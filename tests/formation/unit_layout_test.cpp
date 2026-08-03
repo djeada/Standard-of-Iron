@@ -63,11 +63,6 @@ auto closest_pair_distance(const std::vector<SoldierOffset>& offsets) -> float {
   return offsets.size() < 2 ? 0.0F : best;
 }
 
-auto aspect_ratio(const std::vector<SoldierOffset>& offsets) -> float {
-  float const depth = depth_span(offsets);
-  return depth < 1.0e-3F ? 0.0F : lateral_span(offsets) / depth;
-}
-
 auto rank_curvature(const std::vector<SoldierOffset>& offsets,
                     int cols,
                     int rank) -> float {
@@ -103,13 +98,37 @@ auto rank_skew(const std::vector<SoldierOffset>& offsets, int cols) -> float {
   return std::abs(rank_centre(last_rank) - rank_centre(0));
 }
 
-auto rank_pitch(const std::vector<SoldierOffset>& offsets, int cols) -> float {
+auto file_gap_spread(const std::vector<SoldierOffset>& offsets,
+                     int cols,
+                     int rank) -> float {
+  std::vector<float> files;
+  for (std::size_t i = 0; i < offsets.size(); ++i) {
+    if (static_cast<int>(i) / cols == rank) {
+      files.push_back(offsets[i].offset_x);
+    }
+  }
+  if (files.size() < 3) {
+    return 0.0F;
+  }
+  std::sort(files.begin(), files.end());
+  float widest = 0.0F;
+  float tightest = std::numeric_limits<float>::max();
+  for (std::size_t i = 1; i < files.size(); ++i) {
+    float const gap = files[i] - files[i - 1];
+    widest = std::max(widest, gap);
+    tightest = std::min(tightest, gap);
+  }
+  return widest - tightest;
+}
+
+auto rank_offset_alternation(const std::vector<SoldierOffset>& offsets,
+                             int cols) -> float {
   auto rank_centre = [&](int rank) {
     float sum = 0.0F;
     int count = 0;
     for (std::size_t i = 0; i < offsets.size(); ++i) {
       if (static_cast<int>(i) / cols == rank) {
-        sum += offsets[i].offset_z;
+        sum += offsets[i].offset_x;
         ++count;
       }
     }
@@ -119,8 +138,11 @@ auto rank_pitch(const std::vector<SoldierOffset>& offsets, int cols) -> float {
   if (last_rank < 1) {
     return 0.0F;
   }
-  return std::abs(rank_centre(last_rank) - rank_centre(0)) /
-         static_cast<float>(last_rank);
+  float smallest = std::numeric_limits<float>::max();
+  for (int rank = 1; rank <= last_rank; ++rank) {
+    smallest = std::min(smallest, std::abs(rank_centre(rank) - rank_centre(rank - 1)));
+  }
+  return smallest;
 }
 
 auto mean_absolute_yaw(const std::vector<SoldierOffset>& offsets) -> float {
@@ -196,13 +218,13 @@ TEST_F(UnitLayoutTest, RomanRanksAreTighterAndStraighterThanCarthaginian) {
   EXPECT_LT(mean_absolute_yaw(roman), mean_absolute_yaw(carthaginian));
 }
 
-TEST_F(UnitLayoutTest, RomeIsADeepNarrowBlockAndCarthageAWideShallowOne) {
+TEST_F(UnitLayoutTest, RomeSpacesItsFilesEvenlyWhileCarthageGathersThemIntoKnots) {
   auto const roman = block(layout("rome", "close_order_infantry"), 24, 6);
   auto const carthaginian = block(layout("carthage", "close_order_infantry"), 24, 6);
 
-  EXPECT_GT(depth_span(roman), depth_span(carthaginian));
-  EXPECT_GT(lateral_span(carthaginian), lateral_span(roman) * 1.5F);
-  EXPECT_GT(aspect_ratio(carthaginian), aspect_ratio(roman) * 2.0F);
+  EXPECT_LT(file_gap_spread(roman, 6, 0), 0.10F);
+  EXPECT_GT(file_gap_spread(carthaginian, 6, 0), 0.25F);
+  EXPECT_GT(lateral_span(carthaginian), lateral_span(roman) * 1.1F);
 }
 
 TEST_F(UnitLayoutTest, RomanRanksAreStraightWhileCarthaginianRanksBow) {
@@ -213,13 +235,88 @@ TEST_F(UnitLayoutTest, RomanRanksAreStraightWhileCarthaginianRanksBow) {
   EXPECT_GT(rank_curvature(carthaginian, 6, 0), rank_curvature(roman, 6, 0) * 3.0F);
 }
 
-TEST_F(UnitLayoutTest, RomanRanksStackSquareWhileCarthaginianRanksEchelon) {
-  auto const roman = block(layout("rome", "close_order_infantry"), 24, 6);
+TEST_F(UnitLayoutTest, RomanRanksInterlockInAQuincunx) {
+  auto const roman = block(layout("rome", "close_order_infantry"), 24, 6, 1.0F);
+  const auto& style =
+      UnitLayoutLibrary::instance().style(layout("rome", "close_order_infantry"));
+
+  float const half_file = style.lateral_spacing_scale * 0.5F;
+  EXPECT_NEAR(rank_offset_alternation(roman, 6), half_file, half_file * 0.2F);
+  EXPECT_LT(file_gap_spread(roman, 6, 0), 0.10F);
+  EXPECT_LT(rank_curvature(roman, 6, 0), 0.15F);
+}
+
+TEST_F(UnitLayoutTest, CarthaginianRanksBowWithoutDriftingSideways) {
   auto const carthaginian = block(layout("carthage", "close_order_infantry"), 24, 6);
 
-  EXPECT_LT(rank_skew(roman, 6), 0.2F);
-  EXPECT_GT(rank_skew(carthaginian, 6), 0.75F);
-  EXPECT_GT(rank_skew(carthaginian, 6), rank_skew(roman, 6) * 5.0F);
+  EXPECT_LT(rank_skew(carthaginian, 6), 0.5F);
+  EXPECT_GT(rank_curvature(carthaginian, 6, 0), 0.2F);
+}
+
+TEST_F(UnitLayoutTest, RaggedRosterSpreadsItsRemainderInsteadOfStrandingSoldiers) {
+  for (int count : {13, 16, 17, 22, 23}) {
+    auto const shape = Game::Formation::rank_slot_for(count - 1, count, 6);
+    int widest = 0;
+    int narrowest = count;
+    for (int rank = 0; rank < shape.rows; ++rank) {
+      int occupancy = 0;
+      for (int index = 0; index < count; ++index) {
+        if (Game::Formation::rank_slot_for(index, count, 6).row ==
+            shape.rows - 1 - rank) {
+          ++occupancy;
+        }
+      }
+      widest = std::max(widest, occupancy);
+      narrowest = std::min(narrowest, occupancy);
+    }
+    EXPECT_LE(widest - narrowest, 1) << "count " << count;
+  }
+}
+
+TEST_F(UnitLayoutTest, EveryRankStaysCentredOnTheUnitAnchor) {
+  for (int count : {13, 16, 17, 22, 23}) {
+    auto const offsets = block(layout("rome", "close_order_infantry"), count, 6);
+    std::vector<float> rank_sums(16, 0.0F);
+    std::vector<int> rank_counts(16, 0);
+    for (int index = 0; index < count; ++index) {
+      auto const slot = Game::Formation::rank_slot_for(index, count, 6);
+      rank_sums[static_cast<std::size_t>(slot.row)] +=
+          offsets[static_cast<std::size_t>(index)].offset_x;
+      ++rank_counts[static_cast<std::size_t>(slot.row)];
+    }
+    for (std::size_t rank = 0; rank < rank_counts.size(); ++rank) {
+      if (rank_counts[rank] == 0) {
+        continue;
+      }
+      EXPECT_NEAR(rank_sums[rank] / static_cast<float>(rank_counts[rank]), 0.0F, 0.6F)
+          << "count " << count << " rank " << rank;
+    }
+  }
+}
+
+TEST_F(UnitLayoutTest, CavalryWedgesNarrowTowardsTheirPoint) {
+  for (const auto* doctrine : {"rome", "carthage"}) {
+    auto const offsets = block(layout(doctrine, "cavalry_wedge"), 9, 3);
+    ASSERT_EQ(offsets.size(), 9U);
+
+    float front_z = offsets.front().offset_z;
+    int front_rank = 0;
+    int rear_rank = 0;
+    float rear_z = offsets.front().offset_z;
+    for (const auto& offset : offsets) {
+      front_z = std::max(front_z, offset.offset_z);
+      rear_z = std::min(rear_z, offset.offset_z);
+    }
+    for (const auto& offset : offsets) {
+      if (std::abs(offset.offset_z - front_z) < 0.5F) {
+        ++front_rank;
+      }
+      if (std::abs(offset.offset_z - rear_z) < 0.5F) {
+        ++rear_rank;
+      }
+    }
+    EXPECT_LT(front_rank, rear_rank) << doctrine;
+  }
 }
 
 TEST_F(UnitLayoutTest, EveryPairedRoleKeepsTheFactionSilhouetteApart) {
@@ -230,8 +327,7 @@ TEST_F(UnitLayoutTest, EveryPairedRoleKeepsTheFactionSilhouetteApart) {
     auto const roman = block(layout("rome", generic), 24, 6);
     auto const carthaginian = block(layout("carthage", generic), 24, 6);
 
-    EXPECT_GT(lateral_span(carthaginian), lateral_span(roman) * 1.25F) << generic;
-    EXPECT_GT(rank_pitch(roman, 6), rank_pitch(carthaginian, 6)) << generic;
+    EXPECT_GT(lateral_span(carthaginian), lateral_span(roman) * 1.1F) << generic;
     EXPECT_GT(mean_absolute_yaw(carthaginian), mean_absolute_yaw(roman) * 3.0F)
         << generic;
   }
@@ -242,16 +338,14 @@ TEST_F(UnitLayoutTest, TheThreeDoctrinesAreMutuallyDistinguishable) {
   auto const carthaginian = block(layout("carthage", "close_order_infantry"), 24, 6);
   auto const sepulcher = block(layout("iron_sepulcher", "close_order_infantry"), 24, 6);
 
-  float const rome_aspect = aspect_ratio(roman);
-  float const carthage_aspect = aspect_ratio(carthaginian);
-  float const sepulcher_aspect = aspect_ratio(sepulcher);
-
-  EXPECT_GT(std::abs(carthage_aspect - rome_aspect), 0.8F);
-  EXPECT_GT(std::abs(carthage_aspect - sepulcher_aspect), 0.8F);
-  EXPECT_GT(std::abs(rome_aspect - sepulcher_aspect), 0.25F);
-
   EXPECT_LT(lateral_span(sepulcher), lateral_span(roman));
+  EXPECT_LT(lateral_span(roman), lateral_span(carthaginian));
   EXPECT_LT(depth_span(sepulcher), depth_span(roman));
+
+  EXPECT_GT(rank_curvature(carthaginian, 6, 0), rank_curvature(roman, 6, 0) * 3.0F);
+  EXPECT_GT(rank_curvature(carthaginian, 6, 0), rank_curvature(sepulcher, 6, 0) * 3.0F);
+  EXPECT_GT(rank_offset_alternation(roman, 6), 0.35F);
+  EXPECT_LT(rank_offset_alternation(sepulcher, 6), 0.10F);
 }
 
 TEST_F(UnitLayoutTest, IronSepulcherIsTheDensestOfTheThreeDoctrines) {

@@ -67,6 +67,23 @@ auto default_loadouts() -> LoadoutMap {
   carthage_swordsman.shoulder = "carthage_shoulder_cover";
   map.emplace("troops/carthage/swordsman", std::move(carthage_swordsman));
 
+  EquipmentLoadoutIds showcase_athlete{};
+  showcase_athlete.greaves = "roman_greaves";
+  showcase_athlete.armor = "roman_light_armor";
+  map.emplace("troops/roman/showcase_athlete", std::move(showcase_athlete));
+
+  EquipmentLoadoutIds showcase_blademaster{};
+  showcase_blademaster.sword = "sword_roman";
+  showcase_blademaster.greaves = "roman_greaves";
+  showcase_blademaster.armor = "roman_light_armor";
+  map.emplace("troops/roman/showcase_blademaster", std::move(showcase_blademaster));
+
+  EquipmentLoadoutIds showcase_lancer{};
+  showcase_lancer.spear = "spear";
+  showcase_lancer.greaves = "roman_greaves";
+  showcase_lancer.armor = "roman_light_armor";
+  map.emplace("troops/roman/showcase_lancer", std::move(showcase_lancer));
+
   EquipmentLoadoutIds roman_healer{};
   roman_healer.helmet = "roman_light";
   roman_healer.armor = "roman_light_armor";

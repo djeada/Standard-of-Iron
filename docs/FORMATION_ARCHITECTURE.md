@@ -77,26 +77,34 @@ The three shipped doctrines must be identifiable from overhead with neutral
 materials, so the difference is carried by **silhouette**, not by spacing
 tweaks:
 
-- **Rome — the deep block.** Narrow frontage, wide rank gaps: a tall rectangle.
-  Zero echelon, zero stagger, zero rank arc, so every rank is a dead-straight
-  line and the ranks stack squarely on top of each other. Jitter and facing
-  variation are near zero. Testudo is a `shell` shape, the tightest block in
-  the game.
-- **Carthage — the wide bow.** Frontage roughly 1.7× Rome's over a shallower
-  depth, giving the opposite aspect ratio. Ranks carry a real arc (the line
-  bows forward at the centre) and a real echelon (each rank drifts sideways),
-  so the block reads as a skewed crescent rather than a rectangle. Positional
-  and facing variation are an order of magnitude above Rome's. Its defensive
-  layout is an `arc` shield line, not a testudo.
+- **Rome — the drilled lattice.** Broad frontage, few ranks, evenly spaced
+  files, and every rank offset half a file from the one in front
+  (`rank_stagger` 0.5), so the block reads as an interlocking quincunx instead
+  of a plain grid. Zero echelon, zero rank arc, near-zero jitter: the texture
+  comes from the lattice, not from noise. Bracing drops the stagger and the
+  ranks lock square. Testudo is a `shell` shape, the tightest block in the game.
+- **Carthage — the knotted crescent.** Narrower frontage over more ranks, so a
+  Carthaginian unit is a compact mass where a Roman one is a line. Files are
+  gathered into knots of two to four men (`file_grouping` / `group_gap`) with
+  visible seams between them and a small per-knot depth wobble, and every rank
+  bows forward at the centre (`rank_arc`). Positional and facing variation sit
+  well above Rome's but stay under `min_separation_scale`, so the host looks
+  gathered rather than scattered. Its defensive layout is an `arc` shield line,
+  not a testudo.
 - **Iron Sepulcher — the compressed slab.** The tightest of the three in both
   axes with almost no variation and a procession-like column. Solemn rather
   than chaotic; the distinctness comes from compression, not demonic motifs.
 
+Nation data reinforces the same split before geometry is applied at all:
+`max_units_per_row` gives Roman troops a wide, shallow frontage and
+Carthaginian troops a narrow, deep one, so the two silhouettes differ even at
+identical soldier counts.
+
 `tests/formation/unit_layout_test.cpp` locks this in with shape metrics rather
-than eyeballing: aspect ratio, per-rank curvature, front-to-rear rank skew and
-mean facing deviation must stay separated for every paired role, and
-`formation_data_loader_test.cpp` re-checks the separation after the shipped
-JSON overlays are applied so a data edit cannot quietly erase it.
+than eyeballing: per-rank curvature, file-gap uniformity, the quincunx offset
+between ranks and mean facing deviation must stay separated for every paired
+role, and `formation_data_loader_test.cpp` re-checks the separation after the
+shipped JSON overlays are applied so a data edit cannot quietly erase it.
 
 ## Layer 2: army formation
 

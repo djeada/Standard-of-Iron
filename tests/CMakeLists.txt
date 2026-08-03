@@ -88,6 +88,7 @@ add_executable(
     systems/guard_system_test.cpp
     systems/nation_loader_test.cpp
     systems/troop_catalog_loader_test.cpp
+    systems/showcase_routine_system_test.cpp
     systems/stamina_system_test.cpp
     systems/home_manpower_system_test.cpp
     systems/building_collision_test.cpp

@@ -30,6 +30,7 @@ namespace {
 
 constexpr float k_scenario_tail_seconds = 2.0F;
 constexpr int k_pass_watchdog_ms = 1'800'000;
+constexpr int k_pass_warmup_frames = 3;
 
 struct ShotResult {
   QString name;
@@ -109,6 +110,7 @@ private:
 
     m_slot_index = 0;
     m_pass_active = true;
+    m_pass_frames = 0;
     m_viewport.set_terrain_seed(pass.seed);
     m_viewport.set_batch_fixed_step(idle_step());
     m_viewport.set_scenario_duration_override(last_end + k_scenario_tail_seconds);
@@ -176,6 +178,7 @@ private:
     m_focus_valid = false;
     m_logged_framing = false;
     m_shot_active = true;
+    m_shot_armed = false;
     m_last_frame.reset();
     m_viewport.set_batch_fixed_step(idle_step());
 
@@ -190,6 +193,7 @@ private:
   }
 
   void on_tick(float scenario_time) {
+    ++m_pass_frames;
     if (!m_shot_active) {
       return;
     }
@@ -205,12 +209,15 @@ private:
     m_viewport.set_cinematic_view(
         target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
 
-    const bool recording =
-        scenario_time >= shot.start_seconds && m_frames_written < m_target_frames;
-    if (recording && m_frames_written == 0) {
-
+    const bool in_window =
+        scenario_time >= shot.start_seconds && m_pass_frames > k_pass_warmup_frames;
+    if (in_window && !m_shot_armed) {
+      m_shot_armed = true;
       m_viewport.set_batch_fixed_step(m_step_seconds);
+      m_viewport.set_capture_active(false);
+      return;
     }
+    const bool recording = in_window && m_frames_written < m_target_frames;
     m_viewport.set_capture_active(recording);
 
     if (recording && !m_logged_framing) {
@@ -425,9 +432,11 @@ private:
   std::size_t m_slot_index{0};
   int m_target_frames{0};
   int m_frames_written{0};
+  int m_pass_frames{0};
   float m_step_seconds{1.0F / 60.0F};
   bool m_pass_active{false};
   bool m_shot_active{false};
+  bool m_shot_armed{false};
   bool m_focus_valid{false};
   bool m_logged_framing{false};
   bool m_failed{false};

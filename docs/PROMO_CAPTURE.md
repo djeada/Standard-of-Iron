@@ -104,3 +104,63 @@ advance.formation.options.movement_policy = MovementPolicy::MaintainFormation;
 
 Cycling one army through `Column`, `Line`, `Defensive` and `Assault` is what
 makes a formation reel read as a system rather than as a battle.
+
+## Which frames end up in a clip
+
+Only frames the capture driver asked for are recorded. That is not a detail: in
+batch and promo mode the arena drives its own paints from a timer
+(`makeCurrent(); paintGL(); doneCurrent();`), but the window system still asks
+for paints of its own on exposure, resize and damage. Those paints run `paintGL`
+with the simulation step suppressed, so before this was fixed an unscheduled
+repaint could push a duplicate frame into the encoder and shorten the shot by
+one authored frame at the other end. Capture now requires the frame to be a
+sampled one, and the shot state machine only ticks on sampled frames, so a
+window event can never enter the recording.
+
+A shot also waits before it records:
+
+- **Pass warm-up.** A freshly loaded scenario has not had its terrain, props and
+  creature meshes through a complete render yet. `k_pass_warmup_frames` frames
+  of the loaded scenario go by before any shot in that pass may record, which is
+  what keeps a shot that opens at scenario time zero from starting on a
+  half-built frame. Before this, such a shot logged `soldiers 0/0 drawn` on its
+  first frame.
+- **Step arming.** The frame that switches the simulation to the shot's own step
+  (`slow_motion` shrinks it) was itself simulated with the idle step. That one
+  frame is dropped rather than recorded.
+
+If you are hunting a bad opening frame, measure rather than eyeball it:
+
+```sh
+ffmpeg -v info -i 01_shot.mp4 \
+  -vf "select='lt(n,4)',signalstats,metadata=print:key=lavfi.signalstats.YAVG" \
+  -fps_mode passthrough -f null - 2>&1 | grep YAVG
+```
+
+Note that the _finished cut_ opens on black by design — `promo-edit.py` applies
+an `OPENING_FADE` from black, so a dark first frame there is the edit, not the
+recorder.
+
+## The humanoid showcase reel
+
+`humanoid_showcase.json` over the `promo_humanoid_showcase` scenario is the
+character reel: walk, run, leap, front flip, side aerial, handstand, sword
+flourish and a spear thrown at a statue. It is staged differently from the
+formation reels and the differences are deliberate:
+
+- **Three performers, not one.** Equipment is resolved per renderer key and
+  baked into the archetype, so a single actor cannot put a sword down and pick a
+  spear up. The reel uses `showcase_athlete` (bare), `showcase_blademaster`
+  (sword) and `showcase_lancer` (spear), all helmetless with greaves and a light
+  cuirass, plus a fourth actor who only walks and runs.
+- **`render_scale_override` is 1.0.** Troops render at 0.5-0.6 scale, which
+  reads at the RTS camera but makes a character close-up look like a doll beside
+  grass tufts authored for the world scale. The showcase actors render at full
+  human height so props, scatter and shadows sit at the right size around them.
+- **Seed 44.** The arena scatters iron ore procedurally, and an ore mound
+  renders with an emissive purple vein shader that pulls the eye off the
+  performer. Seed 44 leaves the stage clear; check any new seed before using it.
+- **The acrobat drifts.** A front flip and a side aerial carry real root motion,
+  so the routine walks the performer roughly 2.6 m left and 1.6 m forward per
+  loop. Shots are authored inside the first loop (scenario time 1-13 s) where
+  his position is known.

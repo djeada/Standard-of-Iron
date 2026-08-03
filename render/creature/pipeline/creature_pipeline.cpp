@@ -496,7 +496,8 @@ auto clip_supplies_ground_contact(const Render::Creature::Bpat::BpatBlob* blob,
   if (blob == nullptr || clip_id >= blob->clip_count()) {
     return false;
   }
-  return !blob->clip(clip_id).name.starts_with("riding_");
+  auto const name = blob->clip(clip_id).name;
+  return !name.starts_with("riding_") && !name.starts_with("showcase_");
 }
 
 auto contact_y_for_playback(CreatureKind species_kind,

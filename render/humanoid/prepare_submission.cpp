@@ -248,12 +248,14 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       generated_layouts.clear();
       generated_layouts.reserve(static_cast<std::size_t>(total_layout_count));
       for (int idx = 0; idx < total_layout_count; ++idx) {
+        auto const slot = Game::Formation::rank_slot_for(idx, total_layout_count, cols);
         SoldierLayoutInputs inputs{};
         inputs.idx = idx;
-        inputs.row = rows - 1 - idx / cols;
-        inputs.col = idx % cols;
+        inputs.row = ctx.force_single_soldier ? rows - 1 : slot.row;
+        inputs.col = slot.col;
         inputs.rows = rows;
         inputs.cols = cols;
+        inputs.count = total_layout_count;
         inputs.formation_spacing = formation.spacing;
         inputs.seed = seed;
         inputs.force_single_soldier = ctx.force_single_soldier;

@@ -1,13 +1,13 @@
 {
   "id": "carthage.beast_spread",
   "shape": "ranks",
-  "lateral_spacing_scale": 2.45,
-  "depth_spacing_scale": 1.36,
-  "rank_stagger": 0.55,
-  "rank_echelon": 0.28,
+  "lateral_spacing_scale": 2.1,
+  "depth_spacing_scale": 1.6,
+  "rank_stagger": 0.4,
+  "rank_echelon": 0.0,
   "rank_arc": 0.3,
-  "lateral_jitter": 0.18,
-  "depth_jitter": 0.15,
-  "facing_jitter_degrees": 12.0,
+  "lateral_jitter": 0.1,
+  "depth_jitter": 0.09,
+  "facing_jitter_degrees": 6.0,
   "min_separation_scale": 0.78
 }

@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "animation/rig/humanoid_proportions.h"
+#include "animation/showcase_pose_manifest.h"
 #include "humanoid_renderer_base.h"
 
 namespace Render::GL {
@@ -20,6 +21,8 @@ public:
   void apply_idle_breath(float phase, bool mounted);
 
   void apply_ambient_idle_explicit(AmbientIdleType idle_type, float phase);
+
+  void apply_showcase_move(Animation::HumanoidShowcaseMove move, float phase);
 
   void kneel(float depth);
   void kneel_transition(float progress, bool standing_up);

@@ -1,14 +1,17 @@
 {
   "id": "carthage.shield_wall",
   "shape": "arc",
-  "lateral_spacing_scale": 1.42,
-  "depth_spacing_scale": 0.8,
-  "rank_stagger": 0.5,
-  "rank_echelon": 0.18,
-  "rank_arc": 0.55,
+  "lateral_spacing_scale": 0.96,
+  "depth_spacing_scale": 0.88,
+  "rank_stagger": 0.2,
+  "rank_echelon": 0.0,
+  "rank_arc": 0.4,
   "front_rank_tightening": 0.1,
-  "lateral_jitter": 0.09,
-  "depth_jitter": 0.08,
-  "facing_jitter_degrees": 6.0,
-  "min_separation_scale": 0.52
+  "file_grouping": 2.0,
+  "group_gap": 0.2,
+  "group_depth_stagger": 0.1,
+  "lateral_jitter": 0.045,
+  "depth_jitter": 0.04,
+  "facing_jitter_degrees": 3.0,
+  "min_separation_scale": 0.62
 }

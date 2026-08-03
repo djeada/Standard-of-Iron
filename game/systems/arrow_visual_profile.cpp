@@ -39,6 +39,16 @@ auto make_arrow_visual_profile(ArrowVisualStyle style,
     profile.trail_length = remap_unit(unit_float(sequence ^ 0x10293847U), 0.11F, 0.18F);
     profile.brightness = remap_unit(unit_float(sequence ^ 0x56473829U), 0.88F, 1.08F);
     break;
+  case ArrowVisualStyle::Javelin:
+    profile.scale = 1.30F;
+    profile.length_scale = 2.60F;
+    profile.arc_scale = 0.30F;
+    profile.roll_deg = 0.0F;
+    profile.spin_rate_deg = 0.0F;
+    profile.trail_alpha = 0.10F;
+    profile.trail_length = 0.07F;
+    profile.brightness = 1.02F;
+    break;
   case ArrowVisualStyle::Marker:
     profile.scale = 1.08F;
     profile.brightness = 1.05F;
