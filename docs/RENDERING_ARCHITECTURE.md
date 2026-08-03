@@ -713,6 +713,15 @@ Transparent objects rendering as opaque usually means blending got disabled some
 
 When part of a scatter prop shades almost black while the rest of the same mesh looks fine, suspect the face normals rather than the lighting. `append_oriented_box` and `append_barrel_yaxis` in [vegetation_pipeline.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend/vegetation_pipeline.cpp) emit inward-facing normals on some faces; prop rendering runs with culling disabled, so the geometry still draws but shades as if it were facing away from every light. Use `append_prop_beam` and `append_prop_taper` for new geometry—they are the same shapes with outward normals. `append_box` and `append_vert_prism` were always correct. The background and the full list of touchpoints for a new prop are in [docs/SETTLEMENT_ASSETS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SETTLEMENT_ASSETS.md).
 
+### When the process dies inside the GPU driver
+
+A `SIGSEGV` whose backtrace bottoms out in `libnvidia-glcore` (or any driver `.so`) during `QRhi::endFrame` on the `QSGRenderThread` is almost never a bug in the driver call you can see on the stack. The driver executes our recorded command stream when the frame is flushed, so the faulting call was made earlier in the same frame. Two shapes of app bug produce it:
+
+- An instanced draw asking for more instances than its instance buffer holds. The GPU fetches past the end of the buffer, and the driver faults while walking its own bookkeeping. Every instanced pipeline therefore records how many instances it actually uploaded and routes its draw count through `InstanceDrawGuard` ([instance_draw_guard.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend/instance_draw_guard.h)), which clamps the draw to what is resident and logs the first overflow per buffer. Growing the buffer is capped (`k_max_instances_per_batch`), so `MeshInstancingPipeline::flush` splits an oversized batch into capacity-sized chunks rather than drawing past the cap.
+- Deleting a GL object with no current context. `glDeleteBuffers` through `QOpenGLFunctions` with no context is undefined; on NVIDIA it corrupts driver state and the crash lands in an unrelated later frame. `Buffer` and `VertexArray` now check `QOpenGLContext::currentContext()` and leak the name with a warning instead. Leaking at teardown is free — the driver reclaims everything when the context dies.
+
+Release builds compile out every `glGetError` check in the render layer, so misuse is silent in the build people actually run. Set `SOI_GL_DEBUG=1` to request a debug context and install a synchronous `QOpenGLDebugLogger`; the driver then names the offending call at the moment it is made, in any build type. It costs nothing when the variable is unset.
+
 ## Battle render optimizations
 
 When more than 15 units are visible on screen, the `BattleRenderOptimizer` kicks in to keep rendering fresh without sacrificing visual quality. This system provides several tricks that work independently of LOD:
@@ -794,6 +803,76 @@ and `layout_generation` in the Arena trace. Configure a second build directory w
 The Arena's `render_execute` bucket is sampled straight after `Renderer::end_frame()`, so
 it covers queue sort plus backend execution — it is not animation playback. It was called
 `playback` for a while, which sent at least one investigation in the wrong direction.
+
+## Projectiles and siege engines
+
+Every arrow, bolt and ballista round in the game is the same three meshes, built once in
+[render/geom/arrow.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/geom/arrow.cpp)
+and scaled per call site: a capped, barrelled shaft with a flared nock, a socketed
+broadhead, and three helical feather vanes. All three are authored in one shared local
+space where `+Z` is the direction of flight and the arrow spans `z = 0` (nock) to
+`z = Arrow::k_total_length` (point), with the head occupying the last `k_tip_length`.
+That is what lets a single model matrix drive all three meshes, and it is what the
+`arrow_cloud_render_test` z-bound assertions pin down. If you change the split between
+shaft and head, keep both meshes meeting exactly at `k_shaft_length` or the arrow comes
+apart in flight.
+
+Colour carries meaning here and is deliberately **not** all team colour:
+
+- the shaft is wood with only a 12% team tint, so it never reads as a glowing stick,
+- the head is steel and is the brightest part of the arrow,
+- the fletching is the team colour, and it is the widest part of the silhouette — at
+  gameplay camera distance the feathers are what the player actually sees.
+
+Arrows carry a glow, but a shaped one. It used to be a translucent copy of the whole shaft
+scaled 2.45x, which made a volley look like a swarm of glowing darts. It is now two draws:
+a sheath hugging the shaft at `k_shaft_glow_xy_scale` and a brighter highlight over the
+head only, scaled about `k_head_center_z` so the head mesh does not slide off its socket.
+The rule the `ArrowGlowHugsTheShaft` test pins is that the sheath stays narrower than the
+fletching — the moment the glow is wider than the feathers it stops reading as light on an
+arrow and starts reading as a glowing stick. Colour comes from `Arrow::glow_color`, which
+is mostly neutral warm white with only a fifth of the team hue mixed in; push that ratio up
+and the whole arrow turns the team colour again. Marker-style arrows skip the glow because
+they are a UI aid, not a projectile. Motion trails are shaft-only ghosts at 62% radius, so
+they read as a streak rather than as duplicated arrows.
+
+Impacts deliberately have no starburst. `Renderer::metal_spark` draws ten flat radiating
+quads in world space, and an arrow impact holds for `impact_lifetime` — two thirds of a
+second of a stationary ten-ray fan, which from the gameplay camera reads as a spider web
+lying on the grass. The melee callers in `combat_dust_renderer` keep it because theirs live
+for 80 ms at a blade contact, where it reads as a spark. Arrow impacts now show nothing
+beyond the spent shaft that appears; only ballista bolts get a dust puff. Do not add a
+per-arrow puff — a volley lands dozens of arrows a second and the puffs stack into a haze
+over the whole engagement.
+
+Arrows that land do not vanish. `ProjectileSystem::record_spent_projectile` drops a
+`SpentProjectile` at every arrow or bolt impact, clamped to the terrain surface, planted at
+a jittered angle derived from the incoming direction, and scattered inside a small radius
+so a repeatedly-hit spot grows a cluster instead of a stack. They fade out over the last
+few seconds of their lifetime and the list is capped at `k_max_spent_projectiles`, oldest
+evicted first, which bounds the draw cost of a long siege. The buried head is skipped
+rather than drawn underground. Spent projectiles are visual-only and are not serialized —
+neither are in-flight projectiles.
+
+The siege engines in `render/entity/nations/*/{ballista,catapult}_renderer.cpp` are built
+from the same primitive helpers as everything else (`draw_box`, `draw_cyl`,
+`get_unit_sphere`), and both machines share a rule worth knowing before you move anything:
+the anim context drives geometry that other parts have to follow. On the ballista the
+bowstring, the bolt and the trigger carriage all read `slide_travel(anim_ctx)`, so the
+string visibly draws back with the bolt; on the catapult the arm angle comes from
+`arm_swing_rad(anim_ctx)`, which cocks the arm backwards over the frame and slams it
+forward into a padded buffer beam. Both machines load real ammunition — the ballista puts
+an actual bolt in its groove and the catapult a rock mesh in its sling bowl — rather than a
+scaled unit cube.
+
+The catapult's loaded round is visibly the round it will actually throw.
+`ammunition_for_target` in `siege_special_processor.cpp` already picks
+`ProjectileKind::FlamingStone` whenever a catapult is aimed at something with a
+`BuildingComponent`, so `CatapultAnimContext::incendiary_round` carries that choice through
+to the renderer: the rock goes pitch-dark, gains bound rags, and burns in the sling. The
+flames need the concrete `Renderer` (`fireball` is not on `ISubmitter`), so they come from a
+`dynamic_cast` on `unwrap_submitter()` and are simply skipped when a submitter cannot
+provide one — an offscreen preview harness still gets the geometry, just no fire.
 
 ## The full journey
 

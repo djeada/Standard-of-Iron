@@ -405,6 +405,13 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["capture"] = capture_obj;
   }
 
+  if (const auto* assault_wave = entity->get_component<AssaultWaveComponent>()) {
+    QJsonObject assault_obj;
+    assault_obj["active"] = assault_wave->active;
+    assault_obj["wave_phase"] = assault_wave->wave_phase;
+    entity_obj["assault_wave"] = assault_obj;
+  }
+
   if (const auto* hold_mode = entity->get_component<HoldModeComponent>()) {
     QJsonObject hold_mode_obj;
     hold_mode_obj["active"] = hold_mode->active;
@@ -1167,6 +1174,13 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     capture->required_time = static_cast<float>(capture_obj["required_time"].toDouble(
         static_cast<double>(Defaults::k_capture_required_time)));
     capture->is_being_captured = capture_obj["is_being_captured"].toBool(false);
+  }
+
+  if (json.contains("assault_wave")) {
+    const auto assault_obj = json["assault_wave"].toObject();
+    auto* assault_wave = entity->add_component<AssaultWaveComponent>();
+    assault_wave->active = assault_obj["active"].toBool(true);
+    assault_wave->wave_phase = assault_obj["wave_phase"].toInt(0);
   }
 
   if (json.contains("hold_mode")) {

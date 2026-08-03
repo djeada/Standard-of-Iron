@@ -124,8 +124,10 @@ void MusicPlayer::register_track(const std::string& track_id,
   m_tracks[track_id] = fi.absoluteFilePath();
 
   if (m_backend != nullptr &&
-      !m_backend->predecode(QString::fromStdString(track_id), fi.absoluteFilePath())) {
-    qWarning() << "MusicPlayer: predecode failed for" << fi.absoluteFilePath();
+      !m_backend->request_track(QString::fromStdString(track_id),
+                                fi.absoluteFilePath(),
+                                Game::Audio::Mastering::Material::Music)) {
+    qWarning() << "MusicPlayer: could not register" << fi.absoluteFilePath();
     m_tracks.erase(track_id);
   }
 }

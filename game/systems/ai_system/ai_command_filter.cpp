@@ -17,7 +17,8 @@ auto AICommandFilter::filter(const std::vector<AICommand>& commands,
 
   for (const auto& cmd : commands) {
 
-    if (cmd.type == AICommandType::StartProduction) {
+    if (cmd.type == AICommandType::StartProduction ||
+        cmd.type == AICommandType::SetRallyPoint) {
       filtered.push_back(cmd);
       continue;
     }

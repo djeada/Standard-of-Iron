@@ -190,6 +190,15 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      PresentationOnly,
      "Short-lived exact weapon, block, and dodge contact cues."},
     {"EnemyTelegraphComponent", PresentationOnly, "Attack telegraph overlay."},
+    {"AssaultWaveComponent",
+     AuthoritativeSerialized,
+     "Marks a scripted assault wave. The AI keeps these units attacking whatever "
+     "its posture is, so a save that lost the flag would turn a live wave "
+     "passive."},
+    {"ShowcaseRoutineComponent",
+     PresentationOnly,
+     "Scripted animation routine the arena showcase attaches to a posed "
+     "creature. No mission ever creates one."},
     {"ConstructionPreviewComponent",
      PresentationOnly,
      "Placement ghost. Entities carrying it are skipped entirely when a world "

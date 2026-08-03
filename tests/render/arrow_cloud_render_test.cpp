@@ -2,6 +2,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
 #include <utility>
@@ -111,7 +112,7 @@ TEST(ArrowCloudRender, MarkerArrowUsesTwentyPercentShorterMeshSpan) {
   auto* tip_mesh = Render::Geom::Arrow::get_tip();
   ASSERT_NE(shaft_mesh, nullptr);
   ASSERT_NE(tip_mesh, nullptr);
-  ASSERT_EQ(renderer.meshes.size(), 3U);
+  ASSERT_EQ(renderer.meshes.size(), 2U);
 
   const RecordedMeshDraw* shaft_draw = find_draw(renderer.meshes, shaft_mesh);
   const RecordedMeshDraw* tip_draw = find_draw(renderer.meshes, tip_mesh);
@@ -130,13 +131,112 @@ TEST(ArrowCloudRender, MarkerArrowUsesTwentyPercentShorterMeshSpan) {
               0.8F,
               1.0e-4F);
 
-  auto const glow_draws =
-      std::count_if(renderer.meshes.begin(),
-                    renderer.meshes.end(),
-                    [&](const RecordedMeshDraw& draw) {
-                      return draw.mesh == shaft_mesh && draw.alpha < shaft_draw->alpha;
-                    });
-  EXPECT_EQ(glow_draws, 1);
+  auto const shaft_draws = std::count_if(
+      renderer.meshes.begin(),
+      renderer.meshes.end(),
+      [&](const RecordedMeshDraw& draw) { return draw.mesh == shaft_mesh; });
+  EXPECT_EQ(shaft_draws, 1);
+}
+
+TEST(ArrowCloudRender, ArrowsCarryWoodShaftsAndTeamColouredFletching) {
+  QVector3D const team(0.14F, 0.30F, 0.86F);
+  QVector3D const shaft = Render::Geom::Arrow::shaft_color(team);
+  QVector3D const fletch = Render::Geom::Arrow::fletch_color(team);
+
+  EXPECT_GT(shaft.x(), shaft.y());
+  EXPECT_GT(shaft.y(), shaft.z());
+  EXPECT_GT(std::abs(shaft.z() - team.z()), std::abs(fletch.z() - team.z()));
+  EXPECT_GT(fletch.z(), fletch.x());
+  EXPECT_NEAR(fletch.z(), team.z(), 0.22F);
+}
+
+TEST(ArrowCloudRender, VolleyArrowTrailsAreShaftOnlyStreaks) {
+  Game::Systems::ArrowSystem system;
+  system.spawn_arrow(QVector3D(0.0F, 0.0F, 0.0F),
+                     QVector3D(0.0F, 0.0F, 10.0F),
+                     QVector3D(0.75F, 0.12F, 0.08F),
+                     8.0F,
+                     Game::Systems::ArrowVisualStyle::Volley);
+  system.update(nullptr, 1.0F);
+
+  ASSERT_EQ(system.arrows().size(), 1U);
+
+  RecordingRenderer renderer;
+  Render::GL::render_arrows(
+      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system);
+
+  auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
+  auto* tip_mesh = Render::Geom::Arrow::get_tip();
+  auto* fletch_mesh = Render::Geom::Arrow::get_fletching();
+  ASSERT_NE(shaft_mesh, nullptr);
+
+  auto count = [&](Render::GL::Mesh* mesh) {
+    return std::count_if(
+        renderer.meshes.begin(),
+        renderer.meshes.end(),
+        [&](const RecordedMeshDraw& draw) { return draw.mesh == mesh; });
+  };
+  EXPECT_EQ(count(tip_mesh), 2);
+  EXPECT_EQ(count(fletch_mesh), 1);
+  EXPECT_GT(count(shaft_mesh), 2);
+
+  const RecordedMeshDraw* body = find_draw(renderer.meshes, shaft_mesh);
+  ASSERT_NE(body, nullptr);
+  float const body_width = body->model.column(0).length();
+
+  int streaks = 0;
+  int sheaths = 0;
+  for (const auto& draw : renderer.meshes) {
+    if (draw.mesh != shaft_mesh || &draw == body) {
+      continue;
+    }
+    EXPECT_LT(draw.alpha, body->alpha);
+    if (draw.model.column(0).length() < body_width) {
+      ++streaks;
+    } else {
+      ++sheaths;
+    }
+  }
+  EXPECT_GT(streaks, 0);
+  EXPECT_EQ(sheaths, 1);
+}
+
+TEST(ArrowCloudRender, ArrowGlowHugsTheShaftInsteadOfSwallowingIt) {
+  Game::Systems::ArrowSystem system;
+  system.spawn_arrow(QVector3D(0.0F, 0.0F, 0.0F),
+                     QVector3D(0.0F, 0.0F, 10.0F),
+                     QVector3D(0.75F, 0.12F, 0.08F),
+                     8.0F,
+                     Game::Systems::ArrowVisualStyle::Focused);
+  system.update(nullptr, 0.6F);
+
+  ASSERT_EQ(system.arrows().size(), 1U);
+
+  RecordingRenderer renderer;
+  Render::GL::render_arrows(
+      &renderer, reinterpret_cast<Render::GL::ResourceManager*>(0x1), system);
+
+  auto* shaft_mesh = Render::Geom::Arrow::get_shaft();
+  const RecordedMeshDraw* body = find_draw(renderer.meshes, shaft_mesh);
+  ASSERT_NE(body, nullptr);
+
+  const RecordedMeshDraw* sheath = nullptr;
+  for (const auto& draw : renderer.meshes) {
+    if (draw.mesh == shaft_mesh &&
+        draw.model.column(0).length() > body->model.column(0).length()) {
+      sheath = &draw;
+    }
+  }
+  ASSERT_NE(sheath, nullptr);
+
+  float const width_ratio =
+      sheath->model.column(0).length() / body->model.column(0).length();
+  EXPECT_GT(width_ratio, 1.0F);
+  EXPECT_LT(width_ratio,
+            Render::Geom::Arrow::k_fletch_peak_radius /
+                Render::Geom::Arrow::k_shaft_radius);
+  EXPECT_LT(sheath->alpha, 0.35F);
+  EXPECT_GT(luminance(sheath->color), luminance(body->color));
 }
 
 TEST(ArrowCloudRender, MarkerArrowTipUsesBrightMetallicColor) {

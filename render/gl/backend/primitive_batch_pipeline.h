@@ -9,6 +9,7 @@
 #include "../../primitive_batch.h"
 #include "../persistent_buffer.h"
 #include "../shader_cache.h"
+#include "instance_draw_guard.h"
 #include "pipeline_interface.h"
 
 namespace Render::GL::BackendPipelines {
@@ -72,6 +73,8 @@ private:
   GLuint m_sphere_instance_buffer{0};
   GLsizei m_sphere_index_count{0};
   std::size_t m_sphere_instance_capacity{0};
+  std::size_t m_sphere_instances_resident{0};
+  InstanceDrawGuard m_sphere_draw_guard{"PrimitiveBatchPipeline::spheres"};
 
   GLuint m_cylinder_vao{0};
   GLuint m_cylinder_vertex_buffer{0};
@@ -79,6 +82,8 @@ private:
   GLuint m_cylinder_instance_buffer{0};
   GLsizei m_cylinder_index_count{0};
   std::size_t m_cylinder_instance_capacity{0};
+  std::size_t m_cylinder_instances_resident{0};
+  InstanceDrawGuard m_cylinder_draw_guard{"PrimitiveBatchPipeline::cylinders"};
 
   GLuint m_cone_vao{0};
   GLuint m_cone_vertex_buffer{0};
@@ -86,6 +91,8 @@ private:
   GLuint m_cone_instance_buffer{0};
   GLsizei m_cone_index_count{0};
   std::size_t m_cone_instance_capacity{0};
+  std::size_t m_cone_instances_resident{0};
+  InstanceDrawGuard m_cone_draw_guard{"PrimitiveBatchPipeline::cones"};
 
   static constexpr std::size_t k_default_instance_capacity = 4096;
   static constexpr float k_growth_factor = 1.5F;
