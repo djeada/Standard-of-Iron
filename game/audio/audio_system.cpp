@@ -193,6 +193,25 @@ void AudioSystem::resume_all() {
   enqueue(AudioEvent(AudioEventType::RESUME));
 }
 
+namespace {
+
+auto mastering_material(AudioCategory category, const std::string& resource_id)
+    -> Game::Audio::Mastering::Material {
+  switch (category) {
+  case AudioCategory::MUSIC:
+    return Game::Audio::Mastering::Material::Music;
+  case AudioCategory::VOICE:
+    return Game::Audio::Mastering::Material::Voice;
+  case AudioCategory::AMBIENCE:
+    return Game::Audio::Mastering::Material::Ambience;
+  case AudioCategory::SFX:
+    break;
+  }
+  return Game::Audio::Mastering::effect_material(resource_id);
+}
+
+} // namespace
+
 auto AudioSystem::load_sound(const std::string& sound_id,
                              const std::string& file_path,
                              const AudioResourceConfig& config) -> bool {
@@ -203,8 +222,9 @@ auto AudioSystem::load_sound(const std::string& sound_id,
 
   MiniaudioBackend* backend =
       (m_music_player != nullptr) ? m_music_player->get_backend() : nullptr;
-  auto sound = std::make_unique<Sound>(sound_id, file_path, backend);
-  if (!sound->is_loaded()) {
+  auto sound = std::make_unique<Sound>(
+      sound_id, file_path, mastering_material(config.category, sound_id), backend);
+  if (!sound->is_registered()) {
     return false;
   }
 
@@ -595,7 +615,7 @@ auto AudioSystem::resolve_resource_id_locked(const std::string& resource_id) con
 
 auto AudioSystem::get_effective_volume(AudioCategory category,
                                        float event_volume) const -> float {
-  static constexpr float VOICE_GAIN = 2.0F;
+  static constexpr float VOICE_GAIN = 1.0F;
   if (!std::isfinite(event_volume)) {
     return AudioConstants::MIN_VOLUME;
   }

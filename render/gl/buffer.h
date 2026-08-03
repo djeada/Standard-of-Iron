@@ -2,6 +2,7 @@
 
 #include <QOpenGLFunctions_3_3_Core>
 
+#include <cstddef>
 #include <vector>
 
 namespace Render::GL {
@@ -33,8 +34,11 @@ public:
     set_data(data.data(), data.size() * sizeof(T), usage);
   }
 
+  [[nodiscard]] auto size_bytes() const -> std::size_t { return m_size_bytes; }
+
 private:
   GLuint m_buffer = 0;
+  std::size_t m_size_bytes = 0;
   Type m_type;
   [[nodiscard]] auto get_gl_type() const -> GLenum;
   [[nodiscard]] static auto get_gl_usage(Usage usage) -> GLenum;

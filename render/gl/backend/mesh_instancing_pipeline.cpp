@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QOpenGLContext>
 
+#include <algorithm>
 #include <cstring>
 
 #include "../backend.h"
@@ -77,6 +78,7 @@ void MeshInstancingPipeline::shutdown() {
   }
 
   m_instances.clear();
+  m_instance_capacity = 0;
   m_current_mesh = nullptr;
   m_current_shader = nullptr;
   m_current_texture = nullptr;
@@ -161,9 +163,10 @@ void MeshInstancingPipeline::flush() {
 
   const std::size_t count = m_instances.size();
 
-  if (count > m_instance_capacity) {
-    std::size_t new_capacity = m_instance_capacity;
-    while (new_capacity < count) {
+  const std::size_t required = std::min(count, k_max_instances_per_batch);
+  if (required > m_instance_capacity) {
+    std::size_t new_capacity = std::max<std::size_t>(m_instance_capacity, 1);
+    while (new_capacity < required) {
       new_capacity *= 2;
     }
     new_capacity = std::min(new_capacity, k_max_instances_per_batch);
@@ -176,20 +179,7 @@ void MeshInstancingPipeline::flush() {
     m_instance_capacity = new_capacity;
   }
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
-  GLsizeiptr const upload_size =
-      static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu));
-
-  void* mapped = glMapBufferRange(
-      GL_ARRAY_BUFFER, 0, upload_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-  if (mapped != nullptr) {
-    std::memcpy(mapped, m_instances.data(), static_cast<std::size_t>(upload_size));
-    glUnmapBuffer(GL_ARRAY_BUFFER);
-  } else {
-    glBufferSubData(GL_ARRAY_BUFFER, 0, upload_size, m_instances.data());
-  }
-
-  if (!m_current_mesh->bind_vao()) {
+  if (m_instance_capacity == 0) {
     m_instances.clear();
     return;
   }
@@ -205,7 +195,14 @@ void MeshInstancingPipeline::flush() {
     m_current_texture->bind(0);
   }
 
-  m_current_mesh->draw_instanced_raw(count);
+  for (std::size_t offset = 0; offset < count; offset += m_instance_capacity) {
+    const std::size_t chunk = std::min(count - offset, m_instance_capacity);
+    const std::size_t resident = upload_instances(m_instances.data() + offset, chunk);
+    const std::size_t drawable = m_draw_guard.clamp(chunk, resident);
+    if (drawable > 0) {
+      m_current_mesh->draw_instanced_raw(drawable);
+    }
+  }
 
   glVertexAttribDivisor(k_instance_model_col0_loc, 0);
   glVertexAttribDivisor(k_instance_model_col1_loc, 0);
@@ -228,6 +225,28 @@ auto MeshInstancingPipeline::instance_count() const -> std::size_t {
 
 auto MeshInstancingPipeline::has_pending() const -> bool {
   return !m_instances.empty();
+}
+
+auto MeshInstancingPipeline::upload_instances(const MeshInstanceGpu* data,
+                                              std::size_t count) -> std::size_t {
+  if (data == nullptr || count == 0 || count > m_instance_capacity ||
+      m_instance_buffer == 0) {
+    return 0;
+  }
+
+  const auto upload_size = static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu));
+
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  void* mapped = glMapBufferRange(
+      GL_ARRAY_BUFFER, 0, upload_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+  if (mapped != nullptr) {
+    std::memcpy(mapped, data, static_cast<std::size_t>(upload_size));
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+  } else {
+    glBufferSubData(GL_ARRAY_BUFFER, 0, upload_size, data);
+  }
+
+  return count;
 }
 
 void MeshInstancingPipeline::setup_instance_attributes() {

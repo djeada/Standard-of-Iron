@@ -12,6 +12,7 @@
 #include "../game_config.h"
 #include "arrow_visual_profile.h"
 #include "projectile.h"
+#include "spent_projectile.h"
 
 namespace Game::Systems {
 
@@ -70,6 +71,9 @@ public:
   [[nodiscard]] auto impacts() const -> const std::vector<ProjectileImpactEvent>& {
     return m_impacts;
   }
+  [[nodiscard]] auto spent_projectiles() const -> const std::vector<SpentProjectile>& {
+    return m_spent;
+  }
 
 private:
   struct ImpactResolution {
@@ -80,11 +84,15 @@ private:
   [[nodiscard]] auto resolve_impact(Engine::Core::World* world,
                                     Projectile* projectile) -> ImpactResolution;
   void publish_impact(const Projectile& projectile, const ImpactResolution& resolution);
+  void record_spent_projectile(const Projectile& projectile,
+                               const QVector3D& incoming_direction,
+                               bool ballista_bolt);
 
   static constexpr int k_volley_arrow_threshold = 4;
 
   std::vector<ProjectilePtr> m_projectiles;
   std::vector<ProjectileImpactEvent> m_impacts;
+  std::vector<SpentProjectile> m_spent;
   ArrowConfig m_arrow_config;
   std::uint32_t m_arrow_spawn_sequence{0};
   std::uint64_t m_impact_sequence{0};

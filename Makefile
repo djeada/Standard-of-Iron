@@ -74,6 +74,7 @@ help:
 	@echo "  $(GREEN)test$(RESET)          - Build only test binaries, then run them"
 	@echo "  $(GREEN)test-only$(RESET)     - Run existing test binaries without building"
 	@echo "  $(GREEN)validate-content$(RESET) - Validate mission and campaign JSON files"
+	@echo "  $(GREEN)audio-preview$(RESET) - Render before/after WAVs of the decode-time mastering"
 	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into docs/AUDIO_WISHLIST.md"
 	@echo "  $(GREEN)audio-check$(RESET)   - Fail when cues, manifest and audio files disagree"
 	@echo "  $(GREEN)translations$(RESET)  - Refresh .ts/.qm catalogues and translator CSVs"
@@ -350,6 +351,13 @@ audio-assets:
 
 # Rewrite docs/AUDIO_WISHLIST.md from the cue catalog, the manifest and the
 # assets on disk. Run it any time you want the current list of missing sounds.
+.PHONY: audio-preview
+audio-preview:
+	@echo "$(BOLD)$(BLUE)Rendering audio mastering preview...$(RESET)"
+	@cmake --build $(BUILD_DIR) -j$$(nproc) --target audio_master_preview
+	@$(BUILD_DIR)/bin/audio_master_preview --out artifacts/audio_preview $(AUDIO_PREVIEW_ARGS)
+
+## Audit the cue catalogue, the manifest and the files on disk.
 .PHONY: audio-report
 audio-report:
 	@echo "$(BOLD)$(BLUE)Auditing game audio...$(RESET)"

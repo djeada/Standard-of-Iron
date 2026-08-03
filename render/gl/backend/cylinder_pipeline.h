@@ -7,6 +7,7 @@
 
 #include "../persistent_buffer.h"
 #include "../shader_cache.h"
+#include "instance_draw_guard.h"
 #include "pipeline_interface.h"
 
 namespace Render::GL {
@@ -90,6 +91,8 @@ private:
   GLuint m_cylinder_instance_buffer{0};
   GLsizei m_cylinder_index_count{0};
   std::size_t m_cylinder_instance_capacity{0};
+  std::size_t m_cylinder_instances_resident{0};
+  InstanceDrawGuard m_cylinder_draw_guard{"CylinderPipeline::cylinders"};
   GL::PersistentRingBuffer<CylinderInstanceGpu> m_cylinder_persistent_buffer;
 
   GL::Shader* m_fog_shader{nullptr};
@@ -99,6 +102,8 @@ private:
   GLuint m_fog_instance_buffer{0};
   GLsizei m_fog_index_count{0};
   std::size_t m_fog_instance_capacity{0};
+  std::size_t m_fog_instances_resident{0};
+  InstanceDrawGuard m_fog_draw_guard{"CylinderPipeline::fog"};
   GL::PersistentRingBuffer<FogInstanceGpu> m_fog_persistent_buffer;
 };
 

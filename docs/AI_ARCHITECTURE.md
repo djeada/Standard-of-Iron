@@ -13,6 +13,7 @@ The AI is no longer a passive "units occasionally wander" layer. It now has a ch
 - push toward hidden **strategic objectives** even when tactical contacts are gone
 - build a base using shared macro targets
 - plan and escort a first **forward outpost**
+- operate **several bases at once** with distinct main / production / defensive / forward roles
 - separate **style/personality** from **difficulty/execution tuning**
 
 It is still intentionally lightweight: one AI brain per player, throttled updates, immutable snapshots, small force-role heuristics, and behavior modules instead of expensive per-unit thinking.
@@ -24,7 +25,7 @@ The system optimizes for four things:
 1. **Cheap execution**: one planner per AI player, not one behavior tree per unit.
 2. **Visible activity**: the AI should keep producing, gathering, defending, harassing, attacking, and expanding instead of stalling in idle loops.
 3. **Authorable variation**: missions can shape AI with JSON through strategy, personality, and difficulty.
-4. **Extensibility**: reserve, harass, and outpost logic are foundations for future siege groups, multi-base roles, difficulty ladders, and personality packs.
+4. **Extensibility**: reserve, harass, and base-role logic are foundations for future siege groups, difficulty ladders, and personality packs.
 
 ## High-level update loop
 
@@ -63,19 +64,22 @@ The expensive part is the thinking, so it is throttled and handed to a worker th
 
 Most AI code lives in `game/systems/ai_system/`.
 
-| File                         | Responsibility                                           |
-| ---------------------------- | -------------------------------------------------------- |
-| `ai_types.h`                 | Snapshot, context, strategy config, commands             |
-| `ai_snapshot_builder.cpp`    | Reads visible world state into `AISnapshot`              |
-| `ai_reasoner.cpp`            | Updates persistent AI context and state                  |
-| `ai_executor.cpp`            | Runs behaviors and collects commands                     |
-| `ai_worker.cpp`              | Background worker wrapper                                |
-| `ai_command_filter.cpp`      | Prevents duplicate/spammy commands                       |
-| `ai_command_applier.cpp`     | Applies AI commands back to the game                     |
-| `ai_strategy.cpp`            | Strategy presets, personality shaping, difficulty tuning |
-| `ai_utils.h`                 | Assignment cleanup and force-role helper functions       |
-| `behaviors/*.cpp`            | Tactical and macro behavior implementations              |
-| `game/systems/ai_system.cpp` | Owns AI instances and update cadence                     |
+| File                             | Responsibility                                           |
+| -------------------------------- | -------------------------------------------------------- |
+| `ai_types.h`                     | Snapshot, context, strategy config, commands             |
+| `ai_snapshot_builder.cpp`        | Reads visible world state into `AISnapshot`              |
+| `ai_reasoner.cpp`                | Updates persistent AI context and state                  |
+| `ai_base_manager.cpp`            | Clusters buildings into bases, assigns base roles        |
+| `behaviors/assault_behavior.cpp` | Drives scripted assault waves, whatever the AI's posture |
+| `behaviors/chase_behavior.cpp`   | Sends a small detachment after enemies that stray close  |
+| `ai_executor.cpp`                | Runs behaviors and collects commands                     |
+| `ai_worker.cpp`                  | Background worker wrapper                                |
+| `ai_command_filter.cpp`          | Prevents duplicate/spammy commands                       |
+| `ai_command_applier.cpp`         | Applies AI commands back to the game                     |
+| `ai_strategy.cpp`                | Strategy presets, personality shaping, difficulty tuning |
+| `ai_utils.h`                     | Assignment cleanup and force-role helper functions       |
+| `behaviors/*.cpp`                | Tactical and macro behavior implementations              |
+| `game/systems/ai_system.cpp`     | Owns AI instances and update cadence                     |
 
 ## What the AI knows
 
@@ -113,6 +117,11 @@ The important change is `strategic_objectives`: the AI keeps enemy structures an
     - `outpost_home_count`
     - `expansion_construction_pending`
     - `last_expansion_order_time`
+- the **base model** (see _Multi-base model_ below):
+    - `bases` with stable ids, centers, rally points and roles
+    - `main_base_id` and `forward_base_id`
+    - `forward_plan` (site, failed attempts, abandonment count)
+    - `abandoned_expansion_sites`
 
 This is still heuristic AI, not a heavyweight planner, but the persistent context makes it feel much more intentional.
 
@@ -145,18 +154,20 @@ Behaviors are modular and ordered by priority.
 | -------------------- | -------- | ----------- | ----------------------------------------------------------------------- |
 | `RetreatBehavior`    | Critical | No          | Pull damaged armies back to safety                                      |
 | `DefendBehavior`     | Critical | No          | React to local threats, prefer reserve first                            |
+| `AssaultBehavior`    | High     | Yes         | Drive scripted wave units at the enemy whatever the AI's posture is     |
 | `ProductionBehavior` | High     | Yes         | Keep barracks producing from style-aware targets                        |
 | `BuilderBehavior`    | High     | Yes         | Build homes, barracks, towers, catapults, and outposts                  |
 | `CommanderBehavior`  | High     | Yes         | Move commanders and trigger rally ability                               |
 | `ExpandBehavior`     | High     | No          | Capture neutral barracks or escort the main force to an outpost site    |
 | `AttackBehavior`     | Normal   | No          | Main-army pushes, target chasing, blind marches to strategic objectives |
+| `ChaseBehavior`      | Normal   | Yes         | Peel a capped detachment onto enemies that wander near our troops       |
 | `HarassBehavior`     | Low      | Yes         | Raider detachment against isolated or strategic targets                 |
 | `GatherBehavior`     | Low      | No          | Assemble the main army around the rally area                            |
 
 Three concurrency rules matter:
 
 1. **Production**, **builder**, and **commander** logic keep running during attacks and defenses.
-2. **HarassBehavior** can run alongside the main strategic behavior.
+2. **HarassBehavior**, **ChaseBehavior** and **AssaultBehavior** can run alongside the main strategic behavior; each owns a bounded slice of the army, so none of them can empty the line.
 3. Exclusive force behaviors still rely on unit claiming so they do not fight each other for the same troops.
 
 ## Force organization
@@ -229,7 +240,7 @@ The AI now uses shared macro targets instead of scattered hardcoded thresholds.
 
 ## Expansion logic
 
-The AI now has a **first outpost planner**.
+The AI has a **first outpost planner** feeding a **multi-base model**.
 
 ### What it currently does
 
@@ -239,14 +250,58 @@ The AI now has a **first outpost planner**.
 - tracks pending construction at the chosen site
 - builds an outpost barracks first, then an outpost home
 - sends only the main attack force to escort the outpost
+- retargets the site laterally once a site has been abandoned
 
-### What it does not do yet
+## Multi-base model
 
-- manage several active bases with distinct production roles
-- abandon and retarget failed outposts with richer policies
-- shift strategic center-of-gravity from main base to forward base
+`AIBaseManager` (`ai_base_manager.cpp`) runs at the end of every context update and turns the flat building list into a set of bases. Everything downstream — production, defence, fortification — reads that model instead of assuming a single base.
 
-So this is a real step beyond passive single-base AI, but it is not yet a full multi-base RTS economy.
+### Clustering and identity
+
+Owned buildings are clustered by proximity (`k_base_cluster_radius`). Each cluster is matched against the previous frame's bases within `k_base_identity_radius`, so a base keeps its id, its role and its threat history as buildings are added or lost. Unmatched clusters get a fresh id from `next_base_id`.
+
+### Roles
+
+| Role         | Meaning                                                                             |
+| ------------ | ----------------------------------------------------------------------------------- |
+| `Main`       | The strategic centre: anchors `base_pos`, `rally` and `primary_barracks`            |
+| `Forward`    | The non-main base closest to an enemy objective, past `k_forward_base_min_distance` |
+| `Production` | Any other base that owns barracks                                                   |
+| `Defensive`  | A base with no production, held for map control                                     |
+
+The main role is sticky. It moves only when the incumbent loses all its barracks, or when a challenger's score (`barracks * 3 + homes + towers`) beats it by `k_migration_score_margin`. That is the strategic-centre migration: a forward base that grows into a real settlement takes over as the centre of gravity, and losing the original main base hands the role to whatever survives rather than stalling.
+
+### Per-base production and rally
+
+`ProductionBehavior` groups barracks by base and orders them threatened-first, then Main, Production, Forward, Defensive. Each base carries its own queue budget (`k_production_queue_per_base`) summed across its barracks, so one saturated base cannot starve another, and production continues from any surviving base when one is destroyed. Each base also owns a rally point derived from its primary barracks; the behaviour emits `SetRallyPoint` whenever a barracks' rally drifts from its base's.
+
+### Defence and reassignment
+
+`DefendBehavior` defends the most threatened base rather than always the main one, and tags every claim with that base's id. When a base disappears, `AIBaseManager` drops every assignment that belonged to it, releasing those defenders for re-claiming the same tick. `BuilderBehavior` builds a defence tower at any non-main base that is under threat and has none.
+
+### Outpost abandonment
+
+`note_expansion_order` marks an attempt in flight with a deadline. While a builder still has the site as its construction target the deadline is pushed out; if the deadline passes with no structure and no pending construction, the attempt counts as failed. After `k_max_outpost_failures` the site is pushed to `abandoned_expansion_sites` and the plan is cleared, so site selection rotates laterally to a fresh site and does not retry the same dead ground for `k_abandoned_site_memory` seconds.
+
+## Posture by game mode
+
+The same behaviour set is shaped into two very different opponents by mode.
+
+### Campaign: hold the ground, punish what comes close
+
+Campaign AI players are defensive. Mission JSON authors the posture per `ai_setups` entry (`strategy`, `personality`, `difficulty`), and a mission that names no strategy now defaults to `Defensive` rather than `Balanced`.
+
+A defensive AI that only ever sits still is a punching bag, so `ChaseBehavior` gives it teeth without giving up the position. When an enemy unit comes within `chase_radius` of any of the AI's own troops, and no base is under attack, it peels off a _detachment_ — `min(max_chase_units, available / 3)` of the closest eligible units — and sends them after that target with chase enabled. The cap is the point: the army never abandons its post to run down a scout. Reserve, harass and assault units are never eligible, and the whole behaviour stands down the moment a base is threatened, handing those units to `DefendBehavior`.
+
+### Assault waves: always offensive
+
+Scripted waves are the campaign's pressure, so they must not inherit the defensive posture of the AI that owns them. Wave units are spawned with `AssaultWaveComponent`; the snapshot marks them `is_assault`, and they are excluded from every ordinary force pool — attack force, gather, reserve, harass, and base defence recall. `AssaultBehavior` owns them instead: it advances them on the nearest visible enemy (falling back to a strategic objective) and switches to a direct attack once inside engagement range, regardless of whether the parent AI is Idle, Gathering or Defending. The component is serialized, so a save taken mid-wave restores an assault that is still an assault.
+
+### Skirmish: take the map, then come home when it burns
+
+Skirmish AI players are configured `Expansionist` at setup time. That preset already carries the highest `expansion_priority`, two outpost barracks and a wide `expansion_site_distance`, so the AI spreads into forward bases and contests neutral and player-held ground instead of turtling.
+
+The counterweight is `full_recall_on_base_threat`, which only the expansionist preset sets. When any of its bases is attacked — main or outpost, tracked per base by `AIBaseManager` — `DefendBehavior` drops its usual reserve-first shortlist and its defender cap and commits every available unit to the defence. Assault units are the sole exception; they keep attacking.
 
 ## Style, personality, and difficulty
 
@@ -425,7 +480,15 @@ Current AI test coverage includes:
 - macro targets
 - strategic objective marching
 - reserve and harass role separation
+- assault-wave units staying offensive under a defensive AI
+- chase detachment sizing, and standing down when a base is attacked
+- expansionist full recall when a base is attacked
 - outpost planning and duplicate-order suppression
+- base clustering, stable base identity and role assignment
+- production and strategic-centre migration after a base is destroyed
+- isolated bases keeping their own rally point and threat state
+- per-base rally commands and per-base production queue limits
+- outpost abandonment after repeated construction failures, and retargeting
 
 For repo validation, the reliable test binary is:
 
@@ -448,28 +511,22 @@ Relative to the original passive AI, the current system is much better at:
 
 The AI is improved, but it is not yet "finished RTS AI." The most important remaining gaps are:
 
-1. **True multi-base planning**
-    - multiple active bases
-    - per-base rally points
-    - per-base production roles
-    - better outpost abandonment / retarget logic
-
-2. **Richer force planner**
+1. **Richer force planner**
     - siege groups
     - flankers
     - synchronized attack waves
     - regroup / reform logic after failed pushes
 
-3. **Data-driven profiles**
+2. **Data-driven profiles**
     - move strategy presets out of code into assets/data
     - let designers tune AI personalities without recompiling
 
-4. **Stronger strategic economy awareness**
+3. **Stronger strategic economy awareness**
     - more explicit resource pressure
     - better builder safety / routing
     - broader structure placement logic
 
-5. **Team and campaign coordination**
+4. **Team and campaign coordination**
     - allied AI timing
     - shared fronts
     - mission-aware operational goals
@@ -479,8 +536,7 @@ The AI is improved, but it is not yet "finished RTS AI." The most important rema
 If you want the next biggest gains per engineering effort, the recommended order is:
 
 1. **Data-driven AI profiles** so design can iterate quickly
-2. **True multi-base roles** built on the current outpost foundation
-3. **Richer force planner** for siege / flank / regroup behavior
-4. **Coordinated allied AI** for campaign-scale scenarios
+2. **Richer force planner** for siege / flank / regroup behavior
+3. **Coordinated allied AI** for campaign-scale scenarios
 
 That sequence builds on the current architecture instead of fighting it.
