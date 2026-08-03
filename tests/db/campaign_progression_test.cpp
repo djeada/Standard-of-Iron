@@ -13,14 +13,6 @@
 #include "map/campaign_loader.h"
 #include "systems/save_storage.h"
 
-// End-to-end coverage for issue #1079: walking a campaign from its first
-// mission to its last and back, and checking that progression survives replays,
-// reopened databases and stale requests.
-//
-// These are deliberately written against the storage layer rather than the
-// engine: it is the only place that decides what "unlocked", "completed" and
-// "campaign finished" mean, and it can be driven headlessly one mission at a
-// time in the order a player would actually clear them.
 namespace {
 
 using namespace Game::Systems;
@@ -148,9 +140,6 @@ TEST_F(CampaignProgressionTest, ClearingTheFinalMissionCompletesTheCampaign) {
   QString error;
   const auto advance = complete(last_mission(), &error);
 
-  // The old path rolled the whole transaction back when there was no next
-  // mission to unlock, so the finale never recorded as completed and the
-  // campaign could not be finished at all.
   ASSERT_TRUE(advance.has_value()) << error.toStdString();
   EXPECT_TRUE(advance->unlocked_mission_id.isEmpty())
       << "there is nothing after the last mission to unlock";
@@ -162,8 +151,7 @@ TEST_F(CampaignProgressionTest, ClearingTheFinalMissionCompletesTheCampaign) {
 }
 
 TEST_F(CampaignProgressionTest, TheCampaignIsNotCompleteUntilEveryMissionIs) {
-  // Clearing the finale out of order (however the player got there) must not
-  // paper over the missions they skipped.
+
   ASSERT_TRUE(complete(mission_at(0)).has_value());
   const auto advance = complete(last_mission());
 
@@ -175,8 +163,7 @@ TEST_F(CampaignProgressionTest, TheCampaignIsNotCompleteUntilEveryMissionIs) {
 }
 
 TEST_F(CampaignProgressionTest, AMidCampaignWinNeverCompletesTheCampaign) {
-  // The engine used to mark the campaign finished on every victory, so the
-  // first mission ended the war.
+
   const auto advance = complete(mission_at(0));
 
   ASSERT_TRUE(advance.has_value());
@@ -273,8 +260,7 @@ TEST_F(CampaignProgressionTest, TheCampaignListReflectsProgressAsThePlayerSeesIt
 }
 
 TEST_F(CampaignProgressionTest, ReimportingTheCampaignKeepsProgress) {
-  // Re-reading the campaign file happens on every launch, and it must not reset
-  // what the player has already cleared.
+
   ASSERT_TRUE(complete(mission_at(0)).has_value());
   ASSERT_TRUE(complete(mission_at(1)).has_value());
 
@@ -289,8 +275,7 @@ TEST_F(CampaignProgressionTest, ReimportingTheCampaignKeepsProgress) {
 }
 
 TEST_F(CampaignProgressionTest, ACampaignShortenedByAnUpdateStillAdvances) {
-  // A mission removed from the middle of a campaign leaves a gap in the order
-  // indices. Advancing by "order + 1" would strand the player on the gap.
+
   Game::Campaign::CampaignDefinition edited;
   edited.id = QStringLiteral("edited_campaign");
   edited.missions.push_back({QStringLiteral("first"), 0, {}, {}, {}, {}});
@@ -330,7 +315,7 @@ TEST(CampaignProgressionPersistenceTest, CompletionSurvivesReopeningTheDatabase)
   SaveStorage reopened(path);
   QString error;
   ASSERT_TRUE(reopened.initialize(&error)) << error.toStdString();
-  // The launch path re-imports the campaign file before reading progress.
+
   ASSERT_TRUE(reopened.ensure_campaign_missions_in_db(campaign, &error))
       << error.toStdString();
 
@@ -350,8 +335,7 @@ TEST(CampaignProgressionPersistenceTest, CompletionSurvivesReopeningTheDatabase)
 }
 
 TEST_F(CampaignProgressionTest, AMissionDroppedByAnUpdateStopsBlockingCompletion) {
-  // An older build shipped an extra mission; the update removes it. The row it
-  // left in the progression tables must not keep the campaign unfinishable.
+
   Game::Campaign::CampaignDefinition old_version;
   old_version.id = QStringLiteral("shrinking_campaign");
   old_version.missions.push_back({QStringLiteral("one"), 0, {}, {}, {}, {}});
@@ -385,13 +369,8 @@ TEST_F(CampaignProgressionTest, AMissionDroppedByAnUpdateStopsBlockingCompletion
       << "the dropped mission is still listed in the player's progress";
 }
 
-// --- Failure injection -----------------------------------------------------
-// The states a player can actually reach by quitting, crashing or updating at
-// the wrong moment, and what progression has to do about them.
-
 TEST_F(CampaignProgressionTest, ProgressIsDurableTheMomentTheVictoryLands) {
-  // Quitting on the victory screen must not lose the win. The write has to be
-  // committed by the time the call returns, not held in an open transaction.
+
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
   const QString path = dir.filePath(QStringLiteral("progress.db"));
@@ -405,8 +384,6 @@ TEST_F(CampaignProgressionTest, ProgressIsDurableTheMomentTheVictoryLands) {
       writer.complete_campaign_mission(campaign.id, mission_at(0), &error).has_value())
       << error.toStdString();
 
-  // A second connection, opened while the first is still alive, stands in for
-  // the process that reads the save back after an abrupt exit.
   SaveStorage reader(path);
   ASSERT_TRUE(reader.initialize(&error)) << error.toStdString();
   const QVariantList rows = reader.get_campaign_mission_progress(campaign.id);
@@ -417,9 +394,7 @@ TEST_F(CampaignProgressionTest, ProgressIsDurableTheMomentTheVictoryLands) {
 
 TEST_F(CampaignProgressionTest,
        ACampaignFlaggedCompleteWithoutTheMissionsIsNotBelieved) {
-  // Exactly the state the old engine left behind: the campaign row says
-  // finished after a single mission. What the player is shown is derived from
-  // the missions, so it must still read as unfinished.
+
   QString error;
   ASSERT_TRUE(storage->mark_campaign_completed(campaign.id, &error))
       << error.toStdString();
@@ -434,7 +409,6 @@ TEST_F(CampaignProgressionTest,
   EXPECT_FALSE(entry.value(QStringLiteral("completed")).toBool())
       << "a stale campaign flag was taken at face value";
 
-  // And the campaign can still be played to a real finish from there.
   for (const auto& mission : campaign.missions) {
     ASSERT_TRUE(complete(mission.mission_id).has_value());
   }
@@ -446,8 +420,7 @@ TEST_F(CampaignProgressionTest,
 }
 
 TEST_F(CampaignProgressionTest, CompletingTheSameMissionRepeatedlyIsStable) {
-  // A victory signal that arrives several times, or a transition that is
-  // retried, must converge rather than accumulate.
+
   for (int attempt = 0; attempt < 5; ++attempt) {
     const auto advance = complete(mission_at(0));
     ASSERT_TRUE(advance.has_value()) << "attempt " << attempt;

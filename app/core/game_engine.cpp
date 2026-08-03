@@ -983,8 +983,6 @@ bool GameEngine::campaign_completed() const {
     return false;
   }
 
-  // The campaign list is the authority; the manager's own flag only covers the
-  // win that just happened, and the list may not have been rebuilt yet.
   if (m_campaign_manager->campaign_completed()) {
     return true;
   }
@@ -2646,8 +2644,6 @@ auto GameEngine::selection_activity_summary() const -> QVariantMap {
     return summary;
   }
 
-  // The panel reports the activity most of the selection shares, and flags the
-  // rest as mixed rather than pretending a split squad is doing one thing.
   std::map<std::pair<QString, QString>, int> tally;
   for (const auto id : selected) {
     const auto entry = activity_to_variant(get_unit_activity_state(id));
@@ -2690,8 +2686,7 @@ auto GameEngine::activity_markers() const -> QVariantList {
     if (unit == nullptr || transform == nullptr || unit->health <= 0) {
       continue;
     }
-    // Only the local player's own units: an enemy's orders are not knowledge the
-    // player is entitled to.
+
     if (unit->owner_id != m_runtime.local_owner_id) {
       continue;
     }
@@ -2714,8 +2709,7 @@ auto GameEngine::activity_markers() const -> QVariantList {
 
   for (const auto& marker : App::Models::group_activity_markers(sources)) {
     QPointF screen;
-    // Markers ride above the unit rather than on it so they never sit inside
-    // the model they describe.
+
     if (!world_to_screen(QVector3D(marker.x, marker.y + 3.4F, marker.z), screen)) {
       continue;
     }
@@ -2896,10 +2890,6 @@ void GameEngine::mark_current_mission_completed() {
     return;
   }
 
-  // Whether this win also finishes the campaign is decided by the progression
-  // store, which knows how many missions are left. The engine used to mark the
-  // campaign completed on every single victory, so mission one of eight ended
-  // the war.
   m_campaign_manager->mark_current_mission_completed();
   load_campaigns();
 }

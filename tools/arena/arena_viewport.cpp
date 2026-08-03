@@ -4141,8 +4141,7 @@ void ArenaViewport::draw_activity_overlay(QPainter& painter) {
       continue;
     }
     const auto activity = Game::Systems::classify_unit_activity(*entity);
-    // The arena is a review tool: it shows every side's work, which the game
-    // deliberately does not.
+
     if (!App::Models::activity_deserves_marker(activity, false)) {
       continue;
     }

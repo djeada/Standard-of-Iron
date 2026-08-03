@@ -8,13 +8,6 @@
 
 #include <gtest/gtest.h>
 
-// The campaign map is described by three files that have to agree: the
-// generated geometry, the id whitelist the docs call the source of truth, and
-// the 218 BC ownership table. Nothing in the build checks that, and by the time
-// this test was written all three had drifted -- two of them listed a
-// `sicily_carthaginian` province that `tools/map_pipeline/provinces.py` has
-// never emitted, so an owner assigned to it would have silently painted
-// nothing.
 namespace {
 
 auto repo_root() -> QDir {
@@ -108,8 +101,6 @@ TEST(CampaignProvinceDataTest, EveryProvinceIsOwnedByExactlyOnePower) {
     assigned.insert(id);
   }
 
-  // An unassigned province falls back to the neutral wash, which looks like a
-  // deliberate choice and is usually a forgotten one.
   EXPECT_EQ(sorted_list(drawn - assigned), std::string())
       << "these provinces are drawn but campaign_state.json never says who holds them";
 }
@@ -127,8 +118,6 @@ TEST(CampaignProvinceDataTest, EveryProvinceIsDrawableAndLabellable) {
     EXPECT_GE(triangles.size(), 3) << id << " has no fill geometry";
     EXPECT_EQ(triangles.size() % 3, 0) << id << " has a partial triangle";
 
-    // Everything the renderer draws lives in the map's UV square. A stray
-    // vertex outside it is geometry laid over open ocean.
     for (const auto& point : triangles) {
       const QJsonArray uv = point.toArray();
       ASSERT_EQ(uv.size(), 2) << id << " has a malformed vertex";

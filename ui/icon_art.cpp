@@ -23,8 +23,6 @@ auto line(QString path, Tone tone, float width) -> Stroke {
   return Stroke{std::move(path), tone, false, width};
 }
 
-// The pick is shared by every gathering icon so stone, iron and the generic
-// collect order read as the same job done to different ground.
 auto pick_head() -> Stroke {
   return fill(QStringLiteral("M9.4 2.8 Q15.2 1.4 21 5.6 L19.2 8.4 Q14.6 4.8 10.4 5.8 "
                              "Z"),
@@ -35,7 +33,6 @@ auto pick_haft() -> Stroke {
   return line(QStringLiteral("M13.8 5.2 L6.4 19.8"), Tone::Metal, 2.4F);
 }
 
-// Drawn after the pick so the haft bites into the rock it is working.
 auto boulder_body(Tone tone) -> Stroke {
   return fill(QStringLiteral("M2.6 21.6 L5.2 16.2 L10.4 14.4 L16.4 16.8 L18.2 21.6 Z"),
               tone);
@@ -243,8 +240,6 @@ auto index() -> const QHash<QString, const Art*>& {
   return k_index;
 }
 
-// HUD action ids and simulation activity ids grew up apart; rather than force
-// one to rename, the drawings they share are aliased here.
 auto aliases() -> const QHash<QString, QString>& {
   static const QHash<QString, QString> k_aliases = {
       {QStringLiteral("build"), QStringLiteral("construct")},
@@ -510,9 +505,6 @@ QVariantList IconArtLibrary::strokes(const QString& id) {
     return result;
   }
 
-  // Flattening here rather than in QML keeps one path grammar in the codebase.
-  // The grid is unit-scaled first so the polyline resolution is chosen for a
-  // large icon and simply reused when the same shape is drawn small.
   constexpr qreal k_flatten_scale = 256.0;
   for (const Ui::IconArt::Stroke& stroke : art->strokes) {
     const QPainterPath path = Ui::IconArt::build_path(

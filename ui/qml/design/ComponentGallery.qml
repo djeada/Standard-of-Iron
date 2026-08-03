@@ -178,9 +178,6 @@ ScrollView {
                             font.weight: Design.Typography.bold
                         }
 
-                        // Every activity the HUD can report, in every order
-                        // state, so a drawing that stops reading is caught here
-                        // rather than in a match.
                         Flow {
                             width: parent.width
                             spacing: Design.Metrics.space8

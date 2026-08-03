@@ -1260,8 +1260,7 @@ struct ArenaScenarioRunner::Impl {
       }
       break;
     case ScenarioCommandKind::RepairStructure: {
-      // Drives the same builder job the HUD repair order creates, so the
-      // showcase exercises the real activity pipeline.
+
       auto const& structures = ids(step.target_group);
       if (structures.empty()) {
         break;
@@ -1373,8 +1372,7 @@ struct ArenaScenarioRunner::Impl {
             radius));
       }
       if (!carriers.empty()) {
-        // A plain player move clears auxiliary orders, delivery among them, so
-        // the walk to the barracks has to be issued as scripted movement.
+
         Game::Systems::CommandService::MoveOptions options;
         options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
         Game::Systems::CommandService::move_units(
@@ -1478,8 +1476,7 @@ struct ArenaScenarioRunner::Impl {
       break;
     }
     case ScenarioCommandKind::AbandonWork: {
-      // Walks a working builder off its site: exactly the interruption the
-      // production system reports, not a hand-set flag.
+
       for (auto entity_id : ids(step.group)) {
         auto* entity = world.get_entity(entity_id);
         auto* builder =

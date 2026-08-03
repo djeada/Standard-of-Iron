@@ -405,8 +405,7 @@ private:
   bool m_attack_scrub_enabled = false;
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
-  // The activity badges the game HUD draws over units, shown here so an
-  // icon can be reviewed against the actual battlefield it sits on.
+
   bool m_activity_overlay_visible = true;
   bool m_force_full_creature_lod = true;
   bool m_fog_of_war_enabled = false;

@@ -13,8 +13,6 @@ namespace Game::Systems {
 
 namespace {
 
-// A unit shoving against terrain or a crowd keeps its move order, so the only
-// way to tell "walking" from "wedged" is how long it has stopped making ground.
 constexpr float k_blocked_after_seconds = 1.2F;
 
 struct KindName {
@@ -82,9 +80,7 @@ auto builder_activity(const Engine::Core::Entity& entity,
                        builder.structure_task_entity_id != 0;
 
   if (builder.has_active_fault()) {
-    // A fault with no job left is the "waiting on a target that went away"
-    // case the player needs spelled out; keep the work icon so they can see
-    // which order stalled.
+
     activity.state = state_for_fault(builder.fault);
     if (!has_job && activity.kind == ActivityKind::Construct &&
         builder.product_type.empty()) {
@@ -262,8 +258,7 @@ auto activity_is_noteworthy(const UnitActivity& activity) -> bool {
   if (activity.kind == ActivityKind::Idle) {
     return false;
   }
-  // Marching is the default state of an army; a marker over every soldier on
-  // the move would bury the orders that actually need attention.
+
   return !(activity.kind == ActivityKind::Move &&
            activity.state == ActivityState::Active);
 }

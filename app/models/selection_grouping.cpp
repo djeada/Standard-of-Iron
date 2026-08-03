@@ -17,7 +17,7 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
   std::vector<double> health_sums;
   std::vector<double> stamina_sums;
   std::vector<int> stamina_counts;
-  // Per group: how many members report each activity+state pair.
+
   std::vector<std::map<std::pair<QString, QString>, int>> activity_tallies;
 
   for (const QVariant& entry : units) {

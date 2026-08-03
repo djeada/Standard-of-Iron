@@ -151,8 +151,6 @@ TestCase {
                 badges.push(layer.children[i]);
         }
         compare(badges.length, 2);
-
-        // The badge hangs above the point the engine reported, centred on it.
         for (var b = 0; b < badges.length; ++b) {
             var marker = badges[b].count === 6 ? layer.markers[1] : layer.markers[0];
             fuzzyCompare(badges[b].x + badges[b].width / 2, marker.x, 0.5);

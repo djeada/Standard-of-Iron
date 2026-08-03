@@ -76,9 +76,6 @@ auto prop(QString type,
   return patch;
 }
 
-// The arena hands an economic strategy to Carthaginian AI owners and a
-// defensive one to Roman owners, so the working camp is Punic: a defensive AI
-// would garrison instead of gathering and the showcase would sit idle.
 constexpr int k_camp_owner = 2;
 
 auto worker(QString name,
@@ -248,9 +245,7 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
   out.push_back(std::move(s));
 
   {
-    // The reference scene for issue #1115: one shot in which every activity
-    // icon the HUD can draw is on screen at once, including the states a player
-    // only sees when something goes wrong.
+
     ArenaScenarioDefinition activity;
     activity.id = QStringLiteral("unit_activity_showcase");
     activity.label = QStringLiteral("Showcase: Unit Activities");
@@ -264,8 +259,7 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
     activity.camera_focus = QVector3D(0.0F, 0.0F, -5.0F);
     activity.arena_floor_half_extent = 44.0F;
     activity.suppress_spawn_anchor = true;
-    // The activity markers are the subject of this scenario, so overlays stay
-    // on -- including in the captured frames a reviewer reads afterwards.
+
     activity.suppress_ui_overlays = false;
     activity.capture_ui_overlays = true;
     activity.select_spawned_units = false;
@@ -288,9 +282,7 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
                   Game::Units::SpawnType::Home,
                   {-14.0F, 0.0F, 10.0F},
                   180.0F),
-        // One AI crew keeps a real construction site running; the gathering
-        // crews are scripted so every resource icon is guaranteed on screen
-        // instead of depending on what the economy happens to want.
+
         worker(QStringLiteral("camp_builders"),
                Troop::Builder,
                {2.0F, 0.0F, -6.0F},
@@ -328,12 +320,11 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
         harvest_step(3.0F, QStringLiteral("foresters"), QStringLiteral("tree")),
         harvest_step(3.0F, QStringLiteral("quarriers"), QStringLiteral("boulder")),
         harvest_step(3.0F, QStringLiteral("miners"), QStringLiteral("iron_ore")),
-        // Felled trees and worked-out seams end the job, so the crews are sent
-        // back out to keep the gathering icons live for the whole run.
+
         harvest_step(24.0F, QStringLiteral("foresters"), QStringLiteral("tree")),
         harvest_step(24.0F, QStringLiteral("quarriers"), QStringLiteral("boulder")),
         harvest_step(24.0F, QStringLiteral("miners"), QStringLiteral("iron_ore")),
-        // Knock the home down to a third so the repair job has real work to do.
+
         targeted_step(
             2.0F, Command::SetHealth, QStringLiteral("battered_home"), {}, {}, 220),
         targeted_step(4.0F,
@@ -344,8 +335,7 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
                       Command::DeliverToStructure,
                       QStringLiteral("carriers"),
                       QStringLiteral("camp_barracks")),
-        // Carriers are sent out again once the first load lands, so the
-        // delivery icon is on screen across the whole run.
+
         targeted_step(
             30.0F, Command::Move, QStringLiteral("carriers"), {}, {-8.0F, 0.0F, 22.0F}),
         targeted_step(38.0F,
@@ -356,8 +346,7 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
                       Command::RepairStructure,
                       QStringLiteral("stalled_crew"),
                       QStringLiteral("battered_home")),
-        // Pull the second crew off mid-job: the marker has to switch from
-        // "repairing" to the interrupted treatment on its own.
+
         targeted_step(26.0F,
                       Command::AbandonWork,
                       QStringLiteral("stalled_crew"),

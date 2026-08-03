@@ -8,9 +8,7 @@ AbstractButton {
     property string actionId: ""
     property string label: text
     property string hotkey: ""
-    // Vector art first, the legacy bitmap second, a font glyph last. The bitmaps
-    // are 30px originals and turn to mush on a high-DPI panel, so anything the
-    // vector catalogue covers is drawn from outlines instead.
+
     property string vectorIcon: control.actionId
     property url iconSource: control.actionId ? Design.Icons.command(control.actionId) : ""
     property string glyph: control.actionId ? Design.Icons.commandGlyph(control.actionId) : ""
@@ -121,10 +119,6 @@ AbstractButton {
             height: width
             opacity: control.enabled ? 1 : 0.45
 
-            // The painted icon set is the HUD's own language, so it wins wherever
-            // it exists. The vector catalogue covers the orders it never had art
-            // for -- repair, stop, gate, run -- which used to fall back to a
-            // bare text glyph.
             Image {
                 id: art
 

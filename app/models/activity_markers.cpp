@@ -81,16 +81,14 @@ auto activity_deserves_marker(const Game::Systems::UnitActivity& activity,
   if (selected) {
     return true;
   }
-  // Unselected units earn a marker only when something is happening that the
-  // player would otherwise miss: work in progress, or an order that has stalled.
+
   return is_standing_job(activity.kind) || activity.state != ActivityState::Active;
 }
 
 auto group_activity_markers(const std::vector<ActivityMarkerSource>& sources,
                             const ActivityMarkerOptions& options)
     -> std::vector<ActivityMarker> {
-  // std::map keeps the output order stable across frames, so a marker does not
-  // jump between screen positions just because entity iteration changed.
+
   std::map<std::pair<QString, QString>, std::vector<Cluster>> buckets;
 
   const float radius_sq = options.cluster_radius * options.cluster_radius;
@@ -135,9 +133,6 @@ auto group_activity_markers(const std::vector<ActivityMarkerSource>& sources,
     return markers;
   }
 
-  // Too many to read. Collapse every activity+state down to a single marker at
-  // the middle of the units doing it -- one "12 builders quarrying" banner beats
-  // twelve overlapping ones.
   markers.clear();
   for (const auto& [key, clusters] : buckets) {
     Cluster merged;

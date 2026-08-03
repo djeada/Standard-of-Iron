@@ -261,8 +261,6 @@ auto is_wall_network_product(const std::string& product_type) -> bool {
   return is_wall_builder_product(product_type);
 }
 
-// Repair restores a slice of the structure per tick rather than all of it at
-// once, so the builder visibly works the site and the player can interrupt it.
 constexpr float k_repair_fraction_per_tick = 0.06F;
 constexpr int k_repair_minimum_per_tick = 8;
 
@@ -284,8 +282,6 @@ auto structure_needs_repair(const Engine::Core::Entity* structure) -> bool {
   return unit != nullptr && unit->health > 0 && unit->health < unit->max_health;
 }
 
-// Returns true while there is still damage left to mend, so the caller can
-// restart the tick instead of ending the job.
 auto apply_structure_repair_tick(Engine::Core::World* world,
                                  Engine::Core::BuilderProductionComponent* builder)
     -> bool {
@@ -300,8 +296,6 @@ auto apply_structure_repair_tick(Engine::Core::World* world,
                                                  k_repair_fraction_per_tick));
   unit->health = std::min(unit->max_health, unit->health + restored);
 
-  // A mended structure stops burning; leaving the fire on a full-health
-  // building would read as "still broken".
   if (unit->health >= unit->max_health) {
     if (auto* fire = structure->get_component<Engine::Core::StructureFireComponent>()) {
       fire->remaining_duration = 0.0F;
@@ -534,8 +528,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         builder_prod->time_remaining = builder_prod->build_time;
         continue;
       }
-      // Either the structure is whole again or it is gone. Only the second
-      // case is a failure the player needs told about.
+
       if (repair_target_of(world, builder_prod) == nullptr) {
         builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
       } else {

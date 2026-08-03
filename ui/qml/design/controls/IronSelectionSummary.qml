@@ -368,8 +368,6 @@ Design.IronPanel {
                         }
                     }
 
-                    // A chip is too small for a labelled readout, so the activity
-                    // rides in the corner and the tooltip carries the words.
                     Design.IronVectorIcon {
                         anchors.left: parent.left
                         anchors.top: parent.top

@@ -17,14 +17,12 @@ struct CampaignDefinition;
 
 namespace Game::Systems {
 
-// What advancing a campaign actually did, so a caller can report it without
-// re-reading the database.
 struct CampaignAdvance {
-  // Empty when the completed mission was the last one in the campaign.
+
   QString unlocked_mission_id;
-  // True once every mission in the campaign is recorded as completed.
+
   bool campaign_completed = false;
-  // False when the mission was already completed before this call.
+
   bool newly_completed = false;
 };
 
@@ -64,10 +62,7 @@ public:
   auto list_campaigns(QString* out_error = nullptr) -> QVariantList;
   auto get_campaign_progress(const QString& campaign_id,
                              QString* out_error = nullptr) const -> QVariantMap;
-  // Writes the campaign_progress row directly. Completing a campaign the
-  // normal way goes through complete_campaign_mission; this stays because it is
-  // what older builds wrote, and because reproducing that state is the only way
-  // to test that a stale flag is not believed.
+
   auto mark_campaign_completed(const QString& campaign_id,
                                QString* out_error = nullptr) -> bool;
 
@@ -87,14 +82,6 @@ public:
   get_campaign_mission_progress(const QString& campaign_id,
                                 QString* out_error = nullptr) const -> QVariantList;
 
-  // Records a campaign mission win and advances the campaign in one
-  // transaction: the mission is marked completed, the next one by order is
-  // unlocked, and the campaign itself is marked completed once every mission is
-  // done. Winning the last mission is an ordinary success, not the failure the
-  // old "unlock the next one or roll everything back" path reported.
-  //
-  // Replaying a mission is a no-op beyond refreshing its completion, so a
-  // revisit can never re-lock or un-complete anything later in the campaign.
   auto complete_campaign_mission(const QString& campaign_id,
                                  const QString& mission_id,
                                  QString* out_error = nullptr)

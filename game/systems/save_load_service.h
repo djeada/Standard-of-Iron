@@ -122,8 +122,6 @@ public:
   get_campaign_mission_progress(const QString& campaign_id,
                                 QString* out_error = nullptr) const -> QVariantList;
 
-  // Records a mission win and advances the campaign in one step. See
-  // SaveStorage::complete_campaign_mission.
   auto complete_campaign_mission(const QString& campaign_id,
                                  const QString& mission_id,
                                  QString* out_error = nullptr)

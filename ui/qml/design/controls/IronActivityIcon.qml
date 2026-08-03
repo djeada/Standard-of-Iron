@@ -2,17 +2,12 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import ".." as Design
 
-// One unit activity, drawn once and reused everywhere it is reported: the
-// selection panel, the overhead markers and the arena review overlay.
-// The four order states are told apart by shape as well as colour -- a corner
-// mark, not just a hue -- so the readout survives a colour-blind palette and a
-// desaturated screenshot.
 Item {
     id: root
 
     property string activity: Design.ActivityIcons.defaultActivity
     property string state_id: Design.ActivityIcons.defaultState
-    // Set above 1 when the marker stands in for a group doing the same thing.
+
     property int count: 1
     property bool showLabel: false
     property bool interactive: true
@@ -52,9 +47,6 @@ Item {
     Row {
         id: layout
 
-        // Deliberately not anchored to the root: the root takes its implicit
-        // size from this row, so anchoring back into the root would leave the
-        // two chasing each other every time the label changes.
         x: 0
         y: 0
         spacing: Design.Metrics.space8
@@ -85,8 +77,6 @@ Item {
                 opacity: root.state_id === "unavailable" ? 0.55 : root.state_id === "queued" ? 0.8 : 1
             }
 
-            // Fallback for an unregistered activity: the label still carries the
-            // meaning, so the medallion shows a neutral mark rather than a hole.
             Text {
                 anchors.centerIn: parent
                 visible: !art.available
@@ -177,9 +167,6 @@ Item {
             border.width: Design.Metrics.borderThin
             border.color: root.stateTone
 
-            // A queued order is a chevron waiting its turn, an interrupted one
-            // is a paused bar pair, an unavailable one is a cross. Three
-            // silhouettes, no reliance on the ring colour alone.
             Canvas {
                 id: stateMarkCanvas
 

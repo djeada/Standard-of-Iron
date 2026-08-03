@@ -139,9 +139,6 @@ void CampaignManager::mark_current_mission_completed() {
     return;
   }
 
-  // One call records the win, unlocks whatever comes next and closes out the
-  // campaign when nothing is left. Winning the finale is a success here, not
-  // the "no next mission to unlock" error the old path reported.
   const auto advance = save_service->complete_campaign_mission(
       m_current_campaign_id, m_current_mission_id, &error);
   if (!advance.has_value()) {

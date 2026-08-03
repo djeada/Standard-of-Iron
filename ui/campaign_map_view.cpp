@@ -127,11 +127,6 @@ struct LineLayer {
   float outer_width_ratio = 1.8F;
   float inner_width_ratio = 1.0F;
 
-  // Draw the strip through the province shader so its land mask can throw away
-  // the parts that fall in open water. A border traces the edge of a polygon
-  // that was clipped against the land mesh, and the land mesh and the drawn
-  // coastline are generalised to different tolerances, so a coastal border
-  // spends part of its length a pixel or two out to sea.
   bool clip_to_land = false;
 };
 
@@ -377,11 +372,7 @@ public:
     m_size = size;
     QOpenGLFramebufferObjectFormat fmt;
     fmt.setAttachment(QOpenGLFramebufferObject::Depth);
-    // Multisampled, because almost everything on this map is a thin diagonal
-    // line -- coastlines, rivers, province borders, the march route. Rendered
-    // without it they staircase, and the route in particular read as a chain of
-    // brown blocks rather than a drawn line. Qt resolves the multisampled
-    // buffer into the texture the scene graph shows, so nothing else changes.
+
     fmt.setSamples(4);
     fmt.setSamples(0);
     return new QOpenGLFramebufferObject(size, fmt);
@@ -519,8 +510,6 @@ private:
                        1.2F);
     m_province_border_layer.clip_to_land = true;
 
-    // Rivers stop at the coast too. They are traced from a different dataset
-    // than the land mesh, so a few mouths run out past their own estuary.
     m_river_layer.clip_to_land = true;
 
     init_symbol_layer(m_symbol_layer,
@@ -626,9 +615,6 @@ void main() {
     return true;
   }
 
-  // Compiles assets/shaders/<name>.{vert,frag}. A shader that fails to load
-  // leaves its program unlinked rather than taking the whole map down: every
-  // caller checks isLinked() and falls back to the flat line program.
   void init_asset_shader(QOpenGLShaderProgram& program, const QString& name) {
     const QString vert_path = QStringLiteral(":/assets/shaders/%1.vert").arg(name);
     const QString frag_path = QStringLiteral(":/assets/shaders/%1.frag").arg(name);
@@ -692,11 +678,6 @@ void main() {
 
     build_quad(m_quad_vao, m_quad_vbo, 0.0F, 1.0F);
 
-    // The sea runs far past the edge of the surveyed area. The water texture is
-    // a purely vertical gradient sampled with clamp-to-edge, so overhanging the
-    // quad continues that gradient exactly rather than repeating or stretching
-    // anything -- which is what turns the old hard rectangle where the map
-    // stopped into open ocean.
     build_quad(m_ocean_vao, m_ocean_vbo, -2.0F, 3.0F);
   }
 
@@ -1677,13 +1658,10 @@ void main() {
     m_terrain_program.setUniformValue("u_height_scale",
                                       mesh.height_scale * m_terrain_height_scale);
     m_terrain_program.setUniformValue("u_z_base", mesh.z_base);
-    // Light from the north-west, the convention every printed relief map uses:
-    // read it any other way and the mountains invert into valleys.
+
     m_terrain_program.setUniformValue("u_light_direction",
                                       QVector3D(-0.45F, 0.78F, -0.44F));
-    // Ambient sits high because relief is now a deviation around 1.0 rather
-    // than a straight multiply -- this is the floor of the shadow side, not the
-    // brightness of the whole map.
+
     m_terrain_program.setUniformValue("u_ambient_strength", 0.62F);
     m_terrain_program.setUniformValue("u_hillshade_strength", 0.5F);
     m_terrain_program.setUniformValue("u_ao_strength", 0.12F);
@@ -1694,17 +1672,13 @@ void main() {
                                       QVector3D(0.10F, 0.22F, 0.30F));
     m_terrain_program.setUniformValue("u_water_shallow_color",
                                       QVector3D(0.26F, 0.42F, 0.52F));
-    // Warm ochres over cream paper: a period atlas, not a satellite photo.
-    // These multiply the finished base texture, so they live near white --
-    // plains are the paper itself, and even the Atlas and the Alps only reach a
-    // light tan. Anything heavier reads as dirt rather than as altitude.
+
     m_terrain_program.setUniformValue("u_lowland_tint", QVector3D(1.0F, 0.99F, 0.97F));
     m_terrain_program.setUniformValue("u_highland_tint",
                                       QVector3D(0.99F, 0.94F, 0.83F));
     m_terrain_program.setUniformValue("u_mountain_tint",
                                       QVector3D(0.93F, 0.82F, 0.66F));
-    // Land tops out near 0.8 of the sample range, so this puts the Alpine and
-    // Atlas summits at the top of the ramp and leaves the plains at its foot.
+
     m_terrain_program.setUniformValue("u_elevation_scale", 1.6F);
 
     m_terrain_program.setUniformValue("u_base_texture", 0);
@@ -1954,10 +1928,7 @@ void main() {
 
       if (!passes.empty()) {
         const auto& border_pass = passes[0];
-        // A drawn route, not a pipeline. The casing was eight pixels wide
-        // and the warm fill under it another three, so the march read as a
-        // painted band across the map rather than a line someone inked on
-        // it, and it buried the coast it follows.
+
         float border_width_px = 3.6F * border_pass.width_multiplier;
         if (i != max_mission) {
           border_width_px *= 0.85F;
@@ -2164,12 +2135,6 @@ void main() {
       return;
     }
 
-    // Political colour goes through campaign_province, not the flat line
-    // program, so the fill can read the base map underneath it: the wash picks
-    // up the paper's grain instead of sitting on it as a decal, and the shader
-    // can hold the fill to land. The pipeline already clips provinces against
-    // the land mesh, so the mask only takes back the one to two percent that
-    // ends up on water where the mesh and the drawn coast disagree.
     const bool use_province_program =
         m_province_program.isLinked() && m_base_texture != nullptr;
     QOpenGLShaderProgram& program =
@@ -2203,21 +2168,11 @@ void main() {
         color.setW(color.w() * fade);
       }
 
-      // Selection and hover say different things and are drawn differently.
-      // The mission's own theatre sits a steady step above the map so the eye
-      // can find it; the province under the pointer breathes, because that is
-      // feedback and it should look live.
       const bool selected =
           !m_selected_province_id.isEmpty() && span.id == m_selected_province_id;
       const bool hovered =
           !m_hover_province_id.isEmpty() && span.id == m_hover_province_id;
 
-      // Emphasis replaces the owner's wash rather than brightening it. Adding to
-      // the colour is worthless here: a neutral province is laid down at 0.13
-      // alpha, so a generous boost moved the pixels on screen by seven levels
-      // and nothing appeared to happen. Washing towards a fixed lamp colour at a
-      // raised alpha reads the same over Rome's red, Carthage's purple and
-      // unclaimed paper alike.
       const QVector3D lamp(0.99F, 0.84F, 0.42F);
       const auto wash = [&color, &lamp](float amount, float min_alpha) {
         color.setX(color.x() + (lamp.x() - color.x()) * amount);

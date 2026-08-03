@@ -195,9 +195,7 @@ auto build_campaign_entry(const Game::Campaign::CampaignDefinition& campaign,
       mission_map.insert(QStringLiteral("difficulty_modifier"),
                          *mission.difficulty_modifier);
     }
-    // The war table places its objective marker and frames its camera from this.
-    // Without it every mission reported an empty region, so the campaign map
-    // never marked where the next battle was.
+
     if (mission.world_region_id.has_value()) {
       mission_map.insert(QStringLiteral("world_region_id"), *mission.world_region_id);
     }
@@ -1022,10 +1020,6 @@ auto SaveStorage::ensure_campaign_missions_in_db(
     }
   }
 
-  // Drop rows for missions the campaign no longer contains. Without this an
-  // update that removes a mission leaves an orphan row behind, and because the
-  // campaign is finished when no mission is left uncompleted, that orphan makes
-  // the campaign permanently unfinishable for anyone upgrading.
   QStringList placeholders;
   placeholders.reserve(static_cast<int>(campaign.missions.size()));
   for (int i = 0; i < static_cast<int>(campaign.missions.size()); ++i) {
@@ -1088,9 +1082,6 @@ auto SaveStorage::complete_campaign_mission(const QString& campaign_id,
     return std::nullopt;
   }
 
-  // A mission the campaign does not contain is a stale request -- a menu built
-  // from an older campaign file, or a save naming a mission that has since been
-  // removed. Refuse it rather than writing progress nothing can read back.
   if (!order_query.next()) {
     if (out_error != nullptr) {
       *out_error = QCoreApplication::translate("SaveStorage",
@@ -1125,8 +1116,6 @@ auto SaveStorage::complete_campaign_mission(const QString& campaign_id,
   CampaignAdvance advance;
   advance.newly_completed = !was_completed;
 
-  // The next mission by order rather than order + 1: a campaign edited down to
-  // fewer missions leaves gaps, and a gap must not strand the player.
   QSqlQuery next_query(m_database);
   next_query.prepare(
       QStringLiteral("SELECT mission_id FROM campaign_missions "
@@ -1162,8 +1151,6 @@ auto SaveStorage::complete_campaign_mission(const QString& campaign_id,
     }
   }
 
-  // Completion is "every mission done", not "the last mission done", so a
-  // player who unlocks the finale early still has to clear what they skipped.
   QSqlQuery remaining_query(m_database);
   remaining_query.prepare(
       QStringLiteral("SELECT COUNT(*) FROM campaign_missions "

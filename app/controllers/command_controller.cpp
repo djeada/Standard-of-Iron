@@ -663,8 +663,7 @@ auto CommandController::on_builder_repair_click(qreal sx,
                                                                    viewport_width,
                                                                    viewport_height,
                                                                    local_owner_id);
-  // A miss keeps the cursor armed so the player can try another structure
-  // instead of re-arming the order after every stray click.
+
   result.reset_cursor_to_normal = result.input_consumed;
   return result;
 }

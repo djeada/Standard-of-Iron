@@ -14,7 +14,6 @@ RowLayout {
     property var selection_groups: []
     property int selection_count: 0
 
-    // What is left for the order grid once the banner above it is accounted for.
     readonly property int orderGridHeight: Math.max(Design.Metrics.commandButtonSize, bottomRoot.height - Design.Metrics.controlHeight - Design.Metrics.space8)
 
     signal command_mode_changed(string mode)
@@ -348,13 +347,6 @@ RowLayout {
 
             Layout.fillWidth: true
 
-            // The order bar widens rather than overflowing. The HUD zone is a
-            // fixed slice of the window, so with a fixed column count the last
-            // row was simply clipped away -- and at a large interface scale most
-            // of the bar went with it. Fitting the rows to the space that is
-            // actually there keeps every order reachable; five across is what a
-            // default-sized window works out to, and it is wide enough for the
-            // names.
             readonly property int rowHeight: Design.Metrics.commandButtonSize + rowSpacing
             readonly property int maxRows: Math.max(1, Math.floor((bottomRoot.orderGridHeight + rowSpacing) / rowHeight))
 

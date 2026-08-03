@@ -11,10 +11,6 @@
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
 
-// docs/CAMPAIGN_MISSIONS.md is the one-page overview of the shipped campaign:
-// opponents, wave pressure, whether the player has a base, what wins the
-// mission. A hand-maintained table like that rots the first time someone tunes
-// a mission, so this reads the table back and holds it to the assets.
 namespace {
 
 auto repo_root() -> QDir {
@@ -38,9 +34,6 @@ auto read_text(const QString& relative) -> QString {
   return QString::fromUtf8(file.readAll());
 }
 
-// Every row of the overview table, split into its cells. Rows are recognised by
-// their leading mission number so the surrounding prose cannot be mistaken for
-// data.
 auto split_row(const QString& line) -> QStringList {
   QStringList cells = line.split(QLatin1Char('|'), Qt::SkipEmptyParts);
   for (QString& cell : cells) {
@@ -63,9 +56,7 @@ auto overview_rows() -> QList<QStringList> {
     }
 
     const QStringList cells = split_row(line);
-    // The header is found by its cells rather than by the raw line: the
-    // markdown formatter pads every column, so the spacing is not ours to
-    // depend on.
+
     if (!in_first_table) {
       in_first_table = cells.size() >= 3 && cells.at(0) == QStringLiteral("#") &&
                        cells.at(1) == QStringLiteral("Mission") &&
@@ -104,9 +95,6 @@ auto load_mission(const QString& mission_id) -> Game::Mission::MissionDefinition
   return mission;
 }
 
-// The maps are read as raw JSON: what the roster needs from them -- how many
-// units and barracks each owner starts with -- is map authoring data, not
-// something the mission types model.
 auto map_json_for(const Game::Mission::MissionDefinition& mission) -> QJsonObject {
   QString name = mission.map_path;
   const int slash = name.lastIndexOf(QLatin1Char('/'));

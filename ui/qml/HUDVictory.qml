@@ -3,10 +3,6 @@ import QtQuick.Controls 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 
-// The end-of-mission overlay, bound to the running match.
-// Everything about which outcome is showing and how the banner behaves lives in
-// the design-system control; this file only feeds it the engine's state and
-// hands it the battle report to display.
 Design.IronOutcomeOverlay {
     id: victoryOverlay
 

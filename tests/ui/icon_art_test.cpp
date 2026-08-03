@@ -108,9 +108,7 @@ TEST(IconArtTest, AnUnknownIdDrawsNothingRatherThanCrashing) {
 }
 
 TEST(IconArtTest, EveryIconStillReadsAtSixteenPixels) {
-  // The old bitmaps were 30px squares; the point of the vector set is that a
-  // shape survives being drawn small. An icon that covers almost nothing at
-  // 16px is a smudge, and one that covers almost everything is a blob.
+
   for (const QString& id : Ui::IconArt::ids()) {
     const double coverage = ink_coverage(id, 16);
     EXPECT_GT(coverage, 0.08) << id.toStdString() << " nearly vanishes at 16px";
@@ -119,8 +117,7 @@ TEST(IconArtTest, EveryIconStillReadsAtSixteenPixels) {
 }
 
 TEST(IconArtTest, GeometryIsIndependentOfTheSizeItIsDrawnAt) {
-  // Same shape, four times the size: the painted fraction of the tile should
-  // barely move. If it does, the artwork is not scaling as vector geometry.
+
   for (const QString& id : Ui::IconArt::ids()) {
     const double small = ink_coverage(id, 24);
     const double large = ink_coverage(id, 96);
@@ -174,7 +171,7 @@ TEST(IconArtTest, TheQmlFacadeHandsBackNormalisedPolylines) {
 }
 
 TEST(IconArtTest, ClosedOutlinesComeBackClosed) {
-  // A stroked ring drawn from an open polyline shows a notch where it started.
+
   const QVariantList strokes = IconArtLibrary::strokes(QStringLiteral("blocked"));
   ASSERT_FALSE(strokes.isEmpty());
   const QVariantList points = strokes.front()

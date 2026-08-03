@@ -23,10 +23,7 @@ class CampaignMapView : public QQuickFramebufferObject {
   Q_PROPERTY(float pan_v READ pan_v WRITE set_pan_v NOTIFY pan_v_changed)
   Q_PROPERTY(QString hover_province_id READ hover_province_id WRITE
                  set_hover_province_id NOTIFY hover_province_id_changed)
-  // The province the current mission is fought in, held steady. Hover used to
-  // be overloaded to carry this, which meant that with a mission selected --
-  // which is the panel's normal state -- pointing at a province did nothing at
-  // all.
+
   Q_PROPERTY(QString selected_province_id READ selected_province_id WRITE
                  set_selected_province_id NOTIFY selected_province_id_changed)
   Q_PROPERTY(

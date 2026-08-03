@@ -1,11 +1,6 @@
 pragma Singleton
 import QtQuick 2.15
 
-// The semantic half of the activity iconography: what each drawing means, what
-// it is called, and what a tooltip or a screen reader should say about it.
-// Icons.qml still owns the portrait and resource bitmaps. This registry owns the
-// vector command and activity set, and it is deliberately the only place a
-// player-facing activity string is written.
 QtObject {
     id: root
 
@@ -166,8 +161,6 @@ QtObject {
         return root.resourceFor(activityId) !== "";
     }
 
-    // "Queued" on its own tells a player nothing; the state only makes sense
-    // read together with the work it qualifies.
     function summary(activityId, stateId) {
         var name = root.label(activityId);
         if (stateId === root.defaultState || stateId === undefined)

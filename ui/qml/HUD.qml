@@ -111,9 +111,6 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        // Tall enough for the order bar's three rows plus the command banner at
-        // the default interface scale; HUDBottom reflows to fewer rows when a
-        // smaller window or a larger UI scale leaves less room.
         height: hud.commander_rpg_mode ? Math.max(132, Math.min(158, parent.height * 0.16)) : Math.max(216, parent.height * 0.24)
         clip: true
 

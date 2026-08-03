@@ -638,8 +638,6 @@ Item {
     UnitActivityOverlay {
         id: activityOverlay
 
-        // Commander and first-person views put the player inside the battle;
-        // banners over every worker would be in the way there.
         enabled: game_view.visible && typeof game !== 'undefined' && game.control_mode !== "commander"
         z: 90
     }

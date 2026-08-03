@@ -11,9 +11,6 @@
 #include "app/core/campaign_manager.h"
 #include "game/systems/save_load_service.h"
 
-// The campaign side of issue #1079, one level below GameEngine: driving real
-// mission wins through CampaignManager and checking what the HUD would be told
-// about campaign completion.
 namespace {
 
 constexpr const char* k_campaign_id = "second_punic_war";
@@ -42,13 +39,11 @@ protected:
   }
 
   void SetUp() override {
-    // A fresh progression database per test; the service is a process-wide
-    // singleton, so the state has to be cleared rather than replaced.
+
     QDir(Game::Systems::SaveLoadService::saves_directory()).removeRecursively();
     auto* service = Game::Systems::SaveLoadService::instance();
     ASSERT_NE(service, nullptr);
-    // Listing imports the shipped campaign files into the progression tables,
-    // which is what the launch path does before any mission starts.
+
     const QVariantList campaigns = service->list_campaigns();
     ASSERT_FALSE(campaigns.isEmpty()) << "no campaigns were discovered";
 
@@ -149,8 +144,6 @@ TEST_F(CampaignManagerTest, StartingAnotherMissionClearsTheCompletionBanner) {
   }
   ASSERT_TRUE(manager->campaign_completed());
 
-  // Replaying an earlier mission must not keep announcing "campaign complete"
-  // the moment it is loaded.
   int player_id = 1;
   manager->start_campaign_mission(
       QStringLiteral("%1/%2").arg(QLatin1String(k_campaign_id),
@@ -180,8 +173,6 @@ TEST_F(CampaignManagerTest, DuplicateVictoriesDoNotAdvanceTwice) {
   const QStringList ids = mission_ids();
   ASSERT_GT(ids.size(), 2);
 
-  // A second victory signal for the same mission, which the engine guards
-  // against but the progression store must survive on its own.
   manager->mark_current_mission_completed();
 
   EXPECT_FALSE(mission_state(ids[2]).value(QStringLiteral("unlocked")).toBool())

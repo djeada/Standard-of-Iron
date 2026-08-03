@@ -86,9 +86,6 @@ TEST(MissionDefinitionViewTest, ExposesWoodInStartingResources) {
   EXPECT_EQ(resources.value("wood").toInt(), 45);
 }
 
-// Issue #1079: the briefing a player is shown is built from the mission file,
-// so every shipped campaign mission has to produce a complete one. A mission
-// with no objectives is a mission that cannot be won or explained.
 namespace {
 
 auto campaign_mission_ids() -> QStringList {
@@ -162,8 +159,6 @@ TEST(MissionObjectivesTest, OptionalObjectivesReachTheBriefingSeparately) {
     }
     saw_optional = true;
 
-    // An optional objective must never be duplicated into the mandatory set:
-    // victory would then wait on something the player was told was a bonus.
     const QVariantList victory =
         definition.value(QStringLiteral("victory_conditions")).toList();
     for (const QVariant& entry : optional) {
@@ -184,9 +179,7 @@ TEST(MissionObjectivesTest, OptionalObjectivesReachTheBriefingSeparately) {
 }
 
 TEST(MissionObjectivesTest, AMissionRequiringEveryConditionSaysSo) {
-  // "all" is the mode that makes victory wait on every mandatory objective, so
-  // a mission that ships more than one victory condition must declare it --
-  // otherwise the first one alone would end the mission.
+
   for (const QString& mission_id : campaign_mission_ids()) {
     const QVariantMap definition = load_mission_definition_map(mission_id);
     const QVariantList victory =

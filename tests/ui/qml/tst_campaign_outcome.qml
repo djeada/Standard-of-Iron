@@ -2,10 +2,6 @@ import QtQuick 2.15
 import QtTest 1.15
 import StandardOfIron.Design 1.0
 
-// The end-of-mission overlay as a screen rather than as parts: which banner a
-// given match state produces, that it shows once, that dismissing it sticks
-// until the next outcome, and that a retry starts clean.
-// Covers the victory/defeat and campaign-completion halves of issue #1079.
 TestCase {
     id: testCase
 
@@ -71,8 +67,6 @@ TestCase {
     }
 
     function test_a_skirmish_never_shows_the_campaign_banner() {
-        // campaign_completed can still read true from a previous campaign; the
-        // banner must depend on this match being a campaign mission.
         var overlay = makeOverlay({
                 "victoryState": "victory",
                 "isCampaignMission": false,
@@ -133,9 +127,6 @@ TestCase {
         overlay.forceHide();
         verify(!overlay.visible);
         verify(overlay.manuallyHidden);
-
-        // A repeated victory signal for the same outcome must not reopen what
-        // the player just closed.
         overlay.victoryState = "victory";
         verify(!overlay.visible, "a duplicate victory signal reopened the overlay");
         overlay.destroy();
@@ -159,8 +150,6 @@ TestCase {
             });
         overlay.showingSummary = true;
         verify(overlay.visible);
-
-        // Retrying clears the victory state before the next attempt begins.
         overlay.victoryState = "";
         verify(!overlay.visible, "a retry left the defeat banner up");
         verify(!overlay.showingSummary, "a retry left the battle report open");
@@ -184,7 +173,6 @@ TestCase {
     }
 
     function test_the_campaign_banner_only_appears_on_the_last_win() {
-        // Walk a three mission campaign the way the engine would drive it.
         var overlay = makeOverlay({
                 "isCampaignMission": true
             });

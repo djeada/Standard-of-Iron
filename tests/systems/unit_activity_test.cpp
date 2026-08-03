@@ -98,7 +98,7 @@ TEST(UnitActivityTest, AbandonedWorkAndLostTargetsReadDifferently) {
       Engine::Core::BuilderTaskFault::TargetLost);
   const auto activity = classify_unit_activity(*lost);
   EXPECT_EQ(activity.state, ActivityState::Unavailable);
-  // The work is still named so the player can see which order stalled.
+
   EXPECT_EQ(activity.kind, ActivityKind::ChopWood);
 }
 

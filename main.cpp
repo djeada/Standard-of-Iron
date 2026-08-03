@@ -865,15 +865,7 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Window set successfully";
 
   if (!direct_campaign_mission.isEmpty() || !direct_mission_file.isEmpty()) {
-    // Deferred to the first turn of the event loop rather than done here.
-    //
-    // Flipping these two before the loop starts swaps the whole menu tree for
-    // the gameplay tree while the window still has its startup geometry, so the
-    // very first layout pass both resizes every screen and destroys items that
-    // Qt Quick Layouts is holding mid-rearrange -- a use-after-free deep in
-    // QGridLayoutEngine. Letting the shell reach a settled size first makes the
-    // switch look exactly like a player leaving the menu, which is the path
-    // that has always worked.
+
     QTimer::singleShot(
         0,
         &app,

@@ -12,40 +12,24 @@ Rectangle {
     property real map_orbit_yaw: 180
     property real map_orbit_pitch: 90
     property real map_orbit_distance: 1.2
-    // False until the map has been framed once. The panel opens with a mission
-    // already selected, so the first framing used to play as a 600ms swing from
-    // straight overhead down into an oblique -- the map appeared to lurch as it
-    // loaded. Moving between theatres afterwards is a real transition and keeps
-    // its animation.
+
     property bool camera_settled: false
     property real map_pan_u: 0
     property real map_pan_v: 0
-    // Gentle relief. Displaced terrain seen at a tilt lets a coastal massif lean
-    // out over the water, and at 0.15 the Apennines threw cream-coloured spurs
-    // across the Strait of Messina. A chart wants the mountains legible, not
-    // dramatic.
+
     property real terrain_height_scale: 0.085
     property bool show_province_fills: true
     property string hover_province_name: ""
     property string hover_province_owner: ""
-    // Set from the pointer, and kept whether or not a mission is selected. This
-    // used to be a binding that returned the selected theatre's id instead
-    // whenever one was chosen, so with a mission open -- the panel's normal
-    // state -- nothing ever lit up under the cursor.
+
     property string hover_province_id: ""
     property real hover_mouse_x: 0
     property real hover_mouse_y: 0
     property var province_labels: []
     property int label_refresh: 0
-    // Every name on the map is set in one family, and it is the serif the panel
-    // headings already use. Leaving it to each Text's default meant the map
-    // picked up whatever the system served; a place name on a chart also wants
-    // the display face rather than the UI one.
+
     readonly property string map_label_family: Design.Typography.displayFamily
 
-    // Which cities keep their name when the map gets crowded. The war table is
-    // read at a glance, so the places the campaign is actually fought over win
-    // the space; everything else keeps its dot and gives up its label.
     readonly property var city_rank: ({
             "Rome": 0,
             "Carthage": 0,
@@ -62,8 +46,6 @@ Rectangle {
         })
     readonly property int city_rank_default: 5
 
-    // Where each mission's theatre sits, in the same UV space as the city dots,
-    // so the objective pin lands on the ground it is fought over.
     readonly property var mission_regions: ({
             "transalpine_gaul": {
                 "uv": [0.52, 0.755],
@@ -104,25 +86,16 @@ Rectangle {
         return region && region.name ? region.name : qsTr("Mission Region");
     }
 
-    // [{ name, uv, rank, x, y, labelled }] rebuilt whenever the camera moves.
     property var city_markers: []
     property var campaign_state: null
     property var campaign_state_sources: ["assets/campaign_map/campaign_state.json", "qrc:/assets/campaign_map/campaign_state.json", "qrc:/StandardOfIron/assets/campaign_map/campaign_state.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/campaign_state.json"]
-    // Washes, not paint. These sit over warm parchment, so the hue has to carry
-    // the meaning while the paper keeps its texture -- a saturated fill at high
-    // alpha buries the relief the terrain pass just drew.
-    // Carthage is Tyrian purple, which is both the dye the Phoenicians were
-    // famous for and the only way the player's own empire reads at all: an
-    // ochre wash over cream paper is the colour of cream paper, so Africa and
-    // Barcid Spain used to be indistinguishable from unclaimed ground.
+
     property var owner_color_map: ({
             "rome": [0.72, 0.19, 0.16, 0.44],
             "carthage": [0.41, 0.16, 0.36, 0.44],
             "neutral": [0.44, 0.42, 0.38, 0.16]
         })
-    // One entry per region the campaign actually sends the player to. The alps,
-    // Apulia and Campania were missing, so three of the eight missions framed
-    // the whole Mediterranean instead of their own theatre.
+
     property var region_camera_positions: ({
             "transalpine_gaul": {
                 "yaw": 196,
@@ -325,8 +298,6 @@ Rectangle {
                     });
             }
         }
-        // Rank first, then name, so the same cities win every frame and no label
-        // flickers on and off while the map is being turned.
         markers.sort(function (a, b) {
                 if (a.rank !== b.rank)
                     return a.rank - b.rank;
@@ -342,16 +313,7 @@ Rectangle {
             root.city_markers = markers;
             return;
         }
-
-        // Measured, not estimated. The old character-count approximation was
-        // tuned to a sans face at one size; once names were set in the display
-        // serif at two sizes it under-read every box and the map filled up with
-        // overlapping labels. The declutter only runs when the camera settles,
-        // so exact metrics are affordable.
         var kept = [];
-
-        // The commander portrait and the objective marker sit above the labels,
-        // so they claim their space first rather than clipping a city name.
         var portrait = view.hannibal_icon_position();
         if (portrait && portrait.x > 0 && portrait.y > 0 && root.selected_mission) {
             kept.push({
@@ -361,8 +323,6 @@ Rectangle {
                     "bottom": portrait.y + 26
                 });
         }
-        // The control hint runs along the bottom edge and the legend sits in the
-        // bottom-left corner; both are chrome a city name must not collide with.
         kept.push({
                 "left": 0,
                 "right": map_viewport.width,
@@ -377,7 +337,6 @@ Rectangle {
             });
         var region = root.mission_regions[root.active_region_id];
         if (region && region.uv) {
-            // Matches where the pin is actually drawn, offset and all.
             var marker = view.screen_pos_for_uv(region.uv[0], region.uv[1]);
             kept.push({
                     "left": marker.x - 40,
@@ -395,8 +354,6 @@ Rectangle {
             var width = metrics.advanceWidth;
             var half_height = metrics.height * 0.5;
             var gap = capital ? 9 : 7;
-            // A little air around each name so two labels that merely miss each
-            // other still read as two labels.
             var box = {
                 "left": pos.x + gap - 2,
                 "right": pos.x + gap + width + 3,
@@ -416,20 +373,6 @@ Rectangle {
         root.city_markers = markers;
     }
 
-    // Turning the map used to re-run the whole declutter on every animation
-    // frame and hand the Repeater a brand new model each time, so during the
-    // 600ms camera move every label was destroyed and rebuilt ~36 times and the
-    // set that won the space changed on each one. That is what made the names
-    // jump and blink.
-    // Now the two jobs are separated. Where a label sits is a binding on
-    // label_refresh inside the delegate, so names track the map every frame
-    // without the model changing at all. Which labels are shown is decided only
-    // once the camera has settled, and until then the previous decision stands.
-    // The panel is framed on whichever mission is already selected as it loads,
-    // and that can arrive either side of Component.onCompleted. Rather than
-    // guess the order, animation is simply switched on once the map has had a
-    // moment to reach its opening pose.
-    // The exact advance width of a name in the face it is actually drawn in.
     TextMetrics {
         id: capital_metrics
 
@@ -606,13 +549,6 @@ Rectangle {
             border.width: 1
         }
 
-        // A vignette that settles the map into its frame. It stays at the very
-        // top and bottom edges and stays faint: the previous one ramped from
-        // 67%-opaque black at the top to transparent only at the exact vertical
-        // midpoint, which pulled the whole Mediterranean down to roughly a third
-        // of its brightness -- Africa rendered at RGB(64,49,31) from paper that
-        // is RGB(232,218,193). Everything above this in the stack was drawing a
-        // parchment atlas that nobody could see.
         Rectangle {
             anchors.fill: parent
             z: 2
@@ -808,11 +744,6 @@ Rectangle {
         Repeater {
             model: root.city_markers
 
-            // Three grades of settlement, the way an atlas sets them: the two
-            // capitals and the Barcid seat in small caps, the towns the campaign
-            // is fought over in bold, and everything else quietly. Drawing every
-            // place at one weight told the reader nothing about which of them
-            // mattered.
             delegate: Item {
                 required property var modelData
                 readonly property int rank: modelData.rank === undefined ? root.city_rank_default : modelData.rank
@@ -825,12 +756,6 @@ Rectangle {
                 x: _pos.x
                 y: _pos.y
 
-                // One mark, drawn one way, in two sizes. An earlier pass gave
-                // capitals an inverted dot and small-caps letterforms, which put
-                // three different treatments on screen at once and read as an
-                // inconsistency rather than as a hierarchy. Size alone carries
-                // the rank; everything else is shared so the map looks set by
-                // one hand.
                 Rectangle {
                     width: is_capital ? 9 : 6
                     height: width
@@ -843,8 +768,7 @@ Rectangle {
                 }
 
                 Text {
-                    // A dropped label leaves its dot behind, so the settlement
-                    // is still on the map even where there is no room to name it.
+
                     visible: modelData.labelled
                     text: modelData.name
                     color: "#191108"
@@ -872,8 +796,7 @@ Rectangle {
 
                 visible: marker_uv !== null && root.active_region_id !== ""
                 z: 6
-                // Offset so the objective pin and the commander portrait, which
-                // sit on the same place early in the march, stay distinct.
+
                 x: _pos.x - 22
                 y: _pos.y + 22
 
@@ -1025,9 +948,6 @@ Rectangle {
         Rectangle {
             id: hover_tooltip
 
-            // Shown whenever the pointer is over a province. The old condition
-            // reduced to "a mission is not selected", so the readout was dead
-            // for the whole of normal use.
             visible: root.hover_province_id !== "" && root.hover_province_name !== ""
             x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
             y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
@@ -1087,10 +1007,7 @@ Rectangle {
                 }
 
                 Repeater {
-                    // The hues the map washes onto the paper. The swatch shows
-                    // the hue at full strength rather than the pale wash it
-                    // becomes over parchment -- at twelve pixels a wash reads as
-                    // nothing at all.
+
                     model: [{
                             "name": qsTr("Rome"),
                             "color": "#b4302a"
@@ -1136,8 +1053,7 @@ Rectangle {
         }
 
         Rectangle {
-            // Top-left: the tilt and reset controls own the opposite corner, and
-            // this chip used to be drawn straight over them.
+
             visible: root.active_region_id !== ""
             anchors.left: parent.left
             anchors.top: parent.top

@@ -2,24 +2,17 @@ import QtQuick 2.15
 import StandardOfIron.Core 1.0 as Core
 import ".." as Design
 
-// Draws one icon from the shared vector catalogue.
-// The geometry comes from C++ (Core.IconArt) so the HUD, the overhead markers
-// and the arena overlay cannot drift apart, and so a shape stays crisp at any
-// size or device pixel ratio instead of resampling a small bitmap.
 Canvas {
     id: root
 
     property string iconId: ""
 
-    // Tone overrides. `monochrome` collapses the whole drawing onto `tint`,
-    // which is what small overhead markers and disabled buttons want.
     property color tint: Design.Theme.textPrimary
     property color accent: Design.Theme.accent
     property color ink: Design.Theme.backgroundDeep
     property color edge: Design.Theme.parchment
     property bool monochrome: false
 
-    // Material tones keep gathering icons tied to the resource they yield.
     readonly property color timber: "#8a5a32"
     readonly property color quarry: "#8e8b86"
     readonly property color ore: "#7f8a96"

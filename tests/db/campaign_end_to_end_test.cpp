@@ -20,11 +20,6 @@
 #include "systems/victory_service.h"
 #include "units/spawn_type.h"
 
-// The whole chain issue #1079 asks about, driven headlessly: a shipped mission
-// file is turned into victory rules, a world is played until those rules fire,
-// and the win is handed to the progression store. Nothing here is a stand-in --
-// the mission JSON, the rule builder, the victory service and the campaign
-// tables are all the ones the game ships.
 namespace {
 
 using namespace Game::Systems;
@@ -100,9 +95,6 @@ protected:
     OwnerRegistry::instance().clear();
   }
 
-  // A structure the local player has taken from the enemy: owned by 1, but
-  // built by the nation it was captured from. That is what the capture rule
-  // counts.
   static void add_captured_barracks(Engine::Core::World& world) {
     auto* entity = world.create_entity();
     ASSERT_NE(entity, nullptr);
@@ -118,8 +110,6 @@ protected:
     building->original_nation_id = NationID::RomanRepublic;
   }
 
-  // The mission is lost the moment the player has no soldiers, so the world
-  // needs an army before any of the capture rules can be reached.
   static void add_soldier(Engine::Core::World& world) {
     auto* entity = world.create_entity();
     ASSERT_NE(entity, nullptr);
@@ -145,7 +135,6 @@ protected:
     ASSERT_NE(entity->add_component<Engine::Core::CommanderComponent>(), nullptr);
   }
 
-  // An enemy camp still in Roman hands, waiting to be taken.
   static auto add_enemy_barracks(Engine::Core::World& world) -> Engine::Core::Entity* {
     auto* entity = world.create_entity();
     if (entity == nullptr) {
@@ -198,8 +187,6 @@ TEST_F(CampaignEndToEndTest, TheOpeningMissionCanBeWonAndAdvancesTheCampaign) {
   VictoryService service;
   service.configure(rules, 1);
 
-  // A commander, an army and a base of its own, so the mission is not lost
-  // outright -- one camp already taken, and one enemy camp still standing.
   add_commander(world);
   add_soldier(world);
   add_own_barracks(world);
@@ -214,8 +201,6 @@ TEST_F(CampaignEndToEndTest, TheOpeningMissionCanBeWonAndAdvancesTheCampaign) {
   service.set_victory_callback(
       [&reported_state](const QString& state) { reported_state = state; });
 
-  // Take the second camp the way the game does: the structure changes hands and
-  // the capture is announced, which is what wakes the victory service.
   enemy_camp->get_component<Engine::Core::UnitComponent>()->owner_id = 1;
   Engine::Core::EventManager::instance().publish(
       Engine::Core::BarrackCapturedEvent(enemy_camp->get_id(), 2, 1));
@@ -258,12 +243,10 @@ TEST_F(CampaignEndToEndTest, ADefeatLeavesTheCampaignExactlyWhereItWas) {
   service.set_victory_callback(
       [&reported_state](const QString& state) { reported_state = state; });
 
-  // No army, no base: the mission is lost.
   service.update(world, 0.4F);
   ASSERT_TRUE(service.is_game_over());
   EXPECT_EQ(reported_state, QStringLiteral("defeat"));
 
-  // A loss writes nothing, so a retry starts from the same place.
   const QVariantList rows = storage->get_campaign_mission_progress(campaign.id);
   for (const QVariant& entry : rows) {
     const QVariantMap row = entry.toMap();

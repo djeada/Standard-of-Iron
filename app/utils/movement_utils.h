@@ -44,8 +44,6 @@ inline void clear_patrol_command(Engine::Core::Entity* entity) {
   Game::Systems::OrderService::clear_patrol(entity);
 }
 
-// Where a worker should stand to reach a structure: just clear of its
-// footprint, on the side the worker is already approaching from.
 inline auto structure_work_position(const QVector3D& worker_position,
                                     const QVector3D& structure_position,
                                     const std::string& structure_key,
@@ -198,10 +196,6 @@ issue_civilian_delivery_command(Engine::Core::World* world,
   return true;
 }
 
-// Sends every selected builder to mend the damaged friendly structure under the
-// cursor. Repair reuses the builder job pipeline rather than inventing a second
-// one, so the activity readout, the interruption rules and the "walked away
-// from the site" handling all come for free.
 inline auto
 issue_builder_repair_command(Engine::Core::World* world,
                              const std::vector<Engine::Core::EntityID>& selected,
