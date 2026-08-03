@@ -249,6 +249,7 @@ void Renderer::begin_frame() {
 
   if (m_camera != nullptr) {
     m_view_proj = m_camera->get_view_projection_matrix();
+    refresh_billboard_basis();
   }
   auto& visibility = Game::Map::VisibilityService::instance();
   m_frame_visibility_snapshot =

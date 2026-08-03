@@ -1013,7 +1013,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: players_model.count
+                                text: Design.Numerals.roman(players_model.count)
                                 color: Theme.textMain
                                 font.pixelSize: 13
                                 font.bold: true
@@ -1354,7 +1354,7 @@ Item {
                                         border.color: teamMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
                                         border.width: teamMA.containsMouse ? 2 : 1
                                         ToolTip.visible: teamMA.containsMouse
-                                        ToolTip.text: qsTr("Team %1 - Click to change").arg(model.team_id || 0)
+                                        ToolTip.text: qsTr("Team %1 - Click to change").arg(Design.Numerals.roman(model.team_id || 0))
 
                                         Column {
                                             anchors.centerIn: parent
@@ -1370,7 +1370,7 @@ Item {
 
                                             Text {
                                                 anchors.horizontalCenter: parent.horizontalCenter
-                                                text: qsTr("Team %1").arg(model.team_id || 0)
+                                                text: qsTr("Team %1").arg(Design.Numerals.roman(model.team_id || 0))
                                                 color: Theme.textBright
                                                 font.pixelSize: 10
                                                 font.bold: true
@@ -1579,9 +1579,9 @@ Item {
                     }
 
                     Text {
-                        text: qsTr("Available Player Slots: %1").arg((function () {
-                                    return player_ids_for_map(selected_map_data).length;
-                                })())
+                        text: qsTr("Available Player Slots: %1").arg(Design.Numerals.roman((function () {
+                                        return player_ids_for_map(selected_map_data).length;
+                                    })()))
                         color: Theme.textMain
                         font.pixelSize: 14
                         font.bold: true
@@ -1622,7 +1622,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: qsTr("ID %1").arg(modelData)
+                                    text: qsTr("ID %1").arg(Design.Numerals.roman(modelData))
                                     color: {
                                         var pid = modelData;
                                         if (typeof game === 'undefined')
@@ -1662,7 +1662,7 @@ Item {
                             var others = [];
                             for (var i = 0; i < ids.length; i++) {
                                 if (Number(ids[i]) !== game.selected_player_id)
-                                    others.push(Number(ids[i]));
+                                    others.push(Design.Numerals.roman(Number(ids[i])));
                             }
                             if (others.length === 0)
                                 return qsTr("All other slots will be CPU-controlled");

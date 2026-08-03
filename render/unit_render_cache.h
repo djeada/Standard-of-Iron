@@ -48,10 +48,8 @@ struct CachedUnitData {
   bool moving{false};
   bool in_frustum{true};
   bool fog_visible{true};
-  bool has_attack{false};
-  bool has_guard_mode{false};
-  bool has_hold_mode{false};
-  bool has_patrol{false};
+  float indicator_height{0.0F};
+  float indicator_size{0.0F};
 
   float last_pos_x{0.0F};
   float last_pos_y{0.0F};

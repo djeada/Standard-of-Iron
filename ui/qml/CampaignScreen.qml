@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
@@ -322,7 +323,7 @@ Item {
                                         }
                                         property int total_count: current_campaign && current_campaign.missions ? current_campaign.missions.length : 0
 
-                                        text: completed_count + " / " + total_count
+                                        text: Design.Numerals.ratio(completed_count, total_count)
                                         color: Theme.textMain
                                         font.pointSize: Theme.fontSizeSmall
                                         font.bold: true

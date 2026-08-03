@@ -635,13 +635,6 @@ Item {
         }
     }
 
-    UnitActivityOverlay {
-        id: activityOverlay
-
-        enabled: game_view.visible && typeof game !== 'undefined' && game.control_mode !== "commander"
-        z: 90
-    }
-
     Rectangle {
         id: selectionBox
 

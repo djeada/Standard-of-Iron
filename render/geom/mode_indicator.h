@@ -3,29 +3,51 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
 #include <memory>
 
+#include "../../game/systems/unit_activity.h"
 #include "../gl/mesh.h"
+#include "icon_glyph.h"
 
 namespace Render::Geom {
 
-constexpr int k_mode_type_attack = 0;
-constexpr int k_mode_type_guard = 1;
-constexpr int k_mode_type_hold = 2;
-constexpr int k_mode_type_patrol = 3;
+using IndicatorKind = Game::Systems::ActivityKind;
+using IndicatorState = Game::Systems::ActivityState;
+
+inline constexpr std::size_t k_indicator_kind_count =
+    static_cast<std::size_t>(IndicatorKind::Blocked) + 1U;
 
 constexpr float k_indicator_height_base = 2.5F;
-constexpr float k_indicator_size = 0.8F;
-constexpr float k_indicator_alpha = 0.85F;
+constexpr float k_indicator_alpha = 0.95F;
 constexpr float k_indicator_height_multiplier = 2.0F;
 constexpr float k_indicator_render_scale_height_multiplier = 2.4F;
-constexpr float k_indicator_head_gap = 0.45F;
+constexpr float k_indicator_head_gap = 0.55F;
 constexpr float k_frustum_cull_margin = 1.5F;
+constexpr float k_indicator_tilt_radians = 0.24F;
 
-const QVector3D k_attack_mode_color(1.0F, 0.3F, 0.3F);
-const QVector3D k_guard_mode_color(0.3F, 0.5F, 1.0F);
-const QVector3D k_hold_mode_color(1.0F, 0.6F, 0.2F);
-const QVector3D k_patrol_mode_color(0.5F, 0.5F, 0.5F);
+constexpr float k_indicator_size_ratio = 0.30F;
+constexpr float k_indicator_min_world_size = 0.34F;
+constexpr float k_indicator_max_world_size = 1.60F;
+
+constexpr float k_indicator_fade_start_sq = 3600.0F;
+constexpr float k_indicator_fade_end_sq = 8100.0F;
+
+[[nodiscard]] constexpr auto
+indicator_unit_height(float selection_ring_size, float render_scale) noexcept -> float {
+  return std::max(std::max(selection_ring_size, 0.0F) * k_indicator_height_multiplier,
+                  std::max(render_scale, 0.0F) *
+                      k_indicator_render_scale_height_multiplier);
+}
+
+[[nodiscard]] constexpr auto
+indicator_size_for_unit(float selection_ring_size,
+                        float render_scale) noexcept -> float {
+  float const target =
+      indicator_unit_height(selection_ring_size, render_scale) * k_indicator_size_ratio;
+  return std::clamp(target, k_indicator_min_world_size, k_indicator_max_world_size);
+}
 
 [[nodiscard]] constexpr auto
 indicator_height_for_unit(float selection_ring_size,
@@ -39,23 +61,36 @@ indicator_height_for_unit(float selection_ring_size,
   return anchor_height + k_indicator_head_gap;
 }
 
+[[nodiscard]] constexpr auto
+indicator_distance_fade(float distance_sq) noexcept -> float {
+  if (distance_sq <= k_indicator_fade_start_sq) {
+    return 1.0F;
+  }
+  if (distance_sq >= k_indicator_fade_end_sq) {
+    return 0.0F;
+  }
+  float const span = k_indicator_fade_end_sq - k_indicator_fade_start_sq;
+  return 1.0F - (distance_sq - k_indicator_fade_start_sq) / span;
+}
+
+[[nodiscard]] auto indicator_has_glyph(IndicatorKind kind) noexcept -> bool;
+
+[[nodiscard]] auto indicator_base_color(IndicatorKind kind) noexcept -> QVector3D;
+
+[[nodiscard]] auto indicator_color(IndicatorKind kind,
+                                   IndicatorState state) noexcept -> QVector3D;
+
+[[nodiscard]] auto indicator_state_alpha(IndicatorState state) noexcept -> float;
+
+[[nodiscard]] auto build_indicator_glyph(IndicatorKind kind) -> GlyphBuilder;
+
 class ModeIndicator {
 public:
-  static auto get_attack_mode_mesh() -> Render::GL::Mesh*;
-  static auto get_guard_mode_mesh() -> Render::GL::Mesh*;
-  static auto get_hold_mode_mesh() -> Render::GL::Mesh*;
-  static auto get_patrol_mode_mesh() -> Render::GL::Mesh*;
+  static auto mesh_for(IndicatorKind kind) -> Render::GL::Mesh*;
+  static void release_meshes();
 
 private:
-  static auto create_attack_mode_mesh() -> std::unique_ptr<Render::GL::Mesh>;
-  static auto create_guard_mode_mesh() -> std::unique_ptr<Render::GL::Mesh>;
-  static auto create_hold_mode_mesh() -> std::unique_ptr<Render::GL::Mesh>;
-  static auto create_patrol_mode_mesh() -> std::unique_ptr<Render::GL::Mesh>;
-
-  static std::unique_ptr<Render::GL::Mesh> s_attack_mesh;
-  static std::unique_ptr<Render::GL::Mesh> s_guard_mesh;
-  static std::unique_ptr<Render::GL::Mesh> s_hold_mesh;
-  static std::unique_ptr<Render::GL::Mesh> s_patrol_mesh;
+  static std::array<std::unique_ptr<Render::GL::Mesh>, k_indicator_kind_count> s_meshes;
 };
 
 } // namespace Render::Geom

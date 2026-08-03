@@ -6,6 +6,7 @@ add_library(
     core/component.cpp
     core/system.cpp
     core/world.cpp
+    systems/unit_activity.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp
     core/serialization.cpp
@@ -141,7 +142,6 @@ add_library(
     systems/construction_cost_catalog.cpp
     systems/production_service.cpp
     systems/production_system.cpp
-    systems/unit_activity.cpp
     systems/civilian_delivery_system.cpp
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp

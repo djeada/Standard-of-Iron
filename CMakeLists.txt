@@ -437,7 +437,6 @@ add_library(
     app/core/skirmish_runtime_coordinator.cpp
     app/core/visibility_coordinator.cpp
     app/core/world_bootstrap.cpp
-    app/models/activity_markers.cpp
     app/models/audio_system_proxy.cpp
     app/models/cursor_manager.cpp
     app/models/graphics_settings_proxy.cpp
@@ -538,7 +537,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDVictory.qml
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
-            ui/qml/UnitActivityOverlay.qml
             ui/qml/CommanderInputLayer.qml
             ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml

@@ -97,9 +97,10 @@ void ModeIndicatorPipeline::render_indicator(Mesh* mesh,
 
   DepthMaskScope const depth_mask(false);
   BlendScope const blend(true);
+  DepthTestScope const depth_test(false);
+  CullFaceScope const cull(false);
 
-  glEnable(GL_DEPTH_TEST);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   m_indicator_shader->use();
 

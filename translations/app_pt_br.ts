@@ -2656,20 +2656,8 @@ para ver a prévia</translation>
         <translation>Alto-comando romano</translation>
     </message>
     <message>
-        <source>3/</source>
-        <translation>3/</translation>
-    </message>
-    <message>
-        <source>610</source>
-        <translation>610</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Desconhecido</translation>
-    </message>
-    <message>
-        <source>100%</source>
-        <translation>100%</translation>
     </message>
     <message>
         <source>Sealed</source>
@@ -3368,12 +3356,13 @@ para ver a prévia</translation>
         <source>Max players reached</source>
         <translation>Número máximo de jogadores atingido</translation>
     </message>
-    <message numerus="yes">
-        <source>%n slot(s) available</source>
-        <translation>
-            <numerusform>%n vaga disponível</numerusform>
-            <numerusform>%n vagas disponíveis</numerusform>
-        </translation>
+    <message>
+        <source>%1 slot available</source>
+        <translation>%1 vaga disponível</translation>
+    </message>
+    <message>
+        <source>%1 slots available</source>
+        <translation>%1 vagas disponíveis</translation>
     </message>
     <message>
         <source>(map preview)</source>
