@@ -7,6 +7,7 @@
 
 #include "arena_formation_scenarios.h"
 #include "arena_scenarios.h"
+#include "arena_showcase_scenarios.h"
 
 namespace Arena::Scenarios {
 namespace {
@@ -7838,6 +7839,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
   static const std::vector<ArenaScenarioDefinition> catalog = [] {
     auto values = build_definitions();
+    auto showcase = build_showcase_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(showcase.begin()),
+                  std::make_move_iterator(showcase.end()));
     auto formation = build_formation_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(formation.begin()),

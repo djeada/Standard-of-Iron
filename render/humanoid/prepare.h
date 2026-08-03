@@ -46,6 +46,7 @@ struct SoldierLayoutInputs {
   int col{0};
   int rows{0};
   int cols{0};
+  int count{0};
   float formation_spacing{0.0F};
   std::uint32_t seed{0};
   bool force_single_soldier{false};

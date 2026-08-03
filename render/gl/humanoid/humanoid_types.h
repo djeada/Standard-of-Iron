@@ -70,6 +70,9 @@ struct AnimationInputs {
   bool has_sword_attack_animation{false};
   Animation::SwordAttackAnimation sword_attack_animation{
       Animation::SwordAttackAnimation::InfantrySlashA};
+  bool has_showcase_clip{false};
+  std::uint16_t showcase_clip{Animation::k_unmapped_clip};
+  float showcase_phase{0.0F};
   bool has_authored_action_clip{false};
   std::uint16_t authored_action_clip{Animation::k_unmapped_clip};
   float authored_action_phase{0.0F};

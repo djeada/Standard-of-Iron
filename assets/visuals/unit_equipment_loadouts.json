@@ -198,6 +198,20 @@
       "horse_blanket": "horse_blanket",
       "horse_barding": "horse_champion_barding",
       "horse_crupper": "horse_crupper"
+    },
+    "troops/roman/showcase_athlete": {
+      "greaves": "roman_greaves",
+      "armor": "roman_light_armor"
+    },
+    "troops/roman/showcase_blademaster": {
+      "sword": "sword_roman",
+      "greaves": "roman_greaves",
+      "armor": "roman_light_armor"
+    },
+    "troops/roman/showcase_lancer": {
+      "spear": "spear",
+      "greaves": "roman_greaves",
+      "armor": "roman_light_armor"
     }
   }
 }

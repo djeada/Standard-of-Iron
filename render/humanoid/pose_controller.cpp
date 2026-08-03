@@ -9,6 +9,7 @@
 #include "animation/attack_pose_manifest.h"
 #include "animation/hold_pose_manifest.h"
 #include "animation/posture_pose_manifest.h"
+#include "animation/showcase_pose_manifest.h"
 #include "grip_axis.h"
 #include "humanoid_math.h"
 #include "pose_primitives.h"
@@ -322,6 +323,35 @@ void HumanoidPoseController::apply_ambient_idle_explicit(AmbientIdleType idle_ty
       .airborne = m_anim_ctx.gait.is_airborne,
   });
   apply_ambient_pose_sample(m_pose, sample);
+}
+
+void HumanoidPoseController::apply_showcase_move(Animation::HumanoidShowcaseMove move,
+                                                 float phase) {
+  auto const sample = Animation::resolve_humanoid_showcase_pose({
+      .move = move,
+      .phase = phase,
+      .height_scale = 1.0F,
+  });
+  if (!sample.active) {
+    return;
+  }
+  m_pose.pelvis_pos = to_qvec(sample.pelvis);
+  m_pose.neck_base = to_qvec(sample.neck_base);
+  m_pose.head_pos = to_qvec(sample.head);
+  m_pose.shoulder_l = to_qvec(sample.shoulder_l);
+  m_pose.shoulder_r = to_qvec(sample.shoulder_r);
+  m_pose.elbow_l = to_qvec(sample.elbow_l);
+  m_pose.elbow_r = to_qvec(sample.elbow_r);
+  m_pose.hand_l = to_qvec(sample.hand_l);
+  m_pose.hand_r = to_qvec(sample.hand_r);
+  m_pose.knee_l = to_qvec(sample.knee_l);
+  m_pose.knee_r = to_qvec(sample.knee_r);
+  m_pose.foot_l = to_qvec(sample.foot_l);
+  m_pose.foot_r = to_qvec(sample.foot_r);
+  m_pose.foot_y_offset = 0.0F;
+  if (sample.has_grip_axis) {
+    m_pose.grip_axis_r = to_qvec(sample.grip_axis_r).normalized();
+  }
 }
 
 void HumanoidPoseController::kneel(float depth) {

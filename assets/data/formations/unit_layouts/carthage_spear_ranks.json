@@ -1,14 +1,17 @@
 {
   "id": "carthage.spear_ranks",
   "shape": "ranks",
-  "lateral_spacing_scale": 1.54,
-  "depth_spacing_scale": 1.12,
+  "lateral_spacing_scale": 1.02,
+  "depth_spacing_scale": 1.24,
+  "rank_stagger": 0.3,
+  "rank_echelon": 0.0,
+  "rank_arc": 0.38,
+  "file_grouping": 2.0,
+  "group_gap": 0.4,
+  "group_depth_stagger": 0.22,
   "weapon_clearance": 0.03,
-  "rank_stagger": 0.52,
-  "rank_echelon": 0.26,
-  "rank_arc": 0.34,
-  "lateral_jitter": 0.15,
-  "depth_jitter": 0.12,
-  "facing_jitter_degrees": 9.0,
-  "min_separation_scale": 0.48
+  "lateral_jitter": 0.08,
+  "depth_jitter": 0.07,
+  "facing_jitter_degrees": 6.0,
+  "min_separation_scale": 0.56
 }

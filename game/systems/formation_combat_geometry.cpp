@@ -325,33 +325,40 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   result.all_slots.reserve(static_cast<std::size_t>(result.total_count));
   result.live_slots.reserve(static_cast<std::size_t>(result.live_count));
   result.occupied_slots.reserve(static_cast<std::size_t>(result.total_count));
-  auto resolve_slot =
-      [&](int stable_idx, int layout_idx, int layout_rows, int layout_cols) {
-        int const row = layout_rows - 1 - layout_idx / layout_cols;
-        int const col = layout_idx % layout_cols;
-        Game::Formation::UnitLayoutQuery query;
-        query.layout = definition.layout;
-        query.index = layout_idx;
-        query.row = row;
-        query.col = col;
-        query.rows = layout_rows;
-        query.cols = layout_cols;
-        query.spacing = result.spacing;
-        query.seed = result.seed;
-        auto const offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
-        auto const [world_x, world_z] =
-            world_slot(resolved_transform, offset.offset_x, offset.offset_z);
-        return SoldierSlot{static_cast<std::uint16_t>(stable_idx),
-                           static_cast<std::uint16_t>(row),
-                           static_cast<std::uint16_t>(col),
-                           offset.offset_x,
-                           offset.offset_z,
-                           offset.yaw_offset,
-                           world_x,
-                           world_z};
-      };
+  auto resolve_slot = [&](int stable_idx,
+                          int layout_idx,
+                          int layout_count,
+                          int layout_rows,
+                          int layout_cols) {
+    auto const slot =
+        Game::Formation::rank_slot_for(layout_idx, layout_count, layout_cols);
+    int const row = slot.row;
+    int const col = slot.col;
+    Game::Formation::UnitLayoutQuery query;
+    query.layout = definition.layout;
+    query.index = layout_idx;
+    query.row = row;
+    query.col = col;
+    query.rows = layout_rows;
+    query.cols = layout_cols;
+    query.count = layout_count;
+    query.spacing = result.spacing;
+    query.seed = result.seed;
+    auto const offset = Game::Formation::UnitLayoutSystem::instance().offset(query);
+    auto const [world_x, world_z] =
+        world_slot(resolved_transform, offset.offset_x, offset.offset_z);
+    return SoldierSlot{static_cast<std::uint16_t>(stable_idx),
+                       static_cast<std::uint16_t>(row),
+                       static_cast<std::uint16_t>(col),
+                       offset.offset_x,
+                       offset.offset_z,
+                       offset.yaw_offset,
+                       world_x,
+                       world_z};
+  };
   for (int idx = 0; idx < result.total_count; ++idx) {
-    result.all_slots.push_back(resolve_slot(idx, idx, result.rows, result.cols));
+    result.all_slots.push_back(
+        resolve_slot(idx, idx, result.total_count, result.rows, result.cols));
   }
 
   std::vector<bool> live_slots(static_cast<std::size_t>(result.total_count), false);
@@ -402,9 +409,12 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
       continue;
     }
     int const layout_idx = preserve_stable_slots ? stable_idx : compact_idx;
+    int const layout_count =
+        preserve_stable_slots ? result.total_count : result.live_count;
     int const layout_rows = preserve_stable_slots ? result.rows : compact_rows;
     int const layout_cols = preserve_stable_slots ? result.cols : compact_cols;
-    auto const slot = resolve_slot(stable_idx, layout_idx, layout_rows, layout_cols);
+    auto const slot =
+        resolve_slot(stable_idx, layout_idx, layout_count, layout_rows, layout_cols);
     result.live_slots.push_back(slot);
     result.occupied_slots.push_back(slot);
     ++compact_idx;

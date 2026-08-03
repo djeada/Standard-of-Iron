@@ -510,6 +510,12 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
     next.hold_enter_duration = hold->kneel_duration;
     next.hold_exit_duration = hold->stand_up_duration;
   }
+  auto const* showcase = entity->get_component<ShowcaseRoutineComponent>();
+  if (showcase != nullptr) {
+    next.showcase_active = showcase->active;
+    next.showcase_move = showcase->current_move;
+    next.showcase_phase = showcase->phase;
+  }
   auto const* authored = entity->get_component<RpgCommanderActionComponent>();
   if (authored != nullptr) {
     next.authored_action_id = authored->combat_action_id;
@@ -532,7 +538,10 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
                        presentation->is_dying != next.is_dying ||
                        presentation->is_dead != next.is_dead ||
                        presentation->guard_requested != next.guard_requested ||
-                       presentation->hold_requested != next.hold_requested;
+                       presentation->hold_requested != next.hold_requested ||
+                       presentation->showcase_active != next.showcase_active ||
+                       presentation->showcase_move != next.showcase_move ||
+                       presentation->showcase_phase != next.showcase_phase;
   if (changed) {
     ++next.revision;
   }

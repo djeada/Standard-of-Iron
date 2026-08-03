@@ -8162,26 +8162,29 @@ TEST(HumanoidPrepare, CavalryWedgeNarrowsTowardTheFrontRank) {
   ASSERT_NE(layout, Game::Formation::k_invalid_layout);
 
   float const spacing = Render::GL::cavalry_formation_spacing(0.95F);
-  auto sample = [&](int index, int row, int col) {
-    Game::Formation::UnitLayoutQuery query;
-    query.layout = layout;
-    query.index = index;
-    query.row = row;
-    query.col = col;
-    query.rows = 3;
-    query.cols = 3;
-    query.spacing = spacing;
-    query.seed = 0x12345678U;
-    return Game::Formation::UnitLayoutSystem::instance().offset(query);
+  auto const riders = Game::Formation::UnitLayoutSystem::instance().compute(
+      layout, 9, 3, spacing, 0x12345678U);
+  ASSERT_EQ(riders.size(), 9U);
+
+  auto rank_extent = [&riders](std::size_t first, std::size_t last) {
+    float widest = 0.0F;
+    for (std::size_t i = first; i <= last; ++i) {
+      widest = std::max(widest, std::abs(riders[i].offset_x));
+    }
+    return widest;
+  };
+  auto rank_depth = [&riders](std::size_t first, std::size_t last) {
+    float sum = 0.0F;
+    for (std::size_t i = first; i <= last; ++i) {
+      sum += riders[i].offset_z;
+    }
+    return sum / static_cast<float>(last - first + 1U);
   };
 
-  auto const rear_left = sample(0, 0, 0);
-  auto const middle_left = sample(3, 1, 0);
-  auto const front_left = sample(6, 2, 0);
-
-  EXPECT_GT(middle_left.offset_z - rear_left.offset_z, spacing * 0.5F);
-  EXPECT_GT(front_left.offset_z - middle_left.offset_z, spacing * 0.5F);
-  EXPECT_LT(std::abs(front_left.offset_x), std::abs(rear_left.offset_x));
+  EXPECT_GT(rank_depth(0, 0) - rank_depth(1, 3), spacing * 0.5F);
+  EXPECT_GT(rank_depth(1, 3) - rank_depth(4, 8), spacing * 0.5F);
+  EXPECT_LT(rank_extent(0, 0), rank_extent(1, 3));
+  EXPECT_LT(rank_extent(1, 3), rank_extent(4, 8));
 }
 
 TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {

@@ -27,6 +27,7 @@
 #include <limits>
 #include <string>
 
+#include "animation/showcase_pose_manifest.h"
 #include "app/core/commander_control_controller.h"
 #include "app/core/renderer_bootstrap.h"
 #include "app/core/world_bootstrap.h"
@@ -502,7 +503,7 @@ void ArenaViewport::paintGL() {
                            m_capture_orbit_view.yaw + m_capture_orbit_yaw);
   }
 
-  if (m_frame_hook) {
+  if (m_frame_hook && sampled_frame) {
     m_frame_hook(scenario_elapsed_seconds());
   }
   apply_cinematic_view();
@@ -521,8 +522,9 @@ void ArenaViewport::paintGL() {
   Arena::ArenaRenderedFrameTimings timings;
   timings.simulation_ms = elapsed_phase_ms();
 
-  bool const capture_frame =
-      m_capture_active && static_cast<bool>(m_capture_sink) && ensure_capture_target();
+  bool const capture_frame = m_capture_active && sampled_frame &&
+                             static_cast<bool>(m_capture_sink) &&
+                             ensure_capture_target();
   if (capture_frame) {
     m_capture_target->bind();
     m_renderer->set_viewport(m_capture_width, m_capture_height);
@@ -3127,6 +3129,11 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     auto* unit = entity != nullptr
                      ? entity->get_component<Engine::Core::UnitComponent>()
                      : nullptr;
+    if (transform != nullptr && group.render_scale_override > 0.0F) {
+      transform->scale = {group.render_scale_override,
+                          group.render_scale_override,
+                          group.render_scale_override};
+    }
     if (transform != nullptr) {
       transform->rotation.y = group.facing_degrees;
       transform->desired_yaw = group.facing_degrees;
@@ -3140,6 +3147,39 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       }
       if (group.health_override > 0) {
         unit->health = std::min(group.health_override, std::max(1, unit->max_health));
+      }
+    }
+    if (!group.renderer_override.isEmpty() && entity != nullptr) {
+      if (auto* renderable =
+              entity->get_component<Engine::Core::RenderableComponent>()) {
+        renderable->renderer_id = group.renderer_override.toStdString();
+      }
+    }
+    if (!group.showcase_routine.isEmpty() && entity != nullptr) {
+      auto* routine = entity->add_component<Engine::Core::ShowcaseRoutineComponent>();
+      routine->loop = group.showcase_loop;
+      routine->start_delay = group.showcase_start_delay;
+      for (const QString& entry : group.showcase_routine) {
+        QStringList const parts = entry.split(QLatin1Char(':'));
+        auto const move = Animation::humanoid_showcase_move_from_name(
+            parts.value(0).trimmed().toStdString());
+        if (move == Animation::HumanoidShowcaseMove::None) {
+          continue;
+        }
+        Engine::Core::ShowcaseRoutineComponent::Step step{};
+        step.move = static_cast<std::uint8_t>(move);
+        step.duration = parts.size() > 1 ? parts.at(1).toFloat() : 0.0F;
+        step.hold_after = parts.size() > 2 ? parts.at(2).toFloat() : 0.0F;
+        routine->steps.push_back(step);
+      }
+      if (!group.showcase_released_renderer.isEmpty()) {
+        routine->armed_renderer_id = group.renderer_override.toStdString();
+        routine->released_renderer_id = group.showcase_released_renderer.toStdString();
+      }
+      if (group.showcase_throw_target.has_value()) {
+        routine->has_throw_target = true;
+        routine->throw_target_x = group.showcase_throw_target->x();
+        routine->throw_target_z = group.showcase_throw_target->z();
       }
     }
     if (group.settlement_resident && entity != nullptr && transform != nullptr) {

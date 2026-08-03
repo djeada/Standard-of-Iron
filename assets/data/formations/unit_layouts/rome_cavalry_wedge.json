@@ -1,13 +1,14 @@
 {
   "id": "rome.cavalry_wedge",
   "shape": "wedge",
-  "lateral_spacing_scale": 0.7,
-  "depth_spacing_scale": 1.34,
-  "wedge_slope": 0.58,
+  "lateral_spacing_scale": 1.28,
+  "depth_spacing_scale": 1.45,
   "rank_stagger": 0.0,
-  "rear_depth_bias": 0.2,
-  "lateral_jitter": 0.02,
-  "depth_jitter": 0.018,
-  "facing_jitter_degrees": 1.2,
-  "min_separation_scale": 0.66
+  "rear_depth_bias": 0.0,
+  "wedge_slope": 0.22,
+  "wedge_growth": 2.0,
+  "lateral_jitter": 0.03,
+  "depth_jitter": 0.026,
+  "facing_jitter_degrees": 1.5,
+  "min_separation_scale": 0.62
 }
