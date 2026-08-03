@@ -26,13 +26,14 @@ const float k_readable_zoom_far = 70.0;
 const float k_readable_pivot = 0.42;
 const float k_readable_contrast_gain = 0.38;
 const float k_readable_saturation_gain = 0.30;
-const float k_readable_fill_near = 0.12;
+const float k_readable_fill_near = 0.18;
 const float k_readable_fill_far = 0.22;
-const float k_readable_rim_near = 0.015;
-const float k_readable_rim_far = 0.035;
+const float k_readable_rim_near = 0.040;
+const float k_readable_rim_far = 0.055;
 const float k_readable_wear_far = 0.30;
 const float k_readable_grime_far = 0.20;
 const float k_readable_blood_far = 0.75;
+const float k_readable_shadow_floor = 0.60;
 
 float readable_zoom(vec3 world_position) {
   float view_distance = length(u_camera_position - world_position);
@@ -178,7 +179,7 @@ vec3 shade_readable_character(
   vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(u_camera_position - world_position);
   float scene_ambient = clamp(environment_ambient_intensity(), 0.08, 0.40);
-  float readable_ambient = max(scene_ambient, 0.18);
+  float readable_ambient = max(scene_ambient, 0.22);
   vec3 sun_color = environment_primary_color();
   vec3 sky_color = environment_sky_color();
 
@@ -227,6 +228,8 @@ void main() {
   vec3 color =
       shade_readable_character(base, surface_normal, v_pos_ws, v_material_id, zoom);
   color = apply_directional_shadow(color, v_pos_ws, surface_normal);
+
+  color = max(color, base * sky_color * k_readable_shadow_floor);
   if (v_material_id == 6) {
     bool horse_hair = v_color_role == 5 || v_color_role == 6;
     bool dark_detail = v_color_role == 4 || v_color_role == 8;

@@ -96,12 +96,11 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(settlement_id)),
               ids.end());
   }
-  for (auto const* commander_id :
-       {Arena::Scenarios::k_commander_aura_pulse_id,
-        Arena::Scenarios::k_commander_identity_lineup_id,
-        Arena::Scenarios::k_commander_consul_vs_broker_id,
-        Arena::Scenarios::k_commander_field_vs_cavalry_id,
-        Arena::Scenarios::k_commander_legion_vs_elephant_id}) {
+  for (auto const* commander_id : {Arena::Scenarios::k_commander_aura_pulse_id,
+                                   Arena::Scenarios::k_commander_identity_lineup_id,
+                                   Arena::Scenarios::k_commander_sword_duel_id,
+                                   Arena::Scenarios::k_commander_bow_duel_id,
+                                   Arena::Scenarios::k_commander_spear_duel_id}) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(commander_id)),
               ids.end());
   }

@@ -1035,8 +1035,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                        "units for direct silhouette, weapon, scale, color, and "
                        "ancient-dark-fantasy identity review."),
         12.0F,
-        {9.8F, 36.0F, 0.0F});
+        {11.2F, 21.0F, 0.0F});
     s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
+    s.camera_focus = QVector3D(0.75F, 1.15F, 0.0F);
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
@@ -1049,42 +1051,42 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       float facing{};
     };
     const CommanderLineupEntry entries[] = {
-        {"fabius",
-         Troop::RomanLegionOrganizer,
-         Nation::RomanRepublic,
-         1,
-         {-3.0F, 0.0F, -1.6F},
-         0.0F},
         {"scipio",
          Troop::RomanVeteranConsul,
          Nation::RomanRepublic,
+         1,
+         {-3.0F, 0.0F, 1.7F},
+         180.0F},
+        {"fabius",
+         Troop::RomanLegionOrganizer,
+         Nation::RomanRepublic,
          2,
-         {0.0F, 0.0F, -1.6F},
-         0.0F},
+         {0.0F, 0.0F, 1.7F},
+         180.0F},
         {"marcellus",
          Troop::RomanFieldCommander,
          Nation::RomanRepublic,
          3,
-         {3.0F, 0.0F, -1.6F},
-         0.0F},
-        {"hanno",
-         Troop::CarthageMercenaryBroker,
+         {3.0F, 0.0F, 1.7F},
+         180.0F},
+        {"hannibal",
+         Troop::CarthageSwordCommander,
          Nation::Carthage,
          4,
-         {-3.0F, 0.0F, 1.6F},
-         0.0F},
-        {"hasdrubal",
-         Troop::CarthageCavalryPatron,
+         {-1.5F, 0.0F, -1.7F},
+         180.0F},
+        {"hanno",
+         Troop::CarthageSpearCommander,
          Nation::Carthage,
          5,
-         {0.0F, 0.0F, 1.6F},
-         0.0F},
-        {"hannibal",
-         Troop::CarthageElephantMaster,
+         {1.5F, 0.0F, -1.7F},
+         180.0F},
+        {"hasdrubal",
+         Troop::CarthageBowCommander,
          Nation::Carthage,
          6,
-         {3.0F, 0.0F, 1.6F},
-         0.0F},
+         {4.5F, 0.0F, -1.7F},
+         180.0F},
     };
     for (auto const& entry : entries) {
       auto commander = group(QString::fromLatin1(entry.group_name),
@@ -1223,6 +1225,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                    6.0F,
                    {5.0F, 8.0F, 0.0F});
     s.suppress_terrain_scatter = true;
+    s.suppress_terrain_features = true;
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
@@ -1255,19 +1258,19 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
          {1.9F, 0.0F, 1.3F},
          180.0F},
         {"hanno",
-         Troop::CarthageMercenaryBroker,
+         Troop::CarthageSpearCommander,
          Nation::Carthage,
          4,
          {-0.95F, 0.0F, -1.3F},
          180.0F},
         {"hasdrubal",
-         Troop::CarthageCavalryPatron,
+         Troop::CarthageBowCommander,
          Nation::Carthage,
          5,
          {0.95F, 0.0F, -1.3F},
          180.0F},
         {"hannibal",
-         Troop::CarthageElephantMaster,
+         Troop::CarthageSwordCommander,
          Nation::Carthage,
          6,
          {2.85F, 0.0F, -1.3F},
@@ -1593,18 +1596,18 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       Troop carthaginian;
     };
     constexpr DuelSpec duels[] = {
-        {k_commander_consul_vs_broker_id,
-         "Consul vs Mercenary Broker",
+        {k_commander_sword_duel_id,
+         "Sword Commanders: Scipio vs Hannibal",
          Troop::RomanVeteranConsul,
-         Troop::CarthageMercenaryBroker},
-        {k_commander_field_vs_cavalry_id,
-         "Field Commander vs Cavalry Patron",
-         Troop::RomanFieldCommander,
-         Troop::CarthageCavalryPatron},
-        {k_commander_legion_vs_elephant_id,
-         "Legion Organizer vs Elephant Master",
+         Troop::CarthageSwordCommander},
+        {k_commander_spear_duel_id,
+         "Spear Commanders: Fabius vs Hanno",
          Troop::RomanLegionOrganizer,
-         Troop::CarthageElephantMaster},
+         Troop::CarthageSpearCommander},
+        {k_commander_bow_duel_id,
+         "Bow Commanders: Marcellus vs Hasdrubal",
+         Troop::RomanFieldCommander,
+         Troop::CarthageBowCommander},
     };
     for (auto const& duel : duels) {
       auto s = definition(

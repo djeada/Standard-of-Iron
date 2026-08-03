@@ -10,7 +10,7 @@ void register_carthage_swordsman_style() {
   KnightStyleConfig carthage;
   carthage.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
   carthage.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
-  carthage.leather_dark_color = QVector3D(0.20F, 0.14F, 0.09F);
+  carthage.leather_dark_color = QVector3D(0.32F, 0.22F, 0.15F);
   carthage.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
   carthage.shield_color = QVector3D(0.20F, 0.46F, 0.62F);
   carthage.shield_trim_color = QVector3D(0.76F, 0.68F, 0.42F);

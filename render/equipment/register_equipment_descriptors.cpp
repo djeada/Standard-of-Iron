@@ -301,6 +301,12 @@ void register_equipment_descriptors() {
                                 .role_count = static_cast<std::uint8_t>(
                                     Render::GL::k_roman_greaves_role_count)});
   register_humanoid_descriptor(EquipmentCategory::Armor,
+                               "carthage_greaves",
+                               {.build_attachments = &build_roman_greaves_attachments,
+                                .append_role_colors = &carthage_greaves_role_colors,
+                                .role_count = static_cast<std::uint8_t>(
+                                    Render::GL::k_roman_greaves_role_count)});
+  register_humanoid_descriptor(EquipmentCategory::Armor,
                                "roman_shoulder_cover",
                                {.build_attachments = &build_roman_shoulder_attachments,
                                 .append_role_colors = &roman_shoulder_role_colors,

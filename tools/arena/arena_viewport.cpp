@@ -537,6 +537,11 @@ void ArenaViewport::paintGL() {
   m_renderer->set_hovered_entity_id(m_hovered_entity_id);
   m_renderer->set_local_owner_id(k_local_owner_id);
   m_renderer->update_animation_time(simulation_dt);
+
+  m_renderer->set_cinematic_mode(
+      m_clean_capture || m_promo_mode ||
+      (m_scenario_runner != nullptr &&
+       m_scenario_runner->definition().suppress_ui_overlays));
   m_renderer->begin_frame();
   if (m_terrain_scene != nullptr) {
     Render::GL::TerrainSceneSubmitOptions terrain_options;
@@ -546,6 +551,10 @@ void ArenaViewport::paintGL() {
         include_review_content &&
         (m_scenario_runner == nullptr ||
          !m_scenario_runner->definition().suppress_terrain_scatter);
+    terrain_options.include_features =
+        include_review_content &&
+        (m_scenario_runner == nullptr ||
+         !m_scenario_runner->definition().suppress_terrain_features);
     terrain_options.include_environment = !m_terrain_review_mode;
     m_terrain_scene->submit(*m_renderer, m_renderer->resources(), terrain_options);
   }

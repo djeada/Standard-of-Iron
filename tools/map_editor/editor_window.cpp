@@ -1113,9 +1113,9 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::TroopRomanLegionOrganizer:
   case ToolType::TroopRomanVeteranConsul:
   case ToolType::TroopRomanFieldCommander:
-  case ToolType::TroopCarthageMercenaryBroker:
-  case ToolType::TroopCarthageCavalryPatron:
-  case ToolType::TroopCarthageElephantMaster:
+  case ToolType::TroopCarthageSpearCommander:
+  case ToolType::TroopCarthageBowCommander:
+  case ToolType::TroopCarthageSwordCommander:
   case ToolType::TroopSkeletonSwordsman:
   case ToolType::TroopSkeletonArcher:
   case ToolType::TroopGravePriest:

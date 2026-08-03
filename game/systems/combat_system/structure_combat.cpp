@@ -199,9 +199,9 @@ auto structure_attack_profile(const Engine::Core::Entity* attacker)
   case SpawnType::RomanLegionOrganizer:
   case SpawnType::RomanVeteranConsul:
   case SpawnType::RomanFieldCommander:
-  case SpawnType::CarthageMercenaryBroker:
-  case SpawnType::CarthageCavalryPatron:
-  case SpawnType::CarthageElephantMaster:
+  case SpawnType::CarthageSpearCommander:
+  case SpawnType::CarthageBowCommander:
+  case SpawnType::CarthageSwordCommander:
   case SpawnType::Healer:
   case SpawnType::Civilian:
   case SpawnType::Builder:

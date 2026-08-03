@@ -874,7 +874,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
   Engine::Core::Entity* commander = world.create_entity();
   ASSERT_NE(commander, nullptr);
   add_test_unit(*commander,
-                SpawnType::CarthageElephantMaster,
+                SpawnType::CarthageSwordCommander,
                 NationID::Carthage,
                 1,
                 "troops/carthage/commanders/hannibal_barca");
@@ -890,7 +890,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
 
   Engine::Core::Entity runtime_entity(9004);
   add_test_unit(runtime_entity,
-                SpawnType::CarthageElephantMaster,
+                SpawnType::CarthageSwordCommander,
                 NationID::Carthage,
                 1,
                 "troops/carthage/commanders/hannibal_barca");

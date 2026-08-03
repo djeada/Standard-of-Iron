@@ -10,7 +10,7 @@ const std::array<SpearmanStyleRegistration, 1> k_styles{{
      SpearmanStyleConfig{
          .cloth_color = QVector3D(0.74F, 0.58F, 0.32F),
          .leather_color = QVector3D(0.42F, 0.25F, 0.12F),
-         .leather_dark_color = QVector3D(0.20F, 0.12F, 0.07F),
+         .leather_dark_color = QVector3D(0.32F, 0.21F, 0.14F),
          .metal_color = QVector3D(0.78F, 0.64F, 0.32F),
          .spear_shaft_color = QVector3D(0.42F, 0.24F, 0.13F),
          .spearhead_color = QVector3D(0.72F, 0.68F, 0.58F),

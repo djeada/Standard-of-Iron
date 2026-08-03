@@ -674,7 +674,7 @@ TEST_F(SerializationTest, AttackComponentRoundTrip) {
 TEST_F(SerializationTest, CommanderComponentRoundTrip) {
   auto* original_entity = world->create_entity();
   auto* commander = original_entity->add_component<CommanderComponent>();
-  commander->commander_id = "carthage_elephant_master";
+  commander->commander_id = "carthage_sword_commander";
   commander->display_name = "Hannibal Barca";
   commander->strategic_identity = "Carthage's premier battlefield commander.";
   commander->passive_aura = "Hannibalic Offensive";

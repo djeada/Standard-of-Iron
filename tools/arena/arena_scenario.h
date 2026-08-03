@@ -254,6 +254,7 @@ struct ArenaScenarioDefinition {
   ArenaCameraView camera;
   std::optional<QVector3D> camera_focus;
   bool suppress_terrain_scatter{false};
+  bool suppress_terrain_features{false};
   bool select_spawned_units{true};
   bool suppress_spawn_anchor{false};
   bool suppress_ui_overlays{false};

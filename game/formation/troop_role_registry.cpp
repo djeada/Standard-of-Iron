@@ -145,9 +145,9 @@ auto default_troop_formation_profile(TroopType troop) -> TroopFormationProfile {
   case TroopType::RomanLegionOrganizer:
   case TroopType::RomanVeteranConsul:
   case TroopType::RomanFieldCommander:
-  case TroopType::CarthageMercenaryBroker:
-  case TroopType::CarthageCavalryPatron:
-  case TroopType::CarthageElephantMaster:
+  case TroopType::CarthageSpearCommander:
+  case TroopType::CarthageBowCommander:
+  case TroopType::CarthageSwordCommander:
     profile.roles = mask({RoleTag::Command, RoleTag::Elite});
     profile.army_roles = {ArmyRole::Command, ArmyRole::Reserve};
     profile.unit_layout = "command_retinue";

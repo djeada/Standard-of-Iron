@@ -15,7 +15,7 @@ TEST(MissionDefinitionViewTest, ResolvesFallbackPlayerCommanderForCarthage) {
   const QVariantMap commander = player_setup.value("commander").toMap();
 
   EXPECT_EQ(player_setup.value("commander_troop").toString(),
-            QStringLiteral("carthage_elephant_master"));
+            QStringLiteral("carthage_sword_commander"));
   EXPECT_EQ(commander.value("display_name").toString(),
             QStringLiteral("Hannibal Barca"));
   EXPECT_EQ(commander.value("battlefield_role").toString(),
