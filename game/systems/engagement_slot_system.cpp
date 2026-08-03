@@ -56,7 +56,12 @@ void EngagementSlotSystem::update(Engine::Core::World* world, float delta_time) 
 
   for (auto* attacker : m_query_scratch) {
     auto* atk = attacker->get_component<Engine::Core::AttackComponent>();
-    if (atk == nullptr || !atk->in_melee_lock) {
+
+    bool const engaging_melee =
+        atk != nullptr &&
+        (atk->in_melee_lock ||
+         atk->current_mode == Engine::Core::AttackComponent::CombatMode::Melee);
+    if (!engaging_melee) {
       continue;
     }
 

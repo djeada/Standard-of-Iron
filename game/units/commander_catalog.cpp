@@ -56,7 +56,14 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        24.0F,
        15.0F,
        60.0F,
-       SpawnType::Spearman},
+       SpawnType::Spearman,
+       {CommanderSignatureMove::BracingThrust,
+        QT_TRANSLATE_NOOP("Commanders", "Bracing Thrust"),
+        8.5F,
+        1.35F,
+        0.55F,
+        0.85F,
+        1}},
       {TroopType::RomanVeteranConsul,
        NationID::RomanRepublic,
        "roman_veteran_consul",
@@ -102,7 +109,14 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        26.0F,
        15.0F,
        55.0F,
-       SpawnType::Knight},
+       SpawnType::Knight,
+       {CommanderSignatureMove::ConsularRiposte,
+        QT_TRANSLATE_NOOP("Commanders", "Consular Riposte"),
+        7.0F,
+        1.75F,
+        0.0F,
+        0.35F,
+        1}},
       {TroopType::RomanFieldCommander,
        NationID::RomanRepublic,
        "roman_field_commander",
@@ -148,7 +162,14 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        28.0F,
        12.0F,
        50.0F,
-       SpawnType::Archer},
+       SpawnType::Archer,
+       {CommanderSignatureMove::PointBlankVolley,
+        QT_TRANSLATE_NOOP("Commanders", "Point-blank Volley"),
+        6.0F,
+        1.5F,
+        0.0F,
+        0.5F,
+        1}},
       {TroopType::CarthageSpearCommander,
        NationID::Carthage,
        "carthage_spear_commander",
@@ -195,7 +216,14 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        32.0F,
        15.0F,
        65.0F,
-       SpawnType::Spearman},
+       SpawnType::Spearman,
+       {CommanderSignatureMove::PhalanxSweep,
+        QT_TRANSLATE_NOOP("Commanders", "Phalanx Sweep"),
+        9.5F,
+        1.15F,
+        0.75F,
+        0.6F,
+        4}},
       {TroopType::CarthageBowCommander,
        NationID::Carthage,
        "carthage_bow_commander",
@@ -241,7 +269,14 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        24.0F,
        12.0F,
        50.0F,
-       SpawnType::Archer},
+       SpawnType::Archer,
+       {CommanderSignatureMove::HuntingShot,
+        QT_TRANSLATE_NOOP("Commanders", "Hunting Shot"),
+        5.5F,
+        1.9F,
+        0.0F,
+        0.0F,
+        1}},
       {TroopType::CarthageSwordCommander,
        NationID::Carthage,
        "carthage_sword_commander",
@@ -288,7 +323,14 @@ auto all_commander_definitions() -> const std::vector<CommanderDefinition>& {
        34.0F,
        18.0F,
        55.0F,
-       SpawnType::Knight},
+       SpawnType::Knight,
+       {CommanderSignatureMove::EncirclingCut,
+        QT_TRANSLATE_NOOP("Commanders", "Encircling Cut"),
+        6.5F,
+        1.45F,
+        0.25F,
+        0.45F,
+        2}},
   };
   return definitions;
 }
@@ -335,6 +377,17 @@ void configure_commander_component(Engine::Core::Entity& entity, TroopType troop
   commander->aura_ability_duration = definition->aura_ability_duration;
   commander->aura_ability_cooldown = definition->aura_ability_cooldown;
   commander->aura_affinity_spawn_type = definition->aura_affinity_spawn_type;
+  commander->signature_move = static_cast<std::uint8_t>(definition->signature.move);
+  commander->signature_name = definition->signature.display_name;
+  commander->signature_cooldown = definition->signature.cooldown_seconds;
+
+  commander->signature_cooldown_remaining =
+      definition->signature.cooldown_seconds * 0.5F;
+  commander->signature_damage_multiplier = definition->signature.damage_multiplier;
+  commander->signature_bonus_reach = definition->signature.bonus_reach;
+  commander->signature_stagger_seconds = definition->signature.stagger_seconds;
+  commander->signature_max_targets = definition->signature.max_targets;
+  commander->signature_strike_active = false;
 }
 
 auto commander_definitions_for_nation(Game::Systems::NationID nation_id)

@@ -108,6 +108,10 @@ public:
   }
 
   void remove_non_persistent_props();
+
+  auto add_world_prop_at_world(WorldProp prop,
+                               float world_x,
+                               float world_z) -> std::uint64_t;
   [[nodiscard]] auto
   world_prop_world_position(const WorldProp& prop,
                             float world_y_offset = 0.0F,

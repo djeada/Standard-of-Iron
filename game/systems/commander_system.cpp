@@ -11,6 +11,11 @@
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
+
+namespace {
+constexpr float k_signature_strike_grace = 1.5F;
+} // namespace
+
 namespace {
 
 constexpr float k_flag_rally_arrival_threshold_sq = 2.25F;
@@ -305,6 +310,14 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         std::max(0.0F, commander->rally_feedback_time - delta_time);
     commander->aura_ability_cooldown_remaining =
         std::max(0.0F, commander->aura_ability_cooldown_remaining - delta_time);
+
+    commander->signature_cooldown_remaining =
+        std::max(0.0F, commander->signature_cooldown_remaining - delta_time);
+    if (commander->signature_strike_active &&
+        commander->signature_cooldown_remaining <
+            commander->signature_cooldown - k_signature_strike_grace) {
+      commander->signature_strike_active = false;
+    }
 
     if (commander->aura_ability_active) {
       commander->aura_ability_remaining -= delta_time;

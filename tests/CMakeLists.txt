@@ -69,6 +69,7 @@ add_executable(
     map/hill_crown_geometry_test.cpp
     map/terrain_footprint_test.cpp
     map/mission_victory_rules_test.cpp
+    map/undead_shrine_placement_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/campaign_loader_test.cpp
     map/time_of_day_test.cpp
@@ -101,6 +102,8 @@ add_executable(
     systems/production_system_test.cpp
     systems/victory_service_test.cpp
     systems/undead_awakening_system_test.cpp
+    systems/melee_engagement_test.cpp
+    systems/commander_duel_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
     systems/ai_system_test.cpp
@@ -174,6 +177,7 @@ add_executable(
     render/persistent_render_registry_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
+    render/spark_direction_test.cpp
     render/linear_feature_geometry_test.cpp
     render/road_network_geometry_test.cpp
     render/linear_feature_visibility_test.cpp

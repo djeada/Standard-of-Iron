@@ -25,6 +25,10 @@ enum class CombatActionId : std::uint8_t {
   RtsSpearThrust,
   RtsBowShot,
   RtsElephantStomp,
+
+  RtsCommanderThrust,
+  RtsCommanderCut,
+  RtsCommanderShot,
 };
 
 enum class WeaponFamily : std::uint8_t {

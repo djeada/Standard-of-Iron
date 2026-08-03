@@ -77,20 +77,85 @@ void render_projectile_impact(Renderer* renderer,
   }
 
   if (impact.kind == Game::Systems::ProjectileKind::Fireball) {
-    float const expansion =
-        0.18F + 0.92F * std::sin(progress * std::numbers::pi_v<float>);
-    renderer->fireball(impact.position,
-                       QVector3D(1.0F, 0.24F, 0.025F),
-                       expansion,
-                       1.65F * fade,
-                       renderer->get_animation_time() + impact.age * 2.0F);
-    renderer->fireball(impact.position + QVector3D(0.0F, 0.10F, 0.0F),
-                       QVector3D(1.0F, 0.74F, 0.20F),
-                       expansion * 0.48F,
-                       1.90F * fade,
-                       renderer->get_animation_time() * 1.37F);
-    renderer->stone_impact(
-        impact.position, QVector3D(0.95F, 0.28F, 0.035F), 0.95F, 1.35F, impact.age);
+
+    float const growth = 1.0F - std::pow(1.0F - progress, 2.4F);
+    float const cooling = 1.0F - progress;
+    float const flash_life = std::clamp(1.0F - progress * 3.2F, 0.0F, 1.0F);
+    float const scale = std::max(0.35F, impact.scale);
+    float const time = renderer->get_animation_time();
+
+    float const outer_radius = (0.22F + 0.82F * growth) * scale;
+
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.26F * growth, 0.0F),
+                       QVector3D(0.34F, 0.085F, 0.02F),
+                       outer_radius * 1.12F,
+                       (0.40F + 1.05F * cooling * cooling) * 1.25F,
+                       time + impact.age * 1.9F);
+
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.22F * growth, 0.0F),
+                       QVector3D(0.92F, 0.30F, 0.05F),
+                       outer_radius,
+                       (0.45F + 1.25F * cooling * cooling) * 1.35F,
+                       time * 1.13F + impact.age * 2.3F);
+
+    renderer->fireball(impact.position + QVector3D(0.0F, 0.14F * growth, 0.0F),
+                       QVector3D(1.0F, 0.52F, 0.10F),
+                       outer_radius * 0.58F,
+                       (0.35F + 1.55F * cooling) * 1.25F,
+                       time * 1.37F + impact.age);
+
+    if (flash_life > 0.0F) {
+
+      QVector3D const heart_offset(0.10F * scale * std::sin(impact.age * 9.0F),
+                                   0.08F + 0.16F * growth * scale,
+                                   0.10F * scale * std::cos(impact.age * 7.0F));
+      renderer->fireball(impact.position + heart_offset,
+                         QVector3D(1.0F, 0.82F, 0.44F),
+                         outer_radius * (0.14F + 0.14F * flash_life),
+                         2.1F * flash_life * flash_life,
+                         time * 1.71F);
+    }
+
+    constexpr int k_ember_count = 9;
+    for (int ember = 0; ember < k_ember_count; ++ember) {
+      float const seed = static_cast<float>(ember) * 2.399963F;
+      float const spread = (0.55F + 0.75F * std::sin(seed * 3.1F)) * scale;
+      float const travel = growth * (0.9F + 0.5F * std::cos(seed * 1.7F));
+      QVector3D const offset(std::cos(seed) * spread * travel,
+                             (0.40F + 0.60F * std::sin(seed * 2.3F)) * travel * scale,
+                             std::sin(seed) * spread * travel);
+      renderer->metal_spark(impact.position + offset,
+                            QVector3D(1.0F, 0.42F, 0.09F),
+                            0.085F * scale,
+                            1.15F * cooling,
+                            impact.age + seed * 0.05F,
+                            offset);
+    }
+
+    float const smoke = std::clamp((progress - 0.12F) * 1.7F, 0.0F, 1.0F);
+    if (smoke > 0.0F) {
+      renderer->combat_dust(
+          impact.position + QVector3D(0.0F, (0.30F + 0.95F * progress) * scale, 0.0F),
+          QVector3D(0.30F, 0.26F, 0.24F),
+          (0.70F + 1.25F * progress) * scale,
+          1.25F * smoke * cooling,
+          impact.age);
+      renderer->combat_dust(impact.position +
+                                QVector3D(0.28F * scale,
+                                          (0.55F + 1.20F * progress) * scale,
+                                          -0.20F * scale),
+                            QVector3D(0.24F, 0.21F, 0.20F),
+                            (0.45F + 0.95F * progress) * scale,
+                            0.85F * smoke * cooling,
+                            impact.age * 1.3F + 0.7F);
+    }
+
+    Render::LocalLight blast;
+    blast.position = impact.position + QVector3D(0.0F, 0.35F * scale, 0.0F);
+    blast.color = QVector3D(1.0F, 0.42F, 0.13F);
+    blast.radius = std::clamp((3.2F + 2.4F * growth) * scale, 3.0F, 7.5F);
+    blast.intensity = (0.35F + 1.25F * flash_life) * cooling;
+    renderer->local_light(blast);
     return;
   }
 
@@ -108,8 +173,12 @@ void render_projectile_impact(Renderer* renderer,
                                      : QVector3D(1.0F, 0.88F, 0.52F));
   float const impact_radius = impact.ballista_bolt ? 0.32F : 0.14F;
   float const impact_intensity = impact.ballista_bolt ? 1.35F : 0.72F;
-  renderer->metal_spark(
-      impact.position, flash_color, impact_radius, impact_intensity, impact.age);
+  renderer->metal_spark(impact.position,
+                        flash_color,
+                        impact_radius,
+                        impact_intensity,
+                        impact.age,
+                        impact.incoming_direction);
 
   if (!impact.ballista_bolt) {
     return;
@@ -188,54 +257,71 @@ void render_arrow_projectile(Renderer* renderer,
 
     float const animation_time = renderer->get_animation_time();
     float const pulse =
-        0.92F + 0.10F * std::sin(animation_time * 12.0F + arrow.get_progress() * 32.0F);
+        0.94F + 0.08F * std::sin(animation_time * 12.0F + arrow.get_progress() * 32.0F);
     float const spell_phase = animation_time + arrow.get_progress() * 3.7F;
 
     renderer->fireball(
-        pos, QVector3D(0.92F, 0.20F, 0.025F), 0.135F * pulse, 0.82F, spell_phase);
+        pos, QVector3D(0.34F, 0.09F, 0.02F), 0.205F * pulse, 0.72F, spell_phase);
     renderer->fireball(pos,
-                       QVector3D(1.0F, 0.68F, 0.18F),
-                       0.076F * pulse,
-                       1.32F,
+                       QVector3D(1.0F, 0.42F, 0.07F),
+                       0.128F * pulse,
+                       1.25F,
                        spell_phase * 1.37F + 1.9F);
+    renderer->fireball(pos,
+                       QVector3D(1.0F, 0.88F, 0.55F),
+                       0.058F * pulse,
+                       2.15F,
+                       spell_phase * 1.83F + 4.4F);
 
-    constexpr int k_trail_segments = 5;
+    constexpr int k_trail_segments = 18;
     for (int trail_idx = 1; trail_idx <= k_trail_segments; ++trail_idx) {
       float const trail_t =
-          arrow.get_progress() - static_cast<float>(trail_idx) * 0.040F;
+          arrow.get_progress() - static_cast<float>(trail_idx) * 0.013F;
       if (trail_t < 0.0F) {
         continue;
       }
 
       QVector3D trail_pos = arrow.get_start() + delta * trail_t;
       float const trail_h = arrow.get_arc_height() * 4.0F * trail_t * (1.0F - trail_t);
-      trail_pos.setY(trail_pos.y() + trail_h);
+      float const age =
+          static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
+      trail_pos.setY(trail_pos.y() + trail_h + age * 0.055F);
 
-      float const trail_falloff =
-          1.0F - static_cast<float>(trail_idx) / static_cast<float>(k_trail_segments);
-      QVector3D const trail_color =
-          QVector3D(0.88F, 0.18F, 0.025F) * (0.36F + 0.64F * trail_falloff) +
-          QVector3D(0.045F, 0.025F, 0.018F) * (1.0F - trail_falloff);
+      float const heat = (1.0F - age) * (1.0F - age);
+      QVector3D const trail_color = QVector3D(0.95F, 0.30F, 0.05F) * heat +
+                                    QVector3D(0.075F, 0.065F, 0.060F) * (1.0F - heat);
       renderer->fireball(trail_pos,
                          trail_color,
-                         std::max(0.018F, 0.073F * trail_falloff),
-                         std::max(0.08F, 0.52F * trail_falloff * trail_falloff),
+                         (0.105F + 0.155F * age) * pulse,
+                         std::max(0.09F, 0.85F * heat),
                          spell_phase - static_cast<float>(trail_idx) * 0.13F);
     }
 
     QMatrix4x4 core_model = model;
-    core_model.scale(0.040F * pulse, 0.040F * pulse, 0.040F * pulse);
+    core_model.scale(0.026F * pulse, 0.026F * pulse, 0.026F * pulse);
     renderer->mesh(
-        fireball_mesh, core_model, QVector3D(1.0F, 0.94F, 0.64F), nullptr, 1.0F);
+        fireball_mesh, core_model, QVector3D(1.0F, 0.96F, 0.80F), nullptr, 1.0F);
 
-    QVector3D const orbit_offset(std::sin(spell_phase * 7.3F) * 0.031F,
-                                 std::cos(spell_phase * 5.2F) * 0.017F,
-                                 std::cos(spell_phase * 6.4F) * 0.031F);
-    QMatrix4x4 spark_model = model;
-    spark_model.translate(orbit_offset);
-    spark_model.scale(0.009F, 0.009F, 0.009F);
-    renderer->mesh(
-        fireball_mesh, spark_model, QVector3D(1.0F, 0.86F, 0.40F), nullptr, 1.0F);
+    for (int spark_idx = 0; spark_idx < 3; ++spark_idx) {
+      float const seed = spell_phase * (5.2F + static_cast<float>(spark_idx) * 1.7F) +
+                         static_cast<float>(spark_idx) * 2.1F;
+      QVector3D const orbit(std::sin(seed) * 0.070F,
+                            std::cos(seed * 0.83F) * 0.042F + 0.02F,
+                            std::cos(seed * 1.13F) * 0.070F);
+      renderer->metal_spark(
+          pos + orbit,
+          QVector3D(1.0F, 0.50F, 0.12F),
+          0.045F,
+          0.9F,
+          std::fmod(spell_phase * 0.7F + static_cast<float>(spark_idx), 0.28F));
+    }
+
+    Render::LocalLight spell_light;
+    spell_light.position = pos;
+    spell_light.color = QVector3D(1.0F, 0.46F, 0.15F);
+    spell_light.radius = 3.4F;
+    spell_light.intensity = 0.85F * pulse;
+    renderer->local_light(spell_light);
     return;
   }
 

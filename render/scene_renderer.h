@@ -328,11 +328,13 @@ public:
                     float radius,
                     float intensity,
                     float time) override;
+
   void metal_spark(const QVector3D& position,
                    const QVector3D& color,
                    float radius,
                    float intensity,
-                   float time);
+                   float time,
+                   const QVector3D& direction = {});
   void mode_indicator(const QMatrix4x4& model,
                       int mode_type,
                       const QVector3D& color,

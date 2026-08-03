@@ -151,6 +151,16 @@ void TerrainScatterManager::refresh_runtime_world_props(
                        runtime_world_props,
                        m_use_world_props_exclusively);
   m_iron_ore->configure(*m_height_map, m_biome_settings, runtime_world_props);
+
+  m_firecamp->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_tent->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_supply_cart->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_weapon_rack->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_ruins->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_dead_tree->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_magic_shrine->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_abandoned_home->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_statue->configure(*m_height_map, m_biome_settings, runtime_world_props);
 }
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {

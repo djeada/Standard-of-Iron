@@ -112,11 +112,17 @@ public:
     float time{0.0F};
     EffectType effect_type{EffectType::Dust};
     bool overlay{false};
+
+    QVector3D direction{0.0F, 0.0F, 0.0F};
   };
 
   void render_dust_batch(const DustInstanceData* instances,
                          std::size_t count,
                          const QMatrix4x4& view_proj);
+
+  void set_view_position(const QVector3D& view_position) {
+    m_view_position = view_position;
+  }
 
   struct BloodPoolInstanceData {
     QVector3D position;
@@ -194,6 +200,7 @@ private:
     GL::Shader::UniformHandle intensity{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle dust_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle effect_type{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
   };
 
   struct BloodUniforms {
@@ -205,6 +212,7 @@ private:
     GL::Shader::UniformHandle seed{GL::Shader::InvalidUniform};
   };
 
+  QVector3D m_view_position;
   DustUniforms m_uniforms;
   BloodUniforms m_blood_uniforms;
 };

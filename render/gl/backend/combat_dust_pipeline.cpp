@@ -15,6 +15,7 @@
 #include "../render_constants.h"
 #include "../shader_cache.h"
 #include "scene/camera.h"
+#include "spark_orientation.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -333,6 +334,7 @@ void CombatDustPipeline::cache_uniforms() {
     m_uniforms.intensity = m_dust_shader->uniform_handle("u_intensity");
     m_uniforms.dust_color = m_dust_shader->uniform_handle("u_dust_color");
     m_uniforms.effect_type = m_dust_shader->uniform_handle("u_effect_type");
+    m_uniforms.camera_pos = m_dust_shader->uniform_handle("u_camera_pos");
   }
 
   if (m_blood_shader != nullptr) {
@@ -1100,6 +1102,7 @@ void CombatDustPipeline::render_blood_pools(const Camera& cam) {
 }
 
 void CombatDustPipeline::render_dust(const CombatDustData& data, const Camera& cam) {
+  set_view_position(cam.get_position());
   QMatrix4x4 const view_proj = cam.get_view_projection_matrix();
   DustInstanceData const instance{.position = data.position,
                                   .color = data.color,
@@ -1250,9 +1253,13 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     }
 
     QMatrix4x4 model;
-    model.setToIdentity();
-    model.translate(inst.position);
-    model.scale(inst.radius);
+    if (use_metal_spark_geometry) {
+      model = spark_model_matrix(inst.position, inst.radius, inst.direction);
+    } else {
+      model.setToIdentity();
+      model.translate(inst.position);
+      model.scale(inst.radius);
+    }
 
     QMatrix4x4 const mvp = view_proj * model;
 
@@ -1265,6 +1272,7 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     m_dust_shader->set_uniform(m_uniforms.dust_color, inst.color);
     m_dust_shader->set_uniform(m_uniforms.effect_type,
                                static_cast<int>(inst.effect_type));
+    m_dust_shader->set_uniform(m_uniforms.camera_pos, m_view_position);
 
     glDrawElements(GL_TRIANGLES, current_index_count, GL_UNSIGNED_INT, nullptr);
   }
