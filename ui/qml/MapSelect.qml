@@ -1482,17 +1482,24 @@ Item {
                     }
 
                     Button {
+                        id: addCpuButton
+
+                        readonly property bool allowed: players_model.count < player_ids_for_map(selected_map_data).length
+
                         text: qsTr("+ Add CPU")
-                        enabled: players_model.count < player_ids_for_map(selected_map_data).length
                         onClicked: {
+                            if (!allowed) {
+                                Design.UiSound.warning();
+                                return;
+                            }
                             Design.UiSound.activate();
                             add_cpu();
                         }
                         hoverEnabled: true
                         implicitHeight: 38
                         implicitWidth: 120
-                        ToolTip.visible: addCpuHover.containsMouse && parent.enabled
-                        ToolTip.text: qsTr("Add AI opponent")
+                        ToolTip.visible: addCpuHover.containsMouse
+                        ToolTip.text: allowed ? qsTr("Add AI opponent") : qsTr("Every slot on this map is taken")
 
                         MouseArea {
                             id: addCpuHover
@@ -1500,14 +1507,14 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             acceptedButtons: Qt.NoButton
-                            cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            cursorShape: addCpuButton.allowed ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                         }
 
                         contentItem: Text {
                             text: parent.text
                             font.pixelSize: 13
                             font.bold: true
-                            color: parent.enabled ? Theme.textMain : Theme.textDim
+                            color: addCpuButton.allowed ? Theme.textMain : Theme.textDim
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -1515,7 +1522,7 @@ Item {
                         background: Rectangle {
                             radius: Theme.radiusMedium
                             color: {
-                                if (!parent.enabled)
+                                if (!addCpuButton.allowed)
                                     return Theme.cardBase;
                                 if (parent.down)
                                     return Qt.darker(Theme.addColor, 1.2);
@@ -1523,8 +1530,8 @@ Item {
                                     return Qt.lighter(Theme.addColor, 1.2);
                                 return Theme.addColor;
                             }
-                            border.width: parent.enabled && addCpuHover.containsMouse ? 2 : 1
-                            border.color: parent.enabled ? Qt.lighter(Theme.addColor, 1.3) : Theme.thumbBr
+                            border.width: addCpuButton.allowed && addCpuHover.containsMouse ? 2 : 1
+                            border.color: addCpuButton.allowed ? Qt.lighter(Theme.addColor, 1.3) : Theme.thumbBr
 
                             Behavior on color  {
                                 ColorAnimation {
@@ -1791,9 +1798,16 @@ Item {
             }
 
             Button {
+                id: playButton
+
+                readonly property bool allowed: list.currentIndex >= 0 && list.count > 0 && players_model.count > 0 && validation_error === ""
+
                 text: qsTr("Play")
-                enabled: list.currentIndex >= 0 && list.count > 0 && players_model.count > 0 && validation_error === ""
                 onClicked: {
+                    if (!allowed) {
+                        Design.UiSound.warning();
+                        return;
+                    }
                     Design.UiSound.activate();
                     accept_selection();
                 }
@@ -1819,14 +1833,14 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     acceptedButtons: Qt.NoButton
-                    cursorShape: parent.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    cursorShape: playButton.allowed ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                 }
 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: parent.enabled ? (playHover.containsMouse ? 15 : 14) : 14
+                    font.pixelSize: playButton.allowed ? (playHover.containsMouse ? 15 : 14) : 14
                     font.bold: true
-                    color: parent.enabled ? Theme.textMain : Theme.textDim
+                    color: playButton.allowed ? Theme.textMain : Theme.textDim
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
 
@@ -1840,7 +1854,7 @@ Item {
                 background: Rectangle {
                     radius: Theme.radiusLarge
                     color: {
-                        if (!parent.enabled)
+                        if (!playButton.allowed)
                             return Theme.cardBaseB;
                         if (parent.down)
                             return Theme.selectedBr;
@@ -1848,8 +1862,8 @@ Item {
                             return Qt.lighter(Theme.selectedBg, 1.2);
                         return Theme.selectedBg;
                     }
-                    border.width: parent.enabled && playHover.containsMouse ? 2 : 1
-                    border.color: parent.enabled ? Theme.selectedBr : Theme.panelBr
+                    border.width: playButton.allowed && playHover.containsMouse ? 2 : 1
+                    border.color: playButton.allowed ? Theme.selectedBr : Theme.panelBr
 
                     Behavior on color  {
                         ColorAnimation {

@@ -7,6 +7,9 @@ CheckBox {
 
     property string description: ""
     property string accessibleName: text
+
+    property bool blocked: false
+    readonly property bool interactive: enabled && !blocked
     readonly property bool showFocusRing: visualFocus || (Design.A11y.alwaysShowFocus && activeFocus)
 
     implicitHeight: Math.max(Design.Metrics.controlHeight, Design.Metrics.minTouchTarget)
@@ -21,11 +24,20 @@ CheckBox {
         }
 
         function onHoveredChanged() {
-            if (control.hovered && control.enabled)
+            if (control.hovered && control.interactive)
                 Design.UiSound.hover();
         }
 
         target: control
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: control.blocked
+        visible: enabled
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.ForbiddenCursor
+        onPressed: Design.UiSound.warning()
     }
 
     indicator: Rectangle {
@@ -36,7 +48,7 @@ CheckBox {
         radius: Design.Metrics.radiusSmall
         color: control.checked ? Design.Theme.accent : Design.Theme.panelIron
         border.width: control.showFocusRing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-        border.color: !control.enabled ? Design.Theme.borderSubtle : control.showFocusRing ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderStrong
+        border.color: !control.interactive ? Design.Theme.borderSubtle : control.showFocusRing ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderStrong
 
         Text {
             anchors.centerIn: parent
@@ -58,7 +70,7 @@ CheckBox {
     contentItem: Text {
         leftPadding: control.indicator.width + control.spacing
         text: control.text
-        color: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+        color: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.label
         verticalAlignment: Text.AlignVCenter

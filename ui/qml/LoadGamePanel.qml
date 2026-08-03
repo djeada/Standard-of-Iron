@@ -234,8 +234,11 @@ Item {
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                enabled: !model.isEmpty
                                 onClicked: {
+                                    if (model.isEmpty) {
+                                        Design.UiSound.warning();
+                                        return;
+                                    }
                                     Design.UiSound.activate();
                                     loadListView.selected_index = index;
                                 }
@@ -408,11 +411,9 @@ Item {
                 StyledButton {
                     text: qsTr("Load")
                     button_style: "primary"
-                    enabled: loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty
-                    onClicked: {
-                        if (loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty)
-                            root.load_requested(loadListModel.get(loadListView.selected_index).slot_name);
-                    }
+                    blocked: loadListView.selected_index < 0 || loadListModel.get(loadListView.selected_index).isEmpty
+                    disabledReason: qsTr("Pick a saved game first.")
+                    onClicked: root.load_requested(loadListModel.get(loadListView.selected_index).slot_name)
                 }
             }
         }

@@ -420,11 +420,11 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingMedium
-                                enabled: UiPreferences.edgeScrollEnabled
 
                                 Design.IronSlider {
                                     id: edge_scroll_slider
 
+                                    blocked: !UiPreferences.edgeScrollEnabled
                                     Layout.fillWidth: true
                                     from: UiPreferences.minEdgeScrollSensitivity
                                     to: UiPreferences.maxEdgeScrollSensitivity
@@ -670,7 +670,7 @@ Item {
                                 text: qsTr("Team ring patterns")
                                 description: UiPreferences.colorVisionMode !== "none" ? qsTr("On automatically while a colour vision mode is selected") : qsTr("Marks each side with its own selection ring shape as well as its colour")
                                 checked: UiPreferences.effectiveTeamPatterns
-                                enabled: UiPreferences.colorVisionMode === "none"
+                                blocked: UiPreferences.colorVisionMode !== "none"
                                 onToggled: UiPreferences.teamPatterns = checked
                             }
 

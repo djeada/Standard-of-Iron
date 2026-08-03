@@ -130,6 +130,16 @@ above, and never step 5, because their levels are authored deliberately in
 `tools/audio_synth/cues.py` and normalising them would flatten the contrast the
 recipes were written to produce.
 
+Interface cues additionally take a **fixed +12 dB makeup** (`Profile::makeup_db`)
+in place of step 5. `audio_synth` writes them around -25 dBFS, and effect cues
+leave the pass on the -1 dBFS ceiling, so the whole interface bus used to sit
+12 dB under everything else: a click was inaudible under music, and a hover blip
+at -34 dBFS was inaudible full stop. A single gain for the material moves the bus
+without touching the levels inside it, so the contrast step 5 would have
+flattened survives exactly — the loudest of the 25 cues lands on the ceiling and
+every other cue keeps its authored distance from it. The limiter still runs
+after, so the ceiling guarantee below is unaffected.
+
 ### The limiter's ceiling guarantee
 
 The offline limiter computes, per 32-sample block, the gain that block needs to
@@ -157,16 +167,17 @@ Measured through the game's own decode path, over all twenty music tracks:
 | music     | 20    | +1.26 dBFS    | -1.00 dBFS     | 176,454            | 20             | 2       | 3      |
 | ambience  | 18    | +1.32 dBFS    | -1.50 dBFS     | 3,908              | 12             | 0       | 1      |
 | effect    | 104   | +2.18 dBFS    | -1.00 dBFS     | 17,378             | 26             | 0       | 25     |
-| interface | 25    | -12.99 dBFS   | -12.98 dBFS    | 0                  | 0              | 0       | 9      |
+| interface | 25    | -12.99 dBFS   | -1.00 dBFS     | 0                  | 0              | 0       | 9      |
 | voice     | 31    | -0.75 dBFS    | -1.00 dBFS     | 0                  | 0              | 0       | 6      |
 
 Every one of the twenty music tracks was clipping on decode. Nothing clips now.
 Music loudness converges on -15.0 LUFS (17 of 20 land exactly there; -15.8 is
 the worst case, where the headroom rule binds first).
 
-`ui.click_confirm` measures -14.35 dBFS in and -14.26 dBFS out with no notches,
-no tilt and no loudness change: the authored effect levels are untouched. The
-interface row above is the same story for all 25 cues.
+`ui.click_confirm` measures -14.35 dBFS in and -2.26 dBFS out with no notches and
+no tilt: the +12 dB makeup is the only thing that moved it, and the same +12 dB
+moved all 25 cues. Only the loudest, `ui.error_thud_v2`, asks the limiter for
+anything at all, and it asks for 0.02 dB.
 
 `VOICE_GAIN` in `audio_system.cpp` dropped from 2.0 to 1.0. It existed because
 voices were quiet — they measure -21.9 LUFS — and it paid for that with 6 dB of
