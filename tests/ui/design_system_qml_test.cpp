@@ -35,8 +35,9 @@ public:
       if (metrics.inFontUcs4(code_point)) {
         continue;
       }
+      const auto glyph = static_cast<char32_t>(code_point);
       absent.append(QStringLiteral("%1 (U+%2)")
-                        .arg(QString::fromUcs4(&code_point, 1),
+                        .arg(QString::fromUcs4(&glyph, 1),
                              QString::number(code_point, 16).toUpper()));
     }
     return absent;

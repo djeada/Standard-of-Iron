@@ -587,14 +587,14 @@ struct ArenaScenarioRunner::Impl {
     QString group;
     QVector3D position;
     int health{0};
-    std::uint32_t target_id{0};
+    Engine::Core::EntityID target_id{0};
     QString motion;
     QString combat_mode;
     int mounted_charge_state{-1};
     int mounted_charge_cancel_reason{-1};
     int combat_action_id{0};
     bool melee_lock{false};
-    std::uint32_t melee_lock_target_id{0};
+    Engine::Core::EntityID melee_lock_target_id{0};
     bool combat_indicator_submitted{false};
     float yaw{0.0F};
     bool movement_target{false};

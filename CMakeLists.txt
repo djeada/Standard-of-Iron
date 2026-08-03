@@ -159,6 +159,18 @@ elseif(COMMAND qt6_standard_project_setup)
     qt6_standard_project_setup()
 endif()
 
+# Qt 6.5+ warns on every configure until these are answered. Both are pinned to
+# the behaviour the project already relies on: QML lives under qrc:/StandardOfIron
+# rather than the qrc:/qt/qml prefix QTP0001 NEW would impose (see the import
+# paths in main.cpp), and the module ships its own qmldir files. Adopting NEW is a
+# separate migration, not a warning fix.
+if(COMMAND qt_policy)
+    qt_policy(SET QTP0001 OLD)
+    if(Qt6_VERSION VERSION_GREATER_EQUAL 6.8)
+        qt_policy(SET QTP0004 OLD)
+    endif()
+endif()
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 if(QT_VERSION_MAJOR EQUAL 5)

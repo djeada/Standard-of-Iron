@@ -104,6 +104,12 @@ and `campaign_state.json` to the ids `provinces.py` actually emits. It was added
 after all three had drifted apart -- they listed a `sicily_carthaginian` that the
 pipeline has never generated.
 
+`provinces.json` is a pipeline output and is not committed, so on a plain checkout
+-- CI included -- the two checks that read it are skipped and only the
+`valid_provinces.json`/`campaign_state.json` comparison runs. Run
+`python3 tools/map_pipeline/provinces.py` to get the full check locally; if that
+run is stale the whitelist check is what tells you.
+
 ### Mission to Province Mapping
 
 Missions reference provinces via `world_region_id` field in campaign JSON files:

@@ -41,18 +41,22 @@ protected:
   void SetUp() override {
 
     QDir(Game::Systems::SaveLoadService::saves_directory()).removeRecursively();
-    auto* service = Game::Systems::SaveLoadService::instance();
-    ASSERT_NE(service, nullptr);
+    service = std::make_unique<Game::Systems::SaveLoadService>();
 
     const QVariantList campaigns = service->list_campaigns();
     ASSERT_FALSE(campaigns.isEmpty()) << "no campaigns were discovered";
 
     manager = std::make_unique<CampaignManager>();
+    manager->set_save_service(service.get());
     manager->set_available_campaigns(campaigns);
   }
 
   void TearDown() override {
     manager.reset();
+    if (service) {
+      service->shutdown();
+      service.reset();
+    }
     QDir(Game::Systems::SaveLoadService::saves_directory()).removeRecursively();
   }
 
@@ -67,8 +71,7 @@ protected:
     manager->mark_current_mission_completed();
   }
 
-  [[nodiscard]] static auto mission_ids() -> QStringList {
-    auto* service = Game::Systems::SaveLoadService::instance();
+  [[nodiscard]] auto mission_ids() const -> QStringList {
     QStringList ids;
     for (const QVariant& entry : service->list_campaigns()) {
       const QVariantMap campaign = entry.toMap();
@@ -84,8 +87,7 @@ protected:
     return ids;
   }
 
-  [[nodiscard]] static auto mission_state(const QString& mission_id) -> QVariantMap {
-    auto* service = Game::Systems::SaveLoadService::instance();
+  [[nodiscard]] auto mission_state(const QString& mission_id) const -> QVariantMap {
     for (const QVariant& entry :
          service->get_campaign_mission_progress(QLatin1String(k_campaign_id))) {
       const QVariantMap row = entry.toMap();
@@ -96,6 +98,7 @@ protected:
     return {};
   }
 
+  std::unique_ptr<Game::Systems::SaveLoadService> service;
   std::unique_ptr<CampaignManager> manager;
   static QString s_saved_application_name;
 };
@@ -132,8 +135,7 @@ TEST_F(CampaignManagerTest, TheCampaignOnlyCompletesAfterTheFinalMission) {
   win(k_final_mission);
   EXPECT_TRUE(manager->campaign_completed())
       << "clearing the last mission did not finish the campaign";
-  EXPECT_TRUE(Game::Systems::SaveLoadService::instance()
-                  ->get_campaign_progress(QLatin1String(k_campaign_id))
+  EXPECT_TRUE(service->get_campaign_progress(QLatin1String(k_campaign_id))
                   .value(QStringLiteral("completed"))
                   .toBool());
 }

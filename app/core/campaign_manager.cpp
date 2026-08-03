@@ -17,6 +17,11 @@ CampaignManager::CampaignManager(QObject* parent)
     : QObject(parent) {
 }
 
+auto CampaignManager::save_service() const -> Game::Systems::SaveLoadService* {
+  return m_save_service != nullptr ? m_save_service
+                                   : Game::Systems::SaveLoadService::instance();
+}
+
 void CampaignManager::load_campaigns() {
   emit available_campaigns_changed();
 }
@@ -116,7 +121,7 @@ void CampaignManager::mark_current_mission_completed() {
     return;
   }
 
-  auto* save_service = Game::Systems::SaveLoadService::instance();
+  auto* save_service = this->save_service();
   if (save_service == nullptr) {
     qWarning() << "Save/Load service not initialized";
     return;

@@ -15,7 +15,8 @@ struct MissionDefinition;
 
 namespace Game::Systems {
 class VictoryService;
-}
+class SaveLoadService;
+} // namespace Game::Systems
 
 class CampaignManager : public QObject {
   Q_OBJECT
@@ -56,12 +57,19 @@ public:
     m_current_mission_context = context;
   }
 
+  void set_save_service(Game::Systems::SaveLoadService* service) {
+    m_save_service = service;
+  }
+
 signals:
   void available_campaigns_changed();
   void current_campaign_changed();
   void current_mission_changed();
 
 private:
+  [[nodiscard]] auto save_service() const -> Game::Systems::SaveLoadService*;
+
+  Game::Systems::SaveLoadService* m_save_service = nullptr;
   QVariantList m_available_campaigns;
   QString m_current_campaign_id;
   QString m_current_mission_id;
