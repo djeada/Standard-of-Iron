@@ -326,6 +326,11 @@ auto FormationDataLoader::load_layout(const QJsonObject& root,
   style.facing_jitter_degrees =
       read_float(root, "facing_jitter_degrees", style.facing_jitter_degrees);
   style.wedge_slope = read_float(root, "wedge_slope", style.wedge_slope);
+  style.wedge_growth = read_float(root, "wedge_growth", style.wedge_growth);
+  style.file_grouping = read_float(root, "file_grouping", style.file_grouping);
+  style.group_gap = read_float(root, "group_gap", style.group_gap);
+  style.group_depth_stagger =
+      read_float(root, "group_depth_stagger", style.group_depth_stagger);
   style.cluster_pull = read_float(root, "cluster_pull", style.cluster_pull);
   style.cluster_size = read_float(root, "cluster_size", style.cluster_size);
   style.radius_scale = read_float(root, "radius_scale", style.radius_scale);
@@ -338,6 +343,21 @@ auto FormationDataLoader::load_layout(const QJsonObject& root,
     report.issues.push_back(
         {source,
          QStringLiteral("Layout '%1' has a non-positive spacing scale").arg(id),
+         true});
+    return false;
+  }
+  if (style.file_grouping < 0.0F || style.group_gap < 0.0F ||
+      style.group_depth_stagger < 0.0F) {
+    report.issues.push_back(
+        {source,
+         QStringLiteral("Layout '%1' has a negative file grouping value").arg(id),
+         true});
+    return false;
+  }
+  if (style.wedge_growth <= 0.0F) {
+    report.issues.push_back(
+        {source,
+         QStringLiteral("Layout '%1' wedge_growth must be positive").arg(id),
          true});
     return false;
   }

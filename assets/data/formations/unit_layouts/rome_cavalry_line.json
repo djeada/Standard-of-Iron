@@ -1,0 +1,12 @@
+{
+  "id": "rome.cavalry_line",
+  "shape": "ranks",
+  "lateral_spacing_scale": 1.24,
+  "depth_spacing_scale": 1.46,
+  "rank_stagger": 0.5,
+  "front_rank_tightening": 0.06,
+  "lateral_jitter": 0.03,
+  "depth_jitter": 0.025,
+  "facing_jitter_degrees": 1.4,
+  "min_separation_scale": 0.62
+}

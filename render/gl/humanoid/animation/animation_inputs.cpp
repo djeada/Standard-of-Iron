@@ -562,6 +562,15 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
       return finalize_sample(anim);
     }
 
+    if (presentation->showcase_active) {
+      auto const clip = Animation::humanoid_showcase_clip(presentation->showcase_move);
+      if (clip != Animation::k_unmapped_clip) {
+        anim.has_showcase_clip = true;
+        anim.showcase_clip = clip;
+        anim.showcase_phase = std::clamp(presentation->showcase_phase, 0.0F, 1.0F);
+      }
+    }
+
     apply_authored_action_presentation(anim, *presentation);
 
     bool const has_authored_action =

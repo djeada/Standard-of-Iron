@@ -95,6 +95,14 @@ struct ArenaScenarioGroup {
   int max_health_override{0};
 
   std::optional<Game::Units::SpawnType> spawn_type;
+
+  QString renderer_override;
+  QStringList showcase_routine;
+  float showcase_start_delay{0.0F};
+  bool showcase_loop{true};
+  std::optional<QVector3D> showcase_throw_target;
+  float render_scale_override{0.0F};
+  QString showcase_released_renderer;
 };
 
 struct ArenaScenarioResourcePatch {

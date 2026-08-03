@@ -190,6 +190,7 @@ auto trail_segments_for_style(Game::Systems::ArrowVisualStyle style) -> int {
   case Game::Systems::ArrowVisualStyle::Volley:
     return 2;
   case Game::Systems::ArrowVisualStyle::Focused:
+  case Game::Systems::ArrowVisualStyle::Javelin:
     return 1;
   case Game::Systems::ArrowVisualStyle::Marker:
   default:
@@ -232,7 +233,7 @@ auto build_arrow_model(const Game::Systems::ArrowInstance& arrow,
   model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
   model.scale(arrow_xy_scale * final_scale,
               arrow_xy_scale * final_scale,
-              arrow_z_scale * final_scale);
+              arrow_z_scale * final_scale * arrow.length_scale);
   return model;
 }
 
@@ -347,7 +348,8 @@ void render_arrows(Renderer* renderer,
                     fletch_color,
                     main_alpha,
                     true,
-                    arrow.style != Game::Systems::ArrowVisualStyle::Marker);
+                    arrow.style != Game::Systems::ArrowVisualStyle::Marker &&
+                        arrow.style != Game::Systems::ArrowVisualStyle::Javelin);
   }
 }
 

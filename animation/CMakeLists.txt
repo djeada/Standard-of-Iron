@@ -24,6 +24,7 @@ add_library(
     posture_pose_manifest.cpp
     quadruped_gait_manifest.cpp
     selection_manifest.cpp
+    showcase_pose_manifest.cpp
     state_manifest.cpp
 )
 

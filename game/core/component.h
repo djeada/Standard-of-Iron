@@ -1833,6 +1833,41 @@ public:
   bool authored_action_running{false};
   bool authored_action_completed{false};
   float authored_action_phase{0.0F};
+
+  bool showcase_active{false};
+  std::uint8_t showcase_move{0};
+  float showcase_phase{0.0F};
+};
+
+class ShowcaseRoutineComponent : public Component {
+public:
+  ShowcaseRoutineComponent() = default;
+
+  struct Step {
+    std::uint8_t move{0};
+    float duration{0.0F};
+    float hold_after{0.0F};
+  };
+
+  std::vector<Step> steps;
+  std::size_t index{0};
+  float elapsed{0.0F};
+  float start_delay{0.0F};
+  bool loop{true};
+  bool finished{false};
+  bool active{false};
+  float phase{0.0F};
+  std::uint8_t current_move{0};
+  float applied_travel_x{0.0F};
+  float applied_travel_z{0.0F};
+  float facing_sin{0.0F};
+  float facing_cos{1.0F};
+  std::string armed_renderer_id;
+  std::string released_renderer_id;
+  bool has_throw_target{false};
+  float throw_target_x{0.0F};
+  float throw_target_z{0.0F};
+  bool throw_armed{true};
 };
 
 class TargetCommitmentComponent : public Component {

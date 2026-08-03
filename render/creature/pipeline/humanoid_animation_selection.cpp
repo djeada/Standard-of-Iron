@@ -69,6 +69,19 @@ void apply_authored_action_clip(
   selection.clip_variant = 0U;
 }
 
+void apply_showcase_clip(HumanoidAnimationSelection& selection,
+                         const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.has_showcase_clip ||
+      anim.inputs.showcase_clip == Animation::k_unmapped_clip) {
+    return;
+  }
+  selection.clip_id = anim.inputs.showcase_clip;
+  selection.phase = std::clamp(anim.inputs.showcase_phase, 0.0F, 1.0F);
+  selection.clip_variant = 0U;
+  selection.full_body_blend = {};
+  selection.upper_body_overlay = {};
+}
+
 void apply_role_specific_combat_clip(
     HumanoidAnimationSelection& selection,
     const UnitVisualSpec& spec,
@@ -233,6 +246,7 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
   update_clip_id(selection);
   apply_authored_action_clip(selection, anim);
   apply_role_specific_combat_clip(selection, spec, anim);
+  apply_showcase_clip(selection, anim);
   return selection;
 }
 

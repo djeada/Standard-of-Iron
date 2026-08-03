@@ -60,7 +60,7 @@
       },
       "formation": {
         "individuals_per_unit": 24,
-        "max_units_per_row": 6
+        "max_units_per_row": 8
       }
     },
     {

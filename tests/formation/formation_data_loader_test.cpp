@@ -221,11 +221,12 @@ TEST_F(FormationDataLoaderTest, ShippedLayoutDataKeepsTheFactionsDistinguishable
   const auto& rome_style = library.style(roman);
   const auto& carthage_style = library.style(carthaginian);
 
-  EXPECT_GT(carthage_style.lateral_spacing_scale,
-            rome_style.lateral_spacing_scale * 1.5F);
-  EXPECT_GT(rome_style.depth_spacing_scale, carthage_style.depth_spacing_scale);
-  EXPECT_GT(carthage_style.rank_echelon, 0.2F);
+  EXPECT_GT(carthage_style.file_grouping, 1.0F);
+  EXPECT_GT(carthage_style.group_gap, 0.2F);
+  EXPECT_FLOAT_EQ(rome_style.file_grouping, 0.0F);
+  EXPECT_GE(rome_style.rank_stagger, 0.4F);
   EXPECT_FLOAT_EQ(rome_style.rank_echelon, 0.0F);
+  EXPECT_FLOAT_EQ(carthage_style.rank_echelon, 0.0F);
   EXPECT_GT(carthage_style.rank_arc, 0.3F);
   EXPECT_FLOAT_EQ(rome_style.rank_arc, 0.0F);
   EXPECT_GT(carthage_style.facing_jitter_degrees,
