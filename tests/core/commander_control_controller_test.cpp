@@ -1,18 +1,22 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <vector>
 
 #include "app/core/commander_control_controller.h"
 #include "app/core/commander_mode_coordinator.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
+#include "game/systems/combat_actions/combat_action_events.h"
 #include "game/systems/command_service.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "game/systems/terrain_alignment_system.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "scene/camera.h"
@@ -803,7 +807,8 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 1.2F));
 
   EXPECT_EQ(commander_data->combo_step, 0);
-  EXPECT_EQ(action->melee_attack_sequence, 0U);
+
+  EXPECT_EQ(action->melee_attack_sequence, 1U);
 }
 
 TEST_F(CommanderControlControllerTest, CloseCameraModeShortensCommanderViewDistance) {
@@ -971,6 +976,188 @@ TEST_F(CommanderControlControllerTest, CommanderRpgPoolStaysInPlayableBand) {
   EXPECT_EQ(rpg->rpg_hp, rpg->rpg_max_hp);
   EXPECT_GE(rpg->rpg_max_hp, 130);
   EXPECT_LE(rpg->rpg_max_hp, 220);
+}
+
+TEST_F(CommanderControlControllerTest, ChaseLensStaysLevelWhileWalkingOverTerrain) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 64;
+  map_def.grid.height = 64;
+  map_def.grid.tile_size = 1.0F;
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, -12.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.input().forward = true;
+
+  Game::Systems::TerrainAlignmentSystem terrain_alignment;
+  Render::GL::Camera camera;
+  std::vector<float> eye_y;
+  std::vector<float> ground_y;
+  constexpr int k_frames = 240;
+  constexpr float k_dt = 1.0F / 60.0F;
+  for (int frame = 0; frame < k_frames; ++frame) {
+    terrain_alignment.update(&world, k_dt);
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+    eye_y.push_back(camera.get_position().y());
+    ground_y.push_back(transform->position.y);
+  }
+
+  ASSERT_GT(transform->position.z, -11.0F) << "commander never walked";
+
+  constexpr std::size_t k_settle = 30U;
+  float max_eye_step = 0.0F;
+  for (std::size_t i = k_settle; i < eye_y.size(); ++i) {
+    max_eye_step = std::max(max_eye_step, std::abs(eye_y[i] - eye_y[i - 1]));
+  }
+  EXPECT_LT(max_eye_step, 0.006F);
+
+  auto const eye_span = *std::max_element(eye_y.begin() + k_settle, eye_y.end()) -
+                        *std::min_element(eye_y.begin() + k_settle, eye_y.end());
+  auto const ground_span =
+      *std::max_element(ground_y.begin() + k_settle, ground_y.end()) -
+      *std::min_element(ground_y.begin() + k_settle, ground_y.end());
+
+  EXPECT_LT(eye_span - ground_span, 0.05F);
+}
+
+TEST_F(CommanderControlControllerTest, ChaseLensFiltersGroundReliefButNotJumps) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+
+  constexpr float k_dt = 1.0F / 60.0F;
+  constexpr float k_rise = 0.5F;
+  constexpr float k_jump_peak_height = 0.34F;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  Render::GL::Camera camera;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+  const float resting_eye_y = camera.get_position().y();
+
+  transform->position.y += k_rise;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+  const float ground_first_frame = camera.get_position().y() - resting_eye_y;
+  EXPECT_LT(ground_first_frame, k_rise * 0.25F);
+
+  for (int frame = 0; frame < 120; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+  }
+  EXPECT_NEAR(camera.get_position().y() - resting_eye_y, k_rise, 0.02F);
+  const float raised_eye_y = camera.get_position().y();
+
+  controller.request_jump();
+  float peak_jump_eye_y = raised_eye_y;
+  for (int frame = 0; frame < 24; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+    peak_jump_eye_y = std::max(peak_jump_eye_y, camera.get_position().y());
+  }
+  EXPECT_GT(peak_jump_eye_y - raised_eye_y, k_jump_peak_height * 0.5F);
+}
+
+TEST_F(CommanderControlControllerTest, IsolatedSwingsDoNotReplayTheSameClip) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  auto* enemy = create_enemy(world, 0.0F, 1.6F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  Render::GL::Camera camera;
+
+  std::vector<std::uint8_t> swing_clips;
+  for (int swing = 0; swing < 3; ++swing) {
+    controller.input().primary_action = true;
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+    controller.input().primary_action = false;
+
+    auto* action =
+        commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+    ASSERT_NE(action, nullptr);
+    swing_clips.push_back(action->combat_action_id);
+
+    action->action_running = false;
+    action->action_completed = true;
+    if (auto* combat_state =
+            commander->get_component<Engine::Core::CombatStateComponent>()) {
+      combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+      combat_state->state_duration = 0.0F;
+      combat_state->state_time = 0.0F;
+    }
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 1.5F));
+  }
+
+  ASSERT_EQ(swing_clips.size(), 3U);
+  EXPECT_NE(swing_clips[0], swing_clips[1]);
+  EXPECT_NE(swing_clips[1], swing_clips[2]);
+}
+
+TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOfReach) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+
+  auto* enemy = create_enemy(world, 0.0F, 2.6F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  auto* enemy_unit = enemy->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(enemy_unit, nullptr);
+  commander_data->fpv_controlled = true;
+  enemy_unit->render_individuals_per_unit_override = 1;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  Render::GL::Camera camera;
+
+  controller.input().primary_action = true;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  controller.input().primary_action = false;
+
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  ASSERT_TRUE(action->action_running);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  ASSERT_NE(definition, nullptr);
+
+  const float start_z = transform->position.z;
+  constexpr float k_dt = 0.016F;
+  for (int frame = 0; frame < 40; ++frame) {
+
+    Game::Systems::CombatActions::advance_combat_action_events(
+        *action, k_dt, *definition);
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+  }
+  const float travelled = transform->position.z - start_z;
+
+  EXPECT_GT(travelled, 0.25F);
+
+  EXPECT_LT(transform->position.z, 2.2F);
 }
 
 } // namespace

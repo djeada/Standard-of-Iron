@@ -162,6 +162,8 @@ auto soldier_cull_reason_name(SoldierCullReason reason) noexcept -> const char* 
     return "Billboard";
   case SoldierCullReason::Temporal:
     return "Temporal";
+  case SoldierCullReason::LensGap:
+    return "LensGap";
   }
   return "Unknown";
 }
@@ -211,6 +213,21 @@ void CombatAnimationDiagnostics::begin_frame(std::uint64_t frame_index) {
   }
   m_units.clear();
   m_mode_indicator_entities.clear();
+  m_unit_cull_reasons.clear();
+}
+
+void CombatAnimationDiagnostics::record_unit_cull(std::uint32_t entity_id,
+                                                  SoldierCullReason reason) {
+  if (!active()) {
+    return;
+  }
+  m_unit_cull_reasons[entity_id] = reason;
+}
+
+auto CombatAnimationDiagnostics::unit_cull_reason(
+    std::uint32_t entity_id) const noexcept -> SoldierCullReason {
+  auto const found = m_unit_cull_reasons.find(entity_id);
+  return found != m_unit_cull_reasons.end() ? found->second : SoldierCullReason::None;
 }
 
 void CombatAnimationDiagnostics::record_unit_sample(
