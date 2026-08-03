@@ -308,6 +308,7 @@ private:
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
   void spawn_terrain_review_structures();
   void draw_debug_overlay(QPainter& painter);
+  void draw_activity_overlay(QPainter& painter);
   void draw_spawn_anchor_marker(QPainter& painter);
   void draw_selection_marquee(QPainter& painter);
   void draw_terrain_normals(QPainter& painter);
@@ -401,6 +402,9 @@ private:
   bool m_attack_scrub_enabled = false;
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
+  // The activity badges the game HUD draws over units, shown here so an
+  // icon can be reviewed against the actual battlefield it sits on.
+  bool m_activity_overlay_visible = true;
   bool m_force_full_creature_lod = true;
   bool m_fog_of_war_enabled = false;
   float m_visibility_accumulator = 0.0F;

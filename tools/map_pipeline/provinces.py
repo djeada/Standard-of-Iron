@@ -521,14 +521,48 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "label_lonlat": (14.8, 35.0),
         },
         {
+            # What Rome actually held east of the Adriatic in 218: the
+            # protectorate won in the Illyrian Wars, which was the seaboard and
+            # its harbours, never the interior. Carrying it as one province with
+            # the hinterland painted the whole western Balkans Roman red, and
+            # since the province is bounded by ruled political lines and the
+            # map's own eastern edge, it read as a rectangle laid over the
+            # Adriatic. Higher priority than the interior so it carves out of
+            # it; the seaward edge is deliberately generous because everything
+            # past the coastline is clipped away against the land mesh anyway.
+            "id": "illyrian_coast",
+            "name": "Illyrian Coast",
+            "owner": "rome",
+            "region": "balkans",
+            "priority": 400,
+            "jitter_amplitude": 0.05,
+            "expand_factor": 1.0,
+            "cities": [{"name": "Salona", "lonlat": (16.4, 43.5)}],
+            "lonlat": [
+                (13.2, 45.9),
+                (14.8, 45.9),
+                (16.4, 44.2),
+                (17.8, 43.1),
+                (18.0, 42.4),
+                (18.0, 41.8),
+                (17.1, 42.3),
+                (15.5, 43.5),
+                (13.9, 44.8),
+                (12.9, 45.3),
+                (13.2, 45.9),
+            ],
+            "label_lonlat": (16.5, 43.6),
+        },
+        {
             "id": "illyria",
-            "name": "Illyria",
+            "name": "Illyrian Interior",
             "owner": "neutral",
             "region": "balkans",
             "priority": 120,
-            "jitter_amplitude": 0.06,
+            "jitter_amplitude": 0.09,
+            "jitter_frequency": 2.3,
             "expand_factor": 1.0,
-            "cities": [{"name": "Salona", "lonlat": (16.4, 43.5)}],
+            "cities": [],
             "lonlat": [
                 (15.1, 45.8),
                 (18.0, 45.8),
@@ -539,7 +573,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
                 (15.1, 43.0),
                 (15.1, 45.8),
             ],
-            "label_lonlat": (16.9, 43.7),
+            "label_lonlat": (17.4, 44.4),
         },
     ]
 

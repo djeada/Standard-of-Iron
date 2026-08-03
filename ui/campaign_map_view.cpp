@@ -126,6 +126,13 @@ struct LineLayer {
   QVector4D inner_color = QVector4D(0.55F, 0.50F, 0.42F, 0.75F);
   float outer_width_ratio = 1.8F;
   float inner_width_ratio = 1.0F;
+
+  // Draw the strip through the province shader so its land mask can throw away
+  // the parts that fall in open water. A border traces the edge of a polygon
+  // that was clipped against the land mesh, and the land mesh and the drawn
+  // coastline are generalised to different tolerances, so a coastal border
+  // spends part of its length a pixel or two out to sea.
+  bool clip_to_land = false;
 };
 
 struct StrokeMesh {
@@ -331,7 +338,7 @@ public:
     QMatrix4x4 mvp;
     compute_mvp(mvp);
 
-    draw_textured_layer(m_water_texture, m_quad_vao, 6, mvp, 1.0F, -0.01F);
+    draw_textured_layer(m_water_texture, m_ocean_vao, 6, mvp, 1.0F, -0.01F);
     if (m_terrain_mesh.ready && m_terrain_program.isLinked()) {
       draw_terrain_layer(m_terrain_mesh, mvp);
     } else if (m_land_vertex_count > 0) {
@@ -370,6 +377,12 @@ public:
     m_size = size;
     QOpenGLFramebufferObjectFormat fmt;
     fmt.setAttachment(QOpenGLFramebufferObject::Depth);
+    // Multisampled, because almost everything on this map is a thin diagonal
+    // line -- coastlines, rivers, province borders, the march route. Rendered
+    // without it they staircase, and the route in particular read as a chain of
+    // brown blocks rather than a drawn line. Qt resolves the multisampled
+    // buffer into the texture the scene graph shows, so nothing else changes.
+    fmt.setSamples(4);
     fmt.setSamples(0);
     return new QOpenGLFramebufferObject(size, fmt);
   }
@@ -393,6 +406,7 @@ public:
       m_hover_start_time = QDateTime::currentMSecsSinceEpoch();
       m_hover_province_id = new_hover_id;
     }
+    m_selected_province_id = view->selected_province_id();
 
     m_current_mission = view->current_mission();
 
@@ -411,10 +425,13 @@ private:
   QOpenGLShaderProgram m_line_program;
 
   QOpenGLShaderProgram m_terrain_program;
+  QOpenGLShaderProgram m_province_program;
   QOpenGLShaderProgram m_label_program;
 
   GLuint m_quad_vao = 0;
   GLuint m_quad_vbo = 0;
+  GLuint m_ocean_vao = 0;
+  GLuint m_ocean_vbo = 0;
 
   GLuint m_land_vao = 0;
   GLuint m_land_vbo = 0;
@@ -440,6 +457,7 @@ private:
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
+  QString m_selected_province_id;
   int m_province_state_version = 0;
   int m_current_mission = 7;
   float m_terrain_height_scale = 0.15F;
@@ -499,6 +517,11 @@ private:
                        QStringLiteral(":/assets/campaign_map/provinces.json"),
                        QVector4D(0.25F, 0.22F, 0.20F, 0.65F),
                        1.2F);
+    m_province_border_layer.clip_to_land = true;
+
+    // Rivers stop at the coast too. They are traced from a different dataset
+    // than the land mesh, so a few mouths run out past their own estuary.
+    m_river_layer.clip_to_land = true;
 
     init_symbol_layer(m_symbol_layer,
                       QStringLiteral(":/assets/campaign_map/provinces.json"));
@@ -598,40 +621,68 @@ void main() {
       return false;
     }
 
-    init_terrain_shader();
+    init_asset_shader(m_terrain_program, QStringLiteral("campaign_terrain"));
+    init_asset_shader(m_province_program, QStringLiteral("campaign_province"));
     return true;
   }
 
-  void init_terrain_shader() {
-    const QString vert_path = QStringLiteral(":/assets/shaders/campaign_terrain.vert");
-    const QString frag_path = QStringLiteral(":/assets/shaders/campaign_terrain.frag");
+  // Compiles assets/shaders/<name>.{vert,frag}. A shader that fails to load
+  // leaves its program unlinked rather than taking the whole map down: every
+  // caller checks isLinked() and falls back to the flat line program.
+  void init_asset_shader(QOpenGLShaderProgram& program, const QString& name) {
+    const QString vert_path = QStringLiteral(":/assets/shaders/%1.vert").arg(name);
+    const QString frag_path = QStringLiteral(":/assets/shaders/%1.frag").arg(name);
 
     QString vert_source;
     QString frag_source;
     if (!load_shader_source(vert_path, &vert_source) ||
         !load_shader_source(frag_path, &frag_source)) {
-      m_terrain_program.removeAllShaders();
+      program.removeAllShaders();
       return;
     }
 
-    if (!m_terrain_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                   vert_source)) {
-      qWarning() << "CampaignMapRenderer: Failed to compile terrain vertex"
-                 << vert_path;
-      m_terrain_program.removeAllShaders();
+    if (!program.addShaderFromSourceCode(QOpenGLShader::Vertex, vert_source)) {
+      qWarning() << "CampaignMapRenderer: Failed to compile vertex" << vert_path;
+      program.removeAllShaders();
       return;
     }
-    if (!m_terrain_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                   frag_source)) {
-      qWarning() << "CampaignMapRenderer: Failed to compile terrain fragment"
-                 << frag_path;
-      m_terrain_program.removeAllShaders();
+    if (!program.addShaderFromSourceCode(QOpenGLShader::Fragment, frag_source)) {
+      qWarning() << "CampaignMapRenderer: Failed to compile fragment" << frag_path;
+      program.removeAllShaders();
       return;
     }
-    if (!m_terrain_program.link()) {
-      qWarning() << "CampaignMapRenderer: Failed to link terrain shader";
-      m_terrain_program.removeAllShaders();
+    if (!program.link()) {
+      qWarning() << "CampaignMapRenderer: Failed to link shader" << name;
+      program.removeAllShaders();
     }
+  }
+
+  void build_quad(GLuint& vao, GLuint& vbo, float min_uv, float max_uv) {
+    const float verts[] = {
+        min_uv,
+        min_uv,
+        max_uv,
+        min_uv,
+        max_uv,
+        max_uv,
+        min_uv,
+        min_uv,
+        max_uv,
+        max_uv,
+        min_uv,
+        max_uv,
+    };
+
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
+    glBindVertexArray(0);
   }
 
   void init_quad() {
@@ -639,31 +690,14 @@ void main() {
       return;
     }
 
-    static const float k_quad_verts[] = {
-        0.0F,
-        0.0F,
-        1.0F,
-        0.0F,
-        1.0F,
-        1.0F,
-        0.0F,
-        0.0F,
-        1.0F,
-        1.0F,
-        0.0F,
-        1.0F,
-    };
+    build_quad(m_quad_vao, m_quad_vbo, 0.0F, 1.0F);
 
-    glGenVertexArrays(1, &m_quad_vao);
-    glGenBuffers(1, &m_quad_vbo);
-
-    glBindVertexArray(m_quad_vao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_quad_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(k_quad_verts), k_quad_verts, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-        0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void*>(0));
-    glBindVertexArray(0);
+    // The sea runs far past the edge of the surveyed area. The water texture is
+    // a purely vertical gradient sampled with clamp-to-edge, so overhanging the
+    // quad continues that gradient exactly rather than repeating or stretching
+    // anything -- which is what turns the old hard rectangle where the map
+    // stopped into open ocean.
+    build_quad(m_ocean_vao, m_ocean_vbo, -2.0F, 3.0F);
   }
 
   void init_land_mesh() {
@@ -1643,24 +1677,35 @@ void main() {
     m_terrain_program.setUniformValue("u_height_scale",
                                       mesh.height_scale * m_terrain_height_scale);
     m_terrain_program.setUniformValue("u_z_base", mesh.z_base);
+    // Light from the north-west, the convention every printed relief map uses:
+    // read it any other way and the mountains invert into valleys.
     m_terrain_program.setUniformValue("u_light_direction",
-                                      QVector3D(0.35F, 0.85F, 0.40F));
-    m_terrain_program.setUniformValue("u_ambient_strength", 0.45F);
-    m_terrain_program.setUniformValue("u_hillshade_strength", 0.35F);
-    m_terrain_program.setUniformValue("u_ao_strength", 0.25F);
+                                      QVector3D(-0.45F, 0.78F, -0.44F));
+    // Ambient sits high because relief is now a deviation around 1.0 rather
+    // than a straight multiply -- this is the floor of the shadow side, not the
+    // brightness of the whole map.
+    m_terrain_program.setUniformValue("u_ambient_strength", 0.62F);
+    m_terrain_program.setUniformValue("u_hillshade_strength", 0.5F);
+    m_terrain_program.setUniformValue("u_ao_strength", 0.12F);
     m_terrain_program.setUniformValue("u_use_hillshade", true);
-    m_terrain_program.setUniformValue("u_use_parchment", false);
-    m_terrain_program.setUniformValue("u_use_lighting", true);
+    m_terrain_program.setUniformValue("u_use_parchment", true);
+    m_terrain_program.setUniformValue("u_use_lighting", false);
     m_terrain_program.setUniformValue("u_water_deep_color",
                                       QVector3D(0.10F, 0.22F, 0.30F));
     m_terrain_program.setUniformValue("u_water_shallow_color",
                                       QVector3D(0.26F, 0.42F, 0.52F));
-    m_terrain_program.setUniformValue("u_lowland_tint", QVector3D(0.96F, 0.92F, 0.86F));
+    // Warm ochres over cream paper: a period atlas, not a satellite photo.
+    // These multiply the finished base texture, so they live near white --
+    // plains are the paper itself, and even the Atlas and the Alps only reach a
+    // light tan. Anything heavier reads as dirt rather than as altitude.
+    m_terrain_program.setUniformValue("u_lowland_tint", QVector3D(1.0F, 0.99F, 0.97F));
     m_terrain_program.setUniformValue("u_highland_tint",
-                                      QVector3D(0.82F, 0.74F, 0.64F));
+                                      QVector3D(0.99F, 0.94F, 0.83F));
     m_terrain_program.setUniformValue("u_mountain_tint",
-                                      QVector3D(0.70F, 0.62F, 0.55F));
-    m_terrain_program.setUniformValue("u_elevation_scale", 1.2F);
+                                      QVector3D(0.93F, 0.82F, 0.66F));
+    // Land tops out near 0.8 of the sample range, so this puts the Alpine and
+    // Atlas summits at the top of the ramp and leaves the plains at its foot.
+    m_terrain_program.setUniformValue("u_elevation_scale", 1.6F);
 
     m_terrain_program.setUniformValue("u_base_texture", 0);
     glActiveTexture(GL_TEXTURE0);
@@ -1679,14 +1724,24 @@ void main() {
       return;
     }
 
-    m_line_program.bind();
-    m_line_program.setUniformValue("u_mvp", mvp);
+    const bool clipped = layer.clip_to_land && m_province_program.isLinked() &&
+                         m_base_texture != nullptr;
+    QOpenGLShaderProgram& program = clipped ? m_province_program : m_line_program;
+
+    program.bind();
+    program.setUniformValue("u_mvp", mvp);
+    if (clipped) {
+      program.setUniformValue("u_base_texture", 0);
+      program.setUniformValue("u_use_parchment", false);
+      glActiveTexture(GL_TEXTURE0);
+      m_base_texture->bind();
+    }
 
     if (layer.double_stroke) {
 
       glLineWidth(layer.width * layer.outer_width_ratio);
-      m_line_program.setUniformValue("u_z", z_offset);
-      m_line_program.setUniformValue("u_color", layer.outer_color);
+      program.setUniformValue("u_z", z_offset);
+      program.setUniformValue("u_color", layer.outer_color);
 
       glBindVertexArray(layer.vao);
       for (const auto& span : layer.spans) {
@@ -1694,8 +1749,8 @@ void main() {
       }
 
       glLineWidth(layer.width * layer.inner_width_ratio);
-      m_line_program.setUniformValue("u_z", z_offset + 0.001F);
-      m_line_program.setUniformValue("u_color", layer.inner_color);
+      program.setUniformValue("u_z", z_offset + 0.001F);
+      program.setUniformValue("u_color", layer.inner_color);
 
       for (const auto& span : layer.spans) {
         glDrawArrays(GL_LINE_STRIP, span.start, span.count);
@@ -1704,8 +1759,8 @@ void main() {
     } else {
 
       glLineWidth(layer.width);
-      m_line_program.setUniformValue("u_z", z_offset);
-      m_line_program.setUniformValue("u_color", layer.color);
+      program.setUniformValue("u_z", z_offset);
+      program.setUniformValue("u_color", layer.color);
 
       glBindVertexArray(layer.vao);
       for (const auto& span : layer.spans) {
@@ -1714,7 +1769,10 @@ void main() {
       glBindVertexArray(0);
     }
 
-    m_line_program.release();
+    if (clipped) {
+      m_base_texture->release();
+    }
+    program.release();
   }
 
   static auto safe_normalized(const QVector2D& v) -> QVector2D {
@@ -1896,7 +1954,11 @@ void main() {
 
       if (!passes.empty()) {
         const auto& border_pass = passes[0];
-        float border_width_px = 6.0F * border_pass.width_multiplier;
+        // A drawn route, not a pipeline. The casing was eight pixels wide
+        // and the warm fill under it another three, so the march read as a
+        // painted band across the map rather than a line someone inked on
+        // it, and it buried the coast it follows.
+        float border_width_px = 3.6F * border_pass.width_multiplier;
         if (i != max_mission) {
           border_width_px *= 0.85F;
         }
@@ -1922,7 +1984,7 @@ void main() {
 
       if (passes.size() > 2) {
         const auto& highlight_pass = passes[2];
-        float highlight_width_px = 4.0F * highlight_pass.width_multiplier;
+        float highlight_width_px = 2.5F * highlight_pass.width_multiplier;
         if (i != max_mission) {
           highlight_width_px *= 0.8F;
         }
@@ -1948,7 +2010,7 @@ void main() {
 
       if (passes.size() > 3) {
         const auto& core_pass = passes[3];
-        float core_width_px = 3.0F * core_pass.width_multiplier;
+        float core_width_px = 1.9F * core_pass.width_multiplier;
         if (i != max_mission) {
           core_width_px *= 0.75F;
         }
@@ -2102,9 +2164,28 @@ void main() {
       return;
     }
 
-    m_line_program.bind();
-    m_line_program.setUniformValue("u_mvp", mvp);
-    m_line_program.setUniformValue("u_z", z_offset);
+    // Political colour goes through campaign_province, not the flat line
+    // program, so the fill can read the base map underneath it: the wash picks
+    // up the paper's grain instead of sitting on it as a decal, and the shader
+    // can hold the fill to land. The pipeline already clips provinces against
+    // the land mesh, so the mask only takes back the one to two percent that
+    // ends up on water where the mesh and the drawn coast disagree.
+    const bool use_province_program =
+        m_province_program.isLinked() && m_base_texture != nullptr;
+    QOpenGLShaderProgram& program =
+        use_province_program ? m_province_program : m_line_program;
+
+    program.bind();
+    program.setUniformValue("u_mvp", mvp);
+    program.setUniformValue("u_z", z_offset);
+    if (use_province_program) {
+      program.setUniformValue("u_base_texture", 0);
+      program.setUniformValue("u_parchment_strength", 0.35F);
+      program.setUniformValue("u_parchment_scale", 6.0F);
+      program.setUniformValue("u_use_parchment", true);
+      glActiveTexture(GL_TEXTURE0);
+      m_base_texture->bind();
+    }
 
     glBindVertexArray(layer.vao);
     for (const auto& span : layer.spans) {
@@ -2122,23 +2203,47 @@ void main() {
         color.setW(color.w() * fade);
       }
 
-      if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
+      // Selection and hover say different things and are drawn differently.
+      // The mission's own theatre sits a steady step above the map so the eye
+      // can find it; the province under the pointer breathes, because that is
+      // feedback and it should look live.
+      const bool selected =
+          !m_selected_province_id.isEmpty() && span.id == m_selected_province_id;
+      const bool hovered =
+          !m_hover_province_id.isEmpty() && span.id == m_hover_province_id;
 
-        qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
-        float pulse_cycle = 1200.0F;
-        float pulse = 0.5F + 0.5F * std::sin(elapsed * 2.0F * M_PI / pulse_cycle);
+      // Emphasis replaces the owner's wash rather than brightening it. Adding to
+      // the colour is worthless here: a neutral province is laid down at 0.13
+      // alpha, so a generous boost moved the pixels on screen by seven levels
+      // and nothing appeared to happen. Washing towards a fixed lamp colour at a
+      // raised alpha reads the same over Rome's red, Carthage's purple and
+      // unclaimed paper alike.
+      const QVector3D lamp(0.99F, 0.84F, 0.42F);
+      const auto wash = [&color, &lamp](float amount, float min_alpha) {
+        color.setX(color.x() + (lamp.x() - color.x()) * amount);
+        color.setY(color.y() + (lamp.y() - color.y()) * amount);
+        color.setZ(color.z() + (lamp.z() - color.z()) * amount);
+        color.setW(qMin(1.0F, qMax(color.w(), min_alpha)));
+      };
 
-        float brightness_boost = 0.3F + 0.15F * pulse;
-        color = QVector4D(qMin(1.0F, color.x() + brightness_boost),
-                          qMin(1.0F, color.y() + brightness_boost),
-                          qMin(1.0F, color.z() + brightness_boost),
-                          qMin(1.0F, color.w() + 0.2F));
+      if (selected) {
+        wash(0.38F, 0.30F);
       }
-      m_line_program.setUniformValue("u_color", color);
+      if (hovered) {
+        const qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
+        const float pulse_cycle = 1400.0F;
+        const float pulse = 0.5F + 0.5F * std::sin(static_cast<float>(elapsed) * 2.0F *
+                                                   float(M_PI) / pulse_cycle);
+        wash(0.72F, 0.44F + 0.08F * pulse);
+      }
+      program.setUniformValue("u_color", color);
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
     }
     glBindVertexArray(0);
-    m_line_program.release();
+    if (use_province_program) {
+      m_base_texture->release();
+    }
+    program.release();
   }
 
   void cleanup() {
@@ -2149,6 +2254,14 @@ void main() {
     if (m_quad_vbo != 0) {
       glDeleteBuffers(1, &m_quad_vbo);
       m_quad_vbo = 0;
+    }
+    if (m_ocean_vao != 0) {
+      glDeleteVertexArrays(1, &m_ocean_vao);
+      m_ocean_vao = 0;
+    }
+    if (m_ocean_vbo != 0) {
+      glDeleteBuffers(1, &m_ocean_vbo);
+      m_ocean_vbo = 0;
     }
     if (m_quad_vao != 0) {
       glDeleteVertexArrays(1, &m_quad_vao);
@@ -2754,6 +2867,15 @@ void CampaignMapView::set_hover_province_id(const QString& province_id) {
   }
   m_hover_province_id = province_id;
   emit hover_province_id_changed();
+  update();
+}
+
+void CampaignMapView::set_selected_province_id(const QString& province_id) {
+  if (m_selected_province_id == province_id) {
+    return;
+  }
+  m_selected_province_id = province_id;
+  emit selected_province_id_changed();
   update();
 }
 

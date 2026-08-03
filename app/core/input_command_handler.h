@@ -70,6 +70,10 @@ public:
                                   qreal sy,
                                   int local_owner_id,
                                   const ViewportState& viewport);
+  void on_builder_repair_click(qreal sx,
+                               qreal sy,
+                               int local_owner_id,
+                               const ViewportState& viewport);
   [[nodiscard]] bool any_selected_in_hold_mode() const;
   [[nodiscard]] bool any_selected_in_guard_mode() const;
   [[nodiscard]] bool any_selected_in_formation_mode() const;

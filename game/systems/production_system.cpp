@@ -2,6 +2,7 @@
 
 #include <qvectornd.h>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -14,6 +15,7 @@
 #include "../map/terrain_service.h"
 #include "../units/factory.h"
 #include "../units/troop_config.h"
+#include "builder_product_types.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "construction_cost_catalog.h"
@@ -29,9 +31,9 @@ namespace Game::Systems {
 
 namespace {
 
-constexpr auto k_cut_tree_product_type = "cut_tree";
-constexpr auto k_collect_stone_product_type = "collect_stone";
-constexpr auto k_collect_iron_ore_product_type = "collect_iron_ore";
+constexpr auto k_cut_tree_product_type = k_builder_product_cut_tree;
+constexpr auto k_collect_stone_product_type = k_builder_product_collect_stone;
+constexpr auto k_collect_iron_ore_product_type = k_builder_product_collect_iron_ore;
 constexpr int k_cut_tree_wood_reward = 40;
 constexpr int k_collect_stone_reward = 35;
 constexpr int k_collect_iron_ore_reward = 30;
@@ -249,13 +251,66 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
   builder->construction_complete = false;
   builder->bypass_movement_active = false;
   clear_builder_task_target(builder, false);
+  builder->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
   WallNetworkService::refresh_world(*world);
   assign_next_wall_site(world, builder_entity, builder);
   return true;
 }
 
 auto is_wall_network_product(const std::string& product_type) -> bool {
-  return product_type == "wall_segment" || product_type == "wall_gate";
+  return is_wall_builder_product(product_type);
+}
+
+// Repair restores a slice of the structure per tick rather than all of it at
+// once, so the builder visibly works the site and the player can interrupt it.
+constexpr float k_repair_fraction_per_tick = 0.06F;
+constexpr int k_repair_minimum_per_tick = 8;
+
+auto repair_target_of(Engine::Core::World* world,
+                      const Engine::Core::BuilderProductionComponent* builder)
+    -> Engine::Core::Entity* {
+  if (world == nullptr || builder == nullptr ||
+      builder->structure_task_entity_id == 0) {
+    return nullptr;
+  }
+  return world->get_entity(builder->structure_task_entity_id);
+}
+
+auto structure_needs_repair(const Engine::Core::Entity* structure) -> bool {
+  if (structure == nullptr) {
+    return false;
+  }
+  const auto* unit = structure->get_component<Engine::Core::UnitComponent>();
+  return unit != nullptr && unit->health > 0 && unit->health < unit->max_health;
+}
+
+// Returns true while there is still damage left to mend, so the caller can
+// restart the tick instead of ending the job.
+auto apply_structure_repair_tick(Engine::Core::World* world,
+                                 Engine::Core::BuilderProductionComponent* builder)
+    -> bool {
+  auto* structure = repair_target_of(world, builder);
+  if (!structure_needs_repair(structure)) {
+    return false;
+  }
+
+  auto* unit = structure->get_component<Engine::Core::UnitComponent>();
+  const int restored = std::max(k_repair_minimum_per_tick,
+                                static_cast<int>(static_cast<float>(unit->max_health) *
+                                                 k_repair_fraction_per_tick));
+  unit->health = std::min(unit->max_health, unit->health + restored);
+
+  // A mended structure stops burning; leaving the fire on a full-health
+  // building would read as "still broken".
+  if (unit->health >= unit->max_health) {
+    if (auto* fire = structure->get_component<Engine::Core::StructureFireComponent>()) {
+      fire->remaining_duration = 0.0F;
+      fire->ignition_progress = 0.0F;
+      fire->tick_accumulator = 0.0F;
+    }
+    return false;
+  }
+  return true;
 }
 
 } // namespace
@@ -376,6 +431,13 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
+    if (builder_prod->fault_display_remaining > 0.0F) {
+      builder_prod->fault_display_remaining -= delta_time;
+      if (builder_prod->fault_display_remaining <= 0.0F) {
+        builder_prod->clear_fault();
+      }
+    }
+
     auto* transform = e->get_component<Engine::Core::TransformComponent>();
     auto* movement = e->get_component<Engine::Core::MovementComponent>();
 
@@ -387,6 +449,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->at_construction_site = false;
       builder_prod->in_progress = false;
       builder_prod->time_remaining = 0.0F;
+      builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
     }
 
     if (is_wall_network_product(builder_prod->product_type) &&
@@ -406,6 +469,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
           builder_prod->bypass_movement_active = false;
+          builder_prod->clear_fault();
           Engine::Core::EventManager::instance().publish(
               Engine::Core::AudioCueEvent("build.construction_started"));
 
@@ -445,6 +509,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         builder_prod->construction_complete = false;
         builder_prod->time_remaining = 0.0F;
         clear_builder_task_target(builder_prod);
+        builder_prod->report_fault(Engine::Core::BuilderTaskFault::Interrupted);
         continue;
       }
     }
@@ -463,14 +528,36 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         }
       }
     }
+    if (builder_prod->time_remaining <= 0.0F &&
+        builder_prod->product_type == k_builder_product_repair) {
+      if (apply_structure_repair_tick(world, builder_prod)) {
+        builder_prod->time_remaining = builder_prod->build_time;
+        continue;
+      }
+      // Either the structure is whole again or it is gone. Only the second
+      // case is a failure the player needs told about.
+      if (repair_target_of(world, builder_prod) == nullptr) {
+        builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
+      } else {
+        Engine::Core::EventManager::instance().publish(
+            Engine::Core::AudioCueEvent("build.construction_complete"));
+      }
+      builder_prod->in_progress = false;
+      builder_prod->time_remaining = 0.0F;
+      builder_prod->construction_complete = true;
+      builder_prod->has_construction_site = false;
+      builder_prod->at_construction_site = false;
+      builder_prod->structure_task_entity_id = 0;
+      clear_builder_task_target(builder_prod, false);
+      continue;
+    }
+
     if (builder_prod->time_remaining <= 0.0F) {
 
       auto* t = e->get_component<Engine::Core::TransformComponent>();
       auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
-        if (builder_prod->product_type == k_cut_tree_product_type ||
-            builder_prod->product_type == k_collect_stone_product_type ||
-            builder_prod->product_type == k_collect_iron_ore_product_type) {
+        if (is_harvest_builder_product(builder_prod->product_type)) {
           bool const harvested =
               builder_prod->has_task_target &&
               Game::Map::TerrainService::instance().harvest_world_prop(
@@ -495,6 +582,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             }
           } else {
             clear_builder_task_target(builder_prod);
+            builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
           }
         } else {
           auto reg = Game::Map::MapTransformer::get_factory_registry();

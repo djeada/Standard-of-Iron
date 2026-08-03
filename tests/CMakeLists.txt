@@ -71,6 +71,8 @@ add_executable(
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/campaign_loader_test.cpp
+    map/campaign_roster_test.cpp
+    map/campaign_province_data_test.cpp
     map/time_of_day_test.cpp
     systems/rain_manager_test.cpp
     systems/patrol_system_test.cpp
@@ -99,6 +101,7 @@ add_executable(
     systems/commander_system_test.cpp
     systems/pathfinding_test.cpp
     systems/production_system_test.cpp
+    systems/unit_activity_test.cpp
     systems/victory_service_test.cpp
     systems/undead_awakening_system_test.cpp
     systems/archer_bonus_test.cpp
@@ -133,6 +136,8 @@ add_executable(
     db/save_format_test.cpp
     db/save_load_service_test.cpp
     db/mission_progress_test.cpp
+    db/campaign_progression_test.cpp
+    db/campaign_end_to_end_test.cpp
     headless/headless_main.cpp
 )
 target_link_libraries(
@@ -282,6 +287,7 @@ add_executable(
     core/commander_control_regression_test.cpp
     core/commander_control_controller_test.cpp
     core/input_command_handler_test.cpp
+    core/campaign_manager_test.cpp
     core/mission_commander_setup_test.cpp
     core/mission_definition_view_test.cpp
     core/mission_events_test.cpp
@@ -295,6 +301,8 @@ add_executable(
     ui/input_bindings_test.cpp
     ui/team_identity_test.cpp
     ui/selection_grouping_test.cpp
+    ui/activity_markers_test.cpp
+    ui/icon_art_test.cpp
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp
     map/minimap_generator_test.cpp

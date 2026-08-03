@@ -18,6 +18,9 @@ build-debug/bin/arena_app --scenario carthage_fortification_showcase
 build-debug/bin/arena_app --scenario rival_economies
 build-debug/bin/arena_app --scenario water_showcase
 
+# Unit activity icons: every job and every stalled order in one shot
+build-debug/bin/arena_app --scenario unit_activity_showcase
+
 # Inhabited settlements, camps and the economy around them
 build-debug/bin/arena_app --scenario village_harvest_cycle
 build-debug/bin/arena_app --scenario colony_founding
@@ -33,6 +36,24 @@ speed for visual inspection. Running without `--scenario` still opens the
 general Arena UI; use the **Units** panel to choose and load scenarios. The
 status bar reports the first automated failure and final PASS/FAIL result while
 the viewport remains available for normal RTS camera controls.
+
+## Unit activity markers
+
+The viewport draws the same activity badges the game HUD puts over a unit,
+reading them from `Game::Systems::classify_unit_activity` and painting them with
+`Ui::IconArt` — one geometry source shared with QML, so an icon reviewed here is
+the icon that ships.
+
+`unit_activity_showcase` is the reference scene for that iconography: builders
+raise a structure, gathering crews fell timber and work a boulder field and an
+ore seam, carriers walk a load to the barracks, a repair crew mends a battered
+home, and a second crew is pulled off its job so the interrupted and unavailable
+states can be read on the markers.
+
+Overlays are normally dropped from captured frames so artifacts show the render
+alone. A scenario whose subject _is_ an overlay opts back in with
+`capture_ui_overlays = true`, which is why this one's `frame_*.png` include the
+badges.
 
 ## Local batch inspection
 

@@ -9,6 +9,7 @@
 #include <QtQuickTest/quicktest.h>
 
 #include "app/core/user_settings.h"
+#include "ui/icon_art.h"
 #include "ui/preferences.h"
 #include "ui/theme.h"
 
@@ -71,6 +72,8 @@ public slots:
       qmlRegisterSingletonType<Theme>(uri, 1, 0, "Theme", &Theme::create);
       qmlRegisterSingletonType<UiPreferences>(
           uri, 1, 0, "UiPreferences", &UiPreferences::create);
+      qmlRegisterSingletonType<IconArtLibrary>(
+          uri, 1, 0, "IconArt", &IconArtLibrary::create);
     }
     qmlRegisterSingletonType<GlyphProbe>(
         "StandardOfIron.TestSupport", 1, 0, "GlyphProbe", &GlyphProbe::create);

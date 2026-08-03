@@ -43,6 +43,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
+        ../../app/models/activity_markers.cpp
         ../../ui/widget_shell.cpp
     )
 else()
@@ -62,6 +63,7 @@ else()
         ../../app/core/commander_control_controller.cpp
         ../../app/core/world_bootstrap.cpp
         ../../app/core/rts_action_model.cpp
+        ../../app/models/activity_markers.cpp
         ../../ui/widget_shell.cpp
     )
 endif()

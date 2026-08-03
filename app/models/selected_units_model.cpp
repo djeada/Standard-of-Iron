@@ -52,6 +52,11 @@ auto SelectedUnitsModel::data(const QModelIndex& index, int role) const -> QVari
     }
     return {};
   }
+  if (role == ActivityRole || role == ActivityStateRole) {
+    const QVariantMap activity = m_engine->unit_activity(id);
+    return role == ActivityRole ? activity.value(QStringLiteral("activity"))
+                                : activity.value(QStringLiteral("state"));
+  }
   if (!m_engine->get_unit_info(id, name, hp, max_hp, is_b, alive, nation)) {
     return {};
   }
@@ -100,7 +105,9 @@ auto SelectedUnitsModel::roleNames() const -> QHash<int, QByteArray> {
           {NationRole, "nation"},
           {StaminaRatioRole, "stamina_ratio"},
           {IsRunningRole, "is_running"},
-          {CanRunRole, "can_run"}};
+          {CanRunRole, "can_run"},
+          {ActivityRole, "activity"},
+          {ActivityStateRole, "activity_state"}};
 }
 
 QVariantList SelectedUnitsModel::grouped_by_type() const {
@@ -115,6 +122,8 @@ QVariantList SelectedUnitsModel::grouped_by_type() const {
     unit[QStringLiteral("health_ratio")] = data(model_index, HealthRatioRole);
     unit[QStringLiteral("stamina_ratio")] = data(model_index, StaminaRatioRole);
     unit[QStringLiteral("can_run")] = data(model_index, CanRunRole);
+    unit[QStringLiteral("activity")] = data(model_index, ActivityRole);
+    unit[QStringLiteral("activity_state")] = data(model_index, ActivityStateRole);
     units.append(unit);
   }
   return App::Models::selection_groups_to_variant(
@@ -139,7 +148,9 @@ void SelectedUnitsModel::refresh() {
                         HealthRatioRole,
                         StaminaRatioRole,
                         IsRunningRole,
-                        CanRunRole});
+                        CanRunRole,
+                        ActivityRole,
+                        ActivityStateRole});
     }
     return;
   }

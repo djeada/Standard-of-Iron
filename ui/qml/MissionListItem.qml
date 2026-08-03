@@ -14,6 +14,22 @@ Rectangle {
 
     signal clicked
 
+    // The row used to title-case the mission id, so the list said "Crossing The
+    // Rhone" while every other surface said "Crossing the Rhône". The mission
+    // file carries the real name; the id is only the last resort.
+    readonly property string mission_title: {
+        if (!mission_data)
+            return "";
+        if (mission_data.title)
+            return mission_data.title;
+        if (mission_data.mission_id && typeof game !== "undefined" && game.get_mission_definition) {
+            var definition = game.get_mission_definition(mission_data.mission_id);
+            if (definition && definition.title)
+                return definition.title;
+        }
+        return titleize(mission_data.mission_id);
+    }
+
     function titleize(value) {
         if (!value)
             return "";
@@ -100,7 +116,7 @@ Rectangle {
                 spacing: Theme.spacingSmall
 
                 Label {
-                    text: mission_glyph_prefix + (mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "")
+                    text: mission_glyph_prefix + root.mission_title
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeMedium
                     font.bold: true
@@ -195,15 +211,25 @@ Rectangle {
                 }
 
                 Repeater {
-                    model: {
-                        if (!mission_data || !mission_data.difficulty_modifier)
-                            return 1;
-                        return Math.round(mission_data.difficulty_modifier);
-                    }
+                    // The campaign's modifiers run from 1.1 to 1.7, so rounding
+                    // the raw number gave the opening skirmish and Cannae the
+                    // same one star. Spread that band over five so the curve is
+                    // actually readable, and draw the unearned stars hollow so
+                    // the scale is visible from a single row.
+                    model: 5
 
                     delegate: Text {
-                        text: "★"
-                        color: Theme.warningText
+                        required property int index
+
+                        readonly property int filled: {
+                            if (!mission_data || !mission_data.difficulty_modifier)
+                                return 1;
+                            var steps = Math.ceil((mission_data.difficulty_modifier - 1.0) / 0.15);
+                            return Math.max(1, Math.min(5, steps));
+                        }
+
+                        text: index < filled ? "★" : "☆"
+                        color: index < filled ? Theme.warningText : Theme.textDim
                         font.pointSize: Theme.fontSizeTiny
                     }
                 }

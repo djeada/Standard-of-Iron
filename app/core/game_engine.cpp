@@ -43,6 +43,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -63,6 +64,7 @@
 #include "app/core/environment.h"
 #include "app/core/skirmish_loader.h"
 #include "app/core/world_bootstrap.h"
+#include "app/models/activity_markers.h"
 #include "app/models/cursor_mode.h"
 #include "app/utils/engine_view_helpers.h"
 #include "app/utils/movement_utils.h"
@@ -297,6 +299,9 @@ GameEngine::GameEngine(QObject* parent)
   m_placement_view_model =
       std::make_unique<App::ViewModels::PlacementViewModel>(placement_host, this);
   m_wave_view_model = std::make_unique<App::ViewModels::WaveViewModel>(this);
+  App::ViewModels::ActivityHost& activity_host = *this;
+  m_activity_view_model =
+      std::make_unique<App::ViewModels::ActivityViewModel>(&activity_host, this);
 
   m_session = std::make_unique<Game::Session::SessionContext>();
   m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
@@ -914,6 +919,25 @@ void GameEngine::on_civilian_delivery_click(qreal sx, qreal sy) {
       sx, sy, m_runtime.local_owner_id, m_viewport);
 }
 
+void GameEngine::confirm_repair_at(qreal sx, qreal sy) {
+  if (!m_input_handler || (m_camera == nullptr)) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_builder_repair_click(
+      sx, sy, m_runtime.local_owner_id, m_viewport);
+}
+
+void GameEngine::toggle_repair_order() {
+  ensure_initialized();
+  if (m_cursor_manager == nullptr) {
+    return;
+  }
+  m_cursor_manager->set_mode(m_cursor_manager->mode() == CursorMode::Repair
+                                 ? CursorMode::Normal
+                                 : CursorMode::Repair);
+}
+
 void GameEngine::on_guard_click(qreal sx, qreal sy) {
   if (!m_input_handler || (m_camera == nullptr)) {
     return;
@@ -957,6 +981,12 @@ bool GameEngine::campaign_completed() const {
   const QString campaign_id = m_campaign_manager->current_campaign_id();
   if (campaign_id.isEmpty()) {
     return false;
+  }
+
+  // The campaign list is the authority; the manager's own flag only covers the
+  // win that just happened, and the list may not have been rebuilt yet.
+  if (m_campaign_manager->campaign_completed()) {
+    return true;
   }
 
   for (const QVariant& entry : m_campaign_manager->available_campaigns()) {
@@ -2570,6 +2600,138 @@ auto GameEngine::get_hud_action_states() const -> QVariantMap {
   return App::Core::get_action_states(context);
 }
 
+auto GameEngine::get_unit_activity_state(Engine::Core::EntityID id) const
+    -> Game::Systems::UnitActivity {
+  if (m_world == nullptr) {
+    return {};
+  }
+  return Game::Systems::classify_unit_activity(*m_world, id);
+}
+
+namespace {
+
+auto activity_to_variant(const Game::Systems::UnitActivity& activity) -> QVariantMap {
+  const auto kind = Game::Systems::activity_kind_id(activity.kind);
+  const auto state = Game::Systems::activity_state_id(activity.state);
+  QVariantMap result;
+  result[QStringLiteral("activity")] =
+      QString::fromUtf8(kind.data(), static_cast<int>(kind.size()));
+  result[QStringLiteral("state")] =
+      QString::fromUtf8(state.data(), static_cast<int>(state.size()));
+  result[QStringLiteral("queued")] = activity.queued_orders;
+  return result;
+}
+
+} // namespace
+
+auto GameEngine::unit_activity(qulonglong unit_id) const -> QVariantMap {
+  return activity_to_variant(
+      get_unit_activity_state(static_cast<Engine::Core::EntityID>(unit_id)));
+}
+
+auto GameEngine::selection_activity_summary() const -> QVariantMap {
+  QVariantMap summary;
+  summary[QStringLiteral("activity")] = QStringLiteral("idle");
+  summary[QStringLiteral("state")] = QStringLiteral("active");
+  summary[QStringLiteral("count")] = 0;
+  summary[QStringLiteral("total")] = 0;
+  summary[QStringLiteral("mixed")] = false;
+  if (m_world == nullptr) {
+    return summary;
+  }
+
+  std::vector<Engine::Core::EntityID> selected;
+  get_selected_unit_ids(selected);
+  if (selected.empty()) {
+    return summary;
+  }
+
+  // The panel reports the activity most of the selection shares, and flags the
+  // rest as mixed rather than pretending a split squad is doing one thing.
+  std::map<std::pair<QString, QString>, int> tally;
+  for (const auto id : selected) {
+    const auto entry = activity_to_variant(get_unit_activity_state(id));
+    tally[{entry[QStringLiteral("activity")].toString(),
+           entry[QStringLiteral("state")].toString()}] += 1;
+  }
+
+  auto best = tally.begin();
+  for (auto it = tally.begin(); it != tally.end(); ++it) {
+    if (it->second > best->second) {
+      best = it;
+    }
+  }
+
+  summary[QStringLiteral("activity")] = best->first.first;
+  summary[QStringLiteral("state")] = best->first.second;
+  summary[QStringLiteral("count")] = best->second;
+  summary[QStringLiteral("total")] = static_cast<int>(selected.size());
+  summary[QStringLiteral("mixed")] = tally.size() > 1;
+  return summary;
+}
+
+auto GameEngine::activity_markers() const -> QVariantList {
+  QVariantList result;
+  if (m_world == nullptr) {
+    return result;
+  }
+
+  std::vector<Engine::Core::EntityID> selected;
+  get_selected_unit_ids(selected);
+  const std::set<Engine::Core::EntityID> selected_set(selected.begin(), selected.end());
+
+  std::vector<App::Models::ActivityMarkerSource> sources;
+  for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr) {
+      continue;
+    }
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->health <= 0) {
+      continue;
+    }
+    // Only the local player's own units: an enemy's orders are not knowledge the
+    // player is entitled to.
+    if (unit->owner_id != m_runtime.local_owner_id) {
+      continue;
+    }
+
+    const bool selected_unit = selected_set.count(entity->get_id()) > 0;
+    const auto activity = Game::Systems::classify_unit_activity(*entity);
+    if (!App::Models::activity_deserves_marker(activity, selected_unit)) {
+      continue;
+    }
+
+    App::Models::ActivityMarkerSource source;
+    source.entity_id = entity->get_id();
+    source.activity = activity;
+    source.selected = selected_unit;
+    source.x = transform->position.x;
+    source.y = transform->position.y;
+    source.z = transform->position.z;
+    sources.push_back(source);
+  }
+
+  for (const auto& marker : App::Models::group_activity_markers(sources)) {
+    QPointF screen;
+    // Markers ride above the unit rather than on it so they never sit inside
+    // the model they describe.
+    if (!world_to_screen(QVector3D(marker.x, marker.y + 3.4F, marker.z), screen)) {
+      continue;
+    }
+    QVariantMap entry;
+    entry[QStringLiteral("activity")] = marker.activity;
+    entry[QStringLiteral("state")] = marker.state;
+    entry[QStringLiteral("count")] = marker.count;
+    entry[QStringLiteral("unitId")] =
+        QVariant::fromValue<qulonglong>(static_cast<qulonglong>(marker.lead_entity_id));
+    entry[QStringLiteral("x")] = screen.x();
+    entry[QStringLiteral("y")] = screen.y();
+    result.append(entry);
+  }
+  return result;
+}
+
 void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
   ensure_initialized();
   if (m_production_manager) {
@@ -2724,8 +2886,7 @@ void GameEngine::mark_current_mission_completed() {
     return;
   }
 
-  const QString campaign_id = m_campaign_manager->current_campaign_id();
-  if (campaign_id.isEmpty()) {
+  if (m_campaign_manager->current_campaign_id().isEmpty()) {
     qWarning() << "No active campaign mission to mark as completed";
     return;
   }
@@ -2735,15 +2896,12 @@ void GameEngine::mark_current_mission_completed() {
     return;
   }
 
-  QString error;
-  bool const success =
-      m_save_load_service->mark_campaign_completed(campaign_id, &error);
-  if (!success) {
-    qWarning() << "Failed to mark campaign as completed:" << error;
-  } else {
-    m_campaign_manager->mark_current_mission_completed();
-    load_campaigns();
-  }
+  // Whether this win also finishes the campaign is decided by the progression
+  // store, which knows how many missions are left. The engine used to mark the
+  // campaign completed on every single victory, so mission one of eight ended
+  // the war.
+  m_campaign_manager->mark_current_mission_completed();
+  load_campaigns();
 }
 
 QVariantMap GameEngine::get_current_mission_objectives() const {
@@ -3824,6 +3982,10 @@ auto GameEngine::placement_view_model() const -> QObject* {
 
 auto GameEngine::wave_view_model() const -> QObject* {
   return m_wave_view_model.get();
+}
+
+auto GameEngine::activity_view_model() const -> QObject* {
+  return m_activity_view_model.get();
 }
 
 auto GameEngine::input_handler() const -> InputCommandHandler* {

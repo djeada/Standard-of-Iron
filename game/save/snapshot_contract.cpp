@@ -190,6 +190,11 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      PresentationOnly,
      "Short-lived exact weapon, block, and dodge contact cues."},
     {"EnemyTelegraphComponent", PresentationOnly, "Attack telegraph overlay."},
+    {"ShowcaseRoutineComponent",
+     PresentationOnly,
+     "Scripted animation routine driven by the arena's showcase scenarios. It "
+     "exists only in that tool, never in a match, so a save has nothing to "
+     "restore it from and nothing that needs it."},
     {"ConstructionPreviewComponent",
      PresentationOnly,
      "Placement ghost. Entities carrying it are skipped entirely when a world "

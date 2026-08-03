@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: game_view
@@ -518,6 +519,11 @@ Item {
                             game.on_civilian_delivery_click(mouse.x, mouse.y);
                         return;
                     }
+                    if (game_view.cursor_mode === "repair") {
+                        if (typeof game !== 'undefined' && game.activity)
+                            game.activity.confirm_repair_at(mouse.x, mouse.y);
+                        return;
+                    }
                     if (game_view.cursor_mode === "patrol") {
                         if (typeof game !== 'undefined' && game.on_patrol_click)
                             game.on_patrol_click(mouse.x, mouse.y);
@@ -627,6 +633,15 @@ Item {
             mouseArea.is_selecting = false;
             selectionBox.visible = false;
         }
+    }
+
+    UnitActivityOverlay {
+        id: activityOverlay
+
+        // Commander and first-person views put the player inside the battle;
+        // banners over every worker would be in the way there.
+        enabled: game_view.visible && typeof game !== 'undefined' && game.control_mode !== "commander"
+        z: 90
     }
 
     Rectangle {
@@ -948,6 +963,16 @@ Item {
                 }
             }
             Component.onCompleted: requestPaint()
+        }
+
+        Design.IronVectorIcon {
+            id: repairCursor
+
+            visible: game_view.cursor_mode === "repair"
+            anchors.centerIn: parent
+            width: 22
+            height: 22
+            iconId: "repair"
         }
 
         Item {

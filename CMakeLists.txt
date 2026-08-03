@@ -388,6 +388,7 @@ add_library(
     STATIC
     app/controllers/action_vfx.cpp
     app/viewmodels/save_slots_view_model.cpp
+    app/viewmodels/activity_view_model.cpp
     app/viewmodels/placement_view_model.cpp
     app/viewmodels/wave_view_model.cpp
     app/controllers/command_controller.cpp
@@ -424,6 +425,7 @@ add_library(
     app/core/skirmish_runtime_coordinator.cpp
     app/core/visibility_coordinator.cpp
     app/core/world_bootstrap.cpp
+    app/models/activity_markers.cpp
     app/models/audio_system_proxy.cpp
     app/models/cursor_manager.cpp
     app/models/graphics_settings_proxy.cpp
@@ -524,6 +526,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDVictory.qml
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
+            ui/qml/UnitActivityOverlay.qml
             ui/qml/CommanderInputLayer.qml
             ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml
@@ -675,8 +678,32 @@ if(TARGET bake_creature_assets)
     add_dependencies(standard_of_iron bake_creature_assets)
 endif()
 
-# Copy assets next to the binary for dev runs
-file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/bin/assets/)
+# Stage assets next to the binary for dev runs.
+#
+# The runtime resolves ":/assets/..." against the filesystem before the Qt
+# resource system, so this staged copy -- not the repo tree, and not the qrc --
+# is what a dev build actually reads. It used to be a bare configure-time
+# `file(COPY)`, which meant editing a shader or a map and rebuilding changed
+# nothing at all until someone happened to re-run CMake. Staging on every build
+# makes an edit take effect when you build, which is the only behaviour anyone
+# expects.
+file(
+    GLOB_RECURSE SOI_RUNTIME_ASSET_SOURCES
+    CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/*"
+)
+add_custom_command(
+    OUTPUT "${CMAKE_BINARY_DIR}/bin/assets/.stamp"
+    COMMAND
+        ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "${CMAKE_BINARY_DIR}/bin/assets"
+    COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_BINARY_DIR}/bin/assets/.stamp"
+    DEPENDS ${SOI_RUNTIME_ASSET_SOURCES}
+    COMMENT "Staging assets into bin/assets"
+    VERBATIM
+)
+add_custom_target(stage_runtime_assets DEPENDS "${CMAKE_BINARY_DIR}/bin/assets/.stamp")
+add_dependencies(standard_of_iron stage_runtime_assets)
 
 # ---- clang-format helpers (optional but convenient) ----
 # Provides:

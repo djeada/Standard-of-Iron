@@ -34,7 +34,10 @@ auto count_occurrences(const fs::path& file, const std::string& needle) -> int {
 }
 
 constexpr int k_max_invokables = 103;
-constexpr int k_max_properties = 40;
+// Raised by one for `activity`, the CONSTANT handle on ActivityViewModel. That
+// is the shape this test asks for: a slice of UI surface moves to its own view
+// model and costs the engine exactly one property instead of five invokables.
+constexpr int k_max_properties = 41;
 
 constexpr const char* k_guidance =
     "\nGameEngine is the composition root, not the UI API. New QML-facing "

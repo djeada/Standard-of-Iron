@@ -195,6 +195,12 @@ auto build_campaign_entry(const Game::Campaign::CampaignDefinition& campaign,
       mission_map.insert(QStringLiteral("difficulty_modifier"),
                          *mission.difficulty_modifier);
     }
+    // The war table places its objective marker and frames its camera from this.
+    // Without it every mission reported an empty region, so the campaign map
+    // never marked where the next battle was.
+    if (mission.world_region_id.has_value()) {
+      mission_map.insert(QStringLiteral("world_region_id"), *mission.world_region_id);
+    }
 
     bool unlocked = mission.order_index == 0;
     bool completed = false;
@@ -1016,85 +1022,192 @@ auto SaveStorage::ensure_campaign_missions_in_db(
     }
   }
 
+  // Drop rows for missions the campaign no longer contains. Without this an
+  // update that removes a mission leaves an orphan row behind, and because the
+  // campaign is finished when no mission is left uncompleted, that orphan makes
+  // the campaign permanently unfinishable for anyone upgrading.
+  QStringList placeholders;
+  placeholders.reserve(static_cast<int>(campaign.missions.size()));
+  for (int i = 0; i < static_cast<int>(campaign.missions.size()); ++i) {
+    placeholders.append(QStringLiteral(":mission%1").arg(i));
+  }
+
+  QSqlQuery prune(m_database);
+  const QString sql =
+      campaign.missions.empty()
+          ? QStringLiteral("DELETE FROM campaign_missions WHERE campaign_id = "
+                           ":campaign_id")
+          : QStringLiteral("DELETE FROM campaign_missions WHERE campaign_id = "
+                           ":campaign_id AND mission_id NOT IN (%1)")
+                .arg(placeholders.join(QStringLiteral(", ")));
+  prune.prepare(sql);
+  prune.bindValue(QStringLiteral(":campaign_id"), campaign.id);
+  for (int i = 0; i < static_cast<int>(campaign.missions.size()); ++i) {
+    prune.bindValue(placeholders[i],
+                    campaign.missions[static_cast<std::size_t>(i)].mission_id);
+  }
+
+  if (!prune.exec()) {
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage",
+                                     "Failed to prune removed campaign missions"),
+         prune.lastError());
+    transaction.rollback();
+    return false;
+  }
+
   return transaction.commit(out_error);
 }
 
-auto SaveStorage::unlock_next_mission(const QString& campaign_id,
-                                      const QString& completed_mission_id,
-                                      QString* out_error) -> bool {
+auto SaveStorage::complete_campaign_mission(const QString& campaign_id,
+                                            const QString& mission_id,
+                                            QString* out_error)
+    -> std::optional<CampaignAdvance> {
   if (!initialize(out_error)) {
-    return false;
+    return std::nullopt;
   }
 
   TransactionGuard transaction(m_database);
   if (!transaction.begin(out_error)) {
-    return false;
-  }
-
-  QSqlQuery update_query(m_database);
-  update_query.prepare(
-      QStringLiteral("UPDATE campaign_missions SET completed = 1, unlocked = 1, "
-                     "completed_at = :completed_at "
-                     "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
-  update_query.bindValue(QStringLiteral(":completed_at"), now_iso());
-  update_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
-  update_query.bindValue(QStringLiteral(":mission_id"), completed_mission_id);
-
-  if (!update_query.exec()) {
-    fail(out_error,
-         QCoreApplication::translate("SaveStorage",
-                                     "Failed to mark mission as completed"),
-         update_query.lastError());
-    transaction.rollback();
-    return false;
+    return std::nullopt;
   }
 
   QSqlQuery order_query(m_database);
   order_query.prepare(
-      QStringLiteral("SELECT order_index FROM campaign_missions "
+      QStringLiteral("SELECT order_index, completed FROM campaign_missions "
                      "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
   order_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
-  order_query.bindValue(QStringLiteral(":mission_id"), completed_mission_id);
+  order_query.bindValue(QStringLiteral(":mission_id"), mission_id);
 
-  if (!order_query.exec() || !order_query.next()) {
+  if (!order_query.exec()) {
     fail(out_error,
          QCoreApplication::translate("SaveStorage",
-                                     "Failed to find completed mission order"),
+                                     "Failed to look up the completed mission"),
          order_query.lastError());
     transaction.rollback();
-    return false;
+    return std::nullopt;
+  }
+
+  // A mission the campaign does not contain is a stale request -- a menu built
+  // from an older campaign file, or a save naming a mission that has since been
+  // removed. Refuse it rather than writing progress nothing can read back.
+  if (!order_query.next()) {
+    if (out_error != nullptr) {
+      *out_error = QCoreApplication::translate("SaveStorage",
+                                               "Mission %1 is not part of campaign %2")
+                       .arg(mission_id, campaign_id);
+    }
+    transaction.rollback();
+    return std::nullopt;
   }
 
   const int completed_order = order_query.value(0).toInt();
+  const bool was_completed = order_query.value(1).toInt() != 0;
 
-  QSqlQuery unlock_query(m_database);
-  unlock_query.prepare(
-      QStringLiteral("UPDATE campaign_missions SET unlocked = 1 "
-                     "WHERE campaign_id = :campaign_id AND order_index = :next_order"));
-  unlock_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
-  unlock_query.bindValue(QStringLiteral(":next_order"), completed_order + 1);
+  QSqlQuery complete_query(m_database);
+  complete_query.prepare(
+      QStringLiteral("UPDATE campaign_missions SET completed = 1, unlocked = 1, "
+                     "completed_at = :completed_at "
+                     "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
+  complete_query.bindValue(QStringLiteral(":completed_at"), now_iso());
+  complete_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+  complete_query.bindValue(QStringLiteral(":mission_id"), mission_id);
 
-  if (!unlock_query.exec()) {
+  if (!complete_query.exec()) {
     fail(out_error,
-         QCoreApplication::translate("SaveStorage", "Failed to unlock next mission"),
-         unlock_query.lastError());
+         QCoreApplication::translate("SaveStorage",
+                                     "Failed to mark mission as completed"),
+         complete_query.lastError());
     transaction.rollback();
-    return false;
+    return std::nullopt;
   }
 
-  if (unlock_query.numRowsAffected() == 0) {
-    if (out_error != nullptr) {
-      *out_error = QCoreApplication::translate(
-                       "SaveStorage",
-                       "No next mission found to unlock (completed mission "
-                       "order: %1)")
-                       .arg(completed_order);
+  CampaignAdvance advance;
+  advance.newly_completed = !was_completed;
+
+  // The next mission by order rather than order + 1: a campaign edited down to
+  // fewer missions leaves gaps, and a gap must not strand the player.
+  QSqlQuery next_query(m_database);
+  next_query.prepare(
+      QStringLiteral("SELECT mission_id FROM campaign_missions "
+                     "WHERE campaign_id = :campaign_id AND order_index > :order "
+                     "ORDER BY order_index ASC LIMIT 1"));
+  next_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+  next_query.bindValue(QStringLiteral(":order"), completed_order);
+
+  if (!next_query.exec()) {
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage", "Failed to find the next mission"),
+         next_query.lastError());
+    transaction.rollback();
+    return std::nullopt;
+  }
+
+  if (next_query.next()) {
+    advance.unlocked_mission_id = next_query.value(0).toString();
+
+    QSqlQuery unlock_query(m_database);
+    unlock_query.prepare(QStringLiteral(
+        "UPDATE campaign_missions SET unlocked = 1 "
+        "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
+    unlock_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+    unlock_query.bindValue(QStringLiteral(":mission_id"), advance.unlocked_mission_id);
+
+    if (!unlock_query.exec()) {
+      fail(out_error,
+           QCoreApplication::translate("SaveStorage", "Failed to unlock next mission"),
+           unlock_query.lastError());
+      transaction.rollback();
+      return std::nullopt;
     }
-    transaction.rollback();
-    return false;
   }
 
-  return transaction.commit(out_error);
+  // Completion is "every mission done", not "the last mission done", so a
+  // player who unlocks the finale early still has to clear what they skipped.
+  QSqlQuery remaining_query(m_database);
+  remaining_query.prepare(
+      QStringLiteral("SELECT COUNT(*) FROM campaign_missions "
+                     "WHERE campaign_id = :campaign_id AND completed = 0"));
+  remaining_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+
+  if (!remaining_query.exec() || !remaining_query.next()) {
+    fail(out_error,
+         QCoreApplication::translate("SaveStorage",
+                                     "Failed to count remaining missions"),
+         remaining_query.lastError());
+    transaction.rollback();
+    return std::nullopt;
+  }
+
+  advance.campaign_completed = remaining_query.value(0).toInt() == 0;
+
+  if (advance.campaign_completed) {
+    QSqlQuery campaign_query(m_database);
+    campaign_query.prepare(
+        QStringLiteral("INSERT INTO campaign_progress (campaign_id, completed, "
+                       "unlocked, completed_at) VALUES (:campaign_id, 1, 1, "
+                       ":completed_at) "
+                       "ON CONFLICT(campaign_id) DO UPDATE SET "
+                       "completed = 1, unlocked = 1, "
+                       "completed_at = COALESCE(campaign_progress.completed_at, "
+                       "excluded.completed_at)"));
+    campaign_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+    campaign_query.bindValue(QStringLiteral(":completed_at"), now_iso());
+
+    if (!campaign_query.exec()) {
+      fail(out_error,
+           QCoreApplication::translate("SaveStorage",
+                                       "Failed to mark campaign as completed"),
+           campaign_query.lastError());
+      transaction.rollback();
+      return std::nullopt;
+    }
+  }
+
+  if (!transaction.commit(out_error)) {
+    return std::nullopt;
+  }
+  return advance;
 }
 
 } // namespace Game::Systems

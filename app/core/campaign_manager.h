@@ -37,6 +37,9 @@ public:
   }
   [[nodiscard]] QString current_campaign_id() const { return m_current_campaign_id; }
   [[nodiscard]] QString current_mission_id() const { return m_current_mission_id; }
+  // True once the last win closed the campaign out. Reset when a new mission
+  // starts so a replay of an earlier mission does not keep claiming victory.
+  [[nodiscard]] bool campaign_completed() const { return m_campaign_completed; }
   [[nodiscard]] const std::optional<Game::Mission::MissionDefinition>&
   current_mission_definition() const {
     return m_current_mission_definition;
@@ -63,6 +66,7 @@ private:
   QVariantList m_available_campaigns;
   QString m_current_campaign_id;
   QString m_current_mission_id;
+  bool m_campaign_completed = false;
   std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   Game::Mission::MissionContext m_current_mission_context;
 };

@@ -25,6 +25,7 @@
 #include "../models/selected_units_model.h"
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
+#include "../viewmodels/activity_view_model.h"
 #include "../viewmodels/placement_view_model.h"
 #include "../viewmodels/wave_view_model.h"
 #include "ambient_state_manager.h"
@@ -39,6 +40,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/save_format.h"
+#include "game/systems/unit_activity.h"
 #include "game/util/selection_utils.h"
 #include "game/view/selection_controller.h"
 #include "input_command_handler.h"
@@ -118,7 +120,9 @@ class AudioSystemProxy;
 class QQuickWindow;
 class LoadingProgressTracker;
 
-class GameEngine : public QObject, private App::ViewModels::PlacementHost {
+class GameEngine : public QObject,
+                   private App::ViewModels::PlacementHost,
+                   private App::ViewModels::ActivityHost {
   Q_OBJECT
 public:
   explicit GameEngine(QObject* parent = nullptr);
@@ -191,6 +195,7 @@ public:
   Q_PROPERTY(QObject* saves READ save_slots_view_model CONSTANT)
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
   Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
+  Q_PROPERTY(QObject* activity READ activity_view_model CONSTANT)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -342,6 +347,7 @@ public:
   [[nodiscard]] QObject* save_slots_view_model() const;
   [[nodiscard]] QObject* placement_view_model() const;
   [[nodiscard]] QObject* wave_view_model() const;
+  [[nodiscard]] QObject* activity_view_model() const;
 
   [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
   [[nodiscard]] int save_progress_percent() const { return m_save_progress_percent; }
@@ -401,6 +407,16 @@ public:
                              float& stamina_ratio,
                              bool& is_running,
                              bool& can_run) const;
+  [[nodiscard]] Game::Systems::UnitActivity
+  get_unit_activity_state(Engine::Core::EntityID id) const;
+
+  // App::ViewModels::ActivityHost. Reached from QML through `game.activity`
+  // rather than as engine invokables; see the QmlSurface architecture test.
+  [[nodiscard]] auto activity_markers() const -> QVariantList override;
+  [[nodiscard]] auto unit_activity(qulonglong unit_id) const -> QVariantMap override;
+  [[nodiscard]] auto selection_activity_summary() const -> QVariantMap override;
+  void toggle_repair_order() override;
+  void confirm_repair_at(qreal sx, qreal sy) override;
 
   [[nodiscard]] bool has_patrol_preview_waypoint() const;
   [[nodiscard]] QVector3D get_patrol_preview_waypoint() const;
@@ -528,6 +544,7 @@ private:
   std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
+  std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
 
   [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const override;
   [[nodiscard]] const ViewportState& viewport() const override { return m_viewport; }

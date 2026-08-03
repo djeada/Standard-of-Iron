@@ -38,6 +38,18 @@ Item {
             refresh_objectives();
     }
 
+    // A briefing opened before the mission finished loading would otherwise sit
+    // on "no objectives" for the whole match: it only ever read them on the way
+    // in. The engine announces when a mission's objectives are ready.
+    Connections {
+        function onCampaign_mission_changed() {
+            root.refresh_objectives();
+        }
+
+        ignoreUnknownSignals: true
+        target: root.game_ready() ? game : null
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Design.Theme.scrim

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "../core/rts_action_model.h"
@@ -15,12 +16,14 @@
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/order_service.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
+#include "game/units/spawn_type.h"
 #include "scene/camera.h"
 
 namespace App::Utils {
@@ -41,13 +44,16 @@ inline void clear_patrol_command(Engine::Core::Entity* entity) {
   Game::Systems::OrderService::clear_patrol(entity);
 }
 
-inline auto barracks_delivery_target_position(const QVector3D& civilian_position,
-                                              const QVector3D& barracks_position,
-                                              float unit_radius) -> QVector3D {
+// Where a worker should stand to reach a structure: just clear of its
+// footprint, on the side the worker is already approaching from.
+inline auto structure_work_position(const QVector3D& worker_position,
+                                    const QVector3D& structure_position,
+                                    const std::string& structure_key,
+                                    float unit_radius) -> QVector3D {
   auto const size =
-      Game::Systems::BuildingCollisionRegistry::get_building_size("barracks");
-  float dir_x = civilian_position.x() - barracks_position.x();
-  float dir_z = civilian_position.z() - barracks_position.z();
+      Game::Systems::BuildingCollisionRegistry::get_building_size(structure_key);
+  float dir_x = worker_position.x() - structure_position.x();
+  float dir_z = worker_position.z() - structure_position.z();
   float const len_sq = dir_x * dir_x + dir_z * dir_z;
   if (len_sq < 0.0001F) {
     dir_x = 1.0F;
@@ -73,10 +79,17 @@ inline auto barracks_delivery_target_position(const QVector3D& civilian_position
   float const final_scale =
       std::isfinite(scale) && scale > 0.0F ? scale : fallback_scale;
 
-  QVector3D target(barracks_position.x() + dir_x * final_scale,
+  QVector3D target(structure_position.x() + dir_x * final_scale,
                    0.0F,
-                   barracks_position.z() + dir_z * final_scale);
+                   structure_position.z() + dir_z * final_scale);
   return snap_to_walkable_ground(target);
+}
+
+inline auto barracks_delivery_target_position(const QVector3D& civilian_position,
+                                              const QVector3D& barracks_position,
+                                              float unit_radius) -> QVector3D {
+  return structure_work_position(
+      civilian_position, barracks_position, "barracks", unit_radius);
 }
 
 inline auto
@@ -178,6 +191,106 @@ issue_civilian_delivery_command(Engine::Core::World* world,
 
   Game::Command::Move move;
   move.units = std::move(civilian_ids);
+  move.targets = std::move(targets);
+  move.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  Game::Command::submit(
+      *world, Game::Command::Source::LocalPlayer, local_owner_id, std::move(move));
+  return true;
+}
+
+// Sends every selected builder to mend the damaged friendly structure under the
+// cursor. Repair reuses the builder job pipeline rather than inventing a second
+// one, so the activity readout, the interruption rules and the "walked away
+// from the site" handling all come for free.
+inline auto
+issue_builder_repair_command(Engine::Core::World* world,
+                             const std::vector<Engine::Core::EntityID>& selected,
+                             Game::Systems::PickingService* picking_service,
+                             Render::GL::Camera* camera,
+                             qreal sx,
+                             qreal sy,
+                             int viewport_width,
+                             int viewport_height,
+                             int local_owner_id) -> bool {
+  if ((world == nullptr) || selected.empty() || (picking_service == nullptr) ||
+      (camera == nullptr) || (viewport_width <= 0) || (viewport_height <= 0)) {
+    return false;
+  }
+
+  Engine::Core::EntityID const target_id = picking_service->pick_unit_first(
+      float(sx), float(sy), *world, *camera, viewport_width, viewport_height, 0);
+  auto* target_entity = target_id != 0U ? world->get_entity(target_id) : nullptr;
+  if (target_entity == nullptr ||
+      !target_entity->has_component<Engine::Core::BuildingComponent>()) {
+    return false;
+  }
+  auto* target_unit = target_entity->get_component<Engine::Core::UnitComponent>();
+  auto* target_transform =
+      target_entity->get_component<Engine::Core::TransformComponent>();
+  if ((target_unit == nullptr) || (target_transform == nullptr) ||
+      (target_unit->owner_id != local_owner_id) || target_unit->health <= 0 ||
+      target_unit->health >= target_unit->max_health) {
+    return false;
+  }
+
+  const std::string structure_key =
+      Game::Units::spawn_typeToString(target_unit->spawn_type);
+  const QVector3D structure_position(
+      target_transform->position.x, 0.0F, target_transform->position.z);
+
+  std::vector<Engine::Core::EntityID> builder_ids;
+  std::vector<QVector3D> targets;
+  for (const auto selected_id : selected) {
+    auto* entity = world->get_entity(selected_id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    auto* builder =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::BuilderProductionComponent>()
+            : nullptr;
+    if ((unit == nullptr) || (builder == nullptr) ||
+        (unit->owner_id != local_owner_id) ||
+        (unit->spawn_type != Game::Units::SpawnType::Builder)) {
+      continue;
+    }
+
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    const QVector3D worker_position =
+        transform != nullptr
+            ? QVector3D(transform->position.x, 0.0F, transform->position.z)
+            : structure_position;
+    float const unit_radius =
+        Game::Systems::CommandService::get_unit_radius(*world, selected_id);
+    const QVector3D work_position = structure_work_position(
+        worker_position, structure_position, structure_key, unit_radius);
+
+    Game::Systems::OrderService::clear_builder_task(entity);
+    builder->is_placement_preview = false;
+    builder->product_type = std::string(Game::Systems::k_builder_product_repair);
+    builder->build_time = Game::Systems::k_builder_repair_tick_seconds;
+    builder->time_remaining = Game::Systems::k_builder_repair_tick_seconds;
+    builder->structure_task_entity_id = target_id;
+    builder->has_construction_site = true;
+    builder->construction_site_x = work_position.x();
+    builder->construction_site_z = work_position.z();
+    builder->construction_site_rotation_y = 0.0F;
+    builder->at_construction_site = false;
+    builder->in_progress = false;
+    builder->construction_complete = false;
+    builder->bypass_movement_active = false;
+    builder->clear_fault();
+
+    builder_ids.push_back(selected_id);
+    targets.push_back(work_position);
+  }
+
+  if (builder_ids.empty()) {
+    return false;
+  }
+
+  Game::Command::Move move;
+  move.units = std::move(builder_ids);
   move.targets = std::move(targets);
   move.kind = Game::Systems::MoveOrderKind::ScriptedMove;
   Game::Command::submit(

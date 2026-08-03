@@ -16,6 +16,7 @@ struct MovementTestAccess {
     m.path = std::move(v);
   }
   static void set_path_index(MovementComponent& m, std::size_t v) { m.path_index = v; }
+  static void set_stuck_time(MovementComponent& m, float v) { m.stuck_timer = v; }
 };
 
 } // namespace Engine::Core

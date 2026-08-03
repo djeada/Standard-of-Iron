@@ -73,6 +73,7 @@ void CampaignManager::start_campaign_mission(const QString& mission_path, int&) 
   m_current_campaign_id = campaign_id;
   m_current_mission_id = mission_id;
   m_current_mission_definition = mission;
+  m_campaign_completed = false;
 
   m_current_mission_context.mode = "campaign";
   m_current_mission_context.campaign_id = campaign_id;
@@ -96,6 +97,7 @@ bool CampaignManager::start_mission_file(const QString& file_path,
   }
 
   selected_player_id = 1;
+  m_campaign_completed = false;
   m_current_campaign_id.clear();
   m_current_mission_id = mission.id;
   m_current_mission_definition = mission;
@@ -114,42 +116,51 @@ void CampaignManager::mark_current_mission_completed() {
     return;
   }
 
-  qInfo() << "Campaign mission" << m_current_campaign_id << "/" << m_current_mission_id
-          << "marked as completed";
-
   auto* save_service = Game::Systems::SaveLoadService::instance();
-  if (save_service != nullptr) {
-    QString error;
-
-    bool const saved =
-        save_service->save_mission_result(m_current_mission_id,
-                                          m_current_mission_context.mode,
-                                          m_current_campaign_id,
-                                          true,
-                                          "victory",
-                                          m_current_mission_context.difficulty,
-                                          0.0F,
-                                          &error);
-
-    if (!saved) {
-      qWarning() << "Failed to save mission result:" << error;
-    } else {
-
-      if (m_current_mission_context.is_campaign()) {
-        bool const unlocked = save_service->unlock_next_campaign_mission(
-            m_current_campaign_id, m_current_mission_id, &error);
-        if (!unlocked) {
-          qWarning() << "Failed to unlock next mission:" << error;
-        } else {
-          qInfo() << "Next mission unlocked successfully, reloading campaigns";
-          emit available_campaigns_changed();
-        }
-      }
-    }
+  if (save_service == nullptr) {
+    qWarning() << "Save/Load service not initialized";
+    return;
   }
+
+  QString error;
+  if (!save_service->save_mission_result(m_current_mission_id,
+                                         m_current_mission_context.mode,
+                                         m_current_campaign_id,
+                                         true,
+                                         "victory",
+                                         m_current_mission_context.difficulty,
+                                         0.0F,
+                                         &error)) {
+    qWarning() << "Failed to save mission result:" << error;
+    return;
+  }
+
+  if (!m_current_mission_context.is_campaign()) {
+    return;
+  }
+
+  // One call records the win, unlocks whatever comes next and closes out the
+  // campaign when nothing is left. Winning the finale is a success here, not
+  // the "no next mission to unlock" error the old path reported.
+  const auto advance = save_service->complete_campaign_mission(
+      m_current_campaign_id, m_current_mission_id, &error);
+  if (!advance.has_value()) {
+    qWarning() << "Failed to advance campaign:" << error;
+    return;
+  }
+
+  m_campaign_completed = advance->campaign_completed;
+  if (advance->unlocked_mission_id.isEmpty()) {
+    qInfo() << "Campaign" << m_current_campaign_id
+            << (advance->campaign_completed ? "completed" : "has no further missions");
+  } else {
+    qInfo() << "Unlocked next mission:" << advance->unlocked_mission_id;
+  }
+  emit available_campaigns_changed();
 }
 
 void CampaignManager::set_skirmish_context(const QString& map_path) {
+  m_campaign_completed = false;
   m_current_campaign_id.clear();
   m_current_mission_id.clear();
   m_current_mission_definition.reset();

@@ -73,6 +73,12 @@ enum class ScenarioCommandKind : std::uint8_t {
   RpgGuard,
   RpgDodge,
   RpgMove,
+  // Builder work orders, so an activity showcase can drive the same job
+  // pipeline the HUD reads rather than faking the state.
+  RepairStructure,
+  DeliverToStructure,
+  HarvestResource,
+  AbandonWork,
 };
 
 struct ArenaScenarioGroup {
@@ -149,6 +155,9 @@ struct ArenaScenarioStep {
   bool chase{true};
   bool enabled{true};
   int value{0};
+  // HarvestResource only: "tree", "boulder" or "iron_ore". Kept apart from
+  // target_group because that field is validated against spawned groups.
+  QString resource_kind;
   float camera_distance{14.0F};
   float camera_angle{45.0F};
   float camera_yaw{30.0F};
@@ -267,6 +276,9 @@ struct ArenaScenarioDefinition {
   bool select_spawned_units{true};
   bool suppress_spawn_anchor{false};
   bool suppress_ui_overlays{false};
+  // Captured frames normally drop the overlays so artifacts show the render
+  // alone. A scenario whose subject IS an overlay opts back in here.
+  bool capture_ui_overlays{false};
   bool force_full_creature_lod{true};
   bool require_rigged_instancing{false};
   bool collect_animation_diagnostics{true};

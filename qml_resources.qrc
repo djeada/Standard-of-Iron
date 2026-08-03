@@ -32,6 +32,7 @@
         <file>ui/qml/HUDVictory.qml</file>
         <file>ui/qml/BattleSummary.qml</file>
         <file>ui/qml/GameView.qml</file>
+        <file>ui/qml/UnitActivityOverlay.qml</file>
         <file>ui/qml/CursorManager.qml</file>
         <file>ui/qml/LoadScreen.qml</file>
         <!-- Icon assets mirrored under the QML module prefix for Qt6 -->

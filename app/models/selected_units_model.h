@@ -21,6 +21,14 @@ struct SelectionGroup {
   double health = 0.0;
   double stamina = 1.0;
   bool can_run = false;
+
+  // What most of the group is doing, and how many of them are doing it. A
+  // group whose members disagree reports the majority and sets `mixed_activity`
+  // rather than picking one arbitrarily.
+  QString activity = QStringLiteral("idle");
+  QString activity_state = QStringLiteral("active");
+  int activity_count = 0;
+  bool mixed_activity = false;
 };
 
 [[nodiscard]] auto
@@ -44,7 +52,9 @@ public:
     NationRole,
     StaminaRatioRole,
     IsRunningRole,
-    CanRunRole
+    CanRunRole,
+    ActivityRole,
+    ActivityStateRole
   };
 
   explicit SelectedUnitsModel(GameEngine* engine, QObject* parent = nullptr);

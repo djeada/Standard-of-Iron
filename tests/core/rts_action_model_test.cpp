@@ -96,4 +96,69 @@ TEST(RtsActionModel, SelectedCommanderAuraReflectsReadyActiveAndCooldownStates) 
   EXPECT_FALSE(aura[QStringLiteral("active")].toBool());
 }
 
+TEST(RtsActionModel, RepairIsOfferedToBuildersAndNobodyElse) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  EXPECT_FALSE(App::Core::get_action_states(context)
+                   .value(QStringLiteral("repair"))
+                   .toMap()
+                   .value(QStringLiteral("enabled"))
+                   .toBool());
+
+  auto* builder = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+  builder->add_component<Engine::Core::BuilderProductionComponent>();
+
+  EXPECT_TRUE(App::Core::get_action_states(context)
+                  .value(QStringLiteral("repair"))
+                  .toMap()
+                  .value(QStringLiteral("enabled"))
+                  .toBool());
+}
+
+TEST(RtsActionModel, ARepairingBuilderReportsTheOrderAsActive) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* builder = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+  auto* production = builder->add_component<Engine::Core::BuilderProductionComponent>();
+  production->product_type = "repair_structure";
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  EXPECT_EQ(App::Core::get_toggle_state(&world, QStringLiteral("repair")),
+            QStringLiteral("all"));
+  EXPECT_TRUE(App::Core::get_mode_availability(&world)
+                  .value(QStringLiteral("canRepair"))
+                  .toBool());
+}
+
+TEST(RtsActionModel, ArmingRepairShowsUpAsTheCurrentCommandMode) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* builder = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+  builder->add_component<Engine::Core::BuilderProductionComponent>();
+
+  App::Core::ActionContext context;
+  context.world = &world;
+  context.cursor_mode = CursorMode::Repair;
+
+  EXPECT_EQ(App::Core::get_current_action_mode(context), QStringLiteral("repair"));
+  EXPECT_EQ(App::Core::action_id_for_cursor_mode(CursorMode::Repair),
+            QStringLiteral("repair"));
+}
+
 } // namespace

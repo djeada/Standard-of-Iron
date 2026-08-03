@@ -21,6 +21,9 @@ class OrderService {
 public:
   static void reset_movement(Engine::Core::Entity* entity);
   static void clear_civilian_delivery(Engine::Core::Entity* entity);
+  // Drops any construction, harvest or repair job the builder is holding,
+  // releasing whatever resource node it had reserved.
+  static void clear_builder_task(Engine::Core::Entity* entity);
   static void clear_patrol(Engine::Core::Entity* entity);
   static void clear_attack_target(Engine::Core::Entity* entity);
   static void clear_player_order_intent(Engine::Core::Entity* entity);

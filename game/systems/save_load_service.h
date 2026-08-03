@@ -14,10 +14,12 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <unordered_set>
 
 #include "save_format.h"
+#include "save_storage.h"
 
 namespace Engine::Core {
 class World;
@@ -104,9 +106,6 @@ public:
   auto list_campaigns(QString* out_error = nullptr) -> QVariantList;
   auto get_campaign_progress(const QString& campaign_id,
                              QString* out_error = nullptr) const -> QVariantMap;
-  auto mark_campaign_completed(const QString& campaign_id,
-                               QString* out_error = nullptr) -> bool;
-
   auto save_mission_result(const QString& mission_id,
                            const QString& mode,
                            const QString& campaign_id,
@@ -123,9 +122,12 @@ public:
   get_campaign_mission_progress(const QString& campaign_id,
                                 QString* out_error = nullptr) const -> QVariantList;
 
-  auto unlock_next_campaign_mission(const QString& campaign_id,
-                                    const QString& completed_mission_id,
-                                    QString* out_error = nullptr) -> bool;
+  // Records a mission win and advances the campaign in one step. See
+  // SaveStorage::complete_campaign_mission.
+  auto complete_campaign_mission(const QString& campaign_id,
+                                 const QString& mission_id,
+                                 QString* out_error = nullptr)
+      -> std::optional<CampaignAdvance>;
 
   static void open_settings();
   static void exit_game();

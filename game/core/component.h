@@ -245,6 +245,11 @@ public:
     return structure_approach_target_id;
   }
 
+  // How long the unit has been ordered somewhere without making progress. The
+  // activity readout uses it to say "blocked" instead of "moving" when a unit
+  // is grinding against terrain or a crowd.
+  [[nodiscard]] auto get_stuck_time() const -> float { return stuck_timer; }
+
 private:
   friend class Game::Systems::MovementSystem;
   friend class Serialization;
@@ -1044,9 +1049,38 @@ public:
   bool capture_blocked{false};
 };
 
+// Why a builder stopped working. The HUD tells "walked off the job" apart from
+// "the tree is gone", so the production system records which one happened
+// instead of leaving the panel to guess from an empty task target.
+enum class BuilderTaskFault : std::uint8_t {
+  None = 0,
+  // Work started and was abandoned; re-issuing the order resumes it.
+  Interrupted = 1,
+  // The target no longer exists or can no longer be worked.
+  TargetLost = 2,
+  // The builder cannot reach the job and is waiting.
+  Unreachable = 3,
+};
+
 class BuilderProductionComponent : public Component {
 public:
   BuilderProductionComponent() = default;
+
+  // Cleared as soon as the builder takes new work, and otherwise held long
+  // enough for a player to notice the marker.
+  void report_fault(BuilderTaskFault reported_fault, float display_seconds = 6.0F) {
+    fault = reported_fault;
+    fault_display_remaining = display_seconds;
+  }
+
+  void clear_fault() {
+    fault = BuilderTaskFault::None;
+    fault_display_remaining = 0.0F;
+  }
+
+  [[nodiscard]] auto has_active_fault() const -> bool {
+    return fault != BuilderTaskFault::None && fault_display_remaining > 0.0F;
+  }
 
   bool in_progress{false};
   float build_time{10.0F};
@@ -1070,6 +1104,12 @@ public:
   bool bypass_movement_active{false};
   float bypass_target_x{0.0F};
   float bypass_target_z{0.0F};
+
+  // Repair and dismantle work on an existing structure rather than on a site.
+  EntityID structure_task_entity_id{0};
+
+  BuilderTaskFault fault{BuilderTaskFault::None};
+  float fault_display_remaining{0.0F};
 };
 
 class WallSegmentComponent : public Component {
