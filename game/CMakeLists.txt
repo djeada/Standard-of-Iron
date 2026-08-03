@@ -97,6 +97,7 @@ add_library(
     systems/ai_system.cpp
     systems/ai_system/ai_command_applier.cpp
     systems/ai_system/ai_command_filter.cpp
+    systems/ai_system/ai_base_manager.cpp
     systems/ai_system/ai_snapshot_builder.cpp
     systems/ai_system/ai_reasoner.cpp
     systems/ai_system/ai_executor.cpp
@@ -107,7 +108,9 @@ add_library(
     systems/ai_system/behaviors/production_behavior.cpp
     systems/ai_system/behaviors/gather_behavior.cpp
     systems/ai_system/behaviors/harass_behavior.cpp
+    systems/ai_system/behaviors/assault_behavior.cpp
     systems/ai_system/behaviors/attack_behavior.cpp
+    systems/ai_system/behaviors/chase_behavior.cpp
     systems/ai_system/behaviors/defend_behavior.cpp
     systems/ai_system/behaviors/retreat_behavior.cpp
     systems/ai_system/behaviors/expand_behavior.cpp
@@ -186,6 +189,7 @@ add_library(
     map/terrain.cpp
     map/terrain_landform.cpp
     map/terrain_service.cpp
+    map/undead_shrine_placement.cpp
     map/terrain_topology_audit.cpp
     map/visibility_service.cpp
     map/explored_mask_codec.cpp

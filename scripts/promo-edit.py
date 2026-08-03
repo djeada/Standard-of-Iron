@@ -36,6 +36,19 @@ Typical use::
     scripts/promo-edit.py --spec tools/arena/promos/last_stand.json \\
       --clips artifacts/promo/last_stand
 
+Two delivery rules this script enforces, because both are invisible until the
+short is already published:
+
+* **Frame zero is never black.** Platforms use it as the thumbnail, so the cut
+  opens hard rather than fading up from black; ``--opening-fade`` restores a
+  fade deliberately. The finished file is read back and the run fails if frame
+  zero is black anyway.
+* **The score is mastered.** The music runs through ``audio_master_preview``,
+  which links the same chain the game applies at decode, so the short is scored
+  with the audio a player hears. Delivery then only adds headroom for the AAC
+  encoder rather than a second loudness normaliser. See
+  ``docs/AUDIO_MASTERING.md``.
+
 Exit status is non-zero when the footage is missing or ffmpeg fails, so this
 can be chained straight after a capture run.
 """
@@ -43,17 +56,97 @@ can be chained straight after a capture run.
 from __future__ import annotations
 
 import argparse
+import array
 import json
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 CAPTION_Y_FRACTION = 0.70
 TITLE_Y_FRACTION = 0.42
 CAPTION_FADE = 0.25
 END_CARD_SECONDS = 2.2
-OPENING_FADE = 0.6
+OPENING_FADE = 0.0
+FIRST_FRAME_MIN_PEAK = 8
+MASTER_TOOL_CANDIDATES = (
+    "build/bin/audio_master_preview",
+    "build-release/bin/audio_master_preview",
+    "build-debug/bin/audio_master_preview",
+)
+PLATFORM_CEILING = 0.631
+
+
+def find_master_tool() -> Path | None:
+    """Locate the binary that applies the game's decode-time mastering chain."""
+    override = os.environ.get("SOI_AUDIO_MASTER")
+    candidates = [Path(override)] if override else []
+    candidates += [Path(candidate) for candidate in MASTER_TOOL_CANDIDATES]
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate
+    return None
+
+
+def master_music(track: Path, workdir: Path) -> Path | None:
+    """Run the music through the same chain the game applies at decode.
+
+    Promo audio that skipped it carried the raw generated master, clipping and
+    all, which is the one thing viewers hear before they see anything.
+    """
+    tool = find_master_tool()
+    if tool is None:
+        print(
+            "promo-edit: warning: audio_master_preview not built, scoring with the "
+            "raw track. Run 'cmake --build build --target audio_master_preview' to "
+            "get the same audio the game plays.",
+            file=sys.stderr,
+        )
+        return None
+    rendered = workdir / f"{track.stem}.mastered.wav"
+    result = subprocess.run(
+        [str(tool), "--render", str(rendered), str(track)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0 or not rendered.is_file():
+        print(
+            f"promo-edit: warning: mastering {track} failed, scoring with the raw "
+            f"track ({result.stderr.strip()})",
+            file=sys.stderr,
+        )
+        return None
+    print(f"promo-edit: scored with the mastered render of {track.name}")
+    return rendered
+
+
+def first_frame_peak(video: Path) -> int:
+    """Brightest sample in frame zero, 0-255, or -1 when it cannot be read."""
+    result = subprocess.run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(video),
+            "-frames:v",
+            "1",
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "gray",
+            "-",
+        ],
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0 or not result.stdout:
+        return -1
+    return max(array.array("B", result.stdout))
 
 
 TRANSITIONS = {
@@ -338,6 +431,15 @@ def main() -> int:
     )
     parser.add_argument("--tempo", type=float, default=104.0, help="drum bed tempo")
     parser.add_argument(
+        "--opening-fade",
+        type=float,
+        default=OPENING_FADE,
+        help=(
+            "seconds of fade-in on the opening frame (default: 0, because a fade "
+            "makes frame zero black and platforms use it as the thumbnail)"
+        ),
+    )
+    parser.add_argument(
         "--transition",
         choices=tuple(sorted(TRANSITIONS)),
         help="override every join the spec asks for (use 'cut' for hard cuts)",
@@ -486,10 +588,12 @@ def main() -> int:
             )
             stage = "sub"
 
-    chain.append(
-        f"[{stage}]fade=t=in:st=0:d={OPENING_FADE:.2f},"
-        f"fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55[vout]"
-    )
+    opening = max(0.0, args.opening_fade)
+    fades = []
+    if opening > 0.0:
+        fades.append(f"fade=t=in:st=0:d={opening:.2f}")
+    fades.append(f"fade=t=out:st={max(0.0, total - 0.55):.3f}:d=0.55")
+    chain.append(f"[{stage}]" + ",".join(fades) + "[vout]")
 
     command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *inputs]
     filter_complex = ";".join(chain)
@@ -505,17 +609,25 @@ def main() -> int:
         mode = "drums"
 
     audio_index = len(shots)
+    workdir: tempfile.TemporaryDirectory | None = None
     if mode == "music":
         start = (
             args.music_start
             if args.music_start is not None
             else float(spec.get("music_start", 0.0))
         )
-        command += ["-ss", f"{start:.3f}", "-i", str(music)]
+        workdir = tempfile.TemporaryDirectory(prefix="promo-edit-")
+        mastered = master_music(music, Path(workdir.name))
+        command += ["-ss", f"{start:.3f}", "-i", str(mastered or music)]
 
+        if mastered is not None:
+
+            level = f"alimiter=limit={PLATFORM_CEILING:.3f}:level=disabled"
+        else:
+            level = "loudnorm=I=-14:TP=-1.5:LRA=11"
         filter_complex += (
-            f";[{audio_index}:a]aformat=channel_layouts=mono,aresample=48000,"
-            "pan=stereo|c0=c0|c1=c0,loudnorm=I=-14:TP=-1.5:LRA=11,"
+            f";[{audio_index}:a]aformat=channel_layouts=stereo,aresample=48000,"
+            f"{level},"
             f"afade=t=in:st=0:d=1.0,"
             f"afade=t=out:st={max(0.0, total - 1.8):.3f}:d=1.8[aout]"
         )
@@ -524,7 +636,7 @@ def main() -> int:
         filter_complex += (
             f";[{audio_index}:a]afade=t=in:st=0:d=0.6,"
             f"afade=t=out:st={max(0.0, total - 1.2):.3f}:d=1.2,"
-            "alimiter=limit=0.9[aout]"
+            f"alimiter=limit={PLATFORM_CEILING:.3f}:level=disabled[aout]"
         )
 
     command += ["-filter_complex", filter_complex, "-map", "[vout]"]
@@ -560,10 +672,22 @@ def main() -> int:
         f"{width}x{height} -> {output}\npromo-edit: {joined_note}"
     )
     result = subprocess.run(command, check=False)
+    if workdir is not None:
+        workdir.cleanup()
     if result.returncode != 0:
         fail(f"ffmpeg failed with status {result.returncode}")
 
-    print(f"promo-edit: wrote {output}")
+    peak = first_frame_peak(output)
+    if peak < 0:
+        print("promo-edit: warning: could not read the first frame back")
+    elif peak < FIRST_FRAME_MIN_PEAK:
+        fail(
+            f"the first frame of {output} is black (peak luma {peak}); social "
+            "platforms use it as the thumbnail. Check --opening-fade and the "
+            "first shot's framing."
+        )
+
+    print(f"promo-edit: wrote {output} (first frame peak luma {peak})")
     return 0
 
 

@@ -2295,6 +2295,7 @@ void ArenaViewport::configure_scenario_undead_zones(
   map_definition.grid.tile_size = k_terrain_tile_size;
   map_definition.undead_zones = m_arena_undead_zones;
   undead_system->configure(map_definition);
+  retain_zone_shrine_props(*undead_system);
 
   if (m_ambient_fog != nullptr) {
     auto const& terrain_service = Game::Map::TerrainService::instance();
@@ -2316,6 +2317,47 @@ void ArenaViewport::configure_scenario_undead_zones(
     if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
       ai_system->reinitialize();
     }
+  }
+}
+
+void ArenaViewport::retain_zone_shrine_props(
+    const Game::Systems::UndeadAwakeningSystem& undead_system) {
+  constexpr float k_shrine_match_grid_distance = 1.0F;
+
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_field = terrain_service.terrain_field();
+  bool planted = false;
+  for (const auto& zone : m_arena_undead_zones) {
+    if (!undead_system.has_shrine(zone.id)) {
+      continue;
+    }
+
+    const QVector2D grid_position = grid_position_from_world(
+        terrain_field, undead_system.shrine_world_position(zone.id));
+
+    const bool already_tracked = std::any_of(
+        m_world_props.begin(),
+        m_world_props.end(),
+        [&grid_position](const Game::Map::WorldProp& prop) {
+          return prop.type == Game::Map::WorldProp::Type::MagicShrine &&
+                 QVector2D(prop.x - grid_position.x(), prop.z - grid_position.y())
+                         .length() < k_shrine_match_grid_distance;
+        });
+    if (already_tracked) {
+      continue;
+    }
+
+    Game::Map::WorldProp shrine;
+    shrine.type = Game::Map::WorldProp::Type::MagicShrine;
+    shrine.x = grid_position.x();
+    shrine.z = grid_position.y();
+    shrine.persistent = true;
+    m_world_props.push_back(shrine);
+    planted = true;
+  }
+
+  if (planted && m_gl_initialized && m_scatter != nullptr) {
+    m_scatter->refresh_runtime_world_props(terrain_service.world_props());
   }
 }
 

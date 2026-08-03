@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,35 @@ class Entity;
 }
 
 namespace Game::Units {
+
+enum class CommanderSignatureMove : std::uint8_t {
+  None = 0,
+
+  BracingThrust,
+
+  ConsularRiposte,
+
+  PointBlankVolley,
+
+  PhalanxSweep,
+
+  HuntingShot,
+
+  EncirclingCut,
+};
+
+struct CommanderSignature {
+  CommanderSignatureMove move = CommanderSignatureMove::None;
+  std::string display_name;
+
+  float cooldown_seconds = 9.0F;
+  float damage_multiplier = 1.0F;
+
+  float bonus_reach = 0.0F;
+
+  float stagger_seconds = 0.0F;
+  int max_targets = 1;
+};
 
 struct CommanderDefinition {
   TroopType troop_type;
@@ -41,6 +71,7 @@ struct CommanderDefinition {
   float aura_ability_duration = 15.0F;
   float aura_ability_cooldown = 60.0F;
   Game::Units::SpawnType aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
+  CommanderSignature signature{};
 };
 
 [[nodiscard]] auto

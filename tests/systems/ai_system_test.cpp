@@ -6,13 +6,19 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/ai_system/ai_base_manager.h"
+#include "game/systems/ai_system/ai_behavior_registry.h"
+#include "game/systems/ai_system/ai_command_applier.h"
 #include "game/systems/ai_system/ai_command_filter.h"
+#include "game/systems/ai_system/ai_executor.h"
 #include "game/systems/ai_system/ai_reasoner.h"
 #include "game/systems/ai_system/ai_snapshot_builder.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/ai_system/ai_utils.h"
+#include "game/systems/ai_system/behaviors/assault_behavior.h"
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/builder_behavior.h"
+#include "game/systems/ai_system/behaviors/chase_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
 #include "game/systems/ai_system/behaviors/expand_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
@@ -123,6 +129,45 @@ protected:
     Game::Systems::NationRegistry::instance().register_nation(std::move(nation));
     Game::Systems::NationRegistry::instance().set_player_nation(
         owner_id, Game::Systems::NationID::IronSepulcher);
+  }
+
+  static void register_economy_nation(int owner_id = 3) {
+    Game::Systems::Nation nation;
+    nation.id = Game::Systems::NationID::RomanRepublic;
+    nation.display_name = "Rome";
+    nation.playable = true;
+    nation.has_economy = true;
+    nation.ai_profile = "standard";
+
+    Game::Systems::TroopType archer;
+    archer.unit_type = Game::Units::TroopType::Archer;
+    archer.display_name = "Archer";
+    archer.is_melee = false;
+    archer.priority = 1;
+    nation.available_troops.push_back(archer);
+
+    Game::Systems::TroopType spearman;
+    spearman.unit_type = Game::Units::TroopType::Spearman;
+    spearman.display_name = "Spearman";
+    spearman.is_melee = true;
+    spearman.priority = 1;
+    nation.available_troops.push_back(spearman);
+
+    Game::Systems::NationRegistry::instance().register_nation(std::move(nation));
+    Game::Systems::NationRegistry::instance().set_player_nation(
+        owner_id, Game::Systems::NationID::RomanRepublic);
+  }
+
+  static auto make_barracks(Engine::Core::EntityID id,
+                            float x,
+                            float z,
+                            int queue_size = 0) -> Game::Systems::AI::EntitySnapshot {
+    auto barracks = make_building(id, x, z, Game::Units::SpawnType::Barracks);
+    barracks.production.has_component = true;
+    barracks.production.max_units = 50;
+    barracks.production.produced_count = 0;
+    barracks.production.queue_size = queue_size;
+    return barracks;
   }
 
   static void initialize_world_props(const std::vector<Game::Map::WorldProp>& props) {
@@ -1499,6 +1544,1082 @@ TEST_F(AISystemTest, AttackBehaviorUsesChaseForUnitTargets) {
   ASSERT_EQ(commands.size(), 1U);
   EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::AttackTarget);
   EXPECT_TRUE(commands.front().should_chase);
+}
+
+TEST_F(AISystemTest, BaseManagerClustersBuildingsIntoDistinctBases) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(60, 36.0F, 42.0F, Game::Units::SpawnType::Home),
+      make_building(61, 44.0F, 38.0F, Game::Units::SpawnType::Home),
+      make_barracks(70, 100.0F, 40.0F),
+      make_building(71, 104.0F, 42.0F, Game::Units::SpawnType::Home),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  ASSERT_EQ(context.bases.size(), 2U);
+  EXPECT_NE(context.bases[0].id, context.bases[1].id);
+
+  const auto* main = Game::Systems::AI::AIBaseManager::main_base(context);
+  ASSERT_NE(main, nullptr);
+  EXPECT_EQ(main->role, Game::Systems::AI::BaseRole::Main);
+  EXPECT_EQ(main->primary_barracks, 50U);
+  EXPECT_EQ(main->barracks_count, 1);
+  EXPECT_EQ(main->home_count, 2);
+
+  const auto* second =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 100.0F, 40.0F);
+  ASSERT_NE(second, nullptr);
+  EXPECT_NE(second->id, main->id);
+  EXPECT_EQ(second->primary_barracks, 70U);
+  EXPECT_NE(second->role, Game::Systems::AI::BaseRole::Main);
+}
+
+TEST_F(AISystemTest, BaseManagerSeparatesProductionAndDefensiveResponsibilities) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(60, 36.0F, 42.0F, Game::Units::SpawnType::Home),
+      make_barracks(70, 100.0F, 40.0F),
+      make_building(80, 40.0F, 100.0F, Game::Units::SpawnType::DefenseTower),
+      make_building(81, 44.0F, 104.0F, Game::Units::SpawnType::Home),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  ASSERT_EQ(context.bases.size(), 3U);
+
+  const auto* production =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 100.0F, 40.0F);
+  const auto* defensive =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 40.0F, 100.0F);
+  ASSERT_NE(production, nullptr);
+  ASSERT_NE(defensive, nullptr);
+
+  EXPECT_GT(production->barracks_count, 0);
+  EXPECT_EQ(defensive->barracks_count, 0);
+  EXPECT_EQ(defensive->role, Game::Systems::AI::BaseRole::Defensive);
+  EXPECT_NE(production->role, Game::Systems::AI::BaseRole::Defensive);
+}
+
+TEST_F(AISystemTest, BaseManagerKeepsBaseIdentityAcrossUpdates) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_barracks(70, 100.0F, 40.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_EQ(context.bases.size(), 2U);
+  const int main_id = context.main_base_id;
+  const auto* second_before =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 100.0F, 40.0F);
+  ASSERT_NE(second_before, nullptr);
+  const int second_id = second_before->id;
+
+  snapshot.game_time = 20.0F;
+  snapshot.friendly_units.push_back(
+      make_building(71, 103.0F, 41.0F, Game::Units::SpawnType::Home));
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  ASSERT_EQ(context.bases.size(), 2U);
+  EXPECT_EQ(context.main_base_id, main_id);
+  const auto* second_after =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 101.0F, 40.0F);
+  ASSERT_NE(second_after, nullptr);
+  EXPECT_EQ(second_after->id, second_id);
+}
+
+TEST_F(AISystemTest, ProductionContinuesFromSurvivingBaseWhenMainBaseIsDestroyed) {
+  register_economy_nation();
+  Game::Systems::AI::ProductionBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(60, 36.0F, 42.0F, Game::Units::SpawnType::Home),
+      make_barracks(70, 100.0F, 40.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.max_troops_per_player = 500;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  const auto* main = Game::Systems::AI::AIBaseManager::main_base(context);
+  ASSERT_NE(main, nullptr);
+  ASSERT_EQ(main->primary_barracks, 50U);
+  const int destroyed_base_id = main->id;
+
+  Game::Systems::AI::AISnapshot after_loss;
+  after_loss.player_id = 3;
+  after_loss.game_time = 25.0F;
+  after_loss.friendly_units = {make_barracks(70, 100.0F, 40.0F)};
+
+  Game::Systems::AI::AIReasoner::update_context(after_loss, context);
+
+  ASSERT_EQ(context.bases.size(), 1U);
+  EXPECT_NE(context.main_base_id, destroyed_base_id);
+  EXPECT_EQ(context.primary_barracks, 70U);
+  EXPECT_FLOAT_EQ(context.base_pos_x, 100.0F);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  ASSERT_TRUE(behavior.should_execute(after_loss, context));
+  behavior.execute(after_loss, context, 5.0F, commands);
+
+  const auto production_commands = std::count_if(
+      commands.begin(), commands.end(), [](const Game::Systems::AI::AICommand& cmd) {
+        return cmd.type == Game::Systems::AI::AICommandType::StartProduction;
+      });
+  EXPECT_EQ(production_commands, 1);
+  for (const auto& cmd : commands) {
+    if (cmd.type == Game::Systems::AI::AICommandType::StartProduction) {
+      EXPECT_EQ(cmd.building_id, 70U);
+    }
+  }
+}
+
+TEST_F(AISystemTest, BaseManagerReleasesAssignmentsOwnedByADestroyedBase) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_barracks(70, 100.0F, 40.0F),
+      make_unit(1, 101.0F, 41.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  const auto* outpost =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 100.0F, 40.0F);
+  ASSERT_NE(outpost, nullptr);
+
+  const auto claimed =
+      Game::Systems::AI::claim_units({1},
+                                     Game::Systems::AI::BehaviorPriority::High,
+                                     "defending",
+                                     context,
+                                     snapshot.game_time,
+                                     2.0F,
+                                     outpost->id);
+  ASSERT_EQ(claimed.size(), 1U);
+  ASSERT_TRUE(context.assigned_units.contains(1));
+
+  Game::Systems::AI::AISnapshot after_loss;
+  after_loss.player_id = 3;
+  after_loss.game_time = 12.0F;
+  after_loss.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_unit(1, 101.0F, 41.0F),
+  };
+
+  Game::Systems::AI::AIReasoner::update_context(after_loss, context);
+
+  EXPECT_EQ(context.reassigned_units_last_update, 1);
+  EXPECT_FALSE(context.assigned_units.contains(1));
+}
+
+TEST_F(AISystemTest, BaseManagerMigratesStrategicCenterToStrongerForwardBase) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_barracks(70, 100.0F, 40.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  const auto* main = Game::Systems::AI::AIBaseManager::main_base(context);
+  ASSERT_NE(main, nullptr);
+  ASSERT_EQ(main->primary_barracks, 50U);
+
+  snapshot.game_time = 40.0F;
+  snapshot.friendly_units.push_back(make_barracks(71, 104.0F, 42.0F));
+  snapshot.friendly_units.push_back(
+      make_building(72, 96.0F, 44.0F, Game::Units::SpawnType::Home));
+  snapshot.friendly_units.push_back(
+      make_building(73, 103.0F, 36.0F, Game::Units::SpawnType::Home));
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  const auto* migrated = Game::Systems::AI::AIBaseManager::main_base(context);
+  ASSERT_NE(migrated, nullptr);
+  EXPECT_EQ(migrated->primary_barracks, 70U);
+  EXPECT_EQ(context.primary_barracks, 70U);
+  EXPECT_FLOAT_EQ(context.base_pos_x, 100.0F);
+}
+
+TEST_F(AISystemTest, IsolatedBaseKeepsOwnRallyAndReportsItsOwnThreat) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(60, 36.0F, 42.0F, Game::Units::SpawnType::Home),
+      make_barracks(70, 140.0F, 140.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(200, 142.0F, 141.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  const auto* isolated =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 140.0F, 140.0F);
+  const auto* main = Game::Systems::AI::AIBaseManager::main_base(context);
+  ASSERT_NE(isolated, nullptr);
+  ASSERT_NE(main, nullptr);
+
+  EXPECT_TRUE(isolated->under_threat);
+  EXPECT_FALSE(main->under_threat);
+  EXPECT_FLOAT_EQ(isolated->rally_x, 135.0F);
+  EXPECT_FLOAT_EQ(isolated->rally_z, 140.0F);
+  EXPECT_FLOAT_EQ(main->rally_x, 35.0F);
+  EXPECT_FLOAT_EQ(isolated->last_threat_time, 10.0F);
+}
+
+TEST_F(AISystemTest, DefendBehaviorDefendsThreatenedSecondaryBase) {
+  Game::Systems::AI::DefendBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_barracks(70, 140.0F, 140.0F),
+      make_unit(1, 60.0F, 60.0F),
+      make_unit(2, 62.0F, 62.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(200, 145.0F, 142.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Defending;
+
+  const auto* threatened =
+      Game::Systems::AI::AIBaseManager::base_for_position(context, 140.0F, 140.0F);
+  ASSERT_NE(threatened, nullptr);
+  ASSERT_TRUE(threatened->under_threat);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_FALSE(commands.empty());
+  const auto& response = commands.front();
+  EXPECT_EQ(response.type, Game::Systems::AI::AICommandType::AttackTarget);
+  EXPECT_EQ(response.target_id, 200U);
+  ASSERT_FALSE(response.units.empty());
+
+  for (const auto unit_id : response.units) {
+    ASSERT_TRUE(context.assigned_units.contains(unit_id));
+    EXPECT_EQ(context.assigned_units[unit_id].base_id, threatened->id);
+  }
+}
+
+TEST_F(AISystemTest, ProductionBehaviorSetsRallyPointPerBase) {
+  register_economy_nation();
+  Game::Systems::AI::ProductionBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_barracks(70, 140.0F, 140.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.max_troops_per_player = 500;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+
+  std::unordered_map<Engine::Core::EntityID, std::pair<float, float>> rally_by_building;
+  for (const auto& cmd : commands) {
+    if (cmd.type == Game::Systems::AI::AICommandType::SetRallyPoint) {
+      rally_by_building[cmd.building_id] = {cmd.rally_x, cmd.rally_z};
+    }
+  }
+
+  ASSERT_EQ(rally_by_building.size(), 2U);
+  EXPECT_FLOAT_EQ(rally_by_building[50].first, 35.0F);
+  EXPECT_FLOAT_EQ(rally_by_building[50].second, 40.0F);
+  EXPECT_FLOAT_EQ(rally_by_building[70].first, 135.0F);
+  EXPECT_FLOAT_EQ(rally_by_building[70].second, 140.0F);
+}
+
+TEST_F(AISystemTest, ProductionBehaviorRespectsPerBaseQueueLimit) {
+  register_economy_nation();
+  Game::Systems::AI::ProductionBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F, 4),
+      make_barracks(51, 44.0F, 44.0F, 1),
+      make_barracks(70, 140.0F, 140.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.max_troops_per_player = 500;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+
+  std::vector<Engine::Core::EntityID> produced_at;
+  for (const auto& cmd : commands) {
+    if (cmd.type == Game::Systems::AI::AICommandType::StartProduction) {
+      produced_at.push_back(cmd.building_id);
+    }
+  }
+
+  EXPECT_EQ(std::count(produced_at.begin(), produced_at.end(), 70U), 1);
+  EXPECT_LE(std::count(produced_at.begin(), produced_at.end(), 50U) +
+                std::count(produced_at.begin(), produced_at.end(), 51U),
+            1);
+}
+
+TEST_F(AISystemTest, BuilderBehaviorFortifiesThreatenedSecondaryBase) {
+  Game::Systems::AI::BuilderBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(60, 36.0F, 42.0F, Game::Units::SpawnType::Home),
+      make_building(61, 44.0F, 38.0F, Game::Units::SpawnType::Home),
+      make_barracks(70, 140.0F, 140.0F),
+      make_builder(11, 120.0F, 120.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(200, 145.0F, 142.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_EQ(context.builder_count, 1);
+
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 4.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  const auto& command = commands.front();
+  EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::StartBuilderConstruction);
+  ASSERT_NE(command.construction_type, nullptr);
+  EXPECT_STREQ(command.construction_type, "defense_tower");
+  EXPECT_FLOAT_EQ(command.construction_site_x, 140.0F);
+  EXPECT_FLOAT_EQ(command.construction_site_z, 140.0F);
+}
+
+TEST_F(AISystemTest, ForwardPlanAbandonsOutpostSiteAfterRepeatedFailures) {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Expansionist);
+
+  auto build_snapshot = [](float game_time) {
+    Game::Systems::AI::AISnapshot snapshot;
+    snapshot.player_id = 3;
+    snapshot.game_time = game_time;
+    snapshot.friendly_units = {
+        make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+        make_building(60, 35.0F, 36.0F, Game::Units::SpawnType::Home),
+        make_building(61, 34.0F, 44.0F, Game::Units::SpawnType::Home),
+        make_building(62, 45.0F, 37.0F, Game::Units::SpawnType::Home),
+        make_builder(10, 38.0F, 38.0F),
+    };
+    auto enemy_base = make_enemy(301, 140.0F, 40.0F);
+    enemy_base.is_building = true;
+    enemy_base.spawn_type = Game::Units::SpawnType::Barracks;
+    snapshot.strategic_objectives = {enemy_base};
+    return snapshot;
+  };
+
+  auto snapshot = build_snapshot(10.0F);
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_TRUE(context.has_expansion_site);
+  const float first_site_x = context.expansion_site_x;
+  const float first_site_z = context.expansion_site_z;
+
+  float now = 10.0F;
+  for (int attempt = 0;
+       attempt < Game::Systems::AI::AIBaseManager::k_max_outpost_failures;
+       ++attempt) {
+    Game::Systems::AI::AIBaseManager::note_expansion_order(
+        context, now, context.expansion_site_x, context.expansion_site_z);
+    now += Game::Systems::AI::AIBaseManager::k_outpost_attempt_timeout + 1.0F;
+    auto later = build_snapshot(now);
+    Game::Systems::AI::AIReasoner::update_context(later, context);
+  }
+
+  EXPECT_EQ(context.forward_plan.abandoned_count, 1);
+  ASSERT_EQ(context.abandoned_expansion_sites.size(), 1U);
+  EXPECT_FLOAT_EQ(context.abandoned_expansion_sites.front().x, first_site_x);
+  EXPECT_TRUE(Game::Systems::AI::AIBaseManager::site_is_abandoned(
+      context, first_site_x, first_site_z, now));
+
+  auto next = build_snapshot(now + 1.0F);
+  Game::Systems::AI::AIReasoner::update_context(next, context);
+
+  ASSERT_TRUE(context.has_expansion_site);
+  EXPECT_FALSE(Game::Systems::AI::AIBaseManager::site_is_abandoned(
+      context, context.expansion_site_x, context.expansion_site_z, now + 1.0F));
+  EXPECT_GT(std::abs(context.expansion_site_z - first_site_z), 1.0F);
+}
+
+TEST_F(AISystemTest, ForwardPlanKeepsSiteWhileConstructionIsStillPending) {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Expansionist);
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_building(60, 35.0F, 36.0F, Game::Units::SpawnType::Home),
+      make_building(61, 34.0F, 44.0F, Game::Units::SpawnType::Home),
+      make_building(62, 45.0F, 37.0F, Game::Units::SpawnType::Home),
+      make_builder(10, 38.0F, 38.0F),
+  };
+  auto enemy_base = make_enemy(301, 140.0F, 40.0F);
+  enemy_base.is_building = true;
+  enemy_base.spawn_type = Game::Units::SpawnType::Barracks;
+  snapshot.strategic_objectives = {enemy_base};
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_TRUE(context.has_expansion_site);
+
+  Game::Systems::AI::AIBaseManager::note_expansion_order(
+      context, 10.0F, context.expansion_site_x, context.expansion_site_z);
+
+  snapshot.game_time =
+      10.0F + Game::Systems::AI::AIBaseManager::k_outpost_attempt_timeout + 5.0F;
+  snapshot.friendly_units[4].builder_production.has_construction_site = true;
+  snapshot.friendly_units[4].builder_production.construction_site_x =
+      context.expansion_site_x;
+  snapshot.friendly_units[4].builder_production.construction_site_z =
+      context.expansion_site_z;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_TRUE(context.expansion_construction_pending);
+  EXPECT_EQ(context.forward_plan.failed_attempts, 0);
+  EXPECT_TRUE(context.has_expansion_site);
+  EXPECT_TRUE(context.abandoned_expansion_sites.empty());
+}
+
+TEST_F(AISystemTest, ForwardPlanClearsFailureCountOnceOutpostStructureExists) {
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Expansionist);
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_building(60, 35.0F, 36.0F, Game::Units::SpawnType::Home),
+      make_building(61, 34.0F, 44.0F, Game::Units::SpawnType::Home),
+      make_building(62, 45.0F, 37.0F, Game::Units::SpawnType::Home),
+      make_builder(10, 38.0F, 38.0F),
+  };
+  auto enemy_base = make_enemy(301, 140.0F, 40.0F);
+  enemy_base.is_building = true;
+  enemy_base.spawn_type = Game::Units::SpawnType::Barracks;
+  snapshot.strategic_objectives = {enemy_base};
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_TRUE(context.has_expansion_site);
+
+  Game::Systems::AI::AIBaseManager::note_expansion_order(
+      context, 10.0F, context.expansion_site_x, context.expansion_site_z);
+  context.forward_plan.failed_attempts = 2;
+
+  snapshot.game_time = 100.0F;
+  snapshot.friendly_units.push_back(make_building(90,
+                                                  context.expansion_site_x,
+                                                  context.expansion_site_z,
+                                                  Game::Units::SpawnType::Barracks));
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_EQ(context.outpost_barracks_count, 1);
+  EXPECT_EQ(context.forward_plan.failed_attempts, 0);
+  EXPECT_FALSE(context.forward_plan.attempt_in_flight);
+  EXPECT_TRUE(context.abandoned_expansion_sites.empty());
+}
+
+TEST_F(AISystemTest, ApplierWritesPerBaseRallyPointOntoBarracks) {
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+
+  auto* main_barracks = add_world_unit(
+      world, 3, 40.0F, 40.0F, 10.0F, true, true, Game::Units::SpawnType::Barracks);
+  auto* outpost_barracks = add_world_unit(
+      world, 3, 140.0F, 140.0F, 10.0F, true, true, Game::Units::SpawnType::Barracks);
+  (void)main_barracks->add_component<Engine::Core::ProductionComponent>();
+  (void)outpost_barracks->add_component<Engine::Core::ProductionComponent>();
+
+  Game::Systems::AI::AICommand main_rally;
+  main_rally.type = Game::Systems::AI::AICommandType::SetRallyPoint;
+  main_rally.building_id = main_barracks->get_id();
+  main_rally.rally_x = 35.0F;
+  main_rally.rally_z = 40.0F;
+
+  Game::Systems::AI::AICommand outpost_rally;
+  outpost_rally.type = Game::Systems::AI::AICommandType::SetRallyPoint;
+  outpost_rally.building_id = outpost_barracks->get_id();
+  outpost_rally.rally_x = 135.0F;
+  outpost_rally.rally_z = 140.0F;
+
+  Game::Systems::AI::AICommandApplier::apply(world, 3, {main_rally, outpost_rally});
+
+  const auto* main_production =
+      main_barracks->get_component<Engine::Core::ProductionComponent>();
+  const auto* outpost_production =
+      outpost_barracks->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(main_production, nullptr);
+  ASSERT_NE(outpost_production, nullptr);
+
+  EXPECT_TRUE(main_production->rally_set);
+  EXPECT_FLOAT_EQ(main_production->rally_x, 35.0F);
+  EXPECT_FLOAT_EQ(main_production->rally_z, 40.0F);
+
+  EXPECT_TRUE(outpost_production->rally_set);
+  EXPECT_FLOAT_EQ(outpost_production->rally_x, 135.0F);
+  EXPECT_FLOAT_EQ(outpost_production->rally_z, 140.0F);
+}
+
+TEST_F(AISystemTest, ApplierIgnoresRallyCommandsForForeignBuildings) {
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+  owners.register_owner_with_id(7, Game::Systems::OwnerType::Player, "Enemy");
+
+  auto* enemy_barracks = add_world_unit(
+      world, 7, 140.0F, 140.0F, 10.0F, false, true, Game::Units::SpawnType::Barracks);
+  (void)enemy_barracks->add_component<Engine::Core::ProductionComponent>();
+
+  Game::Systems::AI::AICommand rally;
+  rally.type = Game::Systems::AI::AICommandType::SetRallyPoint;
+  rally.building_id = enemy_barracks->get_id();
+  rally.rally_x = 135.0F;
+  rally.rally_z = 140.0F;
+
+  Game::Systems::AI::AICommandApplier::apply(world, 3, {rally});
+
+  const auto* production =
+      enemy_barracks->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(production, nullptr);
+  EXPECT_FALSE(production->rally_set);
+}
+
+TEST_F(AISystemTest, CommandFilterKeepsRallyCommandsThatCarryNoUnits) {
+  Game::Systems::AI::AICommandFilter filter;
+
+  Game::Systems::AI::AICommand rally;
+  rally.type = Game::Systems::AI::AICommandType::SetRallyPoint;
+  rally.building_id = 50;
+  rally.rally_x = 35.0F;
+  rally.rally_z = 40.0F;
+
+  const auto filtered = filter.filter({rally}, 1.0F);
+
+  ASSERT_EQ(filtered.size(), 1U);
+  EXPECT_EQ(filtered.front().type, Game::Systems::AI::AICommandType::SetRallyPoint);
+  EXPECT_EQ(filtered.front().building_id, 50U);
+}
+
+TEST_F(AISystemTest, PipelineKeepsSecondBaseProducingAfterMainBaseIsDestroyed) {
+  register_economy_nation();
+
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+
+  auto* main_barracks = add_world_unit(
+      world, 3, 40.0F, 40.0F, 20.0F, true, true, Game::Units::SpawnType::Barracks);
+  auto* main_home = add_world_unit(
+      world, 3, 36.0F, 42.0F, 20.0F, true, true, Game::Units::SpawnType::Home);
+  auto* outpost_barracks = add_world_unit(
+      world, 3, 100.0F, 40.0F, 20.0F, true, true, Game::Units::SpawnType::Barracks);
+  (void)main_barracks->add_component<Engine::Core::ProductionComponent>();
+  (void)outpost_barracks->add_component<Engine::Core::ProductionComponent>();
+
+  Game::Systems::AI::AIBehaviorRegistry registry;
+  registry.register_behavior(std::make_unique<Game::Systems::AI::ProductionBehavior>());
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.nation = Game::Systems::NationRegistry::instance().get_nation_for_player(3);
+  context.max_troops_per_player = 500;
+
+  auto run_pipeline = [&](float delta_time) {
+    const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+    Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+    std::vector<Game::Systems::AI::AICommand> commands;
+    Game::Systems::AI::AIExecutor::run(
+        snapshot, context, delta_time, registry, commands);
+    Game::Systems::AI::AICommandApplier::apply(world, 3, commands);
+    return commands;
+  };
+
+  const auto first_commands = run_pipeline(5.0F);
+
+  ASSERT_EQ(context.bases.size(), 2U);
+  EXPECT_EQ(context.primary_barracks, main_barracks->get_id());
+
+  const auto* main_production =
+      main_barracks->get_component<Engine::Core::ProductionComponent>();
+  const auto* outpost_production =
+      outpost_barracks->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(main_production, nullptr);
+  ASSERT_NE(outpost_production, nullptr);
+  EXPECT_TRUE(main_production->rally_set);
+  EXPECT_TRUE(outpost_production->rally_set);
+  EXPECT_FLOAT_EQ(main_production->rally_x, 35.0F);
+  EXPECT_FLOAT_EQ(outpost_production->rally_x, 95.0F);
+
+  const auto produced_for_outpost = std::count_if(
+      first_commands.begin(),
+      first_commands.end(),
+      [&](const Game::Systems::AI::AICommand& cmd) {
+        return cmd.type == Game::Systems::AI::AICommandType::StartProduction &&
+               cmd.building_id == outpost_barracks->get_id();
+      });
+  EXPECT_EQ(produced_for_outpost, 1);
+
+  const auto destroyed_base_id = context.main_base_id;
+  world.destroy_entity(main_barracks->get_id());
+  world.destroy_entity(main_home->get_id());
+
+  const auto second_commands = run_pipeline(5.0F);
+
+  ASSERT_EQ(context.bases.size(), 1U);
+  EXPECT_NE(context.main_base_id, destroyed_base_id);
+  EXPECT_EQ(context.primary_barracks, outpost_barracks->get_id());
+  EXPECT_EQ(context.bases.front().role, Game::Systems::AI::BaseRole::Main);
+
+  const auto still_producing = std::count_if(
+      second_commands.begin(),
+      second_commands.end(),
+      [&](const Game::Systems::AI::AICommand& cmd) {
+        return cmd.type == Game::Systems::AI::AICommandType::StartProduction &&
+               cmd.building_id == outpost_barracks->get_id();
+      });
+  EXPECT_EQ(still_producing, 1);
+}
+
+TEST_F(AISystemTest, AssaultWaveUnitsAreTrackedSeparatelyFromTheStandingArmy) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+
+  auto wave_unit = make_unit(20, 90.0F, 40.0F);
+  wave_unit.is_assault = true;
+  auto second_wave_unit = make_unit(21, 92.0F, 41.0F);
+  second_wave_unit.is_assault = true;
+
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_unit(1, 38.0F, 40.0F),
+      make_unit(2, 36.0F, 41.0F),
+      wave_unit,
+      second_wave_unit,
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_EQ(context.assault_unit_count, 2);
+  EXPECT_TRUE(Game::Systems::AI::is_assault_unit(20, context));
+  EXPECT_TRUE(Game::Systems::AI::is_assault_unit(21, context));
+  EXPECT_FALSE(Game::Systems::AI::is_assault_unit(1, context));
+
+  const auto attack_force =
+      Game::Systems::AI::collect_attack_force_units(snapshot, context);
+  for (const auto* unit : attack_force) {
+    EXPECT_FALSE(unit->is_assault);
+  }
+}
+
+TEST_F(AISystemTest, AssaultBehaviorAttacksWhileTheAIItselfStaysDefensive) {
+  Game::Systems::AI::AssaultBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+
+  auto wave_unit = make_unit(20, 90.0F, 40.0F);
+  wave_unit.is_assault = true;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      wave_unit,
+  };
+  snapshot.visible_enemies = {make_enemy(200, 120.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Defending;
+
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  const auto& command = commands.front();
+  EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::MoveUnits);
+  ASSERT_EQ(command.units.size(), 1U);
+  EXPECT_EQ(command.units.front(), 20U);
+  ASSERT_FALSE(command.move_target_x.empty());
+  EXPECT_GT(command.move_target_x.front(), 100.0F);
+}
+
+TEST_F(AISystemTest, AssaultBehaviorEngagesTargetsItHasAlreadyReached) {
+  Game::Systems::AI::AssaultBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+
+  auto wave_unit = make_unit(20, 118.0F, 40.0F);
+  wave_unit.is_assault = true;
+  snapshot.friendly_units = {wave_unit};
+  snapshot.visible_enemies = {make_enemy(200, 120.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.assault_unit_count = 1;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::AttackTarget);
+  EXPECT_EQ(commands.front().target_id, 200U);
+  EXPECT_TRUE(commands.front().should_chase);
+}
+
+TEST_F(AISystemTest, DefensiveAIChasesNearbyEnemiesWithOnlyADetachment) {
+  Game::Systems::AI::ChaseBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_unit(1, 110.0F, 40.0F),
+      make_unit(2, 111.0F, 41.0F),
+      make_unit(3, 112.0F, 42.0F),
+      make_unit(4, 40.0F, 45.0F),
+      make_unit(5, 41.0F, 46.0F),
+      make_unit(6, 42.0F, 47.0F),
+      make_unit(7, 43.0F, 48.0F),
+      make_unit(8, 44.0F, 49.0F),
+      make_unit(9, 45.0F, 50.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(200, 118.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Gathering;
+
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+  const int detachment =
+      Game::Systems::AI::ChaseBehavior::chase_detachment_size(context);
+  ASSERT_GT(detachment, 0);
+  EXPECT_LE(detachment, context.strategy_config.max_chase_units);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  const auto& command = commands.front();
+  EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::AttackTarget);
+  EXPECT_EQ(command.target_id, 200U);
+  EXPECT_TRUE(command.should_chase);
+  EXPECT_LE(static_cast<int>(command.units.size()), detachment);
+  EXPECT_LT(static_cast<int>(command.units.size()), context.total_units);
+
+  for (const auto unit_id : command.units) {
+    EXPECT_TRUE(unit_id == 1U || unit_id == 2U || unit_id == 3U);
+  }
+}
+
+TEST_F(AISystemTest, ChaseStandsDownWhenTheBaseItselfIsUnderAttack) {
+  Game::Systems::AI::ChaseBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_unit(1, 110.0F, 40.0F),
+      make_unit(2, 111.0F, 41.0F),
+      make_unit(3, 112.0F, 42.0F),
+  };
+  snapshot.visible_enemies = {
+      make_enemy(200, 118.0F, 40.0F),
+      make_enemy(201, 44.0F, 42.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  ASSERT_TRUE(context.any_base_under_threat);
+  EXPECT_FALSE(behavior.should_execute(snapshot, context));
+}
+
+TEST_F(AISystemTest, ChaseIsDisabledWhenAStrategyDoesNotWantIt) {
+  Game::Systems::AI::ChaseBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_unit(1, 70.0F, 40.0F)};
+  snapshot.visible_enemies = {make_enemy(200, 74.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.total_units = 1;
+  context.strategy_config.chase_radius = 0.0F;
+  context.strategy_config.max_chase_units = 0;
+
+  EXPECT_FALSE(behavior.should_execute(snapshot, context));
+  EXPECT_EQ(Game::Systems::AI::ChaseBehavior::chase_detachment_size(context), 0);
+}
+
+TEST_F(AISystemTest, ExpansionistSkirmishAIRecallsEveryUnitWhenItsBaseIsAttacked) {
+  Game::Systems::AI::DefendBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_unit(1, 120.0F, 120.0F),
+      make_unit(2, 122.0F, 121.0F),
+      make_unit(3, 124.0F, 122.0F),
+      make_unit(4, 126.0F, 123.0F),
+      make_unit(5, 128.0F, 124.0F),
+      make_unit(6, 130.0F, 125.0F),
+      make_unit(7, 132.0F, 126.0F),
+      make_unit(8, 134.0F, 127.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(200, 44.0F, 42.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Expansionist);
+  ASSERT_TRUE(context.strategy_config.full_recall_on_base_threat);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Defending;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_FALSE(commands.empty());
+  std::size_t commanded_units = 0;
+  for (const auto& command : commands) {
+    commanded_units += command.units.size();
+  }
+  EXPECT_EQ(commanded_units, 8U);
+}
+
+TEST_F(AISystemTest, AssaultUnitsStayOnTheAttackWhileTheBaseIsRecalled) {
+  Game::Systems::AI::DefendBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+
+  auto wave_unit = make_unit(20, 130.0F, 130.0F);
+  wave_unit.is_assault = true;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Barracks),
+      make_unit(1, 120.0F, 120.0F),
+      make_unit(2, 122.0F, 121.0F),
+      wave_unit,
+  };
+  snapshot.visible_enemies = {make_enemy(200, 44.0F, 42.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Defending;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  for (const auto& command : commands) {
+    for (const auto unit_id : command.units) {
+      EXPECT_NE(unit_id, 20U);
+    }
+  }
+}
+
+TEST_F(AISystemTest, StrategyPresetsGiveCampaignDefendersChaseAndSkirmishFullRecall) {
+  const auto defensive = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+  EXPECT_GT(defensive.chase_radius, 0.0F);
+  EXPECT_GT(defensive.max_chase_units, 0);
+  EXPECT_FALSE(defensive.full_recall_on_base_threat);
+
+  const auto expansionist = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Expansionist);
+  EXPECT_TRUE(expansionist.full_recall_on_base_threat);
+  EXPECT_GT(expansionist.expansion_priority, defensive.expansion_priority);
+  EXPECT_GT(expansionist.desired_outpost_barracks_count,
+            defensive.desired_outpost_barracks_count);
+}
+
+TEST_F(AISystemTest, SnapshotBuilderResolvesEngagementOncePerTick) {
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+  owners.register_owner_with_id(7, Game::Systems::OwnerType::Player, "Enemy");
+
+  add_world_unit(world, 3, 40.0F, 40.0F, 30.0F, true);
+  add_world_unit(world, 3, 90.0F, 90.0F, 30.0F, true);
+  add_world_unit(world, 7, 42.0F, 41.0F, 30.0F, false);
+
+  const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+
+  ASSERT_EQ(snapshot.friendly_units.size(), 2U);
+  for (const auto& friendly : snapshot.friendly_units) {
+    EXPECT_TRUE(friendly.engagement_resolved);
+  }
+
+  const auto* near_enemy = &snapshot.friendly_units.front();
+  const auto* far_from_enemy = &snapshot.friendly_units.back();
+  if (near_enemy->pos_x > 50.0F) {
+    std::swap(near_enemy, far_from_enemy);
+  }
+
+  EXPECT_TRUE(near_enemy->engaged);
+  EXPECT_FALSE(far_from_enemy->engaged);
+  EXPECT_TRUE(
+      Game::Systems::AI::is_entity_engaged(*near_enemy, snapshot.visible_enemies));
+  EXPECT_FALSE(
+      Game::Systems::AI::is_entity_engaged(*far_from_enemy, snapshot.visible_enemies));
+}
+
+TEST_F(AISystemTest, EngagementHelperStillScansForHandBuiltSnapshots) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.friendly_units = {make_unit(1, 40.0F, 40.0F)};
+  snapshot.visible_enemies = {make_enemy(200, 42.0F, 41.0F)};
+
+  ASSERT_FALSE(snapshot.friendly_units.front().engagement_resolved);
+  EXPECT_TRUE(Game::Systems::AI::is_entity_engaged(snapshot.friendly_units.front(),
+                                                   snapshot.visible_enemies));
+}
+
+TEST_F(AISystemTest, SnapshotBuilderMarksAssaultWaveUnitsFromTheirComponent) {
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+
+  auto* garrison = add_world_unit(world, 3, 40.0F, 40.0F, 20.0F, true);
+  auto* wave_unit = add_world_unit(world, 3, 90.0F, 90.0F, 20.0F, true);
+  (void)wave_unit->add_component<Engine::Core::AssaultWaveComponent>();
+
+  auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+  ASSERT_EQ(snapshot.friendly_units.size(), 2U);
+
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.id == wave_unit->get_id()) {
+      EXPECT_TRUE(entity.is_assault);
+    } else {
+      EXPECT_EQ(entity.id, garrison->get_id());
+      EXPECT_FALSE(entity.is_assault);
+    }
+  }
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_EQ(context.assault_unit_count, 1);
+  ASSERT_EQ(context.assault_unit_ids.size(), 1U);
+  EXPECT_EQ(context.assault_unit_ids.front(), wave_unit->get_id());
+}
+
+TEST_F(AISystemTest, DeactivatedAssaultComponentReturnsAUnitToTheStandingArmy) {
+  Engine::Core::World world;
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI");
+
+  auto* wave_unit = add_world_unit(world, 3, 90.0F, 90.0F, 20.0F, true);
+  auto* assault = wave_unit->add_component<Engine::Core::AssaultWaveComponent>();
+  assault->active = false;
+
+  const auto snapshot = Game::Systems::AI::AISnapshotBuilder::build(world, 3);
+  ASSERT_EQ(snapshot.friendly_units.size(), 1U);
+  EXPECT_FALSE(snapshot.friendly_units.front().is_assault);
 }
 
 } // namespace

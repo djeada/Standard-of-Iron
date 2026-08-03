@@ -111,7 +111,7 @@ constexpr std::array<CombatActionEvent, 5> k_rts_elephant_stomp_events{{
     {CombatActionEventType::ExitSafe, 0.92F},
 }};
 
-constexpr std::array<CombatActionDefinition, 15> k_definitions{{
+constexpr std::array<CombatActionDefinition, 18> k_definitions{{
     {
         .id = CombatActionId::RpgSwordSlashLeft,
         .weapon_family = WeaponFamily::Sword,
@@ -285,6 +285,37 @@ constexpr std::array<CombatActionDefinition, 15> k_definitions{{
         .attack_direction = Engine::Core::AttackDirection::Thrust,
         .hit_shape = {.reach = 12.0F, .radius = 0.10F},
         .duration_seconds = 1.0F,
+        .events = k_rts_bow_events,
+        .requires_projectile_release = true,
+    },
+    {
+        .id = CombatActionId::RtsCommanderThrust,
+        .weapon_family = WeaponFamily::Spear,
+        .attack_family = Engine::Core::CombatAttackFamily::Spear,
+        .attack_direction = Engine::Core::AttackDirection::Thrust,
+        .hit_shape = {.reach = 3.1F, .radius = 0.9F},
+        .duration_seconds = 1.25F,
+        .events = k_rts_melee_events,
+        .max_targets = 4,
+    },
+    {
+        .id = CombatActionId::RtsCommanderCut,
+        .weapon_family = WeaponFamily::Sword,
+        .sword_clip = Animation::SwordAttackAnimation::InfantrySlashC,
+        .attack_family = Engine::Core::CombatAttackFamily::Sword,
+        .attack_direction = Engine::Core::AttackDirection::HeavyOverhead,
+        .hit_shape = {.reach = 2.1F, .radius = 0.55F},
+        .duration_seconds = 1.15F,
+        .events = k_rts_melee_events,
+        .max_targets = 2,
+    },
+    {
+        .id = CombatActionId::RtsCommanderShot,
+        .weapon_family = WeaponFamily::Bow,
+        .attack_family = Engine::Core::CombatAttackFamily::Bow,
+        .attack_direction = Engine::Core::AttackDirection::Thrust,
+        .hit_shape = {.reach = 6.0F, .radius = 0.10F},
+        .duration_seconds = 0.85F,
         .events = k_rts_bow_events,
         .requires_projectile_release = true,
     },

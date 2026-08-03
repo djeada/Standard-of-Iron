@@ -500,6 +500,31 @@ public:
   std::vector<Entry> entries;
 };
 
+enum class CommanderSignatureForm : std::uint8_t {
+  Thrust = 0,
+  Cut,
+  Shot,
+};
+
+class CommanderSignaturePresentationComponent : public Component {
+public:
+  struct Entry {
+    float x{0.0F};
+    float y{0.0F};
+    float z{0.0F};
+
+    float dir_x{0.0F};
+    float dir_z{1.0F};
+    float age{0.0F};
+    float lifetime{0.34F};
+    float intensity{1.0F};
+    CommanderSignatureForm form{CommanderSignatureForm::Cut};
+  };
+
+  static constexpr std::size_t k_max_entries = 4U;
+  std::vector<Entry> entries;
+};
+
 enum class CombatAttackFamily : std::uint8_t {
   None = 0,
   Sword = 1,
@@ -859,6 +884,17 @@ public:
   float aura_ability_cooldown{60.0F};
   float aura_ability_cooldown_remaining{0.0F};
   Game::Units::SpawnType aura_affinity_spawn_type{Game::Units::SpawnType::Knight};
+
+  std::uint8_t signature_move{0U};
+  std::string signature_name;
+  float signature_cooldown{9.0F};
+  float signature_cooldown_remaining{0.0F};
+  float signature_damage_multiplier{1.0F};
+  float signature_bonus_reach{0.0F};
+  float signature_stagger_seconds{0.0F};
+  int signature_max_targets{1};
+
+  bool signature_strike_active{false};
 
   bool wounded{false};
   bool fpv_controlled{false};
@@ -1302,6 +1338,14 @@ public:
   };
 
   std::vector<Entry> entries;
+};
+
+class AssaultWaveComponent : public Component {
+public:
+  AssaultWaveComponent() = default;
+
+  bool active{true};
+  int wave_phase{0};
 };
 
 class HoldModeComponent : public Component {

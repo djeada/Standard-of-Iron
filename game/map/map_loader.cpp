@@ -508,9 +508,6 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
         obj.value(LEASH_RADIUS).toDouble(std::max(zone.radius, zone.leash_radius)));
     zone.owner_id = obj.value(OWNER_ID).toInt(zone.owner_id);
     zone.team_id = obj.value(TEAM_ID).toInt(zone.team_id);
-    if (obj.contains(ANCHOR_STRUCTURE)) {
-      zone.anchor_is_structure = obj.value(ANCHOR_STRUCTURE).toBool();
-    }
     zone.fog_density = float(obj.value(FOG_DENSITY).toDouble(zone.fog_density));
     zone.wave_timeout_seconds =
         float(obj.value(WAVE_TIMEOUT).toDouble(zone.wave_timeout_seconds));

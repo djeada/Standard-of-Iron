@@ -529,6 +529,10 @@ auto main(int argc, char* argv[]) -> int {
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
   fmt.setSamples(0);
   fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+  if (qEnvironmentVariableIsSet("SOI_GL_DEBUG")) {
+    fmt.setOption(QSurfaceFormat::DebugContext);
+    qInfo() << "SOI_GL_DEBUG set: requesting a debug OpenGL context";
+  }
 
   QSurfaceFormat::setDefaultFormat(fmt);
   qInfo() << "Surface format configured: OpenGL" << fmt.majorVersion() << "."

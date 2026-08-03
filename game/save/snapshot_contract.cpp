@@ -189,12 +189,22 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"RpgContactPresentationComponent",
      PresentationOnly,
      "Short-lived exact weapon, block, and dodge contact cues."},
-    {"EnemyTelegraphComponent", PresentationOnly, "Attack telegraph overlay."},
     {"ShowcaseRoutineComponent",
      PresentationOnly,
-     "Scripted animation routine driven by the arena's showcase scenarios. It "
-     "exists only in that tool, never in a match, so a save has nothing to "
-     "restore it from and nothing that needs it."},
+     "Scripted pose loop for the humanoid showcase; never part of a battle."},
+    {"CommanderSignaturePresentationComponent",
+     PresentationOnly,
+     "Short-lived burst marking where a commander's signature move landed."},
+    {"EnemyTelegraphComponent", PresentationOnly, "Attack telegraph overlay."},
+    {"AssaultWaveComponent",
+     AuthoritativeSerialized,
+     "Marks a scripted assault wave. The AI keeps these units attacking whatever "
+     "its posture is, so a save that lost the flag would turn a live wave "
+     "passive."},
+    {"ShowcaseRoutineComponent",
+     PresentationOnly,
+     "Scripted animation routine the arena showcase attaches to a posed "
+     "creature. No mission ever creates one."},
     {"ConstructionPreviewComponent",
      PresentationOnly,
      "Placement ghost. Entities carrying it are skipped entirely when a world "

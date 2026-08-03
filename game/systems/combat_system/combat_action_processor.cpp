@@ -17,6 +17,7 @@
 #include "attack_processor.h"
 #include "combat_hit_resolver.h"
 #include "combat_utils.h"
+#include "damage_application.h"
 #include "damage_processor.h"
 #include "elephant_special_processor.h"
 #include "mounted_charge_processor.h"
@@ -28,18 +29,141 @@ namespace {
 auto is_rts_melee_action(Game::Systems::CombatActions::CombatActionId id) -> bool {
   return id == Game::Systems::CombatActions::CombatActionId::RtsSwordStrike ||
          id == Game::Systems::CombatActions::CombatActionId::RtsSpearThrust ||
-         id == Game::Systems::CombatActions::CombatActionId::RtsElephantStomp;
+         id == Game::Systems::CombatActions::CombatActionId::RtsElephantStomp ||
+         id == Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust ||
+         id == Game::Systems::CombatActions::CombatActionId::RtsCommanderCut;
 }
 
 auto is_rts_attack_action(Game::Systems::CombatActions::CombatActionId id) -> bool {
   return is_rts_melee_action(id) ||
-         id == Game::Systems::CombatActions::CombatActionId::RtsBowShot;
+         id == Game::Systems::CombatActions::CombatActionId::RtsBowShot ||
+         id == Game::Systems::CombatActions::CombatActionId::RtsCommanderShot;
 }
 
 auto target_uses_rpg_combat(Engine::Core::World& world,
                             Engine::Core::EntityID target_id) -> bool {
   auto* target = world.get_entity(target_id);
   return target != nullptr && Game::Systems::CombatRules::uses_rpg_combat_rules(target);
+}
+
+void record_signature_contact(
+    Engine::Core::Entity& attacker,
+    const Engine::Core::TransformComponent& attacker_transform,
+    const Engine::Core::TransformComponent& target_transform,
+    Engine::Core::CommanderSignatureForm form) {
+  auto* presentation = Engine::Core::get_or_add_component<
+      Engine::Core::CommanderSignaturePresentationComponent>(&attacker);
+  if (presentation == nullptr) {
+    return;
+  }
+  if (presentation->entries.size() >=
+      Engine::Core::CommanderSignaturePresentationComponent::k_max_entries) {
+    presentation->entries.erase(presentation->entries.begin());
+  }
+
+  float const dx = target_transform.position.x - attacker_transform.position.x;
+  float const dz = target_transform.position.z - attacker_transform.position.z;
+  float const length = std::max(0.0001F, std::hypot(dx, dz));
+
+  Engine::Core::CommanderSignaturePresentationComponent::Entry entry;
+
+  entry.x = attacker_transform.position.x + dx * 0.72F;
+  entry.y = attacker_transform.position.y + 0.58F;
+  entry.z = attacker_transform.position.z + dz * 0.72F;
+  entry.dir_x = dx / length;
+  entry.dir_z = dz / length;
+  entry.form = form;
+  presentation->entries.push_back(entry);
+}
+
+auto signature_form_for_action(Game::Systems::CombatActions::CombatActionId id)
+    -> Engine::Core::CommanderSignatureForm {
+  switch (id) {
+  case Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust:
+    return Engine::Core::CommanderSignatureForm::Thrust;
+  case Game::Systems::CombatActions::CombatActionId::RtsCommanderShot:
+    return Engine::Core::CommanderSignatureForm::Shot;
+  default:
+    return Engine::Core::CommanderSignatureForm::Cut;
+  }
+}
+
+void apply_commander_signature_effects(
+    Engine::Core::World& world,
+    Engine::Core::Entity& attacker,
+    Engine::Core::CommanderComponent& commander,
+    Engine::Core::Entity& primary_target,
+    const Engine::Core::TransformComponent& attacker_transform,
+    float reach,
+    int damage) {
+  auto const* target_transform =
+      primary_target.get_component<Engine::Core::TransformComponent>();
+  auto const* action =
+      attacker.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (target_transform != nullptr && action != nullptr) {
+    record_signature_contact(
+        attacker,
+        attacker_transform,
+        *target_transform,
+        signature_form_for_action(
+            static_cast<Game::Systems::CombatActions::CombatActionId>(
+                action->combat_action_id)));
+  }
+
+  if (commander.signature_stagger_seconds > 0.0F) {
+    Game::Systems::Combat::add_or_extend_stagger(
+        &primary_target,
+        commander.signature_stagger_seconds,
+        Engine::Core::StaggerTier::LightFlinch);
+  }
+
+  if (commander.signature_max_targets <= 1) {
+    return;
+  }
+
+  auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
+  if (attacker_unit == nullptr) {
+    return;
+  }
+  float const sweep_radius = reach + 0.4F;
+  int const sweep_damage = std::max(1, damage / 2);
+  int remaining = commander.signature_max_targets - 1;
+
+  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (remaining <= 0) {
+      break;
+    }
+    if (candidate == nullptr || candidate == &attacker ||
+        candidate == &primary_target ||
+        candidate->has_component<Engine::Core::PendingRemovalComponent>() ||
+        candidate->has_component<Engine::Core::BuildingComponent>()) {
+      continue;
+    }
+    auto const* candidate_unit =
+        candidate->get_component<Engine::Core::UnitComponent>();
+    auto const* candidate_transform =
+        candidate->get_component<Engine::Core::TransformComponent>();
+    if (candidate_unit == nullptr || candidate_transform == nullptr ||
+        candidate_unit->health <= 0 ||
+        candidate_unit->owner_id == attacker_unit->owner_id) {
+      continue;
+    }
+    float const sweep_dx =
+        candidate_transform->position.x - attacker_transform.position.x;
+    float const sweep_dz =
+        candidate_transform->position.z - attacker_transform.position.z;
+    if (std::hypot(sweep_dx, sweep_dz) > sweep_radius) {
+      continue;
+    }
+    deal_damage(&world, candidate, sweep_damage, attacker.get_id());
+    if (commander.signature_stagger_seconds > 0.0F) {
+      Game::Systems::Combat::add_or_extend_stagger(
+          candidate,
+          commander.signature_stagger_seconds * 0.6F,
+          Engine::Core::StaggerTier::LightFlinch);
+    }
+    --remaining;
+  }
 }
 
 void deal_rts_melee_contact_damage(
@@ -69,8 +193,12 @@ void deal_rts_melee_contact_damage(
   float const dz = target_transform->position.z - attacker_transform->position.z;
   float const distance = std::hypot(dx, dz);
   auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
+  auto* commander = attacker.get_component<Engine::Core::CommanderComponent>();
+  bool const signature_strike =
+      commander != nullptr && commander->signature_strike_active;
   float const reach =
-      attack != nullptr ? attack->melee_range : definition.hit_shape.reach;
+      (attack != nullptr ? attack->melee_range : definition.hit_shape.reach) +
+      (signature_strike ? std::max(0.0F, commander->signature_bonus_reach) : 0.0F);
   float const yaw = attacker_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
   float const facing =
       (std::sin(yaw) * dx + std::cos(yaw) * dz) / std::max(distance, 0.0001F);
@@ -90,6 +218,13 @@ void deal_rts_melee_contact_damage(
   action.last_damage = damage;
   action.hit_target_ids[0] = target->get_id();
   action.hit_target_count = 1U;
+
+  if (!signature_strike) {
+    return;
+  }
+  apply_commander_signature_effects(
+      world, attacker, *commander, *target, *attacker_transform, reach, damage);
+  commander->signature_strike_active = false;
 }
 
 void deal_weapon_trace_damage(
@@ -240,7 +375,8 @@ void handle_action_events(
         Game::Systems::CombatActions::CombatActionEventType::ProjectileRelease) {
       continue;
     }
-    if (action_id == Game::Systems::CombatActions::CombatActionId::RtsBowShot) {
+    if (action_id == Game::Systems::CombatActions::CombatActionId::RtsBowShot ||
+        action_id == Game::Systems::CombatActions::CombatActionId::RtsCommanderShot) {
       auto const* special =
           entity.get_component<Engine::Core::SpecialAttackComponent>();
       bool released = false;
@@ -260,6 +396,30 @@ void handle_action_events(
       if (released) {
         action.last_hit_target_id = action.active_target_id;
         action.last_damage = std::max(1, action.requested_damage);
+
+        if (auto* commander = entity.get_component<Engine::Core::CommanderComponent>();
+            commander != nullptr && commander->signature_strike_active) {
+          auto* shot_target = world.get_entity(action.active_target_id);
+          if (shot_target != nullptr && commander->signature_stagger_seconds > 0.0F) {
+            Game::Systems::Combat::add_or_extend_stagger(
+                shot_target,
+                commander->signature_stagger_seconds,
+                Engine::Core::StaggerTier::LightFlinch);
+          }
+          auto const* shooter_transform =
+              entity.get_component<Engine::Core::TransformComponent>();
+          auto const* shot_transform =
+              shot_target != nullptr
+                  ? shot_target->get_component<Engine::Core::TransformComponent>()
+                  : nullptr;
+          if (shooter_transform != nullptr && shot_transform != nullptr) {
+            record_signature_contact(entity,
+                                     *shooter_transform,
+                                     *shot_transform,
+                                     Engine::Core::CommanderSignatureForm::Shot);
+          }
+          commander->signature_strike_active = false;
+        }
       }
       continue;
     }

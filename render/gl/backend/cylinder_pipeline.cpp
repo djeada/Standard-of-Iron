@@ -251,6 +251,8 @@ void CylinderPipeline::shutdown_cylinder_pipeline() {
 }
 
 void CylinderPipeline::upload_cylinder_instances(std::size_t count) {
+  m_cylinder_instances_resident = 0;
+  count = std::min(count, m_cylinder_scratch.size());
   if (count == 0) {
     return;
   }
@@ -258,13 +260,12 @@ void CylinderPipeline::upload_cylinder_instances(std::size_t count) {
   initializeOpenGLFunctions();
 
   if (m_use_persistent_buffers && m_cylinder_persistent_buffer.is_valid()) {
-    if (count > m_cylinder_persistent_buffer.capacity()) {
-      count = m_cylinder_persistent_buffer.capacity();
-    }
+    count = std::min(count, m_cylinder_persistent_buffer.capacity());
 
     m_cylinder_persistent_buffer.write(m_cylinder_scratch.data(), count);
     glBindBuffer(GL_ARRAY_BUFFER, m_cylinder_persistent_buffer.buffer());
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    m_cylinder_instances_resident = count;
     return;
   }
 
@@ -290,9 +291,11 @@ void CylinderPipeline::upload_cylinder_instances(std::size_t count) {
                   count * sizeof(CylinderInstanceGpu),
                   m_cylinder_scratch.data());
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  m_cylinder_instances_resident = count;
 }
 
 void CylinderPipeline::draw_cylinders(std::size_t count) {
+  count = m_cylinder_draw_guard.clamp(count, m_cylinder_instances_resident);
   if ((m_cylinder_vao == 0U) || m_cylinder_index_count == 0 || count == 0) {
     return;
   }
@@ -468,6 +471,8 @@ void CylinderPipeline::shutdown_fog_pipeline() {
 }
 
 void CylinderPipeline::upload_fog_instances(std::size_t count) {
+  m_fog_instances_resident = 0;
+  count = std::min(count, m_fog_scratch.size());
   if ((m_fog_instance_buffer == 0U) || count == 0) {
     return;
   }
@@ -489,12 +494,16 @@ void CylinderPipeline::upload_fog_instances(std::size_t count) {
   glBufferSubData(
       GL_ARRAY_BUFFER, 0, count * sizeof(FogInstanceGpu), m_fog_scratch.data());
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  m_fog_instances_resident = count;
 }
 
 void CylinderPipeline::bind_fog_instance_buffer(GL::Buffer* instance_buffer) {
+  m_fog_instances_resident = 0;
   if (instance_buffer == nullptr || m_fog_vao == 0U) {
     return;
   }
+
+  m_fog_instances_resident = instance_buffer->size_bytes() / sizeof(FogInstanceGpu);
 
   initializeOpenGLFunctions();
   glBindVertexArray(m_fog_vao);
@@ -542,6 +551,7 @@ void CylinderPipeline::bind_fog_instance_buffer(GL::Buffer* instance_buffer) {
 }
 
 void CylinderPipeline::draw_fog(std::size_t count) {
+  count = m_fog_draw_guard.clamp(count, m_fog_instances_resident);
   if ((m_fog_vao == 0U) || m_fog_index_count == 0 || count == 0) {
     return;
   }

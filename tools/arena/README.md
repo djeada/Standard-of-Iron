@@ -144,6 +144,20 @@ a `shots.json` manifest. `scripts/promo-edit.py` then concatenates, grades,
 captions and scores them into one finished short in a single ffmpeg pass.
 `ffmpeg` must be on `PATH` for both steps.
 
+**The short never opens on a black frame.** Social platforms take frame zero as
+the thumbnail, so a fade-in there costs the video its cover image. The edit
+opens on a hard cut by default (`--opening-fade` re-enables one deliberately),
+the capture skips any black lead-in frames before it starts recording a shot,
+and the edit reads frame zero back out of the finished file and fails the run if
+it is black.
+
+**The score goes through the game's audio mastering.** `promo-edit.py` runs the
+music track through `build/bin/audio_master_preview`, which links the same
+`game/audio/audio_mastering.cpp` the game applies at decode, so the short is
+scored with the audio players actually hear rather than the raw generated
+master. Build that target first; without it the edit warns and falls back to the
+unmastered track. See `docs/AUDIO_MASTERING.md`.
+
 Shot fields:
 
 - `scenario`, `seed`, `start`, `duration` select the deterministic window. The
@@ -326,7 +340,7 @@ loop, while the shared frame-budget contract catches overly expensive detail.
 
 ## Iron Sepulcher contracts
 
-Seven scenarios cover the undead faction end to end. The four battle scenes use
+Twelve scenarios cover the undead faction end to end. The four battle scenes use
 equivalent-recruitment-value armies so the roster can be balanced against both
 playable nations:
 
@@ -341,10 +355,10 @@ playable nations:
   visible contact, a charge impact preceding melee lock, deaths, and a launched
   casualty.
 
-The three awakening scenes drive the production `UndeadAwakeningSystem` rather
+The seven awakening scenes drive the production `UndeadAwakeningSystem` rather
 than authored enemy groups. The scenario declares real `undead_zones`, the arena
-configures the system from them, raises the zone haze, and the guardians are
-spawned by the system:
+configures the system from them, raises the zone haze, and both the guardians and
+the zone's magic shrine are spawned by the system:
 
 - `sepulcher_shrine_awakening` places a cursed shrine on otherwise empty ground.
   Roman swordsmen walk into its radius, the whole garrison rises together spread
@@ -356,6 +370,19 @@ spawned by the system:
 - `sepulcher_shrine_siege` razes the shrine instead of grinding the garrison
   down. Because a shrine is the sepulcher's barracks, breaking it puts every
   risen guardian down at once and clears the zone.
+- `sepulcher_zone_shrine_spawn` authors no prop at all: the zone raises its own
+  shrine on bare ground, which is the contract for "every zone has a shrine".
+- `sepulcher_twin_zone_shrines` puts two zones on one field and requires one
+  shrine each - neither zone borrows the other's.
+- `sepulcher_shrine_demolition` brings the shrine down mid-scene and requires the
+  garrison to crumble with it.
+- `sepulcher_shrine_state_reload` round-trips the zone through the save/load path
+  (`serialize_state` / `restore_state`) while it is awake, and requires the
+  shrine and garrison that already stand to survive the reload unduplicated.
+- `sepulcher_fireball_review` is the fireball FX bench: one caster, one target
+  that cannot die or close to melee, and nothing else in frame. The cast charge
+  in the hand, the ball in flight, its smoke trail and the detonation can all be
+  judged without ambient combat dust washing the shot out.
 
 ```bash
 build-debug/bin/arena_app --scenario sepulcher_shrine_awakening
@@ -363,8 +390,9 @@ build-debug/bin/arena_app --batch --scenario sepulcher_shrine_siege \
   --fps 30 --artifact-dir artifacts/sepulcher
 ```
 
-Two acceptance kinds back these scenes and are reported in `report.json` under
-`undead_zones` (spawn totals, peak living guardians, and the first spawn time):
+Five acceptance kinds back these scenes and are reported in `report.json` under
+`undead_zones` (spawn totals, peak living guardians, the first spawn time, and
+the shrine's fate):
 
 - `UndeadZoneDormantBefore` fails when a zone spawns anything before its declared
   dormancy window, which is what proves the "empty space" opening.
@@ -372,6 +400,14 @@ Two acceptance kinds back these scenes and are reported in `report.json` under
   guardians.
 - `UndeadZoneCleared` fails when guardians never appeared or any remain alive at
   the end of the run.
+- `UndeadZoneShrineStands` fails when a zone never raised a shrine, or lost the
+  one it raised.
+- `UndeadZoneShrineDestroyed` fails when the shrine is still standing at the end
+  of the run.
+
+A step may carry a `zone_id` instead of a `group`: `SetHealth` and `ApplyDamage`
+then act on that zone's shrine, and `ReloadUndeadZoneState` round-trips the whole
+zone state through serialize/restore without touching the rest of the scene.
 
 ## Water rendering contract
 
@@ -411,6 +447,22 @@ Each scene requires both commanders to render repeated authored attacks, registe
 physical contact damage, show hit reactions, remain visually stable, and stay
 inside the frame budget. Their fixed midpoint camera keeps both silhouettes at
 the same depth for direct weapon and motion comparison.
+
+Three longer cross-weapon duels exist for the signature moves, the one duel trick
+each commander owns:
+
+- `commander_signature_spear_vs_sword` - Fabius' Bracing Thrust against Hannibal's
+  Encircling Cut.
+- `commander_signature_sword_vs_bow` - Scipio's Consular Riposte against
+  Hasdrubal's Hunting Shot, loosed inside the clinch.
+- `commander_signature_bow_vs_spear` - Marcellus' Point-blank Volley against
+  Hanno's Phalanx Sweep.
+
+They run for 24 s with both commanders on high health on purpose: a signature is
+on a five-to-ten second cooldown, so a short duel that ends in a kill would only
+ever show one of them. `report.json`/`trace.jsonl` name the action each frame -
+`RtsCommanderThrust`, `RtsCommanderCut` and `RtsCommanderShot` are the signature
+forms, distinct from the routine `RtsSwordStrike`/`RtsSpearThrust`/`RtsBowShot`.
 
 ## Commander RPG contracts
 

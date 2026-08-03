@@ -8,6 +8,7 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
+#include "../map/terrain_service.h"
 #include "arrow_projectile.h"
 #include "combat_system/combat_hit_resolver.h"
 #include "stone_projectile.h"
@@ -105,6 +106,48 @@ auto target_escaped_impact(const Engine::Core::Entity* target,
   default:
     return 0.65F;
   }
+}
+
+[[nodiscard]] auto leaves_a_shaft(ProjectileKind kind) -> bool {
+  switch (kind) {
+  case ProjectileKind::Arrow:
+  case ProjectileKind::CursedArrow:
+    return true;
+  case ProjectileKind::Fireball:
+  case ProjectileKind::Stone:
+  case ProjectileKind::FlamingStone:
+    return false;
+  }
+  return false;
+}
+
+[[nodiscard]] auto scatter_unit(std::uint64_t seed) -> float {
+  std::uint64_t value = seed * 0x9e3779b97f4a7c15ULL;
+  value ^= value >> 29;
+  value *= 0xbf58476d1ce4e5b9ULL;
+  value ^= value >> 32;
+  return static_cast<float>(value & 0xffffffULL) / 16777215.0F;
+}
+
+[[nodiscard]] auto planted_direction(const QVector3D& incoming,
+                                     std::uint64_t seed) -> QVector3D {
+  QVector3D flat(incoming.x(), 0.0F, incoming.z());
+  if (flat.lengthSquared() < 1.0e-6F) {
+    float const angle = scatter_unit(seed) * 6.2831853F;
+    flat = QVector3D(std::cos(angle), 0.0F, std::sin(angle));
+  }
+  flat.normalize();
+  float const yaw_jitter = (scatter_unit(seed ^ 0x5bf03635ULL) - 0.5F) * 0.9F;
+  QVector3D const jittered(
+      flat.x() * std::cos(yaw_jitter) - flat.z() * std::sin(yaw_jitter),
+      0.0F,
+      flat.x() * std::sin(yaw_jitter) + flat.z() * std::cos(yaw_jitter));
+
+  constexpr float k_min_plant_slope = 0.80F;
+  constexpr float k_max_plant_slope = 1.90F;
+  float const slope = k_min_plant_slope + (k_max_plant_slope - k_min_plant_slope) *
+                                              scatter_unit(seed ^ 0x27d4eb2fULL);
+  return QVector3D(jittered.x(), -slope, jittered.z()).normalized();
 }
 
 [[nodiscard]] auto
@@ -245,6 +288,11 @@ void ProjectileSystem::update(Engine::Core::World* world, float delta_time) {
   std::erase_if(m_impacts,
                 [](auto const& impact) { return impact.age >= impact.lifetime; });
 
+  for (auto& spent : m_spent) {
+    spent.age += std::max(0.0F, delta_time);
+  }
+  std::erase_if(m_spent, [](auto const& spent) { return spent.age >= spent.lifetime; });
+
   for (auto& projectile : m_projectiles) {
     if (projectile == nullptr || !projectile->is_active()) {
       continue;
@@ -338,6 +386,44 @@ void ProjectileSystem::publish_impact(const Projectile& projectile,
 
   Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(
       impact_cue_for_kind(projectile.get_kind(), ballista_bolt)));
+
+  record_spent_projectile(projectile, incoming_direction, ballista_bolt);
+}
+
+void ProjectileSystem::record_spent_projectile(const Projectile& projectile,
+                                               const QVector3D& incoming_direction,
+                                               bool ballista_bolt) {
+  if (!leaves_a_shaft(projectile.get_kind())) {
+    return;
+  }
+
+  std::uint64_t const seed = m_impact_sequence;
+  QVector3D const impact = projectile.get_end();
+  float const ground_y =
+      Game::Map::TerrainService::instance().get_terrain_height(impact.x(), impact.z());
+
+  constexpr float k_scatter_radius = 0.34F;
+  float const scatter_angle = scatter_unit(seed ^ 0x94d049bbULL) * 6.2831853F;
+  float const scatter_dist = k_scatter_radius * scatter_unit(seed ^ 0x1b873593ULL);
+
+  SpentProjectile spent;
+  spent.position = QVector3D(impact.x() + std::cos(scatter_angle) * scatter_dist,
+                             ground_y,
+                             impact.z() + std::sin(scatter_angle) * scatter_dist);
+  spent.direction = planted_direction(incoming_direction, seed);
+  spent.color = projectile.get_color();
+  spent.kind = projectile.get_kind();
+  spent.roll_deg = scatter_unit(seed ^ 0x85ebca6bULL) * 360.0F;
+  spent.scale = projectile.get_scale();
+  spent.embed = ballista_bolt ? 0.34F : 0.24F;
+  spent.lifetime = m_arrow_config.spent_lifetime_seconds *
+                   (0.82F + 0.36F * scatter_unit(seed ^ 0xc2b2ae35ULL));
+  spent.ballista_bolt = ballista_bolt;
+
+  if (m_spent.size() >= k_max_spent_projectiles) {
+    m_spent.erase(m_spent.begin());
+  }
+  m_spent.push_back(spent);
 }
 
 } // namespace Game::Systems

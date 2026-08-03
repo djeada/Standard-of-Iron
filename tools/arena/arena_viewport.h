@@ -32,6 +32,7 @@ namespace Game::Systems {
 class CameraService;
 class PickingService;
 class SelectionSystem;
+class UndeadAwakeningSystem;
 } // namespace Game::Systems
 
 namespace Game::Units {
@@ -249,6 +250,8 @@ private:
                                        const QVector3D& scenario_origin);
   void configure_scenario_undead_zones(const Arena::ArenaScenarioDefinition& definition,
                                        const QVector3D& scenario_origin);
+  void
+  retain_zone_shrine_props(const Game::Systems::UndeadAwakeningSystem& undead_system);
   void clear_undead_zones();
   void sanitize_selection();
   void update_selected_entities();

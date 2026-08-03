@@ -451,6 +451,11 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
   next.hit_recoil_z = action.hit_recoil_z;
   next.is_constructing = action.is_constructing;
   next.construction_progress = action.construction_progress;
+
+  if (action.is_in_melee_lock) {
+    next.is_constructing = false;
+    next.construction_progress = 0.0F;
+  }
   next.is_dying = action.is_dying;
   next.is_dead = action.is_dead;
   next.death_progress = action.death_progress;
@@ -468,7 +473,8 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
 
   auto const* transform = entity->get_component<TransformComponent>();
   auto const* healer = entity->get_component<HealerComponent>();
-  if (healer != nullptr && healer->is_healing_active && transform != nullptr) {
+  if (healer != nullptr && healer->is_healing_active && transform != nullptr &&
+      !action.is_in_melee_lock) {
     next.is_healing = true;
     next.healing_target_dx = healer->healing_target_x - transform->position.x;
     next.healing_target_dz = healer->healing_target_z - transform->position.z;

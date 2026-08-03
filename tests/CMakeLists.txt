@@ -69,6 +69,7 @@ add_executable(
     map/hill_crown_geometry_test.cpp
     map/terrain_footprint_test.cpp
     map/mission_victory_rules_test.cpp
+    map/undead_shrine_placement_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/campaign_loader_test.cpp
     map/campaign_roster_test.cpp
@@ -104,8 +105,11 @@ add_executable(
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp
     systems/undead_awakening_system_test.cpp
+    systems/melee_engagement_test.cpp
+    systems/commander_duel_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
+    systems/spent_projectile_test.cpp
     systems/ai_system_test.cpp
     systems/elephant_special_processor_test.cpp
     systems/siege_special_processor_test.cpp
@@ -151,6 +155,7 @@ add_executable(
     render_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     render/unit_primitive_convention_test.cpp
+    render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
@@ -179,6 +184,7 @@ add_executable(
     render/persistent_render_registry_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
+    render/spark_direction_test.cpp
     render/linear_feature_geometry_test.cpp
     render/road_network_geometry_test.cpp
     render/linear_feature_visibility_test.cpp
@@ -281,6 +287,9 @@ add_executable(
     ${SOI_TRANSLATIONS_QRC}
     core/audio_system_test.cpp
     core/audio_cues_test.cpp
+    core/audio_mastering_test.cpp
+    core/audio_command_ring_test.cpp
+    core/audio_backend_test.cpp
     db/save_preview_test.cpp
     core/settings_persistence_test.cpp
     core/minimap_manager_test.cpp

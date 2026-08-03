@@ -79,6 +79,8 @@ enum class ScenarioCommandKind : std::uint8_t {
   DeliverToStructure,
   HarvestResource,
   AbandonWork,
+
+  ReloadUndeadZoneState,
 };
 
 struct ArenaScenarioGroup {
@@ -151,6 +153,8 @@ struct ArenaScenarioStep {
   ScenarioCommandKind command{ScenarioCommandKind::Stand};
   QString group;
   QString target_group;
+
+  QString zone_id;
   QVector3D destination;
   bool chase{true};
   bool enabled{true};
@@ -242,6 +246,8 @@ enum class ArenaExpectationKind : std::uint8_t {
   UndeadZoneDormantBefore,
   UndeadZoneAwakened,
   UndeadZoneCleared,
+  UndeadZoneShrineStands,
+  UndeadZoneShrineDestroyed,
 };
 
 struct ArenaExpectation {
