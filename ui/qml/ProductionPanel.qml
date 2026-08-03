@@ -105,7 +105,7 @@ Rectangle {
     function is_commander_type(unit_type) {
         if (!unit_type)
             return false;
-        return unit_type.indexOf("commander") !== -1 || unit_type === "roman_legion_organizer" || unit_type === "roman_veteran_consul" || unit_type === "carthage_mercenary_broker" || unit_type === "carthage_cavalry_patron" || unit_type === "carthage_elephant_master";
+        return unit_type.indexOf("commander") !== -1 || unit_type === "roman_legion_organizer" || unit_type === "roman_veteran_consul" || unit_type === "carthage_spear_commander" || unit_type === "carthage_bow_commander" || unit_type === "carthage_sword_commander";
     }
 
     function get_unit_production_info(unit_type, nation_id) {
@@ -594,7 +594,7 @@ Rectangle {
                                         width: archerCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: archerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: archerCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: archerCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -724,7 +724,7 @@ Rectangle {
                                         width: swordsmanCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: swordsmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: swordsmanCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: swordsmanCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -854,7 +854,7 @@ Rectangle {
                                         width: spearmanCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: spearmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: spearmanCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: spearmanCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -984,7 +984,7 @@ Rectangle {
                                         width: horseKnightCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: horseKnightCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: horseKnightCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: horseKnightCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -1114,7 +1114,7 @@ Rectangle {
                                         width: horseArcherCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: horseArcherCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: horseArcherCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: horseArcherCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -1244,7 +1244,7 @@ Rectangle {
                                         width: horseSpearmanCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: horseSpearmanCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: horseSpearmanCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: horseSpearmanCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -1374,7 +1374,7 @@ Rectangle {
                                         width: healerCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: healerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: healerCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: healerCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -1504,7 +1504,7 @@ Rectangle {
                                         width: builderRecruitCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderRecruitCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderRecruitCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderRecruitCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -1635,7 +1635,7 @@ Rectangle {
                                         width: elephantCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: elephantCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: elephantCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: elephantCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -1721,9 +1721,9 @@ Rectangle {
 
                 width: parent.width
                 height: homeProductionContent.height + 16
-                color: "#1a252f"
+                color: hs.parchmentLight
                 radius: 6
-                border.color: "#34495e"
+                border.color: hs.bronzeDeep
                 border.width: 1
                 visible: has_home
 
@@ -1741,7 +1741,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("HOME RECRUITMENT")
-                        color: "#3498db"
+                        color: hs.bronze
                         font.pointSize: 8
                         font.bold: true
                     }
@@ -1754,7 +1754,7 @@ Rectangle {
                             var ready = Math.floor((homeProductionContent.prod.manpower_available || 0) / cost);
                             return qsTr("Available civilians: %1 / %2").arg(ready).arg(homeProductionContent.prod.max_units || 0);
                         }
-                        color: "#bdc3c7"
+                        color: Theme.textSubLite
                         font.pointSize: 8
                     }
 
@@ -1774,11 +1774,11 @@ Rectangle {
                         height: 80
                         anchors.horizontalCenter: parent.horizontalCenter
                         radius: 6
-                        color: is_enabled ? (is_hovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                        border.color: is_enabled ? (is_hovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
-                        border.width: is_hovered && is_enabled ? 4 : 2
+                        color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                        border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                        border.width: is_hovered && is_enabled ? 2 : 1
                         opacity: is_enabled ? 1 : 0.5
-                        scale: is_hovered && is_enabled ? 1.08 : 1
+                        scale: is_hovered && is_enabled ? 1.025 : 1
 
                         Image {
                             id: civilianRecruitIcon
@@ -1795,7 +1795,7 @@ Rectangle {
                             anchors.centerIn: parent
                             visible: !civilianRecruitIcon.visible
                             text: productionPanel.unit_icon_emoji("civilian")
-                            color: parent.is_enabled ? "#ecf0f1" : "#5a5a5a"
+                            color: parent.is_enabled ? Theme.textMain : Theme.textHint
                             font.pointSize: 36
                             opacity: parent.is_enabled ? 0.9 : 0.4
                         }
@@ -1814,8 +1814,8 @@ Rectangle {
                                     width: civilianCostRow.implicitWidth + 8
                                     height: 16
                                     radius: 8
-                                    color: civilianCard.is_enabled ? "#000000b3" : "#00000066"
-                                    border.color: civilianCard.is_enabled ? "#f39c12" : "#555555"
+                                    color: civilianCard.is_enabled ? "#cc2a1d12" : "#991f150d"
+                                    border.color: civilianCard.is_enabled ? hs.bronze : "#8C6A3E"
                                     border.width: 1
 
                                     Row {
@@ -1834,7 +1834,7 @@ Rectangle {
 
                                         Text {
                                             text: modelData.amount
-                                            color: civilianCard.is_enabled ? "#fdf7e3" : "#8a8a8a"
+                                            color: civilianCard.is_enabled ? Theme.textMain : Theme.textDim
                                             font.pointSize: 7
                                             font.bold: true
                                         }
@@ -2158,7 +2158,7 @@ Rectangle {
                                         width: catapultCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderCatapultCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderCatapultCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderCatapultCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -2298,7 +2298,7 @@ Rectangle {
                                         width: ballistaCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderBallistaCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderBallistaCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderBallistaCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -2438,7 +2438,7 @@ Rectangle {
                                         width: defenseTowerCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderDefenseTowerCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderDefenseTowerCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderDefenseTowerCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -2578,7 +2578,7 @@ Rectangle {
                                         width: homeCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderHomeCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderHomeCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderHomeCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -2718,7 +2718,7 @@ Rectangle {
                                         width: wallSegmentCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderWallSegmentCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderWallSegmentCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderWallSegmentCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -2858,7 +2858,7 @@ Rectangle {
                                         width: wallGateCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderWallGateCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderWallGateCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderWallGateCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -2998,7 +2998,7 @@ Rectangle {
                                         width: marketplaceCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderMarketplaceCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderMarketplaceCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderMarketplaceCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 
@@ -3138,7 +3138,7 @@ Rectangle {
                                         width: templeCostRow.implicitWidth + 8
                                         height: 16
                                         radius: 8
-                                        color: builderTempleCard.is_enabled ? "#2a1d12cc" : "#1f150d99"
+                                        color: builderTempleCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderTempleCard.is_enabled ? hs.bronze : "#8C6A3E"
                                         border.width: 1
 

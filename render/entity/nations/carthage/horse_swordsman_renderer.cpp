@@ -19,7 +19,7 @@ auto carthage_style() -> KnightStyleConfig {
   KnightStyleConfig style;
   style.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
   style.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
-  style.leather_dark_color = QVector3D(0.20F, 0.14F, 0.09F);
+  style.leather_dark_color = QVector3D(0.32F, 0.22F, 0.15F);
   style.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
   return style;
 }

@@ -103,19 +103,23 @@
       "bow": "bow_marcellus",
       "quiver": "quiver_marcellus",
       "helmet": "commander_marcellus",
+      "greaves": "roman_greaves",
       "armor": "roman_light_armor",
       "cloak": "cloak_marcellus"
     },
     "troops/carthage/commanders/hanno_the_great": {
       "spear": "spear_hanno",
       "helmet": "commander_hanno",
+      "greaves": "carthage_greaves",
       "armor": "armor_light_carthage",
+      "shoulder": "carthage_shoulder_cover",
       "cloak": "cloak_hanno"
     },
     "troops/carthage/commanders/hasdrubal_barca": {
       "bow": "bow_hasdrubal",
       "quiver": "quiver_hasdrubal",
       "helmet": "commander_hasdrubal",
+      "greaves": "carthage_greaves",
       "armor": "armor_light_carthage",
       "cloak": "cloak_hasdrubal"
     },
@@ -123,6 +127,7 @@
       "sword": "sword_hannibal",
       "shield": "shield_carthage",
       "helmet": "commander_hannibal",
+      "greaves": "carthage_greaves",
       "armor": "carthage_gilded_scale",
       "shoulder": "carthage_shoulder_cover",
       "cloak": "cloak_hannibal"

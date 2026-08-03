@@ -34,7 +34,7 @@ namespace Render::GL {
 using Render::Geom::clamp_f;
 
 namespace {
-constexpr QVector3D k_dark_bow_color(0.05F, 0.035F, 0.02F);
+constexpr QVector3D k_dark_bow_color(0.22F, 0.145F, 0.085F);
 constexpr float k_bow_length_scale = 1.05F;
 constexpr float k_bow_thickness_scale = 1.0F;
 constexpr float k_bow_depth_scale = 1.0F;

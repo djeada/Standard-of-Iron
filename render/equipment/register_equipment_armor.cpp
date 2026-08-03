@@ -26,11 +26,14 @@ enum class CommanderCloakStyle : std::uint8_t {
 auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   static const CloakConfig fabius = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.34F, 0.025F, 0.035F};
-    cfg.trim_color = {0.66F, 0.68F, 0.66F};
-    cfg.length_scale = 1.26F;
-    cfg.width_scale = 1.18F;
+
+    cfg.primary_color = {0.52F, 0.20F, 0.18F};
+    cfg.trim_color = {0.72F, 0.74F, 0.70F};
+    cfg.length_scale = 1.04F;
+    cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.06F;
+    cfg.team_blend = 0.72F;
+    cfg.team_shade = 0.92F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
     return cfg;
@@ -38,55 +41,65 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   static const CloakConfig scipio = [] {
     CloakConfig cfg;
 
-    cfg.primary_color = {0.46F, 0.060F, 0.085F};
-    cfg.trim_color = {0.94F, 0.62F, 0.15F};
+    cfg.primary_color = {0.58F, 0.24F, 0.22F};
+    cfg.trim_color = {0.94F, 0.68F, 0.24F};
     cfg.length_scale = 1.02F;
-    cfg.width_scale = 0.96F;
+    cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.07F;
+    cfg.team_blend = 0.72F;
+    cfg.team_shade = 0.98F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
     return cfg;
   }();
   static const CloakConfig marcellus = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.56F, 0.055F, 0.045F};
-    cfg.trim_color = {0.18F, 0.16F, 0.15F};
+    cfg.primary_color = {0.56F, 0.26F, 0.22F};
+    cfg.trim_color = {0.30F, 0.28F, 0.26F};
     cfg.length_scale = 0.68F;
     cfg.width_scale = 0.78F;
     cfg.shoulder_anchor_up = 0.12F;
     cfg.show_clasp = false;
+    cfg.team_blend = 0.72F;
+    cfg.team_shade = 1.0F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
     return cfg;
   }();
   static const CloakConfig hanno = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.25F, 0.035F, 0.30F};
-    cfg.trim_color = {0.90F, 0.58F, 0.14F};
+    cfg.primary_color = {0.44F, 0.26F, 0.50F};
+    cfg.trim_color = {0.90F, 0.62F, 0.22F};
     cfg.length_scale = 1.10F;
-    cfg.width_scale = 1.24F;
+    cfg.width_scale = 1.06F;
     cfg.shoulder_anchor_up = 0.25F;
+    cfg.team_blend = 0.72F;
+    cfg.team_shade = 0.92F;
     return cfg;
   }();
   static const CloakConfig hasdrubal = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.08F, 0.24F, 0.25F};
-    cfg.trim_color = {0.44F, 0.16F, 0.48F};
+    cfg.primary_color = {0.30F, 0.44F, 0.46F};
+    cfg.trim_color = {0.58F, 0.30F, 0.62F};
     cfg.length_scale = 0.76F;
     cfg.width_scale = 0.86F;
     cfg.shoulder_anchor_up = 0.12F;
     cfg.show_clasp = false;
+    cfg.team_blend = 0.72F;
+    cfg.team_shade = 1.0F;
     return cfg;
   }();
   static const CloakConfig hannibal = [] {
     CloakConfig cfg;
 
-    cfg.primary_color = {0.175F, 0.185F, 0.235F};
-    cfg.trim_color = {0.74F, 0.44F, 0.10F};
-    cfg.length_scale = 1.30F;
-    cfg.width_scale = 1.00F;
+    cfg.primary_color = {0.38F, 0.40F, 0.46F};
+    cfg.trim_color = {0.82F, 0.54F, 0.18F};
+    cfg.length_scale = 1.12F;
+    cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.08F;
     cfg.drape_anchor_back = 0.60F;
+    cfg.team_blend = 0.72F;
+    cfg.team_shade = 0.88F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
     return cfg;
@@ -141,7 +154,7 @@ auto commander_cloak_role_colors(const void* variant_void,
                                  std::size_t max_count) -> std::uint32_t {
   return with_variant_palette(
       variant_void,
-      [](const HumanoidVariant&,
+      [](const HumanoidVariant& variant,
          QVector3D* colors,
          std::uint32_t count,
          std::size_t max) {
@@ -149,7 +162,7 @@ auto commander_cloak_role_colors(const void* variant_void,
           return count;
         }
         auto const& config = commander_cloak_config(Style);
-        colors[count] = config.primary_color;
+        colors[count] = Render::GL::cloak_mantle_color(config, variant.palette);
         colors[count + 1U] = config.trim_color;
         return count + Render::GL::k_cloak_role_count;
       },
@@ -457,6 +470,28 @@ auto roman_greaves_role_colors(const void* variant_void,
          std::size_t max) {
         return count + Render::GL::roman_greaves_fill_role_colors(
                            variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+auto carthage_greaves_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant&,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        if (max - count < Render::GL::k_roman_greaves_role_count) {
+          return count;
+        }
+
+        colors[count] = QVector3D(0.62F, 0.46F, 0.22F);
+        return count + Render::GL::k_roman_greaves_role_count;
       },
       out,
       base_count,

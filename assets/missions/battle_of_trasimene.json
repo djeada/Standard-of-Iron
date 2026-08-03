@@ -17,7 +17,7 @@
       "gold": 360,
       "food": 280
     },
-    "commander_troop": "carthage_elephant_master"
+    "commander_troop": "carthage_sword_commander"
   },
   "ai_setups": [
     {

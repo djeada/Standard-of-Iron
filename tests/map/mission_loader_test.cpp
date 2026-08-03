@@ -63,7 +63,7 @@ protected:
           "nation": "carthage",
           "faction": "carthaginian",
           "color": "blue",
-          "commander_troop": "carthage_elephant_master",
+          "commander_troop": "carthage_sword_commander",
           "difficulty": "medium",
           "personality": {
             "aggression": 0.7,
@@ -170,7 +170,7 @@ TEST_F(MissionLoaderTest, ParsesAISetups) {
   EXPECT_EQ(mission.ai_setups[0].id, "enemy_1");
   EXPECT_EQ(mission.ai_setups[0].nation, "carthage");
   ASSERT_TRUE(mission.ai_setups[0].commander_troop.has_value());
-  EXPECT_EQ(*mission.ai_setups[0].commander_troop, "carthage_elephant_master");
+  EXPECT_EQ(*mission.ai_setups[0].commander_troop, "carthage_sword_commander");
   EXPECT_EQ(mission.ai_setups[0].difficulty, "medium");
   EXPECT_FLOAT_EQ(mission.ai_setups[0].personality.aggression, 0.7F);
   EXPECT_EQ(mission.ai_setups[0].waves.size(), 1);
@@ -353,7 +353,7 @@ TEST_F(MissionLoaderTest, ParsesAuthoredUnitPatrolBehavior) {
         "nation": "carthage",
         "faction": "carthaginian",
         "color": "blue",
-        "commander_troop": "carthage_elephant_master",
+        "commander_troop": "carthage_sword_commander",
         "difficulty": "medium",
         "starting_units": [
           {

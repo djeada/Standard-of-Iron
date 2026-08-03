@@ -602,40 +602,40 @@ auto commander_colors(CommanderHelmetStyle style, const HumanoidPalette& palette
   (void)palette;
   switch (style) {
   case CommanderHelmetStyle::Fabius:
-    return {QVector3D(0.34F, 0.38F, 0.45F),
-            QVector3D(0.13F, 0.14F, 0.17F),
-            QVector3D(0.74F, 0.76F, 0.72F),
-            QVector3D(0.62F, 0.05F, 0.05F)};
+    return {QVector3D(0.60F, 0.63F, 0.68F),
+            QVector3D(0.26F, 0.27F, 0.31F),
+            QVector3D(0.80F, 0.82F, 0.78F),
+            QVector3D(0.66F, 0.10F, 0.09F)};
   case CommanderHelmetStyle::Scipio:
-    return {QVector3D(0.54F, 0.32F, 0.08F),
-            QVector3D(0.12F, 0.09F, 0.07F),
-            QVector3D(1.0F, 0.72F, 0.18F),
-            QVector3D(0.82F, 0.055F, 0.04F)};
+    return {QVector3D(0.55F, 0.56F, 0.59F),
+            QVector3D(0.22F, 0.20F, 0.16F),
+            QVector3D(1.0F, 0.80F, 0.34F),
+            QVector3D(0.84F, 0.11F, 0.09F)};
   case CommanderHelmetStyle::Marcellus:
-    return {QVector3D(0.36F, 0.39F, 0.44F),
-            QVector3D(0.18F, 0.19F, 0.22F),
-            QVector3D(0.68F, 0.10F, 0.07F),
-            QVector3D(0.58F, 0.06F, 0.05F)};
+    return {QVector3D(0.56F, 0.59F, 0.64F),
+            QVector3D(0.28F, 0.29F, 0.33F),
+            QVector3D(0.72F, 0.18F, 0.13F),
+            QVector3D(0.62F, 0.11F, 0.09F)};
   case CommanderHelmetStyle::Hanno:
-    return {QVector3D(0.46F, 0.27F, 0.09F),
-            QVector3D(0.22F, 0.13F, 0.07F),
-            QVector3D(0.96F, 0.64F, 0.16F),
-            QVector3D(0.40F, 0.07F, 0.46F)};
+    return {QVector3D(0.50F, 0.47F, 0.36F),
+            QVector3D(0.21F, 0.19F, 0.15F),
+            QVector3D(0.98F, 0.74F, 0.32F),
+            QVector3D(0.48F, 0.14F, 0.52F)};
   case CommanderHelmetStyle::Hasdrubal:
-    return {QVector3D(0.32F, 0.21F, 0.09F),
-            QVector3D(0.12F, 0.16F, 0.16F),
-            QVector3D(0.24F, 0.62F, 0.58F),
-            QVector3D(0.36F, 0.09F, 0.44F)};
+    return {QVector3D(0.46F, 0.44F, 0.34F),
+            QVector3D(0.20F, 0.24F, 0.25F),
+            QVector3D(0.40F, 0.76F, 0.72F),
+            QVector3D(0.44F, 0.16F, 0.52F)};
   case CommanderHelmetStyle::Hannibal:
-    return {QVector3D(0.26F, 0.20F, 0.12F),
-            QVector3D(0.10F, 0.11F, 0.13F),
-            QVector3D(0.86F, 0.56F, 0.12F),
-            QVector3D(0.15F, 0.16F, 0.18F)};
+    return {QVector3D(0.52F, 0.47F, 0.40F),
+            QVector3D(0.22F, 0.23F, 0.26F),
+            QVector3D(0.90F, 0.64F, 0.24F),
+            QVector3D(0.30F, 0.31F, 0.35F)};
   }
-  return {QVector3D(0.25F, 0.27F, 0.30F),
-          QVector3D(0.08F, 0.08F, 0.09F),
-          QVector3D(0.55F, 0.34F, 0.10F),
-          QVector3D(0.5F, 0.05F, 0.05F)};
+  return {QVector3D(0.52F, 0.55F, 0.58F),
+          QVector3D(0.20F, 0.20F, 0.22F),
+          QVector3D(0.62F, 0.42F, 0.16F),
+          QVector3D(0.55F, 0.10F, 0.09F)};
 }
 
 } // namespace

@@ -11,7 +11,7 @@
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
-    "commander_troop": "carthage_elephant_master",
+    "commander_troop": "carthage_sword_commander",
     "starting_units": [],
     "starting_buildings": [
       {

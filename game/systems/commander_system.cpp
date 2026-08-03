@@ -16,6 +16,8 @@ namespace {
 constexpr float k_flag_rally_arrival_threshold_sq = 2.25F;
 constexpr float k_flag_rally_order_tolerance_sq = 4.0F;
 
+constexpr float k_off_school_aura_scale = 0.5F;
+
 [[nodiscard]] auto distance_sq(const Engine::Core::TransformComponent& a,
                                const Engine::Core::TransformComponent& b) -> float {
   const float dx = a.position.x - b.position.x;
@@ -48,6 +50,41 @@ auto resolve_troop_type(const Engine::Core::UnitComponent* unit)
 auto is_living_troop(const Engine::Core::UnitComponent* unit) -> bool {
   return unit != nullptr && unit->health > 0 &&
          Game::Units::is_troop_spawn(unit->spawn_type);
+}
+
+enum class WeaponSchool : std::uint8_t {
+  Sword,
+  Spear,
+  Bow,
+  Other
+};
+
+auto weapon_school_of(Game::Units::SpawnType spawn_type) -> WeaponSchool {
+  using Game::Units::SpawnType;
+  switch (spawn_type) {
+  case SpawnType::Knight:
+  case SpawnType::MountedKnight:
+  case SpawnType::SkeletonSwordsman:
+    return WeaponSchool::Sword;
+  case SpawnType::Spearman:
+  case SpawnType::HorseSpearman:
+    return WeaponSchool::Spear;
+  case SpawnType::Archer:
+  case SpawnType::HorseArcher:
+  case SpawnType::SkeletonArcher:
+    return WeaponSchool::Bow;
+  default:
+    return WeaponSchool::Other;
+  }
+}
+
+auto aura_affinity_factor(Game::Units::SpawnType commander_affinity,
+                          Game::Units::SpawnType candidate) -> float {
+  WeaponSchool const wanted = weapon_school_of(commander_affinity);
+  if (wanted == WeaponSchool::Other) {
+    return 1.0F;
+  }
+  return weapon_school_of(candidate) == wanted ? 1.0F : k_off_school_aura_scale;
 }
 
 void halt_rally_movement(Engine::Core::MovementComponent* movement) {
@@ -411,12 +448,18 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
           }
         }
 
+        const float affinity =
+            candidate_is_troop
+                ? aura_affinity_factor(commander->aura_affinity_spawn_type,
+                                       candidate_unit->spawn_type)
+                : 1.0F;
+        const float aura_value = commander->aura_bonus_value * affinity;
+
         if (candidate_is_troop && commander->bonus_type == "health_regen") {
           auto* buff =
               candidate->get_component<Engine::Core::CommanderAuraBuffComponent>();
           if (buff != nullptr) {
-            buff->health_regen_accumulator +=
-                std::max(0.0F, commander->aura_bonus_value) * delta_time;
+            buff->health_regen_accumulator += std::max(0.0F, aura_value) * delta_time;
             const int restored =
                 static_cast<int>(std::floor(buff->health_regen_accumulator));
             if (restored > 0) {
@@ -428,14 +471,14 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         } else if (candidate_is_troop && commander->bonus_type == "attack_boost") {
           if (auto* attack =
                   candidate->get_component<Engine::Core::AttackComponent>()) {
-            const float factor = 1.0F + commander->aura_bonus_value;
+            const float factor = 1.0F + aura_value;
             attack->damage =
                 std::max(1, static_cast<int>(std::round(attack->damage * factor)));
             attack->melee_damage = std::max(
                 1, static_cast<int>(std::round(attack->melee_damage * factor)));
           }
         } else if (candidate_is_troop && commander->bonus_type == "speed_boost") {
-          candidate_unit->speed *= (1.0F + commander->aura_bonus_value);
+          candidate_unit->speed *= (1.0F + aura_value);
         } else if (commander->bonus_type == "production_haste") {
           if (auto* production =
                   candidate->get_component<Engine::Core::ProductionComponent>()) {

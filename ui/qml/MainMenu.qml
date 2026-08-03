@@ -10,10 +10,12 @@ Item {
     property bool game_started: false
     readonly property bool compact: width < 820
     readonly property bool narrow: width < 620
-    readonly property int side_margin: Math.max(18, Math.min(56, width * 0.055))
-    readonly property int top_margin: Math.max(18, Math.min(48, height * 0.055))
-    readonly property int command_width: root.compact ? width - side_margin * 2 : Math.min(560, Math.max(480, width * 0.42))
+    readonly property int side_margin: Math.max(24, Math.min(72, width * 0.058))
+    readonly property int top_margin: Math.max(20, Math.min(54, height * 0.058))
+    readonly property int command_width: root.compact ? width - side_margin * 2 : Math.min(600, Math.max(460, width * 0.40))
     readonly property var hs: StyleGuide.historical
+    readonly property color ink: "#0B0806"
+    readonly property color bronze: hs.bronze
 
     signal open_skirmish
     signal open_campaign
@@ -57,6 +59,11 @@ Item {
             }
             next += direction;
         }
+    }
+
+    function roman_numeral(index) {
+        var numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+        return index < numerals.length ? numerals[index] : String(index + 1);
     }
 
     Keys.onPressed: function (event) {
@@ -144,21 +151,46 @@ Item {
         }
     }
 
-    Image {
-        id: backdrop
-
-        anchors.fill: parent
-        source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        smooth: true
-        opacity: 0.74
-    }
-
     Rectangle {
         anchors.fill: parent
-        color: "#120D09"
-        opacity: backdrop.status === Image.Ready ? 0.28 : 1
+        color: root.ink
+    }
+
+    Item {
+        anchors.fill: parent
+        clip: true
+
+        Image {
+            id: backdrop
+
+            anchors.centerIn: parent
+            width: parent.width
+            height: parent.height
+            source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            smooth: true
+            mipmap: true
+
+            SequentialAnimation on scale  {
+                running: root.visible
+                loops: Animation.Infinite
+
+                NumberAnimation {
+                    from: 1
+                    to: 1.05
+                    duration: 24000
+                    easing.type: Easing.InOutSine
+                }
+
+                NumberAnimation {
+                    from: 1.05
+                    to: 1
+                    duration: 24000
+                    easing.type: Easing.InOutSine
+                }
+            }
+        }
     }
 
     Rectangle {
@@ -168,17 +200,22 @@ Item {
 
             GradientStop {
                 position: 0
-                color: "#15100C"
+                color: "#DB0B0806"
             }
 
             GradientStop {
-                position: root.compact ? 0.78 : 0.48
-                color: "#20160FDD"
+                position: root.compact ? 0.75 : 0.34
+                color: "#C40B0806"
+            }
+
+            GradientStop {
+                position: root.compact ? 0.92 : 0.62
+                color: "#570B0806"
             }
 
             GradientStop {
                 position: 1
-                color: "#07050433"
+                color: "#140B0806"
             }
         }
     }
@@ -188,24 +225,78 @@ Item {
         gradient: Gradient {
             GradientStop {
                 position: 0
-                color: "#00000000"
+                color: "#800B0806"
+            }
+
+            GradientStop {
+                position: 0.34
+                color: "#000B0806"
+            }
+
+            GradientStop {
+                position: 0.76
+                color: "#400B0806"
             }
 
             GradientStop {
                 position: 1
-                color: "#070504AA"
+                color: "#D90B0806"
             }
         }
-        opacity: root.compact ? 0.25 : 0.55
+    }
+
+    Canvas {
+        id: vignette
+
+        anchors.fill: parent
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            var grad = ctx.createRadialGradient(width * 0.5, height * 0.48, Math.min(width, height) * 0.24, width * 0.5, height * 0.48, Math.max(width, height) * 0.76);
+            grad.addColorStop(0, "rgba(11,8,6,0)");
+            grad.addColorStop(0.58, "rgba(11,8,6,0.12)");
+            grad.addColorStop(1, "rgba(11,8,6,0.55)");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+        }
+        Component.onCompleted: requestPaint()
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
     }
 
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: 3
-        color: hs.bronze
-        opacity: 0.85
+        height: 2
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+
+            GradientStop {
+                position: 0
+                color: Theme.accentBright
+            }
+
+            GradientStop {
+                position: 0.55
+                color: root.bronze
+            }
+
+            GradientStop {
+                position: 1
+                color: "#00000000"
+            }
+        }
+        opacity: 0.9
+    }
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 1
+        color: root.bronze
+        opacity: 0.35
     }
 
     RowLayout {
@@ -216,7 +307,7 @@ Item {
         anchors.rightMargin: root.side_margin
         anchors.topMargin: root.top_margin
         anchors.bottomMargin: root.top_margin
-        spacing: root.compact ? 0 : Math.max(24, root.width * 0.035)
+        spacing: root.compact ? 0 : Math.max(28, root.width * 0.04)
 
         ColumnLayout {
             id: commandColumn
@@ -224,75 +315,182 @@ Item {
             Layout.fillHeight: true
             Layout.preferredWidth: root.compact ? stage.width : root.command_width
             Layout.maximumWidth: root.compact ? stage.width : root.command_width
-            spacing: Math.max(12, Math.min(22, root.height * 0.022))
+            spacing: Math.max(14, Math.min(26, root.height * 0.026))
 
             Item {
+                id: titleBlock
+
                 Layout.fillWidth: true
-                Layout.preferredHeight: root.narrow ? 114 : 146
+                Layout.preferredHeight: root.narrow ? 120 : 156
 
                 Column {
+                    id: titleStack
+
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 7
+                    spacing: 9
+                    opacity: 0
+
+                    transform: Translate {
+                        id: titleSlide
+
+                        x: -26
+                    }
 
                     Row {
                         width: parent.width
-                        height: 34
-                        spacing: 10
+                        height: 30
+                        spacing: 11
 
                         Image {
-                            width: 32
-                            height: 32
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 28
+                            height: 28
                             source: "qrc:/StandardOfIron/assets/visuals/emblems/rome.png"
                             fillMode: Image.PreserveAspectFit
                             smooth: true
+                            mipmap: true
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: qsTr("SPQR  /  QART-HADAST")
+                            text: qsTr("SPQR")
                             color: Theme.accentBright
-                            font.pixelSize: root.narrow ? 12 : 13
+                            font.pixelSize: root.narrow ? 11 : 12
                             font.bold: true
+                            font.letterSpacing: 3.2
+                        }
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 1
+                            height: 14
+                            color: root.bronze
+                            opacity: 0.7
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: qsTr("QART-HADAST")
+                            color: Theme.accentBright
+                            font.pixelSize: root.narrow ? 11 : 12
+                            font.bold: true
+                            font.letterSpacing: 3.2
                         }
 
                         Image {
-                            width: 32
-                            height: 32
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 28
+                            height: 28
                             source: "qrc:/StandardOfIron/assets/visuals/emblems/cartaghe.png"
                             fillMode: Image.PreserveAspectFit
                             smooth: true
+                            mipmap: true
                         }
                     }
 
-                    Text {
+                    Item {
                         width: parent.width
-                        text: qsTr("STANDARD OF IRON")
-                        color: Theme.textMain
-                        font.family: "serif"
-                        font.pixelSize: root.narrow ? 36 : 52
-                        font.bold: true
-                        elide: Text.ElideRight
-                        maximumLineCount: 1
-                        style: Text.Outline
-                        styleColor: "#120D09"
+                        height: root.narrow ? 44 : 62
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.verticalCenterOffset: 3
+                            anchors.leftMargin: 2
+                            text: qsTr("STANDARD OF IRON")
+                            color: "#00060403"
+                            font.family: "serif"
+                            font.pixelSize: root.narrow ? 36 : 54
+                            font.bold: true
+                            font.letterSpacing: root.narrow ? 1.2 : 2.4
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            style: Text.Raised
+                            styleColor: "#060403"
+                            opacity: 0.55
+                        }
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: qsTr("STANDARD OF IRON")
+                            color: Theme.textMain
+                            font.family: "serif"
+                            font.pixelSize: root.narrow ? 36 : 54
+                            font.bold: true
+                            font.letterSpacing: root.narrow ? 1.2 : 2.4
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            style: Text.Outline
+                            styleColor: "#120D09"
+                        }
                     }
 
-                    Rectangle {
-                        width: Math.min(parent.width, 360)
-                        height: 2
-                        color: hs.bronze
-                        opacity: 0.85
+                    Row {
+                        width: parent.width
+                        height: 3
+                        spacing: 6
+
+                        Rectangle {
+                            width: 76
+                            height: 3
+                            color: root.bronze
+                        }
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.max(0, parent.width - 82)
+                            height: 1
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+
+                                GradientStop {
+                                    position: 0
+                                    color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0.55)
+                                }
+
+                                GradientStop {
+                                    position: 1
+                                    color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0)
+                                }
+                            }
+                        }
                     }
 
                     Text {
                         width: parent.width
                         text: qsTr("Rome and Carthage at the edge of empire")
                         color: Theme.textSubLite
-                        font.pixelSize: root.narrow ? 14 : 16
+                        font.pixelSize: root.narrow ? 13 : 15
+                        font.letterSpacing: 0.8
                         elide: Text.ElideRight
                         maximumLineCount: 1
+                    }
+                }
+
+                ParallelAnimation {
+                    running: true
+
+                    NumberAnimation {
+                        target: titleStack
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 420
+                        easing.type: Easing.OutCubic
+                    }
+
+                    NumberAnimation {
+                        target: titleSlide
+                        property: "x"
+                        from: -26
+                        to: 0
+                        duration: 520
+                        easing.type: Easing.OutCubic
                     }
                 }
             }
@@ -304,7 +502,7 @@ Item {
                 Layout.fillHeight: true
                 model: menuModel
                 currentIndex: 0
-                spacing: 10
+                spacing: 9
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 interactive: contentHeight > height
@@ -321,136 +519,250 @@ Item {
                     required property string accent
 
                     readonly property bool item_enabled: !requiresGame || root.game_started
-                    readonly property bool selected: ListView.isCurrentItem
-                    readonly property int row_height: root.narrow ? 60 : 70
+                    readonly property bool selected: ListView.isCurrentItem && item_enabled
+                    readonly property bool hovered: menuMouse.containsMouse && item_enabled
 
                     width: commandList.width
-                    height: row_height
-                    opacity: item_enabled ? 1 : 0.46
+                    height: root.narrow ? 62 : 70
+                    opacity: item_enabled ? 1 : 0.38
 
-                    Rectangle {
+                    Item {
+                        id: rowBody
+
                         anchors.fill: parent
-                        radius: 7
-                        color: "transparent"
-                        border.width: selected ? 2 : 1
-                        border.color: selected ? hs.bronze : menuMouse.containsMouse ? Theme.thumbBr : Qt.rgba(0.67, 0.51, 0.29, 0.62)
+                        opacity: 0
 
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
+                        transform: Translate {
+                            id: rowSlide
 
-                            GradientStop {
-                                position: 0
-                                color: selected ? "#8F2F2A" : (menuMouse.containsMouse ? "#3B2F24" : "#17110CEE")
-                            }
-
-                            GradientStop {
-                                position: 0.7
-                                color: selected ? "#4B2119" : (menuMouse.containsMouse ? "#241B13EE" : "#120D09DD")
-                            }
-
-                            GradientStop {
-                                position: 1
-                                color: selected ? "#1D1610" : "#090604DD"
-                            }
+                            x: 30
                         }
 
                         Rectangle {
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            width: selected ? 7 : 4
-                            radius: 2
-                            color: accent
-                        }
+                            id: rowPlate
 
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            height: 1
-                            color: Theme.accentBright
-                            opacity: selected ? 0.6 : 0.16
-                        }
+                            anchors.fill: parent
+                            radius: 5
+                            border.width: 1
+                            border.color: commandItem.selected ? Theme.accentBright : (commandItem.hovered ? root.bronze : Qt.rgba(0.65, 0.49, 0.28, 0.42))
+                            clip: true
 
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            height: 1
-                            color: "#000000"
-                            opacity: 0.42
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+
+                                GradientStop {
+                                    position: 0
+                                    color: commandItem.selected ? "#7C2823" : (commandItem.hovered ? "#332619" : "#E8150F0A")
+                                }
+
+                                GradientStop {
+                                    position: 0.55
+                                    color: commandItem.selected ? "#99382016" : (commandItem.hovered ? "#D91E1610" : "#CC100B07")
+                                }
+
+                                GradientStop {
+                                    position: 1
+                                    color: commandItem.selected ? "#551A120C" : "#AA0C0806"
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: commandItem.selected ? 5 : 3
+                                color: commandItem.accent
+                                opacity: commandItem.selected ? 1 : (commandItem.hovered ? 0.85 : 0.55)
+
+                                Behavior on width  {
+                                    NumberAnimation {
+                                        duration: Theme.animFast
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.margins: 1
+                                height: 1
+                                color: Theme.accentBright
+                                opacity: commandItem.selected ? 0.55 : 0.12
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: 1
+                                color: "#000000"
+                                opacity: 0.4
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: Theme.animNormal
+                                }
+                            }
                         }
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 20
-                            anchors.rightMargin: 14
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 16
                             anchors.topMargin: 9
                             anchors.bottomMargin: 9
-                            spacing: 12
+                            spacing: 13
+
+                            Rectangle {
+                                Layout.preferredWidth: root.narrow ? 26 : 32
+                                Layout.preferredHeight: root.narrow ? 26 : 32
+                                Layout.alignment: Qt.AlignVCenter
+                                radius: 3
+                                color: commandItem.selected ? "#BB2A1710" : "#99100B07"
+                                border.width: 1
+                                border.color: commandItem.selected ? Theme.accentBright : Qt.rgba(0.65, 0.49, 0.28, 0.45)
+                                visible: !root.narrow || commandItem.width > 330
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: root.roman_numeral(commandItem.index)
+                                    color: commandItem.selected ? Theme.accentBright : Theme.textDim
+                                    font.family: "serif"
+                                    font.pixelSize: root.narrow ? 11 : 13
+                                    font.bold: true
+                                    font.letterSpacing: 0.5
+                                }
+                            }
 
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                spacing: 3
+                                spacing: 2
 
                                 Text {
                                     Layout.fillWidth: true
-                                    text: qsTr(title)
-                                    color: selected ? Theme.textMain : Theme.textBright
+                                    text: qsTr(commandItem.title)
+                                    color: commandItem.selected ? Theme.textMain : Theme.textBright
                                     font.family: "serif"
-                                    font.pixelSize: root.narrow ? 19 : 22
+                                    font.pixelSize: root.narrow ? 18 : 21
                                     font.bold: true
+                                    font.letterSpacing: commandItem.selected ? 0.9 : 0.3
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
+
+                                    Behavior on font.letterSpacing  {
+                                        NumberAnimation {
+                                            duration: Theme.animNormal
+                                        }
+                                    }
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
-                                    text: qsTr(subtitle)
-                                    color: selected ? Theme.accentBright : Theme.textSubLite
-                                    font.pixelSize: root.narrow ? 12 : 14
+                                    text: qsTr(commandItem.subtitle)
+                                    color: commandItem.selected ? Theme.accentBright : Theme.textDim
+                                    font.pixelSize: root.narrow ? 11 : 13
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
                                 }
                             }
 
-                            Text {
-                                Layout.preferredWidth: root.narrow ? 64 : 92
-                                text: qsTr(detail)
-                                color: selected ? Theme.textMain : Theme.textDim
-                                font.pixelSize: 10
-                                font.bold: selected
-                                horizontalAlignment: Text.AlignRight
-                                verticalAlignment: Text.AlignVCenter
-                                elide: Text.ElideRight
-                                maximumLineCount: 1
-                                visible: commandItem.width > 390
+                            Rectangle {
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredHeight: 20
+                                Layout.preferredWidth: detailLabel.implicitWidth + 16
+                                radius: 2
+                                color: commandItem.selected ? "#AA2C1811" : "transparent"
+                                border.width: 1
+                                border.color: commandItem.selected ? Qt.rgba(0.91, 0.79, 0.55, 0.6) : Qt.rgba(0.65, 0.49, 0.28, 0.32)
+                                visible: commandItem.width > 400
+
+                                Text {
+                                    id: detailLabel
+
+                                    anchors.centerIn: parent
+                                    text: qsTr(commandItem.detail).toUpperCase()
+                                    color: commandItem.selected ? Theme.accentBright : Theme.textDim
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    font.letterSpacing: 1.4
+                                }
                             }
 
                             Item {
-                                Layout.preferredWidth: 16
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredWidth: 12
+                                Layout.preferredHeight: 16
 
                                 Rectangle {
-                                    anchors.centerIn: parent
-                                    width: selected ? 14 : 9
-                                    height: selected ? 14 : 9
-                                    rotation: 45
-                                    color: selected ? Theme.accentBright : Theme.textHint
-                                    opacity: selected ? 0.95 : 0.45
+                                    x: commandItem.selected ? 3 : 0
+                                    y: 3
+                                    width: 2
+                                    height: 8
+                                    radius: 1
+                                    rotation: -40
+                                    transformOrigin: Item.Bottom
+                                    color: commandItem.selected ? Theme.accentBright : Theme.textHint
+                                    opacity: commandItem.selected ? 1 : 0.55
+
+                                    Behavior on x  {
+                                        NumberAnimation {
+                                            duration: Theme.animFast
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    x: commandItem.selected ? 3 : 0
+                                    y: 8
+                                    width: 2
+                                    height: 8
+                                    radius: 1
+                                    rotation: 40
+                                    transformOrigin: Item.Top
+                                    color: commandItem.selected ? Theme.accentBright : Theme.textHint
+                                    opacity: commandItem.selected ? 1 : 0.55
+
+                                    Behavior on x  {
+                                        NumberAnimation {
+                                            duration: Theme.animFast
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
                                 }
                             }
                         }
+                    }
 
-                        Behavior on color  {
-                            ColorAnimation {
-                                duration: Theme.animNormal
-                            }
+                    SequentialAnimation {
+                        running: true
+
+                        PauseAnimation {
+                            duration: 40 + commandItem.index * 26
                         }
 
-                        Behavior on border.color  {
-                            ColorAnimation {
-                                duration: Theme.animNormal
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: rowBody
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: 280
+                                easing.type: Easing.OutCubic
+                            }
+
+                            NumberAnimation {
+                                target: rowSlide
+                                property: "x"
+                                from: 30
+                                to: 0
+                                duration: 400
+                                easing.type: Easing.OutCubic
                             }
                         }
                     }
@@ -461,9 +773,9 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
-                        cursorShape: item_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                        cursorShape: commandItem.item_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                         onEntered: {
-                            if (item_enabled) {
+                            if (commandItem.item_enabled) {
                                 commandList.currentIndex = commandItem.index;
                                 if (typeof game !== "undefined")
                                     UiAudio.play_hover(game.audio_system);
@@ -471,11 +783,11 @@ Item {
                         }
                         onClicked: {
                             if (typeof game === "undefined") {
-                                if (item_enabled)
+                                if (commandItem.item_enabled)
                                     root.trigger_selection(commandItem.index);
                                 return;
                             }
-                            if (!item_enabled) {
+                            if (!commandItem.item_enabled) {
                                 UiAudio.play_error(game.audio_system);
                                 return;
                             }
@@ -483,6 +795,57 @@ Item {
                             root.trigger_selection(commandItem.index);
                         }
                     }
+                }
+            }
+
+            RowLayout {
+                id: hintRow
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 20
+                spacing: 16
+
+                Repeater {
+                    model: root.game_started ? ["navigate", "confirm", "resume"] : ["navigate", "confirm"]
+
+                    delegate: Row {
+                        required property string modelData
+
+                        spacing: 7
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: hintKey.implicitWidth + 12
+                            height: 18
+                            radius: 2
+                            color: "#99120D09"
+                            border.width: 1
+                            border.color: Qt.rgba(0.65, 0.49, 0.28, 0.45)
+
+                            Text {
+                                id: hintKey
+
+                                anchors.centerIn: parent
+                                text: modelData === "navigate" ? "↑ ↓" : (modelData === "confirm" ? qsTr("Enter") : qsTr("Esc"))
+                                color: Theme.textSubLite
+                                font.pixelSize: 9
+                                font.bold: true
+                                font.letterSpacing: 1
+                            }
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData === "navigate" ? qsTr("Navigate") : (modelData === "confirm" ? qsTr("Confirm") : qsTr("Resume battle"))
+                            color: Theme.textDim
+                            font.pixelSize: 11
+                            font.letterSpacing: 0.6
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
                 }
             }
         }
@@ -494,344 +857,315 @@ Item {
             Layout.fillHeight: true
             visible: !root.compact
 
-            Item {
-                id: portraitPanel
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
+                opacity: 0
 
-                anchors.right: parent.right
-                anchors.top: parent.top
-                width: Math.min(parent.width, 500)
-                height: Math.min(parent.height, 620)
-                Rectangle {
-                    id: warBanner
+                Item {
+                    id: crestFrame
 
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.bottom: footerBanner.top
-                    anchors.bottomMargin: 18
-                    radius: 24
-                    color: "#15100C"
-                    border.color: "#7B5B34"
-                    border.width: 1
-                    clip: true
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
 
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        radius: 18
-                        color: "#21160E"
-                        border.color: hs.bronze
-                        border.width: 1
+                    readonly property real crest_size: Math.min(parent.width * 0.68, crestFrame.height * 0.86, 360)
+
+                    Canvas {
+                        id: crestGlow
+
+                        anchors.centerIn: crest
+                        width: crestFrame.crest_size * 1.75
+                        height: crestFrame.crest_size * 1.75
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.clearRect(0, 0, width, height);
+                            var grad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
+                            grad.addColorStop(0, "rgba(226,168,88,0.30)");
+                            grad.addColorStop(0.42, "rgba(178,116,54,0.14)");
+                            grad.addColorStop(1, "rgba(178,116,54,0)");
+                            ctx.fillStyle = grad;
+                            ctx.beginPath();
+                            ctx.arc(width / 2, height / 2, width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        Component.onCompleted: requestPaint()
+                        onWidthChanged: requestPaint()
+                        onHeightChanged: requestPaint()
+
+                        SequentialAnimation on opacity  {
+                            running: root.visible
+                            loops: Animation.Infinite
+
+                            NumberAnimation {
+                                from: 0.72
+                                to: 1
+                                duration: 3200
+                                easing.type: Easing.InOutSine
+                            }
+
+                            NumberAnimation {
+                                from: 1
+                                to: 0.72
+                                duration: 3200
+                                easing.type: Easing.InOutSine
+                            }
+                        }
                     }
 
                     Image {
-                        id: commanderPortrait
+                        id: crest
 
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        source: "qrc:/StandardOfIron/assets/visuals/hannibal.png"
-                        fillMode: Image.PreserveAspectCrop
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: crestFrame.crest_size
+                        height: crestFrame.crest_size
+                        source: "qrc:/StandardOfIron/assets/visuals/standard_of_iron.png"
+                        fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         smooth: true
                         mipmap: true
+
+                        transform: Translate {
+                            id: crestBob
+                        }
+
+                        SequentialAnimation {
+                            running: root.visible
+                            loops: Animation.Infinite
+
+                            NumberAnimation {
+                                target: crestBob
+                                property: "y"
+                                from: -5
+                                to: 5
+                                duration: 5200
+                                easing.type: Easing.InOutSine
+                            }
+
+                            NumberAnimation {
+                                target: crestBob
+                                property: "y"
+                                from: 5
+                                to: -5
+                                duration: 5200
+                                easing.type: Easing.InOutSine
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 26
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.right: parent.horizontalCenter
+                        anchors.rightMargin: 16
+                        height: 1
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+
+                            GradientStop {
+                                position: 0
+                                color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0)
+                            }
+
+                            GradientStop {
+                                position: 1
+                                color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0.8)
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 8
+                        height: 8
+                        rotation: 45
+                        color: root.bronze
                         opacity: 0.9
                     }
 
                     Rectangle {
-                        anchors.fill: commanderPortrait
-                        color: "#6A4725"
-                        opacity: 0.18
-                    }
-
-                    Rectangle {
-                        anchors.fill: commanderPortrait
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.horizontalCenter
+                        anchors.right: parent.right
+                        anchors.leftMargin: 16
+                        height: 1
                         gradient: Gradient {
                             orientation: Gradient.Horizontal
 
                             GradientStop {
                                 position: 0
-                                color: "#17100BDD"
-                            }
-
-                            GradientStop {
-                                position: 0.38
-                                color: "#100B0822"
+                                color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0.8)
                             }
 
                             GradientStop {
                                 position: 1
-                                color: "#080605CC"
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.fill: commanderPortrait
-                        gradient: Gradient {
-                            GradientStop {
-                                position: 0
-                                color: "#C7934626"
-                            }
-
-                            GradientStop {
-                                position: 0.22
-                                color: "#00000000"
-                            }
-
-                            GradientStop {
-                                position: 0.7
-                                color: "#00000000"
-                            }
-
-                            GradientStop {
-                                position: 1
-                                color: "#0C0806DD"
-                            }
-                        }
-                    }
-
-                    Canvas {
-                        id: portraitDistress
-
-                        anchors.fill: commanderPortrait
-                        opacity: 0.42
-                        onPaint: {
-                            var ctx = getContext("2d");
-                            ctx.clearRect(0, 0, width, height);
-                            function noise(seed, value) {
-                                return Math.sin(value * 0.173 + seed * 3.1) * 0.5 + Math.cos(value * 0.071 + seed * 1.7) * 0.5;
-                            }
-                            for (var i = 0; i < 34; ++i) {
-                                var x = (i + 0.5) * width / 34;
-                                var top = Math.abs(noise(0.7, i)) * height * 0.12;
-                                var len = height * (0.18 + (Math.abs(noise(1.9, i)) * 0.22));
-                                ctx.strokeStyle = "rgba(242,223,188,0.045)";
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.moveTo(x, top);
-                                ctx.lineTo(x + noise(2.3, i) * 8, top + len);
-                                ctx.stroke();
-                            }
-                            for (var j = 0; j < 22; ++j) {
-                                var cx = (j * 37) % width;
-                                var cy = (j * 61) % height;
-                                var radius = 10 + Math.abs(noise(4.1, j)) * 16;
-                                var alpha = 0.018 + Math.abs(noise(5.6, j)) * 0.03;
-                                ctx.fillStyle = "rgba(33,22,14," + alpha.toFixed(3) + ")";
-                                ctx.beginPath();
-                                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-                                ctx.fill();
-                            }
-                            for (var k = 0; k < 16; ++k) {
-                                var sx = (k * 53) % width;
-                                var sy = (k * 29) % height;
-                                ctx.strokeStyle = "rgba(18,13,9,0.16)";
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.moveTo(sx, sy);
-                                ctx.lineTo(sx + 18 + Math.abs(noise(7.1, k)) * 36, sy + 4 + Math.abs(noise(8.4, k)) * 14);
-                                ctx.stroke();
-                            }
-                        }
-                        Component.onCompleted: requestPaint()
-                        onWidthChanged: requestPaint()
-                        onHeightChanged: requestPaint()
-                    }
-
-                    Canvas {
-                        id: portraitFray
-
-                        anchors.fill: commanderPortrait
-                        opacity: 0.86
-                        onPaint: {
-                            var ctx = getContext("2d");
-                            ctx.clearRect(0, 0, width, height);
-                            function edge(seed, value) {
-                                return Math.sin(value * 0.19 + seed * 0.9) * 0.5 + Math.cos(value * 0.043 + seed * 2.7) * 0.5;
-                            }
-                            ctx.fillStyle = "rgba(18,13,9,0.72)";
-                            ctx.beginPath();
-                            ctx.moveTo(0, 0);
-                            for (var x = 0; x <= width; x += 12) {
-                                ctx.lineTo(x, 5 + Math.abs(edge(1.2, x)) * 8);
-                            }
-                            ctx.lineTo(width, 0);
-                            ctx.closePath();
-                            ctx.fill();
-                            ctx.beginPath();
-                            ctx.moveTo(0, height);
-                            for (var xb = 0; xb <= width; xb += 12) {
-                                ctx.lineTo(xb, height - 6 - Math.abs(edge(2.8, xb)) * 10);
-                            }
-                            ctx.lineTo(width, height);
-                            ctx.closePath();
-                            ctx.fill();
-                            ctx.beginPath();
-                            ctx.moveTo(0, 0);
-                            for (var y = 0; y <= height; y += 12) {
-                                ctx.lineTo(6 + Math.abs(edge(4.4, y)) * 10, y);
-                            }
-                            ctx.lineTo(0, height);
-                            ctx.closePath();
-                            ctx.fill();
-                            ctx.beginPath();
-                            ctx.moveTo(width, 0);
-                            for (var yr = 0; yr <= height; yr += 12) {
-                                ctx.lineTo(width - 5 - Math.abs(edge(5.6, yr)) * 8, yr);
-                            }
-                            ctx.lineTo(width, height);
-                            ctx.closePath();
-                            ctx.fill();
-                            ctx.strokeStyle = "rgba(194,149,85,0.45)";
-                            ctx.lineWidth = 1.2;
-                            ctx.strokeRect(6, 6, width - 12, height - 12);
-                        }
-                        Component.onCompleted: requestPaint()
-                        onWidthChanged: requestPaint()
-                        onHeightChanged: requestPaint()
-                    }
-
-                    Column {
-                        z: 2
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.leftMargin: 28
-                        anchors.topMargin: 28
-                        spacing: 6
-
-                        Text {
-                            text: qsTr("HANNIBAL BARCA")
-                            color: Theme.textMain
-                            font.family: "serif"
-                            font.pixelSize: 28
-                            font.bold: true
-                            style: Text.Outline
-                            styleColor: "#120D09"
-                        }
-
-                        Rectangle {
-                            width: 124
-                            height: 1
-                            color: hs.bronze
-                            opacity: 0.82
-                        }
-
-                        Text {
-                            width: Math.min(warBanner.width * 0.46, 220)
-                            text: qsTr("General of Carthage")
-                            color: Theme.textSubLite
-                            font.pixelSize: 13
-                            font.letterSpacing: 0.6
-                            wrapMode: Text.WordWrap
-                        }
-                    }
-
-                    Rectangle {
-                        z: 1
-                        anchors.fill: parent
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
-
-                            GradientStop {
-                                position: 0
-                                color: "#120D09EE"
-                            }
-
-                            GradientStop {
-                                position: 0.45
-                                color: "#120D0944"
-                            }
-
-                            GradientStop {
-                                position: 1
-                                color: "#120D0900"
+                                color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0)
                             }
                         }
                     }
                 }
 
-                Rectangle {
-                    id: footerBanner
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    height: 124
-                    gradient: Gradient {
-                        GradientStop {
-                            position: 0
-                            color: "#120D0900"
-                        }
-
-                        GradientStop {
-                            position: 1
-                            color: "#120D09EE"
-                        }
-                    }
+                Text {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 12
+                    text: qsTr("SECOND PUNIC WAR")
+                    color: Theme.textMain
+                    font.family: "serif"
+                    font.pixelSize: 19
+                    font.bold: true
+                    font.letterSpacing: 3
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
                 }
 
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: 2
-                    color: hs.bronze
-                    opacity: 0.7
+                Text {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 5
+                    text: qsTr("Legions, fleets, elephants, and contested supply lines")
+                    color: Theme.textDim
+                    font.pixelSize: 12
+                    font.letterSpacing: 0.4
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
                 }
 
                 RowLayout {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 22
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: 22
                     spacing: 14
 
-                    Image {
-                        Layout.preferredWidth: 54
-                        Layout.preferredHeight: 54
-                        source: "qrc:/StandardOfIron/assets/visuals/emblems/rome.png"
-                        fillMode: Image.PreserveAspectFit
-                    }
+                    Repeater {
+                        model: ["hannibal", "scipio"]
 
-                    Rectangle {
-                        Layout.preferredWidth: 1
-                        Layout.fillHeight: true
-                        color: hs.bronze
-                        opacity: 0.7
-                    }
+                        delegate: Rectangle {
+                            id: plaque
 
-                    Image {
-                        Layout.preferredWidth: 54
-                        Layout.preferredHeight: 54
-                        source: "qrc:/StandardOfIron/assets/visuals/emblems/cartaghe.png"
-                        fillMode: Image.PreserveAspectFit
-                    }
+                            required property string modelData
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
+                            readonly property bool carthaginian: modelData === "hannibal"
 
-                        Text {
-                            Layout.fillWidth: true
-                            text: qsTr("SECOND PUNIC WAR")
-                            color: Theme.textMain
-                            font.family: "serif"
-                            font.pixelSize: 18
-                            font.bold: true
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
+                            width: 252
+                            height: 82
+                            radius: 5
+                            color: "#E0140E09"
+                            border.width: 1
+                            border.color: Qt.rgba(root.bronze.r, root.bronze.g, root.bronze.b, 0.55)
+
+                            Row {
+                                anchors.fill: parent
+                                anchors.margins: 11
+                                spacing: 12
+
+                                Rectangle {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 58
+                                    height: 58
+                                    radius: 3
+                                    color: "#0C0806"
+                                    border.width: 1
+                                    border.color: root.bronze
+
+                                    Image {
+                                        id: portrait
+
+                                        anchors.fill: parent
+                                        anchors.margins: 2
+                                        source: "qrc:/StandardOfIron/assets/visuals/" + plaque.modelData + ".png"
+                                        fillMode: Image.PreserveAspectCrop
+                                        smooth: true
+                                        mipmap: true
+                                    }
+
+                                    Rectangle {
+                                        anchors.fill: portrait
+                                        color: "#4A2A12"
+                                        opacity: 0.3
+                                    }
+
+                                    Rectangle {
+                                        anchors.fill: portrait
+                                        gradient: Gradient {
+                                            GradientStop {
+                                                position: 0
+                                                color: "#000C0806"
+                                            }
+
+                                            GradientStop {
+                                                position: 1
+                                                color: "#990C0806"
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: parent.width - 100
+                                    spacing: 4
+
+                                    Text {
+                                        width: parent.width
+                                        text: plaque.carthaginian ? qsTr("Hannibal Barca") : qsTr("Scipio Africanus")
+                                        color: Theme.textBright
+                                        font.family: "serif"
+                                        font.pixelSize: 13
+                                        font.bold: true
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 1
+                                    }
+
+                                    Rectangle {
+                                        width: 26
+                                        height: 1
+                                        color: root.bronze
+                                        opacity: 0.7
+                                    }
+
+                                    Text {
+                                        width: parent.width
+                                        text: plaque.carthaginian ? qsTr("CARTHAGE") : qsTr("ROME")
+                                        color: Theme.textDim
+                                        font.pixelSize: 10
+                                        font.letterSpacing: 1.6
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 1
+                                    }
+                                }
+
+                                Image {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 24
+                                    height: 24
+                                    source: plaque.carthaginian ? "qrc:/StandardOfIron/assets/visuals/emblems/cartaghe.png" : "qrc:/StandardOfIron/assets/visuals/emblems/rome.png"
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    mipmap: true
+                                    opacity: 0.9
+                                }
+                            }
                         }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: qsTr("Legions, fleets, elephants, and contested supply lines")
-                            color: Theme.textSubLite
-                            font.pixelSize: 13
-                            wrapMode: Text.WordWrap
-                            maximumLineCount: 2
-                            elide: Text.ElideRight
-                        }
                     }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 8
+                }
+
+                NumberAnimation on opacity  {
+                    running: true
+                    from: 0
+                    to: 1
+                    duration: 700
+                    easing.type: Easing.OutCubic
                 }
             }
         }

@@ -1338,7 +1338,7 @@ void add_formation_promo_scenarios(std::vector<ArenaScenarioDefinition>& out) {
                     1,
                     {6.0F, 0.0F, 0.0F}),
         troop_group(QStringLiteral("elephant_master"),
-                    Troop::CarthageElephantMaster,
+                    Troop::CarthageSwordCommander,
                     Nation::Carthage,
                     1,
                     1,
