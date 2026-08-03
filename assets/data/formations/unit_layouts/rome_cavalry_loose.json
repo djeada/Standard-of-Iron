@@ -1,0 +1,13 @@
+{
+  "id": "rome.cavalry_loose",
+  "shape": "loose_order",
+  "lateral_spacing_scale": 1.4,
+  "depth_spacing_scale": 1.5,
+  "rank_stagger": 0.5,
+  "file_grouping": 2.0,
+  "group_gap": 0.3,
+  "lateral_jitter": 0.1,
+  "depth_jitter": 0.09,
+  "facing_jitter_degrees": 5.0,
+  "min_separation_scale": 0.55
+}

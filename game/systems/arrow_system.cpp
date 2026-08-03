@@ -15,6 +15,7 @@ void apply_visual_profile(ArrowInstance& arrow,
   auto const profile = make_arrow_visual_profile(style, sequence);
   arrow.t = profile.initial_progress;
   arrow.scale = profile.scale;
+  arrow.length_scale = profile.length_scale;
   arrow.roll_deg = profile.roll_deg;
   arrow.spin_rate_deg = profile.spin_rate_deg;
   arrow.trail_alpha = profile.trail_alpha;
@@ -47,6 +48,7 @@ void ArrowSystem::spawn_arrow(const QVector3D& start,
 
   a.inv_dist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
   apply_visual_profile(a, style, ++m_spawn_sequence);
+  a.arc_height *= make_arrow_visual_profile(style, m_spawn_sequence).arc_scale;
   m_arrows.push_back(a);
 }
 

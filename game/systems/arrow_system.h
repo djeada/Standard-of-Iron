@@ -21,6 +21,7 @@ struct ArrowInstance {
   float arc_height{};
   float inv_dist{};
   float scale{1.0F};
+  float length_scale{1.0F};
   float roll_deg{};
   float spin_rate_deg{};
   float trail_alpha{};

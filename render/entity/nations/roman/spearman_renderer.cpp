@@ -25,9 +25,10 @@ const SpearmanRendererProfile k_profile{
     .ensure_styles_registered = &register_roman_spearman_styles,
 };
 
-const std::array<SpearmanRendererRegistration, 2> k_renderers{{
+const std::array<SpearmanRendererRegistration, 3> k_renderers{{
     {"troops/roman/spearman"},
     {"troops/roman/commanders/fabius_maximus"},
+    {"troops/roman/showcase_lancer"},
 }};
 
 } // namespace

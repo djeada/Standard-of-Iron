@@ -23,6 +23,7 @@
 #include "../horse/horse_motion.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
+#include "animation/showcase_pose_manifest.h"
 #include "humanoid_full_builder.h"
 #include "humanoid_renderer_base.h"
 #include "humanoid_spec.h"
@@ -63,6 +64,15 @@ enum class BakerRidingType : std::uint8_t {
   SwordStrike,
   SpearThrust
 };
+enum class BakerShowcaseType : std::uint8_t {
+  None,
+  Jump,
+  FrontFlip,
+  Handstand,
+  SideAerial,
+  SwordFlourish,
+  SpearThrow,
+};
 enum class BakerAmbientIdleType : std::uint8_t {
   None,
   SitDown,
@@ -71,6 +81,26 @@ enum class BakerAmbientIdleType : std::uint8_t {
   ShiftWeight,
   PlantFlag
 };
+auto to_showcase_move(BakerShowcaseType t) noexcept -> Animation::HumanoidShowcaseMove {
+  switch (t) {
+  case BakerShowcaseType::Jump:
+    return Animation::HumanoidShowcaseMove::Jump;
+  case BakerShowcaseType::FrontFlip:
+    return Animation::HumanoidShowcaseMove::FrontFlip;
+  case BakerShowcaseType::Handstand:
+    return Animation::HumanoidShowcaseMove::Handstand;
+  case BakerShowcaseType::SideAerial:
+    return Animation::HumanoidShowcaseMove::SideAerial;
+  case BakerShowcaseType::SwordFlourish:
+    return Animation::HumanoidShowcaseMove::SwordFlourish;
+  case BakerShowcaseType::SpearThrow:
+    return Animation::HumanoidShowcaseMove::SpearThrow;
+  case BakerShowcaseType::None:
+    break;
+  }
+  return Animation::HumanoidShowcaseMove::None;
+}
+
 auto animation_profile_for_bake(BakeProfile profile) noexcept
     -> Animation::HumanoidClipProfile {
   switch (profile) {
@@ -99,6 +129,7 @@ struct HumanoidClipSpec {
   BakerRidingType riding_type{BakerRidingType::None};
   BakerHoldType hold_type{BakerHoldType::None};
   BakerAmbientIdleType ambient_idle_type{BakerAmbientIdleType::None};
+  BakerShowcaseType showcase_type{BakerShowcaseType::None};
   std::uint32_t frames{};
   float fps{};
   float cycle_time{};
@@ -123,6 +154,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      Animation::k_humanoid_idle_breath_frames,
      Animation::k_humanoid_idle_breath_fps,
      Animation::k_humanoid_idle_breath_cycle_time,
@@ -135,6 +167,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::SitDown,
+     BakerShowcaseType::None,
      72U,
      24.0F,
      3.0F,
@@ -147,6 +180,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::Jump,
+     BakerShowcaseType::None,
      72U,
      24.0F,
      3.0F,
@@ -159,6 +193,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::RaiseWeapon,
+     BakerShowcaseType::None,
      72U,
      24.0F,
      3.0F,
@@ -171,6 +206,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::ShiftWeight,
+     BakerShowcaseType::None,
      72U,
      24.0F,
      3.0F,
@@ -183,6 +219,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::PlantFlag,
+     BakerShowcaseType::None,
      72U,
      24.0F,
      3.0F,
@@ -195,6 +232,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      0.92F,
@@ -207,6 +245,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      0.56F,
@@ -219,6 +258,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::Spear,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      16U,
      24.0F,
      1.8F,
@@ -231,6 +271,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::Bow,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      16U,
      24.0F,
      1.8F,
@@ -243,6 +284,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -255,6 +297,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -267,6 +310,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -279,6 +323,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -291,6 +336,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -303,6 +349,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -315,6 +362,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -327,6 +375,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::Idle,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      Animation::k_humanoid_idle_breath_frames,
      Animation::k_humanoid_idle_breath_fps,
      Animation::k_humanoid_idle_breath_cycle_time,
@@ -339,6 +388,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::Charge,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      24U,
      24.0F,
      1.0F,
@@ -351,6 +401,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::Reining,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      24U,
      24.0F,
      1.0F,
@@ -363,6 +414,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::BowShot,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      24U,
      24.0F,
      1.0F,
@@ -375,6 +427,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::SwordStrike,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.2F,
@@ -387,6 +440,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::SpearThrust,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.2F,
@@ -399,6 +453,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      20U,
      24.0F,
      1.0F,
@@ -411,6 +466,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      1U,
      1.0F,
      1.0F,
@@ -423,6 +479,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      20U,
      24.0F,
      1.0F,
@@ -435,6 +492,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      1U,
      1.0F,
      1.0F,
@@ -447,6 +505,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      36U,
      24.0F,
      1.0F,
@@ -459,6 +518,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      36U,
      24.0F,
      1.0F,
@@ -471,6 +531,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      40U,
      24.0F,
      1.1F,
@@ -483,6 +544,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      34U,
      24.0F,
      0.9F,
@@ -495,6 +557,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      44U,
      24.0F,
      1.25F,
@@ -507,6 +570,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -519,6 +583,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
@@ -531,9 +596,89 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
      32U,
      24.0F,
      1.0F,
+     false},
+
+    {"showcase_jump",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::Jump,
+     48U,
+     30.0F,
+     1.6F,
+     false},
+    {"showcase_front_flip",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::FrontFlip,
+     51U,
+     30.0F,
+     1.7F,
+     false},
+    {"showcase_handstand",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::Handstand,
+     102U,
+     30.0F,
+     3.4F,
+     false},
+    {"showcase_side_aerial",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::SideAerial,
+     57U,
+     30.0F,
+     1.9F,
+     false},
+    {"showcase_sword_flourish",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::SwordFlourish,
+     78U,
+     30.0F,
+     2.6F,
+     false},
+    {"showcase_spear_throw",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     BakerDeathType::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::SpearThrow,
+     66U,
+     30.0F,
+     2.2F,
      false},
 }};
 
@@ -1250,7 +1395,17 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       break;
     }
 
-    if (clip.hold_type != BakerHoldType::None) {
+    if (clip.showcase_type != BakerShowcaseType::None) {
+      gait.cycle_phase = 0.0F;
+      Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+          0U, 0.0F, gait, variation, pose);
+      Render::GL::HumanoidAnimationContext anim_ctx{};
+      anim_ctx.gait = gait;
+      anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
+      Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+      ctrl.apply_showcase_move(to_showcase_move(clip.showcase_type),
+                               transition_phase(frame_index, clip.frames));
+    } else if (clip.hold_type != BakerHoldType::None) {
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
@@ -1290,7 +1445,8 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     }
   }
 
-  if (is_rpg_sword_clip(clip) || clip.attack_type == BakerAttackType::Spear ||
+  if (clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||
+      clip.attack_type == BakerAttackType::Spear ||
       clip.attack_type == BakerAttackType::SpearFromHold ||
       clip.attack_type == BakerAttackType::Bow ||
       clip.attack_type == BakerAttackType::BowFromHold ||

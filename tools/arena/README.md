@@ -150,6 +150,34 @@ The `promo_*` scenarios in the catalog are staged for this: short frontages that
 fill a vertical frame, dramatic authored light, and enough runtime that one
 deterministic pass can supply a whole shot list.
 
+## Humanoid showcase
+
+`promo_humanoid_showcase` stages the authored humanoid moves for filming rather
+than for acceptance. Four lightly armoured, bare-headed performers share one
+field: an acrobat looping leap, front flip, side aerial and handstand; a blade
+master cutting air; a lancer throwing a spear at a statue; and a fourth actor
+walking and running across the frame.
+
+```bash
+build/bin/arena_app --scenario promo_humanoid_showcase --seed 44
+
+build/bin/arena_app --promo-spec tools/arena/promos/humanoid_showcase.json \
+  --promo-out artifacts/promo
+scripts/promo-edit.py --spec tools/arena/promos/humanoid_showcase.json \
+  --clips artifacts/promo/humanoid_showcase
+```
+
+The scenario is driven by two group fields rather than by scenario steps:
+`showcase_routine` is a list of `move[:duration[:hold]]` entries naming moves
+from `Animation::HumanoidShowcaseMove`, and `renderer_override` swaps the
+per-entity `renderer_id` so the same troop type can appear armed, unarmed or
+carrying a spear. `showcase_throw_target` arms the spear release, which spawns a
+javelin-styled missile at the clip's authored release marker and swaps the
+performer to the unarmed renderer so the spear leaves his hand.
+
+See `docs/PROMO_CAPTURE.md` for why the reel uses `render_scale_override`, seed
+44, and shots confined to the acrobat's first routine loop.
+
 ## Campaign terrain review
 
 Arena can render production campaign maps as terrain-only review scenes. This

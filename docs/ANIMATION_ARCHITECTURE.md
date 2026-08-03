@@ -192,6 +192,81 @@ side-on camera.
 
 ---
 
+## 4b. Showcase moves (authored keyframes, not procedural shaping)
+
+Six humanoid clips are **authored as keyframes** rather than shaped from gait
+parameters: `showcase_jump`, `showcase_front_flip`, `showcase_handstand`,
+`showcase_side_aerial`, `showcase_sword_flourish`, `showcase_spear_throw`. They
+exist because an acrobatic move is not a small perturbation of a stance — a
+handstand inverts the whole body, so the additive delta vocabulary the ambient
+idles use (`ambient_pose_manifest.cpp`) cannot express it.
+
+`animation/showcase_pose_manifest.{h,cpp}` holds the keys and the forward
+kinematics that turn them into a complete `HumanoidPose`:
+
+```
+ ShowcaseKey  { root, body_pitch/roll/yaw, spine_*, head_pitch, blade_*, 4 limb aims }
+        │  interpolated between keys with smoothstep
+        ▼
+ FK: spine rotation places neck/shoulders/head; each limb is
+     Ry(yaw) · Rz(±splay) · Rx(-pitch) applied to "down", with the joint bend
+     folded into the second segment's pitch, so segment lengths are exact by
+     construction
+        │
+        ▼
+ whole-body rotation about the pelvis, then translation to the authored root
+```
+
+A limb aim is `(pitch, splay, yaw, bend)` in degrees: pitch swings the limb
+forward, splay outward, yaw around the body axis, and bend is joint flexion —
+knees fold backward, elbows forward. Because both the segment and its bend are
+rotations about the same local X axis they simply add, which is why the FK needs
+no IK solve and cannot produce a stretched limb.
+
+Two things about these clips do not follow the usual rules:
+
+- **Ground contact is authored, not derived.** Every other clip is re-grounded
+  at draw time by `contact_y_for_playback`, which pushes the model down until
+  the lowest foot bone sits on the terrain. In a handstand the feet are two
+  metres in the air, so that rule would bury the character. `showcase_` clips
+  are excluded from grounding alongside `riding_` clips, and their keys are
+  therefore authored in absolute model space with the standing feet at the rig's
+  foot offset.
+- **Root motion is carried by the entity, not the pose.** A front flip travels
+  1.55 m and a side aerial 2.62 m. The keys stay in place; the authored travel
+  comes from `humanoid_showcase_root_travel(move, phase)` and
+  `ShowcaseRoutineSystem` integrates it into the transform, rotated into the
+  performer's facing and scaled by the entity's render scale. Pose plus entity
+  motion equals the world motion, with no snap when the clip ends.
+
+`tools/arena/promos/humanoid_showcase.json` and the `promo_humanoid_showcase`
+scenario are what these were authored for; `ShowcaseRoutineComponent` is the
+scripted playlist that drives them (move id, duration, hold, loop) and it is the
+only production consumer.
+
+### Driving one at runtime
+
+```
+ ShowcaseRoutineComponent  ──ShowcaseRoutineSystem──►  active / move / phase
+        │                                                      │
+        │                                    world.cpp presentation sync
+        ▼                                                      ▼
+ transform root motion                       CreaturePresentationComponent
+                                                               │
+                                             animation_inputs.cpp bridges to
+                                             AnimationInputs::showcase_clip
+                                                               │
+                                     humanoid_animation_selection.cpp forces
+                                     the clip and phase after every other rule
+```
+
+The presentation `revision` counter includes the showcase fields. It has to:
+the render signature in `world.cpp` is built from that revision, and a routine
+that changed only its phase would otherwise be treated as an unchanged entity
+and drawn from the cached preparation.
+
+---
+
 ## 5. Combat: visual state machine + marker-driven damage
 
 Melee combat is animated by a small per-swing state machine and, crucially, the **HP hit

@@ -172,6 +172,7 @@ auto build_soldier_layout(const SoldierLayoutInputs& inputs) -> SoldierLayout {
     query.col = inputs.col;
     query.rows = inputs.rows;
     query.cols = inputs.cols;
+    query.count = inputs.count;
     query.spacing = inputs.formation_spacing;
     query.seed = inputs.seed;
     query.formed_ratio = inputs.formed_ratio;

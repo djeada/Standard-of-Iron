@@ -1,12 +1,12 @@
 {
   "id": "carthage.marching_column",
   "shape": "column",
-  "column_files": 2.0,
-  "lateral_spacing_scale": 1.55,
-  "depth_spacing_scale": 0.94,
-  "rank_stagger": 0.48,
-  "lateral_jitter": 0.2,
-  "depth_jitter": 0.18,
-  "facing_jitter_degrees": 10.0,
-  "min_separation_scale": 0.46
+  "lateral_spacing_scale": 1.12,
+  "depth_spacing_scale": 1.08,
+  "rank_stagger": 0.3,
+  "column_files": 3.0,
+  "lateral_jitter": 0.11,
+  "depth_jitter": 0.1,
+  "facing_jitter_degrees": 6.0,
+  "min_separation_scale": 0.54
 }

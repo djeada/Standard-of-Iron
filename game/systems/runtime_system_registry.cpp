@@ -26,6 +26,7 @@
 #include "projectile_system.h"
 #include "selection_system.h"
 #include "settlement_life_system.h"
+#include "showcase_routine_system.h"
 #include "stamina_system.h"
 #include "terrain_alignment_system.h"
 #include "undead_awakening_system.h"
@@ -58,6 +59,7 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<HomeSystem>());
   world.add_system(std::make_unique<CivilianDeliverySystem>());
   world.add_system(std::make_unique<SettlementLifeSystem>());
+  world.add_system(std::make_unique<ShowcaseRoutineSystem>());
   world.add_system(std::make_unique<TerrainAlignmentSystem>());
   world.add_system(std::make_unique<CleanupSystem>());
   world.add_system(std::make_unique<SelectionSystem>());

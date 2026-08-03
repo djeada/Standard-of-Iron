@@ -857,10 +857,12 @@ TEST(FormationCombatGeometry, DefenderPublishesEveryIncomingMeleeFront) {
 
   auto* flank_transform =
       flank_attacker->get_component<Engine::Core::TransformComponent>();
-  flank_transform->position.x =
-      Game::Systems::FormationCombat::contact_geometry(*flank_attacker, *defender)
-          .engagement_center_distance;
+  flank_transform->position.x = 2.0F;
   flank_transform->position.z = 0.0F;
+  auto* flank_attack = flank_attacker->get_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(flank_attack, nullptr);
+  flank_attack->in_melee_lock = true;
+  flank_attack->melee_lock_target_id = defender->get_id();
 
   for (auto* attacker : {front_attacker, flank_attacker}) {
     auto* target = attacker->add_component<Engine::Core::AttackTargetComponent>();

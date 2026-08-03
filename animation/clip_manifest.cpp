@@ -378,9 +378,26 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_riding_idle_clip:
   case k_humanoid_riding_charge_clip:
     return locomotion_markers();
+  case k_humanoid_showcase_spear_throw_clip:
+    return ClipMarkers{0.16F, 0.58F, 0.58F, 0.72F, 0.92F};
+  case k_humanoid_showcase_sword_flourish_clip:
+    return ClipMarkers{0.08F, 0.36F, 0.44F, 0.80F, 0.95F};
+  case k_humanoid_showcase_jump_clip:
+  case k_humanoid_showcase_front_flip_clip:
+  case k_humanoid_showcase_handstand_clip:
+  case k_humanoid_showcase_side_aerial_clip:
+    return locomotion_markers();
   default:
     return {};
   }
+}
+
+auto humanoid_showcase_clip(std::uint8_t showcase_move) noexcept -> std::uint16_t {
+  if (showcase_move == 0U || showcase_move > k_humanoid_showcase_clip_count) {
+    return k_unmapped_clip;
+  }
+  return static_cast<std::uint16_t>(k_humanoid_showcase_first_clip + showcase_move -
+                                    1U);
 }
 
 auto authored_generic_clip_markers(std::string_view clip_name) noexcept -> ClipMarkers {

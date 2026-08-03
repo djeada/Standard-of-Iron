@@ -1,9 +1,9 @@
 {
   "id": "iron_sepulcher.procession",
   "shape": "column",
-  "column_files": 2.0,
   "lateral_spacing_scale": 0.86,
   "depth_spacing_scale": 1.34,
+  "column_files": 2.0,
   "lateral_jitter": 0.006,
   "depth_jitter": 0.006,
   "facing_jitter_degrees": 0.3

@@ -141,7 +141,15 @@ inline constexpr std::uint16_t k_humanoid_rpg_sword_finisher_clip = 31U;
 inline constexpr std::uint16_t k_humanoid_archer_melee_clip = 32U;
 inline constexpr std::uint16_t k_humanoid_hold_spear_attack_clip = 33U;
 inline constexpr std::uint16_t k_humanoid_hold_bow_attack_clip = 34U;
-inline constexpr std::uint16_t k_humanoid_clip_count = 35U;
+inline constexpr std::uint16_t k_humanoid_showcase_first_clip = 35U;
+inline constexpr std::uint16_t k_humanoid_showcase_jump_clip = 35U;
+inline constexpr std::uint16_t k_humanoid_showcase_front_flip_clip = 36U;
+inline constexpr std::uint16_t k_humanoid_showcase_handstand_clip = 37U;
+inline constexpr std::uint16_t k_humanoid_showcase_side_aerial_clip = 38U;
+inline constexpr std::uint16_t k_humanoid_showcase_sword_flourish_clip = 39U;
+inline constexpr std::uint16_t k_humanoid_showcase_spear_throw_clip = 40U;
+inline constexpr std::uint16_t k_humanoid_showcase_clip_count = 6U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 41U;
 
 inline constexpr float k_humanoid_idle_breath_cycle_time = 8.0F;
 inline constexpr std::uint32_t k_humanoid_idle_breath_frames = 90U;
@@ -407,5 +415,8 @@ humanoid_idle_variant_clip_name(std::uint8_t clip_variant) noexcept -> std::stri
 
 [[nodiscard]] auto
 authored_generic_clip_markers(std::string_view clip_name) noexcept -> ClipMarkers;
+
+[[nodiscard]] auto
+humanoid_showcase_clip(std::uint8_t showcase_move) noexcept -> std::uint16_t;
 
 } // namespace Animation

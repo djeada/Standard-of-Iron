@@ -381,6 +381,8 @@
         <file>assets/data/formations/army/iron_sepulcher.json</file>
         <file>assets/data/formations/army/rome.json</file>
         <file>assets/data/formations/unit_layouts/carthage_beast_spread.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_cavalry_line.json</file>
+        <file>assets/data/formations/unit_layouts/carthage_cavalry_loose.json</file>
         <file>assets/data/formations/unit_layouts/carthage_cavalry_wedge.json</file>
         <file>assets/data/formations/unit_layouts/carthage_close_order_infantry.json</file>
         <file>assets/data/formations/unit_layouts/carthage_loose_order_ranged.json</file>
@@ -397,6 +399,8 @@
         <file>assets/data/formations/unit_layouts/iron_sepulcher_procession.json</file>
         <file>assets/data/formations/unit_layouts/iron_sepulcher_sepulcher_ranged_line.json</file>
         <file>assets/data/formations/unit_layouts/iron_sepulcher_shield_wall.json</file>
+        <file>assets/data/formations/unit_layouts/rome_cavalry_line.json</file>
+        <file>assets/data/formations/unit_layouts/rome_cavalry_loose.json</file>
         <file>assets/data/formations/unit_layouts/rome_cavalry_wedge.json</file>
         <file>assets/data/formations/unit_layouts/rome_close_order_infantry.json</file>
         <file>assets/data/formations/unit_layouts/rome_loose_order_ranged.json</file>
