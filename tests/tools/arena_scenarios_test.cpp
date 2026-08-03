@@ -96,11 +96,15 @@ TEST(ArenaScenariosTest, ListsAllPhaseOneScenarioIds) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(settlement_id)),
               ids.end());
   }
-  for (auto const* commander_id : {Arena::Scenarios::k_commander_aura_pulse_id,
-                                   Arena::Scenarios::k_commander_identity_lineup_id,
-                                   Arena::Scenarios::k_commander_sword_duel_id,
-                                   Arena::Scenarios::k_commander_bow_duel_id,
-                                   Arena::Scenarios::k_commander_spear_duel_id}) {
+  for (auto const* commander_id :
+       {Arena::Scenarios::k_commander_aura_pulse_id,
+        Arena::Scenarios::k_commander_identity_lineup_id,
+        Arena::Scenarios::k_commander_sword_duel_id,
+        Arena::Scenarios::k_commander_bow_duel_id,
+        Arena::Scenarios::k_commander_spear_duel_id,
+        Arena::Scenarios::k_commander_signature_spear_vs_sword_id,
+        Arena::Scenarios::k_commander_signature_sword_vs_bow_id,
+        Arena::Scenarios::k_commander_signature_bow_vs_spear_id}) {
     EXPECT_NE(std::find(ids.begin(), ids.end(), QString::fromLatin1(commander_id)),
               ids.end());
   }
@@ -319,7 +323,12 @@ TEST(ArenaScenariosTest, ListsEveryIronSepulcherScenario) {
                          Arena::Scenarios::k_sepulcher_vs_carthage_cavalry_id,
                          Arena::Scenarios::k_sepulcher_shrine_awakening_id,
                          Arena::Scenarios::k_sepulcher_ruins_awakening_waves_id,
-                         Arena::Scenarios::k_sepulcher_shrine_siege_id}) {
+                         Arena::Scenarios::k_sepulcher_shrine_siege_id,
+                         Arena::Scenarios::k_sepulcher_zone_shrine_spawn_id,
+                         Arena::Scenarios::k_sepulcher_twin_zone_shrines_id,
+                         Arena::Scenarios::k_sepulcher_shrine_demolition_id,
+                         Arena::Scenarios::k_sepulcher_shrine_state_reload_id,
+                         Arena::Scenarios::k_sepulcher_fireball_review_id}) {
     EXPECT_NE(Arena::Scenarios::find_option(QString::fromLatin1(id)), nullptr) << id;
     auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
     ASSERT_NE(scenario, nullptr) << id;
@@ -376,6 +385,36 @@ TEST(ArenaScenariosTest, SepulcherBattlesPitUndeadAgainstBothPlayableNations) {
   }
 }
 
+TEST(ArenaScenariosTest, FireballReviewSceneIsolatesTheSpellFromEverythingElse) {
+  auto const* scenario = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_fireball_review_id));
+  ASSERT_NE(scenario, nullptr);
+  ASSERT_EQ(scenario->groups.size(), 2U);
+
+  EXPECT_TRUE(scenario->undead_zones.empty()) << "no zone garrison in the FX bench";
+  EXPECT_TRUE(scenario->suppress_terrain_scatter);
+  EXPECT_TRUE(scenario->suppress_ui_overlays);
+
+  auto const& target = scenario->groups.back();
+  EXPECT_GE(target.health_override, 10000)
+      << "the target has to survive the whole review without burning down";
+
+  EXPECT_NE(std::find_if(scenario->expectations.begin(),
+                         scenario->expectations.end(),
+                         [](auto const& item) {
+                           return item.kind ==
+                                  Arena::ArenaExpectationKind::ProjectileFlightObserved;
+                         }),
+            scenario->expectations.end());
+  EXPECT_NE(std::find_if(scenario->expectations.begin(),
+                         scenario->expectations.end(),
+                         [](auto const& item) {
+                           return item.kind ==
+                                  Arena::ArenaExpectationKind::ProjectileImpactObserved;
+                         }),
+            scenario->expectations.end());
+}
+
 TEST(ArenaScenariosTest, SepulcherZonesCarryTheirOwnHazeAndAnchorRole) {
   auto const* shrine = Arena::Scenarios::find_definition(
       QString::fromLatin1(Arena::Scenarios::k_sepulcher_shrine_awakening_id));
@@ -384,8 +423,7 @@ TEST(ArenaScenariosTest, SepulcherZonesCarryTheirOwnHazeAndAnchorRole) {
 
   auto const& shrine_zone = shrine->undead_zones.front();
   EXPECT_GT(shrine_zone.fog_density, 0.0F);
-  EXPECT_TRUE(Game::Map::zone_has_structural_anchor(shrine_zone))
-      << "a shrine garrisons a capturable sepulcher barracks";
+  EXPECT_EQ(shrine_zone.anchor_type, Game::Map::WorldProp::Type::MagicShrine);
   EXPECT_TRUE(shrine_zone.waves.empty())
       << "the shrine scene exercises the default garrison";
 
@@ -393,8 +431,92 @@ TEST(ArenaScenariosTest, SepulcherZonesCarryTheirOwnHazeAndAnchorRole) {
       QString::fromLatin1(Arena::Scenarios::k_sepulcher_ruins_awakening_waves_id));
   ASSERT_NE(ruins, nullptr);
   ASSERT_EQ(ruins->undead_zones.size(), 1U);
-  EXPECT_FALSE(Game::Map::zone_has_structural_anchor(ruins->undead_zones.front()))
-      << "ruins stay decorative";
+  EXPECT_EQ(ruins->undead_zones.front().anchor_type, Game::Map::WorldProp::Type::Ruins)
+      << "the ruins keep their own anchor prop, next to the zone's shrine";
+}
+
+TEST(ArenaScenariosTest, SignatureDuelsPairCommandersAcrossWeaponsAndLastLongEnough) {
+  for (auto const* id : {Arena::Scenarios::k_commander_signature_spear_vs_sword_id,
+                         Arena::Scenarios::k_commander_signature_sword_vs_bow_id,
+                         Arena::Scenarios::k_commander_signature_bow_vs_spear_id}) {
+    auto const* scenario = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scenario, nullptr) << id;
+    ASSERT_EQ(scenario->groups.size(), 2U) << id;
+
+    auto const& roman = scenario->groups.front();
+    auto const& carthaginian = scenario->groups.back();
+    EXPECT_NE(roman.troop_type, carthaginian.troop_type) << id;
+    EXPECT_NE(roman.owner_id, carthaginian.owner_id) << id;
+
+    EXPECT_GE(scenario->duration_seconds, 20.0F) << id;
+    EXPECT_GE(roman.health_override, 5000) << id;
+    EXPECT_GE(carthaginian.health_override, 5000) << id;
+  }
+}
+
+TEST(ArenaScenariosTest, ShrineScenesCoverSpawnMultipleZonesDestructionAndReload) {
+  auto const zone_expectation_kinds = [](const Arena::ArenaScenarioDefinition& scenario,
+                                         const QString& zone_id) {
+    std::set<Arena::ArenaExpectationKind> kinds;
+    for (auto const& item : scenario.expectations) {
+      if (item.zone_id == zone_id) {
+        kinds.insert(item.kind);
+      }
+    }
+    return kinds;
+  };
+
+  auto const* spawn = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_zone_shrine_spawn_id));
+  ASSERT_NE(spawn, nullptr);
+  ASSERT_EQ(spawn->undead_zones.size(), 1U);
+  EXPECT_TRUE(spawn->resource_patches.empty())
+      << "the zone has to raise its own shrine, not borrow an authored prop";
+  EXPECT_TRUE(zone_expectation_kinds(*spawn, spawn->undead_zones.front().id)
+                  .contains(Arena::ArenaExpectationKind::UndeadZoneShrineStands));
+
+  auto const* twins = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_twin_zone_shrines_id));
+  ASSERT_NE(twins, nullptr);
+  ASSERT_EQ(twins->undead_zones.size(), 2U);
+  for (auto const& zone : twins->undead_zones) {
+    EXPECT_TRUE(zone_expectation_kinds(*twins, zone.id)
+                    .contains(Arena::ArenaExpectationKind::UndeadZoneShrineStands))
+        << zone.id.toStdString();
+  }
+
+  auto const* demolition = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_shrine_demolition_id));
+  ASSERT_NE(demolition, nullptr);
+  ASSERT_EQ(demolition->undead_zones.size(), 1U);
+  auto const demolition_kinds =
+      zone_expectation_kinds(*demolition, demolition->undead_zones.front().id);
+  EXPECT_TRUE(demolition_kinds.contains(
+      Arena::ArenaExpectationKind::UndeadZoneShrineDestroyed));
+  EXPECT_TRUE(
+      demolition_kinds.contains(Arena::ArenaExpectationKind::UndeadZoneCleared));
+  EXPECT_NE(std::find_if(demolition->steps.begin(),
+                         demolition->steps.end(),
+                         [&](auto const& step) {
+                           return step.zone_id == demolition->undead_zones.front().id &&
+                                  step.command ==
+                                      Arena::ScenarioCommandKind::ApplyDamage;
+                         }),
+            demolition->steps.end());
+
+  auto const* reload = Arena::Scenarios::find_definition(
+      QString::fromLatin1(Arena::Scenarios::k_sepulcher_shrine_state_reload_id));
+  ASSERT_NE(reload, nullptr);
+  ASSERT_EQ(reload->undead_zones.size(), 1U);
+  EXPECT_TRUE(zone_expectation_kinds(*reload, reload->undead_zones.front().id)
+                  .contains(Arena::ArenaExpectationKind::UndeadZoneShrineStands));
+  EXPECT_NE(std::find_if(reload->steps.begin(),
+                         reload->steps.end(),
+                         [](auto const& step) {
+                           return step.command ==
+                                  Arena::ScenarioCommandKind::ReloadUndeadZoneState;
+                         }),
+            reload->steps.end());
 }
 
 TEST(ArenaScenariosTest, ShrineSiegeRequiresTheZoneToBeClearedByLosingItsAnchor) {
@@ -402,7 +524,6 @@ TEST(ArenaScenariosTest, ShrineSiegeRequiresTheZoneToBeClearedByLosingItsAnchor)
       QString::fromLatin1(Arena::Scenarios::k_sepulcher_shrine_siege_id));
   ASSERT_NE(scenario, nullptr);
   ASSERT_EQ(scenario->undead_zones.size(), 1U);
-  EXPECT_TRUE(Game::Map::zone_has_structural_anchor(scenario->undead_zones.front()));
 
   EXPECT_NE(std::find_if(scenario->expectations.begin(),
                          scenario->expectations.end(),

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "game/core/system.h"
+#include "game/map/undead_shrine_placement.h"
 #include "game/systems/undead_zone_query.h"
 #include "map/map_definition.h"
 
@@ -43,12 +44,21 @@ public:
   [[nodiscard]] auto
   anchor_entity(const QString& zone_id) const -> Engine::Core::EntityID;
 
+  [[nodiscard]] auto has_shrine(const QString& zone_id) const -> bool;
+  [[nodiscard]] auto shrine_world_position(const QString& zone_id) const -> QVector3D;
+  [[nodiscard]] auto shrine_prop_id(const QString& zone_id) const -> std::uint64_t;
+
+  [[nodiscard]] auto zones_without_shrine() const -> std::vector<QString>;
+
 private:
   struct RuntimeZone {
     Game::Map::UndeadZone definition;
     QVector3D center_world;
     QVector3D anchor_world;
+    QVector3D shrine_world;
     std::uint64_t anchor_world_prop_id = 0;
+    std::uint64_t shrine_world_prop_id = 0;
+    bool shrine_placed = false;
     Engine::Core::EntityID anchor_entity_id = 0;
     bool anchor_pending = false;
     bool awakened = false;
@@ -64,6 +74,9 @@ private:
 
   void ensure_factory_registry();
   void ensure_zone_owner_registered(const RuntimeZone& zone) const;
+  void place_zone_shrine(const Game::Map::MapDefinition& map_definition,
+                         RuntimeZone& zone,
+                         Game::Map::UndeadShrineExclusions& exclusions) const;
   void ensure_anchor_structure(Engine::Core::World& world, RuntimeZone& zone);
   void refresh_active_spawns(Engine::Core::World& world, RuntimeZone& zone) const;
   void refresh_anchor_structure(Engine::Core::World& world, RuntimeZone& zone);

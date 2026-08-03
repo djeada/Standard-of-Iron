@@ -26,6 +26,17 @@ float inv_smoothstep(float edge0, float edge1, float x) {
   return 1.0 - smoothstep(lower_edge, upper_edge, x);
 }
 
+float soi_fbm3_fireball(vec3 p) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  for (int octave = 0; octave < 3; ++octave) {
+    value += amplitude * soi_noise3(p);
+    p *= 2.07;
+    amplitude *= 0.5;
+  }
+  return value;
+}
+
 void main() {
   vec3 pos = a_position;
 
@@ -66,8 +77,11 @@ void main() {
 
     float lobe = 0.78 + 0.27 * sin(angle * 3.0 + u_time * 2.1 + flow_noise * 2.4) +
                  0.13 * sin(angle * 6.0 - u_time * 3.2 + detail_noise * 3.14159);
+
+    float base_pinch = mix(0.30, 1.0, smoothstep(0.0, 0.20, height));
     float taper =
-        mix(unit_flame ? 0.56 : 1.05, unit_flame ? 0.055 : 0.22, pow(height, 0.64));
+        mix(unit_flame ? 0.56 : 1.05, unit_flame ? 0.055 : 0.22, pow(height, 0.64)) *
+        base_pinch;
     float smoke_expand =
         smoothstep(0.58, 1.0, height) *
         (unit_flame ? 0.02 : 0.16 + (unit_flame ? 0.04 : 0.10) * curl_noise);
@@ -95,7 +109,7 @@ void main() {
         smoothstep(unit_flame ? 0.58 : 0.65, 1.0, height) *
             ((unit_flame ? 0.03 : 0.06) + (unit_flame ? 0.03 : 0.08) * curl_noise);
 
-    float base_mask = smoothstep(0.0, 0.06, height);
+    float base_mask = smoothstep(0.0, 0.17, height);
     float tip_fade = 1.0 - smoothstep(unit_flame ? 0.70 : 0.7,
                                       unit_flame ? 0.98 : 1.04,
                                       height + (detail_noise - 0.5) * 0.12);
@@ -175,15 +189,14 @@ void main() {
     v_alpha = clamp(spark_fade * flicker * u_intensity, 0.0, 1.0);
   } else {
     vec3 normal_dir = normalize(a_normal);
-    vec2 flow_uv = vec2(a_texcoord.x * 6.0 + normal_dir.y * 1.4,
-                        a_texcoord.y * 6.5 - u_time * 1.8);
-    float shell_noise = soi_fbm_23e5ab(flow_uv);
-    float detail_noise = soi_fbm_23e5ab(flow_uv * 1.9 + vec2(2.7, -u_time * 0.55));
-    float flare =
-        sin((a_texcoord.x + a_texcoord.y) * 18.0 + u_time * 11.0 + detail_noise * 4.0);
-    float pulse = 0.92 + 0.08 * sin(u_time * 9.0 + shell_noise * 3.14159);
-    float shell_offset =
-        (shell_noise - 0.5) * 0.18 + (detail_noise - 0.5) * 0.08 + flare * 0.03;
+
+    vec3 roll = normal_dir * 2.4 - vec3(0.0, u_time * 1.05, 0.0);
+    float body_noise = soi_fbm3_fireball(roll);
+    float detail_noise =
+        soi_fbm3_fireball(normal_dir * 5.6 + vec3(u_time * 0.6, -u_time * 1.9, 3.0));
+    float pulse = 0.94 + 0.06 * sin(u_time * 8.0 + body_noise * 3.14159);
+
+    float shell_offset = (body_noise - 0.5) * 0.34 + (detail_noise - 0.5) * 0.13 - 0.04;
     pos += normal_dir * shell_offset * pulse;
 
     vec3 tangent = normalize(vec3(-normal_dir.z, 0.0, normal_dir.x));
@@ -191,15 +204,14 @@ void main() {
       tangent = vec3(1.0, 0.0, 0.0);
     }
     vec3 bitangent = normalize(cross(normal_dir, tangent));
-    pos += tangent * (detail_noise - 0.5) * 0.05 * pulse;
-    pos += bitangent * (shell_noise - 0.5) * 0.04 * pulse;
+    pos += tangent * (detail_noise - 0.5) * 0.07 * pulse;
+    pos += bitangent * (body_noise - 0.5) * 0.06 * pulse;
 
-    float polar_fade = 1.0 - smoothstep(0.88, 1.0, abs(normal_dir.y));
-    float spark = pow(max(detail_noise - 0.68, 0.0) * 3.4, 2.2);
-    v_alpha = clamp((0.42 + 0.38 * shell_noise + spark * 0.28) *
-                        (0.72 + 0.28 * polar_fade) * u_intensity,
-                    0.0,
-                    1.2);
+    float rise = smoothstep(-0.6, 1.0, normal_dir.y);
+    pos.y += (0.10 + 0.09 * body_noise) * rise;
+    pos.xz *= mix(0.88, 1.06, rise);
+
+    v_alpha = clamp((0.55 + 0.45 * body_noise) * u_intensity, 0.0, 1.3);
   }
 
   v_local_pos = pos;

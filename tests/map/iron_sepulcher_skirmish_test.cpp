@@ -1,6 +1,9 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -176,6 +179,77 @@ TEST_F(IronSepulcherSkirmishTest, SoloSkirmishAwakensAndIsWonByPurifyingTheShrin
 
   victory.update(world, 0.1F);
   EXPECT_EQ(victory.get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(IronSepulcherSkirmishTest, EveryZoneOnTheMapOwnsAShrineBarracks) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  App::Core::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+  ASSERT_GE(map_definition.undead_zones.size(), 2U)
+      << "this map is the fixture for a multi-zone sepulcher";
+
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  ASSERT_NE(undead, nullptr);
+  undead->configure(map_definition);
+  undead->update(&world, 0.1F);
+
+  EXPECT_TRUE(undead->zones_without_shrine().empty());
+
+  std::vector<std::uint64_t> shrine_prop_ids;
+  for (const auto& zone : map_definition.undead_zones) {
+    EXPECT_TRUE(undead->has_shrine(zone.id)) << zone.id.toStdString();
+
+    const Engine::Core::EntityID anchor_id = undead->anchor_entity(zone.id);
+    ASSERT_NE(anchor_id, 0U) << zone.id.toStdString();
+    auto* anchor = world.get_entity(anchor_id);
+    ASSERT_NE(anchor, nullptr);
+    auto* unit = anchor->get_component<Engine::Core::UnitComponent>();
+    ASSERT_NE(unit, nullptr);
+    EXPECT_EQ(unit->spawn_type, Game::Units::SpawnType::Barracks);
+    EXPECT_EQ(unit->owner_id, zone.owner_id);
+    EXPECT_EQ(unit->nation_id, Game::Systems::NationID::IronSepulcher);
+    EXPECT_EQ(anchor->get_component<Engine::Core::ProductionComponent>(), nullptr)
+        << zone.id.toStdString() << " must be captured, not recruited from";
+
+    const QVector3D zone_world = zone_world_position(map_definition, zone);
+    const QVector3D shrine = undead->shrine_world_position(zone.id);
+    const float dx = shrine.x() - zone_world.x();
+    const float dz = shrine.z() - zone_world.z();
+    EXPECT_LE(std::sqrt(dx * dx + dz * dz), zone.radius)
+        << zone.id.toStdString() << " put its shrine outside its own zone";
+
+    shrine_prop_ids.push_back(undead->shrine_prop_id(zone.id));
+  }
+
+  std::sort(shrine_prop_ids.begin(), shrine_prop_ids.end());
+  EXPECT_EQ(std::unique(shrine_prop_ids.begin(), shrine_prop_ids.end()),
+            shrine_prop_ids.end())
+      << "two zones cannot share one shrine";
+
+  int shrine_props = 0;
+  for (const auto& prop : Game::Map::TerrainService::instance().world_props()) {
+    if (prop.type == Game::Map::WorldProp::Type::MagicShrine) {
+      ++shrine_props;
+    }
+  }
+  EXPECT_EQ(shrine_props, static_cast<int>(map_definition.undead_zones.size()));
 }
 
 TEST_F(IronSepulcherSkirmishTest, DormantSepulcherDoesNotHandTheSkirmishAnEarlyWin) {
