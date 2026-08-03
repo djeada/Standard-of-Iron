@@ -16,6 +16,7 @@ struct ArrowConfig {
   float arc_height_max = 2.5F;
   float speed_default = 8.0F;
   float speed_attack = 6.0F;
+  float spent_lifetime_seconds = 20.0F;
 };
 
 struct GameplayConfig {

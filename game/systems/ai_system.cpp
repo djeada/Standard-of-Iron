@@ -9,8 +9,10 @@
 
 #include "../core/world.h"
 #include "ai_system/ai_strategy.h"
+#include "ai_system/behaviors/assault_behavior.h"
 #include "ai_system/behaviors/attack_behavior.h"
 #include "ai_system/behaviors/builder_behavior.h"
+#include "ai_system/behaviors/chase_behavior.h"
 #include "ai_system/behaviors/commander_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
@@ -73,12 +75,14 @@ AISystem::AISystem() {
 void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::RetreatBehavior>());
   registry.register_behavior(std::make_unique<AI::DefendBehavior>());
+  registry.register_behavior(std::make_unique<AI::AssaultBehavior>());
   registry.register_behavior(std::make_unique<AI::ProductionBehavior>());
   registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
   registry.register_behavior(std::make_unique<AI::CommanderBehavior>());
   registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
   registry.register_behavior(std::make_unique<AI::HarassBehavior>());
   registry.register_behavior(std::make_unique<AI::AttackBehavior>());
+  registry.register_behavior(std::make_unique<AI::ChaseBehavior>());
   registry.register_behavior(std::make_unique<AI::GatherBehavior>());
 }
 

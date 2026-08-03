@@ -8,6 +8,7 @@
 #include "../../core/ownership_constants.h"
 #include "../../game_config.h"
 #include "../nation_registry.h"
+#include "ai_base_manager.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -25,6 +26,8 @@ constexpr float k_local_threat_memory_duration = 6.0F;
 constexpr float k_outpost_site_min_objective_distance = 36.0F;
 constexpr float k_outpost_structure_radius = 16.0F;
 constexpr float k_outpost_pending_radius = 10.0F;
+constexpr float k_outpost_site_lateral_step = 16.0F;
+constexpr int k_outpost_site_attempts = 5;
 
 auto densest_anchor_cluster(const std::vector<AnchorCandidate>& candidates)
     -> std::optional<AnchorCandidate> {
@@ -159,13 +162,19 @@ void update_expansion_site(const Game::Systems::AI::AISnapshot& snapshot,
   ctx.outpost_barracks_count = 0;
   ctx.outpost_home_count = 0;
   ctx.expansion_construction_pending = false;
+  ctx.forward_plan.has_site = false;
 
   if (!ctx.anchor_is_structural ||
       desired_outpost_barracks_count(ctx.strategy_config) <= 0) {
     return;
   }
 
-  if (had_previous_site) {
+  const bool previous_site_usable =
+      had_previous_site &&
+      !Game::Systems::AI::AIBaseManager::site_is_abandoned(
+          ctx, previous_site_x, previous_site_z, snapshot.game_time);
+
+  if (previous_site_usable) {
     ctx.has_expansion_site = true;
     ctx.expansion_site_x = previous_site_x;
     ctx.expansion_site_z = previous_site_z;
@@ -184,10 +193,39 @@ void update_expansion_site(const Game::Systems::AI::AISnapshot& snapshot,
 
     const float site_distance = std::min(ctx.strategy_config.expansion_site_distance,
                                          objective_distance * 0.5F);
-    ctx.expansion_site_x = ctx.base_pos_x + (dx / objective_distance) * site_distance;
-    ctx.expansion_site_z = ctx.base_pos_z + (dz / objective_distance) * site_distance;
+    const float forward_x = ctx.base_pos_x + (dx / objective_distance) * site_distance;
+    const float forward_z = ctx.base_pos_z + (dz / objective_distance) * site_distance;
+    const float lateral_x = -dz / objective_distance;
+    const float lateral_z = dx / objective_distance;
+
+    bool found_site = false;
+    for (int attempt = 0; attempt < k_outpost_site_attempts; ++attempt) {
+      const float lateral_offset = k_outpost_site_lateral_step *
+                                   static_cast<float>((attempt + 1) / 2) *
+                                   ((attempt % 2 == 0) ? 1.0F : -1.0F);
+      const float candidate_x = forward_x + lateral_x * lateral_offset;
+      const float candidate_z = forward_z + lateral_z * lateral_offset;
+
+      if (Game::Systems::AI::AIBaseManager::site_is_abandoned(
+              ctx, candidate_x, candidate_z, snapshot.game_time)) {
+        continue;
+      }
+
+      ctx.expansion_site_x = candidate_x;
+      ctx.expansion_site_z = candidate_z;
+      found_site = true;
+      break;
+    }
+
+    if (!found_site) {
+      return;
+    }
     ctx.has_expansion_site = true;
   }
+
+  ctx.forward_plan.has_site = true;
+  ctx.forward_plan.site_x = ctx.expansion_site_x;
+  ctx.forward_plan.site_z = ctx.expansion_site_z;
 
   const float outpost_radius_sq =
       k_outpost_structure_radius * k_outpost_structure_radius;
@@ -384,6 +422,17 @@ auto compute_effective_harass_units(const Game::Systems::AI::AISnapshot& snapsho
                                   combat_units - ctx.effective_reserve_units -
                                       reactive_attack_size(ctx.strategy_config));
   return std::min(ctx.strategy_config.harass_units, max_harass);
+}
+
+void update_assault_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
+                             Game::Systems::AI::AIContext& ctx) {
+  ctx.assault_unit_ids.clear();
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.is_assault && Game::Systems::AI::is_combat_role_unit(entity)) {
+      ctx.assault_unit_ids.push_back(entity.id);
+    }
+  }
+  ctx.assault_unit_count = static_cast<int>(ctx.assault_unit_ids.size());
 }
 
 void update_reserve_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
@@ -601,8 +650,8 @@ auto return_to_idle_health_threshold(
 }
 
 auto has_active_local_threat(const Game::Systems::AI::AIContext& ctx) -> bool {
-  return ctx.barracks_under_threat || !ctx.buildings_under_attack.empty() ||
-         (ctx.nearby_threat_count > 0);
+  return ctx.barracks_under_threat || ctx.any_base_under_threat ||
+         !ctx.buildings_under_attack.empty() || (ctx.nearby_threat_count > 0);
 }
 
 auto has_recent_local_threat(const Game::Systems::AI::AIContext& ctx,
@@ -668,6 +717,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.assembled_unit_count = 0;
   ctx.effective_reserve_units = 0;
   ctx.effective_harass_units = 0;
+  ctx.assault_unit_count = 0;
+  ctx.any_base_under_threat = false;
   ctx.outpost_barracks_count = 0;
   ctx.outpost_home_count = 0;
   ctx.expansion_construction_pending = false;
@@ -807,6 +858,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   update_expansion_site(
       snapshot, ctx, had_previous_site, previous_site_x, previous_site_z);
 
+  AIBaseManager::update(snapshot, ctx);
+
   int catapult_count = 0;
   for (const auto& entity : snapshot.friendly_units) {
     if (!entity.is_building && entity.spawn_type == Game::Units::SpawnType::Catapult) {
@@ -815,6 +868,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   }
 
   ctx.macro_targets = compute_macro_targets(ctx, catapult_count);
+  update_assault_unit_ids(snapshot, ctx);
   update_reserve_unit_ids(snapshot, ctx);
   update_harass_unit_ids(snapshot, ctx);
   ctx.assembled_unit_count = committed_army_count(snapshot, ctx);

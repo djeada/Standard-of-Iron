@@ -123,6 +123,20 @@ a `shots.json` manifest. `scripts/promo-edit.py` then concatenates, grades,
 captions and scores them into one finished short in a single ffmpeg pass.
 `ffmpeg` must be on `PATH` for both steps.
 
+**The short never opens on a black frame.** Social platforms take frame zero as
+the thumbnail, so a fade-in there costs the video its cover image. The edit
+opens on a hard cut by default (`--opening-fade` re-enables one deliberately),
+the capture skips any black lead-in frames before it starts recording a shot,
+and the edit reads frame zero back out of the finished file and fails the run if
+it is black.
+
+**The score goes through the game's audio mastering.** `promo-edit.py` runs the
+music track through `build/bin/audio_master_preview`, which links the same
+`game/audio/audio_mastering.cpp` the game applies at decode, so the short is
+scored with the audio players actually hear rather than the raw generated
+master. Build that target first; without it the edit warns and falls back to the
+unmastered track. See `docs/AUDIO_MASTERING.md`.
+
 Shot fields:
 
 - `scenario`, `seed`, `start`, `duration` select the deterministic window. The

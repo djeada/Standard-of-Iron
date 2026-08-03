@@ -67,6 +67,10 @@ auto classify_wave_direction(const QVector3D& entry_point) -> QString {
   return QCoreApplication::translate("MissionSetupCoordinator", "northwest");
 }
 
+constexpr float k_skirmish_aggression = 0.6F;
+constexpr float k_skirmish_defense = 0.55F;
+constexpr float k_skirmish_harassment = 0.5F;
+
 auto is_scenario_controlled_behavior(Game::Mission::UnitBehavior behavior) -> bool {
   return behavior == Game::Mission::UnitBehavior::Guard ||
          behavior == Game::Mission::UnitBehavior::Hold ||
@@ -713,7 +717,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
 
     int ai_id = 2;
     for (const auto& ai_setup : mission.ai_setups) {
-      Game::Systems::AI::AIStrategy strategy = Game::Systems::AI::AIStrategy::Balanced;
+      Game::Systems::AI::AIStrategy strategy = Game::Systems::AI::AIStrategy::Defensive;
 
       if (ai_setup.strategy.has_value()) {
         strategy = Game::Systems::AI::AIStrategyFactory::parse_strategy(
@@ -745,6 +749,32 @@ auto MissionSetupCoordinator::apply_mission_setup(
   effects.owner_info_changed = true;
   return effects;
 }
+
+namespace {
+
+void apply_skirmish_ai_strategies(Engine::Core::World& world,
+                                  const QSet<int>& owner_ids,
+                                  int local_owner_id) {
+  auto* ai_system = world.get_system<Game::Systems::AISystem>();
+  if (ai_system == nullptr) {
+    return;
+  }
+
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  for (const int owner_id : owner_ids) {
+    if (owner_id == local_owner_id || !owner_registry.is_ai(owner_id)) {
+      continue;
+    }
+
+    ai_system->set_ai_strategy(owner_id,
+                               Game::Systems::AI::AIStrategy::Expansionist,
+                               k_skirmish_aggression,
+                               k_skirmish_defense,
+                               k_skirmish_harassment);
+  }
+}
+
+} // namespace
 
 auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     const SkirmishCommanderSetupContext& ctx,
@@ -941,6 +971,9 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
 
     apply_team_color(ctx.world.get_entity(unit->id()), owner_id);
   }
+
+  apply_skirmish_ai_strategies(ctx.world, processed_owner_ids, ctx.local_owner_id);
+
   return effects;
 }
 
@@ -1021,6 +1054,10 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
 
       auto* entity = ctx.world.get_entity(unit->id());
       if (entity != nullptr) {
+        if (ai_controlled) {
+          auto* assault = entity->add_component<Engine::Core::AssaultWaveComponent>();
+          assault->wave_phase = wave.phase_index;
+        }
         auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
         if (renderable != nullptr) {
           const QVector3D team_color = Game::Visuals::team_colorForOwner(wave.owner_id);

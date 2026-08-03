@@ -8,6 +8,7 @@
 
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
+#include "../../../geom/arrow.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
@@ -43,6 +44,27 @@ inline auto make_palette(const QVector3D& team) -> CarthageBallistaPalette {
   CarthageBallistaPalette p;
   p.team = clamp_vec_01(team);
   return p;
+}
+
+constexpr float k_stock_tilt_deg = 22.0F;
+constexpr float k_nock_rest_z = -0.07F;
+constexpr float k_slide_travel = 0.38F;
+
+inline auto k_arm_tip(float side) -> QVector3D {
+  return {side * 0.605F, 0.348F, -0.395F};
+}
+
+inline auto slide_travel(const BallistaAnimContext& anim_ctx) -> float {
+  switch (anim_ctx.state) {
+  case BallistaAnimState::Loading:
+    return anim_ctx.loading_progress * k_slide_travel;
+  case BallistaAnimState::Firing:
+    return k_slide_travel * (1.0F - anim_ctx.firing_progress);
+  case BallistaAnimState::Idle:
+  case BallistaAnimState::Resetting:
+    break;
+  }
+  return 0.0F;
 }
 
 inline auto
@@ -116,40 +138,54 @@ void draw_base_frame(const DrawContext& p,
            unit,
            white,
            p.model,
-           QVector3D(-0.38F, 0.18F, 0.0F),
-           QVector3D(0.06F, 0.12F, 0.28F),
+           QVector3D(-0.29F, 0.15F, -0.03F),
+           QVector3D(0.045F, 0.045F, 0.42F),
            c.wood_frame);
   draw_box(out,
            unit,
            white,
            p.model,
-           QVector3D(0.38F, 0.18F, 0.0F),
-           QVector3D(0.06F, 0.12F, 0.28F),
+           QVector3D(0.29F, 0.15F, -0.03F),
+           QVector3D(0.045F, 0.045F, 0.42F),
            c.wood_frame);
 
   draw_box(out,
            unit,
            white,
            p.model,
-           QVector3D(0.0F, 0.25F, -0.26F),
-           QVector3D(0.43F, 0.08F, 0.06F),
+           QVector3D(0.0F, 0.15F, -0.40F),
+           QVector3D(0.31F, 0.042F, 0.05F),
+           c.wood_dark);
+  draw_box(out,
+           unit,
+           white,
+           p.model,
+           QVector3D(0.0F, 0.15F, 0.33F),
+           QVector3D(0.31F, 0.042F, 0.05F),
            c.wood_dark);
 
   draw_box(out,
            unit,
            white,
            p.model,
-           QVector3D(0.0F, 0.15F, 0.23F),
-           QVector3D(0.43F, 0.06F, 0.06F),
-           c.wood_frame);
+           QVector3D(0.0F, 0.09F, 0.44F),
+           QVector3D(0.05F, 0.035F, 0.10F),
+           c.wood_dark);
 
-  draw_box(out,
-           unit,
-           white,
+  draw_cyl(out,
            p.model,
-           QVector3D(0.0F, 0.11F, -0.30F),
-           QVector3D(0.48F, 0.01F, 0.02F),
-           c.metal_bronze);
+           QVector3D(-0.30F, 0.19F, -0.30F),
+           QVector3D(-0.30F, 0.19F, 0.24F),
+           0.012F,
+           c.metal_iron,
+           white);
+  draw_cyl(out,
+           p.model,
+           QVector3D(0.30F, 0.19F, -0.30F),
+           QVector3D(0.30F, 0.19F, 0.24F),
+           0.012F,
+           c.metal_iron,
+           white);
 }
 
 void draw_wheels(const DrawContext& p,
@@ -157,130 +193,136 @@ void draw_wheels(const DrawContext& p,
                  Texture* white,
                  const CarthageBallistaPalette& c) {
 
-  float wheel_radius = 0.13F;
-  float wheel_thickness = 0.032F;
+  float const wheel_radius = 0.155F;
+  float const wheel_half_thickness = 0.022F;
 
-  QVector3D const left_pos(-0.40F, wheel_radius, 0.0F);
-  QVector3D const right_pos(0.40F, wheel_radius, 0.0F);
+  auto draw_wheel = [&](float side) {
+    QVector3D const hub(side * 0.355F, wheel_radius, 0.02F);
+    QVector3D const inner = hub - QVector3D(side * wheel_half_thickness, 0, 0);
+    QVector3D const outer = hub + QVector3D(side * wheel_half_thickness, 0, 0);
 
-  auto draw_wheel = [&](const QVector3D& pos, float side_offset) {
-    QVector3D const inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
-    QVector3D const outer =
-        pos + QVector3D(side_offset * (wheel_thickness + 0.045F), 0, 0);
-
-    draw_cyl(out, p.model, inner, outer, wheel_radius, c.wood_dark, white);
-
+    draw_cyl(out, p.model, inner, outer, wheel_radius * 0.93F, c.wood_dark, white);
     draw_cyl(out,
              p.model,
-             inner - QVector3D(side_offset * 0.004F, 0, 0),
-             outer + QVector3D(side_offset * 0.004F, 0, 0),
-             wheel_radius + 0.010F,
-             c.metal_bronze,
+             inner - QVector3D(side * 0.004F, 0, 0),
+             outer + QVector3D(side * 0.004F, 0, 0),
+             wheel_radius,
+             c.metal_iron,
              white);
-
     draw_cyl(out,
              p.model,
-             inner - QVector3D(side_offset * 0.012F, 0, 0),
-             outer + QVector3D(side_offset * 0.012F, 0, 0),
-             0.032F,
+             inner - QVector3D(side * 0.026F, 0, 0),
+             outer + QVector3D(side * 0.026F, 0, 0),
+             0.038F,
              c.metal_gold,
              white);
 
-    for (int s = 0; s < 8; ++s) {
-      float const angle = s * std::numbers::pi_v<float> / 4.0F;
-      float const spoke_y = std::sin(angle) * wheel_radius * 0.7F;
-      float const spoke_z = std::cos(angle) * wheel_radius * 0.7F;
-      QVector3D const spoke_pos =
-          pos + QVector3D(side_offset * (wheel_thickness + 0.022F), spoke_y, spoke_z);
-      draw_cyl(out,
-               p.model,
-               pos + QVector3D(side_offset * (wheel_thickness + 0.022F), 0, 0),
-               spoke_pos,
-               0.010F,
-               c.wood_frame,
-               white);
+    for (int spoke = 0; spoke < 6; ++spoke) {
+      float const angle = static_cast<float>(spoke) * std::numbers::pi_v<float> / 3.0F;
+      QVector3D const rim(hub.x() + side * (wheel_half_thickness + 0.012F),
+                          hub.y() + std::sin(angle) * wheel_radius * 0.80F,
+                          hub.z() + std::cos(angle) * wheel_radius * 0.80F);
+      QVector3D const centre(
+          hub.x() + side * (wheel_half_thickness + 0.012F), hub.y(), hub.z());
+      draw_cyl(out, p.model, centre, rim, 0.013F, c.wood_light, white);
     }
   };
 
-  draw_wheel(left_pos, -1.0F);
-  draw_wheel(right_pos, 1.0F);
+  draw_wheel(-1.0F);
+  draw_wheel(1.0F);
 
   draw_cyl(out,
            p.model,
-           QVector3D(-0.36F, wheel_radius, 0.0F),
-           QVector3D(0.36F, wheel_radius, 0.0F),
+           QVector3D(-0.34F, 0.155F, 0.02F),
+           QVector3D(0.34F, 0.155F, 0.02F),
            0.020F,
-           c.metal_bronze,
+           c.metal_iron,
            white);
 }
 
 void draw_torsion_bundles(const DrawContext& p,
                           ISubmitter& out,
+                          Mesh* unit,
                           Texture* white,
                           const CarthageBallistaPalette& c) {
 
   QMatrix4x4 tilted = p.model;
-  tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
+  tilted.rotate(k_stock_tilt_deg, 1.0F, 0.0F, 0.0F);
 
-  draw_cyl(out,
-           tilted,
-           QVector3D(-0.23F, 0.20F, -0.26F),
-           QVector3D(-0.23F, 0.34F, -0.26F),
-           0.075F,
-           c.rope,
-           white);
+  auto draw_field_frame = [&](float side) {
+    float const skein_x = side * 0.245F;
 
-  draw_cyl(out,
-           tilted,
-           QVector3D(0.23F, 0.20F, -0.26F),
-           QVector3D(0.23F, 0.34F, -0.26F),
-           0.075F,
-           c.rope,
-           white);
+    draw_cyl(out,
+             tilted,
+             QVector3D(skein_x, 0.20F, -0.26F),
+             QVector3D(skein_x, 0.50F, -0.26F),
+             0.050F,
+             c.rope,
+             white);
 
-  draw_cyl(out,
-           tilted,
-           QVector3D(-0.23F, 0.34F, -0.26F),
-           QVector3D(-0.23F, 0.36F, -0.26F),
-           0.085F,
-           c.metal_bronze,
-           white);
-  draw_cyl(out,
-           tilted,
-           QVector3D(0.23F, 0.34F, -0.26F),
-           QVector3D(0.23F, 0.36F, -0.26F),
-           0.085F,
-           c.metal_bronze,
-           white);
-  draw_cyl(out,
-           tilted,
-           QVector3D(-0.23F, 0.18F, -0.26F),
-           QVector3D(-0.23F, 0.20F, -0.26F),
-           0.085F,
-           c.metal_bronze,
-           white);
-  draw_cyl(out,
-           tilted,
-           QVector3D(0.23F, 0.18F, -0.26F),
-           QVector3D(0.23F, 0.20F, -0.26F),
-           0.085F,
-           c.metal_bronze,
-           white);
+    draw_cyl(out,
+             tilted,
+             QVector3D(skein_x, 0.49F, -0.26F),
+             QVector3D(skein_x, 0.535F, -0.26F),
+             0.062F,
+             c.metal_gold,
+             white);
+    draw_cyl(out,
+             tilted,
+             QVector3D(skein_x, 0.165F, -0.26F),
+             QVector3D(skein_x, 0.21F, -0.26F),
+             0.062F,
+             c.metal_gold,
+             white);
 
-  draw_cyl(out,
+    draw_box(out,
+             unit,
+             white,
+             tilted,
+             QVector3D(skein_x + side * 0.086F, 0.35F, -0.26F),
+             QVector3D(0.020F, 0.195F, 0.036F),
+             c.wood_frame);
+    draw_box(out,
+             unit,
+             white,
+             tilted,
+             QVector3D(skein_x - side * 0.086F, 0.35F, -0.26F),
+             QVector3D(0.020F, 0.195F, 0.036F),
+             c.wood_frame);
+
+    draw_box(out,
+             unit,
+             white,
+             tilted,
+             QVector3D(skein_x, 0.545F, -0.26F),
+             QVector3D(0.105F, 0.020F, 0.036F),
+             c.wood_dark);
+    draw_box(out,
+             unit,
+             white,
+             tilted,
+             QVector3D(skein_x, 0.155F, -0.26F),
+             QVector3D(0.105F, 0.020F, 0.036F),
+             c.wood_dark);
+  };
+
+  draw_field_frame(-1.0F);
+  draw_field_frame(1.0F);
+
+  draw_box(out,
+           unit,
+           white,
            tilted,
-           QVector3D(-0.23F, 0.27F, -0.26F),
-           QVector3D(-0.23F, 0.28F, -0.26F),
-           0.078F,
-           c.metal_gold,
-           white);
-  draw_cyl(out,
+           QVector3D(0.0F, 0.545F, -0.26F),
+           QVector3D(0.155F, 0.018F, 0.030F),
+           c.wood_dark);
+  draw_box(out,
+           unit,
+           white,
            tilted,
-           QVector3D(0.23F, 0.27F, -0.26F),
-           QVector3D(0.23F, 0.28F, -0.26F),
-           0.078F,
-           c.metal_gold,
-           white);
+           QVector3D(0.0F, 0.165F, -0.26F),
+           QVector3D(0.155F, 0.018F, 0.030F),
+           c.wood_dark);
 }
 
 void draw_arms(const DrawContext& p,
@@ -289,57 +331,68 @@ void draw_arms(const DrawContext& p,
                const CarthageBallistaPalette& c) {
 
   QMatrix4x4 tilted = p.model;
-  tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
+  tilted.rotate(k_stock_tilt_deg, 1.0F, 0.0F, 0.0F);
 
-  draw_cyl(out,
-           tilted,
-           QVector3D(-0.23F, 0.27F, -0.26F),
-           QVector3D(-0.43F, 0.31F, -0.08F),
-           0.023F,
-           c.wood_frame,
-           white);
+  auto draw_arm = [&](float side) {
+    QVector3D const root(side * 0.245F, 0.355F, -0.255F);
+    QVector3D const mid(side * 0.435F, 0.352F, -0.325F);
+    QVector3D const tip = k_arm_tip(side);
 
-  draw_cyl(out,
-           tilted,
-           QVector3D(0.23F, 0.27F, -0.26F),
-           QVector3D(0.43F, 0.31F, -0.08F),
-           0.023F,
-           c.wood_frame,
-           white);
+    draw_cyl(out, tilted, root, mid, 0.032F, c.wood_frame, white);
+    draw_cyl(out, tilted, mid, tip, 0.023F, c.wood_light, white);
 
-  QMatrix4x4 left_socket = tilted;
-  left_socket.translate(QVector3D(-0.43F, 0.31F, -0.08F));
-  left_socket.scale(0.022F);
-  out.mesh(get_unit_sphere(), left_socket, c.metal_bronze, white, 1.0F);
+    QMatrix4x4 collar = tilted;
+    collar.translate(mid);
+    collar.scale(0.028F);
+    out.mesh(get_unit_sphere(), collar, c.metal_iron, white, 1.0F);
 
-  QMatrix4x4 right_socket = tilted;
-  right_socket.translate(QVector3D(0.43F, 0.31F, -0.08F));
-  right_socket.scale(0.022F);
-  out.mesh(get_unit_sphere(), right_socket, c.metal_bronze, white, 1.0F);
+    QMatrix4x4 nock = tilted;
+    nock.translate(tip);
+    nock.scale(0.024F);
+    out.mesh(get_unit_sphere(), nock, c.leather, white, 1.0F);
+  };
+
+  draw_arm(-1.0F);
+  draw_arm(1.0F);
 }
 
 void draw_bowstring(const DrawContext& p,
                     ISubmitter& out,
                     Texture* white,
-                    const CarthageBallistaPalette& c) {
+                    const CarthageBallistaPalette& c,
+                    const BallistaAnimContext& anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
-  tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
+  tilted.rotate(k_stock_tilt_deg, 1.0F, 0.0F, 0.0F);
 
-  draw_cyl(out,
-           tilted,
-           QVector3D(-0.43F, 0.31F, -0.08F),
-           QVector3D(0.0F, 0.29F, 0.14F),
-           0.007F,
-           c.rope,
-           white);
-  draw_cyl(out,
-           tilted,
-           QVector3D(0.43F, 0.31F, -0.08F),
-           QVector3D(0.0F, 0.29F, 0.14F),
-           0.007F,
-           c.rope,
-           white);
+  QVector3D const nock(0.0F, 0.315F, k_nock_rest_z + slide_travel(anim_ctx));
+
+  draw_cyl(out, tilted, k_arm_tip(-1.0F), nock, 0.012F, c.rope, white);
+  draw_cyl(out, tilted, k_arm_tip(1.0F), nock, 0.012F, c.rope, white);
+
+  QMatrix4x4 grip = tilted;
+  grip.translate(nock);
+  grip.scale(0.026F, 0.026F, 0.020F);
+  out.mesh(get_unit_sphere(), grip, c.leather, white, 1.0F);
+}
+
+inline void draw_loaded_bolt(ISubmitter& out,
+                             Texture* white,
+                             const QMatrix4x4& model,
+                             const QVector3D& pos,
+                             const CarthageBallistaPalette& c) {
+  using Render::Geom::Arrow;
+  constexpr float k_bolt_z_scale = 0.50F;
+  constexpr float k_bolt_xy_scale = 0.90F;
+
+  QMatrix4x4 bolt = model;
+  bolt.translate(pos);
+  bolt.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+  bolt.scale(k_bolt_xy_scale, k_bolt_xy_scale, k_bolt_z_scale);
+
+  out.mesh(Arrow::get_shaft(), bolt, c.bolt, white, 1.0F);
+  out.mesh(Arrow::get_tip(), bolt, Arrow::tip_color(0.88F), white, 1.0F);
+  out.mesh(Arrow::get_fletching(), bolt, c.leather, white, 1.0F);
 }
 
 void draw_slide(const DrawContext& p,
@@ -350,69 +403,68 @@ void draw_slide(const DrawContext& p,
                 const BallistaAnimContext& anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
-  tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
+  tilted.rotate(k_stock_tilt_deg, 1.0F, 0.0F, 0.0F);
 
   draw_box(out,
            unit,
            white,
            tilted,
-           QVector3D(0.0F, 0.21F, 0.0F),
-           QVector3D(0.038F, 0.028F, 0.38F),
+           QVector3D(0.0F, 0.255F, -0.03F),
+           QVector3D(0.055F, 0.032F, 0.44F),
            c.wood_light);
 
   draw_box(out,
            unit,
            white,
            tilted,
-           QVector3D(-0.032F, 0.23F, 0.0F),
-           QVector3D(0.012F, 0.018F, 0.36F),
-           c.metal_bronze);
+           QVector3D(-0.052F, 0.295F, -0.03F),
+           QVector3D(0.013F, 0.022F, 0.43F),
+           c.wood_frame);
   draw_box(out,
            unit,
            white,
            tilted,
-           QVector3D(0.032F, 0.23F, 0.0F),
-           QVector3D(0.012F, 0.018F, 0.36F),
-           c.metal_bronze);
+           QVector3D(0.052F, 0.295F, -0.03F),
+           QVector3D(0.013F, 0.022F, 0.43F),
+           c.wood_frame);
 
   draw_cyl(out,
            tilted,
-           QVector3D(0.0F, 0.25F, -0.14F),
-           QVector3D(0.0F, 0.25F, 0.18F),
-           0.014F,
-           c.wood_dark,
+           QVector3D(-0.052F, 0.312F, -0.46F),
+           QVector3D(-0.052F, 0.312F, 0.39F),
+           0.008F,
+           c.metal_iron,
            white);
-
   draw_cyl(out,
            tilted,
-           QVector3D(0.0F, 0.25F, -0.23F),
-           QVector3D(0.0F, 0.25F, -0.14F),
-           0.011F,
+           QVector3D(0.052F, 0.312F, -0.46F),
+           QVector3D(0.052F, 0.312F, 0.39F),
+           0.008F,
            c.metal_iron,
            white);
 
-  float slide_offset = 0.0F;
-  switch (anim_ctx.state) {
-  case BallistaAnimState::Idle:
-    slide_offset = 0.0F;
-    break;
-  case BallistaAnimState::Loading:
-    slide_offset = anim_ctx.loading_progress * 0.33F;
-    break;
-  case BallistaAnimState::Firing:
-    slide_offset = 0.33F * (1.0F - anim_ctx.firing_progress);
-    break;
-  case BallistaAnimState::Resetting:
-    slide_offset = 0.0F;
-    break;
-  }
+  draw_box(out,
+           unit,
+           white,
+           tilted,
+           QVector3D(0.0F, 0.268F, -0.455F),
+           QVector3D(0.068F, 0.044F, 0.030F),
+           c.wood_dark);
+
+  draw_box(out,
+           unit,
+           white,
+           tilted,
+           QVector3D(0.0F, 0.205F, 0.12F),
+           QVector3D(0.048F, 0.055F, 0.09F),
+           c.wood_dark);
 
   if (anim_ctx.show_bolt) {
-    QMatrix4x4 bolt_matrix = tilted;
-    bolt_matrix.translate(0.0F, 0.25F, -0.19F + slide_offset);
-    float const bolt_scale = 0.038F;
-    bolt_matrix.scale(bolt_scale, bolt_scale, 0.14F);
-    out.mesh(get_unit_cube(), bolt_matrix, c.bolt, white, 1.0F);
+    draw_loaded_bolt(out,
+                     white,
+                     tilted,
+                     QVector3D(0.0F, 0.305F, k_nock_rest_z + slide_travel(anim_ctx)),
+                     c);
   }
 }
 
@@ -420,40 +472,59 @@ void draw_trigger_mechanism(const DrawContext& p,
                             ISubmitter& out,
                             Mesh* unit,
                             Texture* white,
-                            const CarthageBallistaPalette& c) {
+                            const CarthageBallistaPalette& c,
+                            const BallistaAnimContext& anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
-  tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
+  tilted.rotate(k_stock_tilt_deg, 1.0F, 0.0F, 0.0F);
+
+  float const carriage_z = k_nock_rest_z + slide_travel(anim_ctx);
 
   draw_box(out,
            unit,
            white,
            tilted,
-           QVector3D(0.0F, 0.17F, 0.28F),
-           QVector3D(0.075F, 0.075F, 0.055F),
-           c.metal_bronze);
+           QVector3D(0.0F, 0.30F, carriage_z + 0.06F),
+           QVector3D(0.062F, 0.030F, 0.055F),
+           c.metal_iron);
+
+  draw_box(out,
+           unit,
+           white,
+           tilted,
+           QVector3D(0.0F, 0.27F, 0.36F),
+           QVector3D(0.072F, 0.058F, 0.055F),
+           c.metal_iron);
 
   draw_cyl(out,
            tilted,
-           QVector3D(0.0F, 0.14F, 0.30F),
-           QVector3D(0.0F, 0.07F, 0.36F),
+           QVector3D(-0.10F, 0.27F, 0.36F),
+           QVector3D(0.10F, 0.27F, 0.36F),
+           0.030F,
+           c.wood_dark,
+           white);
+
+  draw_cyl(out,
+           tilted,
+           QVector3D(-0.10F, 0.27F, 0.36F),
+           QVector3D(-0.10F, 0.36F, 0.36F),
            0.014F,
-           c.leather,
+           c.wood_frame,
+           white);
+  draw_cyl(out,
+           tilted,
+           QVector3D(0.10F, 0.27F, 0.36F),
+           QVector3D(0.10F, 0.18F, 0.36F),
+           0.014F,
+           c.wood_frame,
            white);
 
   draw_cyl(out,
            tilted,
-           QVector3D(-0.11F, 0.11F, 0.23F),
-           QVector3D(-0.18F, 0.11F, 0.23F),
-           0.011F,
-           c.wood_frame,
-           white);
-  draw_cyl(out,
-           tilted,
-           QVector3D(0.11F, 0.11F, 0.23F),
-           QVector3D(0.18F, 0.11F, 0.23F),
-           0.011F,
-           c.wood_frame,
+           QVector3D(0.0F, 0.27F, 0.36F),
+           QVector3D(0.0F, 0.30F, carriage_z + 0.06F),
+           0.007F,
+           c.rope,
            white);
 }
 
@@ -463,38 +534,34 @@ void draw_carthage_ornaments(const DrawContext& p,
                              Texture* white,
                              const CarthageBallistaPalette& c) {
 
-  QMatrix4x4 base = p.model;
-  base.rotate(30.0F, 1.0F, 0.0F, 0.0F);
+  QMatrix4x4 tilted = p.model;
+  tilted.rotate(k_stock_tilt_deg, 1.0F, 0.0F, 0.0F);
 
-  QMatrix4x4 front_orb = base;
-  front_orb.translate(QVector3D(0.0F, 0.32F, -0.30F));
-  front_orb.scale(0.025F);
-  out.mesh(get_unit_sphere(), front_orb, c.metal_gold, white, 1.0F);
+  QMatrix4x4 left = tilted;
+  left.translate(QVector3D(-0.245F, 0.575F, -0.26F));
+  left.scale(0.024F);
+  out.mesh(get_unit_sphere(), left, c.metal_gold, white, 1.0F);
 
-  QMatrix4x4 left_orb = base;
-  left_orb.translate(QVector3D(-0.38F, 0.27F, -0.26F));
-  left_orb.scale(0.018F);
-  out.mesh(get_unit_sphere(), left_orb, c.metal_bronze, white, 1.0F);
+  QMatrix4x4 right = tilted;
+  right.translate(QVector3D(0.245F, 0.575F, -0.26F));
+  right.scale(0.024F);
+  out.mesh(get_unit_sphere(), right, c.metal_gold, white, 1.0F);
 
-  QMatrix4x4 right_orb = base;
-  right_orb.translate(QVector3D(0.38F, 0.27F, -0.26F));
-  right_orb.scale(0.018F);
-  out.mesh(get_unit_sphere(), right_orb, c.metal_bronze, white, 1.0F);
+  draw_box(out,
+           unit,
+           white,
+           tilted,
+           QVector3D(0.0F, 0.585F, -0.26F),
+           QVector3D(0.035F, 0.045F, 0.010F),
+           c.metal_gold);
 
   draw_box(out,
            unit,
            white,
            p.model,
-           QVector3D(-0.38F, 0.22F, 0.0F),
-           QVector3D(0.02F, 0.01F, 0.25F),
-           c.purple_accent);
-  draw_box(out,
-           unit,
-           white,
-           p.model,
-           QVector3D(0.38F, 0.22F, 0.0F),
-           QVector3D(0.02F, 0.01F, 0.25F),
-           c.purple_accent);
+           QVector3D(0.0F, 0.115F, 0.30F),
+           QVector3D(0.10F, 0.030F, 0.06F),
+           c.leather);
 }
 
 void draw_ballista_body(const DrawContext& p,
@@ -511,11 +578,11 @@ void draw_ballista_body(const DrawContext& p,
 
   draw_base_frame(ctx, out, unit, white, c);
   draw_wheels(ctx, out, white, c);
-  draw_torsion_bundles(ctx, out, white, c);
+  draw_torsion_bundles(ctx, out, unit, white, c);
   draw_arms(ctx, out, white, c);
-  draw_bowstring(ctx, out, white, c);
+  draw_bowstring(ctx, out, white, c, anim_ctx);
   draw_slide(ctx, out, unit, white, c, anim_ctx);
-  draw_trigger_mechanism(ctx, out, unit, white, c);
+  draw_trigger_mechanism(ctx, out, unit, white, c, anim_ctx);
   draw_carthage_ornaments(ctx, out, unit, white, c);
 }
 
