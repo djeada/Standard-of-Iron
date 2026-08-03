@@ -263,6 +263,9 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     friendly.engagement_resolved = true;
     friendly.engaged = false;
     for (const auto& enemy : snapshot.visible_enemies) {
+      if (enemy.is_building) {
+        continue;
+      }
       const float dx = enemy.pos_x - friendly.pos_x;
       const float dy = enemy.pos_y - friendly.pos_y;
       const float dz = enemy.pos_z - friendly.pos_z;

@@ -73,6 +73,15 @@ protected:
     return enemy;
   }
 
+  static auto make_enemy_building(Engine::Core::EntityID id,
+                                  float x,
+                                  float z) -> Game::Systems::AI::ContactSnapshot {
+    auto building = make_enemy(id, x, z);
+    building.is_building = true;
+    building.spawn_type = Game::Units::SpawnType::Barracks;
+    return building;
+  }
+
   static auto make_builder(Engine::Core::EntityID id,
                            float x,
                            float z) -> Game::Systems::AI::EntitySnapshot {
@@ -1413,6 +1422,101 @@ TEST_F(AISystemTest, HarassBehaviorUsesDedicatedRaidersTowardStrategicObjective)
   ASSERT_EQ(commands.size(), 1U);
   EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
   EXPECT_EQ(commands.front().units, (std::vector<Engine::Core::EntityID>{2U, 3U}));
+}
+
+TEST_F(AISystemTest, AttackBehaviorPicksSoldierOverCloserBuilding) {
+  Game::Systems::AI::AttackBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.friendly_units = {
+      make_unit(1, 30.0F, 20.0F),
+      make_unit(2, 32.0F, 22.0F),
+  };
+  auto damaged_building = make_enemy_building(101, 33.0F, 23.0F);
+  damaged_building.health = 10;
+  snapshot.visible_enemies = {
+      damaged_building,
+      make_enemy(102, 38.0F, 28.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Attacking;
+  context.total_units = 2;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.6F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::AttackTarget);
+  EXPECT_EQ(commands.front().target_id, 102U);
+  EXPECT_TRUE(commands.front().should_chase);
+}
+
+TEST_F(AISystemTest, AssaultBehaviorPicksSoldierOverCloserBuilding) {
+  Game::Systems::AI::AssaultBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  auto assault_unit = make_unit(1, 30.0F, 20.0F);
+  assault_unit.is_assault = true;
+  snapshot.friendly_units = {assault_unit};
+  snapshot.visible_enemies = {
+      make_enemy_building(101, 31.0F, 21.0F),
+      make_enemy(102, 45.0F, 35.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.assault_unit_ids = {1U};
+  context.assault_unit_count = 1;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
+  ASSERT_EQ(commands.front().move_target_x.size(), 1U);
+  EXPECT_NEAR(commands.front().move_target_x.front(), 45.0F, 8.0F);
+  EXPECT_NEAR(commands.front().move_target_z.front(), 35.0F, 8.0F);
+}
+
+TEST_F(AISystemTest, HarassBehaviorPicksSoldierOverCloserBuilding) {
+  Game::Systems::AI::HarassBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 5.0F;
+  snapshot.friendly_units = {make_unit(1, 45.0F, 20.0F)};
+  snapshot.visible_enemies = {
+      make_enemy_building(101, 47.0F, 22.0F),
+      make_enemy(102, 55.0F, 30.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Harasser);
+  context.strategy_config.harassment_range = 50.0F;
+  context.harass_unit_ids = {1U};
+  context.effective_harass_units = 1;
+
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.1F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::AttackTarget);
+  EXPECT_EQ(commands.front().target_id, 102U);
+}
+
+TEST_F(AISystemTest, StandingNextToEnemyBuildingDoesNotCountAsEngaged) {
+  auto unit = make_unit(7, 10.0F, 10.0F);
+
+  EXPECT_FALSE(Game::Systems::AI::is_entity_engaged(
+      unit, {make_enemy_building(9, 11.0F, 10.0F)}));
+  EXPECT_TRUE(
+      Game::Systems::AI::is_entity_engaged(unit, {make_enemy(9, 11.0F, 10.0F)}));
 }
 
 TEST_F(AISystemTest, HarassBehaviorStopsWhenBaseIsUnderThreat) {

@@ -271,3 +271,57 @@ INSTANTIATE_TEST_SUITE_P(
     [](const testing::TestParamInfo<BareHandedCase>& info) {
       return sanitized_case_name(info.param.name);
     });
+
+TEST_F(MeleeEngagementTest, SiegingUnitDropsTheWallForAnEnemySoldierInReach) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* besieger = spawn(world,
+                         Game::Units::SpawnType::Spearman,
+                         2,
+                         QVector3D(0.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::Carthage);
+  ASSERT_NE(besieger, nullptr);
+  (void)besieger->add_component<Engine::Core::AIControlledComponent>();
+
+  auto* structure = world.create_entity();
+  (void)structure->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  auto* structure_unit =
+      structure->add_component<UnitComponent>(100000, 100000, 0.0F, 12.0F);
+  structure_unit->owner_id = 1;
+  structure_unit->spawn_type = Game::Units::SpawnType::Barracks;
+  (void)structure->add_component<Engine::Core::BuildingComponent>();
+
+  order_attack(*besieger, *structure);
+
+  bool locked_onto_structure = false;
+  for (int tick = 0; tick < 200 && !locked_onto_structure; ++tick) {
+    world.update(0.05F);
+    const auto* attack = besieger->get_component<AttackComponent>();
+    locked_onto_structure = attack != nullptr && attack->in_melee_lock &&
+                            attack->melee_lock_target_id == structure->get_id();
+  }
+  ASSERT_TRUE(locked_onto_structure) << "besieger never engaged the structure";
+
+  auto* soldier = spawn(world,
+                        Game::Units::SpawnType::Knight,
+                        1,
+                        QVector3D(-1.2F, 0.0F, 0.0F),
+                        Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(soldier, nullptr);
+  auto* soldier_unit = soldier->get_component<UnitComponent>();
+  ASSERT_NE(soldier_unit, nullptr);
+  soldier_unit->health = soldier_unit->max_health = 100000;
+
+  bool switched_to_soldier = false;
+  for (int tick = 0; tick < 120 && !switched_to_soldier; ++tick) {
+    world.update(0.05F);
+    const auto* attack_target =
+        besieger->get_component<Engine::Core::AttackTargetComponent>();
+    switched_to_soldier =
+        attack_target != nullptr && attack_target->target_id == soldier->get_id();
+  }
+
+  EXPECT_TRUE(switched_to_soldier)
+      << "besieger kept hitting the barracks with an enemy soldier on top of it";
+}

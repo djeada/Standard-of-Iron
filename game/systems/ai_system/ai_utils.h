@@ -56,6 +56,9 @@ inline auto is_entity_engaged(const EntitySnapshot& entity,
   const float engaged_sq = ENGAGED_RADIUS * ENGAGED_RADIUS;
 
   for (const auto& enemy : enemies) {
+    if (enemy.is_building) {
+      continue;
+    }
     float const dx = enemy.pos_x - entity.pos_x;
     float const dy = enemy.pos_y - entity.pos_y;
     float const dz = enemy.pos_z - entity.pos_z;
@@ -71,6 +74,21 @@ inline auto is_entity_engaged(const EntitySnapshot& entity,
 
 inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
   return !entity.is_building && entity.spawn_type != Game::Units::SpawnType::Builder;
+}
+
+inline auto has_troop_contact(const std::vector<ContactSnapshot>& contacts) -> bool {
+  return std::any_of(
+      contacts.begin(), contacts.end(), [](const ContactSnapshot& contact) {
+        return !contact.is_building;
+      });
+}
+
+inline auto
+has_troop_contact(const std::vector<const ContactSnapshot*>& contacts) -> bool {
+  return std::any_of(
+      contacts.begin(), contacts.end(), [](const ContactSnapshot* contact) {
+        return contact != nullptr && !contact->is_building;
+      });
 }
 
 inline auto is_reserved_unit(Engine::Core::EntityID unit_id,

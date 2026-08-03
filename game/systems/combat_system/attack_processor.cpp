@@ -452,6 +452,37 @@ auto is_high_ground_advantage(const Engine::Core::TransformComponent* high_trans
   return height_diff > Constants::k_high_ground_height_threshold;
 }
 
+void release_structure_lock_for_troop_target(Engine::Core::Entity* attacker,
+                                             Engine::Core::AttackComponent* attack_comp,
+                                             Engine::Core::World* world) {
+  if ((attack_comp == nullptr) || (world == nullptr) || !attack_comp->in_melee_lock ||
+      attack_comp->melee_lock_target_id == 0) {
+    return;
+  }
+
+  auto* lock_target = world->get_entity(attack_comp->melee_lock_target_id);
+  if ((lock_target == nullptr) || !is_building(lock_target)) {
+    return;
+  }
+
+  auto const* attack_target =
+      attacker->get_component<Engine::Core::AttackTargetComponent>();
+  if ((attack_target == nullptr) ||
+      attack_target->target_id == attack_comp->melee_lock_target_id) {
+    return;
+  }
+
+  auto* ordered_target = world->get_entity(attack_target->target_id);
+  auto const* attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  if (!is_valid_enemy_unit(attacker_unit, ordered_target, false)) {
+    return;
+  }
+
+  attack_comp->in_melee_lock = false;
+  attack_comp->melee_lock_target_id = 0;
+  attack_comp->melee_lock_separation_time = 0.0F;
+}
+
 void process_melee_lock(Engine::Core::Entity* attacker,
                         Engine::Core::AttackComponent* attack_comp,
                         Engine::Core::World* world,
@@ -1151,6 +1182,8 @@ void process_attacks(Engine::Core::World* world,
         pending_charge != nullptr &&
         (pending_charge->state == Engine::Core::MountedChargeState::Charging ||
          pending_charge->state == Engine::Core::MountedChargeState::ImpactActive);
+    release_structure_lock_for_troop_target(attacker, attacker_atk, world);
+
     if (!resolving_charge_impact) {
       process_melee_lock(attacker, attacker_atk, world, delta_time);
     }
