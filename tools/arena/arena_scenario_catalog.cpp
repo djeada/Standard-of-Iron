@@ -1029,6 +1029,122 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_rpg_strike_lunge_id),
+        QStringLiteral("RPG Strike Lunge"),
+        QStringLiteral(
+            "Behind-head commander attacks an enemy standing just outside his "
+            "planted reach, with no movement input at all. A swing has to carry "
+            "the body into the target: from a planted stance the strike whiffs "
+            "at the edge of reach and the fight reads as two puppets waving at "
+            "each other."),
+        6.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+
+    auto enemy = group(
+        QStringLiteral("enemy_target"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 2.6F}, 1);
+    enemy.facing_degrees = 180.0F;
+    enemy.health_override = enemy.max_health_override = 4000;
+    s.groups = {commander, enemy};
+
+    s.steps = {
+        at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(2.20F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(3.80F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+    };
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_target")});
+
+    auto lunge = expectation(
+        Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 0.30F, 0.50F);
+    lunge.end_seconds = 5.50F;
+    s.expectations.push_back(lunge);
+    s.expectations.push_back(
+        expectation(Expect::RpgDamageContactObserved, QStringLiteral("enemy_target")));
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_target")));
+    s.expectations.push_back(expectation(Expect::RpgStrikeAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_pass_ranks_id),
+        QStringLiteral("RPG Pass Ranks"),
+        QStringLiteral(
+            "Behind-head commander walks the length of a friendly line and then "
+            "back through it. Only the individual bodies that stand between the "
+            "lens and the commander may drop out: a rank the player walks past "
+            "has to stay on screen instead of the whole unit blinking away as "
+            "soon as its anchor enters the gap."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {-6.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 90.0F;
+
+    auto line = group(QStringLiteral("marching_line"),
+                      Troop::Spearman,
+                      1,
+                      3,
+                      {-3.0F, 0.0F, 1.2F},
+                      8,
+                      {3.4F, 0.0F, 0.0F});
+    line.facing_degrees = 180.0F;
+    s.groups = {commander, line};
+
+    auto move = [](float time, QVector3D axes, std::optional<float> yaw = {}) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = 0;
+      step.rpg_view_yaw_degrees = yaw;
+      return step;
+    };
+    s.steps = {
+
+        move(0.30F, {0.0F, 0.0F, 1.0F}, 90.0F),
+
+        move(4.20F, {0.0F, 0.0F, 1.0F}, 0.0F),
+
+        move(6.40F, {0.0F, 0.0F, 1.0F}, 270.0F),
+        move(8.40F, {0.0F, 0.0F, 0.0F}),
+    };
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("marching_line")});
+    s.expectations.push_back(expectation(Expect::RpgFormationSurvivesLensGap,
+                                         QStringLiteral("marching_line"),
+                                         {},
+                                         0.5F));
+    s.expectations.push_back(
+        expectation(Expect::GroupIsRendered, QStringLiteral("marching_line")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_commander_identity_lineup_id),
         QStringLiteral("Commander Identity Lineup"),
         QStringLiteral("Displays all six commanders without bodyguards or supporting "

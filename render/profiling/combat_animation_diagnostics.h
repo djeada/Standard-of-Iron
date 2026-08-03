@@ -48,6 +48,7 @@ enum class SoldierCullReason : std::uint8_t {
   Fog,
   Billboard,
   Temporal,
+  LensGap,
 };
 
 [[nodiscard]] auto soldier_cull_reason_name(SoldierCullReason reason) noexcept -> const
@@ -150,6 +151,11 @@ public:
                                   std::uint16_t soldier_index,
                                   float body_up_y,
                                   float max_arm_reach);
+
+  void record_unit_cull(std::uint32_t entity_id, SoldierCullReason reason);
+  [[nodiscard]] auto
+  unit_cull_reason(std::uint32_t entity_id) const noexcept -> SoldierCullReason;
+
   void record_mode_indicator(std::uint32_t entity_id);
   [[nodiscard]] auto
   mode_indicator_submitted(std::uint32_t entity_id) const noexcept -> bool;
@@ -204,6 +210,7 @@ private:
   std::uint64_t m_frame_index{0U};
   std::unordered_map<std::uint32_t, CombatAnimationDebugUnit> m_units{};
   std::unordered_set<std::uint32_t> m_mode_indicator_entities{};
+  std::unordered_map<std::uint32_t, SoldierCullReason> m_unit_cull_reasons{};
   std::unordered_map<SoldierKey, SoldierTracker, SoldierKeyHash> m_trackers{};
 };
 

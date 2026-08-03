@@ -674,27 +674,36 @@ void Renderer::render_world(Engine::Core::World* world) {
   }
 
   constexpr float k_rpg_lens_gap_slack = 0.35F;
-  bool rpg_lens_cull_enabled = false;
-  QVector3D rpg_lens_eye;
-  float rpg_lens_cull_distance_sq = 0.0F;
+
+  constexpr float k_rpg_lens_gap_focus_radius = 0.45F;
+  LensGapExclusion rpg_lens_gap;
   if (m_world_render_mode == WorldRenderMode::Rpg && m_rpg_camera_focus_id != 0 &&
       m_camera != nullptr) {
     if (auto* focus = world->get_entity(m_rpg_camera_focus_id)) {
       if (auto const* focus_transform =
               focus->get_component<Engine::Core::TransformComponent>()) {
-        rpg_lens_eye = m_camera->get_position();
+        const QVector3D eye = m_camera->get_position();
         const QVector3D focus_pos(focus_transform->position.x,
                                   focus_transform->position.y,
                                   focus_transform->position.z);
-        const float focus_distance = (focus_pos - rpg_lens_eye).length();
-        const float cull_distance = focus_distance - k_rpg_lens_gap_slack;
-        if (cull_distance > 0.0F) {
-          rpg_lens_cull_enabled = true;
-          rpg_lens_cull_distance_sq = cull_distance * cull_distance;
+        const float to_focus_x = focus_pos.x() - eye.x();
+        const float to_focus_z = focus_pos.z() - eye.z();
+        const float focus_distance = std::hypot(to_focus_x, to_focus_z);
+        const float gap_length = focus_distance - k_rpg_lens_gap_slack;
+        if (gap_length > 0.0F && focus_distance > 0.0001F) {
+          rpg_lens_gap.enabled = true;
+          rpg_lens_gap.focus_entity_id = m_rpg_camera_focus_id;
+          rpg_lens_gap.eye_x = eye.x();
+          rpg_lens_gap.eye_z = eye.z();
+          rpg_lens_gap.axis_x = to_focus_x / focus_distance;
+          rpg_lens_gap.axis_z = to_focus_z / focus_distance;
+          rpg_lens_gap.length = gap_length;
+          rpg_lens_gap.focus_radius = k_rpg_lens_gap_focus_radius;
         }
       }
     }
   }
+  m_submission_visibility.set_lens_gap(rpg_lens_gap);
 
   ++m_frame_counter;
 
@@ -793,13 +802,15 @@ void Renderer::render_world(Engine::Core::World* world) {
       }
 
       if (!entry.in_frustum || !entry.fog_visible) {
+#if defined(SOI_ENABLE_RUNTIME_TRACING)
+        Render::Profiling::CombatAnimationDiagnostics::instance().record_unit_cull(
+            entity_id,
+            entry.in_frustum ? Render::Profiling::SoldierCullReason::Fog
+                             : Render::Profiling::SoldierCullReason::Frustum);
+#endif
         continue;
       }
 
-      if (rpg_lens_cull_enabled && entity_id != m_rpg_camera_focus_id &&
-          (unit_pos - rpg_lens_eye).lengthSquared() < rpg_lens_cull_distance_sq) {
-        continue;
-      }
       ++visible_unit_count;
 
       auto const* presentation =
