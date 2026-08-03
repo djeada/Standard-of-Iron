@@ -12,48 +12,130 @@ Rectangle {
     property real map_orbit_yaw: 180
     property real map_orbit_pitch: 90
     property real map_orbit_distance: 1.2
+
+    property bool camera_settled: false
     property real map_pan_u: 0
     property real map_pan_v: 0
-    property real terrain_height_scale: 0.15
+
+    property real terrain_height_scale: 0.085
     property bool show_province_fills: true
     property string hover_province_name: ""
     property string hover_province_owner: ""
+
+    property string hover_province_id: ""
     property real hover_mouse_x: 0
     property real hover_mouse_y: 0
     property var province_labels: []
     property int label_refresh: 0
-    property var campaign_state: null
-    property var campaign_state_sources: ["assets/campaign_map/campaign_state.json", "qrc:/assets/campaign_map/campaign_state.json", "qrc:/StandardOfIron/assets/campaign_map/campaign_state.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/campaign_state.json"]
-    property var owner_color_map: ({
-            "rome": [0.82, 0.12, 0.1, 0.45],
-            "carthage": [0.8, 0.56, 0.28, 0.45],
-            "neutral": [0.25, 0.25, 0.25, 0.25]
+
+    readonly property string map_label_family: Design.Typography.displayFamily
+
+    readonly property var city_rank: ({
+            "Rome": 0,
+            "Carthage": 0,
+            "New Carthage": 0,
+            "Massalia": 1,
+            "Placentia": 1,
+            "Saguntum": 1,
+            "Capua": 2,
+            "Syracuse": 2,
+            "Cirta": 2,
+            "Tarentum": 3,
+            "Mediolanum": 3,
+            "Ariminum": 3
         })
-    property var region_camera_positions: ({
+    readonly property int city_rank_default: 5
+
+    readonly property var mission_regions: ({
             "transalpine_gaul": {
-                "yaw": 200,
-                "pitch": 50,
-                "distance": 2
+                "uv": [0.52, 0.755],
+                "name": qsTr("Rhône")
+            },
+            "alps": {
+                "uv": [0.63, 0.815],
+                "name": qsTr("The Alps")
             },
             "cisalpine_gaul": {
-                "yaw": 185,
-                "pitch": 48,
-                "distance": 1.9
+                "uv": [0.7, 0.845],
+                "name": qsTr("N. Italy")
+            },
+            "etruria": {
+                "uv": [0.79, 0.762],
+                "name": qsTr("Trasimene")
+            },
+            "apulia": {
+                "uv": [0.925, 0.618],
+                "name": qsTr("Cannae")
+            },
+            "campania": {
+                "uv": [0.862, 0.64],
+                "name": qsTr("Campania")
+            },
+            "southern_italy": {
+                "uv": [0.868, 0.634],
+                "name": qsTr("S. Italy")
+            },
+            "carthage_core": {
+                "uv": [0.715, 0.345],
+                "name": qsTr("Zama")
+            }
+        })
+
+    readonly property string active_region_name: {
+        var region = root.mission_regions[root.active_region_id];
+        return region && region.name ? region.name : qsTr("Mission Region");
+    }
+
+    property var city_markers: []
+    property var campaign_state: null
+    property var campaign_state_sources: ["assets/campaign_map/campaign_state.json", "qrc:/assets/campaign_map/campaign_state.json", "qrc:/StandardOfIron/assets/campaign_map/campaign_state.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/campaign_state.json"]
+
+    property var owner_color_map: ({
+            "rome": [0.72, 0.19, 0.16, 0.44],
+            "carthage": [0.41, 0.16, 0.36, 0.44],
+            "neutral": [0.44, 0.42, 0.38, 0.16]
+        })
+
+    property var region_camera_positions: ({
+            "transalpine_gaul": {
+                "yaw": 196,
+                "pitch": 79,
+                "distance": 1.12
+            },
+            "alps": {
+                "yaw": 190,
+                "pitch": 79,
+                "distance": 1.1
+            },
+            "cisalpine_gaul": {
+                "yaw": 184,
+                "pitch": 79,
+                "distance": 1.1
             },
             "etruria": {
                 "yaw": 180,
-                "pitch": 52,
-                "distance": 1.8
+                "pitch": 79,
+                "distance": 1.1
+            },
+            "apulia": {
+                "yaw": 174,
+                "pitch": 79,
+                "distance": 1.12
+            },
+            "campania": {
+                "yaw": 177,
+                "pitch": 79,
+                "distance": 1.1
             },
             "southern_italy": {
                 "yaw": 175,
-                "pitch": 50,
-                "distance": 1.9
+                "pitch": 79,
+                "distance": 1.12
             },
             "carthage_core": {
                 "yaw": 170,
-                "pitch": 55,
-                "distance": 2.2
+                "pitch": 80,
+                "distance": 1.15
             }
         })
 
@@ -166,6 +248,23 @@ Rectangle {
             campaign_map_loader.item.apply_province_state(entries);
     }
 
+    function update_hover(x, y) {
+        if (!campaign_map_loader.item) {
+            root.clear_hover();
+            return;
+        }
+        var info = campaign_map_loader.item.province_info_at_screen(x, y);
+        root.hover_province_id = info && info.id ? info.id : "";
+        root.hover_province_name = info && info.name ? info.name : "";
+        root.hover_province_owner = info && info.owner ? info.owner : "";
+    }
+
+    function clear_hover() {
+        root.hover_province_id = "";
+        root.hover_province_name = "";
+        root.hover_province_owner = "";
+    }
+
     function reset_view() {
         if (selected_mission && selected_mission.world_region_id) {
             focus_on_region(selected_mission.world_region_id);
@@ -177,6 +276,135 @@ Rectangle {
         map_pan_u = 0;
         map_pan_v = 0;
     }
+
+    function collect_city_markers() {
+        var markers = [];
+        if (!root.province_labels)
+            return markers;
+        for (var p = 0; p < root.province_labels.length; ++p) {
+            var cities = root.province_labels[p] ? root.province_labels[p].cities : null;
+            if (!cities)
+                continue;
+            for (var c = 0; c < cities.length; ++c) {
+                var city = cities[c];
+                if (!city || !city.name || !city.uv || city.uv.length !== 2)
+                    continue;
+                var rank = root.city_rank[city.name];
+                markers.push({
+                        "name": city.name,
+                        "uv": city.uv,
+                        "rank": rank === undefined ? root.city_rank_default : rank,
+                        "labelled": false
+                    });
+            }
+        }
+        markers.sort(function (a, b) {
+                if (a.rank !== b.rank)
+                    return a.rank - b.rank;
+                return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+            });
+        return markers;
+    }
+
+    function rebuild_city_markers() {
+        var markers = root.collect_city_markers();
+        var view = campaign_map_loader.item;
+        if (!view) {
+            root.city_markers = markers;
+            return;
+        }
+        var kept = [];
+        var portrait = view.hannibal_icon_position();
+        if (portrait && portrait.x > 0 && portrait.y > 0 && root.selected_mission) {
+            kept.push({
+                    "left": portrait.x - 26,
+                    "right": portrait.x + 26,
+                    "top": portrait.y - 26,
+                    "bottom": portrait.y + 26
+                });
+        }
+        kept.push({
+                "left": 0,
+                "right": map_viewport.width,
+                "top": map_viewport.height - 34,
+                "bottom": map_viewport.height
+            });
+        kept.push({
+                "left": 0,
+                "right": 150,
+                "top": map_viewport.height - 130,
+                "bottom": map_viewport.height
+            });
+        var region = root.mission_regions[root.active_region_id];
+        if (region && region.uv) {
+            var marker = view.screen_pos_for_uv(region.uv[0], region.uv[1]);
+            kept.push({
+                    "left": marker.x - 40,
+                    "right": marker.x - 4,
+                    "top": marker.y + 4,
+                    "bottom": marker.y + 40
+                });
+        }
+        for (var i = 0; i < markers.length; ++i) {
+            var marker = markers[i];
+            var pos = view.screen_pos_for_uv(marker.uv[0], marker.uv[1]);
+            var capital = marker.rank === 0;
+            var metrics = capital ? capital_metrics : town_metrics;
+            metrics.text = marker.name;
+            var width = metrics.advanceWidth;
+            var half_height = metrics.height * 0.5;
+            var gap = capital ? 9 : 7;
+            var box = {
+                "left": pos.x + gap - 2,
+                "right": pos.x + gap + width + 3,
+                "top": pos.y - half_height - 2,
+                "bottom": pos.y + half_height + 2
+            };
+            var clear = pos.x > -width && pos.x < map_viewport.width + width && pos.y > 0 && pos.y < map_viewport.height;
+            for (var k = 0; clear && k < kept.length; ++k) {
+                var other = kept[k];
+                clear = box.right < other.left || box.left > other.right || box.bottom < other.top || box.top > other.bottom;
+            }
+            marker.labelled = clear;
+            if (clear)
+                kept.push(box);
+            markers[i] = marker;
+        }
+        root.city_markers = markers;
+    }
+
+    TextMetrics {
+        id: capital_metrics
+
+        font.bold: true
+        font.family: root.map_label_family
+        font.pointSize: Theme.fontSizeSmall
+    }
+
+    TextMetrics {
+        id: town_metrics
+
+        font.family: root.map_label_family
+        font.pointSize: Theme.fontSizeTiny
+    }
+
+    Timer {
+        id: camera_settle_timer
+
+        interval: 350
+        running: true
+        onTriggered: root.camera_settled = true
+    }
+
+    Timer {
+        id: declutter_timer
+
+        interval: 130
+        onTriggered: root.rebuild_city_markers()
+    }
+
+    onLabel_refreshChanged: declutter_timer.restart()
+    onProvince_labelsChanged: root.rebuild_city_markers()
 
     function label_uv_for(prov) {
         if (prov && prov.label_uv && prov.label_uv.length === 2)
@@ -258,12 +486,8 @@ Rectangle {
                     terrain_height_scale: root.terrain_height_scale
                     show_province_fills: root.show_province_fills
                     current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
-                    hover_province_id: {
-                        if (root.active_region_id !== "")
-                            return root.active_region_id;
-                        var info = province_info_at_screen(root.hover_mouse_x, root.hover_mouse_y);
-                        return info && info.id ? info.id : "";
-                    }
+                    hover_province_id: root.hover_province_id
+                    selected_province_id: root.active_region_id
                     onOrbit_yaw_changed: root.label_refresh += 1
                     onOrbit_pitch_changed: root.label_refresh += 1
                     onOrbit_distance_changed: root.label_refresh += 1
@@ -274,6 +498,8 @@ Rectangle {
                     onHeightChanged: root.label_refresh += 1
 
                     Behavior on orbit_yaw  {
+                        enabled: root.camera_settled
+
                         NumberAnimation {
                             duration: 600
                             easing.type: Easing.InOutQuad
@@ -281,6 +507,8 @@ Rectangle {
                     }
 
                     Behavior on orbit_pitch  {
+                        enabled: root.camera_settled
+
                         NumberAnimation {
                             duration: 600
                             easing.type: Easing.InOutQuad
@@ -288,6 +516,8 @@ Rectangle {
                     }
 
                     Behavior on orbit_distance  {
+                        enabled: root.camera_settled
+
                         NumberAnimation {
                             duration: 600
                             easing.type: Easing.InOutQuad
@@ -325,17 +555,22 @@ Rectangle {
             gradient: Gradient {
                 GradientStop {
                     position: 0
-                    color: "#aa0f0a06"
+                    color: "#4d100b06"
                 }
 
                 GradientStop {
-                    position: 0.5
+                    position: 0.14
+                    color: "transparent"
+                }
+
+                GradientStop {
+                    position: 0.86
                     color: "transparent"
                 }
 
                 GradientStop {
                     position: 1
-                    color: "#bb190f08"
+                    color: "#5c1a1008"
                 }
             }
         }
@@ -482,19 +717,9 @@ Rectangle {
                 last_y = mouse.y;
                 root.hover_mouse_x = mouse.x;
                 root.hover_mouse_y = mouse.y;
-                if (root.active_region_id === "" && campaign_map_loader.item) {
-                    var info = campaign_map_loader.item.province_info_at_screen(mouse.x, mouse.y);
-                    var id = info && info.id ? info.id : "";
-                    root.hover_province_name = info && info.name ? info.name : "";
-                    root.hover_province_owner = info && info.owner ? info.owner : "";
-                }
+                root.update_hover(mouse.x, mouse.y);
             }
-            onExited: {
-                if (root.active_region_id === "") {
-                    root.hover_province_name = "";
-                    root.hover_province_owner = "";
-                }
-            }
+            onExited: root.clear_hover()
             onReleased: function (mouse) {
                 if (mouse.button !== Qt.LeftButton)
                     return;
@@ -517,45 +742,43 @@ Rectangle {
         }
 
         Repeater {
-            model: root.province_labels
+            model: root.city_markers
 
-            delegate: Repeater {
-                property var _cities: (modelData && modelData.cities) ? modelData.cities : []
+            delegate: Item {
+                required property var modelData
+                readonly property int rank: modelData.rank === undefined ? root.city_rank_default : modelData.rank
+                readonly property bool is_capital: rank === 0
 
-                model: _cities
+                readonly property int _refresh: root.label_refresh
+                readonly property point _pos: (_refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(modelData.uv[0], modelData.uv[1]) : Qt.point(0, 0)
 
-                delegate: Item {
-                    property var city_data: modelData
-                    property var _city_uv: city_data.uv && city_data.uv.length === 2 ? city_data.uv : null
-                    property int _refresh: root.label_refresh
-                    property var _pos: (_city_uv !== null && _refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
+                z: 4
+                x: _pos.x
+                y: _pos.y
 
-                    visible: _city_uv !== null && city_data.name && city_data.name.length > 0
-                    z: 4
-                    x: _pos.x
-                    y: _pos.y
+                Rectangle {
+                    width: is_capital ? 9 : 6
+                    height: width
+                    radius: width / 2
+                    color: "#f7ecd4"
+                    border.color: "#2d241c"
+                    border.width: is_capital ? 2 : 1
+                    x: -width / 2
+                    y: -height / 2
+                }
 
-                    Rectangle {
-                        width: 6
-                        height: 6
-                        radius: 3
-                        color: "#f2e6c8"
-                        border.color: "#2d241c"
-                        border.width: 1
-                        x: -width / 2
-                        y: -height / 2
-                    }
+                Text {
 
-                    Text {
-                        text: city_data.name
-                        color: "#111111"
-                        font.pointSize: Theme.fontSizeTiny
-                        font.bold: true
-                        style: Text.Outline
-                        styleColor: "#f2e6c8"
-                        x: 6
-                        y: -height / 2
-                    }
+                    visible: modelData.labelled
+                    text: modelData.name
+                    color: "#191108"
+                    font.family: root.map_label_family
+                    font.pointSize: parent.is_capital ? Theme.fontSizeSmall : Theme.fontSizeTiny
+                    font.bold: parent.is_capital
+                    style: Text.Outline
+                    styleColor: "#f7ecd4"
+                    x: parent.is_capital ? 9 : 7
+                    y: -height / 2
                 }
             }
         }
@@ -563,41 +786,19 @@ Rectangle {
         Repeater {
             id: mission_marker_repeater
 
-            property var mission_region_map: ({
-                    "transalpine_gaul": {
-                        "uv": [0.28, 0.35],
-                        "name": qsTr("Rhône")
-                    },
-                    "cisalpine_gaul": {
-                        "uv": [0.42, 0.38],
-                        "name": qsTr("N. Italy")
-                    },
-                    "etruria": {
-                        "uv": [0.44, 0.48],
-                        "name": qsTr("Trasimene")
-                    },
-                    "southern_italy": {
-                        "uv": [0.5, 0.53],
-                        "name": qsTr("Cannae")
-                    },
-                    "carthage_core": {
-                        "uv": [0.4, 0.78],
-                        "name": qsTr("Zama")
-                    }
-                })
-
             model: root.selected_mission ? 1 : 0
 
             delegate: Item {
-                property var region_info: mission_marker_repeater.mission_region_map[root.active_region_id] || null
+                property var region_info: root.mission_regions[root.active_region_id] || null
                 property var marker_uv: region_info ? region_info.uv : null
                 property int _refresh: root.label_refresh
                 property var _pos: (marker_uv !== null && _refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
 
                 visible: marker_uv !== null && root.active_region_id !== ""
                 z: 6
-                x: _pos.x
-                y: _pos.y
+
+                x: _pos.x - 22
+                y: _pos.y + 22
 
                 Rectangle {
                     width: 24
@@ -636,18 +837,6 @@ Rectangle {
                             easing.type: Easing.InOutQuad
                         }
                     }
-                }
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: -24
-                    text: region_info ? region_info.name : ""
-                    color: "#ffffff"
-                    font.pointSize: Theme.fontSizeSmall
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: "#000000"
                 }
             }
         }
@@ -759,7 +948,7 @@ Rectangle {
         Rectangle {
             id: hover_tooltip
 
-            visible: (root.active_region_id !== "" || (campaign_map_loader.item && campaign_map_loader.item.hover_province_id !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
+            visible: root.hover_province_id !== "" && root.hover_province_name !== ""
             x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
             y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
             width: tooltip_layout.implicitWidth + 16
@@ -818,15 +1007,16 @@ Rectangle {
                 }
 
                 Repeater {
+
                     model: [{
                             "name": qsTr("Rome"),
-                            "color": "#d01f1a"
+                            "color": "#b4302a"
                         }, {
                             "name": qsTr("Carthage"),
-                            "color": "#cc8f47"
+                            "color": "#6b2a5e"
                         }, {
                             "name": qsTr("Neutral"),
-                            "color": "#3a3a3a"
+                            "color": "#8c8478"
                         }]
 
                     delegate: RowLayout {
@@ -863,8 +1053,9 @@ Rectangle {
         }
 
         Rectangle {
+
             visible: root.active_region_id !== ""
-            anchors.right: parent.right
+            anchors.left: parent.left
             anchors.top: parent.top
             anchors.margins: Theme.spacingMedium
             width: active_region_label.implicitWidth + 16
@@ -880,7 +1071,7 @@ Rectangle {
                 id: active_region_label
 
                 anchors.centerIn: parent
-                text: Design.Icons.capture + " " + qsTr("Mission Region")
+                text: Design.Icons.capture + " " + root.active_region_name
                 color: "#2d241c"
                 font.pointSize: Theme.fontSizeSmall
                 font.bold: true

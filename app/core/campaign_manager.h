@@ -15,7 +15,8 @@ struct MissionDefinition;
 
 namespace Game::Systems {
 class VictoryService;
-}
+class SaveLoadService;
+} // namespace Game::Systems
 
 class CampaignManager : public QObject {
   Q_OBJECT
@@ -37,6 +38,8 @@ public:
   }
   [[nodiscard]] QString current_campaign_id() const { return m_current_campaign_id; }
   [[nodiscard]] QString current_mission_id() const { return m_current_mission_id; }
+
+  [[nodiscard]] bool campaign_completed() const { return m_campaign_completed; }
   [[nodiscard]] const std::optional<Game::Mission::MissionDefinition>&
   current_mission_definition() const {
     return m_current_mission_definition;
@@ -54,15 +57,23 @@ public:
     m_current_mission_context = context;
   }
 
+  void set_save_service(Game::Systems::SaveLoadService* service) {
+    m_save_service = service;
+  }
+
 signals:
   void available_campaigns_changed();
   void current_campaign_changed();
   void current_mission_changed();
 
 private:
+  [[nodiscard]] auto save_service() const -> Game::Systems::SaveLoadService*;
+
+  Game::Systems::SaveLoadService* m_save_service = nullptr;
   QVariantList m_available_campaigns;
   QString m_current_campaign_id;
   QString m_current_mission_id;
+  bool m_campaign_completed = false;
   std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   Game::Mission::MissionContext m_current_mission_context;
 };

@@ -38,6 +38,15 @@ Item {
             refresh_objectives();
     }
 
+    Connections {
+        function onCampaign_mission_changed() {
+            root.refresh_objectives();
+        }
+
+        ignoreUnknownSignals: true
+        target: root.game_ready() ? game : null
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Design.Theme.scrim

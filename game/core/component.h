@@ -245,6 +245,8 @@ public:
     return structure_approach_target_id;
   }
 
+  [[nodiscard]] auto get_stuck_time() const -> float { return stuck_timer; }
+
 private:
   friend class Game::Systems::MovementSystem;
   friend class Serialization;
@@ -1080,9 +1082,33 @@ public:
   bool capture_blocked{false};
 };
 
+enum class BuilderTaskFault : std::uint8_t {
+  None = 0,
+
+  Interrupted = 1,
+
+  TargetLost = 2,
+
+  Unreachable = 3,
+};
+
 class BuilderProductionComponent : public Component {
 public:
   BuilderProductionComponent() = default;
+
+  void report_fault(BuilderTaskFault reported_fault, float display_seconds = 6.0F) {
+    fault = reported_fault;
+    fault_display_remaining = display_seconds;
+  }
+
+  void clear_fault() {
+    fault = BuilderTaskFault::None;
+    fault_display_remaining = 0.0F;
+  }
+
+  [[nodiscard]] auto has_active_fault() const -> bool {
+    return fault != BuilderTaskFault::None && fault_display_remaining > 0.0F;
+  }
 
   bool in_progress{false};
   float build_time{10.0F};
@@ -1106,6 +1132,11 @@ public:
   bool bypass_movement_active{false};
   float bypass_target_x{0.0F};
   float bypass_target_z{0.0F};
+
+  EntityID structure_task_entity_id{0};
+
+  BuilderTaskFault fault{BuilderTaskFault::None};
+  float fault_display_remaining{0.0F};
 };
 
 class WallSegmentComponent : public Component {

@@ -41,6 +41,14 @@ Design.IronPanel {
         return group.canRun === undefined || group.canRun;
     }
 
+    function groupActivity(group) {
+        return group && group.activity ? group.activity : Design.ActivityIcons.defaultActivity;
+    }
+
+    function groupActivityState(group) {
+        return group && group.activityState ? group.activityState : Design.ActivityIcons.defaultState;
+    }
+
     implicitWidth: Design.Metrics.space24 * 10
     implicitHeight: body.implicitHeight + Design.Metrics.space24
 
@@ -155,7 +163,7 @@ Design.IronPanel {
             id: singleUnitCard
 
             width: parent.width
-            height: Design.Metrics.space24 * (root.groupCanRun(root.groups[0]) ? 4 : 3)
+            height: Design.Metrics.space24 * (root.groupCanRun(root.groups[0]) ? 5 : 4)
             radius: Design.Metrics.radiusMedium
             color: Design.Theme.backgroundDeep
             border.width: Design.Metrics.borderThin
@@ -192,13 +200,13 @@ Design.IronPanel {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Design.Metrics.space4
 
-                Text {
+                Design.IronActivityIcon {
+                    objectName: "selectionActivity"
                     width: parent.width
-                    text: qsTr("Ready for orders")
-                    color: Design.Theme.textSecondary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    elide: Text.ElideRight
+                    activity: root.groupActivity(root.groups[0])
+                    state_id: root.groupActivityState(root.groups[0])
+                    showLabel: true
+                    iconScale: 0.85
                 }
 
                 Column {
@@ -322,7 +330,7 @@ Design.IronPanel {
 
                     Accessible.role: Accessible.Button
                     Accessible.name: chip.model.name
-                    Accessible.description: Math.round(chip.model.health_ratio * 100) + "%"
+                    Accessible.description: Math.round(chip.model.health_ratio * 100) + "% — " + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
 
                     Rectangle {
                         anchors.fill: parent
@@ -360,6 +368,18 @@ Design.IronPanel {
                         }
                     }
 
+                    Design.IronVectorIcon {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.margins: Design.Metrics.space2
+                        width: Design.Metrics.iconSmall
+                        height: width
+                        visible: chip.model.activity !== undefined && chip.model.activity !== "idle"
+                        iconId: Design.ActivityIcons.iconFor(chip.model.activity)
+                        monochrome: true
+                        tint: chip.model.activity_state === "unavailable" ? Design.Theme.danger : chip.model.activity_state === "interrupted" ? Design.Theme.warning : Design.Theme.accent
+                    }
+
                     MouseArea {
                         id: chipMouse
 
@@ -378,7 +398,7 @@ Design.IronPanel {
 
                     ToolTip.visible: chipMouse.containsMouse
                     ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: chip.model.name + " — " + Math.round(chip.model.health_ratio * 100) + "%"
+                    ToolTip.text: chip.model.name + " — " + Math.round(chip.model.health_ratio * 100) + "%" + "\n" + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
                 }
             }
         }
@@ -412,9 +432,15 @@ Design.IronPanel {
                     border.width: groupMouse.containsMouse ? Design.Metrics.borderFocus : Design.Metrics.borderThin
                     border.color: groupMouse.containsMouse ? Design.Theme.selection : groupCard.modelData.woundedCount > 0 ? root.healthColor(groupCard.modelData.health) : Design.Theme.borderSubtle
 
+                    readonly property string activityText: Design.ActivityIcons.summary(root.groupActivity(groupCard.modelData), root.groupActivityState(groupCard.modelData)) + (groupCard.modelData.mixedActivity ? qsTr(" (mixed)") : "")
+
                     Accessible.role: Accessible.Button
                     Accessible.name: groupCard.modelData.name + " ×" + groupCard.modelData.count
-                    Accessible.description: Math.round(groupCard.modelData.health * 100) + "%"
+                    Accessible.description: Math.round(groupCard.modelData.health * 100) + "% — " + groupCard.activityText
+
+                    ToolTip.visible: groupMouse.containsMouse
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    ToolTip.text: groupCard.modelData.name + " ×" + groupCard.modelData.count + "\n" + groupCard.activityText
 
                     Rectangle {
                         id: portraitFrame
@@ -460,6 +486,18 @@ Design.IronPanel {
                                 font.pixelSize: Design.Typography.caption
                                 font.weight: Design.Typography.bold
                             }
+                        }
+
+                        Design.IronVectorIcon {
+                            anchors.left: parent.left
+                            anchors.bottom: parent.bottom
+                            anchors.margins: -Design.Metrics.space2
+                            width: Design.Metrics.iconSmall
+                            height: width
+                            visible: root.groupActivity(groupCard.modelData) !== "idle"
+                            iconId: Design.ActivityIcons.iconFor(root.groupActivity(groupCard.modelData))
+                            monochrome: true
+                            tint: root.groupActivityState(groupCard.modelData) === "unavailable" ? Design.Theme.danger : root.groupActivityState(groupCard.modelData) === "interrupted" ? Design.Theme.warning : Design.Theme.accent
                         }
                     }
 

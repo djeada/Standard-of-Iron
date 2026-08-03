@@ -8,6 +8,8 @@ AbstractButton {
     property string actionId: ""
     property string label: text
     property string hotkey: ""
+
+    property string vectorIcon: control.actionId
     property url iconSource: control.actionId ? Design.Icons.command(control.actionId) : ""
     property string glyph: control.actionId ? Design.Icons.commandGlyph(control.actionId) : ""
 
@@ -128,9 +130,20 @@ AbstractButton {
                 visible: source.toString() !== "" && status === Image.Ready
             }
 
+            Design.IronVectorIcon {
+                id: vectorArt
+
+                anchors.fill: parent
+                visible: !art.visible && vectorArt.available
+                iconId: control.vectorIcon
+                tint: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+                accent: control.stateColor
+                monochrome: !control.enabled
+            }
+
             Text {
                 anchors.centerIn: parent
-                visible: !art.visible
+                visible: !art.visible && !vectorArt.available
                 text: control.glyph
                 color: control.stateColor
                 font.family: Design.Typography.family

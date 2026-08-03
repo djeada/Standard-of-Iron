@@ -463,10 +463,10 @@ Item {
             delegate: Item {
                 width: lockBrackets.armLength
                 height: lockBrackets.armLength
-                anchors.left: modelData.hAnchor === "left" ? parent.left : undefined
-                anchors.right: modelData.hAnchor === "right" ? parent.right : undefined
-                anchors.top: modelData.vAnchor === "top" ? parent.top : undefined
-                anchors.bottom: modelData.vAnchor === "bottom" ? parent.bottom : undefined
+                anchors.left: modelData.hAnchor === "left" ? lockBrackets.left : undefined
+                anchors.right: modelData.hAnchor === "right" ? lockBrackets.right : undefined
+                anchors.top: modelData.vAnchor === "top" ? lockBrackets.top : undefined
+                anchors.bottom: modelData.vAnchor === "bottom" ? lockBrackets.bottom : undefined
 
                 Rectangle {
                     width: parent.width
@@ -756,7 +756,7 @@ Item {
                 readonly property bool lit: index < comboIndicator.combo
                 readonly property bool isFinisher: index === 3
 
-                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenter: comboIndicator.verticalCenter
                 width: root.scaled(lit ? 16 : 11)
                 height: root.scaled(6)
                 radius: height / 2

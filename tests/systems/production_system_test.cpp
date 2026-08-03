@@ -396,4 +396,100 @@ TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
   EXPECT_FALSE(production->has_construction_site);
 }
 
+TEST_F(ProductionSystemTest, RepairMendsAStructureOneTickAtATime) {
+  Engine::Core::World world;
+
+  auto* structure = world.create_entity();
+  structure->add_component<Engine::Core::TransformComponent>(4.0F, 0.0F, 4.0F);
+  structure->add_component<Engine::Core::BuildingComponent>();
+  auto* structure_unit = structure->add_component<Engine::Core::UnitComponent>();
+  structure_unit->owner_id = 1;
+  structure_unit->max_health = 600;
+  structure_unit->health = 200;
+
+  auto* builder = world.create_entity();
+  builder->add_component<Engine::Core::TransformComponent>(2.0F, 0.0F, 4.0F);
+  builder->add_component<Engine::Core::MovementComponent>();
+  builder->add_component<Engine::Core::UnitComponent>()->owner_id = 1;
+  auto* production = builder->add_component<Engine::Core::BuilderProductionComponent>();
+  production->product_type = "repair_structure";
+  production->structure_task_entity_id = structure->get_id();
+  production->build_time = 1.0F;
+  production->time_remaining = 0.0F;
+  production->has_construction_site = true;
+  production->construction_site_x = 2.0F;
+  production->construction_site_z = 4.0F;
+  production->at_construction_site = true;
+  production->in_progress = true;
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_GT(structure_unit->health, 200) << "a repair tick must restore health";
+  EXPECT_LT(structure_unit->health, structure_unit->max_health)
+      << "one tick must not mend the whole building";
+  EXPECT_TRUE(production->in_progress) << "the crew keeps working while damage remains";
+  EXPECT_FLOAT_EQ(production->time_remaining, production->build_time);
+
+  for (int tick = 0; tick < 40; ++tick) {
+    production->time_remaining = 0.0F;
+    system.update(&world, 0.1F);
+  }
+
+  EXPECT_EQ(structure_unit->health, structure_unit->max_health);
+  EXPECT_FALSE(production->in_progress);
+  EXPECT_TRUE(production->construction_complete);
+  EXPECT_EQ(production->structure_task_entity_id, 0U);
+}
+
+TEST_F(ProductionSystemTest, RepairingAStructureThatIsGoneReportsALostTarget) {
+  Engine::Core::World world;
+
+  auto* builder = world.create_entity();
+  builder->add_component<Engine::Core::TransformComponent>(2.0F, 0.0F, 4.0F);
+  builder->add_component<Engine::Core::MovementComponent>();
+  builder->add_component<Engine::Core::UnitComponent>()->owner_id = 1;
+  auto* production = builder->add_component<Engine::Core::BuilderProductionComponent>();
+  production->product_type = "repair_structure";
+  production->structure_task_entity_id = 4242U;
+  production->build_time = 1.0F;
+  production->time_remaining = 0.0F;
+  production->has_construction_site = true;
+  production->construction_site_x = 2.0F;
+  production->construction_site_z = 4.0F;
+  production->at_construction_site = true;
+  production->in_progress = true;
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_TRUE(production->has_active_fault());
+  EXPECT_EQ(production->fault, Engine::Core::BuilderTaskFault::TargetLost);
+}
+
+TEST_F(ProductionSystemTest, WalkingOffASiteIsRecordedAsAnInterruption) {
+  Engine::Core::World world;
+
+  auto* builder = world.create_entity();
+  builder->add_component<Engine::Core::TransformComponent>(40.0F, 0.0F, 40.0F);
+  builder->add_component<Engine::Core::MovementComponent>();
+  builder->add_component<Engine::Core::UnitComponent>()->owner_id = 1;
+  auto* production = builder->add_component<Engine::Core::BuilderProductionComponent>();
+  production->product_type = "barracks";
+  production->build_time = 10.0F;
+  production->time_remaining = 5.0F;
+  production->has_construction_site = true;
+  production->construction_site_x = 2.0F;
+  production->construction_site_z = 4.0F;
+  production->at_construction_site = true;
+  production->in_progress = true;
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  EXPECT_FALSE(production->in_progress);
+  EXPECT_TRUE(production->has_active_fault());
+  EXPECT_EQ(production->fault, Engine::Core::BuilderTaskFault::Interrupted);
+}
+
 } // namespace

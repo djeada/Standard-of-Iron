@@ -14,12 +14,14 @@
 #include <limits>
 #include <utility>
 
+#include "app/utils/movement_utils.h"
 #include "game/command/command.h"
 #include "game/command/command_dispatcher.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_service.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
@@ -27,6 +29,7 @@
 #include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
+#include "game/systems/order_service.h"
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
@@ -126,6 +129,14 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgGuard");
   case ScenarioCommandKind::RpgDodge:
     return QStringLiteral("RpgDodge");
+  case ScenarioCommandKind::RepairStructure:
+    return QStringLiteral("RepairStructure");
+  case ScenarioCommandKind::DeliverToStructure:
+    return QStringLiteral("DeliverToStructure");
+  case ScenarioCommandKind::HarvestResource:
+    return QStringLiteral("HarvestResource");
+  case ScenarioCommandKind::AbandonWork:
+    return QStringLiteral("AbandonWork");
   case ScenarioCommandKind::RpgMove:
     return QStringLiteral("RpgMove");
   case ScenarioCommandKind::ReloadUndeadZoneState:
@@ -576,14 +587,14 @@ struct ArenaScenarioRunner::Impl {
     QString group;
     QVector3D position;
     int health{0};
-    std::uint32_t target_id{0};
+    Engine::Core::EntityID target_id{0};
     QString motion;
     QString combat_mode;
     int mounted_charge_state{-1};
     int mounted_charge_cancel_reason{-1};
     int combat_action_id{0};
     bool melee_lock{false};
-    std::uint32_t melee_lock_target_id{0};
+    Engine::Core::EntityID melee_lock_target_id{0};
     bool combat_indicator_submitted{false};
     float yaw{0.0F};
     bool movement_target{false};
@@ -1248,6 +1259,245 @@ struct ArenaScenarioRunner::Impl {
         arm_response(step.group, command_name(step.command));
       }
       break;
+    case ScenarioCommandKind::RepairStructure: {
+
+      auto const& structures = ids(step.target_group);
+      if (structures.empty()) {
+        break;
+      }
+      auto* structure = world.get_entity(structures.front());
+      auto* structure_transform =
+          structure != nullptr
+              ? structure->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      auto* structure_unit =
+          structure != nullptr ? structure->get_component<Engine::Core::UnitComponent>()
+                               : nullptr;
+      if (structure_transform == nullptr || structure_unit == nullptr) {
+        break;
+      }
+
+      const QVector3D structure_position(
+          structure_transform->position.x, 0.0F, structure_transform->position.z);
+      const std::string structure_key =
+          Game::Units::spawn_typeToString(structure_unit->spawn_type);
+
+      std::vector<Engine::Core::EntityID> workers;
+      std::vector<QVector3D> destinations;
+      for (auto entity_id : ids(step.group)) {
+        auto* entity = world.get_entity(entity_id);
+        auto* builder =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::BuilderProductionComponent>()
+                : nullptr;
+        auto* transform =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::TransformComponent>()
+                : nullptr;
+        if (builder == nullptr || transform == nullptr) {
+          continue;
+        }
+
+        const QVector3D worker_position(
+            transform->position.x, 0.0F, transform->position.z);
+        const float radius =
+            Game::Systems::CommandService::get_unit_radius(world, entity_id);
+        const QVector3D work_position = App::Utils::structure_work_position(
+            worker_position, structure_position, structure_key, radius);
+
+        Game::Systems::OrderService::clear_builder_task(entity);
+        builder->is_placement_preview = false;
+        builder->product_type = std::string(Game::Systems::k_builder_product_repair);
+        builder->build_time = Game::Systems::k_builder_repair_tick_seconds;
+        builder->time_remaining = Game::Systems::k_builder_repair_tick_seconds;
+        builder->structure_task_entity_id = structures.front();
+        builder->has_construction_site = true;
+        builder->construction_site_x = work_position.x();
+        builder->construction_site_z = work_position.z();
+        builder->at_construction_site = false;
+        builder->in_progress = false;
+
+        workers.push_back(entity_id);
+        destinations.push_back(work_position);
+      }
+      if (!workers.empty()) {
+        Game::Systems::CommandService::move_units(world, workers, destinations);
+      }
+      arm_response(step.group, command_name(step.command));
+      break;
+    }
+    case ScenarioCommandKind::DeliverToStructure: {
+      auto const& structures = ids(step.target_group);
+      if (structures.empty()) {
+        break;
+      }
+      auto* structure = world.get_entity(structures.front());
+      auto* structure_transform =
+          structure != nullptr
+              ? structure->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      if (structure_transform == nullptr) {
+        break;
+      }
+      const QVector3D structure_position(
+          structure_transform->position.x, 0.0F, structure_transform->position.z);
+
+      std::vector<Engine::Core::EntityID> carriers;
+      std::vector<QVector3D> destinations;
+      for (auto entity_id : ids(step.group)) {
+        auto* entity = world.get_entity(entity_id);
+        auto* transform =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::TransformComponent>()
+                : nullptr;
+        if (transform == nullptr) {
+          continue;
+        }
+        auto* delivery =
+            entity->get_component<Engine::Core::CivilianDeliveryComponent>();
+        if (delivery == nullptr) {
+          delivery = entity->add_component<Engine::Core::CivilianDeliveryComponent>();
+        }
+        if (delivery == nullptr) {
+          continue;
+        }
+        delivery->target_barracks_id = structures.front();
+
+        const float radius =
+            Game::Systems::CommandService::get_unit_radius(world, entity_id);
+        carriers.push_back(entity_id);
+        destinations.push_back(App::Utils::barracks_delivery_target_position(
+            QVector3D(transform->position.x, 0.0F, transform->position.z),
+            structure_position,
+            radius));
+      }
+      if (!carriers.empty()) {
+
+        Game::Systems::CommandService::MoveOptions options;
+        options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+        Game::Systems::CommandService::move_units(
+            world, carriers, destinations, options);
+      }
+      arm_response(step.group, command_name(step.command));
+      break;
+    }
+    case ScenarioCommandKind::HarvestResource: {
+      auto& terrain = Game::Map::TerrainService::instance();
+      const QString kind = step.resource_kind;
+      const auto matches = [&kind](Game::Map::WorldProp::Type type) {
+        if (kind == QStringLiteral("tree")) {
+          return Game::Map::is_tree_world_prop_type(type);
+        }
+        if (kind == QStringLiteral("boulder")) {
+          return Game::Map::is_boulder_world_prop_type(type);
+        }
+        if (kind == QStringLiteral("iron_ore")) {
+          return Game::Map::is_iron_ore_world_prop_type(type);
+        }
+        return false;
+      };
+      const std::string product =
+          kind == QStringLiteral("boulder")
+              ? std::string(Game::Systems::k_builder_product_collect_stone)
+          : kind == QStringLiteral("iron_ore")
+              ? std::string(Game::Systems::k_builder_product_collect_iron_ore)
+              : std::string(Game::Systems::k_builder_product_cut_tree);
+
+      std::vector<Engine::Core::EntityID> workers;
+      std::vector<QVector3D> destinations;
+      for (auto entity_id : ids(step.group)) {
+        auto* entity = world.get_entity(entity_id);
+        auto* builder =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::BuilderProductionComponent>()
+                : nullptr;
+        auto* transform =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::TransformComponent>()
+                : nullptr;
+        if (builder == nullptr || transform == nullptr) {
+          continue;
+        }
+
+        const Game::Map::WorldProp* best = nullptr;
+        float best_distance_sq = std::numeric_limits<float>::infinity();
+        for (const auto& candidate : terrain.world_props()) {
+          if (!matches(candidate.type) ||
+              terrain.is_world_prop_reserved(candidate.id)) {
+            continue;
+          }
+          const QVector3D at = terrain.world_prop_world_position(candidate);
+          const float dx = at.x() - transform->position.x;
+          const float dz = at.z() - transform->position.z;
+          const float distance_sq = dx * dx + dz * dz;
+          if (distance_sq < best_distance_sq) {
+            best_distance_sq = distance_sq;
+            best = &candidate;
+          }
+        }
+        if (best == nullptr || !terrain.reserve_world_prop(best->id)) {
+          continue;
+        }
+
+        const QVector3D at = terrain.world_prop_world_position(*best);
+        QVector3D approach(
+            transform->position.x - at.x(), 0.0F, transform->position.z - at.z());
+        if (approach.lengthSquared() < 0.01F) {
+          approach = QVector3D(1.0F, 0.0F, 0.0F);
+        }
+        approach.normalize();
+        const QVector3D work_position =
+            Game::Systems::CommandService::snap_to_walkable_ground(QVector3D(
+                at.x() + approach.x() * 1.8F, 0.0F, at.z() + approach.z() * 1.8F));
+
+        Game::Systems::OrderService::clear_builder_task(entity);
+        builder->is_placement_preview = false;
+        builder->product_type = product;
+        builder->build_time = 6.0F;
+        builder->time_remaining = 6.0F;
+        builder->has_construction_site = true;
+        builder->construction_site_x = work_position.x();
+        builder->construction_site_z = work_position.z();
+        builder->at_construction_site = false;
+        builder->in_progress = false;
+        builder->has_task_target = true;
+        builder->task_target_id = best->id;
+        builder->task_target_x = at.x();
+        builder->task_target_z = at.z();
+        builder->task_target_reserved = true;
+
+        workers.push_back(entity_id);
+        destinations.push_back(work_position);
+      }
+      if (!workers.empty()) {
+        Game::Systems::CommandService::move_units(world, workers, destinations);
+      }
+      arm_response(step.group, command_name(step.command));
+      break;
+    }
+    case ScenarioCommandKind::AbandonWork: {
+
+      for (auto entity_id : ids(step.group)) {
+        auto* entity = world.get_entity(entity_id);
+        auto* builder =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::BuilderProductionComponent>()
+                : nullptr;
+        if (builder == nullptr) {
+          continue;
+        }
+        builder->report_fault(Engine::Core::BuilderTaskFault::Interrupted,
+                              std::max(1.0F, static_cast<float>(step.value)));
+        builder->in_progress = false;
+        builder->at_construction_site = false;
+      }
+      auto const& group_ids = ids(step.group);
+      auto plan = Game::Systems::CommandService::plan_ground_move(
+          world, group_ids, world_origin + step.destination);
+      Game::Systems::CommandService::move_units(world, group_ids, plan.positions);
+      arm_response(step.group, command_name(step.command));
+      break;
+    }
     case ScenarioCommandKind::SetCamera:
       if (host.set_camera) {
         host.set_camera(all_entities(),

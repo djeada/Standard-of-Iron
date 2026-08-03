@@ -113,13 +113,15 @@ TEST_F(MissionProgressTest, UpdateMissionProgress) {
   EXPECT_DOUBLE_EQ(progress["completion_time"].toDouble(), 250.0);
 }
 
-TEST_F(MissionProgressTest, UnlockNextMission) {
+TEST_F(MissionProgressTest, CompletingAMissionOutsideTheCampaignIsRefused) {
   QString error;
 
-  bool unlocked = storage->unlock_next_mission("test_campaign", "mission_1", &error);
+  const auto advance =
+      storage->complete_campaign_mission("test_campaign", "mission_1", &error);
 
-  EXPECT_FALSE(unlocked);
-  EXPECT_FALSE(error.isEmpty());
+  EXPECT_FALSE(advance.has_value());
+  EXPECT_FALSE(error.isEmpty())
+      << "a stale mission id must say why it was refused, not fail silently";
 }
 
 TEST_F(MissionProgressTest, SaveMultipleMissionResults) {

@@ -15,12 +15,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
           cache: pip
@@ -31,10 +31,19 @@ jobs:
           # shellcheck disable=SC1091
           source tools/versions.env
           sudo apt-get update
+          # The qml6-module-* packages are what qmllint reads type information
+          # from. Without them every `property alias` onto a QtQuick type reports
+          # "Cannot resolve alias", because the target type is unknown.
           sudo apt-get install -y --no-install-recommends \
             "clang-format-${CLANG_FORMAT_VERSION%%.*}" \
             shellcheck \
-            qt6-declarative-dev-tools
+            qt6-declarative-dev-tools \
+            qml6-module-qtqml \
+            qml6-module-qtquick \
+            qml6-module-qtquick-controls \
+            qml6-module-qtquick-layouts \
+            qml6-module-qtquick-window \
+            qml6-module-qttest
           python -m pip install --upgrade pip
           python -m pip install \
             "black==${BLACK_VERSION}" \

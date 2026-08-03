@@ -141,6 +141,7 @@ add_library(
     systems/construction_cost_catalog.cpp
     systems/production_service.cpp
     systems/production_system.cpp
+    systems/unit_activity.cpp
     systems/civilian_delivery_system.cpp
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp

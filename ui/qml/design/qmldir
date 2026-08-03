@@ -6,6 +6,7 @@ singleton Metrics 1.0 Metrics.qml
 singleton Typography 1.0 Typography.qml
 singleton Motion 1.0 Motion.qml
 singleton Icons 1.0 Icons.qml
+singleton ActivityIcons 1.0 ActivityIcons.qml
 singleton UiSound 1.0 UiSound.qml
 singleton FactionTheme 1.0 FactionTheme.qml
 singleton Notifications 1.0 Notifications.qml
@@ -32,6 +33,10 @@ IronSearchField 1.0 controls/IronSearchField.qml
 IronHotkeyLabel 1.0 controls/IronHotkeyLabel.qml
 IronUnitCard 1.0 controls/IronUnitCard.qml
 IronCommandButton 1.0 controls/IronCommandButton.qml
+IronVectorIcon 1.0 controls/IronVectorIcon.qml
+IronActivityIcon 1.0 controls/IronActivityIcon.qml
+IronActivityMarkerLayer 1.0 controls/IronActivityMarkerLayer.qml
+IronOutcomeOverlay 1.0 controls/IronOutcomeOverlay.qml
 IronObjectiveRow 1.0 controls/IronObjectiveRow.qml
 IronResourceCounter 1.0 controls/IronResourceCounter.qml
 IronInspectorSection 1.0 controls/IronInspectorSection.qml

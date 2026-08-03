@@ -2,6 +2,7 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../map/terrain_service.h"
 #include "defense_formation_service.h"
 
 namespace Game::Systems {
@@ -86,6 +87,38 @@ void OrderService::clear_civilian_delivery(Engine::Core::Entity* entity) {
   }
 
   entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+}
+
+void OrderService::clear_builder_task(Engine::Core::Entity* entity) {
+  if (entity == nullptr) {
+    return;
+  }
+
+  auto* builder = entity->get_component<Engine::Core::BuilderProductionComponent>();
+  if (builder == nullptr) {
+    return;
+  }
+
+  if (builder->task_target_reserved) {
+    Game::Map::TerrainService::instance().release_world_prop(builder->task_target_id);
+  }
+  builder->in_progress = false;
+  builder->time_remaining = 0.0F;
+  builder->construction_complete = false;
+  builder->has_construction_site = false;
+  builder->at_construction_site = false;
+  builder->is_placement_preview = false;
+  builder->bypass_movement_active = false;
+  builder->construction_site_entity_id = 0;
+  builder->structure_task_entity_id = 0;
+  builder->queued_construction_site_ids.clear();
+  builder->has_task_target = false;
+  builder->task_target_id = 0;
+  builder->task_target_x = 0.0F;
+  builder->task_target_z = 0.0F;
+  builder->task_target_reserved = false;
+  builder->product_type.clear();
+  builder->clear_fault();
 }
 
 void OrderService::clear_patrol(Engine::Core::Entity* entity) {
