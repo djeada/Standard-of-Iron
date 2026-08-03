@@ -586,6 +586,15 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       break;
     }
 
+    auto resolve_glyph = [](int mode_type) -> Mesh* {
+      auto const index = static_cast<std::size_t>(mode_type);
+      if (index >= Render::Geom::k_indicator_kind_count) {
+        return nullptr;
+      }
+      return Render::Geom::ModeIndicator::mesh_for(
+          static_cast<Render::Geom::IndicatorKind>(index));
+    };
+
     if (prepared.kind == PreparedBatchKind::ModeIndicatorInstanced &&
         m_mesh_instancing_pipeline != nullptr &&
         m_mesh_instancing_pipeline->is_initialized() &&
@@ -593,18 +602,8 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       const auto& first_mc =
           std::get<ModeIndicatorCmdIndex>(queue.get_sorted(prepared.start));
 
-      Mesh* indicator_mesh = nullptr;
-      if (first_mc.mode_type == Render::Geom::k_mode_type_attack) {
-        indicator_mesh = Render::Geom::ModeIndicator::get_attack_mode_mesh();
-      } else if (first_mc.mode_type == Render::Geom::k_mode_type_guard) {
-        indicator_mesh = Render::Geom::ModeIndicator::get_guard_mode_mesh();
-      } else if (first_mc.mode_type == Render::Geom::k_mode_type_hold) {
-        indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
-      } else if (first_mc.mode_type == Render::Geom::k_mode_type_patrol) {
-        indicator_mesh = Render::Geom::ModeIndicator::get_patrol_mode_mesh();
-      }
-
-      if (indicator_mesh != nullptr) {
+      Mesh* const batch_mesh = resolve_glyph(first_mc.mode_type);
+      if (batch_mesh != nullptr) {
         GL::Shader* inst_shader = m_mode_indicator_pipeline->m_instanced_shader;
         inst_shader->use();
         if (m_mode_indicator_pipeline->m_instanced_uniforms.time !=
@@ -613,7 +612,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
                                    m_animation_time);
         }
 
-        m_mesh_instancing_pipeline->begin_batch(indicator_mesh, inst_shader, nullptr);
+        m_mesh_instancing_pipeline->begin_batch(batch_mesh, inst_shader, nullptr);
         for (std::size_t idx = prepared.start; idx < prepared.start + prepared.count;
              ++idx) {
           const auto& mc = std::get<ModeIndicatorCmdIndex>(queue.get_sorted(idx));
@@ -622,8 +621,9 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
 
         DepthMaskScope const depth_mask(false);
         BlendScope const blend(true);
-        glEnable(GL_DEPTH_TEST);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        DepthTestScope const depth_test(false);
+        CullFaceScope const cull(false);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         m_mesh_instancing_pipeline->flush();
         m_last_bound_shader = nullptr;
@@ -632,18 +632,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     }
 
     const auto& mc = std::get<ModeIndicatorCmdIndex>(cmd);
-
-    Mesh* indicator_mesh = nullptr;
-    if (mc.mode_type == Render::Geom::k_mode_type_attack) {
-      indicator_mesh = Render::Geom::ModeIndicator::get_attack_mode_mesh();
-    } else if (mc.mode_type == Render::Geom::k_mode_type_guard) {
-      indicator_mesh = Render::Geom::ModeIndicator::get_guard_mode_mesh();
-    } else if (mc.mode_type == Render::Geom::k_mode_type_hold) {
-      indicator_mesh = Render::Geom::ModeIndicator::get_hold_mode_mesh();
-    } else if (mc.mode_type == Render::Geom::k_mode_type_patrol) {
-      indicator_mesh = Render::Geom::ModeIndicator::get_patrol_mode_mesh();
-    }
-
+    Mesh* const indicator_mesh = resolve_glyph(mc.mode_type);
     if (indicator_mesh == nullptr) {
       break;
     }

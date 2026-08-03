@@ -14,6 +14,7 @@
 #include "../systems/building_collision_registry.h"
 #include "../systems/owner_registry.h"
 #include "../systems/troop_count_registry.h"
+#include "../systems/unit_activity.h"
 #include "component.h"
 #include "core/entity.h"
 #include "core/system.h"
@@ -493,7 +494,6 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
   auto const* commander_guard = entity->get_component<CommanderGuardComponent>();
   auto const* formation_mode = entity->get_component<FormationModeComponent>();
   auto const* guard_mode = entity->get_component<GuardModeComponent>();
-  auto const* patrol = entity->get_component<PatrolComponent>();
   auto const* brace = entity->get_component<SpearBraceComponent>();
   next.formation_guard_active = (formation_mode != nullptr && formation_mode->active) ||
                                 (guard_mode != nullptr && guard_mode->active);
@@ -502,12 +502,10 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
       (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Knight &&
        next.formation_guard_active) ||
       (brace != nullptr && (brace->requested || brace->active));
-  next.guard_mode_indicator = guard_mode != nullptr && guard_mode->active;
-  next.patrol_mode_indicator = patrol != nullptr && patrol->patrolling;
+  next.activity = Game::Systems::classify_unit_activity(*entity);
 
   auto const* hold = entity->get_component<HoldModeComponent>();
   if (hold != nullptr) {
-    next.hold_mode_indicator = hold->active;
     next.hold_requested = hold->active;
     next.hold_exit_requested = !hold->active && hold->exit_cooldown > 0.0F;
     next.hold_entry_progress = hold->kneel_entry_progress;

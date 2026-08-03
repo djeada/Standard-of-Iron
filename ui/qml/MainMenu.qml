@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
 
 Item {
@@ -59,11 +60,6 @@ Item {
             }
             next += direction;
         }
-    }
-
-    function roman_numeral(index) {
-        var numerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
-        return index < numerals.length ? numerals[index] : String(index + 1);
     }
 
     Keys.onPressed: function (event) {
@@ -629,7 +625,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.roman_numeral(commandItem.index)
+                                    text: Design.Numerals.ordinal(commandItem.index)
                                     color: commandItem.selected ? Theme.accentBright : Theme.textDim
                                     font.family: "serif"
                                     font.pixelSize: root.narrow ? 11 : 13

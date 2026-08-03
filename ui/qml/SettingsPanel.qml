@@ -179,10 +179,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(master_volume_slider.value) + "%"
+                                    text: Design.Numerals.percent(master_volume_slider.value)
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.minimumWidth: 45
+                                    Layout.minimumWidth: 88
                                 }
                             }
 
@@ -210,10 +210,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(music_volume_slider.value) + "%"
+                                    text: Design.Numerals.percent(music_volume_slider.value)
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.minimumWidth: 45
+                                    Layout.minimumWidth: 88
                                 }
                             }
 
@@ -241,10 +241,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(sfx_volume_slider.value) + "%"
+                                    text: Design.Numerals.percent(sfx_volume_slider.value)
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.minimumWidth: 45
+                                    Layout.minimumWidth: 88
                                 }
                             }
 
@@ -272,10 +272,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(voice_volume_slider.value) + "%"
+                                    text: Design.Numerals.percent(voice_volume_slider.value)
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.minimumWidth: 45
+                                    Layout.minimumWidth: 88
                                 }
                             }
 
@@ -303,10 +303,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(ambience_volume_slider.value) + "%"
+                                    text: Design.Numerals.percent(ambience_volume_slider.value)
                                     color: Theme.textSub
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.minimumWidth: 45
+                                    Layout.minimumWidth: 88
                                 }
                             }
                         }
@@ -435,10 +435,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(edge_scroll_slider.value * 100) + "%"
+                                    text: Design.Numerals.percent(edge_scroll_slider.value * 100)
                                     color: Theme.textMain
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.preferredWidth: 56
+                                    Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
                             }
@@ -505,10 +505,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(autosave_slot_slider.value)
+                                    text: Design.Numerals.roman(autosave_slot_slider.value)
                                     color: Theme.textMain
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.preferredWidth: 32
+                                    Layout.preferredWidth: 56
                                     horizontalAlignment: Text.AlignRight
                                 }
                             }
@@ -539,10 +539,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: autosave_interval_slider.value <= 0 ? qsTr("Off") : qsTr("%1 min").arg(Math.round(autosave_interval_slider.value))
+                                    text: autosave_interval_slider.value <= 0 ? qsTr("Off") : qsTr("%1 min").arg(Design.Numerals.roman(autosave_interval_slider.value))
                                     color: Theme.textMain
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.preferredWidth: 64
+                                    Layout.preferredWidth: 104
                                     horizontalAlignment: Text.AlignRight
                                 }
                             }
@@ -612,10 +612,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: Math.round(ui_scale_slider.value * 100) + "%"
+                                    text: Design.Numerals.percent(ui_scale_slider.value * 100)
                                     color: Theme.textMain
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.preferredWidth: 56
+                                    Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
                             }
@@ -705,10 +705,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: screen_effect_slider.value <= 0 ? qsTr("Off") : Math.round(screen_effect_slider.value * 100) + "%"
+                                    text: screen_effect_slider.value <= 0 ? qsTr("Off") : Design.Numerals.percent(screen_effect_slider.value * 100)
                                     color: Theme.textMain
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.preferredWidth: 56
+                                    Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
                             }
@@ -736,10 +736,10 @@ Item {
                                 }
 
                                 Label {
-                                    text: camera_motion_slider.value <= 0 ? qsTr("Off") : Math.round(camera_motion_slider.value * 100) + "%"
+                                    text: camera_motion_slider.value <= 0 ? qsTr("Off") : Design.Numerals.percent(camera_motion_slider.value * 100)
                                     color: Theme.textMain
                                     font.pointSize: Theme.fontSizeMedium
-                                    Layout.preferredWidth: 56
+                                    Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
                             }

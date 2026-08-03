@@ -2,13 +2,41 @@
 
 #include <QMatrix4x4>
 
+#include <utility>
+
 #include "../game/core/component.h"
 #include "../game/core/entity.h"
 #include "../game/systems/troop_profile_service.h"
 #include "../game/units/spawn_type.h"
+#include "../game/units/troop_config.h"
 #include "entity/building_render_common.h"
+#include "geom/mode_indicator.h"
 
 namespace Render {
+
+namespace {
+
+[[nodiscard]] auto resolve_indicator_metrics(const Engine::Core::UnitComponent& unit)
+    -> std::pair<float, float> {
+  float ring_size = 1.0F;
+  float render_scale = 1.0F;
+
+  auto const troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
+  if (troop_type.has_value()) {
+    const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+        unit.nation_id, *troop_type);
+    ring_size = profile.visuals.selection_ring_size;
+    render_scale = profile.visuals.render_scale;
+  } else {
+    ring_size =
+        Game::Units::TroopConfig::instance().get_selection_ring_size(unit.spawn_type);
+  }
+
+  return {Render::Geom::indicator_height_for_unit(ring_size, render_scale),
+          Render::Geom::indicator_size_for_unit(ring_size, render_scale)};
+}
+
+} // namespace
 
 auto resolve_profile_unit_renderer_key(const Engine::Core::UnitComponent& unit)
     -> std::string {
@@ -98,6 +126,9 @@ auto UnitRenderCache::get_or_create(Engine::Core::EntityID entity_id,
       } else {
         data.renderer_key = resolve_unit_renderer_key(*data.unit, data.renderable);
       }
+      auto const metrics = resolve_indicator_metrics(*data.unit);
+      data.indicator_height = metrics.first;
+      data.indicator_size = metrics.second;
       data.last_spawn_type = data.unit->spawn_type;
       data.last_nation_id = data.unit->nation_id;
     } else if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {

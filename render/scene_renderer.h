@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "../game/systems/unit_activity.h"
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
@@ -407,13 +408,15 @@ private:
                               Engine::Core::UnitComponent* unit_comp,
                               bool selected,
                               bool hovered);
-  void enqueue_mode_indicator(Engine::Core::EntityID entity_id,
-                              Engine::Core::TransformComponent* transform,
-                              Engine::Core::UnitComponent* unit_comp,
-                              bool has_attack,
-                              bool has_guard_mode,
-                              bool has_hold_mode,
-                              bool has_patrol);
+  void enqueue_activity_indicator(Engine::Core::EntityID entity_id,
+                                  Engine::Core::TransformComponent* transform,
+                                  const Game::Systems::UnitActivity& activity,
+                                  int owner_id,
+                                  float anchor_height,
+                                  float world_size,
+                                  float distance_sq);
+
+  void refresh_billboard_basis();
 
   struct AnimationTimeCacheEntry {
     float time = 0.0F;
@@ -465,6 +468,9 @@ private:
   bool m_cinematic_mode = false;
 
   QMatrix4x4 m_view_proj;
+  QVector3D m_billboard_right{1.0F, 0.0F, 0.0F};
+  QVector3D m_billboard_up{0.0F, 1.0F, 0.0F};
+  QVector3D m_billboard_forward{0.0F, 0.0F, 1.0F};
   Game::Map::VisibilityService::SnapshotPtr m_frame_visibility_snapshot;
   std::unique_ptr<Ground::VisibilityTextureHelper> m_visibility_mask_helper;
   TerrainSurfaceCmd::VisibilityResources m_visibility_mask_resources{};

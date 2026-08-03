@@ -80,6 +80,9 @@ public:
   explicit ArenaViewport(QWidget* parent = nullptr);
   ~ArenaViewport() override;
 
+public:
+  void set_scenario_distance_scale(float scale) { m_scenario_distance_scale = scale; }
+
 public slots:
   void regenerate_terrain();
   void set_terrain_seed(int seed);
@@ -311,7 +314,6 @@ private:
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
   void spawn_terrain_review_structures();
   void draw_debug_overlay(QPainter& painter);
-  void draw_activity_overlay(QPainter& painter);
   void draw_spawn_anchor_marker(QPainter& painter);
   void draw_selection_marquee(QPainter& painter);
   void draw_terrain_normals(QPainter& painter);
@@ -406,12 +408,12 @@ private:
   bool m_gl_initialized = false;
   bool m_controls_overlay_visible = true;
 
-  bool m_activity_overlay_visible = true;
   bool m_force_full_creature_lod = true;
   bool m_fog_of_war_enabled = false;
   float m_visibility_accumulator = 0.0F;
   bool m_terrain_review_mode = false;
   bool m_terrain_review_content_enabled = false;
+  float m_scenario_distance_scale = 1.0F;
   bool m_clean_capture = false;
   bool m_promo_mode = false;
   std::unique_ptr<QOpenGLFramebufferObject> m_capture_target;

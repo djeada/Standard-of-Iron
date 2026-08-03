@@ -6,6 +6,7 @@ singleton Metrics 1.0 Metrics.qml
 singleton Typography 1.0 Typography.qml
 singleton Motion 1.0 Motion.qml
 singleton Icons 1.0 Icons.qml
+singleton Numerals 1.0 Numerals.qml
 singleton ActivityIcons 1.0 ActivityIcons.qml
 singleton UiSound 1.0 UiSound.qml
 singleton FactionTheme 1.0 FactionTheme.qml
