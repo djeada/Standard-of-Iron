@@ -168,7 +168,8 @@ void EffectsSubmitter::metal_spark(DrawQueue* queue,
                                    const QVector3D& color,
                                    float radius,
                                    float intensity,
-                                   float time) const {
+                                   float time,
+                                   const QVector3D& direction) const {
   EffectBatchCmd cmd;
   cmd.kind = EffectBatchCmd::Kind::MetalSpark;
   cmd.position = position;
@@ -176,6 +177,7 @@ void EffectsSubmitter::metal_spark(DrawQueue* queue,
   cmd.radius = radius;
   cmd.intensity = intensity;
   cmd.time = time;
+  cmd.direction = direction;
   cmd.priority = CommandPriority::High;
   if (queue != nullptr) {
     queue->submit(std::move(cmd));
@@ -293,13 +295,14 @@ void Renderer::metal_spark(const QVector3D& position,
                            const QVector3D& color,
                            float radius,
                            float intensity,
-                           float time) {
+                           float time,
+                           const QVector3D& direction) {
   if (!m_submission_visibility.accepts_sphere(
           position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
     return;
   }
   m_effects_submitter->metal_spark(
-      m_active_queue, position, color, radius, intensity, time);
+      m_active_queue, position, color, radius, intensity, time, direction);
 }
 
 } // namespace Render::GL

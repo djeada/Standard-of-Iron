@@ -402,6 +402,29 @@ void TerrainService::remove_non_persistent_props() {
   bump_world_props_revision();
 }
 
+auto TerrainService::add_world_prop_at_world(WorldProp prop,
+                                             float world_x,
+                                             float world_z) -> std::uint64_t {
+  if (m_coord_system == CoordSystem::World || m_height_map == nullptr) {
+    prop.x = world_x;
+    prop.z = world_z;
+  } else {
+    float const safe_tile_size =
+        std::max(m_height_map->get_tile_size(), k_min_tile_size);
+    prop.x = world_x / safe_tile_size +
+             (static_cast<float>(m_height_map->get_width()) * 0.5F - 0.5F);
+    prop.z = world_z / safe_tile_size +
+             (static_cast<float>(m_height_map->get_height()) * 0.5F - 0.5F);
+  }
+
+  prop.id = m_next_world_prop_id++;
+  m_authored_world_props.push_back(prop);
+  m_world_props.push_back(prop);
+  bump_authored_world_props_revision();
+  bump_world_props_revision();
+  return prop.id;
+}
+
 auto TerrainService::find_tree_near_world(float world_x,
                                           float world_z,
                                           float max_world_distance) const

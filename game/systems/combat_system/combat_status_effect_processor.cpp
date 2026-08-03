@@ -6,6 +6,7 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_actions/combat_action_definition.h"
+#include "../combat_rules.h"
 #include "../projectile_kind.h"
 #include "combat_hit_resolver.h"
 #include "structure_fire.h"
@@ -165,6 +166,43 @@ auto process_fire_patches(Engine::Core::World* world,
 
 } // namespace
 
+void process_stagger_recovery(Engine::Core::World* world, float delta_time) {
+  for (auto* staggered : world->get_entities_with<Engine::Core::StaggerComponent>()) {
+    if (staggered == nullptr ||
+        Game::Systems::CombatRules::uses_rpg_combat_rules(staggered)) {
+
+      continue;
+    }
+    auto* stagger = staggered->get_component<Engine::Core::StaggerComponent>();
+    if (stagger == nullptr) {
+      continue;
+    }
+    stagger->remaining -= delta_time;
+    if (stagger->remaining <= 0.0F) {
+      staggered->remove_component<Engine::Core::StaggerComponent>();
+    }
+  }
+}
+
+void process_signature_presentations(Engine::Core::World* world, float delta_time) {
+  for (auto* entity : world->get_entities_with<
+                      Engine::Core::CommanderSignaturePresentationComponent>()) {
+    if (entity == nullptr) {
+      continue;
+    }
+    auto* presentation =
+        entity->get_component<Engine::Core::CommanderSignaturePresentationComponent>();
+    if (presentation == nullptr) {
+      continue;
+    }
+    for (auto& entry : presentation->entries) {
+      entry.age += delta_time;
+    }
+    std::erase_if(presentation->entries,
+                  [](auto const& entry) { return entry.age >= entry.lifetime; });
+  }
+}
+
 auto process_combat_status_effects(Engine::Core::World* world,
                                    float delta_time) -> CombatStatusEffectUpdateResult {
   CombatStatusEffectUpdateResult result;
@@ -173,6 +211,8 @@ auto process_combat_status_effects(Engine::Core::World* world,
   }
 
   float const clamped_delta_time = std::max(0.0F, delta_time);
+  process_stagger_recovery(world, clamped_delta_time);
+  process_signature_presentations(world, clamped_delta_time);
   process_cursed_statuses(world, clamped_delta_time, result);
   process_burning_statuses(world, clamped_delta_time, result);
   process_fire_patches(world, clamped_delta_time, result);

@@ -12,6 +12,7 @@
 #include "render/ground/boulder_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
 #include "render/ground/iron_ore_renderer.h"
+#include "render/ground/magic_shrine_renderer.h"
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
@@ -437,6 +438,37 @@ TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScale
               scatter_rules.olive_scale_max * height_map->get_tile_size() * 1.22F +
                   0.001F);
   }
+
+  terrain.clear();
+}
+
+TEST(ScatterRuntimeTest, RuntimePlantedShrineReachesTheScatterPass) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 48;
+  map_def.grid.height = 48;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.seed = 909U;
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+  auto const* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  Render::GL::TerrainScatterManager scatter;
+  scatter.configure(*height_map,
+                    terrain.biome_settings(),
+                    terrain.authored_world_props(),
+                    terrain.world_props());
+  ASSERT_EQ(scatter.magic_shrine()->instance_count(), 0U);
+
+  Game::Map::WorldProp shrine;
+  shrine.type = Game::Map::WorldProp::Type::MagicShrine;
+  ASSERT_NE(terrain.add_world_prop_at_world(shrine, 4.0F, -3.0F), 0U);
+
+  scatter.refresh_runtime_world_props(terrain.world_props());
+
+  EXPECT_EQ(scatter.magic_shrine()->instance_count(), 1U)
+      << "an undead zone that plants its shrine mid-run must still be drawn";
 
   terrain.clear();
 }

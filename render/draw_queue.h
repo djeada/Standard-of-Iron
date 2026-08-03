@@ -255,6 +255,8 @@ struct EffectBatchCmd {
   float progress = 1.0F;
   float beam_width = 0.15F;
 
+  QVector3D direction{0.0F, 0.0F, 0.0F};
+
   CommandPriority priority{CommandPriority::Normal};
 };
 

@@ -28,6 +28,10 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
   (void)polygon_offset_enabled;
   (void)rigged_instancing_enabled;
 
+  if (m_combat_dust_pipeline != nullptr) {
+    m_combat_dust_pipeline->set_view_position(cam.get_position());
+  }
+
   const std::size_t i = prepared.start;
   const std::size_t batch_end = prepared.end();
   const auto& cmd = queue.get_sorted(i);
@@ -328,13 +332,14 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
               : (eff.kind == EffectBatchCmd::Kind::MetalSpark)
                   ? BackendPipelines::EffectType::MetalSpark
                   : BackendPipelines::EffectType::Dust;
-          dust_instances.push_back({eff.position,
-                                    eff.color,
-                                    eff.radius,
-                                    eff.intensity,
-                                    eff.time,
-                                    etype,
-                                    false});
+          dust_instances.push_back({.position = eff.position,
+                                    .color = eff.color,
+                                    .radius = eff.radius,
+                                    .intensity = eff.intensity,
+                                    .time = eff.time,
+                                    .effect_type = etype,
+                                    .overlay = false,
+                                    .direction = eff.direction});
         }
         m_combat_dust_pipeline->render_dust_batch(
             dust_instances.data(), dust_instances.size(), view_proj);
@@ -560,12 +565,14 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
         break;
       }
       BackendPipelines::CombatDustPipeline::DustInstanceData const spark_inst{
-          eff_cmd_.position,
-          eff_cmd_.color,
-          eff_cmd_.radius,
-          eff_cmd_.intensity,
-          eff_cmd_.time,
-          BackendPipelines::EffectType::MetalSpark};
+          .position = eff_cmd_.position,
+          .color = eff_cmd_.color,
+          .radius = eff_cmd_.radius,
+          .intensity = eff_cmd_.intensity,
+          .time = eff_cmd_.time,
+          .effect_type = BackendPipelines::EffectType::MetalSpark,
+          .overlay = false,
+          .direction = eff_cmd_.direction};
       m_combat_dust_pipeline->render_dust_batch(&spark_inst, 1U, view_proj);
       m_last_bound_shader = nullptr;
       break;

@@ -78,6 +78,12 @@ inline constexpr char k_carthage_settlement_works_id[] = "carthage_settlement_wo
 inline constexpr char k_commander_sword_duel_id[] = "commander_sword_commanders_duel";
 inline constexpr char k_commander_bow_duel_id[] = "commander_bow_commanders_duel";
 inline constexpr char k_commander_spear_duel_id[] = "commander_spear_commanders_duel";
+inline constexpr char k_commander_signature_spear_vs_sword_id[] =
+    "commander_signature_spear_vs_sword";
+inline constexpr char k_commander_signature_sword_vs_bow_id[] =
+    "commander_signature_sword_vs_bow";
+inline constexpr char k_commander_signature_bow_vs_spear_id[] =
+    "commander_signature_bow_vs_spear";
 inline constexpr char k_path_bridge_crossing_id[] = "path_bridge_crossing";
 inline constexpr char k_path_uphill_advance_id[] = "path_uphill_advance";
 inline constexpr char k_path_wall_detour_id[] = "path_wall_detour";
@@ -146,6 +152,15 @@ inline constexpr char k_sepulcher_shrine_awakening_id[] = "sepulcher_shrine_awak
 inline constexpr char k_sepulcher_ruins_awakening_waves_id[] =
     "sepulcher_ruins_awakening_waves";
 inline constexpr char k_sepulcher_shrine_siege_id[] = "sepulcher_shrine_siege";
+inline constexpr char k_sepulcher_fireball_review_id[] = "sepulcher_fireball_review";
+inline constexpr char k_sepulcher_zone_shrine_spawn_id[] =
+    "sepulcher_zone_shrine_spawn";
+inline constexpr char k_sepulcher_twin_zone_shrines_id[] =
+    "sepulcher_twin_zone_shrines";
+inline constexpr char k_sepulcher_shrine_demolition_id[] =
+    "sepulcher_shrine_demolition";
+inline constexpr char k_sepulcher_shrine_state_reload_id[] =
+    "sepulcher_shrine_state_reload";
 
 inline constexpr char k_water_showcase_id[] = "water_showcase";
 inline constexpr char k_wall_corner_showcase_id[] = "wall_corner_showcase";

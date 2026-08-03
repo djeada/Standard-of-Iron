@@ -11,6 +11,7 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
+#include "combat_rules.h"
 #include "healing_beam_system.h"
 #include "healing_colors.h"
 #include "healing_rules.h"
@@ -62,6 +63,13 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
     }
 
     if (healer_unit->health <= 0) {
+      continue;
+    }
+
+    auto const* healer_attack = healer->get_component<Engine::Core::AttackComponent>();
+    if (healer_attack != nullptr && healer_attack->in_melee_lock &&
+        Game::Systems::CombatRules::participates_in_rts_melee_lock(healer)) {
+      healer_comp->is_healing_active = false;
       continue;
     }
 

@@ -124,7 +124,6 @@ struct UndeadZone {
   int owner_id = 99;
   int team_id = 0;
 
-  std::optional<bool> anchor_is_structure;
   float fog_density = k_undead_zone_default_fog_density;
 
   float wave_timeout_seconds = k_undead_zone_default_wave_timeout;
@@ -142,18 +141,8 @@ struct UndeadZone {
 }
 
 [[nodiscard]] constexpr auto
-is_structural_undead_anchor(WorldProp::Type anchor_type) -> bool {
-  return anchor_type == WorldProp::Type::MagicShrine;
-}
-
-[[nodiscard]] constexpr auto
 is_settlement_world_prop_type(WorldProp::Type type) -> bool {
   return type == WorldProp::Type::AbandonedHome || type == WorldProp::Type::Statue;
-}
-
-[[nodiscard]] inline auto zone_has_structural_anchor(const UndeadZone& zone) -> bool {
-  return zone.anchor_is_structure.value_or(
-      is_structural_undead_anchor(zone.anchor_type));
 }
 
 [[nodiscard]] constexpr auto is_tree_world_prop_type(WorldProp::Type type) -> bool {

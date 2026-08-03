@@ -64,7 +64,8 @@ public:
                    const QVector3D& color,
                    float radius,
                    float intensity,
-                   float time) const;
+                   float time,
+                   const QVector3D& direction = {}) const;
 };
 
 } // namespace Render::GL

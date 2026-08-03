@@ -7,7 +7,13 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/map_definition.h"
+#include "game/map/terrain_service.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/commander_system.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
+#include "game/systems/undead_awakening_system.h"
 #include "game/units/spawn_type.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "tools/arena/arena_scenario.h"
@@ -107,6 +113,62 @@ auto spawn_guardian(Engine::Core::World& world) -> Engine::Core::UnitComponent* 
   unit->max_health = 100;
   return unit;
 }
+
+class UndeadZoneWorld {
+public:
+  explicit UndeadZoneWorld(const Arena::ArenaScenarioDefinition& scenario) {
+    auto& owners = Game::Systems::OwnerRegistry::instance();
+    owners.clear();
+    owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "Player");
+    owners.set_owner_team(1, 1);
+    owners.set_local_player_id(1);
+
+    auto& nations = Game::Systems::NationRegistry::instance();
+    nations.clear();
+    nations.initialize_defaults();
+    nations.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
+
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+
+    m_map.coordSystem = Game::Map::CoordSystem::World;
+    m_map.grid.width = 64;
+    m_map.grid.height = 64;
+    m_map.grid.tile_size = 1.0F;
+    m_map.undead_zones = scenario.undead_zones;
+    Game::Map::TerrainService::instance().initialize(m_map);
+
+    m_world.add_system(std::make_unique<Game::Systems::UndeadAwakeningSystem>());
+    undead().configure(m_map);
+  }
+
+  ~UndeadZoneWorld() {
+    Game::Map::TerrainService::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Systems::NationRegistry::instance().clear();
+    Game::Systems::OwnerRegistry::instance().clear();
+  }
+
+  UndeadZoneWorld(const UndeadZoneWorld&) = delete;
+  UndeadZoneWorld(UndeadZoneWorld&&) = delete;
+  auto operator=(const UndeadZoneWorld&) -> UndeadZoneWorld& = delete;
+  auto operator=(UndeadZoneWorld&&) -> UndeadZoneWorld& = delete;
+
+  [[nodiscard]] auto world() -> Engine::Core::World& { return m_world; }
+  [[nodiscard]] auto undead() -> Game::Systems::UndeadAwakeningSystem& {
+    return *m_world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  }
+
+  void run(Arena::ArenaScenarioRunner& runner) {
+    while (!runner.finished()) {
+      m_world.update(0.1F);
+      runner.update(0.1F);
+    }
+  }
+
+private:
+  Engine::Core::World m_world;
+  Game::Map::MapDefinition m_map;
+};
 
 auto issue_codes(const Arena::ArenaScenarioReport& report) -> std::vector<QString> {
   std::vector<QString> codes;
@@ -251,6 +313,106 @@ TEST(ArenaScenarioRunnerTest, UndeadZoneWithSurvivingGuardiansIsNotCleared) {
   EXPECT_FALSE(runner.report().passed());
   EXPECT_TRUE(
       contains_code(runner.report(), QStringLiteral("undead_zone_not_cleared")));
+}
+
+TEST(ArenaScenarioRunnerTest, ZoneShrineStandsWithoutAnAuthoredProp) {
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation stands;
+  stands.kind = Arena::ArenaExpectationKind::UndeadZoneShrineStands;
+  stands.zone_id = QStringLiteral("crypt");
+  scenario.expectations = {stands};
+
+  UndeadZoneWorld fixture(scenario);
+  Arena::ArenaScenarioRunner runner(
+      fixture.world(), make_entity_host(fixture.world()), scenario);
+  ASSERT_TRUE(runner.start());
+  fixture.run(runner);
+
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
+  EXPECT_NE(fixture.undead().anchor_entity(QStringLiteral("crypt")), 0U);
+}
+
+TEST(ArenaScenarioRunnerTest, RazingTheZoneShrineSatisfiesTheDestructionContract) {
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation destroyed;
+  destroyed.kind = Arena::ArenaExpectationKind::UndeadZoneShrineDestroyed;
+  destroyed.zone_id = QStringLiteral("crypt");
+  scenario.expectations = {destroyed};
+
+  Arena::ArenaScenarioStep raze;
+  raze.trigger = {Arena::ScenarioTriggerKind::AtTime, 2.0F};
+  raze.command = Arena::ScenarioCommandKind::ApplyDamage;
+  raze.zone_id = QStringLiteral("crypt");
+  raze.value = 100000;
+  scenario.steps = {raze};
+  ASSERT_TRUE(Arena::validate_scenario(scenario).empty());
+
+  UndeadZoneWorld fixture(scenario);
+  Arena::ArenaScenarioRunner runner(
+      fixture.world(), make_entity_host(fixture.world()), scenario);
+  ASSERT_TRUE(runner.start());
+  fixture.run(runner);
+
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
+}
+
+TEST(ArenaScenarioRunnerTest, AShrineThatStandsFailsTheDestructionContract) {
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation destroyed;
+  destroyed.kind = Arena::ArenaExpectationKind::UndeadZoneShrineDestroyed;
+  destroyed.zone_id = QStringLiteral("crypt");
+  scenario.expectations = {destroyed};
+
+  UndeadZoneWorld fixture(scenario);
+  Arena::ArenaScenarioRunner runner(
+      fixture.world(), make_entity_host(fixture.world()), scenario);
+  ASSERT_TRUE(runner.start());
+  fixture.run(runner);
+
+  EXPECT_FALSE(runner.report().passed());
+  EXPECT_TRUE(
+      contains_code(runner.report(), QStringLiteral("undead_zone_shrine_survived")));
+}
+
+TEST(ArenaScenarioRunnerTest, ReloadingZoneStateKeepsTheShrineItAlreadyPlanted) {
+  auto scenario = undead_zone_definition();
+  Arena::ArenaExpectation stands;
+  stands.kind = Arena::ArenaExpectationKind::UndeadZoneShrineStands;
+  stands.zone_id = QStringLiteral("crypt");
+  scenario.expectations = {stands};
+
+  Arena::ArenaScenarioStep reload;
+  reload.trigger = {Arena::ScenarioTriggerKind::AtTime, 2.0F};
+  reload.command = Arena::ScenarioCommandKind::ReloadUndeadZoneState;
+  scenario.steps = {reload};
+  ASSERT_TRUE(Arena::validate_scenario(scenario).empty());
+
+  UndeadZoneWorld fixture(scenario);
+  Arena::ArenaScenarioRunner runner(
+      fixture.world(), make_entity_host(fixture.world()), scenario);
+  ASSERT_TRUE(runner.start());
+  fixture.world().update(0.1F);
+  runner.update(0.1F);
+  const Engine::Core::EntityID shrine_before =
+      fixture.undead().anchor_entity(QStringLiteral("crypt"));
+  ASSERT_NE(shrine_before, 0U);
+
+  fixture.run(runner);
+
+  EXPECT_EQ(fixture.undead().anchor_entity(QStringLiteral("crypt")), shrine_before);
+  EXPECT_TRUE(runner.report().passed()) << runner.report().summary().toStdString();
+}
+
+TEST(ArenaScenarioRunnerTest, StepsRejectAnUnknownUndeadZoneReference) {
+  auto scenario = undead_zone_definition();
+  Arena::ArenaScenarioStep raze;
+  raze.trigger = {Arena::ScenarioTriggerKind::AtTime, 1.0F};
+  raze.command = Arena::ScenarioCommandKind::ApplyDamage;
+  raze.zone_id = QStringLiteral("not_a_zone");
+  raze.value = 10;
+  scenario.steps = {raze};
+
+  EXPECT_FALSE(Arena::validate_scenario(scenario).empty());
 }
 
 TEST(ArenaScenarioDefinitionTest, EntireLocalCatalogIsValidAndUniquelyAddressable) {
