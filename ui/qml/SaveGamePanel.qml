@@ -116,7 +116,8 @@ Item {
 
                 StyledButton {
                     text: qsTr("Save")
-                    enabled: saveNameField.text.length > 0
+                    blocked: saveNameField.text.length === 0
+                    disabledReason: qsTr("Name the save first.")
                     onClicked: {
                         if (saveListModel.slot_exists(saveNameField.text)) {
                             confirmOverwriteDialog.slot_name = saveNameField.text;

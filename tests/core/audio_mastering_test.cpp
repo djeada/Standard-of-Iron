@@ -238,6 +238,37 @@ TEST(AudioMastering, AuthoredEffectLevelsSurvive) {
   EXPECT_EQ(report.notch_count, 0U);
 }
 
+TEST(AudioMastering, InterfaceCuesAreLiftedOntoTheEffectBus) {
+  const Mastering::Profile profile =
+      Mastering::profile_for(Mastering::Material::Interface);
+  ASSERT_GT(profile.makeup_db, 0.0F);
+  ASSERT_FALSE(profile.normalise_loudness);
+
+  auto loudest = make_stereo(8192);
+  add_tone(loudest, 900.0F, std::pow(10.0F, -13.0F / 20.0F));
+  master(loudest, Mastering::Material::Interface);
+  const float ceiling = std::pow(10.0F, profile.ceiling_db / 20.0F);
+  EXPECT_LE(peak_of(loudest), ceiling + 1e-4F);
+  EXPECT_GT(peak_of(loudest), ceiling * 0.7F);
+}
+
+TEST(AudioMastering, InterfaceMakeupKeepsTheAuthoredContrast) {
+
+  auto click = make_stereo(8192);
+  add_tone(click, 900.0F, 0.05F);
+  auto hover = make_stereo(8192);
+  add_tone(hover, 900.0F, 0.05F * std::pow(10.0F, -12.0F / 20.0F));
+
+  const Mastering::Report click_report = master(click, Mastering::Material::Interface);
+  const Mastering::Report hover_report = master(hover, Mastering::Material::Interface);
+
+  const Mastering::Profile profile =
+      Mastering::profile_for(Mastering::Material::Interface);
+  EXPECT_FLOAT_EQ(click_report.loudness_gain_db, profile.makeup_db);
+  EXPECT_FLOAT_EQ(hover_report.loudness_gain_db, profile.makeup_db);
+  EXPECT_NEAR(20.0F * std::log10(peak_of(click) / peak_of(hover)), 12.0F, 0.5F);
+}
+
 TEST(AudioMastering, SilenceStaysSilent) {
   auto pcm = make_stereo(SAMPLE_RATE);
   master(pcm, Mastering::Material::Music);

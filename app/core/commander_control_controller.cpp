@@ -1596,7 +1596,11 @@ auto CommanderControlController::update(Engine::Core::World& world,
        combat_state->animation_state != Engine::Core::CombatAnimationState::Idle);
   const bool should_jump =
       m_input.jump_requested && m_jump_timer <= 0.0F && !jump_blocked_by_action;
+  const bool jump_refused = m_input.jump_requested && !should_jump;
   m_input.jump_requested = false;
+  if (jump_refused) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
+  }
   if (should_jump) {
     m_jump_timer = k_jump_duration;
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_jump);
@@ -1670,9 +1674,13 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   const bool should_dodge = m_input.dodge_requested &&
                             m_dodge_state == DodgeState::None && m_jump_timer <= 0.0F;
+  const bool dodge_refused = m_input.dodge_requested && !should_dodge;
   QVector3D const requested_dodge_direction = m_requested_dodge_direction;
   bool const has_requested_dodge_direction = m_has_requested_dodge_direction;
   m_input.dodge_requested = false;
+  if (dodge_refused) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
+  }
   m_has_requested_dodge_direction = false;
   m_requested_dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
 

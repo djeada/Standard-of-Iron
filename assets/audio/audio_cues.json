@@ -18,7 +18,7 @@
       "id": "ui.click",
       "description": "Menu button, list row or combo box entry is activated.",
       "category": "sfx",
-      "volume": 1.0,
+      "volume": 0.85,
       "priority": 5,
       "cooldown_ms": 40,
       "resources": [

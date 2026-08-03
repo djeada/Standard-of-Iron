@@ -144,7 +144,7 @@ Item {
                         implicitWidth: Design.Metrics.space24 * 2
                         text: modelData + "×"
                         tone: (!topRoot.game_is_paused && topRoot.current_speed === modelData) ? "primary" : "secondary"
-                        enabled: !topRoot.game_is_paused
+                        blocked: topRoot.game_is_paused
                         disabledReason: qsTr("Resume the battle to change speed")
                         onClicked: topRoot.speed_changed(modelData)
                     }
@@ -155,7 +155,8 @@ Item {
                     Layout.preferredWidth: Design.Metrics.space24 * 4
                     model: ["0.5×", "1×", "2×"]
                     currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
-                    enabled: !topRoot.game_is_paused
+                    blocked: topRoot.game_is_paused
+                    disabledReason: qsTr("Resume the battle to change speed")
                     onActivated: function (index) {
                         topRoot.speed_changed(topRoot.speedOptions[index]);
                     }

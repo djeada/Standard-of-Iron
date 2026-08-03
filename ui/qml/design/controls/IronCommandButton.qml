@@ -26,6 +26,9 @@ AbstractButton {
     property string disabledReason: ""
     property string hint: ""
 
+    property bool blocked: false
+    readonly property bool interactive: enabled && !blocked
+
     property bool compact: width > 0 && width < minimumLabelledWidth
     readonly property real minimumLabelledWidth: Design.Metrics.iconMedium + labelMetrics.width + hotkeyLabel.width + Design.Metrics.space24
 
@@ -40,9 +43,9 @@ AbstractButton {
 
     readonly property bool highlighted: active || placing
     readonly property bool showFocusRing: visualFocus || (Design.A11y.alwaysShowFocus && activeFocus)
-    readonly property color stateColor: !enabled ? Design.Theme.textDisabled : placing ? Design.Theme.warning : active ? Design.Theme.accent : mixed ? Design.Theme.textSecondary : Design.Theme.borderStrong
+    readonly property color stateColor: !interactive ? Design.Theme.textDisabled : placing ? Design.Theme.warning : active ? Design.Theme.accent : mixed ? Design.Theme.textSecondary : Design.Theme.borderStrong
 
-    readonly property string tooltipText: control.enabled ? control.hint : control.disabledReason
+    readonly property string tooltipText: control.interactive ? control.hint : control.disabledReason
 
     readonly property string coverageText: (eligibleCount > 0 && activeCount > 0 && activeCount < eligibleCount) ? qsTr("%1 of %2").arg(activeCount).arg(eligibleCount) : ""
 
@@ -53,11 +56,11 @@ AbstractButton {
 
     Accessible.role: Accessible.Button
     Accessible.name: control.label
-    Accessible.description: control.enabled ? (control.coverageText !== "" ? control.coverageText : control.hint) : control.disabledReason
+    Accessible.description: control.interactive ? (control.coverageText !== "" ? control.coverageText : control.hint) : control.disabledReason
     Accessible.checkable: true
     Accessible.checked: control.active
 
-    ToolTip.text: control.compact && control.enabled && control.hint === "" ? control.label : control.tooltipText
+    ToolTip.text: control.compact && control.interactive && control.hint === "" ? control.label : control.tooltipText
     ToolTip.visible: control.hovered && ToolTip.text.length > 0
     ToolTip.delay: Design.Metrics.tooltipDelay
 
@@ -67,16 +70,25 @@ AbstractButton {
         }
 
         function onHoveredChanged() {
-            if (control.hovered)
+            if (control.hovered && control.interactive)
                 Design.UiSound.hover();
         }
 
         target: control
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: control.blocked
+        visible: enabled
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.ForbiddenCursor
+        onPressed: Design.UiSound.warning()
+    }
+
     background: Rectangle {
         radius: Design.Metrics.radiusMedium
-        color: !control.enabled ? Design.Theme.surfaceDisabled : control.down ? Qt.darker(Design.Theme.panelLeather, 1.2) : (control.highlighted || control.hovered) ? Design.Theme.panelLeather : Design.Theme.panelIron
+        color: !control.interactive ? Design.Theme.surfaceDisabled : control.down ? Qt.darker(Design.Theme.panelLeather, 1.2) : (control.highlighted || control.hovered) ? Design.Theme.panelLeather : Design.Theme.panelIron
         border.width: (control.showFocusRing || control.highlighted) ? Design.Metrics.borderFocus : Design.Metrics.borderThin
         border.color: control.showFocusRing ? Design.Theme.focus : control.stateColor
 
@@ -117,7 +129,7 @@ AbstractButton {
 
             width: control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : Design.Metrics.iconMedium
             height: width
-            opacity: control.enabled ? 1 : 0.45
+            opacity: control.interactive ? 1 : 0.45
 
             Image {
                 id: art
@@ -136,9 +148,9 @@ AbstractButton {
                 anchors.fill: parent
                 visible: !art.visible && vectorArt.available
                 iconId: control.vectorIcon
-                tint: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+                tint: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
                 accent: control.stateColor
-                monochrome: !control.enabled
+                monochrome: !control.interactive
             }
 
             Text {
@@ -165,7 +177,7 @@ AbstractButton {
             Text {
                 width: parent.width
                 text: control.label
-                color: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+                color: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.label
                 font.weight: control.highlighted ? Design.Typography.bold : Design.Typography.medium
