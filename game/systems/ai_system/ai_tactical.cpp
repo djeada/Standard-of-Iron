@@ -89,7 +89,14 @@ auto TacticalUtils::select_focus_fire_target(
     return best_target;
   }
 
+  const bool troops_in_sight = has_troop_contact(enemies);
+
   for (const auto* enemy : enemies) {
+
+    if (troops_in_sight && enemy->is_building) {
+      continue;
+    }
+
     float score = 0.0F;
 
     float const dist = distance(enemy->pos_x,
@@ -117,10 +124,6 @@ auto TacticalUtils::select_focus_fire_target(
         Game::Units::spawn_typeToString(enemy->spawn_type), context.nation);
     score += type_priority * 3.0F;
 
-    if (!enemy->is_building) {
-      score += 5.0F;
-    }
-
     if (current_target != 0 && enemy->id == current_target) {
       score += 10.0F;
     }
@@ -141,10 +144,6 @@ auto TacticalUtils::select_focus_fire_target(
       if (dist_to_base < 16.0F) {
         score += (16.0F - dist_to_base) * 0.8F;
       }
-    }
-
-    if (context.state == AIState::Attacking && !enemy->is_building) {
-      score += 3.0F;
     }
 
     if (score > best_target.score) {
