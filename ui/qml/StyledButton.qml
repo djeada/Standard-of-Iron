@@ -18,16 +18,16 @@ Design.IronButton {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
-        cursorShape: control.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: control.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
         onContainsMouseChanged: {
-            if (containsMouse && control.enabled && control.ui_sound_enabled && typeof game !== "undefined")
+            if (containsMouse && control.interactive && control.ui_sound_enabled && typeof game !== "undefined")
                 UiAudio.play_hover(game.audio_system);
         }
     }
 
     Connections {
         function onClicked() {
-            if (control.enabled && control.ui_sound_enabled && typeof game !== "undefined")
+            if (control.interactive && control.ui_sound_enabled && typeof game !== "undefined")
                 UiAudio.play_click(game.audio_system);
         }
 

@@ -43,6 +43,8 @@ struct Profile {
   bool detect_resonances = false;
   float target_lufs = -15.0F;
   float loudness_authority_db = 0.0F;
+
+  float makeup_db = 0.0F;
   float presence_target_db = -8.0F;
   float air_target_db = -16.0F;
   float tilt_cut_db = 2.5F;
@@ -57,6 +59,7 @@ struct Report {
   float output_peak_db = 0.0F;
   float input_lufs = -70.0F;
   float output_lufs = -70.0F;
+
   float loudness_gain_db = 0.0F;
   float presence_tilt_db = 0.0F;
   float air_tilt_db = 0.0F;

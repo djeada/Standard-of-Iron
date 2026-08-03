@@ -22,7 +22,7 @@ Dialog {
     closePolicy: Popup.CloseOnEscape
     implicitWidth: Design.Metrics.space24 * 20
 
-    onOpened: Design.UiSound.panelOpen()
+    onOpened: tone === "danger" || tone === "warning" ? Design.UiSound.warning() : Design.UiSound.panelOpen()
     onClosed: Design.UiSound.panelClose()
 
     background: Rectangle {

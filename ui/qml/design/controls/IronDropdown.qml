@@ -8,6 +8,9 @@ ComboBox {
     property string accessibleName: ""
     property string disabledReason: ""
 
+    property bool blocked: false
+    readonly property bool interactive: enabled && !blocked
+
     property var labelFor: function (data) {
         return data;
     }
@@ -20,7 +23,7 @@ ComboBox {
 
     implicitHeight: Math.max(Design.Metrics.controlHeight, Design.Metrics.minTouchTarget)
     Accessible.name: accessibleName
-    Accessible.description: enabled ? displayText : disabledReason
+    Accessible.description: interactive ? displayText : disabledReason
 
     Connections {
         function onActivated(index) {
@@ -28,11 +31,20 @@ ComboBox {
         }
 
         function onHoveredChanged() {
-            if (control.hovered && control.enabled)
+            if (control.hovered && control.interactive)
                 Design.UiSound.hover();
         }
 
         target: control
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        enabled: control.blocked
+        visible: enabled
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.ForbiddenCursor
+        onPressed: Design.UiSound.warning()
     }
 
     Connections {
@@ -49,7 +61,7 @@ ComboBox {
 
     contentItem: Text {
         text: control.displayText
-        color: control.enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+        color: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.label
         verticalAlignment: Text.AlignVCenter
@@ -59,10 +71,10 @@ ComboBox {
     }
 
     background: Rectangle {
-        color: control.enabled ? Design.Theme.panelIron : Design.Theme.surfaceDisabled
+        color: control.interactive ? Design.Theme.panelIron : Design.Theme.surfaceDisabled
         radius: Design.Metrics.radiusSmall
         border.width: control.showFocusRing ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-        border.color: !control.enabled ? Design.Theme.borderSubtle : control.showFocusRing ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderSubtle
+        border.color: !control.interactive ? Design.Theme.borderSubtle : control.showFocusRing ? Design.Theme.focus : control.hovered ? Design.Theme.accent : Design.Theme.borderSubtle
 
         Behavior on border.color  {
             ColorAnimation {
@@ -75,7 +87,7 @@ ComboBox {
         x: control.width - width - Design.Metrics.space8
         y: control.topPadding + (control.availableHeight - height) / 2
         text: Design.Icons.disclosureOpen
-        color: control.enabled ? Design.Theme.textSecondary : Design.Theme.textDisabled
+        color: control.interactive ? Design.Theme.textSecondary : Design.Theme.textDisabled
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.body
     }

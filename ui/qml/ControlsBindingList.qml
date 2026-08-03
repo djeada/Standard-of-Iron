@@ -132,7 +132,8 @@ Item {
             StyledButton {
                 text: qsTr("Reset all")
                 button_style: "secondary"
-                enabled: !InputBindings.isDefault
+                blocked: InputBindings.isDefault
+                disabledReason: qsTr("Every binding is already at its default.")
                 onClicked: {
                     root.cancel_capture();
                     InputBindings.reset_to_defaults();
@@ -262,7 +263,8 @@ Item {
                     StyledButton {
                         text: qsTr("Default")
                         button_style: "small"
-                        enabled: !modelData.isDefault
+                        blocked: modelData.isDefault
+                        disabledReason: qsTr("This binding is already the default.")
                         onClicked: {
                             root.cancel_capture();
                             InputBindings.reset_action(bindingRow.modelData.id);

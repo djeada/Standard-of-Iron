@@ -161,16 +161,21 @@ Item {
         Button {
             id: addCPUBtn
 
-            text: qsTr("+ Add CPU")
-            enabled: {
+            readonly property bool allowed: {
                 if (!current_map_data || !current_map_data.player_ids)
                     return false;
                 if (!players_model)
                     return false;
                 return players_model.count < current_map_data.player_ids.length;
             }
+
+            text: qsTr("+ Add CPU")
             hoverEnabled: true
             onClicked: {
+                if (!allowed) {
+                    Design.UiSound.warning();
+                    return;
+                }
                 Design.UiSound.activate();
                 root.add_cpu_clicked();
             }
@@ -186,12 +191,12 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 acceptedButtons: Qt.NoButton
-                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                cursorShape: addCPUBtn.allowed ? Qt.PointingHandCursor : Qt.ForbiddenCursor
             }
 
             ToolTip {
-                visible: addHover.containsMouse && enabled
-                text: qsTr("Add AI player to the game")
+                visible: addHover.containsMouse
+                text: addCPUBtn.allowed ? qsTr("Add AI player to the game") : qsTr("Every slot on this map is taken")
                 delay: 500
             }
 
@@ -199,7 +204,7 @@ Item {
                 text: addCPUBtn.text
                 font.pixelSize: 12
                 font.bold: true
-                color: enabled ? colors.addColor : colors.textSub
+                color: addCPUBtn.allowed ? colors.addColor : colors.textSub
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -208,9 +213,9 @@ Item {
                 implicitWidth: 100
                 implicitHeight: 32
                 radius: 6
-                color: enabled ? (addCPUBtn.down ? Qt.darker(colors.addColor, 1.3) : (addHover.containsMouse ? Qt.darker(colors.addColor, 1.1) : colors.cardBaseA)) : colors.cardBaseA
+                color: addCPUBtn.allowed ? (addCPUBtn.down ? Qt.darker(colors.addColor, 1.3) : (addHover.containsMouse ? Qt.darker(colors.addColor, 1.1) : colors.cardBaseA)) : colors.cardBaseA
                 border.width: 1
-                border.color: enabled ? colors.addColor : colors.thumbBr
+                border.color: addCPUBtn.allowed ? colors.addColor : colors.thumbBr
 
                 Behavior on color  {
                     ColorAnimation {

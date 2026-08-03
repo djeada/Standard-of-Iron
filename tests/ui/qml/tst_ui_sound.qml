@@ -89,6 +89,24 @@ TestCase {
         }
     }
 
+    Component {
+        id: dangerDialog
+
+        IronDialog {
+            title: "Error"
+            tone: "danger"
+        }
+    }
+
+    Component {
+        id: warningDialog
+
+        IronDialog {
+            title: "Careful"
+            tone: "warning"
+        }
+    }
+
     function test_a_button_click_is_audible() {
         var button = make(plainButton);
         button.clicked();
@@ -135,6 +153,59 @@ TestCase {
         box.close();
         compare(testCase.played, ["ui.panel_open", "ui.panel_close"]);
         box.destroy();
+    }
+
+    Component {
+        id: blockedButton
+
+        IronButton {
+            property int callerClicks: 0
+
+            text: "Start"
+            blocked: true
+            disabledReason: "Finish the previous mission first."
+            onClicked: callerClicks++
+        }
+    }
+
+    function test_a_blocked_control_refuses_out_loud() {
+        var button = make(blockedButton, {
+                "width": 120,
+                "height": 40
+            });
+        verify(button.enabled, "a blocked control stays enabled or it hears nothing");
+        verify(!button.interactive);
+        mousePress(button, 10, 10);
+        mouseRelease(button, 10, 10);
+        compare(testCase.played, ["ui.error"], "the click is answered by a refusal");
+        compare(button.callerClicks, 0, "and the blocked action never runs");
+        button.destroy();
+    }
+
+    function test_unblocking_a_control_restores_the_action() {
+        var button = make(blockedButton, {
+                "width": 120,
+                "height": 40
+            });
+        button.blocked = false;
+        verify(button.interactive);
+        mousePress(button, 10, 10);
+        mouseRelease(button, 10, 10);
+        compare(testCase.played, ["ui.click"]);
+        compare(button.callerClicks, 1);
+        button.destroy();
+    }
+
+    function test_a_refusing_dialog_sounds_like_a_refusal() {
+        var box = make(dangerDialog);
+        box.open();
+        compare(testCase.played, ["ui.error"], "a danger dialog is the game saying no");
+        box.destroy();
+        testCase.played = [];
+        var caution = make(warningDialog);
+        caution.open();
+        compare(testCase.played, ["ui.error"]);
+        caution.destroy();
     }
 
     function test_muting_the_bus_silences_every_control() {

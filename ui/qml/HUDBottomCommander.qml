@@ -541,14 +541,21 @@ RowLayout {
                         columns: bottomRoot.fpv_mode ? 2 : 1
 
                         Button {
+                            id: rallyButton
+
+                            readonly property bool allowed: bottomRoot.status_value("has_commander", false) && !bottomRoot.status_value("rally_in_progress", false)
+
                             Layout.fillWidth: true
                             Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
                             text: bottomRoot.rally_button_text()
-                            enabled: bottomRoot.status_value("has_commander", false) && !bottomRoot.status_value("rally_in_progress", false)
                             focusPolicy: Qt.NoFocus
                             onClicked: {
                                 if (typeof game === 'undefined')
                                     return;
+                                if (!allowed) {
+                                    Design.UiSound.warning();
+                                    return;
+                                }
                                 Design.UiSound.activate();
                                 if (bottomRoot.status_value("rally_placing", false)) {
                                     if (game.cancel_commander_flag_rally)
@@ -559,15 +566,15 @@ RowLayout {
                             }
 
                             background: Rectangle {
-                                color: parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.wax)) : hs.parchmentDark
+                                color: rallyButton.allowed ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.wax)) : hs.parchmentDark
                                 radius: 6
-                                border.color: parent.enabled ? hs.bronze : hs.bronzeDeep
+                                border.color: rallyButton.allowed ? hs.bronze : hs.bronzeDeep
                                 border.width: 2
                             }
 
                             contentItem: Text {
                                 text: parent.text
-                                color: parent.enabled ? Theme.textMain : Theme.textDim
+                                color: rallyButton.allowed ? Theme.textMain : Theme.textDim
                                 font.pointSize: bottomRoot.fpv_mode ? 9 : 10
                                 font.bold: true
                                 horizontalAlignment: Text.AlignHCenter
@@ -576,30 +583,37 @@ RowLayout {
                         }
 
                         Button {
+                            id: auraButton
+
+                            readonly property bool allowed: bottomRoot.status_value("has_commander", false) && bottomRoot.status_value("aura_ready", false)
+
                             Layout.fillWidth: true
                             Layout.preferredHeight: bottomRoot.fpv_mode ? 34 : 42
                             text: bottomRoot.status_value("aura_active", false) ? qsTr("Command Aura Active · %1s").arg(Number(bottomRoot.status_value("aura_remaining", 0)).toFixed(1)) : (bottomRoot.status_value("aura_ready", false) ? qsTr("Activate Command Aura [3]") : qsTr("Command Aura · %1s cooldown").arg(Number(bottomRoot.status_value("aura_cooldown_remaining", 0)).toFixed(1)))
-                            enabled: bottomRoot.status_value("has_commander", false) && bottomRoot.status_value("aura_ready", false)
                             focusPolicy: Qt.NoFocus
                             ToolTip.visible: hovered
-                            ToolTip.text: qsTr("Temporarily empower nearby troops. Every affected soldier receives a visible glow.")
+                            ToolTip.text: auraButton.allowed ? qsTr("Temporarily empower nearby troops. Every affected soldier receives a visible glow.") : qsTr("The aura is not ready yet.")
                             onClicked: {
-                                if (typeof game !== 'undefined' && game.commander_trigger_aura) {
-                                    Design.UiSound.activate();
-                                    game.commander_trigger_aura();
+                                if (typeof game === 'undefined' || !game.commander_trigger_aura)
+                                    return;
+                                if (!auraButton.allowed) {
+                                    Design.UiSound.warning();
+                                    return;
                                 }
+                                Design.UiSound.activate();
+                                game.commander_trigger_aura();
                             }
 
                             background: Rectangle {
-                                color: bottomRoot.status_value("aura_active", false) ? hs.wax : (parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark)
+                                color: bottomRoot.status_value("aura_active", false) ? hs.wax : (auraButton.allowed ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark)
                                 radius: 6
-                                border.color: bottomRoot.status_value("aura_active", false) ? Theme.accent : (parent.enabled ? hs.bronze : hs.bronzeDeep)
+                                border.color: bottomRoot.status_value("aura_active", false) ? Theme.accent : (auraButton.allowed ? hs.bronze : hs.bronzeDeep)
                                 border.width: 2
                             }
 
                             contentItem: Text {
                                 text: parent.text
-                                color: parent.enabled || bottomRoot.status_value("aura_active", false) ? Theme.textMain : Theme.textDim
+                                color: auraButton.allowed || bottomRoot.status_value("aura_active", false) ? Theme.textMain : Theme.textDim
                                 font.pointSize: bottomRoot.fpv_mode ? 9 : 10
                                 font.bold: true
                                 horizontalAlignment: Text.AlignHCenter

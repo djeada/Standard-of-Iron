@@ -145,10 +145,10 @@ Item {
                         readonly property string blocked_reason: formationPanel.intent_blocked_reason(modelData)
 
                         ToolTip.delay: Design.Metrics.tooltipDelay
-                        ToolTip.text: enabled ? qsTr("[%1] %2").arg(index + 1).arg(formationPanel.intent_purpose(modelData)) : blocked_reason
+                        ToolTip.text: interactive ? qsTr("[%1] %2").arg(index + 1).arg(formationPanel.intent_purpose(modelData)) : blocked_reason
                         ToolTip.visible: hovered && ToolTip.text.length > 0
                         disabledReason: blocked_reason
-                        enabled: blocked_reason.length === 0
+                        blocked: blocked_reason.length > 0
                         implicitWidth: Math.max(96, contentItem.implicitWidth + Design.Metrics.space16)
                         text: formationPanel.intent_label(modelData)
                         tone: formationPanel.active_intent === modelData ? "primary" : "secondary"
