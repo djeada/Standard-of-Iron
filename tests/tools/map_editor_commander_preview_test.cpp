@@ -40,7 +40,7 @@ auto commander_for_owner(const QVector<MapEditor::DerivedCommander>& commanders,
 
 TEST(MapEditorCommanderPreviewTest, ConfiguredCommandersWinOverNationDefaults) {
   EXPECT_EQ(MapEditor::resolve_commander_troop("carthage", ""),
-            QStringLiteral("carthage_elephant_master"));
+            QStringLiteral("carthage_sword_commander"));
   EXPECT_EQ(MapEditor::resolve_commander_troop("roman_republic", ""),
             QStringLiteral("roman_veteran_consul"));
   EXPECT_EQ(
@@ -49,7 +49,7 @@ TEST(MapEditorCommanderPreviewTest, ConfiguredCommandersWinOverNationDefaults) {
   EXPECT_EQ(MapEditor::resolve_commander_troop("roman_republic", "archer"),
             QStringLiteral("roman_veteran_consul"));
   EXPECT_EQ(
-      MapEditor::resolve_commander_troop("roman_republic", "carthage_elephant_master"),
+      MapEditor::resolve_commander_troop("roman_republic", "carthage_sword_commander"),
       QStringLiteral("roman_veteran_consul"));
 }
 
@@ -69,7 +69,7 @@ TEST(MapEditorCommanderPreviewTest, RhoneMissionExposesOneCommanderPerOwner) {
 
   const auto* player = commander_for_owner(commanders, 1);
   ASSERT_NE(player, nullptr);
-  EXPECT_EQ(player->troop_type, QStringLiteral("carthage_elephant_master"));
+  EXPECT_EQ(player->troop_type, QStringLiteral("carthage_sword_commander"));
   EXPECT_TRUE(player->authored_in_map);
 
   const auto* first_ai = commander_for_owner(commanders, 2);
@@ -107,7 +107,7 @@ TEST(MapEditorCommanderPreviewTest, OnlyOneCommanderPerOwnerIsTracked) {
   MapEditor::MapData map;
 
   MapEditor::TroopSpawnElement commander;
-  commander.type = QStringLiteral("carthage_elephant_master");
+  commander.type = QStringLiteral("carthage_sword_commander");
   commander.player_id = 1;
   commander.x = 10.0F;
   commander.z = 10.0F;

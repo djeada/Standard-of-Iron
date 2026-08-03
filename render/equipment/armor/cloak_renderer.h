@@ -24,6 +24,9 @@ struct CloakConfig {
   float clasp_anchor_up = 0.14F;
   float clasp_anchor_forward = 0.14F;
   bool show_clasp = true;
+
+  float team_blend = 0.0F;
+  float team_shade = 1.0F;
   int back_material_id = 5;
   int shoulder_material_id = 6;
 };
@@ -39,6 +42,9 @@ auto cloak_fill_role_colors_with_primary(const QVector3D& primary_color,
                                          const HumanoidPalette& palette,
                                          QVector3D* out,
                                          std::size_t max) -> std::uint32_t;
+
+auto cloak_mantle_color(const CloakConfig& config,
+                        const HumanoidPalette& palette) -> QVector3D;
 
 auto cloak_make_static_attachment(const CloakConfig& config,
                                   const CloakMeshes& meshes,

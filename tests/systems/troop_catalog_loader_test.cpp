@@ -27,9 +27,9 @@ constexpr std::array<Game::Units::TroopType, 21> k_all_troop_types{
     Game::Units::TroopType::RomanLegionOrganizer,
     Game::Units::TroopType::RomanVeteranConsul,
     Game::Units::TroopType::RomanFieldCommander,
-    Game::Units::TroopType::CarthageMercenaryBroker,
-    Game::Units::TroopType::CarthageCavalryPatron,
-    Game::Units::TroopType::CarthageElephantMaster,
+    Game::Units::TroopType::CarthageSpearCommander,
+    Game::Units::TroopType::CarthageBowCommander,
+    Game::Units::TroopType::CarthageSwordCommander,
     Game::Units::TroopType::Builder,
     Game::Units::TroopType::Civilian,
 };
@@ -132,11 +132,11 @@ TEST(TroopCatalogLoader, CommandersLoadFromCatalog) {
   auto const* marcellus = Game::Units::TroopCatalog::instance().get_class(
       Game::Units::TroopType::RomanFieldCommander);
   auto const* hanno = Game::Units::TroopCatalog::instance().get_class(
-      Game::Units::TroopType::CarthageMercenaryBroker);
+      Game::Units::TroopType::CarthageSpearCommander);
   auto const* hasdrubal = Game::Units::TroopCatalog::instance().get_class(
-      Game::Units::TroopType::CarthageCavalryPatron);
+      Game::Units::TroopType::CarthageBowCommander);
   auto const* hannibal = Game::Units::TroopCatalog::instance().get_class(
-      Game::Units::TroopType::CarthageElephantMaster);
+      Game::Units::TroopType::CarthageSwordCommander);
   ASSERT_NE(fabius, nullptr);
   ASSERT_NE(scipio, nullptr);
   ASSERT_NE(marcellus, nullptr);

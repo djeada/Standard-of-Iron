@@ -31,7 +31,7 @@ TEST(CommanderCatalogTest, DefinesThreeCommandersForEachPlayableNation) {
   bool has_hannibal = false;
   bool has_health_bonus = false;
   bool has_attack_bonus = false;
-  bool has_production_bonus = false;
+  bool has_speed_bonus = false;
 
   auto inspect_definition = [&](const Game::Units::CommanderDefinition* definition) {
     ASSERT_NE(definition, nullptr);
@@ -49,8 +49,7 @@ TEST(CommanderCatalogTest, DefinesThreeCommandersForEachPlayableNation) {
     has_hannibal = has_hannibal || definition->display_name == "Hannibal Barca";
     has_health_bonus = has_health_bonus || definition->bonus_type == "health_regen";
     has_attack_bonus = has_attack_bonus || definition->bonus_type == "attack_boost";
-    has_production_bonus =
-        has_production_bonus || definition->bonus_type == "production_haste";
+    has_speed_bonus = has_speed_bonus || definition->bonus_type == "speed_boost";
   };
 
   for (const auto* definition : roman) {
@@ -63,7 +62,26 @@ TEST(CommanderCatalogTest, DefinesThreeCommandersForEachPlayableNation) {
   EXPECT_TRUE(has_hannibal);
   EXPECT_TRUE(has_health_bonus);
   EXPECT_TRUE(has_attack_bonus);
-  EXPECT_TRUE(has_production_bonus);
+  EXPECT_TRUE(has_speed_bonus);
+
+  auto covers_every_weapon_school =
+      [](const std::vector<const Game::Units::CommanderDefinition*>& nation) {
+        bool sword = false;
+        bool spear = false;
+        bool bow = false;
+        for (const auto* definition : nation) {
+          sword = sword || definition->aura_affinity_spawn_type ==
+                               Game::Units::SpawnType::Knight;
+          spear = spear || definition->aura_affinity_spawn_type ==
+                               Game::Units::SpawnType::Spearman;
+          bow = bow ||
+                definition->aura_affinity_spawn_type == Game::Units::SpawnType::Archer;
+        }
+        return sword && spear && bow;
+      };
+
+  EXPECT_TRUE(covers_every_weapon_school(roman));
+  EXPECT_TRUE(covers_every_weapon_school(carthage));
 }
 
 TEST(CommanderProductionTest, RejectsCommanderProductionFromBarracks) {
@@ -105,7 +123,7 @@ TEST(CommanderProductionTest, RejectsCommanderProductionEvenIfOwnerHasNoCommande
           world,
           {barracks->get_id()},
           1,
-          Game::Units::TroopType::CarthageMercenaryBroker);
+          Game::Units::TroopType::CarthageSpearCommander);
   EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderNotRecruitable);
   EXPECT_FALSE(production->in_progress);
 }
@@ -159,13 +177,13 @@ TEST(CommanderFactoryTest, CommanderCombatMatchesDistinctWeaponIdentity) {
       {Game::Units::SpawnType::RomanFieldCommander,
        Engine::Core::CombatAttackFamily::Bow,
        true},
-      {Game::Units::SpawnType::CarthageMercenaryBroker,
+      {Game::Units::SpawnType::CarthageSpearCommander,
        Engine::Core::CombatAttackFamily::Spear,
        false},
-      {Game::Units::SpawnType::CarthageCavalryPatron,
+      {Game::Units::SpawnType::CarthageBowCommander,
        Engine::Core::CombatAttackFamily::Bow,
        true},
-      {Game::Units::SpawnType::CarthageElephantMaster,
+      {Game::Units::SpawnType::CarthageSwordCommander,
        Engine::Core::CombatAttackFamily::Sword,
        false},
   }};
@@ -484,6 +502,8 @@ TEST(CommanderSystemTest, SpeedBoostFallsOffWhenCommanderIsWounded) {
   commander_data->aura_radius = 5.0F;
   commander_data->aura_ability_active = true;
   commander_data->aura_ability_remaining = 10.0F;
+
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Spearman;
 
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
@@ -987,7 +1007,7 @@ TEST(CommanderAuraAbilityTest, ExplicitActivationAppliesConfiguredDamageBoost) {
   EXPECT_EQ(active_buff->source_commander_id, commander->get_id());
 }
 
-TEST(CommanderAuraAbilityTest, ConfiguredBonusAppliesToAllNearbyTroopTypes) {
+TEST(CommanderAuraAbilityTest, ConfiguredBonusFavoursTheCommandersOwnWeaponSchool) {
   Engine::Core::World world;
 
   auto* commander = world.create_entity();
@@ -1008,6 +1028,8 @@ TEST(CommanderAuraAbilityTest, ConfiguredBonusAppliesToAllNearbyTroopTypes) {
   commander_data->bonus_type = "attack_boost";
   commander_data->aura_bonus_value = 0.25F;
 
+  commander_data->aura_affinity_spawn_type = Game::Units::SpawnType::Archer;
+
   auto* ally = world.create_entity();
   auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
   auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
@@ -1020,10 +1042,23 @@ TEST(CommanderAuraAbilityTest, ConfiguredBonusAppliesToAllNearbyTroopTypes) {
   ally_unit->spawn_type = Game::Units::SpawnType::Archer;
   ally_transform->position = {2.0F, 0.0F, 0.0F};
 
+  auto* off_school = world.create_entity();
+  auto* off_unit = off_school->add_component<Engine::Core::UnitComponent>();
+  auto* off_transform = off_school->add_component<Engine::Core::TransformComponent>();
+  auto* off_attack = off_school->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(off_unit, nullptr);
+  ASSERT_NE(off_transform, nullptr);
+  ASSERT_NE(off_attack, nullptr);
+  off_unit->owner_id = 1;
+  off_unit->health = 100;
+  off_unit->spawn_type = Game::Units::SpawnType::Knight;
+  off_transform->position = {2.0F, 0.0F, 1.0F};
+
   Game::Systems::CommanderSystem system;
   system.update(&world, 0.1F);
   const int base_damage = ally_attack->damage;
   const int base_melee = ally_attack->melee_damage;
+  const int off_base_melee = off_attack->melee_damage;
 
   commander_data->aura_ability_requested = true;
   system.update(&world, 0.1F);
@@ -1032,6 +1067,11 @@ TEST(CommanderAuraAbilityTest, ConfiguredBonusAppliesToAllNearbyTroopTypes) {
             std::max(1, static_cast<int>(std::round(base_damage * 1.25F))));
   EXPECT_EQ(ally_attack->melee_damage,
             std::max(1, static_cast<int>(std::round(base_melee * 1.25F))));
+
+  EXPECT_EQ(off_attack->melee_damage,
+            std::max(1, static_cast<int>(std::round(off_base_melee * 1.125F))));
+  EXPECT_LT(off_attack->melee_damage,
+            std::max(1, static_cast<int>(std::round(off_base_melee * 1.25F))));
 }
 
 TEST(CommanderAuraAbilityTest, AllTroopsInRadiusReceiveVisibleBuffMarker) {

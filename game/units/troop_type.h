@@ -29,9 +29,9 @@ enum class TroopType {
   RomanLegionOrganizer,
   RomanVeteranConsul,
   RomanFieldCommander,
-  CarthageMercenaryBroker,
-  CarthageCavalryPatron,
-  CarthageElephantMaster,
+  CarthageSpearCommander,
+  CarthageBowCommander,
+  CarthageSwordCommander,
   Civilian,
   Builder
 };
@@ -70,12 +70,12 @@ inline auto troop_typeToQString(TroopType type) -> QString {
     return QStringLiteral("roman_veteran_consul");
   case TroopType::RomanFieldCommander:
     return QStringLiteral("roman_field_commander");
-  case TroopType::CarthageMercenaryBroker:
-    return QStringLiteral("carthage_mercenary_broker");
-  case TroopType::CarthageCavalryPatron:
-    return QStringLiteral("carthage_cavalry_patron");
-  case TroopType::CarthageElephantMaster:
-    return QStringLiteral("carthage_elephant_master");
+  case TroopType::CarthageSpearCommander:
+    return QStringLiteral("carthage_spear_commander");
+  case TroopType::CarthageBowCommander:
+    return QStringLiteral("carthage_bow_commander");
+  case TroopType::CarthageSwordCommander:
+    return QStringLiteral("carthage_sword_commander");
   case TroopType::Civilian:
     return QStringLiteral("civilian");
   case TroopType::Builder:
@@ -158,16 +158,16 @@ inline auto try_parse_troop_type(const QString& value, TroopType& out) -> bool {
     out = TroopType::RomanFieldCommander;
     return true;
   }
-  if (lowered == QStringLiteral("carthage_mercenary_broker")) {
-    out = TroopType::CarthageMercenaryBroker;
+  if (lowered == QStringLiteral("carthage_spear_commander")) {
+    out = TroopType::CarthageSpearCommander;
     return true;
   }
-  if (lowered == QStringLiteral("carthage_cavalry_patron")) {
-    out = TroopType::CarthageCavalryPatron;
+  if (lowered == QStringLiteral("carthage_bow_commander")) {
+    out = TroopType::CarthageBowCommander;
     return true;
   }
-  if (lowered == QStringLiteral("carthage_elephant_master")) {
-    out = TroopType::CarthageElephantMaster;
+  if (lowered == QStringLiteral("carthage_sword_commander")) {
+    out = TroopType::CarthageSwordCommander;
     return true;
   }
   if (lowered == QStringLiteral("civilian")) {
@@ -202,9 +202,9 @@ inline auto try_parse_troop_type(const std::string& str) -> std::optional<TroopT
   case TroopType::RomanLegionOrganizer:
   case TroopType::RomanVeteranConsul:
   case TroopType::RomanFieldCommander:
-  case TroopType::CarthageMercenaryBroker:
-  case TroopType::CarthageCavalryPatron:
-  case TroopType::CarthageElephantMaster:
+  case TroopType::CarthageSpearCommander:
+  case TroopType::CarthageBowCommander:
+  case TroopType::CarthageSwordCommander:
     return true;
   default:
     return false;
@@ -218,9 +218,9 @@ inline auto try_parse_troop_type(const std::string& str) -> std::optional<TroopT
   case TroopType::RomanVeteranConsul:
   case TroopType::RomanFieldCommander:
     return Game::Systems::NationID::RomanRepublic;
-  case TroopType::CarthageMercenaryBroker:
-  case TroopType::CarthageCavalryPatron:
-  case TroopType::CarthageElephantMaster:
+  case TroopType::CarthageSpearCommander:
+  case TroopType::CarthageBowCommander:
+  case TroopType::CarthageSwordCommander:
     return Game::Systems::NationID::Carthage;
   default:
     return std::nullopt;
@@ -230,7 +230,7 @@ inline auto try_parse_troop_type(const std::string& str) -> std::optional<TroopT
 [[nodiscard]] inline auto default_commander_troop_for_nation(
     Game::Systems::NationID nation) noexcept -> TroopType {
   if (nation == Game::Systems::NationID::Carthage) {
-    return TroopType::CarthageElephantMaster;
+    return TroopType::CarthageSwordCommander;
   }
   return TroopType::RomanVeteranConsul;
 }

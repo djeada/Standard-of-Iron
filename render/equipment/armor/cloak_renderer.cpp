@@ -404,6 +404,21 @@ void CloakRenderer::submit(const CloakConfig& config,
       palette_slots);
 }
 
+auto cloak_mantle_color(const CloakConfig& config,
+                        const HumanoidPalette& palette) -> QVector3D {
+  float const blend = std::clamp(config.team_blend, 0.0F, 1.0F);
+  if (blend <= 0.0F) {
+    return config.primary_color;
+  }
+
+  QVector3D const team_cloth = palette.cloth * std::max(0.0F, config.team_shade);
+  QVector3D const mixed =
+      (config.primary_color * (1.0F - blend)) + (team_cloth * blend);
+  return {std::clamp(mixed.x(), 0.0F, 1.0F),
+          std::clamp(mixed.y(), 0.0F, 1.0F),
+          std::clamp(mixed.z(), 0.0F, 1.0F)};
+}
+
 auto cloak_fill_role_colors_with_primary(const QVector3D& primary_color,
                                          const HumanoidPalette& palette,
                                          QVector3D* out,

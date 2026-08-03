@@ -398,6 +398,10 @@ auto roman_greaves_role_colors(const void* variant_void,
                                QVector3D* out,
                                std::uint32_t base_count,
                                std::size_t max_count) -> std::uint32_t;
+auto carthage_greaves_role_colors(const void* variant_void,
+                                  QVector3D* out,
+                                  std::uint32_t base_count,
+                                  std::size_t max_count) -> std::uint32_t;
 auto roman_shoulder_role_colors(const void* variant_void,
                                 QVector3D* out,
                                 std::uint32_t base_count,

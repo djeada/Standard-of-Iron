@@ -325,7 +325,7 @@ Rectangle {
             gradient: Gradient {
                 GradientStop {
                     position: 0
-                    color: "#0f0a06aa"
+                    color: "#aa0f0a06"
                 }
 
                 GradientStop {
@@ -335,7 +335,7 @@ Rectangle {
 
                 GradientStop {
                     position: 1
-                    color: "#190f08bb"
+                    color: "#bb190f08"
                 }
             }
         }

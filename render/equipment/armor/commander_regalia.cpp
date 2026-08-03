@@ -20,44 +20,50 @@ enum RegaliaPaletteSlot : std::uint8_t {
 using Primitive = GeneratedEquipmentPrimitive;
 
 void add_fabius_regalia(std::vector<Primitive>& p) {
-  p.push_back(generated_ellipsoid(
-      {-0.34F, 0.02F, 0.0F}, {0.23F, 0.10F, 0.21F}, k_trim_slot, 1.0F, 2));
-  p.push_back(generated_ellipsoid(
-      {0.34F, 0.02F, 0.0F}, {0.23F, 0.10F, 0.21F}, k_trim_slot, 1.0F, 2));
-  p.push_back(generated_cone({-0.31F, -0.03F, -0.01F},
-                             {-0.55F, -0.13F, -0.04F},
-                             0.11F,
-                             k_cloth_slot,
-                             1.0F,
-                             2));
-  p.push_back(generated_cone(
-      {0.31F, -0.03F, -0.01F}, {0.55F, -0.13F, -0.04F}, 0.11F, k_cloth_slot, 1.0F, 2));
-  p.push_back(generated_cylinder(
-      {-0.23F, -0.10F, 0.18F}, {0.23F, -0.10F, 0.18F}, 0.055F, k_trim_slot, 1.0F, 2));
+
+  for (int const side : {-1, 1}) {
+    auto const s = static_cast<float>(side);
+    for (int lame = 0; lame < 3; ++lame) {
+      float const t = static_cast<float>(lame) / 2.0F;
+      p.push_back(generated_box({s * (0.255F + 0.075F * t), 0.055F - 0.105F * t, 0.0F},
+                                {0.085F + 0.020F * t, 0.028F, 0.175F - 0.030F * t},
+                                k_trim_slot,
+                                1.0F,
+                                2));
+    }
+  }
+
+  p.push_back(generated_box(
+      {0.0F, 0.075F, 0.155F}, {0.155F, 0.040F, 0.045F}, k_trim_slot, 1.0F, 2));
+  p.push_back(generated_box(
+      {0.0F, -0.055F, 0.170F}, {0.075F, 0.062F, 0.030F}, k_trim_slot, 1.0F, 2));
 }
 
 void add_scipio_regalia(std::vector<Primitive>& p) {
   for (int const side : {-1, 1}) {
     auto const s = static_cast<float>(side);
-    p.push_back(generated_cone({s * 0.27F, -0.01F, 0.02F},
-                               {s * 0.53F, 0.07F, -0.02F},
-                               0.11F,
-                               k_trim_slot,
-                               1.0F,
-                               2));
-    p.push_back(generated_cone({s * 0.30F, -0.07F, 0.02F},
-                               {s * 0.50F, -0.20F, -0.02F},
-                               0.09F,
+
+    p.push_back(generated_box(
+        {s * 0.285F, 0.045F, 0.0F}, {0.105F, 0.032F, 0.165F}, k_trim_slot, 1.0F, 2));
+    p.push_back(generated_cone({s * 0.30F, -0.045F, 0.015F},
+                               {s * 0.46F, -0.175F, -0.010F},
+                               0.075F,
                                k_cloth_slot,
                                1.0F,
-                               2));
+                               1));
   }
+
+  p.push_back(generated_cylinder(
+      {0.0F, 0.020F, 0.150F}, {0.0F, 0.020F, 0.185F}, 0.085F, k_trim_slot, 1.0F, 2));
+  p.push_back(generated_cylinder(
+      {0.0F, 0.020F, 0.180F}, {0.0F, 0.020F, 0.196F}, 0.045F, k_cloth_slot, 1.0F, 2));
 }
 
 void add_marcellus_regalia(std::vector<Primitive>& p) {
+  p.push_back(generated_box(
+      {-0.275F, 0.055F, 0.0F}, {0.095F, 0.028F, 0.140F}, k_trim_slot, 1.0F, 2));
   p.push_back(generated_ellipsoid(
-      {-0.31F, 0.06F, -0.01F}, {0.14F, 0.08F, 0.115F}, k_cloth_slot, 1.0F, 1));
-  p.push_back(generated_sphere({-0.39F, 0.075F, 0.02F}, 0.065F, k_cloth_slot, 1.0F, 1));
+      {-0.31F, 0.02F, -0.01F}, {0.115F, 0.070F, 0.105F}, k_cloth_slot, 1.0F, 1));
   p.push_back(generated_cone(
       {-0.42F, 0.08F, 0.18F}, {-0.56F, -0.16F, 0.27F}, 0.075F, k_trim_slot, 1.0F, 2));
   p.push_back(generated_cone(
@@ -67,30 +73,44 @@ void add_marcellus_regalia(std::vector<Primitive>& p) {
 }
 
 void add_hanno_regalia(std::vector<Primitive>& p) {
+
   p.push_back(generated_ellipsoid(
-      {-0.39F, 0.14F, -0.01F}, {0.24F, 0.18F, 0.20F}, k_trim_slot, 1.0F, 2));
-  p.push_back(generated_ellipsoid(
-      {0.39F, 0.14F, -0.01F}, {0.24F, 0.18F, 0.20F}, k_trim_slot, 1.0F, 2));
-  p.push_back(generated_sphere({-0.39F, 0.14F, 0.19F}, 0.08F, k_cloth_slot, 1.0F, 2));
-  p.push_back(generated_sphere({0.39F, 0.14F, 0.19F}, 0.08F, k_cloth_slot, 1.0F, 2));
-  p.push_back(generated_box(
-      {0.0F, 0.08F, 0.25F}, {0.22F, 0.25F, 0.055F}, k_cloth_slot, 1.0F, 1));
-  p.push_back(generated_cone(
-      {0.0F, 0.18F, 0.30F}, {0.0F, -0.24F, 0.34F}, 0.13F, k_trim_slot, 1.0F, 2));
+      {0.285F, -0.235F, -0.065F}, {0.145F, 0.130F, 0.125F}, k_trim_slot, 1.0F, 1));
+  p.push_back(
+      generated_sphere({0.285F, -0.235F, 0.055F}, 0.055F, k_cloth_slot, 1.0F, 1));
+  p.push_back(generated_cylinder({0.145F, 0.020F, 0.060F},
+                                 {0.300F, -0.170F, -0.020F},
+                                 0.024F,
+                                 k_cloth_slot,
+                                 1.0F,
+                                 1));
+
+  for (int const side : {-1, 1}) {
+    auto const s = static_cast<float>(side);
+    p.push_back(generated_box(
+        {s * 0.255F, 0.055F, 0.0F}, {0.090F, 0.030F, 0.150F}, k_trim_slot, 1.0F, 2));
+  }
+
+  p.push_back(generated_cylinder({-0.055F, 0.090F, 0.150F},
+                                 {-0.055F, 0.090F, 0.180F},
+                                 0.062F,
+                                 k_trim_slot,
+                                 1.0F,
+                                 2));
 }
 
 void add_hasdrubal_regalia(std::vector<Primitive>& p) {
   for (int const side : {-1, 1}) {
     auto const s = static_cast<float>(side);
-    p.push_back(generated_cone({s * 0.24F, 0.16F, 0.0F},
-                               {s * 0.59F, 0.30F, -0.15F},
-                               0.12F,
+    p.push_back(generated_cone({s * 0.235F, 0.105F, 0.0F},
+                               {s * 0.415F, 0.185F, -0.130F},
+                               0.085F,
                                k_trim_slot,
                                1.0F,
                                2));
-    p.push_back(generated_cone({s * 0.25F, 0.10F, -0.04F},
-                               {s * 0.51F, -0.04F, -0.18F},
-                               0.09F,
+    p.push_back(generated_cone({s * 0.245F, 0.055F, -0.030F},
+                               {s * 0.400F, -0.060F, -0.150F},
+                               0.070F,
                                k_cloth_slot,
                                1.0F,
                                1));
@@ -98,17 +118,22 @@ void add_hasdrubal_regalia(std::vector<Primitive>& p) {
 }
 
 void add_hannibal_regalia(std::vector<Primitive>& p) {
-  for (int i = 0; i < 5; ++i) {
-    float const t = static_cast<float>(i) / 4.0F;
-    p.push_back(
-        generated_sphere({-0.34F - 0.055F * t, -0.01F - 0.055F * t, -0.03F + 0.04F * t},
-                         0.105F - 0.015F * t,
-                         k_cloth_slot,
-                         1.0F,
-                         1));
+
+  for (int i = 0; i < 4; ++i) {
+    float const t = static_cast<float>(i) / 3.0F;
+    p.push_back(generated_sphere(
+        {-0.300F - 0.048F * t, -0.030F - 0.078F * t, -0.020F + 0.030F * t},
+        0.088F - 0.016F * t,
+        k_cloth_slot,
+        1.0F,
+        1));
   }
   p.push_back(generated_ellipsoid(
-      {-0.35F, -0.02F, 0.02F}, {0.20F, 0.105F, 0.16F}, k_cloth_slot, 1.0F, 1));
+      {-0.300F, 0.015F, 0.010F}, {0.150F, 0.085F, 0.140F}, k_cloth_slot, 1.0F, 1));
+  p.push_back(generated_box(
+      {0.270F, 0.055F, 0.0F}, {0.100F, 0.032F, 0.160F}, k_trim_slot, 1.0F, 2));
+  p.push_back(generated_cylinder(
+      {0.0F, 0.010F, 0.155F}, {0.0F, 0.010F, 0.188F}, 0.080F, k_trim_slot, 1.0F, 2));
   p.push_back(generated_cone(
       {-0.42F, 0.01F, 0.20F}, {-0.64F, -0.25F, 0.30F}, 0.075F, k_trim_slot, 1.0F, 2));
   p.push_back(generated_cone(

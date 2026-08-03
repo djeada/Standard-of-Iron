@@ -308,9 +308,9 @@ void AudioCoordinator::configure_audio_voice_mappings() {
       "roman_legion_organizer",
       "roman_veteran_consul",
       "roman_field_commander",
-      "carthage_mercenary_broker",
-      "carthage_cavalry_patron",
-      "carthage_elephant_master",
+      "carthage_spear_commander",
+      "carthage_bow_commander",
+      "carthage_sword_commander",
   };
 
   for (const char* unit_name : k_commander_units) {

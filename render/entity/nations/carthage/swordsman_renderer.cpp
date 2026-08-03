@@ -29,8 +29,8 @@ const SwordsmanRendererProfile k_swordsman_profile{
                       SwordsmanLoadoutSlot::Armor,
                       SwordsmanLoadoutSlot::Sword,
                       SwordsmanLoadoutSlot::Cloak,
-                      SwordsmanLoadoutSlot::Cloak},
-    .loadout_slot_count = 6U,
+                      SwordsmanLoadoutSlot::Greaves},
+    .loadout_slot_count = 7U,
     .apply_skin_override = true,
     .ensure_styles_registered = ensure_swordsman_styles_registered};
 

@@ -75,10 +75,9 @@ inline constexpr char k_helmet_identity_review_id[] = "helmet_identity_review";
 inline constexpr char k_commander_helmet_review_id[] = "commander_helmet_review";
 inline constexpr char k_roman_settlement_works_id[] = "roman_settlement_works";
 inline constexpr char k_carthage_settlement_works_id[] = "carthage_settlement_works";
-inline constexpr char k_commander_consul_vs_broker_id[] = "commander_consul_vs_broker";
-inline constexpr char k_commander_field_vs_cavalry_id[] = "commander_field_vs_cavalry";
-inline constexpr char k_commander_legion_vs_elephant_id[] =
-    "commander_legion_vs_elephant";
+inline constexpr char k_commander_sword_duel_id[] = "commander_sword_commanders_duel";
+inline constexpr char k_commander_bow_duel_id[] = "commander_bow_commanders_duel";
+inline constexpr char k_commander_spear_duel_id[] = "commander_spear_commanders_duel";
 inline constexpr char k_path_bridge_crossing_id[] = "path_bridge_crossing";
 inline constexpr char k_path_uphill_advance_id[] = "path_uphill_advance";
 inline constexpr char k_path_wall_detour_id[] = "path_wall_detour";

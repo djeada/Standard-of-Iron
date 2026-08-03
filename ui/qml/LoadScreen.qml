@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron 1.0
 
 Rectangle {
     id: load_screen
@@ -12,6 +13,7 @@ Rectangle {
     property bool use_real_progress: true
     property var bg_sources: ["qrc:/StandardOfIron/assets/visuals/load_screen.png", "qrc:/assets/visuals/load_screen.png", "assets/visuals/load_screen.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/load_screen.png"]
     property int bg_index: 0
+    readonly property var hs: StyleGuide.historical
 
     function complete_loading() {
         load_screen.target_progress = 1;
@@ -19,7 +21,7 @@ Rectangle {
     }
 
     anchors.fill: parent
-    color: "#000000"
+    color: "#0B0806"
     visible: is_loading
     onIs_loadingChanged: {
         if (is_loading) {
@@ -72,43 +74,171 @@ Rectangle {
 
     Rectangle {
         anchors.fill: parent
-        color: "#40000000"
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#800B0806"
+            }
+
+            GradientStop {
+                position: 0.34
+                color: "#000B0806"
+            }
+
+            GradientStop {
+                position: 0.72
+                color: "#660B0806"
+            }
+
+            GradientStop {
+                position: 1
+                color: "#EE0B0806"
+            }
+        }
+    }
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 2
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+
+            GradientStop {
+                position: 0
+                color: Theme.accentBright
+            }
+
+            GradientStop {
+                position: 0.55
+                color: load_screen.hs.bronze
+            }
+
+            GradientStop {
+                position: 1
+                color: "#00000000"
+            }
+        }
+        opacity: 0.9
+    }
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 1
+        color: load_screen.hs.bronze
+        opacity: 0.35
     }
 
     Column {
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: parent.height * 0.3
-        spacing: 20
-        width: parent.width * 0.6
+        anchors.verticalCenterOffset: parent.height * 0.28
+        spacing: 18
+        width: Math.min(parent.width * 0.6, 620)
 
         Text {
-            text: qsTr("Loading...")
-            color: "#ecf0f1"
-            font.pixelSize: 48
-            font.bold: true
             anchors.horizontalCenter: parent.horizontalCenter
+            text: qsTr("Loading...")
+            color: Theme.textMain
+            font.family: "serif"
+            font.pixelSize: 40
+            font.bold: true
+            font.letterSpacing: 4
+            style: Text.Outline
+            styleColor: "#120D09"
+        }
+
+        Item {
+            width: parent.width
+            height: 10
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.right: parent.horizontalCenter
+                anchors.rightMargin: 14
+                height: 1
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+
+                    GradientStop {
+                        position: 0
+                        color: Qt.rgba(load_screen.hs.bronze.r, load_screen.hs.bronze.g, load_screen.hs.bronze.b, 0)
+                    }
+
+                    GradientStop {
+                        position: 1
+                        color: Qt.rgba(load_screen.hs.bronze.r, load_screen.hs.bronze.g, load_screen.hs.bronze.b, 0.8)
+                    }
+                }
+            }
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 7
+                height: 7
+                rotation: 45
+                color: load_screen.hs.bronze
+                opacity: 0.9
+            }
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.horizontalCenter
+                anchors.right: parent.right
+                anchors.leftMargin: 14
+                height: 1
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+
+                    GradientStop {
+                        position: 0
+                        color: Qt.rgba(load_screen.hs.bronze.r, load_screen.hs.bronze.g, load_screen.hs.bronze.b, 0.8)
+                    }
+
+                    GradientStop {
+                        position: 1
+                        color: Qt.rgba(load_screen.hs.bronze.r, load_screen.hs.bronze.g, load_screen.hs.bronze.b, 0)
+                    }
+                }
+            }
         }
 
         Rectangle {
             width: parent.width
-            height: 40
-            color: "#2c3e50"
-            border.color: "#34495e"
-            border.width: 2
+            height: 28
+            color: "#CC120D09"
+            border.color: load_screen.hs.bronze
+            border.width: 1
             radius: 4
 
             Rectangle {
                 id: progress_fill
 
-                readonly property real available_width: parent.width - 8
+                readonly property real available_width: parent.width - 6
 
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                anchors.margins: 4
+                anchors.margins: 3
                 width: Math.max(0, Math.min(available_width, available_width * load_screen.display_progress))
-                color: "#f39c12"
                 radius: 2
+
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+
+                    GradientStop {
+                        position: 0
+                        color: "#8F2F2A"
+                    }
+
+                    GradientStop {
+                        position: 1
+                        color: Theme.accent
+                    }
+                }
 
                 Rectangle {
                     anchors.fill: parent
@@ -136,17 +266,21 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: Math.floor(load_screen.display_progress * 100) + "%"
-                color: "#ecf0f1"
-                font.pixelSize: 18
+                color: Theme.textMain
+                font.pixelSize: 14
                 font.bold: true
+                font.letterSpacing: 1.2
+                style: Text.Outline
+                styleColor: "#120D09"
             }
         }
 
         Text {
-            text: load_screen.stage_text
-            color: "#bdc3c7"
-            font.pixelSize: 18
             anchors.horizontalCenter: parent.horizontalCenter
+            text: load_screen.stage_text
+            color: Theme.textSubLite
+            font.pixelSize: 14
+            font.letterSpacing: 0.6
         }
     }
 }

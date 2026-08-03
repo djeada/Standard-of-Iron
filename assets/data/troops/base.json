@@ -651,7 +651,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.72,
+        "render_scale": 0.84,
         "selection_ring_size": 1.9,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/commanders/fabius_maximus"
@@ -695,7 +695,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.72,
+        "render_scale": 0.84,
         "selection_ring_size": 1.85,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/commanders/scipio_africanus"
@@ -739,7 +739,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.72,
+        "render_scale": 0.84,
         "selection_ring_size": 1.8,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/commanders/marcellus"
@@ -760,7 +760,7 @@
       }
     },
     {
-      "id": "carthage_mercenary_broker",
+      "id": "carthage_spear_commander",
       "display_name": "Hanno the Great",
       "production": {
         "cost": 350,
@@ -783,7 +783,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.72,
+        "render_scale": 0.84,
         "selection_ring_size": 1.82,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/commanders/hanno_the_great"
@@ -804,7 +804,7 @@
       }
     },
     {
-      "id": "carthage_cavalry_patron",
+      "id": "carthage_bow_commander",
       "display_name": "Hasdrubal Barca",
       "production": {
         "cost": 330,
@@ -827,7 +827,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.72,
+        "render_scale": 0.84,
         "selection_ring_size": 1.88,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/commanders/hasdrubal_barca"
@@ -848,7 +848,7 @@
       }
     },
     {
-      "id": "carthage_elephant_master",
+      "id": "carthage_sword_commander",
       "display_name": "Hannibal Barca",
       "production": {
         "cost": 430,
@@ -871,7 +871,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.72,
+        "render_scale": 0.84,
         "selection_ring_size": 1.95,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/commanders/hannibal_barca"
