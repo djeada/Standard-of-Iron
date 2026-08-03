@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -24,6 +25,26 @@ auto select_visible_harass_target(const AISnapshot& snapshot,
   const ContactSnapshot* best_target = nullptr;
   float best_score = std::numeric_limits<float>::infinity();
 
+  const float harassment_range_sq = harassment_range * harassment_range;
+  const auto in_harassment_range = [&](const ContactSnapshot& contact) {
+    if (harassment_range <= 0.0F) {
+      return true;
+    }
+    return distance_squared(contact.pos_x,
+                            contact.pos_y,
+                            contact.pos_z,
+                            reference_x,
+                            reference_y,
+                            reference_z) <= harassment_range_sq;
+  };
+
+  const bool troops_in_sight =
+      std::any_of(snapshot.visible_enemies.begin(),
+                  snapshot.visible_enemies.end(),
+                  [&](const ContactSnapshot& contact) {
+                    return !contact.is_building && in_harassment_range(contact);
+                  });
+
   for (const auto& candidate : snapshot.visible_enemies) {
     const float dist_sq = distance_squared(candidate.pos_x,
                                            candidate.pos_y,
@@ -31,14 +52,15 @@ auto select_visible_harass_target(const AISnapshot& snapshot,
                                            reference_x,
                                            reference_y,
                                            reference_z);
-    if (harassment_range > 0.0F && dist_sq > harassment_range * harassment_range) {
+    if (harassment_range > 0.0F && dist_sq > harassment_range_sq) {
+      continue;
+    }
+
+    if (troops_in_sight && candidate.is_building) {
       continue;
     }
 
     float score = dist_sq;
-    if (!candidate.is_building) {
-      score += 120.0F;
-    }
     if (candidate.spawn_type == Game::Units::SpawnType::DefenseTower) {
       score += 800.0F;
     }
