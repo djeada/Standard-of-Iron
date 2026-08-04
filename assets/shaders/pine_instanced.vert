@@ -1,7 +1,7 @@
 #version 330 core
 
 layout(location = 0) in vec3 a_pos;
-layout(location = 1) in vec2 a_tex_coord;
+layout(location = 1) in vec3 a_tex_coord;
 layout(location = 2) in vec3 a_normal;
 layout(location = 3) in vec4 a_pos_scale;
 layout(location = 4) in vec4 a_color_sway;
@@ -22,6 +22,11 @@ out float v_foliage_mask;
 out float v_needle_seed;
 out float v_bark_seed;
 out vec3 v_local_pos;
+out float v_bough;
+
+float hash11(float n) {
+  return fract(sin(n * 78.233) * 43758.5453123);
+}
 
 void main() {
   const float TWO_PI = 6.2831853;
@@ -56,7 +61,15 @@ void main() {
   float scallop =
       tier_wave * 0.035 * foliage_mask * smoothstep(0.18, 0.52, source_radius);
 
-  model_pos.xz *= (1.0 + irregular + scallop);
+  float spoke = floor(a_tex_coord.x * 16.0 + 0.5);
+  float spoke_jitter = hash11(spoke * 1.7 + silhouette_seed * 13.0) - 0.5;
+  float spoke_reach =
+      foliage_mask * smoothstep(0.14, 0.42, source_radius) * (1.0 - tip_mask * 0.5);
+  float serration = spoke_jitter * 0.34 * spoke_reach;
+
+  model_pos.xz *= (1.0 + irregular + scallop + serration);
+
+  model_pos.y -= max(serration, 0.0) * 0.14;
 
   float skirt_mask =
       foliage_mask * (1.0 - tip_mask) * smoothstep(0.18, 0.55, source_radius);
@@ -87,7 +100,7 @@ void main() {
 
   vec3 local_normal = a_normal;
   if (foliage_mask > 0.0) {
-    float normal_scale = 1.0 + irregular + scallop * 0.6;
+    float normal_scale = 1.0 + irregular + scallop * 0.6 + serration * 0.8;
     local_normal =
         normalize(vec3(local_normal.x * normal_scale,
                        local_normal.y + foliage_mask * 0.18 + skirt_mask * 0.10,
@@ -108,7 +121,8 @@ void main() {
   v_world_pos = local_pos + world_pos;
   v_normal = final_normal;
   v_color = a_color_sway.rgb;
-  v_tex_coord = a_tex_coord;
+  v_tex_coord = a_tex_coord.xy;
+  v_bough = a_tex_coord.z;
   v_foliage_mask = foliage_mask;
   v_needle_seed = needle_seed;
   v_bark_seed = bark_seed;
