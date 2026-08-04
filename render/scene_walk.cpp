@@ -866,11 +866,12 @@ void Renderer::render_world(Engine::Core::World* world) {
     entry.hovered = (entity_id == m_hovered_entity_id);
     entry.distance_sq = distance_sq;
     if (!renderable->renderer_id.empty()) {
-      entry.renderer_key =
-          std::string(canonicalize_building_renderer_key(renderable->renderer_id));
+      std::string_view const canonical =
+          canonicalize_building_renderer_key(renderable->renderer_id);
       if (m_entity_registry != nullptr) {
-        entry.renderer_handle = m_entity_registry->get_handle(entry.renderer_key);
+        entry.renderer_handle = m_entity_registry->get_handle(canonical);
       }
+      entry.renderer_key = std::string(canonical);
     }
     dest.push_back(std::move(entry));
   };
@@ -1288,8 +1289,8 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
       return;
     }
 
-    std::string const renderer_key =
-        std::string(canonicalize_building_renderer_key(renderable->renderer_id));
+    std::string_view const renderer_key =
+        canonicalize_building_renderer_key(renderable->renderer_id);
     const auto renderer_handle = m_entity_registry->get_handle(renderer_key);
     auto const* fn = m_entity_registry->get(renderer_handle);
     if (fn == nullptr) {
