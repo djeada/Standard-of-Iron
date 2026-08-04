@@ -59,6 +59,14 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["dodge_active"] = false;
   result["aim_candidate_in_range"] = false;
   result["finisher_ready"] = false;
+  result["weapon_stance"] = QStringLiteral("melee");
+  result["can_switch_weapon"] = false;
+  result["bow_drawing"] = false;
+  result["bow_draw_progress"] = 0.0;
+  result["bow_full_draw"] = false;
+  result["bow_spread_degrees"] = 0.0;
+  result["bow_hold_seconds"] = 0.0;
+  result["bow_hold_strained"] = false;
   result["camera_mode"] = QStringLiteral("Chase");
   result["shield_bash_cooldown"] = 3.0;
   result["shield_bash_cooldown_remaining"] = 0.0;
@@ -213,12 +221,41 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
 
   result["dodge_active"] = input.dodge_active;
 
+  if (auto* aim = commander_entity != nullptr
+                      ? commander_entity
+                            ->get_component<Engine::Core::RpgCommanderAimComponent>()
+                      : nullptr) {
+    bool const bow = aim->stance == Engine::Core::FpvWeaponStance::Bow;
+    result["weapon_stance"] = bow ? QStringLiteral("bow") : QStringLiteral("melee");
+    result["bow_drawing"] = bow && aim->is_drawing();
+    result["bow_draw_progress"] = static_cast<double>(aim->draw_progress);
+    result["bow_full_draw"] =
+        bow && aim->draw_stage == Engine::Core::BowDrawStage::FullDraw;
+    result["bow_spread_degrees"] = static_cast<double>(aim->spread_degrees);
+    result["bow_hold_seconds"] = static_cast<double>(aim->full_draw_hold);
+    result["bow_hold_strained"] =
+        aim->full_draw_hold >=
+        Engine::Core::RpgCommanderAimComponent::k_steady_hold_seconds;
+  }
+  if (auto* attack =
+          commander_entity != nullptr
+              ? commander_entity->get_component<Engine::Core::AttackComponent>()
+              : nullptr) {
+    result["can_switch_weapon"] = attack->can_ranged && attack->can_melee;
+  }
+
   result["locked_target_name"] = QString();
   result["locked_target_hp"] = 0;
   result["locked_target_max_hp"] = 0;
   result["locked_target_hp_ratio"] = 0.0;
   result["locked_target_staggered"] = false;
   result["locked_target_guard_broken"] = false;
+
+  result["focus_target_name"] = QString();
+  result["focus_target_hp"] = 0;
+  result["focus_target_max_hp"] = 0;
+  result["focus_target_hp_ratio"] = 0.0;
+  result["focus_target_staggered"] = false;
 
   result["focus_marker_valid"] = false;
   result["focus_marker_locked"] = false;
@@ -263,6 +300,38 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
         result["focus_marker_y"] = static_cast<double>(sample->position.y());
         result["focus_marker_z"] = static_cast<double>(sample->position.z());
       }
+
+      QString focus_name;
+      int focus_hp = 0;
+      int focus_max_hp = 0;
+      bool focus_is_building = false;
+      bool focus_alive = false;
+      QString focus_nation;
+      if (input.get_unit_info(focus_id,
+                              focus_name,
+                              focus_hp,
+                              focus_max_hp,
+                              focus_is_building,
+                              focus_alive,
+                              focus_nation)) {
+        if (auto const* focus_commander =
+                focus_entity->get_component<Engine::Core::CommanderComponent>();
+            focus_commander != nullptr && !focus_commander->display_name.empty()) {
+          focus_name = Game::Util::tr_asset(Game::Util::k_commanders_context,
+                                            focus_commander->display_name);
+        }
+        result["focus_target_name"] = focus_name;
+        result["focus_target_hp"] = focus_hp;
+        result["focus_target_max_hp"] = focus_max_hp;
+        result["focus_target_hp_ratio"] =
+            focus_max_hp > 0
+                ? static_cast<double>(focus_hp) / static_cast<double>(focus_max_hp)
+                : 0.0;
+      }
+      auto const* focus_stagger =
+          focus_entity->get_component<Engine::Core::StaggerComponent>();
+      result["focus_target_staggered"] =
+          focus_stagger != nullptr && focus_stagger->remaining > 0.0F;
     }
   }
   if (locked_id != 0 && world != nullptr) {

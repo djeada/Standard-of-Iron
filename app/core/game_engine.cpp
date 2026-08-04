@@ -1559,6 +1559,14 @@ void GameEngine::commander_toggle_camera_mode() {
       *m_world, m_controlled_commander_id, m_runtime.local_owner_id);
 }
 
+void GameEngine::commander_toggle_weapon_stance() {
+  if (m_control_mode != PlayerControlMode::Commander || m_world == nullptr) {
+    return;
+  }
+  m_commander_control.toggle_weapon_stance(
+      *m_world, m_controlled_commander_id, m_runtime.local_owner_id);
+}
+
 void GameEngine::commander_mouse_move(qreal dx, qreal dy) {
   m_commander_control.mouse_move(dx, dy);
 }

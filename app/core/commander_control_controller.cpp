@@ -16,6 +16,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/building_line_of_sight.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/combat_action_service.h"
 #include "game/systems/combat_system/damage_processor.h"
@@ -23,6 +24,8 @@
 #include "game/systems/command_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
+#include "game/systems/rpg_combat_system/rpg_bow_aim.h"
+#include "game/systems/rpg_combat_system/rpg_bow_draw.h"
 #include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
@@ -50,72 +53,6 @@ auto signed_angle_delta(float target_degrees, float current_degrees) -> float {
     diff += 360.0F;
   }
   return diff;
-}
-
-auto segment_intersection_fraction(float start,
-                                   float delta,
-                                   float min_bound,
-                                   float max_bound,
-                                   float& t_enter,
-                                   float& t_exit) -> bool {
-  constexpr float k_epsilon = 0.00001F;
-  if (std::abs(delta) <= k_epsilon) {
-    return start >= min_bound && start <= max_bound;
-  }
-
-  const float inv_delta = 1.0F / delta;
-  float t0 = (min_bound - start) * inv_delta;
-  float t1 = (max_bound - start) * inv_delta;
-  if (t0 > t1) {
-    std::swap(t0, t1);
-  }
-  t_enter = std::max(t_enter, t0);
-  t_exit = std::min(t_exit, t1);
-  return t_enter <= t_exit;
-}
-
-auto first_building_intersection_fraction(const QVector3D& start,
-                                          const QVector3D& end,
-                                          unsigned int ignore_entity_id = 0) -> float {
-  auto const& buildings =
-      Game::Systems::BuildingCollisionRegistry::instance().get_all_buildings();
-  float best_fraction = 1.0F;
-  const QVector3D delta = end - start;
-  for (const auto& building : buildings) {
-    if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
-      continue;
-    }
-
-    float t_enter = 0.0F;
-    float t_exit = 1.0F;
-    const float half_width = building.width * 0.5F;
-    const float half_depth = building.depth * 0.5F;
-    if (!segment_intersection_fraction(start.x(),
-                                       delta.x(),
-                                       building.center_x - half_width,
-                                       building.center_x + half_width,
-                                       t_enter,
-                                       t_exit) ||
-        !segment_intersection_fraction(start.z(),
-                                       delta.z(),
-                                       building.center_z - half_depth,
-                                       building.center_z + half_depth,
-                                       t_enter,
-                                       t_exit)) {
-      continue;
-    }
-
-    if (t_enter >= 0.0F && t_enter <= 1.0F) {
-      best_fraction = std::min(best_fraction, t_enter);
-    }
-  }
-  return best_fraction;
-}
-
-auto has_clear_building_los(const QVector3D& start,
-                            const QVector3D& end,
-                            unsigned int ignore_entity_id = 0) -> bool {
-  return first_building_intersection_fraction(start, end, ignore_entity_id) >= 1.0F;
 }
 
 constexpr float k_commander_body_radius = 0.34F;
@@ -301,8 +238,8 @@ auto resolve_reachable_ground_position(const QVector3D& start,
                                        const QVector3D& desired,
                                        unsigned int ignore_entity_id = 0) -> QVector3D {
   QVector3D candidate = desired;
-  const float blocked_fraction =
-      first_building_intersection_fraction(start, desired, ignore_entity_id);
+  const float blocked_fraction = Game::Systems::first_building_intersection_fraction(
+      start, desired, ignore_entity_id);
   if (blocked_fraction < 1.0F) {
     const float safe_fraction = std::clamp(blocked_fraction - 0.08F, 0.0F, 1.0F);
     candidate = start + (desired - start) * safe_fraction;
@@ -421,6 +358,7 @@ void CommanderControlController::reset() {
   m_fov_current = 75.0F;
   m_cam_smooth_valid = false;
   m_cam_ground_valid = false;
+  m_aim_camera_blend = 0.0F;
   m_hit_impact_kick = 0.0F;
   m_observed_action_hit_count = 0;
   m_move_speed = 0.0F;
@@ -674,6 +612,21 @@ void CommanderControlController::toggle_close_camera_mode(
   }
 }
 
+void CommanderControlController::toggle_weapon_stance(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) const {
+  auto* commander = controlled_commander(world, commander_id, local_owner_id);
+  if (commander == nullptr) {
+    return;
+  }
+  if (Game::Systems::RpgCombat::toggle_weapon_stance(*commander)) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_guard_raise);
+  } else {
+    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
+  }
+}
+
 auto CommanderControlController::locked_target_id() const -> Engine::Core::EntityID {
   return m_locked_target_id;
 }
@@ -736,7 +689,7 @@ void CommanderControlController::cycle_lock_on_target(
       const float angle_diff =
           signed_angle_delta(std::atan2(dx, dz) * 57.29577951308232F, m_view_yaw);
       if (std::abs(angle_diff) > k_lock_max_angle_degrees ||
-          !has_clear_building_los(origin, soldier.position)) {
+          !Game::Systems::has_clear_building_los(origin, soldier.position)) {
         continue;
       }
       Candidate const resolved{
@@ -934,7 +887,7 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
   constexpr float k_lock_drop_sq = 18.0F * 18.0F;
   const QVector3D origin(cmd_transform->position.x, 0.0F, cmd_transform->position.z);
   const QVector3D target_pos = target_sample->position;
-  const bool target_visible = has_clear_building_los(origin, target_pos);
+  const bool target_visible = Game::Systems::has_clear_building_los(origin, target_pos);
 
   const float target_yaw = std::atan2(dx, dz) * 57.29577951308232F;
   const float diff = signed_angle_delta(target_yaw, m_view_yaw);
@@ -1062,7 +1015,7 @@ auto CommanderControlController::find_primary_target(
       float const distance = to_target.length();
       if (distance <= 0.0001F ||
           distance > max_range + std::max(0.0F, sample.body_radius) ||
-          !has_clear_building_los(origin, sample.position)) {
+          !Game::Systems::has_clear_building_los(origin, sample.position)) {
         continue;
       }
       to_target /= distance;
@@ -1160,8 +1113,18 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     return false;
   }
 
-  const auto target_id = find_primary_target(
-      world, commander_id, local_owner_id, k_strike_acquisition_bonus);
+  auto const* aim = commander->get_component<Engine::Core::RpgCommanderAimComponent>();
+  bool const shooting =
+      aim != nullptr && aim->stance == Engine::Core::FpvWeaponStance::Bow;
+
+  Engine::Core::EntityID target_id = 0;
+  if (shooting) {
+    m_primary_target_slot =
+        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+  } else {
+    target_id = find_primary_target(
+        world, commander_id, local_owner_id, k_strike_acquisition_bonus);
+  }
   auto const attack_result =
       Game::Systems::CombatActions::CombatActionService::request_attack(
           world,
@@ -1227,7 +1190,7 @@ auto CommanderControlController::resolve_ability_target(Engine::Core::World& wor
     const QVector3D target(
         candidate_transform->position.x, 0.0F, candidate_transform->position.z);
     return (target - origin).lengthSquared() <= max_range_sq &&
-           has_clear_building_los(origin, target);
+           Game::Systems::has_clear_building_los(origin, target);
   };
 
   if (m_locked_target_id != 0 && qualifies(m_locked_target_id)) {
@@ -1416,7 +1379,7 @@ void CommanderControlController::try_activate_vanguard_rush(
                                  target_transform->position.y,
                                  target_transform->position.z);
       if ((target_pos - resolved).length() <= 2.35F &&
-          has_clear_building_los(resolved, target_pos)) {
+          Game::Systems::has_clear_building_los(resolved, target_pos)) {
         Game::Systems::RpgCombat::deal_commander_attack_damage(
             &world, target, k_rush_damage, commander_id);
         if (target_unit->health > 0) {
@@ -1511,6 +1474,12 @@ auto CommanderControlController::update(Engine::Core::World& world,
     movement = commander->add_component<Engine::Core::MovementComponent>();
   }
   auto* guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
+
+  auto const* aim_state =
+      commander->get_component<Engine::Core::RpgCommanderAimComponent>();
+  bool const bow_stance =
+      aim_state != nullptr && aim_state->stance == Engine::Core::FpvWeaponStance::Bow;
+  bool const drawing_bow = aim_state != nullptr && aim_state->is_drawing();
 
   if (cmd_comp != nullptr && cmd_comp->flag_rally_in_progress &&
       !cmd_comp->fpv_controlled) {
@@ -1779,10 +1748,15 @@ auto CommanderControlController::update(Engine::Core::World& world,
       float speed = std::max(0.1F, unit->speed) * k_fpv_walk_speed_scale;
 
       auto const* stamina = Game::Systems::ensure_run_stamina(*commander);
-      bool const running = m_input.run && stamina != nullptr &&
+      bool const running = m_input.run && !drawing_bow && stamina != nullptr &&
                            (stamina->is_running || stamina->can_start_running());
       if (running) {
         speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
+      }
+      if (drawing_bow) {
+
+        constexpr float k_drawn_bow_move_scale = 0.55F;
+        speed *= k_drawn_bow_move_scale;
       }
       speed *= directional_speed_scale(forward_axis, right_axis);
       const float nx = transform->position.x + move.x() * speed * dt;
@@ -1831,6 +1805,16 @@ auto CommanderControlController::update(Engine::Core::World& world,
   m_move_right_axis = right_axis;
   m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
+
+  auto* aim = Game::Systems::RpgCombat::sync_commander_aim(
+      *commander,
+      {.view_yaw_degrees = m_view_yaw,
+       .view_pitch_degrees = m_view_pitch,
+       .move_speed = m_move_speed,
+       .running = m_move_running,
+       .primary_held = m_input.primary_action,
+       .camera_origin = m_cam_eye_smooth,
+       .camera_origin_valid = m_cam_smooth_valid});
   if (cmd_comp != nullptr) {
     cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->get_vx() : 0.0F;
     cmd_comp->fpv_motion_vz = (movement != nullptr) ? movement->get_vz() : 0.0F;
@@ -1914,8 +1898,10 @@ auto CommanderControlController::update(Engine::Core::World& world,
         std::max(0.0F, m_input.primary_action_scan_cooldown - dt);
   }
 
+  bool const waiting_for_release = aim != nullptr && aim->relaxed_from_overhold;
   if (m_dodge_state != DodgeState::Rolling && m_jump_timer <= 0.0F &&
-      m_input.primary_action && m_input.primary_action_scan_cooldown <= 0.0F) {
+      !waiting_for_release && m_input.primary_action &&
+      m_input.primary_action_scan_cooldown <= 0.0F) {
     if (!primary_action(world, commander_id, local_owner_id)) {
       return false;
     }
@@ -1936,8 +1922,29 @@ auto CommanderControlController::update(Engine::Core::World& world,
     m_observed_action_hit_count = 0;
   }
 
-  Engine::Core::EntityID const aim_candidate_id =
-      find_primary_target(world, commander_id, local_owner_id);
+  Engine::Core::EntityID aim_candidate_id = 0;
+  if (aim != nullptr && aim->stance == Engine::Core::FpvWeaponStance::Bow) {
+
+    constexpr float k_crosshair_forgiveness = 0.22F;
+    auto const* commander_attack =
+        commander->get_component<Engine::Core::AttackComponent>();
+    float const range = commander_attack != nullptr ? commander_attack->range : 12.0F;
+    auto const hit = Game::Systems::RpgCombat::raycast_enemy_bodies(
+        world,
+        *commander,
+        Game::Systems::RpgCombat::crosshair_ray(*commander, *aim),
+        range,
+        k_crosshair_forgiveness);
+    if (hit.has_value()) {
+      aim_candidate_id = hit->entity_id;
+      m_primary_target_slot = hit->soldier_slot;
+    } else {
+      m_primary_target_slot =
+          Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+    }
+  } else {
+    aim_candidate_id = find_primary_target(world, commander_id, local_owner_id);
+  }
 
   if (auto* rpg_targets =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
@@ -2041,6 +2048,17 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
     close_camera_mode = cmd->close_camera_mode;
   }
 
+  auto const* aim_state =
+      commander.get_component<Engine::Core::RpgCommanderAimComponent>();
+  bool const aiming_bow = aim_state != nullptr && aim_state->is_drawing();
+  constexpr float k_aim_blend_rate = 9.0F;
+  m_aim_camera_blend += ((aiming_bow ? 1.0F : 0.0F) - m_aim_camera_blend) *
+                        (1.0F - std::exp(-k_aim_blend_rate * std::max(dt, 0.0F)));
+  float const aim_blend = std::clamp(m_aim_camera_blend, 0.0F, 1.0F);
+  auto const aim_mix = [aim_blend](float base, float aimed) {
+    return base + ((aimed - base) * aim_blend);
+  };
+
   constexpr float k_hit_kick_decay = 9.0F;
   constexpr float k_hit_kick_dolly = 0.14F;
   constexpr float k_hit_kick_fov = 2.6F;
@@ -2050,8 +2068,9 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   }
   const float hit_kick = m_hit_impact_kick * motion_scale;
 
+  constexpr float k_fov_aim = 52.0F;
   const float fov_target =
-      (close_camera_mode ? 64.0F : k_fov_walk) +
+      aim_mix(close_camera_mode ? 64.0F : k_fov_walk, k_fov_aim) +
       ((m_move_running && m_move_speed > 0.05F) ? k_fov_run_boost : 0.0F) +
       m_dodge_fov_kick + (k_hit_kick_fov * hit_kick);
   m_fov_current += (fov_target - m_fov_current) *
@@ -2084,14 +2103,22 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   const QVector3D pivot(transform->position.x,
                         m_cam_ground_y + jump_height_offset + k_focus_height,
                         transform->position.z);
+  constexpr float k_aim_camera_back_offset = 1.55F;
+  constexpr float k_aim_camera_up_offset = 0.50F;
+  constexpr float k_aim_camera_side_offset = -0.62F;
+  constexpr float k_aim_target_distance = 12.0F;
   const float back_offset =
-      close_camera_mode ? k_close_camera_back_offset : k_camera_back_offset;
+      aim_mix(close_camera_mode ? k_close_camera_back_offset : k_camera_back_offset,
+              k_aim_camera_back_offset);
   const float up_offset =
-      close_camera_mode ? k_close_camera_up_offset : k_camera_up_offset;
+      aim_mix(close_camera_mode ? k_close_camera_up_offset : k_camera_up_offset,
+              k_aim_camera_up_offset);
   const float target_distance =
-      close_camera_mode ? k_close_target_distance : k_target_distance;
+      aim_mix(close_camera_mode ? k_close_target_distance : k_target_distance,
+              k_aim_target_distance);
   const float side_offset =
-      close_camera_mode ? k_close_camera_side_offset : k_camera_side_offset;
+      aim_mix(close_camera_mode ? k_close_camera_side_offset : k_camera_side_offset,
+              k_aim_camera_side_offset);
   QVector3D eye_desired = pivot - flat_forward * back_offset +
                           QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
                           flat_right * (side_offset + bob_l);
@@ -2127,7 +2154,7 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   }
 
   const float blocked_fraction =
-      first_building_intersection_fraction(pivot, eye_desired);
+      Game::Systems::first_building_intersection_fraction(pivot, eye_desired);
   const bool camera_blocked = blocked_fraction < 1.0F;
   if (camera_blocked) {
     const float safe_fraction =

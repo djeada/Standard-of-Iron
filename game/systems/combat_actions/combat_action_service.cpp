@@ -57,10 +57,15 @@ select_rpg_sword_action_id(const Engine::Core::CommanderComponent* commander,
   return CombatActionId::RpgSpearThrust;
 }
 
-[[nodiscard]] auto
-should_request_ranged_action(const Engine::Core::AttackComponent* attack) -> bool {
+[[nodiscard]] auto should_request_ranged_action(
+    const Engine::Core::AttackComponent* attack,
+    const Engine::Core::RpgCommanderAimComponent* aim) -> bool {
   if (attack == nullptr || !attack->can_ranged) {
     return false;
+  }
+
+  if (aim != nullptr) {
+    return aim->stance == Engine::Core::FpvWeaponStance::Bow;
   }
   return !attack->can_melee ||
          attack->preferred_mode == Engine::Core::AttackComponent::CombatMode::Ranged;
@@ -110,7 +115,10 @@ auto CombatActionService::request_attack(
 
   auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
   auto* attack = attacker->get_component<Engine::Core::AttackComponent>();
-  bool const request_ranged_action = should_request_ranged_action(attack);
+  auto* aim = player_driven
+                  ? attacker->get_component<Engine::Core::RpgCommanderAimComponent>()
+                  : nullptr;
+  bool const request_ranged_action = should_request_ranged_action(attack, aim);
   if (attack != nullptr && request_ranged_action) {
     attack->current_mode = Engine::Core::AttackComponent::CombatMode::Ranged;
   } else if (attack != nullptr && attack->can_melee) {
@@ -159,6 +167,13 @@ auto CombatActionService::request_attack(
              attack_family == Engine::Core::CombatAttackFamily::Bow) {
     action_id = CombatActionId::RpgBowShot;
     definition = find_combat_action_definition(action_id);
+    if (aim != nullptr) {
+      aim->draw_stage = Engine::Core::BowDrawStage::Drawing;
+      aim->draw_progress = 0.0F;
+      aim->full_draw_hold = 0.0F;
+      aim->shot_power = 0.0F;
+      aim->relaxed_from_overhold = false;
+    }
   }
 
   if (combat_state != nullptr) {
@@ -200,7 +215,8 @@ auto CombatActionService::request_attack(
       }
     }
 
-    if (request.primary_held_duration >= 0.4F) {
+    if (request.primary_held_duration >= 0.4F &&
+        action_id != CombatActionId::RpgBowShot) {
       commander->power_strike_active = true;
     }
   }
