@@ -51,7 +51,9 @@ public:
                    float splash_damage_multiplier = 0.6F,
                    bool friendly_fire = false,
                    ArrowVisualStyle visual_style = ArrowVisualStyle::Focused,
-                   std::optional<QVector3D> target_origin_at_launch = std::nullopt);
+                   std::optional<QVector3D> target_origin_at_launch = std::nullopt,
+
+                   float arc_scale = 1.0F);
 
   void spawn_stone(const QVector3D& start,
                    const QVector3D& end,

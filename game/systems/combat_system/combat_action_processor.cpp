@@ -5,8 +5,10 @@
 #include <numbers>
 #include <span>
 
+#include "../../audio/audio_cues.h"
 #include "../../core/component.h"
 #include "../../core/entity.h"
+#include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../combat_actions/body_impact.h"
 #include "../combat_actions/combat_action_definition.h"
@@ -14,6 +16,8 @@
 #include "../combat_actions/projectile_release.h"
 #include "../combat_actions/weapon_trace.h"
 #include "../combat_rules.h"
+#include "../rpg_combat_system/rpg_bow_draw.h"
+#include "../rpg_combat_system/rpg_bow_shot.h"
 #include "attack_processor.h"
 #include "combat_hit_resolver.h"
 #include "combat_utils.h"
@@ -346,6 +350,63 @@ void deal_mount_body_impact(
   }
 }
 
+void cancel_authored_action(Engine::Core::RpgCommanderActionComponent& action,
+                            Engine::Core::CombatStateComponent* presentation_state) {
+  action.action_running = false;
+  action.action_completed = true;
+  action.action_active = false;
+  action.weapon_trace_active = false;
+  action.cancel_window_active = false;
+  action.phase = Engine::Core::RpgCommanderActionPhase::None;
+  if (presentation_state != nullptr) {
+    presentation_state->animation_state = Engine::Core::CombatAnimationState::Idle;
+    presentation_state->state_time = 0.0F;
+    presentation_state->state_duration = 0.0F;
+    presentation_state->input_buffered = false;
+  }
+}
+
+auto update_commander_bow_draw(
+    Engine::Core::Entity& entity,
+    const Engine::Core::RpgCommanderActionComponent& action,
+    const Game::Systems::CombatActions::CombatActionDefinition& definition,
+    float delta_time) -> Game::Systems::RpgCombat::BowDrawTick {
+  Game::Systems::RpgCombat::BowDrawTick tick;
+  tick.allowed_delta = delta_time;
+
+  auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
+  auto* aim = entity.get_component<Engine::Core::RpgCommanderAimComponent>();
+  if (aim == nullptr || commander == nullptr || !commander->fpv_controlled) {
+    return tick;
+  }
+
+  float stamina_ratio = 1.0F;
+  if (auto const* stamina = entity.get_component<Engine::Core::StaminaComponent>();
+      stamina != nullptr && stamina->max_stamina > 0.0F) {
+    stamina_ratio = std::clamp(stamina->stamina / stamina->max_stamina, 0.0F, 1.0F);
+  }
+
+  tick = Game::Systems::RpgCombat::update_bow_draw(
+      *aim, action, definition, stamina_ratio, delta_time);
+
+  if (tick.reached_full_draw) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_lock_on));
+  }
+  if (tick.relaxed) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_ability_refused));
+  }
+  if (tick.at_full_draw) {
+    if (auto* stamina = entity.get_component<Engine::Core::StaminaComponent>()) {
+      constexpr float k_full_draw_stamina_drain = 6.0F;
+      stamina->stamina =
+          std::max(0.0F, stamina->stamina - (k_full_draw_stamina_drain * delta_time));
+    }
+  }
+  return tick;
+}
+
 void handle_action_events(
     Engine::Core::World& world,
     Engine::Core::Entity& entity,
@@ -423,6 +484,18 @@ void handle_action_events(
       }
       continue;
     }
+    if (action_id == Game::Systems::CombatActions::CombatActionId::RpgBowShot &&
+        entity.has_component<Engine::Core::RpgCommanderAimComponent>()) {
+      auto const loosed =
+          Game::Systems::RpgCombat::loose_aimed_arrow(world, entity, definition);
+      if (loosed.released) {
+        action.active_target_id = loosed.target_id;
+        action.active_target_soldier_slot = loosed.soldier_slot;
+        action.last_hit_target_id = loosed.target_id;
+        action.last_damage = loosed.damage;
+      }
+      continue;
+    }
     auto const release = Game::Systems::CombatActions::release_projectile_for_action(
         &world, entity, definition, action.active_target_id);
     if (release.released) {
@@ -491,8 +564,19 @@ void process_authored_combat_action(
     }
   }
 
+  float action_delta = delta_time;
+  if (action_id == Game::Systems::CombatActions::CombatActionId::RpgBowShot) {
+    auto const draw =
+        update_commander_bow_draw(entity, *action, *definition, delta_time);
+    if (draw.relaxed) {
+      cancel_authored_action(*action, presentation_state);
+      return;
+    }
+    action_delta = draw.allowed_delta;
+  }
+
   auto const events = Game::Systems::CombatActions::advance_combat_action_events(
-      *action, delta_time, *definition);
+      *action, action_delta, *definition);
   handle_action_events(*world, entity, *action, *definition, events);
 
   auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();

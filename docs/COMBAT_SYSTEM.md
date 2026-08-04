@@ -441,6 +441,68 @@ Timing constants encode how much control the player has:
 `rpg_combo_cadence` in the arena catalog is the regression contract for all of
 this.
 
+## The Commander's Bow
+
+A commander who carries a bow shoots it the way an archer would: the player
+draws, aims, and lets go. Everything that makes that true lives beside the
+other RPG combat code, in `game/systems/rpg_combat_system/`:
+
+- `rpg_bow_aim` — where the shot is pointed and what it can hit.
+- `rpg_bow_draw` — the draw, the hold, and what the string is worth when it is
+  released.
+- `rpg_bow_shot` — loosing the arrow itself.
+
+`RpgCommanderAimComponent` carries the state all three read: the view angles,
+the camera the player is sighting from, the draw stage, and the weapon stance.
+
+### Weapon Stance
+
+Commanders such as Marcellus and Hasdrubal carry a bow and a blade, and the
+tactical layer leaves `AttackComponent::preferred_mode` on `Auto` so the RTS can
+pick per range. Under direct control that would have meant a bow commander
+swinging steel forever, so `CombatActionService::request_attack` asks the aim
+component instead. The opening stance is the commander's stronger weapon, and
+`commander.toggle_weapon` (`X`) switches it.
+
+### Draw and Hold
+
+Holding the attack button nocks and draws. The bow shot's authored timeline is
+stopped a hair before its `ProjectileRelease` marker for as long as the string
+is held, which is what makes the commander stand at full draw instead of
+snapping off a shot the moment the animation reaches it. The presentation phase
+machine is frozen with it - those phases are cut from the same timeline, so
+letting them run on would walk the commander back to idle with the string still
+back.
+
+Releasing early looses immediately at whatever the draw was worth, floored at
+`k_min_shot_power`; the animation covers the remaining distance to the release
+marker at a few times speed so a snap shot still reads as a shot. Draw power
+scales damage and arrow speed. Holding at full draw past
+`k_steady_hold_seconds` widens the aim cone and bleeds the shot's power; past
+`k_max_hold_seconds` the arm gives out, the string relaxes, and the player has
+to release the button before the commander will nock another arrow.
+
+### Free Aim
+
+Nothing about the shot consults a locked target. The arrow is aimed at whatever
+the crosshair covers, resolved by ray-casting enemy soldier bodies as upright
+cylinders, and an arrow that hits nothing still flies its full range and plants
+itself in the ground - a miss has to be legible.
+
+Two details keep aiming honest:
+
+- **The camera, not the chest.** The chase camera sits behind and to the side of
+  the commander, so a shot fired parallel to the camera lands beside what the
+  player has the reticle on. The crosshair line is resolved first, from the
+  camera, and the arrow is then aimed from the bow at that point.
+- **The aim cone is earned.** `aim_spread_degrees` opens the cone for movement,
+  sprinting, a half-drawn string, a long hold, and low stamina, and the reticle
+  draws that same cone in pixels. A planted archer at full draw is nearly a
+  laser; one shooting on the run is not.
+
+`rpg_bow_volley` in the arena catalog is the regression contract: three
+chargers, three drawn shots, three bodies.
+
 ## Known Boundaries
 
 ### RPG Commander Combat

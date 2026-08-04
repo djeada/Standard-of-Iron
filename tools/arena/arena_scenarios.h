@@ -66,6 +66,7 @@ inline constexpr char k_rpg_obstacle_slide_id[] = "rpg_obstacle_slide";
 inline constexpr char k_rpg_combo_cadence_id[] = "rpg_combo_cadence";
 inline constexpr char k_rpg_pass_ranks_id[] = "rpg_pass_ranks";
 inline constexpr char k_rpg_strike_lunge_id[] = "rpg_strike_lunge";
+inline constexpr char k_rpg_bow_volley_id[] = "rpg_bow_volley";
 inline constexpr char k_commander_identity_lineup_id[] = "commander_identity_lineup";
 inline constexpr char k_healer_identity_lineup_id[] = "healer_identity_lineup";
 inline constexpr char k_healer_lod_probe_id[] = "healer_lod_probe";

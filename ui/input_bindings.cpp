@@ -393,6 +393,13 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   {},
                   QStringLiteral("R"),
                   false});
+  catalog.append({QStringLiteral("commander.toggle_weapon"),
+                  commander,
+                  combat,
+                  QObject::tr("Switch between melee weapon and bow"),
+                  {},
+                  QStringLiteral("X"),
+                  false});
   catalog.append({QStringLiteral("commander.toggle_camera_mode"),
                   commander,
                   camera,

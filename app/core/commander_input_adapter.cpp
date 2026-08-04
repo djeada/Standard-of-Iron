@@ -97,6 +97,12 @@ void CommanderInputAdapter::toggle_camera_mode() {
   }
 }
 
+void CommanderInputAdapter::toggle_weapon_stance() {
+  if (m_engine != nullptr) {
+    m_engine->commander_toggle_weapon_stance();
+  }
+}
+
 void CommanderInputAdapter::center_mouse(qreal center_sx, qreal center_sy) {
   if (m_engine != nullptr) {
     m_engine->commander_center_mouse(center_sx, center_sy);

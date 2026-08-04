@@ -322,6 +322,10 @@ Item {
             if (game.commander_trigger_rally)
                 game.commander_trigger_rally();
             return true;
+        case "commander.toggle_weapon":
+            if (game.commander_input && game.commander_input.toggle_weapon_stance)
+                game.commander_input.toggle_weapon_stance();
+            return true;
         case "commander.toggle_camera_mode":
             if (game.commander_toggle_camera_mode)
                 game.commander_toggle_camera_mode();
