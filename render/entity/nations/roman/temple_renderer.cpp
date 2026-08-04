@@ -18,18 +18,18 @@ namespace Render::GL::Roman {
 namespace {
 
 struct RomanTemplePalette {
-  QVector3D marble{0.88F, 0.86F, 0.80F};
-  QVector3D marble_shade{0.74F, 0.71F, 0.64F};
-  QVector3D marble_dark{0.55F, 0.52F, 0.46F};
-  QVector3D limestone{0.78F, 0.74F, 0.65F};
-  QVector3D limestone_dark{0.46F, 0.43F, 0.37F};
-  QVector3D mortar{0.52F, 0.49F, 0.43F};
-  QVector3D terracotta{0.63F, 0.25F, 0.105F};
-  QVector3D terracotta_dark{0.43F, 0.15F, 0.08F};
+  QVector3D marble{0.94F, 0.92F, 0.85F};
+  QVector3D marble_shade{0.81F, 0.78F, 0.70F};
+  QVector3D marble_dark{0.58F, 0.55F, 0.48F};
+  QVector3D limestone{0.84F, 0.78F, 0.66F};
+  QVector3D limestone_dark{0.50F, 0.46F, 0.38F};
+  QVector3D mortar{0.56F, 0.52F, 0.45F};
+  QVector3D terracotta{0.66F, 0.29F, 0.14F};
+  QVector3D terracotta_dark{0.47F, 0.18F, 0.09F};
   QVector3D cloth_red{0.53F, 0.075F, 0.052F};
   QVector3D gold{0.72F, 0.53F, 0.20F};
   QVector3D bronze{0.48F, 0.30F, 0.11F};
-  QVector3D blue_accent{0.15F, 0.31F, 0.47F};
+  QVector3D blue_accent{0.24F, 0.40F, 0.55F};
   QVector3D soot{0.16F, 0.14F, 0.12F};
   QVector3D flame{0.88F, 0.47F, 0.12F};
   QVector3D cedar{0.40F, 0.25F, 0.13F};
@@ -122,6 +122,119 @@ void add_votive_altar(BuildingArchetypeDesc& desc,
                 BuildingLODMask::Full);
 }
 
+void add_roman_temple_ruin(BuildingArchetypeDesc& desc,
+                           const RomanTemplePalette& c,
+                           float podium_y,
+                           float cella_h) {
+  constexpr auto k_ruin = BuildingStateMask::Destroyed;
+
+  struct Drum {
+    float x;
+    float z;
+    float yaw;
+    float len;
+  };
+  constexpr std::array<Drum, 6> k_drums{Drum{-0.86F, 0.42F, 18.0F, 0.30F},
+                                        Drum{-0.34F, -0.58F, 74.0F, 0.24F},
+                                        Drum{0.28F, 0.66F, 122.0F, 0.27F},
+                                        Drum{0.94F, -0.30F, 41.0F, 0.22F},
+                                        Drum{-1.28F, -0.70F, 96.0F, 0.26F},
+                                        Drum{1.18F, 0.52F, 8.0F, 0.20F}};
+  for (const auto& drum : k_drums) {
+    float const rad = drum.yaw * 3.14159265F / 180.0F;
+    QVector3D const axis(std::cos(rad) * drum.len, 0.0F, std::sin(rad) * drum.len);
+    QVector3D const mid(drum.x, podium_y + 0.062F, drum.z);
+    desc.add_cylinder(mid - axis, mid + axis, 0.058F, c.marble_shade, k_ruin);
+  }
+
+  struct Block {
+    float x;
+    float y;
+    float z;
+    float yaw;
+    float roll;
+    float sx;
+    float sy;
+    float sz;
+  };
+
+  constexpr std::array<Block, 7> k_blocks{
+      Block{-1.44F, 0.10F, 0.34F, 22.0F, 9.0F, 0.16F, 0.075F, 0.11F},
+      Block{-0.62F, 0.09F, -1.16F, 58.0F, -6.0F, 0.13F, 0.065F, 0.13F},
+      Block{0.44F, 0.10F, 1.22F, 12.0F, 14.0F, 0.18F, 0.070F, 0.10F},
+      Block{1.42F, 0.09F, -0.86F, 81.0F, -11.0F, 0.14F, 0.060F, 0.12F},
+      Block{0.10F, 0.09F, -0.34F, 34.0F, 7.0F, 0.15F, 0.070F, 0.12F},
+      Block{-0.96F, 0.08F, 0.88F, 66.0F, -8.0F, 0.12F, 0.058F, 0.10F},
+      Block{1.02F, 0.10F, 0.16F, 5.0F, 16.0F, 0.19F, 0.080F, 0.13F}};
+  int block_index = 0;
+  for (const auto& block : k_blocks) {
+    bool const on_podium = block_index++ >= 4;
+    desc.add_rotated_box(
+        QVector3D(block.x, block.y + (on_podium ? podium_y : 0.0F), block.z),
+        QVector3D(block.sx, block.sy, block.sz),
+        QVector3D(block.roll, block.yaw, 0.0F),
+        (block.yaw > 40.0F) ? c.limestone : c.marble_shade,
+        k_ruin);
+  }
+
+  float const stub_top = podium_y + cella_h;
+  constexpr std::array<float, 5> k_stub_z{-0.52F, -0.24F, 0.06F, 0.32F, 0.54F};
+  for (std::size_t i = 0; i < k_stub_z.size(); ++i) {
+    float const rise = 0.06F + 0.055F * static_cast<float>((i * 3) % 4);
+    desc.add_box(QVector3D(1.20F, stub_top + rise * 0.5F, k_stub_z[i]),
+                 QVector3D(0.055F, rise * 0.5F, 0.11F),
+                 c.marble_shade,
+                 k_ruin);
+  }
+  for (float const side : {-1.0F, 1.0F}) {
+    for (int i = 0; i < 4; ++i) {
+      float const px = -0.02F + 0.36F * static_cast<float>(i);
+      float const rise = 0.05F + 0.05F * static_cast<float>((i + 1) % 3);
+      desc.add_box(QVector3D(px, stub_top + rise * 0.5F, side * 0.58F),
+                   QVector3D(0.13F, rise * 0.5F, 0.052F),
+                   c.marble_shade,
+                   k_ruin);
+    }
+  }
+
+  QVector3D const ash = c.soot * 0.45F + c.limestone * 0.55F;
+  QVector3D const ash_dark = c.soot * 0.72F + c.limestone * 0.28F;
+
+  desc.add_box(QVector3D(0.52F, stub_top + 0.010F, 0.0F),
+               QVector3D(0.62F, 0.010F, 0.52F),
+               ash,
+               k_ruin);
+  struct Debris {
+    float x;
+    float z;
+    float yaw;
+    float sx;
+    float sy;
+    float sz;
+  };
+  constexpr std::array<Debris, 5> k_debris{
+      Debris{0.24F, -0.22F, 27.0F, 0.15F, 0.055F, 0.12F},
+      Debris{0.72F, 0.28F, 63.0F, 0.13F, 0.070F, 0.11F},
+      Debris{1.00F, -0.30F, 14.0F, 0.11F, 0.048F, 0.14F},
+      Debris{0.36F, 0.34F, 88.0F, 0.14F, 0.062F, 0.10F},
+      Debris{0.86F, 0.02F, 45.0F, 0.10F, 0.052F, 0.12F}};
+  for (const auto& piece : k_debris) {
+    desc.add_rotated_box(QVector3D(piece.x, stub_top + piece.sy + 0.010F, piece.z),
+                         QVector3D(piece.sx, piece.sy, piece.sz),
+                         QVector3D(0.0F, piece.yaw, 0.0F),
+                         (piece.yaw > 50.0F) ? ash_dark : c.marble_shade,
+                         k_ruin);
+  }
+
+  for (float const sx : {-1.10F, -0.20F, 0.86F}) {
+    desc.add_box(QVector3D(sx, podium_y + 0.010F, 0.30F),
+                 QVector3D(0.26F, 0.008F, 0.22F),
+                 ash,
+                 k_ruin,
+                 BuildingLODMask::Full);
+  }
+}
+
 auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   RomanTemplePalette const c;
   float height_multiplier = 1.0F;
@@ -176,19 +289,30 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                  k_building_state_mask_intact);
   }
 
-  float const column_height = 1.06F * height_multiplier;
+  float const column_height = 1.18F * height_multiplier;
+  bool const ruined = state == BuildingState::Destroyed;
+
+  int column_index = 0;
+  auto snapped_height = [&](int index) {
+    if (!ruined) {
+      return column_height;
+    }
+    constexpr std::array<float, 7> k_breaks{
+        1.24F, 0.46F, 0.88F, 0.31F, 1.05F, 0.62F, 0.78F};
+    return column_height * k_breaks[static_cast<std::size_t>(index) % k_breaks.size()];
+  };
 
   for (float const cz : {-0.76F, -0.26F, 0.26F, 0.76F}) {
-    add_fluted_column(desc, c, -1.10F, cz, podium_y, column_height);
-    add_fluted_column(desc, c, -0.56F, cz, podium_y, column_height);
+    add_fluted_column(desc, c, -1.10F, cz, podium_y, snapped_height(column_index++));
+    add_fluted_column(desc, c, -0.56F, cz, podium_y, snapped_height(column_index++));
   }
   for (float const cx : {-0.02F, 0.52F, 1.06F}) {
     for (float const cz : {-0.76F, 0.76F}) {
-      add_fluted_column(desc, c, cx, cz, podium_y, column_height);
+      add_fluted_column(desc, c, cx, cz, podium_y, snapped_height(column_index++));
     }
   }
 
-  float const cella_h = 1.00F * height_multiplier;
+  float const cella_h = 1.12F * height_multiplier;
   desc.add_box(QVector3D(0.52F, podium_y + cella_h * 0.5F, 0.0F),
                QVector3D(0.70F, cella_h * 0.5F, 0.60F),
                c.marble_shade);
@@ -238,25 +362,15 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   }
 
   for (float const side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(0.52F, podium_y + cella_h * 0.90F, side * 0.612F),
-                 QVector3D(0.66F, cella_h * 0.045F, 0.014F),
+    desc.add_box(QVector3D(0.52F, podium_y + cella_h * 0.895F, side * 0.612F),
+                 QVector3D(0.665F, cella_h * 0.040F, 0.012F),
                  c.cloth_red,
                  BuildingStateMask::Normal,
                  BuildingLODMask::Full);
-    desc.add_box(QVector3D(0.52F, podium_y + cella_h * 0.20F, side * 0.612F),
-                 QVector3D(0.66F, cella_h * 0.022F, 0.014F),
-                 c.blue_accent,
-                 BuildingStateMask::Normal,
-                 BuildingLODMask::Full);
   }
-  desc.add_box(QVector3D(1.232F, podium_y + cella_h * 0.90F, 0.0F),
-               QVector3D(0.014F, cella_h * 0.045F, 0.56F),
+  desc.add_box(QVector3D(1.232F, podium_y + cella_h * 0.895F, 0.0F),
+               QVector3D(0.012F, cella_h * 0.040F, 0.565F),
                c.cloth_red,
-               BuildingStateMask::Normal,
-               BuildingLODMask::Full);
-  desc.add_box(QVector3D(1.232F, podium_y + cella_h * 0.20F, 0.0F),
-               QVector3D(0.014F, cella_h * 0.022F, 0.56F),
-               c.blue_accent,
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
 
@@ -318,35 +432,67 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   }
 
   float const pediment_y = entablature_y + 0.152F;
-  float const pediment_rise = 0.46F;
+
+  float const pediment_rise = 0.62F;
   float const pediment_half_z = 0.90F;
 
-  auto add_tympanum = [&](float face_x, const QVector3D& field) {
-    struct Band {
-      float base;
-      float top;
+  auto add_tympanum = [&](float face_x, float face_dir, const QVector3D& field) {
+    auto add_triangle = [&](float x,
+                            float half_thick,
+                            float base_inset,
+                            float z_inset,
+                            const QVector3D& color,
+                            BuildingLODMask lod) {
+      constexpr int k_bands = 24;
+      float const usable_rise = pediment_rise - base_inset * 2.0F;
+      for (int band = 0; band < k_bands; ++band) {
+        float const base =
+            base_inset + usable_rise * static_cast<float>(band) / k_bands;
+        float const top =
+            base_inset + usable_rise * static_cast<float>(band + 1) / k_bands;
+        float const half_z = pediment_half_z * (1.0F - base / pediment_rise) - z_inset;
+        if (half_z <= 0.02F) {
+          continue;
+        }
+        desc.add_box(QVector3D(x, pediment_y + (base + top) * 0.5F, 0.0F),
+                     QVector3D(half_thick, (top - base) * 0.5F + 0.002F, half_z),
+                     color,
+                     k_building_state_mask_intact,
+                     lod);
+      }
     };
-    constexpr std::array<Band, 4> k_bands{Band{0.0F, 0.115F},
-                                          Band{0.115F, 0.225F},
-                                          Band{0.225F, 0.325F},
-                                          Band{0.325F, 0.410F}};
-    for (const auto& band : k_bands) {
-      float const half_z = pediment_half_z * (1.0F - band.top / pediment_rise) * 0.94F;
-      desc.add_box(QVector3D(face_x, pediment_y + (band.base + band.top) * 0.5F, 0.0F),
-                   QVector3D(0.030F, (band.top - band.base) * 0.5F, half_z),
-                   c.marble,
-                   k_building_state_mask_intact);
-      desc.add_box(
-          QVector3D(face_x - 0.018F, pediment_y + (band.base + band.top) * 0.5F, 0.0F),
-          QVector3D(0.014F, (band.top - band.base) * 0.5F - 0.014F, half_z - 0.030F),
-          field,
-          k_building_state_mask_intact,
-          BuildingLODMask::Full);
+
+    add_triangle(face_x, 0.034F, 0.0F, 0.0F, c.marble, BuildingLODMask::All);
+
+    add_triangle(face_x + face_dir * 0.028F,
+                 0.008F,
+                 0.105F,
+                 0.325F,
+                 field,
+                 BuildingLODMask::Full);
+
+    float const rake_theta =
+        std::atan2(pediment_rise, pediment_half_z) * 180.0F / 3.14159265F;
+    float const rake_half_len =
+        std::sqrt(pediment_half_z * pediment_half_z + pediment_rise * pediment_rise) *
+        0.5F;
+    for (float const side : {-1.0F, 1.0F}) {
+      desc.add_rotated_box(QVector3D(face_x + face_dir * 0.030F,
+                                     pediment_y + pediment_rise * 0.5F + 0.012F,
+                                     side * pediment_half_z * 0.5F),
+                           QVector3D(0.030F, 0.042F, rake_half_len + 0.030F),
+                           QVector3D(side * rake_theta, 0.0F, 0.0F),
+                           c.marble,
+                           k_building_state_mask_intact);
     }
+    desc.add_box(QVector3D(face_x + face_dir * 0.024F, pediment_y - 0.008F, 0.0F),
+                 QVector3D(0.026F, 0.026F, pediment_half_z + 0.020F),
+                 c.marble,
+                 k_building_state_mask_intact);
   };
 
-  add_tympanum(-1.20F, c.cloth_red);
-  add_tympanum(1.24F, c.blue_accent);
+  add_tympanum(-1.20F, -1.0F, c.cloth_red);
+  add_tympanum(1.24F, 1.0F, c.blue_accent);
 
   add_gable_roof_x(
       [&](const QVector3D& center,
@@ -364,18 +510,31 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       0.038F,
       c.terracotta);
 
-  for (int rib = 0; rib < 11; ++rib) {
-    float const z = -0.82F + static_cast<float>(rib) * 0.164F;
-    float const lift = pediment_rise * (1.0F - std::fabs(z) / pediment_half_z);
-    desc.add_box(QVector3D(0.02F, pediment_y + lift + 0.042F, z),
-                 QVector3D(1.28F, 0.013F, 0.024F),
-                 c.terracotta_dark,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+  {
+    float const theta = std::atan2(pediment_rise, pediment_half_z);
+    float const theta_deg = theta * 180.0F / 3.14159265F;
+    float const slope_half_len =
+        std::sqrt(pediment_half_z * pediment_half_z + pediment_rise * pediment_rise) *
+        0.5F;
+    float const surface_lift = (0.038F + 0.012F) / std::cos(theta);
+    QVector3D const cover_tile = c.terracotta * 0.72F + c.terracotta_dark * 0.28F;
+    for (int rib = 0; rib < 17; ++rib) {
+      float const x = -1.22F + static_cast<float>(rib) * 0.155F;
+      for (float const side : {-1.0F, 1.0F}) {
+        desc.add_rotated_box(QVector3D(x,
+                                       pediment_y + pediment_rise * 0.5F + surface_lift,
+                                       side * pediment_half_z * 0.5F),
+                             QVector3D(0.015F, 0.011F, slope_half_len),
+                             QVector3D(side * theta_deg, 0.0F, 0.0F),
+                             cover_tile,
+                             k_building_state_mask_intact,
+                             BuildingLODMask::Full);
+      }
+    }
   }
 
-  desc.add_box(QVector3D(0.02F, pediment_y + pediment_rise + 0.026F, 0.0F),
-               QVector3D(1.30F, 0.026F, 0.052F),
+  desc.add_box(QVector3D(0.02F, pediment_y + pediment_rise + 0.030F, 0.0F),
+               QVector3D(1.30F, 0.030F, 0.058F),
                c.terracotta_dark,
                k_building_state_mask_intact);
 
@@ -444,9 +603,9 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                        BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
   add_roman_aquila_relief(desc,
-                          QVector3D(-1.236F, pediment_y + 0.150F, 0.0F),
+                          QVector3D(-1.252F, pediment_y + pediment_rise * 0.40F, 0.0F),
                           BuildingFacadePlane::ZY,
-                          0.34F,
+                          0.46F,
                           c.gold,
                           c.cloth_red);
   add_roman_roof_standard(desc,
@@ -454,6 +613,10 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                           0.68F,
                           c.gold,
                           c.cloth_red);
+
+  if (ruined) {
+    add_roman_temple_ruin(desc, c, podium_y, cella_h);
+  }
 
   return build_building_archetype(desc, state);
 }

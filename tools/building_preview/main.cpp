@@ -179,6 +179,8 @@ auto render_building(EntityRendererRegistry& registry,
                      const std::string& key_suffix,
                      const QVector3D& team_color,
                      const QVector3D& eye_dir,
+                     const QVector3D& light_dir,
+                     float health_ratio,
                      int width,
                      int height) -> QImage {
   Render::GL::RenderFunc const func =
@@ -195,7 +197,7 @@ auto render_building(EntityRendererRegistry& registry,
   renderable->color = {team_color.x(), team_color.y(), team_color.z()};
   entity.add_component<Engine::Core::TransformComponent>();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
-  unit->health = unit->max_health;
+  unit->health = static_cast<int>(static_cast<float>(unit->max_health) * health_ratio);
   unit->nation_id = (nation == "carthage") ? Game::Systems::NationID::Carthage
                                            : Game::Systems::NationID::RomanRepublic;
 
@@ -219,7 +221,7 @@ auto render_building(EntityRendererRegistry& registry,
   settings.width = width;
   settings.height = height;
   settings.clear_color = QColor(60, 70, 50);
-  settings.light_dir = QVector3D(-0.45F, -0.8F, -0.35F);
+  settings.light_dir = light_dir;
   SoftwareRasterizer raster(settings);
   raster.set_view_projection(
       make_view_projection(bounds, tris, eye_dir, width, height));
@@ -247,7 +249,19 @@ auto main(int argc, char** argv) -> int {
     return 3;
   }
 
-  std::string const out_dir = (argc > 1) ? argv[1] : "build/building_preview";
+  std::string out_dir = "build/building_preview";
+  std::string filter;
+  bool show_states = false;
+  for (int i = 1; i < argc; ++i) {
+    std::string const arg = argv[i];
+    if (arg == "--only" && i + 1 < argc) {
+      filter = argv[++i];
+    } else if (arg == "--states") {
+      show_states = true;
+    } else {
+      out_dir = arg;
+    }
+  }
   std::filesystem::create_directories(out_dir);
 
   EntityRendererRegistry registry;
@@ -255,22 +269,64 @@ auto main(int argc, char** argv) -> int {
 
   Render::GL::ResourceManager resources;
 
-  const std::vector<std::string> types = {
+  std::vector<std::string> types = {
       "home", "barracks", "defense_tower", "marketplace", "temple", "wall"};
-  const std::vector<std::string> keys = {"home",
-                                         "barracks",
-                                         "defense_tower",
-                                         "marketplace",
-                                         "temple",
-                                         "wall_segment_straight"};
+  std::vector<std::string> keys = {"home",
+                                   "barracks",
+                                   "defense_tower",
+                                   "marketplace",
+                                   "temple",
+                                   "wall_segment_straight"};
+  if (!filter.empty()) {
+    std::vector<std::string> f_types;
+    std::vector<std::string> f_keys;
+    for (std::size_t i = 0; i < types.size(); ++i) {
+      if (types[i].find(filter) != std::string::npos) {
+        f_types.push_back(types[i]);
+        f_keys.push_back(keys[i]);
+      }
+    }
+    types = f_types;
+    keys = f_keys;
+  }
   const std::vector<std::string> nations = {"roman", "carthage"};
   const QVector3D team_color(0.30F, 0.55F, 0.95F);
-  const QVector3D iso_dir(0.82F, 0.62F, 0.78F);
+
+  struct View {
+    const char* name;
+    QVector3D dir;
+    QVector3D light;
+    float health{1.0F};
+  };
+
+  const QVector3D game_sun(-0.35F, -0.85F, -0.42F);
+  const QVector3D facade_sun(0.35F, -0.85F, -0.42F);
+
+  constexpr float k_cam_elev = 0.7071F;
+  constexpr float k_cam_horiz = 0.7071F;
+  std::vector<View> views = {{"iso", QVector3D(0.82F, 0.62F, 0.78F), game_sun}};
+  if (!filter.empty()) {
+    views = {{"front", QVector3D(-k_cam_horiz, k_cam_elev, 0.0F), facade_sun},
+             {"front3q",
+              QVector3D(-k_cam_horiz * 0.707F, k_cam_elev, k_cam_horiz * 0.707F),
+              facade_sun},
+             {"side", QVector3D(0.0F, k_cam_elev, k_cam_horiz), game_sun},
+             {"rear3q",
+              QVector3D(k_cam_horiz * 0.707F, k_cam_elev, k_cam_horiz * 0.707F),
+              game_sun}};
+  }
+  if (show_states) {
+    const QVector3D three_quarter(
+        -k_cam_horiz * 0.707F, k_cam_elev, k_cam_horiz * 0.707F);
+    views = {{"intact", three_quarter, facade_sun, 1.0F},
+             {"damaged", three_quarter, facade_sun, 0.45F},
+             {"destroyed", three_quarter, facade_sun, 0.10F}};
+  }
 
   const int tile_w = 460;
   const int tile_h = 460;
   const int label_h = 26;
-  const int cols = static_cast<int>(nations.size());
+  const int cols = static_cast<int>(nations.size() * views.size());
   const int rows = static_cast<int>(types.size());
 
   QImage sheet(tile_w * cols, (tile_h + label_h) * rows, QImage::Format_ARGB32);
@@ -281,23 +337,30 @@ auto main(int argc, char** argv) -> int {
 
   for (int r = 0; r < rows; ++r) {
     for (int c = 0; c < cols; ++c) {
+      const std::string& nation = nations[c / static_cast<int>(views.size())];
+      const View& view = views[c % static_cast<int>(views.size())];
       QImage const tile = render_building(registry,
                                           &resources,
-                                          nations[c],
+                                          nation,
                                           types[r],
                                           keys[r],
                                           team_color,
-                                          iso_dir,
+                                          view.dir,
+                                          view.light,
+                                          view.health,
                                           tile_w,
                                           tile_h);
       int const x = c * tile_w;
       int const y = r * (tile_h + label_h);
       painter.drawText(
-          x + 8, y + 18, QString::fromStdString(nations[c] + " / " + types[r]));
+          x + 8,
+          y + 18,
+          QString::fromStdString(nation + " / " + types[r] + " / " + view.name));
       painter.drawImage(x, y + label_h, tile);
 
-      tile.save(
-          QString::fromStdString(out_dir + "/" + nations[c] + "_" + types[r] + ".png"));
+      std::string const stem = nation + "_" + types[r] +
+                               (views.size() > 1 ? std::string("_") + view.name : "");
+      tile.save(QString::fromStdString(out_dir + "/" + stem + ".png"));
     }
   }
   painter.end();

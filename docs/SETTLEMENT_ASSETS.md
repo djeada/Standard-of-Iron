@@ -25,13 +25,66 @@ Two nation variants ship, resolved through the usual
 
 - **Roman** (`render/entity/nations/roman/temple_renderer.cpp`) — a podium temple:
   moulded stone podium with a front stairway, fluted columns with bases and capitals
-  around a cella, a painted frieze, a terracotta gable roof with rib tiles and gilded
-  antefixes, tympana on both gable ends, corner acroteria and an aquila roof standard.
+  around a cella, a painted frieze, a terracotta gable roof with cover tiles running
+  down the slope and gilded antefixes, framed tympana on both gable ends, corner
+  acroteria and an aquila roof standard.
 - **Carthaginian** (`render/entity/nations/carthage/temple_renderer.cpp`) — a walled
   precinct: stepped podium, a recessed porch in antis with basalt columns under a
-  timber-and-stone canopy, painted indigo and oxblood wall registers, a merlon parapet,
-  a raised inner sanctum crowned with a horned altar, twin gold-capped votive pillars
-  and incense braziers flanking the approach.
+  timber-and-stone canopy, a pilastered wall carrying a painted indigo and oxblood
+  register under the cornice, a basalt-capped merlon parapet, a raised inner sanctum
+  crowned with a horned altar, twin gold-capped votive pillars and incense braziers
+  flanking the approach.
+
+### Constraints these two models are tuned against
+
+Both temples are authored for the 45 degree RTS camera
+(`CameraDefaults::k_default_rts_angle`), and several choices only make sense there:
+
+- **The Roman gable is pitched steeper than a real temple** (`pediment_rise`, ~35
+  degrees against a historical ~20). At 45 degrees looking down, a historical pitch
+  foreshortens the pediment into a sliver behind its own roof planes, and the roof
+  is the dominant surface from every yaw.
+- **The tympanum is a stack of bands whose width is sampled at each band's base**, so
+  the stack fills solid rather than leaving see-through slivers along the rake. Each
+  band therefore overshoots the true rake by its own height; keep bands thinner than
+  the roof slab's `half_thick` or the sawtooth pokes through the roof.
+- **The painted field inside a tympanum must stay well inside the rake.** Sized to
+  the full triangle it erases the stone frame entirely and the gable reads as a hole.
+- **Carthaginian pilasters stop below the painted register** rather than running the
+  full wall height. Where the register crossed them it broke into one framed
+  rectangle per bay and the wall read as a row of lit windows.
+- **Merlons are cut from the light stone with a basalt cap.** In the wall's own
+  colour they vanish into it.
+- Buildings front onto **-X**, which the scene's key light
+  (`EnvironmentLightingState::primary_direction`) leaves in shadow. Judge facade
+  detail with a mirrored sun, not by brightening the model.
+
+### Damage states
+
+`build_stateful_building_archetype_set` builds Normal, Damaged and Destroyed. Parts
+tagged `k_building_state_mask_intact` survive into Damaged only; `BuildingStateMask::
+Destroyed` parts appear _only_ in the ruin. Both temples carry a dedicated ruin pass
+(`add_roman_temple_ruin`, `add_carthage_temple_ruin`) that adds snapped column stumps
+at uneven heights, fallen drums and masonry, jagged wall crests and ash. Without it
+the destroyed state is a clean podium with evenly cropped stubs and reads as a
+building site. Note that the burn colour is mixed toward the stone (`ash`) — at full
+`soot` strength a collapsed floor reads as a hole punched through the model.
+
+### Previewing a change
+
+`build_ninja-debug/bin/building_preview <out_dir>` renders every building offscreen
+through `Render::Software::SoftwareRasterizer`, so it needs no display:
+
+- `--only <substring>` limits it to matching types and switches to a four-yaw orbit at
+  the game camera's elevation, lighting the -X facade views with a mirrored sun.
+- `--states` renders intact / damaged / destroyed instead.
+
+The rasterizer depth-tests per pixel and culls backfaces (`RasterSettings::depth_test`,
+`backface_cull`). It is worth knowing why: with those off it falls back to centroid
+sorting, and large overlapping slabs — roof planes especially — resolve in the wrong
+order and punch whole faces through their neighbours. Several apparent modelling bugs
+in these temples were only that. Confirm a suspected geometry fault with a debug colour
+before tuning coordinates.
 
 The temple has no unique gameplay system. Its value is the wide vision radius and a
 durable, high-value settlement anchor; the production panel tooltip says exactly that,
