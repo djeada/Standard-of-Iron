@@ -502,7 +502,9 @@ The engine is moving from a single hardcoded nation toward a scalable multi-fact
 - Full _save/load_ serialization preserves campaign state across sessions.
 - _Spatial audio_ provides positional sound for combat and movement.
 - Multiple _map files_ are playable with distinct layouts and objectives.
-- A _resource economy_ with gathering, spending, and marketplace trade.
+- A _resource economy_ with gathering, spending, and marketplace trade. Gathered goods are
+  carried to the stockpile yard beside a barracks before they count; see
+  [docs/RESOURCE_STOCKPILE.md](docs/RESOURCE_STOCKPILE.md).
 - _Campaign progression_ with mission unlocking and per-slot save metadata.
 - A _simulation kernel_ (`game_sim`) that builds and runs with no renderer linked, exercised by `bin/simulation_tests`, which links that kernel and nothing else.
 - A _session context_ that owns all per-match state, so two matches can run in one process and tests get isolation.

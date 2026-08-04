@@ -134,6 +134,22 @@ void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
   builder->bypass_target_z = target_z;
 }
 
+void load_onto_hauler(Engine::Core::Entity* worker,
+                      ResourceType resource_type,
+                      int amount) {
+  if (worker == nullptr || amount <= 0) {
+    return;
+  }
+  auto* carry = worker->get_component<Engine::Core::ResourceCarryComponent>();
+  if (carry == nullptr) {
+    carry = worker->add_component<Engine::Core::ResourceCarryComponent>();
+  }
+  if (carry == nullptr) {
+    return;
+  }
+  carry->amounts.add(resource_type, amount);
+}
+
 void clear_builder_task_target(Engine::Core::BuilderProductionComponent* builder,
                                bool release_tree = true) {
   if (builder == nullptr) {
@@ -565,8 +581,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               resource_type = ResourceType::Iron;
               reward_amount = k_collect_iron_ore_reward;
             }
-            PlayerResourceRegistry::instance().add_harvested(
-                u->owner_id, resource_type, reward_amount);
+            load_onto_hauler(e, resource_type, reward_amount);
             if (auto* pathfinder = CommandService::get_pathfinder()) {
               Point const tree_grid = CommandService::world_to_grid(
                   builder_prod->task_target_x, builder_prod->task_target_z);

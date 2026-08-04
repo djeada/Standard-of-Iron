@@ -12,6 +12,7 @@
 
 #include "../systems/nation_id.h"
 #include "../systems/projectile_kind.h"
+#include "../systems/resource_types.h"
 #include "../systems/unit_activity.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
@@ -1737,6 +1738,41 @@ public:
   CivilianDeliveryComponent() = default;
 
   EntityID target_barracks_id{0};
+};
+
+class ResourceCarryComponent : public Component {
+public:
+  ResourceCarryComponent() = default;
+
+  [[nodiscard]] auto empty() const -> bool { return amounts.empty(); }
+
+  [[nodiscard]] auto total() const -> int {
+    int sum = 0;
+    for (int const value : amounts.values) {
+      sum += value;
+    }
+    return sum;
+  }
+
+  Game::Systems::ResourceAmounts amounts{};
+
+  EntityID depot_entity_id{0};
+  float depot_x{0.0F};
+  float depot_z{0.0F};
+  bool has_depot{false};
+
+  float haul_repath_cooldown{0.0F};
+  float haul_seconds{0.0F};
+};
+
+class StockpileComponent : public Component {
+public:
+  StockpileComponent() = default;
+
+  float wood_fill{0.0F};
+  float stone_fill{0.0F};
+  float iron_fill{0.0F};
+  float deposit_flash{0.0F};
 };
 
 enum class SettlementErrand : std::uint8_t {

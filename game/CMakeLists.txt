@@ -147,6 +147,7 @@ add_library(
     systems/production_service.cpp
     systems/production_system.cpp
     systems/civilian_delivery_system.cpp
+    systems/resource_delivery_system.cpp
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp
     systems/healing_rules.cpp
