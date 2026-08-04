@@ -18,6 +18,7 @@
 #include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../barracks_renderer_common.h"
+#include "../../barracks_stockpile.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
@@ -883,6 +884,25 @@ void draw_rally_flag(const DrawContext& p,
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
+void draw_stockpile_yard(const DrawContext& p,
+                         ISubmitter& out,
+                         Mesh* unit,
+                         Texture* white,
+                         const CarthagePalette& c) {
+  draw_barracks_stockpile(p,
+                          out,
+                          unit,
+                          white,
+                          StockpileYardStyle{.gravel = c.stone_base * 0.82F,
+                                             .stone_light = c.stone_light,
+                                             .stone_mid = c.stone_base,
+                                             .stone_dark = c.stone_dark,
+                                             .timber = c.wood,
+                                             .timber_dark = c.wood_dark,
+                                             .ore = c.iron * 1.55F,
+                                             .ore_rust = c.brick_dark});
+}
+
 void draw_barracks_ornaments(const DrawContext& p,
                              ISubmitter& out,
                              Mesh* unit,
@@ -890,6 +910,7 @@ void draw_barracks_ornaments(const DrawContext& p,
                              const QVector3D& team,
                              const BarracksFlagRenderer::ClothBannerResources* cloth) {
   CarthagePalette const c = make_palette(team);
+  draw_stockpile_yard(p, out, unit, white, c);
   draw_standards(p, out, unit, white, c, cloth);
   draw_rally_flag(p, out, white, c, cloth);
 }

@@ -150,6 +150,15 @@ auto classify_unit_activity(const Engine::Core::Entity& entity) -> UnitActivity 
     }
   }
 
+  if (const auto* carry = entity.get_component<Engine::Core::ResourceCarryComponent>();
+      carry != nullptr && !carry->empty()) {
+    const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+    bool const walking = movement != nullptr && movement->get_has_target();
+    return {ActivityKind::Deliver,
+            walking ? ActivityState::Active : ActivityState::Queued,
+            0};
+  }
+
   if (const auto* delivery =
           entity.get_component<Engine::Core::CivilianDeliveryComponent>()) {
     if (delivery->target_barracks_id != 0) {

@@ -129,6 +129,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      "Ignition progress and burn timers for a structure set alight by "
      "incendiary damage."},
     {"CivilianDeliveryComponent", AuthoritativeSerialized, "Delivery assignment."},
+    {"ResourceCarryComponent",
+     AuthoritativeSerialized,
+     "Gathered goods a worker is still hauling. Dropping it on save would either "
+     "delete the load or hand it to the player for free."},
     {"SettlementResidentComponent",
      AuthoritativeSerialized,
      "Which settlement a villager belongs to and the errand they are on; "
@@ -200,6 +204,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      PresentationOnly,
      "Short-lived burst marking where a commander's signature move landed."},
     {"EnemyTelegraphComponent", PresentationOnly, "Attack telegraph overlay."},
+    {"StockpileComponent",
+     PresentationOnly,
+     "Pile heights drawn on the barracks stone yard, resampled each tick from "
+     "the owner's resources."},
     {"AssaultWaveComponent",
      AuthoritativeSerialized,
      "Marks a scripted assault wave. The AI keeps these units attacking whatever "

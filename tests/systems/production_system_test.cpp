@@ -13,6 +13,7 @@
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_system.h"
+#include "game/systems/resource_delivery_system.h"
 #include "game/units/factory.h"
 #include "tests/support/movement_test_access.h"
 
@@ -95,9 +96,21 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
   Game::Systems::ProductionSystem system;
   system.update(&world, 0.1F);
 
+  const auto* carry = builder->get_component<Engine::Core::ResourceCarryComponent>();
+  ASSERT_NE(carry, nullptr) << "the gathered load should be on the worker's back";
+  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Wood), 40);
+  EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
+                1, Game::Systems::ResourceType::Wood),
+            0)
+      << "gathering alone must not move the counters";
+
+  Game::Systems::ResourceDeliverySystem delivery;
+  delivery.update(&world, 0.1F);
+
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Wood),
             40);
+  EXPECT_FALSE(builder->has_component<Engine::Core::ResourceCarryComponent>());
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
@@ -165,9 +178,21 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
   Game::Systems::ProductionSystem system;
   system.update(&world, 0.1F);
 
+  const auto* carry = builder->get_component<Engine::Core::ResourceCarryComponent>();
+  ASSERT_NE(carry, nullptr) << "the gathered load should be on the worker's back";
+  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Stone), 35);
+  EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
+                1, Game::Systems::ResourceType::Stone),
+            0)
+      << "gathering alone must not move the counters";
+
+  Game::Systems::ResourceDeliverySystem delivery;
+  delivery.update(&world, 0.1F);
+
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Stone),
             35);
+  EXPECT_FALSE(builder->has_component<Engine::Core::ResourceCarryComponent>());
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
@@ -235,9 +260,21 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
   Game::Systems::ProductionSystem system;
   system.update(&world, 0.1F);
 
+  const auto* carry = builder->get_component<Engine::Core::ResourceCarryComponent>();
+  ASSERT_NE(carry, nullptr) << "the gathered load should be on the worker's back";
+  EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Iron), 30);
+  EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
+                1, Game::Systems::ResourceType::Iron),
+            0)
+      << "gathering alone must not move the counters";
+
+  Game::Systems::ResourceDeliverySystem delivery;
+  delivery.update(&world, 0.1F);
+
   EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
                 1, Game::Systems::ResourceType::Iron),
             30);
+  EXPECT_FALSE(builder->has_component<Engine::Core::ResourceCarryComponent>());
   EXPECT_TRUE(terrain.world_props().empty());
 
   pathfinder->update_navigation_grid();
