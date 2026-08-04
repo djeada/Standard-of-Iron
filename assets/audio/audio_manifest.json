@@ -2379,6 +2379,105 @@
       "tags": {
         "source": "synth"
       }
+    },
+    {
+      "id": "sfx.combat.bow_draw",
+      "path": "sfx/combat/bow_draw_creak.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 240,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_draw_v2",
+      "path": "sfx/combat/bow_draw_creak_v2.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 240,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_full_draw",
+      "path": "sfx/combat/bow_full_draw_seat.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_full_draw_v2",
+      "path": "sfx/combat/bow_full_draw_seat_v2.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 200,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_strain",
+      "path": "sfx/combat/bow_hold_strain.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 900,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_strain_v2",
+      "path": "sfx/combat/bow_hold_strain_v2.ogg",
+      "category": "sfx",
+      "priority": 3,
+      "cooldown_ms": 900,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_loose_heavy",
+      "path": "sfx/combat/bow_loose_heavy.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 90,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_loose_heavy_v2",
+      "path": "sfx/combat/bow_loose_heavy_v2.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 90,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.combat.bow_loose_heavy_v3",
+      "path": "sfx/combat/bow_loose_heavy_v3.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 90,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
     }
   ]
 }

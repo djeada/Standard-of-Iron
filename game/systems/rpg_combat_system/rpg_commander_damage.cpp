@@ -262,6 +262,8 @@ deal_commander_attack_damage(Engine::Core::World* world,
         targets->recent_hit_soldier_slot = target_soldier_slot.value_or(
             Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
         targets->recent_hit_timer = 0.28F;
+        targets->recent_hit_killed = result.killed;
+        ++targets->hit_confirm_sequence;
       }
     }
     if (commander != nullptr) {

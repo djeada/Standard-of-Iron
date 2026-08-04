@@ -36,6 +36,7 @@ public:
   auto is_active() const -> bool override { return m_active; }
   auto is_ballista_bolt() const -> bool { return m_is_ballista_bolt; }
   auto visual_style() const -> ArrowVisualStyle { return m_visual_style; }
+  auto length_scale() const -> float { return m_length_scale; }
   auto roll_deg() const -> float { return m_roll_deg; }
   auto spin_rate_deg() const -> float { return m_spin_rate_deg; }
   auto trail_alpha() const -> float { return m_trail_alpha; }
@@ -82,6 +83,7 @@ private:
   float m_splash_damage_multiplier{0.6F};
   bool m_friendly_fire{false};
   ArrowVisualStyle m_visual_style{ArrowVisualStyle::Focused};
+  float m_length_scale{1.0F};
   float m_roll_deg{0.0F};
   float m_spin_rate_deg{0.0F};
   float m_trail_alpha{0.0F};

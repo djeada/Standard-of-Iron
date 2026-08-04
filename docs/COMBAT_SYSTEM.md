@@ -482,6 +482,15 @@ scales damage and arrow speed. Holding at full draw past
 `k_max_hold_seconds` the arm gives out, the string relaxes, and the player has
 to release the button before the commander will nock another arrow.
 
+The draw is scored as well as animated. `BowDrawTick` reports the three moments
+worth hearing — the string starting back, the draw reaching the wall, and the
+hold crossing `k_steady_hold_seconds` — as one-frame edges rather than states,
+so `combat.bow_draw`, `combat.bow_full_draw` and `combat.bow_strain` fire once
+each instead of every frame. The loose picks its cue from the arrow's visual
+style, so a commander's shot leaves on `combat.bow_loose_heavy` while a rank of
+archers still gets `combat.arrow_launch`. All four are synthesised recipes in
+`tools/audio_synth/cues.py`.
+
 ### Free Aim
 
 Nothing about the shot consults a locked target. The arrow is aimed at whatever
@@ -489,19 +498,55 @@ the crosshair covers, resolved by ray-casting enemy soldier bodies as upright
 cylinders, and an arrow that hits nothing still flies its full range and plants
 itself in the ground - a miss has to be legible.
 
-Two details keep aiming honest:
+Four details keep aiming honest:
 
-- **The camera, not the chest.** The chase camera sits behind and to the side of
-  the commander, so a shot fired parallel to the camera lands beside what the
-  player has the reticle on. The crosshair line is resolved first, from the
-  camera, and the arrow is then aimed from the bow at that point.
+- **The camera axis is the truth.** The reticle is drawn at the centre of the
+  screen, so the only line that can be aimed with is the one the projection
+  puts there: the axis from the camera's eye to the point it is looking at.
+  `CommanderControlController` writes that axis into the aim component every
+  frame after `update_camera`, and `crosshair_ray` uses it in preference to the
+  raw view angles. Yaw and pitch alone would be a different line whenever the
+  camera is still settling, is pushed off a wall, or is being pulled toward a
+  lock-on target, and every one of those cases used to move the shot away from
+  the reticle without telling the player.
+- **The shot is resolved along that line, the arrow is drawn from the bow.**
+  `commander_aim_ray` slides the sight ray forward to the commander's eye plane
+  so bodies beside and behind him are not in front of the crosshair, and
+  `resolve_bow_shot` hit-scans along it. The impact point it finds becomes the
+  arrow's destination; the arrow itself launches from `bow_muzzle`. What the
+  reticle covers is what dies, and the projectile still leaves the weapon.
+- **Aiming settles the view.** Drawing blends the camera to a tighter
+  over-the-shoulder framing at `k_fov_aim`, stiffens the camera spring, damps
+  head bob and strafe lean, drops the lock-on pull on the camera target, and
+  scales look sensitivity by the FOV ratio so the same mouse travel means the
+  same on-screen travel zoomed or not. The framing is held for the whole bow
+  action, recovery included, so the impact is watched from the same shot the
+  player aimed with.
 - **The aim cone is earned.** `aim_spread_degrees` opens the cone for movement,
   sprinting, a half-drawn string, a long hold, and low stamina, and the reticle
-  draws that same cone in pixels. A planted archer at full draw is nearly a
-  laser; one shooting on the run is not.
+  draws that same cone in pixels — projected through the live vertical FOV, not
+  a hard-coded one. The cone is kept current in bow stance even when the string
+  is down, so the penalty for moving is visible before the shot rather than
+  after it. A planted archer at full draw is nearly a laser; one shooting on the
+  run is not.
 
-`rpg_bow_volley` in the arena catalog is the regression contract: three
-chargers, three drawn shots, three bodies.
+### The Aimed Arrow
+
+A commander's shot is not one of the arrows in a volley and does not look like
+one. `ArrowVisualStyle::Aimed` gives it a heavier, longer shaft, a six-segment
+streak, a hot glow and a light that travels with it, and draw power scales its
+size, brightness and trail on top of the damage and speed it already scaled.
+
+The impact is built to be read at a glance: a cone of sparks thrown back along
+the incoming direction — red off a body, white-hot off ground and stone — dark
+blood mist on a body hit, a short flash with its own light, and a hit-confirm
+ring on the target. Landing a shot bumps `hit_confirm_sequence` on the shooter's
+`RpgCommanderTargetComponent`, which is what kicks the camera; a kill kicks it
+harder.
+
+`rpg_bow_volley` in the arena catalog is the regression contract: nine
+chargers, nine drawn shots, nine bodies, with `GroupDestroyed` asserted for
+every one of them.
 
 ## Known Boundaries
 

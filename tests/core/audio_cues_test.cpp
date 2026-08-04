@@ -5,9 +5,12 @@
 #include <QSet>
 #include <QString>
 
+#include <chrono>
 #include <gtest/gtest.h>
 #include <string>
+#include <thread>
 
+#include "app/core/audio_resource_loader.h"
 #include "game/audio/audio_cues.h"
 
 namespace {
@@ -51,6 +54,77 @@ TEST(AudioCueCatalogTest, EveryCatalogEntryHasACueConstant) {
   for (const QString& cue_id : load_catalog_ids()) {
     EXPECT_TRUE(constants.contains(cue_id))
         << "catalog cue with no constant: " << cue_id.toStdString();
+  }
+}
+
+TEST(AudioCueCatalogTest, EveryCueResolvesToAManifestTrackThatExists) {
+  QFile file(QStringLiteral("assets/audio/audio_cues.json"));
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+  const QJsonArray cues = QJsonDocument::fromJson(file.readAll())
+                              .object()
+                              .value(QStringLiteral("cues"))
+                              .toArray();
+  ASSERT_FALSE(cues.isEmpty());
+
+  for (const QJsonValue& value : cues) {
+    const QJsonObject cue = value.toObject();
+    const QString cue_id = cue.value(QStringLiteral("id")).toString();
+    const QJsonArray resources = cue.value(QStringLiteral("resources")).toArray();
+    EXPECT_FALSE(resources.isEmpty())
+        << "cue bound to nothing: " << cue_id.toStdString();
+
+    for (const QJsonValue& resource : resources) {
+      const QString resource_id = resource.toString();
+      EXPECT_TRUE(AudioResourceLoader::has_manifest_entry(resource_id))
+          << cue_id.toStdString() << " points at unknown resource "
+          << resource_id.toStdString();
+    }
+  }
+
+  EXPECT_TRUE(AudioResourceLoader::missing_asset_ids().isEmpty())
+      << "manifest tracks whose file is missing: "
+      << AudioResourceLoader::missing_asset_ids()
+             .join(QStringLiteral(", "))
+             .toStdString();
+}
+
+class ShippedAudioTest : public ::testing::Test {
+protected:
+  void SetUp() override {
+    auto& audio = AudioSystem::get_instance();
+    audio.shutdown();
+    if (!audio.initialize()) {
+      GTEST_SKIP() << "Audio backend is unavailable in this environment";
+    }
+    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Startup);
+    AudioResourceLoader::load_audio_cues();
+  }
+
+  void TearDown() override {
+    Game::Audio::CueRegistry::instance().clear();
+    AudioSystem::get_instance().shutdown();
+  }
+};
+
+TEST_F(ShippedAudioTest, TheCommandersBowCuesReachTheMixer) {
+
+  auto plays_audibly = [](const char* cue_id) {
+    for (int attempt = 0; attempt < 60; ++attempt) {
+      if (Game::Audio::play_cue(cue_id) &&
+          AudioSystem::get_instance().get_active_channel_count() > 0) {
+        return true;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    return false;
+  };
+
+  for (const char* cue_id : {Game::Audio::Cue::k_combat_bow_draw,
+                             Game::Audio::Cue::k_combat_bow_full_draw,
+                             Game::Audio::Cue::k_combat_bow_strain,
+                             Game::Audio::Cue::k_combat_bow_loose_heavy}) {
+    EXPECT_TRUE(plays_audibly(cue_id))
+        << cue_id << " never opened a channel: it is bound but not audible";
   }
 }
 

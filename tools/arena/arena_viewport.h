@@ -206,6 +206,25 @@ public:
   scenario_group_center(const QString& group) const -> std::optional<QVector3D>;
   [[nodiscard]] auto scenario_center_of_mass() const -> std::optional<QVector3D>;
 
+  struct RpgBowHudState {
+    bool valid{false};
+    bool bow_stance{false};
+    bool drawing{false};
+    bool full_draw{false};
+    bool strained{false};
+    bool target_in_reticle{false};
+    float draw_progress{0.0F};
+    float spread_degrees{0.0F};
+    float fov_degrees{68.0F};
+    float health_ratio{1.0F};
+    float stamina_ratio{1.0F};
+
+    float recovery_ratio{0.0F};
+    float hit_confirm{0.0F};
+    int takedowns{0};
+  };
+  [[nodiscard]] auto rpg_bow_hud_state() const -> RpgBowHudState;
+
 public slots:
   [[nodiscard]] auto active_scenario_finished() const -> bool;
   [[nodiscard]] auto
@@ -362,6 +381,7 @@ private:
   std::unique_ptr<CommanderControlController> m_rpg_commander_controller;
   std::unique_ptr<Render::GL::RpgTelegraphRenderer> m_rpg_telegraphs;
   Engine::Core::EntityID m_rpg_commander_id{0};
+  int m_rpg_initial_enemy_units{0};
   bool m_rpg_interactive{false};
   bool m_rpg_mouse_captured{false};
   QPoint m_rpg_mouse_center;

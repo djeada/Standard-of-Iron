@@ -179,9 +179,16 @@ Shot fields:
   chase camera. A gameplay shot needs no `focus` or `camera` block, and any it
   declares is ignored.
 
-`tools/arena/promos/bow_commander.json` cuts both ways in one reel: authored
-close-ups of the draw next to gameplay-camera shots taken over the commander's
-shoulder as he looses.
+- `rpg_hud` paints the commander's bow HUD onto the captured frame: the spread
+  reticle projected through the live vertical FOV, the draw ring, the hit
+  confirm, HP and stamina, the renock meter, and a takedown counter. It is drawn
+  on the CPU over the finished image, so it lands at the recorded resolution
+  rather than the window's, and it reads its state from
+  `ArenaViewport::rpg_bow_hud_state`.
+
+`tools/arena/promos/bow_commander.json` is a straight gameplay reel: four
+gameplay-camera shots with the bow HUD on, cut end to end across one
+deterministic run of nine aimed kills.
 
 ## RPG commander scenarios
 
@@ -189,14 +196,18 @@ The `rpg_*` scenarios run the production `CommanderControlController`, so the
 camera in those captures is the game's own chase camera and the commander
 answers scenario steps the way he answers a player.
 
-`rpg_bow_volley` is the bow contract: a bow commander against three charging
-swordsmen, one drawn arrow apiece. It uses two steps that matter for any aimed
-weapon:
+`rpg_bow_volley` is the bow contract: a bow commander against nine charging
+swordsmen, one drawn arrow apiece, with `GroupDestroyed` asserted for every one
+of them. It uses two steps that matter for any aimed weapon:
 
-- `RpgAim` points the view. Given a `target_group` it resolves yaw and pitch to
-  that group's living centroid at the moment the step fires, so the aim follows
-  a target that is still walking; explicit `rpg_view_yaw_degrees` and
-  `rpg_view_pitch_degrees` are used when no target group is named.
+- `RpgAim` points the view. Given a `target_group` it becomes a standing order:
+  every tick until the next `RpgAim`, the runner asks the host to put the
+  crosshair on that group's living centroid. The host solves the angles from the
+  live camera position (`aim_rpg_view_at`), not from the shooter's chest,
+  because the shot is resolved along the camera axis - aiming from the body
+  would put the reticle on the target and the arrow half a metre beside it.
+  Explicit `rpg_view_yaw_degrees` and `rpg_view_pitch_degrees` are used when no
+  target group is named, and clear the standing order.
 - `RpgAttackHold` holds and releases the attack button, which on a bow is the
   draw and the loose.
 

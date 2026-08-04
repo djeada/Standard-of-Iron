@@ -39,6 +39,7 @@ ArrowProjectile::ArrowProjectile(const QVector3D& start,
     , m_splash_damage_multiplier(splash_damage_multiplier)
     , m_friendly_fire(friendly_fire)
     , m_visual_style(visual_style)
+    , m_length_scale(visual_profile.length_scale)
     , m_roll_deg(visual_profile.roll_deg)
     , m_spin_rate_deg(visual_profile.spin_rate_deg)
     , m_trail_alpha(visual_profile.trail_alpha)

@@ -48,12 +48,12 @@ constexpr float k_gate_margin_seconds = 0.001F;
 } // namespace
 
 auto aim_spread_degrees(const Aim& aim, float stamina_ratio) -> float {
-  constexpr float k_planted_spread = 0.35F;
-  constexpr float k_undrawn_penalty = 7.0F;
-  constexpr float k_walk_penalty = 1.6F;
-  constexpr float k_run_penalty = 2.4F;
-  constexpr float k_fatigue_penalty = 4.0F;
-  constexpr float k_winded_penalty = 1.5F;
+  constexpr float k_planted_spread = 0.28F;
+  constexpr float k_undrawn_penalty = 3.6F;
+  constexpr float k_walk_penalty = 1.3F;
+  constexpr float k_run_penalty = 2.0F;
+  constexpr float k_fatigue_penalty = 3.2F;
+  constexpr float k_winded_penalty = 1.2F;
 
   float spread = k_planted_spread;
   spread += (1.0F - std::clamp(aim.draw_progress, 0.0F, 1.0F)) * k_undrawn_penalty;
@@ -97,15 +97,20 @@ auto update_bow_draw(
 
   bool const was_loosing = aim.draw_stage == Engine::Core::BowDrawStage::Loosing;
   bool const at_gate = elapsed >= hold_limit;
+  bool const was_drawing = aim.draw_stage != Engine::Core::BowDrawStage::None;
 
   if (aim.draw_held && !was_loosing) {
     if (at_gate) {
+      float const hold_before = aim.full_draw_hold;
       aim.draw_stage = Engine::Core::BowDrawStage::FullDraw;
       aim.draw_progress = 1.0F;
       aim.full_draw_hold += delta_time;
       tick.allowed_delta = 0.0F;
       tick.at_full_draw = true;
+      tick.started_draw = !was_drawing;
       tick.reached_full_draw = aim.full_draw_hold <= delta_time;
+      tick.started_straining = hold_before < Aim::k_steady_hold_seconds &&
+                               aim.full_draw_hold >= Aim::k_steady_hold_seconds;
       if (aim.full_draw_hold >= Aim::k_max_hold_seconds) {
 
         aim.draw_stage = Engine::Core::BowDrawStage::None;
@@ -117,6 +122,7 @@ auto update_bow_draw(
       }
     } else {
       aim.draw_stage = Engine::Core::BowDrawStage::Drawing;
+      tick.started_draw = !was_drawing;
       tick.allowed_delta = std::min(delta_time, hold_limit - elapsed);
       aim.draw_progress = std::clamp((elapsed + tick.allowed_delta) / gate, 0.0F, 1.0F);
     }

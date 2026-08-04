@@ -351,6 +351,8 @@ auto scaled_color(const QVector3D& color, float scale) -> QVector3D {
 
 auto trail_segments_for_style(Game::Systems::ArrowVisualStyle style) -> int {
   switch (style) {
+  case Game::Systems::ArrowVisualStyle::Aimed:
+    return 5;
   case Game::Systems::ArrowVisualStyle::Volley:
     return 2;
   case Game::Systems::ArrowVisualStyle::Focused:

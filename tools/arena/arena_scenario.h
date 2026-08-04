@@ -386,6 +386,8 @@ struct ArenaScenarioHost {
       set_rpg_move_input;
   std::function<void(Engine::Core::EntityID, float)> set_rpg_view_yaw;
   std::function<void(Engine::Core::EntityID, float)> set_rpg_view_pitch;
+
+  std::function<void(Engine::Core::EntityID, const QVector3D&)> aim_rpg_view_at;
 };
 
 struct ArenaRenderedFrameTimings {

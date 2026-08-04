@@ -1,6 +1,6 @@
 {
   "id": "bow_commander",
-  "title": "FIVE ARROWS",
+  "title": "NINE ARROWS",
   "subtitle": "STANDARD OF IRON",
   "width": 1920,
   "height": 1080,
@@ -15,103 +15,45 @@
   },
   "shots": [
     {
-      "name": "nock",
+      "name": "first_draw",
       "scenario": "rpg_bow_volley",
       "seed": 1337,
-      "start": 0.55,
-      "duration": 0.9,
-      "caption": "DRAW",
-      "focus": {
-        "mode": "group",
-        "group": "rpg_commander",
-        "smoothing": 0.2
-      },
-      "camera": [
-        {
-          "time": 0.0,
-          "distance": 3.1,
-          "pitch": 5,
-          "yaw": 100,
-          "fov": 40,
-          "height": 1.35
-        },
-        {
-          "time": 0.9,
-          "distance": 2.9,
-          "pitch": 6,
-          "yaw": 122,
-          "fov": 40,
-          "height": 1.35,
-          "ease": "out"
-        }
-      ]
-    },
-    {
-      "name": "first_kill",
-      "scenario": "rpg_bow_volley",
-      "seed": 1337,
-      "start": 1.05,
-      "duration": 0.9,
+      "start": 0.15,
+      "duration": 2.45,
       "gameplay_camera": true,
-      "caption": "LOOSE"
+      "rpg_hud": true,
+      "caption": "ONE BREATH, ONE ARROW"
     },
     {
-      "name": "second_draw",
+      "name": "holding_the_line",
       "scenario": "rpg_bow_volley",
       "seed": 1337,
-      "start": 2.25,
-      "duration": 0.95,
-      "focus": {
-        "mode": "group",
-        "group": "rpg_commander",
-        "smoothing": 0.2
-      },
-      "camera": [
-        {
-          "time": 0.0,
-          "distance": 3.4,
-          "pitch": 7,
-          "yaw": 138,
-          "fov": 42,
-          "height": 1.4
-        },
-        {
-          "time": 0.95,
-          "distance": 3.0,
-          "pitch": 5,
-          "yaw": 112,
-          "fov": 42,
-          "height": 1.4,
-          "ease": "out"
-        }
-      ]
-    },
-    {
-      "name": "third_kill",
-      "scenario": "rpg_bow_volley",
-      "seed": 1337,
-      "start": 3.75,
-      "duration": 0.85,
-      "gameplay_camera": true
-    },
-    {
-      "name": "fourth_kill",
-      "scenario": "rpg_bow_volley",
-      "seed": 1337,
-      "start": 5.2,
-      "duration": 0.8,
+      "start": 2.6,
+      "duration": 4.3,
       "gameplay_camera": true,
-      "caption": "CLOSER"
+      "rpg_hud": true,
+      "caption": "HOLD THE LINE"
     },
     {
-      "name": "last_kill",
+      "name": "closing_in",
       "scenario": "rpg_bow_volley",
       "seed": 1337,
-      "start": 6.55,
-      "duration": 0.8,
-      "slow_motion": 1.4,
+      "start": 6.9,
+      "duration": 4.3,
       "gameplay_camera": true,
-      "caption": "THE LAST ONE"
+      "rpg_hud": true,
+      "caption": "THEY KEEP COMING"
+    },
+    {
+      "name": "ninth_arrow",
+      "scenario": "rpg_bow_volley",
+      "seed": 1337,
+      "start": 11.2,
+      "duration": 3.0,
+      "slow_motion": 1.6,
+      "gameplay_camera": true,
+      "rpg_hud": true,
+      "caption": "NINE DOWN"
     }
   ]
 }

@@ -47,10 +47,12 @@ auto draw_for(RpgCommanderAimComponent& aim,
     bool const loosed = tick.loosed || frame.loosed;
     bool const relaxed = tick.relaxed || frame.relaxed;
     bool const reached_full_draw = tick.reached_full_draw || frame.reached_full_draw;
+    bool const started_straining = tick.started_straining || frame.started_straining;
     tick = frame;
     tick.loosed = loosed;
     tick.relaxed = relaxed;
     tick.reached_full_draw = reached_full_draw;
+    tick.started_straining = started_straining;
   }
   return tick;
 }
@@ -181,6 +183,44 @@ TEST_F(RpgBowTest, ALongHoldTiresTheArmAndCostsTheShotPower) {
   EXPECT_LT(tired.shot_power, steady.shot_power);
 }
 
+TEST_F(RpgBowTest, EachAudibleDrawMomentIsAnnouncedExactlyOnce) {
+  RpgCommanderAimComponent aim;
+  RpgCommanderActionComponent action;
+  aim.draw_held = true;
+  action.action_duration = bow_definition().duration_seconds;
+
+  constexpr float k_step = 1.0F / 60.0F;
+  int started = 0;
+  int reached_full = 0;
+  int strained = 0;
+  float const run =
+      release_gate() + RpgCommanderAimComponent::k_steady_hold_seconds + 1.0F;
+  for (float elapsed = 0.0F; elapsed < run; elapsed += k_step) {
+    auto const frame = Game::Systems::RpgCombat::update_bow_draw(
+        aim, action, bow_definition(), 1.0F, k_step);
+    action.action_elapsed_time += frame.allowed_delta;
+    started += frame.started_draw ? 1 : 0;
+    reached_full += frame.reached_full_draw ? 1 : 0;
+    strained += frame.started_straining ? 1 : 0;
+  }
+
+  EXPECT_EQ(started, 1) << "the draw creak would retrigger every frame";
+  EXPECT_EQ(reached_full, 1);
+  EXPECT_EQ(strained, 1) << "the strain warning would machine-gun once past the hold";
+  EXPECT_GE(aim.full_draw_hold, RpgCommanderAimComponent::k_steady_hold_seconds);
+}
+
+TEST_F(RpgBowTest, AShortDrawNeverReportsStrain) {
+  RpgCommanderAimComponent aim;
+  RpgCommanderActionComponent action;
+  aim.draw_held = true;
+  action.action_duration = bow_definition().duration_seconds;
+
+  auto const tick = draw_for(aim, action, release_gate() + 0.3F);
+  EXPECT_TRUE(tick.reached_full_draw);
+  EXPECT_FALSE(tick.started_straining);
+}
+
 TEST_F(RpgBowTest, MovementOpensTheAimConeAndAFullDrawClosesIt) {
   RpgCommanderAimComponent planted;
   planted.draw_progress = 1.0F;
@@ -255,15 +295,81 @@ TEST_F(RpgBowTest, TheArrowFliesAtWhatTheChaseCameraHasTheCrosshairOn) {
   aim->camera_origin_z = camera.z();
   aim->camera_origin_valid = true;
 
-  auto const ray =
-      Game::Systems::RpgCombat::commander_aim_ray(world, *commander, *aim, 26.0F);
+  auto const ray = Game::Systems::RpgCombat::commander_aim_ray(*commander, *aim);
   auto const shot =
-      Game::Systems::RpgCombat::resolve_bow_shot(world, *commander, ray, 26.0F);
+      Game::Systems::RpgCombat::resolve_bow_shot(world, *commander, *aim, ray, 26.0F);
   EXPECT_TRUE(shot.hit_body);
   EXPECT_EQ(shot.hit.entity_id, enemy->get_id());
 
   auto const sight = Game::Systems::RpgCombat::crosshair_ray(*commander, *aim);
-  EXPECT_LT(QVector3D::dotProduct(ray.direction, sight.direction), 0.9999F);
+
+  EXPECT_GT(QVector3D::dotProduct(ray.direction, sight.direction), 0.99999F);
+
+  QVector3D const to_origin = ray.origin - sight.origin;
+  EXPECT_LT(to_origin.length() - QVector3D::dotProduct(to_origin, sight.direction),
+            1.0e-3F);
+
+  auto const muzzle = Game::Systems::RpgCombat::bow_muzzle(*commander, *aim);
+  EXPECT_LT((shot.start - muzzle).length(), 1.0e-3F);
+  EXPECT_LT((shot.end - shot.impact).length(), 1.0e-3F);
+}
+
+TEST_F(RpgBowTest, TheAimRayIgnoresBodiesBehindTheCommander) {
+  auto* commander = make_archer_commander(world, 0.0F, 0.0F);
+  auto* behind = make_enemy(world, 0.0F, -3.5F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(behind, nullptr);
+
+  QVector3D const camera(0.0F, 2.6F, -6.0F);
+  auto* aim = Game::Systems::RpgCombat::sync_commander_aim(*commander, {});
+  ASSERT_NE(aim, nullptr);
+  aim->view_yaw_degrees = 0.0F;
+  aim->view_pitch_degrees = -25.0F;
+  aim->camera_origin_x = camera.x();
+  aim->camera_origin_y = camera.y();
+  aim->camera_origin_z = camera.z();
+  aim->camera_origin_valid = true;
+
+  auto const sight = Game::Systems::RpgCombat::crosshair_ray(*commander, *aim);
+  EXPECT_TRUE(Game::Systems::RpgCombat::raycast_enemy_bodies(
+                  world, *commander, sight, 26.0F, 0.05F)
+                  .has_value());
+
+  auto const ray = Game::Systems::RpgCombat::commander_aim_ray(*commander, *aim);
+  EXPECT_FALSE(Game::Systems::RpgCombat::raycast_enemy_bodies(
+                   world, *commander, ray, 26.0F, 0.05F)
+                   .has_value());
+}
+
+TEST_F(RpgBowTest, TheCameraForwardOverridesRawYawAndPitch) {
+  auto* commander = make_archer_commander(world, 0.0F, 0.0F);
+  auto* enemy = make_enemy(world, 0.0F, 9.0F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+
+  auto* aim = Game::Systems::RpgCombat::sync_commander_aim(*commander, {});
+  ASSERT_NE(aim, nullptr);
+
+  aim->view_yaw_degrees = 137.0F;
+  aim->view_pitch_degrees = 41.0F;
+
+  QVector3D const camera(0.0F, 2.6F, -3.1F);
+  QVector3D const chest(0.0F, 1.1F, 9.0F);
+  QVector3D const forward = (chest - camera).normalized();
+  aim->camera_origin_x = camera.x();
+  aim->camera_origin_y = camera.y();
+  aim->camera_origin_z = camera.z();
+  aim->camera_origin_valid = true;
+  aim->camera_forward_x = forward.x();
+  aim->camera_forward_y = forward.y();
+  aim->camera_forward_z = forward.z();
+  aim->camera_forward_valid = true;
+
+  auto const ray = Game::Systems::RpgCombat::commander_aim_ray(*commander, *aim);
+  auto const shot =
+      Game::Systems::RpgCombat::resolve_bow_shot(world, *commander, *aim, ray, 26.0F);
+  EXPECT_TRUE(shot.hit_body);
+  EXPECT_EQ(shot.hit.entity_id, enemy->get_id());
 }
 
 TEST_F(RpgBowTest, TheAimRayStopsAtTheNearerOfTwoBodies) {
