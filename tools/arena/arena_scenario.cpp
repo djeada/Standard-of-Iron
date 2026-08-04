@@ -759,6 +759,9 @@ struct ArenaScenarioRunner::Impl {
   bool complete{false};
   bool end_expectations_checked{false};
 
+  QString rpg_aim_shooter_group;
+  QString rpg_aim_target_group;
+
   Impl(Engine::Core::World& world_value,
        ArenaScenarioHost host_value,
        const ArenaScenarioDefinition& definition,
@@ -848,6 +851,50 @@ struct ArenaScenarioRunner::Impl {
     }
     return count > 0 ? std::optional<QVector3D>(total / static_cast<float>(count))
                      : std::nullopt;
+  }
+
+  void track_rpg_aim() {
+    if (rpg_aim_shooter_group.isEmpty() || rpg_aim_target_group.isEmpty()) {
+      return;
+    }
+    auto const target = centroid(rpg_aim_target_group);
+    if (!target.has_value()) {
+
+      rpg_aim_shooter_group.clear();
+      rpg_aim_target_group.clear();
+      return;
+    }
+
+    constexpr float k_chest_height = 1.15F;
+    QVector3D const aim_point = *target + QVector3D(0.0F, k_chest_height, 0.0F);
+    for (auto entity_id : ids(rpg_aim_shooter_group)) {
+      if (host.aim_rpg_view_at) {
+        host.aim_rpg_view_at(entity_id, aim_point);
+        continue;
+      }
+      if (!host.set_rpg_view_yaw || !host.set_rpg_view_pitch) {
+        continue;
+      }
+      auto const* shooter = world.get_entity(entity_id);
+      auto const* shooter_transform =
+          shooter != nullptr
+              ? shooter->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      if (shooter_transform == nullptr) {
+        continue;
+      }
+      constexpr float k_eye_height = 1.55F;
+      float const dx = aim_point.x() - shooter_transform->position.x;
+      float const dz = aim_point.z() - shooter_transform->position.z;
+      float const flat = std::sqrt((dx * dx) + (dz * dz));
+      host.set_rpg_view_yaw(entity_id,
+                            std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>);
+      host.set_rpg_view_pitch(
+          entity_id,
+          std::atan2(aim_point.y() - (shooter_transform->position.y + k_eye_height),
+                     std::max(flat, 0.01F)) *
+              180.0F / std::numbers::pi_v<float>);
+    }
   }
 
   [[nodiscard]] auto groups_distance(const QString& lhs,
@@ -1596,6 +1643,15 @@ struct ArenaScenarioRunner::Impl {
       }
       break;
     case ScenarioCommandKind::RpgAim:
+      if (!step.target_group.isEmpty()) {
+
+        rpg_aim_shooter_group = step.group;
+        rpg_aim_target_group = step.target_group;
+        track_rpg_aim();
+        break;
+      }
+      rpg_aim_shooter_group.clear();
+      rpg_aim_target_group.clear();
       for (auto entity_id : ids(step.group)) {
         if (!host.set_rpg_view_yaw || !host.set_rpg_view_pitch) {
           add_issue(QStringLiteral("rpg_aim_unavailable"),
@@ -1603,36 +1659,8 @@ struct ArenaScenarioRunner::Impl {
                     entity_id);
           continue;
         }
-        float yaw = step.rpg_view_yaw_degrees.value_or(0.0F);
-        float pitch = step.rpg_view_pitch_degrees.value_or(0.0F);
-        if (!step.target_group.isEmpty()) {
-
-          auto const* shooter = world.get_entity(entity_id);
-          auto const* shooter_transform =
-              shooter != nullptr
-                  ? shooter->get_component<Engine::Core::TransformComponent>()
-                  : nullptr;
-          auto const target = centroid(step.target_group);
-          if (shooter_transform == nullptr || !target.has_value()) {
-            add_issue(
-                QStringLiteral("rpg_aim_target_missing"),
-                QStringLiteral("%1 has nothing alive to aim at").arg(step.target_group),
-                entity_id);
-            continue;
-          }
-          constexpr float k_chest_height = 1.15F;
-          constexpr float k_eye_height = 1.55F;
-          float const dx = target->x() - shooter_transform->position.x;
-          float const dz = target->z() - shooter_transform->position.z;
-          float const flat = std::sqrt((dx * dx) + (dz * dz));
-          yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
-          pitch = std::atan2(target->y() + k_chest_height -
-                                 (shooter_transform->position.y + k_eye_height),
-                             std::max(flat, 0.01F)) *
-                  180.0F / std::numbers::pi_v<float>;
-        }
-        host.set_rpg_view_yaw(entity_id, yaw);
-        host.set_rpg_view_pitch(entity_id, pitch);
+        host.set_rpg_view_yaw(entity_id, step.rpg_view_yaw_degrees.value_or(0.0F));
+        host.set_rpg_view_pitch(entity_id, step.rpg_view_pitch_degrees.value_or(0.0F));
       }
       break;
     case ScenarioCommandKind::RpgGuard:
@@ -4005,6 +4033,7 @@ void ArenaScenarioRunner::update(float simulation_dt) {
       m_impl->execute_step(i, step);
     }
   }
+  m_impl->track_rpg_aim();
   m_impl->observe_commander_aura_state();
   m_impl->observe_projectiles();
   for (auto const& expectation : m_impl->scenario.expectations) {

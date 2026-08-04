@@ -625,6 +625,59 @@
       "wanted": "A single dry bow release, isolated. The current clip is a group recording."
     },
     {
+      "id": "combat.bow_draw",
+      "description": "A commander starts drawing his bow.",
+      "category": "sfx",
+      "volume": 0.5,
+      "priority": 3,
+      "cooldown_ms": 240,
+      "resources": [
+        "sfx.combat.bow_draw",
+        "sfx.combat.bow_draw_v2"
+      ],
+      "wanted": "Sinew and leather taking load, rising over about half a second. It has to end open rather than resolve, because the loose is a separate cue."
+    },
+    {
+      "id": "combat.bow_full_draw",
+      "description": "A commander's draw reaches full and the string holds there.",
+      "category": "sfx",
+      "volume": 0.45,
+      "priority": 3,
+      "cooldown_ms": 200,
+      "resources": [
+        "sfx.combat.bow_full_draw",
+        "sfx.combat.bow_full_draw_v2"
+      ],
+      "wanted": "One dry, dark seat: the nock settling on the rest and the creak stopping dead. Woodier and quieter than combat.lock_on, which it used to borrow."
+    },
+    {
+      "id": "combat.bow_strain",
+      "description": "A commander has held full draw long enough that the arm starts to go.",
+      "category": "sfx",
+      "volume": 0.5,
+      "priority": 3,
+      "cooldown_ms": 900,
+      "resources": [
+        "sfx.combat.bow_strain",
+        "sfx.combat.bow_strain_v2"
+      ],
+      "wanted": "A labouring creak falling in pitch under air pushed out through the teeth. It is a warning, so it should sit under the mix rather than punch."
+    },
+    {
+      "id": "combat.bow_loose_heavy",
+      "description": "A commander looses an aimed arrow from his war bow.",
+      "category": "sfx",
+      "volume": 0.7,
+      "priority": 4,
+      "cooldown_ms": 90,
+      "resources": [
+        "sfx.combat.bow_loose_heavy",
+        "sfx.combat.bow_loose_heavy_v2",
+        "sfx.combat.bow_loose_heavy_v3"
+      ],
+      "wanted": "The heavy cousin of combat.arrow_launch: deeper limb thump, harder string snap, and the shaft audible in the air for longer. It has to read as one man shooting, not a rank of archers."
+    },
+    {
       "id": "combat.arrow_flyby",
       "description": "A projectile lands close enough to read as an arrow passing.",
       "category": "sfx",

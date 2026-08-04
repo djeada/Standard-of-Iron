@@ -53,6 +53,18 @@ auto make_arrow_visual_profile(ArrowVisualStyle style,
     profile.scale = 1.08F;
     profile.brightness = 1.05F;
     break;
+  case ArrowVisualStyle::Aimed:
+
+    profile.scale = 1.78F;
+    profile.length_scale = 1.62F;
+    profile.arc_scale = 1.0F;
+    profile.roll_deg = remap_unit(unit_float(sequence ^ 0x6a09e667U), -6.0F, 6.0F);
+    profile.spin_rate_deg =
+        remap_unit(unit_float(sequence ^ 0xbb67ae85U), 120.0F, 210.0F);
+    profile.trail_alpha = 0.46F;
+    profile.trail_length = 0.20F;
+    profile.brightness = 1.30F;
+    break;
   case ArrowVisualStyle::Focused:
   default:
     profile.initial_progress =

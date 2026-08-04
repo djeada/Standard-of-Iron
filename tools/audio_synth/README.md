@@ -1,13 +1,13 @@
 # Synthesised cue sounds
 
-Sixty of the game's sound effects are not recordings. They are generated from
+Sixty-four of the game's sound effects are not recordings. They are generated from
 the recipes in this directory by `make audio-assets`.
 
 ## Why generate them
 
 - **Provenance is trivial.** Nothing here is sampled, scraped or licensed, so
   there is no attribution to track and no commercial-use question to answer.
-- **They stay small.** All sixty come to roughly 420 KiB of Vorbis. Most are
+- **They stay small.** All sixty-four come to roughly 640 KiB of Vorbis. Most are
   under 5 KiB, which is mostly the Vorbis header.
 - **They stay editable.** "The click is too bright" is a one-line change to a
   recipe followed by a regeneration, not a trip back to a sound library.
@@ -33,8 +33,12 @@ python3 tools/audio_synth/synthesize_cues.py ui.click    # one cue
 python3 tools/audio_synth/synthesize_cues.py 'combat.*'  # a family
 ```
 
-Output is deterministic: every recipe seeds its own noise, so regenerating
-without editing a recipe reproduces the same bytes.
+The audio is deterministic: every recipe seeds its own noise, so regenerating
+without editing a recipe reproduces the same samples. The _file_ is not quite,
+because ffmpeg's Ogg muxer picks a random stream serial, so about two dozen
+bytes of container header differ on every encode. Regenerate the cue you are
+working on rather than the whole set, or `git checkout` the files you did not
+mean to touch -- otherwise a one-cue change arrives as a hundred-file diff.
 
 ## Variants
 

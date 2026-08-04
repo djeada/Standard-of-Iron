@@ -296,6 +296,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         shot_object.value(QStringLiteral("shake")).toDouble(shot.shake));
     shot.gameplay_camera = shot_object.value(QStringLiteral("gameplay_camera"))
                                .toBool(shot.gameplay_camera);
+    shot.rpg_hud = shot_object.value(QStringLiteral("rpg_hud")).toBool(shot.rpg_hud);
 
     if (shot.scenario.isEmpty()) {
       if (error != nullptr) {

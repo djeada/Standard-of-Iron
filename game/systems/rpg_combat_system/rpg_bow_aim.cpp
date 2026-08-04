@@ -21,6 +21,14 @@ constexpr int k_terrain_refine_steps = 6;
 
 [[nodiscard]] auto
 view_direction(const Engine::Core::RpgCommanderAimComponent& aim) -> QVector3D {
+  if (aim.camera_forward_valid) {
+
+    QVector3D const forward(
+        aim.camera_forward_x, aim.camera_forward_y, aim.camera_forward_z);
+    if (forward.lengthSquared() > 1.0e-6F) {
+      return forward.normalized();
+    }
+  }
   float const yaw = aim.view_yaw_degrees * k_degrees_to_radians;
   float const pitch = aim.view_pitch_degrees * k_degrees_to_radians;
   float const pitch_cos = std::cos(pitch);
@@ -155,6 +163,11 @@ auto sync_commander_aim(Engine::Core::Entity& commander, const FpvAimInput& inpu
   aim->camera_origin_y = input.camera_origin.y();
   aim->camera_origin_z = input.camera_origin.z();
   aim->camera_origin_valid = input.camera_origin_valid;
+  aim->camera_forward_x = input.camera_forward.x();
+  aim->camera_forward_y = input.camera_forward.y();
+  aim->camera_forward_z = input.camera_forward.z();
+  aim->camera_forward_valid = input.camera_forward_valid;
+  aim->camera_fov_degrees = input.camera_fov_degrees;
   if (!input.primary_held) {
     aim->relaxed_from_overhold = false;
   }
@@ -220,32 +233,27 @@ auto bow_muzzle(const Engine::Core::Entity& commander,
   QVector3D const right(-forward.z(), 0.0F, forward.x());
 
   return QVector3D(transform->position.x,
-                   transform->position.y + aim.eye_height - 0.20F,
+                   transform->position.y + k_bow_hand_height,
                    transform->position.z) +
-         (forward * 0.35F) - (right * 0.18F);
+         (forward * k_bow_hand_forward) - (right * k_bow_hand_lateral);
 }
 
-auto commander_aim_ray(Engine::Core::World& world,
-                       Engine::Core::Entity& commander,
-                       const Engine::Core::RpgCommanderAimComponent& aim,
-                       float max_range) -> AimRay {
-  auto const sight = crosshair_ray(commander, aim);
-  max_range = std::max(1.0F, max_range);
+auto commander_aim_ray(const Engine::Core::Entity& commander,
+                       const Engine::Core::RpgCommanderAimComponent& aim) -> AimRay {
 
-  QVector3D focus = sight.origin + (sight.direction * max_range);
-  constexpr float k_crosshair_forgiveness = 0.10F;
-  if (auto const hit = raycast_enemy_bodies(
-          world, commander, sight, max_range, k_crosshair_forgiveness)) {
-    focus = hit->point;
-  } else if (auto const ground = terrain_distance_along(sight, max_range)) {
-    focus = sight.origin + (sight.direction * *ground);
+  AimRay ray = crosshair_ray(commander, aim);
+  auto const* transform = commander.get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return ray;
   }
 
-  AimRay ray;
-  ray.origin = bow_muzzle(commander, aim);
-  QVector3D direction = focus - ray.origin;
-  ray.direction =
-      direction.lengthSquared() > 1.0e-6F ? direction.normalized() : sight.direction;
+  QVector3D const eye(transform->position.x,
+                      transform->position.y + aim.eye_height,
+                      transform->position.z);
+  float const advance = QVector3D::dotProduct(eye - ray.origin, ray.direction);
+  if (advance > 0.0F) {
+    ray.origin += ray.direction * advance;
+  }
   return ray;
 }
 
@@ -317,29 +325,32 @@ auto scatter_ray(const AimRay& ray,
 
 auto resolve_bow_shot(Engine::Core::World& world,
                       Engine::Core::Entity& commander,
-                      const AimRay& ray,
+                      const Engine::Core::RpgCommanderAimComponent& aim,
+                      const AimRay& sight,
                       float max_range) -> BowShot {
   BowShot shot;
-  shot.start = ray.origin;
   max_range = std::max(1.0F, max_range);
 
   constexpr float k_shot_forgiveness = 0.04F;
   float travel = max_range;
-  if (auto const hit =
-          raycast_enemy_bodies(world, commander, ray, max_range, k_shot_forgiveness)) {
+  if (auto const hit = raycast_enemy_bodies(
+          world, commander, sight, max_range, k_shot_forgiveness)) {
     shot.hit = *hit;
     shot.hit_body = true;
     travel = hit->distance;
   } else {
-    if (auto const ground = terrain_distance_along(ray, max_range)) {
+    if (auto const ground = terrain_distance_along(sight, max_range)) {
       travel = std::min(travel, *ground);
     }
     float const wall_fraction = first_building_intersection_fraction(
-        ray.origin, ray.origin + (ray.direction * travel));
+        sight.origin, sight.origin + (sight.direction * travel));
     travel *= std::clamp(wall_fraction, 0.0F, 1.0F);
   }
 
-  shot.end = ray.origin + (ray.direction * std::max(travel, 0.25F));
+  shot.impact = sight.origin + (sight.direction * std::max(travel, 0.25F));
+
+  shot.start = bow_muzzle(commander, aim);
+  shot.end = shot.impact;
   return shot;
 }
 

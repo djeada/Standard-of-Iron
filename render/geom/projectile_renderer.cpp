@@ -64,6 +64,86 @@ void draw_arrow_glow(Renderer* renderer,
   return model;
 }
 
+void render_aimed_arrow_impact(Renderer* renderer,
+                               const Game::Systems::ProjectileImpactEvent& impact,
+                               float progress,
+                               float fade) {
+
+  float const flash = std::clamp(1.0F - (progress * 4.5F), 0.0F, 1.0F);
+  float const burst = 1.0F - std::pow(1.0F - progress, 2.6F);
+  float const scale = std::max(0.55F, impact.scale);
+  float const time = renderer->get_animation_time();
+
+  QVector3D const incoming = impact.incoming_direction;
+  QVector3D lateral = QVector3D::crossProduct(incoming, QVector3D(0.0F, 1.0F, 0.0F));
+  if (lateral.lengthSquared() < 1.0e-5F) {
+    lateral = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+  lateral.normalize();
+  QVector3D const vertical =
+      QVector3D::crossProduct(lateral, incoming).normalized() * 1.0F;
+
+  constexpr int k_spark_count = 14;
+  for (int spark = 0; spark < k_spark_count; ++spark) {
+    float const seed = static_cast<float>(spark) * 2.399963F;
+    float const cone = 0.32F + (0.55F * std::abs(std::sin(seed * 1.7F)));
+
+    QVector3D const spray =
+        ((-incoming) + (lateral * std::cos(seed) * cone) +
+         (vertical * std::sin(seed) * cone) + QVector3D(0.0F, 0.22F, 0.0F))
+            .normalized();
+    float const reach = (0.30F + (0.85F * std::abs(std::cos(seed * 2.3F)))) * scale;
+    renderer->metal_spark(impact.position + (spray * reach * burst),
+                          impact.hit_target ? QVector3D(0.86F, 0.16F, 0.11F)
+                                            : QVector3D(1.0F, 0.86F, 0.55F),
+                          (0.052F + (0.028F * std::sin(seed))) * scale,
+                          1.45F * fade * fade,
+                          impact.age + (seed * 0.03F),
+                          spray);
+  }
+
+  if (impact.hit_target) {
+
+    renderer->combat_dust(impact.position - (incoming * 0.12F * scale),
+                          QVector3D(0.44F, 0.07F, 0.05F),
+                          (0.24F + (0.42F * burst)) * scale,
+                          1.30F * fade * fade,
+                          time + impact.age);
+    renderer->combat_dust(impact.position + QVector3D(0.0F, 0.16F * burst, 0.0F) -
+                              (incoming * 0.30F * scale),
+                          QVector3D(0.52F, 0.10F, 0.08F),
+                          (0.14F + (0.34F * burst)) * scale,
+                          0.85F * fade,
+                          time * 1.21F + impact.age);
+  } else {
+    renderer->combat_dust(impact.position,
+                          QVector3D(0.62F, 0.56F, 0.46F),
+                          (0.18F + (0.36F * burst)) * scale,
+                          0.95F * fade,
+                          time + impact.age);
+  }
+
+  if (flash > 0.0F) {
+
+    float const flash_radius =
+        impact.hit_target ? (0.045F + (0.040F * flash)) : (0.085F + (0.085F * flash));
+    renderer->fireball(impact.position,
+                       impact.hit_target ? QVector3D(1.0F, 0.46F, 0.36F)
+                                         : QVector3D(1.0F, 0.94F, 0.76F),
+                       flash_radius * scale,
+                       (impact.hit_target ? 1.5F : 2.2F) * flash * flash,
+                       time * 1.7F);
+
+    Render::LocalLight spark_light;
+    spark_light.position = impact.position + QVector3D(0.0F, 0.12F, 0.0F);
+    spark_light.color = impact.hit_target ? QVector3D(1.0F, 0.44F, 0.30F)
+                                          : QVector3D(1.0F, 0.90F, 0.68F);
+    spark_light.radius = 2.6F * scale;
+    spark_light.intensity = (impact.hit_target ? 0.85F : 1.35F) * flash;
+    renderer->local_light(spark_light);
+  }
+}
+
 void render_projectile_impact(Renderer* renderer,
                               const Game::Systems::ProjectileImpactEvent& impact) {
   float const progress =
@@ -179,6 +259,11 @@ void render_projectile_impact(Renderer* renderer,
     blast.radius = std::clamp((3.2F + 2.4F * growth) * scale, 3.0F, 7.5F);
     blast.intensity = (0.35F + 1.25F * flash_life) * cooling;
     renderer->local_light(blast);
+    return;
+  }
+
+  if (impact.aimed_shot) {
+    render_aimed_arrow_impact(renderer, impact, progress, fade);
     return;
   }
 
@@ -403,11 +488,14 @@ void render_arrow_projectile(Renderer* renderer,
                      0.34F - (0.12F * static_cast<float>(trail_idx)));
     }
   } else {
+    bool const aimed = arrow.visual_style() == Game::Systems::ArrowVisualStyle::Aimed;
+    int const trail_segments = aimed ? 6 : 2;
+    float const trail_step = aimed ? 0.17F : 0.38F;
     if (arrow.trail_alpha() > 0.001F && arrow.trail_length() > 0.0F) {
-      for (int segment = 1; segment <= 2; ++segment) {
+      for (int segment = 1; segment <= trail_segments; ++segment) {
         float const trail_t =
             arrow.get_progress() -
-            arrow.trail_length() * (0.55F + 0.38F * static_cast<float>(segment));
+            arrow.trail_length() * (0.55F + trail_step * static_cast<float>(segment));
         if (trail_t <= 0.0F) {
           continue;
         }
@@ -425,18 +513,45 @@ void render_arrow_projectile(Renderer* renderer,
                               0.0F,
                               -Geom::Arrow::k_arrow_z_scale * trail_scale *
                                   Geom::Arrow::k_arrow_z_translate_factor);
-        trail_model.scale(
-            Geom::Arrow::k_arrow_xy_scale * trail_scale * k_streak_xy_scale,
-            Geom::Arrow::k_arrow_xy_scale * trail_scale * k_streak_xy_scale,
-            Geom::Arrow::k_arrow_z_scale * trail_scale);
+        float const streak_xy = aimed ? k_streak_xy_scale * 0.72F : k_streak_xy_scale;
+        trail_model.scale(Geom::Arrow::k_arrow_xy_scale * trail_scale * streak_xy,
+                          Geom::Arrow::k_arrow_xy_scale * trail_scale * streak_xy,
+                          Geom::Arrow::k_arrow_z_scale * trail_scale *
+                              arrow.length_scale() * (aimed ? 1.35F : 1.0F));
+        float const falloff = 1.0F - (static_cast<float>(segment) /
+                                      static_cast<float>(trail_segments + 1));
         float const alpha =
-            arrow.trail_alpha() * (0.55F - 0.16F * static_cast<float>(segment));
+            aimed ? arrow.trail_alpha() * falloff * falloff
+                  : arrow.trail_alpha() * (0.55F - 0.16F * static_cast<float>(segment));
         renderer->mesh(arrow_shaft_mesh,
                        trail_model,
-                       scaled_color(Geom::Arrow::shaft_color(arrow.get_color()), 0.88F),
+                       scaled_color(Geom::Arrow::shaft_color(arrow.get_color()),
+                                    aimed ? 1.10F : 0.88F),
                        nullptr,
                        alpha);
       }
+    }
+
+    if (aimed) {
+
+      float const flight = std::clamp(arrow.get_progress(), 0.0F, 1.0F);
+      float const settle = std::clamp(flight * 6.0F, 0.0F, 1.0F);
+      QVector3D const glow_color = Geom::Arrow::glow_color(arrow.get_color());
+
+      renderer->metal_spark(pos,
+                            QVector3D(1.0F, 0.92F, 0.72F),
+                            0.055F * arrow.get_scale(),
+                            1.35F * settle,
+                            arrow.get_progress() * 0.24F,
+                            delta.normalized());
+
+      Render::LocalLight flight_light;
+      flight_light.position = pos;
+      flight_light.color =
+          (glow_color * 0.45F) + (QVector3D(1.0F, 0.90F, 0.66F) * 0.55F);
+      flight_light.radius = 2.6F;
+      flight_light.intensity = 0.65F * settle * arrow.brightness();
+      renderer->local_light(flight_light);
     }
     model.rotate(arrow.roll_deg() + arrow.get_progress() * arrow.spin_rate_deg(),
                  QVector3D(0, 0, 1));
@@ -446,7 +561,7 @@ void render_arrow_projectile(Renderer* renderer,
     model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
     model.scale(arrow_xy_scale * arrow.get_scale(),
                 arrow_xy_scale * arrow.get_scale(),
-                arrow_z_scale * arrow.get_scale());
+                arrow_z_scale * arrow.get_scale() * arrow.length_scale());
 
     QVector3D const team_color = arrow.get_color();
     QVector3D shaft_color =
@@ -466,8 +581,13 @@ void render_arrow_projectile(Renderer* renderer,
         arrow.get_kind() == Game::Systems::ProjectileKind::CursedArrow
             ? QVector3D(0.78F, 0.35F, 1.0F)
             : Geom::Arrow::glow_color(team_color);
-    draw_arrow_glow(
-        renderer, arrow_shaft_mesh, arrow_tip_mesh, model, glow, arrow.brightness());
+    draw_arrow_glow(renderer,
+                    arrow_shaft_mesh,
+                    arrow_tip_mesh,
+                    model,
+                    aimed ? (glow * 0.55F) + (QVector3D(1.0F, 0.94F, 0.74F) * 0.45F)
+                          : glow,
+                    arrow.brightness() * (aimed ? 1.6F : 1.0F));
 
     QMatrix4x4 fletch_model = model;
     fletch_model.translate(

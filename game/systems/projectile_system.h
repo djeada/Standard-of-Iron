@@ -26,6 +26,8 @@ struct ProjectileImpactEvent {
   float lifetime{0.65F};
   float scale{1.0F};
   bool ballista_bolt{false};
+
+  bool aimed_shot{false};
   bool hit_target{false};
   bool damage_applied{false};
   Engine::Core::EntityID attacker_id{0};
@@ -53,7 +55,9 @@ public:
                    ArrowVisualStyle visual_style = ArrowVisualStyle::Focused,
                    std::optional<QVector3D> target_origin_at_launch = std::nullopt,
 
-                   float arc_scale = 1.0F);
+                   float arc_scale = 1.0F,
+
+                   float visual_power = 1.0F);
 
   void spawn_stone(const QVector3D& start,
                    const QVector3D& end,
@@ -86,6 +90,9 @@ private:
   [[nodiscard]] auto resolve_impact(Engine::Core::World* world,
                                     Projectile* projectile) -> ImpactResolution;
   void publish_impact(const Projectile& projectile, const ImpactResolution& resolution);
+  static void confirm_commander_hit(Engine::Core::World* world,
+                                    Engine::Core::EntityID attacker_id,
+                                    const Engine::Core::Entity& target);
   void record_spent_projectile(const Projectile& projectile,
                                const QVector3D& incoming_direction,
                                bool ballista_bolt);

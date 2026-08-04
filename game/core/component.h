@@ -432,6 +432,10 @@ public:
   EntityID recent_hit_target_id{0};
   std::uint16_t recent_hit_soldier_slot{k_no_soldier_slot};
   float recent_hit_timer{0.0F};
+
+  std::uint32_t hit_confirm_sequence{0};
+
+  bool recent_hit_killed{false};
 };
 
 enum class FpvWeaponStance : std::uint8_t {
@@ -471,6 +475,13 @@ public:
   float camera_origin_y{0.0F};
   float camera_origin_z{0.0F};
   bool camera_origin_valid{false};
+
+  float camera_forward_x{0.0F};
+  float camera_forward_y{0.0F};
+  float camera_forward_z{1.0F};
+  bool camera_forward_valid{false};
+
+  float camera_fov_degrees{68.0F};
 
   FpvWeaponStance stance{FpvWeaponStance::Melee};
   bool stance_resolved{false};
