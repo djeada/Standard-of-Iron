@@ -28,17 +28,28 @@ float pixel_width_uv(vec2 uv) {
   return clamp(w, 0.00125, 0.012);
 }
 
+float segment_sdf(vec2 p, vec2 a, vec2 b, float r) {
+  vec2 pa = p - a;
+  vec2 ba = b - a;
+  float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-5), 0.0, 1.0);
+  return length(pa - ba * h) - r;
+}
+
 float bush_sdf(vec2 uv, float seed) {
-  vec2 p = (uv - 0.5) * vec2(1.08, 0.96);
+  vec2 p = (uv - vec2(0.5, 0.46)) * vec2(1.12, 1.0);
   float sdf = 1e9;
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 7; i++) {
     float fi = float(i);
-    float ang = fi * 1.25663706 + seed * 3.7;
-    vec2 c = vec2(cos(ang), sin(ang)) * (0.18 + h11(seed * 7.9 + fi) * 0.05);
-    float r = 0.30 + h11(seed * 5.7 + fi) * 0.06;
+    float ang = fi * 0.897597901 + seed * 3.7;
+    float spread = 0.20 + h11(seed * 7.9 + fi) * 0.11;
+    vec2 c = vec2(cos(ang), sin(ang) * 0.84) * spread + vec2(0.0, 0.05);
+    float r = 0.145 + h11(seed * 5.7 + fi) * 0.085;
     sdf = min(sdf, length(p - c) - r);
   }
+
+  float stem_lean = (h11(seed * 4.1) - 0.5) * 0.10;
+  sdf = min(sdf, segment_sdf(p, vec2(stem_lean, -0.46), vec2(0.0, -0.04), 0.028));
 
   return sdf - 0.007;
 }
@@ -106,12 +117,14 @@ void main() {
 
   float dryness = mix(0.35, 0.92, h11(v_seed * 2.7 + v_type * 0.73));
 
-  vec3 lush = vec3(0.12, 0.24, 0.16);
-  vec3 dry = vec3(0.35, 0.34, 0.25);
+  vec3 lush = vec3(0.17, 0.32, 0.18);
+  vec3 dry = vec3(0.38, 0.36, 0.24);
 
   vec3 base = mix(lush, dry, dryness);
   base = mix(base, v_color, 0.40);
-  base *= 0.82;
+  base *= 0.94;
+
+  base = mix(base, base * vec3(1.22, 1.16, 0.86), smoothstep(0.35, 1.0, v_height));
 
   vec2 uv2 = (v_tex_coord - 0.5) * 2.0;
   float r2 = clamp(dot(uv2, uv2), 0.0, 1.0);
@@ -154,9 +167,12 @@ void main() {
 
   float leaf_angle = atan(uv2.y, uv2.x);
   float vein_count = mix(5.0, 9.0, h11(v_seed * 8.1));
-  float veins = pow(abs(sin(leaf_angle * vein_count + v_seed * 6.0)), 18.0) *
-                smoothstep(0.08, 0.80, sqrt(r2));
-  albedo *= mix(1.0, 0.76, veins * 0.34);
+  float leaf_wave = sin(leaf_angle * vein_count + v_seed * 6.0);
+  float radial = smoothstep(0.08, 0.80, sqrt(r2));
+  float lobe_shade = (0.5 - 0.5 * cos(leaf_angle * vein_count + v_seed * 6.0)) * radial;
+  float crease = pow(abs(leaf_wave), 24.0) * radial;
+  albedo *= mix(1.0, 0.88, lobe_shade);
+  albedo *= mix(1.0, 0.66, crease * 0.55);
 
   float blemish = h11(floor(v_world_pos.x * 19.0 + v_world_pos.z * 23.0) +
                       floor(v_tex_coord.y * 17.0) + v_seed * 31.0);

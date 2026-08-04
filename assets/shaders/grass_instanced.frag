@@ -15,6 +15,10 @@ void main() {
   float alpha = v_alpha * edge;
   if (alpha <= 0.02)
     discard;
-  vec3 color = apply_visibility_memory(v_color, v_world_pos.xz);
+
+  float across = clamp(abs(v_edge), 0.0, 1.0);
+  float fold = 1.0 - across * across;
+  vec3 color = v_color * mix(0.82, 1.12, fold);
+  color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, alpha);
 }

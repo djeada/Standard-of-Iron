@@ -106,7 +106,7 @@ void main() {
       mix(leaf_color, leaf_light_green, highlight * mix(0.18, 0.34, canopy_height));
   leaf_color = mix(leaf_color, leaf_light_green, canopy_edge * 0.10);
 
-  leaf_color = mix(leaf_color, v_color, 0.15);
+  leaf_color = mix(leaf_color, v_color, 0.38);
 
   float canopy_depth = 1.0 - smoothstep(0.0, 0.35, length(v_local_pos_xz));
   float canopy_occlusion =
