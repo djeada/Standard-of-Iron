@@ -614,6 +614,8 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<ElephantStompImpactComponent>(source, destination);
   copy_snapshot_component<CatapultLoadingComponent>(source, destination);
   copy_snapshot_component<GateComponent>(source, destination);
+  copy_snapshot_component<StockpileComponent>(source, destination);
+  copy_snapshot_component<ResourceCarryComponent>(source, destination);
 }
 
 void render_hash_combine(std::uint64_t& seed, std::uint64_t value) {

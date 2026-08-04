@@ -106,6 +106,7 @@ add_executable(
     systems/commander_system_test.cpp
     systems/pathfinding_test.cpp
     systems/production_system_test.cpp
+    systems/resource_delivery_system_test.cpp
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp
     systems/undead_awakening_system_test.cpp

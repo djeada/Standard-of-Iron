@@ -1,0 +1,99 @@
+# Resource Stockpiles and Hauling
+
+Gathered goods do not teleport into the treasury. A worker who fells a tree, breaks a
+boulder or digs an ore seam shoulders the load, walks it to the stone yard beside a
+friendly barracks, and only there does the player's resource counter move.
+
+This document covers the two halves of that: the yard a barracks owns, and the haul
+that ends on it.
+
+## The stockpile yard
+
+Every barracks has a yard: a flat rectangle of loose stones laid on the ground beside
+the building. It is part of the barracks, not a separate entity — no spawn type, no
+collision footprint, no health. It is drawn by the barracks renderer and it disappears
+with the building.
+
+Its layout is authored once, in world units measured from the barracks centre in the
+building's own unrotated frame, and shared by gameplay and rendering:
+
+| Constant                            | Value       | Meaning                                        |
+| ----------------------------------- | ----------- | ---------------------------------------------- |
+| `k_stockpile_center_x` / `_z`       | 5.20 / 0.0  | Yard centre; `+X` is always the yard side      |
+| `k_stockpile_half_width` / `_depth` | 1.45 / 2.10 | Half extents of the stone bed                  |
+| `k_stockpile_drop_x` / `_z`         | 5.95 / 0.0  | Where haulers stand to unload                  |
+| `k_stockpile_drop_radius`           | 2.20        | Anywhere this close counts as arrived          |
+| `k_stockpile_display_cap`           | 260         | Stored amount that draws a pile at full height |
+
+`game/systems/resource_stockpile.h` owns these numbers and the yaw rotation that turns
+them into world space, so a rotated barracks keeps its yard on the same side of the
+building and the drop-off point follows it. **Change the offsets there and nowhere
+else** — the renderer and the delivery system would otherwise disagree about where the
+yard is, and haulers would walk to a patch of grass.
+
+The offsets clear the barracks' 4×4 collision footprint and its one-cell padding, so
+the drop-off point is always on walkable ground next to the building rather than inside
+the blocked ring around it.
+
+### What is drawn
+
+`render/entity/barracks_stockpile.cpp` draws the yard in world units. It rebuilds its
+own frame from the entity transform's position and yaw, deliberately dropping the
+barracks' non-uniform mesh scale, so the yard's proportions never depend on how a
+nation's building model happens to be scaled.
+
+- A sunken gravel bed.
+- A ring of flat, loose stones around it, jittered from a deterministic hash so it reads
+  as laid rather than as masonry. Two nations get two palettes: Roman limestone,
+  Carthaginian sandstone.
+- Worn flagstones inside the ring (dropped at distance, with the rest of the detail LOD).
+- Three piles on the inner half — stacked round logs, dressed stone blocks, and an ore
+  heap with ingots — leaving the outer strip clear as the apron haulers walk onto.
+
+Pile heights come from `StockpileComponent`, a presentation-only component the delivery
+system refreshes each tick from the owner's current stores. Piles therefore grow as the
+player gathers and shrink as they spend, and they are never written to a save. Roman and
+Carthaginian barracks have yards; other nations' barracks work as drop-off points but
+draw no yard.
+
+## The haul
+
+1. `ProductionSystem` finishes a harvest job. Instead of crediting the owner it calls
+   `load_onto_hauler`, which puts the yield in a `ResourceCarryComponent` on the worker.
+   Loads accumulate per resource type, so a worker who gathers twice carries both.
+2. `ResourceDeliverySystem` finds the nearest live friendly barracks, issues a
+   `ScriptedMove` to that yard's drop-off point, and re-issues it (at most every 1.5 s)
+   whenever the worker is idle again — after being blocked, or after the player sent it
+   somewhere else in between.
+3. When the worker is within `k_stockpile_drop_radius` of the drop-off point the whole
+   load is credited through `PlayerResourceRegistry::add_harvested`, the yard flashes
+   briefly, a drop-off cue plays, and the carry component is removed.
+
+While carrying, the worker reports `ActivityKind::Deliver`, so the same badge the HUD
+already uses for civilians tells the player what it is doing.
+
+### Rules that keep the loop from stalling
+
+- **A player order wins.** The delivery system only steers a worker that has no builder
+  job and no movement target of its own. Order the worker elsewhere and it goes; the
+  load stays on its back and the walk home resumes once it is idle.
+- **No depot, no loss.** With no friendly barracks anywhere in the world the load is
+  credited where the worker stands. Arena scenarios and tests that have no barracks
+  therefore behave exactly as they did before hauling existed.
+- **A dead depot is replaced.** If the target barracks is destroyed or captured
+  mid-walk, the worker re-targets the next nearest friendly one.
+- **Unreachable yards resolve.** If the drop-off point snaps to walkable ground far from
+  the yard, the worker is sent to the barracks itself instead; and after
+  `k_stockpile_haul_patience_seconds` of trying, reaching the building is enough to
+  unload. A load can never be stuck on a worker forever.
+- **The load survives a save.** `ResourceCarryComponent` is authoritative serialized
+  state — dropping it would either delete the goods or hand them over for free.
+
+### What this changes elsewhere
+
+- Mission `accumulate_resources` objectives count a yield at unload, not at harvest, so a
+  gather mission needs a reachable friendly barracks. See
+  [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md).
+- The AI is unaffected in principle and slower in practice: its builder behaviour only
+  picks workers with no movement target, so a hauling worker is left alone until it has
+  unloaded and is genuinely free again.
