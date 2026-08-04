@@ -132,6 +132,33 @@ TEST(UnitActivityTest, ACivilianCarryingItsLoadReportsDelivery) {
   EXPECT_EQ(activity.state, ActivityState::Queued);
 }
 
+TEST(UnitActivityTest, AGathererHaulingItsLoadReportsDelivery) {
+  Engine::Core::World world;
+  auto* entity = make_unit(world);
+  entity->add_component<Engine::Core::BuilderProductionComponent>();
+  auto* carry = entity->add_component<Engine::Core::ResourceCarryComponent>();
+  carry->amounts.add(Game::Systems::ResourceType::Wood, 40);
+
+  auto activity = classify_unit_activity(*entity);
+  EXPECT_EQ(activity.kind, ActivityKind::Deliver);
+  EXPECT_EQ(activity.state, ActivityState::Queued);
+
+  auto* movement = entity->add_component<Engine::Core::MovementComponent>();
+  MovementTestAccess::set_has_target(*movement, true);
+
+  activity = classify_unit_activity(*entity);
+  EXPECT_EQ(activity.kind, ActivityKind::Deliver);
+  EXPECT_EQ(activity.state, ActivityState::Active);
+}
+
+TEST(UnitActivityTest, AnEmptiedGathererStopsReportingDelivery) {
+  Engine::Core::World world;
+  auto* entity = make_unit(world);
+  entity->add_component<Engine::Core::ResourceCarryComponent>();
+
+  EXPECT_EQ(classify_unit_activity(*entity).kind, ActivityKind::Idle);
+}
+
 TEST(UnitActivityTest, StancesAndOrdersAreToldApart) {
   Engine::Core::World world;
 

@@ -445,6 +445,10 @@ buildings never rolls progress backwards. Only builder harvesting counts — mar
 and starting resources do not. Yields are 40 wood per tree, 35 stone per boulder, 30 iron per
 ore deposit.
 
+A yield is credited when the worker **unloads it at a barracks stockpile**, not when the tree
+falls, so a gather objective needs a reachable friendly barracks as well as reachable nodes;
+see [RESOURCE_STOCKPILE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/RESOURCE_STOCKPILE.md).
+
 Harvestable props are scattered procedurally by biome, so a map with low `plant_density` needs
 explicit `pine_tree` / `boulder` / `iron_ore` entries in its `world_props` before it can carry
 a gather objective. Decorative settlement props (`abandoned_home`, `statue`) never yield

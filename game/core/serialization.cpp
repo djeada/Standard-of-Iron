@@ -772,6 +772,21 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["civilian_delivery"] = delivery_obj;
   }
 
+  if (const auto* carry = entity->get_component<ResourceCarryComponent>()) {
+    QJsonObject carry_obj;
+    QJsonObject amounts_obj;
+    for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+      int const amount = carry->amounts.get(type);
+      if (amount > 0) {
+        amounts_obj[QLatin1String(Game::Systems::resource_type_key(type))] = amount;
+      }
+    }
+    carry_obj["amounts"] = amounts_obj;
+    carry_obj["depot_entity_id"] = static_cast<qint64>(carry->depot_entity_id);
+    carry_obj["has_depot"] = carry->has_depot;
+    entity_obj["resource_carry"] = carry_obj;
+  }
+
   if (const auto* resident = entity->get_component<SettlementResidentComponent>()) {
     QJsonObject resident_obj;
     resident_obj["hearth_x"] = static_cast<double>(resident->hearth_x);
@@ -1674,6 +1689,20 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     auto* delivery = entity->add_component<CivilianDeliveryComponent>();
     delivery->target_barracks_id = static_cast<EntityID>(
         delivery_obj["target_barracks_id"].toVariant().toULongLong());
+  }
+
+  if (json.contains("resource_carry")) {
+    const auto carry_obj = json["resource_carry"].toObject();
+    auto* carry = entity->add_component<ResourceCarryComponent>();
+    const auto amounts_obj = carry_obj["amounts"].toObject();
+    for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
+      carry->amounts.set(
+          type,
+          amounts_obj[QLatin1String(Game::Systems::resource_type_key(type))].toInt(0));
+    }
+    carry->depot_entity_id =
+        static_cast<EntityID>(carry_obj["depot_entity_id"].toVariant().toULongLong());
+    carry->has_depot = carry_obj["has_depot"].toBool(false);
   }
 
   if (json.contains("settlement_resident")) {

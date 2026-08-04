@@ -21,6 +21,7 @@
 #include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../barracks_renderer_common.h"
+#include "../../barracks_stockpile.h"
 #include "../../building_archetype_desc.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
@@ -743,6 +744,26 @@ void draw_rally_flag(const DrawContext& p,
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
+void draw_stockpile_yard(const DrawContext& p,
+                         ISubmitter& out,
+                         Mesh* unit,
+                         Texture* white,
+                         const RomanPalette& c) {
+  draw_barracks_stockpile(
+      p,
+      out,
+      unit,
+      white,
+      StockpileYardStyle{.gravel = c.limestone_dark * 0.78F,
+                         .stone_light = c.limestone,
+                         .stone_mid = c.limestone_shade,
+                         .stone_dark = c.limestone_dark,
+                         .timber = c.cedar,
+                         .timber_dark = c.cedar_dark,
+                         .ore = QVector3D(0.47F, 0.46F, 0.50F),
+                         .ore_rust = QVector3D(0.58F, 0.35F, 0.19F)});
+}
+
 void draw_barracks_ornaments(const DrawContext& p,
                              ISubmitter& out,
                              Mesh* unit,
@@ -750,6 +771,7 @@ void draw_barracks_ornaments(const DrawContext& p,
                              const QVector3D& team,
                              const BarracksFlagRenderer::ClothBannerResources* cloth) {
   RomanPalette const c = make_palette(team);
+  draw_stockpile_yard(p, out, unit, white, c);
   draw_phoenician_banner(p, out, unit, white, c, cloth);
   draw_rally_flag(p, out, white, c, cloth);
 }
