@@ -7,14 +7,20 @@ struct RiggedInstanceData {
   vec4 variation_material;
   vec4 wear_params;
   vec4 role_meta;
+  uvec4 palette_ref;
+  vec4 palette_blend;
 };
 
 layout(std430, binding = 0) readonly buffer RiggedVertexData {
   uint rg_vertex_words[];
 };
 
-layout(std430, binding = 2) readonly buffer RiggedPaletteData {
-  mat4 rg_palette[];
+layout(std430, binding = 2) readonly buffer RiggedOwnedPaletteData {
+  mat4 rg_owned_palette[];
+};
+
+layout(std430, binding = 6) readonly buffer RiggedBakedPaletteData {
+  mat4 rg_baked_palette[];
 };
 
 layout(std430, binding = 3) readonly buffer RiggedInstanceBuffer {
@@ -68,12 +74,26 @@ uint rg_color_role(uint v) {
   return rg_vertex_words[v * RG_WORDS_PER_VERTEX + 13u] & 0xFFu;
 }
 
+mat4 rg_bone_matrix(uint instance, uint bone) {
+  uvec4 palette_ref = rg_instance[instance].palette_ref;
+  if (palette_ref.x == 0u) {
+    return rg_owned_palette[palette_ref.y + bone];
+  }
+  mat4 first = rg_baked_palette[palette_ref.y + bone];
+  float weight = rg_instance[instance].palette_blend.x;
+  if (weight <= 0.0001) {
+    return first;
+  }
+  mat4 second = rg_baked_palette[palette_ref.z + bone];
+  return first + (second - first) * weight;
+}
+
 mat4 rg_skin_matrix(uint v, uint instance) {
   uvec4 bi = rg_bone_indices(v);
   vec4 bw = rg_bone_weights(v);
-  uint base = instance * u_bone_count;
-  mat4 skin = bw.x * rg_palette[base + bi.x] + bw.y * rg_palette[base + bi.y] +
-              bw.z * rg_palette[base + bi.z] + bw.w * rg_palette[base + bi.w];
+  mat4 skin =
+      bw.x * rg_bone_matrix(instance, bi.x) + bw.y * rg_bone_matrix(instance, bi.y) +
+      bw.z * rg_bone_matrix(instance, bi.z) + bw.w * rg_bone_matrix(instance, bi.w);
   float wsum = bw.x + bw.y + bw.z + bw.w;
   if (wsum < 0.001) {
     skin = mat4(1.0);
