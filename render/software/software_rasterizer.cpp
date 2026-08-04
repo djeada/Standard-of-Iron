@@ -16,9 +16,18 @@ struct ProjectedTriangle {
   QPointF p0;
   QPointF p1;
   QPointF p2;
+  float z0{0.0F};
+  float z1{0.0F};
+  float z2{0.0F};
   float centroid_z{0.0F};
   QColor fill;
 };
+
+[[nodiscard]] auto
+signed_area(const QPointF& a, const QPointF& b, const QPointF& c) -> float {
+  return static_cast<float>((b.x() - a.x()) * (c.y() - a.y()) -
+                            (b.y() - a.y()) * (c.x() - a.x()));
+}
 
 struct ProjectedVertex {
   QPointF screen;
@@ -147,7 +156,15 @@ auto SoftwareRasterizer::render() -> QImage {
     p.p0 = a.screen;
     p.p1 = b.screen;
     p.p2 = c.screen;
+    p.z0 = a.ndc_z;
+    p.z1 = b.ndc_z;
+    p.z2 = c.ndc_z;
     p.centroid_z = (a.ndc_z + b.ndc_z + c.ndc_z) / 3.0F;
+
+    if (m_settings.backface_cull && tri.alpha >= 1.0F &&
+        signed_area(p.p0, p.p1, p.p2) >= 0.0F) {
+      continue;
+    }
 
     QVector3D const shaded =
         shade(tri.color, compute_normal(tri.v0, tri.v1, tri.v2), m_settings.light_dir);
@@ -155,24 +172,92 @@ auto SoftwareRasterizer::render() -> QImage {
     projected.push_back(p);
   }
 
-  if (m_settings.depth_sort) {
-    std::sort(projected.begin(),
-              projected.end(),
-              [](const ProjectedTriangle& x, const ProjectedTriangle& y) {
-                return x.centroid_z > y.centroid_z;
-              });
+  if (!m_settings.depth_test) {
+    if (m_settings.depth_sort) {
+      std::sort(projected.begin(),
+                projected.end(),
+                [](const ProjectedTriangle& x, const ProjectedTriangle& y) {
+                  return x.centroid_z > y.centroid_z;
+                });
+    }
+
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing, false);
+    painter.setPen(Qt::NoPen);
+    for (auto const& p : projected) {
+      painter.setBrush(p.fill);
+      QPolygonF poly;
+      poly << p.p0 << p.p1 << p.p2;
+      painter.drawPolygon(poly);
+    }
+    painter.end();
+    return image;
   }
 
-  QPainter painter(&image);
-  painter.setRenderHint(QPainter::Antialiasing, false);
-  painter.setPen(Qt::NoPen);
+  std::sort(projected.begin(),
+            projected.end(),
+            [](const ProjectedTriangle& x, const ProjectedTriangle& y) {
+              return x.centroid_z > y.centroid_z;
+            });
+
+  std::vector<float> depth(static_cast<std::size_t>(m_settings.width) *
+                               static_cast<std::size_t>(m_settings.height),
+                           1e30F);
+
   for (auto const& p : projected) {
-    painter.setBrush(p.fill);
-    QPolygonF poly;
-    poly << p.p0 << p.p1 << p.p2;
-    painter.drawPolygon(poly);
+    float const area = signed_area(p.p0, p.p1, p.p2);
+    if (std::fabs(area) < 1e-9F) {
+      continue;
+    }
+
+    int const min_x = std::max(
+        0, static_cast<int>(std::floor(std::min({p.p0.x(), p.p1.x(), p.p2.x()}))));
+    int const max_x =
+        std::min(m_settings.width - 1,
+                 static_cast<int>(std::ceil(std::max({p.p0.x(), p.p1.x(), p.p2.x()}))));
+    int const min_y = std::max(
+        0, static_cast<int>(std::floor(std::min({p.p0.y(), p.p1.y(), p.p2.y()}))));
+    int const max_y =
+        std::min(m_settings.height - 1,
+                 static_cast<int>(std::ceil(std::max({p.p0.y(), p.p1.y(), p.p2.y()}))));
+
+    bool const opaque = p.fill.alpha() >= 255;
+    float const inv_area = 1.0F / area;
+
+    for (int y = min_y; y <= max_y; ++y) {
+      auto* scanline = reinterpret_cast<QRgb*>(image.scanLine(y));
+      for (int x = min_x; x <= max_x; ++x) {
+        QPointF const sample(static_cast<float>(x) + 0.5F,
+                             static_cast<float>(y) + 0.5F);
+        float const w0 = signed_area(p.p1, p.p2, sample) * inv_area;
+        float const w1 = signed_area(p.p2, p.p0, sample) * inv_area;
+        float const w2 = signed_area(p.p0, p.p1, sample) * inv_area;
+        if (w0 < 0.0F || w1 < 0.0F || w2 < 0.0F) {
+          continue;
+        }
+
+        float const z = w0 * p.z0 + w1 * p.z1 + w2 * p.z2;
+        std::size_t const index =
+            static_cast<std::size_t>(y) * static_cast<std::size_t>(m_settings.width) +
+            static_cast<std::size_t>(x);
+        if (z >= depth[index]) {
+          continue;
+        }
+
+        if (opaque) {
+          depth[index] = z;
+          scanline[x] = p.fill.rgb();
+        } else {
+          float const a = static_cast<float>(p.fill.alpha()) / 255.0F;
+          QColor const dst = QColor::fromRgb(scanline[x]);
+          scanline[x] =
+              qRgb(static_cast<int>(p.fill.red() * a + dst.red() * (1.0F - a)),
+                   static_cast<int>(p.fill.green() * a + dst.green() * (1.0F - a)),
+                   static_cast<int>(p.fill.blue() * a + dst.blue() * (1.0F - a)));
+        }
+      }
+    }
   }
-  painter.end();
 
   return image;
 }
