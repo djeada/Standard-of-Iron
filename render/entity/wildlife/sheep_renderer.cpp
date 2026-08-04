@@ -34,19 +34,21 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
                                      QVector3D(0.30F, 0.25F, 0.21F),
                                      hash_unit_float(state.seed, 29U))
                              : mixed(wool, QVector3D(0.50F, 0.40F, 0.30F), 0.74F);
+
+  wool = mixed(wool, QVector3D(0.84F, 0.81F, 0.73F), 0.30F);
   QVector3D const shade =
-      mixed(tinted(wool, 0.82F), QVector3D(0.36F, 0.32F, 0.27F), 0.18F);
+      mixed(tinted(wool, 0.68F), QVector3D(0.34F, 0.30F, 0.25F), 0.22F);
 
   Render::GL::WildlifeVariant variant;
   variant.roles[Render::Wildlife::k_sheep_role_wool - 1U] = wool;
   variant.roles[Render::Wildlife::k_sheep_role_wool_light - 1U] =
-      mixed(tinted(wool, 1.07F), QVector3D(1.0F, 0.97F, 0.90F), 0.16F);
+      mixed(tinted(wool, 1.16F), QVector3D(1.0F, 0.98F, 0.92F), 0.22F);
   variant.roles[Render::Wildlife::k_sheep_role_wool_shade - 1U] = shade;
   variant.roles[Render::Wildlife::k_sheep_role_wool_grubby - 1U] =
-      mixed(shade, QVector3D(0.44F, 0.38F, 0.29F), 0.52F);
+      mixed(shade, QVector3D(0.46F, 0.39F, 0.28F), 0.60F);
   variant.roles[Render::Wildlife::k_sheep_role_face - 1U] = face;
   variant.roles[Render::Wildlife::k_sheep_role_hoof - 1U] =
-      mixed(face, QVector3D(0.10F, 0.09F, 0.09F), 0.72F);
+      mixed(face, QVector3D(0.15F, 0.13F, 0.12F), 0.62F);
   variant.roles[Render::Wildlife::k_sheep_role_nose - 1U] =
       mixed(face, QVector3D(0.08F, 0.07F, 0.07F), 0.65F);
   variant.roles[Render::Wildlife::k_sheep_role_eye - 1U] = {0.07F, 0.06F, 0.05F};

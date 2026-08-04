@@ -255,38 +255,43 @@ void TerrainPipeline::initialize_grass_geometry() {
     QVector2D uv;
   };
 
-  constexpr int k_blades_per_tuft = grass_blade_vertex_count / 6;
   GrassVertex blade_vertices[grass_blade_vertex_count];
 
-  constexpr float k_splay_width_units = 2.6F;
-  constexpr float k_blade_height_scale[3] = {1.0F, 0.86F, 0.94F};
+  constexpr int k_rings = grass_blade_segments + 1;
+  constexpr float k_ring_height[k_rings] = {0.0F, 0.56F, 1.0F};
+  constexpr float k_ring_half_width[k_rings] = {0.50F, 0.33F, 0.07F};
+  constexpr float k_ring_splay[k_rings] = {0.0F, 0.30F, 1.12F};
+  constexpr float k_blade_height_scale[grass_blades_per_tuft] = {1.0F, 0.82F, 0.94F};
+  constexpr float k_blade_splay_scale[grass_blades_per_tuft] = {1.0F, 1.32F, 0.72F};
 
-  for (int blade = 0; blade < k_blades_per_tuft; ++blade) {
+  for (int blade = 0; blade < grass_blades_per_tuft; ++blade) {
     const float angle = (2.0F * std::numbers::pi_v<float> * static_cast<float>(blade)) /
-                        static_cast<float>(k_blades_per_tuft);
+                        static_cast<float>(grass_blades_per_tuft);
     const QVector2D right(std::cos(angle), std::sin(angle));
     const QVector2D splay(-std::sin(angle), std::cos(angle));
-    const float height = k_blade_height_scale[blade % 3];
+    const float height = k_blade_height_scale[blade];
+    const float splay_scale = k_blade_splay_scale[blade];
 
-    const QVector2D base_left = right * -0.5F;
-    const QVector2D base_right = right * 0.5F;
-    const QVector2D tip_left = right * -0.30F + splay * k_splay_width_units;
-    const QVector2D tip_right = right * 0.30F + splay * k_splay_width_units;
-
-    auto vertex = [&](const QVector2D& plane, float y, float u, float v) {
+    auto ring_vertex = [&](int ring, float side, float u) {
+      const QVector2D plane = (right * (side * k_ring_half_width[ring])) +
+                              (splay * (k_ring_splay[ring] * splay_scale));
       GrassVertex out;
-      out.position = QVector3D(plane.x(), y * height, plane.y());
-      out.uv = QVector2D(u, v);
+      out.position = QVector3D(plane.x(), k_ring_height[ring] * height, plane.y());
+      out.uv = QVector2D(u, k_ring_height[ring]);
       return out;
     };
 
-    const int base_index = blade * 6;
-    blade_vertices[base_index + 0] = vertex(base_left, 0.0F, 0.0F, 0.0F);
-    blade_vertices[base_index + 1] = vertex(base_right, 0.0F, 1.0F, 0.0F);
-    blade_vertices[base_index + 2] = vertex(tip_left, 1.0F, 0.15F, 1.0F);
-    blade_vertices[base_index + 3] = vertex(tip_left, 1.0F, 0.15F, 1.0F);
-    blade_vertices[base_index + 4] = vertex(base_right, 0.0F, 1.0F, 0.0F);
-    blade_vertices[base_index + 5] = vertex(tip_right, 1.0F, 0.85F, 1.0F);
+    for (int segment = 0; segment < grass_blade_segments; ++segment) {
+      const int lower = segment;
+      const int upper = segment + 1;
+      const int base_index = (blade * grass_blade_segments + segment) * 6;
+      blade_vertices[base_index + 0] = ring_vertex(lower, -1.0F, 0.0F);
+      blade_vertices[base_index + 1] = ring_vertex(lower, 1.0F, 1.0F);
+      blade_vertices[base_index + 2] = ring_vertex(upper, -1.0F, 0.0F);
+      blade_vertices[base_index + 3] = ring_vertex(upper, -1.0F, 0.0F);
+      blade_vertices[base_index + 4] = ring_vertex(lower, 1.0F, 1.0F);
+      blade_vertices[base_index + 5] = ring_vertex(upper, 1.0F, 1.0F);
+    }
   }
 
   gl->glGenVertexArrays(1, &m_grass_vao);

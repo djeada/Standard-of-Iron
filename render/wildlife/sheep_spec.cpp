@@ -1,7 +1,10 @@
 #include "sheep_spec.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 #include "../creature/species_manifest.h"
@@ -11,7 +14,6 @@ namespace Render::Wildlife {
 
 namespace {
 
-using Render::Creature::Quadruped::ConeNode;
 using Render::Creature::Quadruped::EllipsoidNode;
 using Render::Creature::Quadruped::MeshNode;
 using Render::Creature::Quadruped::SnoutNode;
@@ -110,7 +112,8 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
   QVector3D const side = QVector3D::crossProduct(head_up, facing).normalized();
   QVector3D const muzzle_dir =
       (facing - (head_up * (0.28F + (drive.graze * 0.55F)))).normalized();
-  pose.muzzle = poll + (facing * 0.074F) + (muzzle_dir * 0.070F);
+
+  pose.muzzle = poll + (facing * 0.056F) + (muzzle_dir * 0.050F);
 
   for (int sign_index = 0; sign_index < 2; ++sign_index) {
     float const sign = sign_index == 0 ? -1.0F : 1.0F;
@@ -121,7 +124,7 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
     QVector3D const alert =
         ((side * (sign * 0.74F)) + (facing * 0.22F) + (head_up * 0.28F)).normalized();
     QVector3D const dir = lerp(relaxed, alert, drive.alert).normalized();
-    QVector3D const tip = base + (dir * 0.152F);
+    QVector3D const tip = base + (dir * 0.126F);
     if (sign_index == 0) {
       pose.ear_base_l = base;
       pose.ear_tip_l = tip;
@@ -212,6 +215,52 @@ auto tube(std::string_view name,
     data.segment_count = 2U;
     data.ring_vertices = 5U;
   }
+  node.data = data;
+  return node;
+}
+
+auto ear_flap(std::string_view name,
+              Bone bone,
+              std::uint8_t role,
+              const QVector3D& base,
+              const QVector3D& tip,
+              const QVector3D& face_normal,
+              float half_width) -> MeshNode {
+  QVector3D const along = (tip - base).normalized();
+  QVector3D normal = face_normal - (along * QVector3D::dotProduct(face_normal, along));
+  if (normal.lengthSquared() <= 1.0e-8F) {
+    normal = QVector3D(0.0F, 1.0F, 0.0F);
+  }
+  normal.normalize();
+  QVector3D const across = QVector3D::crossProduct(normal, along).normalized();
+
+  constexpr std::array<std::pair<float, float>, 5> k_profile{{
+      {0.00F, 0.38F},
+      {0.20F, 0.86F},
+      {0.46F, 1.00F},
+      {0.76F, 0.70F},
+      {1.00F, 0.06F},
+  }};
+
+  float const length = (tip - base).length();
+  std::vector<QVector3D> outline;
+  outline.reserve(k_profile.size() * 2U);
+  for (const auto& [t, w] : k_profile) {
+    outline.push_back(base + (along * (t * length)) - (across * (w * half_width)));
+  }
+  for (auto it = k_profile.rbegin(); it != k_profile.rend(); ++it) {
+    outline.push_back(base + (along * (it->first * length)) +
+                      (across * (it->second * half_width)));
+  }
+
+  MeshNode node;
+  node.debug_name = name;
+  node.anchor_bone = bone_index(bone);
+  node.color_role = role;
+  Render::Creature::Quadruped::FlatFanNode data;
+  data.outline = std::move(outline);
+  data.thickness_axis = normal;
+  data.thickness = 0.016F;
   node.data = data;
   return node;
 }
@@ -322,18 +371,19 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
   nodes.push_back(ellipsoid("sheep.cranium",
                             Bone::Head,
                             k_sheep_role_face,
-                            bind.poll + (facing * 0.024F),
-                            {0.070F, 0.074F, 0.082F}));
+                            bind.poll + (facing * 0.020F),
+                            {0.078F, 0.078F, 0.084F}));
+
   nodes.push_back(ellipsoid("sheep.poll_wool",
                             Bone::Head,
                             k_sheep_role_wool_light,
-                            bind.poll - (facing * 0.030F) + (head_up * 0.050F),
-                            {0.078F, 0.052F, 0.080F}));
+                            bind.poll - (facing * 0.026F) + (head_up * 0.046F),
+                            {0.092F, 0.064F, 0.094F}));
   nodes.push_back(ellipsoid("sheep.cheek_wool",
                             Bone::NeckTop,
                             k_sheep_role_wool,
-                            bind.poll - ((bind.poll - bind.withers) * 0.42F),
-                            {0.088F, 0.084F, 0.082F}));
+                            bind.poll - ((bind.poll - bind.withers) * 0.38F),
+                            {0.102F, 0.096F, 0.092F}));
 
   {
     MeshNode node;
@@ -341,10 +391,10 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     node.anchor_bone = bone_index(Bone::Head);
     node.color_role = k_sheep_role_face;
     SnoutNode data;
-    data.start = bind.poll + (facing * 0.048F);
+    data.start = bind.poll + (facing * 0.044F);
     data.end = bind.muzzle;
-    data.base_radius = 0.066F;
-    data.tip_radius = 0.048F;
+    data.base_radius = 0.070F;
+    data.tip_radius = 0.056F;
     node.data = data;
     nodes.push_back(node);
   }
@@ -364,29 +414,20 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                               k_full));
   }
 
-  {
-    MeshNode ear_l;
-    ear_l.debug_name = "sheep.ear_l";
-    ear_l.anchor_bone = bone_index(Bone::EarL);
-    ear_l.color_role = k_sheep_role_face;
-    ConeNode data_l;
-    data_l.base_center = bind.ear_base_l;
-    data_l.tip = bind.ear_tip_l;
-    data_l.base_radius = 0.052F;
-    ear_l.data = data_l;
-    nodes.push_back(ear_l);
-
-    MeshNode ear_r;
-    ear_r.debug_name = "sheep.ear_r";
-    ear_r.anchor_bone = bone_index(Bone::EarR);
-    ear_r.color_role = k_sheep_role_face;
-    ConeNode data_r;
-    data_r.base_center = bind.ear_base_r;
-    data_r.tip = bind.ear_tip_r;
-    data_r.base_radius = 0.052F;
-    ear_r.data = data_r;
-    nodes.push_back(ear_r);
-  }
+  nodes.push_back(ear_flap("sheep.ear_l",
+                           Bone::EarL,
+                           k_sheep_role_face,
+                           bind.ear_base_l,
+                           bind.ear_tip_l,
+                           head_up,
+                           0.044F));
+  nodes.push_back(ear_flap("sheep.ear_r",
+                           Bone::EarR,
+                           k_sheep_role_face,
+                           bind.ear_base_r,
+                           bind.ear_tip_r,
+                           head_up,
+                           0.044F));
 
   constexpr std::array<Bone, k_leg_count> k_shoulders{
       Bone::ShoulderFL, Bone::ShoulderFR, Bone::ShoulderBL, Bone::ShoulderBR};
@@ -403,13 +444,14 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
         k_sheep_role_wool,
         {joints.shoulder.x() * 0.94F, k_hip_y + 0.052F, joints.shoulder.z() * 0.92F},
         {0.084F, 0.086F, 0.104F}));
+
     nodes.push_back(tube("sheep.leg.upper",
                          k_shoulders[i],
-                         k_sheep_role_face,
+                         k_sheep_role_wool_shade,
                          joints.shoulder,
                          joints.knee,
-                         0.056F,
-                         0.036F));
+                         0.058F,
+                         0.038F));
     nodes.push_back(tube("sheep.leg.lower",
                          k_knees[i],
                          k_sheep_role_face,
