@@ -26,6 +26,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rain_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_instancing_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_character_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rigged_cull_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/scatter_command_executor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_command_executor.cpp

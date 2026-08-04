@@ -16,6 +16,7 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
+#include "game/wildlife/wildlife_system.h"
 #include "loading_progress_tracker.h"
 #include "minimap_manager.h"
 #include "render/scene_renderer.h"
@@ -183,6 +184,9 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
       if (victory_service != nullptr) {
         victory_service->set_undead_zone_query(undead_system);
       }
+    }
+    if (auto* wildlife_system = world.get_system<Game::Wildlife::WildlifeSystem>()) {
+      wildlife_system->configure(map_def);
     }
     if (minimap_manager != nullptr) {
       minimap_manager->generate_for_map(map_def);

@@ -35,6 +35,10 @@ const float k_readable_wear_far = 0.30;
 const float k_readable_grime_far = 0.20;
 const float k_readable_blood_far = 0.75;
 const float k_readable_shadow_floor = 0.60;
+const int k_wildlife_material = 7;
+const float k_wildlife_belly_y = 0.26;
+const float k_wildlife_back_span = 0.40;
+const float k_wildlife_rim = 0.030;
 
 float readable_zoom(vec3 world_position) {
   float view_distance = length(u_camera_position - world_position);
@@ -55,7 +59,22 @@ vec3 apply_zoom_readability(vec3 color, float zoom) {
   return clamp(saturated, 0.0, 1.0);
 }
 
+vec3 apply_wildlife_coat(vec3 base, vec3 pos_local) {
+  vec3 coat_pos = abs(pos_local);
+  float macro = soi_hash13_a1b3c9(floor(coat_pos * vec3(7.0, 11.0, 9.0)) + 3.0);
+  float micro = soi_hash13_a1b3c9(floor(coat_pos.zxy * vec3(23.0, 19.0, 29.0)) + 11.0);
+  float back =
+      clamp((pos_local.y - k_wildlife_belly_y) / k_wildlife_back_span, 0.0, 1.0);
+  vec3 coat = base * (0.94 + macro * 0.09);
+  coat = mix(coat * vec3(0.68, 0.64, 0.60), coat, back);
+  coat = mix(coat, min(coat * 1.10, vec3(1.0)), back * back * 0.55 + micro * 0.06);
+  return clamp(coat, 0.0, 1.0);
+}
+
 vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4 wear) {
+  if (material_id == k_wildlife_material) {
+    return apply_wildlife_coat(base, pos_local);
+  }
   bool horse_material = material_id == 6;
   bool horse_hoof = color_role == 4;
   bool horse_hair = color_role == 5 || color_role == 6;
@@ -234,6 +253,19 @@ void main() {
   color = apply_directional_shadow(color, v_pos_ws, surface_normal);
 
   color = max(color, base * sky_color * k_readable_shadow_floor);
+  if (u_material_id == k_wildlife_material) {
+    vec3 view_dir = normalize(u_camera_position - v_pos_ws);
+    float skylight = clamp(surface_normal.y * 0.5 + 0.5, 0.0, 1.0);
+    float edge = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 3.0);
+    float sheen =
+        pow(max(dot(normalize(surface_normal + vec3(0.0, 0.30, 0.12)), light_dir), 0.0),
+            9.0);
+    color += sun_color * sheen * 0.09;
+    color -= sky_color * edge * mix(k_readable_rim_near, k_readable_rim_far, zoom);
+    color += sun_color * edge * k_wildlife_rim;
+    color = mix(color * vec3(1.07, 1.00, 0.85), color, skylight);
+    color = max(color, vec3(0.0));
+  }
   if (u_material_id == 6) {
     bool horse_hair = v_color_role == 5 || v_color_role == 6;
     bool dark_detail = v_color_role == 4 || v_color_role == 8;

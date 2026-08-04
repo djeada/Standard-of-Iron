@@ -4,6 +4,9 @@
 
 #include "../../elephant/elephant_spec.h"
 #include "../../horse/horse_spec.h"
+#include "../../wildlife/sheep_spec.h"
+#include "../../wildlife/wildlife_rig.h"
+#include "../../wildlife/wolf_spec.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -136,6 +139,108 @@ const CreatureVisualDefinition k_elephant_visual_definition{
     LegacySlotMask::ElephantHowdah,
 };
 
+auto sheep_part_graph(Render::Creature::CreatureLOD lod) noexcept
+    -> const Render::Creature::PartGraph& {
+  return Render::Creature::part_graph_for(Render::Wildlife::sheep_creature_spec(), lod);
+}
+
+auto wolf_part_graph(Render::Creature::CreatureLOD lod) noexcept
+    -> const Render::Creature::PartGraph& {
+  return Render::Creature::part_graph_for(Render::Wildlife::wolf_creature_spec(), lod);
+}
+
+const CreatureMeshRecipe k_sheep_mesh_recipe{
+    "sheep.procedural.low_poly",
+    lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Minimal}),
+    &Render::Wildlife::sheep_creature_spec,
+    &sheep_part_graph,
+    {1, 1},
+};
+
+const CreatureRigDefinition k_sheep_rig_definition{
+    "sheep.baked_rig",
+    static_cast<std::uint8_t>(Render::Wildlife::k_bone_count),
+    &Render::Wildlife::sheep_bind_palette,
+    &Render::Wildlife::wildlife_topology(),
+    {static_cast<std::uint8_t>(Render::Wildlife::Bone::FootFL),
+     static_cast<std::uint8_t>(Render::Wildlife::Bone::FootFR),
+     static_cast<std::uint8_t>(Render::Wildlife::Bone::FootBL),
+     static_cast<std::uint8_t>(Render::Wildlife::Bone::FootBR)},
+    static_cast<std::uint8_t>(Render::Wildlife::Bone::Body),
+};
+
+const CreatureGroundingModel k_wildlife_grounding_model{
+    "wildlife.foot_grounding",
+    4U,
+    0.55F,
+    0.60F,
+};
+
+const CreatureMotionController k_wildlife_motion_controller{
+    "wildlife.gait_controller",
+    CreatureLocomotionMode::Idle,
+};
+
+const CreatureAttachmentFrameExtractor k_wildlife_attachment_frame_extractor{
+    "wildlife.no_attachments",
+};
+
+const CreatureLodStrategy k_sheep_lod_strategy{
+    "sheep.ambient_lod",
+    k_sheep_mesh_recipe.lod_mask,
+};
+
+const CreatureVisualDefinition k_sheep_visual_definition{
+    "sheep.ambient_quadruped.v1",
+    CreatureKind::Sheep,
+    &k_sheep_mesh_recipe,
+    &k_sheep_rig_definition,
+    &k_wildlife_motion_controller,
+    &k_wildlife_grounding_model,
+    &k_wildlife_attachment_frame_extractor,
+    &k_sheep_lod_strategy,
+    static_cast<std::uint8_t>(Render::Wildlife::k_sheep_role_count),
+    LegacySlotMask::None,
+};
+
+const CreatureMeshRecipe k_wolf_mesh_recipe{
+    "wolf.procedural.low_poly",
+    lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Minimal}),
+    &Render::Wildlife::wolf_creature_spec,
+    &wolf_part_graph,
+    {1, 1},
+};
+
+const CreatureRigDefinition k_wolf_rig_definition{
+    "wolf.baked_rig",
+    static_cast<std::uint8_t>(Render::Wildlife::k_bone_count),
+    &Render::Wildlife::wolf_bind_palette,
+    &Render::Wildlife::wildlife_topology(),
+    {static_cast<std::uint8_t>(Render::Wildlife::Bone::FootFL),
+     static_cast<std::uint8_t>(Render::Wildlife::Bone::FootFR),
+     static_cast<std::uint8_t>(Render::Wildlife::Bone::FootBL),
+     static_cast<std::uint8_t>(Render::Wildlife::Bone::FootBR)},
+    static_cast<std::uint8_t>(Render::Wildlife::Bone::Body),
+};
+
+const CreatureLodStrategy k_wolf_lod_strategy{
+    "wolf.ambient_lod",
+    k_wolf_mesh_recipe.lod_mask,
+};
+
+const CreatureVisualDefinition k_wolf_visual_definition{
+    "wolf.ambient_quadruped.v1",
+    CreatureKind::Wolf,
+    &k_wolf_mesh_recipe,
+    &k_wolf_rig_definition,
+    &k_wildlife_motion_controller,
+    &k_wildlife_grounding_model,
+    &k_wildlife_attachment_frame_extractor,
+    &k_wolf_lod_strategy,
+    static_cast<std::uint8_t>(Render::Wildlife::k_wolf_role_count),
+    LegacySlotMask::None,
+};
+
 } // namespace
 
 auto horse_creature_visual_definition() noexcept -> const CreatureVisualDefinition& {
@@ -144,6 +249,14 @@ auto horse_creature_visual_definition() noexcept -> const CreatureVisualDefiniti
 
 auto elephant_creature_visual_definition() noexcept -> const CreatureVisualDefinition& {
   return k_elephant_visual_definition;
+}
+
+auto sheep_creature_visual_definition() noexcept -> const CreatureVisualDefinition& {
+  return k_sheep_visual_definition;
+}
+
+auto wolf_creature_visual_definition() noexcept -> const CreatureVisualDefinition& {
+  return k_wolf_visual_definition;
 }
 
 auto resolve_creature_visual_definition(const UnitVisualSpec& spec) noexcept
@@ -157,6 +270,10 @@ auto resolve_creature_visual_definition(const UnitVisualSpec& spec) noexcept
     return &horse_creature_visual_definition();
   case CreatureKind::Elephant:
     return &elephant_creature_visual_definition();
+  case CreatureKind::Sheep:
+    return &sheep_creature_visual_definition();
+  case CreatureKind::Wolf:
+    return &wolf_creature_visual_definition();
   case CreatureKind::Humanoid:
   case CreatureKind::Mounted:
     return nullptr;

@@ -224,8 +224,17 @@ add_library(
     units/temple.cpp
     units/wall_segment.cpp
     units/wall_gate.cpp
+    units/sheep.cpp
+    units/wolf.cpp
+    units/wildlife_unit_common.cpp
     systems/home_system.cpp
     systems/settlement_life_system.cpp
+    wildlife/wildlife_config.cpp
+    wildlife/wildlife_terrain_probe.cpp
+    wildlife/wildlife_threats.cpp
+    wildlife/bird_flock.cpp
+    wildlife/wildlife_system.cpp
+    wildlife/nature_ai.cpp
 )
 
 target_include_directories(game_sim PUBLIC .)

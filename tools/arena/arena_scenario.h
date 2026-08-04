@@ -17,6 +17,7 @@
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
+#include "game/wildlife/wildlife_config.h"
 #include "render/graphics_settings.h"
 
 namespace Engine::Core {
@@ -246,6 +247,11 @@ enum class ArenaExpectationKind : std::uint8_t {
   UndeadZoneCleared,
   UndeadZoneShrineStands,
   UndeadZoneShrineDestroyed,
+  WildlifeGrazingObserved,
+  WildlifeFleeObserved,
+  WildlifeHuntObserved,
+  WildlifeBirdsScattered,
+  WildlifePopulationHeld,
 };
 
 struct ArenaExpectation {
@@ -291,6 +297,7 @@ struct ArenaScenarioDefinition {
   Game::Map::EnvironmentDefinition environment{};
   Game::Map::WeatherLightingInput weather{};
   Game::Map::RainSettings precipitation{};
+  Game::Wildlife::WildlifeSettings wildlife{};
   std::vector<Game::Map::RiverSegment> rivers;
   std::vector<Game::Map::Lake> lakes;
   std::vector<Game::Map::Bridge> bridges;

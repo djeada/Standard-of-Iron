@@ -379,6 +379,89 @@ void read_rain_config(const QJsonObject& obj, RainSettings& out) {
   out.wind_strength = std::max(0.0F, out.wind_strength);
 }
 
+auto authored_position(float raw_x,
+                       float raw_z,
+                       const GridDefinition& grid,
+                       CoordSystem coord_sys) -> QVector3D;
+
+void read_wildlife_species(const QJsonObject& obj,
+                           const GridDefinition& grid,
+                           CoordSystem coord_sys,
+                           Game::Wildlife::SpeciesConfig& out) {
+  out.enabled = obj.value(WILDLIFE_ENABLED).toBool(out.enabled);
+  out.group_count = obj.value(WILDLIFE_GROUPS).toInt(out.group_count);
+  out.group_size_min = obj.value(WILDLIFE_GROUP_SIZE_MIN).toInt(out.group_size_min);
+  out.group_size_max = obj.value(WILDLIFE_GROUP_SIZE_MAX).toInt(out.group_size_max);
+  out.roam_radius = float(obj.value(WILDLIFE_ROAM_RADIUS).toDouble(out.roam_radius));
+  out.move_speed = float(obj.value(WILDLIFE_MOVE_SPEED).toDouble(out.move_speed));
+  out.flee_speed = float(obj.value(WILDLIFE_FLEE_SPEED).toDouble(out.flee_speed));
+  out.alert_radius = float(obj.value(WILDLIFE_ALERT_RADIUS).toDouble(out.alert_radius));
+  out.aggression = float(obj.value(WILDLIFE_AGGRESSION).toDouble(out.aggression));
+  out.respawn = obj.value(WILDLIFE_RESPAWN).toBool(out.respawn);
+  out.respawn_delay =
+      float(obj.value(WILDLIFE_RESPAWN_DELAY).toDouble(out.respawn_delay));
+  out.flight_height =
+      float(obj.value(WILDLIFE_FLIGHT_HEIGHT).toDouble(out.flight_height));
+
+  if (!obj.value(WILDLIFE_SPAWN_AREAS).isArray()) {
+    return;
+  }
+  const float tile =
+      coord_sys == CoordSystem::Grid ? std::max(0.0001F, grid.tile_size) : 1.0F;
+  out.spawn_areas.clear();
+  for (const auto& value : obj.value(WILDLIFE_SPAWN_AREAS).toArray()) {
+    if (!value.isObject()) {
+      continue;
+    }
+    const QJsonObject area_obj = value.toObject();
+    const QVector3D center = authored_position(float(area_obj.value(X).toDouble(0.0)),
+                                               float(area_obj.value(Z).toDouble(0.0)),
+                                               grid,
+                                               coord_sys);
+    Game::Wildlife::SpawnArea area;
+    area.x = center.x();
+    area.z = center.z();
+    area.radius =
+        float(area_obj.value(WILDLIFE_RADIUS).toDouble(double(out.roam_radius))) * tile;
+    out.spawn_areas.push_back(area);
+  }
+}
+
+void read_wildlife_config(const QJsonObject& obj,
+                          const GridDefinition& grid,
+                          CoordSystem coord_sys,
+                          Game::Wildlife::WildlifeSettings& out) {
+  out = Game::Wildlife::default_settings();
+  out.enabled = obj.value(WILDLIFE_ENABLED).toBool(true);
+  out.seed =
+      static_cast<std::uint32_t>(obj.value(WILDLIFE_SEED).toVariant().toULongLong());
+  out.near_simulation_radius =
+      float(obj.value(WILDLIFE_NEAR_RADIUS).toDouble(out.near_simulation_radius));
+  out.far_simulation_radius =
+      float(obj.value(WILDLIFE_FAR_RADIUS).toDouble(out.far_simulation_radius));
+
+  if (obj.value(WILDLIFE_SHEEP).isObject()) {
+    read_wildlife_species(
+        obj.value(WILDLIFE_SHEEP).toObject(), grid, coord_sys, out.sheep);
+  } else {
+    out.sheep.enabled = false;
+  }
+  if (obj.value(WILDLIFE_WOLVES).isObject()) {
+    read_wildlife_species(
+        obj.value(WILDLIFE_WOLVES).toObject(), grid, coord_sys, out.wolves);
+  } else {
+    out.wolves.enabled = false;
+  }
+  if (obj.value(WILDLIFE_BIRDS).isObject()) {
+    read_wildlife_species(
+        obj.value(WILDLIFE_BIRDS).toObject(), grid, coord_sys, out.birds);
+  } else {
+    out.birds.enabled = false;
+  }
+
+  Game::Wildlife::sanitize(out);
+}
+
 void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
   out.clear();
   out.reserve(arr.size());
@@ -1341,6 +1424,13 @@ auto MapLoader::load_from_json_file(const QString& path,
 
   if (root.contains(RAIN) && root.value(RAIN).isObject()) {
     read_rain_config(root.value(RAIN).toObject(), out_map.rain);
+  }
+
+  if (root.contains(WILDLIFE) && root.value(WILDLIFE).isObject()) {
+    read_wildlife_config(root.value(WILDLIFE).toObject(),
+                         out_map.grid,
+                         out_map.coordSystem,
+                         out_map.wildlife);
   }
 
   if (root.contains(TIME_OF_DAY)) {

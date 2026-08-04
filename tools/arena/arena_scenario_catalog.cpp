@@ -8,6 +8,7 @@
 #include "arena_formation_scenarios.h"
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
+#include "arena_wildlife_scenarios.h"
 
 namespace Arena::Scenarios {
 namespace {
@@ -485,6 +486,194 @@ auto performance_battle_definition(QString id,
       expectation(Expect::GroupExists, QStringLiteral("blue_swords")),
       expectation(Expect::GroupExists, QStringLiteral("red_swords")),
       expectation(Expect::FrameBudget, {}, {}, 9.99F, 2.0F),
+  };
+  return s;
+}
+
+auto massed_battle_definition(QString id,
+                              QString label,
+                              int units_per_side) -> ArenaScenarioDefinition {
+  constexpr int k_individuals = 20;
+  int const soldiers_per_side = units_per_side * k_individuals;
+
+  auto s = definition(std::move(id),
+                      std::move(label),
+                      QStringLiteral("Full-field line battle: %1 squads and %2 "
+                                     "rendered soldiers per side under production "
+                                     "LOD, batching, combat, archery and cavalry.")
+                          .arg(units_per_side)
+                          .arg(soldiers_per_side),
+                      16.0F,
+                      {units_per_side >= 40 ? 132.0F : 96.0F, 58.0F, 0.0F});
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.arena_floor_half_extent = 45.0F;
+  s.select_spawned_units = false;
+  s.suppress_spawn_anchor = true;
+  s.suppress_ui_overlays = true;
+  s.force_full_creature_lod = true;
+  s.require_rigged_instancing = true;
+  s.collect_animation_diagnostics = false;
+  s.graphics_quality = Render::GraphicsQuality::Ultra;
+
+  int const swords = units_per_side * 32 / 100;
+  int const spears = units_per_side * 28 / 100;
+  int const archers = units_per_side * 20 / 100;
+  int const horse_archers = std::max(1, units_per_side * 4 / 100);
+  int const healers = std::max(1, units_per_side * 2 / 100);
+  int const cavalry =
+      units_per_side - swords - spears - archers - horse_archers - healers;
+
+  auto line = [](const QString& name,
+                 Troop troop,
+                 int owner,
+                 int count,
+                 float sign,
+                 float depth,
+                 float x_step) {
+    return group(name,
+                 troop,
+                 owner,
+                 count,
+                 {0.0F, 0.0F, sign * depth},
+                 k_individuals,
+                 {x_step, 0.0F, 0.0F});
+  };
+  auto column = [](const QString& name,
+                   Troop troop,
+                   int owner,
+                   int count,
+                   float sign,
+                   float x_offset,
+                   float depth) {
+    return group(name,
+                 troop,
+                 owner,
+                 count,
+                 {x_offset, 0.0F, sign * depth},
+                 k_individuals,
+                 {0.0F, 0.0F, sign * 6.5F});
+  };
+
+  auto add_side = [&](const QString& prefix, int owner, float sign) {
+    s.groups.push_back(line(prefix + QStringLiteral("_swords_a"),
+                            Troop::Swordsman,
+                            owner,
+                            (swords + 1) / 2,
+                            sign,
+                            11.0F,
+                            6.0F));
+    s.groups.push_back(line(prefix + QStringLiteral("_swords_b"),
+                            Troop::Swordsman,
+                            owner,
+                            swords / 2,
+                            sign,
+                            17.0F,
+                            6.0F));
+    s.groups.push_back(line(prefix + QStringLiteral("_spears_a"),
+                            Troop::Spearman,
+                            owner,
+                            (spears + 1) / 2,
+                            sign,
+                            23.0F,
+                            6.5F));
+    s.groups.push_back(line(prefix + QStringLiteral("_spears_b"),
+                            Troop::Spearman,
+                            owner,
+                            spears / 2,
+                            sign,
+                            29.0F,
+                            6.5F));
+    s.groups.push_back(line(prefix + QStringLiteral("_archers_a"),
+                            Troop::Archer,
+                            owner,
+                            (archers + 1) / 2,
+                            sign,
+                            35.0F,
+                            8.0F));
+    s.groups.push_back(line(prefix + QStringLiteral("_archers_b"),
+                            Troop::Archer,
+                            owner,
+                            archers / 2,
+                            sign,
+                            41.0F,
+                            8.0F));
+    s.groups.push_back(column(prefix + QStringLiteral("_cavalry_left"),
+                              Troop::MountedKnight,
+                              owner,
+                              (cavalry + 1) / 2,
+                              sign,
+                              -34.0F,
+                              18.0F));
+    s.groups.push_back(column(prefix + QStringLiteral("_cavalry_right"),
+                              Troop::MountedKnight,
+                              owner,
+                              cavalry / 2,
+                              sign,
+                              34.0F,
+                              18.0F));
+    s.groups.push_back(column(prefix + QStringLiteral("_horse_archers"),
+                              Troop::HorseArcher,
+                              owner,
+                              horse_archers,
+                              sign,
+                              -41.0F,
+                              33.0F));
+    s.groups.push_back(column(prefix + QStringLiteral("_healers"),
+                              Troop::Healer,
+                              owner,
+                              healers,
+                              sign,
+                              41.0F,
+                              38.0F));
+  };
+  add_side(QStringLiteral("blue"), 1, -1.0F);
+  add_side(QStringLiteral("red"), 2, 1.0F);
+
+  auto add_orders = [&](const QString& prefix, const QString& enemy) {
+    s.steps.push_back(at(0.5F,
+                         Command::AttackMove,
+                         prefix + QStringLiteral("_swords_a"),
+                         enemy + QStringLiteral("_spears_a")));
+    s.steps.push_back(at(0.5F,
+                         Command::AttackMove,
+                         prefix + QStringLiteral("_swords_b"),
+                         enemy + QStringLiteral("_spears_b")));
+    s.steps.push_back(at(0.5F,
+                         Command::AttackMove,
+                         prefix + QStringLiteral("_spears_a"),
+                         enemy + QStringLiteral("_swords_a")));
+    s.steps.push_back(at(0.5F,
+                         Command::AttackMove,
+                         prefix + QStringLiteral("_spears_b"),
+                         enemy + QStringLiteral("_swords_b")));
+    s.steps.push_back(at(0.5F,
+                         Command::Attack,
+                         prefix + QStringLiteral("_archers_a"),
+                         enemy + QStringLiteral("_spears_a")));
+    s.steps.push_back(at(0.5F,
+                         Command::Attack,
+                         prefix + QStringLiteral("_archers_b"),
+                         enemy + QStringLiteral("_swords_a")));
+    s.steps.push_back(at(0.5F,
+                         Command::Attack,
+                         prefix + QStringLiteral("_horse_archers"),
+                         enemy + QStringLiteral("_swords_a")));
+    s.steps.push_back(at(0.5F,
+                         Command::Charge,
+                         prefix + QStringLiteral("_cavalry_left"),
+                         enemy + QStringLiteral("_archers_a")));
+    s.steps.push_back(at(0.5F,
+                         Command::Charge,
+                         prefix + QStringLiteral("_cavalry_right"),
+                         enemy + QStringLiteral("_archers_b")));
+  };
+  add_orders(QStringLiteral("blue"), QStringLiteral("red"));
+  add_orders(QStringLiteral("red"), QStringLiteral("blue"));
+
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("blue_swords_a")),
+      expectation(Expect::GroupExists, QStringLiteral("red_swords_a")),
+      expectation(Expect::FrameBudget, {}, {}, 16.67F, 4.0F),
   };
   return s;
 }
@@ -4731,6 +4920,14 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         performance_battle_definition(QString::fromLatin1(k_performance_30v30_id),
                                       QStringLiteral("Performance: 30 vs 30 Units"),
                                       30));
+    result.push_back(
+        massed_battle_definition(QString::fromLatin1(k_massed_battle_500_id),
+                                 QStringLiteral("Performance: 500 vs 500 Soldiers"),
+                                 25));
+    result.push_back(
+        massed_battle_definition(QString::fromLatin1(k_massed_battle_1000_id),
+                                 QStringLiteral("Performance: 1000 vs 1000 Soldiers"),
+                                 50));
   }
 
   {
@@ -8280,6 +8477,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(formation.begin()),
                   std::make_move_iterator(formation.end()));
+    auto wildlife = build_wildlife_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(wildlife.begin()),
+                  std::make_move_iterator(wildlife.end()));
     return values;
   }();
   return catalog;

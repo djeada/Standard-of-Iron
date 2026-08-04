@@ -21,6 +21,7 @@
 #include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
+#include "game/wildlife/wildlife_system.h"
 #include "game_state_restorer.h"
 #include "render/scene_renderer.h"
 #include "utils/resource_utils.h"
@@ -96,6 +97,10 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   if (auto* undead_system =
           context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
     metadata["undead_zones"] = undead_system->serialize_state();
+  }
+  if (auto* wildlife_system =
+          context.world.get_system<Game::Wildlife::WildlifeSystem>()) {
+    metadata["wildlife"] = wildlife_system->serialize_state();
   }
   if (!context.mission_wave_state.isEmpty()) {
     metadata["mission_waves"] = context.mission_wave_state;
@@ -195,6 +200,11 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
         if (context.victory_service != nullptr) {
           context.victory_service->set_undead_zone_query(undead_system);
         }
+      }
+      if (auto* wildlife_system =
+              context.world.get_system<Game::Wildlife::WildlifeSystem>()) {
+        wildlife_system->configure(map_def);
+        wildlife_system->restore_state(metadata["wildlife"].toObject());
       }
     } else {
       qWarning() << "GameEngine: failed to load undead zone map data:" << map_error;

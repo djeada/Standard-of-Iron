@@ -34,6 +34,8 @@
 #include "nations/roman/swordsman_renderer.h"
 #include "temple_renderer.h"
 #include "wall_renderer.h"
+#include "wildlife/sheep_renderer.h"
+#include "wildlife/wolf_renderer.h"
 
 namespace Render::GL {
 
@@ -120,6 +122,9 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
 
   register_marketplace_renderer(registry);
   register_temple_renderer(registry);
+
+  Wildlife::register_sheep_renderer(registry);
+  Wildlife::register_wolf_renderer(registry);
 }
 
 } // namespace Render::GL

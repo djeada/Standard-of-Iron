@@ -133,6 +133,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      AuthoritativeSerialized,
      "Which settlement a villager belongs to and the errand they are on; "
      "recomputing it would teleport the town's daily life back to its start."},
+    {"WildlifeComponent",
+     AuthoritativeSerialized,
+     "Species, behaviour, herd or pack membership and the anchor an animal roams "
+     "around; rebuilding it would scatter every herd on load."},
     {"BuilderProductionComponent", AuthoritativeSerialized, "Construction queue."},
     {"WallConstructionSiteComponent", AuthoritativeSerialized, "Unbuilt wall segment."},
     {"WallSegmentComponent", AuthoritativeSerialized, "Built wall segment."},

@@ -85,6 +85,8 @@ public:
   static constexpr ArchetypeId k_horse_base = 1;
   static constexpr ArchetypeId k_elephant_base = 2;
   static constexpr ArchetypeId k_rider_base = 3;
+  static constexpr ArchetypeId k_sheep_base = 4;
+  static constexpr ArchetypeId k_wolf_base = 5;
 
   auto register_archetype(ArchetypeDescriptor desc) -> ArchetypeId;
 

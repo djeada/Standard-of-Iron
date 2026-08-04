@@ -17,8 +17,10 @@ inline constexpr std::uint32_t k_species_humanoid_spear = 4U;
 inline constexpr std::uint32_t k_species_humanoid_skeleton = 5U;
 inline constexpr std::uint32_t k_species_humanoid_caster = 6U;
 inline constexpr std::uint32_t k_species_humanoid_stave_caster = 7U;
-inline constexpr std::uint32_t k_species_count = 8U;
-inline constexpr std::uint32_t k_max_species_id = k_species_humanoid_stave_caster;
+inline constexpr std::uint32_t k_species_sheep = 8U;
+inline constexpr std::uint32_t k_species_wolf = 9U;
+inline constexpr std::uint32_t k_species_count = 10U;
+inline constexpr std::uint32_t k_max_species_id = k_species_wolf;
 
 inline constexpr std::size_t k_matrix_floats = 16U;
 inline constexpr std::size_t k_socket_matrix_floats = 12U;

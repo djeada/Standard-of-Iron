@@ -1,6 +1,9 @@
 # Entity/nation renderers (Phase 2 owner). Edit ONLY this file for render/entity/* sources.
 set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/registry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wildlife/wildlife_draw_state.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wildlife/sheep_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/wildlife/wolf_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/archer_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/archer_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/archer_renderer.cpp

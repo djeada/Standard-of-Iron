@@ -1,0 +1,85 @@
+#version 430 core
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+#include "rigged_gpu_skin.glsl"
+
+layout(std430, binding = 1) readonly buffer RiggedIndexData {
+  uint rg_index[];
+};
+
+layout(std430, binding = 4) writeonly buffer RiggedOutIndices {
+  uint rg_out_index[];
+};
+
+layout(std430, binding = 5) buffer RiggedDrawCommand {
+  uint count;
+  uint instance_count;
+  uint first_index;
+  uint base_vertex;
+  uint base_instance;
+  uint surviving;
+  uint overflowed;
+} rg_cmd;
+
+uniform uint u_triangle_count;
+uniform uint u_instance_count;
+uniform uint u_out_capacity_triangles;
+uniform vec2 u_viewport;
+uniform int u_front_face_ccw;
+uniform int u_cull_backfaces;
+
+bool rg_covers_a_sample(vec2 lo, vec2 hi) {
+  vec2 first = ceil(lo - 0.5);
+  vec2 last = floor(hi - 0.5);
+  return first.x <= last.x && first.y <= last.y;
+}
+
+void main() {
+  uint tri = gl_GlobalInvocationID.x;
+  uint instance = gl_GlobalInvocationID.y;
+  if (tri >= u_triangle_count || instance >= u_instance_count) {
+    return;
+  }
+
+  uint i0 = rg_index[tri * 3u + 0u];
+  uint i1 = rg_index[tri * 3u + 1u];
+  uint i2 = rg_index[tri * 3u + 2u];
+
+  vec4 c0 = rg_clip_position(i0, instance);
+  vec4 c1 = rg_clip_position(i1, instance);
+  vec4 c2 = rg_clip_position(i2, instance);
+
+  if (c0.w > 0.0 && c1.w > 0.0 && c2.w > 0.0) {
+    vec2 s0 = ((c0.xy / c0.w) * 0.5 + 0.5) * u_viewport;
+    vec2 s1 = ((c1.xy / c1.w) * 0.5 + 0.5) * u_viewport;
+    vec2 s2 = ((c2.xy / c2.w) * 0.5 + 0.5) * u_viewport;
+
+    if (u_cull_backfaces != 0) {
+      float area = (s1.x - s0.x) * (s2.y - s0.y) - (s2.x - s0.x) * (s1.y - s0.y);
+      float facing = (u_front_face_ccw != 0) ? area : -area;
+      if (facing <= 0.0) {
+        return;
+      }
+    }
+
+    const float k_guard = 0.02;
+    vec2 lo = min(min(s0, s1), s2) - vec2(k_guard);
+    vec2 hi = max(max(s0, s1), s2) + vec2(k_guard);
+    if (!rg_covers_a_sample(lo, hi)) {
+      return;
+    }
+  }
+
+  uint slot = atomicAdd(rg_cmd.surviving, 1u);
+  if (slot >= u_out_capacity_triangles) {
+    rg_cmd.overflowed = 1u;
+    return;
+  }
+
+  uint vertex_base = instance * u_vertex_count;
+  uint out_base = slot * 3u;
+  rg_out_index[out_base + 0u] = vertex_base + i0;
+  rg_out_index[out_base + 1u] = vertex_base + i1;
+  rg_out_index[out_base + 2u] = vertex_base + i2;
+}

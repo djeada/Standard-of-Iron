@@ -789,6 +789,27 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["settlement_resident"] = resident_obj;
   }
 
+  if (const auto* wildlife = entity->get_component<WildlifeComponent>()) {
+    QJsonObject wildlife_obj;
+    wildlife_obj["species"] =
+        QString::fromUtf8(Game::Wildlife::species_name(wildlife->species).data());
+    wildlife_obj["behavior"] =
+        QString::fromUtf8(Game::Wildlife::behavior_name(wildlife->behavior).data());
+    wildlife_obj["group_id"] = static_cast<int>(wildlife->group_id);
+    wildlife_obj["home_x"] = static_cast<double>(wildlife->home_x);
+    wildlife_obj["home_z"] = static_cast<double>(wildlife->home_z);
+    wildlife_obj["roam_radius"] = static_cast<double>(wildlife->roam_radius);
+    wildlife_obj["anchor_assigned"] = wildlife->anchor_assigned;
+    wildlife_obj["target_x"] = static_cast<double>(wildlife->target_x);
+    wildlife_obj["target_z"] = static_cast<double>(wildlife->target_z);
+    wildlife_obj["think_cooldown"] = static_cast<double>(wildlife->think_cooldown);
+    wildlife_obj["state_timer"] = static_cast<double>(wildlife->state_timer);
+    wildlife_obj["alarm_timer"] = static_cast<double>(wildlife->alarm_timer);
+    wildlife_obj["focus_id"] = static_cast<qint64>(wildlife->focus_id);
+    wildlife_obj["rng_state"] = static_cast<qint64>(wildlife->rng_state);
+    entity_obj["wildlife"] = wildlife_obj;
+  }
+
   return entity_obj;
 }
 
@@ -1676,6 +1697,39 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(resident_obj["think_cooldown"].toDouble(0.0));
     resident->rng_state =
         static_cast<std::uint32_t>(resident_obj["rng_state"].toVariant().toULongLong());
+  }
+
+  if (json.contains("wildlife")) {
+    const auto wildlife_obj = json["wildlife"].toObject();
+    auto* wildlife = entity->add_component<WildlifeComponent>();
+    Game::Wildlife::Species species = Game::Wildlife::Species::Sheep;
+    if (Game::Wildlife::try_parse_species(
+            wildlife_obj["species"].toString().toStdString(), species)) {
+      wildlife->species = species;
+    }
+    Game::Wildlife::Behavior behavior = Game::Wildlife::Behavior::Graze;
+    if (Game::Wildlife::try_parse_behavior(
+            wildlife_obj["behavior"].toString().toStdString(), behavior)) {
+      wildlife->behavior = behavior;
+    }
+    wildlife->group_id = static_cast<std::uint16_t>(wildlife_obj["group_id"].toInt(0));
+    wildlife->home_x = static_cast<float>(wildlife_obj["home_x"].toDouble(0.0));
+    wildlife->home_z = static_cast<float>(wildlife_obj["home_z"].toDouble(0.0));
+    wildlife->roam_radius =
+        static_cast<float>(wildlife_obj["roam_radius"].toDouble(14.0));
+    wildlife->anchor_assigned = wildlife_obj["anchor_assigned"].toBool(false);
+    wildlife->target_x = static_cast<float>(wildlife_obj["target_x"].toDouble(0.0));
+    wildlife->target_z = static_cast<float>(wildlife_obj["target_z"].toDouble(0.0));
+    wildlife->think_cooldown =
+        static_cast<float>(wildlife_obj["think_cooldown"].toDouble(0.0));
+    wildlife->state_timer =
+        static_cast<float>(wildlife_obj["state_timer"].toDouble(0.0));
+    wildlife->alarm_timer =
+        static_cast<float>(wildlife_obj["alarm_timer"].toDouble(0.0));
+    wildlife->focus_id =
+        static_cast<EntityID>(wildlife_obj["focus_id"].toVariant().toULongLong());
+    wildlife->rng_state =
+        static_cast<std::uint32_t>(wildlife_obj["rng_state"].toVariant().toULongLong());
   }
 }
 

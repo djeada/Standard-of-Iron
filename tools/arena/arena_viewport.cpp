@@ -68,6 +68,8 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
+#include "game/wildlife/bird_flock.h"
+#include "game/wildlife/wildlife_system.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/commander_aura_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
@@ -2269,6 +2271,49 @@ void ArenaViewport::place_scenario_resource_patches(
   }
 }
 
+void ArenaViewport::clear_wildlife() {
+  Game::Wildlife::BirdFlockManager::instance().reset();
+  if (m_world == nullptr) {
+    return;
+  }
+  if (auto* wildlife = m_world->get_system<Game::Wildlife::WildlifeSystem>()) {
+    Game::Wildlife::WildlifeSettings disabled;
+    disabled.enabled = false;
+    wildlife->configure(disabled, 1U);
+  }
+  std::vector<Engine::Core::EntityID> doomed;
+  for (auto* entity : m_world->get_entities_with<Engine::Core::WildlifeComponent>()) {
+    if (entity != nullptr) {
+      doomed.push_back(entity->get_id());
+    }
+  }
+  for (auto entity_id : doomed) {
+    m_world->destroy_entity(entity_id);
+  }
+}
+
+void ArenaViewport::configure_scenario_wildlife(
+    const Arena::ArenaScenarioDefinition& definition,
+    const QVector3D& scenario_origin) {
+  if (m_world == nullptr) {
+    return;
+  }
+  auto* wildlife = m_world->get_system<Game::Wildlife::WildlifeSystem>();
+  if (wildlife == nullptr) {
+    return;
+  }
+
+  Game::Wildlife::WildlifeSettings settings = definition.wildlife;
+  for (auto* config : {&settings.sheep, &settings.wolves, &settings.birds}) {
+    for (auto& area : config->spawn_areas) {
+      area.x += scenario_origin.x();
+      area.z += scenario_origin.z();
+    }
+  }
+  wildlife->configure(settings, 1337U);
+  wildlife->set_focus(scenario_origin.x(), scenario_origin.z());
+}
+
 void ArenaViewport::configure_scenario_undead_zones(
     const Arena::ArenaScenarioDefinition& definition,
     const QVector3D& scenario_origin) {
@@ -2419,6 +2464,7 @@ void ArenaViewport::reset_arena() {
   m_last_scenario_issue_revision = 0U;
   m_scenario_finished_emitted = false;
   clear_undead_zones();
+  clear_wildlife();
   clear_units();
   const bool had_custom_terrain = !m_arena_rivers.empty() || !m_arena_lakes.empty() ||
                                   !m_arena_bridges.empty() || !m_arena_roads.empty() ||
@@ -3160,6 +3206,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     resources.set(group.owner_id, Game::Systems::ResourceType::Iron, 30);
   }
   QVector3D const scenario_origin = resolve_spawn_anchor_world();
+
+  configure_scenario_wildlife(*definition, scenario_origin);
 
   Arena::ArenaScenarioHost host;
   host.spawn_unit =

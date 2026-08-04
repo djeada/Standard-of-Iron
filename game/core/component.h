@@ -15,6 +15,7 @@
 #include "../systems/unit_activity.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
+#include "../wildlife/wildlife_species.h"
 #include "entity.h"
 
 namespace Game::Systems {
@@ -1694,6 +1695,28 @@ public:
   float errand_remaining{0.0F};
   float planned_dwell{3.0F};
   float think_cooldown{0.0F};
+  std::uint32_t rng_state{0U};
+};
+
+class WildlifeComponent : public Component {
+public:
+  WildlifeComponent() = default;
+
+  Game::Wildlife::Species species{Game::Wildlife::Species::Sheep};
+  Game::Wildlife::Behavior behavior{Game::Wildlife::Behavior::Graze};
+
+  std::uint16_t group_id{0U};
+  float home_x{0.0F};
+  float home_z{0.0F};
+  float roam_radius{14.0F};
+  bool anchor_assigned{false};
+
+  float target_x{0.0F};
+  float target_z{0.0F};
+  float think_cooldown{0.0F};
+  float state_timer{0.0F};
+  float alarm_timer{0.0F};
+  EntityID focus_id{0};
   std::uint32_t rng_state{0U};
 };
 

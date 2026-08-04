@@ -28,6 +28,7 @@ class VegetationPipeline;
 class TerrainPipeline;
 class CharacterPipeline;
 class RiggedCharacterPipeline;
+class RiggedCullPipeline;
 class WaterPipeline;
 class EffectsPipeline;
 class PrimitiveBatchPipeline;
@@ -232,6 +233,7 @@ private:
   std::unique_ptr<BackendPipelines::CharacterPipeline> m_character_pipeline;
   std::unique_ptr<BackendPipelines::RiggedCharacterPipeline>
       m_rigged_character_pipeline;
+  std::unique_ptr<BackendPipelines::RiggedCullPipeline> m_rigged_cull_pipeline;
   std::unique_ptr<BackendPipelines::WaterPipeline> m_water_pipeline;
   std::unique_ptr<BackendPipelines::EffectsPipeline> m_effects_pipeline;
   std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline> m_primitive_batch_pipeline;

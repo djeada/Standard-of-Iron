@@ -215,6 +215,38 @@ auto Shader::load_from_source(const QString& vertex_source,
   return success;
 }
 
+auto Shader::load_compute_from_source(const QString& compute_source) -> bool {
+  initializeOpenGLFunctions();
+  m_uniform_cache.clear();
+  m_uniform_value_cache.clear();
+
+  constexpr GLenum k_compute_shader = 0x91B9;
+  GLuint const compute_shader = compile_shader(compute_source, k_compute_shader);
+  if (compute_shader == 0) {
+    return false;
+  }
+
+  if (m_program != 0) {
+    glDeleteProgram(m_program);
+  }
+  m_program = glCreateProgram();
+  glAttachShader(m_program, compute_shader);
+  glLinkProgram(m_program);
+
+  GLint linked = 0;
+  glGetProgramiv(m_program, GL_LINK_STATUS, &linked);
+  if (linked == 0) {
+    GLchar info_log[shader_info_log_size];
+    glGetProgramInfoLog(m_program, shader_info_log_size, nullptr, info_log);
+    qWarning() << "Shader: compute link failed" << m_debug_name << info_log;
+    glDeleteProgram(m_program);
+    m_program = 0;
+  }
+
+  glDeleteShader(compute_shader);
+  return m_program != 0;
+}
+
 auto Shader::preprocess_source(const QString& source) -> QString {
   return resolve_shader_includes(source, QString());
 }
