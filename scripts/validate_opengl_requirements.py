@@ -5,15 +5,22 @@ Checks that the codebase cannot accidentally regress from OpenGL 3.3 Core
 Profile to Compatibility Profile or GLSL ES shaders.  No display or GPU
 required — safe to run as a static analysis step on any CI runner.
 
+OpenGL 3.3 Core remains the hardware floor.  A small, explicitly listed set of
+shaders targets GLSL 4.30 for the optional GPU crowd-culling path; those are
+reached only when the driver advertises compute shaders, SSBOs and indirect
+draw, and every one of them must fail soft to the 3.3 path.  Adding a 4.30
+shader without listing it here, or listing one that is not capability gated,
+fails this check.
+
 Checks:
-  1. Every shader file (.vert/.frag) must start with '#version 330 core'.
-  2. main.cpp must not set QSurfaceFormat::CompatibilityProfile.
-     All render classes derive from QOpenGLFunctions_3_3_Core, which on
-     some Windows drivers fails to initialize when the context profile is
-     Compatibility rather than Core — the historical root cause of the
-     blank-screen bug.
-  3. Every shader must be compiled into assets.qrc.
-  4. Every release workflow must execute the packaged renderer self-test.
+  1. Every baseline shader (.vert/.frag) must start with '#version 330 core'.
+     Shaders in OPTIONAL_GL43_SHADERS may declare '#version 430 core'.
+  2. Every optional 4.30 shader must be gated behind a capability probe, and
+     its owning pipeline must degrade instead of hard-failing.
+  3. main.cpp must not set QSurfaceFormat::CompatibilityProfile, and must not
+     request a context above 3.3 — raising the request raises the floor.
+  4. Every shader, including compute shaders, must be compiled into assets.qrc.
+  5. Every release workflow must execute the packaged renderer self-test.
 
 Usage:
     python3 scripts/validate_opengl_requirements.py
@@ -22,37 +29,93 @@ Usage:
 import sys
 from pathlib import Path
 
+OPTIONAL_GL43_SHADERS = {
+    "character_skinned_gpudriven.vert",
+    "directional_shadow_rigged_gpudriven.vert",
+    "rigged_cull.comp",
+    "rigged_cull_finalize.comp",
+}
+
+
+OPTIONAL_PATH_OWNER = Path("render/gl/backend/rigged_cull_pipeline.cpp")
+REQUIRED_CAPABILITY_PROBES = (
+    "GLCapabilities::has_compute_shaders()",
+    "GLCapabilities::has_indirect_draw()",
+)
+
 
 def check_shader_versions(shader_dir: Path) -> list[str]:
     errors: list[str] = []
-    shaders = sorted(list(shader_dir.glob("*.vert")) + list(shader_dir.glob("*.frag")))
+    shaders = sorted(
+        list(shader_dir.glob("*.vert"))
+        + list(shader_dir.glob("*.frag"))
+        + list(shader_dir.glob("*.comp"))
+    )
     if not shaders:
         errors.append(f"No shaders found in {shader_dir}")
         return errors
     for path in shaders:
         lines = path.read_text(encoding="utf-8").splitlines()
         first = lines[0].strip() if lines else ""
-        if first != "#version 330 core":
+        if path.name in OPTIONAL_GL43_SHADERS:
+            if first != "#version 430 core":
+                errors.append(
+                    f"  {path.name}: listed as an optional 4.30 shader but"
+                    f" declares '{first}'"
+                )
+        elif first != "#version 330 core":
             errors.append(
                 f"  {path.name}: first line is '{first}'"
-                f" — expected '#version 330 core'"
+                f" — expected '#version 330 core'."
+                f" A 4.30 shader must be added to OPTIONAL_GL43_SHADERS and"
+                f" reached only behind a capability probe."
+            )
+    on_disk = {p.name for p in shaders}
+    for name in sorted(OPTIONAL_GL43_SHADERS - on_disk):
+        errors.append(f"  {name}: listed in OPTIONAL_GL43_SHADERS but not on disk")
+    return errors
+
+
+def check_optional_path_is_gated(root: Path) -> list[str]:
+    errors: list[str] = []
+    if not OPTIONAL_GL43_SHADERS:
+        return errors
+    owner = root / OPTIONAL_PATH_OWNER
+    if not owner.exists():
+        return [f"{OPTIONAL_PATH_OWNER} not found; optional 4.30 shaders are ungated"]
+    content = owner.read_text(encoding="utf-8")
+    for probe in REQUIRED_CAPABILITY_PROBES:
+        if probe not in content:
+            errors.append(f"  {OPTIONAL_PATH_OWNER}: missing capability probe {probe}")
+    for name in sorted(OPTIONAL_GL43_SHADERS):
+        if name not in content:
+            errors.append(
+                f"  {name}: not referenced by {OPTIONAL_PATH_OWNER};"
+                f" its capability gate cannot be verified"
             )
     return errors
 
 
 def check_no_compat_profile(root: Path) -> list[str]:
     errors: list[str] = []
-    main_cpp = root / "main.cpp"
-    if not main_cpp.exists():
-        errors.append("main.cpp not found")
-        return errors
-    content = main_cpp.read_text(encoding="utf-8")
-    if "CompatibilityProfile" in content:
-        errors.append(
-            "main.cpp: QSurfaceFormat::CompatibilityProfile is present."
-            " All render classes derive from QOpenGLFunctions_3_3_Core and"
-            " require Core Profile — do not override to CompatibilityProfile."
-        )
+    for relative in ("main.cpp", "tools/arena/main.cpp"):
+        source = root / relative
+        if not source.exists():
+            errors.append(f"{relative} not found")
+            continue
+        content = source.read_text(encoding="utf-8")
+        if "CompatibilityProfile" in content:
+            errors.append(
+                f"{relative}: QSurfaceFormat::CompatibilityProfile is present."
+                " All render classes derive from QOpenGLFunctions_3_3_Core and"
+                " require Core Profile — do not override to CompatibilityProfile."
+            )
+        if "setVersion(3, 3)" not in content:
+            errors.append(
+                f"{relative}: does not request OpenGL 3.3."
+                " Requesting a higher context raises the hardware floor;"
+                " optional features must be probed at runtime instead."
+            )
     return errors
 
 
@@ -64,7 +127,7 @@ def check_embedded_shaders(root: Path, shader_dir: Path) -> list[str]:
     return [
         f"  {path.name}: missing from assets.qrc"
         for path in sorted(shader_dir.glob("*"))
-        if path.suffix in {".vert", ".frag"}
+        if path.suffix in {".vert", ".frag", ".comp"}
         and f"<file>assets/shaders/{path.name}</file>" not in content
     ]
 
@@ -100,26 +163,43 @@ def main() -> int:
     print("=== OpenGL 3.3 Core Profile Requirements ===")
     total_errors: list[str] = []
 
-    shaders = sorted(list(shader_dir.glob("*.vert")) + list(shader_dir.glob("*.frag")))
-    print(f"\n[1/4] Shader GLSL version headers  ({len(shaders)} files)")
+    shaders = sorted(
+        list(shader_dir.glob("*.vert"))
+        + list(shader_dir.glob("*.frag"))
+        + list(shader_dir.glob("*.comp"))
+    )
+    baseline = len(shaders) - len(OPTIONAL_GL43_SHADERS)
+    print(f"\n[1/5] Shader GLSL version headers  ({len(shaders)} files)")
     errs = check_shader_versions(shader_dir)
     if errs:
         total_errors.extend(errs)
         for e in errs:
             print(f"  FAIL {e}")
     else:
-        print(f"  OK   all {len(shaders)} shaders declare '#version 330 core'")
+        print(
+            f"  OK   {baseline} shaders declare '#version 330 core';"
+            f" {len(OPTIONAL_GL43_SHADERS)} optional 4.30 shaders listed"
+        )
 
-    print("\n[2/4] Surface format profile  (main.cpp)")
+    print("\n[2/5] Optional 4.30 path is capability gated")
+    errs = check_optional_path_is_gated(root)
+    if errs:
+        total_errors.extend(errs)
+        for e in errs:
+            print(f"  FAIL {e}")
+    else:
+        print("  OK   every 4.30 shader sits behind a runtime capability probe")
+
+    print("\n[3/5] Surface format profile  (entry points)")
     errs = check_no_compat_profile(root)
     if errs:
         total_errors.extend(errs)
         for e in errs:
             print(f"  FAIL {e}")
     else:
-        print("  OK   QSurfaceFormat::CompatibilityProfile is not present")
+        print("  OK   Core Profile, OpenGL 3.3 requested by every entry point")
 
-    print("\n[3/4] Embedded shader resources  (assets.qrc)")
+    print("\n[4/5] Embedded shader resources  (assets.qrc)")
     errs = check_embedded_shaders(root, shader_dir)
     if errs:
         total_errors.extend(errs)
@@ -128,7 +208,7 @@ def main() -> int:
     else:
         print(f"  OK   all {len(shaders)} shaders are embedded")
 
-    print("\n[4/4] Packaged renderer self-tests  (release workflows)")
+    print("\n[5/5] Packaged renderer self-tests  (release workflows)")
     errs = check_release_renderer_self_tests(root)
     if errs:
         total_errors.extend(errs)

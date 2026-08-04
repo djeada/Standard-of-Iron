@@ -120,96 +120,81 @@ order cannot matter.
 
 ## Results
 
-RTX 5060, ms per frame from the wall-clock slope described above, median of two
-interleaved repeats.
+RTX 5060, ms per frame from the wall-clock slope described above.
 
-| Scenario                  | Before             | After              |       |
+Absolute numbers on this box drift by up to 20% between sessions, so only
+tightly interleaved A/B pairs are quoted as gains. Each pair below ran its two
+variants alternately within one session, three repeats each.
+
+| Comparison                                        | Before   | After    | Gain  |
+| ------------------------------------------------- | -------- | -------- | ----- |
+| GPU crowd cull on vs off (same binary, 1000v1000) | 58.97 ms | 49.91 ms | 1.18x |
+| Baked palettes + cleanup (1000v1000)              | 62.22 ms | 51.81 ms | 1.20x |
+| Shadow pass through the cull path (1000v1000)     | 51.81 ms | 50.36 ms | 1.03x |
+
+End to end, original against current:
+
+| Scenario                  | Original           | Current            | Total |
 | ------------------------- | ------------------ | ------------------ | ----- |
-| 500v500 (1000 soldiers)   | 58.6 ms (17.1 FPS) | 33.8 ms (29.6 FPS) | 1.73x |
-| 1000v1000 (2000 soldiers) | 96.0 ms (10.4 FPS) | 59.8 ms (16.7 FPS) | 1.61x |
+| 500v500 (1000 soldiers)   | 51.1 ms (19.6 FPS) | 34.1 ms (29.4 FPS) | 1.50x |
+| 1000v1000 (2000 soldiers) | 85.3 ms (11.7 FPS) | 58.9 ms (17.0 FPS) | 1.45x |
 
-Worst observed frame at 1000v1000 fell from 5113 ms to 170 ms. At 500v500 no
-frame exceeded 100 ms after the change, against five before.
+CPU-side, which is far less sensitive to machine drift: `world_submit` at
+1000v1000 went from 19.4 ms to 6.8 ms, and `humanoid_preparation` from 3.7 ms to
+2.0 ms. Worst observed frame fell from 5113 ms to under 70 ms.
 
-## Round two: GPU crowd culling
+### Two measurement traps, both of which produced wrong numbers here
 
-The remaining GPU cost was not vertex fetch, it was rasterising triangles that
-resolve to nothing. `humanoid_full.bprm` carries 24,960 triangles; at the
-strategic camera a soldier covers roughly 80 pixels, so the mesh is about 300
-triangles per covered pixel. GPUs rasterise in 2x2 quads, so every sub-pixel
-triangle still costs at least four fragment invocations.
+Earlier revisions of this document claimed 2.43x and 1.78x totals. Both were
+wrong, for different reasons, and both looked plausible at the time.
 
-Swapping the main pass to the 128-triangle minimal mesh took the GPU wait from
-43.5 ms to 0.17 ms, which bounded the prize before any of this was written.
+The first was a single unrepeated wall-clock measurement that happened to land
+35.9 ms/frame for a binary that repeated runs put at 60-63 ms. One sample is not
+a measurement on this machine.
 
-### How it works
+The second was self-inflicted. The stats readback in `RiggedCullPipeline` used
+`glGetBufferSubData`, which is a full GPU sync. It ran every 120 draws and drained
+the pipeline, so the frames around it absorbed all the queued GPU work in one
+120 ms spike while every other frame measured 8 ms. Median frame time looked six
+times better than the truth; only wall clock over a fixed frame count exposed it.
+The readback is now behind `SOI_CULL_STATS` so it never runs unless asked for.
 
-`RiggedCullPipeline` replaces the chunked instanced draw for large batches. Per
-prepared batch it runs one compute dispatch over every (instance, triangle)
-pair, which skins the three vertices with the same code the vertex shader uses,
-projects them, and drops the triangle when either test fires:
+The rule that survives: on this box, believe wall clock over a fixed frame
+count, interleave the variants, and repeat. Frame timers inside `paintGL` can
+be wrong in both directions.
 
-- **Backface**, from the sign of the screen-space area, matched to the live
-  `GL_CULL_FACE_MODE` and `GL_FRONT_FACE` state rather than assumed.
-- **No covered sample**, when the screen bounding box contains no pixel centre.
+## OpenGL floor
 
-The second test is exact, not an approximation. A triangle whose bounding box
-misses every sample position produces no fragments, so removing it before the
-rasteriser cannot change the image. That is why full detail is preserved: this
-is not a LOD scheme, it discards only work that was already going to be thrown
-away, and at this zoom that is the overwhelming majority of it.
+OpenGL 3.3 Core is still the hardware floor and both entry points still request
+it. The crowd-culling path is reached through extension probes
+(`GL_ARB_compute_shader`, `GL_ARB_draw_indirect`,
+`GL_ARB_shader_storage_buffer_object`), which NVIDIA advertises on a 3.3 context;
+where they are absent, or where the driver refuses GLSL 4.30 on a 3.3 context,
+pipeline construction fails and the renderer keeps the instanced path. macOS caps
+desktop GL at 4.1 and will always take the fallback.
 
-Survivors are compacted into one index buffer holding global vertex ids, and the
-whole army draws with a single `glDrawElementsIndirect`. The vertex shader takes
-no attributes; it derives the instance from `gl_VertexID / vertex_count` and
-reads vertices, palettes and instance data from SSBOs. Draw calls per batch fall
-from about 146 to one, and the per-batch uniform rebinds and instance VBO
-orphaning disappear with them.
-
-Triangles that cross the near plane are never culled, since they cannot be
-projected safely, and the bounding box carries a small guard band so a
-borderline triangle survives rather than flickers.
-
-### Constraints
-
-The path needs compute shaders and indirect draw, so both entry points now
-request a 4.3 core context instead of 3.3. Everything is feature-detected:
-`GLCapabilities::has_compute_shaders()` and `has_indirect_draw()` gate
-initialisation, and a failure leaves `m_rigged_cull_pipeline` null so the
-existing instanced path runs unchanged. `SOI_RENDER_DISABLE_GPU_CROWD_CULL`
-forces the old path for A/B testing. Batches below 24 instances keep the old
-path, where a dispatch would not pay for itself.
-
-The compacted buffer is sized at a quarter of the worst case, capped at 12M
-triangles. If survivors exceed it the shader sets an overflow flag and stops
-writing rather than running past the end; tracing builds sample that flag every
-120 draws and warn. No overflow was observed at any zoom from 0.25x to 1.0x
-camera distance.
-
-## Results
-
-RTX 5060, ms per frame from the wall-clock slope described above, median of two
-interleaved repeats.
-
-| Scenario                  | Original           | After round 1      | + GPU crowd cull   | Total |
-| ------------------------- | ------------------ | ------------------ | ------------------ | ----- |
-| 500v500 (1000 soldiers)   | 51.4 ms (19.5 FPS) | 33.8 ms (29.6 FPS) | 28.4 ms (35.2 FPS) | 1.81x |
-| 1000v1000 (2000 soldiers) | 87.2 ms (11.5 FPS) | 59.9 ms (16.7 FPS) | 35.9 ms (27.8 FPS) | 2.43x |
-
-With culling on, GPU wait at 1000v1000 drops from 37.2 ms to 4.9 ms. Worst
-observed frame at 1000v1000 fell from 5113 ms to 170 ms over the two rounds.
+`scripts/validate_opengl_requirements.py` enforces this: baseline shaders must
+declare `#version 330 core`, the four 4.30 shaders must be listed in
+`OPTIONAL_GL43_SHADERS` and referenced from a pipeline that calls both capability
+probes, compute shaders must be embedded in `assets.qrc`, and no entry point may
+request a context above 3.3. The Linux release workflow runs the packaged
+renderer self-test twice, once with `SOI_RENDER_DISABLE_GPU_CROWD_CULL=1`, so the
+fallback is exercised on every release.
 
 ## What is left
 
-Both scenarios are CPU bound again: at 1000v1000 `world_submit` is about 15 ms
-of a 22 ms traced frame. The next lever is the one deferred in round one:
+The frame is GPU bound at 2000 full-detail soldiers; CPU submission is now about
+7 ms of a 50 ms frame. Turning the cull path off costs only 18%, which says most
+of the remaining GPU time is not triangle setup any more. The next honest step is
+to measure the GPU directly with timer queries rather than inferring it from
+frame timers, because the phase timers cannot see inside the driver.
 
-- Move keyframe interpolation into the vertex shader, reading the baked palettes
-  the bake already uploads to `skin_palette_ubo`. The GPU-driven path removes the
-  obstacle that blocked this, since it already feeds palettes through an SSBO
-  rather than the batch-sized uniform block.
+Candidates once that data exists:
+
 - Pack palettes to the real bone count. `k_palette_width` is 64 while the
-  humanoid rig has 20, so two thirds of every palette upload is padding. This
-  now only affects the legacy instanced path and the shadow pass.
-- Extend the cull dispatch to the shadow pass, which still uses the old instanced
-  path against the minimal mesh.
+  humanoid rig has 20, so the static baked buffer and the legacy path both carry
+  two thirds padding.
+- The mount pose path (`resolve_mount_render_state`) is the largest remaining
+  per-instance CPU cost in the scene walk.
+- Shadow cascade resolution at Ultra is 4x4096; the cull path made the geometry
+  cheap but not the fill.

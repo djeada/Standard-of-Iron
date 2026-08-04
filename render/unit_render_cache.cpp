@@ -2,6 +2,7 @@
 
 #include <QMatrix4x4>
 
+#include <string_view>
 #include <utility>
 
 #include "../game/core/component.h"
@@ -107,8 +108,9 @@ auto UnitRenderCache::get_or_create(Engine::Core::EntityID entity_id,
 
   const bool is_building =
       entity->get_component<Engine::Core::BuildingComponent>() != nullptr;
-  const std::string current_renderable_renderer_id =
-      (data.renderable != nullptr) ? data.renderable->renderer_id : std::string{};
+  const std::string_view current_renderable_renderer_id =
+      (data.renderable != nullptr) ? std::string_view(data.renderable->renderer_id)
+                                   : std::string_view{};
   const bool renderer_key_changed =
       !data.renderer_key_valid || (previous_unit != new_unit) ||
       (previous_renderable != new_renderable) ||
