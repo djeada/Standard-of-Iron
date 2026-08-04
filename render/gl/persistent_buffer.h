@@ -4,6 +4,8 @@
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstring>
 
@@ -34,7 +36,8 @@ public:
     }
 
     m_capacity = capacity;
-    m_buffers_in_flight = buffers_in_flight;
+    m_buffers_in_flight =
+        std::min(buffers_in_flight, BufferCapacity::max_buffers_in_flight);
     m_total_size = capacity * sizeof(T) * buffers_in_flight;
     m_current_frame = 0;
     m_frame_offset = 0;
@@ -98,6 +101,13 @@ public:
 
     initializeOpenGLFunctions();
 
+    for (auto& fence : m_fences) {
+      if (fence != nullptr) {
+        glDeleteSync(fence);
+        fence = nullptr;
+      }
+    }
+
     if (m_mapped_ptr != nullptr) {
       glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
       glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -115,6 +125,26 @@ public:
     m_current_frame = (m_current_frame + 1) % m_buffers_in_flight;
     m_frame_offset = m_current_frame * m_capacity * sizeof(T);
     m_current_count = 0;
+
+    if (m_fences[m_current_frame] != nullptr) {
+      constexpr GLuint64 k_wait_timeout_ns = 1'000'000'000ULL;
+      glClientWaitSync(
+          m_fences[m_current_frame], GL_SYNC_FLUSH_COMMANDS_BIT, k_wait_timeout_ns);
+      glDeleteSync(m_fences[m_current_frame]);
+      m_fences[m_current_frame] = nullptr;
+    }
+  }
+
+  // Called once the frame's draws have been submitted, so the region can be
+
+  void end_frame() {
+    if (m_buffer == 0) {
+      return;
+    }
+    if (m_fences[m_current_frame] != nullptr) {
+      glDeleteSync(m_fences[m_current_frame]);
+    }
+    m_fences[m_current_frame] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
   }
 
   auto write(const T* data, std::size_t count) -> std::size_t {
@@ -183,6 +213,7 @@ private:
   std::size_t m_current_count = 0;
   int m_buffers_in_flight = BufferCapacity::buffers_in_flight;
   int m_current_frame = 0;
+  std::array<GLsync, BufferCapacity::max_buffers_in_flight> m_fences{};
   Platform::BufferStorageHelper::Mode m_buffer_mode =
       Platform::BufferStorageHelper::Mode::Persistent;
 };

@@ -148,6 +148,10 @@ struct CreatureVisualDefinition {
 horse_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
 [[nodiscard]] auto
 elephant_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
+[[nodiscard]] auto
+sheep_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
+[[nodiscard]] auto
+wolf_creature_visual_definition() noexcept -> const CreatureVisualDefinition&;
 [[nodiscard]] auto resolve_creature_visual_definition(
     const UnitVisualSpec& spec) noexcept -> const CreatureVisualDefinition*;
 

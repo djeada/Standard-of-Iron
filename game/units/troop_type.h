@@ -33,7 +33,9 @@ enum class TroopType {
   CarthageBowCommander,
   CarthageSwordCommander,
   Civilian,
-  Builder
+  Builder,
+  Sheep,
+  Wolf
 };
 
 inline auto troop_typeToQString(TroopType type) -> QString {
@@ -80,6 +82,10 @@ inline auto troop_typeToQString(TroopType type) -> QString {
     return QStringLiteral("civilian");
   case TroopType::Builder:
     return QStringLiteral("builder");
+  case TroopType::Sheep:
+    return QStringLiteral("sheep");
+  case TroopType::Wolf:
+    return QStringLiteral("wolf");
   }
   return QStringLiteral("archer");
 }
@@ -178,6 +184,14 @@ inline auto try_parse_troop_type(const QString& value, TroopType& out) -> bool {
     out = TroopType::Builder;
     return true;
   }
+  if (lowered == QStringLiteral("sheep")) {
+    out = TroopType::Sheep;
+    return true;
+  }
+  if (lowered == QStringLiteral("wolf")) {
+    out = TroopType::Wolf;
+    return true;
+  }
   return false;
 }
 
@@ -195,6 +209,10 @@ inline auto try_parse_troop_type(const std::string& str) -> std::optional<TroopT
     return result;
   }
   return std::nullopt;
+}
+
+[[nodiscard]] inline auto is_wildlife_troop(TroopType type) noexcept -> bool {
+  return type == TroopType::Sheep || type == TroopType::Wolf;
 }
 
 [[nodiscard]] inline auto is_commander_troop(TroopType type) noexcept -> bool {

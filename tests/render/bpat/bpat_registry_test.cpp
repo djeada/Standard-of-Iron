@@ -39,7 +39,10 @@ TEST(BpatRegistry, LoadsAllSpecies) {
       static_cast<std::size_t>(
           reg.load_species(k_species_humanoid_caster, root + "/humanoid_caster.bpat")) +
       static_cast<std::size_t>(reg.load_species(k_species_humanoid_stave_caster,
-                                                root + "/humanoid_stave_caster.bpat"));
+                                                root + "/humanoid_stave_caster.bpat")) +
+      static_cast<std::size_t>(
+          reg.load_species(k_species_sheep, root + "/sheep.bpat")) +
+      static_cast<std::size_t>(reg.load_species(k_species_wolf, root + "/wolf.bpat"));
   EXPECT_EQ(loaded, k_species_count);
   EXPECT_TRUE(reg.has_species(k_species_humanoid));
   EXPECT_TRUE(reg.has_species(k_species_horse));
@@ -47,6 +50,8 @@ TEST(BpatRegistry, LoadsAllSpecies) {
   EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_spear));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_skeleton));
+  EXPECT_TRUE(reg.has_species(k_species_sheep));
+  EXPECT_TRUE(reg.has_species(k_species_wolf));
 }
 
 TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
@@ -79,6 +84,8 @@ TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
   EXPECT_TRUE(reg.has_species(k_species_humanoid_sword));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_spear));
   EXPECT_TRUE(reg.has_species(k_species_humanoid_skeleton));
+  EXPECT_TRUE(reg.has_species(k_species_sheep));
+  EXPECT_TRUE(reg.has_species(k_species_wolf));
 }
 
 TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {

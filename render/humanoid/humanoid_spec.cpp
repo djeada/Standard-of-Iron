@@ -1128,6 +1128,18 @@ auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4> {
   return {palette.data(), palette.size()};
 }
 
+auto humanoid_inverse_bind_palette() noexcept -> std::span<const QMatrix4x4> {
+  static const std::array<QMatrix4x4, k_bone_count> inverse = []() {
+    auto const bind = humanoid_bind_palette();
+    std::array<QMatrix4x4, k_bone_count> result{};
+    for (std::size_t i = 0; i < k_bone_count && i < bind.size(); ++i) {
+      result[i] = bind[i].inverted();
+    }
+    return result;
+  }();
+  return {inverse.data(), inverse.size()};
+}
+
 auto humanoid_bind_body_frames() noexcept -> const Render::GL::BodyFrames& {
   static const Render::GL::BodyFrames frames = []() -> Render::GL::BodyFrames {
     Render::GL::VariationParams variation{};

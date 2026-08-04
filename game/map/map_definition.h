@@ -14,6 +14,7 @@
 #include "../systems/nation_id.h"
 #include "../systems/resource_types.h"
 #include "../units/spawn_type.h"
+#include "../wildlife/wildlife_config.h"
 #include "environment_lighting.h"
 #include "terrain.h"
 
@@ -411,6 +412,7 @@ struct MapDefinition {
   int max_troops_per_player = 500;
   VictoryConfig victory;
   RainSettings rain;
+  Game::Wildlife::WildlifeSettings wildlife;
   TimeOfDay time_of_day = TimeOfDay::Day;
   EnvironmentDefinition environment;
   Game::Systems::ResourceAmounts starting_resources{};

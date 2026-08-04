@@ -28,6 +28,10 @@ set(_soi_creature_asset_names
     horse_minimal.bpsm
     elephant.bpat
     elephant_minimal.bpsm
+    sheep.bpat
+    sheep_minimal.bpsm
+    wolf.bpat
+    wolf_minimal.bpsm
     # Bodies, baked from the species' C++ part graphs. Named after the graph, so
     # the humanoid stances that share one share a file.
     humanoid_full.bprm
@@ -38,6 +42,10 @@ set(_soi_creature_asset_names
     horse_minimal.bprm
     elephant_full.bprm
     elephant_minimal.bprm
+    sheep_full.bprm
+    sheep_minimal.bprm
+    wolf_full.bprm
+    wolf_minimal.bprm
 )
 
 set(_soi_creature_asset_outputs)

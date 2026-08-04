@@ -104,6 +104,10 @@ struct MeshNode {
   std::uint8_t lod_mask{k_lod_all};
   int material_id{0};
   MeshNodeData data{};
+
+  BoneIndex blend_bone{k_invalid_bone};
+  QVector3D blend_from{};
+  QVector3D blend_to{};
 };
 
 struct CompiledMeshGraph {

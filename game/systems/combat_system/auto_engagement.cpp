@@ -58,6 +58,10 @@ void AutoEngagement::process(Engine::Core::World*,
       continue;
     }
 
+    if (unit->has_component<Engine::Core::WildlifeComponent>()) {
+      continue;
+    }
+
     auto* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
     if (attack_comp == nullptr) {
       continue;

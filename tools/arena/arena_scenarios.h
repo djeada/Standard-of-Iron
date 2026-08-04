@@ -119,6 +119,8 @@ inline constexpr char k_render_continuity_id[] = "render_continuity";
 inline constexpr char k_performance_20v20_id[] = "performance_20v20";
 inline constexpr char k_performance_30v30_id[] = "performance_30v30";
 inline constexpr char k_campaign_scale_battle_id[] = "campaign_scale_battle";
+inline constexpr char k_massed_battle_500_id[] = "massed_battle_500";
+inline constexpr char k_massed_battle_1000_id[] = "massed_battle_1000";
 inline constexpr char k_roman_marching_camp_id[] = "roman_marching_camp";
 inline constexpr char k_carthage_trade_town_id[] = "carthage_trade_town";
 inline constexpr char k_architecture_and_props_showcase_id[] =
@@ -201,6 +203,14 @@ inline constexpr char k_weather_snow_heavy_id[] = "weather_snow_heavy";
 inline constexpr char k_weather_snow_crosswind_id[] = "weather_snow_crosswind";
 inline constexpr char k_weather_rain_budget_low_id[] = "weather_rain_budget_low";
 inline constexpr char k_weather_rain_budget_ultra_id[] = "weather_rain_budget_ultra";
+
+inline constexpr char k_wildlife_grazing_herd_id[] = "wildlife_grazing_herd";
+inline constexpr char k_wildlife_herd_flees_troops_id[] = "wildlife_herd_flees_troops";
+inline constexpr char k_wildlife_wolf_hunt_id[] = "wildlife_wolf_hunt";
+inline constexpr char k_wildlife_wolf_pack_id[] = "wildlife_wolf_pack";
+inline constexpr char k_wildlife_bird_scatter_id[] = "wildlife_bird_scatter";
+inline constexpr char k_wildlife_storm_pasture_id[] = "wildlife_storm_pasture";
+inline constexpr char k_wildlife_dense_population_id[] = "wildlife_dense_population";
 
 struct ScenarioOption {
   QString id;

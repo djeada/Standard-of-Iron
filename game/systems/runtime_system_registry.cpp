@@ -6,6 +6,7 @@
 #include "../core/world.h"
 #include "../formation/army_formation_registry.h"
 #include "../formation/unit_layout_state_system.h"
+#include "../wildlife/wildlife_system.h"
 #include "ai_system.h"
 #include "arrow_system.h"
 #include "capture_system.h"
@@ -62,6 +63,7 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<HomeSystem>());
   world.add_system(std::make_unique<CivilianDeliverySystem>());
   world.add_system(std::make_unique<SettlementLifeSystem>());
+  world.add_system(std::make_unique<Game::Wildlife::WildlifeSystem>());
   world.add_system(std::make_unique<ShowcaseRoutineSystem>());
   world.add_system(std::make_unique<TerrainAlignmentSystem>());
   world.add_system(std::make_unique<CleanupSystem>());
