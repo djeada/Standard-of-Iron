@@ -25,7 +25,11 @@ struct RasterSettings {
   int height{600};
   QColor clear_color{40, 48, 32, 255};
   QVector3D light_dir{-0.4F, -0.8F, -0.3F};
+
+  bool depth_test{true};
   bool depth_sort{true};
+
+  bool backface_cull{true};
 };
 
 class SoftwareRasterizer {
