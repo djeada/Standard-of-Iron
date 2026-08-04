@@ -194,11 +194,11 @@ void PineRenderer::generate_pine_instances() {
                         tile_safe * scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color(0.12F + scene.shelter * 0.03F,
-                               0.24F + scene.shelter * 0.07F,
-                               0.17F + scene.shelter * 0.04F);
-    QVector3D const var_color(0.19F + scene.cluster_bias * 0.03F,
-                              0.33F + scene.shelter * 0.06F,
+    QVector3D const base_color(0.09F + scene.shelter * 0.03F,
+                               0.19F + scene.shelter * 0.07F,
+                               0.16F + scene.shelter * 0.04F);
+    QVector3D const var_color(0.27F + scene.cluster_bias * 0.04F,
+                              0.44F + scene.shelter * 0.06F,
                               0.23F + scene.cluster_bias * 0.03F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 

@@ -120,7 +120,8 @@ void main() {
   v_alpha = coverage_fade;
   v_edge = a_uv.x * 2.0 - 1.0;
 
-  v_edge_softness = clamp(1.0 / max(width_px * widen, 0.35), 0.04, 1.0);
+  float taper = max(1.0 - 0.86 * pow(tip, 1.35), 0.06);
+  v_edge_softness = clamp(1.0 / max(width_px * widen * taper, 0.35), 0.04, 1.0);
 
   v_world_pos = world_pos;
   gl_Position = u_view_proj * vec4(world_pos, 1.0);

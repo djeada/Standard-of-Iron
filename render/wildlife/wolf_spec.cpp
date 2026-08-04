@@ -151,9 +151,10 @@ auto make_pose(const WolfDrive& drive) -> RigPose {
   float const sway = std::sin(drive.stride_phase * k_two_pi) * 0.040F *
                      (0.35F + (drive.speed_ratio * 0.65F));
   float const lift = drive.crouch;
+
   pose.tail_base = QVector3D(0.0F, 0.530F, -0.394F);
-  pose.tail_mid = QVector3D(sway * 0.5F, 0.400F + (lift * 0.150F), -0.520F);
-  pose.tail_tip = QVector3D(sway, 0.238F + (lift * 0.300F), -0.616F);
+  pose.tail_mid = QVector3D(sway * 0.5F, 0.474F + (lift * 0.130F), -0.560F);
+  pose.tail_tip = QVector3D(sway, 0.372F + (lift * 0.280F), -0.708F);
   return pose;
 }
 
@@ -252,25 +253,25 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
   nodes.push_back(barrel("wolf.body",
                          Bone::Body,
                          k_wolf_role_fur,
-                         {{0.360F, 0.500F, 0.082F, 0.086F, 0.074F},
-                          {0.268F, 0.504F, 0.128F, 0.124F, 0.124F},
-                          {0.168F, 0.510F, 0.148F, 0.132F, 0.146F},
-                          {0.060F, 0.512F, 0.132F, 0.116F, 0.126F},
-                          {-0.046F, 0.514F, 0.116F, 0.104F, 0.090F},
-                          {-0.150F, 0.516F, 0.122F, 0.108F, 0.086F},
-                          {-0.246F, 0.520F, 0.142F, 0.124F, 0.114F},
-                          {-0.336F, 0.524F, 0.112F, 0.102F, 0.096F},
+                         {{0.360F, 0.500F, 0.078F, 0.086F, 0.074F},
+                          {0.268F, 0.502F, 0.134F, 0.128F, 0.140F},
+                          {0.168F, 0.508F, 0.162F, 0.138F, 0.164F},
+                          {0.060F, 0.512F, 0.132F, 0.118F, 0.130F},
+                          {-0.046F, 0.516F, 0.100F, 0.100F, 0.082F},
+                          {-0.150F, 0.518F, 0.108F, 0.106F, 0.080F},
+                          {-0.246F, 0.520F, 0.156F, 0.130F, 0.116F},
+                          {-0.336F, 0.524F, 0.118F, 0.104F, 0.096F},
                           {-0.398F, 0.530F, 0.054F, 0.050F, 0.046F}}));
   nodes.push_back(barrel("wolf.saddle",
                          Bone::Body,
                          k_wolf_role_saddle,
-                         {{0.286F, 0.508F, 0.052F, 0.116F, 0.090F},
-                          {0.196F, 0.512F, 0.086F, 0.146F, 0.110F},
-                          {0.096F, 0.514F, 0.094F, 0.142F, 0.116F},
-                          {-0.020F, 0.514F, 0.082F, 0.126F, 0.110F},
-                          {-0.140F, 0.516F, 0.080F, 0.130F, 0.108F},
-                          {-0.250F, 0.520F, 0.092F, 0.144F, 0.114F},
-                          {-0.340F, 0.526F, 0.070F, 0.118F, 0.096F},
+                         {{0.286F, 0.508F, 0.050F, 0.118F, 0.090F},
+                          {0.196F, 0.512F, 0.090F, 0.150F, 0.110F},
+                          {0.096F, 0.514F, 0.100F, 0.146F, 0.116F},
+                          {-0.020F, 0.514F, 0.070F, 0.128F, 0.110F},
+                          {-0.140F, 0.516F, 0.064F, 0.132F, 0.108F},
+                          {-0.250F, 0.520F, 0.098F, 0.148F, 0.114F},
+                          {-0.340F, 0.526F, 0.072F, 0.120F, 0.096F},
                           {-0.394F, 0.532F, 0.034F, 0.070F, 0.056F}}));
   nodes.push_back(ellipsoid("wolf.withers",
                             Bone::Body,
@@ -311,8 +312,8 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
   nodes.push_back(ellipsoid("wolf.ruff",
                             Bone::NeckTop,
                             k_wolf_role_fur,
-                            neck_mid - QVector3D(0.0F, 0.012F, 0.030F),
-                            {0.134F, 0.124F, 0.106F}));
+                            neck_mid - QVector3D(0.0F, 0.010F, 0.026F),
+                            {0.158F, 0.142F, 0.118F}));
   nodes.push_back(ellipsoid("wolf.mane",
                             Bone::NeckTop,
                             k_wolf_role_saddle,
@@ -469,20 +470,25 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                        k_wolf_role_fur,
                        bind.tail_base,
                        bind.tail_mid,
-                       0.042F,
-                       0.070F));
+                       0.048F,
+                       0.084F));
   nodes.push_back(ellipsoid("wolf.tail.brush",
                             Bone::TailBase,
                             k_wolf_role_fur,
-                            (bind.tail_base * 0.24F) + (bind.tail_mid * 0.76F),
-                            {0.062F, 0.070F, 0.070F}));
+                            (bind.tail_base * 0.30F) + (bind.tail_mid * 0.70F),
+                            {0.076F, 0.086F, 0.090F}));
+  nodes.push_back(ellipsoid("wolf.tail.brush_far",
+                            Bone::TailTip,
+                            k_wolf_role_saddle,
+                            (bind.tail_mid * 0.68F) + (bind.tail_tip * 0.32F),
+                            {0.062F, 0.068F, 0.078F}));
   nodes.push_back(tube("wolf.tail.tip",
                        Bone::TailTip,
                        k_wolf_role_saddle,
                        bind.tail_mid,
                        bind.tail_tip,
-                       0.074F,
-                       0.026F));
+                       0.078F,
+                       0.016F));
 
   std::erase_if(nodes, [wanted_lod](const MeshNode& node) {
     return (node.lod_mask & wanted_lod) == 0U;

@@ -192,12 +192,13 @@ void OliveRenderer::generate_olive_instances() {
         world_x, world_z, terrain_cache.sample_height_at(gx, gz));
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color(0.25F + scene.dryness * 0.04F,
-                               0.31F + scene.rockiness * 0.03F,
-                               0.23F + scene.dryness * 0.03F);
-    QVector3D const var_color(0.31F + scene.cluster_bias * 0.03F,
-                              0.37F + scene.rockiness * 0.03F,
-                              0.29F + scene.cluster_bias * 0.02F);
+
+    QVector3D const base_color(0.20F + scene.dryness * 0.05F,
+                               0.26F + scene.rockiness * 0.03F,
+                               0.19F + scene.dryness * 0.03F);
+    QVector3D const var_color(0.38F + scene.cluster_bias * 0.04F,
+                              0.44F + scene.rockiness * 0.04F,
+                              0.34F + scene.cluster_bias * 0.03F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 
     float const gray_mix = remap(
