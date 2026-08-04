@@ -233,6 +233,16 @@ auto phase_duration_for_state(const Engine::Core::Entity& unit,
   return base_phase_duration(state) * combat_state.swing_duration_scale;
 }
 
+auto bow_draw_is_held(const Engine::Core::Entity& unit) noexcept -> bool {
+  auto const* aim = unit.get_component<Engine::Core::RpgCommanderAimComponent>();
+  auto const* action = unit.get_component<Engine::Core::RpgCommanderActionComponent>();
+  return aim != nullptr && action != nullptr && action->action_running &&
+         aim->draw_stage == Engine::Core::BowDrawStage::FullDraw &&
+         static_cast<Game::Systems::CombatActions::CombatActionId>(
+             action->combat_action_id) ==
+             Game::Systems::CombatActions::CombatActionId::RpgBowShot;
+}
+
 void reset_action_events_if_present(Engine::Core::Entity& unit) {
   auto* action = unit.get_component<Engine::Core::RpgCommanderActionComponent>();
   if (action == nullptr) {
@@ -268,6 +278,11 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
         combat_state->is_hit_paused = false;
         combat_state->hit_pause_remaining = 0.0F;
       }
+      continue;
+    }
+
+    if (bow_draw_is_held(*unit)) {
+
       continue;
     }
 

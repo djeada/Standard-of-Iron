@@ -70,6 +70,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   TriggerCommanderAura,
   RpgPrimaryAttack,
   RpgAttackHold,
+  RpgAim,
   RpgGuard,
   RpgDodge,
   RpgMove,
@@ -165,6 +166,7 @@ struct ArenaScenarioStep {
   float camera_yaw{30.0F};
 
   std::optional<float> rpg_view_yaw_degrees;
+  std::optional<float> rpg_view_pitch_degrees;
   ArenaScenarioFormationOrder formation;
 };
 
@@ -383,6 +385,7 @@ struct ArenaScenarioHost {
   std::function<void(Engine::Core::EntityID, const QVector3D&, bool)>
       set_rpg_move_input;
   std::function<void(Engine::Core::EntityID, float)> set_rpg_view_yaw;
+  std::function<void(Engine::Core::EntityID, float)> set_rpg_view_pitch;
 };
 
 struct ArenaRenderedFrameTimings {

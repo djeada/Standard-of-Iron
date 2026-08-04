@@ -174,6 +174,31 @@ Shot fields:
   ground, and `ease` (`smooth`, `linear`, `in`, `out`).
 - `shake` adds deterministic handheld jitter, so re-recording a shot is
   reproducible.
+- `gameplay_camera` hands the lens back to the scenario instead of driving an
+  authored track, which is how an RPG shot is filmed by the commander's own
+  chase camera. A gameplay shot needs no `focus` or `camera` block, and any it
+  declares is ignored.
+
+`tools/arena/promos/bow_commander.json` cuts both ways in one reel: authored
+close-ups of the draw next to gameplay-camera shots taken over the commander's
+shoulder as he looses.
+
+## RPG commander scenarios
+
+The `rpg_*` scenarios run the production `CommanderControlController`, so the
+camera in those captures is the game's own chase camera and the commander
+answers scenario steps the way he answers a player.
+
+`rpg_bow_volley` is the bow contract: a bow commander against three charging
+swordsmen, one drawn arrow apiece. It uses two steps that matter for any aimed
+weapon:
+
+- `RpgAim` points the view. Given a `target_group` it resolves yaw and pitch to
+  that group's living centroid at the moment the step fires, so the aim follows
+  a target that is still walking; explicit `rpg_view_yaw_degrees` and
+  `rpg_view_pitch_degrees` are used when no target group is named.
+- `RpgAttackHold` holds and releases the attack button, which on a bow is the
+  draw and the loose.
 
 Promo runs render in cinematic mode: no selection rings, no attack/guard/hold
 markers, no order markers, no stats or control overlays. The first recorded

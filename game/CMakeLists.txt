@@ -90,6 +90,9 @@ add_library(
     systems/combat_actions/projectile_release.cpp
     systems/combat_actions/weapon_trace.cpp
     systems/cleanup_system.cpp
+    systems/rpg_combat_system/rpg_bow_aim.cpp
+    systems/rpg_combat_system/rpg_bow_draw.cpp
+    systems/rpg_combat_system/rpg_bow_shot.cpp
     systems/rpg_combat_system/rpg_commander_damage.cpp
     systems/rpg_combat_system/rpg_damage_resolver.cpp
     systems/rpg_combat_system/rpg_combat_processor.cpp
@@ -125,6 +128,7 @@ add_library(
     systems/target_commitment_system.cpp
     systems/cohort_system.cpp
     systems/building_collision_registry.cpp
+    systems/building_line_of_sight.cpp
     systems/wall_network_service.cpp
     systems/gate_service.cpp
     systems/gate_system.cpp

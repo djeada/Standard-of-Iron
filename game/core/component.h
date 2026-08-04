@@ -433,6 +433,61 @@ public:
   float recent_hit_timer{0.0F};
 };
 
+enum class FpvWeaponStance : std::uint8_t {
+  Melee = 0,
+  Bow = 1,
+};
+
+enum class BowDrawStage : std::uint8_t {
+  None = 0,
+
+  Drawing,
+
+  FullDraw,
+
+  Loosing,
+};
+
+class RpgCommanderAimComponent : public Component {
+public:
+  RpgCommanderAimComponent() = default;
+
+  static constexpr float k_min_shot_power = 0.35F;
+
+  static constexpr float k_steady_hold_seconds = 2.0F;
+
+  static constexpr float k_max_hold_seconds = 6.0F;
+
+  static constexpr float k_exhausted_shot_power = 0.65F;
+
+  float view_yaw_degrees{0.0F};
+  float view_pitch_degrees{0.0F};
+  float eye_height{1.55F};
+  float move_speed{0.0F};
+  bool running{false};
+
+  float camera_origin_x{0.0F};
+  float camera_origin_y{0.0F};
+  float camera_origin_z{0.0F};
+  bool camera_origin_valid{false};
+
+  FpvWeaponStance stance{FpvWeaponStance::Melee};
+  bool stance_resolved{false};
+
+  bool draw_held{false};
+  BowDrawStage draw_stage{BowDrawStage::None};
+  float draw_progress{0.0F};
+  float full_draw_hold{0.0F};
+  float spread_degrees{0.0F};
+  float shot_power{0.0F};
+  bool relaxed_from_overhold{false};
+  std::uint32_t shot_sequence{0};
+
+  [[nodiscard]] auto is_drawing() const noexcept -> bool {
+    return draw_stage == BowDrawStage::Drawing || draw_stage == BowDrawStage::FullDraw;
+  }
+};
+
 enum class RpgCommanderActionPhase : std::uint8_t {
   None,
   Strike,

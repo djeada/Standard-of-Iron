@@ -27,6 +27,15 @@ Item {
 
     readonly property real slowPulse: 0.5 + 0.5 * Math.sin(pulsePhase * 2 * Math.PI)
 
+    readonly property bool bowStance: String(status_value("weapon_stance", "melee")) === "bow"
+    readonly property bool bowDrawing: bowStance && status_value("bow_drawing", false) === true
+    readonly property bool bowFullDraw: bowStance && status_value("bow_full_draw", false) === true
+    readonly property bool bowStrained: bowDrawing && status_value("bow_hold_strained", false) === true
+    readonly property real bowDrawProgress: Math.max(0.0, Math.min(1.0, Number(status_value("bow_draw_progress", 0.0))))
+
+    readonly property real verticalFovDegrees: 68.0
+    readonly property real bowSpreadPixels: bowDrawing ? Math.min(root.height * 0.22, Number(status_value("bow_spread_degrees", 0.0)) * (root.height / verticalFovDegrees)) : 0.0
+
     function status_value(key, fallback) {
         if (!status || status[key] === undefined || status[key] === null) {
             return fallback;
@@ -502,8 +511,17 @@ Item {
         property bool punishActive: root.status_value("punish_active", false) === true
         property bool lockedOn: root.status_value("focus_marker_locked", false) === true
         property bool targetInRange: root.status_value("aim_candidate_in_range", false) === true
-        property color crossColor: finisherReady ? "#ffe07a" : (punishActive ? "#ff9952" : (targetInRange ? "#52f4ff" : (lockedOn ? "#bfe8ff" : "#f3efe6")))
+        property color crossColor: root.bowFullDraw ? "#ffe07a" : (finisherReady ? "#ffe07a" : (punishActive ? "#ff9952" : (targetInRange ? "#52f4ff" : (lockedOn ? "#bfe8ff" : "#f3efe6"))))
         property real crossSize: finisherReady ? 1.18 : (targetInRange ? 1.12 : (comboStep >= 2 ? 1.08 : 1.0))
+
+        property real tickGap: root.scaled(7) + root.bowSpreadPixels
+
+        Behavior on tickGap  {
+            NumberAnimation {
+                duration: 90
+                easing.type: Easing.OutQuad
+            }
+        }
 
         scale: crossSize
 
@@ -539,7 +557,7 @@ Item {
             opacity: 0.9
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.verticalCenter
-            anchors.bottomMargin: root.scaled(7)
+            anchors.bottomMargin: crosshair.tickGap
         }
 
         Rectangle {
@@ -549,7 +567,7 @@ Item {
             opacity: 0.9
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.verticalCenter
-            anchors.topMargin: root.scaled(7)
+            anchors.topMargin: crosshair.tickGap
         }
 
         Rectangle {
@@ -559,7 +577,7 @@ Item {
             opacity: 0.9
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.horizontalCenter
-            anchors.rightMargin: root.scaled(7)
+            anchors.rightMargin: crosshair.tickGap
         }
 
         Rectangle {
@@ -569,7 +587,138 @@ Item {
             opacity: 0.9
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.horizontalCenter
-            anchors.leftMargin: root.scaled(7)
+            anchors.leftMargin: crosshair.tickGap
+        }
+    }
+
+    Canvas {
+        id: drawRing
+        objectName: "rpgBowDrawRing"
+        anchors.centerIn: parent
+        width: root.scaled(84)
+        height: width
+        visible: root.bowDrawing
+        opacity: visible ? 1.0 : 0.0
+        antialiasing: true
+
+        readonly property real progress: root.bowDrawProgress
+        readonly property color ringColor: root.bowStrained ? "#ff7a5a" : (root.bowFullDraw ? "#ffe07a" : "#bfe8ff")
+
+        onProgressChanged: requestPaint()
+        onRingColorChanged: requestPaint()
+        onVisibleChanged: requestPaint()
+
+        onPaint: {
+            var ctx = getContext("2d");
+            ctx.reset();
+            var cx = width / 2;
+            var cy = height / 2;
+            var radius = width / 2 - root.scaled(4);
+            var start = -Math.PI / 2;
+            ctx.lineWidth = Math.max(2, root.scaled(3));
+            ctx.strokeStyle = "#4d000000";
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+            if (progress <= 0.0)
+                return;
+            ctx.strokeStyle = ringColor;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, start, start + progress * 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 120
+            }
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width + root.scaled(10)
+            height: width
+            radius: width / 2
+            color: "transparent"
+            border.width: 2
+            border.color: "#ffe07a"
+            visible: root.bowFullDraw
+            opacity: 0.35 + 0.35 * root.slowPulse
+        }
+    }
+
+    Item {
+        id: focusPlate
+        objectName: "rpgFocusPlate"
+
+        readonly property int barWidth: root.scaled(132)
+        readonly property string targetName: String(root.status_value("focus_target_name", ""))
+        readonly property real hpRatio: Math.max(0.0, Math.min(1.0, Number(root.status_value("focus_target_hp_ratio", 0.0))))
+        readonly property bool lockedOn: root.status_value("focus_marker_locked", false) === true
+
+        width: barWidth
+        height: root.scaled(30)
+        x: Math.max(root.scaled(4), Math.min(root.width - width - root.scaled(4), root.focusScreenX - width / 2))
+        y: Math.max(root.scaled(4), root.focusScreenY - Math.max(root.scaled(34), root.focusScreenHeight * 0.62) - height)
+        visible: root.focusProjected && Number(root.status_value("focus_target_max_hp", 0)) > 0
+        opacity: visible ? 1.0 : 0.0
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 140
+            }
+        }
+
+        Row {
+            id: plateHeading
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: root.scaled(4)
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.scaled(7)
+                height: width
+                rotation: 45
+                color: focusPlate.lockedOn ? "#ffcf6b" : "#e05a4a"
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: focusPlate.targetName
+                color: "#f2ece0"
+                font.pixelSize: root.scaled(13)
+                font.bold: true
+                style: Text.Outline
+                styleColor: "#cc000000"
+            }
+        }
+
+        Rectangle {
+            anchors.top: plateHeading.bottom
+            anchors.topMargin: root.scaled(3)
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: focusPlate.barWidth
+            height: root.scaled(5)
+            color: "#cc12100c"
+            border.width: 1
+            border.color: "#88000000"
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins: 1
+                width: Math.max(0, (parent.width - 2) * focusPlate.hpRatio)
+                height: parent.height - 2
+                color: root.status_value("focus_target_staggered", false) === true ? "#ffb347" : "#c0281c"
+
+                Behavior on width  {
+                    NumberAnimation {
+                        duration: 200
+                        easing.type: Easing.OutQuad
+                    }
+                }
+            }
         }
     }
 
@@ -878,6 +1027,32 @@ Item {
             font.bold: true
             style: Text.Outline
             styleColor: "#88000000"
+        }
+    }
+
+    Rectangle {
+        id: weaponStanceChip
+        objectName: "rpgWeaponStanceChip"
+
+        anchors.right: abilityCooldowns.right
+        anchors.bottom: abilityCooldowns.top
+        anchors.bottomMargin: root.scaled(8)
+        width: stanceLabel.implicitWidth + root.scaled(18)
+        height: root.scaled(22)
+        radius: root.scaled(6)
+        color: "#b0140f0a"
+        border.width: 1
+        border.color: root.bowStance ? "#88d8c07a" : "#88b8c4cc"
+        visible: root.status_value("can_switch_weapon", false) === true
+
+        Text {
+            id: stanceLabel
+            anchors.centerIn: parent
+            text: root.bowStance ? qsTr("BOW  ·  X") : qsTr("BLADE  ·  X")
+            color: root.bowStance ? "#f0dcae" : "#d6e2ea"
+            font.pixelSize: root.scaled(10)
+            font.bold: true
+            font.letterSpacing: 1.0
         }
     }
 
