@@ -2224,10 +2224,45 @@
           "z": 145.95
         },
         {
-          "x": 516.41,
-          "z": 145.95
+          "x": 505.51,
+          "z": 160.22
         }
       ]
+    },
+    {
+      "type": "forest",
+      "x": 470.0,
+      "z": 250.0,
+      "radius": 28.0,
+      "landmark": "trebia_bank_screen"
+    },
+    {
+      "type": "forest",
+      "x": 200.0,
+      "z": 560.0,
+      "radius": 32.0,
+      "landmark": "trebia_south_screen"
+    },
+    {
+      "type": "forest",
+      "x": 256.0,
+      "z": 284.0,
+      "radius": 28.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "forest",
+      "x": 240.0,
+      "z": 158.0,
+      "radius": 26.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "forest",
+      "x": 482.0,
+      "z": 420.0,
+      "radius": 26.0,
+      "landmark": "trebia_ford_watch"
     }
   ],
   "spawns": [
@@ -2620,6 +2655,62 @@
       "x": 265.18,
       "z": 62.11,
       "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 383.6,
+      "z": 274.2,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 383.6,
+      "z": 269.4,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 383.6,
+      "z": 266.6,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 383.6,
+      "z": 261.8,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 436.0,
+      "z": 406.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 440.0,
+      "z": 406.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 444.0,
+      "z": 406.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trebia_ford_watch"
     }
   ],
   "world_props": [
@@ -3679,6 +3770,378 @@
       "z": 614.08,
       "scale": 0.96,
       "rotation": 118.8
+    },
+    {
+      "type": "statue",
+      "x": 305.5,
+      "z": 275.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 294.5,
+      "z": 281.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 305.5,
+      "z": 266.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 294.5,
+      "z": 266.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 307.0,
+      "z": 293.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 294.0,
+      "z": 295.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 301.0,
+      "z": 298.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 300.0,
+      "z": 278.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_south_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 516.3,
+      "z": 372.47,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 514.41,
+      "z": 386.41,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 528.0,
+      "z": 387.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 534.0,
+      "z": 375.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 508.0,
+      "z": 377.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 524.0,
+      "z": 393.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 516.0,
+      "z": 368.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 536.0,
+      "z": 382.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "trebia_east_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 387.7,
+      "z": 264.15,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 385.7,
+      "z": 271.85,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 398.3,
+      "z": 263.1,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 399.7,
+      "z": 272.2,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 401.8,
+      "z": 267.3,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_ridge_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 387.8,
+      "z": 268.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trebia_ridge_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 234.0,
+      "z": 200.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 251.0,
+      "z": 207.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 247.0,
+      "z": 192.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 239.0,
+      "z": 188.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 237.0,
+      "z": 212.0,
+      "scale": 1.1,
+      "rotation": 270.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 253.0,
+      "z": 196.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 228.0,
+      "z": 204.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 242.0,
+      "z": 184.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "trebia_frozen_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 100.0,
+      "z": 358.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "trebia_west_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 108.0,
+      "z": 363.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trebia_west_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 108.0,
+      "z": 355.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_west_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 93.0,
+      "z": 365.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trebia_west_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 92.0,
+      "z": 354.0,
+      "scale": 0.85,
+      "rotation": 0.0,
+      "landmark": "trebia_west_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 87.0,
+      "z": 361.0,
+      "scale": 1.15,
+      "rotation": 180.0,
+      "landmark": "trebia_west_shrine"
+    },
+    {
+      "type": "firecamp",
+      "x": 114.0,
+      "z": 360.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_west_shrine",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "statue",
+      "x": 437.17,
+      "z": 421.17,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "tent",
+      "x": 445.0,
+      "z": 414.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "tent",
+      "x": 436.0,
+      "z": 413.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "tent",
+      "x": 442.0,
+      "z": 408.0,
+      "scale": 0.95,
+      "rotation": 90.0,
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "supply_cart",
+      "x": 432.0,
+      "z": 417.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 448.0,
+      "z": 418.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "firecamp",
+      "x": 440.0,
+      "z": 412.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trebia_ford_watch",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 434.0,
+      "z": 432.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "trebia_ford_watch"
     }
   ],
   "victory": {
@@ -3743,72 +4206,88 @@
   "structures": [
     {
       "type": "barracks",
-      "x": 311.09,
-      "z": 504.59,
+      "x": 313.3,
+      "z": 504.54,
       "player_id": 1,
       "max_population": 160,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 323.09,
-      "z": 504.59,
+      "x": 323.0,
+      "z": 505.0,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 323.09,
-      "z": 498.59,
+      "x": 323.0,
+      "z": 499.0,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 329.09,
-      "z": 504.59,
+      "x": 329.0,
+      "z": 505.0,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 299.09,
-      "z": 510.59,
+      "x": 299.0,
+      "z": 511.0,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 323.09,
-      "z": 510.59,
+      "x": 323.0,
+      "z": 511.0,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 299.09,
-      "z": 516.59,
+      "x": 329.0,
+      "z": 499.0,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 323.09,
-      "z": 516.59,
+      "x": 293.0,
+      "z": 511.0,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "home",
-      "x": 329.09,
-      "z": 498.59,
+      "x": 329.0,
+      "z": 511.0,
       "player_id": 1,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_gate",
+      "x": 322,
+      "z": 484,
+      "player_id": 1,
+      "rotation": 0.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_gate",
+      "x": 300,
+      "z": 528,
+      "player_id": 1,
+      "rotation": 0.0,
       "nation": "carthage"
     },
     {
       "type": "defense_tower",
-      "x": 339.63,
-      "z": 487.89,
+      "x": 339.54,
+      "z": 488.3,
       "player_id": 1,
       "nation": "carthage"
     },
@@ -4053,8 +4532,8 @@
     },
     {
       "type": "wall_gate",
-      "x": 148.55,
-      "z": 14.0,
+      "x": 148,
+      "z": 14,
       "player_id": 2,
       "rotation": 0.0,
       "nation": "roman_republic"
@@ -4104,8 +4583,8 @@
     },
     {
       "type": "wall_gate",
-      "x": 566.0,
-      "z": 103.0,
+      "x": 566,
+      "z": 104,
       "player_id": 3,
       "rotation": 0.0,
       "nation": "roman_republic"
@@ -4728,16 +5207,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 526.08,
-      "z": 168.0,
+      "x": 526,
+      "z": 168,
       "player_id": 3,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 508.0,
-      "z": 100.62,
+      "x": 508,
+      "z": 100,
       "player_id": 3,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -4771,14 +5250,30 @@
       "nation": "roman_republic"
     },
     {
+      "type": "temple",
+      "x": 300.0,
+      "z": 284.0,
+      "player_id": -1,
+      "landmark": "trebia_south_sanctuary",
+      "nation": "carthage"
+    },
+    {
+      "type": "temple",
+      "x": 392.0,
+      "z": 268.0,
+      "player_id": 3,
+      "landmark": "trebia_ridge_sanctuary",
+      "nation": "roman_republic"
+    },
+    {
       "type": "wall_segment",
       "start": [
-        337.09,
-        490.59
+        314,
+        484
       ],
       "end": [
-        337.09,
-        504.59
+        318,
+        484
       ],
       "player_id": 1,
       "width": 2.0,
@@ -4787,12 +5282,82 @@
     {
       "type": "wall_segment",
       "start": [
-        112.0,
-        14.0
+        326,
+        484
       ],
       "end": [
-        145.55,
-        14.0
+        338,
+        484
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        286,
+        528
+      ],
+      "end": [
+        296,
+        528
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        304,
+        528
+      ],
+      "end": [
+        338,
+        528
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        286,
+        494
+      ],
+      "end": [
+        286,
+        526
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        338,
+        486
+      ],
+      "end": [
+        338,
+        526
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        112,
+        14
+      ],
+      "end": [
+        144,
+        14
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4801,12 +5366,12 @@
     {
       "type": "wall_segment",
       "start": [
-        151.55,
-        14.0
+        152,
+        14
       ],
       "end": [
-        188.0,
-        14.0
+        188,
+        14
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4815,12 +5380,12 @@
     {
       "type": "wall_segment",
       "start": [
-        166.36,
-        78.0
+        160,
+        78
       ],
       "end": [
-        168.33,
-        78.0
+        188,
+        78
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4829,12 +5394,12 @@
     {
       "type": "wall_segment",
       "start": [
-        112.0,
-        14.0
+        112,
+        16
       ],
       "end": [
-        112.0,
-        60.0
+        112,
+        66
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4843,12 +5408,12 @@
     {
       "type": "wall_segment",
       "start": [
-        188.0,
-        14.0
+        188,
+        16
       ],
       "end": [
-        188.0,
-        56.0
+        188,
+        76
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4857,12 +5422,12 @@
     {
       "type": "wall_segment",
       "start": [
-        549.0,
-        103.0
+        550,
+        104
       ],
       "end": [
-        563.0,
-        103.0
+        562,
+        104
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4871,12 +5436,12 @@
     {
       "type": "wall_segment",
       "start": [
-        569.0,
-        103.0
+        570,
+        104
       ],
       "end": [
-        583.0,
-        103.0
+        584,
+        104
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4885,12 +5450,12 @@
     {
       "type": "wall_segment",
       "start": [
-        549.0,
-        133.0
+        550,
+        134
       ],
       "end": [
-        583.0,
-        133.0
+        584,
+        134
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4899,12 +5464,12 @@
     {
       "type": "wall_segment",
       "start": [
-        549.0,
-        103.0
+        550,
+        106
       ],
       "end": [
-        549.0,
-        133.0
+        550,
+        132
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4913,12 +5478,12 @@
     {
       "type": "wall_segment",
       "start": [
-        583.0,
-        103.0
+        584,
+        106
       ],
       "end": [
-        583.0,
-        133.0
+        584,
+        132
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4927,12 +5492,12 @@
     {
       "type": "wall_segment",
       "start": [
-        508.0,
-        68.0
+        508,
+        68
       ],
       "end": [
-        624.0,
-        68.0
+        624,
+        68
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4941,12 +5506,12 @@
     {
       "type": "wall_segment",
       "start": [
-        513.66,
-        168.0
+        508,
+        168
       ],
       "end": [
-        523.08,
-        168.0
+        522,
+        168
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4955,12 +5520,12 @@
     {
       "type": "wall_segment",
       "start": [
-        529.08,
-        168.0
+        530,
+        168
       ],
       "end": [
-        582.47,
-        168.0
+        588,
+        168
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4969,12 +5534,12 @@
     {
       "type": "wall_segment",
       "start": [
-        606.2,
-        168.0
+        598,
+        168
       ],
       "end": [
-        624.0,
-        168.0
+        624,
+        168
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4983,12 +5548,12 @@
     {
       "type": "wall_segment",
       "start": [
-        508.0,
-        68.0
+        508,
+        70
       ],
       "end": [
-        508.0,
-        97.62
+        508,
+        96
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4997,12 +5562,12 @@
     {
       "type": "wall_segment",
       "start": [
-        508.0,
-        103.62
+        508,
+        104
       ],
       "end": [
-        508.0,
-        121.18
+        508,
+        132
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5011,12 +5576,12 @@
     {
       "type": "wall_segment",
       "start": [
-        624.0,
-        68.0
+        508,
+        160
       ],
       "end": [
-        624.0,
-        144.0
+        508,
+        166
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5025,12 +5590,26 @@
     {
       "type": "wall_segment",
       "start": [
-        624.0,
-        162.0
+        624,
+        70
       ],
       "end": [
-        624.0,
-        168.0
+        624,
+        150
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        624,
+        158
+      ],
+      "end": [
+        624,
+        166
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5042,8 +5621,8 @@
       "id": "trebia_punic_camp",
       "player_id": 1,
       "tier": "marching_camp",
-      "x": 300,
-      "z": 500,
+      "x": 311,
+      "z": 505,
       "facing": "north",
       "nation": "carthage",
       "on_hill": false,
@@ -5070,6 +5649,95 @@
       "facing": "west",
       "nation": "roman_republic",
       "max_population": 190
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "trebia_south_sanctuary",
+      "kind": "sanctuary",
+      "x": 300,
+      "z": 280,
+      "facing": "north",
+      "nation": "carthage",
+      "forest": {
+        "radius": 28,
+        "bearing": "west"
+      }
+    },
+    {
+      "id": "trebia_east_hamlet",
+      "kind": "hamlet",
+      "x": 520,
+      "z": 380,
+      "facing": "west"
+    },
+    {
+      "id": "trebia_ridge_sanctuary",
+      "kind": "sanctuary",
+      "x": 392,
+      "z": 268,
+      "on_hill": true,
+      "scale": 0.7,
+      "facing": "west",
+      "nation": "roman_republic",
+      "player_id": 3,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "id": "trebia_frozen_hamlet",
+      "kind": "hamlet",
+      "x": 240,
+      "z": 200,
+      "facing": "south",
+      "forest": {
+        "radius": 26,
+        "bearing": "north"
+      }
+    },
+    {
+      "id": "trebia_west_shrine",
+      "kind": "shrine",
+      "x": 100,
+      "z": 360,
+      "facing": "east"
+    },
+    {
+      "id": "trebia_ford_watch",
+      "kind": "watch",
+      "x": 440,
+      "z": 420,
+      "facing": "north",
+      "nation": "roman_republic",
+      "player_id": 3,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 3
+        }
+      ],
+      "forest": {
+        "radius": 26,
+        "bearing": "east"
+      }
+    }
+  ],
+  "groves": [
+    {
+      "id": "trebia_bank_screen",
+      "x": 470,
+      "z": 250,
+      "radius": 28
+    },
+    {
+      "id": "trebia_south_screen",
+      "x": 200,
+      "z": 560,
+      "radius": 32
     }
   ]
 }

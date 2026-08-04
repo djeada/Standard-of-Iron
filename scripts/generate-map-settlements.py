@@ -10,25 +10,36 @@ with two houses beside it.
 Tiers
   town            outer wall ring, inner citadel with a temple, housing blocks
   fortified_camp  single wall ring, two housing rows, corner towers
-  marching_camp   palisade on the threat side only, no marketplace
+  marching_camp   closed rampart with two gates, no marketplace
 
 A town raises a temple in its citadel. Any settlement may override that with a
 ``temple`` boolean when a map wants a sanctuary at a camp, or a town without one.
 
-Wall rings are closed by real ``wall_gate`` structures rather than left open.
+Wall rings are laid cell by cell on the runtime's own 2-unit wall grid, so a ring
+is closed by construction: the only cells left out are the ones a gate covers and
+the ones no unit can walk anyway (a hill core, a lake, a river channel). A wall
+that merely stops short of a river bank leaves a gap units walk straight through,
+which is why clearance margins are not allowed to decide where a rampart ends.
+
 A gate spans ``GATE_SPAN`` along the wall it closes, so the opening is sized to
 match; anything wider leaves walkable ground beside the gate and the ring stops
 meaning anything. Gate yaw follows the wall: 0 spans x, 90 spans z. Sides and
 positions come from where roads actually cross the ring, because a gateway that
-is not on the road makes formations walk the length of a curtain wall to get in.
-A gate whose wall run is clipped away by terrain is dropped with it.
+is not on the road makes formations walk the length of a curtain wall to get in;
+when no road crosses, the gate is aimed at the nearest road instead of being
+dropped at the midpoint of a side.
 
 A settlement marked ``on_hill`` is fitted inside the hill's flat crown, and the
 hill feature is widened when the footprint needs more room. Slopes are not
-walkable, so anything hanging off the crown would be unreachable.
+walkable, so anything hanging off the crown would be unreachable. Set
+``grow_hill: false`` where the hill's size is load bearing for something else -
+a road threading past it, a pass it forms one wall of - and the settlement is
+shrunk to the crown it already has instead.
 
 The command is dry-run by default. Pass --write to replace only the top-level
-``structures`` array; all other content in the document is retained.
+``structures`` array; all other content in the document is retained. Structures
+carrying a ``landmark`` key belong to generate-map-landmarks.py and are carried
+across untouched, so the two tools can be run in either order.
 """
 
 from __future__ import annotations
@@ -39,7 +50,7 @@ import math
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 CAMPAIGN_MAPS = (
     "assets/maps/map_crossing_rhone.json",
@@ -71,6 +82,9 @@ WALL_SEGMENT_SPACING = 2
 
 
 BUILDING_CLEARANCE = 2.0
+
+
+BUILDING_GRID_PADDING = 1.0
 
 
 TERRAIN_INFLUENCE_MARGIN = 1.22
@@ -158,11 +172,13 @@ class Settlement:
     minimum_homes: int = 0
     scale: float = 1.0
     temple: bool | None = None
+    grow_hill: bool = True
     gateways: dict[str, float] | None = None
 
     buildings: list[Building] = field(default_factory=list)
     walls: list[WallRun] = field(default_factory=list)
     hill: dict | None = None
+    seal: "TerrainMask | None" = None
 
     @staticmethod
     def from_json(entry: dict) -> "Settlement":
@@ -196,6 +212,7 @@ class Settlement:
             minimum_homes=max(0, int(entry.get("minimum_homes", 0))),
             scale=float(entry.get("scale", 1.0)),
             temple=(None if "temple" not in entry else bool(entry["temple"])),
+            grow_hill=bool(entry.get("grow_hill", True)),
         )
 
 
@@ -225,7 +242,11 @@ class TerrainMask:
     """
 
     def __init__(
-        self, definition: dict, clearance: float, exclude_hill: dict | None = None
+        self,
+        definition: dict,
+        clearance: float,
+        exclude_hill: dict | None = None,
+        influence: float = TERRAIN_INFLUENCE_MARGIN,
     ):
         roads = _load_road_generator()
         working = json.loads(json.dumps(definition))
@@ -250,11 +271,19 @@ class TerrainMask:
             if half_width <= 0.0 or half_depth <= 0.0:
                 continue
             feature.pop("radius", None)
-            feature["width"] = half_width * 2.0 * TERRAIN_INFLUENCE_MARGIN
-            feature["depth"] = half_depth * 2.0 * TERRAIN_INFLUENCE_MARGIN
+            feature["width"] = half_width * 2.0 * influence
+            feature["depth"] = half_depth * 2.0 * influence
 
         working["roads"] = []
         self._field = roads.RoutingField(working, clearance)
+
+    def walkable(self, x: float, z: float) -> bool:
+        """Whether a unit could stand on this cell, ignoring buildings."""
+        grid_x = int(round(x))
+        grid_z = int(round(z))
+        if not self._field.passable(grid_x, grid_z):
+            return False
+        return not self._field.water[self._field.index(grid_x, grid_z)]
 
     def clear_for(self, x: float, z: float, size: tuple[float, float]) -> bool:
         half_x = max(1, int(size[0] * 0.5))
@@ -270,47 +299,19 @@ class TerrainMask:
         return True
 
 
-def clip_walls_to_clear_ground(
-    mask: TerrainMask, walls: Sequence[WallRun]
-) -> list[WallRun]:
-    """Split wall runs at river/lake clearance instead of crossing water."""
-    result: list[WallRun] = []
-    for wall in walls:
-        delta_x = wall.end[0] - wall.start[0]
-        delta_z = wall.end[1] - wall.start[1]
-        span = math.hypot(delta_x, delta_z)
-        sample_count = max(1, int(math.ceil(span / WALL_SEGMENT_SPACING)))
-        samples = [
-            (
-                wall.start[0] + delta_x * index / sample_count,
-                wall.start[1] + delta_z * index / sample_count,
-            )
-            for index in range(sample_count + 1)
-        ]
-        clear = [
-            mask.clear_for(point[0], point[1], BUILDING_SIZES["wall_segment"])
-            for point in samples
-        ]
+def snap_wall_coordinate(value: float) -> int:
+    """The lattice cell a wall authored at ``value`` actually spawns on.
 
-        run_start: int | None = None
-        for index, is_clear in enumerate([*clear, False]):
-            if is_clear and run_start is None:
-                run_start = index
-                continue
-            if is_clear or run_start is None:
-                continue
-            run_end = index - 1
-            result.append(
-                WallRun(
-                    samples[run_start],
-                    samples[run_end],
-                    wall.player_id,
-                    wall.nation,
-                    wall.width,
-                )
-            )
-            run_start = None
-    return result
+    MapTransformer rounds a wall's position to the grid and then to the 2-unit
+    wall lattice, so an off-lattice coordinate in the file is a fiction: it
+    describes a wall somewhere the game will never put one. Authoring on the
+    lattice is what makes a ring's gaps countable.
+    """
+    return int(math.floor(value / WALL_SEGMENT_SPACING + 0.5)) * WALL_SEGMENT_SPACING
+
+
+def lattice_range(low: int, high: int) -> list[int]:
+    return list(range(low, high + 1, WALL_SEGMENT_SPACING))
 
 
 def hill_height(width: float, depth: float, authored_height: float) -> float:
@@ -574,6 +575,25 @@ def distance_to_water(definition: dict, x: float, z: float) -> float:
     return best
 
 
+def clamp_hill_entrances(feature: dict, definition: dict, margin: float = 3.0) -> None:
+    """Keep approaches on the map after a hill has been widened.
+
+    A hill grown to carry a settlement can push its own compass entrances past
+    the map edge, where nothing can use them and the routing field has no cells
+    to carve. Sliding them back inside keeps the approach real.
+    """
+    grid = definition.get("grid") or {}
+    width = float(grid.get("width", 0)) or None
+    height = float(grid.get("height", 0)) or None
+    if width is None or height is None:
+        return
+    for entrance in feature.get("entrances") or []:
+        entrance["x"] = round(min(max(float(entrance["x"]), margin), width - margin), 2)
+        entrance["z"] = round(
+            min(max(float(entrance["z"]), margin), height - margin), 2
+        )
+
+
 def ensure_hill_approaches(feature: dict, minimum: int = 4) -> None:
     """Give an enlarged hill enough ramps to stay permeable.
 
@@ -648,7 +668,6 @@ class TierSpec:
     inner_towers: int
     marketplace: bool
     temple: bool
-    full_ring: bool
 
 
 TIER_SPECS = {
@@ -665,7 +684,6 @@ TIER_SPECS = {
         inner_towers=2,
         marketplace=True,
         temple=True,
-        full_ring=True,
     ),
     "fortified_camp": TierSpec(
         outer_half_x=38.0,
@@ -680,7 +698,6 @@ TIER_SPECS = {
         inner_towers=0,
         marketplace=True,
         temple=False,
-        full_ring=True,
     ),
     "marching_camp": TierSpec(
         outer_half_x=26.0,
@@ -695,104 +712,158 @@ TIER_SPECS = {
         inner_towers=0,
         marketplace=False,
         temple=False,
-        full_ring=False,
     ),
 }
 
 
-def gated_run(
-    fixed: float,
-    span_start: float,
-    span_end: float,
-    gate_centre: float,
-    gate_width: float,
-    horizontal: bool,
-    player_id: int,
-    nation: str | None,
-    gates: list[Building] | None = None,
-) -> list[WallRun]:
-    """One wall side split into two runs with a gateway between them.
+SIDE_AXIS = {"north": "z", "south": "z", "west": "x", "east": "x"}
 
-    The opening is sized to the gate structure so the wall actually closes: a
-    wider gap would leave open ground beside the gate and the ring would mean
-    nothing. Passing ``gates`` collects the gate building for the side.
+
+def opposite(facing: str) -> str:
+    return {"north": "south", "south": "north", "east": "west", "west": "east"}[facing]
+
+
+def perpendicular(facing: str) -> str:
+    return {"north": "east", "south": "west", "east": "south", "west": "north"}[facing]
+
+
+@dataclass
+class RingEdge:
+    """One side of a wall ring, as the lattice cells that side owns."""
+
+    side: str
+    horizontal: bool
+    fixed: int
+    cells: list[int]
+
+    def point(self, along: int) -> tuple[int, int]:
+        return (along, self.fixed) if self.horizontal else (self.fixed, along)
+
+
+def ring_edges(cx: float, cz: float, half_x: float, half_z: float) -> list[RingEdge]:
+    """The four sides of a ring, with each corner owned by exactly one side.
+
+    Corners belong to the north and south runs, so the east and west runs stop
+    two cells short of them. Without that the corner cell would be emitted by two
+    runs and the wall entity count would drift away from what the ring costs.
     """
-    gate_width = min(gate_width, GATE_SPAN)
-    gate_low = gate_centre - gate_width * 0.5
-    gate_high = gate_centre + gate_width * 0.5
-    runs: list[WallRun] = []
-
-    def make(a: float, b: float) -> None:
-        if b - a < WALL_SEGMENT_SPACING:
-            return
-        if horizontal:
-            runs.append(WallRun((a, fixed), (b, fixed), player_id, nation))
-        else:
-            runs.append(WallRun((fixed, a), (fixed, b), player_id, nation))
-
-    make(span_start, gate_low)
-    make(gate_high, span_end)
-
-    if gates is not None:
-
-        gate_x, gate_z = (gate_centre, fixed) if horizontal else (fixed, gate_centre)
-        gates.append(
-            Building(
-                "wall_gate",
-                gate_x,
-                gate_z,
-                player_id,
-                nation,
-                rotation=0.0 if horizontal else 90.0,
-            )
-        )
-    return runs
+    left = snap_wall_coordinate(cx - half_x)
+    right = snap_wall_coordinate(cx + half_x)
+    top = snap_wall_coordinate(cz - half_z)
+    bottom = snap_wall_coordinate(cz + half_z)
+    flank = lattice_range(top + WALL_SEGMENT_SPACING, bottom - WALL_SEGMENT_SPACING)
+    return [
+        RingEdge("north", True, top, lattice_range(left, right)),
+        RingEdge("south", True, bottom, lattice_range(left, right)),
+        RingEdge("west", False, left, flank),
+        RingEdge("east", False, right, flank),
+    ]
 
 
-def wall_ring(
+GATE_CELLS = int(GATE_SPAN // WALL_SEGMENT_SPACING)
+
+
+def gate_cells_on(edge: RingEdge, along: float) -> list[int]:
+    """The lattice cells a gate covers on this side, or [] if it will not fit.
+
+    A gate needs a wall cell left standing on either side of it, otherwise the
+    "gate" is just the end of the wall and units walk around it.
+    """
+    if len(edge.cells) < GATE_CELLS + 2:
+        return []
+    reach = (GATE_CELLS // 2) * WALL_SEGMENT_SPACING
+    low = edge.cells[0] + reach + WALL_SEGMENT_SPACING
+    high = edge.cells[-1] - reach - WALL_SEGMENT_SPACING
+    centre = min(max(snap_wall_coordinate(along), low), high)
+    return [
+        centre + offset * WALL_SEGMENT_SPACING
+        for offset in range(-(GATE_CELLS // 2), GATE_CELLS // 2 + 1)
+    ]
+
+
+def build_ring(
     cx: float,
     cz: float,
     half_x: float,
     half_z: float,
     player_id: int,
     nation: str | None,
-    gates: Iterable[str],
-    gate_width: float = 14.0,
-    gate_buildings: list[Building] | None = None,
-    gateways: dict[str, float] | None = None,
-) -> list[WallRun]:
-    """Axis-aligned rectangular ring with a gateway on each named side."""
-    gate_set = set(gates)
-    left, right = cx - half_x, cx + half_x
-    top, bottom = cz - half_z, cz + half_z
-    runs: list[WallRun] = []
+    gateways: dict[str, float],
+    seal: TerrainMask | None = None,
+) -> tuple[list[WallRun], list[Building]]:
+    """A closed rectangular ring, laid one lattice cell at a time.
 
-    for side, fixed, a, b, horizontal, gate_centre in (
-        ("north", top, left, right, True, cx),
-        ("south", bottom, left, right, True, cx),
-        ("west", left, top, bottom, False, cz),
-        ("east", right, top, bottom, False, cz),
-    ):
-        if side in gate_set:
-            runs.extend(
-                gated_run(
-                    fixed,
-                    a,
-                    b,
-                    (gateways or {}).get(side, gate_centre),
-                    gate_width,
-                    horizontal,
-                    player_id,
-                    nation,
-                    gate_buildings,
-                )
+    Only two things take a cell out of the ring: a gate covering it, and ground
+    no unit can walk on anyway. Everything else gets a wall, so the enclosure a
+    map claims is the enclosure the game builds. Rings used to be emitted as four
+    long runs and then clipped back from blocking terrain by a clearance margin,
+    which opened a walkable gap between where the wall stopped and where the
+    river or hill actually started.
+    """
+    walls: list[WallRun] = []
+    gates: list[Building] = []
+
+    for edge in ring_edges(cx, cz, half_x, half_z):
+        if not edge.cells:
+            continue
+        covered: set[int] = set()
+        if edge.side in gateways:
+            covered = set(gate_cells_on(edge, gateways[edge.side]))
+            if covered:
+                centre = sorted(covered)[len(covered) // 2]
+                gate_x, gate_z = edge.point(centre)
+                if seal is None or seal.walkable(gate_x, gate_z):
+                    gates.append(
+                        Building(
+                            "wall_gate",
+                            gate_x,
+                            gate_z,
+                            player_id,
+                            nation,
+                            rotation=0.0 if edge.horizontal else 90.0,
+                        )
+                    )
+                else:
+                    covered = set()
+
+        run: list[int] = []
+
+        def flush(run: list[int] = run, edge: RingEdge = edge) -> None:
+            if not run:
+                return
+            walls.append(
+                WallRun(edge.point(run[0]), edge.point(run[-1]), player_id, nation)
             )
-        elif horizontal:
-            runs.append(WallRun((a, fixed), (b, fixed), player_id, nation))
-        else:
-            runs.append(WallRun((fixed, a), (fixed, b), player_id, nation))
+            run.clear()
 
-    return runs
+        for along in edge.cells:
+            point = edge.point(along)
+            if along in covered or (seal is not None and not seal.walkable(*point)):
+                flush()
+                continue
+            run.append(along)
+        flush()
+
+    return walls, gates
+
+
+def nearest_road_point(
+    definition: dict, x: float, z: float
+) -> tuple[float, float] | None:
+    """The road vertex closest to a point, for aiming a gate that has no crossing."""
+    best: tuple[float, float] | None = None
+    best_distance = float("inf")
+    for road in definition.get("roads") or []:
+        raw = road.get("waypoints") or [road.get("start"), road.get("end")]
+        for point in raw:
+            if not point:
+                continue
+            candidate = (float(point[0]), float(point[1]))
+            distance = math.hypot(candidate[0] - x, candidate[1] - z)
+            if distance < best_distance:
+                best = candidate
+                best_distance = distance
+    return best
 
 
 def road_gateways(
@@ -802,7 +873,10 @@ def road_gateways(
 
     A gateway that is not on the road makes formations walk the length of a
     curtain wall to get in, so both the side and the position along it are read
-    off where the approaches actually cross the wall line.
+    off where the approaches actually cross the wall line. A ring always ends up
+    with two gates: where roads supply only one, or none, the remaining gate is
+    aimed at the nearest road rather than parked at the midpoint of a side, so a
+    garrison always has a sortie route and a besieger always has a second front.
     """
     left, right = settlement.x - half_x, settlement.x + half_x
     top, bottom = settlement.z - half_z, settlement.z + half_z
@@ -836,15 +910,7 @@ def road_gateways(
     for name, hits in crossings.items():
         if hits:
             gateways[name] = max(hits)[1]
-    if not gateways:
-        return {}
-    if len(gateways) == 1:
 
-        side, along = next(iter(gateways.items()))
-        far = opposite(side)
-        low, high = (left, right) if far in ("north", "south") else (top, bottom)
-        gateways[far] = min(max(along, low + GATE_SPAN), high - GATE_SPAN)
-        return gateways
     if len(gateways) > 2:
 
         ranked = sorted(
@@ -856,79 +922,138 @@ def road_gateways(
             next((n for n in ranked[1:] if n == opposite(ranked[0])), ranked[1])
         )
         gateways = {name: gateways[name] for name in chosen}
+
+    while len(gateways) < 2:
+        gateways.update(
+            aimed_gateway(definition, settlement, sides, set(gateways))
+            or fallback_gateway(settlement, sides, set(gateways))
+        )
     return gateways
 
 
-def opposite(facing: str) -> str:
-    return {"north": "south", "south": "north", "east": "west", "west": "east"}[facing]
+def aimed_gateway(
+    definition: dict,
+    settlement: Settlement,
+    sides: dict[str, tuple[str, float, float, float]],
+    taken: set[str],
+) -> dict[str, float]:
+    """A gate on the side facing the nearest road, positioned to point at it."""
+    target = nearest_road_point(definition, settlement.x, settlement.z)
+    if target is None:
+        return {}
+    offset_x = target[0] - settlement.x
+    offset_z = target[1] - settlement.z
+    order = [
+        "east" if offset_x >= 0.0 else "west",
+        "south" if offset_z >= 0.0 else "north",
+    ]
+    if abs(offset_z) > abs(offset_x):
+        order.reverse()
+    order.extend(opposite(side) for side in list(order))
+    for side in order:
+        if side in taken:
+            continue
+        axis, _fixed, span_low, span_high = sides[side]
+        along = target[1] if axis == "x" else target[0]
+        return {side: min(max(along, span_low + GATE_SPAN), span_high - GATE_SPAN)}
+    return {}
 
 
-def perpendicular(facing: str) -> str:
-    return {"north": "east", "south": "west", "east": "south", "west": "north"}[facing]
+def fallback_gateway(
+    settlement: Settlement,
+    sides: dict[str, tuple[str, float, float, float]],
+    taken: set[str],
+) -> dict[str, float]:
+    """The gate a ring gets when the map has no roads at all."""
+    for side in (
+        settlement.facing,
+        opposite(settlement.facing),
+        "north",
+        "south",
+        "east",
+        "west",
+    ):
+        if side in taken:
+            continue
+        axis, _fixed, span_low, span_high = sides[side]
+        return {side: (span_low + span_high) * 0.5}
+    return {}
 
 
-def outer_wall_runs(
-    cx: float,
-    cz: float,
-    half_x: float,
-    half_z: float,
-    facing: str,
-    owner: int,
-    nation: str | None,
-    full_ring: bool,
-    gate_buildings: list[Building] | None = None,
-    gateways: dict[str, float] | None = None,
-) -> list[WallRun]:
-    if full_ring:
-        return wall_ring(
-            cx,
-            cz,
-            half_x,
-            half_z,
-            owner,
-            nation,
-            list(gateways) if gateways else [facing, opposite(facing)],
-            gate_buildings=gate_buildings,
-            gateways=gateways,
-        )
+def ring_box(
+    settlement: Settlement, spec: TierSpec
+) -> tuple[float, float, float, float]:
+    """The outer wall ring as a rectangle, with a margin for the wall itself."""
+    half_x = spec.outer_half_x * settlement.scale + WALL_SEGMENT_SPACING
+    half_z = spec.outer_half_z * settlement.scale + WALL_SEGMENT_SPACING
+    return (
+        settlement.x - half_x,
+        settlement.z - half_z,
+        settlement.x + half_x,
+        settlement.z + half_z,
+    )
 
-    walls: list[WallRun] = []
-    dx, dz = FACINGS[facing]
-    if dz != 0.0:
-        fixed = cz + dz * half_z
-        walls.extend(
-            gated_run(
-                fixed,
-                cx - half_x,
-                cx + half_x,
-                cx,
-                12.0,
-                True,
-                owner,
-                nation,
-                gate_buildings,
+
+def inside_any_ring(
+    boxes: Sequence[tuple[float, float, float, float]], x: float, z: float
+) -> bool:
+    return any(
+        left <= x <= right and top <= z <= bottom for left, top, right, bottom in boxes
+    )
+
+
+def move_entrances_out_of_rings(
+    terrain: Sequence[dict], boxes: Sequence[tuple[float, float, float, float]]
+) -> list[str]:
+    """Keep hill ramps from opening inside somebody's walls.
+
+    Where a hill's flank closes a side of a wall ring, the wall there is left out
+    because the ground is not walkable - but an entrance carves a ramp through
+    exactly that ground. A ramp inside the ring and another outside it is a way
+    in that never passes a gate, and it is invisible to a check that treats hills
+    as solid. Each offending entrance is walked around the hill's edge to the
+    nearest point outside every ring, keeping the hill's approach count.
+    """
+    moved: list[str] = []
+    if not boxes:
+        return moved
+    for feature in terrain:
+        if str(feature.get("type", "")).lower() != "hill":
+            continue
+        entrances = feature.get("entrances") or []
+        if not entrances:
+            continue
+        centre_x = float(feature.get("x", 0.0))
+        centre_z = float(feature.get("z", 0.0))
+        half_width, half_depth = hill_extents(feature)
+        if half_width <= 0.0 or half_depth <= 0.0:
+            continue
+        for entrance in entrances:
+            x = float(entrance.get("x", centre_x))
+            z = float(entrance.get("z", centre_z))
+            if not inside_any_ring(boxes, x, z):
+                continue
+            start = math.atan2((z - centre_z) / half_depth, (x - centre_x) / half_width)
+            best: tuple[float, float] | None = None
+            for step in range(1, 73):
+                for direction in (1.0, -1.0):
+                    angle = start + direction * step * math.pi / 36.0
+                    candidate_x = centre_x + math.cos(angle) * half_width
+                    candidate_z = centre_z + math.sin(angle) * half_depth
+                    if not inside_any_ring(boxes, candidate_x, candidate_z):
+                        best = (candidate_x, candidate_z)
+                        break
+                if best is not None:
+                    break
+            if best is None:
+                continue
+            entrance["x"] = round(best[0], 2)
+            entrance["z"] = round(best[1], 2)
+            moved.append(
+                f"hill {centre_x:.0f},{centre_z:.0f}: ramp moved from "
+                f"{x:.0f},{z:.0f} to {best[0]:.0f},{best[1]:.0f}, out of a wall ring"
             )
-        )
-        walls.append(WallRun((cx - half_x, fixed), (cx - half_x, cz), owner, nation))
-        walls.append(WallRun((cx + half_x, fixed), (cx + half_x, cz), owner, nation))
-    else:
-        fixed = cx + dx * half_x
-        walls.extend(
-            gated_run(
-                fixed,
-                cz - half_z,
-                cz + half_z,
-                cz,
-                12.0,
-                False,
-                owner,
-                nation,
-                gate_buildings,
-            )
-        )
-        walls.append(WallRun((fixed, cz - half_z), (cx, cz - half_z), owner, nation))
-        walls.append(WallRun((fixed, cz + half_z), (cx, cz + half_z), owner, nation))
-    return walls
+    return moved
 
 
 def layout_settlement(
@@ -936,6 +1061,7 @@ def layout_settlement(
     spec: TierSpec,
     mask: TerrainMask | None = None,
     crown: tuple[float, float] | None = None,
+    seal: TerrainMask | None = None,
 ) -> None:
     """Fill in buildings and walls for one settlement."""
     cx, cz = settlement.x, settlement.z
@@ -987,26 +1113,17 @@ def layout_settlement(
                     return candidate_x, candidate_z
         return None
 
+    gateways = settlement.gateways or {
+        settlement.facing: cz if settlement.facing in ("east", "west") else cx,
+        opposite(settlement.facing): (
+            cz if settlement.facing in ("east", "west") else cx
+        ),
+    }
+
     if settlement.walls_only:
-        gate_buildings: list[Building] = []
-        authored_walls = outer_wall_runs(
-            cx,
-            cz,
-            half_x,
-            half_z,
-            settlement.facing,
-            owner,
-            nation,
-            spec.full_ring,
-            gate_buildings,
-            settlement.gateways,
+        settlement.walls, settlement.buildings = build_ring(
+            cx, cz, half_x, half_z, owner, nation, gateways, seal
         )
-        settlement.walls = (
-            clip_walls_to_clear_ground(mask, authored_walls)
-            if mask is not None
-            else authored_walls
-        )
-        settlement.buildings = drop_orphan_gates(gate_buildings, settlement.walls)
         return
 
     barracks_site = nearest_clear(cx, cz - 6.0, "barracks")
@@ -1046,19 +1163,19 @@ def layout_settlement(
         inner_half_z = (spec.inner_half_x - 2.0) * scale
 
         inner_gate = perpendicular(settlement.facing)
-        walls.extend(
-            wall_ring(
-                cx,
-                cz,
-                inner_half_x,
-                inner_half_z,
-                owner,
-                nation,
-                [inner_gate],
-                gate_width=10.0,
-                gate_buildings=buildings,
-            )
+        inner_along = cz if inner_gate in ("east", "west") else cx
+        citadel_walls, citadel_gates = build_ring(
+            cx,
+            cz,
+            inner_half_x,
+            inner_half_z,
+            owner,
+            nation,
+            {inner_gate: inner_along},
+            seal,
         )
+        walls.extend(citadel_walls)
+        buildings.extend(citadel_gates)
         for index in range(spec.inner_towers):
             offset = inner_half_x + 4.0
             sign = 1.0 if index % 2 == 0 else -1.0
@@ -1158,20 +1275,11 @@ def layout_settlement(
         )
 
     if settlement.palisade:
-        walls.extend(
-            outer_wall_runs(
-                cx,
-                cz,
-                half_x,
-                half_z,
-                settlement.facing,
-                owner,
-                nation,
-                spec.full_ring,
-                buildings,
-                settlement.gateways,
-            )
+        outer_walls, outer_gates = build_ring(
+            cx, cz, half_x, half_z, owner, nation, gateways, seal
         )
+        walls.extend(outer_walls)
+        buildings.extend(outer_gates)
 
     corner_inset = 3.0
     corners = [
@@ -1193,49 +1301,8 @@ def layout_settlement(
             Building("defense_tower", corner_site[0], corner_site[1], owner, nation)
         )
 
-    settlement.walls = (
-        clip_walls_to_clear_ground(mask, walls) if mask is not None else walls
-    )
-    settlement.buildings = drop_orphan_gates(buildings, settlement.walls)
-
-
-def drop_orphan_gates(
-    buildings: list[Building], walls: list[WallRun]
-) -> list[Building]:
-    """Remove gateways whose wall was clipped off by terrain.
-
-    A gate only means something as the opening in a wall. When the run beside it
-    is cut away because the ground there is not buildable, what is left is a door
-    standing in open country, so the gate goes with it.
-    """
-    kept: list[Building] = []
-    for building in buildings:
-        if building.type != "wall_gate":
-            kept.append(building)
-            continue
-        spans_x = (building.rotation or 0.0) % 180.0 < 45.0
-        attached = False
-        for run in walls:
-            (ax, az), (bx, bz) = run.start, run.end
-            runs_x = abs(bx - ax) >= abs(bz - az)
-            if runs_x != spans_x:
-                continue
-            if runs_x:
-                if (
-                    abs(building.z - az) < 1.5
-                    and min(ax, bx) - 12.0 <= building.x <= max(ax, bx) + 12.0
-                ):
-                    attached = True
-                    break
-            elif (
-                abs(building.x - ax) < 1.5
-                and min(az, bz) - 12.0 <= building.z <= max(az, bz) + 12.0
-            ):
-                attached = True
-                break
-        if attached:
-            kept.append(building)
-    return kept
+    settlement.walls = walls
+    settlement.buildings = buildings
 
 
 def settlement_footprint(settlement: Settlement) -> tuple[float, float]:
@@ -1251,6 +1318,121 @@ def settlement_footprint(settlement: Settlement) -> tuple[float, float]:
             half_x = max(half_x, abs(point[0] - settlement.x) + 1.0)
             half_z = max(half_z, abs(point[1] - settlement.z) + 1.0)
     return half_x, half_z
+
+
+class OccupancyGrid:
+    """Which cells the runtime's collision registry will call blocked.
+
+    Structures are authored in grid coordinates and loaded into a world whose
+    origin sits at the middle of the map, so a wall's footprint straddles cell
+    boundaries that grid coordinates alone do not show. Reproducing that shift is
+    the only way a gap counted here is a gap a unit can actually walk through.
+    """
+
+    def __init__(self, definition: dict):
+        grid = definition.get("grid") or {}
+        self.shift_x = float(grid.get("width", 0)) * 0.5 - 0.5
+        self.shift_z = float(grid.get("height", 0)) * 0.5 - 0.5
+        self.blocked: dict[tuple[int, int], str] = {}
+
+    def _axis(self, centre: float, shift: float, half: float, padding: float) -> range:
+        world = centre - shift
+        base = int(round(shift + 0.5))
+        low = math.floor(world - half - padding) + base
+        high = math.ceil(world + half + padding) + base
+        return range(low, high)
+
+    def add(
+        self,
+        kind: str,
+        x: float,
+        z: float,
+        size: tuple[float, float],
+        padding: float,
+    ) -> None:
+        for cell_x in self._axis(x, self.shift_x, size[0] * 0.5, padding):
+            for cell_z in self._axis(z, self.shift_z, size[1] * 0.5, padding):
+                self.blocked.setdefault((cell_x, cell_z), kind)
+
+    def add_settlement(self, settlement: Settlement) -> None:
+        for building in settlement.buildings:
+            if building.type == "wall_gate":
+                spans_x = (building.rotation or 0.0) % 180.0 < 45.0
+                size = (GATE_SPAN, 2.0) if spans_x else (2.0, GATE_SPAN)
+                self.add("gate", building.x, building.z, size, 0.0)
+                continue
+            self.add(
+                "building",
+                building.x,
+                building.z,
+                BUILDING_SIZES.get(building.type, (2.0, 2.0)),
+                BUILDING_GRID_PADDING,
+            )
+        for wall in settlement.walls:
+            for point in wall_run_cells(wall):
+                self.add("wall", point[0], point[1], (2.0, 2.0), 0.0)
+
+
+def wall_run_cells(wall: WallRun) -> list[tuple[int, int]]:
+    """The individual wall entities a run spawns, as MapTransformer expands it."""
+    start = (snap_wall_coordinate(wall.start[0]), snap_wall_coordinate(wall.start[1]))
+    end = (snap_wall_coordinate(wall.end[0]), snap_wall_coordinate(wall.end[1]))
+    if abs(end[0] - start[0]) >= abs(end[1] - start[1]):
+        step = WALL_SEGMENT_SPACING if end[0] >= start[0] else -WALL_SEGMENT_SPACING
+        return [(x, start[1]) for x in range(start[0], end[0] + step, step)]
+    step = WALL_SEGMENT_SPACING if end[1] >= start[1] else -WALL_SEGMENT_SPACING
+    return [(start[0], z) for z in range(start[1], end[1] + step, step)]
+
+
+def enclosure_breach(
+    settlement: Settlement,
+    spec: TierSpec,
+    occupancy: OccupancyGrid,
+    seal: TerrainMask,
+) -> tuple[int, int] | None:
+    """Flood the inside of a walled settlement and return where it leaks out.
+
+    A ring is only worth building if an attacker has to come through a gate, so
+    this walks out from the centre over ground that is walkable and unoccupied.
+    Reaching open country past the ring means there is a hole.
+    """
+    from collections import deque
+
+    centre_x = int(round(settlement.x))
+    centre_z = int(round(settlement.z))
+    reach_x = int(spec.outer_half_x * settlement.scale) + 6
+    reach_z = int(spec.outer_half_z * settlement.scale) + 6
+
+    start: tuple[int, int] | None = None
+    for radius in range(0, 10):
+        for offset_z in range(-radius, radius + 1):
+            for offset_x in range(-radius, radius + 1):
+                probe = (centre_x + offset_x, centre_z + offset_z)
+                if probe not in occupancy.blocked and seal.walkable(*probe):
+                    start = probe
+                    break
+            if start is not None:
+                break
+        if start is not None:
+            break
+    if start is None:
+        return None
+
+    seen = {start}
+    pending = deque([start])
+    while pending:
+        x, z = pending.popleft()
+        if abs(x - centre_x) > reach_x or abs(z - centre_z) > reach_z:
+            return (x, z)
+        for step_x, step_z in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            neighbour = (x + step_x, z + step_z)
+            if neighbour in seen or neighbour in occupancy.blocked:
+                continue
+            if not seal.walkable(*neighbour):
+                continue
+            seen.add(neighbour)
+            pending.append(neighbour)
+    return None
 
 
 @dataclass
@@ -1277,6 +1459,7 @@ def validate(
     settlements: Sequence[Settlement],
     max_player_homes: int,
     wall_budget: int,
+    check_enclosure: bool = False,
 ) -> ValidationResult:
     result = ValidationResult()
 
@@ -1329,22 +1512,75 @@ def validate(
             f"{result.wall_entities} wall entities exceeds the {wall_budget} budget"
         )
 
+    if check_enclosure:
+        occupancy = OccupancyGrid(definition)
+        for settlement in settlements:
+            occupancy.add_settlement(settlement)
+        for settlement in settlements:
+            if not settlement.palisade or settlement.seal is None:
+                continue
+            breach = enclosure_breach(
+                settlement, TIER_SPECS[settlement.tier], occupancy, settlement.seal
+            )
+            if breach is not None:
+                result.errors.append(
+                    f"{settlement.id}: wall ring has a hole - a unit walks from the "
+                    f"centre out to {breach[0]},{breach[1]} without passing a gate"
+                )
+
+        boxes = [
+            ring_box(settlement, TIER_SPECS[settlement.tier])
+            for settlement in settlements
+            if settlement.palisade
+        ]
+        for feature in definition.get("terrain") or []:
+            if str(feature.get("type", "")).lower() != "hill":
+                continue
+            for entrance in feature.get("entrances") or []:
+                x = float(entrance.get("x", 0.0))
+                z = float(entrance.get("z", 0.0))
+                if inside_any_ring(boxes, x, z):
+                    result.errors.append(
+                        f"hill at {feature.get('x')},{feature.get('z')} carves a ramp "
+                        f"at {x:.0f},{z:.0f} inside a wall ring, which is a way in "
+                        "that never passes a gate"
+                    )
+
     return result
 
 
-def build_structures(settlements: Sequence[Settlement]) -> list[dict]:
+def build_structures(
+    settlements: Sequence[Settlement], landmarks: Sequence[dict] = ()
+) -> list[dict]:
     """Serialise every settlement, buildings before walls.
 
     The map editor canonicalises structures into point buildings followed by
     line walls, so emitting them in that order keeps an editor round-trip
-    byte-stable (see MapEditorMapDataTest.RealMapRoundTrips...).
+    byte-stable (see MapEditorMapDataTest.RealMapRoundTrips...). Landmark
+    buildings belong to generate-map-landmarks.py; they are carried through
+    untouched, in the point-building half where the editor would put them.
     """
     entries: list[dict] = []
     for settlement in settlements:
         entries.extend(building.to_json() for building in settlement.buildings)
+    entries.extend(landmarks)
     for settlement in settlements:
         entries.extend(wall.to_json() for wall in settlement.walls)
     return entries
+
+
+def serialise_like(path: Path, definition: dict) -> str:
+    """Re-serialise a map in the style it was already written in.
+
+    Maps saved from the editor use four-space indentation with sorted keys;
+    hand-authored ones use two spaces in authored order. Writing everything one
+    way turns a settlement edit into a whole-file diff, which is what made this
+    tool unsafe to run on the maps the editor had touched.
+    """
+    original = path.read_text()
+    sorted_keys = original.startswith('{\n    "')
+    indent = 4 if sorted_keys else 2
+    return json.dumps(definition, indent=indent, sort_keys=sorted_keys) + "\n"
 
 
 def process_map(
@@ -1370,20 +1606,6 @@ def process_map(
     terrain = definition.get("terrain") or []
 
     for settlement in settlements:
-        spec = TIER_SPECS[settlement.tier]
-        if not spec.full_ring:
-            continue
-        settlement.gateways = (
-            road_gateways(
-                definition,
-                settlement,
-                spec.outer_half_x * settlement.scale,
-                spec.outer_half_z * settlement.scale,
-            )
-            or None
-        )
-
-    for settlement in settlements:
 
         if settlement.tier == "town" or settlement.on_hill is False:
             standing_on = hill_containing(terrain, settlement.x, settlement.z)
@@ -1406,8 +1628,9 @@ def process_map(
             )
         normalise_hill_dimensions(hill)
 
-        growth_width = min(max_hill_width, float(hill["width"]) * max_hill_growth)
-        growth_depth = min(max_hill_depth, float(hill["depth"]) * max_hill_growth)
+        growth = max_hill_growth if settlement.grow_hill else 1.0
+        growth_width = min(max_hill_width, float(hill["width"]) * growth)
+        growth_depth = min(max_hill_depth, float(hill["depth"]) * growth)
 
         water_gap = distance_to_water(definition, float(hill["x"]), float(hill["z"]))
         if math.isfinite(water_gap):
@@ -1440,16 +1663,23 @@ def process_map(
             )
         keep_hill_entrances_outside_crown(hill)
         ensure_hill_approaches(hill)
+        clamp_hill_entrances(hill, definition)
         settlement.hill = hill
 
     base_mask = TerrainMask(definition, terrain_clearance)
+    base_seal = TerrainMask(definition, 0.0, influence=1.0)
     for settlement in settlements:
         spec = TIER_SPECS[settlement.tier]
         mask = base_mask
+        settlement.seal = base_seal
         crown: tuple[float, float] | None = None
         if settlement.on_hill:
             mask = TerrainMask(
                 definition, terrain_clearance, exclude_hill=settlement.hill
+            )
+
+            settlement.seal = TerrainMask(
+                definition, 0.0, exclude_hill=settlement.hill, influence=1.0
             )
             crown = usable_crown_extent(
                 float(settlement.hill["width"]),
@@ -1470,9 +1700,24 @@ def process_map(
                     f"{settlement.x:.0f},{settlement.z:.0f} for a settlement"
                 )
             settlement.x, settlement.z = moved
-        layout_settlement(settlement, spec, mask, crown)
+        settlement.gateways = road_gateways(
+            definition,
+            settlement,
+            spec.outer_half_x * settlement.scale,
+            spec.outer_half_z * settlement.scale,
+        )
+        layout_settlement(settlement, spec, mask, crown, settlement.seal)
 
-    result = validate(definition, settlements, max_player_homes, wall_budget)
+    ring_boxes = [
+        ring_box(settlement, TIER_SPECS[settlement.tier])
+        for settlement in settlements
+        if settlement.palisade
+    ]
+    moved_ramps = move_entrances_out_of_rings(terrain, ring_boxes)
+
+    result = validate(
+        definition, settlements, max_player_homes, wall_budget, check_enclosure=True
+    )
 
     label = "VALIDATE" if validate_only else "GENERATE"
     status = "PASS" if result.passed() else "FAIL"
@@ -1480,6 +1725,8 @@ def process_map(
         f"{path} [{label}] {status}: settlements={len(settlements)}, "
         f"buildings={result.buildings}, wall_entities={result.wall_entities}"
     )
+    for note in moved_ramps:
+        print(f"  moved: {note}")
     for warning in result.warnings:
         print(f"  WARNING: {warning}")
     for error in result.errors:
@@ -1489,8 +1736,15 @@ def process_map(
         return False
 
     if write and not validate_only:
-        definition["structures"] = build_structures(settlements)
-        path.write_text(json.dumps(definition, indent=2) + "\n")
+        definition["structures"] = build_structures(
+            settlements,
+            [
+                entry
+                for entry in definition.get("structures") or []
+                if entry.get("landmark") is not None
+            ],
+        )
+        path.write_text(serialise_like(path, definition))
         print(f"  wrote {len(definition['structures'])} structure entries")
 
     return True

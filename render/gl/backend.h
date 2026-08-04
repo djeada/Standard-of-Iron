@@ -92,6 +92,9 @@ public:
   [[nodiscard]] auto ambient_strength() const noexcept -> float {
     return m_ambient_strength;
   }
+  [[nodiscard]] auto viewport_height() const noexcept -> int {
+    return m_viewport_height;
+  }
   [[nodiscard]] auto last_playback_stats() const noexcept -> const PlaybackStats& {
     return m_last_playback_stats;
   }
