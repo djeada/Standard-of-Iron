@@ -52,7 +52,7 @@ void EntityRendererRegistry::register_renderer(const std::string& type,
   m_lookup.emplace(type, handle);
 }
 
-auto EntityRendererRegistry::get(const std::string& type) const -> RenderFunc {
+auto EntityRendererRegistry::get(std::string_view type) const -> RenderFunc {
   if (const auto handle = get_handle(type); handle != k_invalid_renderer_handle) {
     return m_renderers[handle];
   }
@@ -66,8 +66,7 @@ auto EntityRendererRegistry::get(RendererHandle handle) const -> const RenderFun
   return &m_renderers[handle];
 }
 
-auto EntityRendererRegistry::get_handle(const std::string& type) const
-    -> RendererHandle {
+auto EntityRendererRegistry::get_handle(std::string_view type) const -> RendererHandle {
   auto it = m_lookup.find(type);
   if (it == m_lookup.end()) {
     return k_invalid_renderer_handle;
