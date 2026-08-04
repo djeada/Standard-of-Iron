@@ -1,9 +1,8 @@
 #pragma once
 
-#include <QMatrix4x4>
-#include <QVector3D>
 #include <QtGui/qopengl.h>
 
+#include <cstddef>
 #include <vector>
 
 #include "../shader.h"
@@ -17,11 +16,11 @@ struct RainBatchParams;
 
 namespace BackendPipelines {
 
-struct RainDropData {
-  QVector3D position;
-  float speed;
-  float length;
-  float alpha;
+struct WeatherParticleGpu {
+
+  float seed[4];
+
+  float props[4];
 };
 
 class RainPipeline final : public IPipeline {
@@ -38,43 +37,45 @@ public:
 
   void render(const Camera& cam, const RainBatchParams& params);
 
-  void set_intensity(float intensity) { m_intensity = intensity; }
-  void set_wind(const QVector3D& wind) { m_wind_direction = wind; }
+  static constexpr std::size_t k_max_particles = 16384;
 
 private:
-  auto create_rain_geometry() -> bool;
+  auto create_geometry() -> bool;
   void shutdown_geometry();
-  void generate_rain_drops();
+  void generate_particles();
 
   GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_rain_shader = nullptr;
 
   GLuint m_vao = 0;
-  GLuint m_vertex_buffer = 0;
+  GLuint m_quad_buffer = 0;
   GLuint m_index_buffer = 0;
-  GLsizei m_index_count = 0;
+  GLuint m_instance_buffer = 0;
 
-  float m_intensity = 0.0F;
-  QVector3D m_wind_direction{0.1F, 0.0F, 0.0F};
-
-  std::vector<RainDropData> m_rain_drops;
-  static constexpr std::size_t k_max_drops = 3000;
-  static constexpr float k_drop_speed = 20.0F;
-  static constexpr float k_drop_length = 1.2F;
-  static constexpr float k_area_radius = 50.0F;
-  static constexpr float k_area_height = 30.0F;
+  std::vector<WeatherParticleGpu> m_particles;
 
   struct RainUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_right{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_up{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle intensity{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle rain_color{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle wind{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle weather_type{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle density{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rank_step{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle weather_type{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fall_speed{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle streak_half_length{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle particle_half_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle field{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle pixel_scale{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle speed_range{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle size_range{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle alpha_range{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rain_color{GL::Shader::InvalidUniform};
   };
 
   RainUniforms m_uniforms;

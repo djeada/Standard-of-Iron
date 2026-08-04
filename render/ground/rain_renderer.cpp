@@ -69,7 +69,12 @@ void RainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  const float delta_time = 0.016F;
+  const float now = renderer.get_animation_time();
+  const float delta_time = m_last_submit_time < 0.0F
+                               ? 0.0F
+                               : std::clamp(now - m_last_submit_time, 0.0F, 0.5F);
+  m_last_submit_time = now;
+
   if (m_intensity < m_target_intensity) {
     m_intensity =
         std::min(m_target_intensity, m_intensity + delta_time * k_intensity_lerp_speed);
@@ -82,7 +87,7 @@ void RainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  m_params.time = renderer.get_animation_time();
+  m_params.time = now;
   m_params.intensity = m_intensity;
   m_params.density = weather_particle_density(
       {.intensity = m_intensity,
@@ -100,6 +105,7 @@ void RainRenderer::clear() {
   m_intensity = 0.0F;
   m_target_intensity = 0.0F;
   m_params.density = 0.0F;
+  m_last_submit_time = -1.0F;
 }
 
 } // namespace Render::GL

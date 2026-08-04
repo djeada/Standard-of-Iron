@@ -10,23 +10,17 @@
 
 namespace Render::GL {
 
-struct RainDropInstanceGpu {
-  QVector4D pos_velocity;
-  QVector4D size_alpha;
-};
-
 struct RainBatchParams {
-  static constexpr float k_default_rain_drop_speed = 20.0F;
-  static constexpr float k_default_rain_drop_length = 1.2F;
-  static constexpr float k_default_rain_drop_width = 0.025F;
 
-  static constexpr float k_default_snow_drop_speed = 0.1F;
-  static constexpr float k_default_snow_drop_size = 0.08F;
+  static constexpr float k_default_rain_drop_speed = 22.0F;
 
-  static constexpr float k_rain_speed_variation_min = 0.8F;
-  static constexpr float k_rain_speed_variation_range = 0.4F;
-  static constexpr float k_snow_speed_variation_min = 0.6F;
-  static constexpr float k_snow_speed_variation_range = 0.8F;
+  static constexpr float k_default_rain_drop_length = 0.34F;
+
+  static constexpr float k_default_rain_drop_width = 0.018F;
+
+  static constexpr float k_default_snow_drop_speed = 1.8F;
+
+  static constexpr float k_default_snow_drop_size = 0.09F;
 
   Game::Map::WeatherType weather_type = Game::Map::WeatherType::Rain;
   float time = 0.0F;

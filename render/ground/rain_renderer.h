@@ -50,6 +50,7 @@ private:
   float m_world_height = 100.0F;
   float m_intensity = 0.0F;
   float m_target_intensity = 0.0F;
+  float m_last_submit_time = -1.0F;
   std::uint32_t m_seed = 12345U;
 
   QVector3D m_camera_position{0.0F, 0.0F, 0.0F};

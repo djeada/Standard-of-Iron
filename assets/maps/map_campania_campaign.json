@@ -87,8 +87,8 @@
           "z": 255.88
         },
         {
-          "x": 307.05,
-          "z": 255.88
+          "x": 258.8,
+          "z": 231.53
         },
         {
           "x": 255.88,
@@ -129,8 +129,8 @@
       "height": 2.5,
       "entrances": [
         {
-          "x": 362.88,
-          "z": 288.44
+          "x": 392.02,
+          "z": 285.01
         },
         {
           "x": 418.71,
@@ -200,8 +200,8 @@
           "z": 144.22
         },
         {
-          "x": 432.67,
-          "z": 144.22
+          "x": 431.57,
+          "z": 157.01
         },
         {
           "x": 409.41,
@@ -321,8 +321,8 @@
       "height": 2.2,
       "entrances": [
         {
-          "x": 144.22,
-          "z": 60.48
+          "x": 148.43,
+          "z": 47.14
         },
         {
           "x": 190.75,
@@ -376,8 +376,8 @@
           "z": 62.81
         },
         {
-          "x": 483.84,
-          "z": 123.29
+          "x": 513.05,
+          "z": 115.9
         }
       ]
     },
@@ -438,6 +438,41 @@
           "z": 586.19
         }
       ]
+    },
+    {
+      "type": "forest",
+      "x": 300.0,
+      "z": 100.0,
+      "radius": 28.0,
+      "landmark": "campania_north_screen"
+    },
+    {
+      "type": "forest",
+      "x": 520.0,
+      "z": 400.0,
+      "radius": 30.0,
+      "landmark": "campania_east_screen"
+    },
+    {
+      "type": "forest",
+      "x": 40.0,
+      "z": 180.0,
+      "radius": 24.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "forest",
+      "x": 95.17,
+      "z": 217.17,
+      "radius": 26.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "forest",
+      "x": 600.0,
+      "z": 180.0,
+      "radius": 24.0,
+      "landmark": "campania_burnt_villas"
     }
   ],
   "rivers": [
@@ -2948,6 +2983,102 @@
       "x": 353.58,
       "z": 451.28,
       "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 241.17,
+      "z": 54.83,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 240.0,
+      "z": 57.66,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 233.17,
+      "z": 54.83,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 149.17,
+      "z": 211.17,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 149.17,
+      "z": 215.17,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 149.17,
+      "z": 219.17,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 151.17,
+      "z": 223.17,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 153.17,
+      "z": 215.17,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 153.17,
+      "z": 219.17,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 154.0,
+      "z": 396.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 154.0,
+      "z": 400.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 154.0,
+      "z": 404.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "campania_coast_watch"
     }
   ],
   "world_props": [
@@ -4062,6 +4193,394 @@
       "z": 512.75,
       "scale": 1.08,
       "rotation": 51.7
+    },
+    {
+      "type": "statue",
+      "x": 236.87,
+      "z": 54.83,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 242.67,
+      "z": 51.83,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 231.67,
+      "z": 60.83,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 242.67,
+      "z": 60.83,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 230.17,
+      "z": 33.83,
+      "scale": 1.1,
+      "rotation": 270.0,
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 243.17,
+      "z": 31.83,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 236.17,
+      "z": 28.83,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "campania_north_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 237.17,
+      "z": 48.83,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_north_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 40.0,
+      "z": 222.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 47.0,
+      "z": 215.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 32.0,
+      "z": 213.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 26.47,
+      "z": 228.7,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 52.0,
+      "z": 223.0,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 36.0,
+      "z": 207.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 44.0,
+      "z": 232.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 24.0,
+      "z": 218.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "campania_west_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 148.17,
+      "z": 222.67,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 146.17,
+      "z": 211.67,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 155.17,
+      "z": 222.67,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 151.48,
+      "z": 210.14,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 128.17,
+      "z": 224.17,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 126.17,
+      "z": 211.17,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 123.17,
+      "z": 218.17,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_appian_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 143.17,
+      "z": 217.17,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "campania_appian_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "statue",
+      "x": 205.8,
+      "z": 361.55,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "campania_vesuvian_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 202.17,
+      "z": 349.17,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "campania_vesuvian_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 195.0,
+      "z": 352.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "campania_vesuvian_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 205.0,
+      "z": 367.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "campania_vesuvian_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 194.0,
+      "z": 368.0,
+      "scale": 0.85,
+      "rotation": 270.0,
+      "landmark": "campania_vesuvian_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 201.0,
+      "z": 373.0,
+      "scale": 1.15,
+      "rotation": 90.0,
+      "landmark": "campania_vesuvian_shrine"
+    },
+    {
+      "type": "firecamp",
+      "x": 200.0,
+      "z": 346.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_vesuvian_shrine",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 600.0,
+      "z": 134.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 593.0,
+      "z": 141.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 609.55,
+      "z": 152.8,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 612.0,
+      "z": 135.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "ruins",
+      "x": 588.0,
+      "z": 137.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "ruins",
+      "x": 604.0,
+      "z": 153.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "dead_tree",
+      "x": 596.0,
+      "z": 128.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "dead_tree",
+      "x": 616.0,
+      "z": 142.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "campania_burnt_villas"
+    },
+    {
+      "type": "statue",
+      "x": 136.0,
+      "z": 400.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "tent",
+      "x": 146.0,
+      "z": 405.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "tent",
+      "x": 147.0,
+      "z": 396.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "tent",
+      "x": 152.0,
+      "z": 402.0,
+      "scale": 0.95,
+      "rotation": 180.0,
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "supply_cart",
+      "x": 143.0,
+      "z": 392.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 142.0,
+      "z": 408.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "campania_coast_watch"
+    },
+    {
+      "type": "firecamp",
+      "x": 148.0,
+      "z": 400.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "campania_coast_watch",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 128.0,
+      "z": 394.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "campania_coast_watch"
     }
   ],
   "victory": {
@@ -4129,8 +4648,8 @@
     },
     {
       "type": "wall_gate",
-      "x": 322.0,
-      "z": 233.0,
+      "x": 322,
+      "z": 234,
       "player_id": 1,
       "rotation": 0.0,
       "nation": "carthage"
@@ -4221,16 +4740,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 264.0,
-      "z": 204.42,
+      "x": 264,
+      "z": 204,
       "player_id": 1,
       "rotation": 90.0,
       "nation": "carthage"
     },
     {
       "type": "wall_gate",
-      "x": 380.0,
-      "z": 253.96,
+      "x": 380,
+      "z": 254,
       "player_id": 1,
       "rotation": 90.0,
       "nation": "carthage"
@@ -4504,16 +5023,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 70.0,
-      "z": 37.97,
+      "x": 108,
+      "z": 94,
       "player_id": 2,
-      "rotation": 90.0,
+      "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 146.0,
-      "z": 37.97,
+      "x": 146,
+      "z": 38,
       "player_id": 2,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -4773,16 +5292,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 495.44,
-      "z": 170.0,
+      "x": 496,
+      "z": 170,
       "player_id": 2,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 510.0,
-      "z": 140.59,
+      "x": 510,
+      "z": 140,
       "player_id": 2,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -5007,18 +5526,18 @@
     },
     {
       "type": "wall_gate",
-      "x": 56.36,
-      "z": 430.0,
+      "x": 56,
+      "z": 494,
       "player_id": 3,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 56.36,
-      "z": 494.0,
+      "x": 110,
+      "z": 462,
       "player_id": 3,
-      "rotation": 0.0,
+      "rotation": 90.0,
       "nation": "roman_republic"
     },
     {
@@ -5192,10 +5711,18 @@
     },
     {
       "type": "wall_gate",
-      "x": 392.0,
-      "z": 506.0,
+      "x": 384,
+      "z": 506,
       "player_id": 3,
       "rotation": 0.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_gate",
+      "x": 418,
+      "z": 528,
+      "player_id": 3,
+      "rotation": 90.0,
       "nation": "roman_republic"
     },
     {
@@ -5453,16 +5980,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 528.0,
-      "z": 293.33,
+      "x": 528,
+      "z": 294,
       "player_id": 4,
       "rotation": 90.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 604.0,
-      "z": 300.0,
+      "x": 604,
+      "z": 300,
       "player_id": 4,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -5496,14 +6023,30 @@
       "nation": "roman_republic"
     },
     {
+      "type": "temple",
+      "x": 237.17,
+      "z": 42.83,
+      "player_id": 2,
+      "landmark": "campania_north_sanctuary",
+      "nation": "roman_republic"
+    },
+    {
+      "type": "temple",
+      "x": 137.17,
+      "z": 217.17,
+      "player_id": 2,
+      "landmark": "campania_appian_sanctuary",
+      "nation": "roman_republic"
+    },
+    {
       "type": "wall_segment",
       "start": [
-        305.0,
-        233.0
+        306,
+        234
       ],
       "end": [
-        319.0,
-        233.0
+        318,
+        234
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5512,12 +6055,12 @@
     {
       "type": "wall_segment",
       "start": [
-        325.0,
-        233.0
+        326,
+        234
       ],
       "end": [
-        339.0,
-        233.0
+        340,
+        234
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5526,12 +6069,12 @@
     {
       "type": "wall_segment",
       "start": [
-        313.0,
-        263.0
+        306,
+        264
       ],
       "end": [
-        339.0,
-        263.0
+        340,
+        264
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5540,12 +6083,12 @@
     {
       "type": "wall_segment",
       "start": [
-        305.0,
-        233.0
+        306,
+        236
       ],
       "end": [
-        305.0,
-        245.0
+        306,
+        262
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5554,12 +6097,12 @@
     {
       "type": "wall_segment",
       "start": [
-        339.0,
-        233.0
+        340,
+        236
       ],
       "end": [
-        339.0,
-        263.0
+        340,
+        262
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5568,12 +6111,12 @@
     {
       "type": "wall_segment",
       "start": [
-        264.0,
-        198.0
+        264,
+        198
       ],
       "end": [
-        380.0,
-        198.0
+        380,
+        198
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5582,12 +6125,12 @@
     {
       "type": "wall_segment",
       "start": [
-        296.0,
-        298.0
+        264,
+        298
       ],
       "end": [
-        380.0,
-        298.0
+        380,
+        298
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5596,12 +6139,12 @@
     {
       "type": "wall_segment",
       "start": [
-        264.0,
-        198.0
+        264,
+        200
       ],
       "end": [
-        264.0,
-        201.42
+        264,
+        200
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5610,12 +6153,12 @@
     {
       "type": "wall_segment",
       "start": [
-        264.0,
-        207.42
+        264,
+        208
       ],
       "end": [
-        264.0,
-        221.21
+        264,
+        232
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5624,12 +6167,12 @@
     {
       "type": "wall_segment",
       "start": [
-        380.0,
-        198.0
+        264,
+        294
       ],
       "end": [
-        380.0,
-        250.96
+        264,
+        296
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5638,12 +6181,12 @@
     {
       "type": "wall_segment",
       "start": [
-        380.0,
-        256.96
+        380,
+        200
       ],
       "end": [
-        380.0,
-        298.0
+        380,
+        250
       ],
       "player_id": 1,
       "width": 2.0,
@@ -5652,12 +6195,26 @@
     {
       "type": "wall_segment",
       "start": [
-        70.0,
-        30.0
+        380,
+        258
       ],
       "end": [
-        146.0,
-        30.0
+        380,
+        296
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        70,
+        30
+      ],
+      "end": [
+        146,
+        30
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5666,12 +6223,12 @@
     {
       "type": "wall_segment",
       "start": [
-        70.0,
-        94.0
+        70,
+        94
       ],
       "end": [
-        146.0,
-        94.0
+        104,
+        94
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5680,12 +6237,12 @@
     {
       "type": "wall_segment",
       "start": [
-        70.0,
-        30.0
+        112,
+        94
       ],
       "end": [
-        70.0,
-        34.97
+        146,
+        94
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5694,12 +6251,12 @@
     {
       "type": "wall_segment",
       "start": [
-        70.0,
-        40.97
+        70,
+        32
       ],
       "end": [
-        70.0,
-        94.0
+        70,
+        92
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5708,12 +6265,12 @@
     {
       "type": "wall_segment",
       "start": [
-        146.0,
-        30.0
+        146,
+        32
       ],
       "end": [
-        146.0,
-        33.32
+        146,
+        34
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5722,12 +6279,12 @@
     {
       "type": "wall_segment",
       "start": [
-        146.0,
-        88.11
+        146,
+        42
       ],
       "end": [
-        146.0,
-        94.0
+        146,
+        50
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5736,12 +6293,12 @@
     {
       "type": "wall_segment",
       "start": [
-        434.0,
-        106.0
+        146,
+        70
       ],
       "end": [
-        500.0,
-        106.0
+        146,
+        92
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5750,12 +6307,12 @@
     {
       "type": "wall_segment",
       "start": [
-        435.95,
-        170.0
+        434,
+        106
       ],
       "end": [
-        492.44,
-        170.0
+        510,
+        106
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5764,12 +6321,12 @@
     {
       "type": "wall_segment",
       "start": [
-        498.44,
-        170.0
+        434,
+        170
       ],
       "end": [
-        510.0,
-        170.0
+        492,
+        170
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5778,12 +6335,12 @@
     {
       "type": "wall_segment",
       "start": [
-        434.0,
-        106.0
+        500,
+        170
       ],
       "end": [
-        434.0,
-        116.0
+        510,
+        170
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5792,12 +6349,12 @@
     {
       "type": "wall_segment",
       "start": [
-        510.0,
-        131.67
+        434,
+        108
       ],
       "end": [
-        510.0,
-        137.59
+        434,
+        136
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5806,12 +6363,12 @@
     {
       "type": "wall_segment",
       "start": [
-        510.0,
-        143.59
+        434,
+        152
       ],
       "end": [
-        510.0,
-        170.0
+        434,
+        168
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5820,12 +6377,40 @@
     {
       "type": "wall_segment",
       "start": [
-        34.0,
-        430.0
+        510,
+        108
       ],
       "end": [
-        53.36,
-        430.0
+        510,
+        136
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        510,
+        144
+      ],
+      "end": [
+        510,
+        168
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        34,
+        430
+      ],
+      "end": [
+        92,
+        430
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5834,12 +6419,12 @@
     {
       "type": "wall_segment",
       "start": [
-        59.36,
-        430.0
+        104,
+        430
       ],
       "end": [
-        84.68,
-        430.0
+        110,
+        430
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5848,12 +6433,12 @@
     {
       "type": "wall_segment",
       "start": [
-        63.25,
-        494.0
+        52,
+        494
       ],
       "end": [
-        110.0,
-        494.0
+        52,
+        494
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5862,12 +6447,12 @@
     {
       "type": "wall_segment",
       "start": [
-        34.0,
-        430.0
+        60,
+        494
       ],
       "end": [
-        34.0,
-        446.0
+        110,
+        494
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5876,12 +6461,12 @@
     {
       "type": "wall_segment",
       "start": [
-        110.0,
-        454.0
+        34,
+        432
       ],
       "end": [
-        110.0,
-        494.0
+        34,
+        458
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5890,12 +6475,12 @@
     {
       "type": "wall_segment",
       "start": [
-        366.0,
-        506.0
+        110,
+        432
       ],
       "end": [
-        389.0,
-        506.0
+        110,
+        436
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5904,12 +6489,12 @@
     {
       "type": "wall_segment",
       "start": [
-        395.0,
-        506.0
+        110,
+        448
       ],
       "end": [
-        418.0,
-        506.0
+        110,
+        458
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5918,12 +6503,12 @@
     {
       "type": "wall_segment",
       "start": [
-        366.0,
-        506.0
+        110,
+        466
       ],
       "end": [
-        366.0,
-        528.0
+        110,
+        492
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5932,12 +6517,12 @@
     {
       "type": "wall_segment",
       "start": [
-        418.0,
-        506.0
+        366,
+        506
       ],
       "end": [
-        418.0,
-        528.0
+        380,
+        506
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5946,12 +6531,82 @@
     {
       "type": "wall_segment",
       "start": [
-        528.0,
-        268.0
+        388,
+        506
       ],
       "end": [
-        604.0,
-        268.0
+        418,
+        506
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        366,
+        550
+      ],
+      "end": [
+        418,
+        550
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        366,
+        508
+      ],
+      "end": [
+        366,
+        548
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        418,
+        508
+      ],
+      "end": [
+        418,
+        524
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        418,
+        532
+      ],
+      "end": [
+        418,
+        548
+      ],
+      "player_id": 3,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        528,
+        268
+      ],
+      "end": [
+        604,
+        268
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5960,12 +6615,12 @@
     {
       "type": "wall_segment",
       "start": [
-        528.0,
-        332.0
+        528,
+        332
       ],
       "end": [
-        604.0,
-        332.0
+        604,
+        332
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5974,12 +6629,12 @@
     {
       "type": "wall_segment",
       "start": [
-        528.0,
-        268.0
+        528,
+        270
       ],
       "end": [
-        528.0,
-        290.33
+        528,
+        290
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5988,12 +6643,12 @@
     {
       "type": "wall_segment",
       "start": [
-        528.0,
-        296.33
+        528,
+        298
       ],
       "end": [
-        528.0,
-        332.0
+        528,
+        330
       ],
       "player_id": 4,
       "width": 2.0,
@@ -6002,12 +6657,12 @@
     {
       "type": "wall_segment",
       "start": [
-        604.0,
-        268.0
+        604,
+        270
       ],
       "end": [
-        604.0,
-        297.0
+        604,
+        296
       ],
       "player_id": 4,
       "width": 2.0,
@@ -6016,12 +6671,12 @@
     {
       "type": "wall_segment",
       "start": [
-        604.0,
-        303.0
+        604,
+        304
       ],
       "end": [
-        604.0,
-        332.0
+        604,
+        330
       ],
       "player_id": 4,
       "width": 2.0,
@@ -6093,5 +6748,103 @@
   ],
   "rain": {
     "enabled": false
-  }
+  },
+  "landmarks": [
+    {
+      "id": "campania_north_sanctuary",
+      "kind": "sanctuary",
+      "x": 240,
+      "z": 40,
+      "facing": "south",
+      "nation": "roman_republic",
+      "player_id": 2,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "campania_west_hamlet",
+      "kind": "hamlet",
+      "x": 40,
+      "z": 220,
+      "facing": "east",
+      "forest": {
+        "radius": 24,
+        "bearing": "north"
+      }
+    },
+    {
+      "id": "campania_appian_sanctuary",
+      "kind": "sanctuary",
+      "x": 140,
+      "z": 220,
+      "facing": "east",
+      "nation": "roman_republic",
+      "player_id": 2,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 4
+        },
+        {
+          "type": "archer",
+          "count": 2
+        }
+      ],
+      "forest": {
+        "radius": 26,
+        "bearing": "west"
+      }
+    },
+    {
+      "id": "campania_vesuvian_shrine",
+      "kind": "shrine",
+      "x": 200,
+      "z": 360,
+      "facing": "north"
+    },
+    {
+      "id": "campania_burnt_villas",
+      "kind": "hamlet",
+      "x": 600,
+      "z": 140,
+      "facing": "west",
+      "forest": {
+        "radius": 24,
+        "bearing": "south"
+      }
+    },
+    {
+      "id": "campania_coast_watch",
+      "kind": "watch",
+      "x": 140,
+      "z": 400,
+      "facing": "east",
+      "nation": "roman_republic",
+      "player_id": 3,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "groves": [
+    {
+      "id": "campania_north_screen",
+      "x": 300,
+      "z": 100,
+      "radius": 28
+    },
+    {
+      "id": "campania_east_screen",
+      "x": 520,
+      "z": 400,
+      "radius": 30
+    }
+  ]
 }
