@@ -31,11 +31,17 @@ struct AimHit {
 struct BowShot {
   QVector3D start{0.0F, 0.0F, 0.0F};
   QVector3D end{0.0F, 0.0F, 0.0F};
+
+  QVector3D impact{0.0F, 0.0F, 0.0F};
   AimHit hit;
   bool hit_body{false};
 };
 
 inline constexpr float k_aim_body_height = 1.80F;
+
+inline constexpr float k_bow_hand_height = 1.34F;
+inline constexpr float k_bow_hand_forward = 0.34F;
+inline constexpr float k_bow_hand_lateral = 0.26F;
 
 struct FpvAimInput {
   float view_yaw_degrees{0.0F};
@@ -46,6 +52,11 @@ struct FpvAimInput {
 
   QVector3D camera_origin;
   bool camera_origin_valid{false};
+
+  QVector3D camera_forward{0.0F, 0.0F, 1.0F};
+  bool camera_forward_valid{false};
+
+  float camera_fov_degrees{68.0F};
 };
 
 [[nodiscard]] auto default_weapon_stance(const Engine::Core::Entity& commander)
@@ -64,10 +75,9 @@ crosshair_ray(const Engine::Core::Entity& commander,
 bow_muzzle(const Engine::Core::Entity& commander,
            const Engine::Core::RpgCommanderAimComponent& aim) -> QVector3D;
 
-[[nodiscard]] auto commander_aim_ray(Engine::Core::World& world,
-                                     Engine::Core::Entity& commander,
-                                     const Engine::Core::RpgCommanderAimComponent& aim,
-                                     float max_range) -> AimRay;
+[[nodiscard]] auto
+commander_aim_ray(const Engine::Core::Entity& commander,
+                  const Engine::Core::RpgCommanderAimComponent& aim) -> AimRay;
 
 [[nodiscard]] auto raycast_enemy_bodies(Engine::Core::World& world,
                                         Engine::Core::Entity& commander,
@@ -80,7 +90,8 @@ scatter_ray(const AimRay& ray, float spread_degrees, std::uint32_t seed) -> AimR
 
 [[nodiscard]] auto resolve_bow_shot(Engine::Core::World& world,
                                     Engine::Core::Entity& commander,
-                                    const AimRay& ray,
+                                    const Engine::Core::RpgCommanderAimComponent& aim,
+                                    const AimRay& sight,
                                     float max_range) -> BowShot;
 
 } // namespace Game::Systems::RpgCombat

@@ -130,6 +130,7 @@ private:
                      Engine::Core::Entity& commander,
                      Render::GL::Camera& camera,
                      float dt);
+  [[nodiscard]] auto look_sensitivity_scale() const -> float;
   void update_lock_on_yaw(Engine::Core::World& world,
                           Engine::Core::Entity& commander,
                           float dt);
@@ -156,6 +157,9 @@ private:
   QVector3D m_cam_target_smooth{};
   bool m_cam_smooth_valid = false;
 
+  QVector3D m_cam_forward{0.0F, 0.0F, 1.0F};
+  bool m_cam_forward_valid = false;
+
   float m_cam_ground_y = 0.0F;
   bool m_cam_ground_valid = false;
 
@@ -173,6 +177,7 @@ private:
 
   float m_aim_camera_blend = 0.0F;
   float m_hit_impact_kick = 0.0F;
+  std::uint32_t m_observed_hit_confirm_sequence = 0;
   std::uint8_t m_observed_action_hit_count = 0;
   float m_jump_timer = 0.0F;
   bool m_jump_safe_position_valid = false;

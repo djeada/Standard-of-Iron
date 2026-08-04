@@ -185,6 +185,15 @@
         <file>assets/audio/sfx/combat/battlefield_crowd_chaos.ogg</file>
         <file>assets/audio/sfx/combat/battlefield_distant_mass_01.ogg</file>
         <file>assets/audio/sfx/combat/battlefield_distant_mass_02.ogg</file>
+        <file>assets/audio/sfx/combat/bow_draw_creak.ogg</file>
+        <file>assets/audio/sfx/combat/bow_draw_creak_v2.ogg</file>
+        <file>assets/audio/sfx/combat/bow_full_draw_seat.ogg</file>
+        <file>assets/audio/sfx/combat/bow_full_draw_seat_v2.ogg</file>
+        <file>assets/audio/sfx/combat/bow_hold_strain.ogg</file>
+        <file>assets/audio/sfx/combat/bow_hold_strain_v2.ogg</file>
+        <file>assets/audio/sfx/combat/bow_loose_heavy.ogg</file>
+        <file>assets/audio/sfx/combat/bow_loose_heavy_v2.ogg</file>
+        <file>assets/audio/sfx/combat/bow_loose_heavy_v3.ogg</file>
         <file>assets/audio/sfx/combat/bow_release_single.ogg</file>
         <file>assets/audio/sfx/combat/bow_release_single_v2.ogg</file>
         <file>assets/audio/sfx/combat/bow_release_single_v3.ogg</file>

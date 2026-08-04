@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <string>
 
 #include "animation/showcase_pose_manifest.h"
@@ -3327,6 +3328,24 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       m_rpg_commander_controller->set_view_pitch(pitch_degrees);
     }
   };
+  host.aim_rpg_view_at = [this](Engine::Core::EntityID entity_id,
+                                const QVector3D& world_point) {
+    if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id ||
+        m_camera == nullptr) {
+      return;
+    }
+
+    QVector3D direction = world_point - m_camera->get_position();
+    if (direction.lengthSquared() <= 1.0e-6F) {
+      return;
+    }
+    direction.normalize();
+    constexpr float k_radians_to_degrees = 180.0F / std::numbers::pi_v<float>;
+    m_rpg_commander_controller->set_view_yaw(std::atan2(direction.x(), direction.z()) *
+                                             k_radians_to_degrees);
+    m_rpg_commander_controller->set_view_pitch(
+        std::asin(std::clamp(direction.y(), -1.0F, 1.0F)) * k_radians_to_degrees);
+  };
   host.request_rpg_dodge = [this](Engine::Core::EntityID entity_id,
                                   const QVector3D& world_direction) {
     if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {
@@ -3571,6 +3590,80 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   if (m_rpg_telegraphs != nullptr) {
     m_rpg_telegraphs->clear();
   }
+
+  m_rpg_initial_enemy_units = 0;
+  for (auto* candidate : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+    auto const* candidate_unit =
+        candidate != nullptr ? candidate->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+    if (candidate_unit != nullptr && candidate_unit->owner_id != unit->owner_id &&
+        candidate_unit->health > 0) {
+      ++m_rpg_initial_enemy_units;
+    }
+  }
+}
+
+auto ArenaViewport::rpg_bow_hud_state() const -> ArenaViewport::RpgBowHudState {
+  RpgBowHudState state;
+  if (m_world == nullptr || m_rpg_commander_id == 0) {
+    return state;
+  }
+  auto* commander = m_world->get_entity(m_rpg_commander_id);
+  if (commander == nullptr) {
+    return state;
+  }
+  auto const* unit = commander->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return state;
+  }
+  state.valid = true;
+
+  if (auto const* aim =
+          commander->get_component<Engine::Core::RpgCommanderAimComponent>()) {
+    state.bow_stance = aim->stance == Engine::Core::FpvWeaponStance::Bow;
+    state.drawing = aim->is_drawing();
+    state.full_draw = aim->draw_stage == Engine::Core::BowDrawStage::FullDraw;
+    state.strained = aim->full_draw_hold >=
+                     Engine::Core::RpgCommanderAimComponent::k_steady_hold_seconds;
+    state.draw_progress = std::clamp(aim->draw_progress, 0.0F, 1.0F);
+    state.spread_degrees = aim->spread_degrees;
+    state.fov_degrees = aim->camera_fov_degrees;
+  }
+  if (auto const* action =
+          commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
+    if (action->action_running && action->action_duration > 0.0F && !state.drawing) {
+      state.recovery_ratio = std::clamp(
+          1.0F - (action->action_elapsed_time / action->action_duration), 0.0F, 1.0F);
+    }
+  }
+  if (auto const* targets =
+          commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
+    state.target_in_reticle =
+        targets->aim_candidate_in_range && targets->aim_candidate_id != 0;
+    state.hit_confirm = std::clamp(targets->recent_hit_timer / 0.28F, 0.0F, 1.0F);
+  }
+  if (auto const* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
+      rpg != nullptr && rpg->rpg_max_hp > 0) {
+    state.health_ratio =
+        static_cast<float>(rpg->rpg_hp) / static_cast<float>(rpg->rpg_max_hp);
+  }
+  if (auto const* stamina =
+          commander->get_component<Engine::Core::StaminaComponent>()) {
+    state.stamina_ratio = stamina->get_stamina_ratio();
+  }
+
+  int alive_enemies = 0;
+  for (auto* candidate : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+    auto const* candidate_unit =
+        candidate != nullptr ? candidate->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+    if (candidate_unit != nullptr && candidate_unit->owner_id != unit->owner_id &&
+        candidate_unit->health > 0) {
+      ++alive_enemies;
+    }
+  }
+  state.takedowns = std::max(0, m_rpg_initial_enemy_units - alive_enemies);
+  return state;
 }
 
 void ArenaViewport::update_rpg_scenario_controller(float simulation_dt) {

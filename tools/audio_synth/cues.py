@@ -348,6 +348,46 @@ def combat_arrow_launch():
     return place(_pad(mix(string, snap, limb), 0.2), air, 0.018)
 
 
+def combat_bow_draw():
+    """The string coming back. Rising, open-ended: the release is its own cue."""
+    string = at_db(inst.creak(0.44, 460, 260.0, 1250.0, rate=13.0), -10.0)
+    glove = at_db(inst.cloth(0.12, 461, centre=1300.0, curve=1.6), -24.0)
+    limb = at_db(inst.wood(190.0, 0.32, 462, bright=0.5), -22.0)
+    n = seconds(0.44)
+    load = at_db(apply(sweep(118.0, 172.0, n, 0.8), env_swell(n, 0.72, 1.5)), -25.0)
+    return lowpass(fade_out(mix(string, glove, limb, load), 0.05), 6200.0)
+
+
+def combat_bow_full_draw():
+    """The string hits the wall: nock seats on the rest, creak stops dead."""
+    seat = at_db(inst.wood(760.0, 0.032, 463, bright=1.3), -13.0)
+    tick = at_db(inst.transient(9.0, 464, 2100.0, 1.4), -18.0)
+    stop = at_db(inst.creak(0.07, 465, 620.0, 470.0, rate=40.0), -22.0)
+    return lowpass(mix(_pad(seat, 0.13), _pad(tick, 0.13), _pad(stop, 0.13)), 6400.0)
+
+
+def combat_bow_strain():
+    """The held draw going bad: the arm labours, air leaves through the teeth."""
+    labour = at_db(inst.creak(0.62, 466, 860.0, 250.0, rate=8.5), -12.0)
+    hiss = at_db(inst.breath(0.34, 467, pitch=0.85), -17.0)
+    n = seconds(0.62)
+    slip = at_db(apply(sweep(168.0, 118.0, n, 1.4), env_swell(n, 0.35, 1.8)), -24.0)
+    out = mix(labour, slip)
+    out = place(_pad(out, 0.68), hiss, 0.02)
+    return lowpass(out, 4200.0)
+
+
+def combat_bow_loose_heavy():
+    """A commander's war bow, not an archer in a line: deeper, harder, longer."""
+    string = at_db(inst.wood(410.0, 0.06, 468, bright=1.0), -8.0)
+    snap = at_db(inst.cloth(0.05, 469, centre=1700.0, curve=3.2), -14.0)
+    limb = at_db(inst.thud(140.0, 0.095, 470, drop=0.5), -9.0)
+    ring = at_db(inst.wood(185.0, 0.12, 471, bright=0.5), -16.0)
+    air = at_db(inst.whoosh(0.22, 472, 1900.0, 520.0, q=1.5), -17.0)
+    body = _pad(mix(string, snap, limb, ring), 0.32)
+    return lowpass(place(body, air, 0.02), 4600.0)
+
+
 def combat_charge():
     out = silence(seconds(2.4))
     out = mix(out, gain_of(inst.shout(2.1, 405, freq=168.0), 0.85))
@@ -626,6 +666,18 @@ RECIPES: dict[str, Recipe] = {
     "alert.unit_lost": Recipe("sfx/alerts/unit_lost.ogg", -16.0, alert_unit_lost, 2),
     "combat.arrow_launch": Recipe(
         "sfx/combat/bow_release_single.ogg", -14.0, combat_arrow_launch, 2, takes=3
+    ),
+    "combat.bow_draw": Recipe(
+        "sfx/combat/bow_draw_creak.ogg", -17.0, combat_bow_draw, 2, takes=2
+    ),
+    "combat.bow_full_draw": Recipe(
+        "sfx/combat/bow_full_draw_seat.ogg", -21.0, combat_bow_full_draw, 1, takes=2
+    ),
+    "combat.bow_strain": Recipe(
+        "sfx/combat/bow_hold_strain.ogg", -16.0, combat_bow_strain, 2, takes=2
+    ),
+    "combat.bow_loose_heavy": Recipe(
+        "sfx/combat/bow_loose_heavy.ogg", -11.0, combat_bow_loose_heavy, 2, takes=3
     ),
     "combat.charge": Recipe("sfx/combat/charge_roar.ogg", -7.0, combat_charge, 3),
     "combat.siege_launch": Recipe(

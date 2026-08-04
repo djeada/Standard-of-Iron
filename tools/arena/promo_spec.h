@@ -55,6 +55,8 @@ struct Shot {
   float shake{0.0F};
 
   bool gameplay_camera{false};
+
+  bool rpg_hud{false};
   Focus focus;
   std::vector<CameraKey> keys;
 };

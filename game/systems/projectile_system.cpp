@@ -19,7 +19,10 @@ namespace {
 
 constexpr float k_min_progress_for_impact = 1.0F - 1.0e-5F;
 
-auto launch_cue_for_kind(ProjectileKind kind, bool is_ballista_bolt) -> const char* {
+auto launch_cue_for_kind(ProjectileKind kind,
+                         bool is_ballista_bolt,
+                         ArrowVisualStyle style = ArrowVisualStyle::Focused) -> const
+    char* {
   if (is_ballista_bolt) {
     return "combat.siege_launch";
   }
@@ -28,7 +31,9 @@ auto launch_cue_for_kind(ProjectileKind kind, bool is_ballista_bolt) -> const ch
   case ProjectileKind::FlamingStone:
     return "combat.siege_launch";
   default:
-    return "combat.arrow_launch";
+
+    return style == ArrowVisualStyle::Aimed ? "combat.bow_loose_heavy"
+                                            : "combat.arrow_launch";
   }
 }
 
@@ -190,7 +195,8 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
                                    bool friendly_fire,
                                    ArrowVisualStyle visual_style,
                                    std::optional<QVector3D> target_origin_at_launch,
-                                   float arc_scale) {
+                                   float arc_scale,
+                                   float visual_power) {
   QVector3D const delta = end - start;
   float const dist = delta.length();
 
@@ -206,8 +212,13 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
   }
   arc_height *= std::max(0.0F, arc_scale);
   float const inv_dist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
-  auto const visual_profile =
+  auto visual_profile =
       make_arrow_visual_profile(visual_style, ++m_arrow_spawn_sequence);
+
+  float const power = std::clamp(visual_power, 0.0F, 1.5F);
+  visual_profile.scale *= 0.74F + (0.26F * power);
+  visual_profile.brightness *= 0.80F + (0.20F * power);
+  visual_profile.trail_alpha *= 0.56F + (0.44F * power);
 
   m_projectiles.push_back(
       std::make_unique<ArrowProjectile>(start,
@@ -233,8 +244,8 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
       kind != ProjectileKind::FlamingStone) {
     ++m_arrows_launched_this_tick;
   }
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent(launch_cue_for_kind(kind, is_ballista_bolt)));
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(
+      launch_cue_for_kind(kind, is_ballista_bolt, visual_style)));
 }
 
 void ProjectileSystem::spawn_stone(const QVector3D& start,
@@ -354,15 +365,49 @@ auto ProjectileSystem::resolve_impact(Engine::Core::World* world,
                                                         projectile->get_attacker_id(),
                                                         projectile->get_end(),
                                                         projectile->get_kind());
+    if (resolution.damage_applied) {
+      confirm_commander_hit(world, projectile->get_attacker_id(), *target);
+    }
   }
   return resolution;
+}
+
+void ProjectileSystem::confirm_commander_hit(Engine::Core::World* world,
+                                             Engine::Core::EntityID attacker_id,
+                                             const Engine::Core::Entity& target) {
+  if (world == nullptr || attacker_id == 0) {
+    return;
+  }
+  auto* attacker = world->get_entity(attacker_id);
+  if (attacker == nullptr) {
+    return;
+  }
+  auto const* commander = attacker->get_component<Engine::Core::CommanderComponent>();
+  if (commander == nullptr || !commander->fpv_controlled) {
+    return;
+  }
+  auto* targets =
+      Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
+          attacker);
+  if (targets == nullptr) {
+    return;
+  }
+  auto const* target_unit = target.get_component<Engine::Core::UnitComponent>();
+  targets->recent_hit_target_id = target.get_id();
+  targets->recent_hit_soldier_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+  targets->recent_hit_timer = 0.28F;
+  targets->recent_hit_killed = target_unit != nullptr && target_unit->health <= 0;
+  ++targets->hit_confirm_sequence;
 }
 
 void ProjectileSystem::publish_impact(const Projectile& projectile,
                                       const ImpactResolution& resolution) {
   bool ballista_bolt = false;
+  bool aimed_shot = false;
   if (auto const* arrow = dynamic_cast<const ArrowProjectile*>(&projectile)) {
     ballista_bolt = arrow->is_ballista_bolt();
+    aimed_shot = arrow->visual_style() == ArrowVisualStyle::Aimed;
   }
   QVector3D incoming_direction = projectile.get_end() - projectile.get_start();
   if (incoming_direction.lengthSquared() > 1.0e-6F) {
@@ -377,9 +422,11 @@ void ProjectileSystem::publish_impact(const Projectile& projectile,
       .color = projectile.get_color(),
       .kind = projectile.get_kind(),
       .age = 0.0F,
-      .lifetime = impact_lifetime(projectile.get_kind(), ballista_bolt),
+      .lifetime =
+          aimed_shot ? 0.95F : impact_lifetime(projectile.get_kind(), ballista_bolt),
       .scale = projectile.get_scale(),
       .ballista_bolt = ballista_bolt,
+      .aimed_shot = aimed_shot,
       .hit_target = resolution.hit_target,
       .damage_applied = resolution.damage_applied,
       .attacker_id = projectile.get_attacker_id(),
@@ -387,7 +434,9 @@ void ProjectileSystem::publish_impact(const Projectile& projectile,
   });
 
   Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(
-      impact_cue_for_kind(projectile.get_kind(), ballista_bolt)));
+      (aimed_shot && resolution.hit_target)
+          ? "combat.hit.arrow"
+          : impact_cue_for_kind(projectile.get_kind(), ballista_bolt)));
 
   record_spent_projectile(projectile, incoming_direction, ballista_bolt);
 }

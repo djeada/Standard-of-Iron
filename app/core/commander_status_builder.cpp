@@ -67,6 +67,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["bow_spread_degrees"] = 0.0;
   result["bow_hold_seconds"] = 0.0;
   result["bow_hold_strained"] = false;
+  result["camera_fov_degrees"] = 68.0;
   result["camera_mode"] = QStringLiteral("Chase");
   result["shield_bash_cooldown"] = 3.0;
   result["shield_bash_cooldown_remaining"] = 0.0;
@@ -236,6 +237,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
     result["bow_hold_strained"] =
         aim->full_draw_hold >=
         Engine::Core::RpgCommanderAimComponent::k_steady_hold_seconds;
+    result["camera_fov_degrees"] = static_cast<double>(aim->camera_fov_degrees);
   }
   if (auto* attack =
           commander_entity != nullptr
