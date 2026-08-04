@@ -294,6 +294,8 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         shot_object.value(QStringLiteral("slow_motion")).toDouble(shot.slow_motion));
     shot.shake = static_cast<float>(
         shot_object.value(QStringLiteral("shake")).toDouble(shot.shake));
+    shot.gameplay_camera = shot_object.value(QStringLiteral("gameplay_camera"))
+                               .toBool(shot.gameplay_camera);
 
     if (shot.scenario.isEmpty()) {
       if (error != nullptr) {
@@ -313,6 +315,12 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
       return std::nullopt;
     }
     shot.slow_motion = std::clamp(shot.slow_motion, 0.05F, 8.0F);
+
+    if (shot.gameplay_camera) {
+
+      spec.shots.push_back(std::move(shot));
+      continue;
+    }
 
     QString focus_error;
     auto focus = parse_focus(shot_object.value(QStringLiteral("focus")).toObject(),

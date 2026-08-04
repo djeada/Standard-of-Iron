@@ -225,6 +225,11 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"RpgCommanderActionComponent",
      DerivedRebuilt,
      "FPV action in flight, re-issued by input."},
+    {"RpgCommanderAimComponent",
+     DerivedRebuilt,
+     "Where the FPV commander is looking and how far the bow is drawn. Both are "
+     "written from live input every frame, and the weapon stance is re-derived "
+     "from the commander's own weapons when direct control resumes."},
 });
 
 } // namespace

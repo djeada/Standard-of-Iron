@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <utility>
 
 #include "app/utils/movement_utils.h"
@@ -125,6 +126,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgPrimaryAttack");
   case ScenarioCommandKind::RpgAttackHold:
     return QStringLiteral("RpgAttackHold");
+  case ScenarioCommandKind::RpgAim:
+    return QStringLiteral("RpgAim");
   case ScenarioCommandKind::RpgGuard:
     return QStringLiteral("RpgGuard");
   case ScenarioCommandKind::RpgDodge:
@@ -1590,6 +1593,46 @@ struct ArenaScenarioRunner::Impl {
           continue;
         }
         host.set_rpg_attack_held(entity_id, step.enabled);
+      }
+      break;
+    case ScenarioCommandKind::RpgAim:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.set_rpg_view_yaw || !host.set_rpg_view_pitch) {
+          add_issue(QStringLiteral("rpg_aim_unavailable"),
+                    QStringLiteral("%1 has no RPG view host callbacks").arg(step.group),
+                    entity_id);
+          continue;
+        }
+        float yaw = step.rpg_view_yaw_degrees.value_or(0.0F);
+        float pitch = step.rpg_view_pitch_degrees.value_or(0.0F);
+        if (!step.target_group.isEmpty()) {
+
+          auto const* shooter = world.get_entity(entity_id);
+          auto const* shooter_transform =
+              shooter != nullptr
+                  ? shooter->get_component<Engine::Core::TransformComponent>()
+                  : nullptr;
+          auto const target = centroid(step.target_group);
+          if (shooter_transform == nullptr || !target.has_value()) {
+            add_issue(
+                QStringLiteral("rpg_aim_target_missing"),
+                QStringLiteral("%1 has nothing alive to aim at").arg(step.target_group),
+                entity_id);
+            continue;
+          }
+          constexpr float k_chest_height = 1.15F;
+          constexpr float k_eye_height = 1.55F;
+          float const dx = target->x() - shooter_transform->position.x;
+          float const dz = target->z() - shooter_transform->position.z;
+          float const flat = std::sqrt((dx * dx) + (dz * dz));
+          yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+          pitch = std::atan2(target->y() + k_chest_height -
+                                 (shooter_transform->position.y + k_eye_height),
+                             std::max(flat, 0.01F)) *
+                  180.0F / std::numbers::pi_v<float>;
+        }
+        host.set_rpg_view_yaw(entity_id, yaw);
+        host.set_rpg_view_pitch(entity_id, pitch);
       }
       break;
     case ScenarioCommandKind::RpgGuard:

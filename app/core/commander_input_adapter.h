@@ -25,6 +25,7 @@ public:
   Q_INVOKABLE void vanguard_rush();
   Q_INVOKABLE void second_wind();
   Q_INVOKABLE void toggle_camera_mode();
+  Q_INVOKABLE void toggle_weapon_stance();
   Q_INVOKABLE void center_mouse(qreal center_sx, qreal center_sy);
   Q_INVOKABLE void toggle_mode();
 

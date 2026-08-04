@@ -189,7 +189,8 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
                                    float splash_damage_multiplier,
                                    bool friendly_fire,
                                    ArrowVisualStyle visual_style,
-                                   std::optional<QVector3D> target_origin_at_launch) {
+                                   std::optional<QVector3D> target_origin_at_launch,
+                                   float arc_scale) {
   QVector3D const delta = end - start;
   float const dist = delta.length();
 
@@ -203,6 +204,7 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
                             m_arrow_config.arc_height_min,
                             m_arrow_config.arc_height_max);
   }
+  arc_height *= std::max(0.0F, arc_scale);
   float const inv_dist = (dist > 0.001F) ? (1.0F / dist) : 1.0F;
   auto const visual_profile =
       make_arrow_visual_profile(visual_style, ++m_arrow_spawn_sequence);

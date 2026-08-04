@@ -105,6 +105,10 @@ Item {
             if (root.commanderInput.trigger_rally)
                 root.commanderInput.trigger_rally();
             return true;
+        case "commander.toggle_weapon":
+            if (root.commanderInput.toggle_weapon_stance)
+                root.commanderInput.toggle_weapon_stance();
+            return true;
         case "commander.toggle_camera_mode":
             if (root.commanderInput.toggle_camera_mode)
                 root.commanderInput.toggle_camera_mode();

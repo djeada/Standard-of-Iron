@@ -77,6 +77,9 @@ public:
   void toggle_close_camera_mode(Engine::Core::World& world,
                                 Engine::Core::EntityID commander_id,
                                 int local_owner_id) const;
+  void toggle_weapon_stance(Engine::Core::World& world,
+                            Engine::Core::EntityID commander_id,
+                            int local_owner_id) const;
   void cycle_lock_on_target(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
                             int local_owner_id);
@@ -168,6 +171,7 @@ private:
   bool m_has_requested_dodge_direction = false;
   float m_dodge_fov_kick = 0.0F;
 
+  float m_aim_camera_blend = 0.0F;
   float m_hit_impact_kick = 0.0F;
   std::uint8_t m_observed_action_hit_count = 0;
   float m_jump_timer = 0.0F;

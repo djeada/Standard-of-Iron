@@ -220,14 +220,20 @@ private:
     const Shot& shot = current_shot();
     const float shot_time = std::max(0.0F, scenario_time - shot.start_seconds);
 
-    const QVector3D focus = resolve_focus(shot);
-    Pose pose = evaluate(shot.keys, shot_time);
-    QVector3D target = focus + shot.focus.offset + QVector3D(0.0F, pose.height, 0.0F);
-    if (shot.shake > 0.0F) {
-      target += shake_offset(m_frames_written, shot.shake);
+    QVector3D target;
+    if (shot.gameplay_camera) {
+
+      m_viewport.clear_cinematic_view();
+    } else {
+      const QVector3D focus = resolve_focus(shot);
+      Pose pose = evaluate(shot.keys, shot_time);
+      target = focus + shot.focus.offset + QVector3D(0.0F, pose.height, 0.0F);
+      if (shot.shake > 0.0F) {
+        target += shake_offset(m_frames_written, shot.shake);
+      }
+      m_viewport.set_cinematic_view(
+          target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
     }
-    m_viewport.set_cinematic_view(
-        target, pose.distance, pose.pitch, pose.yaw, pose.fov, pose.roll);
 
     const bool in_window =
         scenario_time >= shot.start_seconds && m_pass_frames > k_pass_warmup_frames;
