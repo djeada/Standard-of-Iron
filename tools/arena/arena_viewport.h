@@ -272,6 +272,9 @@ private:
                                        const QVector3D& scenario_origin);
   void configure_scenario_undead_zones(const Arena::ArenaScenarioDefinition& definition,
                                        const QVector3D& scenario_origin);
+  void configure_scenario_wildlife(const Arena::ArenaScenarioDefinition& definition,
+                                   const QVector3D& scenario_origin);
+  void clear_wildlife();
   void
   retain_zone_shrine_props(const Game::Systems::UndeadAwakeningSystem& undead_system);
   void clear_undead_zones();

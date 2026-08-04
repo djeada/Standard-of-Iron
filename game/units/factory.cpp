@@ -17,6 +17,7 @@
 #include "horse_spearman.h"
 #include "horse_swordsman.h"
 #include "marketplace.h"
+#include "sheep.h"
 #include "skeleton_archer.h"
 #include "skeleton_swordsman.h"
 #include "spearman.h"
@@ -26,6 +27,7 @@
 #include "units/unit.h"
 #include "wall_gate.h"
 #include "wall_segment.h"
+#include "wolf.h"
 
 namespace Game::Units {
 namespace {
@@ -191,6 +193,16 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::Temple,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Temple::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::Sheep,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Sheep::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::Wolf,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Wolf::Create(world, params);
                        });
 }
 

@@ -10,7 +10,7 @@ namespace Render::Creature::Rigged {
 
 namespace {
 
-constexpr std::array<std::pair<std::uint32_t, std::string_view>, 8> k_species{{
+constexpr std::array<std::pair<std::uint32_t, std::string_view>, 10> k_species{{
     {Render::Creature::Bpat::k_species_humanoid, "humanoid"},
     {Render::Creature::Bpat::k_species_humanoid_sword, "humanoid"},
     {Render::Creature::Bpat::k_species_humanoid_spear, "humanoid"},
@@ -19,6 +19,8 @@ constexpr std::array<std::pair<std::uint32_t, std::string_view>, 8> k_species{{
     {Render::Creature::Bpat::k_species_humanoid_stave_caster, "humanoid"},
     {Render::Creature::Bpat::k_species_horse, "horse"},
     {Render::Creature::Bpat::k_species_elephant, "elephant"},
+    {Render::Creature::Bpat::k_species_sheep, "sheep"},
+    {Render::Creature::Bpat::k_species_wolf, "wolf"},
 }};
 
 constexpr std::array<Render::Creature::CreatureLOD, 2> k_lods{

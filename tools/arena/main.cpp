@@ -182,7 +182,7 @@ auto write_terrain_review_report(const QString& directory,
 
 auto main(int argc, char** argv) -> int {
   QSurfaceFormat fmt;
-  fmt.setVersion(3, 3);
+  fmt.setVersion(4, 3);
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setDepthBufferSize(24);
   fmt.setStencilBufferSize(8);

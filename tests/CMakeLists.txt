@@ -62,6 +62,7 @@ add_executable(
     map/map_bridge_coverage_test.cpp
     map/map_hill_entrance_smoothness_test.cpp
     map/map_weather_coverage_test.cpp
+    map/map_wildlife_config_test.cpp
     map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp
     map/mission_loader_test.cpp
@@ -76,6 +77,8 @@ add_executable(
     map/campaign_province_data_test.cpp
     map/time_of_day_test.cpp
     systems/rain_manager_test.cpp
+    wildlife/wildlife_system_test.cpp
+    wildlife/bird_flock_test.cpp
     systems/patrol_system_test.cpp
     formation/unit_layout_test.cpp
     formation/army_formation_planner_test.cpp

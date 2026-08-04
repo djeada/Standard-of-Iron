@@ -43,6 +43,8 @@ void apply_skeleton_proportion_pose_layer(
 
 auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4>;
 
+auto humanoid_inverse_bind_palette() noexcept -> std::span<const QMatrix4x4>;
+
 [[nodiscard]] auto
 humanoid_bind_body_frames() noexcept -> const Render::GL::BodyFrames&;
 

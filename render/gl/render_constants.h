@@ -35,6 +35,8 @@ namespace Render::GL::BufferCapacity {
 inline constexpr int default_cylinder_instances = 256;
 inline constexpr int default_fog_instances = 512;
 inline constexpr int buffers_in_flight = 3;
+
+inline constexpr int max_buffers_in_flight = 4;
 inline constexpr int shader_info_log_size = 512;
 } // namespace Render::GL::BufferCapacity
 

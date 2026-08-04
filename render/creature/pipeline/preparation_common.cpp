@@ -16,6 +16,9 @@
 #include "../../horse/horse_spec.h"
 #include "../../humanoid/humanoid_spec.h"
 #include "../../humanoid/skeleton.h"
+#include "../../wildlife/sheep_spec.h"
+#include "../../wildlife/wildlife_rig.h"
+#include "../../wildlife/wolf_spec.h"
 #include "../archetype_registry.h"
 #include "../humanoid_clip_ids.h"
 #include "../pose_intent.h"
@@ -339,6 +342,23 @@ auto palette_contact_y(CreatureKind kind,
             bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
                             bind_palette),
             bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBR),
+                            bind_palette)));
+  }
+  case CreatureKind::Sheep:
+  case CreatureKind::Wolf: {
+    auto const bind_palette = kind == CreatureKind::Wolf
+                                  ? Render::Wildlife::wolf_bind_palette()
+                                  : Render::Wildlife::sheep_bind_palette();
+    return std::min(
+        std::min(
+            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFL),
+                            bind_palette),
+            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFR),
+                            bind_palette)),
+        std::min(
+            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBL),
+                            bind_palette),
+            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBR),
                             bind_palette)));
   }
   case CreatureKind::Elephant: {

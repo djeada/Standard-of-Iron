@@ -4512,6 +4512,14 @@ Tempo de construção: %3s</translation>
         <translation>Civil</translation>
     </message>
     <message>
+        <source>Sheep</source>
+        <translation>Ovelha</translation>
+    </message>
+    <message>
+        <source>Wolf</source>
+        <translation>Lobo</translation>
+    </message>
+    <message>
         <source>Unknown Troop</source>
         <translation>Tropa desconhecida</translation>
     </message>

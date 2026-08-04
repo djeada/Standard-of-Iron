@@ -429,7 +429,9 @@ void evaluate_world_matrices(std::span<const NodePose> poses,
                              std::span<const int> parents,
                              std::vector<QMatrix4x4>& out) {
   out.assign(poses.size(), QMatrix4x4{});
-  std::vector<bool> evaluated(poses.size(), false);
+
+  thread_local std::vector<bool> evaluated;
+  evaluated.assign(poses.size(), false);
   auto evaluate = [&](auto&& self, std::size_t node) -> void {
     if (evaluated[node]) {
       return;
@@ -837,11 +839,13 @@ auto sample_source_clip(SourceAsset const& asset,
   SourceClip const& clip = *clip_it;
   float const phase = std::clamp(normalized_phase, 0.0F, 1.0F);
   float const time = phase * clip.duration;
-  std::vector<NodePose> poses = asset.default_poses;
+
+  thread_local std::vector<NodePose> poses;
+  poses.assign(asset.default_poses.begin(), asset.default_poses.end());
   for (AnimationChannel const& channel : clip.channels) {
     sample_channel(channel, time, poses[static_cast<std::size_t>(channel.node)]);
   }
-  std::vector<QMatrix4x4> world;
+  thread_local std::vector<QMatrix4x4> world;
   evaluate_world_matrices(poses, asset.parents, world);
   for (std::size_t slot = 0U; slot < asset.bind_palette.size(); ++slot) {
     out[slot] = normalize_world_matrix(
@@ -948,18 +952,23 @@ auto horse_source_pose_mount_frame(std::string_view source_clip,
                                    float normalized_phase,
                                    Render::GL::MountedAttachmentFrame& frame) noexcept
     -> bool {
-  std::array<QMatrix4x4, k_horse_source_bone_count> pose{};
+  thread_local std::array<QMatrix4x4, k_horse_source_bone_count> pose{};
   if (!horse_source_sample_clip(source_clip, normalized_phase, pose)) {
     return false;
   }
 
-  auto const& bind = source_asset().bind_palette;
-  auto const delta_for = [&](HorseBone bone) {
-    auto const index = static_cast<std::size_t>(bone);
-    return pose[index] * bind[index].inverted();
-  };
-  QMatrix4x4 const back_delta = delta_for(HorseBone::SourceBack);
-  QMatrix4x4 const head_delta = delta_for(HorseBone::SourceHead);
+  static const std::array<QMatrix4x4, 2> inverse_bind = {
+      source_asset()
+          .bind_palette[static_cast<std::size_t>(HorseBone::SourceBack)]
+          .inverted(),
+      source_asset()
+          .bind_palette[static_cast<std::size_t>(HorseBone::SourceHead)]
+          .inverted()};
+
+  QMatrix4x4 const back_delta =
+      pose[static_cast<std::size_t>(HorseBone::SourceBack)] * inverse_bind[0];
+  QMatrix4x4 const head_delta =
+      pose[static_cast<std::size_t>(HorseBone::SourceHead)] * inverse_bind[1];
 
   frame.saddle_center = back_delta.map(frame.saddle_center);
   frame.seat_position = back_delta.map(frame.seat_position);

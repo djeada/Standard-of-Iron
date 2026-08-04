@@ -36,6 +36,8 @@ public:
 
   [[nodiscard]] auto size_bytes() const -> std::size_t { return m_size_bytes; }
 
+  [[nodiscard]] auto id() const -> GLuint { return m_buffer; }
+
 private:
   GLuint m_buffer = 0;
   std::size_t m_size_bytes = 0;

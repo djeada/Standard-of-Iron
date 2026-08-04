@@ -9,8 +9,10 @@ namespace Render::Creature::Snapshot {
 
 namespace {
 
-constexpr std::array<std::pair<std::uint32_t, std::string_view>, 2> k_assets{{
+constexpr std::array<std::pair<std::uint32_t, std::string_view>, 4> k_assets{{
     {Render::Creature::Bpat::k_species_horse, "horse_minimal.bpsm"},
+    {Render::Creature::Bpat::k_species_sheep, "sheep_minimal.bpsm"},
+    {Render::Creature::Bpat::k_species_wolf, "wolf_minimal.bpsm"},
     {Render::Creature::Bpat::k_species_elephant, "elephant_minimal.bpsm"},
 }};
 

@@ -36,6 +36,8 @@
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/units/unit.h"
+#include "game/wildlife/bird_flock.h"
+#include "game/wildlife/wildlife_species.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 
 namespace Arena {
@@ -304,6 +306,16 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("UndeadZoneShrineStands");
   case ArenaExpectationKind::UndeadZoneShrineDestroyed:
     return QStringLiteral("UndeadZoneShrineDestroyed");
+  case ArenaExpectationKind::WildlifeGrazingObserved:
+    return QStringLiteral("WildlifeGrazingObserved");
+  case ArenaExpectationKind::WildlifeFleeObserved:
+    return QStringLiteral("WildlifeFleeObserved");
+  case ArenaExpectationKind::WildlifeHuntObserved:
+    return QStringLiteral("WildlifeHuntObserved");
+  case ArenaExpectationKind::WildlifeBirdsScattered:
+    return QStringLiteral("WildlifeBirdsScattered");
+  case ArenaExpectationKind::WildlifePopulationHeld:
+    return QStringLiteral("WildlifePopulationHeld");
   }
   return QStringLiteral("Unknown");
 }
@@ -1711,6 +1723,61 @@ struct ArenaScenarioRunner::Impl {
       break;
     }
     }
+  }
+
+  struct WildlifeObservation {
+    bool grazing_seen{false};
+    bool flee_seen{false};
+    bool hunt_seen{false};
+    int min_population{-1};
+    int peak_population{0};
+    std::uint64_t bird_scatter_events{0U};
+  };
+
+  WildlifeObservation wildlife_observation;
+
+  void observe_wildlife() {
+    int population = 0;
+    for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+      auto const* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
+      if (unit == nullptr || wildlife == nullptr || unit->health <= 0) {
+        continue;
+      }
+      ++population;
+      switch (wildlife->behavior) {
+      case Game::Wildlife::Behavior::Graze:
+        wildlife_observation.grazing_seen = true;
+        break;
+      case Game::Wildlife::Behavior::Flee:
+        wildlife_observation.flee_seen = true;
+        break;
+      case Game::Wildlife::Behavior::Stalk:
+        wildlife_observation.hunt_seen = true;
+        break;
+      default:
+        break;
+      }
+    }
+
+    for (auto const& bird : Game::Wildlife::BirdFlockManager::instance().birds()) {
+      ++population;
+      if (bird.behavior == Game::Wildlife::Behavior::Scatter) {
+        wildlife_observation.flee_seen = true;
+      }
+    }
+    wildlife_observation.bird_scatter_events =
+        Game::Wildlife::BirdFlockManager::instance().stats().scatter_events;
+
+    wildlife_observation.peak_population =
+        std::max(wildlife_observation.peak_population, population);
+    wildlife_observation.min_population =
+        wildlife_observation.min_population < 0
+            ? population
+            : std::min(wildlife_observation.min_population, population);
   }
 
   void observe_undead_zones() {
@@ -3942,6 +4009,42 @@ struct ArenaScenarioRunner::Impl {
         }
         break;
       }
+      case ArenaExpectationKind::WildlifeGrazingObserved:
+        if (!wildlife_observation.grazing_seen) {
+          add_issue(QStringLiteral("wildlife_never_grazed"),
+                    QStringLiteral("no animal settled into grazing during the run"));
+        }
+        break;
+      case ArenaExpectationKind::WildlifeFleeObserved:
+        if (!wildlife_observation.flee_seen) {
+          add_issue(QStringLiteral("wildlife_never_fled"),
+                    QStringLiteral("no animal fled or scattered during the run"));
+        }
+        break;
+      case ArenaExpectationKind::WildlifeHuntObserved:
+        if (!wildlife_observation.hunt_seen) {
+          add_issue(QStringLiteral("wildlife_never_hunted"),
+                    QStringLiteral("no wolf started stalking prey during the run"));
+        }
+        break;
+      case ArenaExpectationKind::WildlifeBirdsScattered:
+        if (wildlife_observation.bird_scatter_events == 0U) {
+          add_issue(QStringLiteral("bird_flock_never_scattered"),
+                    QStringLiteral("the flock never scattered from a threat"));
+        }
+        break;
+      case ArenaExpectationKind::WildlifePopulationHeld: {
+        int const required = std::max(1, static_cast<int>(expectation.threshold));
+        if (wildlife_observation.min_population < required) {
+          add_issue(QStringLiteral("wildlife_population_dropped"),
+                    QStringLiteral("wildlife population fell to %1, below the "
+                                   "required %2 (peak %3)")
+                        .arg(wildlife_observation.min_population)
+                        .arg(required)
+                        .arg(wildlife_observation.peak_population));
+        }
+        break;
+      }
       case ArenaExpectationKind::NoRenderVisibilityChurn:
       case ArenaExpectationKind::RpgFormationSurvivesLensGap:
       case ArenaExpectationKind::FullCreatureDetailOnly:
@@ -4027,6 +4130,7 @@ void ArenaScenarioRunner::update(float simulation_dt) {
   m_impl->elapsed += simulation_dt;
   m_impl->report.elapsed_seconds = m_impl->elapsed;
   m_impl->observe_undead_zones();
+  m_impl->observe_wildlife();
   for (std::size_t i = 0; i < m_impl->scenario.steps.size(); ++i) {
     auto const& step = m_impl->scenario.steps[i];
     if (!m_impl->steps[i].executed && m_impl->trigger_ready(i, step)) {

@@ -113,6 +113,9 @@ auto is_valid_enemy_unit(const Engine::Core::UnitComponent* attacker_unit,
   if ((target_unit == nullptr) || (target_unit->health <= 0)) {
     return false;
   }
+  if (target->has_component<Engine::Core::WildlifeComponent>()) {
+    return false;
+  }
   if (target_unit->owner_id == attacker_unit->owner_id) {
     return false;
   }

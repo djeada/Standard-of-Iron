@@ -5,6 +5,8 @@
 
 #include "../elephant/elephant_spec.h"
 #include "../humanoid/humanoid_spec.h"
+#include "../wildlife/sheep_spec.h"
+#include "../wildlife/wolf_spec.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
 
@@ -48,6 +50,14 @@ constexpr auto make_elephant_animation_manifest() -> ArchetypeAnimationManifest 
   return animation_manifest_to_render_manifest(Animation::elephant_clip_manifest());
 }
 
+constexpr auto make_sheep_animation_manifest() -> ArchetypeAnimationManifest {
+  return animation_manifest_to_render_manifest(Animation::sheep_clip_manifest());
+}
+
+constexpr auto make_wolf_animation_manifest() -> ArchetypeAnimationManifest {
+  return animation_manifest_to_render_manifest(Animation::wolf_clip_manifest());
+}
+
 constexpr auto make_rider_animation_manifest() -> ArchetypeAnimationManifest {
   return animation_manifest_to_render_manifest(Animation::rider_clip_manifest());
 }
@@ -88,6 +98,8 @@ void ArchetypeRegistry::seed_baseline() {
   static constexpr auto k_humanoid_manifest = make_humanoid_animation_manifest();
   static constexpr auto k_horse_manifest = make_horse_animation_manifest();
   static constexpr auto k_elephant_manifest = make_elephant_animation_manifest();
+  static constexpr auto k_sheep_manifest = make_sheep_animation_manifest();
+  static constexpr auto k_wolf_manifest = make_wolf_animation_manifest();
   static constexpr auto k_rider_manifest = make_rider_animation_manifest();
 
   register_archetype(
@@ -110,6 +122,16 @@ void ArchetypeRegistry::seed_baseline() {
                               Render::Creature::Pipeline::CreatureKind::Humanoid,
                               k_rider_manifest,
                               k_humanoid_base_roles));
+  register_archetype(make_baseline_archetype(
+      "sheep_base",
+      Render::Creature::Pipeline::CreatureKind::Sheep,
+      k_sheep_manifest,
+      static_cast<std::uint8_t>(Render::Wildlife::k_sheep_role_count + 1U)));
+  register_archetype(make_baseline_archetype(
+      "wolf_base",
+      Render::Creature::Pipeline::CreatureKind::Wolf,
+      k_wolf_manifest,
+      static_cast<std::uint8_t>(Render::Wildlife::k_wolf_role_count + 1U)));
 }
 
 auto ArchetypeRegistry::register_archetype(ArchetypeDescriptor desc) -> ArchetypeId {
@@ -139,6 +161,12 @@ auto ArchetypeRegistry::register_unit_archetype(
     break;
   case Render::Creature::Pipeline::CreatureKind::Elephant:
     base = k_elephant_base;
+    break;
+  case Render::Creature::Pipeline::CreatureKind::Sheep:
+    base = k_sheep_base;
+    break;
+  case Render::Creature::Pipeline::CreatureKind::Wolf:
+    base = k_wolf_base;
     break;
   case Render::Creature::Pipeline::CreatureKind::Mounted:
     return k_invalid_archetype;

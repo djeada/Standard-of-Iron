@@ -12,6 +12,7 @@
 #include "game/systems/rain_manager.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/victory_service.h"
+#include "game/wildlife/wildlife_system.h"
 #include "minimap_manager.h"
 #include "render/ground/rain_renderer.h"
 #include "render/scene_renderer.h"
@@ -43,6 +44,13 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
 
   if (scene.active_camera != nullptr) {
     scene.active_camera->update(dt);
+  }
+
+  if (scene.world != nullptr && scene.active_camera != nullptr) {
+    if (auto* wildlife = scene.world->get_system<Game::Wildlife::WildlifeSystem>()) {
+      const QVector3D focus = scene.active_camera->get_target();
+      wildlife->set_focus(focus.x(), focus.z());
+    }
   }
 
   if (scene.world != nullptr) {

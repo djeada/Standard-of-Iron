@@ -4512,6 +4512,14 @@ Bauzeit: %3 s</translation>
         <translation>Zivilist</translation>
     </message>
     <message>
+        <source>Sheep</source>
+        <translation>Schaf</translation>
+    </message>
+    <message>
+        <source>Wolf</source>
+        <translation>Wolf</translation>
+    </message>
+    <message>
         <source>Unknown Troop</source>
         <translation>Unbekannte Truppe</translation>
     </message>

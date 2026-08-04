@@ -44,6 +44,7 @@
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/rain_pipeline.h"
 #include "backend/rigged_character_pipeline.h"
+#include "backend/rigged_cull_pipeline.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
@@ -265,6 +266,12 @@ auto Backend::initialize() -> bool {
     return false;
   }
   qInfo() << "Backend: RiggedCharacterPipeline initialized";
+
+  m_rigged_cull_pipeline = std::make_unique<BackendPipelines::RiggedCullPipeline>();
+  m_rigged_cull_pipeline->set_shader_cache(m_shader_cache.get());
+  if (!m_rigged_cull_pipeline->initialize()) {
+    m_rigged_cull_pipeline.reset();
+  }
 
   qInfo() << "Backend: Creating WaterPipeline...";
   m_water_pipeline =
@@ -697,7 +704,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       m_directional_shadow_rigged_shader->set_uniform("u_model", rigged.world);
       m_directional_shadow_rigged_shader->set_uniform("u_variation_scale",
                                                       rigged.variation_scale);
-      rigged.mesh->draw();
+      RiggedMesh* const cast_mesh =
+          rigged.shadow_mesh != nullptr ? rigged.shadow_mesh : rigged.mesh;
+      cast_mesh->draw();
       ++m_last_playback_stats.shadow_rigged_single_draws;
     };
 
@@ -1252,6 +1261,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
       rigged_min = std::numeric_limits<std::size_t>::max();
       rigged_max = 0;
     }
+  }
+
+  if (m_rigged_character_pipeline) {
+    m_rigged_character_pipeline->end_frame();
   }
 
   m_frame_tracker.mark_complete();

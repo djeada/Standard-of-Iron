@@ -1,0 +1,848 @@
+#include "wildlife_system.h"
+
+#include <QJsonArray>
+#include <QVector3D>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <memory>
+
+#include "../core/component.h"
+#include "../core/entity.h"
+#include "../core/ownership_constants.h"
+#include "../core/world.h"
+#include "../map/map_definition.h"
+#include "../systems/combat_system/damage_application.h"
+#include "../systems/command_service.h"
+#include "../systems/order_service.h"
+#include "../units/factory.h"
+#include "../units/spawn_type.h"
+#include "bird_flock.h"
+#include "wildlife_terrain_probe.h"
+
+namespace Game::Wildlife {
+
+namespace {
+
+constexpr float k_two_pi = 6.28318530718F;
+constexpr float k_herd_cohesion_radius = 3.6F;
+constexpr float k_herd_max_spread = 7.5F;
+constexpr float k_pack_cohesion_radius = 5.5F;
+constexpr float k_flee_distance_min = 7.0F;
+constexpr float k_flee_distance_max = 11.0F;
+constexpr float k_graze_chance = 0.55F;
+constexpr float k_graze_dwell_min = 3.0F;
+constexpr float k_graze_dwell_max = 8.5F;
+constexpr float k_alarm_duration = 3.5F;
+constexpr float k_wolf_detect_multiplier = 1.4F;
+constexpr float k_wolf_bite_range = 1.35F;
+constexpr float k_pack_approach_spacing = 1.1F;
+constexpr float k_wolf_avoid_base_strength = 2.5F;
+constexpr float k_civilian_standoff = 3.0F;
+constexpr float k_civilian_threat_strength = 0.3F;
+constexpr float k_troop_threat_strength = 1.0F;
+constexpr float k_sheep_flee_strength_threshold = 0.5F;
+constexpr float k_spawn_scatter = 3.2F;
+constexpr int k_open_point_attempts = 8;
+
+auto next_random(std::uint32_t& state) -> float {
+  state = (state * 1664525U) + 1013904223U;
+  return static_cast<float>((state >> 8U) & 0xFFFFFFU) / 16777216.0F;
+}
+
+auto random_range(std::uint32_t& state, float low, float high) -> float {
+  return low + ((high - low) * next_random(state));
+}
+
+auto seed_for(std::uint32_t seed, Species species, int index) -> std::uint32_t {
+  std::uint32_t value = seed;
+  value ^= (static_cast<std::uint32_t>(species_index(species)) + 1U) * 2654435761U;
+  value ^= (static_cast<std::uint32_t>(index) + 1U) * 2246822519U;
+  return value | 1U;
+}
+
+auto is_wildlife_entity(const Engine::Core::Entity& entity) -> bool {
+  return entity.has_component<Engine::Core::WildlifeComponent>();
+}
+
+auto threat_strength_of(const Engine::Core::UnitComponent& unit) -> float {
+  switch (unit.spawn_type) {
+  case Game::Units::SpawnType::Civilian:
+  case Game::Units::SpawnType::Builder:
+    return k_civilian_threat_strength;
+  default:
+    return k_troop_threat_strength;
+  }
+}
+
+auto is_civilian_spawn(Game::Units::SpawnType type) -> bool {
+  return type == Game::Units::SpawnType::Civilian ||
+         type == Game::Units::SpawnType::Builder;
+}
+
+} // namespace
+
+WildlifeSystem::WildlifeSystem() = default;
+
+WildlifeSystem::~WildlifeSystem() = default;
+
+void WildlifeSystem::ensure_factory_registry() {
+  if (m_factory_registry) {
+    return;
+  }
+  m_factory_registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
+  Game::Units::register_built_in_units(*m_factory_registry);
+}
+
+void WildlifeSystem::configure(const Game::Map::MapDefinition& map_definition) {
+  configure(map_definition.wildlife, map_definition.biome.seed);
+}
+
+void WildlifeSystem::configure(const WildlifeSettings& settings,
+                               std::uint32_t map_seed) {
+  m_settings = settings;
+  sanitize(m_settings);
+  m_seed = m_settings.seed != 0U ? m_settings.seed : (map_seed | 1U);
+  m_enabled = m_settings.enabled && m_settings.any_species_enabled();
+  m_groups.clear();
+  m_group_runtime.clear();
+  m_animals.clear();
+  m_threats.clear();
+  m_stats.reset();
+  m_next_group_id = 0U;
+  m_threat_refresh = 0.0F;
+  m_restored = false;
+  m_spawn_pending = m_enabled;
+
+  if (m_enabled) {
+    plan_groups();
+  }
+
+  BirdFlockManager::instance().configure(m_settings.birds,
+                                         m_seed ^ 0x5EEDBEEFU,
+                                         m_settings.near_simulation_radius,
+                                         m_settings.far_simulation_radius);
+  if (!m_enabled) {
+    BirdFlockManager::instance().reset();
+  }
+}
+
+void WildlifeSystem::set_focus(float world_x, float world_z) noexcept {
+  m_focus_x = world_x;
+  m_focus_z = world_z;
+  m_has_focus = true;
+  BirdFlockManager::instance().set_focus(world_x, world_z);
+}
+
+void WildlifeSystem::clear_focus() noexcept {
+  m_has_focus = false;
+  BirdFlockManager::instance().clear_focus();
+}
+
+auto WildlifeSystem::tier_for(float world_x, float world_z) const noexcept -> Tier {
+  if (!m_has_focus) {
+    return Tier::Near;
+  }
+  float const dx = world_x - m_focus_x;
+  float const dz = world_z - m_focus_z;
+  float const distance_sq = (dx * dx) + (dz * dz);
+  if (distance_sq <=
+      m_settings.near_simulation_radius * m_settings.near_simulation_radius) {
+    return Tier::Near;
+  }
+  if (distance_sq <=
+      m_settings.far_simulation_radius * m_settings.far_simulation_radius) {
+    return Tier::Far;
+  }
+  return Tier::Dormant;
+}
+
+auto WildlifeSystem::find_group(std::uint16_t group_id) -> GroupState* {
+  for (auto& group : m_groups) {
+    if (group.id == group_id) {
+      return &group;
+    }
+  }
+  return nullptr;
+}
+
+auto WildlifeSystem::pick_open_point(std::uint32_t& rng,
+                                     float origin_x,
+                                     float origin_z,
+                                     float min_radius,
+                                     float max_radius,
+                                     float& out_x,
+                                     float& out_z) const -> bool {
+  const auto& terrain = terrain_service_probe();
+  WorldBounds const bounds = terrain.bounds();
+  for (int attempt = 0; attempt < k_open_point_attempts; ++attempt) {
+    float const angle = random_range(rng, 0.0F, k_two_pi);
+    float const reach = random_range(rng, min_radius, std::max(min_radius, max_radius));
+    float const x =
+        std::clamp(origin_x + (std::cos(angle) * reach), bounds.min_x, bounds.max_x);
+    float const z =
+        std::clamp(origin_z + (std::sin(angle) * reach), bounds.min_z, bounds.max_z);
+    if (terrain.is_blocked(x, z)) {
+      continue;
+    }
+    out_x = x;
+    out_z = z;
+    return true;
+  }
+  return false;
+}
+
+void WildlifeSystem::plan_groups() {
+  const std::array<Species, 2> ground_species{{Species::Sheep, Species::Wolf}};
+  for (Species const species : ground_species) {
+    const auto& config = m_settings.for_species(species);
+    if (!config.enabled || config.group_count <= 0) {
+      continue;
+    }
+    for (int index = 0; index < config.group_count; ++index) {
+      std::uint32_t rng = seed_for(m_seed, species, index);
+
+      GroupState group;
+      group.id = m_next_group_id++;
+      group.species = species;
+      group.roam_radius = config.roam_radius;
+      group.rng_state = rng;
+      group.desired_size = config.clamped_group_size(
+          static_cast<std::uint32_t>(next_random(rng) * 4096.0F));
+
+      float anchor_x = 0.0F;
+      float anchor_z = 0.0F;
+      float origin_x = 0.0F;
+      float origin_z = 0.0F;
+      float reach = 0.0F;
+      if (!config.spawn_areas.empty()) {
+        auto const area_index = static_cast<std::size_t>(
+            next_random(rng) * static_cast<float>(config.spawn_areas.size()));
+        const auto& area =
+            config.spawn_areas[std::min(area_index, config.spawn_areas.size() - 1U)];
+        origin_x = area.x;
+        origin_z = area.z;
+        reach = area.radius;
+      } else {
+        WorldBounds const bounds = terrain_service_probe().bounds();
+        origin_x = (bounds.min_x + bounds.max_x) * 0.5F;
+        origin_z = (bounds.min_z + bounds.max_z) * 0.5F;
+        reach =
+            std::min(bounds.max_x - bounds.min_x, bounds.max_z - bounds.min_z) * 0.35F;
+      }
+
+      bool anchored = false;
+      for (float scale : {1.0F, 1.8F, 3.0F}) {
+        if (pick_open_point(
+                rng, origin_x, origin_z, 0.0F, reach * scale, anchor_x, anchor_z)) {
+          anchored = true;
+          break;
+        }
+      }
+      if (!anchored) {
+        continue;
+      }
+
+      group.home_x = anchor_x;
+      group.home_z = anchor_z;
+      group.rng_state = rng | 1U;
+      m_groups.push_back(group);
+    }
+  }
+  m_group_runtime.assign(m_groups.size(), GroupRuntime{});
+}
+
+auto WildlifeSystem::spawn_member(Engine::Core::World& world,
+                                  GroupState& group,
+                                  const SpeciesConfig& config)
+    -> Engine::Core::EntityID {
+  ensure_factory_registry();
+
+  float spawn_x = group.home_x;
+  float spawn_z = group.home_z;
+  if (!pick_open_point(group.rng_state,
+                       group.home_x,
+                       group.home_z,
+                       0.0F,
+                       k_spawn_scatter,
+                       spawn_x,
+                       spawn_z) &&
+      !pick_open_point(group.rng_state,
+                       group.home_x,
+                       group.home_z,
+                       0.0F,
+                       k_spawn_scatter * 3.0F,
+                       spawn_x,
+                       spawn_z)) {
+    return 0;
+  }
+
+  const auto& terrain = terrain_service_probe();
+  Game::Units::SpawnParams params;
+  params.position =
+      QVector3D(spawn_x, terrain.ground_height(spawn_x, spawn_z), spawn_z);
+  params.player_id = Game::Core::NEUTRAL_OWNER_ID;
+  params.spawn_type = group.species == Species::Wolf ? Game::Units::SpawnType::Wolf
+                                                     : Game::Units::SpawnType::Sheep;
+  params.rotation_y = random_range(group.rng_state, 0.0F, 360.0F);
+  params.ai_controlled = false;
+  params.is_initial_spawn = false;
+
+  auto unit = m_factory_registry->create(params.spawn_type, world, params);
+  if (!unit) {
+    return 0;
+  }
+
+  auto* entity = world.get_entity(unit->id());
+  if (entity == nullptr) {
+    return 0;
+  }
+  auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
+  if (wildlife != nullptr) {
+    wildlife->group_id = group.id;
+    wildlife->home_x = group.home_x;
+    wildlife->home_z = group.home_z;
+    wildlife->roam_radius = group.roam_radius;
+    wildlife->anchor_assigned = true;
+    wildlife->rng_state = group.rng_state | 1U;
+    wildlife->think_cooldown =
+        random_range(group.rng_state, 0.0F, k_think_interval * 2.0F);
+  }
+  auto* unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp != nullptr) {
+    unit_comp->speed = config.move_speed;
+  }
+  return unit->id();
+}
+
+void WildlifeSystem::spawn_initial_population(Engine::Core::World& world) {
+  for (auto& group : m_groups) {
+    const auto& config = m_settings.for_species(group.species);
+    for (int member = 0; member < group.desired_size; ++member) {
+      spawn_member(world, group, config);
+    }
+  }
+}
+
+void WildlifeSystem::rebuild_threats(Engine::Core::World& world) {
+  m_threats.clear();
+  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr || is_wildlife_entity(*entity)) {
+      continue;
+    }
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->health <= 0) {
+      continue;
+    }
+    if (entity->has_component<Engine::Core::BuildingComponent>()) {
+      continue;
+    }
+
+    ThreatSource source;
+    source.x = transform->position.x;
+    source.z = transform->position.z;
+    source.strength = threat_strength_of(*unit);
+    source.civilian = is_civilian_spawn(unit->spawn_type);
+    m_threats.add(source);
+  }
+  m_threats.finalize();
+}
+
+void WildlifeSystem::collect_animals(Engine::Core::World& world) {
+  m_animals.clear();
+  m_group_runtime.assign(m_groups.size(), GroupRuntime{});
+
+  std::vector<float> sum_x(m_groups.size(), 0.0F);
+  std::vector<float> sum_z(m_groups.size(), 0.0F);
+
+  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    const auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
+    if (unit == nullptr || transform == nullptr || wildlife == nullptr ||
+        unit->health <= 0) {
+      continue;
+    }
+
+    AnimalRef ref;
+    ref.entity = entity;
+    ref.id = entity->get_id();
+    ref.x = transform->position.x;
+    ref.z = transform->position.z;
+    ref.group = wildlife->group_id;
+    ref.species = wildlife->species;
+    m_animals.push_back(ref);
+
+    for (std::size_t index = 0; index < m_groups.size(); ++index) {
+      if (m_groups[index].id != wildlife->group_id) {
+        continue;
+      }
+      auto& runtime = m_group_runtime[index];
+      runtime.alive += 1;
+      runtime.alarm = std::max(runtime.alarm, wildlife->alarm_timer);
+      sum_x[index] += ref.x;
+      sum_z[index] += ref.z;
+      break;
+    }
+  }
+
+  for (std::size_t index = 0; index < m_groups.size(); ++index) {
+    auto& runtime = m_group_runtime[index];
+    if (runtime.alive > 0) {
+      runtime.center_x = sum_x[index] / static_cast<float>(runtime.alive);
+      runtime.center_z = sum_z[index] / static_cast<float>(runtime.alive);
+    } else {
+      runtime.center_x = m_groups[index].home_x;
+      runtime.center_z = m_groups[index].home_z;
+    }
+  }
+}
+
+auto WildlifeSystem::nearest_prey(float world_x,
+                                  float world_z,
+                                  float radius) const -> const AnimalRef* {
+  const AnimalRef* best = nullptr;
+  float best_sq = radius * radius;
+  for (const auto& animal : m_animals) {
+    if (animal.species != Species::Sheep) {
+      continue;
+    }
+    float const dx = animal.x - world_x;
+    float const dz = animal.z - world_z;
+    float const distance_sq = (dx * dx) + (dz * dz);
+    if (distance_sq >= best_sq) {
+      continue;
+    }
+    best_sq = distance_sq;
+    best = &animal;
+  }
+  return best;
+}
+
+void WildlifeSystem::alert_group(std::uint16_t group_id, float duration) {
+  for (const auto& animal : m_animals) {
+    if (animal.group != group_id || animal.entity == nullptr) {
+      continue;
+    }
+    auto* wildlife = animal.entity->get_component<Engine::Core::WildlifeComponent>();
+    if (wildlife != nullptr) {
+      wildlife->alarm_timer = std::max(wildlife->alarm_timer, duration);
+    }
+  }
+}
+
+void WildlifeSystem::issue_move(Engine::Core::World& world,
+                                Engine::Core::EntityID entity_id,
+                                float world_x,
+                                float world_z) {
+  QVector3D const destination = Game::Systems::CommandService::snap_to_walkable_ground(
+      QVector3D(world_x, 0.0F, world_z));
+  Game::Systems::CommandService::MoveOptions options;
+  options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  Game::Systems::CommandService::move_unit(world, entity_id, destination, options);
+}
+
+void WildlifeSystem::set_travel_speed(Engine::Core::Entity& entity,
+                                      const SpeciesConfig& config,
+                                      bool urgent) {
+  auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return;
+  }
+  unit->speed = urgent ? config.flee_speed : config.move_speed;
+}
+
+class WildlifeSystem::NatureActionAdapter final : public NatureActions {
+public:
+  explicit NatureActionAdapter(WildlifeSystem& owner, Engine::Core::World& world)
+      : m_owner(owner)
+      , m_world(world) {}
+
+  void move_to(const NatureContext& ctx, float world_x, float world_z) override {
+    m_owner.issue_move(m_world, ctx.entity->get_id(), world_x, world_z);
+  }
+
+  void halt(const NatureContext& ctx) override {
+    if (ctx.movement != nullptr) {
+      ctx.movement->stop();
+    }
+  }
+
+  void set_travel_speed(const NatureContext& ctx, bool urgent) override {
+    m_owner.set_travel_speed(*ctx.entity, *ctx.config, urgent);
+  }
+
+  void alert_herd(std::uint16_t group_id, float duration) override {
+    m_owner.alert_group(group_id, duration);
+  }
+
+  void note(NatureEvent event) override {
+    switch (event) {
+    case NatureEvent::Flee:
+      m_owner.m_stats.flee_events += 1U;
+      break;
+    case NatureEvent::Hunt:
+      m_owner.m_stats.hunt_events += 1U;
+      break;
+    case NatureEvent::Bite:
+      m_owner.m_stats.bites += 1U;
+      break;
+    }
+  }
+
+  auto pick_open_point(std::uint32_t& rng,
+                       float origin_x,
+                       float origin_z,
+                       float min_radius,
+                       float max_radius,
+                       float& out_x,
+                       float& out_z) -> bool override {
+    return m_owner.pick_open_point(
+        rng, origin_x, origin_z, min_radius, max_radius, out_x, out_z);
+  }
+
+  auto nearest_prey(float world_x, float world_z, float radius) -> PreyRef override {
+    const AnimalRef* found = m_owner.nearest_prey(world_x, world_z, radius);
+    if (found == nullptr || found->entity == nullptr) {
+      return {};
+    }
+    return PreyRef{found->entity, found->id, found->x, found->z};
+  }
+
+  auto nearest_pack_hunter(float world_x,
+                           float world_z,
+                           float radius) -> ThreatQuery override {
+    ThreatQuery out;
+    for (const auto& animal : m_owner.m_animals) {
+      if (animal.species != Species::Wolf) {
+        continue;
+      }
+      float const dx = animal.x - world_x;
+      float const dz = animal.z - world_z;
+      float const distance = std::sqrt((dx * dx) + (dz * dz));
+      if (distance > radius) {
+        continue;
+      }
+      if (!out.found || distance < out.distance) {
+        out.found = true;
+        out.x = animal.x;
+        out.z = animal.z;
+        out.distance = distance;
+        out.strength = 1.0F;
+      }
+    }
+    return out;
+  }
+
+  auto bite(const NatureContext& ctx, const PreyRef& prey) -> bool override {
+    auto* attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
+    if (attack == nullptr || ctx.wildlife->state_timer > 0.0F) {
+      return false;
+    }
+    Game::Systems::Combat::apply_unit_damage(
+        &m_world, prey.entity, attack->melee_damage, ctx.entity->get_id());
+    ctx.wildlife->state_timer = std::max(0.35F, attack->melee_cooldown);
+    return true;
+  }
+
+private:
+  WildlifeSystem& m_owner;
+  Engine::Core::World& m_world;
+};
+
+void WildlifeSystem::think(Engine::Core::World& world,
+                           Engine::Core::Entity& entity,
+                           const GroupRuntime& runtime,
+                           const SpeciesConfig& config,
+                           Species species) {
+  auto* wildlife = entity.get_component<Engine::Core::WildlifeComponent>();
+  auto* transform = entity.get_component<Engine::Core::TransformComponent>();
+  auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+  if (wildlife == nullptr || transform == nullptr || movement == nullptr) {
+    return;
+  }
+
+  NatureContext ctx;
+  ctx.world = &world;
+  ctx.entity = &entity;
+  ctx.wildlife = wildlife;
+  ctx.movement = movement;
+  ctx.config = &config;
+  ctx.threats = &m_threats;
+  ctx.herd.center_x = runtime.center_x;
+  ctx.herd.center_z = runtime.center_z;
+  ctx.herd.alarm = runtime.alarm;
+  ctx.herd.alive = runtime.alive;
+  ctx.x = transform->position.x;
+  ctx.z = transform->position.z;
+
+  NatureActionAdapter adapter(*this, world);
+  NatureBrain& brain = species == Species::Wolf ? m_wolf_brain : m_sheep_brain;
+  brain.tick(ctx, adapter);
+}
+
+void WildlifeSystem::update_respawns(Engine::Core::World& world, float delta_time) {
+  for (std::size_t index = 0; index < m_groups.size(); ++index) {
+    auto& group = m_groups[index];
+    const auto& config = m_settings.for_species(group.species);
+    int const alive = index < m_group_runtime.size() ? m_group_runtime[index].alive : 0;
+
+    if (alive >= group.desired_size) {
+      group.respawn_timer = config.respawn_delay;
+      continue;
+    }
+    if (!config.respawn) {
+      continue;
+    }
+
+    group.respawn_timer -= delta_time;
+    if (group.respawn_timer > 0.0F) {
+      continue;
+    }
+    group.respawn_timer = config.respawn_delay;
+    if (spawn_member(world, group, config) != 0) {
+      m_stats.respawns += 1U;
+    }
+  }
+}
+
+void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
+  if (world == nullptr || !m_enabled || delta_time <= 0.0F) {
+    return;
+  }
+
+  if (m_spawn_pending) {
+    m_spawn_pending = false;
+    if (!m_restored) {
+      spawn_initial_population(*world);
+    }
+  }
+
+  m_threat_refresh -= delta_time;
+  if (m_threat_refresh <= 0.0F) {
+    m_threat_refresh = k_threat_refresh_interval;
+    rebuild_threats(*world);
+  }
+
+  collect_animals(*world);
+
+  for (const auto& animal : m_animals) {
+    if (animal.entity == nullptr) {
+      continue;
+    }
+    auto* wildlife = animal.entity->get_component<Engine::Core::WildlifeComponent>();
+    if (wildlife == nullptr) {
+      continue;
+    }
+
+    Tier const tier = tier_for(animal.x, animal.z);
+    if (tier == Tier::Dormant) {
+      m_stats.dormant_skips += 1U;
+      continue;
+    }
+
+    wildlife->state_timer = std::max(0.0F, wildlife->state_timer - delta_time);
+    wildlife->alarm_timer = std::max(0.0F, wildlife->alarm_timer - delta_time);
+    wildlife->think_cooldown -= delta_time;
+    if (wildlife->think_cooldown > 0.0F) {
+      continue;
+    }
+
+    float const multiplier = tier == Tier::Far ? k_far_think_multiplier : 1.0F;
+    if (wildlife->rng_state == 0U) {
+      wildlife->rng_state =
+          static_cast<std::uint32_t>((animal.id * 2654435761ULL) | 1ULL);
+    }
+    wildlife->think_cooldown =
+        (k_think_interval * multiplier) +
+        random_range(wildlife->rng_state, 0.0F, k_think_interval * 0.5F);
+
+    if (tier == Tier::Near) {
+      m_stats.near_thinks += 1U;
+    } else {
+      m_stats.far_thinks += 1U;
+    }
+
+    GroupRuntime runtime;
+    for (std::size_t index = 0; index < m_groups.size(); ++index) {
+      if (m_groups[index].id == wildlife->group_id && index < m_group_runtime.size()) {
+        runtime = m_group_runtime[index];
+        break;
+      }
+    }
+
+    const SpeciesConfig& config =
+        wildlife->species == Species::Wolf ? m_settings.wolves : m_settings.sheep;
+    think(*world, *animal.entity, runtime, config, wildlife->species);
+  }
+
+  update_respawns(*world, delta_time);
+
+  BirdFlockManager::instance().update(delta_time, m_threats);
+}
+
+auto WildlifeSystem::serialize_state() const -> QJsonObject {
+  QJsonObject state;
+  state["enabled"] = m_enabled;
+  state["seed"] = static_cast<qint64>(m_seed);
+  state["next_group_id"] = static_cast<int>(m_next_group_id);
+
+  QJsonArray groups;
+  for (const auto& group : m_groups) {
+    QJsonObject group_obj;
+    group_obj["id"] = static_cast<int>(group.id);
+    group_obj["species"] = QString::fromUtf8(species_name(group.species).data());
+    group_obj["home_x"] = static_cast<double>(group.home_x);
+    group_obj["home_z"] = static_cast<double>(group.home_z);
+    group_obj["roam_radius"] = static_cast<double>(group.roam_radius);
+    group_obj["desired_size"] = group.desired_size;
+    group_obj["respawn_timer"] = static_cast<double>(group.respawn_timer);
+    group_obj["rng_state"] = static_cast<qint64>(group.rng_state);
+    groups.append(group_obj);
+  }
+  state["groups"] = groups;
+
+  const auto& flock_manager = BirdFlockManager::instance();
+  QJsonArray flocks;
+  for (const auto& flock : flock_manager.flocks()) {
+    QJsonObject flock_obj;
+    flock_obj["home_x"] = static_cast<double>(flock.home_x);
+    flock_obj["home_z"] = static_cast<double>(flock.home_z);
+    flock_obj["roam_radius"] = static_cast<double>(flock.roam_radius);
+    flock_obj["target_x"] = static_cast<double>(flock.target_x);
+    flock_obj["target_z"] = static_cast<double>(flock.target_z);
+    flock_obj["retarget_timer"] = static_cast<double>(flock.retarget_timer);
+    flock_obj["alarm_timer"] = static_cast<double>(flock.alarm_timer);
+    flock_obj["rng_state"] = static_cast<qint64>(flock.rng_state);
+    flocks.append(flock_obj);
+  }
+  state["flocks"] = flocks;
+
+  QJsonArray birds;
+  for (const auto& bird : flock_manager.birds()) {
+    QJsonObject bird_obj;
+    bird_obj["x"] = static_cast<double>(bird.x);
+    bird_obj["y"] = static_cast<double>(bird.y);
+    bird_obj["z"] = static_cast<double>(bird.z);
+    bird_obj["yaw"] = static_cast<double>(bird.yaw);
+    bird_obj["target_x"] = static_cast<double>(bird.target_x);
+    bird_obj["target_z"] = static_cast<double>(bird.target_z);
+    bird_obj["altitude"] = static_cast<double>(bird.altitude);
+    bird_obj["target_altitude"] = static_cast<double>(bird.target_altitude);
+    bird_obj["speed"] = static_cast<double>(bird.speed);
+    bird_obj["phase"] = static_cast<double>(bird.phase);
+    bird_obj["think_timer"] = static_cast<double>(bird.think_timer);
+    bird_obj["state_timer"] = static_cast<double>(bird.state_timer);
+    bird_obj["rng_state"] = static_cast<qint64>(bird.rng_state);
+    bird_obj["flock"] = static_cast<int>(bird.flock);
+    bird_obj["behavior"] = QString::fromUtf8(behavior_name(bird.behavior).data());
+    bird_obj["tint"] = static_cast<int>(bird.tint);
+    birds.append(bird_obj);
+  }
+  state["birds"] = birds;
+
+  return state;
+}
+
+void WildlifeSystem::restore_state(const QJsonObject& state) {
+  if (state.isEmpty()) {
+    return;
+  }
+
+  m_enabled = state.value("enabled").toBool(m_enabled);
+  m_seed = static_cast<std::uint32_t>(state.value("seed").toVariant().toULongLong());
+  m_next_group_id =
+      static_cast<std::uint16_t>(state.value("next_group_id").toInt(m_next_group_id));
+
+  m_groups.clear();
+  const QJsonArray groups = state.value("groups").toArray();
+  for (const auto& value : groups) {
+    const QJsonObject group_obj = value.toObject();
+    GroupState group;
+    group.id = static_cast<std::uint16_t>(group_obj.value("id").toInt(0));
+    Species species = Species::Sheep;
+    if (try_parse_species(group_obj.value("species").toString().toStdString(),
+                          species)) {
+      group.species = species;
+    }
+    group.home_x = static_cast<float>(group_obj.value("home_x").toDouble(0.0));
+    group.home_z = static_cast<float>(group_obj.value("home_z").toDouble(0.0));
+    group.roam_radius =
+        static_cast<float>(group_obj.value("roam_radius").toDouble(14.0));
+    group.desired_size = group_obj.value("desired_size").toInt(0);
+    group.respawn_timer =
+        static_cast<float>(group_obj.value("respawn_timer").toDouble(0.0));
+    group.rng_state = static_cast<std::uint32_t>(
+        group_obj.value("rng_state").toVariant().toULongLong());
+    if (group.rng_state == 0U) {
+      group.rng_state = 1U;
+    }
+    m_groups.push_back(group);
+  }
+  m_group_runtime.assign(m_groups.size(), GroupRuntime{});
+
+  BirdPopulation population;
+  const QJsonArray flocks = state.value("flocks").toArray();
+  for (const auto& value : flocks) {
+    const QJsonObject flock_obj = value.toObject();
+    Flock flock;
+    flock.home_x = static_cast<float>(flock_obj.value("home_x").toDouble(0.0));
+    flock.home_z = static_cast<float>(flock_obj.value("home_z").toDouble(0.0));
+    flock.roam_radius =
+        static_cast<float>(flock_obj.value("roam_radius").toDouble(30.0));
+    flock.target_x = static_cast<float>(flock_obj.value("target_x").toDouble(0.0));
+    flock.target_z = static_cast<float>(flock_obj.value("target_z").toDouble(0.0));
+    flock.retarget_timer =
+        static_cast<float>(flock_obj.value("retarget_timer").toDouble(0.0));
+    flock.alarm_timer =
+        static_cast<float>(flock_obj.value("alarm_timer").toDouble(0.0));
+    flock.rng_state = static_cast<std::uint32_t>(
+        flock_obj.value("rng_state").toVariant().toULongLong());
+    population.flocks.push_back(flock);
+  }
+
+  const QJsonArray birds = state.value("birds").toArray();
+  for (const auto& value : birds) {
+    const QJsonObject bird_obj = value.toObject();
+    Bird bird;
+    bird.x = static_cast<float>(bird_obj.value("x").toDouble(0.0));
+    bird.y = static_cast<float>(bird_obj.value("y").toDouble(0.0));
+    bird.z = static_cast<float>(bird_obj.value("z").toDouble(0.0));
+    bird.yaw = static_cast<float>(bird_obj.value("yaw").toDouble(0.0));
+    bird.target_x = static_cast<float>(bird_obj.value("target_x").toDouble(0.0));
+    bird.target_z = static_cast<float>(bird_obj.value("target_z").toDouble(0.0));
+    bird.altitude = static_cast<float>(bird_obj.value("altitude").toDouble(0.0));
+    bird.target_altitude =
+        static_cast<float>(bird_obj.value("target_altitude").toDouble(0.0));
+    bird.speed = static_cast<float>(bird_obj.value("speed").toDouble(0.0));
+    bird.phase = static_cast<float>(bird_obj.value("phase").toDouble(0.0));
+    bird.think_timer = static_cast<float>(bird_obj.value("think_timer").toDouble(0.0));
+    bird.state_timer = static_cast<float>(bird_obj.value("state_timer").toDouble(0.0));
+    bird.rng_state = static_cast<std::uint32_t>(
+        bird_obj.value("rng_state").toVariant().toULongLong());
+    bird.flock = static_cast<std::uint16_t>(bird_obj.value("flock").toInt(0));
+    Behavior behavior = Behavior::Cruise;
+    if (try_parse_behavior(bird_obj.value("behavior").toString().toStdString(),
+                           behavior)) {
+      bird.behavior = behavior;
+    }
+    bird.tint = static_cast<std::uint8_t>(bird_obj.value("tint").toInt(0));
+    population.birds.push_back(bird);
+  }
+
+  BirdFlockManager::instance().restore(population);
+
+  m_restored = true;
+  m_spawn_pending = false;
+}
+
+} // namespace Game::Wildlife

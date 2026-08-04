@@ -39,7 +39,9 @@ enum class SpawnType : std::uint8_t {
   WallSegment,
   Marketplace,
   WallGate,
-  Temple
+  Temple,
+  Sheep,
+  Wolf
 };
 
 inline auto spawn_typeToQString(SpawnType type) -> QString {
@@ -100,6 +102,10 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("wall_gate");
   case SpawnType::Temple:
     return QStringLiteral("temple");
+  case SpawnType::Sheep:
+    return QStringLiteral("sheep");
+  case SpawnType::Wolf:
+    return QStringLiteral("wolf");
   }
   return QStringLiteral("archer");
 }
@@ -192,6 +198,14 @@ inline auto try_parse_spawn_type(const QString& value, SpawnType& out) -> bool {
   }
   if (lowered == QStringLiteral("builder")) {
     out = SpawnType::Builder;
+    return true;
+  }
+  if (lowered == QStringLiteral("sheep")) {
+    out = SpawnType::Sheep;
+    return true;
+  }
+  if (lowered == QStringLiteral("wolf")) {
+    out = SpawnType::Wolf;
     return true;
   }
   if (lowered == QStringLiteral("barracks")) {
@@ -317,7 +331,17 @@ inline auto spawn_typeFromString(const std::string& str) -> std::optional<SpawnT
   if (str == "temple") {
     return SpawnType::Temple;
   }
+  if (str == "sheep") {
+    return SpawnType::Sheep;
+  }
+  if (str == "wolf") {
+    return SpawnType::Wolf;
+  }
   return std::nullopt;
+}
+
+[[nodiscard]] inline auto is_wildlife_spawn(SpawnType type) noexcept -> bool {
+  return type == SpawnType::Sheep || type == SpawnType::Wolf;
 }
 
 inline auto is_building_spawn(SpawnType type) -> bool {
@@ -328,7 +352,7 @@ inline auto is_building_spawn(SpawnType type) -> bool {
 }
 
 inline auto is_troop_spawn(SpawnType type) -> bool {
-  return !is_building_spawn(type);
+  return !is_building_spawn(type) && !is_wildlife_spawn(type);
 }
 
 inline auto is_wall_network_spawn(SpawnType type) -> bool {
@@ -342,11 +366,11 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
 
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Builder &&
-         !is_building_spawn(type);
+         !is_building_spawn(type) && !is_wildlife_spawn(type);
 }
 
 inline auto can_use_guard_mode(SpawnType type) -> bool {
-  return !is_building_spawn(type);
+  return !is_building_spawn(type) && !is_wildlife_spawn(type);
 }
 
 inline auto can_use_hold_mode(SpawnType type) -> bool {
@@ -354,7 +378,7 @@ inline auto can_use_hold_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_patrol_mode(SpawnType type) -> bool {
-  return !is_building_spawn(type);
+  return !is_building_spawn(type) && !is_wildlife_spawn(type);
 }
 
 [[nodiscard]] inline auto can_use_run_mode(SpawnType type) noexcept -> bool {
@@ -387,6 +411,8 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::Marketplace:
   case SpawnType::WallGate:
   case SpawnType::Temple:
+  case SpawnType::Sheep:
+  case SpawnType::Wolf:
     return false;
   }
   return false;
@@ -450,6 +476,10 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return std::nullopt;
   case SpawnType::Temple:
     return std::nullopt;
+  case SpawnType::Sheep:
+    return TroopType::Sheep;
+  case SpawnType::Wolf:
+    return TroopType::Wolf;
   }
   return std::nullopt;
 }
@@ -498,6 +528,10 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Civilian;
   case TroopType::Builder:
     return SpawnType::Builder;
+  case TroopType::Sheep:
+    return SpawnType::Sheep;
+  case TroopType::Wolf:
+    return SpawnType::Wolf;
   }
   return SpawnType::Archer;
 }

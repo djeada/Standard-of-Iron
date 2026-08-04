@@ -9,6 +9,7 @@
 #include "../../elephant/dimensions.h"
 #include "../../gl/humanoid/humanoid_types.h"
 #include "../../horse/dimensions.h"
+#include "../../wildlife/wildlife_variant.h"
 #include "../render_request.h"
 #include "creature_render_graph.h"
 
@@ -42,6 +43,17 @@ struct PreparedHorseBodyState {
 struct PreparedElephantBodyState {
   CreatureGraphOutput graph{};
   Render::GL::ElephantVariant variant{};
+  Render::Creature::AnimationStateId animation_state{
+      Render::Creature::AnimationStateId::Idle};
+  float phase{0.0F};
+  std::uint32_t clip_variant{0U};
+};
+
+struct PreparedWildlifeBodyState {
+  CreatureGraphOutput graph{};
+  Render::GL::WildlifeVariant variant{};
+  Render::Creature::Pipeline::CreatureKind kind{
+      Render::Creature::Pipeline::CreatureKind::Sheep};
   Render::Creature::AnimationStateId animation_state{
       Render::Creature::AnimationStateId::Idle};
   float phase{0.0F};
