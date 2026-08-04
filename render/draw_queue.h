@@ -280,10 +280,14 @@ struct RiggedCreatureCmd {
   QMatrix4x4 world;
 
   const QMatrix4x4* bone_palette = nullptr;
+  const QMatrix4x4* bone_palette_next = nullptr;
   std::shared_ptr<std::array<QMatrix4x4, k_max_owned_bones>> owned_bone_palette{};
 
   std::uint32_t palette_ubo = 0;
   std::uint32_t palette_offset = 0;
+  std::uint32_t palette_next_offset = 0;
+  float palette_lerp = 0.0F;
+  bool palette_frames_resident = false;
   std::uint32_t bone_count = 0;
   std::array<QVector3D, k_max_role_colors> role_colors{};
   std::uint32_t role_color_count = 0;

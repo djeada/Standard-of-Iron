@@ -13,8 +13,20 @@ layout(std430, binding = 5) buffer RiggedDrawCommand {
 } rg_cmd;
 
 uniform uint u_out_capacity_triangles;
+uniform uint u_reset;
 
 void main() {
+  if (u_reset != 0u) {
+    rg_cmd.count = 0u;
+    rg_cmd.instance_count = 1u;
+    rg_cmd.first_index = 0u;
+    rg_cmd.base_vertex = 0u;
+    rg_cmd.base_instance = 0u;
+    rg_cmd.surviving = 0u;
+    rg_cmd.overflowed = 0u;
+    return;
+  }
+
   uint drawn = min(rg_cmd.surviving, u_out_capacity_triangles);
   rg_cmd.count = drawn * 3u;
   rg_cmd.instance_count = drawn > 0u ? 1u : 0u;

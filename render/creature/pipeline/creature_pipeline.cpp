@@ -741,14 +741,27 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     ensure_skin_ubo_for_submit(cache, *entry);
   }
 
+  const bool wants_layered_pose =
+      (full_body_blend != nullptr && full_body_blend->valid() &&
+       full_body_blend_weight > 0.0F) ||
+      (upper_body_overlay != nullptr && upper_body_overlay->valid() &&
+       upper_body_overlay_weight > 0.0F);
+  const bool frames_resident =
+      entry->skin_palette_ubo != 0U && entry->skinned_frame_total != 0U &&
+      global_frame < entry->skinned_frame_total &&
+      primary_playback.next_global_frame < entry->skinned_frame_total;
+  const bool use_resident_frames = frames_resident && !wants_layered_pose;
+
   std::shared_ptr<
       std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>
       primary_interpolated_palette;
   const QMatrix4x4* frame_palette =
-      interpolated_palette_for_playback(*entry,
-                                        primary_playback,
-                                        handle.archetype->species,
-                                        primary_interpolated_palette);
+      use_resident_frames
+          ? frame_palette_for_global_frame(*entry, primary_playback.global_frame)
+          : interpolated_palette_for_playback(*entry,
+                                              primary_playback,
+                                              handle.archetype->species,
+                                              primary_interpolated_palette);
   if (frame_palette == nullptr) {
     return;
   }
@@ -786,6 +799,15 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     cmd.palette_offset =
         static_cast<std::uint32_t>(static_cast<std::size_t>(global_frame) *
                                    entry->skin_palette_frame_stride_bytes);
+    if (use_resident_frames) {
+      cmd.palette_next_offset = static_cast<std::uint32_t>(
+          static_cast<std::size_t>(primary_playback.next_global_frame) *
+          entry->skin_palette_frame_stride_bytes);
+      cmd.palette_lerp = std::clamp(primary_playback.frame_lerp, 0.0F, 1.0F);
+      cmd.palette_frames_resident = true;
+      cmd.bone_palette_next =
+          frame_palette_for_global_frame(*entry, primary_playback.next_global_frame);
+    }
   } else if (entry->skin_palette_ubo != 0U &&
              qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
     static std::uint64_t hits = 0;

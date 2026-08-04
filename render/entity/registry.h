@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -91,13 +92,22 @@ using RenderFunc = std::function<void(const DrawContext&, ISubmitter& out)>;
 
 class EntityRendererRegistry {
 public:
+  struct TransparentStringHash {
+    using is_transparent = void;
+    auto operator()(std::string_view value) const noexcept -> std::size_t {
+      return std::hash<std::string_view>{}(value);
+    }
+  };
+
   void register_renderer(const std::string& type, RenderFunc func);
-  auto get(const std::string& type) const -> RenderFunc;
+  auto get(std::string_view type) const -> RenderFunc;
   auto get(RendererHandle handle) const -> const RenderFunc*;
-  auto get_handle(const std::string& type) const -> RendererHandle;
+  auto get_handle(std::string_view type) const -> RendererHandle;
 
 private:
-  std::unordered_map<std::string, RendererHandle> m_lookup;
+  std::
+      unordered_map<std::string, RendererHandle, TransparentStringHash, std::equal_to<>>
+          m_lookup;
   std::vector<RenderFunc> m_renderers;
 };
 

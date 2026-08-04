@@ -13,6 +13,7 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
+#include <vector>
 
 #include "../../bone_palette_arena.h"
 #include "../../draw_queue.h"
@@ -57,9 +58,36 @@ auto query_max_uniform_block_size() -> std::size_t {
   return (max_block > 0) ? static_cast<std::size_t>(max_block) : 0;
 }
 
-void copy_palette_to_scratch(const QMatrix4x4* palette, std::vector<float>& scratch) {
+void pack_cmd_palette(const RiggedCreatureCmd& cmd, float* dst) {
+  if (!cmd.palette_frames_resident || cmd.bone_palette_next == nullptr ||
+      cmd.palette_lerp <= 1.0e-4F) {
+    BonePaletteArena::pack_palette_for_gpu(cmd.bone_palette, dst);
+    return;
+  }
+
+  thread_local std::vector<QMatrix4x4> blended;
+  const auto bones =
+      std::min<std::size_t>(cmd.bone_count, BonePaletteArena::k_palette_width);
+  blended.resize(BonePaletteArena::k_palette_width);
+  float const weight = std::clamp(cmd.palette_lerp, 0.0F, 1.0F);
+  for (std::size_t b = 0; b < bones; ++b) {
+    const float* first = cmd.bone_palette[b].constData();
+    const float* second = cmd.bone_palette_next[b].constData();
+    float* out = blended[b].data();
+    for (std::size_t i = 0; i < BonePaletteArena::k_matrix_floats; ++i) {
+      out[i] = first[i] + (second[i] - first[i]) * weight;
+    }
+  }
+  for (std::size_t b = bones; b < BonePaletteArena::k_palette_width; ++b) {
+    blended[b] = QMatrix4x4{};
+  }
+  BonePaletteArena::pack_palette_for_gpu(blended.data(), dst);
+}
+
+void copy_palette_to_scratch(const RiggedCreatureCmd& cmd,
+                             std::vector<float>& scratch) {
   scratch.resize(BonePaletteArena::k_palette_floats);
-  BonePaletteArena::pack_palette_for_gpu(palette, scratch.data());
+  pack_cmd_palette(cmd, scratch.data());
 }
 
 void flatten_role_colors(
@@ -323,9 +351,8 @@ auto RiggedCharacterPipeline::bind_streamed_palette_batch(
     if (cmds[k] == nullptr || cmds[k]->bone_palette == nullptr) {
       return false;
     }
-    BonePaletteArena::pack_palette_for_gpu(cmds[k]->bone_palette,
-                                           m_palette_scratch.data() +
-                                               k * BonePaletteArena::k_palette_floats);
+    pack_cmd_palette(*cmds[k],
+                     m_palette_scratch.data() + k * BonePaletteArena::k_palette_floats);
   }
   const std::size_t element_offset =
       m_palette_stream.write(m_palette_scratch.data(), written_floats);
@@ -430,7 +457,7 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
                            GL_DYNAMIC_DRAW);
           m_palette_ubo_capacity_bytes = BonePaletteArena::k_palette_bytes;
         }
-        copy_palette_to_scratch(cmd.bone_palette, m_palette_scratch);
+        copy_palette_to_scratch(cmd, m_palette_scratch);
         fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
         fn->glBufferSubData(GL_UNIFORM_BUFFER,
                             0,
@@ -746,7 +773,7 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* cmds,
   for (std::size_t k = 0; k < count; ++k) {
     const auto& c = cmds[k];
     float* dst = m_palette_scratch.data() + k * floats_per_palette;
-    BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
+    pack_cmd_palette(c, dst);
   }
   fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
 
@@ -915,7 +942,7 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
     for (std::size_t k = 0; k < count; ++k) {
       const auto& c = *cmds[k];
       float* dst = m_palette_scratch.data() + k * floats_per_palette;
-      BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
+      pack_cmd_palette(c, dst);
     }
     fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
     fn->glBufferData(GL_UNIFORM_BUFFER,
