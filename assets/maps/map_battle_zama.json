@@ -310,6 +310,48 @@
       "x": 177.83,
       "z": 671.31,
       "radius": 54.41
+    },
+    {
+      "type": "forest",
+      "x": 400.0,
+      "z": 340.0,
+      "radius": 32.0,
+      "landmark": "zama_centre_screen"
+    },
+    {
+      "type": "forest",
+      "x": 620.0,
+      "z": 540.0,
+      "radius": 28.0,
+      "landmark": "zama_east_screen"
+    },
+    {
+      "type": "forest",
+      "x": 300.0,
+      "z": 120.0,
+      "radius": 28.0,
+      "landmark": "zama_north_screen"
+    },
+    {
+      "type": "forest",
+      "x": 100.0,
+      "z": 508.0,
+      "radius": 26.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "forest",
+      "x": 422.0,
+      "z": 480.0,
+      "radius": 26.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "forest",
+      "x": 106.0,
+      "z": 560.0,
+      "radius": 30.0,
+      "landmark": "zama_south_shrine"
     }
   ],
   "rivers": [
@@ -2646,6 +2688,30 @@
       "x": 651.6,
       "z": 393.47,
       "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 564.0,
+      "z": 194.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 560.0,
+      "z": 194.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 556.0,
+      "z": 194.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "zama_numidian_watch"
     }
   ],
   "world_props": [
@@ -3988,6 +4054,453 @@
       "z": 240.25,
       "scale": 1.12,
       "rotation": 126.8
+    },
+    {
+      "type": "statue",
+      "x": 109.0,
+      "z": 471.5,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 111.0,
+      "z": 460.5,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 122.0,
+      "z": 471.5,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 116.0,
+      "z": 460.5,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 91.0,
+      "z": 473.0,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 89.0,
+      "z": 460.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 86.0,
+      "z": 467.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 106.0,
+      "z": 466.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_west_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 89.7,
+      "z": 658.47,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 75.0,
+      "z": 653.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 73.0,
+      "z": 668.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 83.59,
+      "z": 673.41,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 83.0,
+      "z": 648.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 67.0,
+      "z": 664.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 94.0,
+      "z": 656.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 78.0,
+      "z": 676.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "zama_south_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 92.81,
+      "z": 314.79,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 90.81,
+      "z": 305.44,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 100.46,
+      "z": 314.79,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 100.46,
+      "z": 305.44,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 77.51,
+      "z": 316.06,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 75.81,
+      "z": 305.01,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 73.26,
+      "z": 310.96,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 90.26,
+      "z": 310.11,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_plateau_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "statue",
+      "x": 305.8,
+      "z": 281.55,
+      "scale": 1.1,
+      "rotation": 270.0,
+      "landmark": "zama_desert_shrine_way"
+    },
+    {
+      "type": "statue",
+      "x": 292.0,
+      "z": 275.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "zama_desert_shrine_way"
+    },
+    {
+      "type": "statue",
+      "x": 297.2,
+      "z": 288.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_desert_shrine_way"
+    },
+    {
+      "type": "ruins",
+      "x": 307.0,
+      "z": 275.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "zama_desert_shrine_way"
+    },
+    {
+      "type": "ruins",
+      "x": 308.0,
+      "z": 286.0,
+      "scale": 0.85,
+      "rotation": 180.0,
+      "landmark": "zama_desert_shrine_way"
+    },
+    {
+      "type": "ruins",
+      "x": 313.0,
+      "z": 279.0,
+      "scale": 1.15,
+      "rotation": 0.0,
+      "landmark": "zama_desert_shrine_way"
+    },
+    {
+      "type": "firecamp",
+      "x": 286.0,
+      "z": 280.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_desert_shrine_way",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 386.0,
+      "z": 480.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 375.0,
+      "z": 473.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 373.0,
+      "z": 490.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 382.0,
+      "z": 497.2,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "ruins",
+      "x": 383.0,
+      "z": 468.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "ruins",
+      "x": 367.0,
+      "z": 484.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "dead_tree",
+      "x": 392.0,
+      "z": 476.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "dead_tree",
+      "x": 379.53,
+      "z": 499.7,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "zama_ruined_farmstead"
+    },
+    {
+      "type": "statue",
+      "x": 560.0,
+      "z": 176.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "tent",
+      "x": 555.0,
+      "z": 186.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "tent",
+      "x": 564.0,
+      "z": 187.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "tent",
+      "x": 558.0,
+      "z": 192.0,
+      "scale": 0.95,
+      "rotation": 270.0,
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "supply_cart",
+      "x": 568.0,
+      "z": 183.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 552.0,
+      "z": 182.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "firecamp",
+      "x": 560.0,
+      "z": 188.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "zama_numidian_watch",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 566.0,
+      "z": 168.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "statue",
+      "x": 55.76,
+      "z": 564.24,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "zama_south_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 71.0,
+      "z": 552.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_south_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 55.0,
+      "z": 552.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "zama_south_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 65.0,
+      "z": 567.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "zama_south_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 54.0,
+      "z": 568.0,
+      "scale": 0.85,
+      "rotation": 270.0,
+      "landmark": "zama_south_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 61.0,
+      "z": 573.0,
+      "scale": 1.15,
+      "rotation": 90.0,
+      "landmark": "zama_south_shrine"
+    },
+    {
+      "type": "firecamp",
+      "x": 60.0,
+      "z": 546.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "zama_south_shrine",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
     }
   ],
   "victory": {
@@ -4118,8 +4631,8 @@
     },
     {
       "type": "wall_gate",
-      "x": 636.0,
-      "z": 381.0,
+      "x": 636,
+      "z": 382,
       "player_id": 2,
       "rotation": 0.0,
       "nation": "roman_republic"
@@ -4707,16 +5220,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 655.0,
-      "z": 346.0,
+      "x": 656,
+      "z": 346,
       "player_id": 2,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 600.66,
-      "z": 446.0,
+      "x": 600,
+      "z": 446,
       "player_id": 2,
       "rotation": 0.0,
       "nation": "roman_republic"
@@ -5011,16 +5524,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 699.84,
-      "z": 228.0,
+      "x": 700,
+      "z": 228,
       "player_id": 3,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 674.0,
-      "z": 192.7,
+      "x": 674,
+      "z": 192,
       "player_id": 3,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -5322,16 +5835,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 567.82,
-      "z": 604.0,
+      "x": 568,
+      "z": 604,
       "player_id": 4,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 556.79,
-      "z": 668.0,
+      "x": 556,
+      "z": 668,
       "player_id": 4,
       "rotation": 0.0,
       "nation": "roman_republic"
@@ -5612,16 +6125,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 453.71,
-      "z": 204.0,
+      "x": 454,
+      "z": 204,
       "player_id": 5,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 474.0,
-      "z": 175.3,
+      "x": 474,
+      "z": 176,
       "player_id": 5,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -5648,14 +6161,30 @@
       "nation": "roman_republic"
     },
     {
+      "type": "temple",
+      "x": 100.0,
+      "z": 466.0,
+      "player_id": -1,
+      "landmark": "zama_west_sanctuary",
+      "nation": "carthage"
+    },
+    {
+      "type": "temple",
+      "x": 85.16,
+      "z": 310.11,
+      "player_id": -1,
+      "landmark": "zama_plateau_sanctuary",
+      "nation": "carthage"
+    },
+    {
       "type": "wall_segment",
       "start": [
-        619.0,
-        381.0
+        620,
+        382
       ],
       "end": [
-        633.0,
-        381.0
+        632,
+        382
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5664,12 +6193,12 @@
     {
       "type": "wall_segment",
       "start": [
-        639.0,
-        381.0
+        640,
+        382
       ],
       "end": [
-        653.0,
-        381.0
+        654,
+        382
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5678,12 +6207,12 @@
     {
       "type": "wall_segment",
       "start": [
-        619.0,
-        411.0
+        620,
+        412
       ],
       "end": [
-        653.0,
-        411.0
+        654,
+        412
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5692,12 +6221,12 @@
     {
       "type": "wall_segment",
       "start": [
-        619.0,
-        381.0
+        620,
+        384
       ],
       "end": [
-        619.0,
-        411.0
+        620,
+        410
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5706,12 +6235,12 @@
     {
       "type": "wall_segment",
       "start": [
-        653.0,
-        381.0
+        654,
+        384
       ],
       "end": [
-        653.0,
-        411.0
+        654,
+        410
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5720,12 +6249,12 @@
     {
       "type": "wall_segment",
       "start": [
-        612.0,
-        346.0
+        590,
+        346
       ],
       "end": [
-        652.0,
-        346.0
+        652,
+        346
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5734,12 +6263,12 @@
     {
       "type": "wall_segment",
       "start": [
-        658.0,
-        346.0
+        660,
+        346
       ],
       "end": [
-        694.0,
-        346.0
+        694,
+        346
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5748,12 +6277,12 @@
     {
       "type": "wall_segment",
       "start": [
-        578.0,
-        446.0
+        578,
+        446
       ],
       "end": [
-        593.72,
-        446.0
+        596,
+        446
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5762,12 +6291,12 @@
     {
       "type": "wall_segment",
       "start": [
-        578.0,
-        366.0
+        604,
+        446
       ],
       "end": [
-        578.0,
-        446.0
+        618,
+        446
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5776,12 +6305,12 @@
     {
       "type": "wall_segment",
       "start": [
-        694.0,
-        346.0
+        674,
+        446
       ],
       "end": [
-        694.0,
-        442.0
+        694,
+        446
       ],
       "player_id": 2,
       "width": 2.0,
@@ -5790,12 +6319,40 @@
     {
       "type": "wall_segment",
       "start": [
-        674.0,
-        164.0
+        578,
+        352
       ],
       "end": [
-        750.0,
-        164.0
+        578,
+        444
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        694,
+        348
+      ],
+      "end": [
+        694,
+        444
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        674,
+        164
+      ],
+      "end": [
+        750,
+        164
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5804,12 +6361,12 @@
     {
       "type": "wall_segment",
       "start": [
-        674.0,
-        228.0
+        674,
+        228
       ],
       "end": [
-        696.84,
-        228.0
+        696,
+        228
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5818,12 +6375,12 @@
     {
       "type": "wall_segment",
       "start": [
-        702.84,
-        228.0
+        704,
+        228
       ],
       "end": [
-        750.0,
-        228.0
+        750,
+        228
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5832,12 +6389,12 @@
     {
       "type": "wall_segment",
       "start": [
-        674.0,
-        164.0
+        674,
+        166
       ],
       "end": [
-        674.0,
-        189.7
+        674,
+        188
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5846,12 +6403,12 @@
     {
       "type": "wall_segment",
       "start": [
-        674.0,
-        195.7
+        674,
+        196
       ],
       "end": [
-        674.0,
-        228.0
+        674,
+        226
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5860,12 +6417,12 @@
     {
       "type": "wall_segment",
       "start": [
-        750.0,
-        164.0
+        750,
+        166
       ],
       "end": [
-        750.0,
-        228.0
+        750,
+        226
       ],
       "player_id": 3,
       "width": 2.0,
@@ -5874,12 +6431,12 @@
     {
       "type": "wall_segment",
       "start": [
-        518.0,
-        604.0
+        518,
+        604
       ],
       "end": [
-        564.82,
-        604.0
+        564,
+        604
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5888,12 +6445,12 @@
     {
       "type": "wall_segment",
       "start": [
-        570.82,
-        604.0
+        572,
+        604
       ],
       "end": [
-        594.0,
-        604.0
+        594,
+        604
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5902,12 +6459,12 @@
     {
       "type": "wall_segment",
       "start": [
-        518.0,
-        668.0
+        518,
+        668
       ],
       "end": [
-        553.79,
-        668.0
+        552,
+        668
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5916,12 +6473,12 @@
     {
       "type": "wall_segment",
       "start": [
-        559.79,
-        668.0
+        560,
+        668
       ],
       "end": [
-        594.0,
-        668.0
+        594,
+        668
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5930,12 +6487,12 @@
     {
       "type": "wall_segment",
       "start": [
-        518.0,
-        604.0
+        518,
+        606
       ],
       "end": [
-        518.0,
-        668.0
+        518,
+        666
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5944,12 +6501,12 @@
     {
       "type": "wall_segment",
       "start": [
-        594.0,
-        604.0
+        594,
+        606
       ],
       "end": [
-        594.0,
-        668.0
+        594,
+        666
       ],
       "player_id": 4,
       "width": 2.0,
@@ -5958,12 +6515,12 @@
     {
       "type": "wall_segment",
       "start": [
-        398.0,
-        140.0
+        398,
+        140
       ],
       "end": [
-        414.0,
-        140.0
+        436,
+        140
       ],
       "player_id": 5,
       "width": 2.0,
@@ -5972,12 +6529,12 @@
     {
       "type": "wall_segment",
       "start": [
-        398.0,
-        204.0
+        398,
+        204
       ],
       "end": [
-        450.71,
-        204.0
+        450,
+        204
       ],
       "player_id": 5,
       "width": 2.0,
@@ -5986,12 +6543,12 @@
     {
       "type": "wall_segment",
       "start": [
-        456.71,
-        204.0
+        458,
+        204
       ],
       "end": [
-        474.0,
-        204.0
+        474,
+        204
       ],
       "player_id": 5,
       "width": 2.0,
@@ -6000,12 +6557,12 @@
     {
       "type": "wall_segment",
       "start": [
-        398.0,
-        140.0
+        398,
+        142
       ],
       "end": [
-        398.0,
-        204.0
+        398,
+        202
       ],
       "player_id": 5,
       "width": 2.0,
@@ -6014,12 +6571,12 @@
     {
       "type": "wall_segment",
       "start": [
-        474.0,
-        157.1
+        474,
+        148
       ],
       "end": [
-        474.0,
-        172.3
+        474,
+        172
       ],
       "player_id": 5,
       "width": 2.0,
@@ -6028,12 +6585,12 @@
     {
       "type": "wall_segment",
       "start": [
-        474.0,
-        178.3
+        474,
+        180
       ],
       "end": [
-        474.0,
-        204.0
+        474,
+        202
       ],
       "player_id": 5,
       "width": 2.0,
@@ -6098,5 +6655,101 @@
   ],
   "rain": {
     "enabled": false
-  }
+  },
+  "landmarks": [
+    {
+      "id": "zama_west_sanctuary",
+      "kind": "sanctuary",
+      "x": 100,
+      "z": 460,
+      "facing": "east",
+      "nation": "carthage",
+      "forest": {
+        "radius": 26,
+        "bearing": "south"
+      }
+    },
+    {
+      "id": "zama_south_hamlet",
+      "kind": "hamlet",
+      "x": 80,
+      "z": 660,
+      "facing": "north"
+    },
+    {
+      "id": "zama_plateau_sanctuary",
+      "kind": "sanctuary",
+      "x": 85,
+      "z": 310,
+      "on_hill": true,
+      "scale": 0.85,
+      "facing": "east",
+      "nation": "carthage",
+      "player_id": -1
+    },
+    {
+      "id": "zama_desert_shrine_way",
+      "kind": "shrine",
+      "x": 300,
+      "z": 280,
+      "facing": "west"
+    },
+    {
+      "id": "zama_ruined_farmstead",
+      "kind": "hamlet",
+      "x": 380,
+      "z": 480,
+      "facing": "north",
+      "forest": {
+        "radius": 26,
+        "bearing": "east"
+      }
+    },
+    {
+      "id": "zama_numidian_watch",
+      "kind": "watch",
+      "x": 560,
+      "z": 180,
+      "facing": "south",
+      "nation": "roman_republic",
+      "player_id": 3,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "zama_south_shrine",
+      "kind": "shrine",
+      "x": 60,
+      "z": 560,
+      "facing": "north",
+      "forest": {
+        "radius": 30,
+        "bearing": "east"
+      }
+    }
+  ],
+  "groves": [
+    {
+      "id": "zama_centre_screen",
+      "x": 400,
+      "z": 340,
+      "radius": 32
+    },
+    {
+      "id": "zama_east_screen",
+      "x": 620,
+      "z": 540,
+      "radius": 28
+    },
+    {
+      "id": "zama_north_screen",
+      "x": 300,
+      "z": 120,
+      "radius": 28
+    }
+  ]
 }

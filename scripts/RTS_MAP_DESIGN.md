@@ -53,8 +53,10 @@ Three tiers, chosen by the settlement's role in its mission:
   housing quarters cut by streets. The signature settlement of a map.
 - **fortified_camp** - one wall ring, corner towers, a market and housing rows.
   The common garrison holding.
-- **marching_camp** - palisade across the threat side only, barracks and a few
-  homes, no market. Temporary and forward positions, and the player's start.
+- **marching_camp** - a closed rampart with two gates, barracks and a few homes,
+  no market. Temporary and forward positions, and the player's start. A camp with
+  no wall at all is authored with `"palisade": false`, which is how the offensive
+  missions keep the player's start to a bare barracks.
 
 Rules the generator enforces, and the reasons behind them:
 
@@ -72,7 +74,72 @@ Rules the generator enforces, and the reasons behind them:
 - A hill carrying a settlement may be widened to fit its crown, but never past
   2.4x its authored size, never into a river or lake, and never without keeping
   at least two approaches. A hill that doubles in size stops being terrain and
-  becomes a wall that severs the road graph.
+  becomes a wall that severs the road graph. Where a hill's size is load bearing
+  for something else - a road threading past it, one wall of a pass - author
+  `"grow_hill": false` and the settlement is shrunk to the crown it already has.
+
+### Walls and gates
+
+- **A wall ring has no holes.** It is laid one cell at a time on the runtime's
+  2-unit wall lattice, and the only cells left out are the ones a gate covers and
+  the ones no unit can walk anyway: a hill core, a lake, a river channel. Terrain
+  may close a side of a ring; a clearance margin may not. A rampart that stops
+  four units short of a river bank leaves a gap units walk straight through, and
+  that is what a ring is for.
+- The generator proves this rather than asserting it: it floods the inside of
+  every walled settlement over walkable, unoccupied ground and fails the map if
+  the flood reaches open country without passing a gate.
+- **Gates go where roads cross the ring.** A gateway off the road makes
+  formations walk the length of a curtain wall to get in. Where no road crosses,
+  the gate is aimed at the nearest road instead of parked at the midpoint of a
+  side, and every ring gets two, so a garrison always has a sortie route and a
+  besieger always has a second front.
+- A gate opening is exactly the gate's own span. Anything wider leaves walkable
+  ground beside it. Gates open for their owner and allies only, so a walled town
+  is a siege.
+
+## Landmarks
+
+The ground between settlements needs places worth walking to. A map's
+`landmarks` array is authored intent - a handful of lines each - and
+`scripts/generate-map-landmarks.py` stamps it into temples, props, guards and
+groves. Four kinds:
+
+- **sanctuary** - a temple standing outside any settlement, a statue-lined
+  approach, ruins and a fire. Put one on a hill crown or at a wood's edge; it is
+  the map's second temple and its most visible detour.
+- **shrine** - a wayside altar of statues and ruins at a junction or a crossing.
+- **hamlet** - a dead village of abandoned homes, ruins and dead trees, for a
+  burnt flank or the ground around a Sepulcher zone.
+- **watch** - a picket camped beside a monument: tents, a cart, a rack, a fire.
+
+Rules the tool enforces, and the reasons:
+
+- Nothing lands inside a settlement's ring or in a road. `statue` and
+  `abandoned_home` block the cell they stand on, so a monument in the roadway
+  makes a formation file around it.
+- Guards are authored with the `guard` behaviour. Without it the AI folds them
+  into its strategic pool and marches them off, and the landmark they were put
+  there to hold is unheld a minute into the mission.
+- Two landmarks inside 60 units read as one place, and the tool says so.
+- A landmark owned by an AI player is a side objective; one owned by `-1` is
+  neutral ground. Keep landmarks off `player_id` 1 on the offensive missions -
+  `MissionAssetRulesTest.OffensivePlayerCampsUseAuthoredMinimalStructures` counts
+  every structure the local player owns.
+
+Everything the tool writes carries a `landmark` key naming its landmark, across
+`structures`, `world_props`, `spawns` and `terrain`; a run replaces its own
+previous output and leaves untagged entries alone. So the two generators can run
+in either order, and hand-placed scatter survives both.
+
+### Groves
+
+A map's `groves` array places standalone woods. A forest does not block
+movement - it marks its ground as forest, which thickens the tree scatter and
+gives cover - so place one for what it screens: the approach to a wall with no
+gate on it, the flank of a road a column has to march down, the timber a gather
+objective is measured against. A wood inside 22 units of a settlement wall grows
+through the streets and is rejected.
 
 After moving settlements or resizing hills, re-run the road generator: approach
 roads and bridges are routed around terrain and must be repaired.
@@ -113,6 +180,7 @@ Before visual review, both commands must pass:
 python3 scripts/generate-map-water.py --validate-only assets/maps/MAP.json
 python3 scripts/generate-map-roads.py --validate-only assets/maps/MAP.json
 python3 scripts/generate-map-settlements.py --validate-only assets/maps/MAP.json
+python3 scripts/generate-map-landmarks.py assets/maps/MAP.json
 ```
 
 The mechanical gate requires a connected road graph, at least two map-edge

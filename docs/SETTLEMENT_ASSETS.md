@@ -123,6 +123,13 @@ through them (`game/map/scatter/scatter_composition_context.h`). Note that a pro
 only the cell it stands on — props have no footprint concept, so a large abandoned home
 does not wall off its full visual extent.
 
+On the campaign maps neither prop is placed by hand. `scripts/generate-map-landmarks.py`
+composes them into sanctuaries, wayside shrines, dead hamlets and pickets from a map's
+`landmarks` intent, and keeps them out of roads and settlement rings precisely because
+they block. It is also where the campaign's outlying temples come from — the ones that
+stand on a ridge or at a wood's edge rather than in a town citadel. See
+`scripts/RTS_MAP_DESIGN.md` for the authoring contract.
+
 - **Abandoned home** — a roofless stone-and-daub house shell: rubble foundation, wall
   stubs at varying heights, a collapsed south wall with a lintelled doorway and a
   window opening, a surviving stepped roof over one half, charred rafters over the

@@ -78,18 +78,29 @@
       "type": "hill",
       "x": 48.83,
       "z": 60.78,
-      "radius": 35.72,
       "height": 3.0,
       "entrances": [
         {
-          "x": 79.34,
-          "z": 69.46
+          "x": 83.19,
+          "z": 70.55
         },
         {
-          "x": 56.97,
-          "z": 97.68
+          "x": 56.52,
+          "z": 95.66
+        },
+        {
+          "x": 13.11,
+          "z": 60.78,
+          "radius": 2.0
+        },
+        {
+          "x": 48.83,
+          "z": 25.06,
+          "radius": 2.0
         }
-      ]
+      ],
+      "width": 71.44,
+      "depth": 71.44
     },
     {
       "type": "mountain",
@@ -328,6 +339,48 @@
       "x": 508.62,
       "z": 573.03,
       "radius": 42.03
+    },
+    {
+      "type": "forest",
+      "x": 55.0,
+      "z": 210.0,
+      "radius": 26.0,
+      "landmark": "alps_column_timber"
+    },
+    {
+      "type": "forest",
+      "x": 150.0,
+      "z": 470.0,
+      "radius": 30.0,
+      "landmark": "alps_pass_screen"
+    },
+    {
+      "type": "forest",
+      "x": 470.0,
+      "z": 600.0,
+      "radius": 30.0,
+      "landmark": "alps_descent_timber"
+    },
+    {
+      "type": "forest",
+      "x": 100.0,
+      "z": 220.0,
+      "radius": 24.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "forest",
+      "x": 404.24,
+      "z": 520.24,
+      "radius": 28.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "forest",
+      "x": 360.0,
+      "z": 60.0,
+      "radius": 24.0,
+      "landmark": "alps_frozen_hamlet"
     }
   ],
   "rivers": [
@@ -1976,8 +2029,8 @@
     },
     {
       "type": "elephant",
-      "x": 46.79,
-      "z": 65.12,
+      "x": 45.79,
+      "z": 64.12,
       "player_id": 1
     },
     {
@@ -2105,6 +2158,78 @@
       "x": 362.14,
       "z": 382.02,
       "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 416.24,
+      "z": 558.24,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 414.83,
+      "z": 563.66,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 416.24,
+      "z": 566.24,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 416.24,
+      "z": 570.24,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 420.24,
+      "z": 562.24,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 420.24,
+      "z": 566.24,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 286.0,
+      "z": 524.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 286.0,
+      "z": 520.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 286.0,
+      "z": 516.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "alps_switchback_watch"
     }
   ],
   "world_props": [
@@ -3182,6 +3307,394 @@
       "z": 551.06,
       "scale": 0.96,
       "rotation": 177.8
+    },
+    {
+      "type": "statue",
+      "x": 65.5,
+      "z": 211.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 54.5,
+      "z": 211.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 65.5,
+      "z": 202.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 54.5,
+      "z": 202.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 67.0,
+      "z": 229.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 54.0,
+      "z": 231.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 61.0,
+      "z": 234.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 60.0,
+      "z": 214.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_ascent_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 340.0,
+      "z": 594.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 333.0,
+      "z": 605.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 352.0,
+      "z": 607.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 352.0,
+      "z": 595.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 328.0,
+      "z": 597.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 344.0,
+      "z": 613.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 336.0,
+      "z": 588.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 356.0,
+      "z": 602.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "alps_scree_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 413.24,
+      "z": 569.74,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 417.49,
+      "z": 562.99,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 422.24,
+      "z": 569.74,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 423.77,
+      "z": 562.44,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 395.24,
+      "z": 571.24,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 393.24,
+      "z": 558.24,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 390.24,
+      "z": 565.24,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "alps_descent_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 410.24,
+      "z": 564.24,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_descent_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "statue",
+      "x": 318.0,
+      "z": 420.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "alps_pass_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 327.83,
+      "z": 414.83,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_pass_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 315.0,
+      "z": 414.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "alps_pass_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 325.0,
+      "z": 427.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_pass_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 314.0,
+      "z": 428.0,
+      "scale": 0.85,
+      "rotation": 270.0,
+      "landmark": "alps_pass_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 321.0,
+      "z": 433.0,
+      "scale": 1.15,
+      "rotation": 90.0,
+      "landmark": "alps_pass_shrine"
+    },
+    {
+      "type": "firecamp",
+      "x": 320.0,
+      "z": 406.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_pass_shrine",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 311.17,
+      "z": 62.83,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 325.0,
+      "z": 67.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 327.0,
+      "z": 52.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 321.0,
+      "z": 48.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 317.0,
+      "z": 72.0,
+      "scale": 1.1,
+      "rotation": 270.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 333.0,
+      "z": 56.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 308.0,
+      "z": 66.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 320.0,
+      "z": 44.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "alps_frozen_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 304.0,
+      "z": 520.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "tent",
+      "x": 294.0,
+      "z": 515.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "tent",
+      "x": 293.0,
+      "z": 524.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "tent",
+      "x": 288.0,
+      "z": 518.0,
+      "scale": 0.95,
+      "rotation": 0.0,
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "supply_cart",
+      "x": 297.0,
+      "z": 528.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 298.0,
+      "z": 512.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "firecamp",
+      "x": 292.0,
+      "z": 520.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "alps_switchback_watch",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 312.0,
+      "z": 526.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "alps_switchback_watch"
     }
   ],
   "victory": {
@@ -3240,152 +3753,126 @@
   "structures": [
     {
       "type": "barracks",
-      "x": 7.75,
-      "z": 8.72,
+      "x": 42.47,
+      "z": 61.14,
       "player_id": 1,
       "max_population": 150,
       "nation": "carthage"
     },
     {
-      "type": "home",
-      "x": 19.75,
-      "z": 14.72,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 19.75,
-      "z": 8.72,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 25.75,
-      "z": 14.72,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 19.75,
-      "z": 20.72,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 19.75,
-      "z": 2.72,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
-      "type": "home",
-      "x": 25.75,
-      "z": 8.72,
-      "player_id": 1,
-      "nation": "carthage"
-    },
-    {
       "type": "wall_gate",
-      "x": 7.75,
-      "z": 36.72,
+      "x": 50,
+      "z": 66,
       "player_id": 1,
       "rotation": 0.0,
       "nation": "carthage"
     },
     {
+      "type": "wall_gate",
+      "x": 56,
+      "z": 60,
+      "player_id": 1,
+      "rotation": 90.0,
+      "nation": "carthage"
+    },
+    {
       "type": "defense_tower",
-      "x": 30.75,
-      "z": 1.72,
+      "x": 42.65,
+      "z": 66.68,
       "player_id": 1,
       "nation": "carthage"
     },
     {
       "type": "barracks",
-      "x": 116.37,
-      "z": 156.31,
+      "x": 116.0,
+      "z": 156.0,
       "player_id": 2,
       "max_population": 140,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 104.37,
-      "z": 156.31,
+      "x": 104.0,
+      "z": 156.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 104.37,
-      "z": 150.31,
+      "x": 104.0,
+      "z": 150.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 98.37,
-      "z": 156.31,
+      "x": 98.0,
+      "z": 156.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 104.37,
-      "z": 162.31,
+      "x": 104.0,
+      "z": 162.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 104.37,
-      "z": 144.31,
+      "x": 104.0,
+      "z": 144.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 98.37,
-      "z": 150.31,
+      "x": 98.0,
+      "z": 150.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 98.37,
-      "z": 162.31,
+      "x": 98.0,
+      "z": 162.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 98.37,
-      "z": 144.31,
+      "x": 98.0,
+      "z": 144.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "home",
-      "x": 98.37,
-      "z": 168.31,
+      "x": 98.0,
+      "z": 168.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 116.37,
-      "z": 134.31,
+      "x": 110,
+      "z": 178,
       "player_id": 2,
       "rotation": 0.0,
       "nation": "roman_republic"
     },
     {
+      "type": "wall_gate",
+      "x": 142,
+      "z": 162,
+      "player_id": 2,
+      "rotation": 90.0,
+      "nation": "roman_republic"
+    },
+    {
       "type": "defense_tower",
-      "x": 93.37,
-      "z": 137.31,
+      "x": 93.0,
+      "z": 137.0,
       "player_id": 2,
       "nation": "roman_republic"
     },
@@ -3595,10 +4082,18 @@
     },
     {
       "type": "wall_gate",
-      "x": 180.7,
-      "z": 324.0,
+      "x": 180,
+      "z": 324,
       "player_id": 3,
       "rotation": 0.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_gate",
+      "x": 234,
+      "z": 368,
+      "player_id": 3,
+      "rotation": 90.0,
       "nation": "roman_republic"
     },
     {
@@ -3624,351 +4119,383 @@
     },
     {
       "type": "barracks",
-      "x": 577.62,
-      "z": 564.31,
+      "x": 577.3,
+      "z": 564.54,
       "player_id": 4,
       "max_population": 180,
       "nation": "roman_republic"
     },
     {
       "type": "marketplace",
-      "x": 575.32,
-      "z": 570.77,
+      "x": 575.0,
+      "z": 571.0,
       "player_id": 4,
       "nation": "roman_republic"
     },
     {
       "type": "temple",
-      "x": 566.32,
-      "z": 564.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 569.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 581.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 605.32,
-      "z": 552.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 545.32,
-      "z": 576.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 605.32,
-      "z": 576.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 563.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 587.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 569.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 581.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 611.32,
-      "z": 552.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 539.32,
-      "z": 576.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 545.32,
-      "z": 582.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 605.32,
-      "z": 582.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 557.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 593.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 563.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 587.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 569.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 581.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 611.32,
-      "z": 546.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 533.32,
-      "z": 576.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 539.32,
-      "z": 582.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 557.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 593.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 563.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 587.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 617.32,
-      "z": 546.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 533.32,
-      "z": 582.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 545.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 557.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 593.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 539.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 545.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 533.32,
-      "z": 594.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 539.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 545.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 533.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 617.32,
-      "z": 600.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 539.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 533.32,
-      "z": 606.77,
-      "player_id": 4,
-      "nation": "roman_republic"
-    },
-    {
-      "type": "home",
-      "x": 617.32,
-      "z": 606.77,
+      "x": 566.0,
+      "z": 565.0,
       "player_id": 4,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 633.32,
-      "z": 551.22,
+      "x": 576,
+      "z": 550,
+      "player_id": 4,
+      "rotation": 0.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 569.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 581.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 605.0,
+      "z": 553.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 545.0,
+      "z": 577.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 605.0,
+      "z": 577.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 563.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 587.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 569.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 581.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 611.0,
+      "z": 553.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 539.0,
+      "z": 577.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 545.0,
+      "z": 583.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 605.0,
+      "z": 583.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 557.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 593.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 563.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 587.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 569.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 581.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 611.0,
+      "z": 547.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 533.0,
+      "z": 577.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 539.0,
+      "z": 583.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 557.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 593.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 563.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 587.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 617.0,
+      "z": 547.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 533.0,
+      "z": 583.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 545.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 557.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 593.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 539.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 545.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 533.0,
+      "z": 595.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 539.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 545.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 533.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 617.0,
+      "z": 601.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 539.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 533.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "home",
+      "x": 617.0,
+      "z": 607.0,
+      "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_gate",
+      "x": 518,
+      "z": 538,
+      "player_id": 4,
+      "rotation": 90.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_gate",
+      "x": 634,
+      "z": 554,
       "player_id": 4,
       "rotation": 90.0,
       "nation": "roman_republic"
     },
     {
       "type": "defense_tower",
-      "x": 628.2,
-      "z": 519.89,
+      "x": 627.88,
+      "z": 520.12,
       "player_id": 4,
       "nation": "roman_republic"
     },
     {
       "type": "defense_tower",
-      "x": 520.32,
-      "z": 611.77,
+      "x": 520.0,
+      "z": 612.0,
       "player_id": 4,
       "nation": "roman_republic"
     },
     {
       "type": "defense_tower",
-      "x": 630.32,
-      "z": 611.77,
+      "x": 630.0,
+      "z": 612.0,
       "player_id": 4,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "temple",
+      "x": 60.0,
+      "z": 220.0,
+      "player_id": -1,
+      "landmark": "alps_ascent_sanctuary",
+      "nation": "carthage"
+    },
+    {
+      "type": "temple",
+      "x": 404.24,
+      "z": 564.24,
+      "player_id": 4,
+      "landmark": "alps_descent_sanctuary",
       "nation": "roman_republic"
     },
     {
       "type": "wall_segment",
       "start": [
-        2.83,
-        36.72
+        42,
+        54
       ],
       "end": [
-        4.75,
-        36.72
+        56,
+        54
       ],
       "player_id": 1,
       "width": 2.0,
@@ -3977,12 +4504,82 @@
     {
       "type": "wall_segment",
       "start": [
-        90.37,
-        134.31
+        42,
+        66
       ],
       "end": [
-        105.7,
-        134.31
+        46,
+        66
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        54,
+        66
+      ],
+      "end": [
+        56,
+        66
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        42,
+        56
+      ],
+      "end": [
+        42,
+        64
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        56,
+        56
+      ],
+      "end": [
+        56,
+        56
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        56,
+        64
+      ],
+      "end": [
+        56,
+        64
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        90,
+        134
+      ],
+      "end": [
+        116,
+        134
       ],
       "player_id": 2,
       "width": 2.0,
@@ -3991,12 +4588,12 @@
     {
       "type": "wall_segment",
       "start": [
-        90.37,
-        134.31
+        90,
+        178
       ],
       "end": [
-        90.37,
-        156.31
+        106,
+        178
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4005,12 +4602,68 @@
     {
       "type": "wall_segment",
       "start": [
-        158.0,
-        324.0
+        114,
+        178
       ],
       "end": [
-        177.7,
-        324.0
+        114,
+        178
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        90,
+        136
+      ],
+      "end": [
+        90,
+        176
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        142,
+        150
+      ],
+      "end": [
+        142,
+        158
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        142,
+        166
+      ],
+      "end": [
+        142,
+        166
+      ],
+      "player_id": 2,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        158,
+        324
+      ],
+      "end": [
+        176,
+        324
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4019,12 +4672,12 @@
     {
       "type": "wall_segment",
       "start": [
-        183.7,
-        324.0
+        184,
+        324
       ],
       "end": [
-        234.0,
-        324.0
+        234,
+        324
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4033,12 +4686,12 @@
     {
       "type": "wall_segment",
       "start": [
-        158.0,
-        388.0
+        158,
+        388
       ],
       "end": [
-        174.0,
-        388.0
+        198,
+        388
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4047,12 +4700,12 @@
     {
       "type": "wall_segment",
       "start": [
-        158.0,
-        324.0
+        158,
+        326
       ],
       "end": [
-        158.0,
-        388.0
+        158,
+        386
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4061,12 +4714,12 @@
     {
       "type": "wall_segment",
       "start": [
-        234.0,
-        324.0
+        234,
+        326
       ],
       "end": [
-        234.0,
-        351.86
+        234,
+        364
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4075,12 +4728,12 @@
     {
       "type": "wall_segment",
       "start": [
-        558.32,
-        579.77
+        558,
+        550
       ],
       "end": [
-        592.32,
-        579.77
+        572,
+        550
       ],
       "player_id": 4,
       "width": 2.0,
@@ -4089,12 +4742,12 @@
     {
       "type": "wall_segment",
       "start": [
-        558.32,
-        565.77
+        580,
+        550
       ],
       "end": [
-        558.32,
-        579.77
+        592,
+        550
       ],
       "player_id": 4,
       "width": 2.0,
@@ -4103,12 +4756,12 @@
     {
       "type": "wall_segment",
       "start": [
-        592.32,
-        557.77
+        558,
+        580
       ],
       "end": [
-        592.32,
-        579.77
+        592,
+        580
       ],
       "player_id": 4,
       "width": 2.0,
@@ -4117,12 +4770,12 @@
     {
       "type": "wall_segment",
       "start": [
-        517.32,
-        614.77
+        558,
+        552
       ],
       "end": [
-        593.32,
-        614.77
+        558,
+        578
       ],
       "player_id": 4,
       "width": 2.0,
@@ -4131,12 +4784,12 @@
     {
       "type": "wall_segment",
       "start": [
-        611.32,
-        614.77
+        592,
+        552
       ],
       "end": [
-        633.32,
-        614.77
+        592,
+        578
       ],
       "player_id": 4,
       "width": 2.0,
@@ -4145,12 +4798,12 @@
     {
       "type": "wall_segment",
       "start": [
-        517.32,
-        555.32
+        610,
+        516
       ],
       "end": [
-        517.32,
-        614.77
+        634,
+        516
       ],
       "player_id": 4,
       "width": 2.0,
@@ -4159,12 +4812,96 @@
     {
       "type": "wall_segment",
       "start": [
-        633.32,
-        554.22
+        518,
+        616
       ],
       "end": [
-        633.32,
-        614.77
+        598,
+        616
+      ],
+      "player_id": 4,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        606,
+        616
+      ],
+      "end": [
+        634,
+        616
+      ],
+      "player_id": 4,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        518,
+        534
+      ],
+      "end": [
+        518,
+        534
+      ],
+      "player_id": 4,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        518,
+        542
+      ],
+      "end": [
+        518,
+        614
+      ],
+      "player_id": 4,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        634,
+        518
+      ],
+      "end": [
+        634,
+        520
+      ],
+      "player_id": 4,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        634,
+        536
+      ],
+      "end": [
+        634,
+        550
+      ],
+      "player_id": 4,
+      "width": 2.0,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        634,
+        558
+      ],
+      "end": [
+        634,
+        614
       ],
       "player_id": 4,
       "width": 2.0,
@@ -4176,20 +4913,21 @@
       "id": "alps_column_camp",
       "player_id": 1,
       "tier": "marching_camp",
-      "x": 41,
-      "z": 52,
+      "x": 48.83,
+      "z": 60.78,
       "facing": "south",
       "nation": "carthage",
-      "on_hill": false,
+      "on_hill": true,
       "homes": 6,
-      "max_population": 150
+      "max_population": 150,
+      "grow_hill": false
     },
     {
       "id": "alps_first_pass_camp",
       "player_id": 2,
       "tier": "marching_camp",
-      "x": 146,
-      "z": 161,
+      "x": 116,
+      "z": 156,
       "facing": "north",
       "nation": "roman_republic",
       "max_population": 140
@@ -4209,11 +4947,108 @@
       "id": "alps_descent_town",
       "player_id": 4,
       "tier": "town",
-      "x": 566,
-      "z": 530,
+      "x": 575,
+      "z": 565,
       "facing": "west",
       "nation": "roman_republic",
       "max_population": 180
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "alps_ascent_sanctuary",
+      "kind": "sanctuary",
+      "x": 60,
+      "z": 220,
+      "facing": "north",
+      "nation": "carthage",
+      "forest": {
+        "radius": 24,
+        "bearing": "east"
+      }
+    },
+    {
+      "id": "alps_scree_hamlet",
+      "kind": "hamlet",
+      "x": 340,
+      "z": 600,
+      "facing": "west"
+    },
+    {
+      "id": "alps_descent_sanctuary",
+      "kind": "sanctuary",
+      "x": 400,
+      "z": 560,
+      "facing": "east",
+      "nation": "roman_republic",
+      "player_id": 4,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 4
+        },
+        {
+          "type": "archer",
+          "count": 2
+        }
+      ],
+      "forest": {
+        "radius": 28,
+        "bearing": "north"
+      }
+    },
+    {
+      "id": "alps_pass_shrine",
+      "kind": "shrine",
+      "x": 320,
+      "z": 420,
+      "facing": "north"
+    },
+    {
+      "id": "alps_frozen_hamlet",
+      "kind": "hamlet",
+      "x": 320,
+      "z": 60,
+      "facing": "south",
+      "forest": {
+        "radius": 24,
+        "bearing": "east"
+      }
+    },
+    {
+      "id": "alps_switchback_watch",
+      "kind": "watch",
+      "x": 300,
+      "z": 520,
+      "facing": "west",
+      "nation": "roman_republic",
+      "player_id": 3,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "groves": [
+    {
+      "id": "alps_column_timber",
+      "x": 55,
+      "z": 210,
+      "radius": 26
+    },
+    {
+      "id": "alps_pass_screen",
+      "x": 150,
+      "z": 470,
+      "radius": 30
+    },
+    {
+      "id": "alps_descent_timber",
+      "x": 470,
+      "z": 600,
+      "radius": 30
     }
   ]
 }
