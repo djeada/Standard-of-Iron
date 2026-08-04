@@ -104,8 +104,8 @@
       "rotation": 22,
       "entrances": [
         {
-          "x": 80,
-          "z": 220
+          "x": 101.92,
+          "z": 242.35
         },
         {
           "x": 178,
@@ -317,6 +317,41 @@
       "x": 588,
       "z": 542,
       "radius": 24
+    },
+    {
+      "type": "forest",
+      "x": 230.0,
+      "z": 520.0,
+      "radius": 30.0,
+      "landmark": "trasimene_ambush_screen"
+    },
+    {
+      "type": "forest",
+      "x": 420.0,
+      "z": 140.0,
+      "radius": 26.0,
+      "landmark": "trasimene_north_screen"
+    },
+    {
+      "type": "forest",
+      "x": 500.0,
+      "z": 434.0,
+      "radius": 26.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "forest",
+      "x": 458.0,
+      "z": 342.0,
+      "radius": 26.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "forest",
+      "x": 80.0,
+      "z": 464.0,
+      "radius": 28.0,
+      "landmark": "trasimene_drowned_hamlet"
     }
   ],
   "lakes": [
@@ -2294,6 +2329,78 @@
       "x": 590,
       "z": 147,
       "player_id": 2
+    },
+    {
+      "type": "spearman",
+      "x": 446.0,
+      "z": 306.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 446.0,
+      "z": 302.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 446.0,
+      "z": 298.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 446.0,
+      "z": 294.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 442.0,
+      "z": 302.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 442.0,
+      "z": 298.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 216.0,
+      "z": 426.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 220.0,
+      "z": 426.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 224.0,
+      "z": 426.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "trasimene_basin_watch"
     }
   ],
   "world_props": [
@@ -3357,6 +3464,394 @@
       "z": 449.27,
       "scale": 0.98,
       "rotation": 169.3
+    },
+    {
+      "type": "statue",
+      "x": 505.5,
+      "z": 467.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 494.5,
+      "z": 467.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 505.5,
+      "z": 458.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 494.5,
+      "z": 458.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 507.0,
+      "z": 485.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 494.0,
+      "z": 487.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 501.0,
+      "z": 490.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 500.0,
+      "z": 470.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_ridge_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 596.3,
+      "z": 452.47,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 593.0,
+      "z": 465.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 608.0,
+      "z": 467.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 615.7,
+      "z": 456.53,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 588.0,
+      "z": 457.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 604.0,
+      "z": 473.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 596.0,
+      "z": 448.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 616.0,
+      "z": 462.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "trasimene_east_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 449.0,
+      "z": 294.5,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 449.0,
+      "z": 305.5,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 440.0,
+      "z": 294.5,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 440.0,
+      "z": 305.5,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 467.0,
+      "z": 293.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 469.0,
+      "z": 306.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 472.0,
+      "z": 299.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_shore_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 452.0,
+      "z": 300.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trasimene_shore_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "statue",
+      "x": 300.0,
+      "z": 158.0,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "trasimene_via_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 289.8,
+      "z": 171.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trasimene_via_shrine"
+    },
+    {
+      "type": "statue",
+      "x": 306.41,
+      "z": 169.41,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trasimene_via_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 295.0,
+      "z": 153.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trasimene_via_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 306.0,
+      "z": 152.0,
+      "scale": 0.85,
+      "rotation": 90.0,
+      "landmark": "trasimene_via_shrine"
+    },
+    {
+      "type": "ruins",
+      "x": 299.0,
+      "z": 147.0,
+      "scale": 1.15,
+      "rotation": 270.0,
+      "landmark": "trasimene_via_shrine"
+    },
+    {
+      "type": "firecamp",
+      "x": 300.0,
+      "z": 174.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trasimene_via_shrine",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 80.0,
+      "z": 426.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 87.0,
+      "z": 415.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 73.41,
+      "z": 414.41,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 69.41,
+      "z": 426.41,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 92.0,
+      "z": 423.0,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 76.0,
+      "z": 407.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 84.0,
+      "z": 432.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 64.0,
+      "z": 418.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "trasimene_drowned_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 220.0,
+      "z": 444.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "tent",
+      "x": 225.0,
+      "z": 434.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "tent",
+      "x": 216.0,
+      "z": 433.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "tent",
+      "x": 222.0,
+      "z": 428.0,
+      "scale": 0.95,
+      "rotation": 90.0,
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "supply_cart",
+      "x": 212.0,
+      "z": 437.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 228.0,
+      "z": 438.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "firecamp",
+      "x": 220.0,
+      "z": 432.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "trasimene_basin_watch",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 214.0,
+      "z": 452.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "trasimene_basin_watch"
     }
   ],
   "victory": {
@@ -3468,8 +3963,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 286.0,
-      "z": 530.0,
+      "x": 274,
+      "z": 530,
+      "player_id": 1,
+      "rotation": 0.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_gate",
+      "x": 296,
+      "z": 574,
       "player_id": 1,
       "rotation": 0.0,
       "nation": "carthage"
@@ -3512,8 +4015,8 @@
     },
     {
       "type": "wall_gate",
-      "x": 72.0,
-      "z": 201.0,
+      "x": 72,
+      "z": 202,
       "player_id": 2,
       "rotation": 0.0,
       "nation": "roman_republic"
@@ -4157,16 +4660,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 14.0,
-      "z": 214.17,
+      "x": 14,
+      "z": 214,
       "player_id": 2,
       "rotation": 90.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 130.0,
-      "z": 181.29,
+      "x": 130,
+      "z": 182,
       "player_id": 2,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -4440,16 +4943,16 @@
     },
     {
       "type": "wall_gate",
-      "x": 562.0,
-      "z": 141.99,
+      "x": 562,
+      "z": 142,
       "player_id": 3,
       "rotation": 90.0,
       "nation": "roman_republic"
     },
     {
       "type": "wall_gate",
-      "x": 638.0,
-      "z": 123.75,
+      "x": 638,
+      "z": 124,
       "player_id": 3,
       "rotation": 90.0,
       "nation": "roman_republic"
@@ -4483,14 +4986,30 @@
       "nation": "roman_republic"
     },
     {
+      "type": "temple",
+      "x": 500.0,
+      "z": 476.0,
+      "player_id": -1,
+      "landmark": "trasimene_ridge_sanctuary",
+      "nation": "carthage"
+    },
+    {
+      "type": "temple",
+      "x": 458.0,
+      "z": 300.0,
+      "player_id": 3,
+      "landmark": "trasimene_shore_sanctuary",
+      "nation": "roman_republic"
+    },
+    {
       "type": "wall_segment",
       "start": [
-        260.0,
-        530.0
+        260,
+        530
       ],
       "end": [
-        283.0,
-        530.0
+        270,
+        530
       ],
       "player_id": 1,
       "width": 2.0,
@@ -4499,12 +5018,12 @@
     {
       "type": "wall_segment",
       "start": [
-        289.0,
-        530.0
+        278,
+        530
       ],
       "end": [
-        312.0,
-        530.0
+        312,
+        530
       ],
       "player_id": 1,
       "width": 2.0,
@@ -4513,12 +5032,12 @@
     {
       "type": "wall_segment",
       "start": [
-        260.0,
-        530.0
+        260,
+        574
       ],
       "end": [
-        260.0,
-        552.0
+        292,
+        574
       ],
       "player_id": 1,
       "width": 2.0,
@@ -4527,12 +5046,12 @@
     {
       "type": "wall_segment",
       "start": [
-        312.0,
-        530.0
+        300,
+        574
       ],
       "end": [
-        312.0,
-        552.0
+        312,
+        574
       ],
       "player_id": 1,
       "width": 2.0,
@@ -4541,12 +5060,40 @@
     {
       "type": "wall_segment",
       "start": [
-        55.0,
-        171.0
+        260,
+        532
       ],
       "end": [
-        89.0,
-        171.0
+        260,
+        572
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        312,
+        532
+      ],
+      "end": [
+        312,
+        572
+      ],
+      "player_id": 1,
+      "width": 2.0,
+      "nation": "carthage"
+    },
+    {
+      "type": "wall_segment",
+      "start": [
+        56,
+        172
+      ],
+      "end": [
+        90,
+        172
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4555,12 +5102,12 @@
     {
       "type": "wall_segment",
       "start": [
-        55.0,
-        201.0
+        56,
+        202
       ],
       "end": [
-        69.0,
-        201.0
+        68,
+        202
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4569,12 +5116,12 @@
     {
       "type": "wall_segment",
       "start": [
-        75.0,
-        201.0
+        76,
+        202
       ],
       "end": [
-        89.0,
-        201.0
+        90,
+        202
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4583,12 +5130,12 @@
     {
       "type": "wall_segment",
       "start": [
-        55.0,
-        171.0
+        56,
+        174
       ],
       "end": [
-        55.0,
-        201.0
+        56,
+        200
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4597,12 +5144,12 @@
     {
       "type": "wall_segment",
       "start": [
-        89.0,
-        171.0
+        90,
+        174
       ],
       "end": [
-        89.0,
-        201.0
+        90,
+        200
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4611,12 +5158,12 @@
     {
       "type": "wall_segment",
       "start": [
-        14.0,
-        136.0
+        14,
+        136
       ],
       "end": [
-        130.0,
-        136.0
+        130,
+        136
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4625,12 +5172,12 @@
     {
       "type": "wall_segment",
       "start": [
-        14.0,
-        236.0
+        14,
+        236
       ],
       "end": [
-        44.0,
-        236.0
+        68,
+        236
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4639,12 +5186,12 @@
     {
       "type": "wall_segment",
       "start": [
-        128.0,
-        236.0
+        96,
+        236
       ],
       "end": [
-        130.0,
-        236.0
+        130,
+        236
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4653,12 +5200,12 @@
     {
       "type": "wall_segment",
       "start": [
-        14.0,
-        136.0
+        14,
+        138
       ],
       "end": [
-        14.0,
-        211.17
+        14,
+        210
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4667,12 +5214,12 @@
     {
       "type": "wall_segment",
       "start": [
-        14.0,
-        217.17
+        14,
+        218
       ],
       "end": [
-        14.0,
-        236.0
+        14,
+        234
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4681,12 +5228,12 @@
     {
       "type": "wall_segment",
       "start": [
-        130.0,
-        136.0
+        130,
+        138
       ],
       "end": [
-        130.0,
-        178.29
+        130,
+        178
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4695,12 +5242,12 @@
     {
       "type": "wall_segment",
       "start": [
-        130.0,
-        184.29
+        130,
+        186
       ],
       "end": [
-        130.0,
-        236.0
+        130,
+        234
       ],
       "player_id": 2,
       "width": 2.0,
@@ -4709,12 +5256,12 @@
     {
       "type": "wall_segment",
       "start": [
-        562.0,
-        106.0
+        562,
+        106
       ],
       "end": [
-        638.0,
-        106.0
+        638,
+        106
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4723,12 +5270,12 @@
     {
       "type": "wall_segment",
       "start": [
-        562.0,
-        170.0
+        562,
+        170
       ],
       "end": [
-        638.0,
-        170.0
+        638,
+        170
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4737,12 +5284,12 @@
     {
       "type": "wall_segment",
       "start": [
-        562.0,
-        106.0
+        562,
+        108
       ],
       "end": [
-        562.0,
-        138.99
+        562,
+        138
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4751,12 +5298,12 @@
     {
       "type": "wall_segment",
       "start": [
-        562.0,
-        144.99
+        562,
+        146
       ],
       "end": [
-        562.0,
-        170.0
+        562,
+        168
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4765,12 +5312,12 @@
     {
       "type": "wall_segment",
       "start": [
-        638.0,
-        106.0
+        638,
+        108
       ],
       "end": [
-        638.0,
-        120.75
+        638,
+        120
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4779,12 +5326,12 @@
     {
       "type": "wall_segment",
       "start": [
-        638.0,
-        126.75
+        638,
+        128
       ],
       "end": [
-        638.0,
-        170.0
+        638,
+        168
       ],
       "player_id": 3,
       "width": 2.0,
@@ -4826,5 +5373,96 @@
   ],
   "rain": {
     "enabled": false
-  }
+  },
+  "landmarks": [
+    {
+      "id": "trasimene_ridge_sanctuary",
+      "kind": "sanctuary",
+      "x": 500,
+      "z": 480,
+      "facing": "north",
+      "nation": "carthage",
+      "forest": {
+        "radius": 26,
+        "bearing": "north"
+      }
+    },
+    {
+      "id": "trasimene_east_hamlet",
+      "kind": "hamlet",
+      "x": 600,
+      "z": 460,
+      "facing": "west"
+    },
+    {
+      "id": "trasimene_shore_sanctuary",
+      "kind": "sanctuary",
+      "x": 460,
+      "z": 300,
+      "facing": "west",
+      "nation": "roman_republic",
+      "player_id": 3,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 4
+        },
+        {
+          "type": "archer",
+          "count": 2
+        }
+      ],
+      "forest": {
+        "radius": 26,
+        "bearing": "south"
+      }
+    },
+    {
+      "id": "trasimene_via_shrine",
+      "kind": "shrine",
+      "x": 300,
+      "z": 160,
+      "facing": "south"
+    },
+    {
+      "id": "trasimene_drowned_hamlet",
+      "kind": "hamlet",
+      "x": 80,
+      "z": 420,
+      "facing": "east",
+      "forest": {
+        "radius": 28,
+        "bearing": "south"
+      }
+    },
+    {
+      "id": "trasimene_basin_watch",
+      "kind": "watch",
+      "x": 220,
+      "z": 440,
+      "facing": "north",
+      "nation": "roman_republic",
+      "player_id": 2,
+      "guards": [
+        {
+          "type": "spearman",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "groves": [
+    {
+      "id": "trasimene_ambush_screen",
+      "x": 230,
+      "z": 520,
+      "radius": 30
+    },
+    {
+      "id": "trasimene_north_screen",
+      "x": 420,
+      "z": 140,
+      "radius": 26
+    }
+  ]
 }
