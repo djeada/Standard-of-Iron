@@ -13,7 +13,11 @@ struct BowDrawTick {
 
   bool at_full_draw{false};
 
+  bool started_draw{false};
+
   bool reached_full_draw{false};
+
+  bool started_straining{false};
 
   bool loosed{false};
 

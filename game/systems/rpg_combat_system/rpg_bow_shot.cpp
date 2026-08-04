@@ -40,10 +40,9 @@ auto loose_aimed_arrow(Engine::Core::World& world,
                           ? aim->shot_power
                           : Engine::Core::RpgCommanderAimComponent::k_min_shot_power;
   float const range = std::max(1.0F, attack->range) + k_overshoot_range;
-  auto const ray = scatter_ray(commander_aim_ray(world, commander, *aim, range),
-                               aim->spread_degrees,
-                               ++aim->shot_sequence);
-  auto const shot = resolve_bow_shot(world, commander, ray, range);
+  auto const sight = scatter_ray(
+      commander_aim_ray(commander, *aim), aim->spread_degrees, ++aim->shot_sequence);
+  auto const shot = resolve_bow_shot(world, commander, *aim, sight, range);
 
   int const damage = std::max(
       1,
@@ -67,7 +66,7 @@ auto loose_aimed_arrow(Engine::Core::World& world,
                            shot.end,
                            Game::Visuals::team_colorForOwner(unit->owner_id),
                            Game::Systems::Combat::Constants::k_arrow_speed *
-                               (0.70F + (0.55F * power)),
+                               (1.35F + (1.05F * power)),
                            false,
                            Game::Systems::ProjectileKind::Arrow,
                            shot.hit_body,
@@ -77,9 +76,10 @@ auto loose_aimed_arrow(Engine::Core::World& world,
                            0.0F,
                            0.6F,
                            false,
-                           Game::Systems::ArrowVisualStyle::Focused,
+                           Game::Systems::ArrowVisualStyle::Aimed,
                            target_origin,
-                           k_aimed_arc_scale);
+                           k_aimed_arc_scale,
+                           power);
 
   result.released = true;
   result.target_id = shot.hit.entity_id;

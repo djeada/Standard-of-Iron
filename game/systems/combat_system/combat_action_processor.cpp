@@ -389,9 +389,17 @@ auto update_commander_bow_draw(
   tick = Game::Systems::RpgCombat::update_bow_draw(
       *aim, action, definition, stamina_ratio, delta_time);
 
+  if (tick.started_draw) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_bow_draw));
+  }
   if (tick.reached_full_draw) {
     Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_lock_on));
+        Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_bow_full_draw));
+  }
+  if (tick.started_straining) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_bow_strain));
   }
   if (tick.relaxed) {
     Engine::Core::EventManager::instance().publish(

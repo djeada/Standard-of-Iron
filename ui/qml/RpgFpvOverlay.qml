@@ -33,8 +33,11 @@ Item {
     readonly property bool bowStrained: bowDrawing && status_value("bow_hold_strained", false) === true
     readonly property real bowDrawProgress: Math.max(0.0, Math.min(1.0, Number(status_value("bow_draw_progress", 0.0))))
 
-    readonly property real verticalFovDegrees: 68.0
-    readonly property real bowSpreadPixels: bowDrawing ? Math.min(root.height * 0.22, Number(status_value("bow_spread_degrees", 0.0)) * (root.height / verticalFovDegrees)) : 0.0
+    readonly property real verticalFovDegrees: Math.max(20.0, Math.min(110.0, Number(status_value("camera_fov_degrees", 68.0))))
+
+    readonly property real focalPixels: (root.height * 0.5) / Math.tan(verticalFovDegrees * Math.PI / 360.0)
+
+    readonly property real bowSpreadPixels: bowStance ? Math.min(root.height * 0.24, focalPixels * Math.tan(Math.min(28.0, Number(status_value("bow_spread_degrees", 0.0))) * Math.PI / 180.0)) : 0.0
 
     function status_value(key, fallback) {
         if (!status || status[key] === undefined || status[key] === null) {

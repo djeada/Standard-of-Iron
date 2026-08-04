@@ -1033,11 +1033,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         QString::fromLatin1(k_rpg_bow_volley_id),
         QStringLiteral("RPG Bow Volley"),
         QStringLiteral(
-            "Behind-head bow commander against five charging swordsmen. Each shot "
-            "is drawn, held at full draw, and loosed along the aim ray, so the "
-            "arrows have to leave the bow where the crosshair was pointing and drop "
-            "one attacker apiece before the line reaches him."),
-        9.8F);
+            "Behind-head bow commander against nine charging swordsmen. Every shot "
+            "is drawn, held at full draw, and loosed along the aim ray with the "
+            "crosshair solved from the live chase camera, so each arrow has to "
+            "leave the bow where the reticle was sitting and drop one attacker "
+            "before the line reaches him."),
+        14.6F);
     s.rpg_mode = true;
     s.rpg_commander_group = QStringLiteral("rpg_commander");
     s.select_spawned_units = false;
@@ -1046,7 +1047,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.suppress_terrain_scatter = true;
     s.arena_floor_half_extent = 30.0F;
     s.graphics_quality = Render::GraphicsQuality::Ultra;
-    s.environment.start_time = 8.5F;
+    s.environment.start_time = 16.2F;
     s.environment.time_mode = Game::Map::TimeMode::Locked;
 
     auto commander = group(QStringLiteral("rpg_commander"),
@@ -1062,16 +1063,25 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       enemy.health_override = enemy.max_health_override = 70;
       return enemy;
     };
-    std::array<QString, 5> const charger_names{QStringLiteral("charger_centre"),
+    std::array<QString, 9> const charger_names{QStringLiteral("charger_centre"),
                                                QStringLiteral("charger_left"),
                                                QStringLiteral("charger_right"),
                                                QStringLiteral("charger_far_left"),
-                                               QStringLiteral("charger_far_right")};
-    std::array<QVector3D, 5> const charger_origins{QVector3D{0.4F, 0.0F, 11.0F},
-                                                   QVector3D{-4.0F, 0.0F, 11.5F},
-                                                   QVector3D{4.4F, 0.0F, 11.5F},
-                                                   QVector3D{-7.6F, 0.0F, 10.5F},
-                                                   QVector3D{7.8F, 0.0F, 10.5F}};
+                                               QStringLiteral("charger_far_right"),
+                                               QStringLiteral("charger_deep_left"),
+                                               QStringLiteral("charger_deep_right"),
+                                               QStringLiteral("charger_flank_left"),
+                                               QStringLiteral("charger_flank_right")};
+
+    std::array<QVector3D, 9> const charger_origins{QVector3D{0.4F, 0.0F, 12.0F},
+                                                   QVector3D{-4.2F, 0.0F, 12.0F},
+                                                   QVector3D{4.4F, 0.0F, 12.0F},
+                                                   QVector3D{-7.6F, 0.0F, 11.0F},
+                                                   QVector3D{7.8F, 0.0F, 11.0F},
+                                                   QVector3D{-2.6F, 0.0F, 14.5F},
+                                                   QVector3D{2.8F, 0.0F, 14.5F},
+                                                   QVector3D{-9.5F, 0.0F, 13.0F},
+                                                   QVector3D{9.6F, 0.0F, 13.0F}};
     s.groups = {commander};
     for (std::size_t i = 0; i < charger_names.size(); ++i) {
       s.groups.push_back(charger(charger_names[i], charger_origins[i]));
@@ -1086,18 +1096,18 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       return at(time, Command::RpgAim, QStringLiteral("rpg_commander"), target);
     };
 
-    constexpr float k_first_shot = 0.40F;
+    constexpr float k_first_shot = 0.55F;
     constexpr float k_shot_interval = 1.45F;
     for (std::size_t i = 0; i < charger_names.size(); ++i) {
       float const shot = k_first_shot + (k_shot_interval * static_cast<float>(i));
-      s.steps.push_back(at(std::max(0.10F, shot - 1.20F),
+      s.steps.push_back(at(std::max(0.10F, shot - 3.20F),
                            Command::Attack,
                            charger_names[i],
                            QStringLiteral("rpg_commander")));
+
       s.steps.push_back(aim_at(shot, charger_names[i]));
-      s.steps.push_back(draw(shot + 0.10F, true));
-      s.steps.push_back(aim_at(shot + 0.65F, charger_names[i]));
-      s.steps.push_back(draw(shot + 0.80F, false));
+      s.steps.push_back(draw(shot + 0.16F, true));
+      s.steps.push_back(draw(shot + 0.86F, false));
     }
 
     add_visual_stability(s, {QStringLiteral("rpg_commander")});
@@ -1110,7 +1120,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                          QStringLiteral("rpg_commander"),
                                          charger_names[0]));
     for (auto const& name : charger_names) {
-      s.expectations.push_back(expectation(Expect::GroupHealthReduced, name));
+      s.expectations.push_back(expectation(Expect::GroupDestroyed, name));
     }
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));

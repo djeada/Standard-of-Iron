@@ -70,6 +70,10 @@ inline constexpr const char* k_combat_hit_siege = "combat.hit.siege";
 inline constexpr const char* k_combat_hit_generic = "combat.hit.generic";
 inline constexpr const char* k_combat_death = "combat.death";
 inline constexpr const char* k_combat_arrow_launch = "combat.arrow_launch";
+inline constexpr const char* k_combat_bow_draw = "combat.bow_draw";
+inline constexpr const char* k_combat_bow_full_draw = "combat.bow_full_draw";
+inline constexpr const char* k_combat_bow_strain = "combat.bow_strain";
+inline constexpr const char* k_combat_bow_loose_heavy = "combat.bow_loose_heavy";
 inline constexpr const char* k_combat_arrow_flyby = "combat.arrow_flyby";
 inline constexpr const char* k_combat_arrow_volley = "combat.arrow_volley";
 inline constexpr const char* k_combat_siege_launch = "combat.siege_launch";
@@ -99,7 +103,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 77> k_all = {
+inline constexpr std::array<const char*, 81> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -150,6 +154,10 @@ inline constexpr std::array<const char*, 77> k_all = {
     k_combat_hit_generic,
     k_combat_death,
     k_combat_arrow_launch,
+    k_combat_bow_draw,
+    k_combat_bow_full_draw,
+    k_combat_bow_strain,
+    k_combat_bow_loose_heavy,
     k_combat_arrow_flyby,
     k_combat_arrow_volley,
     k_combat_siege_launch,
