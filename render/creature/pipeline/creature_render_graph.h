@@ -45,6 +45,7 @@ namespace Render::Creature::Pipeline {
 struct PreparedHumanoidBodyState;
 struct PreparedHorseBodyState;
 struct PreparedElephantBodyState;
+struct PreparedWildlifeBodyState;
 
 struct CreatureGraphInputs {
   const Render::GL::DrawContext* ctx{nullptr};
@@ -144,6 +145,8 @@ public:
                      std::uint32_t clip_variant = 0U);
 
   void add_quadruped(const PreparedElephantBodyState& state);
+
+  void add_quadruped(const PreparedWildlifeBodyState& state);
 
   void add_request(const Render::Creature::CreatureRenderRequest& request);
 

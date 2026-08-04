@@ -80,6 +80,10 @@ if(SOI_RUNTIME_TRACING AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(SOI_ENABLE_RUNTIME_TRACING=1)
 endif()
 
+# Optimised builds are stripped so shipped artifacts carry no debug info. A
+# sampling profiler needs the symbol table, so let a profiling build opt out.
+option(SOI_KEEP_SYMBOLS "Keep the symbol table in optimised builds" OFF)
+
 # ---- Compiler Optimization Flags ----
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(SOI_ENABLE_RUNTIME_TRACING=1)
@@ -122,6 +126,8 @@ else()
         add_compile_options(-ffunction-sections -fdata-sections)
         if(APPLE)
             add_link_options(-Wl,-dead_strip)
+        elseif(SOI_KEEP_SYMBOLS)
+            add_link_options(-Wl,--gc-sections)
         else()
             add_link_options(-Wl,--gc-sections -s)
         endif()

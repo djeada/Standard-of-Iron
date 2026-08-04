@@ -274,6 +274,8 @@ struct RiggedCreatureCmd {
   static constexpr std::size_t k_max_owned_bones = 64;
 
   RiggedMesh* mesh = nullptr;
+
+  RiggedMesh* shadow_mesh = nullptr;
   const Material* material = nullptr;
   QMatrix4x4 world;
 

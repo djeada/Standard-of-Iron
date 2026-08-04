@@ -7,6 +7,8 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <functional>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <unordered_map>
@@ -15,6 +17,7 @@
 #include "../../../game/map/terrain_service.h"
 #include "../../bone_palette_arena.h"
 #include "../../entity/registry.h"
+#include "../../humanoid/cache_control.h"
 #include "../../humanoid/humanoid_spec.h"
 #include "../../humanoid/skeleton.h"
 #include "../../profiling/combat_animation_diagnostics.h"
@@ -51,6 +54,10 @@ auto species_to_bpat_id(CreatureKind kind) noexcept -> std::uint32_t {
     return Render::Creature::Bpat::k_species_horse;
   case CreatureKind::Elephant:
     return Render::Creature::Bpat::k_species_elephant;
+  case CreatureKind::Sheep:
+    return Render::Creature::Bpat::k_species_sheep;
+  case CreatureKind::Wolf:
+    return Render::Creature::Bpat::k_species_wolf;
   case CreatureKind::Mounted:
     return 0xFFFFFFFFU;
   }
@@ -291,30 +298,89 @@ auto frame_palette_for_global_frame(const Render::GL::RiggedMeshEntry& entry,
          static_cast<std::size_t>(global_frame) * entry.skinned_bone_count;
 }
 
+auto affine_inverse(const QMatrix4x4& m) noexcept -> QMatrix4x4 {
+  const float* d = m.constData();
+  float const a00 = d[0];
+  float const a10 = d[1];
+  float const a20 = d[2];
+  float const a01 = d[4];
+  float const a11 = d[5];
+  float const a21 = d[6];
+  float const a02 = d[8];
+  float const a12 = d[9];
+  float const a22 = d[10];
+  float const tx = d[12];
+  float const ty = d[13];
+  float const tz = d[14];
+
+  float const c00 = (a11 * a22) - (a12 * a21);
+  float const c10 = (a12 * a20) - (a10 * a22);
+  float const c20 = (a10 * a21) - (a11 * a20);
+  float const det = (a00 * c00) + (a01 * c10) + (a02 * c20);
+  if (std::abs(det) < 1.0e-12F) {
+    return m.inverted();
+  }
+  float const inv_det = 1.0F / det;
+
+  float const i00 = c00 * inv_det;
+  float const i01 = ((a02 * a21) - (a01 * a22)) * inv_det;
+  float const i02 = ((a01 * a12) - (a02 * a11)) * inv_det;
+  float const i10 = c10 * inv_det;
+  float const i11 = ((a00 * a22) - (a02 * a20)) * inv_det;
+  float const i12 = ((a02 * a10) - (a00 * a12)) * inv_det;
+  float const i20 = c20 * inv_det;
+  float const i21 = ((a01 * a20) - (a00 * a21)) * inv_det;
+  float const i22 = ((a00 * a11) - (a01 * a10)) * inv_det;
+
+  return {i00,
+          i01,
+          i02,
+          -((i00 * tx) + (i01 * ty) + (i02 * tz)),
+          i10,
+          i11,
+          i12,
+          -((i10 * tx) + (i11 * ty) + (i12 * tz)),
+          i20,
+          i21,
+          i22,
+          -((i20 * tx) + (i21 * ty) + (i22 * tz)),
+          0.0F,
+          0.0F,
+          0.0F,
+          1.0F};
+}
+
+auto matrix_rotation_quaternion(const QMatrix4x4& matrix) noexcept -> QQuaternion {
+  QMatrix3x3 basis;
+  for (int col = 0; col < 3; ++col) {
+    QVector3D axis = matrix.column(col).toVector3D();
+    if (axis.lengthSquared() > 1.0e-8F) {
+      axis.normalize();
+    }
+    basis(0, col) = axis.x();
+    basis(1, col) = axis.y();
+    basis(2, col) = axis.z();
+  }
+  return QQuaternion::fromRotationMatrix(basis).normalized();
+}
+
 auto rigid_lerp_matrix(const QMatrix4x4& a,
                        const QMatrix4x4& b,
                        float t) noexcept -> QMatrix4x4 {
-
-  auto rotation = [](const QMatrix4x4& matrix) {
-    QMatrix3x3 basis;
-    for (int col = 0; col < 3; ++col) {
-      QVector3D axis = matrix.column(col).toVector3D();
-      if (axis.lengthSquared() > 1.0e-8F) {
-        axis.normalize();
-      }
-      basis(0, col) = axis.x();
-      basis(1, col) = axis.y();
-      basis(2, col) = axis.z();
-    }
-    return QQuaternion::fromRotationMatrix(basis).normalized();
-  };
-
   float const weight = std::clamp(t, 0.0F, 1.0F);
+  if (weight <= 1.0e-4F) {
+    return a;
+  }
+  if (weight >= 1.0F - 1.0e-4F) {
+    return b;
+  }
+
   QVector3D const translation =
       a.column(3).toVector3D() * (1.0F - weight) + b.column(3).toVector3D() * weight;
   QMatrix4x4 out;
   out.translate(translation);
-  out.rotate(QQuaternion::slerp(rotation(a), rotation(b), weight));
+  out.rotate(QQuaternion::slerp(
+      matrix_rotation_quaternion(a), matrix_rotation_quaternion(b), weight));
   return out;
 }
 
@@ -350,8 +416,8 @@ struct PooledPaletteAllocator {
   PooledPaletteAllocator(const PooledPaletteAllocator<U>&) noexcept {}
 
   static auto free_list() noexcept -> std::vector<void*>& {
-    thread_local std::vector<void*> list;
-    return list;
+    thread_local auto* list = new std::vector<void*>();
+    return *list;
   }
 
   auto allocate(std::size_t n) -> T* {
@@ -410,12 +476,21 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
   if (species_kind == CreatureKind::Humanoid) {
 
     auto const bind = Render::Humanoid::humanoid_bind_palette();
+    auto const inverse_bind = Render::Humanoid::humanoid_inverse_bind_palette();
     std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
         primary_global{};
     std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
         secondary_global{};
     std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
         result_global{};
+
+    std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
+        primary_parent_inverse{};
+    std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
+        secondary_parent_inverse{};
+    std::array<bool, Render::GL::RiggedCreatureCmd::k_max_owned_bones>
+        parent_inverse_ready{};
+
     std::uint32_t const count =
         std::min(bone_count,
                  std::min(static_cast<std::uint32_t>(bind.size()),
@@ -435,16 +510,21 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
           result_global[bone] =
               rigid_lerp_matrix(primary_global[bone], secondary_global[bone], weight);
         } else {
+          if (!parent_inverse_ready[parent]) {
+            primary_parent_inverse[parent] = affine_inverse(primary_global[parent]);
+            secondary_parent_inverse[parent] = affine_inverse(secondary_global[parent]);
+            parent_inverse_ready[parent] = true;
+          }
           QMatrix4x4 const primary_local =
-              primary_global[parent].inverted() * primary_global[bone];
+              primary_parent_inverse[parent] * primary_global[bone];
           QMatrix4x4 const secondary_local =
-              secondary_global[parent].inverted() * secondary_global[bone];
+              secondary_parent_inverse[parent] * secondary_global[bone];
           result_global[bone] =
               result_global[parent] *
               rigid_lerp_matrix(primary_local, secondary_local, weight);
         }
       }
-      (*owned)[bone] = result_global[bone] * bind[bone].inverted();
+      (*owned)[bone] = result_global[bone] * inverse_bind[bone];
     }
     for (std::uint32_t bone = count;
          bone < bone_count && bone < Render::GL::RiggedCreatureCmd::k_max_owned_bones;
@@ -464,6 +544,30 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
   }
   return owned;
 }
+
+struct BlendCacheKey {
+  const Render::GL::RiggedMeshEntry* entry{nullptr};
+  std::uint32_t frame_a{0};
+  std::uint32_t frame_b{0};
+  std::uint32_t weight_bucket{0};
+
+  auto operator==(const BlendCacheKey& other) const noexcept -> bool {
+    return entry == other.entry && frame_a == other.frame_a &&
+           frame_b == other.frame_b && weight_bucket == other.weight_bucket;
+  }
+};
+
+struct BlendCacheKeyHash {
+  auto operator()(const BlendCacheKey& key) const noexcept -> std::size_t {
+    std::size_t hash = std::hash<const void*>{}(key.entry);
+    hash ^= key.frame_a * 0x9E3779B1U + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
+    hash ^= key.frame_b * 0x85EBCA77U + 0xC2B2AE3DU + (hash << 6U) + (hash >> 2U);
+    hash ^= key.weight_bucket * 0x27D4EB2FU + (hash << 6U) + (hash >> 2U);
+    return hash;
+  }
+};
+
+constexpr std::uint32_t k_blend_weight_buckets = 32U;
 
 auto interpolated_palette_for_playback(
     const Render::GL::RiggedMeshEntry& entry,
@@ -486,8 +590,34 @@ auto interpolated_palette_for_playback(
   if (next == nullptr) {
     return current;
   }
+
+  auto bucket = static_cast<std::uint32_t>(frame_lerp *
+                                           static_cast<float>(k_blend_weight_buckets));
+  bucket = std::min(bucket, k_blend_weight_buckets - 1U);
+  float const bucket_weight =
+      (static_cast<float>(bucket) + 0.5F) / static_cast<float>(k_blend_weight_buckets);
+
+  BlendCacheKey const key{
+      &entry, playback.global_frame, playback.next_global_frame, bucket};
+
+  using OwnedPalette = std::shared_ptr<
+      std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>;
+  thread_local std::unordered_map<BlendCacheKey, OwnedPalette, BlendCacheKeyHash> cache;
+  thread_local std::uint32_t cache_frame = std::numeric_limits<std::uint32_t>::max();
+  if (std::uint32_t const now = Render::GL::humanoid_current_frame();
+      now != cache_frame) {
+    cache.clear();
+    cache_frame = now;
+  }
+
+  if (auto it = cache.find(key); it != cache.end()) {
+    owned_palette = it->second;
+    return owned_palette ? owned_palette->data() : current;
+  }
+
   owned_palette = blend_palette_owned(
-      current, next, entry.skinned_bone_count, frame_lerp, false, species_kind);
+      current, next, entry.skinned_bone_count, bucket_weight, false, species_kind);
+  cache.emplace(key, owned_palette);
   return owned_palette ? owned_palette->data() : current;
 }
 
@@ -632,6 +762,21 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              role_colors,
                              base_color,
                              wear_params);
+
+  if (lod == CreatureLOD::Full) {
+    const auto* shadow_entry = cache.get_or_bake_prehashed(*asset->spec,
+                                                           CreatureLOD::Minimal,
+                                                           handle.bind_palette,
+                                                           variant_bucket,
+                                                           {},
+                                                           0U,
+                                                           0U,
+                                                           blob.species_id());
+    if (shadow_entry != nullptr && shadow_entry->mesh != nullptr &&
+        shadow_entry->mesh->index_count() != 0U) {
+      cmd.shadow_mesh = shadow_entry->mesh.get();
+    }
+  }
 
   const bool skin_ubo_covers_frame = entry->skin_palette_ubo != 0U &&
                                      entry->skinned_frame_total != 0U &&

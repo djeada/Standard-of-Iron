@@ -519,7 +519,7 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Configuring OpenGL surface format...";
   QSurfaceFormat fmt;
   fmt.setRenderableType(QSurfaceFormat::OpenGL);
-  fmt.setVersion(3, 3);
+  fmt.setVersion(4, 3);
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setRedBufferSize(8);
   fmt.setGreenBufferSize(8);

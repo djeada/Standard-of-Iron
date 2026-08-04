@@ -59,6 +59,7 @@ public:
                              std::size_t count,
                              const QMatrix4x4& light_view_proj) -> bool;
   void begin_frame();
+  void end_frame();
 
   [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
   [[nodiscard]] auto instanced_shader() const -> GL::Shader* {
@@ -144,7 +145,8 @@ private:
   unsigned int m_palette_ubo = 0;
   std::size_t m_palette_ubo_capacity_bytes = 0;
   std::vector<float> m_palette_scratch;
-  static constexpr std::size_t k_palette_stream_instance_capacity = 4096U;
+
+  static constexpr std::size_t k_palette_stream_instance_capacity = 8192U;
   PersistentRingBuffer<float> m_palette_stream;
 
   struct InstancedVaoEntry {

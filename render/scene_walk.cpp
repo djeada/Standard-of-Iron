@@ -79,6 +79,7 @@
 #include "template_cache.h"
 #include "template_prewarm_catalog.h"
 #include "visibility_budget.h"
+#include "wildlife/bird_flock_renderer.h"
 #include "world_chunk.h"
 
 namespace Render::GL {
@@ -133,6 +134,8 @@ auto unit_should_emit_rigged_body(Game::Units::SpawnType spawn_type) noexcept ->
   case Game::Units::SpawnType::DefenseTower:
   case Game::Units::SpawnType::Home:
   case Game::Units::SpawnType::WallSegment:
+  case Game::Units::SpawnType::Sheep:
+  case Game::Units::SpawnType::Wolf:
     return false;
   default:
     return true;
@@ -1214,6 +1217,9 @@ void Renderer::render_world(Engine::Core::World* world) {
   for (const auto& entry : other_entries) {
     render_non_unit_entry(entry);
   }
+
+  Render::GL::Wildlife::submit_bird_flocks(
+      batch_submitter, &m_submission_visibility, m_camera);
 
   {
     Render::Pass::FrameContext pass_ctx;

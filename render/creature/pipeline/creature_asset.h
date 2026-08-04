@@ -48,6 +48,8 @@ inline constexpr CreatureAssetId k_humanoid_spear_asset = 4;
 inline constexpr CreatureAssetId k_skeleton_humanoid_asset = 5;
 inline constexpr CreatureAssetId k_caster_humanoid_asset = 6;
 inline constexpr CreatureAssetId k_stave_caster_humanoid_asset = 7;
+inline constexpr CreatureAssetId k_sheep_asset = 8;
+inline constexpr CreatureAssetId k_wolf_asset = 9;
 
 inline constexpr std::uint32_t k_no_snapshot_mesh_species = 0xFFFFFFFFu;
 
@@ -181,6 +183,8 @@ private:
   CreatureAsset m_skeleton_humanoid{};
   CreatureAsset m_caster_humanoid{};
   CreatureAsset m_stave_caster_humanoid{};
+  CreatureAsset m_sheep{};
+  CreatureAsset m_wolf{};
 };
 
 [[nodiscard]] auto resolve_creature_render_asset_handle(

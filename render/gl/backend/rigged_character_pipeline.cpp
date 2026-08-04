@@ -299,18 +299,26 @@ void RiggedCharacterPipeline::begin_frame() {
   }
 }
 
+void RiggedCharacterPipeline::end_frame() {
+  if (m_palette_stream.is_valid()) {
+    m_palette_stream.end_frame();
+  }
+}
+
 auto RiggedCharacterPipeline::bind_streamed_palette_batch(
     const RiggedCreatureCmd* const* cmds, std::size_t count) -> bool {
   if (!m_palette_stream.is_valid() || cmds == nullptr || count == 0U ||
       count > m_max_instances_per_batch) {
     return false;
   }
+
   const std::size_t palette_stride =
       m_max_instances_per_batch * BonePaletteArena::k_palette_floats;
+  const std::size_t written_floats = count * BonePaletteArena::k_palette_floats;
   if (m_palette_stream.count() + palette_stride > m_palette_stream.capacity()) {
     return false;
   }
-  m_palette_scratch.assign(palette_stride, 0.0F);
+  m_palette_scratch.assign(written_floats, 0.0F);
   for (std::size_t k = 0; k < count; ++k) {
     if (cmds[k] == nullptr || cmds[k]->bone_palette == nullptr) {
       return false;
@@ -320,7 +328,7 @@ auto RiggedCharacterPipeline::bind_streamed_palette_batch(
                                                k * BonePaletteArena::k_palette_floats);
   }
   const std::size_t element_offset =
-      m_palette_stream.write(m_palette_scratch.data(), palette_stride);
+      m_palette_stream.write(m_palette_scratch.data(), written_floats);
   const std::size_t byte_offset =
       m_palette_stream.current_offset() + element_offset * sizeof(float);
   auto* fn = gl_funcs();
@@ -991,7 +999,10 @@ auto RiggedCharacterPipeline::draw_shadow_instanced(
                       static_cast<GLsizeiptr>(instance_bytes),
                       m_instance_scratch.data());
 
-  const GLuint vao = ensure_instanced_vao(*cmds[0]->mesh);
+  RiggedMesh& cast_mesh =
+      cmds[0]->shadow_mesh != nullptr ? *cmds[0]->shadow_mesh : *cmds[0]->mesh;
+
+  const GLuint vao = ensure_instanced_vao(cast_mesh);
   if (vao == 0U) {
     return false;
   }
@@ -1004,7 +1015,7 @@ auto RiggedCharacterPipeline::draw_shadow_instanced(
   m_shadow_instanced_shader->set_uniform(m_shadow_instanced_view_proj, light_view_proj);
   fn->glBindVertexArray(vao);
   fn->glDrawElementsInstanced(GL_TRIANGLES,
-                              static_cast<GLsizei>(cmds[0]->mesh->index_count()),
+                              static_cast<GLsizei>(cast_mesh.index_count()),
                               GL_UNSIGNED_INT,
                               nullptr,
                               static_cast<GLsizei>(count));

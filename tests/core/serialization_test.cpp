@@ -2164,3 +2164,45 @@ TEST_F(SerializationTest, SerializeWorldSkipsConstructionPreviewEntities) {
 
   EXPECT_EQ(entities.size(), 1);
 }
+
+TEST_F(SerializationTest, WildlifeComponentRoundTrip) {
+  auto* original_entity = world->create_entity();
+  auto* wildlife = original_entity->add_component<WildlifeComponent>();
+  wildlife->species = Game::Wildlife::Species::Wolf;
+  wildlife->behavior = Game::Wildlife::Behavior::Stalk;
+  wildlife->group_id = 3U;
+  wildlife->home_x = -12.5F;
+  wildlife->home_z = 7.25F;
+  wildlife->roam_radius = 19.5F;
+  wildlife->anchor_assigned = true;
+  wildlife->target_x = -8.0F;
+  wildlife->target_z = 4.5F;
+  wildlife->think_cooldown = 0.35F;
+  wildlife->state_timer = 1.25F;
+  wildlife->alarm_timer = 2.5F;
+  wildlife->focus_id = 42U;
+  wildlife->rng_state = 987654321U;
+
+  QJsonObject const json = Serialization::serialize_entity(original_entity);
+  ASSERT_TRUE(json.contains("wildlife"));
+
+  auto* new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto* restored = new_entity->get_component<WildlifeComponent>();
+  ASSERT_NE(restored, nullptr);
+  EXPECT_EQ(restored->species, Game::Wildlife::Species::Wolf);
+  EXPECT_EQ(restored->behavior, Game::Wildlife::Behavior::Stalk);
+  EXPECT_EQ(restored->group_id, 3U);
+  EXPECT_FLOAT_EQ(restored->home_x, -12.5F);
+  EXPECT_FLOAT_EQ(restored->home_z, 7.25F);
+  EXPECT_FLOAT_EQ(restored->roam_radius, 19.5F);
+  EXPECT_TRUE(restored->anchor_assigned);
+  EXPECT_FLOAT_EQ(restored->target_x, -8.0F);
+  EXPECT_FLOAT_EQ(restored->target_z, 4.5F);
+  EXPECT_FLOAT_EQ(restored->think_cooldown, 0.35F);
+  EXPECT_FLOAT_EQ(restored->state_timer, 1.25F);
+  EXPECT_FLOAT_EQ(restored->alarm_timer, 2.5F);
+  EXPECT_EQ(restored->focus_id, 42U);
+  EXPECT_EQ(restored->rng_state, 987654321U);
+}

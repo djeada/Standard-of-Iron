@@ -29,6 +29,7 @@ public:
                        const QString& fragment_path) -> bool;
   auto load_from_source(const QString& vertex_source,
                         const QString& fragment_source) -> bool;
+  auto load_compute_from_source(const QString& compute_source) -> bool;
 
   void use();
   void release();

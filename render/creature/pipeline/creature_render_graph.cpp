@@ -135,6 +135,9 @@ auto quadruped_lod_from_settings(CreatureKind kind, float distance) noexcept
   case CreatureKind::Elephant:
     return select_distance_lod(distance,
                                elephant_lod_config_from_settings().thresholds);
+  case CreatureKind::Sheep:
+  case CreatureKind::Wolf:
+    return select_distance_lod(distance, horse_lod_config_from_settings().thresholds);
   case CreatureKind::Humanoid:
   case CreatureKind::Mounted:
     break;
@@ -239,6 +242,10 @@ default_archetype_for(CreatureKind kind) noexcept -> Render::Creature::Archetype
     return Render::Creature::ArchetypeRegistry::k_horse_base;
   case CreatureKind::Elephant:
     return Render::Creature::ArchetypeRegistry::k_elephant_base;
+  case CreatureKind::Sheep:
+    return Render::Creature::ArchetypeRegistry::k_sheep_base;
+  case CreatureKind::Wolf:
+    return Render::Creature::ArchetypeRegistry::k_wolf_base;
   case CreatureKind::Humanoid:
     return Render::Creature::ArchetypeRegistry::k_humanoid_base;
   case CreatureKind::Mounted:
@@ -332,6 +339,17 @@ auto variant_hash(const Render::GL::ElephantVariant& variant) noexcept
   h = hash_combine(h, hash_vec3(variant.howdah_wood_color));
   h = hash_combine(h, hash_vec3(variant.howdah_fabric_color));
   h = hash_combine(h, hash_vec3(variant.howdah_metal_color));
+  return h;
+}
+
+template <>
+auto variant_hash(const Render::GL::WildlifeVariant& variant) noexcept
+    -> std::uint64_t {
+  std::uint64_t h = 0x27D4EB2F165667C5ULL;
+  h = hash_combine(h, static_cast<std::uint64_t>(variant.role_count));
+  for (std::uint8_t i = 0; i < variant.role_count; ++i) {
+    h = hash_combine(h, hash_vec3(variant.roles[i]));
+  }
   return h;
 }
 
@@ -626,6 +644,38 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
   }
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
+  requests_.push_back(req);
+}
+
+void CreatureRenderBatch::add_quadruped(const PreparedWildlifeBodyState& state) {
+  const CreatureGraphOutput& output = state.graph;
+  if (output.culled) {
+    return;
+  }
+  const auto* asset = CreatureAssetRegistry::instance().for_species(state.kind);
+  if (asset == nullptr) {
+    return;
+  }
+  if (output.pass_intent == RenderPassIntent::Shadow) {
+    rows_.push_back(make_prepared_creature_row(output.spec,
+                                               state.kind,
+                                               output.world_matrix,
+                                               output.seed,
+                                               output.lod,
+                                               output.entity_id,
+                                               output.pass_intent));
+  }
+  auto const archetype_id =
+      (output.spec.archetype_id != Render::Creature::k_invalid_archetype)
+          ? output.spec.archetype_id
+          : default_archetype_for(state.kind);
+  auto req = build_request(output, archetype_id, state.animation_state, state.phase);
+  req.creature_asset_id = asset->id;
+  bool created_handle = false;
+  req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
+      asset->id, archetype_id, &created_handle);
+  req.clip_variant = static_cast<std::uint8_t>(state.clip_variant);
+  populate_role_colors(req, state.variant);
   requests_.push_back(req);
 }
 

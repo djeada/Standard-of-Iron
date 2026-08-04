@@ -30,6 +30,8 @@
 #include "render/humanoid/humanoid_manifest.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/snapshot_mesh_bake.h"
+#include "render/wildlife/sheep_manifest.h"
+#include "render/wildlife/wolf_manifest.h"
 
 namespace {
 
@@ -253,5 +255,7 @@ int main(int argc, char** argv) {
   }
   ok = bake_species_manifest(out_dir, Render::Horse::horse_manifest()) && ok;
   ok = bake_species_manifest(out_dir, Render::Elephant::elephant_manifest()) && ok;
+  ok = bake_species_manifest(out_dir, Render::Wildlife::sheep_manifest()) && ok;
+  ok = bake_species_manifest(out_dir, Render::Wildlife::wolf_manifest()) && ok;
   return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }

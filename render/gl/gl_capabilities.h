@@ -62,6 +62,10 @@ public:
 
     qInfo() << "Persistent Buffer Mapping:"
             << (has_persistent_mapping ? "Supported" : "Not Supported");
+    qInfo() << "Compute Shaders:"
+            << (has_compute_shaders() ? "Supported" : "Not Supported");
+    qInfo() << "Indirect Draw + SSBO:"
+            << (has_indirect_draw() ? "Supported" : "Not Supported");
 
     qInfo() << "==================================";
   }
@@ -73,6 +77,30 @@ public:
     }
 
     return ctx->hasExtension(QByteArray(extension));
+  }
+
+  [[nodiscard]] static auto has_compute_shaders() -> bool {
+    auto* ctx = QOpenGLContext::currentContext();
+    if (ctx == nullptr) {
+      return false;
+    }
+    const auto format = ctx->format();
+    const bool core_43 = format.majorVersion() > 4 ||
+                         (format.majorVersion() == 4 && format.minorVersion() >= 3);
+    return core_43 || ctx->hasExtension(QByteArrayLiteral("GL_ARB_compute_shader"));
+  }
+
+  [[nodiscard]] static auto has_indirect_draw() -> bool {
+    auto* ctx = QOpenGLContext::currentContext();
+    if (ctx == nullptr) {
+      return false;
+    }
+    const auto format = ctx->format();
+    const bool core_43 = format.majorVersion() > 4 ||
+                         (format.majorVersion() == 4 && format.minorVersion() >= 3);
+    return core_43 || (ctx->hasExtension(QByteArrayLiteral("GL_ARB_draw_indirect")) &&
+                       ctx->hasExtension(
+                           QByteArrayLiteral("GL_ARB_shader_storage_buffer_object")));
   }
 };
 

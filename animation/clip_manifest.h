@@ -179,6 +179,21 @@ inline constexpr std::uint16_t k_elephant_attack_clip = 3U;
 inline constexpr std::uint16_t k_elephant_die_clip = 4U;
 inline constexpr std::uint16_t k_elephant_dead_clip = 5U;
 
+inline constexpr std::uint16_t k_sheep_idle_clip = 0U;
+inline constexpr std::uint16_t k_sheep_graze_clip = 1U;
+inline constexpr std::uint16_t k_sheep_walk_clip = 2U;
+inline constexpr std::uint16_t k_sheep_run_clip = 3U;
+inline constexpr std::uint16_t k_sheep_die_clip = 4U;
+inline constexpr std::uint16_t k_sheep_dead_clip = 5U;
+
+inline constexpr std::uint16_t k_wolf_idle_clip = 0U;
+inline constexpr std::uint16_t k_wolf_stalk_clip = 1U;
+inline constexpr std::uint16_t k_wolf_walk_clip = 2U;
+inline constexpr std::uint16_t k_wolf_run_clip = 3U;
+inline constexpr std::uint16_t k_wolf_bite_clip = 4U;
+inline constexpr std::uint16_t k_wolf_die_clip = 5U;
+inline constexpr std::uint16_t k_wolf_dead_clip = 6U;
+
 struct ClipManifest {
   std::array<std::uint16_t, state_count()> clips{};
   std::array<std::uint8_t, state_count()> variant_counts{};
@@ -354,6 +369,45 @@ elephant_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
 
 [[nodiscard]] constexpr auto elephant_clip_manifest() noexcept -> ClipManifest {
   auto const clips = elephant_clip_table();
+  return {clips,
+          make_variant_count_table_for_clips(clips),
+          make_snapshot_table_for_clips(clips)};
+}
+
+[[nodiscard]] constexpr auto
+sheep_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
+  auto t = make_unmapped_clip_table();
+  t[state_index(StateId::Idle)] = k_sheep_idle_clip;
+  t[state_index(StateId::Hold)] = k_sheep_graze_clip;
+  t[state_index(StateId::Walk)] = k_sheep_walk_clip;
+  t[state_index(StateId::Run)] = k_sheep_run_clip;
+  t[state_index(StateId::Die)] = k_sheep_die_clip;
+  t[state_index(StateId::Dead)] = k_sheep_dead_clip;
+  return t;
+}
+
+[[nodiscard]] constexpr auto sheep_clip_manifest() noexcept -> ClipManifest {
+  auto const clips = sheep_clip_table();
+  return {clips,
+          make_variant_count_table_for_clips(clips),
+          make_snapshot_table_for_clips(clips)};
+}
+
+[[nodiscard]] constexpr auto
+wolf_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
+  auto t = make_unmapped_clip_table();
+  t[state_index(StateId::Idle)] = k_wolf_idle_clip;
+  t[state_index(StateId::Hold)] = k_wolf_stalk_clip;
+  t[state_index(StateId::Walk)] = k_wolf_walk_clip;
+  t[state_index(StateId::Run)] = k_wolf_run_clip;
+  t[state_index(StateId::AttackMelee)] = k_wolf_bite_clip;
+  t[state_index(StateId::Die)] = k_wolf_die_clip;
+  t[state_index(StateId::Dead)] = k_wolf_dead_clip;
+  return t;
+}
+
+[[nodiscard]] constexpr auto wolf_clip_manifest() noexcept -> ClipManifest {
+  auto const clips = wolf_clip_table();
   return {clips,
           make_variant_count_table_for_clips(clips),
           make_snapshot_table_for_clips(clips)};

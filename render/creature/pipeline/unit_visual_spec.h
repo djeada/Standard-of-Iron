@@ -45,6 +45,8 @@ enum class CreatureKind : std::uint8_t {
   Horse = 1,
   Elephant = 2,
   Mounted = 3,
+  Sheep = 4,
+  Wolf = 5,
 };
 
 using PaletteId = std::uint32_t;

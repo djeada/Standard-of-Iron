@@ -4512,6 +4512,14 @@ Build time: %3s</translation>
         <translation>Civilian</translation>
     </message>
     <message>
+        <source>Sheep</source>
+        <translation>Sheep</translation>
+    </message>
+    <message>
+        <source>Wolf</source>
+        <translation>Wolf</translation>
+    </message>
+    <message>
         <source>Unknown Troop</source>
         <translation>Unknown Troop</translation>
     </message>

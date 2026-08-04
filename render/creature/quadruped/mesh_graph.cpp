@@ -518,6 +518,43 @@ auto compile_mesh_graph(std::span<const MeshNode> nodes) -> CompiledMeshGraph {
   return compiled;
 }
 
+namespace {
+
+auto has_authored_weights(const Render::GL::Vertex& vertex) noexcept -> bool {
+  return (vertex.bone_weights[0] + vertex.bone_weights[1] + vertex.bone_weights[2] +
+          vertex.bone_weights[3]) > 1e-4F;
+}
+
+auto blend_fraction(const MeshNode& node,
+                    const Render::GL::Vertex& vertex) noexcept -> float {
+  QVector3D const axis = node.blend_to - node.blend_from;
+  float const length_sq = axis.lengthSquared();
+  if (length_sq < 1e-12F) {
+    return 0.0F;
+  }
+  QVector3D const offset =
+      QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]) -
+      node.blend_from;
+  return std::clamp(QVector3D::dotProduct(offset, axis) / length_sq, 0.0F, 1.0F);
+}
+
+void apply_node_skinning(const MeshNode& node, Render::GL::Vertex& vertex) noexcept {
+  if (node.anchor_bone == k_invalid_bone || has_authored_weights(vertex)) {
+    return;
+  }
+  auto const anchor = static_cast<std::uint8_t>(node.anchor_bone);
+  if (node.blend_bone == k_invalid_bone) {
+    vertex.bone_indices = {anchor, 0U, 0U, 0U};
+    vertex.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+    return;
+  }
+  float const t = blend_fraction(node, vertex);
+  vertex.bone_indices = {anchor, static_cast<std::uint8_t>(node.blend_bone), 0U, 0U};
+  vertex.bone_weights = {1.0F - t, t, 0.0F, 0.0F};
+}
+
+} // namespace
+
 auto compile_combined_mesh_graph(std::span<const MeshNode> nodes)
     -> std::unique_ptr<Render::GL::Mesh> {
   std::vector<Render::GL::Vertex> vertices;
@@ -533,6 +570,7 @@ auto compile_combined_mesh_graph(std::span<const MeshNode> nodes)
     auto const& mesh_indices = mesh->get_indices();
     for (auto vertex : mesh_vertices) {
       vertex.color_role = node.color_role;
+      apply_node_skinning(node, vertex);
       vertices.push_back(vertex);
     }
     for (unsigned int idx : mesh_indices) {
