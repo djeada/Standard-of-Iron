@@ -66,9 +66,6 @@ auto has_punish_opening(Engine::Core::Entity* target) -> bool {
   if (target == nullptr) {
     return false;
   }
-  if (target->has_component<Engine::Core::StaggerComponent>()) {
-    return true;
-  }
   if (auto* combat_state =
           target->get_component<Engine::Core::CombatStateComponent>()) {
     if (combat_state->animation_state == Engine::Core::CombatAnimationState::WindUp) {
@@ -325,11 +322,13 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
     return result;
   }
 
-  if (result.guard_broken || result.killed || has_punish_opening(commander)) {
-    auto tier = result.guard_broken ? Engine::Core::StaggerTier::GuardBreak
-                                    : Engine::Core::StaggerTier::HeavyStagger;
+  if (result.guard_broken) {
     Game::Systems::Combat::add_or_extend_stagger(
-        commander, result.guard_broken ? 0.65F : 0.45F, tier);
+        commander, 0.65F, Engine::Core::StaggerTier::GuardBreak);
+  } else if (has_punish_opening(commander) &&
+             !commander->has_component<Engine::Core::StaggerComponent>()) {
+    Game::Systems::Combat::add_or_extend_stagger(
+        commander, 0.22F, Engine::Core::StaggerTier::LightFlinch);
   }
   if (!result.blocked) {
     float const posture_damage = std::max(

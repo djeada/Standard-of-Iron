@@ -449,6 +449,29 @@ Timing constants encode how much control the player has:
 `rpg_combo_cadence` in the arena catalog is the regression contract for all of
 this.
 
+### A commander cannot be stagger-locked
+
+Because anything heavier than a `LightFlinch` cancels the action, whatever
+decides the tier decides whether the player gets to play. `has_punish_opening()`
+used to answer yes for anything carrying a `StaggerComponent`, and the punish
+reaction applied a `HeavyStagger` — so the first blow that caught a wind-up
+staggered the commander, the stagger made him permanently punishable, and every
+later blow re-applied and extended it. Surrounded by six swordsmen the player
+never completed a swing again. `rpg_melee_contact` had been failing on exactly
+that: the commander swung twice in 5.4 s and the enemy formation never lost a
+point of health.
+
+Being staggered is now the _result_ of a punish, not a fresh opening: the
+`StaggerComponent` branch is gone from `has_punish_opening()`, so a punish is a
+wind-up, an authored punish window, or a broken guard. An ordinary blow that
+catches a commander mid-wind-up gives him a `LightFlinch` — recoil over the
+swing, and the swing survives — and only a guard break still takes the action
+away. A commander who is already staggered is not re-staggered at all, which
+puts a hard ceiling on how long a crowd can hold him.
+
+`ABeatenCommanderIsNeverStaggerLocked` and `AStaggeredCommanderIsNotAPunishOpening`
+pin both halves.
+
 ## The Commander's Bow
 
 A commander who carries a bow shoots it the way an archer would: the player
