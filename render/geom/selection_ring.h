@@ -15,9 +15,9 @@ public:
   static auto get(Game::Accessibility::TeamPattern pattern) -> Render::GL::Mesh*;
 
 private:
-  static std::array<std::unique_ptr<Render::GL::Mesh>,
-                    Game::Accessibility::k_team_pattern_count>
-      s_meshes;
+  using MeshCache = std::array<std::unique_ptr<Render::GL::Mesh>,
+                               Game::Accessibility::k_team_pattern_count>;
+  static auto meshes() -> MeshCache&;
 };
 
 } // namespace Render::Geom

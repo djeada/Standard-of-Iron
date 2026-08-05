@@ -163,6 +163,51 @@ The rule that survives: on this box, believe wall clock over a fixed frame
 count, interleave the variants, and repeat. Frame timers inside `paintGL` can
 be wrong in both directions.
 
+## A GL lifetime trap that crashed two scenarios
+
+`ballista_impact` and `catapult_impact` segfaulted at process exit. The stack was
+always the same: a function-static `unique_ptr<Mesh>` destroyed by an atexit
+handler, `Mesh::~Mesh` reaching `Buffer::~Buffer`, and that faulting inside
+`QOpenGLContext::currentContext()`.
+
+The destructors already guarded on `currentContext() == nullptr`. The guard was
+the bug: `currentContext()` reads Qt thread-local storage, and by the time exit
+handlers run Qt has already torn that storage down, so the probe faults rather
+than returning null.
+
+`Render::GL::gl_objects_can_be_released()` checks `QCoreApplication::instance()`
+first, which is a plain global pointer and safe to read at any point, and only
+then asks about the context. Every GL destructor guard goes through it. This is a
+root fix rather than a per-static one: any future namespace- or function-static
+GL object is covered, which matters because chasing them individually did not
+work -- fixing three static mesh caches just moved the crash to a fourth.
+
+A sweep of all 199 arena scenarios now reports zero crashes.
+
+## Deduplication in render/
+
+- `ballista_geometry.cpp` holds the ballista once. Rome and Carthage had 1196
+  lines between them for a machine whose geometry was byte-identical; the only
+  real difference was that Rome finishes its fittings in bronze and Carthage in
+  gold, which is now a single `accent` slot in `BallistaPalette`. The extraction
+  was verified by diffing both originals against the shared body: identical apart
+  from whitespace. Two dead palette fields went with it.
+- `apply_mount_loadout` applies the eleven mount equipment slots and the debug
+  names that every mounted troop config repeats. Four renderers lost fourteen
+  lines each of field-by-field copying.
+- `is_prewarmable_spawn` was a 22-case switch over `SpawnType` answering the same
+  question as the 22-case switch over `TroopType` beside it. It now derives from
+  the troop predicate via `spawn_typeToTroopType`, so the two lists cannot drift.
+- `primitive_geometry.cpp` had three parallel switches over `PrimitiveShape`.
+  Whether a shape spans two bones, and which unit mesh it uses, are now one
+  traits table, so adding a shape means adding a row rather than remembering
+  three call sites.
+
+The catapult pair was left alone deliberately. It looks like the ballista at a
+glance but the two nations genuinely differ in geometry -- different proportions
+and extra bronze rails on the Carthaginian frame -- so merging them would have
+meant parameterising real visual differences rather than removing duplication.
+
 ## OpenGL floor
 
 OpenGL 3.3 Core is still the hardware floor and both entry points still request

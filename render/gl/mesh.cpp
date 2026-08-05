@@ -1,6 +1,7 @@
 #include "mesh.h"
 
 #include <QDebug>
+#include <QOpenGLContext>
 #include <QOpenGLFunctions_3_3_Core>
 #include <qopenglext.h>
 
@@ -12,6 +13,7 @@
 #include <vector>
 
 #include "gl/buffer.h"
+#include "gl_lifetime.h"
 #include "render_constants.h"
 #include "vertex_attrib_layout.h"
 
@@ -53,7 +55,7 @@ Mesh::Mesh(const std::vector<Vertex>& vertices,
 Mesh::~Mesh() = default;
 
 void Mesh::setup_buffers() {
-  if (QOpenGLContext::currentContext() == nullptr) {
+  if (!gl_objects_can_be_released()) {
     qWarning() << "Mesh::setup_buffers called without current GL context; "
                   "skipping VAO/VBO creation";
     return;
@@ -96,7 +98,7 @@ auto Mesh::prepare_draw(const char* caller_name) -> bool {
     setup_buffers();
   }
 #ifndef NDEBUG
-  if (QOpenGLContext::currentContext() == nullptr) {
+  if (!gl_objects_can_be_released()) {
     qWarning() << caller_name << "called without current GL context; skipping draw"
                << "indices" << m_indices.size();
     return false;

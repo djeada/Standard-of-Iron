@@ -9,6 +9,8 @@
 #include <cstddef>
 #include <utility>
 
+#include "gl/gl_lifetime.h"
+
 namespace Render::GL {
 
 auto RiggedMesh::next_id() noexcept -> std::uint64_t {
@@ -25,7 +27,7 @@ RiggedMesh::RiggedMesh(std::vector<RiggedVertex> vertices,
 RiggedMesh::~RiggedMesh() = default;
 
 void RiggedMesh::setup_buffers() {
-  if (QOpenGLContext::currentContext() == nullptr) {
+  if (!gl_objects_can_be_released()) {
     qWarning() << "RiggedMesh::setup_buffers called without current GL "
                   "context; skipping VAO/VBO creation";
     return;
@@ -83,7 +85,7 @@ auto RiggedMesh::bind_vao() -> bool {
   if (!m_vao) {
     setup_buffers();
   }
-  if (!m_vao || QOpenGLContext::currentContext() == nullptr) {
+  if (!m_vao || !gl_objects_can_be_released()) {
     return false;
   }
   m_vao->bind();
