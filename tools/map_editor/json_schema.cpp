@@ -301,6 +301,34 @@ auto troop_schema(const QString& sub_type) -> JsonSchema {
   return schema;
 }
 
+auto wildlife_area_schema() -> JsonSchema {
+  JsonSchema schema;
+  schema.title = QStringLiteral("Wildlife range");
+  schema.summary = QStringLiteral(
+      "Ground a species is anchored to. Groups spawn somewhere inside the circle "
+      "and roam out from there. A map that authors no range at all still gets one "
+      "picked for it at load time, off the roads and away from the player bases.");
+
+  schema.fields = {
+      optional_field("species",
+                     "string",
+                     "sheep",
+                     "Which population this range belongs to.",
+                     QStringLiteral("sheep"),
+                     QStringList{QStringLiteral("sheep"),
+                                 QStringLiteral("wolves"),
+                                 QStringLiteral("birds")}),
+      grid_x_field(),
+      grid_z_field(),
+      optional_field("radius",
+                     "number",
+                     "14",
+                     "How far from the centre a group may be anchored, in cells.",
+                     14.0),
+  };
+  return schema;
+}
+
 auto undead_zone_schema() -> JsonSchema {
   JsonSchema schema;
   schema.title = QStringLiteral("Undead zone");
@@ -383,6 +411,8 @@ auto schema_for_element(int element_kind, const QString& sub_type) -> JsonSchema
     return troop_schema(normalized);
   case ElementKind::UndeadZone:
     return undead_zone_schema();
+  case ElementKind::WildlifeArea:
+    return wildlife_area_schema();
   }
   return {};
 }
