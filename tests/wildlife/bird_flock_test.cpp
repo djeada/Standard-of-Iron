@@ -24,6 +24,16 @@ auto make_config(int flocks, int size) -> SpeciesConfig {
   config.roam_radius = 16.0F;
   config.alert_radius = 10.0F;
   config.spawn_areas = {{0.0F, 0.0F, 4.0F}};
+
+  config.flyover_interval_min = 0.0F;
+  config.flyover_interval_max = 0.0F;
+  return config;
+}
+
+auto make_flyover_config(int flocks, int size) -> SpeciesConfig {
+  SpeciesConfig config = make_config(flocks, size);
+  config.flyover_interval_min = 8.0F;
+  config.flyover_interval_max = 12.0F;
   return config;
 }
 
@@ -173,6 +183,60 @@ TEST_F(BirdFlockTest, SnapshotRestoreKeepsPopulation) {
     EXPECT_EQ(BirdFlockManager::instance().birds()[index].behavior,
               snapshot.birds[index].behavior);
   }
+}
+
+TEST_F(BirdFlockTest, FlyoverFlocksStartEmptySky) {
+  BirdFlockManager::instance().configure(make_flyover_config(2, 6), 21U, 40.0F, 80.0F);
+
+  EXPECT_EQ(BirdFlockManager::instance().flocks().size(), 2U);
+  EXPECT_TRUE(BirdFlockManager::instance().birds().empty());
+  EXPECT_EQ(BirdFlockManager::instance().stats().flyovers_launched, 0U);
+}
+
+TEST_F(BirdFlockTest, FlyoverLaunchesThenClearsTheSky) {
+  BirdFlockManager::instance().configure(make_flyover_config(1, 6), 21U, 40.0F, 80.0F);
+  BirdFlockManager::instance().set_focus(0.0F, 0.0F);
+  ThreatField threats;
+  threats.finalize();
+
+  bool seen_airborne = false;
+  for (int slice = 0; slice < 90 && !seen_airborne; ++slice) {
+    advance(1.0F, threats);
+    seen_airborne = !BirdFlockManager::instance().birds().empty();
+  }
+  ASSERT_TRUE(seen_airborne) << "no flock ever took off";
+  EXPECT_EQ(BirdFlockManager::instance().birds().size(), 6U);
+  EXPECT_GT(BirdFlockManager::instance().stats().flyovers_launched, 0U);
+
+  advance(180.0F, threats);
+  EXPECT_GT(BirdFlockManager::instance().stats().flyovers_finished, 0U);
+}
+
+TEST_F(BirdFlockTest, FlyoverBirdsCrossTheStageInOneDirection) {
+  BirdFlockManager::instance().configure(make_flyover_config(1, 5), 33U, 40.0F, 80.0F);
+  BirdFlockManager::instance().set_focus(0.0F, 0.0F);
+  ThreatField threats;
+  threats.finalize();
+
+  for (int slice = 0; slice < 90 && BirdFlockManager::instance().birds().empty();
+       ++slice) {
+    advance(1.0F, threats);
+  }
+  ASSERT_FALSE(BirdFlockManager::instance().birds().empty());
+
+  const auto& flock = BirdFlockManager::instance().flocks().front();
+  const auto before = BirdFlockManager::instance().birds().front();
+  float const before_travel = ((before.x - flock.home_x) * flock.heading_x) +
+                              ((before.z - flock.home_z) * flock.heading_z);
+
+  advance(4.0F, threats);
+  ASSERT_FALSE(BirdFlockManager::instance().birds().empty());
+  const auto after = BirdFlockManager::instance().birds().front();
+  float const after_travel = ((after.x - flock.home_x) * flock.heading_x) +
+                             ((after.z - flock.home_z) * flock.heading_z);
+
+  EXPECT_GT(after_travel, before_travel);
+  EXPECT_GT(after.altitude, 1.0F);
 }
 
 TEST_F(BirdFlockTest, PublishedFrameTracksLatestPositions) {

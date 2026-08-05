@@ -311,20 +311,24 @@ void draw_timber_pile(ISubmitter& out,
     return;
   }
 
-  constexpr std::array<int, 3> k_row_counts{4, 3, 2};
-  constexpr std::array<float, 3> k_row_offsets{-0.36F, -0.24F, -0.12F};
-  int const logs = std::max(1, static_cast<int>(std::lround(fill * 9.0F)));
+  constexpr std::array<int, 4> k_row_counts{5, 4, 3, 2};
+  constexpr std::array<float, 4> k_row_offsets{-0.42F, -0.315F, -0.21F, -0.105F};
+  constexpr float k_log_pitch = 0.21F;
+  constexpr float k_row_pitch = 0.155F;
+  constexpr int k_max_logs = 14;
+  int const logs =
+      std::clamp(static_cast<int>(std::lround(fill * k_max_logs)), 1, k_max_logs);
   int drawn = 0;
 
   QVector3D const cut_face = brighten(style.timber, 0.42F);
 
   for (std::size_t row = 0; row < k_row_counts.size() && drawn < logs; ++row) {
-    float const y = 0.135F + (static_cast<float>(row) * 0.199F);
+    float const y = 0.135F + (static_cast<float>(row) * k_row_pitch);
     int const count = k_row_counts.at(row);
     for (int i = 0; i < count && drawn < logs; ++i, ++drawn) {
       auto const seed = static_cast<std::uint32_t>(211 + (drawn * 29));
-      float const x =
-          k_pile_center_x + k_row_offsets.at(row) + (static_cast<float>(i) * 0.24F);
+      float const x = k_pile_center_x + k_row_offsets.at(row) +
+                      (static_cast<float>(i) * k_log_pitch);
       float const half_length = k_log_half_length + jitter(seed * 3U, 0.045F);
       float const shift = jitter(seed * 5U, 0.04F);
       QVector3D const color =
@@ -367,11 +371,15 @@ void draw_stone_pile(ISubmitter& out,
     int count;
     float first_z;
   };
-  constexpr std::array<Course, 3> k_courses{
-      {{0.185F, 3, -0.38F}, {0.415F, 2, -0.19F}, {0.645F, 1, 0.0F}}};
-  constexpr float k_block_pitch = 0.38F;
+  constexpr std::array<Course, 4> k_courses{{{0.180F, 4, -0.45F},
+                                             {0.368F, 3, -0.30F},
+                                             {0.556F, 2, -0.15F},
+                                             {0.744F, 1, 0.0F}}};
+  constexpr float k_block_pitch = 0.30F;
+  constexpr int k_max_blocks = 10;
 
-  int const blocks = std::max(1, static_cast<int>(std::lround(fill * 6.0F)));
+  int const blocks =
+      std::clamp(static_cast<int>(std::lround(fill * k_max_blocks)), 1, k_max_blocks);
   int drawn = 0;
 
   for (const auto& course : k_courses) {
@@ -390,7 +398,7 @@ void draw_stone_pile(ISubmitter& out,
                     course.y,
                     k_stone_pile_z + course.first_z +
                         (static_cast<float>(i) * k_block_pitch)),
-          QVector3D(0.225F, 0.105F, 0.163F),
+          QVector3D(0.215F, 0.092F, 0.145F),
           jitter(seed * 7U, 2.0F),
           color);
     }
@@ -399,8 +407,8 @@ void draw_stone_pile(ISubmitter& out,
   if (fill > 0.35F) {
     box(out,
         yard,
-        QVector3D(k_pile_center_x + 0.40F, 0.108F, k_stone_pile_z - 0.46F),
-        QVector3D(0.215F, 0.098F, 0.155F),
+        QVector3D(k_pile_center_x + 0.40F, 0.100F, k_stone_pile_z - 0.52F),
+        QVector3D(0.205F, 0.090F, 0.145F),
         -14.0F,
         brighten(tint(style.stone_dark, 1.28F), flash * 0.25F));
   }
@@ -487,8 +495,8 @@ void draw_ore_pile(ISubmitter& out,
                                                                {0.16F, -0.05F},
                                                                {-0.22F, -0.10F},
                                                                {0.02F, -0.34F}}};
-  int const lumps = std::clamp(static_cast<int>(std::lround(fill * 10.0F)),
-                               2,
+  int const lumps = std::clamp(static_cast<int>(std::lround(fill * 12.0F)),
+                               1,
                                static_cast<int>(k_lump_spots.size()));
   for (int i = 0; i < lumps; ++i) {
     auto const seed = static_cast<std::uint32_t>(457 + (i * 53));

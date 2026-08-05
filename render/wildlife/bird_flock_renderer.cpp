@@ -23,6 +23,7 @@ constexpr float k_cull_radius = 0.6F;
 constexpr float k_far_distance_sq = 140.0F * 140.0F;
 constexpr float k_detail_distance_sq = 42.0F * 42.0F;
 
+constexpr float k_bird_scale = 1.8F;
 constexpr float k_body_length = 0.085F;
 constexpr float k_wing_span = 0.115F;
 constexpr float k_flap_amplitude = 46.0F;
@@ -43,6 +44,7 @@ auto bird_model(const Game::Wildlife::Bird& bird) -> QMatrix4x4 {
   QMatrix4x4 model;
   model.translate(bird.x, bird.y, bird.z);
   model.rotate(bird.yaw * k_degrees_per_radian, 0.0F, 1.0F, 0.0F);
+  model.scale(k_bird_scale);
   return model;
 }
 

@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <QTemporaryFile>
 
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "game/map/map_loader.h"
@@ -34,10 +35,72 @@ auto base_root() -> QJsonObject {
 
 } // namespace
 
-TEST(MapWildlifeConfigTest, MapsWithoutWildlifeKeepTheFeatureOff) {
+TEST(MapWildlifeConfigTest, MapsWithoutWildlifeGetAPopulatedDefault) {
   Game::Map::MapDefinition map;
   ASSERT_TRUE(load_map(base_root(), map));
-  EXPECT_FALSE(map.wildlife.enabled);
+
+  EXPECT_TRUE(map.wildlife.enabled);
+  EXPECT_TRUE(map.wildlife.sheep.enabled);
+  EXPECT_TRUE(map.wildlife.wolves.enabled);
+  EXPECT_TRUE(map.wildlife.birds.enabled);
+
+  EXPECT_FALSE(map.wildlife.sheep.spawn_areas.empty());
+  EXPECT_FALSE(map.wildlife.wolves.spawn_areas.empty());
+  EXPECT_FALSE(map.wildlife.birds.spawn_areas.empty());
+}
+
+TEST(MapWildlifeConfigTest, AuthoredSpawnAreasAreNotOverwritten) {
+  QJsonObject root = base_root();
+  root["wildlife"] = QJsonObject{
+      {"enabled", true},
+      {"sheep",
+       QJsonObject{{"enabled", true},
+                   {"groups", 2},
+                   {"spawn_areas",
+                    QJsonArray{QJsonObject{{"x", 20}, {"z", 20}, {"radius", 6}}}}}}};
+
+  Game::Map::MapDefinition map;
+  ASSERT_TRUE(load_map(root, map));
+
+  ASSERT_EQ(map.wildlife.sheep.spawn_areas.size(), 1U);
+  EXPECT_FLOAT_EQ(map.wildlife.sheep.spawn_areas[0].radius, 6.0F);
+}
+
+TEST(MapWildlifeConfigTest, EnabledSpeciesWithoutAreasAreGivenGround) {
+  QJsonObject root = base_root();
+  root["wildlife"] = QJsonObject{
+      {"enabled", true}, {"wolves", QJsonObject{{"enabled", true}, {"groups", 2}}}};
+
+  Game::Map::MapDefinition map;
+  ASSERT_TRUE(load_map(root, map));
+
+  EXPECT_FALSE(map.wildlife.wolves.spawn_areas.empty());
+  EXPECT_TRUE(map.wildlife.sheep.spawn_areas.empty());
+}
+
+TEST(MapWildlifeConfigTest, PlacementStaysInsideTheMapAndOffThePlayerBase) {
+  QJsonObject root = base_root();
+  root["grid"] = QJsonObject{{"width", 81}, {"height", 81}, {"tile_size", 1.0}};
+  root["structures"] = QJsonArray{QJsonObject{{"type", "barracks"},
+                                              {"x", 10},
+                                              {"z", 10},
+                                              {"player_id", 1},
+                                              {"max_population", 100}}};
+
+  Game::Map::MapDefinition map;
+  ASSERT_TRUE(load_map(root, map));
+
+  constexpr float k_half = 40.0F;
+  auto const check = [&](const Game::Wildlife::SpeciesConfig& config) {
+    for (const auto& area : config.spawn_areas) {
+      EXPECT_LE(std::abs(area.x), k_half);
+      EXPECT_LE(std::abs(area.z), k_half);
+      EXPECT_GT(std::hypot(area.x + 30.0F, area.z + 30.0F), 20.0F);
+    }
+  };
+  check(map.wildlife.sheep);
+  check(map.wildlife.wolves);
+  check(map.wildlife.birds);
 }
 
 TEST(MapWildlifeConfigTest, ParsesPerSpeciesPopulationAndBehaviourKnobs) {

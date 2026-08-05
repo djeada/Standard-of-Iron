@@ -235,6 +235,7 @@ add_library(
     systems/home_system.cpp
     systems/settlement_life_system.cpp
     wildlife/wildlife_config.cpp
+    wildlife/wildlife_placement.cpp
     wildlife/wildlife_terrain_probe.cpp
     wildlife/wildlife_threats.cpp
     wildlife/bird_flock.cpp

@@ -209,7 +209,9 @@ TEST_F(ResourceDeliverySystemTest, PileHeightsFollowTheOwnersStores) {
   Engine::Core::World world;
   auto* barracks = add_barracks(world, 1, 0.0F, 0.0F);
   Game::Systems::PlayerResourceRegistry::instance().set(
-      1, ResourceType::Wood, Game::Systems::k_stockpile_display_cap * 2);
+      1, ResourceType::Wood, Game::Systems::k_stockpile_wood_display_cap * 2);
+  Game::Systems::PlayerResourceRegistry::instance().set(
+      1, ResourceType::Iron, Game::Systems::k_stockpile_iron_display_cap / 4);
 
   Game::Systems::ResourceDeliverySystem system;
   for (int tick = 0; tick < 60; ++tick) {
@@ -220,7 +222,22 @@ TEST_F(ResourceDeliverySystemTest, PileHeightsFollowTheOwnersStores) {
   ASSERT_NE(stockpile, nullptr);
   EXPECT_FLOAT_EQ(stockpile->wood_fill, 1.0F);
   EXPECT_FLOAT_EQ(stockpile->stone_fill, 0.0F);
+  EXPECT_NEAR(stockpile->iron_fill, 0.25F, 0.01F);
   EXPECT_FLOAT_EQ(stockpile->deposit_flash, 0.0F);
+}
+
+TEST_F(ResourceDeliverySystemTest, EachResourceKeepsItsOwnDisplayScale) {
+  using Game::Systems::stockpile_fill_ratio;
+
+  EXPECT_FLOAT_EQ(stockpile_fill_ratio(0, ResourceType::Wood), 0.0F);
+  EXPECT_FLOAT_EQ(stockpile_fill_ratio(Game::Systems::k_stockpile_wood_display_cap,
+                                       ResourceType::Wood),
+                  1.0F);
+
+  EXPECT_LT(stockpile_fill_ratio(200, ResourceType::Wood),
+            stockpile_fill_ratio(200, ResourceType::Stone))
+      << "stone reads fuller than wood at the same count, because a yard holds "
+         "less of it";
 }
 
 } // namespace

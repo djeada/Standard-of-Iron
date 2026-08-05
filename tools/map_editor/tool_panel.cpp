@@ -106,6 +106,13 @@ auto toolDescription(ToolType tool) -> QString {
   case ToolType::UndeadZone:
     return "Place an undead zone (shrine or ruins anchor with skeleton wave spawns). "
            "Double-click to edit waves.";
+  case ToolType::WildlifeSheep:
+    return "Mark a sheep pasture. Herds spawn inside the circle and graze within it.";
+  case ToolType::WildlifeWolves:
+    return "Mark a wolf range. Packs den inside the circle and hunt out from it.";
+  case ToolType::WildlifeBirds:
+    return "Mark a bird roost. Only used when a map turns flyovers off and keeps "
+           "the flock resident.";
   }
 
   return "Choose a tool to start editing.";
@@ -386,6 +393,36 @@ void ToolPanel::setup_ui() {
       "Double-click to edit waves.",
       ToolType::UndeadZone);
   layout->addWidget(sepulcher_group);
+
+  auto* wildlife_group = new QGroupBox("Wildlife", this);
+  auto* wildlife_layout = new QGridLayout(wildlife_group);
+  wildlife_layout->setHorizontalSpacing(6);
+  wildlife_layout->setVerticalSpacing(6);
+  add_tool_button(
+      wildlife_layout,
+      0,
+      0,
+      "Sheep",
+      "🐑",
+      "Mark a sheep pasture. Herds spawn inside the circle and graze within it.",
+      ToolType::WildlifeSheep);
+  add_tool_button(
+      wildlife_layout,
+      0,
+      1,
+      "Wolves",
+      "🐺",
+      "Mark a wolf range. Packs den inside the circle and hunt out from it.",
+      ToolType::WildlifeWolves);
+  add_tool_button(wildlife_layout,
+                  0,
+                  2,
+                  "Birds",
+                  "🐦",
+                  "Mark a bird roost. Only used when a map turns flyovers off and "
+                  "keeps the flock resident.",
+                  ToolType::WildlifeBirds);
+  layout->addWidget(wildlife_group);
 
   auto* paths_group = new QGroupBox("Paths & Bridges", this);
   auto* paths_layout = new QGridLayout(paths_group);
