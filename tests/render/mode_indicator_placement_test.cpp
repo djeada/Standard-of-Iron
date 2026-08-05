@@ -49,13 +49,8 @@ TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   transform.position = {1.0F, 2.0F, 3.0F};
   transform.scale = {0.5F, 0.5F, 0.5F};
 
-  renderer.enqueue_activity_indicator(1U,
-                                      &transform,
-                                      activity_of(Game::Systems::ActivityKind::Guard),
-                                      1,
-                                      0.0F,
-                                      0.5F,
-                                      0.0F);
+  renderer.enqueue_activity_indicator(
+      1U, &transform, activity_of(Game::Systems::ActivityKind::Guard), 1, 0.0F, 0.0F);
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
   auto const& items = renderer.m_active_queue->items();
@@ -87,7 +82,6 @@ TEST(ModeIndicatorPlacement, UsesThePerUnitAnchorHeightWhenOneIsCached) {
                                       activity_of(Game::Systems::ActivityKind::Repair),
                                       1,
                                       anchor,
-                                      0.5F,
                                       0.0F);
 
   auto const& items = renderer.m_active_queue->items();
@@ -112,7 +106,6 @@ TEST(ModeIndicatorPlacement, SubmitsAnIconForEveryNoteworthyActivity) {
                                         activity,
                                         1,
                                         3.0F,
-                                        0.5F,
                                         0.0F);
   }
 
@@ -131,7 +124,6 @@ TEST(ModeIndicatorPlacement, StaysSilentForUnitsTheLocalPlayerDoesNotOwn) {
       activity_of(Game::Systems::ActivityKind::ChopWood),
       2,
       3.0F,
-      0.5F,
       0.0F);
 
   EXPECT_TRUE(renderer.m_active_queue->items().empty());
@@ -146,7 +138,6 @@ TEST(ModeIndicatorPlacement, DropsIconsPastTheFadeDistance) {
                                       activity_of(Game::Systems::ActivityKind::Hold),
                                       1,
                                       3.0F,
-                                      0.5F,
                                       Render::Geom::k_indicator_fade_end_sq + 1.0F);
 
   EXPECT_TRUE(renderer.m_active_queue->items().empty());
@@ -163,7 +154,6 @@ TEST(ModeIndicatorPlacement, CarriesTheActivityStateInTheCommandColour) {
                   Game::Systems::ActivityState::Unavailable),
       1,
       3.0F,
-      0.5F,
       0.0F);
 
   auto const& items = renderer.m_active_queue->items();

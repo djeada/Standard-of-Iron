@@ -27,29 +27,30 @@ vec4 activity_indicator_shade(float layer,
 
   if (layer < 0.5) {
     float falloff = 1.0 - smoothstep(0.62, 1.20, radial);
-    return vec4(vec3(0.0), alpha * 0.55 * falloff * falloff);
+    return vec4(vec3(0.0), alpha * 0.62 * falloff * falloff);
   }
 
   vec3 base;
   float gloss;
   if (layer < 1.5) {
-    base = mix(vec3(0.050, 0.053, 0.064), tint * 0.20, 0.5);
-    gloss = 0.30;
+
+    base = mix(vec3(0.042, 0.045, 0.055), tint * 0.22, 0.30);
+    gloss = 0.25;
   } else if (layer < 2.5) {
-    base = tint * (0.86 + 0.22 * breathe);
+    base = tint * (0.95 + 0.18 * breathe);
     gloss = 1.55;
   } else if (layer < 3.5) {
-    base = vec3(0.020, 0.022, 0.028);
+    base = vec3(0.016, 0.018, 0.024);
     gloss = 0.0;
   } else if (layer < 4.5) {
-    base = mix(tint, vec3(1.0), 0.04);
-    gloss = 0.90;
+    base = mix(tint, vec3(1.0), 0.58);
+    gloss = 0.85;
   } else if (layer < 5.5) {
-    base = mix(tint, vec3(1.0), 0.45);
-    gloss = 1.30;
+    base = mix(tint, vec3(1.0), 0.80);
+    gloss = 1.20;
   } else {
-    base = tint * 0.46;
-    gloss = 1.05;
+    base = tint * 0.62;
+    gloss = 1.00;
   }
 
   float ambient = 0.30 + 0.16 * (normal.z * 0.5 + 0.5);

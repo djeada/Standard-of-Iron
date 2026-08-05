@@ -413,7 +413,6 @@ private:
                                   const Game::Systems::UnitActivity& activity,
                                   int owner_id,
                                   float anchor_height,
-                                  float world_size,
                                   float distance_sq);
 
   void refresh_billboard_basis();
