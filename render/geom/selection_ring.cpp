@@ -12,8 +12,10 @@
 
 namespace Render::Geom {
 
-std::array<std::unique_ptr<Render::GL::Mesh>, Game::Accessibility::k_team_pattern_count>
-    SelectionRing::s_meshes;
+auto SelectionRing::meshes() -> MeshCache& {
+  static auto* storage = new MeshCache{};
+  return *storage;
+}
 
 namespace {
 
@@ -125,13 +127,13 @@ auto create_pattern_mesh(TeamPattern pattern) -> std::unique_ptr<Render::GL::Mes
 
 auto SelectionRing::get(TeamPattern pattern) -> Render::GL::Mesh* {
   const auto index = static_cast<std::size_t>(pattern);
-  if (index >= s_meshes.size()) {
+  if (index >= meshes().size()) {
     return get(TeamPattern::Solid);
   }
-  if (!s_meshes[index]) {
-    s_meshes[index] = create_pattern_mesh(pattern);
+  if (!meshes()[index]) {
+    meshes()[index] = create_pattern_mesh(pattern);
   }
-  return s_meshes[index].get();
+  return meshes()[index].get();
 }
 
 auto SelectionRing::get() -> Render::GL::Mesh* {

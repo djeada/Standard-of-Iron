@@ -437,36 +437,6 @@ void Renderer::prewarm_unit_templates(
     }
   };
 
-  auto is_prewarmable_spawn = [](Game::Units::SpawnType spawn_type) -> bool {
-    using Game::Units::SpawnType;
-    switch (spawn_type) {
-    case SpawnType::Archer:
-    case SpawnType::Knight:
-    case SpawnType::Spearman:
-    case SpawnType::RomanLegionOrganizer:
-    case SpawnType::RomanVeteranConsul:
-    case SpawnType::RomanFieldCommander:
-    case SpawnType::CarthageSpearCommander:
-    case SpawnType::CarthageBowCommander:
-    case SpawnType::CarthageSwordCommander:
-    case SpawnType::SkeletonSwordsman:
-    case SpawnType::SkeletonArcher:
-    case SpawnType::GravePriest:
-    case SpawnType::MountedKnight:
-    case SpawnType::HorseArcher:
-    case SpawnType::HorseSpearman:
-    case SpawnType::Healer:
-    case SpawnType::Civilian:
-    case SpawnType::Builder:
-    case SpawnType::Elephant:
-      return true;
-    case SpawnType::Catapult:
-    case SpawnType::Ballista:
-    default:
-      return false;
-    }
-  };
-
   auto is_prewarmable_troop = [](Game::Units::TroopType type) -> bool {
     using Game::Units::TroopType;
     switch (type) {
@@ -495,6 +465,12 @@ void Renderer::prewarm_unit_templates(
     default:
       return false;
     }
+  };
+
+  auto is_prewarmable_spawn =
+      [&is_prewarmable_troop](Game::Units::SpawnType spawn_type) -> bool {
+    auto const troop_type = Game::Units::spawn_typeToTroopType(spawn_type);
+    return troop_type.has_value() && is_prewarmable_troop(*troop_type);
   };
 
   auto choose_template_budget_by_quality = []() -> std::size_t {

@@ -1,6 +1,7 @@
 #include "primitive_geometry.h"
 
 #include <algorithm>
+#include <array>
 
 #include "../geom/parts.h"
 #include "../geom/transforms.h"
@@ -49,19 +50,57 @@ auto oriented_span_model(const PrimitiveInstance& prim,
       head_world, tail_world, right_ref, r_right, r_forward);
 }
 
+struct ShapeTraits {
+  bool spans_two_bones;
+  Render::GL::Mesh* (*unit_mesh)();
+};
+
+constexpr std::size_t k_shape_count =
+    static_cast<std::size_t>(PrimitiveShape::TaperedCylinder) + 1U;
+
+auto shape_traits(PrimitiveShape shape) noexcept -> const ShapeTraits& {
+  static const std::array<ShapeTraits, k_shape_count> k_traits{{
+      {false, nullptr},
+      {false,
+       +[]() {
+         return Render::GL::get_unit_sphere();
+       }},
+      {true,
+       +[]() {
+         return Render::GL::get_unit_cylinder();
+       }},
+      {true,
+       +[]() {
+         return Render::GL::get_unit_capsule();
+       }},
+      {true,
+       +[]() {
+         return Render::GL::get_unit_cone();
+       }},
+      {false,
+       +[]() {
+         return Render::GL::get_unit_cube();
+       }},
+      {false, nullptr},
+      {false, nullptr},
+      {true,
+       +[]() {
+         return Render::GL::get_unit_cylinder();
+       }},
+      {false,
+       +[]() {
+         return Render::GL::get_unit_sphere();
+       }},
+      {true, nullptr},
+  }};
+  auto const index = static_cast<std::size_t>(shape);
+  return index < k_traits.size() ? k_traits[index] : k_traits[0];
+}
+
 } // namespace
 
 auto primitive_needs_tail(PrimitiveShape shape) noexcept -> bool {
-  switch (shape) {
-  case PrimitiveShape::Cylinder:
-  case PrimitiveShape::Capsule:
-  case PrimitiveShape::Cone:
-  case PrimitiveShape::OrientedCylinder:
-  case PrimitiveShape::TaperedCylinder:
-    return true;
-  default:
-    return false;
-  }
+  return shape_traits(shape).spans_two_bones;
 }
 
 auto bone_world_offset(const QMatrix4x4& bone,
@@ -81,31 +120,15 @@ auto primitive_unit_mesh(const PrimitiveInstance& prim) noexcept -> Render::GL::
     return prim.custom_mesh;
   }
 
-  switch (prim.shape) {
-  case PrimitiveShape::Sphere:
-  case PrimitiveShape::OrientedSphere:
-    return Render::GL::get_unit_sphere();
-  case PrimitiveShape::Cylinder:
-  case PrimitiveShape::OrientedCylinder:
-    return Render::GL::get_unit_cylinder();
-  case PrimitiveShape::Capsule:
-    return Render::GL::get_unit_capsule();
-  case PrimitiveShape::Cone:
-    return Render::GL::get_unit_cone();
-  case PrimitiveShape::Box:
-    return Render::GL::get_unit_cube();
-  case PrimitiveShape::TaperedCylinder: {
+  if (prim.shape == PrimitiveShape::TaperedCylinder) {
     float const anchor = std::max(prim.params.radius, 1.0e-4F);
     float const tail =
         prim.params.tail_radius > 0.0F ? prim.params.tail_radius : anchor;
     return Render::GL::get_unit_tapered_cylinder(1.0F, tail / anchor);
   }
-  case PrimitiveShape::Mesh:
-  case PrimitiveShape::BoneSpanMesh:
-  case PrimitiveShape::None:
-  default:
-    return nullptr;
-  }
+
+  auto const getter = shape_traits(prim.shape).unit_mesh;
+  return getter != nullptr ? getter() : nullptr;
 }
 
 auto primitive_unit_model(const PrimitiveInstance& prim,
