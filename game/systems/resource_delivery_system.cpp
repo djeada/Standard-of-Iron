@@ -105,15 +105,13 @@ void sync_stockpile_displays(Engine::Core::World* world, float delta_time) {
     }
 
     bool const owned = !Game::Core::is_neutral_owner(unit->owner_id);
-    float const wood_target =
-        owned ? stockpile_fill_ratio(resources.get(unit->owner_id, ResourceType::Wood))
-              : 0.0F;
-    float const stone_target =
-        owned ? stockpile_fill_ratio(resources.get(unit->owner_id, ResourceType::Stone))
-              : 0.0F;
-    float const iron_target =
-        owned ? stockpile_fill_ratio(resources.get(unit->owner_id, ResourceType::Iron))
-              : 0.0F;
+    auto const target_for = [&](ResourceType type) {
+      return owned ? stockpile_fill_ratio(resources.get(unit->owner_id, type), type)
+                   : 0.0F;
+    };
+    float const wood_target = target_for(ResourceType::Wood);
+    float const stone_target = target_for(ResourceType::Stone);
+    float const iron_target = target_for(ResourceType::Iron);
 
     approach_fill(stockpile->wood_fill, wood_target, delta_time);
     approach_fill(stockpile->stone_fill, stone_target, delta_time);

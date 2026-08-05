@@ -99,14 +99,57 @@ auto terrain_footprint_cells(const TerrainElement& elem) -> float {
   return std::max(extent > 0.0F ? extent : 0.0F, elem.radius);
 }
 
-constexpr std::array<int, 6> k_category_paint_order = {
+constexpr std::array<int, 7> k_category_paint_order = {
     static_cast<int>(ElementKind::Terrain),
     static_cast<int>(ElementKind::Linear),
+    static_cast<int>(ElementKind::WildlifeArea),
     static_cast<int>(ElementKind::WorldProp),
     static_cast<int>(ElementKind::Structure),
     static_cast<int>(ElementKind::TroopSpawn),
     static_cast<int>(ElementKind::UndeadZone),
 };
+
+struct WildlifeAreaStyle {
+  QColor fill;
+  QColor outline;
+  QString glyph;
+};
+
+auto is_wildlife_tool(ToolType tool) -> bool {
+  return tool == ToolType::WildlifeSheep || tool == ToolType::WildlifeWolves ||
+         tool == ToolType::WildlifeBirds;
+}
+
+auto wildlife_species_for_tool(ToolType tool) -> QString {
+  switch (tool) {
+  case ToolType::WildlifeWolves:
+    return QStringLiteral("wolves");
+  case ToolType::WildlifeBirds:
+    return QStringLiteral("birds");
+  default:
+    return QStringLiteral("sheep");
+  }
+}
+
+auto default_wildlife_radius(const QString& species) -> float {
+  if (species == QLatin1String("wolves")) {
+    return 22.0F;
+  }
+  if (species == QLatin1String("birds")) {
+    return 26.0F;
+  }
+  return 14.0F;
+}
+
+auto wildlife_area_style(const QString& species) -> WildlifeAreaStyle {
+  if (species == QLatin1String("wolves")) {
+    return {QColor(120, 60, 50, 46), QColor(214, 118, 92, 190), QStringLiteral("🐺")};
+  }
+  if (species == QLatin1String("birds")) {
+    return {QColor(60, 96, 130, 44), QColor(126, 184, 226, 185), QStringLiteral("🐦")};
+  }
+  return {QColor(190, 190, 170, 48), QColor(226, 224, 190, 195), QStringLiteral("🐑")};
+}
 
 void draw_troop_marker(QPainter& painter,
                        const QPoint& pos,
@@ -1090,6 +1133,9 @@ void MapCanvas::draw_one_element(QPainter& painter, const ElementRef& ref) {
   case ElementKind::UndeadZone:
     draw_undead_zone_element(painter, ref.index);
     break;
+  case ElementKind::WildlifeArea:
+    draw_wildlife_area_element(painter, ref.index);
+    break;
   }
 }
 
@@ -1462,6 +1508,51 @@ void MapCanvas::draw_undead_zone_element(QPainter& painter, int i) {
   painter.restore();
 }
 
+void MapCanvas::draw_wildlife_area_element(QPainter& painter, int i) {
+  const QColor& hover_ring_color =
+      m_current_tool == ToolType::Eraser ? k_hover_erase_color : k_hover_select_color;
+
+  const auto& elem = m_map_data->wildlife_areas()[i];
+  const WildlifeAreaStyle style = wildlife_area_style(elem.species);
+  QPoint const center = grid_to_widget(elem.x, elem.z);
+
+  auto const kind = static_cast<int>(ElementKind::WildlifeArea);
+  bool const is_selected = is_selected_element(kind, i);
+  bool const is_hovered = (m_hovered_type == kind && m_hovered_index == i);
+
+  const int radius_px = static_cast<int>(elem.radius * m_zoom * grid_cell_size);
+
+  painter.save();
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  painter.setBrush(style.fill);
+  if (is_selected) {
+    painter.setPen(QPen(Qt::yellow, 2));
+  } else if (is_hovered) {
+    painter.setPen(QPen(hover_ring_color, 2));
+  } else {
+    painter.setPen(QPen(style.outline, 1, Qt::DashLine));
+  }
+  painter.drawEllipse(center, radius_px, radius_px);
+
+  painter.setPen(style.outline);
+  QFont f = painter.font();
+  f.setPointSize(9);
+  painter.setFont(f);
+  painter.drawText(
+      QRect(center.x() - 10, center.y() - 10, 20, 20), Qt::AlignCenter, style.glyph);
+
+  if (labels_visible()) {
+    f.setPointSize(7);
+    painter.setFont(f);
+    painter.drawText(QRect(center.x() - 50, center.y() + radius_px + 2, 100, 14),
+                     Qt::AlignCenter,
+                     wildlife_species_label(elem.species));
+  }
+
+  painter.restore();
+}
+
 void MapCanvas::draw_derived_commanders(QPainter& painter) {
   if (m_mission_data == nullptr || m_map_data == nullptr) {
     return;
@@ -1666,6 +1757,21 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
                       troop_type_for_tool(m_current_tool),
                       m_current_player_id,
                       static_cast<float>(marker_radius_px()) * 1.375F);
+  } else if (is_wildlife_tool(m_current_tool)) {
+    const QString species = wildlife_species_for_tool(m_current_tool);
+    const WildlifeAreaStyle style = wildlife_area_style(species);
+    const int radius_px =
+        static_cast<int>(default_wildlife_radius(species) * m_zoom * grid_cell_size);
+    painter.setBrush(style.fill);
+    painter.setPen(QPen(style.outline, 1, Qt::DashLine));
+    painter.drawEllipse(widget_pos, radius_px, radius_px);
+    painter.setPen(style.outline);
+    QFont f = painter.font();
+    f.setPointSize(9);
+    painter.setFont(f);
+    painter.drawText(QRect(widget_pos.x() - 10, widget_pos.y() - 10, 20, 20),
+                     Qt::AlignCenter,
+                     style.glyph);
   } else if (m_current_tool == ToolType::UndeadZone) {
     const int radius_px = static_cast<int>(8.0F * m_zoom * grid_cell_size);
     painter.setBrush(QColor(100, 40, 140, 55));
@@ -2668,6 +2774,21 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     consider_hit(5, i, -1, (cursor - center_vec).length(), zone_radius_px + 4.0F, 6);
   }
 
+  const auto& wildlife_areas = m_map_data->wildlife_areas();
+  for (int i = wildlife_areas.size() - 1; i >= 0; --i) {
+    const auto& elem = wildlife_areas[i];
+    const QPoint center = grid_to_widget(elem.x, elem.z);
+    const QVector2D center_vec(static_cast<float>(center.x()),
+                               static_cast<float>(center.y()));
+    const float area_radius_px = elem.radius * m_zoom * grid_cell_size;
+    consider_hit(static_cast<int>(ElementKind::WildlifeArea),
+                 i,
+                 -1,
+                 (cursor - center_vec).length(),
+                 area_radius_px + 4.0F,
+                 7);
+  }
+
   const auto& structures = m_map_data->structures();
   for (int i = structures.size() - 1; i >= 0; --i) {
     const auto& elem = structures[i];
@@ -2823,6 +2944,13 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
       return;
     }
     m_map_data->execute_command(std::make_unique<AddTroopSpawnCmd>(m_map_data, elem));
+  } else if (is_wildlife_tool(m_current_tool)) {
+    WildlifeAreaElement elem;
+    elem.species = wildlife_species_for_tool(m_current_tool);
+    elem.x = static_cast<float>(grid_pos.x());
+    elem.z = static_cast<float>(grid_pos.y());
+    elem.radius = default_wildlife_radius(elem.species);
+    m_map_data->execute_command(std::make_unique<AddWildlifeAreaCmd>(m_map_data, elem));
   } else if (m_current_tool == ToolType::UndeadZone) {
     UndeadZoneElement elem;
     static int zone_counter = 0;

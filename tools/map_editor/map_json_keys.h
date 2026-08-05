@@ -35,6 +35,15 @@ inline constexpr const char* fog_density = Game::Map::JsonKeys::FOG_DENSITY;
 inline constexpr const char* exposure = Game::Map::JsonKeys::EXPOSURE;
 inline constexpr const char* undead_zones = Game::Map::JsonKeys::UNDEAD_ZONES;
 inline constexpr const char* fog_zones = Game::Map::JsonKeys::FOG_ZONES;
+inline constexpr const char* wildlife = Game::Map::JsonKeys::WILDLIFE;
+inline constexpr const char* wildlife_enabled = Game::Map::JsonKeys::WILDLIFE_ENABLED;
+inline constexpr const char* wildlife_groups = Game::Map::JsonKeys::WILDLIFE_GROUPS;
+inline constexpr const char* wildlife_spawn_areas =
+    Game::Map::JsonKeys::WILDLIFE_SPAWN_AREAS;
+inline constexpr const char* wildlife_radius = Game::Map::JsonKeys::WILDLIFE_RADIUS;
+inline constexpr const char* wildlife_sheep = Game::Map::JsonKeys::WILDLIFE_SHEEP;
+inline constexpr const char* wildlife_wolves = Game::Map::JsonKeys::WILDLIFE_WOLVES;
+inline constexpr const char* wildlife_birds = Game::Map::JsonKeys::WILDLIFE_BIRDS;
 
 inline constexpr const char* type = Game::Map::JsonKeys::TYPE;
 inline constexpr const char* x = Game::Map::JsonKeys::X;

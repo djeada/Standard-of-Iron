@@ -314,6 +314,8 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("WildlifeHuntObserved");
   case ArenaExpectationKind::WildlifeBirdsScattered:
     return QStringLiteral("WildlifeBirdsScattered");
+  case ArenaExpectationKind::WildlifeBirdFlyoverObserved:
+    return QStringLiteral("WildlifeBirdFlyoverObserved");
   case ArenaExpectationKind::WildlifePopulationHeld:
     return QStringLiteral("WildlifePopulationHeld");
   }
@@ -1732,6 +1734,7 @@ struct ArenaScenarioRunner::Impl {
     int min_population{-1};
     int peak_population{0};
     std::uint64_t bird_scatter_events{0U};
+    std::uint64_t bird_flyovers{0U};
   };
 
   WildlifeObservation wildlife_observation;
@@ -1771,6 +1774,8 @@ struct ArenaScenarioRunner::Impl {
     }
     wildlife_observation.bird_scatter_events =
         Game::Wildlife::BirdFlockManager::instance().stats().scatter_events;
+    wildlife_observation.bird_flyovers =
+        Game::Wildlife::BirdFlockManager::instance().stats().flyovers_launched;
 
     wildlife_observation.peak_population =
         std::max(wildlife_observation.peak_population, population);
@@ -4031,6 +4036,12 @@ struct ArenaScenarioRunner::Impl {
         if (wildlife_observation.bird_scatter_events == 0U) {
           add_issue(QStringLiteral("bird_flock_never_scattered"),
                     QStringLiteral("the flock never scattered from a threat"));
+        }
+        break;
+      case ArenaExpectationKind::WildlifeBirdFlyoverObserved:
+        if (wildlife_observation.bird_flyovers == 0U) {
+          add_issue(QStringLiteral("bird_flyover_never_launched"),
+                    QStringLiteral("no flock crossed the sky during the run"));
         }
         break;
       case ArenaExpectationKind::WildlifePopulationHeld: {
