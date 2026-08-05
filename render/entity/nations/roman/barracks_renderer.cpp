@@ -754,14 +754,15 @@ void draw_stockpile_yard(const DrawContext& p,
       out,
       unit,
       white,
-      StockpileYardStyle{.gravel = c.limestone_dark * 0.78F,
+      StockpileYardStyle{.gravel = QVector3D(0.62F, 0.55F, 0.44F),
+                         .earth_light = QVector3D(0.72F, 0.65F, 0.53F),
                          .stone_light = c.limestone,
                          .stone_mid = c.limestone_shade,
                          .stone_dark = c.limestone_dark,
                          .timber = c.cedar,
                          .timber_dark = c.cedar_dark,
-                         .ore = QVector3D(0.47F, 0.46F, 0.50F),
-                         .ore_rust = QVector3D(0.58F, 0.35F, 0.19F)});
+                         .ore = QVector3D(0.35F, 0.34F, 0.36F),
+                         .ore_rust = QVector3D(0.46F, 0.28F, 0.16F)});
 }
 
 void draw_barracks_ornaments(const DrawContext& p,
