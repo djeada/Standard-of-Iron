@@ -71,6 +71,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/catapult_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/catapult_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/ballista_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/ballista_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/ballista_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/ballista_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/elephant_renderer.cpp

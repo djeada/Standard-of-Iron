@@ -2,6 +2,7 @@
 set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_lifetime.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/texture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp

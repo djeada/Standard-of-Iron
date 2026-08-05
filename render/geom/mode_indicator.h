@@ -90,7 +90,9 @@ public:
   static void release_meshes();
 
 private:
-  static std::array<std::unique_ptr<Render::GL::Mesh>, k_indicator_kind_count> s_meshes;
+  using MeshCache =
+      std::array<std::unique_ptr<Render::GL::Mesh>, k_indicator_kind_count>;
+  static auto meshes() -> MeshCache&;
 };
 
 } // namespace Render::Geom
