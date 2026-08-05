@@ -22,6 +22,7 @@
 #include "game/core/world.h"
 #include "game/formation/army_formation_service.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/attack_range.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_system/damage_application.h"
@@ -34,6 +35,7 @@
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "game/systems/selection_system.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/units/unit.h"
 #include "game/wildlife/bird_flock.h"
@@ -234,6 +236,10 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("BotIssuesUsefulCommand");
   case ArenaExpectationKind::FrameBudget:
     return QStringLiteral("FrameBudget");
+  case ArenaExpectationKind::RangeIndicatorObserved:
+    return QStringLiteral("RangeIndicatorObserved");
+  case ArenaExpectationKind::RangeIndicatorCountAtMost:
+    return QStringLiteral("RangeIndicatorCountAtMost");
   case ArenaExpectationKind::GroupIsRendered:
     return QStringLiteral("GroupIsRendered");
   case ArenaExpectationKind::GroupExists:
@@ -736,6 +742,9 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, bool> useful_bot_action;
   QHash<QString, UndeadZoneObservation> undead_zone_states;
   QHash<QString, QSet<Engine::Core::EntityID>> undead_zone_entities;
+  QHash<QString, float> range_ring_max_radius;
+  QHash<QString, float> range_ring_min_radius;
+  std::size_t max_range_ring_count{0};
   QHash<QString, bool> commander_aura_active_seen;
   QHash<QString, bool> commander_aura_expired_seen;
   QHash<QString, bool> commander_aura_buff_seen;
@@ -1845,6 +1854,37 @@ struct ArenaScenarioRunner::Impl {
   undead_zone_state(const QString& zone_id) const -> UndeadZoneObservation {
     auto const found = undead_zone_states.constFind(zone_id);
     return found == undead_zone_states.cend() ? UndeadZoneObservation{} : found.value();
+  }
+
+  void observe_range_rings() {
+    auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+    if (selection == nullptr) {
+      return;
+    }
+    const auto& selected = selection->get_selected_units();
+    if (selected.empty()) {
+      return;
+    }
+
+    Game::Systems::AttackRangeRingRequest request;
+    request.world = &world;
+    request.local_owner_id = 1;
+    request.selection = selected;
+    request.max_rings = Game::Systems::k_attack_range_max_rings;
+    const auto rings = Game::Systems::collect_attack_range_rings(request);
+    max_range_ring_count = std::max(max_range_ring_count, rings.size());
+
+    for (auto const& group : scenario.groups) {
+      auto const& group_ids = ids(group.name);
+      for (auto const& ring : rings) {
+        if (std::find(group_ids.begin(), group_ids.end(), ring.entity_id) ==
+            group_ids.end()) {
+          continue;
+        }
+        range_ring_max_radius[group.name] = ring.max_radius;
+        range_ring_min_radius[group.name] = ring.min_radius;
+      }
+    }
   }
 
   void observe_commander_aura_state() {
@@ -3508,6 +3548,43 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group));
         }
         break;
+      case ArenaExpectationKind::RangeIndicatorObserved: {
+        if (!range_ring_max_radius.contains(expectation.group)) {
+          add_issue(QStringLiteral("range_indicator_missing"),
+                    QStringLiteral("%1 never produced a range indicator ring")
+                        .arg(expectation.group));
+          break;
+        }
+        float const observed = range_ring_max_radius.value(expectation.group, 0.0F);
+        if (expectation.threshold > 0.0F && std::abs(observed - expectation.threshold) >
+                                                expectation.threshold * 0.02F) {
+          add_issue(QStringLiteral("range_indicator_radius_mismatch"),
+                    QStringLiteral("%1 drew a %2 range ring, expected %3")
+                        .arg(expectation.group)
+                        .arg(observed, 0, 'f', 2)
+                        .arg(expectation.threshold, 0, 'f', 2));
+        }
+        float const observed_min = range_ring_min_radius.value(expectation.group, 0.0F);
+        if (expectation.distance > 0.0F &&
+            std::abs(observed_min - expectation.distance) >
+                expectation.distance * 0.02F) {
+          add_issue(QStringLiteral("range_indicator_min_radius_mismatch"),
+                    QStringLiteral("%1 drew a %2 minimum range ring, expected %3")
+                        .arg(expectation.group)
+                        .arg(observed_min, 0, 'f', 2)
+                        .arg(expectation.distance, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::RangeIndicatorCountAtMost:
+        if (expectation.threshold > 0.0F &&
+            static_cast<float>(max_range_ring_count) > expectation.threshold) {
+          add_issue(QStringLiteral("range_indicator_count_exceeded"),
+                    QStringLiteral("range indicators peaked at %1 rings, cap is %2")
+                        .arg(max_range_ring_count)
+                        .arg(static_cast<int>(expectation.threshold)));
+        }
+        break;
       case ArenaExpectationKind::GroupIsRendered:
         if (rendered_by_group.value(expectation.group, 0U) == 0U) {
           add_issue(QStringLiteral("group_not_rendered"),
@@ -4150,6 +4227,7 @@ void ArenaScenarioRunner::update(float simulation_dt) {
   }
   m_impl->track_rpg_aim();
   m_impl->observe_commander_aura_state();
+  m_impl->observe_range_rings();
   m_impl->observe_projectiles();
   for (auto const& expectation : m_impl->scenario.expectations) {
     if (expectation.kind == ArenaExpectationKind::FormationOrderPreserved &&

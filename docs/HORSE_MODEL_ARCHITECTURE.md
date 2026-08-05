@@ -39,6 +39,26 @@ Horse saddle/rider frames follow the animated back bone; the elephant howdah
 frame does the same. Rest landmarks are measured from production geometry rather
 than independently guessed dimensions.
 
+### Mount tack is resolved in one place
+
+Every mounted renderer base — `MountedKnightRendererBase`,
+`HorseSpearmanRendererBase`, `HorseArcherRendererBase` — carries the same seven
+horse equipment slots: saddle, bridle and reins (`HorseTack`), barding and crupper
+(`HorseArmor`), and decoration (`HorseDecoration`). They used to hold seven separate
+`EquipmentHandle` members each and repeat the same thirty-line resolution block in
+their constructors. That now lives in `render/entity/mounted_horse_equipment.h`:
+`MountedHorseHandles` holds the seven, `resolve_mounted_horse_handles()` fills them
+from any config that names the fields, and `as_array()` produces the ordered array
+that `resolve_horse_equipment_archetype()` expects.
+
+The order in `as_array()` is what the archetype resolver hashes, so changing it
+changes which archetype a mount resolves to. Add new slots at the end.
+
+The rider's own weapon, shield, helmet, armour and shoulder handles stay per-class,
+because each mounted type names them differently (`has_sword` versus `has_spear`,
+`has_cavalry_shield` versus `has_shield`) and feeds a different five-handle array to
+the humanoid archetype resolver.
+
 ## Shape verification
 
 The verification tool checks the generated production geometry directly. It

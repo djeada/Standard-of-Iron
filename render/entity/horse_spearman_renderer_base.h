@@ -7,6 +7,7 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/render_request.h"
 #include "../equipment/equipment_registry.h"
+#include "mounted_horse_equipment.h"
 #include "mounted_humanoid_renderer_base.h"
 
 namespace Render::GL {
@@ -86,13 +87,7 @@ private:
   EquipmentHandle m_helmet_handle{k_invalid_equipment_handle};
   EquipmentHandle m_armor_handle{k_invalid_equipment_handle};
   EquipmentHandle m_shoulder_handle{k_invalid_equipment_handle};
-  EquipmentHandle m_horse_saddle_handle{k_invalid_equipment_handle};
-  EquipmentHandle m_horse_bridle_handle{k_invalid_equipment_handle};
-  EquipmentHandle m_horse_reins_handle{k_invalid_equipment_handle};
-  EquipmentHandle m_horse_blanket_handle{k_invalid_equipment_handle};
-  EquipmentHandle m_horse_barding_handle{k_invalid_equipment_handle};
-  EquipmentHandle m_horse_crupper_handle{k_invalid_equipment_handle};
-  EquipmentHandle m_horse_decoration_handle{k_invalid_equipment_handle};
+  MountedHorseHandles m_horse_handles;
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };
 

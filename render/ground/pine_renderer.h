@@ -15,7 +15,7 @@ namespace Render::GL {
 class Buffer;
 class Renderer;
 
-class PineRenderer : public ScatterRendererBase<PineInstanceGpu, PineBatchParams> {
+class PineRenderer : public ScatterRendererBase<TreeInstanceGpu, FoliageBatchParams> {
 public:
   PineRenderer();
   ~PineRenderer() override;
@@ -26,13 +26,11 @@ public:
                  const std::vector<Game::Map::WorldProp>& runtime_world_props = {},
                  bool use_world_props_exclusively = false);
 
-  void set_light_direction(const QVector3D& dir);
+  void set_light_direction(const QVector3D& dir) override;
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
-  void clear();
-
-  [[nodiscard]] auto instances_for_test() const -> const std::vector<PineInstanceGpu>& {
+  [[nodiscard]] auto instances_for_test() const -> const std::vector<TreeInstanceGpu>& {
     return m_state.instances;
   }
 

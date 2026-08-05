@@ -73,12 +73,12 @@ TEST(RiggedPipeline, DrawQueueSubmitAndSort) {
   EXPECT_EQ(sorted.index(), RiggedCreatureCmdIndex);
 }
 
-TEST(RiggedPipeline, SelectionRingSortsAfterRiggedCreatures) {
+TEST(RiggedPipeline, GroundMarkerSortsAfterRiggedCreatures) {
   using namespace Render::GL;
 
   DrawQueue queue;
 
-  SelectionRingCmd ring;
+  GroundMarkerCmd ring;
   ring.priority = Render::CommandPriority::Critical;
   queue.submit(ring);
 
@@ -90,7 +90,7 @@ TEST(RiggedPipeline, SelectionRingSortsAfterRiggedCreatures) {
 
   ASSERT_EQ(queue.size(), 2U);
   EXPECT_EQ(queue.get_sorted(0).index(), RiggedCreatureCmdIndex);
-  EXPECT_EQ(queue.get_sorted(1).index(), SelectionRingCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), GroundMarkerCmdIndex);
 }
 
 TEST(RiggedPipeline, PrioritySortKeyPathMultipleCmds) {
@@ -175,22 +175,22 @@ TEST(RiggedPipeline, DifferentRolePalettesShareRiggedPreparedBatch) {
   EXPECT_EQ(batches[0].count, 2U);
 }
 
-TEST(RiggedPipeline, MultipleSelectionRingsBatchedIntoInstanced) {
+TEST(RiggedPipeline, MultipleGroundMarkersBatchedIntoInstanced) {
   using namespace Render::GL;
 
   DrawQueue queue;
 
-  SelectionRingCmd ring_a;
+  GroundMarkerCmd ring_a;
   ring_a.priority = Render::CommandPriority::Critical;
   ring_a.color = QVector3D(1.0F, 0.0F, 0.0F);
   queue.submit(ring_a);
 
-  SelectionRingCmd ring_b;
+  GroundMarkerCmd ring_b;
   ring_b.priority = Render::CommandPriority::Critical;
   ring_b.color = QVector3D(0.0F, 0.0F, 1.0F);
   queue.submit(ring_b);
 
-  SelectionRingCmd ring_c;
+  GroundMarkerCmd ring_c;
   ring_c.priority = Render::CommandPriority::Critical;
   ring_c.color = QVector3D(0.0F, 1.0F, 0.0F);
   queue.submit(ring_c);
@@ -199,17 +199,17 @@ TEST(RiggedPipeline, MultipleSelectionRingsBatchedIntoInstanced) {
   const auto& batches = queue.prepared_batches();
 
   ASSERT_EQ(batches.size(), 1U);
-  EXPECT_EQ(batches[0].kind, PreparedBatchKind::SelectionRingInstanced);
+  EXPECT_EQ(batches[0].kind, PreparedBatchKind::GroundMarkerInstanced);
   EXPECT_EQ(batches[0].count, 3U);
-  EXPECT_EQ(batches[0].type, DrawCmdType::SelectionRing);
+  EXPECT_EQ(batches[0].type, DrawCmdType::GroundMarker);
 }
 
-TEST(RiggedPipeline, SingleSelectionRingRemainsASingleBatch) {
+TEST(RiggedPipeline, SingleGroundMarkerRemainsASingleBatch) {
   using namespace Render::GL;
 
   DrawQueue queue;
 
-  SelectionRingCmd ring;
+  GroundMarkerCmd ring;
   ring.priority = Render::CommandPriority::Critical;
   queue.submit(ring);
 

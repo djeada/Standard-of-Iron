@@ -10,6 +10,7 @@
 #include "../persistent_buffer.h"
 #include "../shader_cache.h"
 #include "instance_draw_guard.h"
+#include "mesh_buffers.h"
 #include "pipeline_interface.h"
 
 namespace Render::GL::BackendPipelines {
@@ -67,29 +68,17 @@ private:
 
   GL::Shader* m_shader{nullptr};
 
-  GLuint m_sphere_vao{0};
-  GLuint m_sphere_vertex_buffer{0};
-  GLuint m_sphere_index_buffer{0};
-  GLuint m_sphere_instance_buffer{0};
-  GLsizei m_sphere_index_count{0};
+  StaticMeshBuffers m_sphere_mesh;
   std::size_t m_sphere_instance_capacity{0};
   std::size_t m_sphere_instances_resident{0};
   InstanceDrawGuard m_sphere_draw_guard{"PrimitiveBatchPipeline::spheres"};
 
-  GLuint m_cylinder_vao{0};
-  GLuint m_cylinder_vertex_buffer{0};
-  GLuint m_cylinder_index_buffer{0};
-  GLuint m_cylinder_instance_buffer{0};
-  GLsizei m_cylinder_index_count{0};
+  StaticMeshBuffers m_cylinder_mesh;
   std::size_t m_cylinder_instance_capacity{0};
   std::size_t m_cylinder_instances_resident{0};
   InstanceDrawGuard m_cylinder_draw_guard{"PrimitiveBatchPipeline::cylinders"};
 
-  GLuint m_cone_vao{0};
-  GLuint m_cone_vertex_buffer{0};
-  GLuint m_cone_index_buffer{0};
-  GLuint m_cone_instance_buffer{0};
-  GLsizei m_cone_index_count{0};
+  StaticMeshBuffers m_cone_mesh;
   std::size_t m_cone_instance_capacity{0};
   std::size_t m_cone_instances_resident{0};
   InstanceDrawGuard m_cone_draw_guard{"PrimitiveBatchPipeline::cones"};

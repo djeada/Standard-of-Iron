@@ -21,7 +21,7 @@ auto fake_texture(std::uintptr_t tag) -> Render::GL::Texture* {
 
 } // namespace
 
-TEST(DrawPartCmdSortOrder, SitsBetweenTerrainAndSelectionRing) {
+TEST(DrawPartCmdSortOrder, SitsBetweenTerrainAndGroundMarker) {
   Render::GL::DrawQueue queue;
 
   Render::GL::TerrainSurfaceCmd terrain{};
@@ -32,7 +32,7 @@ TEST(DrawPartCmdSortOrder, SitsBetweenTerrainAndSelectionRing) {
   part.mesh = fake_mesh(0x2000);
   part.material = &mat;
 
-  Render::GL::SelectionRingCmd ring{};
+  Render::GL::GroundMarkerCmd ring{};
 
   queue.submit(ring);
   queue.submit(part);
@@ -42,7 +42,7 @@ TEST(DrawPartCmdSortOrder, SitsBetweenTerrainAndSelectionRing) {
   ASSERT_EQ(queue.size(), 3U);
   EXPECT_EQ(queue.get_sorted(0).index(), Render::GL::TerrainSurfaceCmdIndex);
   EXPECT_EQ(queue.get_sorted(1).index(), Render::GL::DrawPartCmdIndex);
-  EXPECT_EQ(queue.get_sorted(2).index(), Render::GL::SelectionRingCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), Render::GL::GroundMarkerCmdIndex);
 }
 
 TEST(DrawPartCmdSortOrder, BatchesByMaterialThenMesh) {

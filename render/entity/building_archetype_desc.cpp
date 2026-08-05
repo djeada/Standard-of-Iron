@@ -209,23 +209,6 @@ void BuildingArchetypeDesc::add_rotated_box(const QVector3D& center,
   m_parts.push_back(std::move(part));
 }
 
-void BuildingArchetypeDesc::add_palette_rotated_box(const QVector3D& center,
-                                                    const QVector3D& scale,
-                                                    const QVector3D& euler_deg,
-                                                    std::uint8_t palette_slot,
-                                                    BuildingStateMask states,
-                                                    BuildingLODMask lod) {
-  BuildingPartDesc part;
-  part.kind = BuildingPartKind::PaletteRotatedBox;
-  part.point_a = center;
-  part.point_b = scale;
-  part.euler_deg = euler_deg;
-  part.palette_slot = palette_slot;
-  part.states = states;
-  part.lod = lod;
-  m_parts.push_back(std::move(part));
-}
-
 void BuildingArchetypeDesc::add_cylinder(const QVector3D& start,
                                          const QVector3D& end,
                                          float radius,

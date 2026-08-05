@@ -47,10 +47,6 @@ public:
             const QMatrix4x4& view_proj,
             const QVector3D& camera_position = {}) -> bool;
 
-  auto draw_instanced(const RiggedCreatureCmd* cmds,
-                      std::size_t count,
-                      const QMatrix4x4& view_proj,
-                      const QVector3D& camera_position = {}) -> bool;
   auto draw_instanced(const RiggedCreatureCmd* const* cmds,
                       std::size_t count,
                       const QMatrix4x4& view_proj,

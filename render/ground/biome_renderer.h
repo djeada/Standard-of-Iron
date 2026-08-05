@@ -8,14 +8,13 @@
 
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
-#include "../i_render_pass.h"
-#include "scatter_renderer_state.h"
+#include "i_scatter_pass.h"
 
 namespace Render::GL {
 class Buffer;
 class Renderer;
 
-class BiomeRenderer : public IRenderPass {
+class BiomeRenderer : public IScatterPass {
 public:
   BiomeRenderer();
   ~BiomeRenderer() override;
@@ -23,20 +22,23 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings);
 
-  void set_light_direction(const QVector3D& dir);
+  void set_light_direction(const QVector3D& dir) override;
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void refresh_grass();
 
-  void clear();
+  void clear() override;
 
-  [[nodiscard]] bool is_gpu_ready() const { return m_grass_state.is_gpu_ready(); }
+  [[nodiscard]] auto is_gpu_ready() const -> bool override {
+    return m_grass_state.is_gpu_ready();
+  }
 
-  [[nodiscard]] auto instance_count() const -> std::size_t {
+  [[nodiscard]] auto instance_count() const -> std::size_t override {
     return m_grass_state.instances.size();
   }
-  [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
+  [[nodiscard]] auto
+  last_sync_stats() const -> Render::Ground::Scatter::SyncStats override {
     return m_grass_state.last_sync_stats;
   }
 

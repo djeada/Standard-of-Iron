@@ -14,10 +14,10 @@
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
-#include "ballista_renderer_common.h"
 #include "math/math_utils.h"
 #include "nations/siege_anim_types.h"
 #include "registry.h"
+#include "siege_renderer_common.h"
 
 namespace Render::GL {
 namespace {

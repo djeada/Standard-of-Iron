@@ -84,12 +84,6 @@ public:
                        const QVector3D& color,
                        BuildingStateMask states = BuildingStateMask::All,
                        BuildingLODMask lod = BuildingLODMask::All);
-  void add_palette_rotated_box(const QVector3D& center,
-                               const QVector3D& scale,
-                               const QVector3D& euler_deg,
-                               std::uint8_t palette_slot,
-                               BuildingStateMask states = BuildingStateMask::All,
-                               BuildingLODMask lod = BuildingLODMask::All);
   void add_cylinder(const QVector3D& start,
                     const QVector3D& end,
                     float radius,

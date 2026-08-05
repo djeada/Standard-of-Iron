@@ -216,7 +216,7 @@ public:
                 float,
                 const QVector3D&,
                 float = 1.0F) override {}
-  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void ground_marker(const GroundMarkerCmd&) override {}
   void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
   void selection_smoke(const QMatrix4x4&, const QVector3D&, float = 0.15F) override {}
   void healing_beam(const QVector3D&,

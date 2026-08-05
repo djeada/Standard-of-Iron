@@ -12,8 +12,7 @@
 namespace Render::GL {
 class Renderer;
 
-class IronOreRenderer
-    : public ScatterRendererBase<IronOreInstanceGpu, IronOreBatchParams> {
+class IronOreRenderer : public ScatterRendererBase<PropInstanceGpu, PropBatchParams> {
 public:
   IronOreRenderer();
   ~IronOreRenderer() override;
@@ -21,11 +20,9 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& world_props = {});
-  void set_light_direction(const QVector3D& dir);
+  void set_light_direction(const QVector3D& dir) override;
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
-
-  void clear();
 
 private:
   void generate_instances(const std::vector<Game::Map::WorldProp>& world_props,

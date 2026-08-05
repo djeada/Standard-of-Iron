@@ -10,16 +10,16 @@ namespace Render::GL {
 class Mesh;
 class Texture;
 
-using CatapultBodyDrawer =
+using SiegeBodyDrawer =
     void (*)(const DrawContext&, ISubmitter&, Mesh*, Texture*, const QVector3D&);
 
-struct CatapultRendererConfig {
+struct SiegeRendererConfig {
   std::string_view renderer_key;
   QVector3D default_team;
-  CatapultBodyDrawer draw_body;
+  SiegeBodyDrawer draw_body;
 };
 
-void register_catapult_renderer_variant(EntityRendererRegistry& registry,
-                                        const CatapultRendererConfig& config);
+void register_siege_renderer_variant(EntityRendererRegistry& registry,
+                                     const SiegeRendererConfig& config);
 
 } // namespace Render::GL

@@ -120,19 +120,9 @@ struct TerrainScatterCmd {
 
   GrassBatchParams grass{};
   StoneBatchParams stone{};
-  PlantBatchParams plant{};
-  PineBatchParams pine{};
-  OliveBatchParams olive{};
+  FoliageBatchParams foliage{};
   FireCampBatchParams firecamp{};
-  TentBatchParams tent{};
-  SupplyCartBatchParams supply_cart{};
-  WeaponRackBatchParams weapon_rack{};
-  RuinsBatchParams ruins{};
-  DeadTreeBatchParams dead_tree{};
-  IronOreBatchParams iron_ore{};
-  MagicShrineBatchParams magic_shrine{};
-  AbandonedHomeBatchParams abandoned_home{};
-  StatueBatchParams statue{};
+  PropBatchParams prop{};
 
   VisibilityMaskResources visibility{};
   CommandPriority priority{CommandPriority::Low};
@@ -205,14 +195,17 @@ struct GridCmd {
   CommandPriority priority{CommandPriority::Low};
 };
 
-struct SelectionRingCmd {
-  QMatrix4x4 model;
-  QMatrix4x4 mvp;
-  QVector3D color{0, 0, 0};
-  float alpha_inner = 0.6F;
-  float alpha_outer = 0.25F;
+struct GroundMarkerCmd {
+  QVector3D center{0.0F, 0.0F, 0.0F};
+  float outer_radius = 1.0F;
+  float thickness = 0.06F;
+  QVector3D color{0.0F, 0.0F, 0.0F};
+  float alpha = 0.6F;
+  float phase = 0.0F;
 
   Game::Accessibility::TeamPattern pattern{Game::Accessibility::TeamPattern::Solid};
+  bool focused = false;
+  TerrainSurfaceCmd::HeightResources height{};
   CommandPriority priority{CommandPriority::Critical};
 };
 
@@ -301,7 +294,7 @@ struct RiggedCreatureCmd {
 };
 
 using DrawCmd = std::variant<GridCmd,
-                             SelectionRingCmd,
+                             GroundMarkerCmd,
                              SelectionSmokeCmd,
                              CylinderCmd,
                              MeshCmd,
@@ -318,7 +311,7 @@ using DrawCmd = std::variant<GridCmd,
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
-  SelectionRing = 1,
+  GroundMarker = 1,
   SelectionSmoke = 2,
   Cylinder = 3,
   Mesh = 4,
@@ -336,8 +329,8 @@ enum class DrawCmdType : std::uint8_t {
 
 constexpr std::size_t MeshCmdIndex = static_cast<std::size_t>(DrawCmdType::Mesh);
 constexpr std::size_t GridCmdIndex = static_cast<std::size_t>(DrawCmdType::Grid);
-constexpr std::size_t SelectionRingCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::SelectionRing);
+constexpr std::size_t GroundMarkerCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::GroundMarker);
 constexpr std::size_t SelectionSmokeCmdIndex =
     static_cast<std::size_t>(DrawCmdType::SelectionSmoke);
 constexpr std::size_t CylinderCmdIndex =
@@ -377,7 +370,7 @@ enum class PreparedBatchKind : std::uint8_t {
   MeshInstanced,
   DrawPartInstanced,
   RiggedCreatureInstanced,
-  SelectionRingInstanced,
+  GroundMarkerInstanced,
   EffectInstanced,
   ModeIndicatorInstanced
 };
@@ -571,7 +564,7 @@ private:
     Effect = 30,
     Grid = 31,
     SelectionSmoke = 32,
-    SelectionRing = 33,
+    GroundMarker = 33,
     ModeIndicator = 34
   };
 
@@ -624,13 +617,13 @@ private:
       SelectionSmoke = 8,
       Grid = 9,
       EffectBatch = 10,
-      SelectionRing = 16,
+      GroundMarker = 16,
       ModeIndicator = 17
     };
 
     static constexpr uint8_t k_type_order[] = {
         static_cast<uint8_t>(RenderOrder::Grid),
-        static_cast<uint8_t>(RenderOrder::SelectionRing),
+        static_cast<uint8_t>(RenderOrder::GroundMarker),
         static_cast<uint8_t>(RenderOrder::SelectionSmoke),
         static_cast<uint8_t>(RenderOrder::Cylinder),
         static_cast<uint8_t>(RenderOrder::Mesh),
@@ -695,8 +688,8 @@ private:
       identity.transparency_bucket = 1U;
     } else if (cmd.index() == GridCmdIndex) {
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Grid);
-    } else if (cmd.index() == SelectionRingCmdIndex) {
-      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::SelectionRing);
+    } else if (cmd.index() == GroundMarkerCmdIndex) {
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::GroundMarker);
       identity.transparency_bucket = 1U;
     } else if (cmd.index() == ModeIndicatorCmdIndex) {
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::ModeIndicator);
@@ -720,7 +713,7 @@ private:
     case PrimitiveBatchCmdIndex:
     case FogBatchCmdIndex:
     case SelectionSmokeCmdIndex:
-    case SelectionRingCmdIndex:
+    case GroundMarkerCmdIndex:
     case GridCmdIndex:
     case EffectBatchCmdIndex:
       return true;
@@ -852,12 +845,12 @@ private:
         if (end - i > 1U) {
           kind = PreparedBatchKind::RiggedCreatureInstanced;
         }
-      } else if (head.index() == SelectionRingCmdIndex) {
-        while (end < count && get_sorted(end).index() == SelectionRingCmdIndex) {
+      } else if (head.index() == GroundMarkerCmdIndex) {
+        while (end < count && get_sorted(end).index() == GroundMarkerCmdIndex) {
           ++end;
         }
         if (end - i > 1U) {
-          kind = PreparedBatchKind::SelectionRingInstanced;
+          kind = PreparedBatchKind::GroundMarkerInstanced;
         }
       } else if (head.index() == EffectBatchCmdIndex) {
         const auto& head_eff = std::get<EffectBatchCmdIndex>(head);

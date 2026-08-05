@@ -34,15 +34,6 @@ auto mixed(const QVector3D& a, const QVector3D& b, float t) -> QVector3D {
   return a + ((b - a) * std::clamp(t, 0.0F, 1.0F));
 }
 
-auto ellipsoid_at(const QMatrix4x4& parent,
-                  const QVector3D& center,
-                  const QVector3D& radii) -> QMatrix4x4 {
-  QMatrix4x4 model = parent;
-  model.translate(center);
-  model.scale(radii);
-  return model;
-}
-
 auto resolve_draw_state(const DrawContext& ctx, float stride_rate) -> DrawState {
   DrawState state;
   if (ctx.entity == nullptr) {

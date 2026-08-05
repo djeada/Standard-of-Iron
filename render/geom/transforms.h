@@ -37,30 +37,6 @@ auto capsule_between(const QMatrix4x4& parent,
                      const QVector3D& b,
                      float radius) -> QMatrix4x4;
 
-inline auto cylinder_between_pod(const Render::Math::Vec3& a,
-                                 const Render::Math::Vec3& b,
-                                 float radius) -> Render::Math::Mat3x4 {
-  return Render::Math::cylinder_between_fast(a, b, radius);
-}
-
-inline auto cylinder_between_pod(const Render::Math::Mat3x4& parent,
-                                 const Render::Math::Vec3& a,
-                                 const Render::Math::Vec3& b,
-                                 float radius) -> Render::Math::Mat3x4 {
-  return Render::Math::cylinder_between_fast(parent, a, b, radius);
-}
-
-inline auto sphere_at_pod(const Render::Math::Vec3& pos,
-                          float radius) -> Render::Math::Mat3x4 {
-  return Render::Math::sphere_at_fast(pos, radius);
-}
-
-inline auto sphere_at_pod(const Render::Math::Mat3x4& parent,
-                          const Render::Math::Vec3& pos,
-                          float radius) -> Render::Math::Mat3x4 {
-  return Render::Math::sphere_at_fast(parent, pos, radius);
-}
-
 inline auto to_vec3(const QVector3D& v) -> Render::Math::Vec3 {
   return {v.x(), v.y(), v.z()};
 }

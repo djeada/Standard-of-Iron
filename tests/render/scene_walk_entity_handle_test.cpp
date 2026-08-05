@@ -57,12 +57,24 @@ TEST(SceneWalkEntityHandleTest, WorldWalkIteratesFullWidthEntityHandles) {
       << "scene_walk.cpp truncates an EntityID to 32 bits while walking the world";
   EXPECT_EQ(source.find("[&](std::uint32_t entity_id,"), std::string::npos)
       << "scene_walk.cpp truncates an EntityID to 32 bits while collecting entries";
+  EXPECT_EQ(source.find("std::span<const std::uint32_t>"), std::string::npos)
+      << "scene_walk.cpp walks a 32-bit id span";
 
-  for (const char* id_list : {"unit_ids", "building_ids", "other_ids"}) {
-    const std::string loop =
-        std::string("for (Engine::Core::EntityID const entity_id : ") + id_list + ")";
-    EXPECT_NE(source.find(loop), std::string::npos)
-        << "expected a full-width handle loop over " << id_list;
+  EXPECT_NE(source.find("for (Engine::Core::EntityID const entity_id : entity_ids)"),
+            std::string::npos)
+      << "expected the collectors to walk full-width handles";
+
+  for (const char* collector : {"collect_unit_entries", "collect_non_unit_entries"}) {
+    const auto at = source.find(std::string("void Renderer::") + collector + "(");
+    ASSERT_NE(at, std::string::npos) << collector << " is missing from scene_walk.cpp";
+    const auto body = source.find('{', at);
+    ASSERT_NE(body, std::string::npos) << collector;
+    EXPECT_NE(source.find("std::span<const Engine::Core::EntityID> entity_ids", at),
+              std::string::npos)
+        << collector << " does not take a full-width handle span";
+    EXPECT_LT(source.find("std::span<const Engine::Core::EntityID> entity_ids", at),
+              body)
+        << collector << " does not take a full-width handle span";
   }
 }
 

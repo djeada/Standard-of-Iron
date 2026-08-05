@@ -214,6 +214,15 @@ inline constexpr char k_wildlife_mixed_pasture_id[] = "wildlife_mixed_pasture";
 inline constexpr char k_wildlife_storm_pasture_id[] = "wildlife_storm_pasture";
 inline constexpr char k_wildlife_dense_population_id[] = "wildlife_dense_population";
 
+inline constexpr char k_range_indicator_archers_id[] = "range_indicator_archers";
+inline constexpr char k_range_indicator_siege_minimum_id[] =
+    "range_indicator_siege_minimum";
+inline constexpr char k_range_indicator_mage_id[] = "range_indicator_mage";
+inline constexpr char k_range_indicator_elevation_id[] = "range_indicator_elevation";
+inline constexpr char k_range_indicator_hold_bonus_id[] = "range_indicator_hold_bonus";
+inline constexpr char k_range_indicator_mixed_selection_id[] =
+    "range_indicator_mixed_selection";
+
 struct ScenarioOption {
   QString id;
   QString label;

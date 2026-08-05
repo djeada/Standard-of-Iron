@@ -1079,6 +1079,100 @@ Item {
         }
     }
 
+    Rectangle {
+        id: attackTargetHint
+
+        readonly property var hint: (typeof game !== 'undefined' && game.activity && game.activity.attack_target_hint) ? game.activity.attack_target_hint : ({
+                "state": "none",
+                "name": "",
+                "range": "none"
+            })
+        readonly property bool attackable: hint.state === "valid"
+        readonly property bool in_range: hint.range === "in_range"
+
+        function hint_text() {
+            switch (hint.state) {
+            case "valid":
+                return hint.name && hint.name.length > 0 ? hint.name : qsTr("Enemy target");
+            case "ally":
+                return qsTr("Cannot attack ally");
+            case "neutral":
+                return qsTr("Cannot attack this target");
+            case "no_attackers":
+                return qsTr("Selection cannot attack");
+            }
+            return "";
+        }
+
+        function range_text() {
+            switch (hint.range) {
+            case "in_range":
+                return qsTr("In range");
+            case "too_close":
+                return qsTr("Too close");
+            case "out_of_range":
+                return qsTr("Out of range");
+            case "blocked":
+                return qsTr("No firing line");
+            }
+            return "";
+        }
+
+        function range_glyph() {
+            switch (hint.range) {
+            case "in_range":
+                return "\u25CE";
+            case "too_close":
+                return "\u25B3";
+            case "out_of_range":
+                return "\u25CB";
+            case "blocked":
+                return "\u2715";
+            }
+            return "";
+        }
+
+        visible: game_view.cursor_mode === "attack" && hint.state !== "none"
+        z: 999999
+        radius: 5
+        color: "#C8141414"
+        border.color: attackable ? Theme.dangerBr : Theme.panelBr
+        border.width: 1
+        width: attackTargetHintRow.implicitWidth + 14
+        height: attackTargetHintRow.implicitHeight + 8
+        x: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_x + 22), game_view.width - width) : 0
+        y: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_y + 20), game_view.height - height) : 0
+
+        Row {
+            id: attackTargetHintRow
+
+            anchors.centerIn: parent
+            spacing: 6
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: attackTargetHint.attackable ? Theme.dangerBr : Theme.textDim
+                text: attackTargetHint.attackable ? "⚔" : "⊘"
+                font.pixelSize: 14
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: attackTargetHint.attackable ? Theme.textMain : Theme.textDim
+                text: attackTargetHint.hint_text()
+                font.pixelSize: 13
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: attackTargetHint.range_text().length > 0
+                color: attackTargetHint.in_range ? Theme.successText : Theme.warningText
+                text: attackTargetHint.range_glyph() + " " + attackTargetHint.range_text()
+                font.pixelSize: 12
+            }
+        }
+    }
+
     Timer {
         id: keyPanTimer
 

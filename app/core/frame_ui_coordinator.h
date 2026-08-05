@@ -5,8 +5,11 @@
 
 #include <functional>
 #include <optional>
+#include <vector>
 
 #include "../models/cursor_mode.h"
+#include "game/systems/attack_range.h"
+#include "game/systems/attack_targeting.h"
 
 class CursorManager;
 class HoverTracker;
@@ -32,6 +35,9 @@ struct RenderEffectsContext {
   App::Controllers::CommandController* command_controller = nullptr;
   int local_owner_id = 0;
   std::optional<QVector3D> commander_rally_preview_pos;
+
+  const Game::Systems::AttackTargetingHighlights* attack_targeting = nullptr;
+  const std::vector<Game::Systems::AttackRangeRing>* attack_range_rings = nullptr;
 };
 
 void render_effects(const RenderEffectsContext& context,

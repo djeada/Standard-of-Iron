@@ -6,7 +6,6 @@
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
-#include "game/map/visibility_service.h"
 #include "render/decoration_gpu.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
@@ -41,21 +40,6 @@ auto find_repo_root() -> std::filesystem::path {
   return std::filesystem::current_path();
 }
 
-auto make_snapshot() -> Game::Map::VisibilityService::Snapshot {
-  Game::Map::VisibilityService::Snapshot snapshot;
-  snapshot.initialized = true;
-  snapshot.width = 4;
-  snapshot.height = 4;
-  snapshot.tile_size = 1.0F;
-  snapshot.half_width = 1.5F;
-  snapshot.half_height = 1.5F;
-  snapshot.cells.assign(16,
-                        static_cast<std::uint8_t>(Game::Map::VisibilityState::Unseen));
-  snapshot.cells[10] = static_cast<std::uint8_t>(Game::Map::VisibilityState::Visible);
-  snapshot.cells[5] = static_cast<std::uint8_t>(Game::Map::VisibilityState::Explored);
-  return snapshot;
-}
-
 auto make_tree_map_definition(Game::Map::GroundType ground_type,
                               std::uint32_t seed) -> Game::Map::MapDefinition {
   Game::Map::MapDefinition map_def;
@@ -70,37 +54,6 @@ auto make_tree_map_definition(Game::Map::GroundType ground_type,
   return map_def;
 }
 
-TEST(ScatterRuntimeTest, CollectVisibleInstancesKeepsVisibleAndExploredCells) {
-  std::vector<Render::GL::PlantInstanceGpu> instances(3);
-  instances[0].pos_scale = QVector4D(0.0F, 0.0F, 0.0F, 1.0F);
-  instances[1].pos_scale = QVector4D(-1.0F, 0.0F, -1.0F, 1.0F);
-  instances[2].pos_scale = QVector4D(5.0F, 0.0F, 5.0F, 1.0F);
-
-  const auto visible = Render::Ground::Scatter::collect_visible_instances(
-      instances,
-      make_snapshot(),
-      [](const Render::GL::PlantInstanceGpu& instance) -> const QVector4D& {
-        return instance.pos_scale;
-      });
-
-  ASSERT_EQ(visible.size(), 2U);
-  EXPECT_FLOAT_EQ(visible[0].pos_scale.x(), 0.0F);
-  EXPECT_FLOAT_EQ(visible[0].pos_scale.z(), 0.0F);
-  EXPECT_FLOAT_EQ(visible[1].pos_scale.x(), -1.0F);
-  EXPECT_FLOAT_EQ(visible[1].pos_scale.z(), -1.0F);
-}
-
-TEST(ScatterRuntimeTest, FilteredGpuReadyReflectsVisibilityState) {
-  std::vector<Render::GL::PlantInstanceGpu> const instances(1);
-  std::vector<Render::GL::PlantInstanceGpu> const visible_instances;
-  std::unique_ptr<Render::GL::Buffer> const buffer;
-
-  EXPECT_TRUE(Render::Ground::Scatter::is_filtered_gpu_ready(
-      instances, visible_instances, buffer, false));
-  EXPECT_FALSE(Render::Ground::Scatter::is_filtered_gpu_ready(
-      instances, visible_instances, buffer, true));
-}
-
 TEST(ScatterRuntimeTest, DirectUploadDecisionRequiresDirtyOrMissingBuffer) {
   using Render::Ground::Scatter::direct_needs_buffer_upload;
 
@@ -112,22 +65,6 @@ TEST(ScatterRuntimeTest, DirectUploadDecisionRequiresDirtyOrMissingBuffer) {
       << "Dirty populated chunks need an upload.";
   EXPECT_FALSE(direct_needs_buffer_upload(false, true, false))
       << "Stable populated chunks with a buffer must not upload.";
-}
-
-TEST(ScatterRuntimeTest,
-     FilteredVisibilityDecisionIgnoresStableFramesWithCachedBuffer) {
-  using Render::Ground::Scatter::filtered_needs_visibility_rebuild;
-
-  EXPECT_FALSE(filtered_needs_visibility_rebuild(true, true, false, true, 2, 1))
-      << "Empty scatter chunks should not rebuild visibility.";
-  EXPECT_TRUE(filtered_needs_visibility_rebuild(false, true, false, true, 1, 1))
-      << "Dirty filtered chunks need a visibility pass.";
-  EXPECT_TRUE(filtered_needs_visibility_rebuild(false, false, true, false, 2, 1))
-      << "Visibility version changes need a new filtered instance list.";
-  EXPECT_TRUE(filtered_needs_visibility_rebuild(false, false, false, false, 1, 1))
-      << "A visible cached list without a buffer needs re-upload.";
-  EXPECT_FALSE(filtered_needs_visibility_rebuild(false, false, true, false, 1, 1))
-      << "Stable filtered chunks with cached visibility and buffer do no work.";
 }
 
 TEST(ScatterRuntimeTest, DryGrassColorKeepsContrastOnMediterraneanSoil) {
@@ -208,7 +145,7 @@ TEST(ScatterRuntimeTest, DirectRendererStateResetClearsCpuTrackingState) {
 
 TEST(ScatterRuntimeTest, FilteredRendererStateResetClearsVisibilityState) {
   Render::Ground::Scatter::FilteredRendererState<Render::GL::PlantInstanceGpu,
-                                                 Render::GL::PlantBatchParams>
+                                                 Render::GL::FoliageBatchParams>
       state;
   state.instances.push_back({QVector4D(0.0F, 0.0F, 0.0F, 1.0F),
                              QVector4D(1.0F, 1.0F, 1.0F, 0.0F),

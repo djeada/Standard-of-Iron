@@ -48,33 +48,6 @@ inline auto single_cylinder_archetype(
   return cache.back().archetype;
 }
 
-inline auto single_sphere_archetype(int material_id,
-                                    std::string_view debug_prefix = "segment_sphere")
-    -> const RenderArchetype& {
-  struct CachedArchetype {
-    std::string debug_prefix;
-    int material_id{0};
-    RenderArchetype archetype;
-  };
-
-  static std::deque<CachedArchetype> cache;
-  for (const auto& entry : cache) {
-    if (entry.debug_prefix == debug_prefix && entry.material_id == material_id) {
-      return entry.archetype;
-    }
-  }
-
-  std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
-      generated_sphere(QVector3D(0.0F, 0.0F, 0.0F), 1.0F, 0U, 1.0F, material_id),
-  }};
-  cache.push_back(
-      {std::string(debug_prefix),
-       material_id,
-       build_generated_equipment_archetype(
-           std::string(debug_prefix) + "_" + std::to_string(material_id), primitives)});
-  return cache.back().archetype;
-}
-
 inline auto single_cone_archetype(float base_radius,
                                   int material_id,
                                   std::string_view debug_prefix = "segment_cone")

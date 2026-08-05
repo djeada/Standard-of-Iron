@@ -37,21 +37,11 @@ void IronOreRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
 }
 
 void IronOreRenderer::set_light_direction(const QVector3D& dir) {
-  set_light_direction_common(dir, IronOreBatchParams::default_light_direction());
+  set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
 void IronOreRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  submit_filtered_common<false>(
-      renderer,
-      resources,
-      TerrainScatterCmd::Species::IronOre,
-      [](TerrainScatterCmd& cmd, const IronOreBatchParams& params) {
-        cmd.iron_ore = params;
-      });
-}
-
-void IronOreRenderer::clear() {
-  clear_common();
+  submit_prop_common(renderer, resources, TerrainScatterCmd::Species::IronOre);
 }
 
 void IronOreRenderer::generate_instances(
@@ -81,7 +71,7 @@ void IronOreRenderer::generate_instances(
     float const iron_mix = remap(rand_01(state), 0.32F, 0.54F);
     color = color * (1.0F - iron_mix) + iron_tint * iron_mix;
 
-    IronOreInstanceGpu inst;
+    PropInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(),
                                resolved.y(),
                                resolved.z(),

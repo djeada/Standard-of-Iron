@@ -145,20 +145,6 @@ inline void encode_visibility_mask_region(const std::vector<std::uint8_t>& cells
   }
 }
 
-inline void encode_visibility_mask(const std::vector<std::uint8_t>& cells,
-                                   int width,
-                                   int height,
-                                   std::vector<unsigned char>& out_rgba) {
-  const auto cell_count = static_cast<std::size_t>(std::max(0, width)) *
-                          static_cast<std::size_t>(std::max(0, height));
-  if (cell_count == 0 || cells.size() != cell_count) {
-    out_rgba.assign(cell_count * VisibilityMaskChannels::k_stride, 0U);
-    return;
-  }
-  encode_visibility_mask_region(
-      cells, width, height, MaskRegion::whole(width, height), out_rgba);
-}
-
 inline void encode_fog_mask_region(const std::vector<float>& fog_amount,
                                    const std::vector<float>& seen_amount,
                                    int width,
@@ -203,26 +189,6 @@ inline void encode_fog_mask_region(const std::vector<float>& fog_amount,
       out_rgba[base + 3] = 255U;
     }
   }
-}
-
-inline void encode_fog_mask(const std::vector<float>& fog_amount,
-                            const std::vector<float>& seen_amount,
-                            int width,
-                            int height,
-                            std::vector<unsigned char>& out_rgba) {
-  const auto cell_count = static_cast<std::size_t>(std::max(0, width)) *
-                          static_cast<std::size_t>(std::max(0, height));
-  if (cell_count == 0 || fog_amount.size() != cell_count ||
-      seen_amount.size() != cell_count) {
-    out_rgba.assign(cell_count * VisibilityMaskChannels::k_stride, 0U);
-    return;
-  }
-  encode_fog_mask_region(fog_amount,
-                         seen_amount,
-                         width,
-                         height,
-                         MaskRegion::whole(width, height),
-                         out_rgba);
 }
 
 } // namespace Render::Ground

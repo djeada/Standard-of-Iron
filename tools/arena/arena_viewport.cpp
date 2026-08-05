@@ -78,6 +78,7 @@
 #include "render/entity/healing_waves_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
+#include "render/geom/range_rings.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/rain_renderer.h"
@@ -589,6 +590,7 @@ void ArenaViewport::paintGL() {
     Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
     Render::GL::render_commander_auras(m_renderer.get(), res, m_world.get());
     Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
+    render_attack_range_rings(res);
     if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr) {
       Engine::Core::EntityID locked_target_id = 0;
       if (auto* commander = m_world->get_entity(m_rpg_commander_id)) {
@@ -1015,6 +1017,28 @@ void ArenaViewport::update_hover(const QPoint& pos) {
                                                         *m_camera,
                                                         width(),
                                                         height());
+}
+
+void ArenaViewport::render_attack_range_rings(Render::GL::ResourceManager* resources) {
+  m_attack_range_rings.clear();
+  auto* selection = selection_system();
+  if (selection == nullptr || m_world == nullptr || m_renderer == nullptr) {
+    return;
+  }
+
+  const auto& selected = selection->get_selected_units();
+  Game::Systems::AttackRangeRingRequest request;
+  request.world = m_world.get();
+  request.local_owner_id = k_local_owner_id;
+  request.selection = selected;
+  request.max_rings = Game::Systems::k_attack_range_max_rings;
+  if (std::find(selected.begin(), selected.end(), m_hovered_entity_id) !=
+      selected.end()) {
+    request.focus_entity_id = m_hovered_entity_id;
+  }
+  m_attack_range_rings = Game::Systems::collect_attack_range_rings(request);
+  Render::GL::render_attack_range_rings(
+      m_renderer.get(), resources, m_attack_range_rings);
 }
 
 auto ArenaViewport::selection_system() const -> Game::Systems::SelectionSystem* {
@@ -3255,6 +3279,17 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       }
       if (group.health_override > 0) {
         unit->health = std::min(group.health_override, std::max(1, unit->max_health));
+      }
+    }
+    if (entity != nullptr && (group.attack_range_override > 0.0F ||
+                              group.attack_min_range_override > 0.0F)) {
+      if (auto* attack = entity->get_component<Engine::Core::AttackComponent>()) {
+        if (group.attack_range_override > 0.0F) {
+          attack->range = group.attack_range_override;
+        }
+        if (group.attack_min_range_override > 0.0F) {
+          attack->min_range = group.attack_min_range_override;
+        }
       }
     }
     if (!group.renderer_override.isEmpty() && entity != nullptr) {

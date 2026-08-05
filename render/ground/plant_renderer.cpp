@@ -41,20 +41,11 @@ PlantRenderer::~PlantRenderer() = default;
 void PlantRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                               const Game::Map::BiomeSettings& biome_settings,
                               const std::vector<Game::Map::WorldProp>& world_props) {
-  m_width = height_map.get_width();
-  m_height = height_map.get_height();
-  m_tile_size = height_map.get_tile_size();
-  m_height_data = height_map.get_height_data();
-  m_terrain_types = height_map.getTerrainTypes();
-  m_world_props = world_props;
-  m_biome_settings = biome_settings;
-  m_noise_seed = biome_settings.seed;
-
-  m_plant_state.reset_instances();
+  configure_height_scatter_common(height_map, biome_settings, {}, world_props, false);
 
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto& wind_profile = profiles.wind;
-  auto& plant_params = m_plant_state.params;
+  auto& plant_params = m_state.params;
   plant_params.light_direction = m_light_direction;
   plant_params.time = 0.0F;
   plant_params.wind_strength = wind_profile.sway_strength;
@@ -64,43 +55,23 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
 }
 
 void PlantRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction = dir.isNull() ? QVector3D(0.35F, 0.8F, 0.45F) : dir.normalized();
-  m_plant_state.params.light_direction = m_light_direction;
+  set_light_direction_common(dir, FoliageBatchParams::default_light_direction());
 }
 
 void PlantRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  (void)resources;
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_plant_state,
-      [](const PlantInstanceGpu& instance) -> const QVector4D& {
-        return instance.pos_scale;
-      },
-      renderer.static_world_visibility_filter_enabled()
-          ? renderer.submission_visibility().snapshot()
-          : nullptr,
-      Scatter::ScatterMemoryMode::Remembered);
-  if (visible_count == 0) {
-    return;
-  }
-
-  PlantBatchParams params = m_plant_state.params;
-  params.time = renderer.get_animation_time();
-  TerrainScatterCmd cmd;
-  cmd.visibility = renderer.visibility_mask();
-  cmd.species = TerrainScatterCmd::Species::Plant;
-  cmd.plant = params;
-  Scatter::submit_visible_chunks(renderer, m_plant_state, cmd);
-}
-
-void PlantRenderer::clear() {
-  m_plant_state.reset_instances();
+  submit_filtered_common<true>(
+      renderer,
+      resources,
+      TerrainScatterCmd::Species::Plant,
+      [](TerrainScatterCmd& cmd, const FoliageBatchParams& params) {
+        cmd.foliage = params;
+      });
 }
 
 void PlantRenderer::generate_plant_instances() {
-  auto& plant_instances = m_plant_state.instances;
-  auto& plant_instance_count = m_plant_state.instance_count;
-  auto& plant_instances_dirty = m_plant_state.instances_dirty;
+  auto& plant_instances = m_state.instances;
+  auto& plant_instance_count = m_state.instance_count;
+  auto& plant_instances_dirty = m_state.instances_dirty;
 
   plant_instances.clear();
 
