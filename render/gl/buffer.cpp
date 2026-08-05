@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <vector>
 
+#include "gl_lifetime.h"
+
 namespace Render::GL {
 
 Buffer::Buffer(Type type)
@@ -18,7 +20,7 @@ Buffer::~Buffer() {
   if (m_buffer == 0) {
     return;
   }
-  if (QOpenGLContext::currentContext() == nullptr) {
+  if (!gl_objects_can_be_released()) {
     qWarning() << "Buffer destroyed without a current GL context; leaking buffer"
                << m_buffer;
     return;
@@ -74,7 +76,7 @@ VertexArray::~VertexArray() {
   if (m_vao == 0) {
     return;
   }
-  if (QOpenGLContext::currentContext() == nullptr) {
+  if (!gl_objects_can_be_released()) {
     qWarning() << "VertexArray destroyed without a current GL context; leaking vao"
                << m_vao;
     return;
