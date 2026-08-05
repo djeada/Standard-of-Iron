@@ -26,9 +26,17 @@ struct SpeciesConfig {
   bool respawn{true};
   float respawn_delay{45.0F};
   float flight_height{0.0F};
+
+  float flyover_interval_min{0.0F};
+  float flyover_interval_max{0.0F};
+
   std::vector<SpawnArea> spawn_areas;
 
   [[nodiscard]] auto clamped_group_size(std::uint32_t roll) const noexcept -> int;
+
+  [[nodiscard]] auto is_flyover() const noexcept -> bool {
+    return flyover_interval_max > 0.0F;
+  }
 };
 
 struct WildlifeSettings {

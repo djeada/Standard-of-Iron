@@ -139,12 +139,18 @@ private:
     QString name;
     QString owner;
     std::vector<QVector2D> triangles;
+    QVector2D bounds_min;
+    QVector2D bounds_max;
+    float area = 0.0F;
   };
 
   bool m_provinces_loaded = false;
   std::vector<ProvinceHit> m_provinces;
 
   void load_provinces_for_hit_test();
+
+  [[nodiscard]] auto uv_at_screen(float x, float y, QVector2D* out_uv) const -> bool;
+  auto pick_province(float x, float y) -> const ProvinceHit*;
 
   bool m_province_labels_loaded = false;
   QVariantList m_province_labels;

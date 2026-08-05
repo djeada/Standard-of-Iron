@@ -20,8 +20,23 @@ constexpr float k_turn_rate = 5.5F;
 constexpr float k_accel = 6.0F;
 constexpr float k_perched_phase_rate = 0.9F;
 constexpr float k_flight_phase_rate = 5.4F;
+constexpr float k_glide_cycle_rate = 0.26F;
+constexpr float k_bank_per_turn_rate = 0.42F;
+constexpr float k_bank_limit = 0.62F;
+constexpr float k_bank_settle_rate = 3.2F;
 constexpr float k_retarget_interval_min = 4.0F;
 constexpr float k_retarget_interval_max = 9.0F;
+
+constexpr float k_flyover_stage_margin = 24.0F;
+constexpr float k_flyover_entry_lead = 1.10F;
+constexpr float k_flyover_min_span = 70.0F;
+constexpr float k_flyover_lateral_spread = 14.0F;
+constexpr float k_flyover_column_spacing = 1.6F;
+constexpr float k_flyover_wing_offset = 1.15F;
+constexpr float k_flyover_timeout_seconds = 150.0F;
+constexpr float k_flyover_first_arm_scale = 0.55F;
+constexpr float k_flyover_exit_overshoot = 18.0F;
+constexpr float k_flyover_aim_jitter = 3.2F;
 
 auto next_random(std::uint32_t& state) -> float {
   state = (state * 1664525U) + 1013904223U;
@@ -45,6 +60,17 @@ auto wrap_angle(float radians) -> float {
 auto approach(float current, float target, float max_delta) -> float {
   float const delta = std::clamp(target - current, -max_delta, max_delta);
   return current + delta;
+}
+
+void aim_along_flyover(Bird& bird, const Flock& flock) {
+  float const ahead = k_flyover_exit_overshoot - bird.slot_trail;
+  float const across =
+      bird.slot_lateral +
+      random_range(bird.rng_state, -k_flyover_aim_jitter, k_flyover_aim_jitter);
+  bird.target_x =
+      flock.target_x + (flock.heading_x * ahead) - (flock.heading_z * across);
+  bird.target_z =
+      flock.target_z + (flock.heading_z * ahead) + (flock.heading_x * across);
 }
 
 } // namespace
@@ -122,6 +148,12 @@ void BirdFlockManager::spawn_flock(std::uint16_t index) {
   flock.rng_state = rng | 1U;
   flock.roam_radius = m_config.roam_radius;
 
+  if (m_config.is_flyover()) {
+    arm_flyover(flock, true);
+    m_population.flocks.push_back(flock);
+    return;
+  }
+
   if (!m_config.spawn_areas.empty()) {
     auto const area_index = static_cast<std::size_t>(
         next_random(rng) * static_cast<float>(m_config.spawn_areas.size()));
@@ -165,11 +197,140 @@ void BirdFlockManager::spawn_flock(std::uint16_t index) {
     bird.behavior = Behavior::Cruise;
     bird.flock = flock_index;
     bird.phase = next_random(bird.rng_state);
+    bird.glide = next_random(bird.rng_state);
     bird.think_timer = random_range(bird.rng_state, 0.0F, k_think_interval);
     bird.tint = static_cast<std::uint8_t>(bird.rng_state % 3U);
     bird.speed = m_config.move_speed * 0.5F;
     m_population.birds.push_back(bird);
   }
+}
+
+void BirdFlockManager::arm_flyover(Flock& flock, bool first_arm) {
+  float const low = std::max(1.0F, m_config.flyover_interval_min);
+  float const high = std::max(low, m_config.flyover_interval_max);
+  float wait = random_range(flock.rng_state, low, high);
+  if (first_arm) {
+    wait *= k_flyover_first_arm_scale;
+  }
+  flock.respite_timer = wait;
+  flock.airborne = false;
+  flock.airborne_seconds = 0.0F;
+  flock.alarm_timer = 0.0F;
+}
+
+auto BirdFlockManager::flyover_span() const -> float {
+  float span = m_near_radius * 2.0F * k_flyover_entry_lead;
+  if (m_terrain != nullptr) {
+    WorldBounds const bounds = m_terrain->bounds();
+    float const diagonal =
+        std::hypot(bounds.max_x - bounds.min_x, bounds.max_z - bounds.min_z);
+    span = std::min(span, diagonal + (k_flyover_stage_margin * 2.0F));
+  }
+  return std::max(k_flyover_min_span, span);
+}
+
+void BirdFlockManager::launch_flyover(Flock& flock, std::uint16_t index) {
+  float const angle = random_range(flock.rng_state, 0.0F, k_two_pi);
+  flock.heading_x = std::cos(angle);
+  flock.heading_z = std::sin(angle);
+
+  float center_x = 0.0F;
+  float center_z = 0.0F;
+  if (m_has_focus) {
+    center_x = m_focus_x;
+    center_z = m_focus_z;
+  } else if (m_terrain != nullptr) {
+    WorldBounds const bounds = m_terrain->bounds();
+    center_x = (bounds.min_x + bounds.max_x) * 0.5F;
+    center_z = (bounds.min_z + bounds.max_z) * 0.5F;
+  }
+
+  float const lateral = random_range(
+      flock.rng_state, -k_flyover_lateral_spread, k_flyover_lateral_spread);
+  center_x += -flock.heading_z * lateral;
+  center_z += flock.heading_x * lateral;
+
+  float const half_span = flyover_span() * 0.5F;
+  flock.home_x = center_x - (flock.heading_x * half_span);
+  flock.home_z = center_z - (flock.heading_z * half_span);
+  flock.target_x = center_x + (flock.heading_x * half_span);
+  flock.target_z = center_z + (flock.heading_z * half_span);
+  flock.airborne = true;
+  flock.airborne_seconds = 0.0F;
+  flock.retarget_timer = 0.0F;
+
+  int const size = m_config.clamped_group_size(
+      static_cast<std::uint32_t>(next_random(flock.rng_state) * 1024.0F));
+  float const lead_yaw = std::atan2(flock.heading_x, flock.heading_z);
+
+  for (int member = 0; member < size; ++member) {
+    Bird bird;
+    bird.rng_state =
+        (flock.rng_state + (static_cast<std::uint32_t>(member) * 2246822519U)) | 1U;
+
+    auto const rank = static_cast<float>((member + 1) / 2);
+    float const side = ((member % 2) == 0) ? -1.0F : 1.0F;
+    bird.slot_trail =
+        (rank * k_flyover_column_spacing) + random_range(bird.rng_state, -0.7F, 0.7F);
+    bird.slot_lateral = (rank * k_flyover_wing_offset * side) +
+                        random_range(bird.rng_state, -0.6F, 0.6F);
+
+    bird.x = flock.home_x - (flock.heading_x * bird.slot_trail) -
+             (flock.heading_z * bird.slot_lateral);
+    bird.z = flock.home_z - (flock.heading_z * bird.slot_trail) +
+             (flock.heading_x * bird.slot_lateral);
+    bird.altitude = random_range(
+        bird.rng_state, m_config.flight_height * 0.9F, m_config.flight_height * 1.45F);
+    bird.target_altitude = bird.altitude;
+    bird.y = ground_height(bird.x, bird.z) + bird.altitude;
+    bird.yaw = lead_yaw;
+    bird.behavior = Behavior::Cruise;
+    bird.flock = index;
+    bird.phase = next_random(bird.rng_state);
+    bird.glide = next_random(bird.rng_state);
+    bird.think_timer = random_range(bird.rng_state, 0.0F, k_think_interval);
+    bird.tint = static_cast<std::uint8_t>(bird.rng_state % 3U);
+    bird.speed = m_config.move_speed;
+    bird.tier = BirdTier::Near;
+    aim_along_flyover(bird, flock);
+    m_population.birds.push_back(bird);
+  }
+
+  m_stats.flyovers_launched += 1U;
+}
+
+void BirdFlockManager::update_flyover(Flock& flock,
+                                      std::uint16_t index,
+                                      float delta_time) {
+  flock.airborne_seconds += delta_time;
+
+  float const span_x = flock.target_x - flock.home_x;
+  float const span_z = flock.target_z - flock.home_z;
+  float const span = std::sqrt((span_x * span_x) + (span_z * span_z));
+
+  bool still_crossing = false;
+  for (const auto& bird : m_population.birds) {
+    if (bird.flock != index) {
+      continue;
+    }
+    float const travelled = ((bird.x - flock.home_x) * flock.heading_x) +
+                            ((bird.z - flock.home_z) * flock.heading_z);
+    if (travelled < span) {
+      still_crossing = true;
+      break;
+    }
+  }
+
+  if (!still_crossing || flock.airborne_seconds >= k_flyover_timeout_seconds) {
+    land_flyover(flock, index);
+  }
+}
+
+void BirdFlockManager::land_flyover(Flock& flock, std::uint16_t index) {
+  std::erase_if(m_population.birds,
+                [index](const Bird& bird) { return bird.flock == index; });
+  arm_flyover(flock, false);
+  m_stats.flyovers_finished += 1U;
 }
 
 auto BirdFlockManager::tier_for(float world_x,
@@ -194,8 +355,24 @@ void BirdFlockManager::update(float delta_time, const ThreatField& threats) {
     return;
   }
 
-  for (auto& flock : m_population.flocks) {
-    update_flock(flock, delta_time);
+  for (std::size_t i = 0; i < m_population.flocks.size(); ++i) {
+    auto& flock = m_population.flocks[i];
+    if (!m_config.is_flyover()) {
+      update_flock(flock, delta_time);
+      continue;
+    }
+
+    auto const index = static_cast<std::uint16_t>(i);
+    flock.alarm_timer = std::max(0.0F, flock.alarm_timer - delta_time);
+    if (flock.airborne) {
+      update_flyover(flock, index, delta_time);
+      continue;
+    }
+
+    flock.respite_timer -= delta_time;
+    if (flock.respite_timer <= 0.0F) {
+      launch_flyover(flock, index);
+    }
   }
 
   for (auto& bird : m_population.birds) {
@@ -205,8 +382,11 @@ void BirdFlockManager::update(float delta_time, const ThreatField& threats) {
     Flock& flock = m_population.flocks[bird.flock];
     bird.tier = tier_for(bird.x, bird.z);
     if (bird.tier == BirdTier::Dormant) {
-      m_stats.dormant_skips += 1U;
-      continue;
+      if (!m_config.is_flyover()) {
+        m_stats.dormant_skips += 1U;
+        continue;
+      }
+      bird.tier = BirdTier::Far;
     }
 
     float const multiplier = bird.tier == BirdTier::Far ? k_far_think_multiplier : 1.0F;
@@ -261,12 +441,22 @@ void BirdFlockManager::think(Bird& bird, Flock& flock, const ThreatField& threat
     float const spread = random_range(bird.rng_state, -0.6F, 0.6F);
     bird.target_x = bird.x + ((away_x - (away_z * spread)) * k_scatter_distance);
     bird.target_z = bird.z + ((away_z + (away_x * spread)) * k_scatter_distance);
-    clamp_to_bounds(bird.target_x, bird.target_z);
+    if (!m_config.is_flyover()) {
+      clamp_to_bounds(bird.target_x, bird.target_z);
+    }
     bird.target_altitude = m_config.flight_height * k_scatter_altitude_gain;
     return;
   }
 
   if (bird.behavior == Behavior::Scatter && bird.state_timer > 0.0F) {
+    return;
+  }
+
+  if (m_config.is_flyover()) {
+    bird.behavior = Behavior::Cruise;
+    aim_along_flyover(bird, flock);
+    bird.target_altitude = random_range(
+        bird.rng_state, m_config.flight_height * 0.9F, m_config.flight_height * 1.45F);
     return;
   }
 
@@ -308,6 +498,14 @@ void BirdFlockManager::update_bird(Bird& bird, Flock& flock, float delta_time) {
           : k_flight_phase_rate * (bird.behavior == Behavior::Scatter ? 1.5F : 1.0F);
   bird.phase += delta_time * phase_rate;
   bird.phase -= std::floor(bird.phase);
+
+  if (bird.behavior == Behavior::Scatter) {
+    bird.glide = 0.0F;
+  } else {
+    bird.glide += delta_time * k_glide_cycle_rate *
+                  (0.82F + (0.18F * static_cast<float>(bird.tint)));
+    bird.glide -= std::floor(bird.glide);
+  }
 }
 
 void BirdFlockManager::integrate(Bird& bird, float delta_time) {
@@ -330,17 +528,27 @@ void BirdFlockManager::integrate(Bird& bird, float delta_time) {
 
   bird.speed = approach(bird.speed, desired_speed, k_accel * delta_time);
 
+  float target_bank = 0.0F;
   if (distance > 0.001F && bird.speed > 0.001F) {
     float const step = std::min(bird.speed * delta_time, distance);
     bird.x += (dx / distance) * step;
     bird.z += (dz / distance) * step;
     float const desired_yaw = std::atan2(dx, dz);
-    bird.yaw +=
-        wrap_angle(desired_yaw - bird.yaw) * std::min(1.0F, k_turn_rate * delta_time);
+    float const yaw_error = wrap_angle(desired_yaw - bird.yaw);
+    bird.yaw += yaw_error * std::min(1.0F, k_turn_rate * delta_time);
     bird.yaw = wrap_angle(bird.yaw);
-  }
 
-  clamp_to_bounds(bird.x, bird.z);
+    target_bank =
+        std::clamp(yaw_error * k_bank_per_turn_rate, -k_bank_limit, k_bank_limit);
+  }
+  if (bird.behavior == Behavior::Graze) {
+    target_bank = 0.0F;
+  }
+  bird.bank = approach(bird.bank, target_bank, k_bank_settle_rate * delta_time);
+
+  if (!m_config.is_flyover()) {
+    clamp_to_bounds(bird.x, bird.z);
+  }
   bird.altitude =
       approach(bird.altitude, bird.target_altitude, k_altitude_rate * delta_time);
   bird.y = ground_height(bird.x, bird.z) + bird.altitude;

@@ -17,13 +17,15 @@ with the building.
 Its layout is authored once, in world units measured from the barracks centre in the
 building's own unrotated frame, and shared by gameplay and rendering:
 
-| Constant                            | Value       | Meaning                                        |
-| ----------------------------------- | ----------- | ---------------------------------------------- |
-| `k_stockpile_center_x` / `_z`       | 5.20 / 0.0  | Yard centre; `+X` is always the yard side      |
-| `k_stockpile_half_width` / `_depth` | 1.45 / 2.10 | Half extents of the stone bed                  |
-| `k_stockpile_drop_x` / `_z`         | 5.95 / 0.0  | Where haulers stand to unload                  |
-| `k_stockpile_drop_radius`           | 2.20        | Anywhere this close counts as arrived          |
-| `k_stockpile_display_cap`           | 260         | Stored amount that draws a pile at full height |
+| Constant                            | Value       | Meaning                                   |
+| ----------------------------------- | ----------- | ----------------------------------------- |
+| `k_stockpile_center_x` / `_z`       | 5.20 / 0.0  | Yard centre; `+X` is always the yard side |
+| `k_stockpile_half_width` / `_depth` | 1.45 / 2.10 | Half extents of the stone bed             |
+| `k_stockpile_drop_x` / `_z`         | 5.95 / 0.0  | Where haulers stand to unload             |
+| `k_stockpile_drop_radius`           | 2.20        | Anywhere this close counts as arrived     |
+| `k_stockpile_wood_display_cap`      | 640         | Wood that draws the timber stack at full  |
+| `k_stockpile_stone_display_cap`     | 480         | Stone that fills the block courses        |
+| `k_stockpile_iron_display_cap`      | 480         | Iron that fills the ore bin               |
 
 `game/systems/resource_stockpile.h` owns these numbers and the yaw rotation that turns
 them into world space, so a rotated barracks keeps its yard on the same side of the
@@ -55,6 +57,24 @@ system refreshes each tick from the owner's current stores. Piles therefore grow
 player gathers and shrink as they spend, and they are never written to a save. Roman and
 Carthaginian barracks have yards; other nations' barracks work as drop-off points but
 draw no yard.
+
+**Each resource has its own display cap**, because a yard holds far more timber than
+dressed stone and the three piles would otherwise disagree about what "full" means. The
+caps sit well above a typical map's starting stores, so a new game opens with a part-built
+yard rather than a full one, and the piles are quantised finely enough — fourteen logs, ten
+blocks, twelve ore lumps — that a single delivery moves them. A pile at zero draws nothing
+but its empty frame: bare stakes, an empty bin.
+
+### The carried load
+
+`render/entity/carried_load_renderer.cpp` draws what a worker is carrying, so the walk home
+is legible without reading the activity badge: a log across the chest for wood, a dressed
+block for stone, a basket of ore for iron. It reads the same `ResourceCarryComponent` the
+delivery system does, picks the heaviest resource in the load, and places one load per
+living soldier using the unit's shared formation layout, so a whole work gang hauls
+together. It is submitted during the scene walk beside the bird flocks — nothing is added
+to the creature pipeline, and a load costs a handful of primitives that stop drawing their
+detail past 46 units.
 
 ## The haul
 

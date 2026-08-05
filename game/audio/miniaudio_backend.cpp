@@ -20,6 +20,8 @@
 #include <vector>
 
 #include "audio_mastering.h"
+#include "loop_seam.h"
+#include "resampler.h"
 
 namespace {
 
@@ -30,6 +32,25 @@ auto sanitize_backend_volume(float volume) -> float {
     return MiniaudioBackend::MIN_VOLUME;
   }
   return std::clamp(volume, MiniaudioBackend::MIN_VOLUME, MiniaudioBackend::MAX_VOLUME);
+}
+
+void log_resample(const QString& id, const Game::Audio::ResampleReport& report) {
+  if (!report.applied) {
+    return;
+  }
+  qInfo().nospace() << "audio resample " << id << ": " << report.rate_in << " -> "
+                    << report.rate_out << " Hz, " << report.up << "/" << report.down
+                    << ", " << int(report.taps_per_phase) << " taps per phase";
+}
+
+void log_loop_seam(const QString& id, const Game::Audio::LoopSeamReport& seam) {
+  static constexpr float REPORTABLE_STEP = 0.02F;
+  if (seam.step_before < REPORTABLE_STEP) {
+    return;
+  }
+  qInfo().nospace() << "audio loop seam " << id << ": wrap step " << seam.step_before
+                    << " -> " << seam.step_after << " over " << int(seam.fade_frames)
+                    << " frames";
 }
 
 void log_mastering(const QString& id, const Game::Audio::Mastering::Report& report) {
@@ -336,8 +357,8 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
     return false;
   }
 
-  ma_decoder_config const decoder_config =
-      ma_decoder_config_init(ma_format_f32, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
+  const ma_decoder_config decoder_config =
+      ma_decoder_config_init(ma_format_f32, DEFAULT_OUTPUT_CHANNELS, 0);
   ma_decoder decoder;
   if (ma_decoder_init_memory(data.constData(),
                              static_cast<size_t>(data.size()),
@@ -375,6 +396,7 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
       return false;
     }
   }
+  const ma_uint32 source_rate = decoder.outputSampleRate;
   ma_decoder_uninit(&decoder);
 
   if (pcm.empty()) {
@@ -382,7 +404,11 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
     return false;
   }
 
-  const auto frame_count = pcm.size() / DEFAULT_OUTPUT_CHANNELS;
+  const Game::Audio::ResampleReport resampled = Game::Audio::resample_to(
+      pcm, DEFAULT_OUTPUT_CHANNELS, source_rate, m_sample_rate);
+  log_resample(job.id, resampled);
+
+  auto frame_count = pcm.size() / DEFAULT_OUTPUT_CHANNELS;
   const Game::Audio::Mastering::Analysis analysis = Game::Audio::Mastering::analyse(
       pcm.data(), frame_count, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
   const Game::Audio::Mastering::Report report =
@@ -393,6 +419,18 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
                                     Game::Audio::Mastering::profile_for(job.material),
                                     analysis);
   log_mastering(job.id, report);
+
+  const bool loops = job.material == Game::Audio::Mastering::Material::Music ||
+                     job.material == Game::Audio::Mastering::Material::Ambience;
+  if (loops) {
+    const Game::Audio::LoopSeamReport seam = Game::Audio::seal_loop(
+        pcm.data(), frame_count, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
+    if (seam.loop_frames > 0) {
+      log_loop_seam(job.id, seam);
+      frame_count = seam.loop_frames;
+      pcm.resize(frame_count * DEFAULT_OUTPUT_CHANNELS);
+    }
+  }
 
   auto track = std::make_unique<DecodedTrack>();
   track->frames = static_cast<unsigned>(frame_count);
@@ -606,6 +644,19 @@ void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
   submit(command);
 }
 
+void MiniaudioBackend::set_sound_volume(const QString& id, float volume, int fade_ms) {
+  const int slot = find_track_slot(id);
+  if (slot < 0) {
+    return;
+  }
+  Game::Audio::AudioCommand command;
+  command.type = Game::Audio::AudioCommand::Type::SetSoundVolume;
+  command.track = static_cast<std::int16_t>(slot);
+  command.volume = sanitize_backend_volume(volume);
+  command.fade_samples = fade_samples_for(fade_ms);
+  submit(command);
+}
+
 void MiniaudioBackend::stop_sound(const QString& id) {
   const int slot = find_track_slot(id);
   if (slot < 0) {
@@ -709,12 +760,26 @@ void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
       effect.track = command.track;
       effect.frame_pos = 0;
       effect.volume = command.volume;
+      effect.target_volume = command.volume;
+      effect.volume_step = 0.0F;
+      effect.fade_samples = 0;
       effect.looping = command.loop;
       effect.active = true;
       return;
     }
     return;
   }
+  case Type::SetSoundVolume:
+    for (SoundEffect& effect : m_sound_effects) {
+      if (!effect.active || effect.track != command.track) {
+        continue;
+      }
+      effect.target_volume = command.volume;
+      effect.fade_samples = std::max(1U, command.fade_samples);
+      effect.volume_step =
+          (effect.target_volume - effect.volume) / float(effect.fade_samples);
+    }
+    return;
   case Type::StopSound:
     for (SoundEffect& effect : m_sound_effects) {
       if (effect.active && effect.track == command.track) {
@@ -862,7 +927,6 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
 
     const float* const pcm = track->pcm.data();
     const unsigned stride = track->channels;
-    const float volume = effect.volume * master;
     unsigned frames_left = frames;
     unsigned position = effect.frame_pos;
     float* destination = output;
@@ -877,19 +941,37 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       }
       const unsigned run = std::min(frames_left, track->frames - position);
       const float* source = pcm + (static_cast<std::size_t>(position) * stride);
-      if (stride == 1) {
-        for (unsigned i = 0; i < run; ++i) {
-          const float value = source[i] * volume;
-          destination[0] += value;
-          destination[1] += value;
-          destination += STEREO_CHANNELS;
+
+      const unsigned fading = std::min(run, effect.fade_samples);
+      for (unsigned i = 0; i < fading; ++i) {
+        const float volume = effect.volume * master;
+        const float left = source[0] * volume;
+        destination[0] += left;
+        destination[1] += (stride == 1) ? left : source[1] * volume;
+        destination += STEREO_CHANNELS;
+        source += stride;
+        effect.volume += effect.volume_step;
+        if (--effect.fade_samples == 0) {
+          effect.volume = effect.target_volume;
         }
-      } else {
-        for (unsigned i = 0; i < run; ++i) {
-          destination[0] += source[0] * volume;
-          destination[1] += source[1] * volume;
-          destination += STEREO_CHANNELS;
-          source += STEREO_CHANNELS;
+      }
+      const unsigned steady = run - fading;
+      if (steady > 0) {
+        const float volume = effect.volume * master;
+        if (stride == 1) {
+          for (unsigned i = 0; i < steady; ++i) {
+            const float value = source[i] * volume;
+            destination[0] += value;
+            destination[1] += value;
+            destination += STEREO_CHANNELS;
+          }
+        } else {
+          for (unsigned i = 0; i < steady; ++i) {
+            destination[0] += source[0] * volume;
+            destination[1] += source[1] * volume;
+            destination += STEREO_CHANNELS;
+            source += STEREO_CHANNELS;
+          }
         }
       }
       position += run;

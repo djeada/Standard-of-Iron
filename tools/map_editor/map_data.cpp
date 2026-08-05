@@ -321,6 +321,7 @@ void MapData::clear() {
   m_troop_spawns.clear();
   m_undead_zones.clear();
   m_fog_zones.clear();
+  m_wildlife_areas.clear();
 
   m_biome = QJsonObject();
   m_camera = QJsonObject();
@@ -330,6 +331,7 @@ void MapData::clear() {
                               {MapJsonKeys::time_mode, "locked"},
                               {MapJsonKeys::day_length_seconds, 1800.0},
                               {MapJsonKeys::lighting_profile, "mediterranean_summer"}};
+  m_wildlife = QJsonObject();
   m_extra_root_fields = QJsonObject();
   m_next_spawn_order = 0;
   m_raw_spawns.clear();
@@ -498,7 +500,8 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
                                        MapJsonKeys::roads,
                                        MapJsonKeys::bridges,
                                        MapJsonKeys::undead_zones,
-                                       MapJsonKeys::fog_zones};
+                                       MapJsonKeys::fog_zones,
+                                       MapJsonKeys::wildlife};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
   m_name = root[MapJsonKeys::name].toString("Untitled Map");
@@ -582,6 +585,7 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   if (root.contains(MapJsonKeys::fog_zones)) {
     parse_fog_zones_array(root[MapJsonKeys::fog_zones].toArray());
   }
+  parse_wildlife_object(root[MapJsonKeys::wildlife].toObject());
 
   m_undo_stack.clear();
   m_redo_stack.clear();
@@ -690,6 +694,11 @@ QJsonObject MapData::build_root_json() const {
   QJsonArray const fog_zones_arr = fog_zones_to_json();
   if (!fog_zones_arr.isEmpty()) {
     root[MapJsonKeys::fog_zones] = fog_zones_arr;
+  }
+
+  QJsonObject const wildlife_obj = wildlife_to_json();
+  if (!wildlife_obj.isEmpty()) {
+    root[MapJsonKeys::wildlife] = wildlife_obj;
   }
 
   return normalize_json_object(root);
@@ -1548,6 +1557,123 @@ void MapData::parse_fog_zones_array(const QJsonArray& arr) {
     elem.density = static_cast<float>(obj["density"].toDouble(0.6));
     m_fog_zones.append(elem);
   }
+}
+
+auto wildlife_species_keys() -> QStringList {
+  return {QString::fromLatin1(MapJsonKeys::wildlife_sheep),
+          QString::fromLatin1(MapJsonKeys::wildlife_wolves),
+          QString::fromLatin1(MapJsonKeys::wildlife_birds)};
+}
+
+auto wildlife_species_label(const QString& species) -> QString {
+  if (species == QLatin1String(MapJsonKeys::wildlife_wolves)) {
+    return QStringLiteral("wolf pack");
+  }
+  if (species == QLatin1String(MapJsonKeys::wildlife_birds)) {
+    return QStringLiteral("bird roost");
+  }
+  return QStringLiteral("sheep pasture");
+}
+
+void MapData::add_wildlife_area(const WildlifeAreaElement& element) {
+  m_wildlife_areas.append(element);
+  set_modified(true);
+  emit data_changed();
+}
+
+void MapData::insert_wildlife_area(int index, const WildlifeAreaElement& element) {
+  if (index < 0 || index > m_wildlife_areas.size()) {
+    index = m_wildlife_areas.size();
+  }
+  m_wildlife_areas.insert(index, element);
+  set_modified(true);
+  emit data_changed();
+}
+
+void MapData::update_wildlife_area(int index, const WildlifeAreaElement& element) {
+  if (index >= 0 && index < m_wildlife_areas.size()) {
+    m_wildlife_areas[index] = element;
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::remove_wildlife_area(int index) {
+  if (index >= 0 && index < m_wildlife_areas.size()) {
+    m_wildlife_areas.removeAt(index);
+    set_modified(true);
+    emit data_changed();
+  }
+}
+
+void MapData::parse_wildlife_object(const QJsonObject& obj) {
+  m_wildlife = obj;
+  m_wildlife_areas.clear();
+
+  for (const QString& species : wildlife_species_keys()) {
+    if (!m_wildlife.value(species).isObject()) {
+      continue;
+    }
+    QJsonObject species_obj = m_wildlife.value(species).toObject();
+    const QJsonArray areas =
+        species_obj.value(MapJsonKeys::wildlife_spawn_areas).toArray();
+    for (const QJsonValue& value : areas) {
+      if (!value.isObject()) {
+        continue;
+      }
+      const QJsonObject area = value.toObject();
+      WildlifeAreaElement elem;
+      elem.species = species;
+      elem.x = static_cast<float>(area[MapJsonKeys::x].toDouble());
+      elem.z = static_cast<float>(area[MapJsonKeys::z].toDouble());
+      elem.radius =
+          static_cast<float>(area[MapJsonKeys::wildlife_radius].toDouble(14.0));
+      m_wildlife_areas.append(elem);
+    }
+
+    species_obj.remove(MapJsonKeys::wildlife_spawn_areas);
+    m_wildlife[species] = species_obj;
+  }
+}
+
+QJsonObject MapData::wildlife_to_json() const {
+  QJsonObject root = m_wildlife;
+
+  for (const QString& species : wildlife_species_keys()) {
+    QJsonArray areas;
+    for (const WildlifeAreaElement& elem : m_wildlife_areas) {
+      if (elem.species != species) {
+        continue;
+      }
+      QJsonObject area;
+      area[MapJsonKeys::x] = static_cast<double>(elem.x);
+      area[MapJsonKeys::z] = static_cast<double>(elem.z);
+      area[MapJsonKeys::wildlife_radius] = static_cast<double>(elem.radius);
+      areas.append(area);
+    }
+
+    const bool authored = root.value(species).isObject();
+    if (areas.isEmpty() && !authored) {
+      continue;
+    }
+
+    QJsonObject species_obj = root.value(species).toObject();
+    if (!authored) {
+      species_obj[MapJsonKeys::wildlife_enabled] = true;
+      species_obj[MapJsonKeys::wildlife_groups] = areas.size();
+    }
+    if (areas.isEmpty()) {
+      species_obj.remove(MapJsonKeys::wildlife_spawn_areas);
+    } else {
+      species_obj[MapJsonKeys::wildlife_spawn_areas] = areas;
+    }
+    root[species] = species_obj;
+  }
+
+  if (!root.isEmpty() && !root.contains(MapJsonKeys::wildlife_enabled)) {
+    root[MapJsonKeys::wildlife_enabled] = true;
+  }
+  return root;
 }
 
 QJsonArray MapData::fog_zones_to_json() const {

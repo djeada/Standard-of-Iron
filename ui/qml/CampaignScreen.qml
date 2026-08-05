@@ -116,6 +116,7 @@ Item {
     }
     anchors.fill: parent
     focus: true
+    Keys.forwardTo: [campaign_map_panel.key_handler]
     Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Escape) {
             root.cancelled();
@@ -390,6 +391,8 @@ Item {
                         }
 
                         MediterraneanMapPanel {
+                            id: campaign_map_panel
+
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             selected_mission: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null

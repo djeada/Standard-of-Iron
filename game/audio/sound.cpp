@@ -87,3 +87,10 @@ void Sound::stop() {
 void Sound::set_volume(float volume) {
   m_volume = volume;
 }
+
+void Sound::set_playing_volume(float volume, int fade_ms) {
+  m_volume = volume;
+  if (m_backend != nullptr) {
+    m_backend->set_sound_volume(m_track_id, volume, fade_ms);
+  }
+}

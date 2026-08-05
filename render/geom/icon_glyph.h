@@ -42,6 +42,9 @@ public:
   void set_transform(QVector2D translation, float rotation_radians, float scale = 1.0F);
   void reset_transform();
 
+  [[nodiscard]] auto vertex_mark() const -> std::size_t { return m_vertices.size(); }
+  void fit_since(std::size_t mark, float target_radius);
+
   void begin_glyph();
   struct GlyphExtrusion {
     float glow_depth = 0.0F;
@@ -68,6 +71,20 @@ public:
             float start_angle = 0.0F,
             float sweep = k_glyph_two_pi);
   void arrow_head(QVector2D tip, QVector2D direction, float length, float half_width);
+
+  void gradient_ring(GlyphLayer layer,
+                     float inner_radius,
+                     float outer_radius,
+                     float depth,
+                     float inner_falloff,
+                     float outer_falloff,
+                     int segments = 40);
+
+  void revolved_band(float inner_radius,
+                     float inner_depth,
+                     float outer_radius,
+                     float outer_depth,
+                     int segments);
 
   [[nodiscard]] auto vertices() const -> const std::vector<Render::GL::Vertex>& {
     return m_vertices;

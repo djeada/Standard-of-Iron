@@ -52,7 +52,7 @@ void draw_marker_glyph(Renderer* renderer,
                        const QVector3D& ground_position,
                        float radius,
                        bool attackable) {
-  float const scale = Render::Geom::indicator_size_for_unit(radius, 1.0F);
+  float const scale = Render::Geom::indicator_world_size();
   float const height = Render::Geom::indicator_height_for_unit(radius, 1.0F);
   QVector3D const anchor(
       ground_position.x(), ground_position.y() + height, ground_position.z());

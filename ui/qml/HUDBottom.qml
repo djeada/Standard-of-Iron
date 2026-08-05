@@ -93,7 +93,7 @@ RowLayout {
     readonly property var commands: [{
             "id": "attack",
             "label": qsTr("Attack"),
-            "hotkey": "A",
+            "binding": "rts.order_attack",
             "needsTroops": true,
             "mode": "attack",
             "hint": qsTr("Attack enemy units or buildings. Only eligible selected troops receive the order."),
@@ -101,7 +101,7 @@ RowLayout {
         }, {
             "id": "guard",
             "label": qsTr("Guard"),
-            "hotkey": "G",
+            "binding": "rts.order_guard",
             "needsTroops": true,
             "mode": "guard",
             "hint": qsTr("Guard a position. Only guard-capable troops receive the order."),
@@ -109,7 +109,7 @@ RowLayout {
         }, {
             "id": "patrol",
             "label": qsTr("Patrol"),
-            "hotkey": "P",
+            "binding": "rts.order_patrol",
             "needsTroops": true,
             "mode": "patrol",
             "hint": qsTr("Patrol between waypoints."),
@@ -125,7 +125,7 @@ RowLayout {
         }, {
             "id": "stop",
             "label": qsTr("Stop"),
-            "hotkey": "S",
+            "binding": "rts.order_stop",
             "needsTroops": true,
             "ignoreActionState": true,
             "hint": qsTr("Stop all actions immediately."),
@@ -137,7 +137,7 @@ RowLayout {
         }, {
             "id": "hold",
             "label": qsTr("Hold"),
-            "hotkey": "H",
+            "binding": "rts.order_hold",
             "needsTroops": true,
             "hint": qsTr("Hold position and defend."),
             "unavailable": qsTr("Hold is not available for the current selection"),
@@ -146,20 +146,8 @@ RowLayout {
                     game.on_hold_command();
             }
         }, {
-            "id": "formation",
-            "label": qsTr("Formation"),
-            "hotkey": "F",
-            "needsTroops": true,
-            "hint": qsTr("Arrange the selection in a tactical formation."),
-            "unavailable": qsTr("Select multiple units to use formation"),
-            "invoke": function () {
-                if (bottomRoot.game_ready() && game.placement.on_formation_command)
-                    game.placement.on_formation_command();
-            }
-        }, {
             "id": "build",
             "label": qsTr("Build"),
-            "hotkey": "B",
             "needsTroops": true,
             "mode": "build",
             "hint": qsTr("Open builder orders and place structures."),
@@ -218,7 +206,7 @@ RowLayout {
         }, {
             "id": "rally",
             "label": qsTr("Rally"),
-            "hotkey": "R",
+            "binding": "rts.commander_rally",
             "hint": qsTr("The commander plants a rally flag; troops march to it once placed."),
             "unavailable": qsTr("Select a commander to use rally"),
             "invoke": function () {
@@ -228,7 +216,6 @@ RowLayout {
         }, {
             "id": "gate",
             "label": qsTr("Gate"),
-            "hotkey": "G",
             "hint": qsTr("Cycle the selected gates: automatic, held open, held shut."),
             "unavailable": qsTr("Select one of your gates to control it"),
             "invoke": function () {
@@ -240,7 +227,6 @@ RowLayout {
         }, {
             "id": "aura",
             "label": qsTr("Aura"),
-            "hotkey": "E",
             "hint": qsTr("Temporarily empower nearby troops. A glow marks every affected soldier."),
             "unavailable": qsTr("Select a ready commander to activate the aura"),
             "invoke": function () {
@@ -250,6 +236,12 @@ RowLayout {
                 }
             }
         }]
+
+    function hotkey_for(entry) {
+        if (!entry.binding)
+            return "";
+        return InputBindings.display_shortcut_for(entry.binding);
+    }
 
     function invoke_command(entry) {
         if (entry.invoke) {
@@ -369,7 +361,7 @@ RowLayout {
 
                     actionId: modelData.id
                     label: modelData.label
-                    hotkey: modelData.hotkey || ""
+                    hotkey: bottomRoot.hotkey_for(modelData)
                     hint: modelData.hint || ""
                     disabledReason: bottomRoot.unavailable_reason(modelData, state)
 

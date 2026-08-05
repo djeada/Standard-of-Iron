@@ -19,9 +19,10 @@ enum class ElementKind {
   Structure = 3,
   TroopSpawn = 4,
   UndeadZone = 5,
+  WildlifeArea = 6,
 };
 
-inline constexpr int k_element_kind_count = 6;
+inline constexpr int k_element_kind_count = 7;
 
 struct ElementRef {
   int kind = -1;
@@ -43,7 +44,8 @@ using ElementSnapshot = std::variant<std::monostate,
                                      LinearElement,
                                      StructureElement,
                                      TroopSpawnElement,
-                                     UndeadZoneElement>;
+                                     UndeadZoneElement,
+                                     WildlifeAreaElement>;
 
 namespace ElementOps {
 

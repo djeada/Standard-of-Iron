@@ -76,6 +76,8 @@ constexpr float MAX_LIMITING_DB = 4.0F;
 
 constexpr float INTERFACE_MAKEUP_DB = 12.0F;
 
+constexpr float VOICE_LOUDNESS_AUTHORITY_DB = 14.0F;
+
 constexpr int LIMITER_BLOCK_SAMPLES = 32;
 constexpr float LIMITER_LOOKAHEAD_MS = 4.0F;
 constexpr float LIMITER_RELEASE_MS = 120.0F;
@@ -933,7 +935,7 @@ auto profile_for(Material material) -> Profile {
     profile.normalise_loudness = true;
     profile.detect_resonances = true;
     profile.target_lufs = -15.5F;
-    profile.loudness_authority_db = 6.0F;
+    profile.loudness_authority_db = VOICE_LOUDNESS_AUTHORITY_DB;
     profile.presence_target_db = -16.0F;
     profile.air_target_db = -28.0F;
     profile.tilt_cut_db = 3.0F;

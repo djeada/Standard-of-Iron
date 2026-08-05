@@ -321,4 +321,31 @@ TEST_F(InputBindingsTest, TheQmlActionListMirrorsTheCatalogAndFlagsConflicts) {
   EXPECT_TRUE(saw_stop);
 }
 
+TEST_F(InputBindingsTest, TheFormationOrderOwnsTheKeyItIsDocumentedWith) {
+  auto* bindings = InputBindings::instance();
+
+  const auto resolved = bindings->actions_for_key(
+      Qt::Key_F, Qt::NoModifier, QString::fromLatin1(InputBindings::kContextRts));
+
+  ASSERT_EQ(resolved.size(), 1);
+  EXPECT_EQ(resolved.at(0), QStringLiteral("rts.order_formation"));
+  EXPECT_EQ(bindings->display_shortcut_for(QStringLiteral("rts.order_formation")),
+            QStringLiteral("F"));
+}
+
+TEST_F(InputBindingsTest, EveryCommandBarChipResolvesToARealAction) {
+
+  auto* bindings = InputBindings::instance();
+  for (const auto* action_id : {"rts.order_attack",
+                                "rts.order_guard",
+                                "rts.order_patrol",
+                                "rts.order_stop",
+                                "rts.order_hold",
+                                "rts.commander_rally"}) {
+    const QString id = QString::fromLatin1(action_id);
+    EXPECT_FALSE(bindings->default_shortcut_for(id).isEmpty()) << action_id;
+    EXPECT_FALSE(bindings->display_shortcut_for(id).isEmpty()) << action_id;
+  }
+}
+
 } // namespace

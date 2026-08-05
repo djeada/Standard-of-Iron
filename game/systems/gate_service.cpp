@@ -1,6 +1,8 @@
 #include "gate_service.h"
 
 #include <algorithm>
+#include <cmath>
+#include <utility>
 
 #include "../core/entity.h"
 #include "../core/world.h"
@@ -129,6 +131,50 @@ auto GateService::blocks_move(const QVector3D& current,
       continue;
     }
     return true;
+  }
+
+  return false;
+}
+
+auto GateService::blocks_line(const QVector3D& from, const QVector3D& to) -> bool {
+  const auto& storage = blocker_storage();
+  if (storage.empty()) {
+    return false;
+  }
+
+  const float delta_x = to.x() - from.x();
+  const float delta_z = to.z() - from.z();
+
+  auto slab = [](float start,
+                 float delta,
+                 float min_bound,
+                 float max_bound,
+                 float& t_enter,
+                 float& t_exit) {
+    constexpr float k_epsilon = 1.0e-5F;
+    if (std::abs(delta) <= k_epsilon) {
+      return start >= min_bound && start <= max_bound;
+    }
+    float t0 = (min_bound - start) / delta;
+    float t1 = (max_bound - start) / delta;
+    if (t0 > t1) {
+      std::swap(t0, t1);
+    }
+    t_enter = std::max(t_enter, t0);
+    t_exit = std::min(t_exit, t1);
+    return t_enter <= t_exit;
+  };
+
+  for (const auto& blocker : storage) {
+    if (blocker.contains(from.x(), from.z()) || blocker.contains(to.x(), to.z())) {
+      continue;
+    }
+    float t_enter = 0.0F;
+    float t_exit = 1.0F;
+    if (slab(from.x(), delta_x, blocker.min_x, blocker.max_x, t_enter, t_exit) &&
+        slab(from.z(), delta_z, blocker.min_z, blocker.max_z, t_enter, t_exit)) {
+      return true;
+    }
   }
 
   return false;

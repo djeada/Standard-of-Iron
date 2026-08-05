@@ -66,6 +66,7 @@ public:
 
   void play_sound(const QString& id, float volume, bool loop = false);
   void stop_sound(const QString& id);
+  void set_sound_volume(const QString& id, float volume, int fade_ms);
   auto is_sound_active(const QString& id) const -> bool;
 
   auto is_track_ready(const QString& id) const -> bool;
@@ -95,6 +96,9 @@ private:
     int track = -1;
     unsigned frame_pos = 0;
     float volume = DEFAULT_VOLUME;
+    float target_volume = DEFAULT_VOLUME;
+    float volume_step = 0.0F;
+    unsigned fade_samples = 0;
     bool looping = false;
     bool active = false;
   };

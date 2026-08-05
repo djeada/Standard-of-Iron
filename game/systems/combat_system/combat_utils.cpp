@@ -6,8 +6,10 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
+#include "../building_collision_registry.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
+#include "../gate_service.h"
 #include "../owner_registry.h"
 #include "structure_combat.h"
 
@@ -160,6 +162,31 @@ auto combat_radius(Engine::Core::Entity* entity) -> float {
   return radius;
 }
 
+auto structure_separates_combatants(Engine::Core::Entity* attacker,
+                                    Engine::Core::Entity* target) -> bool {
+  if ((attacker == nullptr) || (target == nullptr)) {
+    return false;
+  }
+  if (is_building(attacker) || is_building(target)) {
+    return false;
+  }
+
+  auto const* attacker_transform =
+      attacker->get_component<Engine::Core::TransformComponent>();
+  auto const* target_transform =
+      target->get_component<Engine::Core::TransformComponent>();
+  if ((attacker_transform == nullptr) || (target_transform == nullptr)) {
+    return false;
+  }
+
+  QVector3D const from(
+      attacker_transform->position.x, 0.0F, attacker_transform->position.z);
+  QVector3D const to(target_transform->position.x, 0.0F, target_transform->position.z);
+  return Game::Systems::BuildingCollisionRegistry::instance()
+             .segment_crosses_blocking_building(from.x(), from.z(), to.x(), to.z()) ||
+         Game::Systems::GateService::blocks_line(from, to);
+}
+
 auto is_in_range(Engine::Core::Entity* attacker,
                  Engine::Core::Entity* target,
                  float range) -> bool {
@@ -205,6 +232,10 @@ auto is_in_range(Engine::Core::Entity* attacker,
       return false;
     }
     return true;
+  }
+
+  if (melee && structure_separates_combatants(attacker, target)) {
+    return false;
   }
 
   auto const formation_geometry =

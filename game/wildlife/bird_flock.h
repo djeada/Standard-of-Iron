@@ -30,8 +30,16 @@ struct Bird {
   float target_altitude{0.0F};
   float speed{0.0F};
   float phase{0.0F};
+
+  float glide{0.0F};
+
+  float bank{0.0F};
   float think_timer{0.0F};
   float state_timer{0.0F};
+
+  float slot_lateral{0.0F};
+  float slot_trail{0.0F};
+
   std::uint32_t rng_state{1U};
   std::uint16_t flock{0U};
   Behavior behavior{Behavior::Cruise};
@@ -48,6 +56,12 @@ struct Flock {
   float retarget_timer{0.0F};
   float alarm_timer{0.0F};
   std::uint32_t rng_state{1U};
+
+  float heading_x{1.0F};
+  float heading_z{0.0F};
+  float respite_timer{0.0F};
+  float airborne_seconds{0.0F};
+  bool airborne{true};
 };
 
 struct BirdPopulation {
@@ -65,6 +79,8 @@ struct BirdFlockStats {
   std::uint64_t far_updates{0U};
   std::uint64_t dormant_skips{0U};
   std::uint64_t scatter_events{0U};
+  std::uint64_t flyovers_launched{0U};
+  std::uint64_t flyovers_finished{0U};
 
   void reset() noexcept { *this = BirdFlockStats{}; }
 };
@@ -118,6 +134,12 @@ private:
   void update_bird(Bird& bird, Flock& flock, float delta_time);
   void think(Bird& bird, Flock& flock, const ThreatField& threats);
   void integrate(Bird& bird, float delta_time);
+
+  void arm_flyover(Flock& flock, bool first_arm);
+  void launch_flyover(Flock& flock, std::uint16_t index);
+  void update_flyover(Flock& flock, std::uint16_t index, float delta_time);
+  void land_flyover(Flock& flock, std::uint16_t index);
+  [[nodiscard]] auto flyover_span() const -> float;
 
   [[nodiscard]] auto tier_for(float world_x, float world_z) const noexcept -> BirdTier;
   [[nodiscard]] auto ground_height(float world_x, float world_z) const -> float;

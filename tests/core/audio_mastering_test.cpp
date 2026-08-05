@@ -143,6 +143,35 @@ TEST(AudioMastering, LoudnessCorrectionStaysWithinItsAuthority) {
   EXPECT_LT(report.output_lufs, profile.target_lufs);
 }
 
+TEST(AudioMastering, VoiceAuthorityReachesTheQuietestShippedLines) {
+  const Mastering::Profile profile = Mastering::profile_for(Mastering::Material::Voice);
+
+  constexpr float k_quietest_shipped_lufs = -27.3F;
+  EXPECT_GE(profile.loudness_authority_db,
+            profile.target_lufs - k_quietest_shipped_lufs)
+      << "a line at " << k_quietest_shipped_lufs
+      << " LUFS cannot reach the target within " << profile.loudness_authority_db
+      << " dB";
+}
+
+TEST(AudioMastering, VoicesOfVeryDifferentLevelsEndUpTogether) {
+  const Mastering::Profile profile = Mastering::profile_for(Mastering::Material::Voice);
+
+  auto faint = make_stereo(SAMPLE_RATE * 2);
+  add_noise(faint, 0.075F, 7);
+  const Mastering::Report faint_report = master(faint, Mastering::Material::Voice);
+
+  auto strong = make_stereo(SAMPLE_RATE * 2);
+  add_noise(strong, 0.30F, 7);
+  const Mastering::Report strong_report = master(strong, Mastering::Material::Voice);
+
+  EXPECT_NEAR(faint_report.output_lufs, profile.target_lufs, 1.5F);
+  EXPECT_NEAR(strong_report.output_lufs, profile.target_lufs, 1.5F);
+  EXPECT_LT(std::abs(faint_report.output_lufs - strong_report.output_lufs), 2.0F)
+      << "faint " << faint_report.output_lufs << " against strong "
+      << strong_report.output_lufs;
+}
+
 TEST(AudioMastering, StationaryResonanceIsFoundAndReduced) {
   auto pcm = make_stereo(SAMPLE_RATE * 24);
   add_noise(pcm, 0.30F, 7);

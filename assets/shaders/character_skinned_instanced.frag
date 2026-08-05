@@ -38,6 +38,13 @@ const int k_wildlife_material = 7;
 const float k_wildlife_belly_y = 0.26;
 const float k_wildlife_back_span = 0.40;
 const float k_wildlife_rim = 0.030;
+const int k_elephant_material = 8;
+const int k_elephant_role_tusk = 6;
+const int k_elephant_role_eye = 7;
+
+const float k_elephant_height_local = 1.75;
+const float k_elephant_rim_cancel = 0.78;
+const float k_elephant_shadow_floor = 0.40;
 
 float readable_zoom(vec3 world_position) {
   float view_distance = length(u_camera_position - world_position);
@@ -70,9 +77,45 @@ vec3 apply_wildlife_coat(vec3 base, vec3 pos_local) {
   return clamp(coat, 0.0, 1.0);
 }
 
+vec3 apply_elephant_hide(vec3 base, int color_role, vec3 pos_local) {
+  if (color_role == k_elephant_role_eye) {
+    return base;
+  }
+  float height = clamp(pos_local.y / k_elephant_height_local, 0.0, 1.0);
+
+  if (color_role == k_elephant_role_tusk) {
+    float grain = soi_hash13_a1b3c9(floor(pos_local * vec3(37.0, 41.0, 39.0)) + 71.0);
+    float root = smoothstep(0.42, 0.68, height);
+    vec3 ivory = base * (0.95 + grain * 0.07);
+    ivory = mix(ivory, ivory * vec3(0.80, 0.72, 0.58), root * 0.45);
+    return clamp(ivory, 0.0, 1.0);
+  }
+
+  float coarse = soi_hash13_a1b3c9(floor(pos_local * 19.0) + 5.0);
+  float fine = soi_hash13_a1b3c9(floor(pos_local * 43.0) + 19.0);
+  float fold =
+      0.5 + 0.5 * sin(pos_local.y * 46.0 + pos_local.z * 6.0 + coarse * 6.2831);
+  float crease =
+      0.5 + 0.5 * sin(pos_local.z * 31.0 + pos_local.x * 23.0 + fine * 6.2831);
+  float wrinkle = clamp(fold * 0.5 + crease * 0.5, 0.0, 1.0);
+  vec3 hide = base * (0.92 + 0.08 * wrinkle + 0.03 * (coarse - 0.5));
+
+  float blotch =
+      smoothstep(0.20, 0.85, soi_hash13_a1b3c9(floor(pos_local * 4.0) + 29.0));
+  float back = smoothstep(0.62, 1.0, height);
+  float legs = 1.0 - smoothstep(0.04, 0.34, height);
+  float dust = clamp((back * 0.70 + legs * 0.85) * (0.40 + 0.60 * blotch), 0.0, 1.0);
+  hide = mix(hide, hide * vec3(1.34, 1.22, 1.02), dust * 0.55);
+  hide *= 1.0 - (1.0 - smoothstep(0.24, 0.54, height)) * 0.06;
+  return clamp(hide, 0.0, 1.0);
+}
+
 vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4 wear) {
   if (material_id == k_wildlife_material) {
     return apply_wildlife_coat(base, pos_local);
+  }
+  if (material_id == k_elephant_material) {
+    return apply_elephant_hide(base, color_role, pos_local);
   }
   bool horse_material = material_id == 6;
   bool horse_hoof = color_role == 4;
@@ -248,7 +291,9 @@ void main() {
       shade_readable_character(base, surface_normal, v_pos_ws, v_material_id, zoom);
   color = apply_directional_shadow(color, v_pos_ws, surface_normal);
 
-  color = max(color, base * sky_color * k_readable_shadow_floor);
+  float shadow_floor = v_material_id == k_elephant_material ? k_elephant_shadow_floor
+                                                            : k_readable_shadow_floor;
+  color = max(color, base * sky_color * shadow_floor);
   if (v_material_id == k_wildlife_material) {
     vec3 view_dir = normalize(u_camera_position - v_pos_ws);
     float skylight = clamp(surface_normal.y * 0.5 + 0.5, 0.0, 1.0);
@@ -274,6 +319,17 @@ void main() {
     if (dark_detail) {
       color = min(color, base * 1.10 + vec3(0.015));
     }
+  }
+  if (v_material_id == k_elephant_material) {
+    vec3 view_dir = normalize(u_camera_position - v_pos_ws);
+    float edge = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 3.0);
+    float skylight = clamp(surface_normal.y * 0.5 + 0.5, 0.0, 1.0);
+
+    color -= sky_color * edge * mix(k_readable_rim_near, k_readable_rim_far, zoom) *
+             k_elephant_rim_cancel;
+
+    color += environment_ground_bounce_color() * (1.0 - skylight) * 0.06;
+    color = max(color, vec3(0.0));
   }
   color = apply_zoom_readability(color, zoom);
   frag_color = vec4(color, v_alpha);

@@ -103,6 +103,16 @@ struct UndeadZoneElement {
   QJsonArray waves;
 };
 
+struct WildlifeAreaElement {
+  QString species = QStringLiteral("sheep");
+  float x = 0.0F;
+  float z = 0.0F;
+  float radius = 14.0F;
+};
+
+[[nodiscard]] auto wildlife_species_keys() -> QStringList;
+[[nodiscard]] auto wildlife_species_label(const QString& species) -> QString;
+
 struct FogZoneElement {
   float x = 0.0F;
   float z = 0.0F;
@@ -201,6 +211,14 @@ public:
   void update_undead_zone(int index, const UndeadZoneElement& element);
   void remove_undead_zone(int index);
 
+  [[nodiscard]] const QVector<WildlifeAreaElement>& wildlife_areas() const {
+    return m_wildlife_areas;
+  }
+  void add_wildlife_area(const WildlifeAreaElement& element);
+  void insert_wildlife_area(int index, const WildlifeAreaElement& element);
+  void update_wildlife_area(int index, const WildlifeAreaElement& element);
+  void remove_wildlife_area(int index);
+
   [[nodiscard]] const QVector<FogZoneElement>& fog_zones() const { return m_fog_zones; }
   void add_fog_zone(const FogZoneElement& element);
   void update_fog_zone(int index, const FogZoneElement& element);
@@ -235,12 +253,14 @@ private:
   QVector<TroopSpawnElement> m_troop_spawns;
   QVector<UndeadZoneElement> m_undead_zones;
   QVector<FogZoneElement> m_fog_zones;
+  QVector<WildlifeAreaElement> m_wildlife_areas;
 
   QJsonObject m_biome;
   QJsonObject m_camera;
   QJsonObject m_victory;
   QJsonObject m_rain;
   QJsonObject m_environment;
+  QJsonObject m_wildlife;
   QJsonObject m_extra_root_fields;
   QString m_description;
   QString m_coord_system;
@@ -268,6 +288,7 @@ private:
   void parse_spawns_array(const QJsonArray& arr);
   void parse_undead_zones_array(const QJsonArray& arr);
   void parse_fog_zones_array(const QJsonArray& arr);
+  void parse_wildlife_object(const QJsonObject& obj);
   void parse_structures_array(const QJsonArray& arr);
 
   [[nodiscard]] QJsonArray terrain_to_json() const;
@@ -281,6 +302,7 @@ private:
   [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;
   [[nodiscard]] QJsonArray undead_zones_to_json() const;
   [[nodiscard]] QJsonArray fog_zones_to_json() const;
+  [[nodiscard]] QJsonObject wildlife_to_json() const;
 };
 
 } // namespace MapEditor
@@ -636,6 +658,68 @@ private:
   int m_index;
   UndeadZoneElement m_before;
   UndeadZoneElement m_after;
+  QString m_desc;
+};
+
+class AddWildlifeAreaCmd : public Command {
+public:
+  AddWildlifeAreaCmd(MapData* data, WildlifeAreaElement elem)
+      : m_data(data)
+      , m_elem(std::move(elem)) {}
+  void execute() override {
+    m_index = m_data->wildlife_areas().size();
+    m_data->add_wildlife_area(m_elem);
+  }
+  void undo() override { m_data->remove_wildlife_area(m_index); }
+  [[nodiscard]] QString description() const override {
+    return "Place " + wildlife_species_label(m_elem.species) + " range";
+  }
+
+private:
+  MapData* m_data;
+  WildlifeAreaElement m_elem;
+  int m_index = -1;
+};
+
+class RemoveWildlifeAreaCmd : public Command {
+public:
+  RemoveWildlifeAreaCmd(MapData* data, int index, WildlifeAreaElement elem)
+      : m_data(data)
+      , m_index(index)
+      , m_elem(std::move(elem)) {}
+  void execute() override { m_data->remove_wildlife_area(m_index); }
+  void undo() override { m_data->insert_wildlife_area(m_index, m_elem); }
+  [[nodiscard]] QString description() const override {
+    return "Erase " + wildlife_species_label(m_elem.species) + " range";
+  }
+
+private:
+  MapData* m_data;
+  int m_index;
+  WildlifeAreaElement m_elem;
+};
+
+class UpdateWildlifeAreaCmd : public Command {
+public:
+  UpdateWildlifeAreaCmd(MapData* data,
+                        int index,
+                        WildlifeAreaElement before,
+                        WildlifeAreaElement after,
+                        QString desc = "Edit wildlife range")
+      : m_data(data)
+      , m_index(index)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
+  void execute() override { m_data->update_wildlife_area(m_index, m_after); }
+  void undo() override { m_data->update_wildlife_area(m_index, m_before); }
+  [[nodiscard]] QString description() const override { return m_desc; }
+
+private:
+  MapData* m_data;
+  int m_index;
+  WildlifeAreaElement m_before;
+  WildlifeAreaElement m_after;
   QString m_desc;
 };
 

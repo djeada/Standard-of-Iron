@@ -132,23 +132,12 @@
     },
     "birds": {
       "enabled": true,
-      "groups": 3,
-      "group_size_min": 6,
-      "group_size_max": 10,
-      "roam_radius": 34.0,
+      "groups": 1,
+      "group_size_min": 3,
+      "group_size_max": 6,
       "flight_height": 8.0,
-      "spawn_areas": [
-        {
-          "x": 125,
-          "z": 125,
-          "radius": 40
-        },
-        {
-          "x": 90,
-          "z": 160,
-          "radius": 26
-        }
-      ]
+      "flyover_interval_min": 110.0,
+      "flyover_interval_max": 240.0
     }
   },
   "rivers": [],

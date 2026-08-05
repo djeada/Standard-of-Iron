@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "resource_types.h"
+
 namespace Game::Systems {
 
 inline constexpr float k_stockpile_center_x = 5.20F;
@@ -18,7 +20,9 @@ inline constexpr float k_stockpile_drop_radius = 2.20F;
 inline constexpr float k_stockpile_haul_patience_seconds = 30.0F;
 inline constexpr float k_stockpile_depot_arrival_radius = 4.50F;
 
-inline constexpr int k_stockpile_display_cap = 260;
+inline constexpr int k_stockpile_wood_display_cap = 640;
+inline constexpr int k_stockpile_stone_display_cap = 480;
+inline constexpr int k_stockpile_iron_display_cap = 480;
 
 inline constexpr float k_stockpile_deposit_flash_seconds = 1.1F;
 
@@ -47,11 +51,23 @@ struct StockpilePoint {
       center_x, center_z, yaw_degrees, k_stockpile_drop_x, k_stockpile_drop_z);
 }
 
-[[nodiscard]] inline auto stockpile_fill_ratio(int stored_amount) -> float {
-  return std::clamp(static_cast<float>(stored_amount) /
-                        static_cast<float>(k_stockpile_display_cap),
-                    0.0F,
-                    1.0F);
+[[nodiscard]] inline auto stockpile_display_cap(ResourceType type) -> int {
+  switch (type) {
+  case ResourceType::Wood:
+    return k_stockpile_wood_display_cap;
+  case ResourceType::Stone:
+    return k_stockpile_stone_display_cap;
+  case ResourceType::Iron:
+    return k_stockpile_iron_display_cap;
+  default:
+    return k_stockpile_wood_display_cap;
+  }
+}
+
+[[nodiscard]] inline auto stockpile_fill_ratio(int stored_amount,
+                                               ResourceType type) -> float {
+  auto const cap = static_cast<float>(std::max(1, stockpile_display_cap(type)));
+  return std::clamp(static_cast<float>(stored_amount) / cap, 0.0F, 1.0F);
 }
 
 } // namespace Game::Systems

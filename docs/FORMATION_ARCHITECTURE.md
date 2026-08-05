@@ -263,19 +263,102 @@ level; soldiers are offsets inside a unit, not agents.
 
 `CommandController` exposes the whole surface to QML:
 
-- Preset intents, filtered to what the doctrine supports, each with the reason
-  it is unavailable when it is (`formation_intent_unavailable_reason`).
-- Drag placement: drag length sets frontage, drag direction sets facing.
-  Wheel changes depth, `Alt` cycles the strong flank, `Shift` preserves
-  left-to-right order, `Ctrl` tightens spacing, `Esc` cancels and releases the
-  group.
-- An advanced panel that scales the faction template rather than replacing it —
-  frontage, depth, spacing, cavalry flank, ranged placement, reserve rows,
-  movement policy, mixed-army doctrine policy, and an explicit doctrine
-  override.
+- The whole intent catalogue, in a fixed order, each carrying the reason it is
+  unavailable to the current selection when it is
+  (`formation_intent_unavailable_reason`).
+- Drag placement: drag length sets frontage, drag direction sets facing. Wheel
+  turns the deployment, `Ctrl`+wheel changes depth, left-click deploys, and
+  right-click or `Esc` cancels and releases the group.
+- Right-clicking the ground with two or more troops selected: the press opens
+  the planner at that point, dragging away from it aims the block, and the
+  release deploys.
+- A fine-tuning section that scales the faction template rather than replacing
+  it — frontage, depth, spacing, cavalry wing, missile placement, reserve rows,
+  slot order, movement policy, mixed-army doctrine policy, and an explicit
+  doctrine override.
 
 The preview is planned with `ArmyFormationPlanner::plan` and rendered as unit
 footprints, never as individual soldiers.
+
+### Positioning troops is what opens the planner
+
+Ordering two or more troops to a spot is already a formation decision, so the
+right-click that gives that order is what raises the planner — there is no
+command-bar button to press first. `InputCommandHandler::on_right_press` calls
+`begin_move_placement_at_position`, which starts placement only when the
+selection holds **at least two** troops and otherwise reports back that it did
+nothing, so a single unit takes the plain move order it always did rather than
+being asked to pick a deployment for itself. `on_right_release` issues that
+ordinary move whenever the press did not consume the gesture.
+
+`rts.order_formation` (`F`) remains a real entry in the binding catalogue and
+still opens the planner around the current selection, which is what
+`TheFormationOrderOwnsTheKeyItIsDocumentedWith` checks. The command bar used to
+carry a Formation button whose letter was written next to the label rather than
+read from the catalogue; the button is gone, and with it the drift.
+
+### The arrow is the facing, not an offset from it
+
+`m_formation_facing_degrees` is the yaw the formation will actually be committed
+with — one number that the preview request, the commit request and the on-ground
+arrow all read. Until the player aims the block themselves it tracks
+`ArmyFormationService::auto_facing`, so a formation the player only positions
+faces the way the troops are marching; a drag, a wheel turn or a right-drag sets
+it explicitly and the anchor moving no longer overrides that choice.
+
+It used to be an offset that the planner added to `auto_facing` while the
+renderer drew it raw, so the arrow pointed one way and the deployed line faced
+another — off by however far the units had to march. `on_right_drag_orient` fed
+it a world angle, which meant the error was the whole auto-facing term.
+`ThePlacementArrowPointsWhereTheUnitsEndUpFacing` pins the arrow, the previewed
+plan and the committed `desired_yaw` to the same angle.
+
+Nothing is set by a modifier held during a click any more. `Ctrl`, `Shift` and
+`Alt` on mouse-down used to set tight spacing, preserve order and cycle the
+strong flank, and none of them ever set the value back: one `Ctrl`-click tightened
+every formation for the rest of the session, and `Alt` advanced the flank one step
+on each click with nothing on screen saying so. Those are ordinary controls in
+the fine-tuning section now, where their state is visible and reversible.
+
+`formation_intents()` returns the whole catalogue rather than only what the
+doctrine can field. The number keys pick the nth entry, so filtering the list
+made a digit mean a different formation from one selection to the next. Entries
+the selection cannot field are shown blocked, carrying the reason, which also
+teaches the player what a formation needs instead of hiding it.
+`FormationSlotsKeepTheirMeaningAcrossSelections` locks the ordering down.
+
+### Choosing a formation is a picture, not a word
+
+Each choice is a card with a seven-by-four dot silhouette of the deployment it
+produces (`FormationShape`), its name, its hotkey and — for whichever card the
+pointer is over — one line on what it is for. A player who has never opened the
+panel can see that Column is narrow and deep and that Line is wide and shallow
+without reading anything. The patterns are a lookup keyed on the intent id, and
+`tst_formation_panel.qml` asserts every intent has one and that no two are the
+same, because two identical silhouettes would be worse than none.
+
+### The panel avoids QtQuick.Layouts on purpose
+
+`FormationPanel` is built from plain `Column`/`Row`/`Grid` positioners inside a
+`Flickable`. It used to be nested `ColumnLayout`s and `RowLayout`s anchored with
+`anchors.fill: parent` to a card that was itself sized from those layouts'
+implicit size. Showing the panel re-entered `QQuickLayout::rearrange` through
+`updatePolish`, and the grid engine walked items that the re-entrant pass had
+already freed — a hard crash in `qmlAttachedPropertiesObject` every time the
+player asked for a formation. The panel has a fixed content width, so a layout
+engine bought nothing to begin with.
+
+Two rules fall out of that and apply to any HUD panel sized from its own
+content: do not anchor a layout to a parent whose size comes from that layout,
+and do not give a `Repeater` inside a layout a model that is a JS array rebuilt
+from live properties — the delegates are destroyed and recreated underneath the
+layout pass. `FormationShape` iterates a constant cell count for the same
+reason. `test_showing_a_populated_planner_survives_layout` brings the populated
+panel up and expands it, which is all the old structure needed to die.
+
+The HUD hands the panel the vertical band it has free between the wave tracker
+and the command bar (`max_height`); the panel scrolls inside it rather than
+growing off the top of the screen when the fine tuning is expanded.
 
 ### The panel reports state, not just accepts input
 
@@ -299,10 +382,15 @@ at zero for each line rule, so reading the maximum of those would report the
 deepest single line rather than the depth of the whole block — a three-line
 template would have claimed to be two ranks deep. Banding the finished plan is
 what makes a Column read as deeper and narrower than a Line, which is the
-assertion `RankAndFileCountsDescribeTheWholeBlock` makes. Number
-keys 1–9 pick the nth intent the doctrine currently offers, matching the button
-order; the binding lives in `GameView`'s key handler with the rest of the
-hotkeys rather than the panel stealing focus.
+assertion `RankAndFileCountsDescribeTheWholeBlock` makes. Number keys 1–9 pick
+the nth intent in the catalogue, matching the card order; the binding lives in
+`GameView`'s key handler with the rest of the hotkeys rather than the panel
+stealing focus.
+
+The doctrine override is built from `DoctrineRegistry::ids()` rather than a
+hardcoded faction list, so a new doctrine appears in the dropdown without a UI
+edit — the old list silently reported "Automatic" for anything it did not know
+about.
 
 `FormationStatusBadge` is the piece that outlives placement. Selecting units
 that belong to a committed group shows the intent, the doctrine, the phase and
@@ -355,6 +443,9 @@ See `assets/data/formations/README.md` for the file schemas.
 | `tests/formation/formation_cohesion_test.cpp`           | measured cohesion, phase thresholds, the damage multiplier through `apply_unit_damage`, save/load     |
 | `tests/formation/formation_planner_cache_test.cpp`      | layout/place equivalence, layout signature, slot separation under the hash grid, per-plan cost report |
 | `tests/ui/qml/tst_formation_status_badge.qml`           | the persistent badge: phase labels, distinct phase colours, unknown-phase fallback                    |
+| `tests/ui/qml/tst_formation_panel.qml`                  | the planner survives being shown and expanded, one silhouette per intent, the band the HUD gives it   |
+| `tests/core/input_command_handler_test.cpp`             | who opens the planner, arrow and committed facing agree, slots keep their meaning across selections   |
+| `tests/ui/input_bindings_test.cpp`                      | the formation order owns the key it is documented with                                                |
 
 These are headless and run in `simulation_tests`. The terrain suite is a real
 test rather than a tautology: disabling `resolve_terrain` makes four of its

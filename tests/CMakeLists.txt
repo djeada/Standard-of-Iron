@@ -126,6 +126,7 @@ add_executable(
     systems/battlefield_capture_test.cpp
     headless/headless_simulation_test.cpp
     headless/gate_traversal_test.cpp
+    headless/wall_siege_test.cpp
     architecture/layering_test.cpp
     architecture/qml_surface_test.cpp
     architecture/documentation_accuracy_test.cpp
@@ -294,6 +295,10 @@ add_executable(
     core/audio_system_test.cpp
     core/audio_cues_test.cpp
     core/audio_mastering_test.cpp
+    core/loop_seam_test.cpp
+    core/resampler_test.cpp
+    core/ambience_assets_test.cpp
+    core/weather_audio_test.cpp
     core/audio_command_ring_test.cpp
     core/audio_backend_test.cpp
     db/save_preview_test.cpp
@@ -360,6 +365,7 @@ add_executable(
     tools/map_editor_mission_data_test.cpp
     tools/map_editor_canvas_transform_test.cpp
     tools/map_editor_element_ops_test.cpp
+    tools/map_editor_wildlife_test.cpp
     tools/map_editor_json_schema_test.cpp
     tools/hill_projection_model_test.cpp
     tools/map_editor_commander_preview_test.cpp
@@ -476,4 +482,10 @@ add_custom_target(
 )
 if(TARGET design_system_qml_tests)
     add_dependencies(soi_test_binaries design_system_qml_tests)
+endif()
+
+# AmbienceAssetsTest reads the shipped beds, which the build renders rather than
+# git storing. Without this the suite would skip them on a clean tree.
+if(TARGET synthesize_ambience_assets)
+    add_dependencies(soi_test_binaries synthesize_ambience_assets)
 endif()

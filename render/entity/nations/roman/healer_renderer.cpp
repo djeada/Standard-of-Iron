@@ -114,16 +114,46 @@ auto senator_toga_archetype() -> const RenderArchetype& {
     float const y_waist = torso_local.point(waist.origin).y();
     float const y_knee = y_waist - 0.52F;
 
-    float const chest_w = tr * 0.99F;
-    float const chest_d = tr * 0.70F;
-    float const waist_w = tr * 1.04F;
-    float const waist_d = tr * 0.74F;
+    float const waist_w = tr * 0.98F;
+    float const waist_d = tr * 0.70F;
+    float const rib_w = tr * 1.14F;
+    float const rib_d = tr * 0.86F;
+    float const bust_w = tr * 1.24F;
+    float const bust_d = tr * 0.97F;
+    float const chest_w = tr * 1.10F;
+    float const chest_d = tr * 0.84F;
+
+    float const y_rib = y_waist + ((y_top - y_waist) * 0.34F);
+    float const y_bust = y_waist + ((y_top - y_waist) * 0.70F);
     float const skirt_mid_w = tr * 1.56F;
     float const skirt_mid_d = tr * 1.08F;
     float const hem_w = tr * 2.05F;
     float const hem_d = tr * 1.46F;
 
     RenderArchetypeBuilder builder{"roman_senator_toga"};
+
+    struct TorsoSection {
+      float width;
+      float depth;
+    };
+    auto torso_at = [&](float y) -> TorsoSection {
+      auto blend = [](float low, float high, float t) {
+        return low + ((high - low) * t);
+      };
+      auto span = [](float from, float to, float y_value) {
+        return std::clamp((y_value - from) / std::max(0.001F, to - from), 0.0F, 1.0F);
+      };
+      if (y <= y_rib) {
+        float const t = span(y_waist, y_rib, y);
+        return {blend(waist_w, rib_w, t), blend(waist_d, rib_d, t)};
+      }
+      if (y <= y_bust) {
+        float const t = span(y_rib, y_bust, y);
+        return {blend(rib_w, bust_w, t), blend(rib_d, bust_d, t)};
+      }
+      float const t = span(y_bust, y_top, y);
+      return {blend(bust_w, chest_w, t), blend(bust_d, chest_d, t)};
+    };
 
     auto add_shell = [&](float y_bottom,
                          float y_top_edge,
@@ -133,12 +163,12 @@ auto senator_toga_archetype() -> const RenderArchetype& {
                          float top_d,
                          std::uint8_t slot) {
       float const height = y_top_edge - y_bottom;
+      float const ratio = top_w / bottom_w;
+      float const base_d = (bottom_d + top_d) / (1.0F + ratio);
       QMatrix4x4 model;
       model.translate(0.0F, (y_bottom + y_top_edge) * 0.5F, 0.0F);
-      model.scale(bottom_w, height, bottom_d);
-      builder.add_palette_mesh(
-          get_unit_tapered_cylinder(1.0F, top_w / bottom_w, 18), model, slot);
-      (void)top_d;
+      model.scale(bottom_w, height, base_d);
+      builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, ratio, 18), model, slot);
     };
 
     auto add_band = [&](float y_center,
@@ -152,7 +182,10 @@ auto senator_toga_archetype() -> const RenderArchetype& {
       builder.add_palette_mesh(get_unit_tapered_cylinder(1.0F, 1.0F, 18), model, slot);
     };
 
-    add_shell(y_waist, y_top, waist_w, waist_d, chest_w, chest_d, k_toga_cloth_slot);
+    add_shell(y_waist, y_rib, waist_w, waist_d, rib_w, rib_d, k_toga_cloth_slot);
+    add_shell(y_rib - 0.004F, y_bust, rib_w, rib_d, bust_w, bust_d, k_toga_cloth_slot);
+    add_shell(
+        y_bust - 0.004F, y_top, bust_w, bust_d, chest_w, chest_d, k_toga_cloth_slot);
     add_shell(y_waist - 0.26F,
               y_waist + 0.01F,
               skirt_mid_w,
@@ -184,18 +217,50 @@ auto senator_toga_archetype() -> const RenderArchetype& {
           (i % 2 == 0) ? k_toga_shade_slot : k_toga_cloth_slot);
     }
 
+    constexpr int k_chest_folds = 9;
+    constexpr float k_chest_fold_half_arc = 2.05F;
+    float const chest_fold_bottom = y_waist + 0.055F;
+    float const chest_fold_top = y_top - 0.055F;
+    TorsoSection const fold_low = torso_at(chest_fold_bottom);
+    TorsoSection const fold_high = torso_at(chest_fold_top);
+    for (int i = 0; i < k_chest_folds; ++i) {
+      float const spread = (static_cast<float>(i) / (k_chest_folds - 1)) - 0.5F;
+      float const a = spread * 2.0F * k_chest_fold_half_arc;
+      float const s = std::sin(a);
+      float const c = std::cos(a);
+      builder.add_palette_mesh(get_unit_cylinder(),
+                               cylinder_between(QVector3D(s * fold_low.width * 0.995F,
+                                                          chest_fold_bottom,
+                                                          c * fold_low.depth * 0.995F),
+                                                QVector3D(s * fold_high.width * 0.995F,
+                                                          chest_fold_top,
+                                                          c * fold_high.depth * 0.995F),
+                                                0.011F),
+                               (i % 2 == 0) ? k_toga_shade_slot : k_toga_cloth_slot);
+    }
+
     add_band(y_knee + 0.024F, 0.048F, hem_w * 1.02F, hem_d * 1.02F, k_toga_clavus_slot);
     add_band(y_knee + 0.056F, 0.011F, hem_w * 1.01F, hem_d * 1.01F, k_toga_gold_slot);
 
+    constexpr std::array<float, 4> k_clavus_fraction{{0.0F, 0.34F, 0.70F, 1.0F}};
     for (int side = -1; side <= 1; side += 2) {
-      float const x_top = static_cast<float>(side) * chest_w * 0.40F;
-      float const x_bot = static_cast<float>(side) * waist_w * 0.42F;
-      builder.add_palette_mesh(
-          get_unit_cylinder(),
-          cylinder_between(QVector3D(x_top, y_top - 0.02F, chest_d * 0.90F),
-                           QVector3D(x_bot, y_waist + 0.03F, waist_d * 0.90F),
-                           0.017F),
-          k_toga_clavus_slot);
+      auto stripe_point = [&](float fraction) {
+        float const y = y_waist + ((y_top - y_waist) * fraction) +
+                        (fraction < 0.5F ? 0.03F : -0.02F);
+        TorsoSection const section = torso_at(y);
+        float const offset = 0.41F;
+        float const x = static_cast<float>(side) * section.width * offset;
+        float const z = section.depth * std::sqrt(1.0F - (offset * offset)) * 0.99F;
+        return QVector3D(x, y, z);
+      };
+      for (std::size_t i = 1; i < k_clavus_fraction.size(); ++i) {
+        builder.add_palette_mesh(
+            get_unit_cylinder(),
+            cylinder_between(stripe_point(k_clavus_fraction[i - 1]),
+                             stripe_point(k_clavus_fraction[i]),
+                             0.017F),
+            k_toga_clavus_slot);
+      }
     }
 
     QVector3D const shoulder_l = torso_local.point(bind_frames.shoulder_l.origin);
@@ -222,9 +287,14 @@ auto senator_toga_archetype() -> const RenderArchetype& {
           k_toga_shade_slot);
     }
 
+    float const drape_mid_y = y_top - 0.20F;
+    TorsoSection const drape_mid_section = torso_at(drape_mid_y);
+    TorsoSection const drape_low_section = torso_at(y_waist + 0.01F);
     QVector3D const drape_top(-shoulder_x * 0.72F, y_top + 0.030F, chest_d * 0.62F);
-    QVector3D const drape_mid(-chest_w * 0.14F, y_top - 0.20F, chest_d * 1.02F);
-    QVector3D const drape_low(waist_w * 0.94F, y_waist + 0.01F, waist_d * 0.74F);
+    QVector3D const drape_mid(
+        -chest_w * 0.14F, drape_mid_y, drape_mid_section.depth * 1.04F);
+    QVector3D const drape_low(
+        waist_w * 0.94F, y_waist + 0.01F, drape_low_section.depth * 0.86F);
     constexpr int k_drape_steps = 16;
     for (int step = 0; step <= k_drape_steps; ++step) {
       float const t = static_cast<float>(step) / k_drape_steps;
@@ -256,11 +326,13 @@ auto senator_toga_archetype() -> const RenderArchetype& {
     constexpr int k_tail_steps = 7;
     for (int step = 0; step < k_tail_steps; ++step) {
       float const t = static_cast<float>(step) / (k_tail_steps - 1);
+      float const tail_y = y_top - 0.115F - (t * 0.30F);
+      TorsoSection const tail_section = torso_at(tail_y);
       builder.add_palette_mesh(
           get_unit_sphere(),
           local_scale_model(QVector3D(-shoulder_x * (0.72F - 0.10F * t),
-                                      y_top - 0.115F - t * 0.30F,
-                                      -(chest_d * 1.06F + t * 0.014F)),
+                                      tail_y,
+                                      -((tail_section.depth * 1.06F) + (t * 0.014F))),
                             QVector3D(0.048F - 0.005F * t, 0.044F, 0.024F)),
           t > 0.78F ? k_toga_clavus_slot : k_toga_shade_slot);
     }

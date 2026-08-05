@@ -145,10 +145,10 @@ Item {
     function select_formation_intent_slot(slot_index) {
         if (typeof game === 'undefined' || !game.placement.set_formation_intent)
             return;
-        var available = game.placement.available_formation_intents;
-        if (slot_index < 0 || slot_index >= available.length)
+        var intents = game.placement.formation_intents;
+        if (slot_index < 0 || slot_index >= intents.length)
             return;
-        var intent_id = available[slot_index];
+        var intent_id = intents[slot_index];
         if (game.placement.formation_intent_unavailable_reason && game.placement.formation_intent_unavailable_reason(intent_id).length > 0)
             return;
         game.placement.set_formation_intent(intent_id);
@@ -224,6 +224,11 @@ Item {
             if (!game.has_units_selected || !game.on_hold_command)
                 return false;
             game.on_hold_command();
+            return true;
+        case "rts.order_formation":
+            if (!game.has_units_selected || !game.placement.on_formation_command)
+                return false;
+            game.placement.on_formation_command();
             return true;
         case "rts.camera_pan_up":
             begin_pan_action(actionId, event);
@@ -494,7 +499,7 @@ Item {
                     return;
                 }
                 if (typeof game !== 'undefined' && game.placement.is_placing_formation) {
-                    if (game.placement.is_dragging_formation && game.placement.is_dragging_formation())
+                    if ((w.modifiers & Qt.ControlModifier) && game.placement.adjust_formation_depth)
                         game.placement.adjust_formation_depth(dy);
                     else if (game.placement.on_formation_scroll)
                         game.placement.on_formation_scroll(dy);
@@ -551,12 +556,6 @@ Item {
                         return;
                     }
                     if (typeof game !== 'undefined' && game.placement.is_placing_formation) {
-                        if (mouse.modifiers & Qt.ControlModifier)
-                            game.placement.set_formation_tight_spacing(true);
-                        if (mouse.modifiers & Qt.ShiftModifier)
-                            game.placement.set_formation_preserve_order(true);
-                        if (mouse.modifiers & Qt.AltModifier)
-                            game.placement.mirror_formation_flank();
                         if (game.placement.on_formation_drag_begin)
                             game.placement.on_formation_drag_begin(mouse.x, mouse.y);
                         return;
@@ -577,6 +576,10 @@ Item {
                 } else if (mouse.button === Qt.RightButton) {
                     if (game_view.is_rally_placement()) {
                         game_view.cancel_rally_placement();
+                        return;
+                    }
+                    if (typeof game !== 'undefined' && game.placement.is_placing_formation && game.placement.on_formation_cancel) {
+                        game.placement.on_formation_cancel();
                         return;
                     }
                     renderArea.mouse_pan_active = true;

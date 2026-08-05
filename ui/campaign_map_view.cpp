@@ -108,6 +108,41 @@ auto point_in_triangle(const QVector2D& p,
   return (u >= 0.0F) && (v >= 0.0F) && (u + v <= 1.0F);
 }
 
+constexpr int k_outline_steps = 12;
+constexpr float k_pick_tolerance_px = 16.0F;
+constexpr float k_pick_fallback_tolerance_uv = 0.012F;
+
+auto distance_point_segment(const QVector2D& p,
+                            const QVector2D& a,
+                            const QVector2D& b) -> float {
+  const QVector2D ab = b - a;
+  const float len_sq = QVector2D::dotProduct(ab, ab);
+  if (len_sq <= 1e-12F) {
+    return (p - a).length();
+  }
+  const float t = qBound(0.0F, QVector2D::dotProduct(p - a, ab) / len_sq, 1.0F);
+  return (p - (a + ab * t)).length();
+}
+
+auto distance_to_triangle(const QVector2D& p,
+                          const QVector2D& a,
+                          const QVector2D& b,
+                          const QVector2D& c) -> float {
+  if (point_in_triangle(p, a, b, c)) {
+    return 0.0F;
+  }
+  return qMin(distance_point_segment(p, a, b),
+              qMin(distance_point_segment(p, b, c), distance_point_segment(p, c, a)));
+}
+
+auto distance_to_bounds(const QVector2D& p,
+                        const QVector2D& lo,
+                        const QVector2D& hi) -> float {
+  const float dx = qMax(qMax(lo.x() - p.x(), p.x() - hi.x()), 0.0F);
+  const float dy = qMax(qMax(lo.y() - p.y(), p.y() - hi.y()), 0.0F);
+  return std::sqrt(dx * dx + dy * dy);
+}
+
 struct LineSpan {
   int start = 0;
   int count = 0;
@@ -328,7 +363,7 @@ public:
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glClearColor(0.157F, 0.267F, 0.361F, 1.0F);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     QMatrix4x4 mvp;
     compute_mvp(mvp);
@@ -371,7 +406,7 @@ public:
   createFramebufferObject(const QSize& size) -> QOpenGLFramebufferObject* override {
     m_size = size;
     QOpenGLFramebufferObjectFormat fmt;
-    fmt.setAttachment(QOpenGLFramebufferObject::Depth);
+    fmt.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 
     fmt.setSamples(4);
     fmt.setSamples(0);
@@ -2152,53 +2187,124 @@ void main() {
       m_base_texture->bind();
     }
 
+    if (use_province_program) {
+      program.setUniformValue("u_ndc_offset", QVector2D(0.0F, 0.0F));
+    }
+
     glBindVertexArray(layer.vao);
+    const ProvinceSpan* selected_span = nullptr;
+    const ProvinceSpan* hovered_span = nullptr;
     for (const auto& span : layer.spans) {
+      if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
+        hovered_span = &span;
+        continue;
+      }
+      if (!m_selected_province_id.isEmpty() && span.id == m_selected_province_id) {
+        selected_span = &span;
+        continue;
+      }
       if (span.color.w() <= 0.0F) {
         continue;
       }
-      QVector4D color = span.color;
-
-      const float parchment_tint = 0.92F;
-      color.setX(color.x() * parchment_tint);
-      color.setY(color.y() * parchment_tint);
-      color.setZ(color.z() * parchment_tint * 0.98F);
-      if (m_terrain_mesh.ready && m_terrain_height_scale > 0.01F) {
-        float fade = 1.0F / (1.0F + 3.0F * m_terrain_height_scale);
-        color.setW(color.w() * fade);
-      }
-
-      const bool selected =
-          !m_selected_province_id.isEmpty() && span.id == m_selected_province_id;
-      const bool hovered =
-          !m_hover_province_id.isEmpty() && span.id == m_hover_province_id;
-
-      const QVector3D lamp(0.99F, 0.84F, 0.42F);
-      const auto wash = [&color, &lamp](float amount, float min_alpha) {
-        color.setX(color.x() + (lamp.x() - color.x()) * amount);
-        color.setY(color.y() + (lamp.y() - color.y()) * amount);
-        color.setZ(color.z() + (lamp.z() - color.z()) * amount);
-        color.setW(qMin(1.0F, qMax(color.w(), min_alpha)));
-      };
-
-      if (selected) {
-        wash(0.38F, 0.30F);
-      }
-      if (hovered) {
-        const qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
-        const float pulse_cycle = 1400.0F;
-        const float pulse = 0.5F + 0.5F * std::sin(static_cast<float>(elapsed) * 2.0F *
-                                                   float(M_PI) / pulse_cycle);
-        wash(0.72F, 0.44F + 0.08F * pulse);
-      }
-      program.setUniformValue("u_color", color);
+      program.setUniformValue("u_color", province_fill_color(span));
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
     }
+
+    if (selected_span != nullptr) {
+      draw_focused_province(program, *selected_span, use_province_program, false);
+    }
+    if (hovered_span != nullptr) {
+      draw_focused_province(program, *hovered_span, use_province_program, true);
+    }
+
     glBindVertexArray(0);
     if (use_province_program) {
       m_base_texture->release();
     }
     program.release();
+  }
+
+  [[nodiscard]] auto province_fill_color(const ProvinceSpan& span) const -> QVector4D {
+    QVector4D color = span.color;
+
+    const float parchment_tint = 0.92F;
+    color.setX(color.x() * parchment_tint);
+    color.setY(color.y() * parchment_tint);
+    color.setZ(color.z() * parchment_tint * 0.98F);
+    if (m_terrain_mesh.ready && m_terrain_height_scale > 0.01F) {
+      const float fade = 1.0F / (1.0F + 3.0F * m_terrain_height_scale);
+      color.setW(color.w() * fade);
+    }
+    return color;
+  }
+
+  void draw_focused_province(QOpenGLShaderProgram& program,
+                             const ProvinceSpan& span,
+                             bool can_outline,
+                             bool hovered) {
+    QVector4D color = province_fill_color(span);
+
+    const QVector3D lamp(0.99F, 0.84F, 0.42F);
+    const auto wash = [&color, &lamp](float amount, float min_alpha) {
+      color.setX(color.x() + (lamp.x() - color.x()) * amount);
+      color.setY(color.y() + (lamp.y() - color.y()) * amount);
+      color.setZ(color.z() + (lamp.z() - color.z()) * amount);
+      color.setW(qMin(1.0F, qMax(color.w(), min_alpha)));
+    };
+
+    float pulse = 0.0F;
+    if (hovered) {
+      const qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
+      const float pulse_cycle = 1400.0F;
+      pulse = 0.5F + 0.5F * std::sin(static_cast<float>(elapsed) * 2.0F * float(M_PI) /
+                                     pulse_cycle);
+      wash(0.72F, 0.44F + 0.08F * pulse);
+    } else {
+      wash(0.38F, 0.30F);
+    }
+
+    if (can_outline) {
+      const float radius_px = hovered ? 3.2F + 0.6F * pulse : 2.4F;
+      const QVector4D outline = hovered ? QVector4D(1.0F, 0.88F, 0.46F, 0.98F)
+                                        : QVector4D(0.99F, 0.66F, 0.20F, 0.95F);
+      draw_province_outline(program, span, radius_px, outline);
+    }
+
+    program.setUniformValue("u_color", color);
+    glDrawArrays(GL_TRIANGLES, span.start, span.count);
+  }
+
+  void draw_province_outline(QOpenGLShaderProgram& program,
+                             const ProvinceSpan& span,
+                             float radius_px,
+                             const QVector4D& color) {
+    const float width_px = static_cast<float>(qMax(1, m_size.width()));
+    const float height_px = static_cast<float>(qMax(1, m_size.height()));
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0xFF);
+    glClear(GL_STENCIL_BUFFER_BIT);
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    program.setUniformValue("u_ndc_offset", QVector2D(0.0F, 0.0F));
+    program.setUniformValue("u_color", color);
+    glDrawArrays(GL_TRIANGLES, span.start, span.count);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    for (int i = 0; i < k_outline_steps; ++i) {
+      const float angle = 2.0F * float(M_PI) * static_cast<float>(i) /
+                          static_cast<float>(k_outline_steps);
+      const QVector2D offset(2.0F * radius_px * std::cos(angle) / width_px,
+                             2.0F * radius_px * std::sin(angle) / height_px);
+      program.setUniformValue("u_ndc_offset", offset);
+      glDrawArrays(GL_TRIANGLES, span.start, span.count);
+    }
+
+    program.setUniformValue("u_ndc_offset", QVector2D(0.0F, 0.0F));
+    glDisable(GL_STENCIL_TEST);
   }
 
   void cleanup() {
@@ -2397,6 +2503,28 @@ void CampaignMapView::load_provinces_for_hit_test() {
     }
 
     if (province.triangles.size() >= 3) {
+      QVector2D lo = province.triangles.front();
+      QVector2D hi = province.triangles.front();
+      for (const auto& pt : province.triangles) {
+        lo.setX(qMin(lo.x(), pt.x()));
+        lo.setY(qMin(lo.y(), pt.y()));
+        hi.setX(qMax(hi.x(), pt.x()));
+        hi.setY(qMax(hi.y(), pt.y()));
+      }
+      province.bounds_min = lo;
+      province.bounds_max = hi;
+
+      float area = 0.0F;
+      for (size_t i = 0; i + 2 < province.triangles.size(); i += 3) {
+        const QVector2D& a = province.triangles[i];
+        const QVector2D& b = province.triangles[i + 1];
+        const QVector2D& c = province.triangles[i + 2];
+        area += std::abs((b.x() - a.x()) * (c.y() - a.y()) -
+                         (c.x() - a.x()) * (b.y() - a.y())) *
+                0.5F;
+      }
+      province.area = area;
+
       m_provinces.push_back(std::move(province));
     }
   }
@@ -2553,16 +2681,11 @@ void CampaignMapView::apply_province_state(const QVariantList& states) {
   update();
 }
 
-QString CampaignMapView::province_at_screen(float x, float y) {
-  load_provinces_for_hit_test();
-  if (m_provinces.empty()) {
-    return {};
-  }
-
+auto CampaignMapView::uv_at_screen(float x, float y, QVector2D* out_uv) const -> bool {
   const float w = static_cast<float>(width());
   const float h = static_cast<float>(height());
   if (w <= 0.0F || h <= 0.0F) {
-    return {};
+    return false;
   }
 
   const float ndc_x = (2.0F * x / w) - 1.0F;
@@ -2573,111 +2696,107 @@ QString CampaignMapView::province_at_screen(float x, float y) {
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
-    return {};
+    return false;
   }
 
-  QVector4D near_p = inv * QVector4D(ndc_x, ndc_y, -1.0F, 1.0F);
-  QVector4D far_p = inv * QVector4D(ndc_x, ndc_y, 1.0F, 1.0F);
+  const QVector4D near_p = inv * QVector4D(ndc_x, ndc_y, -1.0F, 1.0F);
+  const QVector4D far_p = inv * QVector4D(ndc_x, ndc_y, 1.0F, 1.0F);
   if (qFuzzyIsNull(near_p.w()) || qFuzzyIsNull(far_p.w())) {
-    return {};
+    return false;
   }
-  QVector3D near_v = QVector3D(near_p.x(), near_p.y(), near_p.z()) / near_p.w();
-  QVector3D far_v = QVector3D(far_p.x(), far_p.y(), far_p.z()) / far_p.w();
+  const QVector3D near_v = QVector3D(near_p.x(), near_p.y(), near_p.z()) / near_p.w();
+  const QVector3D far_v = QVector3D(far_p.x(), far_p.y(), far_p.z()) / far_p.w();
 
   const QVector3D dir = far_v - near_v;
   if (qFuzzyIsNull(dir.y())) {
-    return {};
+    return false;
   }
 
   const float t = -near_v.y() / dir.y();
   if (t < 0.0F) {
-    return {};
+    return false;
   }
 
   const QVector3D hit = near_v + dir * t;
-  const float u = 1.0F - hit.x();
-  const float v = hit.z();
-  if (u < 0.0F || u > 1.0F || v < 0.0F || v > 1.0F) {
-    return {};
+  *out_uv = QVector2D(1.0F - hit.x(), hit.z());
+  return true;
+}
+
+auto CampaignMapView::pick_province(float x, float y) -> const ProvinceHit* {
+  load_provinces_for_hit_test();
+  if (m_provinces.empty()) {
+    return nullptr;
   }
 
-  const QVector2D p(u, v);
+  QVector2D p;
+  if (!uv_at_screen(x, y, &p)) {
+    return nullptr;
+  }
+
+  const ProvinceHit* best = nullptr;
   for (const auto& province : m_provinces) {
+    if (distance_to_bounds(p, province.bounds_min, province.bounds_max) > 0.0F) {
+      continue;
+    }
     const auto& triangles = province.triangles;
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
       if (point_in_triangle(p, triangles[i], triangles[i + 1], triangles[i + 2])) {
-        return province.id;
+
+        if (best == nullptr || province.area < best->area) {
+          best = &province;
+        }
+        break;
+      }
+    }
+  }
+  if (best != nullptr) {
+    return best;
+  }
+
+  QVector2D nudged;
+  float tolerance = k_pick_fallback_tolerance_uv;
+  if (uv_at_screen(x + k_pick_tolerance_px, y, &nudged)) {
+    tolerance = (nudged - p).length();
+  }
+  if (tolerance <= 0.0F) {
+    return nullptr;
+  }
+
+  float best_distance = tolerance;
+  for (const auto& province : m_provinces) {
+    if (distance_to_bounds(p, province.bounds_min, province.bounds_max) >
+        best_distance) {
+      continue;
+    }
+    const auto& triangles = province.triangles;
+    for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
+      const float distance =
+          distance_to_triangle(p, triangles[i], triangles[i + 1], triangles[i + 2]);
+      if (distance < best_distance) {
+        best_distance = distance;
+        best = &province;
       }
     }
   }
 
-  return {};
+  return best;
+}
+
+QString CampaignMapView::province_at_screen(float x, float y) {
+  const ProvinceHit* province = pick_province(x, y);
+  return province != nullptr ? province->id : QString();
 }
 
 QVariantMap CampaignMapView::province_info_at_screen(float x, float y) {
-  load_provinces_for_hit_test();
   QVariantMap info;
-  if (m_provinces.empty()) {
+  const ProvinceHit* province = pick_province(x, y);
+  if (province == nullptr) {
     return info;
   }
-
-  const float w = static_cast<float>(width());
-  const float h = static_cast<float>(height());
-  if (w <= 0.0F || h <= 0.0F) {
-    return info;
-  }
-
-  const float ndc_x = (2.0F * x / w) - 1.0F;
-  const float ndc_y = 1.0F - (2.0F * y / h);
-
-  const QMatrix4x4 mvp = build_mvp_matrix(
-      w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance, m_pan_u, m_pan_v);
-  bool inverted = false;
-  const QMatrix4x4 inv = mvp.inverted(&inverted);
-  if (!inverted) {
-    return info;
-  }
-
-  QVector4D near_p = inv * QVector4D(ndc_x, ndc_y, -1.0F, 1.0F);
-  QVector4D far_p = inv * QVector4D(ndc_x, ndc_y, 1.0F, 1.0F);
-  if (qFuzzyIsNull(near_p.w()) || qFuzzyIsNull(far_p.w())) {
-    return info;
-  }
-  QVector3D near_v = QVector3D(near_p.x(), near_p.y(), near_p.z()) / near_p.w();
-  QVector3D far_v = QVector3D(far_p.x(), far_p.y(), far_p.z()) / far_p.w();
-
-  const QVector3D dir = far_v - near_v;
-  if (qFuzzyIsNull(dir.y())) {
-    return info;
-  }
-
-  const float t = -near_v.y() / dir.y();
-  if (t < 0.0F) {
-    return info;
-  }
-
-  const QVector3D hit = near_v + dir * t;
-  const float u = 1.0F - hit.x();
-  const float v = hit.z();
-  if (u < 0.0F || u > 1.0F || v < 0.0F || v > 1.0F) {
-    return info;
-  }
-
-  const QVector2D p(u, v);
-  for (const auto& province : m_provinces) {
-    const auto& triangles = province.triangles;
-    for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
-      if (point_in_triangle(p, triangles[i], triangles[i + 1], triangles[i + 2])) {
-        info.insert(QStringLiteral("id"), province.id);
-        info.insert(
-            QStringLiteral("name"),
-            Game::Util::tr_asset(Game::Util::k_campaign_map_context, province.name));
-        info.insert(QStringLiteral("owner"), province.owner);
-        return info;
-      }
-    }
-  }
-
+  info.insert(QStringLiteral("id"), province->id);
+  info.insert(QStringLiteral("name"),
+              Game::Util::tr_asset(Game::Util::k_campaign_map_context, province->name));
+  info.insert(QStringLiteral("owner"), province->owner);
   return info;
 }
 

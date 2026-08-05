@@ -393,6 +393,9 @@ TEST_F(WildlifeSystemTest, SerializedStateRestoresGroupsAndFlocks) {
   for (std::size_t index = 0; index < restored_birds.size(); ++index) {
     EXPECT_FLOAT_EQ(restored_birds[index].x, expected_birds[index].x);
     EXPECT_FLOAT_EQ(restored_birds[index].z, expected_birds[index].z);
+
+    EXPECT_FLOAT_EQ(restored_birds[index].glide, expected_birds[index].glide);
+    EXPECT_FLOAT_EQ(restored_birds[index].bank, expected_birds[index].bank);
   }
 }
 
@@ -409,6 +412,36 @@ TEST_F(WildlifeSystemTest, RestoredSystemDoesNotDuplicateThePopulation) {
   advance(restored, world, 1.0F);
 
   EXPECT_EQ(count_species(world, Species::Sheep), 4);
+}
+
+TEST_F(WildlifeSystemTest, AMapThatNeverAuthoredWildlifeStillGetsAPopulation) {
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QStringLiteral("assets/maps/map_rivers.json"), map_definition, &error))
+      << error.toStdString();
+  ASSERT_TRUE(map_definition.wildlife.enabled);
+
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  Game::Systems::CommandService::initialize(map_definition.grid.width,
+                                            map_definition.grid.height);
+
+  World world;
+  WildlifeSystem system;
+  system.configure(map_definition);
+  advance(system, world, 1.0F);
+
+  EXPECT_GT(count_species(world, Species::Sheep), 0)
+      << "derived spawn areas landed on ground the spawner refuses";
+  EXPECT_GT(count_species(world, Species::Wolf), 0);
+
+  const auto& terrain = Game::Map::TerrainService::instance();
+  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    ASSERT_NE(transform, nullptr);
+    EXPECT_FALSE(
+        terrain.is_forbidden_world(transform->position.x, transform->position.z));
+  }
 }
 
 TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
@@ -430,7 +463,13 @@ TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
 
   EXPECT_GT(count_species(world, Species::Sheep), 0);
   EXPECT_GT(count_species(world, Species::Wolf), 0);
-  EXPECT_FALSE(Game::Wildlife::BirdFlockManager::instance().birds().empty());
+
+  bool birds_seen = false;
+  for (int slice = 0; slice < 60 && !birds_seen; ++slice) {
+    advance(system, world, 2.0F);
+    birds_seen = !Game::Wildlife::BirdFlockManager::instance().birds().empty();
+  }
+  EXPECT_TRUE(birds_seen) << "no flyover crossed the map in two minutes";
 
   const auto& terrain = Game::Map::TerrainService::instance();
   for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {

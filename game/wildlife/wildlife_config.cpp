@@ -13,6 +13,7 @@ constexpr float k_max_roam_radius = 220.0F;
 constexpr float k_max_speed = 24.0F;
 constexpr float k_max_alert_radius = 120.0F;
 constexpr float k_max_respawn_delay = 3600.0F;
+constexpr float k_max_flyover_interval = 1800.0F;
 constexpr float k_min_simulation_radius = 12.0F;
 
 void sanitize_species(SpeciesConfig& config) noexcept {
@@ -28,6 +29,10 @@ void sanitize_species(SpeciesConfig& config) noexcept {
   config.aggression = std::clamp(config.aggression, 0.0F, 1.0F);
   config.respawn_delay = std::clamp(config.respawn_delay, 0.0F, k_max_respawn_delay);
   config.flight_height = std::clamp(config.flight_height, 0.0F, 60.0F);
+  config.flyover_interval_min =
+      std::clamp(config.flyover_interval_min, 0.0F, k_max_flyover_interval);
+  config.flyover_interval_max = std::clamp(
+      config.flyover_interval_max, config.flyover_interval_min, k_max_flyover_interval);
   for (auto& area : config.spawn_areas) {
     area.radius = std::clamp(area.radius, 1.0F, k_max_roam_radius);
   }
@@ -110,17 +115,21 @@ auto default_wolf_config() noexcept -> SpeciesConfig {
 auto default_bird_config() noexcept -> SpeciesConfig {
   SpeciesConfig config;
   config.enabled = true;
-  config.group_count = 3;
-  config.group_size_min = 6;
-  config.group_size_max = 12;
+
+  config.group_count = 1;
+  config.group_size_min = 3;
+  config.group_size_max = 6;
   config.roam_radius = 30.0F;
-  config.move_speed = 4.5F;
-  config.flee_speed = 9.0F;
+  config.move_speed = 5.6F;
+  config.flee_speed = 9.5F;
   config.alert_radius = 12.0F;
   config.aggression = 0.0F;
   config.respawn = true;
   config.respawn_delay = 25.0F;
-  config.flight_height = 7.5F;
+  config.flight_height = 9.5F;
+
+  config.flyover_interval_min = 105.0F;
+  config.flyover_interval_max = 255.0F;
   return config;
 }
 

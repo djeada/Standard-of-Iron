@@ -24,6 +24,7 @@
 #include "map/terrain.h"
 #include "systems/resource_types.h"
 #include "units/spawn_type.h"
+#include "wildlife/wildlife_placement.h"
 
 namespace Game::Map {
 
@@ -402,6 +403,10 @@ void read_wildlife_species(const QJsonObject& obj,
       float(obj.value(WILDLIFE_RESPAWN_DELAY).toDouble(out.respawn_delay));
   out.flight_height =
       float(obj.value(WILDLIFE_FLIGHT_HEIGHT).toDouble(out.flight_height));
+  out.flyover_interval_min = float(
+      obj.value(WILDLIFE_FLYOVER_INTERVAL_MIN).toDouble(out.flyover_interval_min));
+  out.flyover_interval_max = float(
+      obj.value(WILDLIFE_FLYOVER_INTERVAL_MAX).toDouble(out.flyover_interval_max));
 
   if (!obj.value(WILDLIFE_SPAWN_AREAS).isArray()) {
     return;
@@ -1426,7 +1431,9 @@ auto MapLoader::load_from_json_file(const QString& path,
     read_rain_config(root.value(RAIN).toObject(), out_map.rain);
   }
 
-  if (root.contains(WILDLIFE) && root.value(WILDLIFE).isObject()) {
+  bool const wildlife_authored =
+      root.contains(WILDLIFE) && root.value(WILDLIFE).isObject();
+  if (wildlife_authored) {
     read_wildlife_config(root.value(WILDLIFE).toObject(),
                          out_map.grid,
                          out_map.coordSystem,
@@ -1460,6 +1467,11 @@ auto MapLoader::load_from_json_file(const QString& path,
     read_starting_resources(root.value(STARTING_RESOURCES).toObject(),
                             out_map.starting_resources);
   }
+
+  if (!wildlife_authored) {
+    out_map.wildlife = Game::Wildlife::default_settings_for_map(out_map);
+  }
+  Game::Wildlife::populate_missing_spawn_areas(out_map, out_map.wildlife);
 
   return true;
 }

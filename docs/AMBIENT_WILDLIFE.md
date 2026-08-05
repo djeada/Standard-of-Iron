@@ -87,9 +87,17 @@ menacing, never damaging. `wolf.prowl` roams the pack anchor.
 
 The ambient behaviours never decline, so an animal always has something to do.
 
-**Birds** are not entities and do not run the brain. A flock shares a wander target;
-individual birds orbit it and occasionally land to peck. Any threat inside the alert radius
-bursts the whole flock upward and outward, after which they settle back into a cruise.
+**Birds** are not entities and do not run the brain, and by default they are not resident
+either: a flyover flock waits out a random respite with an empty sky, then enters from one
+side of the camera focus, crosses it in a loose skein and leaves by the other, at which
+point its birds are deleted and the timer is rearmed. That is what `flyover_interval_min`
+and `flyover_interval_max` buy — birds read as an event rather than as scenery that
+happens to be overhead. Each bird keeps a slot offset from the leader, so the formation
+survives the crossing instead of converging on one point.
+
+Setting `flyover_interval_max` to `0` restores the resident behaviour: the flock shares a
+wander target near its spawn area, individual birds orbit it and occasionally land to peck.
+Either way, a threat inside the alert radius bursts the flock upward and outward.
 
 Each animal is re-evaluated on a stagger — roughly every half second, never all animals on
 the same frame.
@@ -112,9 +120,11 @@ respawns, scatter events).
 
 ## Map configuration
 
-Wildlife is off unless a map asks for it. The block is authored in the map JSON next to
-`rain`, and spawn-area coordinates follow the map's coordinate system, so a grid map
-authors them in grid space:
+**Every map gets wildlife.** A map file that says nothing about it is given the default
+population at load time, scaled to the map's area, and a map that enables a species without
+authoring `spawn_areas` is given ground for it. The block below is what an author writes
+when they want something other than that; coordinates follow the map's coordinate system,
+so a grid map authors them in grid space:
 
 ```json
 "wildlife": {
@@ -145,21 +155,41 @@ authors them in grid space:
   },
   "birds": {
     "enabled": true,
-    "groups": 3,
-    "group_size_min": 6,
-    "group_size_max": 12,
-    "flight_height": 7.5,
-    "spawn_areas": [{ "x": 32, "z": 32, "radius": 30 }]
+    "groups": 2,
+    "group_size_min": 7,
+    "group_size_max": 14,
+    "flight_height": 9.5,
+    "flyover_interval_min": 22.0,
+    "flyover_interval_max": 65.0
   }
 }
 ```
 
-A species that is omitted from the block stays disabled even when `enabled` is true, so a
-map can ask for sheep without inheriting wolves. Every value is clamped on load; an
-author cannot request 5000 packs or a negative roam radius.
+A species that is omitted from an authored block stays disabled even when `enabled` is
+true, so a map can ask for sheep without inheriting wolves. Every value is clamped on
+load; an author cannot request 5000 packs or a negative roam radius.
 
-Omitting `spawn_areas` scatters the groups around the middle of the map. Setting
-`respawn` to false lets a hunted-out herd stay gone.
+Setting `respawn` to false lets a hunted-out herd stay gone. Bird `spawn_areas` only
+matter when flyovers are turned off, because a flyover enters from the map edge rather
+than from an anchor.
+
+### Derived placement
+
+`game/wildlife/wildlife_placement.cpp` fills in what an author left out, using only what
+the map file already describes. It scores a jittered lattice of candidate points and keeps
+the best ones, spaced at least `roam_radius * 1.7` apart:
+
+- Points inside a lake, a river, a mountain or a road are rejected outright, as are points
+  within 24 cells of a structure, 15 of a unit spawn, or inside an undead zone's leash. An
+  author never finds a wolf den in the middle of a player's base.
+- **Sheep** want open pasture: cover near the ideal of "close to a treeline, not under it",
+  away from the settlements, and off the hills.
+- **Wolves** want the opposite: the deepest cover and the highest ground the map has, as
+  far from the players as it can get.
+- **Birds** are nearly indifferent, since a flyover ignores its anchor anyway.
+
+Placement is seeded from the map's wildlife seed (falling back to the biome seed), so the
+same map always lays out the same way.
 
 ## Persistence
 
@@ -241,7 +271,7 @@ a white fleece is what made a grazing herd read as plastic.
 
 ## Arena fixtures
 
-Seven scenarios cover the feature; run them with
+Nine scenarios cover the feature; run them with
 `arena_app --batch --scenario <id>`:
 
 | Scenario                     | What it proves                                              |
@@ -250,13 +280,26 @@ Seven scenarios cover the feature; run them with
 | `wildlife_herd_flees_troops` | A patrol triggers the herd's flee response                  |
 | `wildlife_wolf_hunt`         | Pack stalking, bites, herd panic                            |
 | `wildlife_wolf_pack`         | Undisturbed prowl: wolf silhouette, coat and gait           |
-| `wildlife_bird_scatter`      | Flock cruise and burst under a marching column              |
+| `wildlife_bird_scatter`      | Resident flock cruise and burst under a marching column     |
+| `wildlife_bird_flyover`      | Empty sky, then a flock crosses it and leaves               |
+| `wildlife_mixed_pasture`     | Sheep, wolves and a passing flock in one frame              |
 | `wildlife_storm_pasture`     | Wildlife shading under heavy rain and wind                  |
 | `wildlife_dense_population`  | Six herds, three packs, six flocks against the frame budget |
 
 They assert through wildlife-specific expectations (`WildlifeGrazingObserved`,
 `WildlifeFleeObserved`, `WildlifeHuntObserved`, `WildlifeBirdsScattered`,
-`WildlifePopulationHeld`) rather than by eye.
+`WildlifeBirdFlyoverObserved`, `WildlifePopulationHeld`) rather than by eye.
+
+## Authoring in the map editor
+
+The editor carries wildlife ranges as ordinary canvas elements, under a **Wildlife** tool
+group and a **Wildlife** layer: click to drop a sheep pasture, a wolf range or a bird
+roost, drag it, erase it, undo it, and double-click it to edit the species and radius.
+Dropping the first range for a species switches that species on when the file is written.
+
+Everything else in the `wildlife` block — seed, simulation radii, group sizes, speeds,
+flyover intervals — round-trips untouched, so the editor never flattens a hand-tuned
+population just because it opened the file.
 
 ## Deliberately out of scope
 

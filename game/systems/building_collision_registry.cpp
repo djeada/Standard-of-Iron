@@ -302,6 +302,138 @@ auto BuildingCollisionRegistry::is_point_in_building(
   return false;
 }
 
+namespace {
+
+[[nodiscard]] auto
+point_inside_footprint(const BuildingFootprint& footprint, float x, float z) -> bool {
+  float const half_width = footprint.width / 2.0F;
+  float const half_depth = footprint.depth / 2.0F;
+  return x >= footprint.center_x - half_width && x <= footprint.center_x + half_width &&
+         z >= footprint.center_z - half_depth && z <= footprint.center_z + half_depth;
+}
+
+[[nodiscard]] auto
+footprint_penetration(const BuildingFootprint& footprint, float x, float z) -> float {
+  if (!point_inside_footprint(footprint, x, z)) {
+    return 0.0F;
+  }
+  float const half_width = footprint.width / 2.0F;
+  float const half_depth = footprint.depth / 2.0F;
+  return std::min(half_width - std::abs(x - footprint.center_x),
+                  half_depth - std::abs(z - footprint.center_z));
+}
+
+[[nodiscard]] auto slab_overlap(float start,
+                                float delta,
+                                float min_bound,
+                                float max_bound,
+                                float& t_enter,
+                                float& t_exit) -> bool {
+  constexpr float k_epsilon = 1.0e-5F;
+  if (std::abs(delta) <= k_epsilon) {
+    return start >= min_bound && start <= max_bound;
+  }
+
+  float t0 = (min_bound - start) / delta;
+  float t1 = (max_bound - start) / delta;
+  if (t0 > t1) {
+    std::swap(t0, t1);
+  }
+  t_enter = std::max(t_enter, t0);
+  t_exit = std::min(t_exit, t1);
+  return t_enter <= t_exit;
+}
+
+[[nodiscard]] auto segment_hits_footprint(const BuildingFootprint& footprint,
+                                          float start_x,
+                                          float start_z,
+                                          float delta_x,
+                                          float delta_z) -> bool {
+  float const half_width = footprint.width / 2.0F;
+  float const half_depth = footprint.depth / 2.0F;
+  float t_enter = 0.0F;
+  float t_exit = 1.0F;
+  return slab_overlap(start_x,
+                      delta_x,
+                      footprint.center_x - half_width,
+                      footprint.center_x + half_width,
+                      t_enter,
+                      t_exit) &&
+         slab_overlap(start_z,
+                      delta_z,
+                      footprint.center_z - half_depth,
+                      footprint.center_z + half_depth,
+                      t_enter,
+                      t_exit);
+}
+
+} // namespace
+
+auto BuildingCollisionRegistry::is_point_in_blocking_building(float x,
+                                                              float z) const -> bool {
+  bool blocked = false;
+  for_each_building_in_region(x, x, z, z, [&](const BuildingFootprint& footprint) {
+    if (blocked || !footprint.blocks_navigation) {
+      return;
+    }
+    blocked = point_inside_footprint(footprint, x, z);
+  });
+  if (blocked) {
+    return true;
+  }
+
+  return std::any_of(m_authored_obstacles.begin(),
+                     m_authored_obstacles.end(),
+                     [x, z](const BuildingFootprint& obstacle) {
+                       return point_inside_footprint(obstacle, x, z);
+                     });
+}
+
+auto BuildingCollisionRegistry::blocking_penetration_depth(float x,
+                                                           float z) const -> float {
+  float depth = 0.0F;
+  for_each_building_in_region(x, x, z, z, [&](const BuildingFootprint& footprint) {
+    if (!footprint.blocks_navigation) {
+      return;
+    }
+    depth = std::max(depth, footprint_penetration(footprint, x, z));
+  });
+  for (const auto& obstacle : m_authored_obstacles) {
+    depth = std::max(depth, footprint_penetration(obstacle, x, z));
+  }
+  return depth;
+}
+
+auto BuildingCollisionRegistry::segment_crosses_blocking_building(
+    float start_x, float start_z, float end_x, float end_z) const -> bool {
+  float const delta_x = end_x - start_x;
+  float const delta_z = end_z - start_z;
+
+  auto separates = [&](const BuildingFootprint& footprint) {
+    return !point_inside_footprint(footprint, start_x, start_z) &&
+           !point_inside_footprint(footprint, end_x, end_z) &&
+           segment_hits_footprint(footprint, start_x, start_z, delta_x, delta_z);
+  };
+
+  bool crossed = false;
+  for_each_building_in_region(std::min(start_x, end_x),
+                              std::max(start_x, end_x),
+                              std::min(start_z, end_z),
+                              std::max(start_z, end_z),
+                              [&](const BuildingFootprint& footprint) {
+                                if (crossed || !footprint.blocks_navigation) {
+                                  return;
+                                }
+                                crossed = separates(footprint);
+                              });
+  if (crossed) {
+    return true;
+  }
+
+  return std::any_of(
+      m_authored_obstacles.begin(), m_authored_obstacles.end(), separates);
+}
+
 void BuildingCollisionRegistry::set_authored_obstacles(
     std::vector<BuildingFootprint> obstacles) {
   m_authored_obstacles = std::move(obstacles);
