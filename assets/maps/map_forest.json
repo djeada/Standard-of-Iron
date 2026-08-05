@@ -132,12 +132,12 @@
     },
     "birds": {
       "enabled": true,
-      "groups": 3,
-      "group_size_min": 6,
-      "group_size_max": 10,
+      "groups": 1,
+      "group_size_min": 3,
+      "group_size_max": 6,
       "flight_height": 8.0,
-      "flyover_interval_min": 20.0,
-      "flyover_interval_max": 55.0
+      "flyover_interval_min": 110.0,
+      "flyover_interval_max": 240.0
     }
   },
   "rivers": [],

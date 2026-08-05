@@ -30,7 +30,8 @@ constexpr float k_bird_cover_weight = 0.35F;
 
 constexpr float k_area_per_sheep_herd = 3400.0F;
 constexpr float k_area_per_wolf_pack = 9000.0F;
-constexpr float k_area_per_bird_flock = 7000.0F;
+
+constexpr float k_area_per_bird_flock = 26000.0F;
 
 struct Stage {
   float min_x{0.0F};
@@ -350,7 +351,7 @@ auto default_settings_for_map(const Game::Map::MapDefinition& map) -> WildlifeSe
 
   settings.sheep.group_count = groups_for_area(area, k_area_per_sheep_herd, 4);
   settings.wolves.group_count = groups_for_area(area, k_area_per_wolf_pack, 2);
-  settings.birds.group_count = groups_for_area(area, k_area_per_bird_flock, 3);
+  settings.birds.group_count = groups_for_area(area, k_area_per_bird_flock, 2);
 
   sanitize(settings);
   return settings;

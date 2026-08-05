@@ -92,6 +92,8 @@ enum class HorseBone : std::uint8_t {
 
 inline constexpr std::size_t k_horse_bone_count = k_horse_source_bone_count;
 
+inline constexpr int k_horse_material_id = 6;
+
 using BonePalette = std::array<QMatrix4x4, k_horse_bone_count>;
 
 struct HorseSpecPose {
