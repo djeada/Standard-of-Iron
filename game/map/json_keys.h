@@ -145,6 +145,8 @@ inline constexpr const char* WILDLIFE_AGGRESSION = "aggression";
 inline constexpr const char* WILDLIFE_RESPAWN = "respawn";
 inline constexpr const char* WILDLIFE_RESPAWN_DELAY = "respawn_delay";
 inline constexpr const char* WILDLIFE_FLIGHT_HEIGHT = "flight_height";
+inline constexpr const char* WILDLIFE_FLYOVER_INTERVAL_MIN = "flyover_interval_min";
+inline constexpr const char* WILDLIFE_FLYOVER_INTERVAL_MAX = "flyover_interval_max";
 inline constexpr const char* WILDLIFE_SPAWN_AREAS = "spawn_areas";
 inline constexpr const char* WILDLIFE_RADIUS = "radius";
 

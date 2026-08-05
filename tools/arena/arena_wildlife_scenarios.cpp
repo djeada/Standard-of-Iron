@@ -81,6 +81,11 @@ auto expectation(Expect kind,
   return result;
 }
 
+void make_resident(Game::Wildlife::SpeciesConfig& birds) {
+  birds.flyover_interval_min = 0.0F;
+  birds.flyover_interval_max = 0.0F;
+}
+
 auto sheep_only(int groups,
                 int size,
                 float radius) -> Game::Wildlife::WildlifeSettings {
@@ -224,6 +229,7 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
     settings.birds.alert_radius = 14.0F;
     settings.birds.flight_height = 6.0F;
     settings.birds.spawn_areas = {{0.0F, 0.0F, 4.0F}};
+    make_resident(settings.birds);
     s.wildlife = settings;
     s.groups = {patrol_group(
         QStringLiteral("column"), Troop::Spearman, {0.0F, 0.0F, -20.0F}, 2)};
@@ -250,6 +256,7 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.wildlife.birds.group_size_min = 6;
     s.wildlife.birds.group_size_max = 6;
     s.wildlife.birds.spawn_areas = {{0.0F, 0.0F, 6.0F}};
+    make_resident(s.wildlife.birds);
     s.weather.rain = Game::Map::k_weather_intensity_heavy;
     s.weather.storm = 0.4F;
     s.precipitation.enabled = true;
@@ -260,6 +267,96 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.groups = {observer_group({0.0F, 0.0F, -26.0F})};
     s.expectations = {
         expectation(Expect::WildlifePopulationHeld, {}, 8.0F),
+        expectation(Expect::FrameBudget, {}, 9.99F),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_wildlife_bird_flyover_id),
+        QStringLiteral("Wildlife: Bird Flyover"),
+        QStringLiteral("Empty sky until a flock enters from one edge, crosses "
+                       "overhead in formation and leaves by the other: the "
+                       "occasional flyover, not a resident roost."),
+        70.0F,
+        {30.0F, 40.0F, 22.0F});
+    Game::Wildlife::WildlifeSettings settings = Game::Wildlife::default_settings();
+    settings.enabled = true;
+    settings.seed = 8123U;
+    settings.near_simulation_radius = 46.0F;
+    settings.far_simulation_radius = 92.0F;
+    settings.sheep.enabled = false;
+    settings.sheep.group_count = 0;
+    settings.wolves.enabled = false;
+    settings.wolves.group_count = 0;
+
+    settings.birds.enabled = true;
+    settings.birds.group_count = 2;
+    settings.birds.group_size_min = 9;
+    settings.birds.group_size_max = 12;
+    settings.birds.flight_height = 9.0F;
+    settings.birds.flyover_interval_min = 12.0F;
+    settings.birds.flyover_interval_max = 26.0F;
+
+    s.wildlife = settings;
+    s.groups = {observer_group({0.0F, 0.0F, -26.0F})};
+    s.expectations = {
+        expectation(Expect::WildlifeBirdFlyoverObserved),
+        expectation(Expect::FrameBudget, {}, 9.99F),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_wildlife_mixed_pasture_id),
+        QStringLiteral("Wildlife: Mixed Pasture"),
+        QStringLiteral("Sheep, wolves and passing flocks sharing one pasture, the "
+                       "way a loaded map presents them. The herd holds its ground "
+                       "next to a prowling pack, so the three populations can be "
+                       "reviewed running together rather than one fixture at a "
+                       "time; pan to find the pack."),
+        45.0F,
+        {28.0F, 46.0F, 26.0F});
+    Game::Wildlife::WildlifeSettings settings = Game::Wildlife::default_settings();
+    settings.enabled = true;
+    settings.seed = 44017U;
+    settings.near_simulation_radius = 50.0F;
+    settings.far_simulation_radius = 100.0F;
+
+    settings.sheep.enabled = true;
+    settings.sheep.group_count = 2;
+    settings.sheep.group_size_min = 6;
+    settings.sheep.group_size_max = 6;
+    settings.sheep.roam_radius = 8.0F;
+
+    settings.sheep.alert_radius = 4.0F;
+    settings.sheep.spawn_areas = {{-9.0F, 4.0F, 3.0F}, {2.0F, -6.0F, 3.0F}};
+
+    settings.wolves.enabled = true;
+    settings.wolves.group_count = 1;
+    settings.wolves.group_size_min = 3;
+    settings.wolves.group_size_max = 3;
+    settings.wolves.aggression = 0.15F;
+    settings.wolves.roam_radius = 4.0F;
+
+    settings.wolves.alert_radius = 3.0F;
+    settings.wolves.spawn_areas = {{-10.0F, 13.0F, 2.0F}};
+
+    settings.birds.enabled = true;
+    settings.birds.group_count = 1;
+    settings.birds.group_size_min = 8;
+    settings.birds.group_size_max = 10;
+    settings.birds.flight_height = 8.5F;
+    settings.birds.flyover_interval_min = 10.0F;
+    settings.birds.flyover_interval_max = 20.0F;
+
+    s.wildlife = settings;
+    s.groups = {observer_group({0.0F, 0.0F, -34.0F})};
+    s.expectations = {
+        expectation(Expect::WildlifeBirdFlyoverObserved),
+        expectation(Expect::WildlifePopulationHeld, {}, 15.0F),
         expectation(Expect::FrameBudget, {}, 9.99F),
     };
     result.push_back(std::move(s));
@@ -299,6 +396,7 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
     settings.birds.group_size_min = 10;
     settings.birds.group_size_max = 10;
     settings.birds.spawn_areas = {{0.0F, 0.0F, 26.0F}};
+    make_resident(settings.birds);
 
     s.wildlife = settings;
     s.groups = {observer_group({0.0F, 0.0F, -46.0F})};

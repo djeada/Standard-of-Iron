@@ -44,6 +44,7 @@
 #include "elephant/dimensions.h"
 #include "elephant/elephant_renderer_base.h"
 #include "entity/building_render_common.h"
+#include "entity/carried_load_renderer.h"
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
 #include "equipment/render_archetype_registry.h"
@@ -1218,6 +1219,9 @@ void Renderer::render_world(Engine::Core::World* world) {
   for (const auto& entry : other_entries) {
     render_non_unit_entry(entry);
   }
+
+  Render::GL::submit_carried_loads(
+      world, batch_submitter, &m_submission_visibility, m_camera);
 
   Render::GL::Wildlife::submit_bird_flocks(
       batch_submitter, &m_submission_visibility, m_camera);

@@ -723,6 +723,11 @@ auto WildlifeSystem::serialize_state() const -> QJsonObject {
     flock_obj["retarget_timer"] = static_cast<double>(flock.retarget_timer);
     flock_obj["alarm_timer"] = static_cast<double>(flock.alarm_timer);
     flock_obj["rng_state"] = static_cast<qint64>(flock.rng_state);
+    flock_obj["heading_x"] = static_cast<double>(flock.heading_x);
+    flock_obj["heading_z"] = static_cast<double>(flock.heading_z);
+    flock_obj["respite_timer"] = static_cast<double>(flock.respite_timer);
+    flock_obj["airborne_seconds"] = static_cast<double>(flock.airborne_seconds);
+    flock_obj["airborne"] = flock.airborne;
     flocks.append(flock_obj);
   }
   state["flocks"] = flocks;
@@ -742,6 +747,8 @@ auto WildlifeSystem::serialize_state() const -> QJsonObject {
     bird_obj["phase"] = static_cast<double>(bird.phase);
     bird_obj["think_timer"] = static_cast<double>(bird.think_timer);
     bird_obj["state_timer"] = static_cast<double>(bird.state_timer);
+    bird_obj["slot_lateral"] = static_cast<double>(bird.slot_lateral);
+    bird_obj["slot_trail"] = static_cast<double>(bird.slot_trail);
     bird_obj["rng_state"] = static_cast<qint64>(bird.rng_state);
     bird_obj["flock"] = static_cast<int>(bird.flock);
     bird_obj["behavior"] = QString::fromUtf8(behavior_name(bird.behavior).data());
@@ -807,6 +814,13 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
         static_cast<float>(flock_obj.value("alarm_timer").toDouble(0.0));
     flock.rng_state = static_cast<std::uint32_t>(
         flock_obj.value("rng_state").toVariant().toULongLong());
+    flock.heading_x = static_cast<float>(flock_obj.value("heading_x").toDouble(1.0));
+    flock.heading_z = static_cast<float>(flock_obj.value("heading_z").toDouble(0.0));
+    flock.respite_timer =
+        static_cast<float>(flock_obj.value("respite_timer").toDouble(0.0));
+    flock.airborne_seconds =
+        static_cast<float>(flock_obj.value("airborne_seconds").toDouble(0.0));
+    flock.airborne = flock_obj.value("airborne").toBool(true);
     population.flocks.push_back(flock);
   }
 
@@ -827,6 +841,9 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
     bird.phase = static_cast<float>(bird_obj.value("phase").toDouble(0.0));
     bird.think_timer = static_cast<float>(bird_obj.value("think_timer").toDouble(0.0));
     bird.state_timer = static_cast<float>(bird_obj.value("state_timer").toDouble(0.0));
+    bird.slot_lateral =
+        static_cast<float>(bird_obj.value("slot_lateral").toDouble(0.0));
+    bird.slot_trail = static_cast<float>(bird_obj.value("slot_trail").toDouble(0.0));
     bird.rng_state = static_cast<std::uint32_t>(
         bird_obj.value("rng_state").toVariant().toULongLong());
     bird.flock = static_cast<std::uint16_t>(bird_obj.value("flock").toInt(0));

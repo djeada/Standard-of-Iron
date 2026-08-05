@@ -359,6 +359,7 @@ add_executable(
     tools/map_editor_mission_data_test.cpp
     tools/map_editor_canvas_transform_test.cpp
     tools/map_editor_element_ops_test.cpp
+    tools/map_editor_wildlife_test.cpp
     tools/map_editor_json_schema_test.cpp
     tools/hill_projection_model_test.cpp
     tools/map_editor_commander_preview_test.cpp

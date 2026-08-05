@@ -67,6 +67,8 @@ auto category_label(int kind) -> QString {
     return QStringLiteral("Troop");
   case ElementKind::UndeadZone:
     return QStringLiteral("Undead zone");
+  case ElementKind::WildlifeArea:
+    return QStringLiteral("Wildlife");
   }
   return {};
 }
@@ -85,6 +87,8 @@ auto count(const MapData& data, int kind) -> int {
     return static_cast<int>(data.troop_spawns().size());
   case ElementKind::UndeadZone:
     return static_cast<int>(data.undead_zones().size());
+  case ElementKind::WildlifeArea:
+    return static_cast<int>(data.wildlife_areas().size());
   }
   return 0;
 }
@@ -110,6 +114,8 @@ auto snapshot(const MapData& data, int kind, int index) -> ElementSnapshot {
     return data.troop_spawns()[index];
   case ElementKind::UndeadZone:
     return data.undead_zones()[index];
+  case ElementKind::WildlifeArea:
+    return data.wildlife_areas()[index];
   }
   return {};
 }
@@ -118,6 +124,7 @@ auto type_name(const ElementSnapshot& snap) -> QString {
   return std::visit(Overloaded{
                         [](std::monostate) { return QString{}; },
                         [](const UndeadZoneElement& e) { return e.anchor_type; },
+                        [](const WildlifeAreaElement& e) { return e.species; },
                         [](const auto& e) { return e.type; },
                     },
                     snap);
@@ -126,6 +133,9 @@ auto type_name(const ElementSnapshot& snap) -> QString {
 auto display_name(const ElementSnapshot& snap) -> QString {
   if (const auto* zone = std::get_if<UndeadZoneElement>(&snap)) {
     return zone->id.isEmpty() ? QStringLiteral("undead zone") : zone->id;
+  }
+  if (const auto* area = std::get_if<WildlifeAreaElement>(&snap)) {
+    return wildlife_species_label(area->species);
   }
   return type_name(snap);
 }
@@ -303,6 +313,9 @@ auto summary(const ElementSnapshot& snap) -> QString {
     text += QStringLiteral("\nradius %1, leash %2")
                 .arg(static_cast<double>(zone->radius), 0, 'f', 1)
                 .arg(static_cast<double>(zone->leash_radius), 0, 'f', 1);
+  } else if (const auto* area = std::get_if<WildlifeAreaElement>(&snap)) {
+    text +=
+        QStringLiteral("\nrange %1").arg(static_cast<double>(area->radius), 0, 'f', 1);
   }
 
   return text;
@@ -318,6 +331,7 @@ void apply(MapData& data, int index, const ElementSnapshot& snap) {
           [&](const StructureElement& e) { data.update_structure(index, e); },
           [&](const TroopSpawnElement& e) { data.update_troop_spawn(index, e); },
           [&](const UndeadZoneElement& e) { data.update_undead_zone(index, e); },
+          [&](const WildlifeAreaElement& e) { data.update_wildlife_area(index, e); },
       },
       snap);
 }
@@ -342,6 +356,9 @@ auto make_add(MapData& data, const ElementSnapshot& snap) -> std::unique_ptr<Com
                         },
                         [&](const UndeadZoneElement& e) -> std::unique_ptr<Command> {
                           return std::make_unique<AddUndeadZoneCmd>(&data, e);
+                        },
+                        [&](const WildlifeAreaElement& e) -> std::unique_ptr<Command> {
+                          return std::make_unique<AddWildlifeAreaCmd>(&data, e);
                         },
                     },
                     snap);
@@ -369,6 +386,9 @@ auto make_remove(MapData& data, int kind, int index) -> std::unique_ptr<Command>
   case ElementKind::UndeadZone:
     return std::make_unique<RemoveUndeadZoneCmd>(
         &data, index, data.undead_zones()[index]);
+  case ElementKind::WildlifeArea:
+    return std::make_unique<RemoveWildlifeAreaCmd>(
+        &data, index, data.wildlife_areas()[index]);
   }
   return {};
 }
@@ -407,6 +427,10 @@ auto make_update(MapData& data,
           [&](const UndeadZoneElement& e) -> std::unique_ptr<Command> {
             return std::make_unique<UpdateUndeadZoneCmd>(
                 &data, index, std::get<UndeadZoneElement>(before), e, description);
+          },
+          [&](const WildlifeAreaElement& e) -> std::unique_ptr<Command> {
+            return std::make_unique<UpdateWildlifeAreaCmd>(
+                &data, index, std::get<WildlifeAreaElement>(before), e, description);
           },
       },
       after);

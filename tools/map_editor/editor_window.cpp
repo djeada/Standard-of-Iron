@@ -1331,6 +1331,19 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     }
 
     title = "Edit Undead Zone: " + elem.id;
+  } else if (element_type == static_cast<int>(ElementKind::WildlifeArea)) {
+    const auto& areas = m_map_data->wildlife_areas();
+    if (index < 0 || index >= areas.size()) {
+      return;
+    }
+    const auto& elem = areas[index];
+
+    json["species"] = elem.species;
+    json[MapJsonKeys::x] = static_cast<double>(elem.x);
+    json[MapJsonKeys::z] = static_cast<double>(elem.z);
+    json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
+
+    title = "Edit Wildlife Range: " + wildlife_species_label(elem.species);
   } else {
     return;
   }
@@ -1584,6 +1597,19 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                                 m_map_data->undead_zones()[index],
                                                 elem,
                                                 "Edit undead zone"));
+    } else if (element_type == static_cast<int>(ElementKind::WildlifeArea)) {
+      WildlifeAreaElement elem;
+      elem.species = new_json["species"].toString(QStringLiteral("sheep"));
+      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
+      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
+      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(14.0));
+
+      m_map_data->execute_command(
+          std::make_unique<UpdateWildlifeAreaCmd>(m_map_data,
+                                                  index,
+                                                  m_map_data->wildlife_areas()[index],
+                                                  elem,
+                                                  "Edit wildlife range"));
     }
   }
 }
@@ -2083,6 +2109,16 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
     if (index < undead_zones.size()) {
       const auto& e = undead_zones[index];
       type_name = "undead_zone";
+      coords = QString("(%1, %2) r=%3")
+                   .arg(static_cast<int>(e.x))
+                   .arg(static_cast<int>(e.z))
+                   .arg(static_cast<int>(e.radius));
+    }
+  } else if (element_type == static_cast<int>(ElementKind::WildlifeArea)) {
+    const auto& areas = m_map_data->wildlife_areas();
+    if (index < areas.size()) {
+      const auto& e = areas[index];
+      type_name = wildlife_species_label(e.species);
       coords = QString("(%1, %2) r=%3")
                    .arg(static_cast<int>(e.x))
                    .arg(static_cast<int>(e.z))

@@ -29,9 +29,10 @@ public:
     LayerStructure = 3,
     LayerTroopSpawn = 4,
     LayerUndeadZone = 5,
-    LayerFogZone = 6,
-    LayerMissionOverlay = 7,
-    LayerCount = 8,
+    LayerWildlifeArea = 6,
+    LayerFogZone = 7,
+    LayerMissionOverlay = 8,
+    LayerCount = 9,
   };
 
   void set_map_data(MapData* data);
@@ -119,6 +120,7 @@ private:
   [[nodiscard]] float linear_width_px(const LinearElement& elem) const;
   [[nodiscard]] QPolygonF linear_polyline_px(const LinearElement& elem) const;
   void draw_undead_zone_element(QPainter& painter, int index);
+  void draw_wildlife_area_element(QPainter& painter, int index);
   void draw_linear_preview(QPainter& painter);
   void draw_mission_overlays(QPainter& painter);
   void draw_derived_commanders(QPainter& painter);
