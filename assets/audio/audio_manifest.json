@@ -826,17 +826,29 @@
       }
     },
     {
-      "id": "ambient.rainy_battlefield",
-      "path": "ambience/rainy_battlefield.ogg",
+      "id": "ambient.weather_rain",
+      "path": "ambience/weather_rain.ogg",
       "category": "ambience",
-      "volume": 0.35,
+      "volume": 0.5,
       "priority": 1,
       "max_instances": 1,
-      "load_policy": "mission",
+      "load_policy": "lazy",
       "tags": {
-        "biome": "battlefield",
-        "weather": "rain",
-        "variant": "rainy"
+        "layer": "weather",
+        "weather": "rain"
+      }
+    },
+    {
+      "id": "ambient.weather_snow",
+      "path": "ambience/weather_snow.ogg",
+      "category": "ambience",
+      "volume": 0.5,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "lazy",
+      "tags": {
+        "layer": "weather",
+        "weather": "snow"
       }
     },
     {

@@ -136,6 +136,17 @@ void AudioSystem::play_music(const std::string& music_id,
                      transition == Game::Audio::MusicTransition::Crossfade));
 }
 
+auto AudioSystem::is_sound_playing(const std::string& sound_id) const -> bool {
+  std::lock_guard<std::mutex> const lock(resource_mutex);
+  const std::string resource_id = resolve_resource_id_locked(sound_id);
+  auto it = sounds.find(resource_id);
+  return it != sounds.end() && it->second->is_playing();
+}
+
+void AudioSystem::set_playing_sound_volume(const std::string& sound_id, float volume) {
+  enqueue(AudioEvent(AudioEventType::SET_SOUND_LEVEL, sound_id, volume));
+}
+
 void AudioSystem::stop_sound(const std::string& sound_id) {
   enqueue(AudioEvent(AudioEventType::STOP_SOUND, sound_id));
 }
@@ -409,6 +420,18 @@ void AudioSystem::process_event(const AudioEvent& event) {
                                    : Game::Audio::MusicTransition::Immediate);
     break;
   }
+  case AudioEventType::SET_SOUND_LEVEL: {
+    std::lock_guard<std::mutex> const lock(resource_mutex);
+    const std::string resource_id = resolve_resource_id_locked(event.resource_id);
+    auto it = sounds.find(resource_id);
+    if (it != sounds.end()) {
+      const AudioResourceConfig config = get_resource_config_locked(resource_id);
+      const float effective =
+          get_effective_volume(AudioCategory::AMBIENCE, event.volume * config.volume);
+      it->second->set_playing_volume(effective, AudioConstants::DEFAULT_FADE_OUT_MS);
+    }
+    break;
+  }
   case AudioEventType::STOP_SOUND: {
     std::lock_guard<std::mutex> const lock(resource_mutex);
     const std::string resource_id = resolve_resource_id_locked(event.resource_id);
@@ -592,14 +615,22 @@ void AudioSystem::evict_lowest_priority_sound_locked() {
 void AudioSystem::cleanup_inactive_sounds_locked() {
   std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
 
+  const auto now = std::chrono::steady_clock::now();
   active_sounds.erase(std::remove_if(active_sounds.begin(),
                                      active_sounds.end(),
-                                     [this](const ActiveSound& as) {
+                                     [this, now](const ActiveSound& as) {
                                        auto it = sounds.find(as.id);
                                        if (it == sounds.end()) {
                                          return true;
                                        }
-                                       return (!as.loop) && !it->second->is_playing();
+                                       if (it->second->is_playing()) {
+                                         return false;
+                                       }
+                                       if (!as.loop) {
+                                         return true;
+                                       }
+                                       return (now - as.start_time) >
+                                              k_loop_start_grace;
                                      }),
                       active_sounds.end());
 }

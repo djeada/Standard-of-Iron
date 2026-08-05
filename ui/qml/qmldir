@@ -7,6 +7,9 @@ LoadGamePanel 1.0 LoadGamePanel.qml
 SaveProgressOverlay 1.0 SaveProgressOverlay.qml
 MapPreview 1.0 MapPreview.qml
 FormationPanel 1.0 FormationPanel.qml
+FormationShape 1.0 FormationShape.qml
+FormationReadoutCell 1.0 FormationReadoutCell.qml
+FormationOptionRow 1.0 FormationOptionRow.qml
 FormationStatusBadge 1.0 FormationStatusBadge.qml
 ObjectivesPanel 1.0 ObjectivesPanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml

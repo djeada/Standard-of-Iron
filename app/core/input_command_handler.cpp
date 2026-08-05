@@ -251,10 +251,11 @@ auto InputCommandHandler::on_right_press(qreal sx,
   QVector3D hit;
   if (Game::Systems::PickingService::screen_to_ground(
           QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
-    m_command_controller->disable_run_mode_for_selected();
     hit = App::Utils::snap_to_walkable_ground(hit);
-    m_command_controller->begin_move_placement_at_position(hit);
-    return true;
+    if (m_command_controller->begin_move_placement_at_position(hit)) {
+      m_command_controller->disable_run_mode_for_selected();
+      return true;
+    }
   }
   return false;
 }
@@ -283,12 +284,8 @@ void InputCommandHandler::on_right_drag_orient(qreal sx,
 
   if (delta.lengthSquared() > 0.01F) {
     constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
-    float angle_deg = std::atan2(delta.x(), delta.z()) * k_rad_to_deg;
-    angle_deg = std::fmod(angle_deg, 360.0F);
-    if (angle_deg < 0.0F) {
-      angle_deg += 360.0F;
-    }
-    m_command_controller->update_formation_rotation(angle_deg);
+    m_command_controller->update_formation_rotation(std::atan2(delta.x(), delta.z()) *
+                                                    k_rad_to_deg);
   }
 }
 
@@ -584,16 +581,8 @@ void InputCommandHandler::on_formation_scroll(float delta) {
     return;
   }
 
-  float const current_angle = m_command_controller->get_formation_placement_angle();
-  float new_angle = current_angle + delta * 5.0F;
-
-  while (new_angle < 0.0F) {
-    new_angle += 360.0F;
-  }
-  while (new_angle >= 360.0F) {
-    new_angle -= 360.0F;
-  }
-  m_command_controller->update_formation_rotation(new_angle);
+  float const current_angle = m_command_controller->get_formation_facing_degrees();
+  m_command_controller->update_formation_rotation(current_angle + delta * 5.0F);
 }
 
 void InputCommandHandler::on_formation_confirm() {

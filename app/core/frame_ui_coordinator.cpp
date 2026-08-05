@@ -124,7 +124,7 @@ void render_effects(const RenderEffectsContext& context,
     placement.position.setY(Game::Map::TerrainService::instance().get_terrain_height(
         placement.position.x(), placement.position.z()));
     placement.angle_degrees =
-        context.command_controller->get_formation_placement_angle();
+        context.command_controller->get_formation_facing_degrees();
     placement.active = true;
 
     const auto* nation =

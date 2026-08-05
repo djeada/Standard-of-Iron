@@ -18,6 +18,7 @@
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "visibility_coordinator.h"
+#include "weather_audio.h"
 
 namespace {
 constexpr int k_selection_refresh_interval = 15;
@@ -110,6 +111,9 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
 
   if (scene.rain_manager != nullptr) {
     scene.rain_manager->update(dt);
+    if (scene.weather_audio != nullptr) {
+      scene.weather_audio->update(scene.rain_manager);
+    }
     if (scene.rain != nullptr) {
       scene.rain->set_enabled(scene.rain_manager->is_enabled());
       scene.rain->set_intensity(scene.rain_manager->get_intensity());

@@ -8,6 +8,8 @@ Item {
 
     property var status: ({})
 
+    readonly property int content_width: Design.A11y.scaled(220)
+
     readonly property bool has_formation: status.active === true
     readonly property real cohesion: status.cohesion !== undefined ? status.cohesion : 0
     readonly property string phase: status.phase !== undefined ? status.phase : ""
@@ -93,8 +95,8 @@ Item {
         border.color: statusBadge.phase_tone
         border.width: Design.Metrics.borderThin
         color: Design.Theme.panelIron
-        implicitHeight: layout.implicitHeight + Design.Metrics.space12
-        implicitWidth: Math.max(200, layout.implicitWidth + Design.Metrics.space16)
+        implicitHeight: layout.implicitHeight + Design.Metrics.space8 * 2
+        implicitWidth: statusBadge.content_width + Design.Metrics.space8 * 2
         radius: Design.Metrics.radiusMedium
 
         ToolTip.delay: Design.Metrics.tooltipDelay
@@ -112,9 +114,10 @@ Item {
         ColumnLayout {
             id: layout
 
-            anchors.fill: parent
-            anchors.margins: Design.Metrics.space8
             spacing: Design.Metrics.space4
+            width: statusBadge.content_width
+            x: Design.Metrics.space8
+            y: Design.Metrics.space8
 
             RowLayout {
                 Layout.fillWidth: true

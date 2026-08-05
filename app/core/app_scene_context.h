@@ -30,6 +30,10 @@ namespace Game::Session {
 class SessionContext;
 }
 
+namespace App::Core {
+class WeatherAudio;
+}
+
 class MinimapManager;
 class VisibilityCoordinator;
 
@@ -51,5 +55,6 @@ struct AppSceneContext {
   VisibilityCoordinator* visibility_coordinator = nullptr;
   Game::Systems::VictoryService* victory_service = nullptr;
   Game::Systems::RainManager* rain_manager = nullptr;
+  App::Core::WeatherAudio* weather_audio = nullptr;
   Game::Map::EnvironmentClock* environment_clock = nullptr;
 };

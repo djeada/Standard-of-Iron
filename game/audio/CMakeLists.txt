@@ -4,6 +4,8 @@ add_library(
     audio_system.cpp
     audio_cues.cpp
     audio_mastering.cpp
+    loop_seam.cpp
+    resampler.cpp
     sound.cpp
     music_player.cpp
     miniaudio_backend.cpp

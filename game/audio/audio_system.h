@@ -27,6 +27,7 @@ enum class AudioEventType {
   PLAY_SOUND,
   PLAY_MUSIC,
   STOP_SOUND,
+  SET_SOUND_LEVEL,
   STOP_MUSIC,
   PAUSE,
   RESUME,
@@ -91,6 +92,10 @@ public:
                   Game::Audio::MusicTransition transition =
                       Game::Audio::MusicTransition::Crossfade);
   void stop_sound(const std::string& sound_id);
+
+  void set_playing_sound_volume(const std::string& sound_id, float volume);
+
+  [[nodiscard]] auto is_sound_playing(const std::string& sound_id) const -> bool;
   void stop_music();
   void set_master_volume(float volume);
   void set_sound_volume(float volume);
@@ -171,6 +176,8 @@ private:
   std::atomic<float> ambience_volume;
 
   size_t max_channels{AudioConstants::DEFAULT_MAX_CHANNELS};
+
+  static constexpr std::chrono::milliseconds k_loop_start_grace{500};
 
   struct ActiveSound {
     std::string id;

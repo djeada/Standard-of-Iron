@@ -413,6 +413,7 @@ add_library(
     app/core/ambient_state_manager.cpp
     app/core/audio_coordinator.cpp
     app/core/audio_resource_loader.cpp
+    app/core/weather_audio.cpp
     app/core/camera_controller.cpp
     app/core/campaign_manager.cpp
     app/core/commander_control_controller.cpp
@@ -532,6 +533,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgDamageNumbers.qml
             ui/qml/FormationPanel.qml
+            ui/qml/FormationShape.qml
+            ui/qml/FormationReadoutCell.qml
+            ui/qml/FormationOptionRow.qml
             ui/qml/FormationStatusBadge.qml
             ui/qml/ProductionPanel.qml
             ui/qml/SaveGamePanel.qml
@@ -694,6 +698,10 @@ if(TARGET bake_creature_assets)
     add_dependencies(standard_of_iron bake_creature_assets)
 endif()
 
+if(TARGET synthesize_ambience_assets)
+    add_dependencies(standard_of_iron synthesize_ambience_assets)
+endif()
+
 # Stage assets next to the binary for dev runs.
 #
 # The runtime resolves ":/assets/..." against the filesystem before the Qt
@@ -720,6 +728,9 @@ add_custom_command(
 )
 add_custom_target(stage_runtime_assets DEPENDS "${CMAKE_BINARY_DIR}/bin/assets/.stamp")
 add_dependencies(standard_of_iron stage_runtime_assets)
+if(TARGET synthesize_ambience_assets)
+    add_dependencies(stage_runtime_assets synthesize_ambience_assets)
+endif()
 
 # ---- clang-format helpers (optional but convenient) ----
 # Provides:
