@@ -124,6 +124,7 @@ add_executable(
     systems/battlefield_capture_test.cpp
     headless/headless_simulation_test.cpp
     headless/gate_traversal_test.cpp
+    headless/wall_siege_test.cpp
     architecture/layering_test.cpp
     architecture/qml_surface_test.cpp
     architecture/documentation_accuracy_test.cpp

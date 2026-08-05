@@ -308,6 +308,11 @@ void face_target(Engine::Core::TransformComponent* attacker_transform,
   attacker_transform->has_desired_yaw = true;
 }
 
+[[nodiscard]] auto
+has_authored_orientation(const Engine::Core::Entity* entity) -> bool {
+  return entity != nullptr && entity->has_component<Engine::Core::BuildingComponent>();
+}
+
 void lock_facing(Engine::Core::TransformComponent* actor_transform,
                  Engine::Core::TransformComponent* target_transform) {
   if (actor_transform == nullptr || target_transform == nullptr) {
@@ -335,6 +340,9 @@ void lock_facing(Engine::Core::TransformComponent* actor_transform,
 void lock_combatant_facing(Engine::Core::Entity* actor,
                            Engine::Core::TransformComponent* actor_transform,
                            Engine::Core::TransformComponent* target_transform) {
+  if (has_authored_orientation(actor)) {
+    return;
+  }
   if (is_multi_body_formation(actor)) {
 
     actor_transform->desired_yaw = actor_transform->rotation.y;
@@ -520,8 +528,21 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     return;
   }
 
-  lock_combatant_facing(attacker, att_t, tgt_t);
   auto* lock_target_atk = lock_target->get_component<Engine::Core::AttackComponent>();
+  if (structure_separates_combatants(attacker, lock_target)) {
+    attack_comp->in_melee_lock = false;
+    attack_comp->melee_lock_target_id = 0;
+    attack_comp->melee_lock_separation_time = 0.0F;
+    if (lock_target_atk != nullptr &&
+        lock_target_atk->melee_lock_target_id == attacker->get_id()) {
+      lock_target_atk->in_melee_lock = false;
+      lock_target_atk->melee_lock_target_id = 0;
+      lock_target_atk->melee_lock_separation_time = 0.0F;
+    }
+    return;
+  }
+
+  lock_combatant_facing(attacker, att_t, tgt_t);
   bool const reciprocal_lock =
       (lock_target_atk != nullptr) && lock_target_atk->in_melee_lock &&
       lock_target_atk->melee_lock_target_id == attacker->get_id();
@@ -926,6 +947,10 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
             charge->state == Engine::Core::MountedChargeState::ImpactActive);
   };
   if (charge_precedes_melee(attacker) || charge_precedes_melee(target)) {
+    return;
+  }
+
+  if (structure_separates_combatants(attacker, target)) {
     return;
   }
 
@@ -1477,6 +1502,10 @@ void process_attacks(Engine::Core::World* world,
         !suppress_opportunistic_combat) {
       if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
         best_target = find_nearest_enemy(attacker, query_context, range);
+        if (best_target != nullptr && !is_ranged_mode(attacker_atk) &&
+            structure_separates_combatants(attacker, best_target)) {
+          best_target = nullptr;
+        }
         if (best_target != nullptr && !is_ranged_mode(attacker_atk) &&
             !is_building(best_target)) {
 
