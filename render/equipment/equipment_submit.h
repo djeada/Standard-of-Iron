@@ -112,7 +112,7 @@ public:
     m_batch.cylinders.push_back({start, end, radius, color, alpha});
   }
 
-  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void ground_marker(const GroundMarkerCmd&) override {}
   void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
   void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
   void healing_beam(const QVector3D&,

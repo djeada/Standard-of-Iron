@@ -160,46 +160,6 @@ inline void draw_banner_with_tassels(const DrawContext& p,
   }
 }
 
-inline void draw_pole_with_banner(const DrawContext& p,
-                                  ISubmitter& out,
-                                  Mesh* unit,
-                                  Texture* white,
-                                  const QVector3D& pole_start,
-                                  const QVector3D& pole_end,
-                                  float pole_radius,
-                                  const QVector3D& pole_color,
-                                  const QVector3D& banner_center,
-                                  const QVector3D& banner_half_size,
-                                  const QVector3D& banner_color,
-                                  bool enable_capture = false) {
-  QVector3D actual_banner_color = banner_color;
-
-  if (enable_capture && p.entity != nullptr) {
-    auto* capture = p.entity->get_component<Engine::Core::CaptureComponent>();
-    if ((capture != nullptr) && capture->is_being_captured) {
-      float const progress =
-          std::clamp(capture->capture_progress / capture->required_time, 0.0F, 1.0F);
-      QVector3D const new_team_color =
-          Game::Visuals::team_colorForOwner(capture->capturing_player_id);
-      actual_banner_color = QVector3D(
-          banner_color.x() * (1.0F - progress) + new_team_color.x() * progress,
-          banner_color.y() * (1.0F - progress) + new_team_color.y() * progress,
-          banner_color.z() * (1.0F - progress) + new_team_color.z() * progress);
-    }
-  }
-
-  out.mesh(get_unit_cylinder(),
-           p.model * Render::Geom::cylinder_between(pole_start, pole_end, pole_radius),
-           pole_color,
-           white,
-           1.0F);
-
-  QMatrix4x4 banner_transform = p.model;
-  banner_transform.translate(banner_center);
-  banner_transform.scale(banner_half_size);
-  out.mesh(unit, banner_transform, actual_banner_color, white, 1.0F);
-}
-
 struct CaptureColors {
   QVector3D team_color;
   QVector3D team_trim_color;

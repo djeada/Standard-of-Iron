@@ -1,6 +1,7 @@
 #include "frame_ui_coordinator.h"
 
 #include <algorithm>
+#include <vector>
 
 #include "../controllers/command_controller.h"
 #include "../models/cursor_manager.h"
@@ -22,9 +23,11 @@
 #include "render/entity/healing_beam_renderer.h"
 #include "render/entity/healing_waves_renderer.h"
 #include "render/geom/arrow.h"
+#include "render/geom/attack_target_markers.h"
 #include "render/geom/formation_arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/projectile_renderer.h"
+#include "render/geom/range_rings.h"
 #include "render/scene_renderer.h"
 #include "rts_action_model.h"
 
@@ -59,6 +62,26 @@ auto has_selected_local_barracks(Engine::Core::World* world,
   }
 
   return false;
+}
+
+void render_attack_targeting(
+    Render::GL::Renderer* renderer,
+    Render::GL::ResourceManager* resources,
+    const Game::Systems::AttackTargetingHighlights& targeting) {
+  if (targeting.markers.empty()) {
+    return;
+  }
+
+  std::vector<Render::GL::AttackTargetMarkerVisual> visuals;
+  visuals.reserve(targeting.markers.size());
+  for (const auto& marker : targeting.markers) {
+    visuals.push_back(
+        {.position = QVector3D(marker.world_x, marker.world_y, marker.world_z),
+         .radius = marker.radius,
+         .hovered = marker.hovered,
+         .attackable = marker.attackable});
+  }
+  Render::GL::render_attack_target_markers(renderer, resources, visuals);
 }
 
 } // namespace
@@ -101,6 +124,15 @@ void render_effects(const RenderEffectsContext& context,
 
   if (render_runtime_mode_effects) {
     render_runtime_mode_effects();
+  }
+
+  if (context.attack_targeting != nullptr) {
+    render_attack_targeting(context.renderer, res, *context.attack_targeting);
+  }
+
+  if (context.attack_range_rings != nullptr) {
+    Render::GL::render_attack_range_rings(
+        context.renderer, res, *context.attack_range_rings);
   }
 
   std::optional<QVector3D> preview_waypoint;

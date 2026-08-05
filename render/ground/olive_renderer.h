@@ -15,7 +15,7 @@ namespace Render::GL {
 class Buffer;
 class Renderer;
 
-class OliveRenderer : public ScatterRendererBase<OliveInstanceGpu, OliveBatchParams> {
+class OliveRenderer : public ScatterRendererBase<TreeInstanceGpu, FoliageBatchParams> {
 public:
   OliveRenderer();
   ~OliveRenderer() override;
@@ -26,14 +26,11 @@ public:
                  const std::vector<Game::Map::WorldProp>& runtime_world_props = {},
                  bool use_world_props_exclusively = false);
 
-  void set_light_direction(const QVector3D& dir);
+  void set_light_direction(const QVector3D& dir) override;
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
-  void clear();
-
-  [[nodiscard]] auto
-  instances_for_test() const -> const std::vector<OliveInstanceGpu>& {
+  [[nodiscard]] auto instances_for_test() const -> const std::vector<TreeInstanceGpu>& {
     return m_state.instances;
   }
 

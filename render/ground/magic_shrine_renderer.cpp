@@ -2,12 +2,15 @@
 
 #include <QVector4D>
 
+#include <algorithm>
+#include <cmath>
+
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
+#include "game/map/scatter/ground_utils.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
-#include "scatter_submission.h"
 
 namespace {
 
@@ -28,41 +31,20 @@ void MagicShrineRenderer::configure(
     const Game::Map::TerrainHeightMap& height_map,
     const Game::Map::BiomeSettings& biome_settings,
     const std::vector<Game::Map::WorldProp>& world_props) {
-  m_biome_settings = biome_settings;
-  m_state.reset_instances();
+  configure_biome_common(biome_settings);
   m_state.params.light_direction = m_light_direction;
   generate_instances(world_props, height_map);
 }
 
 void MagicShrineRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction = dir.isNull() ? MagicShrineBatchParams::default_light_direction()
-                                   : dir.normalized();
-  m_state.params.light_direction = m_light_direction;
+  set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
 void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  Q_UNUSED(resources);
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_state,
-      [](const MagicShrineInstanceGpu& inst) -> const QVector4D& {
-        return inst.pos_scale;
-      },
-      renderer.static_world_visibility_filter_enabled()
-          ? renderer.submission_visibility().snapshot()
-          : nullptr,
-      Scatter::ScatterMemoryMode::Remembered);
-  if (visible_count == 0) {
+  if (submit_prop_common(
+          renderer, resources, TerrainScatterCmd::Species::MagicShrine) == 0) {
     return;
   }
-
-  m_state.params.time = renderer.get_animation_time();
-
-  TerrainScatterCmd cmd;
-  cmd.visibility = renderer.visibility_mask();
-  cmd.species = TerrainScatterCmd::Species::MagicShrine;
-  cmd.magic_shrine = m_state.params;
-  Scatter::submit_visible_chunks(renderer, m_state, cmd);
 
   for (const auto& inst : m_state.visible_instances) {
     const QVector3D shrine_pos = inst.pos_scale.toVector3D();
@@ -76,10 +58,6 @@ void MagicShrineRenderer::submit(Renderer& renderer, ResourceManager* resources)
     votive.intensity = 0.75F * pulse;
     renderer.local_light(votive);
   }
-}
-
-void MagicShrineRenderer::clear() {
-  m_state.reset_instances();
 }
 
 void MagicShrineRenderer::generate_instances(
@@ -102,7 +80,7 @@ void MagicShrineRenderer::generate_instances(
     const QVector3D resolved =
         terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
 
-    MagicShrineInstanceGpu inst;
+    PropInstanceGpu inst;
     inst.pos_scale =
         QVector4D(resolved.x(),
                   resolved.y(),

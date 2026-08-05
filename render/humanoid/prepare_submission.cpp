@@ -3,6 +3,42 @@
 
 namespace Render::Humanoid {
 
+namespace {
+
+struct CasualtyLaunch {
+  float x{0.0F};
+  float y{0.0F};
+  float z{0.0F};
+  float pitch{0.0F};
+  float roll{0.0F};
+};
+
+auto resolve_casualty_launch(
+    const Engine::Core::SoldierCasualtyAnimationComponent::Entry& entry)
+    -> CasualtyLaunch {
+  if (!entry.launched) {
+    return {};
+  }
+
+  constexpr float k_flight_seconds = 1.45F;
+  constexpr float k_half_gravity = 4.9F;
+
+  float const casualty_age = entry.state == Engine::Core::DeathSequenceState::Dying
+                                 ? entry.state_time
+                                 : entry.state_duration + entry.state_time;
+  float const flight_time = std::min(casualty_age, k_flight_seconds);
+
+  return {entry.launch_velocity_x * flight_time,
+          std::max(0.0F,
+                   entry.launch_velocity_y * flight_time -
+                       k_half_gravity * flight_time * flight_time),
+          entry.launch_velocity_z * flight_time,
+          entry.launch_pitch_speed * flight_time,
+          entry.launch_roll_speed * flight_time};
+}
+
+} // namespace
+
 void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                 const DrawContext& ctx,
                                 const AnimationInputs& anim,
@@ -1120,27 +1156,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         casualty_anim.is_dead = true;
         casualty_anim.death_progress = 1.0F;
       }
-      float launch_x = 0.0F;
-      float launch_y = 0.0F;
-      float launch_z = 0.0F;
-      float launch_pitch = 0.0F;
-      float launch_roll = 0.0F;
-      if (entry.launched) {
-        float const casualty_age =
-            entry.state == Engine::Core::DeathSequenceState::Dying
-                ? entry.state_time
-                : entry.state_duration + entry.state_time;
-        constexpr float k_charge_casualty_flight_seconds = 1.45F;
-        float const flight_time =
-            std::min(casualty_age, k_charge_casualty_flight_seconds);
-        launch_x = entry.launch_velocity_x * flight_time;
-        launch_z = entry.launch_velocity_z * flight_time;
-        launch_y = std::max(0.0F,
-                            entry.launch_velocity_y * flight_time -
-                                4.9F * flight_time * flight_time);
-        launch_pitch = entry.launch_pitch_speed * flight_time;
-        launch_roll = entry.launch_roll_speed * flight_time;
-      }
+      const CasualtyLaunch launch = resolve_casualty_launch(entry);
       auto const& casualty_layout =
           soldier_layouts[static_cast<std::size_t>(entry.slot_index)];
       float const anchor_offset_x =
@@ -1151,11 +1167,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           entry.has_local_anchor ? entry.local_yaw - casualty_layout.yaw_offset : 0.0F;
       append_prepared_soldier(static_cast<int>(entry.slot_index),
                               casualty_anim,
-                              anchor_offset_x + launch_x,
-                              launch_y,
-                              anchor_offset_z + launch_z,
-                              launch_pitch,
-                              launch_roll,
+                              anchor_offset_x + launch.x,
+                              launch.y,
+                              anchor_offset_z + launch.z,
+                              launch.pitch,
+                              launch.roll,
                               anchor_yaw);
     }
   }

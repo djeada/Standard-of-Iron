@@ -16,8 +16,8 @@
 #include "../../../gl/resources.h"
 #include "../../../scene_renderer.h"
 #include "../../../submitter.h"
-#include "../../catapult_renderer_common.h"
 #include "../../registry.h"
+#include "../../siege_renderer_common.h"
 #include "../siege_anim_types.h"
 #include "math/math_utils.h"
 
@@ -570,11 +570,11 @@ void draw_catapult_body(const DrawContext& p,
 } // namespace
 
 void register_catapult_renderer(EntityRendererRegistry& registry) {
-  register_catapult_renderer_variant(
+  register_siege_renderer_variant(
       registry,
-      CatapultRendererConfig{.renderer_key = "troops/carthage/catapult",
-                             .default_team = QVector3D(0.4F, 0.2F, 0.6F),
-                             .draw_body = &draw_catapult_body});
+      SiegeRendererConfig{.renderer_key = "troops/carthage/catapult",
+                          .default_team = QVector3D(0.4F, 0.2F, 0.6F),
+                          .draw_body = &draw_catapult_body});
 }
 
 } // namespace Render::GL::Carthage

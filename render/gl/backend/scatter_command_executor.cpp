@@ -6,6 +6,71 @@ using namespace Render::GL::ColorIndex;
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
+namespace {
+
+struct FoliageDraw {
+  Shader* shader{nullptr};
+  const BackendPipelines::StaticMeshBuffers* mesh{nullptr};
+  const BackendPipelines::VegetationPipeline::FoliageUniforms* uniforms{nullptr};
+};
+
+auto resolve_foliage_draw(const BackendPipelines::VegetationPipeline& veg,
+                          TerrainScatterCmd::Species species) -> FoliageDraw {
+  using S = TerrainScatterCmd::Species;
+  switch (species) {
+  case S::Plant:
+    return {veg.plant_shader(), &veg.m_plant_mesh, &veg.m_plant_uniforms};
+  case S::Pine:
+    return {veg.pine_shader(), &veg.m_pine_mesh, &veg.m_pine_uniforms};
+  case S::Olive:
+    return {veg.olive_shader(), &veg.m_olive_mesh, &veg.m_olive_uniforms};
+  default:
+    return {};
+  }
+}
+
+struct PropDraw {
+  Shader* shader{nullptr};
+  const BackendPipelines::StaticMeshBuffers* mesh{nullptr};
+  const BackendPipelines::VegetationPipeline::PropUniforms* uniforms{nullptr};
+  float magic_strength{0.0F};
+};
+
+auto resolve_prop_draw(const BackendPipelines::VegetationPipeline& veg,
+                       TerrainScatterCmd::Species species) -> PropDraw {
+  using S = TerrainScatterCmd::Species;
+  switch (species) {
+  case S::Tent:
+    return {veg.tent_shader(), &veg.m_tent_mesh, &veg.m_tent_uniforms};
+  case S::SupplyCart:
+    return {
+        veg.supply_cart_shader(), &veg.m_supply_cart_mesh, &veg.m_supply_cart_uniforms};
+  case S::WeaponRack:
+    return {
+        veg.weapon_rack_shader(), &veg.m_weapon_rack_mesh, &veg.m_weapon_rack_uniforms};
+  case S::Ruins:
+    return {veg.ruins_shader(), &veg.m_ruins_mesh, &veg.m_ruins_uniforms};
+  case S::AbandonedHome:
+    return {veg.ruins_shader(), &veg.m_abandoned_home_mesh, &veg.m_ruins_uniforms};
+  case S::DeadTree:
+    return {veg.dead_tree_shader(), &veg.m_dead_tree_mesh, &veg.m_dead_tree_uniforms};
+  case S::Statue:
+    return {veg.statue_shader(), &veg.m_statue_mesh, &veg.m_statue_uniforms};
+  case S::IronOre:
+    return {
+        veg.iron_ore_shader(), &veg.m_iron_ore_mesh, &veg.m_iron_ore_uniforms, 1.15F};
+  case S::MagicShrine:
+    return {veg.magic_shrine_shader(),
+            &veg.m_magic_shrine_mesh,
+            &veg.m_magic_shrine_uniforms,
+            1.18F};
+  default:
+    return {};
+  }
+}
+
+} // namespace
+
 void Backend::execute_scatter_commands(const PreparedBatch& prepared,
                                        CommandExecutionContext& context) {
   const auto& queue = context.queue;
@@ -158,8 +223,8 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
           deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.stone};
       if ((stone.instance_buffer == nullptr) || stone.instance_count == 0 ||
           (m_vegetation_pipeline->stone_shader() == nullptr) ||
-          (m_vegetation_pipeline->m_stone_vao == 0U) ||
-          m_vegetation_pipeline->m_stone_index_count == 0) {
+          (m_vegetation_pipeline->m_stone_mesh.vao == 0U) ||
+          m_vegetation_pipeline->m_stone_mesh.index_count == 0) {
         break;
       }
 
@@ -188,7 +253,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
             m_vegetation_pipeline->m_stone_uniforms.light_direction, light_dir);
       }
 
-      glBindVertexArray(m_vegetation_pipeline->m_stone_vao);
+      glBindVertexArray(m_vegetation_pipeline->m_stone_mesh.vao);
       stone.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(StoneInstanceGpu));
       apply_vertex_attrib_layout({{tex_coord,
@@ -206,7 +271,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
       stone.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
-                              m_vegetation_pipeline->m_stone_index_count,
+                              m_vegetation_pipeline->m_stone_mesh.index_count,
                               GL_UNSIGNED_SHORT,
                               nullptr,
                               static_cast<GLsizei>(stone.instance_count));
@@ -214,220 +279,20 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
 
       break;
     }
-    case TerrainScatterCmd::Species::Plant: {
-      if (!m_vegetation_pipeline) {
-        break;
-      }
-      struct PlantView {
-        Buffer* instance_buffer;
-        std::size_t instance_count;
-        const PlantBatchParams& params;
-      };
-      const PlantView plant{
-          deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.plant};
-
-      if ((plant.instance_buffer == nullptr) || plant.instance_count == 0 ||
-          (m_vegetation_pipeline->plant_shader() == nullptr) ||
-          (m_vegetation_pipeline->m_plant_vao == 0U) ||
-          m_vegetation_pipeline->m_plant_index_count == 0) {
-        break;
-      }
-
-      DepthMaskScope const depth_mask(true);
-
-      glEnable(GL_DEPTH_TEST);
-      BlendScope const blend(false);
-      GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
-      if (prev_cull != 0U) {
-        glDisable(GL_CULL_FACE);
-      }
-
-      Shader* plant_shader = m_vegetation_pipeline->plant_shader();
-      if (m_last_bound_shader != plant_shader) {
-        plant_shader->use();
-        m_last_bound_shader = plant_shader;
-        m_last_bound_texture = nullptr;
-      }
-      bind_visibility_mask(*plant_shader, deco_cmd_.visibility);
-
-      if (m_vegetation_pipeline->m_plant_uniforms.view_proj != Shader::InvalidUniform) {
-        plant_shader->set_uniform(m_vegetation_pipeline->m_plant_uniforms.view_proj,
-                                  view_proj);
-      }
-      if (m_vegetation_pipeline->m_plant_uniforms.time != Shader::InvalidUniform) {
-        plant_shader->set_uniform(m_vegetation_pipeline->m_plant_uniforms.time,
-                                  plant.params.time);
-      }
-      if (m_vegetation_pipeline->m_plant_uniforms.wind_strength !=
-          Shader::InvalidUniform) {
-        plant_shader->set_uniform(m_vegetation_pipeline->m_plant_uniforms.wind_strength,
-                                  plant.params.wind_strength);
-      }
-      if (m_vegetation_pipeline->m_plant_uniforms.wind_speed !=
-          Shader::InvalidUniform) {
-        plant_shader->set_uniform(m_vegetation_pipeline->m_plant_uniforms.wind_speed,
-                                  plant.params.wind_speed);
-      }
-      if (m_vegetation_pipeline->m_plant_uniforms.light_direction !=
-          Shader::InvalidUniform) {
-        QVector3D light_dir = plant.params.light_direction;
-        if (!light_dir.isNull()) {
-          light_dir.normalize();
-        }
-        plant_shader->set_uniform(
-            m_vegetation_pipeline->m_plant_uniforms.light_direction, light_dir);
-      }
-
-      glBindVertexArray(m_vegetation_pipeline->m_plant_vao);
-      plant.instance_buffer->bind();
-      const auto stride = static_cast<GLsizei>(sizeof(PlantInstanceGpu));
-      apply_vertex_attrib_layout({{instance_position,
-                                   vec4,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   stride,
-                                   offsetof(PlantInstanceGpu, pos_scale)},
-                                  {instance_scale,
-                                   vec4,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   stride,
-                                   offsetof(PlantInstanceGpu, color_sway)},
-                                  {instance_color,
-                                   vec4,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   stride,
-                                   offsetof(PlantInstanceGpu, type_params)}});
-      plant.instance_buffer->unbind();
-
-      glDrawElementsInstanced(GL_TRIANGLES,
-                              m_vegetation_pipeline->m_plant_index_count,
-                              GL_UNSIGNED_SHORT,
-                              nullptr,
-                              static_cast<GLsizei>(plant.instance_count));
-      glBindVertexArray(0);
-
-      if (prev_cull != 0U) {
-        glEnable(GL_CULL_FACE);
-      }
-
-      break;
-    }
-    case TerrainScatterCmd::Species::Pine: {
-      if (!m_vegetation_pipeline) {
-        break;
-      }
-      struct PineView {
-        Buffer* instance_buffer;
-        std::size_t instance_count;
-        const PineBatchParams& params;
-      };
-      const PineView pine{
-          deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.pine};
-
-      if ((pine.instance_buffer == nullptr) || pine.instance_count == 0 ||
-          (m_vegetation_pipeline->pine_shader() == nullptr) ||
-          (m_vegetation_pipeline->m_pine_vao == 0U) ||
-          m_vegetation_pipeline->m_pine_index_count == 0) {
-        break;
-      }
-
-      DepthMaskScope const depth_mask(true);
-      glEnable(GL_DEPTH_TEST);
-      BlendScope const blend(false);
-      GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
-      if (prev_cull != 0U) {
-        glDisable(GL_CULL_FACE);
-      }
-
-      Shader* pine_shader = m_vegetation_pipeline->pine_shader();
-      if (m_last_bound_shader != pine_shader) {
-        pine_shader->use();
-        m_last_bound_shader = pine_shader;
-        m_last_bound_texture = nullptr;
-      }
-      bind_visibility_mask(*pine_shader, deco_cmd_.visibility);
-
-      if (m_vegetation_pipeline->m_pine_uniforms.view_proj != Shader::InvalidUniform) {
-        pine_shader->set_uniform(m_vegetation_pipeline->m_pine_uniforms.view_proj,
-                                 view_proj);
-      }
-      if (m_vegetation_pipeline->m_pine_uniforms.time != Shader::InvalidUniform) {
-        pine_shader->set_uniform(m_vegetation_pipeline->m_pine_uniforms.time,
-                                 pine.params.time);
-      }
-      if (m_vegetation_pipeline->m_pine_uniforms.wind_strength !=
-          Shader::InvalidUniform) {
-        pine_shader->set_uniform(m_vegetation_pipeline->m_pine_uniforms.wind_strength,
-                                 pine.params.wind_strength);
-      }
-      if (m_vegetation_pipeline->m_pine_uniforms.wind_speed != Shader::InvalidUniform) {
-        pine_shader->set_uniform(m_vegetation_pipeline->m_pine_uniforms.wind_speed,
-                                 pine.params.wind_speed);
-      }
-      if (m_vegetation_pipeline->m_pine_uniforms.light_direction !=
-          Shader::InvalidUniform) {
-        QVector3D light_dir = pine.params.light_direction;
-        if (!light_dir.isNull()) {
-          light_dir.normalize();
-        }
-        pine_shader->set_uniform(m_vegetation_pipeline->m_pine_uniforms.light_direction,
-                                 light_dir);
-      }
-
-      glBindVertexArray(m_vegetation_pipeline->m_pine_vao);
-      pine.instance_buffer->bind();
-      const auto stride = static_cast<GLsizei>(sizeof(PineInstanceGpu));
-      apply_vertex_attrib_layout({{instance_position,
-                                   vec4,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   stride,
-                                   offsetof(PineInstanceGpu, pos_scale)},
-                                  {instance_scale,
-                                   vec4,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   stride,
-                                   offsetof(PineInstanceGpu, color_sway)},
-                                  {instance_color,
-                                   vec4,
-                                   GL_FLOAT,
-                                   GL_FALSE,
-                                   stride,
-                                   offsetof(PineInstanceGpu, rotation)}});
-      pine.instance_buffer->unbind();
-
-      glDrawElementsInstanced(GL_TRIANGLES,
-                              m_vegetation_pipeline->m_pine_index_count,
-                              GL_UNSIGNED_SHORT,
-                              nullptr,
-                              static_cast<GLsizei>(pine.instance_count));
-      glBindVertexArray(0);
-
-      if (prev_cull != 0U) {
-        glEnable(GL_CULL_FACE);
-      }
-
-      break;
-    }
+    case TerrainScatterCmd::Species::Plant:
+    case TerrainScatterCmd::Species::Pine:
     case TerrainScatterCmd::Species::Olive: {
       if (!m_vegetation_pipeline) {
         break;
       }
-      struct OliveView {
-        Buffer* instance_buffer;
-        std::size_t instance_count;
-        const OliveBatchParams& params;
-      };
-      const OliveView olive{
-          deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.olive};
 
-      if ((olive.instance_buffer == nullptr) || olive.instance_count == 0 ||
-          (m_vegetation_pipeline->olive_shader() == nullptr) ||
-          (m_vegetation_pipeline->m_olive_vao == 0U) ||
-          m_vegetation_pipeline->m_olive_index_count == 0) {
+      const FoliageDraw foliage =
+          resolve_foliage_draw(*m_vegetation_pipeline, deco_cmd_.species);
+      const FoliageBatchParams& params = deco_cmd_.foliage;
+
+      if (deco_cmd_.instance_buffer == nullptr || deco_cmd_.instance_count == 0 ||
+          foliage.shader == nullptr || foliage.mesh == nullptr ||
+          !foliage.mesh->drawable()) {
         break;
       }
 
@@ -439,70 +304,63 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         glDisable(GL_CULL_FACE);
       }
 
-      Shader* olive_shader = m_vegetation_pipeline->olive_shader();
-      if (m_last_bound_shader != olive_shader) {
-        olive_shader->use();
-        m_last_bound_shader = olive_shader;
+      Shader* shader = foliage.shader;
+      if (m_last_bound_shader != shader) {
+        shader->use();
+        m_last_bound_shader = shader;
         m_last_bound_texture = nullptr;
       }
-      bind_visibility_mask(*olive_shader, deco_cmd_.visibility);
+      bind_visibility_mask(*shader, deco_cmd_.visibility);
 
-      if (m_vegetation_pipeline->m_olive_uniforms.view_proj != Shader::InvalidUniform) {
-        olive_shader->set_uniform(m_vegetation_pipeline->m_olive_uniforms.view_proj,
-                                  view_proj);
+      const auto& uniforms = *foliage.uniforms;
+      if (uniforms.view_proj != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.view_proj, view_proj);
       }
-      if (m_vegetation_pipeline->m_olive_uniforms.time != Shader::InvalidUniform) {
-        olive_shader->set_uniform(m_vegetation_pipeline->m_olive_uniforms.time,
-                                  olive.params.time);
+      if (uniforms.time != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.time, params.time);
       }
-      if (m_vegetation_pipeline->m_olive_uniforms.wind_strength !=
-          Shader::InvalidUniform) {
-        olive_shader->set_uniform(m_vegetation_pipeline->m_olive_uniforms.wind_strength,
-                                  olive.params.wind_strength);
+      if (uniforms.wind_strength != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.wind_strength, params.wind_strength);
       }
-      if (m_vegetation_pipeline->m_olive_uniforms.wind_speed !=
-          Shader::InvalidUniform) {
-        olive_shader->set_uniform(m_vegetation_pipeline->m_olive_uniforms.wind_speed,
-                                  olive.params.wind_speed);
+      if (uniforms.wind_speed != Shader::InvalidUniform) {
+        shader->set_uniform(uniforms.wind_speed, params.wind_speed);
       }
-      if (m_vegetation_pipeline->m_olive_uniforms.light_direction !=
-          Shader::InvalidUniform) {
-        QVector3D light_dir = olive.params.light_direction;
+      if (uniforms.light_direction != Shader::InvalidUniform) {
+        QVector3D light_dir = params.light_direction;
         if (!light_dir.isNull()) {
           light_dir.normalize();
         }
-        olive_shader->set_uniform(
-            m_vegetation_pipeline->m_olive_uniforms.light_direction, light_dir);
+        shader->set_uniform(uniforms.light_direction, light_dir);
       }
 
-      glBindVertexArray(m_vegetation_pipeline->m_olive_vao);
-      olive.instance_buffer->bind();
-      const auto stride = static_cast<GLsizei>(sizeof(OliveInstanceGpu));
+      glBindVertexArray(foliage.mesh->vao);
+      deco_cmd_.instance_buffer->bind();
+      const auto stride = static_cast<GLsizei>(sizeof(TreeInstanceGpu));
       apply_vertex_attrib_layout({{instance_position,
                                    vec4,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride,
-                                   offsetof(OliveInstanceGpu, pos_scale)},
+                                   offsetof(TreeInstanceGpu, pos_scale)},
                                   {instance_scale,
                                    vec4,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride,
-                                   offsetof(OliveInstanceGpu, color_sway)},
+                                   offsetof(TreeInstanceGpu, color_sway)},
                                   {instance_color,
                                    vec4,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride,
-                                   offsetof(OliveInstanceGpu, rotation)}});
-      olive.instance_buffer->unbind();
+                                   offsetof(TreeInstanceGpu, rotation)}});
+      deco_cmd_.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
-                              m_vegetation_pipeline->m_olive_index_count,
+                              foliage.mesh->index_count,
                               GL_UNSIGNED_SHORT,
                               nullptr,
-                              static_cast<GLsizei>(olive.instance_count));
+                              static_cast<GLsizei>(deco_cmd_.instance_count));
       glBindVertexArray(0);
 
       if (prev_cull != 0U) {
@@ -525,8 +383,8 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
 
       if ((firecamp.instance_buffer == nullptr) || firecamp.instance_count == 0 ||
           (m_vegetation_pipeline->firecamp_shader() == nullptr) ||
-          (m_vegetation_pipeline->m_firecamp_vao == 0U) ||
-          m_vegetation_pipeline->m_firecamp_index_count == 0) {
+          (m_vegetation_pipeline->m_firecamp_mesh.vao == 0U) ||
+          m_vegetation_pipeline->m_firecamp_mesh.index_count == 0) {
         break;
       }
 
@@ -605,7 +463,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         }
       }
 
-      glBindVertexArray(m_vegetation_pipeline->m_firecamp_vao);
+      glBindVertexArray(m_vegetation_pipeline->m_firecamp_mesh.vao);
       firecamp.instance_buffer->bind();
       const auto stride = static_cast<GLsizei>(sizeof(FireCampInstanceGpu));
       apply_vertex_attrib_layout({{instance_position,
@@ -623,7 +481,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
       firecamp.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,
-                              m_vegetation_pipeline->m_firecamp_index_count,
+                              m_vegetation_pipeline->m_firecamp_mesh.index_count,
                               GL_UNSIGNED_SHORT,
                               nullptr,
                               static_cast<GLsizei>(firecamp.instance_count));
@@ -649,79 +507,15 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      Shader* prop_shader = nullptr;
-      GLuint prop_vao = 0U;
-      GLsizei prop_idx_count = 0;
-      const BackendPipelines::VegetationPipeline::PropUniforms* prop_uniforms = nullptr;
-      QVector3D prop_light_dir;
+      const PropDraw prop =
+          resolve_prop_draw(*m_vegetation_pipeline, deco_cmd_.species);
 
-      switch (deco_cmd_.species) {
-      case TerrainScatterCmd::Species::Tent:
-        prop_shader = m_vegetation_pipeline->tent_shader();
-        prop_vao = m_vegetation_pipeline->m_tent_vao;
-        prop_idx_count = m_vegetation_pipeline->m_tent_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_tent_uniforms;
-        prop_light_dir = deco_cmd_.tent.light_direction;
-        break;
-      case TerrainScatterCmd::Species::SupplyCart:
-        prop_shader = m_vegetation_pipeline->supply_cart_shader();
-        prop_vao = m_vegetation_pipeline->m_supply_cart_vao;
-        prop_idx_count = m_vegetation_pipeline->m_supply_cart_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_supply_cart_uniforms;
-        prop_light_dir = deco_cmd_.supply_cart.light_direction;
-        break;
-      case TerrainScatterCmd::Species::WeaponRack:
-        prop_shader = m_vegetation_pipeline->weapon_rack_shader();
-        prop_vao = m_vegetation_pipeline->m_weapon_rack_vao;
-        prop_idx_count = m_vegetation_pipeline->m_weapon_rack_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_weapon_rack_uniforms;
-        prop_light_dir = deco_cmd_.weapon_rack.light_direction;
-        break;
-      case TerrainScatterCmd::Species::Ruins:
-        prop_shader = m_vegetation_pipeline->ruins_shader();
-        prop_vao = m_vegetation_pipeline->m_ruins_vao;
-        prop_idx_count = m_vegetation_pipeline->m_ruins_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_ruins_uniforms;
-        prop_light_dir = deco_cmd_.ruins.light_direction;
-        break;
-      case TerrainScatterCmd::Species::DeadTree:
-        prop_shader = m_vegetation_pipeline->dead_tree_shader();
-        prop_vao = m_vegetation_pipeline->m_dead_tree_vao;
-        prop_idx_count = m_vegetation_pipeline->m_dead_tree_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_dead_tree_uniforms;
-        prop_light_dir = deco_cmd_.dead_tree.light_direction;
-        break;
-      case TerrainScatterCmd::Species::IronOre:
-        prop_shader = m_vegetation_pipeline->iron_ore_shader();
-        prop_vao = m_vegetation_pipeline->m_iron_ore_vao;
-        prop_idx_count = m_vegetation_pipeline->m_iron_ore_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_iron_ore_uniforms;
-        prop_light_dir = deco_cmd_.iron_ore.light_direction;
-        break;
-      case TerrainScatterCmd::Species::MagicShrine:
-        prop_shader = m_vegetation_pipeline->magic_shrine_shader();
-        prop_vao = m_vegetation_pipeline->m_magic_shrine_vao;
-        prop_idx_count = m_vegetation_pipeline->m_magic_shrine_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_magic_shrine_uniforms;
-        prop_light_dir = deco_cmd_.magic_shrine.light_direction;
-        break;
-      case TerrainScatterCmd::Species::AbandonedHome:
-        prop_shader = m_vegetation_pipeline->ruins_shader();
-        prop_vao = m_vegetation_pipeline->m_abandoned_home_vao;
-        prop_idx_count = m_vegetation_pipeline->m_abandoned_home_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_ruins_uniforms;
-        prop_light_dir = deco_cmd_.abandoned_home.light_direction;
-        break;
-      case TerrainScatterCmd::Species::Statue:
-        prop_shader = m_vegetation_pipeline->statue_shader();
-        prop_vao = m_vegetation_pipeline->m_statue_vao;
-        prop_idx_count = m_vegetation_pipeline->m_statue_index_count;
-        prop_uniforms = &m_vegetation_pipeline->m_statue_uniforms;
-        prop_light_dir = deco_cmd_.statue.light_direction;
-        break;
-      default:
-        break;
-      }
+      Shader* prop_shader = prop.shader;
+      GLuint const prop_vao = prop.mesh != nullptr ? prop.mesh->vao : 0U;
+      GLsizei const prop_idx_count = prop.mesh != nullptr ? prop.mesh->index_count : 0;
+      const BackendPipelines::VegetationPipeline::PropUniforms* prop_uniforms =
+          prop.uniforms;
+      const QVector3D prop_light_dir = deco_cmd_.prop.light_direction;
 
       if (prop_shader == nullptr || prop_vao == 0U || prop_idx_count == 0 ||
           deco_cmd_.instance_buffer == nullptr || deco_cmd_.instance_count == 0 ||
@@ -760,30 +554,24 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         prop_shader->set_uniform(prop_uniforms->time, m_animation_time);
       }
       if (prop_uniforms->magic_strength != Shader::InvalidUniform) {
-        float const magic_strength =
-            (deco_cmd_.species == TerrainScatterCmd::Species::IronOre ||
-             deco_cmd_.species == TerrainScatterCmd::Species::MagicShrine)
-                ? (deco_cmd_.species == TerrainScatterCmd::Species::MagicShrine ? 1.18F
-                                                                                : 1.15F)
-                : 0.0F;
-        prop_shader->set_uniform(prop_uniforms->magic_strength, magic_strength);
+        prop_shader->set_uniform(prop_uniforms->magic_strength, prop.magic_strength);
       }
 
       glBindVertexArray(prop_vao);
       deco_cmd_.instance_buffer->bind();
-      const auto stride2 = static_cast<GLsizei>(sizeof(TentInstanceGpu));
+      const auto stride2 = static_cast<GLsizei>(sizeof(PropInstanceGpu));
       apply_vertex_attrib_layout({{tex_coord,
                                    vec4,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride2,
-                                   offsetof(TentInstanceGpu, pos_scale)},
+                                   offsetof(PropInstanceGpu, pos_scale)},
                                   {instance_position,
                                    vec4,
                                    GL_FLOAT,
                                    GL_FALSE,
                                    stride2,
-                                   offsetof(TentInstanceGpu, color_rot)}});
+                                   offsetof(PropInstanceGpu, color_rot)}});
       deco_cmd_.instance_buffer->unbind();
 
       glDrawElementsInstanced(GL_TRIANGLES,

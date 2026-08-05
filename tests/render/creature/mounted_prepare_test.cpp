@@ -67,7 +67,7 @@ public:
   void rigged(const Render::GL::RiggedCreatureCmd&) override { ++rigged_calls; }
   void cylinder(
       const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {}
-  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {}
+  void ground_marker(const Render::GL::GroundMarkerCmd&) override {}
   void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {}
   void selection_smoke(const QMatrix4x4&, const QVector3D&, float) override {}
   void healing_beam(const QVector3D&,
@@ -411,8 +411,8 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   EXPECT_EQ(rider_requests, 1);
   EXPECT_EQ(horse_requests, 1);
   EXPECT_EQ(prep.bodies.requests().size(), 2U);
-  EXPECT_TRUE(owns_slot(renderer.visual_spec().owned_legacy_slots,
-                        LegacySlotMask::Attachments));
+  EXPECT_NE(renderer.visual_spec().owned_legacy_slots & LegacySlotMask::Attachments,
+            LegacySlotMask::None);
 }
 
 TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {

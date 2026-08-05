@@ -59,9 +59,7 @@ public:
       const QVector3D&, const QVector3D&, float, const QVector3D&, float) override {
     ++total_calls;
   }
-  void selection_ring(const QMatrix4x4&, float, float, const QVector3D&) override {
-    ++total_calls;
-  }
+  void ground_marker(const Render::GL::GroundMarkerCmd&) override { ++total_calls; }
   void grid(const QMatrix4x4&, const QVector3D&, float, float, float) override {
     ++total_calls;
   }

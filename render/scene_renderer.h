@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -61,6 +62,9 @@ namespace Render::GL {
 
 class Backend;
 class EffectsSubmitter;
+struct UnitRenderEntry;
+struct RenderEntry;
+struct UnitSubmitContext;
 
 class Renderer : public ISubmitter {
 public:
@@ -266,16 +270,11 @@ public:
                 float radius,
                 const QVector3D& color,
                 float alpha = 1.0F) override;
-  void selection_ring(const QMatrix4x4& model,
-                      float alpha_inner,
-                      float alpha_outer,
-                      const QVector3D& color) override;
+  void ground_marker(const GroundMarkerCmd& marker) override;
 
-  void selection_ring_styled(const QMatrix4x4& model,
-                             float alpha_inner,
-                             float alpha_outer,
-                             const QVector3D& color,
-                             Game::Accessibility::TeamPattern pattern) override;
+  void set_terrain_height_resources(const TerrainSurfaceCmd::HeightResources& height) {
+    m_terrain_height_resources = height;
+  }
 
   void grid(const QMatrix4x4& model,
             const QVector3D& color,
@@ -403,6 +402,23 @@ private:
                                     const Game::Map::VisibilityService* vis,
                                     bool visibility_enabled);
 
+  [[nodiscard]] auto
+  compute_rpg_lens_gap(Engine::Core::World& world) const -> LensGapExclusion;
+
+  void collect_unit_entries(Engine::Core::World& world,
+                            std::span<const Engine::Core::EntityID> entity_ids,
+                            bool visibility_enabled,
+                            std::vector<UnitRenderEntry>& out,
+                            int& visible_unit_count);
+
+  void collect_non_unit_entries(Engine::Core::World& world,
+                                std::span<const Engine::Core::EntityID> entity_ids,
+                                float cull_radius,
+                                bool visibility_enabled,
+                                std::vector<RenderEntry>& out);
+
+  void submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext& ctx);
+
   void enqueue_selection_ring(Engine::Core::Entity* entity,
                               Engine::Core::TransformComponent* transform,
                               Engine::Core::UnitComponent* unit_comp,
@@ -447,6 +463,7 @@ private:
   std::unique_ptr<EntityRendererRegistry> m_entity_registry;
   std::unique_ptr<EffectsSubmitter> m_effects_submitter;
   unsigned int m_hovered_entity_id = 0;
+  TerrainSurfaceCmd::HeightResources m_terrain_height_resources{};
   std::unordered_set<Engine::Core::EntityID> m_selected_ids;
 
   int m_viewport_width = 0;

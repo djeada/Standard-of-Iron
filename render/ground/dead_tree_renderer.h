@@ -13,8 +13,7 @@
 namespace Render::GL {
 class Renderer;
 
-class DeadTreeRenderer
-    : public ScatterRendererBase<DeadTreeInstanceGpu, DeadTreeBatchParams> {
+class DeadTreeRenderer : public ScatterRendererBase<PropInstanceGpu, PropBatchParams> {
 public:
   DeadTreeRenderer();
   ~DeadTreeRenderer() override;
@@ -22,11 +21,9 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& world_props = {});
-  void set_light_direction(const QVector3D& dir);
+  void set_light_direction(const QVector3D& dir) override;
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
-
-  void clear();
 
 private:
   void generate_instances(const std::vector<Game::Map::WorldProp>& world_props,

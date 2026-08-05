@@ -38,6 +38,8 @@
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
 #include "game/session/session_context.h"
+#include "game/systems/attack_range.h"
+#include "game/systems/attack_targeting.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/save_format.h"
 #include "game/systems/unit_activity.h"
@@ -499,6 +501,8 @@ private:
   void poll_commander_mouse_look();
   void reset_commander_input();
   void sync_selection_flags();
+  void sync_attack_targeting();
+  void sync_attack_range_rings();
   [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
   void sync_selected_player_state();
   void sync_scatter_world_props();
@@ -580,6 +584,9 @@ private:
   std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hover_tracker;
   bool m_civilian_delivery_available = false;
+  Game::Systems::AttackTargetingHighlights m_attack_targeting;
+  std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
+  QVariantMap m_attack_target_hint;
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::SelectionController> m_selection_controller;
   std::unique_ptr<App::Controllers::CommandController> m_command_controller;

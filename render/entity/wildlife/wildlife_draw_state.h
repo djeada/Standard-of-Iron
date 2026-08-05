@@ -24,10 +24,6 @@ struct DrawState {
 [[nodiscard]] auto resolve_draw_state(const DrawContext& ctx,
                                       float stride_rate) -> DrawState;
 
-[[nodiscard]] auto ellipsoid_at(const QMatrix4x4& parent,
-                                const QVector3D& center,
-                                const QVector3D& radii) -> QMatrix4x4;
-
 [[nodiscard]] auto tinted(const QVector3D& color, float factor) -> QVector3D;
 
 [[nodiscard]] auto mixed(const QVector3D& a, const QVector3D& b, float t) -> QVector3D;

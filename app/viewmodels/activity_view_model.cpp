@@ -31,4 +31,12 @@ void ActivityViewModel::confirm_repair_at(qreal sx, qreal sy) {
   m_host->confirm_repair_at(sx, sy);
 }
 
+void ActivityViewModel::set_attack_target_hint(const QVariantMap& hint) {
+  if (m_attack_target_hint == hint) {
+    return;
+  }
+  m_attack_target_hint = hint;
+  emit attack_target_hint_changed();
+}
+
 } // namespace App::ViewModels

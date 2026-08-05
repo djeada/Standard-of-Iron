@@ -103,6 +103,9 @@ struct ArenaScenarioGroup {
   int health_override{0};
   int max_health_override{0};
 
+  float attack_range_override{0.0F};
+  float attack_min_range_override{0.0F};
+
   std::optional<Game::Units::SpawnType> spawn_type;
 
   QString renderer_override;
@@ -255,6 +258,8 @@ enum class ArenaExpectationKind : std::uint8_t {
   WildlifeBirdsScattered,
   WildlifeBirdFlyoverObserved,
   WildlifePopulationHeld,
+  RangeIndicatorObserved,
+  RangeIndicatorCountAtMost,
 };
 
 struct ArenaExpectation {

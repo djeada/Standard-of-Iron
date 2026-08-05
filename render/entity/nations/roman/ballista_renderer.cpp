@@ -3,8 +3,8 @@
 #include <QVector3D>
 
 #include "../../ballista_geometry.h"
-#include "../../ballista_renderer_common.h"
 #include "../../registry.h"
+#include "../../siege_renderer_common.h"
 
 namespace Render::GL::Roman {
 namespace {
@@ -32,11 +32,11 @@ void draw_ballista_body(const DrawContext& p,
 } // namespace
 
 void register_ballista_renderer(EntityRendererRegistry& registry) {
-  register_ballista_renderer_variant(
+  register_siege_renderer_variant(
       registry,
-      BallistaRendererConfig{.renderer_key = "troops/roman/ballista",
-                             .default_team = QVector3D(0.8F, 0.2F, 0.2F),
-                             .draw_body = &draw_ballista_body});
+      SiegeRendererConfig{.renderer_key = "troops/roman/ballista",
+                          .default_team = QVector3D(0.8F, 0.2F, 0.2F),
+                          .draw_body = &draw_ballista_body});
 }
 
 } // namespace Render::GL::Roman

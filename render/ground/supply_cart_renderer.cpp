@@ -5,11 +5,9 @@
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
-#include "gl/render_constants.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
 #include "scatter_runtime.h"
-#include "scatter_submission.h"
 
 namespace {
 
@@ -26,45 +24,17 @@ void SupplyCartRenderer::configure(
     const Game::Map::TerrainHeightMap& height_map,
     const Game::Map::BiomeSettings& biome_settings,
     const std::vector<Game::Map::WorldProp>& world_props) {
-  m_biome_settings = biome_settings;
-  m_state.reset_instances();
+  configure_biome_common(biome_settings);
   m_state.params.light_direction = m_light_direction;
   generate_instances(world_props, height_map);
 }
 
 void SupplyCartRenderer::set_light_direction(const QVector3D& dir) {
-  m_light_direction = dir.isNull() ? SupplyCartBatchParams::default_light_direction()
-                                   : dir.normalized();
-  m_state.params.light_direction = m_light_direction;
+  set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
 void SupplyCartRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  Q_UNUSED(resources);
-
-  const auto visible_count = Scatter::sync_filtered_state(
-      m_state,
-      [](const SupplyCartInstanceGpu& inst) -> const QVector4D& {
-        return inst.pos_scale;
-      },
-      renderer.static_world_visibility_filter_enabled()
-          ? renderer.submission_visibility().snapshot()
-          : nullptr,
-      Scatter::ScatterMemoryMode::Remembered);
-  if (visible_count == 0) {
-    return;
-  }
-
-  m_state.params.time = renderer.get_animation_time();
-
-  TerrainScatterCmd cmd;
-  cmd.visibility = renderer.visibility_mask();
-  cmd.species = TerrainScatterCmd::Species::SupplyCart;
-  cmd.supply_cart = m_state.params;
-  Scatter::submit_visible_chunks(renderer, m_state, cmd);
-}
-
-void SupplyCartRenderer::clear() {
-  m_state.reset_instances();
+  submit_prop_common(renderer, resources, TerrainScatterCmd::Species::SupplyCart);
 }
 
 void SupplyCartRenderer::generate_instances(
@@ -95,7 +65,7 @@ void SupplyCartRenderer::generate_instances(
     QVector3D wood_color = heartwood * (1.0F - wood_mix) + oak * wood_mix;
     wood_color *= remap(rand_01(state), 0.88F, 1.06F);
 
-    SupplyCartInstanceGpu inst;
+    PropInstanceGpu inst;
     inst.pos_scale =
         QVector4D(resolved.x(),
                   resolved.y(),

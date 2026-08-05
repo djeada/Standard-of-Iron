@@ -19,6 +19,7 @@
 #include "game/core/component.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
+#include "game/systems/attack_range.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -51,6 +52,7 @@ class FrameContinuityAnalyzer;
 
 namespace Render::GL {
 class Renderer;
+class ResourceManager;
 class Camera;
 class TerrainSceneProxy;
 class TerrainSurfaceManager;
@@ -226,6 +228,11 @@ public:
   [[nodiscard]] auto rpg_bow_hud_state() const -> RpgBowHudState;
 
 public slots:
+  [[nodiscard]] auto
+  attack_range_rings() const -> const std::vector<Game::Systems::AttackRangeRing>& {
+    return m_attack_range_rings;
+  }
+
   [[nodiscard]] auto active_scenario_finished() const -> bool;
   [[nodiscard]] auto
   active_scenario_report() const -> const Arena::ArenaScenarioReport*;
@@ -330,6 +337,7 @@ private:
   auto nation_display_name(Game::Systems::NationID nation_id) const -> QString;
   auto troop_display_name(Game::Systems::NationID nation_id,
                           Game::Units::SpawnType spawn_type) const -> QString;
+  void render_attack_range_rings(Render::GL::ResourceManager* resources);
   auto selection_system() const -> Game::Systems::SelectionSystem*;
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
@@ -421,6 +429,7 @@ private:
   QPoint m_selection_anchor;
   QPoint m_selection_current;
   Engine::Core::EntityID m_hovered_entity_id = 0;
+  std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   bool m_selection_drag_active = false;
   bool m_paused = false;
   bool m_wireframe_enabled = false;

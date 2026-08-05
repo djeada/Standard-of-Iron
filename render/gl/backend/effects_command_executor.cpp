@@ -8,7 +8,37 @@ using namespace Render::GL::ComponentCount;
 
 namespace {
 const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
+constexpr float k_ground_marker_offset = 0.06F;
+
+auto billboard_effect_type(EffectBatchCmd::Kind kind) -> BackendPipelines::EffectType {
+  switch (kind) {
+  case EffectBatchCmd::Kind::BuildingFlame:
+    return BackendPipelines::EffectType::Flame;
+  case EffectBatchCmd::Kind::BurningFlame:
+    return BackendPipelines::EffectType::BurningFlame;
+  case EffectBatchCmd::Kind::Fireball:
+    return BackendPipelines::EffectType::Fireball;
+  case EffectBatchCmd::Kind::StoneImpact:
+    return BackendPipelines::EffectType::StoneImpact;
+  case EffectBatchCmd::Kind::MetalSpark:
+    return BackendPipelines::EffectType::MetalSpark;
+  default:
+    return BackendPipelines::EffectType::Dust;
+  }
 }
+
+auto make_dust_instance(const EffectBatchCmd& eff)
+    -> BackendPipelines::CombatDustPipeline::DustInstanceData {
+  return {.position = eff.position,
+          .color = eff.color,
+          .radius = eff.radius,
+          .intensity = eff.intensity,
+          .time = eff.time,
+          .effect_type = billboard_effect_type(eff.kind),
+          .overlay = false,
+          .direction = eff.direction};
+}
+} // namespace
 
 void Backend::execute_effects_commands(const PreparedBatch& prepared,
                                        CommandExecutionContext& context) {
@@ -75,111 +105,57 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     }
     break;
   }
-  case SelectionRingCmdIndex: {
+  case GroundMarkerCmdIndex: {
+    if (!m_ground_marker_pipeline || !m_ground_marker_pipeline->is_initialized()) {
+      break;
+    }
+
     DepthMaskScope const depth_mask(false);
     DepthTestScope const depth_test(true);
     PolygonOffsetScope const poly(-1.0F, -1.0F);
     BlendScope const blend(true);
     CullFaceScope const cull(false);
 
-    const bool can_instance_rings =
-        prepared.kind == PreparedBatchKind::SelectionRingInstanced &&
-        m_mesh_instancing_pipeline && m_mesh_instancing_pipeline->is_initialized() &&
-        m_effects_pipeline->m_basic_instanced_shader != nullptr;
+    Shader* marker_shader = m_ground_marker_pipeline->shader();
+    marker_shader->use();
+    m_last_bound_shader = marker_shader;
+    m_last_bound_texture = nullptr;
 
-    if (can_instance_rings) {
-      GL::Shader* ring_shader = m_effects_pipeline->m_basic_instanced_shader;
-      ring_shader->use();
-      m_last_bound_shader = ring_shader;
-      const auto vp_handle = m_effects_pipeline->m_basic_instanced_uniforms.view_proj;
-      if (vp_handle != Shader::InvalidUniform) {
-        ring_shader->set_uniform(vp_handle, view_proj);
-      }
-      const auto ut_handle = m_effects_pipeline->m_basic_instanced_uniforms.use_texture;
-      if (ut_handle != Shader::InvalidUniform) {
-        ring_shader->set_uniform(ut_handle, false);
-      }
+    const auto& uniforms = m_ground_marker_pipeline->uniforms();
+    m_ground_marker_pipeline->upload_pattern_table();
+    set_uniform_if_valid(*marker_shader, uniforms.time, m_animation_time);
+    set_uniform_if_valid(
+        *marker_shader, uniforms.ground_offset, k_ground_marker_offset);
 
-      for (std::size_t run = i; run < batch_end;) {
-        const auto pattern =
-            std::get<SelectionRingCmdIndex>(queue.get_sorted(run)).pattern;
-        std::size_t run_end = run + 1;
-        while (run_end < batch_end &&
-               std::get<SelectionRingCmdIndex>(queue.get_sorted(run_end)).pattern ==
-                   pattern) {
-          ++run_end;
-        }
-
-        Mesh* ring = Render::Geom::SelectionRing::get(pattern);
-        if (ring == nullptr) {
-          run = run_end;
-          continue;
-        }
-
-        m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
-        for (std::size_t j = run; j < run_end; ++j) {
-          const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
-          QMatrix4x4 m = sc.model;
-          m.scale(1.08F, 1.0F, 1.08F);
-          m_mesh_instancing_pipeline->accumulate(m, sc.color, sc.alpha_outer);
-        }
-        m_mesh_instancing_pipeline->flush();
-
-        m_mesh_instancing_pipeline->begin_batch(ring, ring_shader, nullptr);
-        for (std::size_t j = run; j < run_end; ++j) {
-          const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
-          m_mesh_instancing_pipeline->accumulate(sc.model, sc.color, sc.alpha_inner);
-        }
-        m_mesh_instancing_pipeline->flush();
-
-        run = run_end;
-      }
-    } else {
-      if (m_last_bound_shader != m_effects_pipeline->m_basic_shader) {
-        m_effects_pipeline->m_basic_shader->use();
-        m_last_bound_shader = m_effects_pipeline->m_basic_shader;
-      }
-      m_effects_pipeline->m_basic_shader->set_uniform(
-          m_effects_pipeline->m_basic_uniforms.use_texture, false);
-      m_effects_pipeline->m_basic_shader->set_uniform(
-          m_effects_pipeline->m_basic_uniforms.instanced, false);
-      m_effects_pipeline->m_basic_shader->set_uniform(
-          m_effects_pipeline->m_basic_uniforms.view_proj, view_proj);
-
-      for (std::size_t j = i; j < batch_end; ++j) {
-        const auto& sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(j));
-        Mesh* ring = Render::Geom::SelectionRing::get(sc.pattern);
-        if (ring == nullptr) {
-          continue;
-        }
-        m_effects_pipeline->m_basic_shader->set_uniform(
-            m_effects_pipeline->m_basic_uniforms.color, sc.color);
-
-        {
-          QMatrix4x4 m = sc.model;
-          m.scale(1.08F, 1.0F, 1.08F);
-          const QMatrix4x4 mvp = view_proj * m;
-          m_effects_pipeline->m_basic_shader->set_uniform(
-              m_effects_pipeline->m_basic_uniforms.mvp, mvp);
-          m_effects_pipeline->m_basic_shader->set_uniform(
-              m_effects_pipeline->m_basic_uniforms.model, m);
-          m_effects_pipeline->m_basic_shader->set_uniform(
-              m_effects_pipeline->m_basic_uniforms.alpha, sc.alpha_outer);
-          ring->draw();
-        }
-
-        {
-          const QMatrix4x4 mvp = view_proj * sc.model;
-          m_effects_pipeline->m_basic_shader->set_uniform(
-              m_effects_pipeline->m_basic_uniforms.mvp, mvp);
-          m_effects_pipeline->m_basic_shader->set_uniform(
-              m_effects_pipeline->m_basic_uniforms.model, sc.model);
-          m_effects_pipeline->m_basic_shader->set_uniform(
-              m_effects_pipeline->m_basic_uniforms.alpha, sc.alpha_inner);
-          ring->draw();
-        }
-      }
+    const auto& height = std::get<GroundMarkerCmdIndex>(queue.get_sorted(i)).height;
+    const bool has_height = height.enabled && height.texture != nullptr;
+    set_uniform_if_valid(*marker_shader, uniforms.has_height_tex, has_height ? 1 : 0);
+    if (has_height) {
+      height.texture->bind(TextureUnit::terrain_height);
+      m_last_bound_texture = height.texture;
+      set_uniform_if_valid(
+          *marker_shader, uniforms.height_tex, TextureUnit::terrain_height);
+      set_uniform_if_valid(*marker_shader, uniforms.height_uv_scale, height.uv_scale);
+      set_uniform_if_valid(*marker_shader, uniforms.height_uv_offset, height.uv_offset);
+      set_uniform_if_valid(*marker_shader, uniforms.height_to_world, height.to_world);
     }
+
+    m_ground_marker_pipeline->m_scratch.clear();
+    for (std::size_t j = i; j < batch_end; ++j) {
+      const auto& marker = std::get<GroundMarkerCmdIndex>(queue.get_sorted(j));
+      BackendPipelines::GroundMarkerPipeline::InstanceGpu gpu{};
+      gpu.center_radius = QVector4D(marker.center, marker.outer_radius);
+      gpu.color_alpha = QVector4D(marker.color, marker.alpha);
+      gpu.shape = QVector4D(marker.thickness,
+                            static_cast<float>(marker.pattern),
+                            marker.focused ? 1.0F : 0.0F,
+                            marker.phase);
+      m_ground_marker_pipeline->m_scratch.emplace_back(gpu);
+    }
+
+    const std::size_t marker_count = m_ground_marker_pipeline->m_scratch.size();
+    m_ground_marker_pipeline->upload_instances(marker_count);
+    m_ground_marker_pipeline->draw(marker_count);
     break;
   }
   case SelectionSmokeCmdIndex: {
@@ -320,26 +296,7 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
         for (std::size_t idx = prepared.start; idx < prepared.start + prepared.count;
              ++idx) {
           const auto& eff = std::get<EffectBatchCmdIndex>(queue.get_sorted(idx));
-          BackendPipelines::EffectType const etype =
-              (eff.kind == EffectBatchCmd::Kind::BuildingFlame)
-                  ? BackendPipelines::EffectType::Flame
-              : (eff.kind == EffectBatchCmd::Kind::BurningFlame)
-                  ? BackendPipelines::EffectType::BurningFlame
-              : (eff.kind == EffectBatchCmd::Kind::Fireball)
-                  ? BackendPipelines::EffectType::Fireball
-              : (eff.kind == EffectBatchCmd::Kind::StoneImpact)
-                  ? BackendPipelines::EffectType::StoneImpact
-              : (eff.kind == EffectBatchCmd::Kind::MetalSpark)
-                  ? BackendPipelines::EffectType::MetalSpark
-                  : BackendPipelines::EffectType::Dust;
-          dust_instances.push_back({.position = eff.position,
-                                    .color = eff.color,
-                                    .radius = eff.radius,
-                                    .intensity = eff.intensity,
-                                    .time = eff.time,
-                                    .effect_type = etype,
-                                    .overlay = false,
-                                    .direction = eff.direction});
+          dust_instances.push_back(make_dust_instance(eff));
         }
         m_combat_dust_pipeline->render_dust_batch(
             dust_instances.data(), dust_instances.size(), view_proj);
@@ -408,172 +365,34 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
       m_last_bound_shader = nullptr;
       break;
     }
-    case EffectBatchCmd::Kind::CombatDust: {
-      struct CombatDustView {
-        const QVector3D& position;
-        const QVector3D& color;
-        float radius;
-        float intensity;
-        float time;
-      };
-      const CombatDustView dust{eff_cmd_.position,
-                                eff_cmd_.color,
-                                eff_cmd_.radius,
-                                eff_cmd_.intensity,
-                                eff_cmd_.time};
-      if (m_combat_dust_pipeline == nullptr ||
-          !m_combat_dust_pipeline->is_initialized()) {
-        break;
-      }
-      m_combat_dust_pipeline->render_single_dust(
-          dust.position, dust.color, dust.radius, dust.intensity, dust.time, view_proj);
-      m_last_bound_shader = nullptr;
-      break;
-    }
-    case EffectBatchCmd::Kind::BuildingFlame: {
-      struct BuildingFlameView {
-        const QVector3D& position;
-        const QVector3D& color;
-        float radius;
-        float intensity;
-        float time;
-      };
-      const BuildingFlameView flame{eff_cmd_.position,
-                                    eff_cmd_.color,
-                                    eff_cmd_.radius,
-                                    eff_cmd_.intensity,
-                                    eff_cmd_.time};
-      if (m_combat_dust_pipeline == nullptr ||
-          !m_combat_dust_pipeline->is_initialized()) {
-        break;
-      }
-      m_combat_dust_pipeline->render_single_flame(flame.position,
-                                                  flame.color,
-                                                  flame.radius,
-                                                  flame.intensity,
-                                                  flame.time,
-                                                  view_proj);
-      m_last_bound_shader = nullptr;
-      break;
-    }
-    case EffectBatchCmd::Kind::BurningFlame: {
-      struct BurningFlameView {
-        const QVector3D& position;
-        const QVector3D& color;
-        float radius;
-        float intensity;
-        float time;
-      };
-      const BurningFlameView flame{eff_cmd_.position,
-                                   eff_cmd_.color,
-                                   eff_cmd_.radius,
-                                   eff_cmd_.intensity,
-                                   eff_cmd_.time};
-      if (m_combat_dust_pipeline == nullptr ||
-          !m_combat_dust_pipeline->is_initialized()) {
-        break;
-      }
-      BackendPipelines::CombatDustPipeline::DustInstanceData const instance{
-          .position = flame.position,
-          .color = flame.color,
-          .radius = flame.radius,
-          .intensity = flame.intensity,
-          .time = flame.time,
-          .effect_type = BackendPipelines::EffectType::BurningFlame,
-          .overlay = false};
-      m_combat_dust_pipeline->render_dust_batch(&instance, 1U, view_proj);
-      m_last_bound_shader = nullptr;
-      break;
-    }
-    case EffectBatchCmd::Kind::Fireball: {
-      struct FireballView {
-        const QVector3D& position;
-        const QVector3D& color;
-        float radius;
-        float intensity;
-        float time;
-      };
-      const FireballView fireball{eff_cmd_.position,
-                                  eff_cmd_.color,
-                                  eff_cmd_.radius,
-                                  eff_cmd_.intensity,
-                                  eff_cmd_.time};
-      if (m_combat_dust_pipeline == nullptr ||
-          !m_combat_dust_pipeline->is_initialized()) {
-        break;
-      }
-      m_combat_dust_pipeline->render_single_fireball(fireball.position,
-                                                     fireball.color,
-                                                     fireball.radius,
-                                                     fireball.intensity,
-                                                     fireball.time,
-                                                     view_proj);
-      m_last_bound_shader = nullptr;
-      break;
-    }
-    case EffectBatchCmd::Kind::BloodPool: {
-      struct BloodPoolView {
-        const QVector3D& position;
-        float radius;
-        float alpha_scale;
-      };
-      const BloodPoolView blood{
-          eff_cmd_.position, eff_cmd_.radius, eff_cmd_.alpha_scale};
-      if (m_combat_dust_pipeline == nullptr ||
-          !m_combat_dust_pipeline->is_initialized()) {
-        break;
-      }
-      m_combat_dust_pipeline->render_single_blood_pool(blood.position,
-                                                       blood.radius,
-                                                       blood.alpha_scale,
-                                                       eff_cmd_.rotation,
-                                                       eff_cmd_.aspect_ratio,
-                                                       eff_cmd_.seed,
-                                                       view_proj);
-      m_last_bound_shader = nullptr;
-      break;
-    }
-    case EffectBatchCmd::Kind::StoneImpact: {
-      struct StoneImpactView {
-        const QVector3D& position;
-        const QVector3D& color;
-        float radius;
-        float intensity;
-        float time;
-      };
-      const StoneImpactView impact{eff_cmd_.position,
-                                   eff_cmd_.color,
-                                   eff_cmd_.radius,
-                                   eff_cmd_.intensity,
-                                   eff_cmd_.time};
-      if (m_combat_dust_pipeline == nullptr ||
-          !m_combat_dust_pipeline->is_initialized()) {
-        break;
-      }
-      m_combat_dust_pipeline->render_single_stone_impact(impact.position,
-                                                         impact.color,
-                                                         impact.radius,
-                                                         impact.intensity,
-                                                         impact.time,
-                                                         view_proj);
-      m_last_bound_shader = nullptr;
-      break;
-    }
+    case EffectBatchCmd::Kind::CombatDust:
+    case EffectBatchCmd::Kind::BuildingFlame:
+    case EffectBatchCmd::Kind::BurningFlame:
+    case EffectBatchCmd::Kind::Fireball:
+    case EffectBatchCmd::Kind::StoneImpact:
     case EffectBatchCmd::Kind::MetalSpark: {
       if (m_combat_dust_pipeline == nullptr ||
           !m_combat_dust_pipeline->is_initialized()) {
         break;
       }
-      BackendPipelines::CombatDustPipeline::DustInstanceData const spark_inst{
+      const auto instance = make_dust_instance(eff_cmd_);
+      m_combat_dust_pipeline->render_dust_batch(&instance, 1U, view_proj);
+      m_last_bound_shader = nullptr;
+      break;
+    }
+    case EffectBatchCmd::Kind::BloodPool: {
+      if (m_combat_dust_pipeline == nullptr ||
+          !m_combat_dust_pipeline->is_initialized()) {
+        break;
+      }
+      const BackendPipelines::CombatDustPipeline::BloodPoolInstanceData instance{
           .position = eff_cmd_.position,
-          .color = eff_cmd_.color,
           .radius = eff_cmd_.radius,
-          .intensity = eff_cmd_.intensity,
-          .time = eff_cmd_.time,
-          .effect_type = BackendPipelines::EffectType::MetalSpark,
-          .overlay = false,
-          .direction = eff_cmd_.direction};
-      m_combat_dust_pipeline->render_dust_batch(&spark_inst, 1U, view_proj);
+          .alpha_scale = eff_cmd_.alpha_scale,
+          .rotation = eff_cmd_.rotation,
+          .aspect_ratio = eff_cmd_.aspect_ratio,
+          .seed = eff_cmd_.seed};
+      m_combat_dust_pipeline->render_blood_pool_batch(&instance, 1U, view_proj);
       m_last_bound_shader = nullptr;
       break;
     }

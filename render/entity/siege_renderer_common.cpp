@@ -1,4 +1,4 @@
-#include "catapult_renderer_common.h"
+#include "siege_renderer_common.h"
 
 #include "../../game/core/component.h"
 #include "../gl/primitives.h"
@@ -7,8 +7,8 @@
 
 namespace Render::GL {
 
-void register_catapult_renderer_variant(EntityRendererRegistry& registry,
-                                        const CatapultRendererConfig& config) {
+void register_siege_renderer_variant(EntityRendererRegistry& registry,
+                                     const SiegeRendererConfig& config) {
   registry.register_renderer(
       std::string(config.renderer_key),
       [config](const DrawContext& ctx, ISubmitter& out) {

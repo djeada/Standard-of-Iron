@@ -245,6 +245,24 @@ public:
 };
 ```
 
+### Wrapping a submitter
+
+Some passes want to watch or adjust submissions on their way through without becoming
+the destination. `DamageStateSubmitter` substitutes a damage material id when a caller
+did not pick one; `RiggedBodyProbeSubmitter` counts how many rigged bodies a unit
+renderer actually emitted, so the tracing build can warn when one emits none.
+
+Both derive from `ForwardingSubmitter`, which implements every `ISubmitter` method by
+passing it to an inner submitter. A decorator then overrides only what it changes —
+three methods for the damage one, one for the probe — instead of restating all sixteen.
+Before that, each wrapper spelled out every method, and thirteen of the sixteen were
+pure pass-throughs that told you nothing.
+
+Read a decorator's override list as its specification: what is listed is what it does.
+`BatchSubmitterAdapter` in `equipment_submit.h` is deliberately _not_ a
+`ForwardingSubmitter` — it is a sink that collects into an `EquipmentBatch` rather than
+forwarding anywhere, so it implements the interface directly.
+
 When a Carthaginian spearman renderer wants to draw a torso, it calls the mesh method on the submitter. That method just packs the parameters into a MeshCmd struct and pushes it onto the queue. Fast and simple.
 
 We use double-buffering on these queues. While the GPU is busy rendering the previous frame's queue, the CPU is filling up the next frame's queue. The swap happens in [scene_renderer.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/scene_renderer.cpp) at the frame boundary:
@@ -338,6 +356,8 @@ Rather than having one giant loop that handles every command type, we split thin
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+`Backend::initialize()` brings fifteen of these up through one `create_pipeline()` template: it constructs the pipeline into its `unique_ptr` slot, calls `initialize()`, logs the same way for every one, and returns false so the caller can bail. Adding a pipeline is one three-line block rather than a seven-line copy of the create-check-log dance. `RiggedCullPipeline` stays outside the helper on purpose — it has a different constructor, takes its shader cache through a setter, and is optional, so a failure resets the slot and carries on instead of failing the whole backend.
+
 Each pipeline understands the specific needs of its command type and can optimize accordingly. The main execute loop walks through the sorted queue and delegates to the appropriate pipeline. Here's a simplified view from [backend.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend.cpp):
 
 ```cpp
@@ -402,11 +422,35 @@ render/gl/
 ├── state_scopes.h          # RAII wrappers for GL state
 ├── persistent_buffer.h     # Persistent mapped buffers for streaming
 └── backend/                # Individual pipeline implementations
+    ├── mesh_buffers.cpp/.h  # StaticMeshBuffers: the GL handles one mesh owns
     ├── cylinder_pipeline.cpp/.h
     ├── terrain_pipeline.cpp/.h
-    ├── vegetation_pipeline.cpp/.h
+    ├── prop_mesh_builder.cpp/.h        # append_* geometry helpers, shared
+    ├── vegetation_pipeline.cpp/.h      # plumbing: init, shutdown, uniforms, upload
+    ├── vegetation_pipeline_natural.cpp     # stone, plant, pine, olive, dead tree, ore
+    ├── vegetation_pipeline_settlement.cpp  # camp, tent, cart, rack, ruins, home, statue, shrine
     └── ...
 ```
+
+`VegetationPipeline` is one class across four translation units. It had reached ~3000
+lines in a single file by stacking three unrelated concerns: the pipeline plumbing every
+prop shares, a general-purpose mesh-building library, and the per-prop authoring of
+fourteen `initialize_*_pipeline()` methods. The mesh helpers were file-static, so nothing
+else could call or test them despite being pure functions over a vertex/index pair; they
+now live in `prop_mesh_builder.h` behind the named types `PropMeshVerts` and
+`PropMeshIndices`. The authoring methods split by domain — natural scatter versus
+settlement props — because those two groups are edited for different reasons and almost
+never together.
+
+A pipeline that owns static geometry keeps it in `StaticMeshBuffers` — the VAO, the vertex buffer, the index buffer, an optional instance buffer, and the two counts — and tears it down with `release_mesh_buffers()`, which no-ops safely when no GL context is current. That one struct replaced twenty-six hand-written groups of loose `GLuint`/`GLsizei` members and their per-mesh `shutdown_*()` functions across the vegetation, combat dust, healer aura, healing beam, primitive batch and cylinder pipelines. `VegetationPipeline::shutdown()` and `CombatDustPipeline::release_geometry()` now just walk their mesh list.
+
+Three pipelines deliberately stay off it because their handles are a different shape: `terrain_pipeline`'s grass draws from arrays and has no index buffer, `rain_pipeline` names its buffers differently, and `rigged_cull_pipeline` owns compute-shader SSBOs rather than a mesh. Forcing those into the struct would make it mean less, not more.
+
+### Billboard effects all take one path
+
+Combat dust, building flames, burning flames, fireballs, stone impacts and metal sparks are the same draw: one camera-facing billboard mesh, instanced, with a per-instance position, colour, radius, intensity, clock and — for sparks — a direction. The only thing that varies is which `EffectType` the fragment shader branches on. So `effects_command_executor.cpp` maps `EffectBatchCmd::Kind` to `EffectType` once in `billboard_effect_type()`, builds the instance in `make_dust_instance()`, and runs every one of those six kinds through a single `case` block calling `render_dust_batch()`. The batched path (a run of consecutive effect commands) and the single-command path share both helpers, so they cannot drift apart.
+
+Blood pools stay separate: they carry rotation, aspect ratio and a seed instead of colour and intensity, and draw from their own mesh with their own shader.
 
 Every class that touches OpenGL inherits from QOpenGLFunctions_3_3_Core. This is Qt's way of giving you function pointers to OpenGL without relying on a global loader:
 
@@ -542,6 +586,25 @@ AnimationInputs  ──►  resolve_pose_intent()  ──►  PoseIntent
 - `archetype_for_variant[k]` / `state_for_variant[k]` — per-variant overrides (e.g. by seed for builders, by `FacialHairStyle` for spearmen), optionally gated on a trigger intent
 
 Nation renderers that need per-variant animation (builders with different tools, spearmen with beards) simply fill in the table's arrays at static init time instead of registering a function pointer.
+
+### Equipment archetypes resolve through one engine
+
+Putting equipment on a creature means deriving a new archetype from a base one:
+take the base descriptor, append each item's bake attachments, extend the role-colour
+count, and register the result — memoised on (base archetype, debug name, handle list)
+so a loadout is only built once.
+
+That logic is identical for riders and for mounts, and it used to exist as two
+169-line files that differed only in the word "humanoid" versus "horse". It now lives
+once in `EquipmentArchetype::Resolver` (`render/equipment/equipment_archetype_resolver.h`).
+`humanoid_equipment_archetype.cpp` and `horse_equipment_archetype.cpp` are thin wrappers
+that own one `Resolver` each and keep their existing public functions, so no call site
+changed.
+
+The two resolvers stay separate instances on purpose: each owns its own contribution
+registry, memo cache and mutex. Merging them into one registry would put rider and mount
+equipment handles in the same key space, and a handle registered for one domain would
+silently become visible to the other.
 
 **Caching.** `CreatureRenderBatch::add_humanoid` calls `resolve_pose_intent` once and passes the result into both `humanoid_state_for_anim` (via its two-argument overload) and the variant-table dispatch block. No system in the critical render path calls the resolver more than once per entity per frame.
 
@@ -685,6 +748,62 @@ whole-grid encode. `arena_app --fog-of-war` runs the real thing in the Arena,
 and the `fog_of_war_recon` scenario walks a patrol out and back so all three
 states appear in one frame.
 
+## Ground markers: one ring system
+
+Everything the game draws flat on the ground to say "this is the thing you mean"
+is one system: the blue ring under a selected unit, the yellow one under a
+hovered unit, the hostile outline attack mode puts on a valid target, and the
+projectile range rings a selected archer or catapult publishes. They are one
+command (`GroundMarkerCmd`), one shader (`assets/shaders/ground_marker.*`), one
+annulus mesh, and — because the sort key groups them into a single prepared batch
+— **one instanced draw call per frame for every marker on screen**, whatever
+their colours, radii or patterns.
+
+`ISubmitter::ground_marker` is the only entry point. `selection_ring` and
+`selection_ring_styled` still exist as non-virtual adapters that decompose the
+old model matrix into a centre and a radius, so the world walk that draws
+selection rings did not have to change.
+
+Three properties are the point of the design:
+
+- **Markers follow the ground.** The vertex shader samples the terrain height
+  texture the terrain renderer already uploads (`TextureUnit::terrain_height`,
+  published to the renderer by `TerrainRenderer::submit`) and places every ring
+  vertex on the surface. A range ring 21 units across climbs a hill and is
+  occluded by one instead of slicing through it. Without a height texture — an
+  arena scene with no terrain, say — markers fall back to the centre's own height.
+- **Patterns are data, not geometry.** `render/geom/ground_marker_pattern.h`
+  holds one spec per `TeamPattern` (dash count and duty, an optional inner band,
+  optional ticks). C++ uploads that table as `u_pattern_table`; the fragment
+  shader reads it. Adding a pattern is a row in the table, not a new mesh, and
+  the accessibility contract — every pattern differs in _shape_, so hue is never
+  the only signal — is asserted against the table in
+  `ground_marker_pattern_test.cpp` rather than against six meshes.
+- **The radial coordinate is band-relative.** A marker carries an outer radius
+  and a band thickness in world units; the mesh's radial coordinate is measured
+  in band widths (`world_radius = outer_radius + (t - 1) * thickness`), which is
+  why a 0.3-unit selection ring and a 21-unit range ring are equally crisp and
+  why the inner band of a double ring and the ticks of a chevron sit at the same
+  visual offset at any size. `k_marker_geometry_inner/outer` must stay wide
+  enough to contain every pattern feature; a test checks it.
+
+The fragment shader adds what the old per-pattern meshes could not: an
+antialiased band edge, a soft glow around the line, and a slow pulse on markers
+flagged `focused` (a single selection, the hovered target, the unit whose range
+ring is the one being read). Colour still carries meaning — blue for selected,
+gold for reach, red for hostile — but never alone.
+
+RPG commander combat is on the same system. `RpgTelegraphRenderer` used to draw
+six kinds of ring that differed only in hue — an enemy winding up, a staggered
+enemy, your aim candidate, your locked target, a strike flash, a landed hit —
+which is exactly the case a colour-vision mode collapses. Each role now maps to
+a pattern in `marker_style()`: telegraph chevrons, a locked target's double ring
+(and the shader's pulse, since "the one you mean" is what `focused` means
+everywhere else), dashed for aim, dotted for stagger, solid for the strike
+flash, notched for the hit. Where the _rate_ of a pulse carries meaning — a
+telegraph speeds up from 4 Hz to 10 Hz as the wind-up completes — that stays in
+the submitted alpha, because the shader's pulse is a fixed cadence.
+
 ## Activity indicators
 
 Every unit the local player owns carries one small 3D item above its head saying
@@ -784,7 +903,7 @@ When specific units don't render but debug shapes do, the renderer probably isn'
 
 Transparent objects rendering as opaque usually means blending got disabled somewhere, or the draw order is wrong so transparent stuff draws before what's behind it. Make sure the queue sorts transparent objects to the back and that the BlendScope RAII wrapper is being used.
 
-When part of a scatter prop shades almost black while the rest of the same mesh looks fine, suspect the face normals rather than the lighting. `append_oriented_box` and `append_barrel_yaxis` in [vegetation_pipeline.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend/vegetation_pipeline.cpp) emit inward-facing normals on some faces; prop rendering runs with culling disabled, so the geometry still draws but shades as if it were facing away from every light. Use `append_prop_beam` and `append_prop_taper` for new geometry—they are the same shapes with outward normals. `append_box` and `append_vert_prism` were always correct. The background and the full list of touchpoints for a new prop are in [docs/SETTLEMENT_ASSETS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SETTLEMENT_ASSETS.md).
+When part of a scatter prop shades almost black while the rest of the same mesh looks fine, suspect the face normals rather than the lighting. `append_oriented_box` and `append_barrel_yaxis` in [prop_mesh_builder.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend/prop_mesh_builder.cpp) emit inward-facing normals on some faces; prop rendering runs with culling disabled, so the geometry still draws but shades as if it were facing away from every light. Use `append_prop_beam` and `append_prop_taper` for new geometry—they are the same shapes with outward normals. `append_box` and `append_vert_prism` were always correct. The background and the full list of touchpoints for a new prop are in [docs/SETTLEMENT_ASSETS.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SETTLEMENT_ASSETS.md).
 
 ### When the process dies inside the GPU driver
 
@@ -946,6 +1065,19 @@ to the renderer: the rock goes pitch-dark, gains bound rags, and burns in the sl
 flames need the concrete `Renderer` (`fireball` is not on `ISubmitter`), so they come from a
 `dynamic_cast` on `unwrap_submitter()` and are simply skipped when a submitter cannot
 provide one — an offscreen preview harness still gets the geometry, just no fire.
+
+## The phases inside `render_world`
+
+`Renderer::render_world` in [scene_walk.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/scene_walk.cpp) is the widest function in the renderer, so it is worth knowing its shape before editing it. It runs four phases in order, and each one is a separate private method so the boundaries are visible rather than implied by blank lines:
+
+1. **Snapshot and setup** — acquire the detached render world, take the entity mutex, attach the persistent render registry, and resolve the id spans. `compute_rpg_lens_gap()` returns the RPG lens exclusion that the submission visibility policy then applies.
+2. **Collection** — `collect_unit_entries()` and `collect_non_unit_entries()` walk the id spans and produce flat `UnitRenderEntry` / `RenderEntry` vectors. Everything that can reject an entity (pending removal, dead without a death animation, invisible, out of frustum, fogged) happens here, so the submission phase never has to ask again. Units are then sorted front to back.
+3. **Batching setup** — prune the caches, ask `BattleRenderOptimizer` for a batching ratio, size the `PrimitiveBatcher`, and derive the full-detail distance threshold.
+4. **Submission** — `submit_unit_entry()` handles one unit: resolve its renderer (falling back to the profile renderer key), decide whether its animation ticks this frame, fill a `DrawContext`, pick an LOD tier, and call the registry renderer through either the batching submitter or the renderer itself. Non-unit entries take a shorter version of the same path.
+
+Everything phase 4 needs from phases 1-3 travels in one `UnitSubmitContext` — the world, the resource manager, the batching submitter, the optimizer, the batching ratio, the LOD distance threshold and the frame's flags. That is the point of the struct: the submission path used to read a dozen locals out of an enclosing scope, so there was no way to see what it actually depended on. Now adding a dependency means adding a field.
+
+The split matters because phase 2 is pure collection against renderer state, while phase 4 owns the submitter, the batcher and the LOD decisions. Keeping a filter in phase 2 keeps it out of the hot submission loop; adding renderer state to phase 2 means adding it to an explicit parameter list rather than to a growing capture set.
 
 ## The full journey
 

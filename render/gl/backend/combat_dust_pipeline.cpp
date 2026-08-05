@@ -6,6 +6,8 @@
 
 #include <cmath>
 #include <numbers>
+#include <string>
+#include <vector>
 
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
@@ -14,6 +16,7 @@
 #include "../backend.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
+#include "gl_error_check.h"
 #include "scene/camera.h"
 #include "spark_orientation.h"
 
@@ -23,6 +26,11 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
 namespace {
+
+auto check_gl_error(const char* operation) -> bool {
+  return BackendPipelines::check_gl_error("CombatDustPipeline", operation);
+}
+
 constexpr float k_min_dust_intensity = 0.01F;
 constexpr float k_dust_color_r = 0.6F;
 constexpr float k_dust_color_g = 0.55F;
@@ -119,25 +127,6 @@ void restore_effect_render_state(const EffectRenderState& state) {
   }
 }
 
-void clear_gl_errors() {
-#ifndef NDEBUG
-  while (glGetError() != GL_NO_ERROR) {
-  }
-#endif
-}
-
-auto check_gl_error(const char* operation) -> bool {
-#ifndef NDEBUG
-  GLenum const err = glGetError();
-  if (err != GL_NO_ERROR) {
-    qWarning() << "CombatDustPipeline GL error in" << operation << ":" << err;
-    return false;
-  }
-#else
-  Q_UNUSED(operation);
-#endif
-  return true;
-}
 } // namespace
 
 auto CombatDustPipeline::initialize() -> bool {
@@ -193,7 +182,7 @@ auto CombatDustPipeline::initialize() -> bool {
   if (m_blood_shader != nullptr && !create_blood_geometry()) {
     qWarning() << "CombatDustPipeline: Blood pools disabled; failed to create "
                   "blood geometry";
-    shutdown_blood_geometry();
+    release_mesh_buffers(*this, m_blood_mesh);
     m_blood_shader = nullptr;
     m_blood_uniforms = {};
   }
@@ -203,122 +192,22 @@ auto CombatDustPipeline::initialize() -> bool {
 }
 
 void CombatDustPipeline::shutdown() {
-  shutdown_blood_geometry();
-  shutdown_metal_spark_geometry();
-  shutdown_fireball_geometry();
-  shutdown_geometry();
+  release_geometry();
   m_blood_shader = nullptr;
   m_dust_shader = nullptr;
   m_blood_data.clear();
   m_dust_data.clear();
 }
 
-void CombatDustPipeline::shutdown_geometry() {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    m_vao = 0;
-    m_vertex_buffer = 0;
-    m_index_buffer = 0;
-    m_index_count = 0;
-    return;
+void CombatDustPipeline::release_geometry() {
+  if (QOpenGLContext::currentContext() != nullptr) {
+    initializeOpenGLFunctions();
+    clear_gl_errors();
   }
-
-  initializeOpenGLFunctions();
-  clear_gl_errors();
-
-  if (m_vao != 0) {
-    glDeleteVertexArrays(1, &m_vao);
-    m_vao = 0;
+  for (StaticMeshBuffers* mesh :
+       {&m_dust_mesh, &m_fireball_mesh, &m_metal_spark_mesh, &m_blood_mesh}) {
+    release_mesh_buffers(*this, *mesh);
   }
-  if (m_vertex_buffer != 0) {
-    glDeleteBuffers(1, &m_vertex_buffer);
-    m_vertex_buffer = 0;
-  }
-  if (m_index_buffer != 0) {
-    glDeleteBuffers(1, &m_index_buffer);
-    m_index_buffer = 0;
-  }
-  m_index_count = 0;
-}
-
-void CombatDustPipeline::shutdown_fireball_geometry() {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    m_fireball_vao = 0;
-    m_fireball_vertex_buffer = 0;
-    m_fireball_index_buffer = 0;
-    m_fireball_index_count = 0;
-    return;
-  }
-
-  initializeOpenGLFunctions();
-  clear_gl_errors();
-
-  if (m_fireball_vao != 0) {
-    glDeleteVertexArrays(1, &m_fireball_vao);
-    m_fireball_vao = 0;
-  }
-  if (m_fireball_vertex_buffer != 0) {
-    glDeleteBuffers(1, &m_fireball_vertex_buffer);
-    m_fireball_vertex_buffer = 0;
-  }
-  if (m_fireball_index_buffer != 0) {
-    glDeleteBuffers(1, &m_fireball_index_buffer);
-    m_fireball_index_buffer = 0;
-  }
-  m_fireball_index_count = 0;
-}
-
-void CombatDustPipeline::shutdown_metal_spark_geometry() {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    m_metal_spark_vao = 0;
-    m_metal_spark_vertex_buffer = 0;
-    m_metal_spark_index_buffer = 0;
-    m_metal_spark_index_count = 0;
-    return;
-  }
-
-  initializeOpenGLFunctions();
-  clear_gl_errors();
-
-  if (m_metal_spark_vao != 0) {
-    glDeleteVertexArrays(1, &m_metal_spark_vao);
-    m_metal_spark_vao = 0;
-  }
-  if (m_metal_spark_vertex_buffer != 0) {
-    glDeleteBuffers(1, &m_metal_spark_vertex_buffer);
-    m_metal_spark_vertex_buffer = 0;
-  }
-  if (m_metal_spark_index_buffer != 0) {
-    glDeleteBuffers(1, &m_metal_spark_index_buffer);
-    m_metal_spark_index_buffer = 0;
-  }
-  m_metal_spark_index_count = 0;
-}
-
-void CombatDustPipeline::shutdown_blood_geometry() {
-  if (QOpenGLContext::currentContext() == nullptr) {
-    m_blood_vao = 0;
-    m_blood_vertex_buffer = 0;
-    m_blood_index_buffer = 0;
-    m_blood_index_count = 0;
-    return;
-  }
-
-  initializeOpenGLFunctions();
-  clear_gl_errors();
-
-  if (m_blood_vao != 0) {
-    glDeleteVertexArrays(1, &m_blood_vao);
-    m_blood_vao = 0;
-  }
-  if (m_blood_vertex_buffer != 0) {
-    glDeleteBuffers(1, &m_blood_vertex_buffer);
-    m_blood_vertex_buffer = 0;
-  }
-  if (m_blood_index_buffer != 0) {
-    glDeleteBuffers(1, &m_blood_index_buffer);
-    m_blood_index_buffer = 0;
-  }
-  m_blood_index_count = 0;
 }
 
 void CombatDustPipeline::cache_uniforms() {
@@ -348,9 +237,10 @@ void CombatDustPipeline::cache_uniforms() {
 }
 
 auto CombatDustPipeline::is_initialized() const -> bool {
-  return m_dust_shader != nullptr && m_vao != 0 && m_index_count > 0 &&
-         m_fireball_vao != 0 && m_fireball_index_count > 0 && m_metal_spark_vao != 0 &&
-         m_metal_spark_index_count > 0;
+  return m_dust_shader != nullptr && m_dust_mesh.vao != 0 &&
+         m_dust_mesh.index_count > 0 && m_fireball_mesh.vao != 0 &&
+         m_fireball_mesh.index_count > 0 && m_metal_spark_mesh.vao != 0 &&
+         m_metal_spark_mesh.index_count > 0;
 }
 
 struct DustVertex {
@@ -359,9 +249,93 @@ struct DustVertex {
   float tex_coord[2];
 };
 
+namespace {
+
+auto upload_dust_mesh(QOpenGLFunctions_3_3_Core& gl,
+                      StaticMeshBuffers& mesh,
+                      const char* label,
+                      const std::vector<DustVertex>& vertices,
+                      const std::vector<unsigned int>& indices) -> bool {
+  auto stage_ok = [label](const char* stage) {
+    const std::string message = std::string(label) + " " + stage;
+    return check_gl_error(message.c_str());
+  };
+
+  gl.glGenVertexArrays(1, &mesh.vao);
+  if (!stage_ok("glGenVertexArrays") || mesh.vao == 0) {
+    return false;
+  }
+
+  gl.glBindVertexArray(mesh.vao);
+  if (!stage_ok("glBindVertexArray")) {
+    gl.glDeleteVertexArrays(1, &mesh.vao);
+    mesh.vao = 0;
+    return false;
+  }
+
+  gl.glGenBuffers(1, &mesh.vertex_buffer);
+  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
+  gl.glBufferData(GL_ARRAY_BUFFER,
+                  static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
+                  vertices.data(),
+                  GL_STATIC_DRAW);
+  if (!stage_ok("vertex buffer")) {
+    release_mesh_buffers(gl, mesh);
+    return false;
+  }
+
+  gl.glGenBuffers(1, &mesh.index_buffer);
+  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
+  gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                  static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
+                  indices.data(),
+                  GL_STATIC_DRAW);
+  if (!stage_ok("index buffer")) {
+    release_mesh_buffers(gl, mesh);
+    return false;
+  }
+
+  mesh.index_count = static_cast<GLsizei>(indices.size());
+
+  gl.glEnableVertexAttribArray(VertexAttrib::position);
+  gl.glVertexAttribPointer(VertexAttrib::position,
+                           ComponentCount::vec3,
+                           GL_FLOAT,
+                           GL_FALSE,
+                           sizeof(DustVertex),
+                           reinterpret_cast<void*>(offsetof(DustVertex, position)));
+
+  gl.glEnableVertexAttribArray(VertexAttrib::normal);
+  gl.glVertexAttribPointer(VertexAttrib::normal,
+                           ComponentCount::vec3,
+                           GL_FLOAT,
+                           GL_FALSE,
+                           sizeof(DustVertex),
+                           reinterpret_cast<void*>(offsetof(DustVertex, normal)));
+
+  gl.glEnableVertexAttribArray(VertexAttrib::tex_coord);
+  gl.glVertexAttribPointer(VertexAttrib::tex_coord,
+                           ComponentCount::vec2,
+                           GL_FLOAT,
+                           GL_FALSE,
+                           sizeof(DustVertex),
+                           reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
+
+  gl.glBindVertexArray(0);
+
+  if (!stage_ok("vertex attributes")) {
+    release_mesh_buffers(gl, mesh);
+    return false;
+  }
+
+  return true;
+}
+
+} // namespace
+
 auto CombatDustPipeline::create_dust_geometry() -> bool {
   initializeOpenGLFunctions();
-  shutdown_geometry();
+  release_mesh_buffers(*this, m_dust_mesh);
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -420,79 +394,12 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
     }
   }
 
-  glGenVertexArrays(1, &m_vao);
-  if (!check_gl_error("glGenVertexArrays") || m_vao == 0) {
-    return false;
-  }
-
-  glBindVertexArray(m_vao);
-  if (!check_gl_error("glBindVertexArray")) {
-    glDeleteVertexArrays(1, &m_vao);
-    m_vao = 0;
-    return false;
-  }
-
-  glGenBuffers(1, &m_vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("vertex buffer")) {
-    shutdown_geometry();
-    return false;
-  }
-
-  glGenBuffers(1, &m_index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("index buffer")) {
-    shutdown_geometry();
-    return false;
-  }
-
-  m_index_count = static_cast<GLsizei>(indices.size());
-
-  glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
-
-  glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
-
-  glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord,
-                        ComponentCount::vec2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
-
-  glBindVertexArray(0);
-
-  if (!check_gl_error("vertex attributes")) {
-    shutdown_geometry();
-    return false;
-  }
-
-  return true;
+  return upload_dust_mesh(*this, m_dust_mesh, "dust", vertices, indices);
 }
 
 auto CombatDustPipeline::create_fireball_geometry() -> bool {
   initializeOpenGLFunctions();
-  shutdown_fireball_geometry();
+  release_mesh_buffers(*this, m_fireball_mesh);
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -547,79 +454,12 @@ auto CombatDustPipeline::create_fireball_geometry() -> bool {
     }
   }
 
-  glGenVertexArrays(1, &m_fireball_vao);
-  if (!check_gl_error("glGenVertexArrays fireball") || m_fireball_vao == 0) {
-    return false;
-  }
-
-  glBindVertexArray(m_fireball_vao);
-  if (!check_gl_error("glBindVertexArray fireball")) {
-    glDeleteVertexArrays(1, &m_fireball_vao);
-    m_fireball_vao = 0;
-    return false;
-  }
-
-  glGenBuffers(1, &m_fireball_vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_fireball_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("fireball vertex buffer")) {
-    shutdown_fireball_geometry();
-    return false;
-  }
-
-  glGenBuffers(1, &m_fireball_index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_fireball_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("fireball index buffer")) {
-    shutdown_fireball_geometry();
-    return false;
-  }
-
-  m_fireball_index_count = static_cast<GLsizei>(indices.size());
-
-  glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
-
-  glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
-
-  glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord,
-                        ComponentCount::vec2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
-
-  glBindVertexArray(0);
-
-  if (!check_gl_error("fireball vertex attributes")) {
-    shutdown_fireball_geometry();
-    return false;
-  }
-
-  return true;
+  return upload_dust_mesh(*this, m_fireball_mesh, "fireball", vertices, indices);
 }
 
 auto CombatDustPipeline::create_metal_spark_geometry() -> bool {
   initializeOpenGLFunctions();
-  shutdown_metal_spark_geometry();
+  release_mesh_buffers(*this, m_metal_spark_mesh);
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -679,68 +519,12 @@ auto CombatDustPipeline::create_metal_spark_geometry() -> bool {
                    {first, first + 1U, first + 2U, first + 2U, first + 1U, first + 3U});
   }
 
-  glGenVertexArrays(1, &m_metal_spark_vao);
-  if (!check_gl_error("glGenVertexArrays metal spark") || m_metal_spark_vao == 0) {
-    return false;
-  }
-
-  glBindVertexArray(m_metal_spark_vao);
-  glGenBuffers(1, &m_metal_spark_vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_metal_spark_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("metal spark vertex buffer")) {
-    shutdown_metal_spark_geometry();
-    return false;
-  }
-
-  glGenBuffers(1, &m_metal_spark_index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_metal_spark_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("metal spark index buffer")) {
-    shutdown_metal_spark_geometry();
-    return false;
-  }
-  m_metal_spark_index_count = static_cast<GLsizei>(indices.size());
-
-  glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
-  glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
-  glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord,
-                        ComponentCount::vec2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
-  glBindVertexArray(0);
-
-  if (!check_gl_error("metal spark vertex attributes")) {
-    shutdown_metal_spark_geometry();
-    return false;
-  }
-  return true;
+  return upload_dust_mesh(*this, m_metal_spark_mesh, "metal spark", vertices, indices);
 }
 
 auto CombatDustPipeline::create_blood_geometry() -> bool {
   initializeOpenGLFunctions();
-  shutdown_blood_geometry();
+  release_mesh_buffers(*this, m_blood_mesh);
   clear_gl_errors();
 
   std::vector<DustVertex> vertices;
@@ -788,74 +572,7 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
     indices.push_back(next);
   }
 
-  glGenVertexArrays(1, &m_blood_vao);
-  if (!check_gl_error("glGenVertexArrays blood") || m_blood_vao == 0) {
-    return false;
-  }
-
-  glBindVertexArray(m_blood_vao);
-  if (!check_gl_error("glBindVertexArray blood")) {
-    glDeleteVertexArrays(1, &m_blood_vao);
-    m_blood_vao = 0;
-    return false;
-  }
-
-  glGenBuffers(1, &m_blood_vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_blood_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("blood vertex buffer")) {
-    shutdown_blood_geometry();
-    return false;
-  }
-
-  glGenBuffers(1, &m_blood_index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_blood_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("blood index buffer")) {
-    shutdown_blood_geometry();
-    return false;
-  }
-
-  m_blood_index_count = static_cast<GLsizei>(indices.size());
-
-  glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, position)));
-
-  glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, normal)));
-
-  glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord,
-                        ComponentCount::vec2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(DustVertex),
-                        reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
-
-  glBindVertexArray(0);
-
-  if (!check_gl_error("blood vertex attributes")) {
-    shutdown_blood_geometry();
-    return false;
-  }
-
-  return true;
+  return upload_dust_mesh(*this, m_blood_mesh, "blood", vertices, indices);
 }
 
 void CombatDustPipeline::collect_combat_zones(Engine::Core::World* world,
@@ -1082,8 +799,8 @@ void CombatDustPipeline::render(const Camera& cam, float animation_time) {
 }
 
 void CombatDustPipeline::render_blood_pools(const Camera& cam) {
-  if (m_blood_shader == nullptr || m_blood_vao == 0 || m_blood_index_count <= 0 ||
-      m_blood_data.empty()) {
+  if (m_blood_shader == nullptr || m_blood_mesh.vao == 0 ||
+      m_blood_mesh.index_count <= 0 || m_blood_data.empty()) {
     return;
   }
 
@@ -1099,95 +816,6 @@ void CombatDustPipeline::render_blood_pools(const Camera& cam) {
                          .seed = blood.seed});
   }
   render_blood_pool_batch(instances.data(), instances.size(), view_proj);
-}
-
-void CombatDustPipeline::render_dust(const CombatDustData& data, const Camera& cam) {
-  set_view_position(cam.get_position());
-  QMatrix4x4 const view_proj = cam.get_view_projection_matrix();
-  DustInstanceData const instance{.position = data.position,
-                                  .color = data.color,
-                                  .radius = data.radius,
-                                  .intensity = data.intensity,
-                                  .time = data.time,
-                                  .effect_type = data.effect_type};
-  render_dust_batch(&instance, 1U, view_proj);
-}
-
-void CombatDustPipeline::render_single_dust(const QVector3D& position,
-                                            const QVector3D& color,
-                                            float radius,
-                                            float intensity,
-                                            float time,
-                                            const QMatrix4x4& view_proj) {
-  DustInstanceData const instance{.position = position,
-                                  .color = color,
-                                  .radius = radius,
-                                  .intensity = intensity,
-                                  .time = time,
-                                  .effect_type = EffectType::Dust};
-  render_dust_batch(&instance, 1U, view_proj);
-}
-
-void CombatDustPipeline::render_single_flame(const QVector3D& position,
-                                             const QVector3D& color,
-                                             float radius,
-                                             float intensity,
-                                             float time,
-                                             const QMatrix4x4& view_proj) {
-  DustInstanceData const instance{.position = position,
-                                  .color = color,
-                                  .radius = radius,
-                                  .intensity = intensity,
-                                  .time = time,
-                                  .effect_type = EffectType::Flame,
-                                  .overlay = false};
-  render_dust_batch(&instance, 1U, view_proj);
-}
-
-void CombatDustPipeline::render_single_fireball(const QVector3D& position,
-                                                const QVector3D& color,
-                                                float radius,
-                                                float intensity,
-                                                float time,
-                                                const QMatrix4x4& view_proj) {
-  DustInstanceData const instance{.position = position,
-                                  .color = color,
-                                  .radius = radius,
-                                  .intensity = intensity,
-                                  .time = time,
-                                  .effect_type = EffectType::Fireball};
-  render_dust_batch(&instance, 1U, view_proj);
-}
-
-void CombatDustPipeline::render_single_stone_impact(const QVector3D& position,
-                                                    const QVector3D& color,
-                                                    float radius,
-                                                    float intensity,
-                                                    float time,
-                                                    const QMatrix4x4& view_proj) {
-  DustInstanceData const instance{.position = position,
-                                  .color = color,
-                                  .radius = radius,
-                                  .intensity = intensity,
-                                  .time = time,
-                                  .effect_type = EffectType::StoneImpact};
-  render_dust_batch(&instance, 1U, view_proj);
-}
-
-void CombatDustPipeline::render_single_blood_pool(const QVector3D& position,
-                                                  float radius,
-                                                  float alpha_scale,
-                                                  float rotation,
-                                                  float aspect_ratio,
-                                                  float seed,
-                                                  const QMatrix4x4& view_proj) {
-  BloodPoolInstanceData const instance{.position = position,
-                                       .radius = radius,
-                                       .alpha_scale = alpha_scale,
-                                       .rotation = rotation,
-                                       .aspect_ratio = aspect_ratio,
-                                       .seed = seed};
-  render_blood_pool_batch(&instance, 1U, view_proj);
 }
 
 void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
@@ -1237,12 +865,14 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
 
     bool const use_metal_spark_geometry = inst.effect_type == EffectType::MetalSpark;
     GLuint const target_vao =
-        use_fireball_geometry ? m_fireball_vao
-                              : (use_metal_spark_geometry ? m_metal_spark_vao : m_vao);
+        use_fireball_geometry
+            ? m_fireball_mesh.vao
+            : (use_metal_spark_geometry ? m_metal_spark_mesh.vao : m_dust_mesh.vao);
     GLsizei const target_index_count =
         use_fireball_geometry
-            ? m_fireball_index_count
-            : (use_metal_spark_geometry ? m_metal_spark_index_count : m_index_count);
+            ? m_fireball_mesh.index_count
+            : (use_metal_spark_geometry ? m_metal_spark_mesh.index_count
+                                        : m_dust_mesh.index_count);
     if (target_vao == 0 || target_index_count <= 0) {
       continue;
     }
@@ -1285,7 +915,8 @@ void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* in
                                                  std::size_t count,
                                                  const QMatrix4x4& view_proj) {
   if (!is_initialized() || instances == nullptr || count == 0 ||
-      m_blood_shader == nullptr || m_blood_vao == 0 || m_blood_index_count <= 0) {
+      m_blood_shader == nullptr || m_blood_mesh.vao == 0 ||
+      m_blood_mesh.index_count <= 0) {
     return;
   }
 
@@ -1310,7 +941,7 @@ void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* in
   glPolygonOffset(-1.0F, -1.0F);
 
   m_blood_shader->use();
-  glBindVertexArray(m_blood_vao);
+  glBindVertexArray(m_blood_mesh.vao);
 
   for (std::size_t idx = 0; idx < count; ++idx) {
     BloodPoolInstanceData const& blood = instances[idx];
@@ -1331,7 +962,7 @@ void CombatDustPipeline::render_blood_pool_batch(const BloodPoolInstanceData* in
     m_blood_shader->set_uniform(m_blood_uniforms.aspect_ratio, blood.aspect_ratio);
     m_blood_shader->set_uniform(m_blood_uniforms.seed, blood.seed);
 
-    glDrawElements(GL_TRIANGLES, m_blood_index_count, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, m_blood_mesh.index_count, GL_UNSIGNED_INT, nullptr);
   }
 
   glBindVertexArray(0);

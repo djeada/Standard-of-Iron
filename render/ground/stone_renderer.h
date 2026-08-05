@@ -24,11 +24,9 @@ public:
                  const Game::Map::BiomeSettings& biome_settings,
                  const std::vector<Game::Map::WorldProp>& world_props = {});
 
-  void set_light_direction(const QVector3D& dir);
+  void set_light_direction(const QVector3D& dir) override;
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
-
-  void clear();
 
 private:
   void generate_stone_instances();
