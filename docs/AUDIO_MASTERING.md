@@ -277,6 +277,181 @@ that assert silence after a stop need to render twice. And `initialize` takes an
 without a playback device, which is how the backend tests drive `on_audio`
 directly and deterministically.
 
+### Beds are decoded at their own rate and resampled with a real filter
+
+The loudest artefact in the game was not in any asset: it was manufactured at
+load time. Every ambience bed shipped at **16 kHz**, and the decoder was asked to
+produce 48 kHz, so miniaudio resampled with its stock linear interpolator behind
+a fourth-order IIR low-pass whose cutoff sits exactly at the source Nyquist.
+Linear interpolation mirrors the source's content around its own sampling
+frequency, and a 24 dB/octave filter starting at 8 kHz cannot remove an image
+that begins at 8 kHz.
+
+Measured on the mix the game actually produced, against the level of its own
+1-4 kHz band:
+
+| Band       | 16 kHz source, decoded by the engine | The same file through `soxr` |
+| ---------- | ------------------------------------ | ---------------------------- |
+| 8.2-10 kHz | **-26.5 dB**                         | -85.9 dB                     |
+| 10-12 kHz  | -34.2 dB                             | -85.9 dB                     |
+| 12-14 kHz  | -48.8 dB                             | -85.9 dB                     |
+
+A 16 kHz file cannot contain anything above 8 kHz, so every decibel in those
+rows was invented by the resampler: a mirror image of the bed's own noise,
+continuous, sitting in the band the ear is most sensitive to, under every map
+for the whole mission. Raising the IIR to eighth order — the highest miniaudio
+allows — moved the worst band by only 4 dB, because the problem is the shape of
+the filter, not its order.
+
+`game/audio/resampler.{h,cpp}` decodes at the file's native rate and converts
+with a polyphase FIR: a Kaiser-windowed sinc designed for a 90 dB stopband and a
+transition band 10% of the passband, which comes to 115 taps per phase for both
+ratios the game ships (16 kHz and 32 kHz into 48 kHz). The same measurement
+afterwards reads **-69.0 dB** at 8.2-10 kHz — 42 dB of fabricated hiss removed —
+and the real 6-7.8 kHz band comes back 5 dB louder, because the old IIR had been
+eating content as well as failing to stop images.
+
+It costs 39 ms for a ten-second bed and 286 ms for a sixty-second music track,
+on the decode worker, behind the loading screen.
+
+`ResamplerTest.UpsamplingDoesNotFabricateContentAboveTheSourceNyquist` measures
+the imaging against a linear interpolator written into the test, so reverting to
+interpolation fails rather than quietly passing.
+
+### The beds themselves are generated, not sampled
+
+Fixing the resampler stopped the game inventing hiss, but the beds were still
+16 kHz ten-second clips, and three of them measured _louder_ in 2-6 kHz than in
+their own 100-800 Hz body — `alpine_mountain_pass` by +2.0 dB. Several decoded
+above full scale (`mediterranean_plains` clipped 1132 samples) and every one of
+them had a step discontinuity at its loop point.
+
+`tools/audio_synth/ambience.py` replaces all eighteen with generated beds, for
+the reasons the cue sounds are generated: nothing sampled or licensed, a bed is
+retuned by editing a recipe, and they can be produced at the rate the mixer runs
+at. `make audio-ambience` renders them.
+
+Each bed is layers of noise, a filter and a slow contour — wind, rain, water,
+foliage, murmur, work sounds, a distant tread, fire — mixed per recipe, shaped
+by a house curve that removes the rumble below 45 Hz and the hiss above 3.2 kHz,
+then folded tail-into-head so the file loops without a seam.
+
+|                          | before                         | after                             |
+| ------------------------ | ------------------------------ | --------------------------------- |
+| Sample rate              | 16 kHz                         | 48 kHz, so nothing resamples them |
+| Length                   | 10 s                           | 18.8 s                            |
+| 2-6 kHz against the body | +2.0 to -20.3 dB               | **-5.9 to -15.4 dB**, never above |
+| Clipped samples          | up to 1132                     | **0**                             |
+| Loop wrap step           | up to 0.67, to 590x the median | within normal signal variation    |
+| Limiter action at load   | 2-4 dB                         | 0 dB                              |
+
+`AmbienceAssetsTest` holds both properties on the shipped files: every bed is
+stored at the mixer's rate, and no bed is louder in 2-6 kHz than in its body.
+
+### Weather is a layer, not a bed per sky
+
+A rainy forest is the forest plus rain. Authoring one bed per biome and sky
+would be eighteen times three assets, so weather rides over whatever bed the
+biome chose: `ambient.weather_rain` and `ambient.weather_snow` loop on their own
+effect slot alongside the biome bed.
+
+`App::Core::WeatherAudio` follows `RainManager`, which already runs the weather
+cycle and publishes an intensity that has been faded in and out, and rides that
+intensity so the sound arrives and leaves with the thing on screen. Snow had no
+sound at all before this: the only weather query in the ambience selection asked
+for rain, and snow maps fell through to their biome bed in silence.
+
+Two things had to change underneath for a layer to work at all.
+
+**A looping sound can now have its level changed while it plays.** The mixer's
+effect slots carried a fixed volume, so the only way to follow an intensity was
+to stop and restart. `AudioCommand::SetSoundVolume` ramps an effect's volume the
+way `SetVolume` already ramped a music channel's, and
+`AudioSystem::set_playing_sound_volume` reaches it.
+
+**A looping sound whose start was dropped no longer holds its slot forever.**
+`play_sound` drops a cue whose track is still decoding, but the sound was still
+recorded as active, and `cleanup_inactive_sounds_locked` deliberately never
+pruned loops. With `max_instances: 1` on the bed, that one dropped start
+blocked every later attempt for the rest of the session -- silently, because the
+rejection happens before the backend is reached. Cleanup now prunes a loop the
+mixer is not running, after a grace period long enough to cover the gap between
+asking for a sound and the mixer publishing that it is running. The weather
+layer also waits for the mixer to confirm it is playing rather than assuming it,
+and preloads its bed when the mission's weather is configured.
+
+### Loudness is matched within a category, not across them
+
+A player should not have to reach for the volume between one unit answering and
+the next. Measured through the game's own decode path, output loudness by
+category:
+
+| Category  | Before  | After      |
+| --------- | ------- | ---------- |
+| Ambience  | 3.8 LU  | **0.1 LU** |
+| Music     | 1.2 LU  | 1.2 LU     |
+| Voice     | 7.8 LU  | **2.2 LU** |
+| Effects   | 7.9 LU  | 7.9 LU     |
+| Interface | 17.9 LU | 17.9 LU    |
+
+Voice was the defect. Every voice asset is the same kind of thing -- a unit
+answering an order -- so they have to land together, and the profile does ask for
+that. But the quietest shipped lines decode near -27 LUFS, 11.8 dB from the
+-15.5 target, and `loudness_authority_db` was the generic 6 dB. They were
+clamped six decibels short and played five to six decibels under the rest of the
+cast, which is exactly the drop you hear moving between units. Their peaks sat
+at -10 dBFS, so the headroom to correct them had been there all along. Voice
+authority is now 14 dB.
+
+The effect and interface spreads are **not** defects and are deliberately left
+alone: those profiles set `normalise_loudness = false` because the level of a
+cue is a design decision. A pointer hover at -30 LUFS _should_ be far quieter
+than an error at -12, and an arrow flyby quieter than a reinforcements horn.
+Flattening them would make the interface shout.
+
+Category volumes the player sets in the options menu are applied after all of
+this, so turning music down still turns music down.
+
+### Loops are sealed, so the wrap is not a click
+
+Every music and ambience track is looped — `AudioSystem::play_music` hardcodes
+the loop flag, and `apply_mission_ambience` starts its bed with `loop = true` —
+and the mixer loops by setting the read position back to zero. The generated
+masters do not end where they begin, so that assignment was a step
+discontinuity spliced into the output: a broadband click.
+
+It was loudest and most frequent on ambience, because the beds are ten seconds
+long and one plays on every map. Measured through the decode path, the wrap step
+was 0.10 to 0.57 of full scale against a median sample-to-sample step of 0.005
+to 0.05 — 10x to 100x the surrounding signal, every ten seconds, for the whole
+mission. `music.combat.cavalry_flank_fast` was 0.57 and
+`music.stinger.mission_failed_distant_horn` 0.51.
+
+`game/audio/loop_seam.{h,cpp}` folds the last 120 ms of a bed into its first
+120 ms with an **equal-power** crossfade and reports the shorter length that now
+wraps cleanly; the decoder truncates the buffer to that length. The mixer keeps
+wrapping at `frames` and knows nothing about any of this. Across the shipped
+assets the wrap step drops to 0.0006–0.034, which is at or below the material's
+own median step — an ordinary sample transition rather than an edge.
+
+Two choices in there are load-bearing:
+
+- **Equal power, not linear.** Beds are noise-like, so the two halves of the
+  crossfade are uncorrelated; linear weights sum to 0.707 in the middle and
+  would trade the click for a 3 dB dip once per loop.
+  `TheCrossfadeHoldsItsLevelThroughTheWrap` is the guard.
+- **After mastering, not before.** Sealing first leaves the mastering filters'
+  start-up transient at frame 0, which is itself a discontinuity at the wrap —
+  on a near-DC test signal it reproduced the entire original step. Sealing last
+  folds steady-state tail over that transient and covers it. The cost is that
+  the crossfade can sum above the mastering ceiling; measured on the shipped
+  beds the fade region peaks at most **+0.19 dB** above the rest of the track,
+  so nothing needs re-limiting.
+
+`AudioBackendTest.ALoopingBedWrapsWithoutAClick` renders a bed that ends a
+quarter cycle short through the real mixer, crosses the wrap twice, and fails if
+any step outside the attack is more than 12x the median.
+
 ### What is left
 
 Music is still fully decoded into RAM — 17.3 MB per 90 s track, and a mission

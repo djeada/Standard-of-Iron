@@ -27,6 +27,7 @@ public:
   void play(float volume = DEFAULT_VOLUME, bool loop = false);
   void stop();
   void set_volume(float volume);
+  void set_playing_volume(float volume, int fade_ms);
 
   void set_backend(MiniaudioBackend* backend);
 

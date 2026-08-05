@@ -9,7 +9,7 @@ TestCase {
 
     readonly property var shippedNations: ["roman_republic", "carthage", "iron_sepulcher"]
 
-    readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "formation", "build", "heal", "collect", "rally", "deliver", "aura"]
+    readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "build", "heal", "collect", "rally", "deliver", "aura"]
 
     function test_every_hud_command_has_art_and_a_glyph() {
         for (var i = 0; i < hudCommands.length; ++i) {

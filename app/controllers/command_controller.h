@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <QVariantList>
 #include <QVariantMap>
 #include <QVector3D>
 
@@ -91,7 +92,7 @@ public:
   void reset_transient_state();
 
   [[nodiscard]] bool is_placing_formation() const { return m_is_placing_formation; }
-  void begin_move_placement_at_position(const QVector3D& position);
+  [[nodiscard]] bool begin_move_placement_at_position(const QVector3D& position);
   void update_formation_placement(const QVector3D& position);
   void update_formation_rotation(float angle_degrees);
   void confirm_formation_placement();
@@ -99,19 +100,21 @@ public:
   [[nodiscard]] QVector3D get_formation_placement_position() const {
     return m_formation_placement_position;
   }
-  [[nodiscard]] float get_formation_placement_angle() const {
-    return m_formation_placement_angle;
+
+  [[nodiscard]] float get_formation_facing_degrees() const {
+    return m_formation_facing_degrees;
   }
 
   Q_INVOKABLE void set_formation_intent(const QString& intent_id);
   Q_INVOKABLE [[nodiscard]] QString formation_intent() const;
-  Q_INVOKABLE [[nodiscard]] QStringList available_formation_intents() const;
+  Q_INVOKABLE [[nodiscard]] QStringList formation_intents() const;
   Q_INVOKABLE [[nodiscard]] QString
   formation_intent_display_name(const QString& intent_id) const;
   Q_INVOKABLE [[nodiscard]] QString
   formation_intent_unavailable_reason(const QString& intent_id) const;
   Q_INVOKABLE [[nodiscard]] QString formation_doctrine() const;
   Q_INVOKABLE [[nodiscard]] QString formation_doctrine_display_name() const;
+  Q_INVOKABLE [[nodiscard]] QVariantList formation_doctrine_options() const;
 
   void begin_formation_drag(const QVector3D& start);
   void update_formation_drag(const QVector3D& current);
@@ -121,9 +124,7 @@ public:
     return m_formation_drag_start;
   }
   Q_INVOKABLE void adjust_formation_depth(float wheel_delta);
-  Q_INVOKABLE void mirror_formation_flank();
   Q_INVOKABLE void set_formation_preserve_order(bool preserve);
-  Q_INVOKABLE void set_formation_tight_spacing(bool tight);
 
   Q_INVOKABLE void set_formation_frontage_preset(const QString& preset);
   Q_INVOKABLE void set_formation_depth_preset(const QString& preset);
@@ -179,7 +180,9 @@ private:
   bool m_is_placing_formation = false;
   bool m_is_right_drag_formation = false;
   QVector3D m_formation_placement_position;
-  float m_formation_placement_angle = 0.0F;
+
+  float m_formation_facing_degrees = 0.0F;
+  bool m_formation_facing_explicit = false;
   std::vector<Engine::Core::EntityID> m_formation_units;
 
   Game::Formation::ArmyFormationIntent m_formation_intent =
@@ -201,6 +204,11 @@ private:
 
   void apply_formation_option_change();
   void invalidate_formation_layout();
+
+  [[nodiscard]] auto auto_formation_facing() const -> float;
+  void set_formation_facing(float degrees, bool explicit_choice);
+  void follow_auto_formation_facing();
+  void reset_formation_facing();
 
   static void reset_movement(Engine::Core::Entity* entity);
 };

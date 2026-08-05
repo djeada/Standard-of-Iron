@@ -294,6 +294,10 @@ add_executable(
     core/audio_system_test.cpp
     core/audio_cues_test.cpp
     core/audio_mastering_test.cpp
+    core/loop_seam_test.cpp
+    core/resampler_test.cpp
+    core/ambience_assets_test.cpp
+    core/weather_audio_test.cpp
     core/audio_command_ring_test.cpp
     core/audio_backend_test.cpp
     db/save_preview_test.cpp
@@ -477,4 +481,10 @@ add_custom_target(
 )
 if(TARGET design_system_qml_tests)
     add_dependencies(soi_test_binaries design_system_qml_tests)
+endif()
+
+# AmbienceAssetsTest reads the shipped beds, which the build renders rather than
+# git storing. Without this the suite would skip them on a clean tree.
+if(TARGET synthesize_ambience_assets)
+    add_dependencies(soi_test_binaries synthesize_ambience_assets)
 endif()

@@ -4,6 +4,7 @@
 #include <QPointF>
 #include <QString>
 #include <QStringList>
+#include <QVariantList>
 #include <QVariantMap>
 
 #include "../models/cursor_mode.h"
@@ -47,8 +48,8 @@ class PlacementViewModel : public QObject {
                  placing_formation_changed)
   Q_PROPERTY(QVariantMap formation_options READ formation_options NOTIFY
                  formation_options_changed)
-  Q_PROPERTY(QStringList available_formation_intents READ available_formation_intents
-                 NOTIFY formation_options_changed)
+  Q_PROPERTY(QStringList formation_intents READ formation_intents NOTIFY
+                 formation_options_changed)
   Q_PROPERTY(QVariantMap selected_formation_status READ selected_formation_status NOTIFY
                  formation_options_changed)
   Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
@@ -87,11 +88,12 @@ public:
 
   Q_INVOKABLE void set_formation_intent(const QString& intent_id);
   Q_INVOKABLE [[nodiscard]] QString formation_intent() const;
-  Q_INVOKABLE [[nodiscard]] QStringList available_formation_intents() const;
+  Q_INVOKABLE [[nodiscard]] QStringList formation_intents() const;
   Q_INVOKABLE [[nodiscard]] QString
   formation_intent_display_name(const QString& intent_id) const;
   Q_INVOKABLE [[nodiscard]] QString
   formation_intent_unavailable_reason(const QString& intent_id) const;
+  Q_INVOKABLE [[nodiscard]] QVariantList formation_doctrine_options() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap formation_options() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_formation_status() const;
   Q_INVOKABLE void reset_formation_options();
@@ -104,9 +106,7 @@ public:
   Q_INVOKABLE void set_formation_movement_policy(const QString& policy);
   Q_INVOKABLE void set_formation_mixed_policy(const QString& policy);
   Q_INVOKABLE void set_formation_doctrine_override(const QString& doctrine);
-  Q_INVOKABLE void mirror_formation_flank();
   Q_INVOKABLE void set_formation_preserve_order(bool preserve);
-  Q_INVOKABLE void set_formation_tight_spacing(bool tight);
   Q_INVOKABLE void adjust_formation_depth(float wheel_delta);
 
   Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;

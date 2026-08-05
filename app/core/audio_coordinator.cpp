@@ -204,12 +204,6 @@ auto build_mission_ambience_queries(const Game::Mission::MissionDefinition* miss
                        {QStringLiteral("faction"), QStringLiteral("carthage")}});
   }
 
-  if (map_def != nullptr && map_def->rain.enabled &&
-      map_def->rain.type == Game::Map::WeatherType::Rain) {
-    queries.push_back({{QStringLiteral("biome"), QStringLiteral("battlefield")},
-                       {QStringLiteral("weather"), QStringLiteral("rain")}});
-  }
-
   QString biome_tag;
   if (mission != nullptr && mission->terrain_type.has_value()) {
     biome_tag = mission_terrain_to_ambience_biome(*mission->terrain_type);
