@@ -284,8 +284,10 @@ void build_idle(GlyphBuilder& builder) {
 
 } // namespace
 
-std::array<std::unique_ptr<Render::GL::Mesh>, k_indicator_kind_count>
-    ModeIndicator::s_meshes{};
+auto ModeIndicator::meshes() -> MeshCache& {
+  static auto* storage = new MeshCache{};
+  return *storage;
+}
 
 auto indicator_has_glyph(IndicatorKind kind) noexcept -> bool {
   return style_for(kind).has_glyph;
@@ -386,17 +388,17 @@ auto build_indicator_glyph(IndicatorKind kind) -> GlyphBuilder {
 
 auto ModeIndicator::mesh_for(IndicatorKind kind) -> Render::GL::Mesh* {
   auto const index = static_cast<std::size_t>(kind);
-  if (index >= s_meshes.size()) {
+  if (index >= meshes().size()) {
     return nullptr;
   }
-  if (!s_meshes[index]) {
-    s_meshes[index] = build_indicator_glyph(kind).build();
+  if (!meshes()[index]) {
+    meshes()[index] = build_indicator_glyph(kind).build();
   }
-  return s_meshes[index].get();
+  return meshes()[index].get();
 }
 
 void ModeIndicator::release_meshes() {
-  for (auto& mesh : s_meshes) {
+  for (auto& mesh : meshes()) {
     mesh.reset();
   }
 }
