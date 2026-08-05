@@ -11,6 +11,7 @@ class Texture;
 
 struct StockpileYardStyle {
   QVector3D gravel{0.42F, 0.38F, 0.31F};
+  QVector3D earth_light{0.54F, 0.48F, 0.39F};
   QVector3D stone_light{0.76F, 0.73F, 0.66F};
   QVector3D stone_mid{0.62F, 0.59F, 0.53F};
   QVector3D stone_dark{0.44F, 0.42F, 0.38F};
