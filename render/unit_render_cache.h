@@ -49,7 +49,6 @@ struct CachedUnitData {
   bool in_frustum{true};
   bool fog_visible{true};
   float indicator_height{0.0F};
-  float indicator_size{0.0F};
 
   float last_pos_x{0.0F};
   float last_pos_y{0.0F};

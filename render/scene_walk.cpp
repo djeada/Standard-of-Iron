@@ -407,7 +407,6 @@ struct UnitRenderEntry {
   Game::Systems::UnitActivity activity{};
   int owner_id{0};
   float indicator_height{0.0F};
-  float indicator_size{0.0F};
   float distance_sq{0.0F};
 };
 
@@ -538,7 +537,6 @@ void Renderer::enqueue_activity_indicator(Engine::Core::EntityID entity_id,
                                           const Game::Systems::UnitActivity& activity,
                                           int owner_id,
                                           float anchor_height,
-                                          float world_size,
                                           float distance_sq) {
   if (transform == nullptr || !order_markers_visible_for_owner(owner_id)) {
     return;
@@ -555,9 +553,7 @@ void Renderer::enqueue_activity_indicator(Engine::Core::EntityID entity_id,
 
   float const height =
       anchor_height > 0.0F ? anchor_height : Render::Geom::k_indicator_height_base;
-  float const scale = world_size > 0.0F
-                          ? world_size
-                          : Render::Geom::indicator_size_for_unit(1.0F, 1.0F);
+  float const scale = Render::Geom::indicator_world_size();
   QVector3D const pos(
       transform->position.x, transform->position.y + height, transform->position.z);
 
@@ -804,7 +800,6 @@ void Renderer::render_world(Engine::Core::World* world) {
       }
       entry.owner_id = unit_comp->owner_id;
       entry.indicator_height = cached.indicator_height;
-      entry.indicator_size = cached.indicator_size;
 
       unit_entries.push_back(std::move(entry));
     }
@@ -1129,7 +1124,6 @@ void Renderer::render_world(Engine::Core::World* world) {
                                  entry.activity,
                                  entry.owner_id,
                                  entry.indicator_height,
-                                 entry.indicator_size,
                                  entry.distance_sq);
       continue;
     }
@@ -1148,7 +1142,6 @@ void Renderer::render_world(Engine::Core::World* world) {
                                entry.activity,
                                entry.owner_id,
                                entry.indicator_height,
-                               entry.indicator_size,
                                entry.distance_sq);
     mesh(mesh_to_draw,
          model_matrix,

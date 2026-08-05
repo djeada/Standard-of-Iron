@@ -113,21 +113,59 @@ TEST(ModeIndicator, FaultStatesShiftTheColourAwayFromTheActiveOne) {
             Render::Geom::indicator_state_alpha(IndicatorState::Active));
 }
 
-TEST(ModeIndicator, SizesTheItemAgainstTheUnitItFloatsOver) {
-  float const infantry = Render::Geom::indicator_size_for_unit(1.1F, 0.75F);
-  float const elephant = Render::Geom::indicator_size_for_unit(3.2F, 2.1F);
-
-  EXPECT_GT(elephant, infantry);
-  EXPECT_NEAR(infantry,
-              Render::Geom::indicator_unit_height(1.1F, 0.75F) *
-                  Render::Geom::k_indicator_size_ratio,
-              1.0e-4F);
-  EXPECT_LE(elephant, Render::Geom::k_indicator_max_world_size);
-  EXPECT_GE(Render::Geom::indicator_size_for_unit(0.05F, 0.05F),
-            Render::Geom::k_indicator_min_world_size);
+TEST(ModeIndicator, DrawsEveryOrderAtOneWorldSize) {
+  EXPECT_GT(Render::Geom::indicator_world_size(), 0.0F);
+  EXPECT_FLOAT_EQ(Render::Geom::indicator_world_size(),
+                  Render::Geom::k_indicator_world_size);
 }
 
-TEST(ModeIndicator, RaisesMarkersForTallerUnits) {
+TEST(ModeIndicator, StampsEveryActivityOnTheSameMedallion) {
+  for (IndicatorKind const kind : all_kinds()) {
+    auto const builder = Render::Geom::build_indicator_glyph(kind);
+    auto const layers = layers_used(builder);
+    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Plaque)))
+        << "activity " << Game::Systems::activity_kind_id(kind) << " has no plaque";
+    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Rim)))
+        << "activity " << Game::Systems::activity_kind_id(kind)
+        << " has no coloured rim";
+    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Shadow)))
+        << "activity " << Game::Systems::activity_kind_id(kind)
+        << " has nothing to lift it off the terrain";
+  }
+}
+
+TEST(ModeIndicator, FitsEveryIconToTheSameRadiusInsideTheMedallion) {
+  float smallest = 1.0e9F;
+  float largest = 0.0F;
+  for (IndicatorKind const kind : all_kinds()) {
+    auto const builder = Render::Geom::build_indicator_glyph(kind);
+    float radius_sq = 0.0F;
+    for (auto const& vertex : builder.vertices()) {
+      auto const layer = static_cast<int>(vertex.tex_coord[0]);
+      if (layer != static_cast<int>(GlyphLayer::Glyph) &&
+          layer != static_cast<int>(GlyphLayer::Accent) &&
+          layer != static_cast<int>(GlyphLayer::GlyphSide)) {
+        continue;
+      }
+      radius_sq = std::max(radius_sq,
+                           vertex.position[0] * vertex.position[0] +
+                               vertex.position[1] * vertex.position[1]);
+    }
+
+    float const radius = std::sqrt(radius_sq);
+
+    EXPECT_LT(radius, 0.318F) << "activity " << Game::Systems::activity_kind_id(kind)
+                              << " overflows the medallion face";
+    smallest = std::min(smallest, radius);
+    largest = std::max(largest, radius);
+  }
+
+  EXPECT_GT(smallest, 0.20F);
+  EXPECT_LT(largest - smallest, 0.03F)
+      << "one activity reads at a noticeably different size than the others";
+}
+
+TEST(ModeIndicator, RaisesMarkersForTallerUnitsWithoutResizingThem) {
   float const infantry_height = Render::Geom::indicator_height_for_unit(1.1F, 0.6F);
   float const cavalry_height = Render::Geom::indicator_height_for_unit(2.0F, 0.8F);
   float const elephant_height = Render::Geom::indicator_height_for_unit(3.2F, 2.1F);
