@@ -19,7 +19,6 @@ namespace Render::Horse {
 namespace {
 
 constexpr std::uint8_t k_role_coat = 1;
-constexpr int k_horse_material_id = 6;
 
 struct HorseClipSpec {
   Render::Creature::BakeClipDescriptor desc;

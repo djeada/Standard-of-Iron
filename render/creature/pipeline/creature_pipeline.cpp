@@ -16,7 +16,9 @@
 
 #include "../../../game/map/terrain_service.h"
 #include "../../bone_palette_arena.h"
+#include "../../elephant/elephant_spec.h"
 #include "../../entity/registry.h"
+#include "../../horse/horse_spec.h"
 #include "../../humanoid/cache_control.h"
 #include "../../humanoid/humanoid_spec.h"
 #include "../../humanoid/skeleton.h"
@@ -26,6 +28,7 @@
 #include "../../scene_renderer.h"
 #include "../../snapshot_mesh_cache.h"
 #include "../../submitter.h"
+#include "../../wildlife/wildlife_rig.h"
 #include "../archetype_registry.h"
 #include "../runtime_bake_guard.h"
 #include "../skeleton.h"
@@ -161,13 +164,30 @@ void copy_role_colors(Render::GL::RiggedCreatureCmd& cmd,
   std::copy_n(role_colors.data(), count, cmd.role_colors.data());
 }
 
+auto material_id_for_species(CreatureKind species) noexcept -> std::int32_t {
+  switch (species) {
+  case CreatureKind::Horse:
+    return Render::Horse::k_horse_material_id;
+  case CreatureKind::Elephant:
+    return Render::Elephant::k_elephant_material_id;
+  case CreatureKind::Sheep:
+  case CreatureKind::Wolf:
+    return Render::Wildlife::k_wildlife_material_id;
+  case CreatureKind::Humanoid:
+  case CreatureKind::Mounted:
+    break;
+  }
+  return 0;
+}
+
 auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
                      const QMatrix4x4& world_from_unit,
                      const QMatrix4x4* bone_palette,
                      std::uint32_t bone_count,
                      std::span<const QVector3D> role_colors,
                      const QVector3D& base_color,
-                     const QVector4D& wear_params) -> Render::GL::RiggedCreatureCmd {
+                     const QVector4D& wear_params,
+                     std::int32_t material_id) -> Render::GL::RiggedCreatureCmd {
   Render::GL::RiggedCreatureCmd cmd{};
   cmd.mesh = mesh;
   cmd.world = world_from_unit;
@@ -176,6 +196,7 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
   copy_role_colors(cmd, role_colors);
   cmd.color = base_color;
   cmd.wear_params = wear_params;
+  cmd.material_id = material_id;
   return cmd;
 }
 
@@ -774,7 +795,8 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              entry->skinned_bone_count,
                              role_colors,
                              base_color,
-                             wear_params);
+                             wear_params,
+                             material_id_for_species(handle.archetype->species));
 
   if (lod == CreatureLOD::Full) {
     const auto* shadow_entry = cache.get_or_bake_prehashed(*asset->spec,
@@ -995,13 +1017,15 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
             key, *mesh_blob, mesh_global_frame);
         if (snap != nullptr && snap->mesh != nullptr &&
             snap->mesh->index_count() != 0U) {
-          auto cmd = make_rigged_cmd(snap->mesh.get(),
-                                     world_from_unit,
-                                     Render::GL::SnapshotMeshCache::identity_palette(),
-                                     1U,
-                                     role_colors,
-                                     base_color,
-                                     wear_params);
+          auto cmd =
+              make_rigged_cmd(snap->mesh.get(),
+                              world_from_unit,
+                              Render::GL::SnapshotMeshCache::identity_palette(),
+                              1U,
+                              role_colors,
+                              base_color,
+                              wear_params,
+                              material_id_for_species(handle.archetype->species));
           cmd.palette_ubo = 0U;
           cmd.palette_offset = 0U;
 
@@ -1081,7 +1105,8 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
                              1U,
                              role_colors,
                              base_color,
-                             wear_params);
+                             wear_params,
+                             material_id_for_species(handle.archetype->species));
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
 

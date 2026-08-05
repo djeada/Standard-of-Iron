@@ -35,7 +35,6 @@ constexpr std::uint8_t k_role_mane = 5;
 constexpr std::uint8_t k_role_tail = 6;
 constexpr std::uint8_t k_role_muzzle = 7;
 constexpr std::uint8_t k_role_eye = 8;
-constexpr int k_horse_material_id = 6;
 
 [[nodiscard]] auto translation_matrix(const QVector3D& origin) noexcept -> QMatrix4x4 {
   QMatrix4x4 m;

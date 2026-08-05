@@ -115,9 +115,10 @@ auto default_wolf_config() noexcept -> SpeciesConfig {
 auto default_bird_config() noexcept -> SpeciesConfig {
   SpeciesConfig config;
   config.enabled = true;
-  config.group_count = 2;
-  config.group_size_min = 7;
-  config.group_size_max = 14;
+
+  config.group_count = 1;
+  config.group_size_min = 3;
+  config.group_size_max = 6;
   config.roam_radius = 30.0F;
   config.move_speed = 5.6F;
   config.flee_speed = 9.5F;
@@ -127,8 +128,8 @@ auto default_bird_config() noexcept -> SpeciesConfig {
   config.respawn_delay = 25.0F;
   config.flight_height = 9.5F;
 
-  config.flyover_interval_min = 22.0F;
-  config.flyover_interval_max = 65.0F;
+  config.flyover_interval_min = 105.0F;
+  config.flyover_interval_max = 255.0F;
   return config;
 }
 
