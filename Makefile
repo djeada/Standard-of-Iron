@@ -346,8 +346,16 @@ audio-assets:
 	@echo "$(BOLD)$(BLUE)Synthesising cue sounds...$(RESET)"
 	@$(PYTHON) tools/audio_synth/synthesize_cues.py
 	@$(PYTHON) tools/audio_synth/register_cues.py
+	@$(MAKE) --no-print-directory audio-ambience
 	@$(MAKE) --no-print-directory audio-report
 	@echo "$(GREEN)✓ Cue sounds rendered and registered$(RESET)"
+
+## Re-render the looping ambience beds at the mixer's sample rate.
+.PHONY: audio-ambience
+audio-ambience:
+	@echo "$(BOLD)$(BLUE)Synthesising ambience beds...$(RESET)"
+	@$(PYTHON) tools/audio_synth/synthesize_ambience.py
+	@echo "$(GREEN)✓ Ambience beds rendered$(RESET)"
 
 # Rewrite docs/AUDIO_WISHLIST.md from the cue catalog, the manifest and the
 # assets on disk. Run it any time you want the current list of missing sounds.

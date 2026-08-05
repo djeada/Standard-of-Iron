@@ -164,6 +164,8 @@ Item {
         anchors.bottomMargin: 12
         anchors.left: parent.left
         anchors.leftMargin: 16
+
+        max_height: Math.max(0, bottomPanel.y - (waveTracker.y + waveTracker.height) - Design.Metrics.space16)
         placing: typeof game !== 'undefined' && game.placement !== undefined && game.placement.is_placing_formation
     }
 

@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QTemporaryDir>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -34,6 +35,34 @@ auto write_tone_wav(const QString& path, float amplitude) -> bool {
   stream << payload;
   for (int frame = 0; frame < TONE_FRAMES; ++frame) {
     const double phase = 2.0 * M_PI * 440.0 * frame / SAMPLE_RATE;
+    const auto value = static_cast<std::int16_t>(amplitude * std::sin(phase) * 32000.0);
+    stream << value << value;
+  }
+
+  QFile file(path);
+  if (!file.open(QIODevice::WriteOnly)) {
+    return false;
+  }
+  return file.write(data) == data.size();
+}
+
+auto write_unclosed_bed_wav(const QString& path, int frames, float amplitude) -> bool {
+  QByteArray data;
+  QDataStream stream(&data, QIODevice::WriteOnly);
+  stream.setByteOrder(QDataStream::LittleEndian);
+
+  const std::uint32_t payload = std::uint32_t(frames) * CHANNELS * 2;
+  stream.writeRawData("RIFF", 4);
+  stream << std::uint32_t(36 + payload);
+  stream.writeRawData("WAVEfmt ", 8);
+  stream << std::uint32_t(16) << std::uint16_t(1) << std::uint16_t(CHANNELS)
+         << std::uint32_t(SAMPLE_RATE) << std::uint32_t(SAMPLE_RATE * CHANNELS * 2)
+         << std::uint16_t(CHANNELS * 2) << std::uint16_t(16);
+  stream.writeRawData("data", 4);
+  stream << payload;
+  const double cycles = 200.25;
+  for (int frame = 0; frame < frames; ++frame) {
+    const double phase = 2.0 * M_PI * cycles * frame / frames;
     const auto value = static_cast<std::int16_t>(amplitude * std::sin(phase) * 32000.0);
     stream << value << value;
   }
@@ -201,6 +230,36 @@ TEST_F(AudioBackendTest, MonoSourcesAreStoredOnceAndStillPlayInStereo) {
   for (std::size_t frame = 0; frame < 1024; ++frame) {
     EXPECT_FLOAT_EQ(buffer[frame * CHANNELS], buffer[(frame * CHANNELS) + 1]);
   }
+}
+
+TEST_F(AudioBackendTest, ALoopingBedWrapsWithoutAClick) {
+  const int bed_frames = SAMPLE_RATE;
+  const QString bed_path = m_directory.filePath("bed.wav");
+  ASSERT_TRUE(write_unclosed_bed_wav(bed_path, bed_frames, 0.6F));
+  ASSERT_TRUE(m_backend.request_track(
+      QStringLiteral("bed"), bed_path, Mastering::Material::Ambience));
+  m_backend.wait_for_decodes();
+
+  m_backend.play_sound(QStringLiteral("bed"), 1.0F, true);
+
+  const unsigned span = static_cast<unsigned>(bed_frames) * 3U;
+  const std::vector<float> buffer = render(span);
+  ASSERT_GT(peak_of(buffer), 0.01F);
+
+  constexpr unsigned ATTACK_FRAMES = 256;
+  std::vector<float> steps;
+  steps.reserve(span);
+  for (unsigned frame = ATTACK_FRAMES; frame < span; ++frame) {
+    steps.push_back(
+        std::abs(buffer[frame * CHANNELS] - buffer[(frame - 1) * CHANNELS]));
+  }
+  std::vector<float> sorted = steps;
+  std::sort(sorted.begin(), sorted.end());
+  const float median = sorted[sorted.size() / 2];
+  const float worst = sorted.back();
+
+  EXPECT_LT(worst, std::max(median * 12.0F, 0.02F))
+      << "largest step " << worst << " against a median of " << median;
 }
 
 } // namespace
