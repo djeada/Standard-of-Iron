@@ -889,18 +889,20 @@ void draw_stockpile_yard(const DrawContext& p,
                          Mesh* unit,
                          Texture* white,
                          const CarthagePalette& c) {
-  draw_barracks_stockpile(p,
-                          out,
-                          unit,
-                          white,
-                          StockpileYardStyle{.gravel = c.stone_base * 0.82F,
-                                             .stone_light = c.stone_light,
-                                             .stone_mid = c.stone_base,
-                                             .stone_dark = c.stone_dark,
-                                             .timber = c.wood,
-                                             .timber_dark = c.wood_dark,
-                                             .ore = c.iron * 1.55F,
-                                             .ore_rust = c.brick_dark});
+  draw_barracks_stockpile(
+      p,
+      out,
+      unit,
+      white,
+      StockpileYardStyle{.gravel = QVector3D(0.58F, 0.49F, 0.36F),
+                         .earth_light = QVector3D(0.69F, 0.60F, 0.45F),
+                         .stone_light = c.stone_light,
+                         .stone_mid = c.stone_base,
+                         .stone_dark = c.stone_dark,
+                         .timber = c.wood,
+                         .timber_dark = c.wood_dark,
+                         .ore = c.iron * 1.55F,
+                         .ore_rust = c.brick_dark});
 }
 
 void draw_barracks_ornaments(const DrawContext& p,

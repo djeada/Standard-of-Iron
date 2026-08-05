@@ -200,13 +200,18 @@ auto render_building(EntityRendererRegistry& registry,
   unit->health = static_cast<int>(static_cast<float>(unit->max_health) * health_ratio);
   unit->nation_id = (nation == "carthage") ? Game::Systems::NationID::Carthage
                                            : Game::Systems::NationID::RomanRepublic;
+  if (type == "barracks") {
+    auto* stockpile = entity.add_component<Engine::Core::StockpileComponent>();
+    stockpile->wood_fill = 0.75F;
+    stockpile->stone_fill = 0.6F;
+    stockpile->iron_fill = 0.85F;
+  }
 
   DrawContext ctx;
   ctx.entity = &entity;
   ctx.resources = resources;
   ctx.model = QMatrix4x4{};
   ctx.distance_sq = 0.0F;
-  (void)type;
 
   CapturingSubmitter sub;
   func(ctx, sub);
