@@ -104,7 +104,16 @@ auto is_building(Engine::Core::Entity* entity) -> bool {
 auto is_valid_enemy_unit(const Engine::Core::UnitComponent* attacker_unit,
                          Engine::Core::Entity* target,
                          bool allow_buildings) -> bool {
-  if ((attacker_unit == nullptr) || (target == nullptr)) {
+  if (attacker_unit == nullptr) {
+    return false;
+  }
+  return is_valid_enemy_of_owner(attacker_unit->owner_id, target, allow_buildings);
+}
+
+auto is_valid_enemy_of_owner(int attacker_owner_id,
+                             Engine::Core::Entity* target,
+                             bool allow_buildings) -> bool {
+  if (target == nullptr) {
     return false;
   }
   if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -118,12 +127,12 @@ auto is_valid_enemy_unit(const Engine::Core::UnitComponent* attacker_unit,
   if (target->has_component<Engine::Core::WildlifeComponent>()) {
     return false;
   }
-  if (target_unit->owner_id == attacker_unit->owner_id) {
+  if (target_unit->owner_id == attacker_owner_id) {
     return false;
   }
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  if (owner_registry.are_allies(attacker_unit->owner_id, target_unit->owner_id)) {
+  if (owner_registry.are_allies(attacker_owner_id, target_unit->owner_id)) {
     return false;
   }
 
@@ -198,6 +207,12 @@ auto is_in_range(Engine::Core::Entity* attacker,
   bool const melee =
       (attacker_atk != nullptr) &&
       attacker_atk->current_mode == Engine::Core::AttackComponent::CombatMode::Melee;
+
+  if (!melee && (attacker_atk != nullptr) && attacker_atk->min_range > 0.0F &&
+      distance_squared < attacker_atk->min_range * attacker_atk->min_range) {
+    return false;
+  }
+
   if (is_building(target)) {
     QVector3D const attacker_position(attacker_transform->position.x,
                                       attacker_transform->position.y,

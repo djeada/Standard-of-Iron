@@ -55,6 +55,29 @@ alone. A scenario whose subject _is_ an overlay opts back in with
 `capture_ui_overlays = true`, which is why this one's `frame_*.png` include the
 badges.
 
+## Projectile range indicators
+
+```bash
+build-debug/bin/arena_app --scenario range_indicator_archers
+build-debug/bin/arena_app --scenario range_indicator_siege_minimum
+build-debug/bin/arena_app --scenario range_indicator_mage
+build-debug/bin/arena_app --scenario range_indicator_elevation
+build-debug/bin/arena_app --scenario range_indicator_hold_bonus
+build-debug/bin/arena_app --scenario range_indicator_mixed_selection
+```
+
+The viewport draws the selected units' projectile range rings from the same
+`Game::Systems::collect_attack_range_rings` the game uses, so a ring reviewed
+here is the ring that ships. `RangeIndicatorObserved` asserts the radius against
+the number the combat system fires with — which is why the archer scenarios
+expect 11.4 and not the 7.6 in the troop data: `TroopProfileService` multiplies
+bow range by 1.5 on the way to the unit. `RangeIndicatorCountAtMost` guards the
+group cap in `range_indicator_mixed_selection`.
+
+`range_indicator_siege_minimum` is the only place a minimum firing distance
+exists today; it comes from the scenario group's `attack_min_range_override`,
+because no shipped unit carries one yet.
+
 ## Local batch inspection
 
 Batch mode intentionally opens the real Arena OpenGL window. It requires a

@@ -61,22 +61,26 @@ TerrainScatterManager::TerrainScatterManager()
     , m_magic_shrine(std::make_unique<MagicShrineRenderer>())
     , m_abandoned_home(std::make_unique<AbandonedHomeRenderer>())
     , m_statue(std::make_unique<StatueRenderer>())
-    , m_passes{m_biome.get(),
-               m_stone.get(),
-               m_plant.get(),
-               m_pine.get(),
-               m_olive.get(),
-               m_firecamp.get(),
-               m_tent.get(),
-               m_supply_cart.get(),
-               m_weapon_rack.get(),
-               m_ruins.get(),
-               m_dead_tree.get(),
-               m_boulder.get(),
-               m_iron_ore.get(),
-               m_magic_shrine.get(),
-               m_abandoned_home.get(),
-               m_statue.get()} {
+    , m_scatter_passes{{ScatterSpeciesId::Grass, m_biome.get()},
+                       {ScatterSpeciesId::Stone, m_stone.get()},
+                       {ScatterSpeciesId::Plant, m_plant.get()},
+                       {ScatterSpeciesId::Pine, m_pine.get()},
+                       {ScatterSpeciesId::Olive, m_olive.get()},
+                       {ScatterSpeciesId::FireCamp, m_firecamp.get()},
+                       {ScatterSpeciesId::Tent, m_tent.get()},
+                       {ScatterSpeciesId::SupplyCart, m_supply_cart.get()},
+                       {ScatterSpeciesId::WeaponRack, m_weapon_rack.get()},
+                       {ScatterSpeciesId::Ruins, m_ruins.get()},
+                       {ScatterSpeciesId::DeadTree, m_dead_tree.get()},
+                       {ScatterSpeciesId::Boulder, m_boulder.get()},
+                       {ScatterSpeciesId::IronOre, m_iron_ore.get()},
+                       {ScatterSpeciesId::MagicShrine, m_magic_shrine.get()},
+                       {ScatterSpeciesId::AbandonedHome, m_abandoned_home.get()},
+                       {ScatterSpeciesId::Statue, m_statue.get()}} {
+  m_passes.reserve(m_scatter_passes.size());
+  for (const auto& entry : m_scatter_passes) {
+    m_passes.push_back(entry.pass);
+  }
 }
 
 TerrainScatterManager::~TerrainScatterManager() = default;
@@ -165,21 +169,9 @@ void TerrainScatterManager::refresh_runtime_world_props(
 
 void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
   std::lock_guard<std::mutex> const lock(m_mutex);
-  m_biome->set_light_direction(dir);
-  m_stone->set_light_direction(dir);
-  m_plant->set_light_direction(dir);
-  m_pine->set_light_direction(dir);
-  m_olive->set_light_direction(dir);
-  m_tent->set_light_direction(dir);
-  m_supply_cart->set_light_direction(dir);
-  m_weapon_rack->set_light_direction(dir);
-  m_ruins->set_light_direction(dir);
-  m_dead_tree->set_light_direction(dir);
-  m_boulder->set_light_direction(dir);
-  m_iron_ore->set_light_direction(dir);
-  m_magic_shrine->set_light_direction(dir);
-  m_abandoned_home->set_light_direction(dir);
-  m_statue->set_light_direction(dir);
+  for (const auto& entry : m_scatter_passes) {
+    entry.pass->set_light_direction(dir);
+  }
 }
 
 void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resources) {
@@ -189,10 +181,8 @@ void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resource
       Render::Ground::Scatter::visibility_filter_enabled_for_current_thread();
   Render::Ground::Scatter::set_visibility_filter_enabled_for_current_thread(
       renderer.static_world_visibility_filter_enabled());
-  for (auto* pass : m_passes) {
-    if (pass != nullptr) {
-      pass->submit(renderer, resources);
-    }
+  for (const auto& entry : m_scatter_passes) {
+    entry.pass->submit(renderer, resources);
   }
   Render::Ground::Scatter::set_visibility_filter_enabled_for_current_thread(
       previous_filter);
@@ -206,22 +196,9 @@ void TerrainScatterManager::clear() {
   m_scatter_seed_world_props.clear();
   m_use_world_props_exclusively = false;
 
-  m_biome->clear();
-  m_stone->clear();
-  m_plant->clear();
-  m_pine->clear();
-  m_olive->clear();
-  m_firecamp->clear();
-  m_tent->clear();
-  m_supply_cart->clear();
-  m_weapon_rack->clear();
-  m_ruins->clear();
-  m_dead_tree->clear();
-  m_boulder->clear();
-  m_iron_ore->clear();
-  m_magic_shrine->clear();
-  m_abandoned_home->clear();
-  m_statue->clear();
+  for (const auto& entry : m_scatter_passes) {
+    entry.pass->clear();
+  }
 }
 
 void TerrainScatterManager::refresh_grass() {
@@ -231,14 +208,10 @@ void TerrainScatterManager::refresh_grass() {
 
 auto TerrainScatterManager::is_gpu_ready() const -> bool {
   std::lock_guard<std::mutex> const lock(m_mutex);
-  return m_biome->is_gpu_ready() && m_stone->is_gpu_ready() &&
-         m_plant->is_gpu_ready() && m_pine->is_gpu_ready() && m_olive->is_gpu_ready() &&
-         m_firecamp->is_gpu_ready() && m_tent->is_gpu_ready() &&
-         m_supply_cart->is_gpu_ready() && m_weapon_rack->is_gpu_ready() &&
-         m_ruins->is_gpu_ready() && m_dead_tree->is_gpu_ready() &&
-         m_boulder->is_gpu_ready() && m_iron_ore->is_gpu_ready() &&
-         m_magic_shrine->is_gpu_ready() && m_abandoned_home->is_gpu_ready() &&
-         m_statue->is_gpu_ready();
+  return std::all_of(
+      m_scatter_passes.begin(),
+      m_scatter_passes.end(),
+      [](const ScatterPassEntry& entry) { return entry.pass->is_gpu_ready(); });
 }
 
 auto TerrainScatterManager::biome() const -> BiomeRenderer* {
@@ -308,118 +281,17 @@ auto TerrainScatterManager::statue() const -> StatueRenderer* {
 auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
   std::lock_guard<std::mutex> const lock(m_mutex);
 
-  return {{ScatterSpeciesId::Grass,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_biome.get(),
-           m_biome != nullptr ? m_biome->instance_count() : 0U,
-           m_biome == nullptr || m_biome->is_gpu_ready(),
-           m_biome != nullptr ? m_biome->last_sync_stats()
-                              : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Stone,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_stone.get(),
-           m_stone != nullptr ? m_stone->instance_count() : 0U,
-           m_stone == nullptr || m_stone->is_gpu_ready(),
-           m_stone != nullptr ? m_stone->last_sync_stats()
-                              : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Plant,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_plant.get(),
-           m_plant != nullptr ? m_plant->instance_count() : 0U,
-           m_plant == nullptr || m_plant->is_gpu_ready(),
-           m_plant != nullptr ? m_plant->last_sync_stats()
-                              : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Pine,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_pine.get(),
-           m_pine != nullptr ? m_pine->instance_count() : 0U,
-           m_pine == nullptr || m_pine->is_gpu_ready(),
-           m_pine != nullptr ? m_pine->last_sync_stats()
-                             : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Olive,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_olive.get(),
-           m_olive != nullptr ? m_olive->instance_count() : 0U,
-           m_olive == nullptr || m_olive->is_gpu_ready(),
-           m_olive != nullptr ? m_olive->last_sync_stats()
-                              : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::FireCamp,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_firecamp.get(),
-           m_firecamp != nullptr ? m_firecamp->instance_count() : 0U,
-           m_firecamp == nullptr || m_firecamp->is_gpu_ready(),
-           m_firecamp != nullptr ? m_firecamp->last_sync_stats()
-                                 : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Tent,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_tent.get(),
-           m_tent != nullptr ? m_tent->instance_count() : 0U,
-           m_tent == nullptr || m_tent->is_gpu_ready(),
-           m_tent != nullptr ? m_tent->last_sync_stats()
-                             : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::SupplyCart,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_supply_cart.get(),
-           m_supply_cart != nullptr ? m_supply_cart->instance_count() : 0U,
-           m_supply_cart == nullptr || m_supply_cart->is_gpu_ready(),
-           m_supply_cart != nullptr ? m_supply_cart->last_sync_stats()
-                                    : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::WeaponRack,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_weapon_rack.get(),
-           m_weapon_rack != nullptr ? m_weapon_rack->instance_count() : 0U,
-           m_weapon_rack == nullptr || m_weapon_rack->is_gpu_ready(),
-           m_weapon_rack != nullptr ? m_weapon_rack->last_sync_stats()
-                                    : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Ruins,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_ruins.get(),
-           m_ruins != nullptr ? m_ruins->instance_count() : 0U,
-           m_ruins == nullptr || m_ruins->is_gpu_ready(),
-           m_ruins != nullptr ? m_ruins->last_sync_stats()
-                              : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::DeadTree,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_dead_tree.get(),
-           m_dead_tree != nullptr ? m_dead_tree->instance_count() : 0U,
-           m_dead_tree == nullptr || m_dead_tree->is_gpu_ready(),
-           m_dead_tree != nullptr ? m_dead_tree->last_sync_stats()
-                                  : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Boulder,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_boulder.get(),
-           m_boulder != nullptr ? m_boulder->instance_count() : 0U,
-           m_boulder == nullptr || m_boulder->is_gpu_ready(),
-           m_boulder != nullptr ? m_boulder->last_sync_stats()
-                                : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::IronOre,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_iron_ore.get(),
-           m_iron_ore != nullptr ? m_iron_ore->instance_count() : 0U,
-           m_iron_ore == nullptr || m_iron_ore->is_gpu_ready(),
-           m_iron_ore != nullptr ? m_iron_ore->last_sync_stats()
-                                 : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::MagicShrine,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_magic_shrine.get(),
-           m_magic_shrine != nullptr ? m_magic_shrine->instance_count() : 0U,
-           m_magic_shrine == nullptr || m_magic_shrine->is_gpu_ready(),
-           m_magic_shrine != nullptr ? m_magic_shrine->last_sync_stats()
-                                     : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::AbandonedHome,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_abandoned_home.get(),
-           m_abandoned_home != nullptr ? m_abandoned_home->instance_count() : 0U,
-           m_abandoned_home == nullptr || m_abandoned_home->is_gpu_ready(),
-           m_abandoned_home != nullptr ? m_abandoned_home->last_sync_stats()
-                                       : Render::Ground::Scatter::SyncStats{}},
-          {ScatterSpeciesId::Statue,
-           ScatterVisibilityMode::InstanceFiltered,
-           m_statue.get(),
-           m_statue != nullptr ? m_statue->instance_count() : 0U,
-           m_statue == nullptr || m_statue->is_gpu_ready(),
-           m_statue != nullptr ? m_statue->last_sync_stats()
-                               : Render::Ground::Scatter::SyncStats{}}};
+  std::vector<ScatterChunk> out;
+  out.reserve(m_scatter_passes.size());
+  for (const auto& entry : m_scatter_passes) {
+    out.push_back({entry.species,
+                   ScatterVisibilityMode::InstanceFiltered,
+                   entry.pass,
+                   entry.pass->instance_count(),
+                   entry.pass->is_gpu_ready(),
+                   entry.pass->last_sync_stats()});
+  }
+  return out;
 }
 
 auto TerrainScatterManager::last_sync_stats() const
@@ -427,53 +299,8 @@ auto TerrainScatterManager::last_sync_stats() const
   std::lock_guard<std::mutex> const lock(m_mutex);
 
   Render::Ground::Scatter::SyncStats stats{};
-  if (m_biome != nullptr) {
-    stats += m_biome->last_sync_stats();
-  }
-  if (m_stone != nullptr) {
-    stats += m_stone->last_sync_stats();
-  }
-  if (m_plant != nullptr) {
-    stats += m_plant->last_sync_stats();
-  }
-  if (m_pine != nullptr) {
-    stats += m_pine->last_sync_stats();
-  }
-  if (m_olive != nullptr) {
-    stats += m_olive->last_sync_stats();
-  }
-  if (m_firecamp != nullptr) {
-    stats += m_firecamp->last_sync_stats();
-  }
-  if (m_tent != nullptr) {
-    stats += m_tent->last_sync_stats();
-  }
-  if (m_supply_cart != nullptr) {
-    stats += m_supply_cart->last_sync_stats();
-  }
-  if (m_weapon_rack != nullptr) {
-    stats += m_weapon_rack->last_sync_stats();
-  }
-  if (m_ruins != nullptr) {
-    stats += m_ruins->last_sync_stats();
-  }
-  if (m_dead_tree != nullptr) {
-    stats += m_dead_tree->last_sync_stats();
-  }
-  if (m_boulder != nullptr) {
-    stats += m_boulder->last_sync_stats();
-  }
-  if (m_iron_ore != nullptr) {
-    stats += m_iron_ore->last_sync_stats();
-  }
-  if (m_magic_shrine != nullptr) {
-    stats += m_magic_shrine->last_sync_stats();
-  }
-  if (m_abandoned_home != nullptr) {
-    stats += m_abandoned_home->last_sync_stats();
-  }
-  if (m_statue != nullptr) {
-    stats += m_statue->last_sync_stats();
+  for (const auto& entry : m_scatter_passes) {
+    stats += entry.pass->last_sync_stats();
   }
   return stats;
 }

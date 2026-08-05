@@ -8,8 +8,7 @@
 namespace {
 
 using Game::Map::VisibilityState;
-using Render::Ground::encode_fog_mask;
-using Render::Ground::encode_visibility_mask;
+using Render::Ground::encode_fog_mask_region;
 using Render::Ground::encode_visibility_mask_region;
 using Render::Ground::MaskRegion;
 
@@ -45,7 +44,8 @@ TEST(VisibilityMaskEncoder, VisibleInteriorIsFullyLitInBothChannels) {
   const auto cells = half_visible_grid(width, height);
 
   std::vector<unsigned char> texels;
-  encode_visibility_mask(cells, width, height, texels);
+  encode_visibility_mask_region(
+      cells, width, height, MaskRegion::whole(width, height), texels);
   ASSERT_EQ(texels.size(), static_cast<std::size_t>(width * height * 4));
 
   EXPECT_EQ(channel_at(texels, width, 1, 4, k_seen_channel), 255);
@@ -58,7 +58,8 @@ TEST(VisibilityMaskEncoder, UnexploredInteriorStaysDark) {
   const auto cells = half_visible_grid(width, height);
 
   std::vector<unsigned char> texels;
-  encode_visibility_mask(cells, width, height, texels);
+  encode_visibility_mask_region(
+      cells, width, height, MaskRegion::whole(width, height), texels);
 
   EXPECT_EQ(channel_at(texels, width, 7, 4, k_seen_channel), 0);
   EXPECT_EQ(channel_at(texels, width, 7, 4, k_known_channel), 0);
@@ -70,7 +71,8 @@ TEST(VisibilityMaskEncoder, BoundaryRampsInsteadOfSteppingAtTheTileEdge) {
   const auto cells = half_visible_grid(width, height);
 
   std::vector<unsigned char> texels;
-  encode_visibility_mask(cells, width, height, texels);
+  encode_visibility_mask_region(
+      cells, width, height, MaskRegion::whole(width, height), texels);
 
   const int frontier = channel_at(texels, width, 3, 4, k_known_channel);
   const int beyond = channel_at(texels, width, 4, 4, k_known_channel);
@@ -87,7 +89,8 @@ TEST(VisibilityMaskEncoder, ExploredTilesAreKnownButNotSeen) {
                                   static_cast<std::uint8_t>(VisibilityState::Explored));
 
   std::vector<unsigned char> texels;
-  encode_visibility_mask(cells, width, height, texels);
+  encode_visibility_mask_region(
+      cells, width, height, MaskRegion::whole(width, height), texels);
 
   EXPECT_EQ(channel_at(texels, width, 1, 0, k_seen_channel), 0);
   EXPECT_GT(channel_at(texels, width, 1, 0, k_known_channel), 200);
@@ -98,12 +101,9 @@ TEST(VisibilityMaskEncoder, RejectsCellCountsThatDoNotMatchTheGrid) {
                                   static_cast<std::uint8_t>(VisibilityState::Visible));
 
   std::vector<unsigned char> texels;
-  encode_visibility_mask(cells, 4, 4, texels);
+  encode_visibility_mask_region(cells, 4, 4, MaskRegion::whole(4, 4), texels);
 
-  ASSERT_EQ(texels.size(), static_cast<std::size_t>(4 * 4 * 4));
-  for (const unsigned char value : texels) {
-    EXPECT_EQ(value, 0U);
-  }
+  EXPECT_TRUE(texels.empty());
 }
 
 TEST(VisibilityMaskEncoder, FogMaskBlursTheFogField) {
@@ -113,7 +113,8 @@ TEST(VisibilityMaskEncoder, FogMaskBlursTheFogField) {
   const std::vector<float> seen{0.0F, 0.0F, 0.0F, 0.0F, 1.0F};
 
   std::vector<unsigned char> texels;
-  encode_fog_mask(fog, seen, width, height, texels);
+  encode_fog_mask_region(
+      fog, seen, width, height, MaskRegion::whole(width, height), texels);
   ASSERT_EQ(texels.size(), static_cast<std::size_t>(width * height * 4));
 
   EXPECT_EQ(channel_at(texels, width, 0, 0, 0), 255);
@@ -131,7 +132,8 @@ TEST(VisibilityMaskEncoder, FogMaskCarriesLiveSightSoFogCanBeHeldBack) {
   const std::vector<float> seen{0.0F, 0.0F, 0.0F, 1.0F, 1.0F};
 
   std::vector<unsigned char> texels;
-  encode_fog_mask(fog, seen, width, height, texels);
+  encode_fog_mask_region(
+      fog, seen, width, height, MaskRegion::whole(width, height), texels);
 
   EXPECT_GT(channel_at(texels, width, 4, 0, 1), 200);
   EXPECT_GT(channel_at(texels, width, 2, 0, 1), 0);
@@ -140,12 +142,9 @@ TEST(VisibilityMaskEncoder, FogMaskCarriesLiveSightSoFogCanBeHeldBack) {
 
 TEST(VisibilityMaskEncoder, FogMaskRejectsMismatchedFields) {
   std::vector<unsigned char> texels;
-  encode_fog_mask({1.0F, 1.0F}, {0.0F}, 2, 1, texels);
+  encode_fog_mask_region({1.0F, 1.0F}, {0.0F}, 2, 1, MaskRegion::whole(2, 1), texels);
 
-  ASSERT_EQ(texels.size(), static_cast<std::size_t>(2 * 1 * 4));
-  for (const unsigned char value : texels) {
-    EXPECT_EQ(value, 0U);
-  }
+  EXPECT_TRUE(texels.empty());
 }
 
 TEST(VisibilityMaskEncoder, RegionEncodeMatchesTheWholeGridEncode) {
@@ -154,7 +153,8 @@ TEST(VisibilityMaskEncoder, RegionEncodeMatchesTheWholeGridEncode) {
   const auto cells = half_visible_grid(width, height);
 
   std::vector<unsigned char> whole;
-  encode_visibility_mask(cells, width, height, whole);
+  encode_visibility_mask_region(
+      cells, width, height, MaskRegion::whole(width, height), whole);
 
   const MaskRegion region{4, 3, 5, 6};
   std::vector<unsigned char> slice;

@@ -368,6 +368,8 @@ public:
   float cooldown;
   float time_since_last{0.0F};
 
+  float min_range{0.0F};
+
   float melee_range;
   int melee_damage;
   float melee_cooldown;
@@ -394,7 +396,7 @@ public:
   }
 
   [[nodiscard]] auto is_in_ranged_range(float distance) const -> bool {
-    return distance <= range && distance > melee_range;
+    return distance <= range && distance > melee_range && distance >= min_range;
   }
 
   [[nodiscard]] auto get_current_damage() const -> int {

@@ -11,9 +11,13 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_debug_log.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/instance_draw_guard.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_buffers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/dead_tree_mesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_mesh_builder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_natural.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_settlement.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/character_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/water_pipeline.cpp
@@ -23,6 +27,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/healing_beam_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/healer_aura_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/combat_dust_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ground_marker_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mode_indicator_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rain_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_instancing_pipeline.cpp

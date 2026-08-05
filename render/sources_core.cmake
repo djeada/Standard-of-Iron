@@ -24,7 +24,6 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/pass/frame_pass_runner.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pass/primitive_flush_pass.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pass/construction_preview_pass.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/geom/selection_ring.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/selection_disc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/arrow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/stone.cpp
@@ -33,7 +32,9 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/projectile_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/flag.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/banner_cloth.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/attack_target_markers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/patrol_flags.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/range_rings.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/formation_arrow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/transforms.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/parts.cpp
@@ -46,7 +47,6 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/static_attachment_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/bone_palette_arena.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/unit_render_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/mesh_geometry_pool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/software/software_rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/software_backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/combat_animation_diagnostics.cpp

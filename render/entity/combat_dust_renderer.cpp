@@ -849,6 +849,8 @@ using Engine::Core::CombatAnimationState;
 
 constexpr float k_telegraph_range = 12.0F;
 constexpr float k_ring_y_offset = 0.025F;
+constexpr float k_marker_thickness_ratio = 0.13F;
+constexpr float k_marker_min_thickness = 0.05F;
 
 constexpr QVector3D k_danger_red{1.0F, 0.08F, 0.02F};
 constexpr QVector3D k_warning_orange{1.0F, 0.55F, 0.08F};
@@ -864,18 +866,58 @@ inline float pulse(float t, float hz, float phase = 0.0F) {
   return 0.5F + 0.5F * std::sin(t * 6.2832F * hz + phase);
 }
 
-inline void submit_ring(Render::GL::Renderer* renderer,
-                        float px,
-                        float py,
-                        float pz,
-                        float radius,
-                        float alpha_inner,
-                        float alpha_outer,
-                        const QVector3D& color) {
-  QMatrix4x4 model;
-  model.translate(px, py + k_ring_y_offset, pz);
-  model.scale(radius, 1.0F, radius);
-  renderer->selection_ring(model, alpha_inner, alpha_outer, color);
+enum class RpgMarkerRole : std::uint8_t {
+  Stagger,
+  Aim,
+  Lock,
+  Telegraph,
+  StrikeFlash,
+  ContactHit,
+};
+
+struct RpgMarkerStyle {
+  Game::Accessibility::TeamPattern pattern;
+  bool focused;
+};
+
+inline auto marker_style(RpgMarkerRole role) -> RpgMarkerStyle {
+  switch (role) {
+  case RpgMarkerRole::Stagger:
+    return {Game::Accessibility::TeamPattern::Dotted, false};
+  case RpgMarkerRole::Aim:
+    return {Game::Accessibility::TeamPattern::Dashed, false};
+  case RpgMarkerRole::Lock:
+    return {Game::Accessibility::TeamPattern::DoubleRing, true};
+  case RpgMarkerRole::Telegraph:
+    return {Game::Accessibility::TeamPattern::Chevron, false};
+  case RpgMarkerRole::StrikeFlash:
+    return {Game::Accessibility::TeamPattern::Solid, false};
+  case RpgMarkerRole::ContactHit:
+    return {Game::Accessibility::TeamPattern::Notched, false};
+  }
+  return {Game::Accessibility::TeamPattern::Solid, false};
+}
+
+inline void submit_marker(Render::GL::Renderer* renderer,
+                          RpgMarkerRole role,
+                          float px,
+                          float py,
+                          float pz,
+                          float radius,
+                          float alpha,
+                          const QVector3D& color) {
+  const auto style = marker_style(role);
+
+  Render::GL::GroundMarkerCmd marker;
+  marker.center = QVector3D(px, py + k_ring_y_offset, pz);
+  marker.outer_radius = radius;
+  marker.thickness =
+      std::max(k_marker_min_thickness, radius * k_marker_thickness_ratio);
+  marker.color = color;
+  marker.alpha = alpha;
+  marker.pattern = style.pattern;
+  marker.focused = style.focused;
+  renderer->ground_marker(marker);
 }
 
 enum class BodyRingPriority : std::uint8_t {
@@ -890,12 +932,12 @@ struct BodyRing {
   std::uint16_t soldier_slot{
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
   BodyRingPriority priority{BodyRingPriority::Stagger};
+  RpgMarkerRole role{RpgMarkerRole::Stagger};
   float x{0.0F};
   float y{0.0F};
   float z{0.0F};
   float radius{0.5F};
-  float alpha_inner{0.0F};
-  float alpha_outer{0.0F};
+  float alpha{0.0F};
   QVector3D color;
 };
 
@@ -917,14 +959,14 @@ public:
 
   void submit(Render::GL::Renderer* renderer) const {
     for (auto const& ring : m_rings) {
-      submit_ring(renderer,
-                  ring.x,
-                  ring.y,
-                  ring.z,
-                  ring.radius,
-                  ring.alpha_inner,
-                  ring.alpha_outer,
-                  ring.color);
+      submit_marker(renderer,
+                    ring.role,
+                    ring.x,
+                    ring.y,
+                    ring.z,
+                    ring.radius,
+                    ring.alpha,
+                    ring.color);
     }
   }
 
@@ -1064,12 +1106,12 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     body_rings.add({.entity_id = id,
                     .soldier_slot = entry.soldier_slot,
                     .priority = BodyRingPriority::Telegraph,
+                    .role = RpgMarkerRole::Telegraph,
                     .x = entry.last_pos_x,
                     .y = entry.base_y,
                     .z = entry.last_pos_z,
                     .radius = ring_r,
-                    .alpha_inner = ring_alpha,
-                    .alpha_outer = ring_alpha * 0.46F,
+                    .alpha = ring_alpha,
                     .color = ring_color});
   }
 
@@ -1103,13 +1145,13 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                  ? carrier->soldier_slot
                  : Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot,
          .priority = BodyRingPriority::Stagger,
+         .role = RpgMarkerRole::Stagger,
          .x = ex,
          .y = ey,
          .z = ez,
          .radius = carrier.has_value() ? std::max(0.58F, carrier->body_radius * 1.24F)
                                        : 0.90F,
-         .alpha_inner = stagger_alpha,
-         .alpha_outer = stagger_alpha * 0.40F,
+         .alpha = stagger_alpha,
          .color = k_stagger_violet});
   }
 
@@ -1119,25 +1161,25 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
 
     const float flash_r = 0.48F + 0.42F * t;
     const float flash_alpha = (1.0F - t) * 0.78F;
-    submit_ring(renderer,
-                flash.pos.x(),
-                flash.pos.y(),
-                flash.pos.z(),
-                flash_r,
-                flash_alpha,
-                flash_alpha * 0.45F,
-                k_flash_white);
+    submit_marker(renderer,
+                  RpgMarkerRole::StrikeFlash,
+                  flash.pos.x(),
+                  flash.pos.y(),
+                  flash.pos.z(),
+                  flash_r,
+                  flash_alpha,
+                  k_flash_white);
 
     const float core_r = 0.22F + 0.24F * t;
     const float core_alpha = (1.0F - t * t) * 0.82F;
-    submit_ring(renderer,
-                flash.pos.x(),
-                flash.pos.y(),
-                flash.pos.z(),
-                core_r,
-                core_alpha,
-                core_alpha * 0.55F,
-                QVector3D(1.0F, 1.0F, 0.80F));
+    submit_marker(renderer,
+                  RpgMarkerRole::StrikeFlash,
+                  flash.pos.x(),
+                  flash.pos.y(),
+                  flash.pos.z(),
+                  core_r,
+                  core_alpha,
+                  QVector3D(1.0F, 1.0F, 0.80F));
 
     if (elapsed < 0.08F) {
       QVector3D const spark_pos(flash.pos.x(), flash.pos.y() + 0.4F, flash.pos.z());
@@ -1177,12 +1219,12 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
           {.entity_id = targets->aim_candidate_id,
            .soldier_slot = targets->aim_candidate_soldier_slot,
            .priority = aim_is_lock ? BodyRingPriority::Lock : BodyRingPriority::Aim,
+           .role = aim_is_lock ? RpgMarkerRole::Lock : RpgMarkerRole::Aim,
            .x = aim->position.x(),
            .y = aim->position.y(),
            .z = aim->position.z(),
            .radius = radius,
-           .alpha_inner = alpha,
-           .alpha_outer = alpha * 0.42F,
+           .alpha = alpha,
            .color = aim_is_lock ? k_lock_gold : k_aim_cyan});
     }
   }
@@ -1195,12 +1237,12 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
       body_rings.add({.entity_id = resolved_lock_id,
                       .soldier_slot = resolved_lock_slot,
                       .priority = BodyRingPriority::Lock,
+                      .role = RpgMarkerRole::Lock,
                       .x = lock->position.x(),
                       .y = lock->position.y(),
                       .z = lock->position.z(),
                       .radius = radius,
-                      .alpha_inner = lock_alpha,
-                      .alpha_outer = lock_alpha * 0.48F,
+                      .alpha = lock_alpha,
                       .color = k_lock_gold});
     }
   }
@@ -1214,14 +1256,14 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     if (hit.has_value()) {
       float const life = std::clamp(targets->recent_hit_timer / 0.28F, 0.0F, 1.0F);
       float const radius = std::max(0.50F, hit->body_radius) + (1.0F - life) * 0.55F;
-      submit_ring(renderer,
-                  hit->position.x(),
-                  hit->position.y(),
-                  hit->position.z(),
-                  radius,
-                  life * 0.72F,
-                  life * 0.30F,
-                  k_contact_red);
+      submit_marker(renderer,
+                    RpgMarkerRole::ContactHit,
+                    hit->position.x(),
+                    hit->position.y(),
+                    hit->position.z(),
+                    radius,
+                    life * 0.72F,
+                    k_contact_red);
     }
   }
 }

@@ -3,6 +3,7 @@
 #include <QVector3D>
 #include <QVector4D>
 
+#include <cstddef>
 #include <cstdint>
 
 namespace Render::GL {
@@ -65,55 +66,22 @@ struct PlantInstanceGpu {
   QVector4D type_params;
 };
 
-struct PlantBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-  static constexpr float k_default_wind_strength = 0.25F;
-  static constexpr float k_default_wind_speed = 1.4F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-  float wind_strength = k_default_wind_strength;
-  float wind_speed = k_default_wind_speed;
-  float pad0 = 0.0F;
-  float pad1 = 0.0F;
-};
-
-struct PineInstanceGpu {
+struct TreeInstanceGpu {
   QVector4D pos_scale;
   QVector4D color_sway;
   QVector4D rotation;
 };
 
-struct PineBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-  static constexpr float k_default_wind_strength = 0.3F;
-  static constexpr float k_default_wind_speed = 0.5F;
+static_assert(sizeof(PlantInstanceGpu) == sizeof(TreeInstanceGpu) &&
+                  offsetof(PlantInstanceGpu, pos_scale) ==
+                      offsetof(TreeInstanceGpu, pos_scale) &&
+                  offsetof(PlantInstanceGpu, color_sway) ==
+                      offsetof(TreeInstanceGpu, color_sway) &&
+                  offsetof(PlantInstanceGpu, type_params) ==
+                      offsetof(TreeInstanceGpu, rotation),
+              "the shared foliage draw path assumes one instance layout");
 
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-  float wind_strength = k_default_wind_strength;
-  float wind_speed = k_default_wind_speed;
-};
-
-struct OliveInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_sway;
-  QVector4D rotation;
-};
-
-struct OliveBatchParams {
+struct FoliageBatchParams {
   static constexpr float k_default_light_dir_x = 0.35F;
   static constexpr float k_default_light_dir_y = 0.8F;
   static constexpr float k_default_light_dir_z = 0.45F;
@@ -146,156 +114,12 @@ struct FireCampBatchParams {
   float glow_strength = k_default_glow_strength;
 };
 
-struct TentInstanceGpu {
+struct PropInstanceGpu {
   QVector4D pos_scale;
   QVector4D color_rot;
 };
 
-struct TentBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct SupplyCartInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct SupplyCartBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct WeaponRackInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct WeaponRackBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct RuinsInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct RuinsBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct AbandonedHomeInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct AbandonedHomeBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct StatueInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct StatueBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct DeadTreeInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct DeadTreeBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct IronOreInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct IronOreBatchParams {
-  static constexpr float k_default_light_dir_x = 0.35F;
-  static constexpr float k_default_light_dir_y = 0.8F;
-  static constexpr float k_default_light_dir_z = 0.45F;
-
-  static auto default_light_direction() -> QVector3D {
-    return {k_default_light_dir_x, k_default_light_dir_y, k_default_light_dir_z};
-  }
-
-  QVector3D light_direction = default_light_direction();
-  float time = 0.0F;
-};
-
-struct MagicShrineInstanceGpu {
-  QVector4D pos_scale;
-  QVector4D color_rot;
-};
-
-struct MagicShrineBatchParams {
+struct PropBatchParams {
   static constexpr float k_default_light_dir_x = 0.35F;
   static constexpr float k_default_light_dir_y = 0.8F;
   static constexpr float k_default_light_dir_z = 0.45F;

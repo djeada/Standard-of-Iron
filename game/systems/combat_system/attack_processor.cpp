@@ -13,6 +13,7 @@
 #include "../../units/spawn_type.h"
 #include "../../units/troop_config.h"
 #include "../../visuals/team_colors.h"
+#include "../attack_range.h"
 #include "../combat_actions/combat_action_definition.h"
 #include "../combat_actions/combat_action_events.h"
 #include "../combat_rules.h"
@@ -656,13 +657,13 @@ void apply_hold_mode_bonuses(Engine::Core::Entity* attacker,
     return;
   }
 
+  range *= Game::Systems::hold_mode_range_multiplier(*attacker, unit_comp->spawn_type);
+
   if (unit_comp->spawn_type == Game::Units::SpawnType::Archer) {
-    range *= Constants::k_range_multiplier_hold;
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::k_damage_multiplier_archer_hold);
     apply_health_bonus(unit_comp);
   } else if (unit_comp->spawn_type == Game::Units::SpawnType::Spearman) {
-    range *= Constants::k_range_multiplier_spearman_hold;
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::k_damage_multiplier_spearman_hold);
     apply_health_bonus(unit_comp);

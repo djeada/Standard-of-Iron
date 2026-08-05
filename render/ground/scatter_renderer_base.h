@@ -10,25 +10,30 @@
 #include "../../game/map/map_definition.h"
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
-#include "../i_render_pass.h"
 #include "../scene_renderer.h"
+#include "i_scatter_pass.h"
 #include "scatter_renderer_state.h"
 #include "scatter_submission.h"
 
 namespace Render::GL {
 
 template <typename Instance, typename Params>
-class ScatterRendererBase : public IRenderPass {
+class ScatterRendererBase : public IScatterPass {
 public:
-  [[nodiscard]] bool is_gpu_ready() const { return m_state.is_gpu_ready(); }
+  [[nodiscard]] auto is_gpu_ready() const -> bool override {
+    return m_state.is_gpu_ready();
+  }
 
-  [[nodiscard]] auto instance_count() const -> std::size_t {
+  [[nodiscard]] auto instance_count() const -> std::size_t override {
     return m_state.instances.size();
   }
 
-  [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
+  [[nodiscard]] auto
+  last_sync_stats() const -> Render::Ground::Scatter::SyncStats override {
     return m_state.last_sync_stats;
   }
+
+  void clear() override { m_state.reset_instances(); }
 
 protected:
   using State = Render::Ground::Scatter::FilteredRendererState<Instance, Params>;
@@ -67,11 +72,11 @@ protected:
   }
 
   template <bool CopyTimeToParams>
-  void submit_filtered_common(Renderer& renderer,
+  auto submit_filtered_common(Renderer& renderer,
                               ResourceManager* resources,
                               TerrainScatterCmd::Species species,
                               void (*assign_params)(TerrainScatterCmd&,
-                                                    const Params&)) {
+                                                    const Params&)) -> std::size_t {
     (void)resources;
 
     const auto visible_count = Render::Ground::Scatter::sync_filtered_state(
@@ -83,7 +88,7 @@ protected:
 
         Render::Ground::Scatter::ScatterMemoryMode::Remembered);
     if (visible_count == 0) {
-      return;
+      return 0;
     }
 
     TerrainScatterCmd cmd;
@@ -97,9 +102,18 @@ protected:
       assign_params(cmd, m_state.params);
     }
     Render::Ground::Scatter::submit_visible_chunks(renderer, m_state, cmd);
+    return visible_count;
   }
 
-  void clear_common() { m_state.reset_instances(); }
+  auto submit_prop_common(Renderer& renderer,
+                          ResourceManager* resources,
+                          TerrainScatterCmd::Species species) -> std::size_t {
+    m_state.params.time = renderer.get_animation_time();
+    return submit_filtered_common<false>(
+        renderer, resources, species, [](TerrainScatterCmd& cmd, const Params& params) {
+          cmd.prop = params;
+        });
+  }
 
   int m_width = 0;
   int m_height = 0;

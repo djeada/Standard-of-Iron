@@ -77,42 +77,7 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(HorseSpearmanRendererConfig
     m_config.shoulder_equipment_id.clear();
   }
 
-  auto resolve_mount_handle = [&](EquipmentHandle& handle,
-                                  EquipmentCategory category,
-                                  std::string& equipment_id) {
-    if (handle == k_invalid_equipment_handle && !equipment_id.empty()) {
-      handle = equipment_registry.resolve_handle(category, equipment_id);
-    }
-  };
-
-  m_horse_saddle_handle = m_config.horse_saddle_handle;
-  resolve_mount_handle(m_horse_saddle_handle,
-                       EquipmentCategory::HorseTack,
-                       m_config.horse_saddle_equipment_id);
-  m_horse_bridle_handle = m_config.horse_bridle_handle;
-  resolve_mount_handle(m_horse_bridle_handle,
-                       EquipmentCategory::HorseTack,
-                       m_config.horse_bridle_equipment_id);
-  m_horse_reins_handle = m_config.horse_reins_handle;
-  resolve_mount_handle(m_horse_reins_handle,
-                       EquipmentCategory::HorseTack,
-                       m_config.horse_reins_equipment_id);
-  m_horse_blanket_handle = m_config.horse_blanket_handle;
-  resolve_mount_handle(m_horse_blanket_handle,
-                       EquipmentCategory::HorseTack,
-                       m_config.horse_blanket_equipment_id);
-  m_horse_barding_handle = m_config.horse_barding_handle;
-  resolve_mount_handle(m_horse_barding_handle,
-                       EquipmentCategory::HorseArmor,
-                       m_config.horse_barding_equipment_id);
-  m_horse_crupper_handle = m_config.horse_crupper_handle;
-  resolve_mount_handle(m_horse_crupper_handle,
-                       EquipmentCategory::HorseArmor,
-                       m_config.horse_crupper_equipment_id);
-  m_horse_decoration_handle = m_config.horse_decoration_handle;
-  resolve_mount_handle(m_horse_decoration_handle,
-                       EquipmentCategory::HorseDecoration,
-                       m_config.horse_decoration_equipment_id);
+  m_horse_handles = resolve_mounted_horse_handles(m_config);
 
   build_visual_spec();
 }
@@ -175,15 +140,7 @@ void HorseSpearmanRendererBase::build_visual_spec() {
       (m_config.mount_archetype_id != Render::Creature::k_invalid_archetype)
           ? m_config.mount_archetype_id
           : Render::Creature::ArchetypeRegistry::k_horse_base;
-  const std::array<EquipmentHandle, 7> mount_handles{
-      m_horse_saddle_handle,
-      m_horse_bridle_handle,
-      m_horse_reins_handle,
-      m_horse_blanket_handle,
-      m_horse_barding_handle,
-      m_horse_crupper_handle,
-      m_horse_decoration_handle,
-  };
+  const auto mount_handles = m_horse_handles.as_array();
   set_mount_visual(resolve_horse_equipment_archetype(
                        m_config.mount_debug_name, base_mount_id, mount_handles),
                    m_config.mount_debug_name);

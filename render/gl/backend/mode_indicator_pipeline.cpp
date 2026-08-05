@@ -7,29 +7,16 @@
 #include "../mesh.h"
 #include "../shader_cache.h"
 #include "../state_scopes.h"
+#include "gl_error_check.h"
 
 namespace Render::GL::BackendPipelines {
 
 namespace {
-void clear_gl_errors() {
-#ifndef NDEBUG
-  while (glGetError() != GL_NO_ERROR) {
-  }
-#endif
-}
 
 auto check_gl_error(const char* operation) -> bool {
-#ifndef NDEBUG
-  GLenum err = glGetError();
-  if (err != GL_NO_ERROR) {
-    qWarning() << "ModeIndicatorPipeline GL error in" << operation << ":" << err;
-    return false;
-  }
-#else
-  Q_UNUSED(operation);
-#endif
-  return true;
+  return BackendPipelines::check_gl_error("ModeIndicatorPipeline", operation);
 }
+
 } // namespace
 
 auto ModeIndicatorPipeline::initialize() -> bool {

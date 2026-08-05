@@ -97,6 +97,8 @@
 #include "game/map/visibility_service.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
+#include "game/systems/attack_range.h"
+#include "game/systems/attack_targeting.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/camera_visibility_service.h"
@@ -1907,7 +1909,6 @@ void GameEngine::render_runtime_mode_effects() {
 }
 
 void GameEngine::update(float dt) {
-
   if (m_runtime.loading) {
     return;
   }
@@ -1959,6 +1960,8 @@ void GameEngine::update(float dt) {
       frame_state.minimap_unit_update_accumulator;
   sync_scatter_world_props();
   sync_selected_player_state();
+  sync_attack_targeting();
+  sync_attack_range_rings();
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {
@@ -2015,7 +2018,9 @@ void GameEngine::render(int pixel_width, int pixel_height) {
        .world = m_world,
        .command_controller = m_command_controller.get(),
        .local_owner_id = m_runtime.local_owner_id,
-       .commander_rally_preview_pos = m_commander_rally_preview_pos},
+       .commander_rally_preview_pos = m_commander_rally_preview_pos,
+       .attack_targeting = &m_attack_targeting,
+       .attack_range_rings = &m_attack_range_rings},
       [this]() { render_runtime_mode_effects(); });
   m_renderer->end_frame();
 
@@ -2192,6 +2197,113 @@ void GameEngine::sync_selection_flags() {
     m_civilian_delivery_available = civilian_delivery_available;
     emit civilian_delivery_available_changed();
   }
+}
+
+void GameEngine::sync_attack_range_rings() {
+  std::vector<Game::Systems::AttackRangeRing> rings;
+
+  if ((m_world != nullptr) && !m_level.is_spectator_mode) {
+    if (auto* selection_system =
+            m_world->get_system<Game::Systems::SelectionSystem>()) {
+      const auto& selected = selection_system->get_selected_units();
+      const auto hovered =
+          m_hover_tracker ? m_hover_tracker->get_last_hovered_entity() : 0;
+
+      Game::Systems::AttackRangeRingRequest request;
+      request.world = m_world;
+      request.local_owner_id = m_runtime.local_owner_id;
+      request.selection = selected;
+      request.max_rings = Game::Systems::k_attack_range_max_rings;
+      if (std::find(selected.begin(), selected.end(), hovered) != selected.end()) {
+        request.focus_entity_id = hovered;
+      }
+      rings = Game::Systems::collect_attack_range_rings(request);
+    }
+  }
+
+  m_attack_range_rings = std::move(rings);
+}
+
+void GameEngine::sync_attack_targeting() {
+  Game::Systems::AttackTargetingHighlights highlights;
+  QVariantMap hint;
+  hint[QStringLiteral("state")] = QStringLiteral("none");
+  hint[QStringLiteral("name")] = QString();
+  hint[QStringLiteral("range")] = QStringLiteral("none");
+
+  const bool attack_mode_active =
+      (m_cursor_manager != nullptr) && m_cursor_manager->mode() == CursorMode::Attack;
+
+  if (attack_mode_active && (m_world != nullptr) && !m_level.is_spectator_mode) {
+    std::vector<Engine::Core::EntityID> attackers;
+    if (auto* selection_system =
+            m_world->get_system<Game::Systems::SelectionSystem>()) {
+      attackers = App::Core::filter_selected_units_for_action(
+          m_world, selection_system->get_selected_units(), QStringLiteral("attack"));
+    }
+
+    auto& visibility = Game::Map::VisibilityService::instance();
+    const auto snapshot =
+        visibility.is_initialized() ? visibility.snapshot_ptr() : nullptr;
+
+    Game::Systems::AttackTargetingRequest request;
+    request.world = m_world;
+    request.local_owner_id = m_runtime.local_owner_id;
+    request.has_attackers = !attackers.empty();
+    request.hovered_entity_id =
+        m_hover_tracker ? m_hover_tracker->get_last_hovered_entity() : 0;
+    if (m_camera != nullptr) {
+      const QVector3D anchor = m_camera->get_target();
+      request.anchor_x = anchor.x();
+      request.anchor_z = anchor.z();
+      request.max_distance = Game::Systems::k_attack_highlight_max_distance;
+    }
+    request.max_markers = Game::Systems::k_attack_highlight_max_markers;
+    request.visibility = snapshot.get();
+
+    highlights = Game::Systems::collect_attack_target_highlights(request);
+
+    const auto verdict_key =
+        Game::Systems::attack_target_verdict_key(highlights.hovered_verdict);
+    hint[QStringLiteral("state")] = QString::fromLatin1(
+        verdict_key.data(), static_cast<qsizetype>(verdict_key.size()));
+    if (highlights.hovered_verdict == Game::Systems::AttackTargetVerdict::Valid) {
+      QString name;
+      QString nation;
+      int health = 0;
+      int max_health = 0;
+      bool is_building = false;
+      bool alive = false;
+      if (get_unit_info(highlights.hovered_entity_id,
+                        name,
+                        health,
+                        max_health,
+                        is_building,
+                        alive,
+                        nation)) {
+        hint[QStringLiteral("name")] = name;
+      }
+
+      const auto range_verdict = Game::Systems::classify_range_to_target(
+          m_world, attackers, highlights.hovered_entity_id);
+      const auto range_key = Game::Systems::range_verdict_key(range_verdict);
+      hint[QStringLiteral("range")] = QString::fromLatin1(
+          range_key.data(), static_cast<qsizetype>(range_key.size()));
+    }
+  }
+
+  m_attack_targeting = std::move(highlights);
+
+  if ((m_activity_view_model == nullptr) || (m_attack_target_hint == hint)) {
+    return;
+  }
+  m_attack_target_hint = hint;
+  QMetaObject::invokeMethod(
+      m_activity_view_model.get(),
+      [view_model = m_activity_view_model.get(), hint]() {
+        view_model->set_attack_target_hint(hint);
+      },
+      Qt::QueuedConnection);
 }
 
 auto GameEngine::is_action_enabled(const QString& action_id) const -> bool {

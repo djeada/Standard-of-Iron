@@ -75,33 +75,4 @@ auto make_elephant_profile(uint32_t seed,
                            const QVector3D& fabric_base,
                            const QVector3D& metal_base) -> ElephantProfile;
 
-inline void scale_elephant_dimensions(ElephantDimensions& dims, float scale) {
-  dims.body_length *= scale;
-  dims.body_width *= scale;
-  dims.body_height *= scale;
-  dims.neck_length *= scale;
-  dims.neck_width *= scale;
-  dims.head_length *= scale;
-  dims.head_width *= scale;
-  dims.head_height *= scale;
-  dims.trunk_length *= scale;
-  dims.trunk_base_radius *= scale;
-  dims.trunk_tip_radius *= scale;
-  dims.ear_width *= scale;
-  dims.ear_height *= scale;
-  dims.ear_thickness *= scale;
-  dims.leg_length *= scale;
-  dims.leg_radius *= scale;
-  dims.foot_radius *= scale;
-  dims.tail_length *= scale;
-  dims.tusk_length *= scale;
-  dims.tusk_radius *= scale;
-  dims.howdah_width *= scale;
-  dims.howdah_length *= scale;
-  dims.howdah_height *= scale;
-  dims.barrel_center_y *= scale;
-  dims.idle_bob_amplitude *= scale;
-  dims.move_bob_amplitude *= scale;
-}
-
 } // namespace Render::GL

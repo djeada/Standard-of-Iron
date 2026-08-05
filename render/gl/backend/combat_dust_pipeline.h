@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../shader.h"
+#include "mesh_buffers.h"
 #include "pipeline_interface.h"
 
 namespace Engine::Core {
@@ -68,42 +69,6 @@ public:
 
   void render(const Camera& cam, float animation_time);
 
-  void render_single_dust(const QVector3D& position,
-                          const QVector3D& color,
-                          float radius,
-                          float intensity,
-                          float time,
-                          const QMatrix4x4& view_proj);
-
-  void render_single_flame(const QVector3D& position,
-                           const QVector3D& color,
-                           float radius,
-                           float intensity,
-                           float time,
-                           const QMatrix4x4& view_proj);
-
-  void render_single_fireball(const QVector3D& position,
-                              const QVector3D& color,
-                              float radius,
-                              float intensity,
-                              float time,
-                              const QMatrix4x4& view_proj);
-
-  void render_single_stone_impact(const QVector3D& position,
-                                  const QVector3D& color,
-                                  float radius,
-                                  float intensity,
-                                  float time,
-                                  const QMatrix4x4& view_proj);
-
-  void render_single_blood_pool(const QVector3D& position,
-                                float radius,
-                                float alpha_scale,
-                                float rotation,
-                                float aspect_ratio,
-                                float seed,
-                                const QMatrix4x4& view_proj);
-
   struct DustInstanceData {
     QVector3D position;
     QVector3D color;
@@ -155,15 +120,11 @@ public:
                       float time);
 
 private:
-  void render_dust(const CombatDustData& data, const Camera& cam);
   auto create_dust_geometry() -> bool;
-  void shutdown_geometry();
   auto create_fireball_geometry() -> bool;
-  void shutdown_fireball_geometry();
   auto create_metal_spark_geometry() -> bool;
-  void shutdown_metal_spark_geometry();
   auto create_blood_geometry() -> bool;
-  void shutdown_blood_geometry();
+  void release_geometry();
   void render_blood_pools(const Camera& cam);
 
   GL::Backend* m_backend = nullptr;
@@ -171,22 +132,10 @@ private:
   GL::Shader* m_dust_shader = nullptr;
   GL::Shader* m_blood_shader = nullptr;
 
-  GLuint m_vao = 0;
-  GLuint m_vertex_buffer = 0;
-  GLuint m_index_buffer = 0;
-  GLsizei m_index_count = 0;
-  GLuint m_fireball_vao = 0;
-  GLuint m_fireball_vertex_buffer = 0;
-  GLuint m_fireball_index_buffer = 0;
-  GLsizei m_fireball_index_count = 0;
-  GLuint m_metal_spark_vao = 0;
-  GLuint m_metal_spark_vertex_buffer = 0;
-  GLuint m_metal_spark_index_buffer = 0;
-  GLsizei m_metal_spark_index_count = 0;
-  GLuint m_blood_vao = 0;
-  GLuint m_blood_vertex_buffer = 0;
-  GLuint m_blood_index_buffer = 0;
-  GLsizei m_blood_index_count = 0;
+  StaticMeshBuffers m_dust_mesh;
+  StaticMeshBuffers m_fireball_mesh;
+  StaticMeshBuffers m_metal_spark_mesh;
+  StaticMeshBuffers m_blood_mesh;
 
   std::vector<CombatDustData> m_dust_data;
   std::vector<BloodPoolData> m_blood_data;

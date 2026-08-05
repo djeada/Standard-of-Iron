@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../shader.h"
+#include "mesh_buffers.h"
 #include "pipeline_interface.h"
 
 namespace Engine::Core {
@@ -68,16 +69,13 @@ public:
 private:
   void render_aura(const HealerAuraData& data, const Camera& cam, float animation_time);
   auto create_dome_geometry() -> bool;
-  void shutdown_geometry();
+  void release_geometry();
 
   GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_aura_shader = nullptr;
 
-  GLuint m_vao = 0;
-  GLuint m_vertex_buffer = 0;
-  GLuint m_index_buffer = 0;
-  GLsizei m_index_count = 0;
+  StaticMeshBuffers m_mesh;
 
   std::vector<HealerAuraData> m_healer_data;
 

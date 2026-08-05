@@ -116,11 +116,6 @@ enum class LegacySlotMask : std::uint8_t {
                                      static_cast<std::uint8_t>(b));
 }
 
-[[nodiscard]] constexpr auto owns_slot(LegacySlotMask mask,
-                                       LegacySlotMask slot) noexcept -> bool {
-  return (static_cast<std::uint8_t>(mask) & static_cast<std::uint8_t>(slot)) != 0U;
-}
-
 struct MountedSpec;
 
 struct UnitVisualSpec {

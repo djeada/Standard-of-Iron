@@ -173,8 +173,6 @@ void apply_combat_micro_variation(const HumanoidAnimationContext& anim_ctx,
                                   std::uint32_t inst_seed,
                                   bool multi_soldier,
                                   HumanoidPose& pose);
-auto flattened_or(const QVector3D& v, const QVector3D& fallback) noexcept -> QVector3D;
-
 struct VisualLocomotionSample {
   float speed = 0.0F;
   QVector3D direction{0.0F, 0.0F, 1.0F};

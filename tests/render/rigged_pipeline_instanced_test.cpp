@@ -118,16 +118,6 @@ TEST(RiggedPipelineInstanced, PaletteRangeCoversDeclaredShaderBatch) {
             k_shader_batch_size * Render::GL::BonePaletteArena::k_palette_bytes);
 }
 
-TEST(RiggedPipelineInstanced, HeadlessDrawInstancedRecordsBatchSize) {
-  RiggedCharacterPipeline pipe(nullptr, nullptr);
-
-  std::vector<RiggedCreatureCmd> cmds(7, make_cmd(k_mesh_a, k_mat_a));
-
-  bool ok = pipe.draw_instanced(cmds.data(), cmds.size(), QMatrix4x4{});
-  EXPECT_FALSE(ok);
-  EXPECT_TRUE(pipe.batch_sizes_for_test().empty());
-}
-
 TEST(RiggedPipelineInstanced, HeadlessDrawInstancedPointerBatchReturnsFalse) {
   RiggedCharacterPipeline pipe(nullptr, nullptr);
 

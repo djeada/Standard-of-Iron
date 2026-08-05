@@ -50,22 +50,11 @@ void DeadTreeRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
 }
 
 void DeadTreeRenderer::set_light_direction(const QVector3D& dir) {
-  set_light_direction_common(dir, DeadTreeBatchParams::default_light_direction());
+  set_light_direction_common(dir, PropBatchParams::default_light_direction());
 }
 
 void DeadTreeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  m_state.params.time = renderer.get_animation_time();
-  submit_filtered_common<false>(
-      renderer,
-      resources,
-      TerrainScatterCmd::Species::DeadTree,
-      [](TerrainScatterCmd& cmd, const DeadTreeBatchParams& params) {
-        cmd.dead_tree = params;
-      });
-}
-
-void DeadTreeRenderer::clear() {
-  clear_common();
+  submit_prop_common(renderer, resources, TerrainScatterCmd::Species::DeadTree);
 }
 
 void DeadTreeRenderer::generate_instances(
@@ -136,7 +125,7 @@ void DeadTreeRenderer::generate_instances(
     color = color * (1.0F - dampness) + rain_dark * dampness;
     color *= 0.88F + scene.dryness * 0.10F + scene.rockiness * 0.03F;
 
-    DeadTreeInstanceGpu inst;
+    PropInstanceGpu inst;
     float const scale = remap(rand_01(state), scale_min, scale_max) *
                         scatter_scale_bias(ScatterRuleSpecies::DeadTree, scene);
     inst.pos_scale = QVector4D(world_pos.x(), world_pos.y(), world_pos.z(), scale);
@@ -163,7 +152,7 @@ void DeadTreeRenderer::generate_instances(
     float const color_var = remap(rand_01(state), 0.35F, 0.85F);
     QVector3D const color = base_color * (1.0F - color_var) + dry_color * color_var;
 
-    DeadTreeInstanceGpu inst;
+    PropInstanceGpu inst;
     inst.pos_scale = QVector4D(resolved.x(),
                                resolved.y(),
                                resolved.z(),

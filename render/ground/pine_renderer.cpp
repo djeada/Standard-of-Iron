@@ -78,11 +78,9 @@ void PineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       renderer,
       resources,
       TerrainScatterCmd::Species::Pine,
-      [](TerrainScatterCmd& cmd, const PineBatchParams& params) { cmd.pine = params; });
-}
-
-void PineRenderer::clear() {
-  clear_common();
+      [](TerrainScatterCmd& cmd, const FoliageBatchParams& params) {
+        cmd.foliage = params;
+      });
 }
 
 void PineRenderer::generate_pine_instances() {
@@ -111,7 +109,7 @@ void PineRenderer::generate_pine_instances() {
       const float needle_seed = rand_01(var_state);
       const float bark_seed = rand_01(var_state);
 
-      PineInstanceGpu inst;
+      TreeInstanceGpu inst;
       inst.pos_scale =
           QVector4D(pos.x(),
                     pos.y(),
@@ -215,7 +213,7 @@ void PineRenderer::generate_pine_instances() {
     float const needle_seed = rand_01(state);
     float const bark_seed = rand_01(state);
 
-    PineInstanceGpu instance;
+    TreeInstanceGpu instance;
 
     instance.pos_scale = QVector4D(world_pos.x(), world_pos.y(), world_pos.z(), scale);
     instance.color_sway =

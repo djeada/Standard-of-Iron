@@ -8,6 +8,7 @@
 #include "../persistent_buffer.h"
 #include "../shader_cache.h"
 #include "instance_draw_guard.h"
+#include "mesh_buffers.h"
 #include "pipeline_interface.h"
 
 namespace Render::GL {
@@ -85,22 +86,14 @@ private:
   bool m_use_persistent_buffers{false};
 
   GL::Shader* m_cylinder_shader{nullptr};
-  GLuint m_cylinder_vao{0};
-  GLuint m_cylinder_vertex_buffer{0};
-  GLuint m_cylinder_index_buffer{0};
-  GLuint m_cylinder_instance_buffer{0};
-  GLsizei m_cylinder_index_count{0};
+  StaticMeshBuffers m_cylinder_mesh;
   std::size_t m_cylinder_instance_capacity{0};
   std::size_t m_cylinder_instances_resident{0};
   InstanceDrawGuard m_cylinder_draw_guard{"CylinderPipeline::cylinders"};
   GL::PersistentRingBuffer<CylinderInstanceGpu> m_cylinder_persistent_buffer;
 
   GL::Shader* m_fog_shader{nullptr};
-  GLuint m_fog_vao{0};
-  GLuint m_fog_vertex_buffer{0};
-  GLuint m_fog_index_buffer{0};
-  GLuint m_fog_instance_buffer{0};
-  GLsizei m_fog_index_count{0};
+  StaticMeshBuffers m_fog_mesh;
   std::size_t m_fog_instance_capacity{0};
   std::size_t m_fog_instances_resident{0};
   InstanceDrawGuard m_fog_draw_guard{"CylinderPipeline::fog"};

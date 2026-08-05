@@ -386,6 +386,68 @@ auto build_hasdrubal_quiver_attachments(std::uint8_t base_role_byte)
   return to_vector(Render::GL::quiver_make_static_attachments(
       hasdrubal_quiver_config(), humanoid_pelvis_bone(), base_role_byte));
 }
+template <const SwordRenderConfig& (*ConfigFn)()>
+auto sword_with_scabbard_role_colors(const void* variant_void,
+                                     QVector3D* out,
+                                     std::uint32_t base_count,
+                                     std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        count += Render::GL::sword_fill_role_colors(
+            variant.palette, ConfigFn(), colors + count, max - count);
+        if (max <= count) {
+          return count;
+        }
+        return count + Render::GL::scabbard_fill_role_colors(
+                           variant.palette, colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+template <const QuiverRenderConfig& (*ConfigFn)()>
+auto quiver_config_role_colors(const void* variant_void,
+                               QVector3D* out,
+                               std::uint32_t base_count,
+                               std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::quiver_fill_role_colors(
+                           variant.palette, ConfigFn(), colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
+template <const SpearRenderConfig& (*ConfigFn)()>
+auto spear_config_role_colors(const void* variant_void,
+                              QVector3D* out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  return with_variant_palette(
+      variant_void,
+      [](const HumanoidVariant& variant,
+         QVector3D* colors,
+         std::uint32_t count,
+         std::size_t max) {
+        return count + Render::GL::spear_fill_role_colors(
+                           variant.palette, ConfigFn(), colors + count, max - count);
+      },
+      out,
+      base_count,
+      max_count);
+}
+
 auto spear_role_colors(const void* variant_void,
                        QVector3D* out,
                        std::uint32_t base_count,
@@ -417,38 +479,16 @@ auto fabius_spear_role_colors(const void* variant_void,
                               QVector3D* out,
                               std::uint32_t base_count,
                               std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [&](const HumanoidVariant& variant,
-          QVector3D* colors,
-          std::uint32_t count,
-          std::size_t max) {
-        return count +
-               Render::GL::spear_fill_role_colors(
-                   variant.palette, fabius_spear_config(), colors + count, max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return spear_config_role_colors<fabius_spear_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto hanno_spear_role_colors(const void* variant_void,
                              QVector3D* out,
                              std::uint32_t base_count,
                              std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [&](const HumanoidVariant& variant,
-          QVector3D* colors,
-          std::uint32_t count,
-          std::size_t max) {
-        return count +
-               Render::GL::spear_fill_role_colors(
-                   variant.palette, hanno_spear_config(), colors + count, max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return spear_config_role_colors<hanno_spear_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto roman_scutum_role_colors(const void* variant_void,
@@ -491,92 +531,32 @@ auto roman_sword_role_colors(const void* variant_void,
                              QVector3D* out,
                              std::uint32_t base_count,
                              std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        count += Render::GL::sword_fill_role_colors(
-            variant.palette, roman_sword_config(), colors + count, max - count);
-        if (max <= count) {
-          return count;
-        }
-        return count + Render::GL::scabbard_fill_role_colors(
-                           variant.palette, colors + count, max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return sword_with_scabbard_role_colors<roman_sword_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto scipio_sword_role_colors(const void* variant_void,
                               QVector3D* out,
                               std::uint32_t base_count,
                               std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        count += Render::GL::sword_fill_role_colors(
-            variant.palette, scipio_sword_config(), colors + count, max - count);
-        if (max <= count) {
-          return count;
-        }
-        return count + Render::GL::scabbard_fill_role_colors(
-                           variant.palette, colors + count, max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return sword_with_scabbard_role_colors<scipio_sword_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto carthage_sword_role_colors(const void* variant_void,
                                 QVector3D* out,
                                 std::uint32_t base_count,
                                 std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        count += Render::GL::sword_fill_role_colors(
-            variant.palette, carthage_sword_config(), colors + count, max - count);
-        if (max <= count) {
-          return count;
-        }
-        return count + Render::GL::scabbard_fill_role_colors(
-                           variant.palette, colors + count, max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return sword_with_scabbard_role_colors<carthage_sword_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto hannibal_sword_role_colors(const void* variant_void,
                                 QVector3D* out,
                                 std::uint32_t base_count,
                                 std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        count += Render::GL::sword_fill_role_colors(
-            variant.palette, hannibal_sword_config(), colors + count, max - count);
-        if (max <= count) {
-          return count;
-        }
-        return count + Render::GL::scabbard_fill_role_colors(
-                           variant.palette, colors + count, max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return sword_with_scabbard_role_colors<hannibal_sword_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto sepulcher_sword_role_colors(const void* variant_void,
@@ -665,40 +645,16 @@ auto quiver_role_colors(const void* variant_void,
                         QVector3D* out,
                         std::uint32_t base_count,
                         std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        return count + Render::GL::quiver_fill_role_colors(variant.palette,
-                                                           mounted_quiver_config(),
-                                                           colors + count,
-                                                           max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return quiver_config_role_colors<mounted_quiver_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto marcellus_quiver_role_colors(const void* variant_void,
                                   QVector3D* out,
                                   std::uint32_t base_count,
                                   std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        return count + Render::GL::quiver_fill_role_colors(variant.palette,
-                                                           marcellus_quiver_config(),
-                                                           colors + count,
-                                                           max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return quiver_config_role_colors<marcellus_quiver_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto roman_quiver_role_colors(const void* variant_void,
@@ -724,40 +680,16 @@ auto hasdrubal_quiver_role_colors(const void* variant_void,
                                   QVector3D* out,
                                   std::uint32_t base_count,
                                   std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        return count + Render::GL::quiver_fill_role_colors(variant.palette,
-                                                           hasdrubal_quiver_config(),
-                                                           colors + count,
-                                                           max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return quiver_config_role_colors<hasdrubal_quiver_config>(
+      variant_void, out, base_count, max_count);
 }
 
 auto carthage_quiver_role_colors(const void* variant_void,
                                  QVector3D* out,
                                  std::uint32_t base_count,
                                  std::size_t max_count) -> std::uint32_t {
-  return with_variant_palette(
-      variant_void,
-      [](const HumanoidVariant& variant,
-         QVector3D* colors,
-         std::uint32_t count,
-         std::size_t max) {
-        return count + Render::GL::quiver_fill_role_colors(variant.palette,
-                                                           carthage_quiver_config(),
-                                                           colors + count,
-                                                           max - count);
-      },
-      out,
-      base_count,
-      max_count);
+  return quiver_config_role_colors<carthage_quiver_config>(
+      variant_void, out, base_count, max_count);
 }
 
 } // namespace Render::GL::EquipmentRegistration

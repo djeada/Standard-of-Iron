@@ -78,13 +78,9 @@ void OliveRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       renderer,
       resources,
       TerrainScatterCmd::Species::Olive,
-      [](TerrainScatterCmd& cmd, const OliveBatchParams& params) {
-        cmd.olive = params;
+      [](TerrainScatterCmd& cmd, const FoliageBatchParams& params) {
+        cmd.foliage = params;
       });
-}
-
-void OliveRenderer::clear() {
-  clear_common();
 }
 
 void OliveRenderer::generate_olive_instances() {
@@ -113,7 +109,7 @@ void OliveRenderer::generate_olive_instances() {
       const float leaf_seed = rand_01(var_state);
       const float bark_seed = rand_01(var_state);
 
-      OliveInstanceGpu inst;
+      TreeInstanceGpu inst;
       inst.pos_scale =
           QVector4D(pos.x(),
                     pos.y(),
@@ -214,7 +210,7 @@ void OliveRenderer::generate_olive_instances() {
     float const leaf_seed = rand_01(state);
     float const bark_seed = rand_01(state);
 
-    OliveInstanceGpu instance;
+    TreeInstanceGpu instance;
 
     float const chosen_scale = remap(rand_01(state),
                                      scatter_rules.olive_scale_min,
