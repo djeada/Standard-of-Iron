@@ -29,6 +29,16 @@ Rectangle {
     property int label_refresh: 0
 
     readonly property string map_label_family: Design.Typography.displayFamily
+    readonly property int capital_font_px: Math.round(Design.Typography.body * 1.05)
+    readonly property int town_font_px: Design.Typography.label
+    readonly property int capital_plate_pad_x: 7
+    readonly property int town_plate_pad_x: 6
+    readonly property int plate_pad_y: 3
+
+    property alias key_handler: map_keys
+    property bool pan_fast: false
+    property var held_keys: ({})
+    property real last_pan_tick: 0
 
     readonly property var city_rank: ({
             "Rome": 0,
@@ -294,7 +304,8 @@ Rectangle {
                         "name": city.name,
                         "uv": city.uv,
                         "rank": rank === undefined ? root.city_rank_default : rank,
-                        "labelled": false
+                        "labelled": false,
+                        "side": 1
                     });
             }
         }
@@ -304,6 +315,42 @@ Rectangle {
                 return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
             });
         return markers;
+    }
+
+    function rank_limit_for_distance(distance) {
+        if (distance <= 1.45)
+            return root.city_rank_default;
+        if (distance <= 2.2)
+            return 3;
+        if (distance <= 3.2)
+            return 1;
+        return 0;
+    }
+
+    function label_plate_size(marker) {
+        var capital = marker.rank === 0;
+        var metrics = capital ? capital_metrics : town_metrics;
+        metrics.text = marker.name;
+        var pad_x = capital ? root.capital_plate_pad_x : root.town_plate_pad_x;
+        return {
+            "width": metrics.advanceWidth + pad_x * 2,
+            "height": metrics.height + root.plate_pad_y * 2,
+            "gap": capital ? 11 : 9
+        };
+    }
+
+    function label_box_for(pos, plate, side) {
+        var left = side > 0 ? pos.x + plate.gap : pos.x - plate.gap - plate.width;
+        return {
+            "left": left - 2,
+            "right": left + plate.width + 2,
+            "top": pos.y - plate.height * 0.5 - 2,
+            "bottom": pos.y + plate.height * 0.5 + 2
+        };
+    }
+
+    function boxes_overlap(a, b) {
+        return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
     }
 
     function rebuild_city_markers() {
@@ -317,60 +364,159 @@ Rectangle {
         var portrait = view.hannibal_icon_position();
         if (portrait && portrait.x > 0 && portrait.y > 0 && root.selected_mission) {
             kept.push({
-                    "left": portrait.x - 26,
-                    "right": portrait.x + 26,
-                    "top": portrait.y - 26,
-                    "bottom": portrait.y + 26
+                    "left": portrait.x - 30,
+                    "right": portrait.x + 30,
+                    "top": portrait.y - 30,
+                    "bottom": portrait.y + 30
                 });
         }
         kept.push({
                 "left": 0,
                 "right": map_viewport.width,
-                "top": map_viewport.height - 34,
+                "top": map_viewport.height - 40,
                 "bottom": map_viewport.height
             });
         kept.push({
                 "left": 0,
-                "right": 150,
-                "top": map_viewport.height - 130,
+                "right": legend_plate.width + Theme.spacingMedium * 2,
+                "top": map_viewport.height - legend_plate.height - Theme.spacingMedium * 2,
                 "bottom": map_viewport.height
             });
-        var region = root.mission_regions[root.active_region_id];
-        if (region && region.uv) {
-            var marker = view.screen_pos_for_uv(region.uv[0], region.uv[1]);
+        kept.push({
+                "left": map_viewport.width - map_control_row.width - Theme.spacingMedium * 2,
+                "right": map_viewport.width,
+                "top": 0,
+                "bottom": map_control_row.height + Theme.spacingMedium * 2
+            });
+        if (root.active_region_id !== "") {
             kept.push({
-                    "left": marker.x - 40,
-                    "right": marker.x - 4,
-                    "top": marker.y + 4,
-                    "bottom": marker.y + 40
+                    "left": 0,
+                    "right": region_badge.width + Theme.spacingMedium * 2,
+                    "top": 0,
+                    "bottom": region_badge.height + Theme.spacingMedium * 2
                 });
         }
+        var region = root.mission_regions[root.active_region_id];
+        if (region && region.uv) {
+            var region_pos = view.screen_pos_for_uv(region.uv[0], region.uv[1]);
+            kept.push({
+                    "left": region_pos.x - 40,
+                    "right": region_pos.x - 4,
+                    "top": region_pos.y + 4,
+                    "bottom": region_pos.y + 40
+                });
+        }
+        var rank_limit = root.rank_limit_for_distance(view.orbit_distance);
         for (var i = 0; i < markers.length; ++i) {
             var marker = markers[i];
+            marker.labelled = false;
+            marker.side = 1;
+            markers[i] = marker;
+            if (marker.rank > rank_limit)
+                continue;
             var pos = view.screen_pos_for_uv(marker.uv[0], marker.uv[1]);
-            var capital = marker.rank === 0;
-            var metrics = capital ? capital_metrics : town_metrics;
-            metrics.text = marker.name;
-            var width = metrics.advanceWidth;
-            var half_height = metrics.height * 0.5;
-            var gap = capital ? 9 : 7;
-            var box = {
-                "left": pos.x + gap - 2,
-                "right": pos.x + gap + width + 3,
-                "top": pos.y - half_height - 2,
-                "bottom": pos.y + half_height + 2
-            };
-            var clear = pos.x > -width && pos.x < map_viewport.width + width && pos.y > 0 && pos.y < map_viewport.height;
-            for (var k = 0; clear && k < kept.length; ++k) {
-                var other = kept[k];
-                clear = box.right < other.left || box.left > other.right || box.bottom < other.top || box.top > other.bottom;
-            }
-            marker.labelled = clear;
-            if (clear)
+            var dot_radius = marker.rank === 0 ? 7 : 5;
+            if (pos.x < dot_radius || pos.x > map_viewport.width - dot_radius || pos.y < dot_radius || pos.y > map_viewport.height - dot_radius)
+                continue;
+            var plate = root.label_plate_size(marker);
+            var sides = [1, -1];
+            for (var s = 0; s < sides.length && !marker.labelled; ++s) {
+                var box = root.label_box_for(pos, plate, sides[s]);
+                if (box.left < 2 || box.right > map_viewport.width - 2)
+                    continue;
+                var clear = true;
+                for (var k = 0; clear && k < kept.length; ++k)
+                    clear = !root.boxes_overlap(box, kept[k]);
+                if (!clear)
+                    continue;
+                marker.labelled = true;
+                marker.side = sides[s];
                 kept.push(box);
+                kept.push({
+                        "left": pos.x - dot_radius,
+                        "right": pos.x + dot_radius,
+                        "top": pos.y - dot_radius,
+                        "bottom": pos.y + dot_radius
+                    });
+            }
             markers[i] = marker;
         }
         root.city_markers = markers;
+    }
+
+    function key_held(key) {
+        return root.held_keys[key] === true;
+    }
+
+    function set_key_held(key, pressed) {
+        var keys = root.held_keys;
+        if (pressed)
+            keys[key] = true;
+        else
+            delete keys[key];
+        root.held_keys = keys;
+        var panning = root.key_held(Qt.Key_Left) || root.key_held(Qt.Key_Right) || root.key_held(Qt.Key_Up) || root.key_held(Qt.Key_Down);
+        if (panning && !pan_timer.running)
+            root.last_pan_tick = Date.now() - 100;
+        pan_timer.running = panning;
+    }
+
+    function clear_held_keys() {
+        root.held_keys = ({});
+        pan_timer.running = false;
+    }
+
+    function step_keyboard_pan() {
+        var dx = (root.key_held(Qt.Key_Left) ? 1 : 0) - (root.key_held(Qt.Key_Right) ? 1 : 0);
+        var dy = (root.key_held(Qt.Key_Up) ? 1 : 0) - (root.key_held(Qt.Key_Down) ? 1 : 0);
+        if (dx === 0 && dy === 0) {
+            pan_timer.running = false;
+            return;
+        }
+        var now = Date.now();
+        var elapsed = Math.min(0.1, Math.max(0.001, (now - root.last_pan_tick) / 1000));
+        root.last_pan_tick = now;
+        var speed = 0.34 * Math.max(0.4, root.map_orbit_distance) * (root.pan_fast ? 2.4 : 1) * elapsed;
+        root.map_pan_u = Math.max(-0.5, Math.min(0.5, root.map_pan_u + dx * speed));
+        root.map_pan_v = Math.max(-0.5, Math.min(0.5, root.map_pan_v + dy * speed));
+    }
+
+    function zoom_by(step) {
+        if (!campaign_map_loader.item)
+            return;
+        var next_distance = root.map_orbit_distance * step;
+        root.map_orbit_distance = Math.min(campaign_map_loader.item.max_orbit_distance, Math.max(campaign_map_loader.item.min_orbit_distance, next_distance));
+    }
+
+    function handle_map_key(event, pressed) {
+        root.pan_fast = (event.modifiers & Qt.ShiftModifier) !== 0;
+        switch (event.key) {
+        case Qt.Key_Left:
+        case Qt.Key_Right:
+        case Qt.Key_Up:
+        case Qt.Key_Down:
+            if (!event.isAutoRepeat)
+                root.set_key_held(event.key, pressed);
+            if (pressed)
+                root.step_keyboard_pan();
+            return true;
+        case Qt.Key_Plus:
+        case Qt.Key_Equal:
+            if (pressed)
+                root.zoom_by(0.9);
+            return true;
+        case Qt.Key_Minus:
+            if (pressed)
+                root.zoom_by(1.1);
+            return true;
+        case Qt.Key_Home:
+            if (pressed) {
+                root.clear_held_keys();
+                root.reset_view();
+            }
+            return true;
+        }
+        return false;
     }
 
     TextMetrics {
@@ -378,14 +524,25 @@ Rectangle {
 
         font.bold: true
         font.family: root.map_label_family
-        font.pointSize: Theme.fontSizeSmall
+        font.pixelSize: root.capital_font_px
+        font.letterSpacing: 0.8
     }
 
     TextMetrics {
         id: town_metrics
 
         font.family: root.map_label_family
-        font.pointSize: Theme.fontSizeTiny
+        font.pixelSize: root.town_font_px
+        font.letterSpacing: 0.2
+    }
+
+    Timer {
+        id: pan_timer
+
+        interval: 16
+        repeat: true
+        running: false
+        onTriggered: root.step_keyboard_pan()
     }
 
     Timer {
@@ -396,14 +553,7 @@ Rectangle {
         onTriggered: root.camera_settled = true
     }
 
-    Timer {
-        id: declutter_timer
-
-        interval: 130
-        onTriggered: root.rebuild_city_markers()
-    }
-
-    onLabel_refreshChanged: declutter_timer.restart()
+    onLabel_refreshChanged: root.rebuild_city_markers()
     onProvince_labelsChanged: root.rebuild_city_markers()
 
     function label_uv_for(prov) {
@@ -451,6 +601,9 @@ Rectangle {
     onVisibleChanged: {
         if (visible) {
             load_campaign_state();
+            map_keys.forceActiveFocus();
+        } else {
+            root.clear_held_keys();
         }
     }
 
@@ -460,6 +613,31 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
         clip: true
+        onWidthChanged: root.label_refresh += 1
+        onHeightChanged: root.label_refresh += 1
+
+        Item {
+            id: map_keys
+
+            anchors.fill: parent
+            activeFocusOnTab: false
+            onActiveFocusChanged: {
+                if (!activeFocus)
+                    root.clear_held_keys();
+            }
+            Keys.onPressed: function (event) {
+                if (root.handle_map_key(event, true))
+                    event.accepted = true;
+            }
+            Keys.onReleased: function (event) {
+                if (event.isAutoRepeat) {
+                    event.accepted = true;
+                    return;
+                }
+                if (root.handle_map_key(event, false))
+                    event.accepted = true;
+            }
+        }
 
         Loader {
             id: campaign_map_loader
@@ -470,6 +648,7 @@ Rectangle {
                 if (status === Loader.Ready) {
                     root.load_provinces();
                     root.apply_campaign_state();
+                    map_keys.forceActiveFocus();
                 }
             }
 
@@ -696,7 +875,9 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onEntered: map_keys.forceActiveFocus()
             onPressed: function (mouse) {
+                map_keys.forceActiveFocus();
                 last_x = mouse.x;
                 last_y = mouse.y;
                 drag_distance = 0;
@@ -745,40 +926,72 @@ Rectangle {
             model: root.city_markers
 
             delegate: Item {
+                id: city_marker
+
                 required property var modelData
                 readonly property int rank: modelData.rank === undefined ? root.city_rank_default : modelData.rank
                 readonly property bool is_capital: rank === 0
+                readonly property int side: modelData.side === undefined ? 1 : modelData.side
 
                 readonly property int _refresh: root.label_refresh
                 readonly property point _pos: (_refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(modelData.uv[0], modelData.uv[1]) : Qt.point(0, 0)
 
-                z: 4
-                x: _pos.x
-                y: _pos.y
+                z: is_capital ? 5 : 4
+                x: Math.round(_pos.x)
+                y: Math.round(_pos.y)
+                opacity: modelData.labelled ? 1 : 0
+                visible: opacity > 0.01
 
-                Rectangle {
-                    width: is_capital ? 9 : 6
-                    height: width
-                    radius: width / 2
-                    color: "#f7ecd4"
-                    border.color: "#2d241c"
-                    border.width: is_capital ? 2 : 1
-                    x: -width / 2
-                    y: -height / 2
+                Behavior on opacity  {
+                    NumberAnimation {
+                        duration: 160
+                        easing.type: Easing.OutQuad
+                    }
                 }
 
-                Text {
-
-                    visible: modelData.labelled
-                    text: modelData.name
-                    color: "#191108"
-                    font.family: root.map_label_family
-                    font.pointSize: parent.is_capital ? Theme.fontSizeSmall : Theme.fontSizeTiny
-                    font.bold: parent.is_capital
-                    style: Text.Outline
-                    styleColor: "#f7ecd4"
-                    x: parent.is_capital ? 9 : 7
+                Rectangle {
+                    width: city_marker.is_capital ? 11 : 7
+                    height: width
+                    radius: width / 2
+                    color: "#2d241c"
+                    x: -width / 2
                     y: -height / 2
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width - (city_marker.is_capital ? 4 : 2)
+                        height: width
+                        radius: width / 2
+                        color: "#f7ecd4"
+                    }
+                }
+
+                Rectangle {
+                    id: label_plate
+
+                    readonly property int gap: city_marker.is_capital ? 11 : 9
+
+                    x: city_marker.side > 0 ? gap : -gap - width
+                    y: Math.round(-height / 2)
+                    width: Math.round(label_text.implicitWidth) + (city_marker.is_capital ? root.capital_plate_pad_x : root.town_plate_pad_x) * 2
+                    height: Math.round(label_text.implicitHeight) + root.plate_pad_y * 2
+                    radius: 3
+                    color: city_marker.is_capital ? "#eef6ecd6" : "#e6f1e6cd"
+                    border.color: city_marker.is_capital ? "#b08a5c2b" : "#909a7b53"
+                    border.width: 1
+
+                    Text {
+                        id: label_text
+
+                        anchors.centerIn: parent
+                        text: city_marker.modelData.name
+                        color: "#241a10"
+                        font.family: root.map_label_family
+                        font.pixelSize: city_marker.is_capital ? root.capital_font_px : root.town_font_px
+                        font.bold: city_marker.is_capital
+                        font.letterSpacing: city_marker.is_capital ? 0.8 : 0.2
+                        renderType: Text.NativeRendering
+                    }
                 }
             }
         }
@@ -982,6 +1195,8 @@ Rectangle {
         }
 
         Rectangle {
+            id: legend_plate
+
             anchors.left: parent.left
             anchors.bottom: parent.bottom
             anchors.margins: Theme.spacingMedium
@@ -1041,18 +1256,30 @@ Rectangle {
             }
         }
 
-        Label {
+        Rectangle {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.margins: Theme.spacingMedium
-            text: qsTr("Drag to rotate  ·  Shift or right-drag to pan  ·  Scroll to zoom")
-            color: "#4a3f32"
-            font.pointSize: Theme.fontSizeTiny
-            style: Text.Outline
-            styleColor: "#f5f0e6"
+            width: map_hint_label.implicitWidth + 14
+            height: map_hint_label.implicitHeight + 8
+            radius: 3
+            color: "#e0f5f0e6"
+            border.color: "#8b7355"
+            border.width: 1
+
+            Label {
+                id: map_hint_label
+
+                anchors.centerIn: parent
+                text: qsTr("Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets")
+                color: "#4a3f32"
+                font.pixelSize: root.town_font_px
+                renderType: Text.NativeRendering
+            }
         }
 
         Rectangle {
+            id: region_badge
 
             visible: root.active_region_id !== ""
             anchors.left: parent.left

@@ -150,6 +150,15 @@ public:
   [[nodiscard]] auto is_point_in_building(
       float x, float z, Engine::Core::EntityID ignore_entity_id = 0) const -> bool;
 
+  [[nodiscard]] auto is_point_in_blocking_building(float x, float z) const -> bool;
+
+  [[nodiscard]] auto blocking_penetration_depth(float x, float z) const -> float;
+
+  [[nodiscard]] auto segment_crosses_blocking_building(float start_x,
+                                                       float start_z,
+                                                       float end_x,
+                                                       float end_z) const -> bool;
+
   [[nodiscard]] auto is_circle_overlapping_building(
       float x,
       float z,

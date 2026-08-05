@@ -154,10 +154,11 @@ auto is_point_allowed(const QVector3D& pos,
       Game::Systems::Combat::structure_surface_distance(*structure, pos);
   constexpr float k_max_final_approach_depth = 2.25F;
   constexpr float k_min_physical_clearance = 0.04F;
+
   return facade_distance >= k_min_physical_clearance &&
          facade_distance <= k_max_final_approach_depth &&
          !BuildingCollisionRegistry::instance().is_circle_overlapping_building(
-             pos.x(), pos.z(), 0.04F, structure->get_id());
+             pos.x(), pos.z(), k_min_physical_clearance);
 }
 
 } // namespace
@@ -637,14 +638,27 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     return is_point_allowed(QVector3D(wx, 0.0F, wz), *entity, world);
   };
 
-  if (!was_on_valid_tile || cell_walkable(new_x, new_z)) {
+  auto const& collision = BuildingCollisionRegistry::instance();
+  float const trapped_depth =
+      was_on_valid_tile ? 0.0F : collision.blocking_penetration_depth(old_x, old_z);
+  auto step_allowed = [&](float wx, float wz) -> bool {
+    if (was_on_valid_tile) {
+      return cell_walkable(wx, wz);
+    }
+    if (trapped_depth > 0.0F) {
+      return collision.blocking_penetration_depth(wx, wz) < trapped_depth;
+    }
+    return !collision.is_point_in_blocking_building(wx, wz);
+  };
+
+  if (step_allowed(new_x, new_z)) {
 
     transform->position.x = new_x;
     transform->position.z = new_z;
   } else {
 
-    bool const x_axis_clear = cell_walkable(new_x, old_z);
-    bool const z_axis_clear = cell_walkable(old_x, new_z);
+    bool const x_axis_clear = step_allowed(new_x, old_z);
+    bool const z_axis_clear = step_allowed(old_x, new_z);
 
     if (x_axis_clear) {
       transform->position.x = new_x;
