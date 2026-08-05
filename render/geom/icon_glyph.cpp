@@ -384,6 +384,32 @@ void GlyphBuilder::arrow_head(QVector2D tip,
   tri(tip, back - side, back + side);
 }
 
+void GlyphBuilder::gradient_ring(GlyphLayer layer,
+                                 float inner_radius,
+                                 float outer_radius,
+                                 float depth,
+                                 float inner_falloff,
+                                 float outer_falloff,
+                                 int segments) {
+  int const count = std::max(segments, 3);
+  for (int i = 0; i < count; ++i) {
+    float const a0 =
+        (static_cast<float>(i) / static_cast<float>(count)) * k_glyph_two_pi;
+    float const a1 =
+        (static_cast<float>(i + 1) / static_cast<float>(count)) * k_glyph_two_pi;
+    QVector2D const d0(std::cos(a0), std::sin(a0));
+    QVector2D const d1(std::cos(a1), std::sin(a1));
+
+    push_skirt_vertex(layer, d0 * inner_radius, depth, inner_falloff);
+    push_skirt_vertex(layer, d0 * outer_radius, depth, outer_falloff);
+    push_skirt_vertex(layer, d1 * outer_radius, depth, outer_falloff);
+
+    push_skirt_vertex(layer, d0 * inner_radius, depth, inner_falloff);
+    push_skirt_vertex(layer, d1 * outer_radius, depth, outer_falloff);
+    push_skirt_vertex(layer, d1 * inner_radius, depth, inner_falloff);
+  }
+}
+
 void GlyphBuilder::revolved_band(float inner_radius,
                                  float inner_depth,
                                  float outer_radius,
@@ -422,6 +448,31 @@ void GlyphBuilder::revolved_band(float inner_radius,
 
     emit_positioned(i0, o0, o1, n0, n0, n1);
     emit_positioned(i0, o1, i1, n0, n1, n1);
+  }
+}
+
+void GlyphBuilder::fit_since(std::size_t mark, float target_radius) {
+  if (mark >= m_vertices.size() || target_radius <= 0.0F) {
+    return;
+  }
+
+  float radius_sq = 0.0F;
+  for (std::size_t i = mark; i < m_vertices.size(); ++i) {
+    const Render::GL::Vertex& vertex = m_vertices[i];
+    radius_sq = std::max(radius_sq,
+                         vertex.position[0] * vertex.position[0] +
+                             vertex.position[1] * vertex.position[1]);
+  }
+  if (radius_sq <= 1.0e-10F) {
+    return;
+  }
+
+  float const factor = target_radius / std::sqrt(radius_sq);
+  for (std::size_t i = mark; i < m_vertices.size(); ++i) {
+    Render::GL::Vertex& vertex = m_vertices[i];
+    vertex.position[0] *= factor;
+    vertex.position[1] *= factor;
+    vertex.tex_coord[1] *= factor;
   }
 }
 

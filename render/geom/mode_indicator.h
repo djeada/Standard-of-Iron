@@ -19,34 +19,21 @@ using IndicatorState = Game::Systems::ActivityState;
 inline constexpr std::size_t k_indicator_kind_count =
     static_cast<std::size_t>(IndicatorKind::Blocked) + 1U;
 
-constexpr float k_indicator_height_base = 2.5F;
+constexpr float k_indicator_height_base = 2.05F;
 constexpr float k_indicator_alpha = 0.95F;
-constexpr float k_indicator_height_multiplier = 2.0F;
-constexpr float k_indicator_render_scale_height_multiplier = 2.4F;
-constexpr float k_indicator_head_gap = 0.55F;
+constexpr float k_indicator_height_multiplier = 1.35F;
+constexpr float k_indicator_render_scale_height_multiplier = 2.2F;
+constexpr float k_indicator_head_gap = 0.45F;
 constexpr float k_frustum_cull_margin = 1.5F;
 constexpr float k_indicator_tilt_radians = 0.24F;
 
-constexpr float k_indicator_size_ratio = 0.30F;
-constexpr float k_indicator_min_world_size = 0.34F;
-constexpr float k_indicator_max_world_size = 1.60F;
+constexpr float k_indicator_world_size = 1.05F;
 
 constexpr float k_indicator_fade_start_sq = 3600.0F;
 constexpr float k_indicator_fade_end_sq = 8100.0F;
 
-[[nodiscard]] constexpr auto
-indicator_unit_height(float selection_ring_size, float render_scale) noexcept -> float {
-  return std::max(std::max(selection_ring_size, 0.0F) * k_indicator_height_multiplier,
-                  std::max(render_scale, 0.0F) *
-                      k_indicator_render_scale_height_multiplier);
-}
-
-[[nodiscard]] constexpr auto
-indicator_size_for_unit(float selection_ring_size,
-                        float render_scale) noexcept -> float {
-  float const target =
-      indicator_unit_height(selection_ring_size, render_scale) * k_indicator_size_ratio;
-  return std::clamp(target, k_indicator_min_world_size, k_indicator_max_world_size);
+[[nodiscard]] constexpr auto indicator_world_size() noexcept -> float {
+  return k_indicator_world_size;
 }
 
 [[nodiscard]] constexpr auto
