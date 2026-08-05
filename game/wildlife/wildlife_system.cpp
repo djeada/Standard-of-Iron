@@ -745,6 +745,8 @@ auto WildlifeSystem::serialize_state() const -> QJsonObject {
     bird_obj["target_altitude"] = static_cast<double>(bird.target_altitude);
     bird_obj["speed"] = static_cast<double>(bird.speed);
     bird_obj["phase"] = static_cast<double>(bird.phase);
+    bird_obj["glide"] = static_cast<double>(bird.glide);
+    bird_obj["bank"] = static_cast<double>(bird.bank);
     bird_obj["think_timer"] = static_cast<double>(bird.think_timer);
     bird_obj["state_timer"] = static_cast<double>(bird.state_timer);
     bird_obj["slot_lateral"] = static_cast<double>(bird.slot_lateral);
@@ -839,6 +841,8 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
         static_cast<float>(bird_obj.value("target_altitude").toDouble(0.0));
     bird.speed = static_cast<float>(bird_obj.value("speed").toDouble(0.0));
     bird.phase = static_cast<float>(bird_obj.value("phase").toDouble(0.0));
+    bird.glide = static_cast<float>(bird_obj.value("glide").toDouble(0.0));
+    bird.bank = static_cast<float>(bird_obj.value("bank").toDouble(0.0));
     bird.think_timer = static_cast<float>(bird_obj.value("think_timer").toDouble(0.0));
     bird.state_timer = static_cast<float>(bird_obj.value("state_timer").toDouble(0.0));
     bird.slot_lateral =

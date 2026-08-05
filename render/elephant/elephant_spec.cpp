@@ -27,7 +27,6 @@ using Render::Creature::SkeletonTopology;
 
 constexpr std::array<Render::Creature::SocketDef, 0> k_elephant_sockets{};
 constexpr std::uint8_t k_role_skin = 1;
-constexpr int k_elephant_material_id = 6;
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_rear_stride_scale = 0.58F;

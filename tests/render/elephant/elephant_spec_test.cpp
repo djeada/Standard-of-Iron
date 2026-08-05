@@ -233,13 +233,20 @@ TEST(ElephantSpecTest, AnimatedPoseKeepsForwardTrunkAndLighterHeadRead) {
   EXPECT_LT(pose.pose_leg_radius, dims.leg_radius * 0.9F);
 }
 
-TEST(ElephantSpecTest, RoleColorsUseWhiteTusksAndBlackEyes) {
+TEST(ElephantSpecTest, RoleColorsUseWarmIvoryTusksAndBlackEyes) {
   auto const variant = Render::GL::make_elephant_variant(
       0U, QVector3D(0.2F, 0.3F, 0.4F), QVector3D(0.5F, 0.6F, 0.7F));
   std::array<QVector3D, Render::Elephant::k_elephant_role_count> roles{};
   Render::Elephant::fill_elephant_role_colors(variant, roles);
 
-  EXPECT_EQ(shader_role_color(roles, 6U), QVector3D(1.0F, 1.0F, 1.0F));
+  QVector3D const tusk = shader_role_color(roles, 6U);
+  QVector3D const skin = shader_role_color(roles, 1U);
+
+  EXPECT_GT(tusk.x(), skin.x() * 1.4F);
+  EXPECT_GT(tusk.x(), tusk.y());
+  EXPECT_GT(tusk.y(), tusk.z());
+  EXPECT_LT(std::max({tusk.x(), tusk.y(), tusk.z()}), 0.90F);
+
   EXPECT_EQ(shader_role_color(roles, 7U), QVector3D(0.0F, 0.0F, 0.0F));
 }
 

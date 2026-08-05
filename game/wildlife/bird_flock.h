@@ -30,6 +30,10 @@ struct Bird {
   float target_altitude{0.0F};
   float speed{0.0F};
   float phase{0.0F};
+
+  float glide{0.0F};
+
+  float bank{0.0F};
   float think_timer{0.0F};
   float state_timer{0.0F};
 

@@ -18,8 +18,6 @@ namespace Render::Elephant {
 
 namespace {
 
-constexpr int k_elephant_material_id = 6;
-
 struct ElephantClipSpec {
   Render::Creature::BakeClipDescriptor desc;
   bool is_moving{};

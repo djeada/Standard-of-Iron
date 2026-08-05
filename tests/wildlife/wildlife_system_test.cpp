@@ -393,6 +393,9 @@ TEST_F(WildlifeSystemTest, SerializedStateRestoresGroupsAndFlocks) {
   for (std::size_t index = 0; index < restored_birds.size(); ++index) {
     EXPECT_FLOAT_EQ(restored_birds[index].x, expected_birds[index].x);
     EXPECT_FLOAT_EQ(restored_birds[index].z, expected_birds[index].z);
+
+    EXPECT_FLOAT_EQ(restored_birds[index].glide, expected_birds[index].glide);
+    EXPECT_FLOAT_EQ(restored_birds[index].bank, expected_birds[index].bank);
   }
 }
 

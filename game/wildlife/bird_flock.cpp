@@ -20,6 +20,10 @@ constexpr float k_turn_rate = 5.5F;
 constexpr float k_accel = 6.0F;
 constexpr float k_perched_phase_rate = 0.9F;
 constexpr float k_flight_phase_rate = 5.4F;
+constexpr float k_glide_cycle_rate = 0.26F;
+constexpr float k_bank_per_turn_rate = 0.42F;
+constexpr float k_bank_limit = 0.62F;
+constexpr float k_bank_settle_rate = 3.2F;
 constexpr float k_retarget_interval_min = 4.0F;
 constexpr float k_retarget_interval_max = 9.0F;
 
@@ -193,6 +197,7 @@ void BirdFlockManager::spawn_flock(std::uint16_t index) {
     bird.behavior = Behavior::Cruise;
     bird.flock = flock_index;
     bird.phase = next_random(bird.rng_state);
+    bird.glide = next_random(bird.rng_state);
     bird.think_timer = random_range(bird.rng_state, 0.0F, k_think_interval);
     bird.tint = static_cast<std::uint8_t>(bird.rng_state % 3U);
     bird.speed = m_config.move_speed * 0.5F;
@@ -282,6 +287,7 @@ void BirdFlockManager::launch_flyover(Flock& flock, std::uint16_t index) {
     bird.behavior = Behavior::Cruise;
     bird.flock = index;
     bird.phase = next_random(bird.rng_state);
+    bird.glide = next_random(bird.rng_state);
     bird.think_timer = random_range(bird.rng_state, 0.0F, k_think_interval);
     bird.tint = static_cast<std::uint8_t>(bird.rng_state % 3U);
     bird.speed = m_config.move_speed;
@@ -492,6 +498,14 @@ void BirdFlockManager::update_bird(Bird& bird, Flock& flock, float delta_time) {
           : k_flight_phase_rate * (bird.behavior == Behavior::Scatter ? 1.5F : 1.0F);
   bird.phase += delta_time * phase_rate;
   bird.phase -= std::floor(bird.phase);
+
+  if (bird.behavior == Behavior::Scatter) {
+    bird.glide = 0.0F;
+  } else {
+    bird.glide += delta_time * k_glide_cycle_rate *
+                  (0.82F + (0.18F * static_cast<float>(bird.tint)));
+    bird.glide -= std::floor(bird.glide);
+  }
 }
 
 void BirdFlockManager::integrate(Bird& bird, float delta_time) {
@@ -514,15 +528,23 @@ void BirdFlockManager::integrate(Bird& bird, float delta_time) {
 
   bird.speed = approach(bird.speed, desired_speed, k_accel * delta_time);
 
+  float target_bank = 0.0F;
   if (distance > 0.001F && bird.speed > 0.001F) {
     float const step = std::min(bird.speed * delta_time, distance);
     bird.x += (dx / distance) * step;
     bird.z += (dz / distance) * step;
     float const desired_yaw = std::atan2(dx, dz);
-    bird.yaw +=
-        wrap_angle(desired_yaw - bird.yaw) * std::min(1.0F, k_turn_rate * delta_time);
+    float const yaw_error = wrap_angle(desired_yaw - bird.yaw);
+    bird.yaw += yaw_error * std::min(1.0F, k_turn_rate * delta_time);
     bird.yaw = wrap_angle(bird.yaw);
+
+    target_bank =
+        std::clamp(yaw_error * k_bank_per_turn_rate, -k_bank_limit, k_bank_limit);
   }
+  if (bird.behavior == Behavior::Graze) {
+    target_bank = 0.0F;
+  }
+  bird.bank = approach(bird.bank, target_bank, k_bank_settle_rate * delta_time);
 
   if (!m_config.is_flyover()) {
     clamp_to_bounds(bird.x, bird.z);
