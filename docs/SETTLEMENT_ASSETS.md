@@ -143,18 +143,50 @@ stand on a ridge or at a wood's edge rather than in a town citadel. See
 Adding a prop touches a fixed set of places. In order:
 
 1. `game/map/map_definition.h` — enum entry, string mapping both ways, render scale.
-2. `render/decoration_gpu.h` — `<Prop>InstanceGpu` and `<Prop>BatchParams`.
-3. `render/draw_queue.h` — `TerrainScatterCmd::Species` entry and batch-params member.
-4. `render/terrain_scene_types.h` — `ScatterSpeciesId` entry.
-5. `render/ground/<prop>_renderer.{h,cpp}` + `render/sources_ground.cmake`.
-6. `render/gl/backend/vegetation_pipeline.{h,cpp}` — VAO members plus
-   `initialize_/shutdown_<prop>_pipeline()`, and the mesh itself.
-7. `render/gl/backend/scatter_command_executor.cpp` — a case in the generic prop path.
-8. `render/ground/terrain_scatter_manager.{h,cpp}` — ownership, configure, light
-   direction, clear, ready check, accessor, and the `chunks()` list.
-9. Map editor `ToolType` and JSON schema; arena `prop_panel` and viewport type mapping.
-10. `tests/render/terrain_scene_proxy_test.cpp` asserts exact pass and scatter counts —
-    it has to be updated whenever a scatter renderer is added.
+2. `render/draw_queue.h` — `TerrainScatterCmd::Species` entry. Props share one
+   `PropInstanceGpu` layout and one `PropBatchParams` block, so nothing new is needed
+   in `render/decoration_gpu.h`.
+3. `render/terrain_scene_types.h` — `ScatterSpeciesId` entry.
+4. `render/ground/<prop>_renderer.{h,cpp}` + `render/sources_ground.cmake`. Derive from
+   `ScatterRendererBase<PropInstanceGpu, PropBatchParams>`; only `generate_instances()`
+   is prop-specific, and `submit()` is a one-line `submit_prop_common()` call.
+5. `render/gl/backend/vegetation_pipeline.{h,cpp}` — a `StaticMeshBuffers m_<prop>_mesh`
+   member, an entry in `all_meshes()`, `initialize_<prop>_pipeline()`, and the mesh
+   itself. There is no per-prop shutdown function: `shutdown()` walks `all_meshes()`.
+6. `render/gl/backend/scatter_command_executor.cpp` — one line in `resolve_prop_draw()`
+   and the species in the shared prop `case` label list.
+7. `render/ground/terrain_scatter_manager.{h,cpp}` — the `unique_ptr` member, one entry
+   in the `m_scatter_passes` table, its `configure()` call, and the typed accessor.
+   Light direction, clear, the ready check, `chunks()` and `last_sync_stats()` all walk
+   the table, so they need no edit. Every scatter renderer implements `IScatterPass`
+   (`render/ground/i_scatter_pass.h`), which is what makes the table possible;
+   `set_light_direction()` has a no-op default for passes that have no light direction.
+8. Map editor `ToolType` and JSON schema; arena `prop_panel` and viewport type mapping.
+9. `tests/render/terrain_scene_proxy_test.cpp` asserts exact pass and scatter counts —
+   it has to be updated whenever a scatter renderer is added.
+
+### Why props share one type and one draw path
+
+Every world prop is the same thing to the GPU: one static indexed mesh, drawn instanced,
+with a per-instance `pos_scale` and `color_rot` vec4 pair and a per-batch light direction
+and clock. Nine props used to carry nine byte-identical `<Prop>InstanceGpu` /
+`<Prop>BatchParams` struct pairs, nine near-identical renderer classes, nine fields on
+`TerrainScatterCmd`, and a 45-line switch in the executor that only chose between a
+shader, a VAO and a uniform block. The only genuine per-prop variation left is the
+shader, the mesh, the uniform block and the `u_magic_strength` value — which is what
+`resolve_prop_draw()` returns, one line per prop.
+
+Two things the shared path deliberately keeps asymmetric: `AbandonedHome` binds the
+`ruins_instanced` shader and the ruins uniform block against its own mesh, and iron ore
+and the magic shrine are the only props with a non-zero `magic_strength`.
+
+Plant, pine and olive follow the same idea one level up. All three upload three vec4
+slots per instance and bind the same three attribute locations, so they share
+`FoliageBatchParams`, a `FoliageUniforms` block and a single wind-swayed draw path
+resolved by `resolve_foliage_draw()`. Their instance structs stay separate
+(`PlantInstanceGpu` vs `TreeInstanceGpu`) because the third slot means different things
+— plant type versus silhouette and bark seeds — and a `static_assert` in
+`decoration_gpu.h` pins the two layouts together so the shared path stays honest.
 
 The abandoned home reuses the `ruins_instanced` shader, which is a generic weathered
 stone shader. The statue has its own `statue_instanced` shader so it reads as marble
@@ -177,13 +209,25 @@ wrapped rather than Lambertian, and a soft highlight shoulder runs after the sha
 
 ## Mesh helpers and face normals
 
-`append_oriented_box()` and `append_barrel_yaxis()` in `vegetation_pipeline.cpp` emit
-**inward-facing** normals on some faces. Prop rendering runs with back-face culling
-disabled, so the geometry is still drawn — it just shades almost black, which is why
-the ruins and magic shrine read so dark.
+The prop geometry helpers live in `render/gl/backend/prop_mesh_builder.{h,cpp}`. They
+were split out of `vegetation_pipeline.cpp`, which had grown to ~3000 lines by mixing
+three unrelated concerns: pipeline plumbing, this general-purpose geometry library, and
+the per-prop `initialize_*_pipeline()` mesh authoring. The helpers are pure functions
+over a vertex/index pair and depend on nothing else in the pipeline, so keeping them
+file-static made them unusable and untestable from anywhere else.
 
-Two replacements with correct outward normals live in the same file and should be
-preferred for new geometry:
+They append into two named types rather than a bare
+`std::vector<std::pair<QVector3D, QVector3D>>`:
+
+- `PropMeshVerts` — interleaved (position, normal) pairs.
+- `PropMeshIndices` — `uint16_t` triangle indices.
+
+`append_oriented_box()` and `append_barrel_yaxis()` emit **inward-facing** normals on
+some faces. Prop rendering runs with back-face culling disabled, so the geometry is
+still drawn — it just shades almost black, which is why the ruins and magic shrine read
+so dark.
+
+Replacements with correct outward normals should be preferred for new geometry:
 
 - `append_prop_beam(a, b, half_width, half_depth)` — an oriented box; each face normal
   is flipped to point away from the beam centre.
@@ -202,6 +246,10 @@ The existing helpers were left alone on purpose: ruins, the magic shrine, iron o
 the dead tree were all authored against their current (dark) appearance, and correcting
 the shared helpers would restyle assets outside the scope of this work. `append_box()`
 and `append_vert_prism()` have always been correct.
+
+Note that fixing the two inward-normal helpers is now a single-file change with a
+visible blast radius: `grep` `prop_mesh_builder.h` to find every prop that would
+restyle.
 
 ## Supply cart and weapon rack
 

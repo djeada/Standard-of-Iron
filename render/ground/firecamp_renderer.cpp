@@ -31,18 +31,9 @@ FireCampRenderer::~FireCampRenderer() = default;
 void FireCampRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                                  const Game::Map::BiomeSettings& biome_settings,
                                  const std::vector<Game::Map::WorldProp>& world_props) {
-  m_width = height_map.get_width();
-  m_height = height_map.get_height();
-  m_tile_size = height_map.get_tile_size();
-  m_height_data = height_map.get_height_data();
-  m_terrain_types = height_map.getTerrainTypes();
-  m_world_props = world_props;
-  m_biome_settings = biome_settings;
-  m_noise_seed = biome_settings.seed;
+  configure_height_scatter_common(height_map, biome_settings, {}, world_props, false);
 
-  m_firecamp_state.reset_instances();
-  auto& firecamp_params = m_firecamp_state.params;
-
+  auto& firecamp_params = m_state.params;
   firecamp_params.time = 0.0F;
   firecamp_params.flicker_speed = 4.4F;
   firecamp_params.flicker_amount = 0.028F;
@@ -55,7 +46,7 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_state(
-      m_firecamp_state,
+      m_state,
       [](const FireCampInstanceGpu& instance) -> const QVector4D& {
         return instance.pos_intensity;
       },
@@ -66,19 +57,19 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     return;
   }
 
-  FireCampBatchParams params = m_firecamp_state.params;
+  FireCampBatchParams params = m_state.params;
   params.time = renderer.get_animation_time();
-  params.flicker_amount = m_firecamp_state.params.flicker_amount *
-                          (0.9F + 0.25F * std::sin(params.time * 1.3F));
-  params.glow_strength = m_firecamp_state.params.glow_strength *
+  params.flicker_amount =
+      m_state.params.flicker_amount * (0.9F + 0.25F * std::sin(params.time * 1.3F));
+  params.glow_strength = m_state.params.glow_strength *
                          (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
   TerrainScatterCmd cmd;
   cmd.visibility = renderer.visibility_mask();
   cmd.species = TerrainScatterCmd::Species::FireCamp;
   cmd.firecamp = params;
-  Scatter::submit_visible_chunks(renderer, m_firecamp_state, cmd);
+  Scatter::submit_visible_chunks(renderer, m_state, cmd);
 
-  for (const auto& instance : m_firecamp_state.visible_instances) {
+  for (const auto& instance : m_state.visible_instances) {
     const QVector4D pos_intensity = instance.pos_intensity;
     const QVector4D radius_phase = instance.radius_phase;
 
@@ -215,14 +206,14 @@ void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,
 }
 
 void FireCampRenderer::clear() {
-  m_firecamp_state.reset_instances();
+  m_state.reset_instances();
   m_camp_decor.clear();
 }
 
 void FireCampRenderer::generate_firecamp_instances() {
-  auto& firecamp_instances = m_firecamp_state.instances;
-  auto& firecamp_instance_count = m_firecamp_state.instance_count;
-  auto& firecamp_instances_dirty = m_firecamp_state.instances_dirty;
+  auto& firecamp_instances = m_state.instances;
+  auto& firecamp_instance_count = m_state.instance_count;
+  auto& firecamp_instances_dirty = m_state.instances_dirty;
 
   firecamp_instances.clear();
   m_camp_decor.clear();

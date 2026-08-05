@@ -64,8 +64,6 @@ public:
   void set_uniform(const QString& name, int value);
   void set_uniform(const QString& name, bool value);
 
-  void clear_uniform_cache() { m_uniform_value_cache.clear(); }
-
   auto bind_uniform_block(const char* block_name, std::uint32_t binding_point) -> bool;
   auto optional_bind_uniform_block(const char* block_name,
                                    std::uint32_t binding_point) -> bool;

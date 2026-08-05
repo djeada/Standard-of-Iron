@@ -10,62 +10,11 @@
 #include <ostream>
 #include <unordered_map>
 
+#include "mesh_asset_io.h"
+
 namespace Render::Creature::Snapshot {
 
-namespace {
-
-constexpr std::size_t k_write_chunk_bytes = 1U << 20;
-
-auto write_pod(std::ostream& out, const void* src, std::size_t bytes) -> bool {
-  auto const* cursor = static_cast<const char*>(src);
-  while (bytes != 0U) {
-    std::size_t const chunk_size = std::min<std::size_t>(
-        bytes,
-        std::min<std::size_t>(
-            k_write_chunk_bytes,
-            static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())));
-    out.write(cursor, static_cast<std::streamsize>(chunk_size));
-    if (!out.good()) {
-      return false;
-    }
-    cursor += chunk_size;
-    bytes -= chunk_size;
-  }
-  return true;
-}
-
-auto pad_to_alignment(std::ostream& out,
-                      std::uint64_t current,
-                      std::uint64_t alignment) -> bool {
-  std::uint64_t const padded = Render::Creature::Bpat::align_up(current, alignment);
-  std::uint64_t const pad = padded - current;
-  static constexpr std::array<char, 16> zeros{};
-  for (std::uint64_t remaining = pad; remaining != 0U;) {
-    auto const chunk =
-        static_cast<std::streamsize>(std::min<std::uint64_t>(remaining, zeros.size()));
-    out.write(zeros.data(), chunk);
-    if (!out.good()) {
-      return false;
-    }
-    remaining -= static_cast<std::uint64_t>(chunk);
-  }
-  return true;
-}
-
-auto lod_from_u32(std::uint32_t raw, Render::Creature::CreatureLOD& out) -> bool {
-  switch (raw) {
-  case static_cast<std::uint32_t>(Render::Creature::CreatureLOD::Full):
-    out = Render::Creature::CreatureLOD::Full;
-    return true;
-  case static_cast<std::uint32_t>(Render::Creature::CreatureLOD::Minimal):
-    out = Render::Creature::CreatureLOD::Minimal;
-    return true;
-  default:
-    return false;
-  }
-}
-
-} // namespace
+namespace {}
 
 auto SnapshotMeshBlob::from_bytes(std::vector<std::uint8_t> bytes) -> SnapshotMeshBlob {
   SnapshotMeshBlob blob{};
@@ -113,7 +62,7 @@ bool SnapshotMeshBlob::validate() {
     return false;
   }
   Render::Creature::CreatureLOD parsed_lod{};
-  if (!lod_from_u32(header->lod, parsed_lod)) {
+  if (!MeshAssetIo::lod_from_u32(header->lod, parsed_lod)) {
     m_last_error = "unsupported lod";
     return false;
   }
@@ -198,7 +147,7 @@ auto SnapshotMeshBlob::lod() const noexcept -> Render::Creature::CreatureLOD {
   if (m_header == nullptr) {
     return out;
   }
-  (void)lod_from_u32(m_header->lod, out);
+  (void)MeshAssetIo::lod_from_u32(m_header->lod, out);
   return out;
 }
 
@@ -356,38 +305,40 @@ auto SnapshotMeshWriter::write(std::ostream& out) const -> bool {
   header.vertex_data_offset = vertex_data_offset;
 
   std::uint64_t written = 0U;
-  if (!write_pod(out, &header, sizeof(header))) {
+  if (!MeshAssetIo::write_pod(out, &header, sizeof(header))) {
     return false;
   }
   written += sizeof(header);
 
   if (!clip_entries.empty()) {
-    if (!write_pod(out,
-                   clip_entries.data(),
-                   clip_entries.size() * sizeof(SnapshotMeshClipEntry))) {
+    if (!MeshAssetIo::write_pod(out,
+                                clip_entries.data(),
+                                clip_entries.size() * sizeof(SnapshotMeshClipEntry))) {
       return false;
     }
     written += clip_entries.size() * sizeof(SnapshotMeshClipEntry);
   }
   if (!string_table.empty()) {
-    if (!write_pod(out, string_table.data(), string_table.size())) {
+    if (!MeshAssetIo::write_pod(out, string_table.data(), string_table.size())) {
       return false;
     }
     written += string_table.size();
   }
-  if (!pad_to_alignment(out, written, Render::Creature::Bpat::k_section_alignment)) {
+  if (!MeshAssetIo::pad_to_alignment(
+          out, written, Render::Creature::Bpat::k_section_alignment)) {
     return false;
   }
 
   if (!m_indices.empty()) {
-    if (!write_pod(out, m_indices.data(), m_indices.size() * sizeof(std::uint32_t))) {
+    if (!MeshAssetIo::write_pod(
+            out, m_indices.data(), m_indices.size() * sizeof(std::uint32_t))) {
       return false;
     }
   }
   if (!m_vertices.empty()) {
-    if (!write_pod(out,
-                   m_vertices.data(),
-                   m_vertices.size() * sizeof(Render::GL::RiggedVertex))) {
+    if (!MeshAssetIo::write_pod(out,
+                                m_vertices.data(),
+                                m_vertices.size() * sizeof(Render::GL::RiggedVertex))) {
       return false;
     }
   }

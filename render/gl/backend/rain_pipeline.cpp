@@ -14,11 +14,16 @@
 #include "../../rain_gpu.h"
 #include "../backend.h"
 #include "../shader_cache.h"
+#include "gl_error_check.h"
 #include "scene/camera.h"
 
 namespace Render::GL::BackendPipelines {
 
 namespace {
+
+auto check_gl_error(const char* operation) -> bool {
+  return BackendPipelines::check_gl_error("RainPipeline", operation);
+}
 
 struct WeatherLook {
   float fall_speed = 1.0F;
@@ -73,26 +78,6 @@ auto snow_look() -> WeatherLook {
   look.color = k_snow_base_color;
   look.pool_fraction = 0.75F;
   return look;
-}
-
-void clear_gl_errors() {
-#ifndef NDEBUG
-  while (glGetError() != GL_NO_ERROR) {
-  }
-#endif
-}
-
-auto check_gl_error(const char* operation) -> bool {
-#ifndef NDEBUG
-  GLenum err = glGetError();
-  if (err != GL_NO_ERROR) {
-    qWarning() << "RainPipeline GL error in" << operation << ":" << err;
-    return false;
-  }
-#else
-  Q_UNUSED(operation);
-#endif
-  return true;
 }
 
 } // namespace

@@ -1256,6 +1256,38 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 walls  •  %3 wood</translation>
     </message>
+    <message>
+        <source>Enemy target</source>
+        <translation>Enemy target</translation>
+    </message>
+    <message>
+        <source>Cannot attack ally</source>
+        <translation>Cannot attack ally</translation>
+    </message>
+    <message>
+        <source>Cannot attack this target</source>
+        <translation>Cannot attack this target</translation>
+    </message>
+    <message>
+        <source>Selection cannot attack</source>
+        <translation>Selection cannot attack</translation>
+    </message>
+    <message>
+        <source>In range</source>
+        <translation>In range</translation>
+    </message>
+    <message>
+        <source>Too close</source>
+        <translation>Too close</translation>
+    </message>
+    <message>
+        <source>Out of range</source>
+        <translation>Out of range</translation>
+    </message>
+    <message>
+        <source>No firing line</source>
+        <translation>No firing line</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottom</name>

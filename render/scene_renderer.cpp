@@ -561,13 +561,9 @@ void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {
     submitted.grass.time = m_accumulated_time;
     break;
   case TerrainScatterCmd::Species::Plant:
-    submitted.plant.time = m_accumulated_time;
-    break;
   case TerrainScatterCmd::Species::Pine:
-    submitted.pine.time = m_accumulated_time;
-    break;
   case TerrainScatterCmd::Species::Olive:
-    submitted.olive.time = m_accumulated_time;
+    submitted.foliage.time = m_accumulated_time;
     break;
   case TerrainScatterCmd::Species::FireCamp:
     submitted.firecamp.time = m_accumulated_time;
@@ -578,28 +574,14 @@ void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {
   m_active_queue->submit(std::move(submitted));
 }
 
-void Renderer::selection_ring(const QMatrix4x4& model,
-                              float alpha_inner,
-                              float alpha_outer,
-                              const QVector3D& color) {
-  selection_ring_styled(
-      model, alpha_inner, alpha_outer, color, Game::Accessibility::TeamPattern::Solid);
-}
-
-void Renderer::selection_ring_styled(const QMatrix4x4& model,
-                                     float alpha_inner,
-                                     float alpha_outer,
-                                     const QVector3D& color,
-                                     Game::Accessibility::TeamPattern pattern) {
-  SelectionRingCmd cmd;
-  cmd.model = model;
-  cmd.alpha_inner = alpha_inner;
-  cmd.alpha_outer = alpha_outer;
-  cmd.color = color;
-  cmd.pattern = pattern;
-  if (m_active_queue != nullptr) {
-    m_active_queue->submit(std::move(cmd));
+void Renderer::ground_marker(const GroundMarkerCmd& marker) {
+  if (m_active_queue == nullptr || marker.outer_radius <= 0.0F) {
+    return;
   }
+  GroundMarkerCmd cmd = marker;
+  cmd.alpha *= m_alpha_override;
+  cmd.height = m_terrain_height_resources;
+  m_active_queue->submit(std::move(cmd));
 }
 
 void Renderer::grid(const QMatrix4x4& model,

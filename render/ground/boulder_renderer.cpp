@@ -54,10 +54,6 @@ void BoulderRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       });
 }
 
-void BoulderRenderer::clear() {
-  clear_common();
-}
-
 void BoulderRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& scatter_seed_world_props,
     const std::vector<Game::Map::WorldProp>& runtime_world_props,

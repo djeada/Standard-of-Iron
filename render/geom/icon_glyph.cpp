@@ -384,47 +384,6 @@ void GlyphBuilder::arrow_head(QVector2D tip,
   tri(tip, back - side, back + side);
 }
 
-void GlyphBuilder::revolved_band(float inner_radius,
-                                 float inner_depth,
-                                 float outer_radius,
-                                 float outer_depth,
-                                 int segments) {
-  int const count = std::max(segments, 3);
-
-  float const profile_dr = outer_radius - inner_radius;
-  float const profile_dz = outer_depth - inner_depth;
-  float const profile_length =
-      std::sqrt(profile_dr * profile_dr + profile_dz * profile_dz);
-  float const radial_component =
-      profile_length > 1.0e-6F ? -profile_dz / profile_length : 0.0F;
-  float const axial_component =
-      profile_length > 1.0e-6F ? profile_dr / profile_length : 1.0F;
-
-  for (int i = 0; i < count; ++i) {
-    float const a0 =
-        (static_cast<float>(i) / static_cast<float>(count)) * k_glyph_two_pi;
-    float const a1 =
-        (static_cast<float>(i + 1) / static_cast<float>(count)) * k_glyph_two_pi;
-    QVector2D const d0(std::cos(a0), std::sin(a0));
-    QVector2D const d1(std::cos(a1), std::sin(a1));
-
-    QVector3D const n0 =
-        QVector3D(d0.x() * radial_component, d0.y() * radial_component, axial_component)
-            .normalized();
-    QVector3D const n1 =
-        QVector3D(d1.x() * radial_component, d1.y() * radial_component, axial_component)
-            .normalized();
-
-    QVector3D const i0(d0.x() * inner_radius, d0.y() * inner_radius, inner_depth);
-    QVector3D const i1(d1.x() * inner_radius, d1.y() * inner_radius, inner_depth);
-    QVector3D const o0(d0.x() * outer_radius, d0.y() * outer_radius, outer_depth);
-    QVector3D const o1(d1.x() * outer_radius, d1.y() * outer_radius, outer_depth);
-
-    emit_positioned(i0, o0, o1, n0, n0, n1);
-    emit_positioned(i0, o1, i1, n0, n1, n1);
-  }
-}
-
 void GlyphBuilder::normalize_extent(float target_half_extent) {
   float extent = 0.0F;
   for (const Render::GL::Vertex& vertex : m_vertices) {

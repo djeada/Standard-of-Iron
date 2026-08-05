@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <utility>
 
 #include "draw_queue.h"
@@ -57,19 +58,7 @@ public:
                         float radius,
                         const QVector3D& color,
                         float alpha = 1.0F) = 0;
-  virtual void selection_ring(const QMatrix4x4& model,
-                              float alpha_inner,
-                              float alpha_outer,
-                              const QVector3D& color) = 0;
-
-  virtual void selection_ring_styled(const QMatrix4x4& model,
-                                     float alpha_inner,
-                                     float alpha_outer,
-                                     const QVector3D& color,
-                                     Game::Accessibility::TeamPattern pattern) {
-    Q_UNUSED(pattern)
-    selection_ring(model, alpha_inner, alpha_outer, color);
-  }
+  virtual void ground_marker(const GroundMarkerCmd& marker) = 0;
   virtual void grid(const QMatrix4x4& model,
                     const QVector3D& color,
                     float cell_size,
@@ -104,6 +93,108 @@ public:
                               int mode_type,
                               const QVector3D& color,
                               float alpha = 1.0F) = 0;
+};
+
+class ForwardingSubmitter : public ISubmitter {
+public:
+  explicit ForwardingSubmitter(ISubmitter& inner)
+      : m_inner(inner) {}
+
+  [[nodiscard]] auto unwrap_submitter() noexcept -> ISubmitter* override {
+    return m_inner.unwrap_submitter();
+  }
+
+  void mesh(Mesh* mesh,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
+            int material_id = 0) override {
+    m_inner.mesh(mesh, model, color, tex, alpha, material_id);
+  }
+  void banner(Mesh* mesh,
+              const QMatrix4x4& model,
+              const QVector3D& color,
+              const QVector3D& trim_color,
+              Texture* tex = nullptr,
+              float alpha = 1.0F,
+              int material_id = 0) override {
+    m_inner.banner(mesh, model, color, trim_color, tex, alpha, material_id);
+  }
+  void part(Mesh* mesh,
+            Material* material,
+            const QMatrix4x4& model,
+            const QVector3D& color,
+            Texture* tex = nullptr,
+            float alpha = 1.0F,
+            int material_id = 0) override {
+    m_inner.part(mesh, material, model, color, tex, alpha, material_id);
+  }
+  void rigged(const RiggedCreatureCmd& cmd) override { m_inner.rigged(cmd); }
+  void cylinder(const QVector3D& start,
+                const QVector3D& end,
+                float radius,
+                const QVector3D& color,
+                float alpha = 1.0F) override {
+    m_inner.cylinder(start, end, radius, color, alpha);
+  }
+  void ground_marker(const GroundMarkerCmd& marker) override {
+    m_inner.ground_marker(marker);
+  }
+  void grid(const QMatrix4x4& model,
+            const QVector3D& color,
+            float cell_size,
+            float thickness,
+            float extent) override {
+    m_inner.grid(model, color, cell_size, thickness, extent);
+  }
+  void selection_smoke(const QMatrix4x4& model,
+                       const QVector3D& color,
+                       float base_alpha = 0.15F) override {
+    m_inner.selection_smoke(model, color, base_alpha);
+  }
+  void healing_beam(const QVector3D& start,
+                    const QVector3D& end,
+                    const QVector3D& color,
+                    float progress,
+                    float beam_width,
+                    float intensity,
+                    float time) override {
+    m_inner.healing_beam(start, end, color, progress, beam_width, intensity, time);
+  }
+  void healer_aura(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
+    m_inner.healer_aura(position, color, radius, intensity, time);
+  }
+  void combat_dust(const QVector3D& position,
+                   const QVector3D& color,
+                   float radius,
+                   float intensity,
+                   float time) override {
+    m_inner.combat_dust(position, color, radius, intensity, time);
+  }
+  void stone_impact(const QVector3D& position,
+                    const QVector3D& color,
+                    float radius,
+                    float intensity,
+                    float time) override {
+    m_inner.stone_impact(position, color, radius, intensity, time);
+  }
+  void mode_indicator(const QMatrix4x4& model,
+                      int mode_type,
+                      const QVector3D& color,
+                      float alpha = 1.0F) override {
+    m_inner.mode_indicator(model, mode_type, color, alpha);
+  }
+
+protected:
+  [[nodiscard]] auto inner() noexcept -> ISubmitter& { return m_inner; }
+
+private:
+  ISubmitter& m_inner;
 };
 
 namespace detail {
@@ -237,34 +328,11 @@ public:
     cmd.alpha = alpha;
     m_queue->submit(std::move(cmd));
   }
-  void selection_ring(const QMatrix4x4& model,
-                      float alpha_inner,
-                      float alpha_outer,
-                      const QVector3D& color) override {
+  void ground_marker(const GroundMarkerCmd& marker) override {
     if (m_queue == nullptr) {
       return;
     }
-    SelectionRingCmd cmd;
-    cmd.model = model;
-    cmd.alpha_inner = alpha_inner;
-    cmd.alpha_outer = alpha_outer;
-    cmd.color = color;
-    m_queue->submit(std::move(cmd));
-  }
-  void selection_ring_styled(const QMatrix4x4& model,
-                             float alpha_inner,
-                             float alpha_outer,
-                             const QVector3D& color,
-                             Game::Accessibility::TeamPattern pattern) override {
-    if (m_queue == nullptr) {
-      return;
-    }
-    SelectionRingCmd cmd;
-    cmd.model = model;
-    cmd.alpha_inner = alpha_inner;
-    cmd.alpha_outer = alpha_outer;
-    cmd.color = color;
-    cmd.pattern = pattern;
+    GroundMarkerCmd cmd = marker;
     m_queue->submit(std::move(cmd));
   }
   void grid(const QMatrix4x4& model,
@@ -459,23 +527,9 @@ public:
     }
   }
 
-  void selection_ring(const QMatrix4x4& model,
-                      float alpha_inner,
-                      float alpha_outer,
-                      const QVector3D& color) override {
+  void ground_marker(const GroundMarkerCmd& marker) override {
     if (m_fallback != nullptr) {
-      m_fallback->selection_ring(model, alpha_inner, alpha_outer, color);
-    }
-  }
-
-  void selection_ring_styled(const QMatrix4x4& model,
-                             float alpha_inner,
-                             float alpha_outer,
-                             const QVector3D& color,
-                             Game::Accessibility::TeamPattern pattern) override {
-    if (m_fallback != nullptr) {
-      m_fallback->selection_ring_styled(
-          model, alpha_inner, alpha_outer, color, pattern);
+      m_fallback->ground_marker(marker);
     }
   }
 
@@ -561,15 +615,11 @@ private:
   bool m_enabled = true;
 };
 
-class DamageStateSubmitter : public ISubmitter {
+class DamageStateSubmitter : public ForwardingSubmitter {
 public:
   explicit DamageStateSubmitter(ISubmitter& inner, int damage_material_id)
-      : m_inner(inner)
+      : ForwardingSubmitter(inner)
       , m_damage_id(damage_material_id) {}
-
-  [[nodiscard]] auto unwrap_submitter() noexcept -> ISubmitter* override {
-    return m_inner.unwrap_submitter();
-  }
 
   void mesh(Mesh* mesh,
             const QMatrix4x4& model,
@@ -577,7 +627,7 @@ public:
             Texture* tex = nullptr,
             float alpha = 1.0F,
             int material_id = 0) override {
-    m_inner.mesh(mesh, model, color, tex, alpha, pick(material_id));
+    ForwardingSubmitter::mesh(mesh, model, color, tex, alpha, pick(material_id));
   }
   void part(Mesh* mesh,
             Material* material,
@@ -586,7 +636,8 @@ public:
             Texture* tex = nullptr,
             float alpha = 1.0F,
             int material_id = 0) override {
-    m_inner.part(mesh, material, model, color, tex, alpha, pick(material_id));
+    ForwardingSubmitter::part(
+        mesh, material, model, color, tex, alpha, pick(material_id));
   }
   void banner(Mesh* mesh,
               const QMatrix4x4& model,
@@ -595,77 +646,8 @@ public:
               Texture* tex = nullptr,
               float alpha = 1.0F,
               int material_id = 0) override {
-    m_inner.banner(mesh, model, color, trim_color, tex, alpha, pick(material_id));
-  }
-
-  void rigged(const RiggedCreatureCmd& cmd) override { m_inner.rigged(cmd); }
-  void cylinder(const QVector3D& start,
-                const QVector3D& end,
-                float radius,
-                const QVector3D& color,
-                float alpha = 1.0F) override {
-    m_inner.cylinder(start, end, radius, color, alpha);
-  }
-  void selection_ring(const QMatrix4x4& model,
-                      float alpha_inner,
-                      float alpha_outer,
-                      const QVector3D& color) override {
-    m_inner.selection_ring(model, alpha_inner, alpha_outer, color);
-  }
-  void selection_ring_styled(const QMatrix4x4& model,
-                             float alpha_inner,
-                             float alpha_outer,
-                             const QVector3D& color,
-                             Game::Accessibility::TeamPattern pattern) override {
-    m_inner.selection_ring_styled(model, alpha_inner, alpha_outer, color, pattern);
-  }
-  void grid(const QMatrix4x4& model,
-            const QVector3D& color,
-            float cell_size,
-            float thickness,
-            float extent) override {
-    m_inner.grid(model, color, cell_size, thickness, extent);
-  }
-  void selection_smoke(const QMatrix4x4& model,
-                       const QVector3D& color,
-                       float base_alpha = 0.15F) override {
-    m_inner.selection_smoke(model, color, base_alpha);
-  }
-  void healing_beam(const QVector3D& start,
-                    const QVector3D& end,
-                    const QVector3D& color,
-                    float progress,
-                    float beam_width,
-                    float intensity,
-                    float time) override {
-    m_inner.healing_beam(start, end, color, progress, beam_width, intensity, time);
-  }
-  void healer_aura(const QVector3D& position,
-                   const QVector3D& color,
-                   float radius,
-                   float intensity,
-                   float time) override {
-    m_inner.healer_aura(position, color, radius, intensity, time);
-  }
-  void combat_dust(const QVector3D& position,
-                   const QVector3D& color,
-                   float radius,
-                   float intensity,
-                   float time) override {
-    m_inner.combat_dust(position, color, radius, intensity, time);
-  }
-  void stone_impact(const QVector3D& position,
-                    const QVector3D& color,
-                    float radius,
-                    float intensity,
-                    float time) override {
-    m_inner.stone_impact(position, color, radius, intensity, time);
-  }
-  void mode_indicator(const QMatrix4x4& model,
-                      int mode_type,
-                      const QVector3D& color,
-                      float alpha = 1.0F) override {
-    m_inner.mode_indicator(model, mode_type, color, alpha);
+    ForwardingSubmitter::banner(
+        mesh, model, color, trim_color, tex, alpha, pick(material_id));
   }
 
 private:
@@ -673,7 +655,6 @@ private:
     return (m_damage_id != 0 && incoming_id == 0) ? m_damage_id : incoming_id;
   }
 
-  ISubmitter& m_inner;
   int m_damage_id;
 };
 

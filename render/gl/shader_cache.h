@@ -196,6 +196,10 @@ public:
          resolve(shader_base + QStringLiteral("combat_dust.vert")),
          resolve(shader_base + QStringLiteral("combat_dust.frag")));
 
+    load(QStringLiteral("ground_marker"),
+         resolve(shader_base + QStringLiteral("ground_marker.vert")),
+         resolve(shader_base + QStringLiteral("ground_marker.frag")));
+
     load(QStringLiteral("mode_indicator"),
          resolve(shader_base + QStringLiteral("mode_indicator.vert")),
          resolve(shader_base + QStringLiteral("mode_indicator.frag")));

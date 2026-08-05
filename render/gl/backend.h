@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QDebug>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QVector2D>
@@ -7,6 +8,7 @@
 
 #include <array>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "../decoration_gpu.h"
@@ -38,6 +40,7 @@ class HealerAuraPipeline;
 class CombatDustPipeline;
 class RainPipeline;
 class ModeIndicatorPipeline;
+class GroundMarkerPipeline;
 class MeshInstancingPipeline;
 } // namespace Render::GL::BackendPipelines
 
@@ -151,6 +154,11 @@ public:
     return m_mode_indicator_pipeline.get();
   }
 
+  [[nodiscard]] auto
+  ground_marker_pipeline() -> BackendPipelines::GroundMarkerPipeline* {
+    return m_ground_marker_pipeline.get();
+  }
+
   void enable_depth_test(bool enable) {
     if (enable) {
       glEnable(GL_DEPTH_TEST);
@@ -224,6 +232,20 @@ private:
   void ensure_directional_shadow_resources(int resolution, int cascades);
   void release_directional_shadow_resources();
 
+  template <typename Pipeline, typename... Args>
+  auto create_pipeline(std::unique_ptr<Pipeline>& slot,
+                       const char* name,
+                       Args&&... args) -> bool {
+    qInfo() << "Backend: Creating" << name << "...";
+    slot = std::make_unique<Pipeline>(std::forward<Args>(args)...);
+    if (!slot->initialize()) {
+      qCritical() << "Backend::initialize() FAILED:" << name;
+      return false;
+    }
+    qInfo() << "Backend:" << name << "initialized";
+    return true;
+  }
+
   int m_viewport_width{0};
   int m_viewport_height{0};
 
@@ -246,6 +268,7 @@ private:
   std::unique_ptr<BackendPipelines::CombatDustPipeline> m_combat_dust_pipeline;
   std::unique_ptr<BackendPipelines::RainPipeline> m_rain_pipeline;
   std::unique_ptr<BackendPipelines::ModeIndicatorPipeline> m_mode_indicator_pipeline;
+  std::unique_ptr<BackendPipelines::GroundMarkerPipeline> m_ground_marker_pipeline;
   std::unique_ptr<BackendPipelines::MeshInstancingPipeline> m_mesh_instancing_pipeline;
 
   Shader* m_basic_shader = nullptr;

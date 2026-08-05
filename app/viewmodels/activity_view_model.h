@@ -25,6 +25,9 @@ public:
 class ActivityViewModel : public QObject {
   Q_OBJECT
 
+  Q_PROPERTY(QVariantMap attack_target_hint READ attack_target_hint NOTIFY
+                 attack_target_hint_changed)
+
 public:
   explicit ActivityViewModel(ActivityHost* host, QObject* parent = nullptr);
 
@@ -34,8 +37,18 @@ public:
   Q_INVOKABLE void begin_repair_order();
   Q_INVOKABLE void confirm_repair_at(qreal sx, qreal sy);
 
+  [[nodiscard]] auto attack_target_hint() const -> QVariantMap {
+    return m_attack_target_hint;
+  }
+
+  void set_attack_target_hint(const QVariantMap& hint);
+
+signals:
+  void attack_target_hint_changed();
+
 private:
   ActivityHost* m_host = nullptr;
+  QVariantMap m_attack_target_hint;
 };
 
 } // namespace App::ViewModels

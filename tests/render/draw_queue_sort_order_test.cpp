@@ -10,11 +10,11 @@ namespace {
 
 using Render::CommandPriority;
 using Render::GL::DrawQueue;
+using Render::GL::GroundMarkerCmd;
+using Render::GL::GroundMarkerCmdIndex;
 using Render::GL::Mesh;
 using Render::GL::MeshCmd;
 using Render::GL::MeshCmdIndex;
-using Render::GL::SelectionRingCmd;
-using Render::GL::SelectionRingCmdIndex;
 using Render::GL::Shader;
 using Render::GL::TerrainFeatureCmd;
 using Render::GL::TerrainFeatureCmdIndex;
@@ -22,10 +22,10 @@ using Render::GL::TerrainSurfaceCmd;
 using Render::GL::TerrainSurfaceCmdIndex;
 using Render::GL::Texture;
 
-TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeSelectionRing) {
+TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeGroundMarker) {
   DrawQueue queue;
 
-  SelectionRingCmd ring;
+  GroundMarkerCmd ring;
   ring.priority = CommandPriority::Critical;
   queue.submit(ring);
 
@@ -44,7 +44,7 @@ TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeSelectionRing) {
       << "Terrain must render first (beneath everything).";
   EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex)
       << "Meshes (units) must render between terrain and selection rings.";
-  EXPECT_EQ(queue.get_sorted(2).index(), SelectionRingCmdIndex)
+  EXPECT_EQ(queue.get_sorted(2).index(), GroundMarkerCmdIndex)
       << "Selection rings must render last so they appear on top of units "
          "and terrain, regardless of CommandPriority.";
 }
@@ -74,7 +74,7 @@ TEST(DrawQueueSortOrder, PriorityDoesNotInvertTypeOrder) {
 
   DrawQueue queue;
 
-  SelectionRingCmd ring;
+  GroundMarkerCmd ring;
   ring.priority = CommandPriority::Critical;
   queue.submit(ring);
 
@@ -86,7 +86,7 @@ TEST(DrawQueueSortOrder, PriorityDoesNotInvertTypeOrder) {
 
   ASSERT_EQ(queue.size(), 2U);
   EXPECT_EQ(queue.get_sorted(0).index(), MeshCmdIndex);
-  EXPECT_EQ(queue.get_sorted(1).index(), SelectionRingCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), GroundMarkerCmdIndex);
 }
 
 TEST(DrawQueueSortOrder, RiverbankVisibilityTextureAffectsSortKey) {
@@ -212,7 +212,7 @@ TEST(DrawQueueSortOrder, AlreadySortedInputsKeepSubmissionOrder) {
   MeshCmd mesh;
   queue.submit(mesh);
 
-  SelectionRingCmd ring;
+  GroundMarkerCmd ring;
   queue.submit(ring);
 
   queue.sort_for_batching();
@@ -220,7 +220,7 @@ TEST(DrawQueueSortOrder, AlreadySortedInputsKeepSubmissionOrder) {
   ASSERT_EQ(queue.size(), 3U);
   EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex);
   EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex);
-  EXPECT_EQ(queue.get_sorted(2).index(), SelectionRingCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), GroundMarkerCmdIndex);
 }
 
 TEST(DrawQueueSortOrder, BucketedInputsOnlySortWithinMatchingBucket) {
@@ -242,7 +242,7 @@ TEST(DrawQueueSortOrder, BucketedInputsOnlySortWithinMatchingBucket) {
   MeshCmd mesh_c = mesh_a;
   queue.submit(mesh_c);
 
-  SelectionRingCmd ring;
+  GroundMarkerCmd ring;
   queue.submit(ring);
 
   queue.sort_for_batching();
@@ -252,7 +252,7 @@ TEST(DrawQueueSortOrder, BucketedInputsOnlySortWithinMatchingBucket) {
   EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex);
   EXPECT_EQ(queue.get_sorted(2).index(), MeshCmdIndex);
   EXPECT_EQ(queue.get_sorted(3).index(), MeshCmdIndex);
-  EXPECT_EQ(queue.get_sorted(4).index(), SelectionRingCmdIndex);
+  EXPECT_EQ(queue.get_sorted(4).index(), GroundMarkerCmdIndex);
   EXPECT_EQ(queue.sort_key_for_sorted(1), queue.sort_key_for_sorted(2));
   EXPECT_LT(queue.sort_key_for_sorted(2), queue.sort_key_for_sorted(3));
 }

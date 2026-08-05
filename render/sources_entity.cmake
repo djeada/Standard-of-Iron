@@ -82,8 +82,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_stockpile.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/entity/catapult_renderer_common.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/entity/ballista_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/siege_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/spearman_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/healer_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/builder_renderer_common.cpp

@@ -96,6 +96,14 @@ This helper rejects targets that are:
 
 Avoid implementing direct owner checks in individual combat processors. Team and alliance rules are easy to handle incorrectly when duplicated.
 
+`is_valid_enemy_of_owner` is the same rule set keyed on an owner id instead of an attacker component, for callers that have a player but no attacking unit — the attack-mode target highlighting uses it.
+
+## Firing distance
+
+`AttackComponent::range` is the outer reach and `AttackComponent::min_range` the inner one. A ranged attacker whose planar distance to the target falls below `min_range` fails `Combat::is_in_range` outright, before any structure, formation or height rule is consulted; melee contact ignores it. No shipped unit sets a minimum today — the field exists so siege weapons can be given a dead zone in data or by an upgrade without the UI and the combat check disagreeing about where it is.
+
+Anything that needs the reach a unit will actually fire with — the range indicator, a UI verdict, a future ability — should go through `Game::Systems::resolve_attack_range`, which applies `hold_mode_range_multiplier` exactly as `apply_hold_mode_bonuses` does inside the attack processor. Reading `attack->range` directly skips the Hold bonus and drifts from combat the moment a stance changes.
+
 ## Normal Attacks
 
 Normal attacks are processed by:

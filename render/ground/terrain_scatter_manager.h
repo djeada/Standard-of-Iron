@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "../../game/map/map_definition.h"
-#include "../i_render_pass.h"
 #include "../terrain_scene_types.h"
+#include "i_scatter_pass.h"
 
 namespace Render::GL {
 
@@ -72,6 +72,11 @@ public:
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>&;
 
 private:
+  struct ScatterPassEntry {
+    ScatterSpeciesId species{ScatterSpeciesId::Grass};
+    IScatterPass* pass{nullptr};
+  };
+
   std::unique_ptr<BiomeRenderer> m_biome;
   std::unique_ptr<StoneRenderer> m_stone;
   std::unique_ptr<PlantRenderer> m_plant;
@@ -88,6 +93,7 @@ private:
   std::unique_ptr<MagicShrineRenderer> m_magic_shrine;
   std::unique_ptr<AbandonedHomeRenderer> m_abandoned_home;
   std::unique_ptr<StatueRenderer> m_statue;
+  std::vector<ScatterPassEntry> m_scatter_passes;
   std::vector<IRenderPass*> m_passes;
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   Game::Map::BiomeSettings m_biome_settings;

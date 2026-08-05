@@ -1256,6 +1256,38 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 Mauern  •  %3 Holz</translation>
     </message>
+    <message>
+        <source>Enemy target</source>
+        <translation>Feindliches Ziel</translation>
+    </message>
+    <message>
+        <source>Cannot attack ally</source>
+        <translation>Verbündete können nicht angegriffen werden</translation>
+    </message>
+    <message>
+        <source>Cannot attack this target</source>
+        <translation>Dieses Ziel kann nicht angegriffen werden</translation>
+    </message>
+    <message>
+        <source>Selection cannot attack</source>
+        <translation>Die Auswahl kann nicht angreifen</translation>
+    </message>
+    <message>
+        <source>In range</source>
+        <translation>In Reichweite</translation>
+    </message>
+    <message>
+        <source>Too close</source>
+        <translation>Zu nah</translation>
+    </message>
+    <message>
+        <source>Out of range</source>
+        <translation>Außer Reichweite</translation>
+    </message>
+    <message>
+        <source>No firing line</source>
+        <translation>Keine Schusslinie</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottom</name>

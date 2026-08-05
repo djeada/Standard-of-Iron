@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../shader.h"
+#include "mesh_buffers.h"
 #include "pipeline_interface.h"
 
 namespace Game::Systems {
@@ -51,16 +52,13 @@ private:
                    const Camera& cam,
                    float animation_time);
   auto create_beam_geometry() -> bool;
-  void shutdown_geometry();
+  void release_geometry();
 
   GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_beam_shader = nullptr;
 
-  GLuint m_vao = 0;
-  GLuint m_vertex_buffer = 0;
-  GLuint m_index_buffer = 0;
-  GLsizei m_index_count = 0;
+  StaticMeshBuffers m_mesh;
 
   struct BeamUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

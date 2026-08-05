@@ -41,6 +41,10 @@ auto is_valid_enemy_unit(const Engine::Core::UnitComponent* attacker_unit,
                          Engine::Core::Entity* target,
                          bool allow_buildings) -> bool;
 
+auto is_valid_enemy_of_owner(int attacker_owner_id,
+                             Engine::Core::Entity* target,
+                             bool allow_buildings) -> bool;
+
 auto combat_radius(Engine::Core::Entity* entity) -> float;
 
 auto is_in_range(Engine::Core::Entity* attacker,

@@ -116,18 +116,6 @@ void apply_combat_micro_variation(const HumanoidAnimationContext& anim_ctx,
   pose.knee_r.setZ(pose.knee_r.z() - variation.foot_adjust * 0.3F);
 }
 
-auto flattened_or(const QVector3D& v, const QVector3D& fallback) noexcept -> QVector3D {
-  QVector3D flat(v.x(), 0.0F, v.z());
-  if (flat.lengthSquared() <= 1.0e-6F) {
-    flat = fallback;
-  }
-  if (flat.lengthSquared() <= 1.0e-6F) {
-    flat = QVector3D(0.0F, 0.0F, 1.0F);
-  }
-  flat.normalize();
-  return flat;
-}
-
 auto resolve_visual_locomotion_sample(
     const Render::GL::VisualMovementState& movement_state,
     const QVector3D& entity_forward) noexcept -> VisualLocomotionSample {

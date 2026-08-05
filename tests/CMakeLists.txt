@@ -98,6 +98,8 @@ add_executable(
     systems/stamina_system_test.cpp
     systems/home_manpower_system_test.cpp
     systems/building_collision_test.cpp
+    systems/attack_range_test.cpp
+    systems/attack_targeting_test.cpp
     systems/combat_mode_test.cpp
     systems/hold_mode_test.cpp
     systems/defense_formation_test.cpp
@@ -246,8 +248,7 @@ add_executable(
     render/creature/shadow_batch_test.cpp
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
-    render/selection_ring_mesh_test.cpp
-    render/selection_ring_pattern_test.cpp
+    render/ground_marker_pattern_test.cpp
     render/arrow_cloud_render_test.cpp
     render/orientation_arrow_mesh_test.cpp
     render/creature/rigged_mesh_asset_test.cpp

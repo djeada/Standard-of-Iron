@@ -139,6 +139,90 @@ out on `Motion.dwellFor(priority)`.
 Screens push. They do not render toasts. A single `NotificationHost` per product shell
 renders whatever is current — `Main.qml` mounts one in the top-right of the battle view.
 
+## Attack mode targeting feedback
+
+Picking a target used to be a cursor change and nothing else: the player could not tell
+which of the shapes on screen the click would actually accept. Attack mode now layers
+three signals on top of the cursor, and all three are gated on the player having
+_asked_ for attack mode — `CursorMode::Attack`, which only the HUD `Attack` command (and
+its `A` hotkey) sets. Ordinary hovering, and the right-click attack that works from the
+normal cursor, draw nothing new. The command panel already names the mode in its banner
+("Attack order"), so the mode is legible in both places.
+
+- **Every eligible target carries a quiet hostile ring** — red, `TeamPattern::Chevron`,
+  low alpha. Only entities the order would accept get one: enemy units and enemy
+  buildings, never your own troops, never an ally, never wildlife, never a corpse.
+- **The hovered target's ring turns loud** — brighter, `DoubleRing`, pulsing, with the
+  attack glyph floating above it.
+- **An invalid hover is answered, not ignored** — a muted grey `Dashed` ring plus the
+  blocked glyph on the shape under the cursor, and a label beside the cursor that says
+  why: _Cannot attack ally_, _Cannot attack this target_, _Selection cannot attack_.
+
+The ring pattern and the floating glyph are the shape channel: the hostile, hovered and
+blocked states differ in outline shape and iconography before they differ in hue, so the
+feedback survives every colour-vision mode.
+
+`Game::Systems::collect_attack_target_highlights` (`game/systems/attack_targeting.h`) is
+the whole rule set, and it is a pure function over the world so the eligibility matrix is
+unit-tested rather than eyeballed. Fog is part of that matrix: a target the player cannot
+currently see is not highlighted, which is also why the set is rebuilt every frame instead
+of cached on entry to attack mode — visibility, health and position all move underneath it.
+Two bounds keep a large battle cheap: markers are collected within
+`k_attack_highlight_max_distance` of the camera's ground focus and capped at
+`k_attack_highlight_max_markers`, nearest first, with the hovered target always kept.
+
+The collection runs in `GameEngine::update`, which the GL view drives from the render
+thread, so the markers reach `render_attack_target_markers` on the thread that owns them.
+The cursor label is the exception: it is a QML-facing property on `ActivityViewModel`, so
+it is posted to that object's thread with a queued call and only when the text changes.
+
+## Projectile range rings
+
+Selecting a ranged unit draws its projectile reach on the ground. The ring is
+built from segments sampled on the terrain surface, so it climbs a hill and
+disappears behind one instead of slicing through it, and it is drawn with the
+depth buffer like any other world geometry.
+
+- **The radius is the number combat fires with**, not a second copy of it.
+  `Game::Systems::resolve_attack_range` reads the unit's `AttackComponent` and
+  applies `hold_mode_range_multiplier` — the same function
+  `apply_hold_mode_bonuses` calls inside the attack processor — so an archer that
+  goes to Hold grows its ring in the tick its reach actually grows. Anything that
+  writes the component (an upgrade, an aura, a scenario override) moves the ring
+  with it, because the ring is recomputed every frame from the component.
+- **Weapon classes differ in line pattern, not hue**: bows dashed, siege ticked,
+  arcane dotted. A weapon with a minimum firing distance also draws an inner
+  dashed ring in the warning colour, marking the dead zone it cannot shoot into.
+- **The focused unit gets the loud ring** — thicker line, higher alpha. A single
+  selection is always focused; in a group only the hovered unit is, so a mixed
+  selection reads as one bright boundary over quiet ones.
+- **A group stays legible.** Rings that would sit on top of each other (same
+  weapon class, radius within 5%, centres within 35% of the radius) collapse into
+  one, and the set is capped at `k_attack_range_max_rings`, keeping the longest
+  reaches. The focused ring is never dropped.
+- **Only your own units.** The collector filters to the local owner, so an
+  enemy's reach is never revealed.
+
+The ring states distance and nothing else — it is not a line-of-sight claim. What
+the cursor label adds, while a hostile target is hovered in attack mode, is the
+verdict that the combat check itself returns: _In range_, _Too close_ (inside a
+minimum), _Out of range_, or _No firing line_ when the target sits inside the ring
+and the attacker still cannot shoot it — a unit locked in melee, or a structure
+whose contact geometry refuses. Each verdict carries its own glyph so the state
+survives a colour-vision mode.
+
+`render_attack_range_rings` is called from both the game's frame coordinator and
+the Arena viewport off the same collector, which is what lets the
+`range_indicator_*` Arena scenarios assert the shipped behaviour rather than a
+harness copy of it.
+
+The rings themselves are not their own renderer: they are ground markers, the
+same command and shader that draw selection rings and attack-target outlines —
+see "Ground markers: one ring system" in `RENDERING_ARCHITECTURE.md`. That is
+where the terrain-following, the dash/tick patterns and the focus pulse come
+from, and why every highlight on the ground costs one instanced draw between
+them.
+
 ## Iconography
 
 `Icons` is the only place an icon is named. It holds two families that are not

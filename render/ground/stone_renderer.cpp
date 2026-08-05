@@ -62,10 +62,6 @@ void StoneRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       });
 }
 
-void StoneRenderer::clear() {
-  clear_common();
-}
-
 void StoneRenderer::generate_stone_instances() {
   auto& stone_instances = m_state.instances;
   auto& stone_instance_count = m_state.instance_count;

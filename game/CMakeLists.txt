@@ -134,6 +134,8 @@ add_library(
     systems/gate_service.cpp
     systems/gate_system.cpp
     systems/selection_system.cpp
+    systems/attack_range.cpp
+    systems/attack_targeting.cpp
     systems/arrow_system.cpp
     systems/arrow_visual_profile.cpp
     systems/combat_status_effect_system.cpp
