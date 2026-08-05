@@ -4,6 +4,7 @@ add_subdirectory(map_editor)
 add_subdirectory(content_validator)
 add_subdirectory(bpat_baker)
 add_subdirectory(audio_master)
+add_subdirectory(audio_synth)
 
 # Arena scenarios inspect the baked clips, so an Arena-only build must never
 # run against assets produced by an older pose controller.

@@ -174,6 +174,7 @@
 #include "user_settings.h"
 #include "utils/resource_utils.h"
 #include "visibility_coordinator.h"
+#include "weather_audio.h"
 
 namespace {
 
@@ -333,6 +334,7 @@ GameEngine::GameEngine(QObject* parent)
   connect_save_service_signals();
   m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_rain_manager = std::make_unique<Game::Systems::RainManager>();
+  m_weather_audio = std::make_unique<App::Core::WeatherAudio>();
   m_environment_clock = std::make_unique<Game::Map::EnvironmentClock>();
 
   m_loading_progress_tracker = std::make_unique<LoadingProgressTracker>(this);
@@ -702,6 +704,10 @@ void GameEngine::cleanup_opengl_resources() {
   m_boundary_fog.reset();
   m_ambient_fog.reset();
   m_rain.reset();
+  if (m_weather_audio) {
+    m_weather_audio->stop();
+  }
+  m_weather_audio.reset();
   m_rain_manager.reset();
 
   m_renderer.reset();
@@ -807,7 +813,8 @@ void GameEngine::on_right_move(qreal sx, qreal sy) {
     m_right_mouse_gesture.dragged = true;
   }
 
-  if (m_input_handler && m_input_handler->is_placing_formation()) {
+  if (m_right_mouse_gesture.dragged && m_input_handler &&
+      m_input_handler->is_placing_formation()) {
     m_input_handler->on_right_drag_orient(sx, sy, m_viewport);
   }
 }
@@ -830,8 +837,7 @@ void GameEngine::on_right_release(qreal sx, qreal sy) {
     return;
   }
 
-  if (!m_right_mouse_gesture.dragged && !m_right_mouse_gesture.suppress_release_click &&
-      m_input_handler) {
+  if (!m_right_mouse_gesture.suppress_release_click && m_input_handler) {
     m_input_handler->on_right_click(sx, sy, m_runtime.local_owner_id, m_viewport);
   }
 
@@ -1776,6 +1782,7 @@ auto GameEngine::scene_context() const -> AppSceneContext {
                          .visibility_coordinator = m_visibility_coordinator.get(),
                          .victory_service = m_victory_service.get(),
                          .rain_manager = m_rain_manager.get(),
+                         .weather_audio = m_weather_audio.get(),
                          .environment_clock = m_environment_clock.get()};
 }
 
@@ -3097,6 +3104,13 @@ void GameEngine::configure_mission_victory_conditions() {
 void GameEngine::configure_rain_system() {
   if (m_rain_manager) {
     m_rain_manager->configure(m_level.rain, m_level.biome_seed);
+  }
+
+  if (m_weather_audio) {
+    m_weather_audio->stop();
+    if (m_level.rain.enabled) {
+      m_weather_audio->preload(m_level.rain.type);
+    }
   }
 
   if (!m_rain) {

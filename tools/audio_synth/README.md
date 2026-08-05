@@ -1,4 +1,4 @@
-# Synthesised cue sounds
+# Synthesised cue sounds and ambience
 
 Sixty-four of the game's sound effects are not recordings. They are generated from
 the recipes in this directory by `make audio-assets`.
@@ -16,14 +16,16 @@ the recipes in this directory by `make audio-assets`.
 
 ## Layout
 
-| File                 | Role                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------- |
-| `dsp.py`             | Buffers, envelopes, filters and effects. Standard library only.                       |
-| `instruments.py`     | Physical bodies: struck wood and bronze, thuds, cloth, gravel, creaks, horns, breath. |
-| `cues.py`            | One recipe per cue, plus where the file lands and how loud it may peak.               |
-| `synthesize_cues.py` | Renders recipes to `assets/audio` and encodes with ffmpeg.                            |
-| `register_cues.py`   | Adds the manifest tracks and points each cue at its resource.                         |
-| `analyse.py`         | Measures rendered files so they can be judged without listening.                      |
+| File                     | Role                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `dsp.py`                 | Buffers, envelopes, filters and effects. Standard library only.                       |
+| `instruments.py`         | Physical bodies: struck wood and bronze, thuds, cloth, gravel, creaks, horns, breath. |
+| `cues.py`                | One recipe per cue, plus where the file lands and how loud it may peak.               |
+| `synthesize_cues.py`     | Renders recipes to `assets/audio` and encodes with ffmpeg.                            |
+| `register_cues.py`       | Adds the manifest tracks and points each cue at its resource.                         |
+| `analyse.py`             | Measures rendered files so they can be judged without listening.                      |
+| `ambience.py`            | One recipe per looping ambience bed, plus the layers they are built from.             |
+| `synthesize_ambience.py` | Renders the beds into `assets/audio/ambience` at the mixer's sample rate.             |
 
 ## Regenerating
 
@@ -92,3 +94,33 @@ later are the crowd and voice-adjacent pieces -- `combat.charge`,
 "plausible" rather than "real". Everything in the `ui.*`, `state.*` and
 `order.*` families is meant to stay synthetic; abstract interface sounds are
 what this technique is best at.
+
+## The ambience beds
+
+The eighteen looping beds in `assets/audio/ambience` are generated too, by
+`make audio-ambience`. They replaced 16 kHz ten-second clips that the mixer had
+to resample at load — which manufactured a mirror of their own noise across
+8-16 kHz — and whose energy sat in the 2-6 kHz band the ear finds most
+fatiguing. See [AUDIO_MASTERING.md](../../docs/AUDIO_MASTERING.md) for the
+measurements.
+
+The beds are rendered at 48 kHz so nothing resamples them, run 18.8 s so the
+repeat is less obvious, and are folded tail-into-head so the file loops without
+a seam. `ambience.py` holds one recipe per bed over a small set of layers:
+`wind`, `rain`, `snowfall`, `water`, `leaves`, `murmur`, `knocks`, `march`,
+`fire`, `gulls`.
+
+Two of the beds are not places but skies. `weather_rain` and `weather_snow` are
+layered over whatever bed the biome chose, so they carry only the weather and
+never the ground under it -- see
+[AUDIO_MASTERING.md](../../docs/AUDIO_MASTERING.md).
+
+```sh
+python3 tools/audio_synth/synthesize_ambience.py                 # every bed
+python3 tools/audio_synth/synthesize_ambience.py rain            # matching beds
+python3 tools/audio_synth/synthesize_ambience.py --out /tmp/try  # audition first
+```
+
+Two invariants are held by `AmbienceAssetsTest`: every bed is stored at the
+mixer's sample rate, and no bed is louder in 2-6 kHz than in its 100-800 Hz
+body. A recipe that breaks either fails the suite.

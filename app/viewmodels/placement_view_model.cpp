@@ -114,9 +114,9 @@ auto PlacementViewModel::formation_intent() const -> QString {
   return commands == nullptr ? QString() : commands->formation_intent();
 }
 
-auto PlacementViewModel::available_formation_intents() const -> QStringList {
+auto PlacementViewModel::formation_intents() const -> QStringList {
   auto* commands = m_host.command_controller();
-  return commands == nullptr ? QStringList() : commands->available_formation_intents();
+  return commands == nullptr ? QStringList() : commands->formation_intents();
 }
 
 auto PlacementViewModel::formation_intent_display_name(const QString& intent_id) const
@@ -136,6 +136,11 @@ auto PlacementViewModel::formation_intent_unavailable_reason(
 auto PlacementViewModel::selected_formation_status() const -> QVariantMap {
   auto* commands = m_host.command_controller();
   return commands == nullptr ? QVariantMap() : commands->selected_formation_status();
+}
+
+auto PlacementViewModel::formation_doctrine_options() const -> QVariantList {
+  auto* commands = m_host.command_controller();
+  return commands == nullptr ? QVariantList() : commands->formation_doctrine_options();
 }
 
 auto PlacementViewModel::formation_options() const -> QVariantMap {
@@ -223,26 +228,10 @@ void PlacementViewModel::set_formation_doctrine_override(const QString& doctrine
   }
 }
 
-void PlacementViewModel::mirror_formation_flank() {
-  auto* commands = m_host.command_controller();
-  if (commands != nullptr) {
-    commands->mirror_formation_flank();
-    emit formation_options_changed();
-  }
-}
-
 void PlacementViewModel::set_formation_preserve_order(bool preserve) {
   auto* commands = m_host.command_controller();
   if (commands != nullptr) {
     commands->set_formation_preserve_order(preserve);
-    emit formation_options_changed();
-  }
-}
-
-void PlacementViewModel::set_formation_tight_spacing(bool tight) {
-  auto* commands = m_host.command_controller();
-  if (commands != nullptr) {
-    commands->set_formation_tight_spacing(tight);
     emit formation_options_changed();
   }
 }

@@ -111,6 +111,7 @@ class CommandController;
 namespace Core {
 class CommanderModeCoordinator;
 class SkirmishRuntimeCoordinator;
+class WeatherAudio;
 } // namespace Core
 namespace Models {
 class AudioSystemProxy;
@@ -571,6 +572,7 @@ private:
   std::unique_ptr<Render::GL::AmbientFogRenderer> m_ambient_fog;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
   std::unique_ptr<Game::Systems::RainManager> m_rain_manager;
+  std::unique_ptr<App::Core::WeatherAudio> m_weather_audio;
   std::unique_ptr<Game::Map::EnvironmentClock> m_environment_clock;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
   std::unique_ptr<Game::Systems::VictoryService> m_victory_service;

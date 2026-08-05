@@ -108,7 +108,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
   const QString combat = QObject::tr("Commander combat");
 
   QVector<Spec> catalog;
-  catalog.reserve(41);
+  catalog.reserve(42);
 
   catalog.append({QStringLiteral("global.menu"),
                   global,
@@ -200,7 +200,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   camera,
                   QObject::tr("Orbit camera right"),
                   {},
-                  QStringLiteral("F"),
+                  QStringLiteral("T"),
                   false});
   catalog.append({QStringLiteral("rts.select"),
                   rts,
@@ -264,6 +264,13 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   QObject::tr("Hold position"),
                   {},
                   QStringLiteral("H"),
+                  false});
+  catalog.append({QStringLiteral("rts.order_formation"),
+                  rts,
+                  orders,
+                  QObject::tr("Deploy the selection in a formation"),
+                  QObject::tr("Opens the formation planner for the selected troops"),
+                  QStringLiteral("F"),
                   false});
   catalog.append({QStringLiteral("rts.commander_rally"),
                   rts,

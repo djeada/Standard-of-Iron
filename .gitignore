@@ -87,6 +87,11 @@ assets/creatures/*.bpat
 assets/creatures/*.bpsm
 assets/creatures/*.bprm
 
+# Ambience beds are rendered from tools/audio_synth/ambience.py by the build.
+# The recipes are the source; the .ogg files are output.
+assets/audio/ambience/*.ogg
+assets/audio/ambience/*.wav
+
 # Local virtualenvs
 venv/
 

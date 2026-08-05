@@ -19,6 +19,7 @@ struct AudioCommand {
     SetMasterVolume,
     PlaySound,
     StopSound,
+    SetSoundVolume,
     ReleaseTrack,
   };
 

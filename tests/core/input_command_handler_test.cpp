@@ -1,4 +1,6 @@
+#include <cmath>
 #include <gtest/gtest.h>
+#include <numbers>
 
 #include "app/controllers/command_controller.h"
 #include "app/core/input_command_handler.h"
@@ -203,8 +205,11 @@ TEST_F(InputCommandHandlerTest, RightPressAppliesAttackOnlyToEligibleUnits) {
 
 TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
+  ASSERT_NE(second, nullptr);
   selection_system->select_unit(unit->get_id());
+  selection_system->select_unit(second->get_id());
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
@@ -219,15 +224,36 @@ TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove)
   EXPECT_TRUE(movement->get_has_target());
 }
 
-TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) {
+TEST_F(InputCommandHandlerTest, OneTroopIsMovedWithoutOpeningThePlanner) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
+
+  EXPECT_FALSE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  EXPECT_FALSE(input_handler->is_placing_formation());
+
+  input_handler->on_right_click(ground_screen.x(), ground_screen.y(), 1, viewport);
+
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_TRUE(movement->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(second, nullptr);
   auto* patrol = unit->add_component<Engine::Core::PatrolComponent>();
   ASSERT_NE(patrol, nullptr);
   patrol->patrolling = true;
   patrol->waypoints.emplace_back(-3.0F, 0.0F);
   patrol->waypoints.emplace_back(-1.0F, 0.0F);
   selection_system->select_unit(unit->get_id());
+  selection_system->select_unit(second->get_id());
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
@@ -244,8 +270,11 @@ TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) 
 
 TEST_F(InputCommandHandlerTest, RightDoubleClickDoesNotBypassFormationPlacement) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
+  ASSERT_NE(second, nullptr);
   selection_system->select_unit(unit->get_id());
+  selection_system->select_unit(second->get_id());
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
@@ -340,6 +369,140 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickMovesMultipleSelectedUnitsToTar
   ASSERT_NE(mv2, nullptr);
   EXPECT_TRUE(mv1->get_has_target());
   EXPECT_TRUE(mv2->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest, FormationSlotsKeepTheirMeaningAcrossSelections) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* spearman = create_unit(-1.0F, 0.0F, 1, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(spearman, nullptr);
+
+  selection_system->select_unit(archer->get_id());
+  selection_system->select_unit(spearman->get_id());
+  QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
+  ASSERT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  ASSERT_TRUE(command_controller->is_placing_formation());
+
+  const QStringList mixed = command_controller->formation_intents();
+  EXPECT_EQ(mixed.size(), 7);
+  EXPECT_EQ(mixed.at(0), QStringLiteral("faction_default"));
+  EXPECT_EQ(mixed.at(1), QStringLiteral("line"));
+  EXPECT_EQ(mixed.at(2), QStringLiteral("column"));
+
+  input_handler->on_formation_cancel();
+
+  auto* second_archer = create_unit(-4.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(second_archer, nullptr);
+  selection_system->clear_selection();
+  selection_system->select_unit(archer->get_id());
+  selection_system->select_unit(second_archer->get_id());
+  ASSERT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+
+  EXPECT_EQ(command_controller->formation_intents(), mixed);
+}
+
+TEST_F(InputCommandHandlerTest, FormationsTheSelectionCannotFieldCarryAReason) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second_archer = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(second_archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+  selection_system->select_unit(second_archer->get_id());
+
+  QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
+  ASSERT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+
+  const QString reason = command_controller->formation_intent_unavailable_reason(
+      QStringLiteral("encirclement"));
+  EXPECT_FALSE(reason.isEmpty());
+
+  EXPECT_TRUE(
+      command_controller
+          ->formation_intent_unavailable_reason(QStringLiteral("faction_default"))
+          .isEmpty());
+}
+
+TEST_F(InputCommandHandlerTest, DoctrineChoicesAreOfferedFromTheRegistryNotAFixedList) {
+  const QVariantList options = command_controller->formation_doctrine_options();
+  ASSERT_GE(options.size(), 2);
+
+  EXPECT_TRUE(options.at(0).toMap()[QStringLiteral("id")].toString().isEmpty());
+  EXPECT_FALSE(options.at(0).toMap()[QStringLiteral("name")].toString().isEmpty());
+
+  QStringList ids;
+  for (const QVariant& entry : options) {
+    const QVariantMap option = entry.toMap();
+    EXPECT_FALSE(option[QStringLiteral("name")].toString().isEmpty());
+    ids.append(option[QStringLiteral("id")].toString());
+  }
+  EXPECT_TRUE(ids.contains(QStringLiteral("rome")));
+  EXPECT_TRUE(ids.contains(QStringLiteral("carthage")));
+}
+
+TEST_F(InputCommandHandlerTest, ThePlacementArrowPointsWhereTheUnitsEndUpFacing) {
+  auto* first = create_unit(-3.0F, -6.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(-1.0F, -6.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  selection_system->select_unit(first->get_id());
+  selection_system->select_unit(second->get_id());
+
+  const QVector3D anchor(0.0F, 0.0F, 0.0F);
+  QPointF const anchor_screen = world_to_screen(anchor);
+  ASSERT_TRUE(
+      input_handler->on_right_press(anchor_screen.x(), anchor_screen.y(), 1, viewport));
+  ASSERT_TRUE(command_controller->is_placing_formation());
+
+  const QVector3D orient_target(-6.0F, 0.0F, 0.0F);
+  QPointF const orient_screen = world_to_screen(orient_target);
+  input_handler->on_right_drag_orient(orient_screen.x(), orient_screen.y(), viewport);
+
+  const QVector3D dragged =
+      orient_target - command_controller->get_formation_placement_position();
+  float const dragged_degrees =
+      std::atan2(dragged.x(), dragged.z()) * 180.0F / std::numbers::pi_v<float>;
+
+  float const arrow_degrees = command_controller->get_formation_facing_degrees();
+  EXPECT_NEAR(arrow_degrees, dragged_degrees, 0.5F);
+  EXPECT_NEAR(command_controller->formation_preview().facing, arrow_degrees, 0.001F);
+
+  input_handler->on_formation_confirm();
+
+  for (const auto* unit : {first, second}) {
+    const auto* transform = unit->get_component<Engine::Core::TransformComponent>();
+    ASSERT_NE(transform, nullptr);
+    EXPECT_TRUE(transform->has_desired_yaw);
+    EXPECT_NEAR(transform->desired_yaw, arrow_degrees, 0.5F);
+  }
+}
+
+TEST_F(InputCommandHandlerTest, UntouchedPlacementFacesAwayFromTheUnitsThatMarch) {
+  auto* first = create_unit(-1.0F, -6.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(1.0F, -6.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  selection_system->select_unit(first->get_id());
+  selection_system->select_unit(second->get_id());
+
+  QPointF const anchor_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  ASSERT_TRUE(
+      input_handler->on_right_press(anchor_screen.x(), anchor_screen.y(), 1, viewport));
+
+  const QVector3D anchor = command_controller->get_formation_placement_position();
+  const QVector3D march(anchor.x() - 0.0F, 0.0F, anchor.z() - (-6.0F));
+  float const march_degrees =
+      std::atan2(march.x(), march.z()) * 180.0F / std::numbers::pi_v<float>;
+
+  EXPECT_NEAR(command_controller->get_formation_facing_degrees(), march_degrees, 0.5F);
+
+  input_handler->on_formation_confirm();
+
+  const auto* transform = first->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_NEAR(transform->desired_yaw, march_degrees, 0.5F);
 }
 
 } // namespace
