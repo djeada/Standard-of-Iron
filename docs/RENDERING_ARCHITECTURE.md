@@ -689,9 +689,10 @@ states appear in one frame.
 
 Every unit the local player owns carries one small 3D item above its head saying
 what it is doing right now: crossed swords for fighting, a shield for guarding,
-an anchor for holding, an axe for felling trees, a pickaxe for quarrying, a
-wrench for repairs, a crate for hauling, a warning triangle when it is stuck --
-sixteen in all. There is exactly one source for that answer,
+a planted standard for holding, an axe for felling trees, a pickaxe for
+quarrying, a wrench for repairs, a load going into a crate for hauling, a warning
+triangle when it is stuck -- sixteen in all. There is exactly one source for that
+answer,
 `classify_unit_activity()` in `game/systems/unit_activity.cpp`, the same function
 the selection panel reads, so the item over a unit can never disagree with the
 text in the HUD. The simulation writes the result into
@@ -699,32 +700,41 @@ text in the HUD. The simulation writes the result into
 which is why the renderer classifies nothing itself and touches no gameplay
 component to decide what to draw.
 
-The items are generated, not authored. `render/geom/icon_glyph.cpp` is a small
-vector builder -- bars, arcs, rings, convex polygons, arrow heads -- and
-`render/geom/mode_indicator.cpp` describes each item as a handful of calls
-against it. `begin_glyph()`/`end_glyph()` records those flat shapes and turns
-them into a solid: it extracts the silhouette (the boundary edges of the
-recorded triangle soup), extrudes side walls along it, and lays two skirts
-outward from it -- an even dark outline so the item reads against bright terrain,
-and a feathered coloured glow behind that. Everything an item needs comes from
-its silhouette, so a new item is a few lines of 2D drawing and nothing else.
+Every one of them is the same medallion -- a soft drop shadow, a tinted halo, a
+dark contour, a near-neutral plaque, and a bevelled rim carrying the activity
+colour -- with a different icon stamped on its face. `add_medallion()` in
+`render/geom/mode_indicator.cpp` emits that frame first and the icon rides on top
+of it, which is what gives sixteen unrelated symbols one silhouette and one
+optical weight.
+
+The icons themselves are generated, not authored. `render/geom/icon_glyph.cpp`
+is a small vector builder -- bars, arcs, rings, convex polygons, arrow heads --
+and `mode_indicator.cpp` describes each icon as a handful of calls against it.
+`begin_glyph()`/`end_glyph()` records those flat shapes and turns them into a
+solid: it extracts the silhouette (the boundary edges of the recorded triangle
+soup), extrudes side walls along it, and lays a dark outline skirt outward from
+it. Everything an icon needs comes from its silhouette, so a new one is a few
+lines of 2D drawing and nothing else -- it does not even need to be drawn at the
+right size, because `fit_since()` scales whatever was emitted after the medallion
+down to a single radius that clears the rim.
 
 Four properties are worth knowing before changing anything here:
 
-- **They are a fixed fraction of the unit, not of the screen.**
-  `indicator_size_for_unit()` returns `k_indicator_size_ratio` (30%) of the
-  unit's visual height, clamped, and every item mesh is normalised to the same
-  local footprint by `normalize_extent()` so that ratio means the same thing for
-  all sixteen. They do not grow when the camera pulls back: an earlier revision
-  held them at a constant pixel size and they read as UI stickers rather than
-  objects in the world.
+- **Every badge is the same size in the world, for every unit.**
+  `indicator_world_size()` is one constant, and every item mesh is normalised to
+  the same local footprint by `normalize_extent()`, so a worker's order and an
+  elephant's order are drawn at identical scale -- they say the same kind of
+  thing, so they get the same voice. Only the anchor height still varies, enough
+  to clear each unit's head. They do not grow when the camera pulls back either:
+  an earlier revision held them at a constant pixel size and they read as UI
+  stickers rather than objects in the world.
 - **They face the camera, tilted.** The model matrix is built from the view
   matrix's right and up vectors with a small pitch (`k_indicator_tilt_radians`)
   so the extrusion catches perspective instead of presenting flat on.
 - **They ignore depth.** The pass runs last with depth test and depth write off,
-  and the mesh is ordered glow, outline, walls, face so painter's order alone
-  resolves it. A status read that a friendly unit can stand in front of is worse
-  than useless.
+  so the order the mesh is emitted in is the order it composites in: shadow,
+  halo, contour, plaque, rim, then the icon's outline, walls and face. A status
+  read that a friendly unit can stand in front of is worse than useless.
 - **State is colour, not geometry.** Queued, unavailable and interrupted tint the
   same mesh, because the instanced path carries only a colour and an alpha per
   instance and widening that vertex format would cost every other mesh batch.
@@ -733,7 +743,7 @@ Lighting is local to the item: `activity_indicator.glsl` shades against a fixed
 light in the item's own space, so a camera-facing badge keeps a stable studio
 highlight instead of flickering as the camera turns.
 
-Cost is kept down in three places. Height and size come from the troop profile
+Cost is kept down in three places. Anchor height comes from the troop profile
 once, cached in `CachedUnitData` and refreshed only when the spawn type or nation
 changes, instead of a `TroopProfileService` lookup per unit per frame.
 `ModeIndicatorCmd`s sort by kind, so the queue hands the backend one instanced
