@@ -60,6 +60,9 @@ public:
   [[nodiscard]] static auto blocks_move(const QVector3D& current,
                                         const QVector3D& target) -> bool;
 
+  [[nodiscard]] static auto blocks_line(const QVector3D& from,
+                                        const QVector3D& to) -> bool;
+
   static auto set_manual_mode(Engine::Core::Entity& gate, ManualMode mode) -> bool;
   static auto cycle_manual_mode(Engine::Core::Entity& gate) -> ManualMode;
 };
