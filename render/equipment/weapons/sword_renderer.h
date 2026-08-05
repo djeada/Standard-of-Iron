@@ -71,6 +71,8 @@ auto sword_fill_role_colors(const HumanoidPalette& palette,
                             QVector3D* out,
                             std::size_t max) -> std::uint32_t;
 
+inline constexpr QVector3D k_sword_blade_axis_in_grip{0.02F, 0.97F, 0.0F};
+
 auto sword_make_static_attachment(const SwordRenderConfig& config,
                                   std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec;

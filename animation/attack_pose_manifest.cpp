@@ -47,6 +47,10 @@ namespace {
   return add(scale(a, 1.0F - t), scale(b, t));
 }
 
+[[nodiscard]] auto nlerp(PoseVec3 a, PoseVec3 b, float t) noexcept -> PoseVec3 {
+  return normalize(lerp(a, b, t));
+}
+
 [[nodiscard]] auto smoothstep(float t) noexcept -> float {
   t = std::clamp(t, 0.0F, 1.0F);
   return t * t * (3.0F - 2.0F * t);
@@ -113,10 +117,35 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
   float const phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
   float const shoulder_y = inputs.shoulder_y;
 
-  PoseVec3 const retracted_rear{0.28F, shoulder_y + 0.035F, 0.12F};
-  PoseVec3 const contact_rear{0.28F, shoulder_y + 0.095F, 0.42F};
-  PoseVec3 const retracted_front{-0.03F, shoulder_y + 0.035F, 0.42F};
-  PoseVec3 const contact_front{-0.03F, shoulder_y + 0.095F, 0.72F};
+  float height_bias = 0.0F;
+  float crouch = 0.0F;
+  float pitch = 0.0F;
+  float reach_bias = 0.0F;
+  switch (inputs.variant % 3U) {
+  case 1U:
+
+    height_bias = -0.130F;
+    crouch = 0.045F;
+    pitch = -0.09F;
+    reach_bias = 0.02F;
+    break;
+  case 2U:
+
+    height_bias = 0.160F;
+    crouch = -0.008F;
+    pitch = 0.13F;
+    reach_bias = 0.02F;
+    break;
+  default:
+    break;
+  }
+
+  PoseVec3 const retracted_rear{0.28F, shoulder_y + 0.035F + height_bias, 0.12F};
+  PoseVec3 const contact_rear{
+      0.28F, shoulder_y + 0.095F + height_bias, 0.42F + reach_bias};
+  PoseVec3 const retracted_front{-0.03F, shoulder_y + 0.035F + height_bias, 0.42F};
+  PoseVec3 const contact_front{
+      -0.03F, shoulder_y + 0.095F + height_bias, 0.72F + reach_bias};
 
   HumanoidWeaponAttackPoseSample sample{};
   float drive = 0.0F;
@@ -147,12 +176,24 @@ lerp(MountedSeatOffset a, MountedSeatOffset b, float t) noexcept -> MountedSeatO
   sample.foot_r_z_delta += 0.060F * drive;
   sample.knee_r_z_delta += 0.035F * drive;
 
+  if (crouch > 0.001F || crouch < -0.001F) {
+    float const sink = crouch * drive;
+    sample.pelvis_y_delta -= sink;
+    sample.shoulder_l_y_delta -= sink * 0.6F;
+    sample.shoulder_r_y_delta -= sink * 0.6F;
+    sample.neck_y_delta -= sink * 0.5F;
+    sample.head_y_delta -= sink * 0.4F;
+  }
+
   sample.use_offhand_spear_grip = true;
-  sample.offhand_spear_direction = resolve_humanoid_spear_direction({
+  PoseVec3 shaft = resolve_humanoid_spear_direction({
       .is_attacking = true,
       .is_melee = true,
       .attack_phase = phase,
   });
+
+  shaft = normalize({shaft.x, shaft.y + pitch, shaft.z});
+  sample.offhand_spear_direction = shaft;
 
   sample.offhand_along_offset = 0.30F;
   sample.offhand_y_drop = 0.0F;
@@ -257,6 +298,13 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
   PoseVec3 recover_pos =
       combat_variant ? PoseVec3{0.18F, shoulder_y - 0.01F, 0.30F} : rest_pos;
 
+  PoseVec3 rest_blade{0.12F, 0.86F, 0.50F};
+  PoseVec3 chamber_blade{0.44F, 0.76F, -0.48F};
+  PoseVec3 apex_blade{0.30F, 0.90F, -0.32F};
+  PoseVec3 strike_blade{-0.54F, -0.30F, 0.78F};
+  PoseVec3 followthrough_blade{-0.86F, -0.40F, 0.30F};
+  PoseVec3 recover_blade{0.10F, 0.80F, 0.58F};
+
   float strike_direction = k_strike_right_to_left;
   switch (inputs.variant % 3U) {
   case 1U:
@@ -271,6 +319,10 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     if (combat_variant) {
       recover_pos = {0.28F, shoulder_y - 0.02F, 0.32F};
     }
+    chamber_blade = {-0.44F, 0.76F, -0.48F};
+    apex_blade = {-0.30F, 0.90F, -0.32F};
+    strike_blade = {0.54F, -0.30F, 0.78F};
+    followthrough_blade = {0.86F, -0.40F, 0.30F};
     strike_direction = k_strike_left_to_right;
     break;
   case 2U:
@@ -285,6 +337,10 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     if (combat_variant) {
       recover_pos = {0.14F, shoulder_y - 0.04F, 0.34F};
     }
+    chamber_blade = {0.10F, 0.96F, -0.26F};
+    apex_blade = {0.04F, 0.99F, -0.12F};
+    strike_blade = {-0.06F, -0.46F, 0.89F};
+    followthrough_blade = {-0.12F, -0.74F, 0.66F};
     break;
   default:
     break;
@@ -348,6 +404,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     if (attack_phase < 0.18F) {
       float const t = ease_in_out_cubic(attack_phase / 0.18F);
       sample.right_hand = lerp(rest_pos, chamber_pos, t);
+      sample.blade_direction = nlerp(rest_blade, chamber_blade, t);
       sample.left_hand = {-0.22F - 0.03F * strike_direction * amplified_weight,
                           shoulder_y - 0.02F - 0.01F * amplified_weight,
                           0.18F + 0.04F * t + 0.05F * amplified_weight};
@@ -356,6 +413,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     } else if (attack_phase < 0.32F) {
       float const t = smoothstep((attack_phase - 0.18F) / 0.14F);
       sample.right_hand = lerp(chamber_pos, apex_pos, t);
+      sample.blade_direction = nlerp(chamber_blade, apex_blade, t);
       sample.left_hand = {-0.22F - 0.05F * strike_direction * amplified_weight,
                           shoulder_y - 0.05F - 0.02F * amplified_weight,
                           0.20F + 0.10F * amplified_weight};
@@ -367,6 +425,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       float const t = (attack_phase - 0.32F) / 0.26F;
       float const power_t = t * t * t;
       sample.right_hand = lerp(apex_pos, strike_pos, power_t);
+      sample.blade_direction = nlerp(apex_blade, strike_blade, power_t);
       sample.left_hand = {
           -0.22F + (0.16F + 0.07F * amplified_weight) * power_t,
           shoulder_y - 0.05F - (0.10F + 0.05F * amplified_weight) * power_t,
@@ -376,9 +435,10 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       forward_lean = 0.04F + 0.22F * power_t;
       shoulder_rotation = 0.10F - 0.22F * power_t;
       weight_shift = -0.04F + 0.20F * power_t;
-    } else if (attack_phase < 0.90F) {
-      float const t = ease_out((attack_phase - 0.58F) / 0.32F);
+    } else if (attack_phase < 0.76F) {
+      float const t = ease_out((attack_phase - 0.58F) / 0.18F);
       sample.right_hand = lerp(strike_pos, followthrough_pos, t);
+      sample.blade_direction = nlerp(strike_blade, followthrough_blade, t);
       sample.left_hand = {-0.10F + 0.05F * strike_direction * amplified_weight,
                           shoulder_y - 0.12F - 0.03F * amplified_weight,
                           0.46F + 0.08F * amplified_weight + 0.06F * finisher_bonus};
@@ -386,10 +446,12 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       forward_lean = 0.24F - 0.06F * t;
       weight_shift = 0.18F;
     } else {
-      float const t = ease_out((attack_phase - 0.90F) / 0.10F);
+      float const t = ease_in_out_cubic((attack_phase - 0.76F) / 0.24F);
       sample.right_hand =
           add(add(scale(followthrough_pos, 1.0F - t), scale(recover_pos, 0.55F * t)),
               scale(rest_pos, 0.45F * t));
+      sample.blade_direction =
+          nlerp(followthrough_blade, nlerp(recover_blade, rest_blade, 0.45F), t);
       sample.left_hand = {
           -0.10F - (0.10F + 0.03F * amplified_weight) * t,
           shoulder_y - 0.12F * (1.0F - t) - 0.02F * amplified_weight * (1.0F - t),
@@ -405,6 +467,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       float const t = attack_phase / 0.18F;
       float const ease_t = t * t;
       sample.right_hand = lerp(rest_pos, chamber_pos, ease_t);
+      sample.blade_direction = nlerp(rest_blade, chamber_blade, ease_t);
       sample.left_hand = {-0.20F - 0.04F * strike_direction * amplified_weight,
                           shoulder_y - 0.02F - 0.01F * amplified_weight,
                           0.15F + 0.05F * amplified_weight};
@@ -413,6 +476,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     } else if (attack_phase < 0.34F) {
       float const ease_t = smoothstep((attack_phase - 0.18F) / 0.16F);
       sample.right_hand = lerp(chamber_pos, apex_pos, ease_t);
+      sample.blade_direction = nlerp(chamber_blade, apex_blade, ease_t);
       sample.left_hand = {-0.20F - 0.05F * strike_direction * amplified_weight,
                           shoulder_y - 0.04F - 0.02F * amplified_weight,
                           0.17F + 0.08F * amplified_weight};
@@ -423,6 +487,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       float const t = (attack_phase - 0.34F) / 0.24F;
       float const power_t = t * t * t;
       sample.right_hand = lerp(apex_pos, strike_pos, power_t);
+      sample.blade_direction = nlerp(apex_blade, strike_blade, power_t);
       sample.left_hand = {
           -0.20F + (0.12F + 0.06F * amplified_weight) * power_t,
           shoulder_y - 0.04F - (0.08F + 0.04F * amplified_weight) * power_t,
@@ -436,6 +501,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
       float const t = (attack_phase - 0.58F) / 0.18F;
       float const ease_t = ease_out(t);
       sample.right_hand = lerp(strike_pos, followthrough_pos, ease_t);
+      sample.blade_direction = nlerp(strike_blade, followthrough_blade, ease_t);
       sample.left_hand = {-0.12F + 0.04F * strike_direction * amplified_weight,
                           shoulder_y - 0.10F - 0.03F * amplified_weight,
                           0.47F + 0.12F * amplified_weight + 0.10F * finisher_bonus};
@@ -445,6 +511,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     } else {
       float const ease_t = ease_out((attack_phase - 0.76F) / 0.24F);
       sample.right_hand = lerp(followthrough_pos, rest_pos, ease_t);
+      sample.blade_direction = nlerp(followthrough_blade, rest_blade, ease_t);
       sample.left_hand = {-0.12F - (0.08F + 0.03F * amplified_weight) * ease_t,
                           shoulder_y - 0.10F * (1.0F - ease_t) -
                               0.02F * amplified_weight * (1.0F - ease_t),
@@ -457,6 +524,7 @@ resolve_sword_pose(const HumanoidWeaponAttackPoseInputs& inputs,
     }
   }
 
+  sample.has_blade_direction = true;
   apply_sword_body_drive(sample,
                          attack_phase,
                          torso_twist,

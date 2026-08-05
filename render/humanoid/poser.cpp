@@ -79,6 +79,8 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
   pose.foot_r = to_qvec(base_pose.foot_r);
   pose.hand_l = to_qvec(base_pose.hand_l);
   pose.hand_r = to_qvec(base_pose.hand_r);
+  pose.foot_pitch_l = 0.0F;
+  pose.foot_pitch_r = 0.0F;
 
   if (is_moving) {
     auto const locomotion_pose = Animation::resolve_humanoid_locomotion_pose({
@@ -100,10 +102,16 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
         .foot_y_offset = pose.foot_y_offset,
         .base_foot_l = base_pose.foot_l,
         .base_foot_r = base_pose.foot_r,
+        .pelvis_y = pose.pelvis_pos.y(),
+        .hip_lateral_offset = HP::HIP_LATERAL_OFFSET,
+        .hip_vertical_offset = HP::HIP_VERTICAL_OFFSET,
+        .leg_length = (HP::UPPER_LEG_LEN + HP::LOWER_LEG_LEN) * h_scale,
     });
     if (locomotion_pose.active) {
       pose.foot_l = to_qvec(locomotion_pose.foot_l);
       pose.foot_r = to_qvec(locomotion_pose.foot_r);
+      pose.foot_pitch_l = locomotion_pose.foot_pitch_l;
+      pose.foot_pitch_r = locomotion_pose.foot_pitch_r;
       pose.pelvis_pos += to_qvec(locomotion_pose.pelvis_delta);
       pose.shoulder_l += to_qvec(locomotion_pose.shoulder_l_delta);
       pose.shoulder_r += to_qvec(locomotion_pose.shoulder_r_delta);
@@ -113,16 +121,12 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
       pose.hand_r += to_qvec(locomotion_pose.hand_r_delta);
     }
 
-    auto clamp_hand_reach = [&](const QVector3D& shoulder, QVector3D& hand) {
-      float const max_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * h_scale * 0.98F;
-      QVector3D const diff = hand - shoulder;
-      float const len = diff.length();
-      if (len > max_reach && len > 1e-6F) {
-        hand = shoulder + diff * (max_reach / len);
-      }
-    };
-    clamp_hand_reach(pose.shoulder_l, pose.hand_l);
-    clamp_hand_reach(pose.shoulder_r, pose.hand_r);
+    float const max_reach =
+        Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(h_scale);
+    pose.hand_l = Render::Humanoid::PosePrimitives::clamp_to_reach(
+        pose.shoulder_l, pose.hand_l, max_reach);
+    pose.hand_r = Render::Humanoid::PosePrimitives::clamp_to_reach(
+        pose.shoulder_r, pose.hand_r, max_reach);
   }
 
   QVector3D const hip_l =
@@ -156,20 +160,22 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
   QVector3D const outward_r = right_axis;
 
   float const elbow_along_bias = (variation.bulk_scale - 1.0F) * 0.05F;
-  pose.elbow_l = elbow_bend_torso(pose.shoulder_l,
-                                  pose.hand_l,
-                                  outward_l,
-                                  0.45F - elbow_along_bias,
-                                  0.10F,
-                                  -0.03F,
-                                  +1.0F);
-  pose.elbow_r = elbow_bend_torso(pose.shoulder_r,
-                                  pose.hand_r,
-                                  outward_r,
-                                  0.45F - elbow_along_bias,
-                                  0.08F,
-                                  0.0F,
-                                  +1.0F);
+  pose.elbow_l =
+      Render::Humanoid::PosePrimitives::solve_elbow_ik(pose.shoulder_l,
+                                                       pose.hand_l,
+                                                       outward_l,
+                                                       0.45F - elbow_along_bias,
+                                                       0.10F,
+                                                       -0.03F,
+                                                       +1.0F);
+  pose.elbow_r =
+      Render::Humanoid::PosePrimitives::solve_elbow_ik(pose.shoulder_r,
+                                                       pose.hand_r,
+                                                       outward_r,
+                                                       0.45F - elbow_along_bias,
+                                                       0.08F,
+                                                       0.0F,
+                                                       +1.0F);
 }
 
 void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,

@@ -80,6 +80,9 @@ resolve_definition(const Engine::Core::UnitComponent& unit,
 [[nodiscard]] auto
 resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout;
 
+[[nodiscard]] auto living_slot_indices(const Engine::Core::Entity& entity,
+                                       int total_count) -> std::vector<std::uint16_t>;
+
 [[nodiscard]] auto formation_turn_radius(const Engine::Core::Entity& entity) -> float;
 
 [[nodiscard]] auto

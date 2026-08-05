@@ -929,8 +929,9 @@ auto MountedPoseController::compute_outward_dir(Side side) const -> QVector3D {
 void MountedPoseController::enforce_arm_reach(Side side) {
   QVector3D const shoulder = get_shoulder(side);
   QVector3D shoulder_to_hand = get_hand(side) - shoulder;
-  constexpr float k_max_arm_reach =
-      (HumanProportions::UPPER_ARM_LEN + HumanProportions::FORE_ARM_LEN) * 0.75F;
+  float const k_max_arm_reach =
+      Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(
+          1.0F, Render::Humanoid::PosePrimitives::k_seated_arm_reach_fraction);
   float const requested_reach = shoulder_to_hand.length();
   if (requested_reach > k_max_arm_reach && requested_reach > 1.0e-6F) {
     shoulder_to_hand *= k_max_arm_reach / requested_reach;

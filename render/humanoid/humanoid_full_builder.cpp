@@ -204,18 +204,26 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose& pose,
     }
     return f;
   };
-  pose.body_frames.foot_l = AF{pose.foot_l,
-                               -m.right_axis,
-                               m.up_axis,
-                               compute_foot_fwd(-1.0F),
-                               m.foot_radius,
-                               0.0F};
-  pose.body_frames.foot_r = AF{pose.foot_r,
-                               m.right_axis,
-                               m.up_axis,
-                               compute_foot_fwd(+1.0F),
-                               m.foot_radius,
-                               0.0F};
+  auto rolled_foot_frame = [&](const QVector3D& origin,
+                               const QVector3D& right,
+                               float lateral_sign,
+                               float pitch) -> AF {
+    QVector3D forward = compute_foot_fwd(lateral_sign);
+    QVector3D up = m.up_axis;
+    if (std::abs(pitch) > 1.0e-4F) {
+      float const cos_pitch = std::cos(pitch);
+      float const sin_pitch = std::sin(pitch);
+      QVector3D const rolled_up = (up * cos_pitch) - (forward * sin_pitch);
+      QVector3D const rolled_forward = (forward * cos_pitch) + (up * sin_pitch);
+      up = rolled_up.normalized();
+      forward = rolled_forward.normalized();
+    }
+    return AF{origin, right, up, forward, m.foot_radius, 0.0F};
+  };
+  pose.body_frames.foot_l =
+      rolled_foot_frame(pose.foot_l, -m.right_axis, -1.0F, pose.foot_pitch_l);
+  pose.body_frames.foot_r =
+      rolled_foot_frame(pose.foot_r, m.right_axis, 1.0F, pose.foot_pitch_r);
 
   auto compute_shin =
       [&](const QVector3D& ankle, const QVector3D& knee, float right_sign) -> AF {
