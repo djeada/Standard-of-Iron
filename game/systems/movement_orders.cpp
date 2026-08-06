@@ -151,10 +151,14 @@ auto prepare_move(Engine::Core::World& world,
         locked_target != nullptr
             ? locked_target->get_component<Engine::Core::UnitComponent>()
             : nullptr;
+
+    bool const locked_to_structure =
+        locked_target != nullptr &&
+        locked_target->has_component<Engine::Core::BuildingComponent>();
     bool const opponent_alive =
         locked_unit != nullptr && locked_unit->health > 0 &&
         !locked_target->has_component<Engine::Core::PendingRemovalComponent>();
-    if (opponent_alive) {
+    if (opponent_alive && !locked_to_structure) {
       return {};
     }
     CombatRules::clear_rts_melee_lock(entity);

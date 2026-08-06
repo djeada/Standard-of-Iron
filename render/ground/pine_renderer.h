@@ -26,6 +26,9 @@ public:
                  const std::vector<Game::Map::WorldProp>& runtime_world_props = {},
                  bool use_world_props_exclusively = false);
 
+  void refresh_world_props(const std::vector<Game::Map::WorldProp>& runtime_world_props,
+                           bool use_world_props_exclusively);
+
   void set_light_direction(const QVector3D& dir) override;
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
@@ -35,7 +38,9 @@ public:
   }
 
 private:
-  void generate_pine_instances();
+  void rebuild_pine_instances();
+  void append_world_prop_pines();
+  void generate_procedural_pines(std::vector<TreeInstanceGpu>& out) const;
 };
 
 } // namespace Render::GL

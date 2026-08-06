@@ -27,7 +27,7 @@ constexpr float k_indicator_head_gap = 0.45F;
 constexpr float k_frustum_cull_margin = 1.5F;
 constexpr float k_indicator_tilt_radians = 0.24F;
 
-constexpr float k_indicator_world_size = 1.05F;
+constexpr float k_indicator_world_size = 0.80F;
 
 constexpr float k_indicator_fade_start_sq = 3600.0F;
 constexpr float k_indicator_fade_end_sq = 8100.0F;

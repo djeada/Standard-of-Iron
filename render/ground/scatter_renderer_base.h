@@ -56,6 +56,7 @@ protected:
     m_biome_settings = biome_settings;
     m_noise_seed = biome_settings.seed;
     m_state.reset_instances();
+    invalidate_procedural_cache();
   }
 
   void configure_biome_common(const Game::Map::BiomeSettings& biome_settings,
@@ -63,8 +64,47 @@ protected:
     m_biome_settings = biome_settings;
     m_use_world_props_exclusively = use_world_props_exclusively;
     m_state.reset_instances();
+    invalidate_procedural_cache();
   }
 
+  void adopt_runtime_world_props(
+      const std::vector<Game::Map::WorldProp>& runtime_world_props,
+      bool use_world_props_exclusively) {
+    m_runtime_world_props = runtime_world_props;
+    m_world_props = runtime_world_props;
+    m_use_world_props_exclusively = use_world_props_exclusively;
+  }
+
+  void invalidate_procedural_cache() {
+    m_procedural_cached = false;
+    m_procedural_instances.clear();
+    m_procedural_generations = 0;
+  }
+
+  template <typename GenerateProcedural>
+  void append_procedural_instances(GenerateProcedural&& generate) {
+    if (!m_procedural_cached) {
+      m_procedural_instances.clear();
+      generate(m_procedural_instances);
+      m_procedural_cached = true;
+      ++m_procedural_generations;
+    }
+    m_state.instances.insert(m_state.instances.end(),
+                             m_procedural_instances.begin(),
+                             m_procedural_instances.end());
+  }
+
+  void finish_instance_rebuild() {
+    m_state.instance_count = m_state.instances.size();
+    m_state.instances_dirty = m_state.instance_count > 0;
+  }
+
+public:
+  [[nodiscard]] auto procedural_generations_for_test() const -> std::size_t {
+    return m_procedural_generations;
+  }
+
+protected:
   void set_light_direction_common(const QVector3D& dir,
                                   const QVector3D& default_direction) {
     m_light_direction = dir.isNull() ? default_direction : dir.normalized();
@@ -128,6 +168,10 @@ protected:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
   QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
+
+  std::vector<Instance> m_procedural_instances;
+  bool m_procedural_cached = false;
+  std::size_t m_procedural_generations = 0;
 
   State m_state;
 };
