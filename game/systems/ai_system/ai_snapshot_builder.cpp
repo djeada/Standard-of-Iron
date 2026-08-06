@@ -146,6 +146,11 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
     data.is_commander = entity->has_component<Engine::Core::CommanderComponent>();
     data.is_assault = is_assault;
+    if (is_assault) {
+      data.has_march_target = assault_wave->has_march_target;
+      data.march_target_x = assault_wave->march_target_x;
+      data.march_target_z = assault_wave->march_target_z;
+    }
 
     if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
       data.pos_x = transform->position.x;

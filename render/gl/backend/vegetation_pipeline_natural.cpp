@@ -359,36 +359,36 @@ void VegetationPipeline::initialize_pine_pipeline() {
     }
   };
 
-  const int trunk_bottom = add_ring(0.14F, -0.01F, -0.08F, 0.00F, 0.0F);
+  const int trunk_bottom = add_ring(0.088F, -0.01F, -0.08F, 0.00F, 0.0F);
   const int trunk_kink =
-      add_ring(0.105F, 0.18F, 0.00F, 0.08F, 0.0F, QVector2D(0.010F, 0.006F));
+      add_ring(0.068F, 0.18F, 0.00F, 0.08F, 0.0F, QVector2D(0.010F, 0.006F));
   const int trunk_mid =
-      add_ring(0.085F, 0.36F, 0.03F, 0.16F, 0.0F, QVector2D(0.022F, 0.012F));
+      add_ring(0.056F, 0.36F, 0.03F, 0.16F, 0.0F, QVector2D(0.022F, 0.012F));
   const int trunk_top =
-      add_ring(0.075F, 0.56F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F));
+      add_ring(0.050F, 0.56F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F));
 
   const QVector2D t1o(-0.032F, 0.050F);
-  const int c1_inner = add_ring(0.18F, 0.60F, 0.12F, 0.34F, 0.00F, t1o * 0.15F);
-  const int c1_base = add_ring(0.34F, 0.65F, 0.24F, 0.42F, 0.60F, t1o * 0.40F);
-  const int c1_outer = add_ring(0.50F, 0.70F, 0.34F, 0.50F, 1.00F, t1o);
-  const int c1_mid = add_ring(0.45F, 0.77F, 0.56F, 0.58F, 0.74F, t1o * 0.55F);
-  const int c1_top = add_ring(0.28F, 0.83F, 0.72F, 0.64F, 0.30F, t1o * 0.22F);
+  const int c1_inner = add_ring(0.135F, 0.62F, 0.12F, 0.34F, 0.00F, t1o * 0.15F);
+  const int c1_base = add_ring(0.245F, 0.67F, 0.24F, 0.42F, 0.60F, t1o * 0.40F);
+  const int c1_outer = add_ring(0.355F, 0.72F, 0.34F, 0.50F, 1.00F, t1o);
+  const int c1_mid = add_ring(0.315F, 0.79F, 0.56F, 0.58F, 0.74F, t1o * 0.55F);
+  const int c1_top = add_ring(0.205F, 0.85F, 0.72F, 0.64F, 0.30F, t1o * 0.22F);
 
   const QVector2D t2o(0.040F, -0.026F);
-  const int c2_inner = add_ring(0.15F, 0.85F, 0.16F, 0.66F, 0.00F, t2o * 0.12F);
-  const int c2_base = add_ring(0.28F, 0.90F, 0.30F, 0.73F, 0.60F, t2o * 0.38F);
-  const int c2_outer = add_ring(0.37F, 0.95F, 0.42F, 0.80F, 1.00F, t2o);
-  const int c2_mid = add_ring(0.30F, 1.01F, 0.64F, 0.86F, 0.74F, t2o * 0.52F);
-  const int c2_top = add_ring(0.18F, 1.06F, 0.78F, 0.90F, 0.30F, t2o * 0.20F);
+  const int c2_inner = add_ring(0.120F, 0.87F, 0.16F, 0.66F, 0.00F, t2o * 0.12F);
+  const int c2_base = add_ring(0.220F, 0.92F, 0.30F, 0.73F, 0.60F, t2o * 0.38F);
+  const int c2_outer = add_ring(0.295F, 0.97F, 0.42F, 0.80F, 1.00F, t2o);
+  const int c2_mid = add_ring(0.240F, 1.03F, 0.64F, 0.86F, 0.74F, t2o * 0.52F);
+  const int c2_top = add_ring(0.145F, 1.08F, 0.78F, 0.90F, 0.30F, t2o * 0.20F);
 
   const QVector2D t3o(-0.022F, -0.032F);
-  const int c3_inner = add_ring(0.10F, 1.08F, 0.20F, 0.91F, 0.00F, t3o * 0.10F);
-  const int c3_base = add_ring(0.18F, 1.12F, 0.38F, 0.95F, 0.60F, t3o * 0.35F);
-  const int c3_outer = add_ring(0.255F, 1.16F, 0.52F, 0.98F, 1.00F, t3o);
-  const int c3_mid = add_ring(0.18F, 1.21F, 0.74F, 1.02F, 0.74F, t3o * 0.48F);
-  const int c3_top = add_ring(0.09F, 1.25F, 0.86F, 1.06F, 0.30F, t3o * 0.15F);
+  const int c3_inner = add_ring(0.085F, 1.10F, 0.20F, 0.91F, 0.00F, t3o * 0.10F);
+  const int c3_base = add_ring(0.150F, 1.15F, 0.38F, 0.95F, 0.60F, t3o * 0.35F);
+  const int c3_outer = add_ring(0.205F, 1.19F, 0.52F, 0.98F, 1.00F, t3o);
+  const int c3_mid = add_ring(0.150F, 1.25F, 0.74F, 1.02F, 0.74F, t3o * 0.48F);
+  const int c3_top = add_ring(0.075F, 1.30F, 0.86F, 1.06F, 0.30F, t3o * 0.15F);
 
-  const int tip_ring = add_ring(0.03F, 1.30F, 0.95F, 1.12F, 0.20F);
+  const int tip_ring = add_ring(0.028F, 1.36F, 0.95F, 1.12F, 0.20F);
 
   connect_rings(trunk_bottom, trunk_kink);
   connect_rings(trunk_kink, trunk_mid);
@@ -422,7 +422,7 @@ void VegetationPipeline::initialize_pine_pipeline() {
   }
 
   const auto apex_index = static_cast<unsigned short>(vertices.size());
-  vertices.push_back({QVector3D(0.0F, 1.36F, 0.0F),
+  vertices.push_back({QVector3D(0.0F, 1.44F, 0.0F),
                       QVector3D(0.5F, 1.18F, 0.30F),
                       QVector3D(0.0F, 1.0F, 0.0F)});
   for (int i = 0; i < k_segments; ++i) {

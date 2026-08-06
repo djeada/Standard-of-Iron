@@ -409,6 +409,9 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     QJsonObject assault_obj;
     assault_obj["active"] = assault_wave->active;
     assault_obj["wave_phase"] = assault_wave->wave_phase;
+    assault_obj["has_march_target"] = assault_wave->has_march_target;
+    assault_obj["march_target_x"] = static_cast<double>(assault_wave->march_target_x);
+    assault_obj["march_target_z"] = static_cast<double>(assault_wave->march_target_z);
     entity_obj["assault_wave"] = assault_obj;
   }
 
@@ -1227,6 +1230,11 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     auto* assault_wave = entity->add_component<AssaultWaveComponent>();
     assault_wave->active = assault_obj["active"].toBool(true);
     assault_wave->wave_phase = assault_obj["wave_phase"].toInt(0);
+    assault_wave->has_march_target = assault_obj["has_march_target"].toBool(false);
+    assault_wave->march_target_x =
+        static_cast<float>(assault_obj["march_target_x"].toDouble(0.0));
+    assault_wave->march_target_z =
+        static_cast<float>(assault_obj["march_target_z"].toDouble(0.0));
   }
 
   if (json.contains("hold_mode")) {

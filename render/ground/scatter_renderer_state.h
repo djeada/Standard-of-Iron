@@ -16,10 +16,17 @@
 
 namespace Render::Ground::Scatter {
 
+inline constexpr float k_chunk_world_size = 24.0F;
+inline constexpr float k_chunk_bounds_padding = 8.0F;
+
 template <typename Instance>
 struct SpatialChunk {
-  std::vector<Instance> instances;
+  std::size_t first = 0;
+  std::size_t count = 0;
+  std::vector<std::uint8_t> accepted;
   std::unique_ptr<Render::GL::Buffer> buffer;
+  std::size_t visible_count = 0;
+  bool all_accepted = false;
   QVector3D center;
   float radius = 0.0F;
 };
@@ -51,7 +58,10 @@ struct FilteredRendererState {
   std::size_t instance_count = 0;
   Params params{};
   bool instances_dirty = false;
+
+  bool track_visible_instances = false;
   std::vector<Instance> visible_instances;
+
   std::vector<SpatialChunk<Instance>> spatial_chunks;
   std::uint64_t cached_visibility_version = 0;
   bool visibility_dirty = true;
@@ -69,13 +79,16 @@ struct FilteredRendererState {
   }
 
   [[nodiscard]] auto is_gpu_ready() const -> bool {
-    if (instances.empty() || (!visibility_dirty && visible_instances.empty())) {
+    if (instances.empty()) {
       return true;
     }
-    return !visibility_dirty &&
-           std::all_of(spatial_chunks.begin(),
-                       spatial_chunks.end(),
-                       [](const auto& chunk) { return chunk.buffer != nullptr; });
+    if (visibility_dirty) {
+      return false;
+    }
+    return std::all_of(
+        spatial_chunks.begin(), spatial_chunks.end(), [](const auto& chunk) {
+          return chunk.visible_count == 0 || chunk.buffer != nullptr;
+        });
   }
 };
 
@@ -92,6 +105,112 @@ enum class ScatterMemoryMode : std::uint8_t {
   VisibleOnly,
   Remembered
 };
+
+template <typename Instance, typename PositionAccessor>
+void rebuild_spatial_partition(std::vector<Instance>& instances,
+                               std::vector<SpatialChunk<Instance>>& chunks,
+                               PositionAccessor position_accessor) {
+  chunks.clear();
+  if (instances.empty()) {
+    return;
+  }
+
+  std::unordered_map<std::uint64_t, std::size_t> chunk_indices;
+  chunk_indices.reserve(instances.size() / 16U + 1U);
+  std::vector<std::size_t> chunk_of_instance(instances.size(), 0U);
+  std::vector<std::size_t> counts;
+
+  for (std::size_t index = 0; index < instances.size(); ++index) {
+    const auto position = position_accessor(instances[index]);
+    const auto chunk_x =
+        static_cast<std::int32_t>(std::floor(position.x() / k_chunk_world_size));
+    const auto chunk_z =
+        static_cast<std::int32_t>(std::floor(position.z() / k_chunk_world_size));
+    const std::uint64_t key =
+        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(chunk_x)) << 32U) |
+        static_cast<std::uint32_t>(chunk_z);
+    auto [it, inserted] = chunk_indices.emplace(key, chunks.size());
+    if (inserted) {
+      chunks.emplace_back();
+      counts.push_back(0U);
+    }
+    chunk_of_instance[index] = it->second;
+    ++counts[it->second];
+  }
+
+  std::size_t offset = 0;
+  std::vector<std::size_t> cursor(chunks.size(), 0U);
+  for (std::size_t index = 0; index < chunks.size(); ++index) {
+    chunks[index].first = offset;
+    chunks[index].count = counts[index];
+    cursor[index] = offset;
+    offset += counts[index];
+  }
+
+  std::vector<Instance> reordered(instances.size());
+  for (std::size_t index = 0; index < instances.size(); ++index) {
+    reordered[cursor[chunk_of_instance[index]]++] = instances[index];
+  }
+  instances = std::move(reordered);
+
+  for (auto& chunk : chunks) {
+    QVector3D min{std::numeric_limits<float>::max(),
+                  std::numeric_limits<float>::max(),
+                  std::numeric_limits<float>::max()};
+    QVector3D max{std::numeric_limits<float>::lowest(),
+                  std::numeric_limits<float>::lowest(),
+                  std::numeric_limits<float>::lowest()};
+    for (std::size_t i = 0; i < chunk.count; ++i) {
+      const auto position = position_accessor(instances[chunk.first + i]);
+      min.setX(std::min(min.x(), position.x()));
+      min.setY(std::min(min.y(), position.y()));
+      min.setZ(std::min(min.z(), position.z()));
+      max.setX(std::max(max.x(), position.x()));
+      max.setY(std::max(max.y(), position.y()));
+      max.setZ(std::max(max.z(), position.z()));
+    }
+    chunk.center = (min + max) * 0.5F;
+    chunk.radius = (max - chunk.center).length() + k_chunk_bounds_padding;
+    chunk.accepted.assign(chunk.count, 0U);
+    chunk.visible_count = 0;
+    chunk.all_accepted = false;
+    chunk.buffer.reset();
+  }
+}
+
+template <typename Instance, typename PositionAccessor, typename Accepts>
+auto refresh_chunk_acceptance(const std::vector<Instance>& instances,
+                              SpatialChunk<Instance>& chunk,
+                              PositionAccessor position_accessor,
+                              Accepts accepts,
+                              std::vector<std::uint8_t>& flags,
+                              std::vector<Instance>& packed) -> bool {
+  flags.assign(chunk.count, 0U);
+  packed.clear();
+
+  bool changed = chunk.accepted.size() != chunk.count;
+  for (std::size_t i = 0; i < chunk.count; ++i) {
+    const auto& instance = instances[chunk.first + i];
+    const auto position = position_accessor(instance);
+    const bool is_accepted = accepts(position.x(), position.z());
+    flags[i] = is_accepted ? std::uint8_t{1} : std::uint8_t{0};
+    if (is_accepted) {
+      packed.push_back(instance);
+    }
+    if (!changed && flags[i] != chunk.accepted[i]) {
+      changed = true;
+    }
+  }
+
+  if (!changed) {
+    return false;
+  }
+
+  chunk.accepted.assign(flags.begin(), flags.end());
+  chunk.visible_count = packed.size();
+  chunk.all_accepted = chunk.visible_count == chunk.count;
+  return true;
+}
 
 template <typename Instance, typename Params, typename PositionAccessor>
 auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
@@ -110,80 +229,78 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
   }
 
   const std::uint64_t version = snapshot != nullptr ? snapshot->version : 0;
-  const bool rebuild = state.instances_dirty || state.visibility_dirty ||
-                       version != state.cached_visibility_version ||
-                       (state.instance_count > 0 && state.spatial_chunks.empty());
-  if (!rebuild) {
+  const bool structure_dirty = state.instances_dirty || state.spatial_chunks.empty();
+  const bool visibility_changed =
+      state.visibility_dirty || version != state.cached_visibility_version;
+  if (!structure_dirty && !visibility_changed) {
     return static_cast<std::uint32_t>(state.instance_count);
   }
 
   ++state.last_sync_stats.visibility_rebuilds;
-  state.visible_instances.clear();
-  state.visible_instances.reserve(state.instances.size());
-  state.spatial_chunks.clear();
-
-  constexpr float k_chunk_world_size = 24.0F;
-  constexpr float k_bounds_padding = 8.0F;
-  struct Bounds {
-    QVector3D min{std::numeric_limits<float>::max(),
-                  std::numeric_limits<float>::max(),
-                  std::numeric_limits<float>::max()};
-    QVector3D max{std::numeric_limits<float>::lowest(),
-                  std::numeric_limits<float>::lowest(),
-                  std::numeric_limits<float>::lowest()};
-  };
-  std::vector<Bounds> bounds;
-  std::unordered_map<std::uint64_t, std::size_t> chunk_indices;
-  chunk_indices.reserve(state.instances.size() / 16U + 1U);
-
-  for (const auto& instance : state.instances) {
-    const auto position = position_accessor(instance);
-    if (snapshot != nullptr) {
-      const auto state_at_instance =
-          Game::Map::classify_world_visibility(*snapshot, position.x(), position.z());
-      const bool accepted =
-          memory_mode == ScatterMemoryMode::Remembered
-              ? state_at_instance != Game::Map::RenderVisibilityState::Hidden
-              : state_at_instance == Game::Map::RenderVisibilityState::Visible;
-      if (!accepted) {
-        continue;
-      }
-    }
-    state.visible_instances.push_back(instance);
-    const auto chunk_x =
-        static_cast<std::int32_t>(std::floor(position.x() / k_chunk_world_size));
-    const auto chunk_z =
-        static_cast<std::int32_t>(std::floor(position.z() / k_chunk_world_size));
-    const std::uint64_t key =
-        (static_cast<std::uint64_t>(static_cast<std::uint32_t>(chunk_x)) << 32U) |
-        static_cast<std::uint32_t>(chunk_z);
-    auto [it, inserted] = chunk_indices.emplace(key, state.spatial_chunks.size());
-    if (inserted) {
-      state.spatial_chunks.emplace_back();
-      bounds.emplace_back();
-    }
-    const std::size_t index = it->second;
-    state.spatial_chunks[index].instances.push_back(instance);
-    auto& chunk_bounds = bounds[index];
-    chunk_bounds.min.setX(std::min(chunk_bounds.min.x(), position.x()));
-    chunk_bounds.min.setY(std::min(chunk_bounds.min.y(), position.y()));
-    chunk_bounds.min.setZ(std::min(chunk_bounds.min.z(), position.z()));
-    chunk_bounds.max.setX(std::max(chunk_bounds.max.x(), position.x()));
-    chunk_bounds.max.setY(std::max(chunk_bounds.max.y(), position.y()));
-    chunk_bounds.max.setZ(std::max(chunk_bounds.max.z(), position.z()));
+  if (structure_dirty) {
+    rebuild_spatial_partition(state.instances, state.spatial_chunks, position_accessor);
   }
 
-  for (std::size_t index = 0; index < state.spatial_chunks.size(); ++index) {
-    auto& chunk = state.spatial_chunks[index];
-    chunk.center = (bounds[index].min + bounds[index].max) * 0.5F;
-    chunk.radius = (bounds[index].max - chunk.center).length() + k_bounds_padding;
-    chunk.buffer =
-        std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
-    chunk.buffer->set_data(chunk.instances, Render::GL::Buffer::Usage::Static);
+  const bool remembered = memory_mode == ScatterMemoryMode::Remembered;
+  const auto accepts = [snapshot, remembered](float world_x, float world_z) -> bool {
+    if (snapshot == nullptr) {
+      return true;
+    }
+    const auto visibility =
+        Game::Map::classify_world_visibility(*snapshot, world_x, world_z);
+    return remembered ? visibility != Game::Map::RenderVisibilityState::Hidden
+                      : visibility == Game::Map::RenderVisibilityState::Visible;
+  };
+
+  std::vector<std::uint8_t> flags;
+  std::vector<Instance> packed;
+  std::size_t total_visible = 0;
+  bool any_chunk_changed = false;
+
+  for (auto& chunk : state.spatial_chunks) {
+
+    if (remembered && chunk.all_accepted && chunk.buffer != nullptr) {
+      total_visible += chunk.visible_count;
+      continue;
+    }
+
+    ++state.last_sync_stats.chunks_rescanned;
+    const bool changed = refresh_chunk_acceptance(
+        state.instances, chunk, position_accessor, accepts, flags, packed);
+    total_visible += chunk.visible_count;
+    if (!changed && chunk.buffer != nullptr) {
+      continue;
+    }
+    any_chunk_changed = true;
+
+    if (chunk.visible_count == 0) {
+      if (chunk.buffer != nullptr) {
+        chunk.buffer.reset();
+        ++state.last_sync_stats.buffer_resets;
+      }
+      continue;
+    }
+    if (!chunk.buffer) {
+      chunk.buffer =
+          std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
+    }
+    chunk.buffer->set_data(packed, Render::GL::Buffer::Usage::Static);
     ++state.last_sync_stats.buffer_uploads;
   }
 
-  state.instance_count = state.visible_instances.size();
+  if (state.track_visible_instances && (any_chunk_changed || structure_dirty)) {
+    state.visible_instances.clear();
+    state.visible_instances.reserve(total_visible);
+    for (const auto& chunk : state.spatial_chunks) {
+      for (std::size_t i = 0; i < chunk.count; ++i) {
+        if (chunk.accepted[i] != 0U) {
+          state.visible_instances.push_back(state.instances[chunk.first + i]);
+        }
+      }
+    }
+  }
+
+  state.instance_count = total_visible;
   state.instances_dirty = false;
   state.visibility_dirty = false;
   state.cached_visibility_version = version;

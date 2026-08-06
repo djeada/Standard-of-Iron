@@ -60,8 +60,9 @@ TEST(ModeIndicator, EveryNoteworthyActivityHasGlyphGeometry) {
     EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Outline)))
         << "activity " << Game::Systems::activity_kind_id(kind)
         << " has no silhouette to read against terrain";
-    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Glow)))
-        << "activity " << Game::Systems::activity_kind_id(kind) << " has no glow";
+    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Shadow)))
+        << "activity " << Game::Systems::activity_kind_id(kind)
+        << " has nothing dropped behind it to lift it off the terrain";
   }
 }
 
@@ -119,27 +120,41 @@ TEST(ModeIndicator, DrawsEveryOrderAtOneWorldSize) {
                   Render::Geom::k_indicator_world_size);
 }
 
-TEST(ModeIndicator, StampsEveryActivityOnTheSameMedallion) {
+auto face_coverage(const Render::Geom::GlyphBuilder& builder) -> float {
+  auto const& vertices = builder.vertices();
+  auto const& indices = builder.indices();
+  float area = 0.0F;
+  for (std::size_t i = 0; i + 2U < indices.size(); i += 3U) {
+    auto const& a = vertices[indices[i]];
+    auto const& b = vertices[indices[i + 1U]];
+    auto const& c = vertices[indices[i + 2U]];
+    if (static_cast<int>(a.tex_coord[0]) != static_cast<int>(GlyphLayer::Glyph)) {
+      continue;
+    }
+    area += 0.5F *
+            std::abs((b.position[0] - a.position[0]) * (c.position[1] - a.position[1]) -
+                     (c.position[0] - a.position[0]) * (b.position[1] - a.position[1]));
+  }
+  return area;
+}
+
+TEST(ModeIndicator, DrawsTheIconAloneWithNoPlateBehindIt) {
+  constexpr float k_footprint_area = 1.0F;
   for (IndicatorKind const kind : all_kinds()) {
     auto const builder = Render::Geom::build_indicator_glyph(kind);
-    auto const layers = layers_used(builder);
-    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Plaque)))
-        << "activity " << Game::Systems::activity_kind_id(kind) << " has no plaque";
-    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Rim)))
+    EXPECT_LT(face_coverage(builder), k_footprint_area * 0.62F)
         << "activity " << Game::Systems::activity_kind_id(kind)
-        << " has no coloured rim";
-    EXPECT_TRUE(layers.contains(static_cast<int>(GlyphLayer::Shadow)))
-        << "activity " << Game::Systems::activity_kind_id(kind)
-        << " has nothing to lift it off the terrain";
+        << " covers its whole footprint, which is what a badge behind the icon "
+           "would look like";
   }
 }
 
-TEST(ModeIndicator, FitsEveryIconToTheSameRadiusInsideTheMedallion) {
+TEST(ModeIndicator, ReadsAtOneSizeAcrossEveryActivity) {
   float smallest = 1.0e9F;
   float largest = 0.0F;
   for (IndicatorKind const kind : all_kinds()) {
     auto const builder = Render::Geom::build_indicator_glyph(kind);
-    float radius_sq = 0.0F;
+    float extent = 0.0F;
     for (auto const& vertex : builder.vertices()) {
       auto const layer = static_cast<int>(vertex.tex_coord[0]);
       if (layer != static_cast<int>(GlyphLayer::Glyph) &&
@@ -147,21 +162,18 @@ TEST(ModeIndicator, FitsEveryIconToTheSameRadiusInsideTheMedallion) {
           layer != static_cast<int>(GlyphLayer::GlyphSide)) {
         continue;
       }
-      radius_sq = std::max(radius_sq,
-                           vertex.position[0] * vertex.position[0] +
-                               vertex.position[1] * vertex.position[1]);
+      extent = std::max(
+          extent, std::max(std::abs(vertex.position[0]), std::abs(vertex.position[1])));
     }
 
-    float const radius = std::sqrt(radius_sq);
-
-    EXPECT_LT(radius, 0.318F) << "activity " << Game::Systems::activity_kind_id(kind)
-                              << " overflows the medallion face";
-    smallest = std::min(smallest, radius);
-    largest = std::max(largest, radius);
+    EXPECT_LT(extent, 0.5F) << "activity " << Game::Systems::activity_kind_id(kind)
+                            << " overflows the marker footprint";
+    smallest = std::min(smallest, extent);
+    largest = std::max(largest, extent);
   }
 
-  EXPECT_GT(smallest, 0.20F);
-  EXPECT_LT(largest - smallest, 0.03F)
+  EXPECT_GT(smallest, 0.34F) << "an icon reads far smaller than the space it owns";
+  EXPECT_LT(largest - smallest, 0.09F)
       << "one activity reads at a noticeably different size than the others";
 }
 

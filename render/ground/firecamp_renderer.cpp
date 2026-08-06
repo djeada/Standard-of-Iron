@@ -33,6 +33,8 @@ void FireCampRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                                  const std::vector<Game::Map::WorldProp>& world_props) {
   configure_height_scatter_common(height_map, biome_settings, {}, world_props, false);
 
+  m_state.track_visible_instances = true;
+
   auto& firecamp_params = m_state.params;
   firecamp_params.time = 0.0F;
   firecamp_params.flicker_speed = 4.4F;

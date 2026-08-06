@@ -32,6 +32,8 @@ void MagicShrineRenderer::configure(
     const Game::Map::BiomeSettings& biome_settings,
     const std::vector<Game::Map::WorldProp>& world_props) {
   configure_biome_common(biome_settings);
+
+  m_state.track_visible_instances = true;
   m_state.params.light_direction = m_light_direction;
   generate_instances(world_props, height_map);
 }

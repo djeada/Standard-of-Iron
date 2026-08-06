@@ -5,6 +5,7 @@ in vec3 v_normal;
 in float v_layer;
 in float v_radial;
 in float v_phase;
+in float v_height;
 
 uniform vec3 u_mode_color;
 uniform float u_alpha;
@@ -14,5 +15,5 @@ out vec4 frag_color;
 
 void main() {
   frag_color = activity_indicator_shade(
-      v_layer, v_radial, v_normal, u_mode_color, u_alpha, u_time, v_phase);
+      v_layer, v_radial, v_normal, u_mode_color, u_alpha, u_time, v_phase, v_height);
 }
