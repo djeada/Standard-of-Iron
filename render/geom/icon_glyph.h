@@ -17,16 +17,13 @@ inline constexpr float k_glyph_two_pi = 2.0F * std::numbers::pi_v<float>;
 
 enum class GlyphLayer : std::uint8_t {
   Shadow = 0,
-  Plaque = 1,
-  Rim = 2,
-  Outline = 3,
-  Glyph = 4,
-  Accent = 5,
-  GlyphSide = 6,
-  Glow = 7,
+  Outline = 1,
+  Glyph = 2,
+  Accent = 3,
+  GlyphSide = 4,
 };
 
-inline constexpr std::uint8_t k_glyph_layer_count = 8;
+inline constexpr std::uint8_t k_glyph_layer_count = 5;
 
 enum class GlyphNormal : std::uint8_t {
   Front,
@@ -44,15 +41,19 @@ public:
 
   [[nodiscard]] auto vertex_mark() const -> std::size_t { return m_vertices.size(); }
   void fit_since(std::size_t mark, float target_radius);
+  void center_since(std::size_t mark);
 
   void begin_glyph();
   struct GlyphExtrusion {
-    float glow_depth = 0.0F;
-    float glow_width = 0.0F;
     float outline_depth = 0.0F;
     float outline_width = 0.0F;
     float back_depth = 0.0F;
     float face_depth = 0.0F;
+
+    float shadow_depth = 0.0F;
+    float shadow_grow = 0.0F;
+    float halo_grow = 0.0F;
+    QVector2D shadow_offset{};
   };
 
   void end_glyph(const GlyphExtrusion& extrusion);
@@ -71,20 +72,6 @@ public:
             float start_angle = 0.0F,
             float sweep = k_glyph_two_pi);
   void arrow_head(QVector2D tip, QVector2D direction, float length, float half_width);
-
-  void gradient_ring(GlyphLayer layer,
-                     float inner_radius,
-                     float outer_radius,
-                     float depth,
-                     float inner_falloff,
-                     float outer_falloff,
-                     int segments = 40);
-
-  void revolved_band(float inner_radius,
-                     float inner_depth,
-                     float outer_radius,
-                     float outer_depth,
-                     int segments);
 
   [[nodiscard]] auto vertices() const -> const std::vector<Render::GL::Vertex>& {
     return m_vertices;
@@ -119,6 +106,8 @@ private:
   };
 
   [[nodiscard]] auto collect_boundary_edges() const -> std::vector<BoundaryEdge>;
+  void emit_silhouette(
+      GlyphLayer layer, float depth, float grow, QVector2D offset, float shade);
   void emit_glyph_walls(const std::vector<BoundaryEdge>& edges,
                         float back_depth,
                         float face_depth);

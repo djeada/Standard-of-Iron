@@ -119,6 +119,10 @@ struct EntitySnapshot {
   float pos_y = 0.0F;
   float pos_z = 0.0F;
 
+  bool has_march_target = false;
+  float march_target_x = 0.0F;
+  float march_target_z = 0.0F;
+
   MovementSnapshot movement;
   ProductionSnapshot production;
   BuilderProductionSnapshot builder_production;

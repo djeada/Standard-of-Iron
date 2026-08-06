@@ -66,7 +66,24 @@ void PineRenderer::configure(
   pine_params.wind_strength = wind_profile.sway_strength;
   pine_params.wind_speed = wind_profile.sway_speed;
 
-  generate_pine_instances();
+  rebuild_pine_instances();
+}
+
+void PineRenderer::refresh_world_props(
+    const std::vector<Game::Map::WorldProp>& runtime_world_props,
+    bool use_world_props_exclusively) {
+  adopt_runtime_world_props(runtime_world_props, use_world_props_exclusively);
+  rebuild_pine_instances();
+}
+
+void PineRenderer::rebuild_pine_instances() {
+  m_state.instances.clear();
+  append_world_prop_pines();
+  if (!m_use_world_props_exclusively) {
+    append_procedural_instances(
+        [this](std::vector<TreeInstanceGpu>& out) { generate_procedural_pines(out); });
+  }
+  finish_instance_rebuild();
 }
 
 void PineRenderer::set_light_direction(const QVector3D& dir) {
@@ -83,11 +100,8 @@ void PineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       });
 }
 
-void PineRenderer::generate_pine_instances() {
+void PineRenderer::append_world_prop_pines() {
   auto& pine_instances = m_state.instances;
-  auto& pine_instance_count = m_state.instance_count;
-  auto& pine_instances_dirty = m_state.instances_dirty;
-  pine_instances.clear();
 
   {
     auto& terrain_service = Game::Map::TerrainService::instance();
@@ -101,9 +115,11 @@ void PineRenderer::generate_pine_instances() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0x4A7F2C9EU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.12F, 0.24F, 0.17F);
-      const QVector3D var_color(0.19F, 0.33F, 0.23F);
-      const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
+      const QVector3D base_color(0.09F, 0.20F, 0.13F);
+      const QVector3D var_color(0.28F, 0.42F, 0.23F);
+      QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
+
+      tint *= remap(rand_01(var_state), 0.80F, 1.22F);
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
       const float silhouette_seed = rand_01(var_state);
       const float needle_seed = rand_01(var_state);
@@ -121,24 +137,18 @@ void PineRenderer::generate_pine_instances() {
       pine_instances.push_back(inst);
     }
   }
+}
 
-  if (m_use_world_props_exclusively) {
-    pine_instance_count = pine_instances.size();
-    pine_instances_dirty = pine_instance_count > 0;
-    return;
-  }
+void PineRenderer::generate_procedural_pines(std::vector<TreeInstanceGpu>& out) const {
+  auto& pine_instances = out;
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    pine_instance_count = pine_instances.size();
-    pine_instances_dirty = pine_instance_count > 0;
     return;
   }
 
   const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
   const auto scatter_rules = Game::Map::make_scatter_rules(scatter_profile.ground_type);
   if (!scatter_rules.allow_pines) {
-    pine_instance_count = pine_instances.size();
-    pine_instances_dirty = pine_instance_count > 0;
     return;
   }
 
@@ -192,18 +202,20 @@ void PineRenderer::generate_pine_instances() {
                         tile_safe * scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color(0.09F + scene.shelter * 0.03F,
-                               0.19F + scene.shelter * 0.07F,
-                               0.16F + scene.shelter * 0.04F);
-    QVector3D const var_color(0.27F + scene.cluster_bias * 0.04F,
-                              0.44F + scene.shelter * 0.06F,
-                              0.23F + scene.cluster_bias * 0.03F);
+    QVector3D const base_color(0.07F + scene.shelter * 0.03F,
+                               0.16F + scene.shelter * 0.07F,
+                               0.13F + scene.shelter * 0.04F);
+    QVector3D const var_color(0.33F + scene.cluster_bias * 0.05F,
+                              0.49F + scene.shelter * 0.07F,
+                              0.25F + scene.cluster_bias * 0.04F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 
     float const brown_mix = remap(
         rand_01(state), 0.03F + scene.dryness * 0.05F, 0.10F + scene.rockiness * 0.06F);
     QVector3D const brown_tint(0.27F, 0.25F, 0.19F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
+
+    tint_color *= remap(rand_01(state), 0.78F, 1.24F);
 
     float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
 
@@ -295,9 +307,6 @@ void PineRenderer::generate_pine_instances() {
       }
     }
   }
-
-  pine_instance_count = pine_instances.size();
-  pine_instances_dirty = pine_instance_count > 0;
 }
 
 } // namespace Render::GL

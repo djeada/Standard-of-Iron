@@ -116,7 +116,8 @@ void TerrainScatterManager::configure(
   m_supply_cart->configure(height_map, biome_settings, runtime_world_props);
   m_weapon_rack->configure(height_map, biome_settings, runtime_world_props);
   m_ruins->configure(height_map, biome_settings, runtime_world_props);
-  m_dead_tree->configure(height_map, biome_settings, runtime_world_props);
+  m_dead_tree->configure(
+      height_map, biome_settings, m_scatter_seed_world_props, runtime_world_props);
   m_boulder->configure(height_map,
                        biome_settings,
                        m_scatter_seed_world_props,
@@ -139,21 +140,11 @@ void TerrainScatterManager::refresh_runtime_world_props(
   m_use_world_props_exclusively =
       should_use_runtime_harvest_props_exclusively(runtime_world_props, false);
 
-  m_pine->configure(*m_height_map,
-                    m_biome_settings,
-                    m_scatter_seed_world_props,
-                    runtime_world_props,
-                    m_use_world_props_exclusively);
-  m_olive->configure(*m_height_map,
-                     m_biome_settings,
-                     m_scatter_seed_world_props,
-                     runtime_world_props,
-                     m_use_world_props_exclusively);
-  m_boulder->configure(*m_height_map,
-                       m_biome_settings,
-                       m_scatter_seed_world_props,
-                       runtime_world_props,
-                       m_use_world_props_exclusively);
+  m_pine->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
+  m_olive->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
+  m_boulder->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
+  m_dead_tree->refresh_world_props(runtime_world_props);
+
   m_iron_ore->configure(*m_height_map, m_biome_settings, runtime_world_props);
 
   m_firecamp->configure(*m_height_map, m_biome_settings, runtime_world_props);
@@ -161,7 +152,6 @@ void TerrainScatterManager::refresh_runtime_world_props(
   m_supply_cart->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_weapon_rack->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_ruins->configure(*m_height_map, m_biome_settings, runtime_world_props);
-  m_dead_tree->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_magic_shrine->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_abandoned_home->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_statue->configure(*m_height_map, m_biome_settings, runtime_world_props);

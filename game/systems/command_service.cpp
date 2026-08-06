@@ -401,14 +401,11 @@ void CommandService::attack_target(Engine::Core::World& world,
           locked_unit != nullptr && locked_unit->health > 0 &&
           !locked_target->has_component<Engine::Core::PendingRemovalComponent>();
 
-      auto* new_target = world.get_entity(target_id);
-      bool const leaves_structure_for_troop =
+      bool const leaves_structure =
           locked_target != nullptr &&
-          locked_target->has_component<Engine::Core::BuildingComponent>() &&
-          new_target != nullptr &&
-          !new_target->has_component<Engine::Core::BuildingComponent>();
+          locked_target->has_component<Engine::Core::BuildingComponent>();
 
-      if (locked_opponent_alive && !leaves_structure_for_troop) {
+      if (locked_opponent_alive && !leaves_structure) {
         continue;
       }
       CombatRules::clear_rts_melee_lock(e);

@@ -410,4 +410,184 @@ TEST(ScatterRuntimeTest, RuntimePlantedShrineReachesTheScatterPass) {
   terrain.clear();
 }
 
+TEST(ScatterRuntimeTest, WorldPropRefreshReusesTheProceduralBiomeScatter) {
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(make_tree_map_definition(Game::Map::GroundType::ForestMud, 8081U));
+  auto const* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  const auto& seed_props = terrain.authored_world_props();
+  auto runtime_props = terrain.world_props();
+
+  Render::GL::PineRenderer pines;
+  Render::GL::BoulderRenderer boulders;
+  Render::GL::DeadTreeRenderer dead_trees;
+  pines.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
+  boulders.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
+  dead_trees.configure(
+      *height_map, terrain.biome_settings(), seed_props, runtime_props);
+
+  ASSERT_GT(pines.instance_count(), 0U)
+      << "forest mud must scatter pines procedurally for this test to mean anything";
+  ASSERT_EQ(pines.procedural_generations_for_test(), 1U);
+  ASSERT_EQ(boulders.procedural_generations_for_test(), 1U);
+  ASSERT_EQ(dead_trees.procedural_generations_for_test(), 1U);
+
+  const std::size_t pine_count = pines.instance_count();
+  const std::size_t boulder_count = boulders.instance_count();
+  const std::size_t dead_tree_count = dead_trees.instance_count();
+
+  Game::Map::WorldProp shrine;
+  shrine.type = Game::Map::WorldProp::Type::MagicShrine;
+  shrine.x = 12.0F;
+  shrine.z = 9.0F;
+  runtime_props.push_back(shrine);
+
+  pines.refresh_world_props(runtime_props, false);
+  boulders.refresh_world_props(runtime_props, false);
+  dead_trees.refresh_world_props(runtime_props);
+
+  EXPECT_EQ(pines.procedural_generations_for_test(), 1U)
+      << "planting a prop must not re-run the map-wide pine scatter";
+  EXPECT_EQ(boulders.procedural_generations_for_test(), 1U);
+  EXPECT_EQ(dead_trees.procedural_generations_for_test(), 1U);
+
+  EXPECT_EQ(pines.instance_count(), pine_count);
+  EXPECT_EQ(boulders.instance_count(), boulder_count);
+  EXPECT_EQ(dead_trees.instance_count(), dead_tree_count)
+      << "an unrelated prop must not shift the biome scatter around it";
+
+  pines.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
+  EXPECT_EQ(pines.procedural_generations_for_test(), 1U)
+      << "a full reconfigure must drop the cache and generate exactly once";
+  EXPECT_EQ(pines.instance_count(), pine_count);
+
+  terrain.clear();
+}
+
+struct FakeScatterInstance {
+  QVector4D pos_scale;
+};
+
+using FakeChunk = Render::Ground::Scatter::SpatialChunk<FakeScatterInstance>;
+
+auto fake_position(const FakeScatterInstance& instance) -> const QVector4D& {
+  return instance.pos_scale;
+}
+
+auto make_grid_instances(int side, float spacing) -> std::vector<FakeScatterInstance> {
+  std::vector<FakeScatterInstance> instances;
+  instances.reserve(static_cast<std::size_t>(side) * static_cast<std::size_t>(side));
+  for (int z = 0; z < side; ++z) {
+    for (int x = 0; x < side; ++x) {
+      instances.push_back({QVector4D(static_cast<float>(x) * spacing,
+                                     0.0F,
+                                     static_cast<float>(z) * spacing,
+                                     1.0F)});
+    }
+  }
+  return instances;
+}
+
+TEST(ScatterRuntimeTest, SpatialPartitionGivesEveryChunkAContiguousInstanceSlice) {
+  auto instances = make_grid_instances(24, 4.0F);
+  const std::size_t total = instances.size();
+  std::vector<FakeChunk> chunks;
+
+  Render::Ground::Scatter::rebuild_spatial_partition(instances, chunks, fake_position);
+
+  ASSERT_GT(chunks.size(), 1U) << "a 92-unit grid must span several 24-unit chunks";
+  EXPECT_EQ(instances.size(), total) << "partitioning reorders, it must not drop";
+
+  std::size_t expected_first = 0;
+  std::size_t counted = 0;
+  for (const auto& chunk : chunks) {
+    EXPECT_EQ(chunk.first, expected_first)
+        << "chunk slices must tile the instance vector without gaps";
+    EXPECT_GT(chunk.count, 0U);
+    EXPECT_EQ(chunk.accepted.size(), chunk.count);
+    EXPECT_EQ(chunk.visible_count, 0U);
+    EXPECT_FALSE(chunk.all_accepted);
+
+    for (std::size_t i = 0; i < chunk.count; ++i) {
+      const auto& position = instances[chunk.first + i].pos_scale;
+      EXPECT_LE((position.toVector3D() - chunk.center).length(), chunk.radius)
+          << "the chunk bounding sphere must contain every instance it owns";
+    }
+    expected_first += chunk.count;
+    counted += chunk.count;
+  }
+  EXPECT_EQ(counted, total);
+}
+
+TEST(ScatterRuntimeTest, UnchangedVisibilityLeavesChunkAcceptanceAlone) {
+  auto instances = make_grid_instances(12, 4.0F);
+  std::vector<FakeChunk> chunks;
+  Render::Ground::Scatter::rebuild_spatial_partition(instances, chunks, fake_position);
+  ASSERT_FALSE(chunks.empty());
+
+  std::vector<std::uint8_t> flags;
+  std::vector<FakeScatterInstance> packed;
+  auto reveal_west = [](float world_x, float) {
+    return world_x < 24.0F;
+  };
+
+  bool any_changed_first_pass = false;
+  for (auto& chunk : chunks) {
+    any_changed_first_pass |= Render::Ground::Scatter::refresh_chunk_acceptance(
+        instances, chunk, fake_position, reveal_west, flags, packed);
+  }
+  EXPECT_TRUE(any_changed_first_pass)
+      << "the first scan must always report a change so the buffers get filled";
+
+  for (auto& chunk : chunks) {
+    EXPECT_FALSE(Render::Ground::Scatter::refresh_chunk_acceptance(
+        instances, chunk, fake_position, reveal_west, flags, packed))
+        << "re-scanning against the same visibility must not request an upload";
+  }
+}
+
+TEST(ScatterRuntimeTest, RevealingGroundOnlyDirtiesTheChunksItTouches) {
+  auto instances = make_grid_instances(12, 6.0F);
+  std::vector<FakeChunk> chunks;
+  Render::Ground::Scatter::rebuild_spatial_partition(instances, chunks, fake_position);
+  ASSERT_GT(chunks.size(), 2U);
+
+  std::vector<std::uint8_t> flags;
+  std::vector<FakeScatterInstance> packed;
+  auto reveal_west = [](float world_x, float) {
+    return world_x < 24.0F;
+  };
+  auto reveal_more = [](float world_x, float) {
+    return world_x < 48.0F;
+  };
+
+  for (auto& chunk : chunks) {
+    Render::Ground::Scatter::refresh_chunk_acceptance(
+        instances, chunk, fake_position, reveal_west, flags, packed);
+  }
+
+  std::size_t changed_chunks = 0;
+  for (auto& chunk : chunks) {
+    if (Render::Ground::Scatter::refresh_chunk_acceptance(
+            instances, chunk, fake_position, reveal_more, flags, packed)) {
+      ++changed_chunks;
+    }
+  }
+
+  EXPECT_GT(changed_chunks, 0U) << "widening the reveal must expose more scatter";
+  EXPECT_LT(changed_chunks, chunks.size())
+      << "chunks outside the newly revealed band must not re-upload";
+
+  std::size_t visible_total = 0;
+  for (const auto& chunk : chunks) {
+    visible_total += chunk.visible_count;
+    if (chunk.center.x() < 24.0F) {
+      EXPECT_TRUE(chunk.all_accepted);
+    }
+  }
+  EXPECT_GT(visible_total, 0U);
+  EXPECT_LT(visible_total, instances.size());
+}
+
 } // namespace

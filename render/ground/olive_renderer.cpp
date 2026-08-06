@@ -66,7 +66,24 @@ void OliveRenderer::configure(
   olive_params.wind_strength = wind_profile.sway_strength;
   olive_params.wind_speed = wind_profile.sway_speed;
 
-  generate_olive_instances();
+  rebuild_olive_instances();
+}
+
+void OliveRenderer::refresh_world_props(
+    const std::vector<Game::Map::WorldProp>& runtime_world_props,
+    bool use_world_props_exclusively) {
+  adopt_runtime_world_props(runtime_world_props, use_world_props_exclusively);
+  rebuild_olive_instances();
+}
+
+void OliveRenderer::rebuild_olive_instances() {
+  m_state.instances.clear();
+  append_world_prop_olives();
+  if (!m_use_world_props_exclusively) {
+    append_procedural_instances(
+        [this](std::vector<TreeInstanceGpu>& out) { generate_procedural_olives(out); });
+  }
+  finish_instance_rebuild();
 }
 
 void OliveRenderer::set_light_direction(const QVector3D& dir) {
@@ -83,11 +100,8 @@ void OliveRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       });
 }
 
-void OliveRenderer::generate_olive_instances() {
+void OliveRenderer::append_world_prop_olives() {
   auto& olive_instances = m_state.instances;
-  auto& olive_instance_count = m_state.instance_count;
-  auto& olive_instances_dirty = m_state.instances_dirty;
-  olive_instances.clear();
 
   {
     auto& terrain_service = Game::Map::TerrainService::instance();
@@ -101,9 +115,11 @@ void OliveRenderer::generate_olive_instances() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0x7B3E5F1CU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.25F, 0.31F, 0.23F);
-      const QVector3D var_color(0.31F, 0.37F, 0.29F);
-      const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
+      const QVector3D base_color(0.17F, 0.25F, 0.17F);
+      const QVector3D var_color(0.40F, 0.45F, 0.34F);
+      QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
+
+      tint *= remap(rand_01(var_state), 0.82F, 1.20F);
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
       const float silhouette_seed = rand_01(var_state);
       const float leaf_seed = rand_01(var_state);
@@ -121,24 +137,19 @@ void OliveRenderer::generate_olive_instances() {
       olive_instances.push_back(inst);
     }
   }
+}
 
-  if (m_use_world_props_exclusively) {
-    olive_instance_count = olive_instances.size();
-    olive_instances_dirty = olive_instance_count > 0;
-    return;
-  }
+void OliveRenderer::generate_procedural_olives(
+    std::vector<TreeInstanceGpu>& out) const {
+  auto& olive_instances = out;
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    olive_instance_count = olive_instances.size();
-    olive_instances_dirty = olive_instance_count > 0;
     return;
   }
 
   const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
   const auto scatter_rules = Game::Map::make_scatter_rules(scatter_profile.ground_type);
   if (!scatter_rules.allow_olives) {
-    olive_instance_count = olive_instances.size();
-    olive_instances_dirty = olive_instance_count > 0;
     return;
   }
 
@@ -189,18 +200,20 @@ void OliveRenderer::generate_olive_instances() {
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
 
-    QVector3D const base_color(0.20F + scene.dryness * 0.05F,
-                               0.26F + scene.rockiness * 0.03F,
-                               0.19F + scene.dryness * 0.03F);
-    QVector3D const var_color(0.38F + scene.cluster_bias * 0.04F,
-                              0.44F + scene.rockiness * 0.04F,
-                              0.34F + scene.cluster_bias * 0.03F);
+    QVector3D const base_color(0.14F + scene.dryness * 0.05F,
+                               0.21F + scene.rockiness * 0.03F,
+                               0.15F + scene.dryness * 0.03F);
+    QVector3D const var_color(0.44F + scene.cluster_bias * 0.05F,
+                              0.50F + scene.rockiness * 0.05F,
+                              0.37F + scene.cluster_bias * 0.04F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 
     float const gray_mix = remap(
         rand_01(state), 0.08F + scene.rockiness * 0.04F, 0.18F + scene.dryness * 0.08F);
-    QVector3D const gray_tint(0.38F, 0.41F, 0.38F);
+    QVector3D const gray_tint(0.44F, 0.47F, 0.43F);
     tint_color = tint_color * (1.0F - gray_mix) + gray_tint * gray_mix;
+
+    tint_color *= remap(rand_01(state), 0.80F, 1.22F);
 
     float const sway_phase = rand_01(state) * MathConstants::k_two_pi;
 
@@ -300,9 +313,6 @@ void OliveRenderer::generate_olive_instances() {
       }
     }
   }
-
-  olive_instance_count = olive_instances.size();
-  olive_instances_dirty = olive_instance_count > 0;
 }
 
 } // namespace Render::GL
