@@ -15,7 +15,10 @@ namespace Render::GL::Wildlife {
 
 namespace {
 
-constexpr float k_stride_rate = 1.70F;
+// The catalogue speed for wildlife/wolf. Ratios are taken against it so the gait
+// thresholds below mean the same thing they read as.
+constexpr float k_top_speed = 3.1F;
+constexpr float k_run_threshold = 0.30F;
 
 auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   float const morph = hash_unit_float(state.seed, 31U);
@@ -47,31 +50,49 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   return variant;
 }
 
-auto resolve_state(const DrawState& state) -> Render::Creature::AnimationStateId {
+auto resolve_gait(const DrawState& state) -> Render::Wildlife::WolfGait {
   bool const stalking = state.behavior == Game::Wildlife::Behavior::Stalk;
-  if (state.speed_ratio > 0.60F) {
-    return Render::Creature::AnimationStateId::Run;
+  if (state.speed_ratio > k_run_threshold) {
+    return Render::Wildlife::WolfGait::Run;
   }
   if (stalking && state.speed_ratio <= 0.02F) {
-    return Render::Creature::AnimationStateId::AttackMelee;
+    return Render::Wildlife::WolfGait::Stand;
   }
   if (stalking) {
-    return Render::Creature::AnimationStateId::Hold;
+    return Render::Wildlife::WolfGait::Stalk;
   }
   if (state.speed_ratio > 0.02F) {
-    return Render::Creature::AnimationStateId::Walk;
+    return Render::Wildlife::WolfGait::Walk;
   }
-  return Render::Creature::AnimationStateId::Idle;
+  return Render::Wildlife::WolfGait::Stand;
+}
+
+auto state_for_gait(const DrawState& state, Render::Wildlife::WolfGait gait)
+    -> Render::Creature::AnimationStateId {
+  switch (gait) {
+  case Render::Wildlife::WolfGait::Run:
+    return Render::Creature::AnimationStateId::Run;
+  case Render::Wildlife::WolfGait::Walk:
+    return Render::Creature::AnimationStateId::Walk;
+  case Render::Wildlife::WolfGait::Stalk:
+    return Render::Creature::AnimationStateId::Hold;
+  case Render::Wildlife::WolfGait::Stand:
+    break;
+  }
+  return state.behavior == Game::Wildlife::Behavior::Stalk
+             ? Render::Creature::AnimationStateId::AttackMelee
+             : Render::Creature::AnimationStateId::Idle;
 }
 
 void draw_wolf(const DrawContext& ctx, ISubmitter& out) {
-  const DrawState state = resolve_draw_state(ctx, k_stride_rate);
+  const DrawState state = resolve_draw_state(ctx, k_top_speed);
+  const Render::Wildlife::WolfGait gait = resolve_gait(state);
 
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Wolf;
   inputs.variant = resolve_variant(state);
-  inputs.phase = state.phase;
-  inputs.state = resolve_state(state);
+  inputs.phase = gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
+  inputs.state = state_for_gait(state, gait);
 
   Render::Wildlife::submit_wildlife(ctx, inputs, out);
 }

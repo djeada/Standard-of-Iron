@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../creature/species_manifest.h"
+#include "wildlife_gait.h"
 #include "wolf_manifest.h"
 
 namespace Render::Wildlife {
@@ -18,16 +19,11 @@ using Render::Creature::Quadruped::SnoutNode;
 using Render::Creature::Quadruped::TubeNode;
 
 constexpr float k_two_pi = 6.28318530718F;
-constexpr float k_half_pi = 1.57079633F;
 
 // Authored against a standing shoulder height of 0.646. A wolf is built the opposite
 // way to the sheep it hunts: legs are half its height, the chest is deep and narrow
 // rather than round, the belly tucks up hard behind the last rib, and the back is
 // long - 1.23 shoulder heights from brisket to croup.
-constexpr float k_fore_swing = 0.40F;
-constexpr float k_hind_swing = 0.36F;
-constexpr float k_fore_flex = 0.60F;
-constexpr float k_hind_flex = 0.72F;
 constexpr float k_fore_half_width = 0.088F;
 constexpr float k_hind_half_width = 0.094F;
 
@@ -40,21 +36,23 @@ struct BodyRing {
 };
 
 // Withers at 0.646, deepest at the heart girth, tucked up hard at the loin, then a
-// slight rise over the croup. The topline dip behind the shoulder and the belly tuck
-// are what read as "wolf" at any distance.
+// slight rise over the croup. Plan-view sections of a CC0 reference wolf show the
+// waist is as much a narrowing as a tuck: half the body's width goes at the loin,
+// 0.14 against 0.22 over the ribs and hips. That pinch, the topline dip behind the
+// shoulder, and the belly tuck are what read as "wolf" at any distance.
 constexpr std::array<BodyRing, 14> k_body_rings{{
     {0.396F, 0.466F, 0.028F, 0.044F, 0.046F},
     {0.372F, 0.470F, 0.062F, 0.088F, 0.090F},
     {0.320F, 0.486F, 0.104F, 0.122F, 0.140F},
-    {0.258F, 0.498F, 0.134F, 0.152F, 0.166F},
-    {0.186F, 0.504F, 0.150F, 0.148F, 0.180F},
-    {0.108F, 0.506F, 0.152F, 0.140F, 0.172F},
-    {0.026F, 0.508F, 0.144F, 0.130F, 0.148F},
-    {-0.056F, 0.510F, 0.126F, 0.126F, 0.114F},
-    {-0.140F, 0.512F, 0.118F, 0.126F, 0.098F},
-    {-0.222F, 0.516F, 0.132F, 0.128F, 0.108F},
-    {-0.300F, 0.518F, 0.140F, 0.126F, 0.122F},
-    {-0.368F, 0.516F, 0.112F, 0.110F, 0.106F},
+    {0.258F, 0.498F, 0.136F, 0.152F, 0.166F},
+    {0.186F, 0.504F, 0.146F, 0.148F, 0.180F},
+    {0.108F, 0.506F, 0.140F, 0.140F, 0.172F},
+    {0.026F, 0.508F, 0.118F, 0.130F, 0.148F},
+    {-0.056F, 0.510F, 0.096F, 0.126F, 0.114F},
+    {-0.140F, 0.512F, 0.094F, 0.126F, 0.098F},
+    {-0.222F, 0.516F, 0.122F, 0.128F, 0.108F},
+    {-0.300F, 0.518F, 0.136F, 0.126F, 0.122F},
+    {-0.368F, 0.516F, 0.110F, 0.110F, 0.106F},
     {-0.420F, 0.512F, 0.052F, 0.070F, 0.062F},
     {-0.444F, 0.510F, 0.024F, 0.034F, 0.030F},
 }};
@@ -84,12 +82,71 @@ struct LegPlan {
   bool hind;
 };
 
+// Diagonal pairs move together: a wolf trots.
 constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
     {-k_fore_half_width, 0.0F, false},
     {k_fore_half_width, 0.5F, false},
     {-k_hind_half_width, 0.5F, true},
     {k_hind_half_width, 0.0F, true},
 }};
+
+// Standing joints. Both limbs carry a real angle at rest - the fore at the elbow, the
+// hind through the stifle and hock - because a column that stands dead straight has no
+// travel left to fold into, and its paw can only swing through the ground on an arc.
+struct LegRestPlan {
+  float knee_y;
+  float knee_z;
+  float ankle_y;
+  float ankle_z;
+  float toe_y;
+  float toe_z;
+  float hip_y;
+  float hip_z;
+};
+
+constexpr LegRestPlan k_fore_rest{
+    0.244F, 0.272F, 0.108F, 0.216F, 0.024F, 0.236F, 0.402F, 0.222F};
+constexpr LegRestPlan k_hind_rest{
+    0.286F, -0.140F, 0.134F, -0.256F, 0.024F, -0.220F, 0.438F, -0.222F};
+
+// The fore limb folds least, so it sets the stride both ends have to share: 0.30 at
+// most before the paw outruns its reach and the leg locks straight. Each plan sits
+// just inside that, which puts the cadence at 3.1 units/s near 4 Hz for the run and
+// keeps the walk under 2.5 Hz across its whole speed band.
+constexpr GaitPlan k_gait_stalk{0.130F, 0.70F, 0.014F, 0.030F};
+constexpr GaitPlan k_gait_walk{0.235F, 0.62F, 0.028F, 0.060F};
+constexpr GaitPlan k_gait_run{0.290F, 0.38F, 0.074F, 0.100F};
+
+auto gait_plan(WolfGait gait) noexcept -> GaitPlan {
+  switch (gait) {
+  case WolfGait::Stalk:
+    return k_gait_stalk;
+  case WolfGait::Walk:
+    return k_gait_walk;
+  case WolfGait::Run:
+    return k_gait_run;
+  case WolfGait::Stand:
+    break;
+  }
+  return GaitPlan{};
+}
+
+auto leg_rests() noexcept -> const std::array<LegRest, k_leg_count>& {
+  static const std::array<LegRest, k_leg_count> rests = [] {
+    std::array<LegRest, k_leg_count> out{};
+    for (std::size_t i = 0; i < k_leg_count; ++i) {
+      const LegPlan& plan = k_leg_plans[i];
+      const LegRestPlan& r = plan.hind ? k_hind_rest : k_fore_rest;
+      out[i] = make_leg_rest({plan.x, r.hip_y, r.hip_z},
+                             {plan.x, r.knee_y, r.knee_z},
+                             {plan.x, r.ankle_y, r.ankle_z},
+                             {plan.x, r.toe_y, r.toe_z},
+                             plan.phase_offset);
+    }
+    return out;
+  }();
+  return rests;
+}
 
 // Mirrors the cross-section make_oval_ring builds: the fraction of a ring's
 // half_width the barrel actually has at a given height, with the height measured in
@@ -139,14 +196,6 @@ auto saddle_rings() -> std::vector<Render::Creature::Quadruped::BarrelRing> {
   return rings;
 }
 
-auto swung(const QVector3D& point, const QVector3D& pivot, float angle) -> QVector3D {
-  float const dy = point.y() - pivot.y();
-  float const dz = point.z() - pivot.z();
-  float const c = std::cos(angle);
-  float const s = std::sin(angle);
-  return {point.x(), pivot.y() + (dy * c) + (dz * s), pivot.z() + (dz * c) - (dy * s)};
-}
-
 auto lerp(const QVector3D& a, const QVector3D& b, float t) -> QVector3D {
   return a + ((b - a) * std::clamp(t, 0.0F, 1.0F));
 }
@@ -160,39 +209,11 @@ auto bezier(const QVector3D& p0,
 }
 
 void fill_legs(RigPose& pose, const WolfDrive& drive) {
+  const GaitPlan plan = gait_plan(drive.gait);
+  float const weight = drive.gait == WolfGait::Stand ? 0.0F : 1.0F;
   for (std::size_t i = 0; i < k_leg_count; ++i) {
-    const LegPlan& plan = k_leg_plans[i];
-    float const cycle = (drive.stride_phase + plan.phase_offset) * k_two_pi;
-    float const swing = plan.hind ? k_hind_swing : k_fore_swing;
-    float const flex_scale = plan.hind ? k_hind_flex : k_fore_flex;
-    float const angle = std::sin(cycle) * swing * drive.speed_ratio;
-    float const flex =
-        std::max(0.0F, std::sin(cycle + k_half_pi)) * flex_scale * drive.speed_ratio;
-
-    QVector3D shoulder;
-    QVector3D knee;
-    QVector3D foot;
-    QVector3D toe;
-    if (plan.hind) {
-      shoulder = {plan.x, 0.436F, -0.226F};
-      knee = {plan.x, 0.280F, -0.148F};
-      foot = {plan.x, 0.140F, -0.268F};
-      toe = {plan.x, 0.028F, -0.230F};
-    } else {
-      shoulder = {plan.x, 0.400F, 0.222F};
-      knee = {plan.x, 0.260F, 0.214F};
-      foot = {plan.x, 0.120F, 0.226F};
-      toe = {plan.x, 0.028F, 0.236F};
-    }
-
-    knee = swung(knee, shoulder, angle);
-    foot = swung(swung(foot, shoulder, angle), knee, -flex);
-    toe = swung(swung(toe, shoulder, angle), knee, -flex);
-
-    pose.legs[i].shoulder = shoulder;
-    pose.legs[i].knee = knee;
-    pose.legs[i].foot = foot;
-    pose.legs[i].toe = toe;
+    const LegRest& rest = leg_rests()[i];
+    solve_leg(rest, plan, drive.stride_phase + rest.phase_offset, weight, pose.legs[i]);
   }
 }
 
@@ -589,6 +610,10 @@ auto static_minimal_parts() noexcept -> const Render::Creature::CompiledWholeMes
 }
 
 } // namespace
+
+auto wolf_gait_advance(WolfGait gait) noexcept -> float {
+  return gait_advance(gait_plan(gait));
+}
 
 auto wolf_bind_pose() noexcept -> const RigPose& {
   static const RigPose pose = make_pose(WolfDrive{});

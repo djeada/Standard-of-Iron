@@ -23,13 +23,24 @@ inline constexpr std::uint8_t k_sheep_role_nose = 7U;
 inline constexpr std::uint8_t k_sheep_role_eye = 8U;
 inline constexpr std::size_t k_sheep_role_count = 8U;
 
+enum class SheepGait : std::uint8_t {
+  Stand = 0,
+  Walk,
+  Run
+};
+
 struct SheepDrive {
   float graze{0.0F};
   float stride_phase{0.0F};
   float speed_ratio{0.0F};
   float alert{0.0F};
   float collapse{0.0F};
+  SheepGait gait{SheepGait::Stand};
 };
+
+// Ground the body covers per gait cycle. The renderer divides distance travelled by
+// this to get the animation phase, which is what keeps planted hooves from sliding.
+[[nodiscard]] auto sheep_gait_advance(SheepGait gait) noexcept -> float;
 
 [[nodiscard]] auto sheep_bind_pose() noexcept -> const RigPose&;
 [[nodiscard]] auto sheep_pose(const SheepDrive& drive) noexcept -> RigPose;

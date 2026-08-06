@@ -9,6 +9,7 @@
 
 #include "../creature/species_manifest.h"
 #include "sheep_manifest.h"
+#include "wildlife_gait.h"
 
 namespace Render::Wildlife {
 
@@ -20,7 +21,6 @@ using Render::Creature::Quadruped::SnoutNode;
 using Render::Creature::Quadruped::TubeNode;
 
 constexpr float k_two_pi = 6.28318530718F;
-constexpr float k_half_pi = 1.57079633F;
 
 // Everything below is authored against a standing shoulder height of 0.612 and holds
 // the proportions a sheep is recognised by: legs 47% of that height, barrel 0.53 deep
@@ -28,19 +28,17 @@ constexpr float k_half_pi = 1.57079633F;
 constexpr float k_hip_y = 0.300F;
 constexpr float k_knee_y = 0.164F;
 constexpr float k_fetlock_y = 0.052F;
-constexpr float k_fore_hip_z = 0.208F;
-constexpr float k_hind_hip_z = -0.240F;
-constexpr float k_swing_angle = 0.30F;
-constexpr float k_knee_flex = 0.52F;
+constexpr float k_fore_hip_z = 0.180F;
+constexpr float k_hind_hip_z = -0.212F;
 
 // Neck root sits at the front of the chest, not on top of the withers: that is what
 // lets the muzzle reach the grass over a neck this short. A sheep carries its head
 // barely above its own topline with the face angled down, which is most of what
 // separates its profile from a goat's.
-constexpr QVector3D k_withers(0.0F, 0.480F, 0.330F);
-constexpr QVector3D k_poll_up(0.0F, 0.672F, 0.470F);
+constexpr QVector3D k_withers(0.0F, 0.452F, 0.250F);
+constexpr QVector3D k_poll_up(0.0F, 0.616F, 0.366F);
 constexpr QVector3D k_graze_dir(0.0F, -0.974F, 0.226F);
-constexpr float k_head_length = 0.196F;
+constexpr float k_head_length = 0.180F;
 
 struct BodyRing {
   float z;
@@ -50,31 +48,43 @@ struct BodyRing {
   float bottom;
 };
 
-// Flat topline, widest across the hips, a shallow tuck at the loin, then tapering up
-// into the brisket in front and rounding off over the rump behind. The ring-to-ring
-// jitter is the whole of the fleece texture: separate clumps laid over this surface
-// intersect it in hard lines that flat shading turns into plates, so the wool has to
-// be breathed into the barrel itself.
-constexpr std::array<BodyRing, 17> k_body_rings{{
-    {-0.386F, 0.472F, 0.022F, 0.030F, 0.030F},
-    {-0.368F, 0.470F, 0.062F, 0.070F, 0.066F},
-    {-0.342F, 0.464F, 0.108F, 0.108F, 0.102F},
-    {-0.306F, 0.458F, 0.145F, 0.138F, 0.130F},
-    {-0.262F, 0.454F, 0.168F, 0.156F, 0.150F},
-    {-0.228F, 0.453F, 0.170F, 0.162F, 0.154F},
-    {-0.196F, 0.454F, 0.165F, 0.157F, 0.157F},
-    {-0.152F, 0.452F, 0.163F, 0.161F, 0.157F},
-    {-0.106F, 0.451F, 0.157F, 0.157F, 0.159F},
-    {-0.054F, 0.451F, 0.159F, 0.161F, 0.160F},
-    {0.006F, 0.452F, 0.156F, 0.157F, 0.162F},
-    {0.062F, 0.454F, 0.161F, 0.160F, 0.161F},
-    {0.126F, 0.459F, 0.156F, 0.155F, 0.158F},
-    {0.190F, 0.466F, 0.148F, 0.151F, 0.145F},
-    {0.252F, 0.477F, 0.128F, 0.140F, 0.121F},
-    {0.310F, 0.492F, 0.098F, 0.127F, 0.092F},
-    {0.358F, 0.510F, 0.044F, 0.090F, 0.052F},
+// Traced off the sagittal section of a CC0 reference ewe and scaled to a shoulder
+// height of 0.612. A section beats sampling vertices per slab: the reference is only
+// 610 triangles, far too few for a min/max per slice to describe its outline, and the
+// legs sit off the centreline so the plane cuts the body alone.
+//
+// The three things that section says, and that the earlier barrel had wrong: the
+// brisket hangs well below the flank rather than the underline running flat; the
+// topline crests behind centre and dips again over the shoulder; and the barrel is
+// only about as wide at mid-body as it is deep, flaring out across the hips. The
+// ring-to-ring jitter on top of that is the whole of the fleece texture - separate
+// clumps laid over this surface intersect it in hard lines that flat shading turns
+// into plates, so the wool has to be breathed into the barrel itself.
+constexpr std::array<BodyRing, 19> k_body_rings{{
+    {-0.343F, 0.395F, 0.067F, 0.095F, 0.095F},
+    {-0.318F, 0.398F, 0.141F, 0.144F, 0.144F},
+    {-0.288F, 0.413F, 0.165F, 0.156F, 0.156F},
+    {-0.257F, 0.424F, 0.164F, 0.160F, 0.160F},
+    {-0.226F, 0.433F, 0.158F, 0.161F, 0.161F},
+    {-0.190F, 0.442F, 0.152F, 0.160F, 0.160F},
+    {-0.153F, 0.452F, 0.144F, 0.157F, 0.157F},
+    {-0.113F, 0.456F, 0.138F, 0.156F, 0.156F},
+    {-0.073F, 0.446F, 0.135F, 0.165F, 0.165F},
+    {-0.034F, 0.437F, 0.133F, 0.173F, 0.173F},
+    {0.006F, 0.432F, 0.133F, 0.177F, 0.177F},
+    {0.046F, 0.425F, 0.135F, 0.176F, 0.176F},
+    {0.086F, 0.422F, 0.140F, 0.168F, 0.168F},
+    {0.126F, 0.427F, 0.147F, 0.158F, 0.158F},
+    {0.165F, 0.438F, 0.151F, 0.155F, 0.155F},
+    {0.205F, 0.450F, 0.141F, 0.156F, 0.156F},
+    {0.245F, 0.460F, 0.113F, 0.152F, 0.152F},
+    {0.275F, 0.470F, 0.080F, 0.139F, 0.139F},
+    {0.300F, 0.480F, 0.040F, 0.120F, 0.120F},
 }};
 
+// Diagonal pairs, and enough angle at rest for the limb to fold: a carpus carried
+// slightly forward in front, a hock set back behind. A leg that stands dead straight
+// has no travel to give and can only swing its hoof through the ground on an arc.
 struct LegPlan {
   float x;
   float z;
@@ -84,18 +94,44 @@ struct LegPlan {
 };
 
 constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
-    {-0.104F, k_fore_hip_z, 0.0F, 0.008F, -0.006F},
-    {0.104F, k_fore_hip_z, 0.5F, 0.008F, -0.006F},
-    {-0.114F, k_hind_hip_z, 0.5F, -0.046F, 0.004F},
-    {0.114F, k_hind_hip_z, 0.0F, -0.046F, 0.004F},
+    {-0.104F, k_fore_hip_z, 0.0F, 0.034F, -0.008F},
+    {0.104F, k_fore_hip_z, 0.5F, 0.034F, -0.008F},
+    {-0.114F, k_hind_hip_z, 0.5F, -0.056F, 0.006F},
+    {0.114F, k_hind_hip_z, 0.0F, -0.056F, 0.006F},
 }};
 
-auto swung(const QVector3D& point, const QVector3D& pivot, float angle) -> QVector3D {
-  float const dy = point.y() - pivot.y();
-  float const dz = point.z() - pivot.z();
-  float const c = std::cos(angle);
-  float const s = std::sin(angle);
-  return {point.x(), pivot.y() + (dy * c) + (dz * s), pivot.z() + (dz * c) - (dy * s)};
+// The fore limb folds least, so it sets the stride both ends have to share: 0.24 at
+// most before the hoof outruns its reach and the leg locks straight. At the sheep's
+// 1.5 units/s that puts the run near 2.9 Hz and holds the walk under 2.4 Hz.
+constexpr GaitPlan k_gait_walk{0.185F, 0.64F, 0.024F, 0.060F};
+constexpr GaitPlan k_gait_run{0.230F, 0.44F, 0.058F, 0.100F};
+
+auto gait_plan(SheepGait gait) noexcept -> GaitPlan {
+  switch (gait) {
+  case SheepGait::Walk:
+    return k_gait_walk;
+  case SheepGait::Run:
+    return k_gait_run;
+  case SheepGait::Stand:
+    break;
+  }
+  return GaitPlan{};
+}
+
+auto leg_rests() noexcept -> const std::array<LegRest, k_leg_count>& {
+  static const std::array<LegRest, k_leg_count> rests = [] {
+    std::array<LegRest, k_leg_count> out{};
+    for (std::size_t i = 0; i < k_leg_count; ++i) {
+      const LegPlan& plan = k_leg_plans[i];
+      out[i] = make_leg_rest({plan.x, k_hip_y, plan.z},
+                             {plan.x, k_knee_y, plan.z + plan.knee_bias},
+                             {plan.x, k_fetlock_y, plan.z + plan.foot_bias},
+                             {plan.x, 0.0F, plan.z + plan.foot_bias},
+                             plan.phase_offset);
+    }
+    return out;
+  }();
+  return rests;
 }
 
 auto lerp(const QVector3D& a, const QVector3D& b, float t) -> QVector3D {
@@ -111,33 +147,18 @@ auto bezier(const QVector3D& p0,
 }
 
 void fill_legs(RigPose& pose, const SheepDrive& drive) {
+  const GaitPlan plan = gait_plan(drive.gait);
+  float const weight = drive.gait == SheepGait::Stand ? 0.0F : 1.0F;
   for (std::size_t i = 0; i < k_leg_count; ++i) {
-    const LegPlan& plan = k_leg_plans[i];
-    float const cycle = (drive.stride_phase + plan.phase_offset) * k_two_pi;
-    float const angle = std::sin(cycle) * k_swing_angle * drive.speed_ratio;
-    float const flex =
-        std::max(0.0F, std::sin(cycle + k_half_pi)) * k_knee_flex * drive.speed_ratio;
-
-    QVector3D const hip(plan.x, k_hip_y, plan.z);
-    QVector3D knee(plan.x, k_knee_y, plan.z + plan.knee_bias);
-    QVector3D foot(plan.x, k_fetlock_y, plan.z + plan.foot_bias);
-    QVector3D toe(plan.x, 0.0F, plan.z + plan.foot_bias);
-
-    knee = swung(knee, hip, angle);
-    foot = swung(swung(foot, hip, angle), knee, -flex);
-    toe = swung(swung(toe, hip, angle), knee, -flex);
-
-    pose.legs[i].shoulder = hip;
-    pose.legs[i].knee = knee;
-    pose.legs[i].foot = foot;
-    pose.legs[i].toe = toe;
+    const LegRest& rest = leg_rests()[i];
+    solve_leg(rest, plan, drive.stride_phase + rest.phase_offset, weight, pose.legs[i]);
   }
 }
 
 void fill_head(RigPose& pose, const SheepDrive& drive) {
   float const neck_length = (k_poll_up - k_withers).length();
   QVector3D const poll_graze = k_withers + (k_graze_dir.normalized() * neck_length);
-  QVector3D const control_up(0.0F, 0.640F, 0.368F);
+  QVector3D const control_up(0.0F, 0.590F, 0.292F);
   QVector3D const control_graze =
       k_withers + ((poll_graze - k_withers) * 0.5F) + QVector3D(0.0F, 0.0F, 0.045F);
   QVector3D const poll = lerp(k_poll_up, poll_graze, drive.graze);
@@ -156,7 +177,7 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
   // forward and down, and straightens into line with the neck as it swings down to
   // graze.
   QVector3D const muzzle_dir =
-      (facing - (head_up * (1.38F - (drive.graze * 1.18F)))).normalized();
+      (facing - (head_up * (1.58F - (drive.graze * 1.38F)))).normalized();
 
   pose.muzzle = poll + (muzzle_dir * k_head_length);
 
@@ -169,7 +190,7 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
     QVector3D const alert =
         ((side * (sign * 0.78F)) + (facing * 0.20F) + (head_up * 0.24F)).normalized();
     QVector3D const dir = lerp(relaxed, alert, drive.alert).normalized();
-    QVector3D const tip = base + (dir * 0.092F);
+    QVector3D const tip = base + (dir * 0.100F);
     if (sign_index == 0) {
       pose.ear_base_l = base;
       pose.ear_tip_l = tip;
@@ -186,17 +207,17 @@ auto make_pose(const SheepDrive& drive) -> RigPose {
       (std::sin(drive.stride_phase * k_two_pi * 2.0F) * 0.012F * drive.speed_ratio) -
       (drive.graze * 0.030F);
   pose.root = QVector3D(0.0F, bob, 0.0F);
-  pose.body_rear = QVector3D(0.0F, 0.462F + bob, -0.360F);
-  pose.body_front = QVector3D(0.0F, 0.478F + bob, 0.360F);
+  pose.body_rear = QVector3D(0.0F, 0.430F + bob, -0.300F);
+  pose.body_front = QVector3D(0.0F, 0.448F + bob, 0.280F);
 
   fill_legs(pose, drive);
   fill_head(pose, drive);
 
   float const wag =
       std::sin(drive.stride_phase * k_two_pi) * 0.022F * drive.speed_ratio;
-  pose.tail_base = QVector3D(0.0F, 0.540F, -0.340F);
-  pose.tail_mid = QVector3D(wag * 0.5F, 0.462F, -0.372F);
-  pose.tail_tip = QVector3D(wag, 0.392F, -0.378F);
+  pose.tail_base = QVector3D(0.0F, 0.520F, -0.300F);
+  pose.tail_mid = QVector3D(wag * 0.5F, 0.446F, -0.330F);
+  pose.tail_tip = QVector3D(wag, 0.382F, -0.336F);
   return pose;
 }
 
@@ -329,18 +350,18 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
   nodes.push_back(ellipsoid("sheep.belly",
                             Bone::Body,
                             k_sheep_role_wool_grubby,
-                            {0.0F, 0.300F, -0.020F},
-                            {0.136F, 0.046F, 0.250F}));
+                            {0.0F, 0.268F, -0.010F},
+                            {0.112F, 0.042F, 0.210F}));
   nodes.push_back(ellipsoid("sheep.brisket",
                             Bone::Body,
                             k_sheep_role_wool,
-                            {0.0F, 0.386F, 0.298F},
-                            {0.092F, 0.076F, 0.070F}));
+                            {0.0F, 0.352F, 0.220F},
+                            {0.076F, 0.068F, 0.062F}));
   nodes.push_back(ellipsoid("sheep.ruff",
                             Bone::Body,
                             k_sheep_role_wool,
-                            {0.0F, 0.500F, 0.300F},
-                            {0.124F, 0.112F, 0.090F}));
+                            {0.0F, 0.462F, 0.240F},
+                            {0.098F, 0.096F, 0.084F}));
 
   QVector3D const neck_mid = (bind.withers + bind.poll) * 0.5F;
   nodes.push_back(tube("sheep.neck.lower",
@@ -348,15 +369,15 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                        k_sheep_role_wool,
                        bind.withers,
                        neck_mid,
-                       0.100F,
+                       0.094F,
                        0.078F));
   nodes.push_back(tube("sheep.neck.upper",
                        Bone::NeckTop,
-                       k_sheep_role_wool_shade,
+                       k_sheep_role_wool,
                        neck_mid,
                        bind.poll,
-                       0.084F,
-                       0.068F));
+                       0.078F,
+                       0.064F));
 
   QVector3D const facing = (bind.muzzle - bind.poll).normalized();
   QVector3D const head_up =
@@ -366,21 +387,21 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
   nodes.push_back(ellipsoid("sheep.cranium",
                             Bone::Head,
                             k_sheep_role_face,
-                            bind.poll + (facing * 0.028F) + (head_up * 0.012F),
-                            {0.062F, 0.058F, 0.062F}));
+                            bind.poll + (facing * 0.036F) + (head_up * 0.008F),
+                            {0.070F, 0.066F, 0.080F}));
 
   // The fleece line stops at the poll. Sat any further forward this reads as a cap
   // pulled over the head rather than the end of the wool.
   nodes.push_back(ellipsoid("sheep.poll_wool",
                             Bone::Head,
                             k_sheep_role_wool_light,
-                            bind.poll - (facing * 0.034F) + (head_up * 0.028F),
-                            {0.066F, 0.046F, 0.056F}));
+                            bind.poll - (facing * 0.048F) + (head_up * 0.020F),
+                            {0.072F, 0.058F, 0.064F}));
   nodes.push_back(ellipsoid("sheep.cheek_wool",
                             Bone::NeckTop,
                             k_sheep_role_wool,
                             bind.poll - ((bind.poll - bind.withers) * 0.30F),
-                            {0.082F, 0.076F, 0.072F}));
+                            {0.076F, 0.072F, 0.068F}));
 
   {
     MeshNode node;
@@ -388,10 +409,10 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     node.anchor_bone = bone_index(Bone::Head);
     node.color_role = k_sheep_role_face;
     SnoutNode data;
-    data.start = bind.poll + (facing * 0.044F);
+    data.start = bind.poll + (facing * 0.062F);
     data.end = bind.muzzle;
     data.base_radius = 0.048F;
-    data.tip_radius = 0.028F;
+    data.tip_radius = 0.030F;
     node.data = data;
     nodes.push_back(node);
   }
@@ -416,14 +437,14 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                            bind.ear_base_l,
                            bind.ear_tip_l,
                            head_up,
-                           0.032F));
+                           0.036F));
   nodes.push_back(ear_flap("sheep.ear_r",
                            Bone::EarR,
                            k_sheep_role_face,
                            bind.ear_base_r,
                            bind.ear_tip_r,
                            head_up,
-                           0.032F));
+                           0.036F));
 
   constexpr std::array<Bone, k_leg_count> k_shoulders{
       Bone::ShoulderFL, Bone::ShoulderFR, Bone::ShoulderBL, Bone::ShoulderBR};
@@ -511,6 +532,10 @@ auto static_minimal_parts() noexcept -> const Render::Creature::CompiledWholeMes
 }
 
 } // namespace
+
+auto sheep_gait_advance(SheepGait gait) noexcept -> float {
+  return gait_advance(gait_plan(gait));
+}
 
 auto sheep_bind_pose() noexcept -> const RigPose& {
   static const RigPose pose = make_pose(SheepDrive{});

@@ -24,6 +24,13 @@ inline constexpr std::uint8_t k_wolf_role_eye = 8U;
 inline constexpr std::uint8_t k_wolf_role_iris = 9U;
 inline constexpr std::size_t k_wolf_role_count = 9U;
 
+enum class WolfGait : std::uint8_t {
+  Stand = 0,
+  Stalk,
+  Walk,
+  Run
+};
+
 struct WolfDrive {
   float stride_phase{0.0F};
   float speed_ratio{0.0F};
@@ -31,7 +38,12 @@ struct WolfDrive {
   float ear_pin{0.0F};
   float lunge{0.0F};
   float collapse{0.0F};
+  WolfGait gait{WolfGait::Stand};
 };
+
+// Ground the body covers per gait cycle. The renderer divides distance travelled by
+// this to get the animation phase, which is what keeps planted paws from sliding.
+[[nodiscard]] auto wolf_gait_advance(WolfGait gait) noexcept -> float;
 
 [[nodiscard]] auto wolf_bind_pose() noexcept -> const RigPose&;
 [[nodiscard]] auto wolf_pose(const WolfDrive& drive) noexcept -> RigPose;

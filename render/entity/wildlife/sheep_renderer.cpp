@@ -15,7 +15,9 @@ namespace Render::GL::Wildlife {
 
 namespace {
 
-constexpr float k_stride_rate = 1.30F;
+// The catalogue speed for wildlife/sheep.
+constexpr float k_top_speed = 1.5F;
+constexpr float k_run_threshold = 0.45F;
 
 auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   QVector3D wool = state.coat;
@@ -58,27 +60,42 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   return variant;
 }
 
-auto resolve_state(const DrawState& state) -> Render::Creature::AnimationStateId {
+auto resolve_gait(const DrawState& state) -> Render::Wildlife::SheepGait {
   if (state.grazing) {
-    return Render::Creature::AnimationStateId::Hold;
+    return Render::Wildlife::SheepGait::Stand;
   }
-  if (state.speed_ratio > 0.55F) {
-    return Render::Creature::AnimationStateId::Run;
+  if (state.speed_ratio > k_run_threshold) {
+    return Render::Wildlife::SheepGait::Run;
   }
   if (state.speed_ratio > 0.02F) {
-    return Render::Creature::AnimationStateId::Walk;
+    return Render::Wildlife::SheepGait::Walk;
   }
-  return Render::Creature::AnimationStateId::Idle;
+  return Render::Wildlife::SheepGait::Stand;
+}
+
+auto state_for_gait(const DrawState& state, Render::Wildlife::SheepGait gait)
+    -> Render::Creature::AnimationStateId {
+  switch (gait) {
+  case Render::Wildlife::SheepGait::Run:
+    return Render::Creature::AnimationStateId::Run;
+  case Render::Wildlife::SheepGait::Walk:
+    return Render::Creature::AnimationStateId::Walk;
+  case Render::Wildlife::SheepGait::Stand:
+    break;
+  }
+  return state.grazing ? Render::Creature::AnimationStateId::Hold
+                       : Render::Creature::AnimationStateId::Idle;
 }
 
 void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
-  const DrawState state = resolve_draw_state(ctx, k_stride_rate);
+  const DrawState state = resolve_draw_state(ctx, k_top_speed);
+  const Render::Wildlife::SheepGait gait = resolve_gait(state);
 
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Sheep;
   inputs.variant = resolve_variant(state);
-  inputs.phase = state.phase;
-  inputs.state = resolve_state(state);
+  inputs.phase = gait_phase(state, Render::Wildlife::sheep_gait_advance(gait));
+  inputs.state = state_for_gait(state, gait);
 
   Render::Wildlife::submit_wildlife(ctx, inputs, out);
 }
