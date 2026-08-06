@@ -7,56 +7,49 @@ vec4 activity_indicator_shade(float layer,
                               vec3 tint,
                               float alpha,
                               float time,
-                              float phase) {
+                              float phase,
+                              float height) {
   vec3 normal = normalize(raw_normal);
-  vec3 light_dir = normalize(vec3(-0.42, 0.58, 0.70));
+  vec3 light_dir = normalize(vec3(-0.38, 0.62, 0.68));
   vec3 view_dir = vec3(0.0, 0.0, 1.0);
   vec3 half_dir = normalize(light_dir + view_dir);
 
   float lambert = max(dot(normal, light_dir), 0.0);
-  float specular = pow(max(dot(normal, half_dir), 0.0), 30.0);
+  float specular = pow(max(dot(normal, half_dir), 0.0), 42.0);
   float fresnel = pow(1.0 - clamp(normal.z, 0.0, 1.0), 3.0);
   float breathe = 0.5 + 0.5 * sin(time * 2.0 + phase);
 
-  if (layer > 6.5) {
-    float t = clamp(radial, 0.0, 1.0);
-    float falloff = pow(1.0 - t, 2.2);
-    float strength = 0.42 + 0.22 * breathe;
-    return vec4(tint * 1.45, alpha * falloff * strength);
+  if (layer < 0.5) {
+    float strength = mix(0.40, 0.15, clamp(radial, 0.0, 1.0));
+    return vec4(vec3(0.0), alpha * strength);
   }
 
-  if (layer < 0.5) {
-    float falloff = 1.0 - smoothstep(0.62, 1.20, radial);
-    return vec4(vec3(0.0), alpha * 0.62 * falloff * falloff);
+  if (layer < 1.5) {
+    return vec4(mix(vec3(0.0), tint, 0.14) * 0.10, clamp(alpha, 0.0, 1.0));
   }
+
+  float sheen = clamp(height * 0.5 + 0.5, 0.0, 1.0);
 
   vec3 base;
   float gloss;
-  if (layer < 1.5) {
-
-    base = mix(vec3(0.042, 0.045, 0.055), tint * 0.22, 0.30);
-    gloss = 0.25;
-  } else if (layer < 2.5) {
-    base = tint * (0.95 + 0.18 * breathe);
-    gloss = 1.55;
+  if (layer < 2.5) {
+    vec3 lit = mix(tint, vec3(1.0), 0.16);
+    vec3 deep = mix(tint, vec3(0.0), 0.34);
+    base = mix(deep, lit, sheen * sheen * (3.0 - 2.0 * sheen));
+    gloss = 0.70;
   } else if (layer < 3.5) {
-    base = vec3(0.016, 0.018, 0.024);
-    gloss = 0.0;
-  } else if (layer < 4.5) {
-    base = mix(tint, vec3(1.0), 0.58);
-    gloss = 0.85;
-  } else if (layer < 5.5) {
-    base = mix(tint, vec3(1.0), 0.80);
-    gloss = 1.20;
+    base = mix(tint, vec3(1.0), 0.55);
+    gloss = 1.05;
   } else {
-    base = tint * 0.62;
-    gloss = 1.00;
+    base = mix(tint, vec3(0.0), 0.62);
+    gloss = 0.35;
   }
 
-  float ambient = 0.30 + 0.16 * (normal.z * 0.5 + 0.5);
-  vec3 color = base * (ambient + 0.90 * lambert);
-  color += vec3(1.0) * specular * gloss * 0.55;
-  color += tint * fresnel * 0.22;
+  float ambient = 0.42 + 0.14 * (normal.z * 0.5 + 0.5);
+  vec3 color = base * (ambient + 0.60 * lambert);
+  color += vec3(1.0) * specular * gloss * 0.42;
+  color += tint * fresnel * 0.30;
+  color *= 0.96 + 0.08 * breathe;
 
   return vec4(color, clamp(alpha, 0.0, 1.0));
 }

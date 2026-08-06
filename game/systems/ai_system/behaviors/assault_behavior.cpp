@@ -18,9 +18,96 @@ constexpr float k_assault_update_interval = 1.0F;
 constexpr float k_engage_radius = 14.0F;
 constexpr float k_formation_spread = 2.4F;
 
+constexpr float k_wall_half_extent = 2.5F;
+constexpr float k_gate_half_extent = 5.0F;
+constexpr float k_barrier_search_radius = 120.0F;
+
+constexpr float k_breach_stand_off = 2.0F;
+constexpr float k_breach_spread = 1.6F;
+constexpr float k_breach_engage_radius = 4.0F;
+
+auto is_barrier(const ContactSnapshot& contact) -> bool {
+  return contact.spawn_type == Game::Units::SpawnType::WallSegment ||
+         contact.spawn_type == Game::Units::SpawnType::WallGate;
+}
+
+auto barrier_half_extent(const ContactSnapshot& contact) -> float {
+  return contact.spawn_type == Game::Units::SpawnType::WallGate ? k_gate_half_extent
+                                                                : k_wall_half_extent;
+}
+
+auto distance_to_segment(float point_x,
+                         float point_z,
+                         float from_x,
+                         float from_z,
+                         float to_x,
+                         float to_z) -> float {
+  const float span_x = to_x - from_x;
+  const float span_z = to_z - from_z;
+  const float span_length_sq = (span_x * span_x) + (span_z * span_z);
+  float travel = 0.0F;
+  if (span_length_sq > 1.0e-4F) {
+    travel = (((point_x - from_x) * span_x) + ((point_z - from_z) * span_z)) /
+             span_length_sq;
+    travel = std::clamp(travel, 0.0F, 1.0F);
+  }
+  const float nearest_x = from_x + (span_x * travel);
+  const float nearest_z = from_z + (span_z * travel);
+  return std::sqrt(
+      distance_squared(point_x, 0.0F, point_z, nearest_x, 0.0F, nearest_z));
+}
+
+auto select_breach_target(const AISnapshot& snapshot,
+                          float reference_x,
+                          float reference_z,
+                          float objective_x,
+                          float objective_z) -> const ContactSnapshot* {
+  const ContactSnapshot* best = nullptr;
+  float best_distance_sq = std::numeric_limits<float>::infinity();
+
+  auto consider = [&](const ContactSnapshot& candidate) {
+    if (!is_barrier(candidate) || candidate.health <= 0) {
+      return;
+    }
+    const float distance_sq = distance_squared(
+        candidate.pos_x, 0.0F, candidate.pos_z, reference_x, 0.0F, reference_z);
+    if (distance_sq > k_barrier_search_radius * k_barrier_search_radius) {
+      return;
+    }
+    if (distance_to_segment(candidate.pos_x,
+                            candidate.pos_z,
+                            reference_x,
+                            reference_z,
+                            objective_x,
+                            objective_z) > barrier_half_extent(candidate)) {
+      return;
+    }
+
+    const bool candidate_is_gate =
+        candidate.spawn_type == Game::Units::SpawnType::WallGate;
+    const bool best_is_gate =
+        best != nullptr && best->spawn_type == Game::Units::SpawnType::WallGate;
+    if (best == nullptr || (candidate_is_gate && !best_is_gate) ||
+        (candidate_is_gate == best_is_gate && distance_sq < best_distance_sq)) {
+      best = &candidate;
+      best_distance_sq = distance_sq;
+    }
+  };
+
+  for (const auto& candidate : snapshot.visible_enemies) {
+    consider(candidate);
+  }
+  for (const auto& candidate : snapshot.strategic_objectives) {
+    consider(candidate);
+  }
+
+  return best;
+}
+
 auto select_assault_target(const AISnapshot& snapshot,
                            float reference_x,
-                           float reference_z) -> const ContactSnapshot* {
+                           float reference_z,
+                           bool skip_barriers) -> const ContactSnapshot* {
   const ContactSnapshot* best = nullptr;
   float best_score = std::numeric_limits<float>::infinity();
 
@@ -28,6 +115,9 @@ auto select_assault_target(const AISnapshot& snapshot,
 
   for (const auto& candidate : snapshot.visible_enemies) {
     if (troops_in_sight && candidate.is_building) {
+      continue;
+    }
+    if (skip_barriers && is_barrier(candidate)) {
       continue;
     }
     const float score = distance_squared(
@@ -43,6 +133,9 @@ auto select_assault_target(const AISnapshot& snapshot,
   }
 
   for (const auto& objective : snapshot.strategic_objectives) {
+    if (skip_barriers && is_barrier(objective)) {
+      continue;
+    }
     const float score = distance_squared(
         objective.pos_x, 0.0F, objective.pos_z, reference_x, 0.0F, reference_z);
     if (score < best_score) {
@@ -88,9 +181,37 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
   center_x *= scale;
   center_z *= scale;
 
-  const auto* target = select_assault_target(snapshot, center_x, center_z);
-  if (target == nullptr) {
-    return;
+  const auto* objective = select_assault_target(snapshot, center_x, center_z, true);
+
+  float objective_x = 0.0F;
+  float objective_z = 0.0F;
+  if (objective != nullptr) {
+    objective_x = objective->pos_x;
+    objective_z = objective->pos_z;
+  } else {
+
+    const auto marching =
+        std::find_if(assault_units.begin(),
+                     assault_units.end(),
+                     [](const EntitySnapshot* unit) { return unit->has_march_target; });
+    if (marching != assault_units.end()) {
+      objective_x = (*marching)->march_target_x;
+      objective_z = (*marching)->march_target_z;
+    } else {
+      objective = select_assault_target(snapshot, center_x, center_z, false);
+      if (objective == nullptr) {
+        return;
+      }
+      objective_x = objective->pos_x;
+      objective_z = objective->pos_z;
+    }
+  }
+
+  const ContactSnapshot* target = objective;
+  const auto* breach =
+      select_breach_target(snapshot, center_x, center_z, objective_x, objective_z);
+  if (breach != nullptr) {
+    target = breach;
   }
 
   std::vector<Engine::Core::EntityID> engage_ids;
@@ -99,24 +220,57 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
   std::vector<float> advance_y;
   std::vector<float> advance_z;
 
-  const float engage_radius_sq = k_engage_radius * k_engage_radius;
+  const bool breaching = breach != nullptr;
+  const float attack_point_x = target != nullptr ? target->pos_x : objective_x;
+  const float attack_point_z = target != nullptr ? target->pos_z : objective_z;
+  float approach_x = attack_point_x;
+  float approach_z = attack_point_z;
+  float lateral_x = 0.0F;
+  float lateral_z = 0.0F;
+  if (breaching) {
+    float outward_x = center_x - objective_x;
+    float outward_z = center_z - objective_z;
+    const float span = std::sqrt((outward_x * outward_x) + (outward_z * outward_z));
+    if (span > 1.0e-3F) {
+      outward_x /= span;
+      outward_z /= span;
+    } else {
+      outward_x = 1.0F;
+      outward_z = 0.0F;
+    }
+    approach_x = attack_point_x + (outward_x * k_breach_stand_off);
+    approach_z = attack_point_z + (outward_z * k_breach_stand_off);
+    lateral_x = -outward_z;
+    lateral_z = outward_x;
+  }
+
+  const float engage_radius = breaching ? k_breach_engage_radius : k_engage_radius;
+  const float engage_radius_sq = engage_radius * engage_radius;
 
   for (std::size_t index = 0; index < assault_units.size(); ++index) {
     const auto* unit = assault_units[index];
     const float distance_to_target_sq = distance_squared(
-        unit->pos_x, 0.0F, unit->pos_z, target->pos_x, 0.0F, target->pos_z);
+        unit->pos_x, 0.0F, unit->pos_z, attack_point_x, 0.0F, attack_point_z);
 
-    if (distance_to_target_sq <= engage_radius_sq) {
+    if (target != nullptr && distance_to_target_sq <= engage_radius_sq) {
       engage_ids.push_back(unit->id);
+      continue;
+    }
+
+    advance_ids.push_back(unit->id);
+    if (breaching) {
+      const float offset = (static_cast<float>(index % 4) - 1.5F) * k_breach_spread;
+      advance_x.push_back(approach_x + (lateral_x * offset));
+      advance_y.push_back(0.0F);
+      advance_z.push_back(approach_z + (lateral_z * offset));
       continue;
     }
 
     const float angle = static_cast<float>(index) * 0.9F;
     const float ring = k_formation_spread * static_cast<float>(1 + (index % 3));
-    advance_ids.push_back(unit->id);
-    advance_x.push_back(target->pos_x + std::cos(angle) * ring);
+    advance_x.push_back(attack_point_x + std::cos(angle) * ring);
     advance_y.push_back(0.0F);
-    advance_z.push_back(target->pos_z + std::sin(angle) * ring);
+    advance_z.push_back(attack_point_z + std::sin(angle) * ring);
   }
 
   if (!engage_ids.empty()) {
@@ -127,7 +281,8 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
       attack.type = AICommandType::AttackTarget;
       attack.units = std::move(claimed);
       attack.target_id = target->id;
-      attack.should_chase = !target->is_building;
+
+      attack.should_chase = true;
       out_commands.push_back(std::move(attack));
     }
   }
@@ -169,7 +324,15 @@ auto AssaultBehavior::should_execute(const AISnapshot& snapshot,
   if (context.assault_unit_count <= 0) {
     return false;
   }
-  return !snapshot.visible_enemies.empty() || !snapshot.strategic_objectives.empty();
+  if (!snapshot.visible_enemies.empty() || !snapshot.strategic_objectives.empty()) {
+    return true;
+  }
+
+  return std::any_of(snapshot.friendly_units.begin(),
+                     snapshot.friendly_units.end(),
+                     [](const EntitySnapshot& entity) {
+                       return entity.is_assault && entity.has_march_target;
+                     });
 }
 
 } // namespace Game::Systems::AI

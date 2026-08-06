@@ -1420,6 +1420,10 @@ public:
 
   bool active{true};
   int wave_phase{0};
+
+  bool has_march_target{false};
+  float march_target_x{0.0F};
+  float march_target_z{0.0F};
 };
 
 class HoldModeComponent : public Component {

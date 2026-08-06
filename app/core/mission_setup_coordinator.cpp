@@ -1057,6 +1057,9 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
         if (ai_controlled) {
           auto* assault = entity->add_component<Engine::Core::AssaultWaveComponent>();
           assault->wave_phase = wave.phase_index;
+          assault->has_march_target = true;
+          assault->march_target_x = wave.defense_reference_world_position.x();
+          assault->march_target_z = wave.defense_reference_world_position.z();
         }
         auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
         if (renderable != nullptr) {

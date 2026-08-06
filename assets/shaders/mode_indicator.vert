@@ -11,6 +11,7 @@ out vec3 v_normal;
 out float v_layer;
 out float v_radial;
 out float v_phase;
+out float v_height;
 
 void main() {
   v_normal = a_normal;
@@ -20,6 +21,7 @@ void main() {
 
   float pulse = 1.0 + 0.015 * sin(u_time * 2.0);
   vec3 pos = vec3(a_position.xy * pulse, a_position.z);
+  v_height = a_position.y * 2.0;
 
   gl_Position = u_mvp * vec4(pos, 1.0);
 }
