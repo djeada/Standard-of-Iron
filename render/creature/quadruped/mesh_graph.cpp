@@ -212,6 +212,43 @@ auto make_round_ring(QVector3D center,
   return make_oriented_ring(center, QVector3D(0.0F, 0.0F, 1.0F), rx, ry, vertex_count);
 }
 
+auto ring_centroid(const std::vector<QVector3D>& ring) -> QVector3D {
+  QVector3D sum;
+  for (const QVector3D& p : ring) {
+    sum += p;
+  }
+  return sum / static_cast<float>(ring.size());
+}
+
+// Newell's method: right-handed, so a ring wound counter-clockwise when viewed from
+// the +axis side returns a normal pointing along +axis.
+auto ring_normal(const std::vector<QVector3D>& ring) -> QVector3D {
+  QVector3D normal;
+  for (std::size_t i = 0; i < ring.size(); ++i) {
+    const QVector3D& a = ring[i];
+    const QVector3D& b = ring[(i + 1U) % ring.size()];
+    normal += QVector3D((a.y() - b.y()) * (a.z() + b.z()),
+                        (a.z() - b.z()) * (a.x() + b.x()),
+                        (a.x() - b.x()) * (a.y() + b.y()));
+  }
+  return normal;
+}
+
+// Reverses every ring when the strip would come out inside-out. A no-op for rings
+// already wound so that the first one's normal points down the strip.
+void orient_ring_strip_outward(std::vector<std::vector<QVector3D>>& rings) {
+  if (rings.size() < 2U || rings.front().size() < 3U) {
+    return;
+  }
+  QVector3D const axis = ring_centroid(rings.back()) - ring_centroid(rings.front());
+  if (QVector3D::dotProduct(ring_normal(rings.front()), axis) >= 0.0F) {
+    return;
+  }
+  for (std::vector<QVector3D>& ring : rings) {
+    std::reverse(ring.begin(), ring.end());
+  }
+}
+
 void append_ring_strip(std::vector<Render::GL::Vertex>& vertices,
                        std::vector<unsigned int>& indices,
                        const std::vector<std::vector<QVector3D>>& rings) {
@@ -316,6 +353,14 @@ auto build_barrel_mesh(const BarrelNode& node) -> std::unique_ptr<Render::GL::Me
                                      ring.half_width * node.scale.x()));
     }
   }
+
+  // append_ring_strip takes the ring winding at face value, so whether a barrel ends
+  // up with outward normals depends on which end of the animal its rings were
+  // authored from. Getting it backwards lights the whole torso as if it were inside
+  // out - a flat dark shell that reads as a missing colour role, not as geometry - so
+  // decide from the geometry rather than trusting the author: the first ring's polygon
+  // normal has to point along the strip.
+  orient_ring_strip_outward(rings);
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;

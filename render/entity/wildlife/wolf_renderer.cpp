@@ -23,13 +23,15 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   if (morph < 0.30F) {
     base = mixed(base, QVector3D(0.36F, 0.28F, 0.19F), 0.55F);
   } else if (morph > 0.86F) {
-    base = mixed(base, QVector3D(0.14F, 0.13F, 0.14F), 0.62F);
+    base = mixed(base, QVector3D(0.22F, 0.20F, 0.20F), 0.55F);
   }
 
   Render::GL::WildlifeVariant variant;
   variant.roles[Render::Wildlife::k_wolf_role_fur - 1U] = base;
+  // The dark roles need a floor. Taken all the way down, a black-morph wolf's saddle
+  // and paws land under the scene's ambient and punch holes in its own silhouette.
   variant.roles[Render::Wildlife::k_wolf_role_saddle - 1U] =
-      mixed(base, QVector3D(0.13F, 0.11F, 0.10F), 0.58F);
+      mixed(base, QVector3D(0.24F, 0.21F, 0.18F), 0.55F);
   variant.roles[Render::Wildlife::k_wolf_role_pale - 1U] =
       mixed(base, QVector3D(0.84F, 0.78F, 0.66F), 0.42F);
   variant.roles[Render::Wildlife::k_wolf_role_cream - 1U] =
@@ -37,7 +39,7 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   variant.roles[Render::Wildlife::k_wolf_role_limb - 1U] =
       mixed(base, QVector3D(0.26F, 0.22F, 0.19F), 0.38F);
   variant.roles[Render::Wildlife::k_wolf_role_paw - 1U] =
-      mixed(base, QVector3D(0.14F, 0.13F, 0.12F), 0.62F);
+      mixed(base, QVector3D(0.22F, 0.20F, 0.18F), 0.58F);
   variant.roles[Render::Wildlife::k_wolf_role_nose - 1U] = {0.07F, 0.065F, 0.07F};
   variant.roles[Render::Wildlife::k_wolf_role_eye - 1U] = {0.09F, 0.07F, 0.05F};
   variant.roles[Render::Wildlife::k_wolf_role_iris - 1U] = {0.86F, 0.64F, 0.16F};

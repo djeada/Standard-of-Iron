@@ -35,14 +35,16 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
                                      hash_unit_float(state.seed, 29U))
                              : mixed(wool, QVector3D(0.50F, 0.40F, 0.30F), 0.74F);
 
-  wool = mixed(wool, QVector3D(0.84F, 0.81F, 0.73F), 0.30F);
+  // Fleece is greasy and dusty, never paper white, and the tuft roles need real
+  // separation or the lumps flatten into one blob at gameplay distance.
+  wool = mixed(wool, QVector3D(0.80F, 0.77F, 0.70F), 0.34F);
   QVector3D const shade =
-      mixed(tinted(wool, 0.68F), QVector3D(0.34F, 0.30F, 0.25F), 0.22F);
+      mixed(tinted(wool, 0.70F), QVector3D(0.34F, 0.30F, 0.26F), 0.22F);
 
   Render::GL::WildlifeVariant variant;
   variant.roles[Render::Wildlife::k_sheep_role_wool - 1U] = wool;
   variant.roles[Render::Wildlife::k_sheep_role_wool_light - 1U] =
-      mixed(tinted(wool, 1.16F), QVector3D(1.0F, 0.98F, 0.92F), 0.22F);
+      mixed(tinted(wool, 1.10F), QVector3D(0.97F, 0.95F, 0.89F), 0.16F);
   variant.roles[Render::Wildlife::k_sheep_role_wool_shade - 1U] = shade;
   variant.roles[Render::Wildlife::k_sheep_role_wool_grubby - 1U] =
       mixed(shade, QVector3D(0.46F, 0.39F, 0.28F), 0.60F);
