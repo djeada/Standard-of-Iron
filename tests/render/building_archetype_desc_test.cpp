@@ -212,10 +212,12 @@ TEST(BuildingCulturalOrnaments, RomanAndPunicReliefsKeepDistinctProfiles) {
   const RenderArchetype punic_archetype =
       build_building_archetype(punic, BuildingState::Normal);
 
-  EXPECT_EQ(roman_archetype.lods[0].draws.size(), 9U);
-  EXPECT_EQ(punic_archetype.lods[0].draws.size(), 6U);
+  EXPECT_EQ(roman_archetype.lods[0].draws.size(), 39U);
+  EXPECT_EQ(punic_archetype.lods[0].draws.size(), 14U);
+
   EXPECT_TRUE(roman_archetype.lods[1].draws.empty());
   EXPECT_TRUE(punic_archetype.lods[1].draws.empty());
+  EXPECT_NE(roman_archetype.lods[0].draws.size(), punic_archetype.lods[0].draws.size());
   EXPECT_NE(roman_archetype.lods[0].draws[0].local_model,
             punic_archetype.lods[0].draws[0].local_model);
 }

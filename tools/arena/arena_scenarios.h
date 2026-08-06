@@ -136,6 +136,7 @@ inline constexpr char k_carthage_fortification_showcase_id[] =
     "carthage_fortification_showcase";
 inline constexpr char k_rival_economies_id[] = "rival_economies";
 inline constexpr char k_village_harvest_cycle_id[] = "village_harvest_cycle";
+inline constexpr char k_village_day_life_id[] = "village_day_life";
 inline constexpr char k_colony_founding_id[] = "colony_founding";
 inline constexpr char k_village_raid_id[] = "village_raid";
 inline constexpr char k_frontier_outpost_id[] = "frontier_outpost";

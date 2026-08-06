@@ -3,7 +3,10 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <utility>
 
 #include "building_archetype_desc.h"
 
@@ -207,6 +210,199 @@ inline auto facade_rotation(BuildingFacadePlane plane, float degrees) -> QVector
   return {degrees, 0.0F, 0.0F};
 }
 
+struct EagleFeather {
+  float horizontal;
+  float vertical;
+  float half_length;
+  float half_thickness;
+  float sweep_degrees;
+};
+
+inline constexpr std::array<EagleFeather, 4> k_eagle_wing{{
+    {0.115F, 0.055F, 0.150F, 0.062F, 8.0F},
+    {0.255F, 0.105F, 0.130F, 0.048F, 24.0F},
+    {0.370F, 0.170F, 0.105F, 0.036F, 42.0F},
+    {0.455F, 0.245F, 0.075F, 0.026F, 58.0F},
+}};
+
+inline constexpr std::array<EagleFeather, 3> k_eagle_tail{{
+    {0.000F, -0.205F, 0.100F, 0.030F, 0.0F},
+    {0.058F, -0.190F, 0.090F, 0.026F, 16.0F},
+    {0.115F, -0.160F, 0.075F, 0.022F, 30.0F},
+}};
+
+inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
+                                 const QVector3D& center,
+                                 BuildingFacadePlane plane,
+                                 float scale,
+                                 float depth,
+                                 const QVector3D& bronze,
+                                 const QVector3D& shade,
+                                 BuildingStateMask states,
+                                 BuildingLODMask core_lod = BuildingLODMask::Full) {
+  const auto point = [&](float horizontal, float vertical, float normal) {
+    return facade_point(center, plane, horizontal * scale, vertical * scale, normal);
+  };
+  const auto size = [&](float horizontal, float vertical, float thickness) {
+    return facade_scale(plane, horizontal * scale, vertical * scale, thickness);
+  };
+
+  const float relief = depth * 0.55F;
+
+  for (float const side : {-1.0F, 1.0F}) {
+    std::size_t feather_index = 0;
+    for (auto const& feather : k_eagle_wing) {
+      const BuildingLODMask lod = feather_index < 2 ? core_lod : BuildingLODMask::Full;
+      desc.add_rotated_box(point(side * feather.horizontal, feather.vertical, relief),
+                           size(feather.half_length, feather.half_thickness, relief),
+                           facade_rotation(plane, side * feather.sweep_degrees),
+                           shade,
+                           states,
+                           BuildingLODMask::Full);
+      desc.add_rotated_box(
+          point(side * feather.horizontal, feather.vertical + 0.022F, depth),
+          size(feather.half_length * 0.88F, feather.half_thickness * 0.72F, depth),
+          facade_rotation(plane, side * feather.sweep_degrees),
+          bronze,
+          states,
+          lod);
+      ++feather_index;
+    }
+
+    desc.add_rotated_box(point(side * 0.085F, 0.115F, depth),
+                         size(0.085F, 0.050F, depth),
+                         facade_rotation(plane, side * 34.0F),
+                         bronze,
+                         states,
+                         BuildingLODMask::Full);
+  }
+
+  for (auto const& feather : k_eagle_tail) {
+    for (float const side : {-1.0F, 1.0F}) {
+      if (feather.horizontal == 0.0F && side < 0.0F) {
+        continue;
+      }
+      desc.add_rotated_box(point(side * feather.horizontal, feather.vertical, depth),
+                           size(feather.half_thickness, feather.half_length, depth),
+                           facade_rotation(plane, side * feather.sweep_degrees),
+                           bronze,
+                           states,
+                           feather.horizontal == 0.0F ? core_lod
+                                                      : BuildingLODMask::Full);
+    }
+  }
+
+  desc.add_box(point(0.0F, -0.015F, depth),
+               size(0.072F, 0.155F, depth * 1.25F),
+               bronze,
+               states,
+               core_lod);
+  desc.add_box(point(0.0F, 0.075F, depth * 1.15F),
+               size(0.055F, 0.070F, depth * 1.35F),
+               bronze,
+               states,
+               BuildingLODMask::Full);
+
+  desc.add_box(point(0.018F, 0.180F, depth * 1.2F),
+               size(0.046F, 0.055F, depth * 1.4F),
+               bronze,
+               states,
+               core_lod);
+  desc.add_cone(point(0.048F, 0.184F, depth * 1.2F),
+                point(0.104F, 0.156F, depth * 1.2F),
+                0.020F * scale,
+                bronze,
+                states,
+                core_lod);
+}
+
+inline void add_laurel_wreath(BuildingArchetypeDesc& desc,
+                              const QVector3D& center,
+                              BuildingFacadePlane plane,
+                              float scale,
+                              float depth,
+                              float radius,
+                              const QVector3D& color,
+                              BuildingStateMask states) {
+  constexpr int k_leaves = 14;
+  for (int index = 0; index < k_leaves; ++index) {
+    float const t = static_cast<float>(index) / static_cast<float>(k_leaves);
+    float const angle = (t * 6.2831853F) - 1.5707963F;
+
+    if (std::sin(angle) > 0.72F) {
+      continue;
+    }
+    float const horizontal = std::cos(angle) * radius;
+    float const vertical = std::sin(angle) * radius;
+    desc.add_rotated_box(
+        facade_point(center, plane, horizontal * scale, vertical * scale, depth * 0.6F),
+        facade_scale(plane, 0.052F * scale, 0.024F * scale, depth * 0.6F),
+        facade_rotation(plane, (angle * 180.0F / 3.14159265F) + 90.0F),
+        color,
+        states,
+        BuildingLODMask::Full);
+  }
+}
+
+inline void add_tanit_sign(BuildingArchetypeDesc& desc,
+                           const QVector3D& center,
+                           BuildingFacadePlane plane,
+                           float scale,
+                           float depth,
+                           const QVector3D& symbol,
+                           const QVector3D& shade,
+                           BuildingStateMask states,
+                           BuildingLODMask core_lod = BuildingLODMask::Full) {
+  const auto point = [&](float horizontal, float vertical, float normal) {
+    return facade_point(center, plane, horizontal * scale, vertical * scale, normal);
+  };
+  const auto size = [&](float horizontal, float vertical, float thickness) {
+    return facade_scale(plane, horizontal * scale, vertical * scale, thickness);
+  };
+
+  desc.add_cylinder(point(0.0F, 0.235F, depth * 0.2F),
+                    point(0.0F, 0.235F, depth * 1.9F),
+                    0.098F * scale,
+                    symbol,
+                    states,
+                    core_lod);
+  desc.add_cylinder(point(0.0F, 0.235F, 0.0F),
+                    point(0.0F, 0.235F, depth * 0.35F),
+                    0.114F * scale,
+                    shade,
+                    states,
+                    BuildingLODMask::Full);
+
+  desc.add_box(point(0.0F, 0.085F, depth),
+               size(0.235F, 0.032F, depth),
+               symbol,
+               states,
+               core_lod);
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(point(side * 0.272F, 0.124F, depth),
+                         size(0.075F, 0.030F, depth),
+                         facade_rotation(plane, side * -38.0F),
+                         symbol,
+                         states,
+                         BuildingLODMask::Full);
+  }
+
+  constexpr std::array<std::pair<float, float>, 4> k_body{
+      {{0.060F, 0.020F}, {0.104F, -0.058F}, {0.148F, -0.136F}, {0.192F, -0.214F}}};
+  for (auto const& course : k_body) {
+    desc.add_box(point(0.0F, course.second, depth),
+                 size(course.first, 0.042F, depth),
+                 symbol,
+                 states,
+                 core_lod);
+  }
+  desc.add_box(point(0.0F, -0.262F, depth),
+               size(0.215F, 0.030F, depth),
+               shade,
+               states,
+               BuildingLODMask::Full);
+}
+
 } // namespace Detail
 
 inline void
@@ -217,49 +413,17 @@ add_roman_aquila_relief(BuildingArchetypeDesc& desc,
                         const QVector3D& bronze,
                         const QVector3D& shadow,
                         BuildingStateMask states = k_building_state_mask_intact) {
-  const float depth = 0.025F * scale;
+  const float depth = 0.028F * scale;
+
   desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
-               Detail::facade_scale(plane, 0.62F * scale, 0.42F * scale, depth),
-               shadow,
+               Detail::facade_scale(plane, 0.58F * scale, 0.54F * scale, depth * 0.5F),
+               weathered(shadow, 3, 0.10F),
                states,
                BuildingLODMask::Full);
 
-  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.01F, depth),
-               Detail::facade_scale(plane, 0.08F * scale, 0.25F * scale, depth),
-               bronze,
-               states,
-               BuildingLODMask::Full);
-  desc.add_box(
-      Detail::facade_point(center, plane, 0.035F * scale, 0.17F * scale, depth),
-      Detail::facade_scale(plane, 0.10F * scale, 0.09F * scale, depth),
-      bronze,
-      states,
-      BuildingLODMask::Full);
-
-  for (float side : {-1.0F, 1.0F}) {
-    desc.add_rotated_box(
-        Detail::facade_point(center, plane, side * 0.16F * scale, 0.06F * scale, depth),
-        Detail::facade_scale(plane, 0.27F * scale, 0.065F * scale, depth),
-        Detail::facade_rotation(plane, side * 18.0F),
-        bronze,
-        states,
-        BuildingLODMask::Full);
-    desc.add_rotated_box(
-        Detail::facade_point(center, plane, side * 0.24F * scale, 0.13F * scale, depth),
-        Detail::facade_scale(plane, 0.20F * scale, 0.055F * scale, depth),
-        Detail::facade_rotation(plane, side * 38.0F),
-        bronze,
-        states,
-        BuildingLODMask::Full);
-    desc.add_rotated_box(
-        Detail::facade_point(
-            center, plane, side * 0.045F * scale, -0.15F * scale, depth),
-        Detail::facade_scale(plane, 0.055F * scale, 0.16F * scale, depth),
-        Detail::facade_rotation(plane, side * 20.0F),
-        bronze,
-        states,
-        BuildingLODMask::Full);
-  }
+  Detail::add_laurel_wreath(desc, center, plane, scale, depth, 0.36F, bronze, states);
+  Detail::add_eagle_silhouette(
+      desc, center, plane, scale, depth, bronze, shadow, states);
 }
 
 inline void
@@ -270,37 +434,29 @@ add_punic_tanit_relief(BuildingArchetypeDesc& desc,
                        const QVector3D& symbol,
                        const QVector3D& backing,
                        BuildingStateMask states = k_building_state_mask_intact) {
-  const float depth = 0.025F * scale;
+  const float depth = 0.028F * scale;
+
   desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
-               Detail::facade_scale(plane, 0.48F * scale, 0.52F * scale, depth),
+               Detail::facade_scale(plane, 0.58F * scale, 0.74F * scale, depth * 0.7F),
                backing,
                states,
                BuildingLODMask::Full);
-  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.08F * scale, depth),
-               Detail::facade_scale(plane, 0.38F * scale, 0.045F * scale, depth),
-               symbol,
+  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F, depth * 0.25F),
+               Detail::facade_scale(plane, 0.48F * scale, 0.64F * scale, depth * 0.35F),
+               weathered(backing, 7, 0.12F),
                states,
                BuildingLODMask::Full);
-  desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.20F * scale, depth),
-               Detail::facade_scale(plane, 0.11F * scale, 0.11F * scale, depth),
-               symbol,
-               states,
-               BuildingLODMask::Full);
-  for (float side : {-1.0F, 1.0F}) {
-    desc.add_rotated_box(
-        Detail::facade_point(
-            center, plane, side * 0.075F * scale, -0.08F * scale, depth),
-        Detail::facade_scale(plane, 0.055F * scale, 0.27F * scale, depth),
-        Detail::facade_rotation(plane, side * 31.0F),
+
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_box(
+        Detail::facade_point(center, plane, side * 0.52F * scale, 0.0F, depth * 0.3F),
+        Detail::facade_scale(plane, 0.032F * scale, 0.72F * scale, depth * 0.45F),
         symbol,
         states,
         BuildingLODMask::Full);
   }
-  desc.add_box(Detail::facade_point(center, plane, 0.0F, -0.21F * scale, depth),
-               Detail::facade_scale(plane, 0.30F * scale, 0.045F * scale, depth),
-               symbol,
-               states,
-               BuildingLODMask::Full);
+
+  Detail::add_tanit_sign(desc, center, plane, scale, depth, symbol, backing, states);
 }
 
 inline void
@@ -310,51 +466,53 @@ add_roman_roof_standard(BuildingArchetypeDesc& desc,
                         const QVector3D& bronze,
                         const QVector3D& crimson,
                         BuildingStateMask states = k_building_state_mask_intact) {
-  desc.add_box(base + QVector3D(0.0F, 0.035F * scale, 0.0F),
-               QVector3D(0.16F, 0.035F, 0.13F) * scale,
+
+  desc.add_box(base + QVector3D(0.0F, 0.030F * scale, 0.0F),
+               QVector3D(0.150F, 0.030F, 0.120F) * scale,
                crimson,
                states);
-  desc.add_box(base + QVector3D(0.0F, 0.09F * scale, 0.0F),
-               QVector3D(0.11F, 0.025F, 0.09F) * scale,
+  desc.add_box(base + QVector3D(0.0F, 0.078F * scale, 0.0F),
+               QVector3D(0.100F, 0.022F, 0.082F) * scale,
                bronze,
                states);
-  desc.add_cylinder(base + QVector3D(0.0F, 0.10F * scale, 0.0F),
-                    base + QVector3D(0.0F, 0.58F * scale, 0.0F),
-                    0.028F * scale,
+  desc.add_cylinder(base + QVector3D(0.0F, 0.085F * scale, 0.0F),
+                    base + QVector3D(0.0F, 0.560F * scale, 0.0F),
+                    0.026F * scale,
                     bronze,
                     states);
 
-  desc.add_box(base + QVector3D(0.0F, 0.37F * scale, 0.0F),
-               QVector3D(0.15F, 0.09F, 0.035F) * scale,
+  desc.add_box(base + QVector3D(0.0F, 0.330F * scale, 0.0F),
+               QVector3D(0.150F, 0.088F, 0.030F) * scale,
                crimson,
                states);
-  desc.add_box(base + QVector3D(0.0F, 0.37F * scale, 0.038F * scale),
-               QVector3D(0.10F, 0.045F, 0.012F) * scale,
+  desc.add_box(base + QVector3D(0.0F, 0.330F * scale, 0.033F * scale),
+               QVector3D(0.098F, 0.044F, 0.011F) * scale,
                bronze,
                states,
                BuildingLODMask::Full);
-
-  for (float side : {-1.0F, 1.0F}) {
-    desc.add_rotated_box(base + QVector3D(side * 0.15F * scale, 0.60F * scale, 0.0F),
-                         QVector3D(0.18F, 0.045F, 0.055F) * scale,
-                         QVector3D(0.0F, 0.0F, side * 18.0F),
-                         bronze,
-                         states);
-    desc.add_rotated_box(base + QVector3D(side * 0.25F * scale, 0.66F * scale, 0.0F),
-                         QVector3D(0.11F, 0.035F, 0.045F) * scale,
-                         QVector3D(0.0F, 0.0F, side * 36.0F),
-                         bronze,
-                         states,
-                         BuildingLODMask::Full);
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_box(base + QVector3D(side * 0.135F * scale, 0.238F * scale, 0.0F),
+                 QVector3D(0.016F, 0.030F, 0.016F) * scale,
+                 bronze,
+                 states,
+                 BuildingLODMask::Full);
   }
-  desc.add_box(base + QVector3D(0.0F, 0.62F * scale, 0.0F),
-               QVector3D(0.065F, 0.13F, 0.065F) * scale,
-               bronze,
-               states);
-  desc.add_box(base + QVector3D(0.035F * scale, 0.73F * scale, 0.0F),
-               QVector3D(0.055F, 0.045F, 0.055F) * scale,
-               bronze,
-               states);
+
+  desc.add_cylinder(base + QVector3D(0.0F, 0.560F * scale, -0.02F * scale),
+                    base + QVector3D(0.0F, 0.560F * scale, 0.02F * scale),
+                    0.058F * scale,
+                    bronze,
+                    states);
+
+  Detail::add_eagle_silhouette(desc,
+                               base + QVector3D(0.0F, 0.700F * scale, 0.0F),
+                               BuildingFacadePlane::XY,
+                               scale * 0.68F,
+                               0.030F * scale,
+                               bronze,
+                               crimson,
+                               states,
+                               BuildingLODMask::All);
 }
 
 inline void
@@ -365,50 +523,62 @@ add_punic_horned_crown(BuildingArchetypeDesc& desc,
                        const QVector3D& bronze,
                        const QVector3D& ember,
                        BuildingStateMask states = k_building_state_mask_intact) {
-  desc.add_box(base + QVector3D(0.0F, 0.035F * scale, 0.0F),
-               QVector3D(0.28F, 0.035F, 0.22F) * scale,
+
+  desc.add_box(base + QVector3D(0.0F, 0.030F * scale, 0.0F),
+               QVector3D(0.170F, 0.028F, 0.140F) * scale,
                obsidian,
                states);
-  desc.add_box(base + QVector3D(0.0F, 0.10F * scale, 0.0F),
-               QVector3D(0.20F, 0.035F, 0.16F) * scale,
+  desc.add_box(base + QVector3D(0.0F, 0.078F * scale, 0.0F),
+               QVector3D(0.118F, 0.026F, 0.098F) * scale,
                bronze,
                states);
-  desc.add_box(base + QVector3D(0.0F, 0.17F * scale, 0.0F),
-               QVector3D(0.13F, 0.045F, 0.12F) * scale,
+  desc.add_box(base + QVector3D(0.0F, 0.128F * scale, 0.0F),
+               QVector3D(0.076F, 0.032F, 0.070F) * scale,
                obsidian,
                states);
 
-  desc.add_cylinder(base + QVector3D(0.0F, 0.17F * scale, 0.0F),
-                    base + QVector3D(0.0F, 0.62F * scale, 0.0F),
-                    0.055F * scale,
+  desc.add_cylinder(base + QVector3D(0.0F, 0.150F * scale, 0.0F),
+                    base + QVector3D(0.0F, 0.620F * scale, 0.0F),
+                    0.040F * scale,
                     obsidian,
                     states);
-  desc.add_box(base + QVector3D(0.0F, 0.45F * scale, 0.0F),
-               QVector3D(0.075F, 0.13F, 0.075F) * scale,
+  desc.add_box(base + QVector3D(0.0F, 0.370F * scale, 0.0F),
+               QVector3D(0.058F, 0.090F, 0.058F) * scale,
                ember,
                states);
-  desc.add_rotated_box(base + QVector3D(0.0F, 0.69F * scale, 0.0F),
-                       QVector3D(0.075F, 0.16F, 0.075F) * scale,
-                       QVector3D(0.0F, 0.0F, 45.0F),
-                       bronze,
-                       states);
 
-  for (float side : {-1.0F, 1.0F}) {
-    desc.add_rotated_box(base + QVector3D(side * 0.16F * scale, 0.39F * scale, 0.0F),
-                         QVector3D(0.18F, 0.045F, 0.065F) * scale,
-                         QVector3D(0.0F, 0.0F, side * 43.0F),
-                         bronze,
-                         states);
-    desc.add_rotated_box(base + QVector3D(side * 0.29F * scale, 0.53F * scale, 0.0F),
-                         QVector3D(0.14F, 0.040F, 0.055F) * scale,
-                         QVector3D(0.0F, 0.0F, side * 67.0F),
-                         obsidian,
-                         states);
-    desc.add_box(base + QVector3D(side * 0.34F * scale, 0.65F * scale, 0.0F),
-                 QVector3D(0.045F, 0.10F, 0.045F) * scale,
-                 bronze,
-                 states,
-                 BuildingLODMask::Full);
+  desc.add_box(base + QVector3D(0.0F, 0.690F * scale, 0.0F),
+               QVector3D(0.105F, 0.100F, 0.105F) * scale,
+               bronze,
+               states);
+  desc.add_box(base + QVector3D(0.0F, 0.690F * scale, 0.0F),
+               QVector3D(0.128F, 0.038F, 0.128F) * scale,
+               ember,
+               states,
+               BuildingLODMask::Full);
+
+  constexpr int k_crescent_steps = 9;
+  constexpr float k_crescent_span = 0.74F;
+  for (int index = 0; index < k_crescent_steps; ++index) {
+    float const t =
+        static_cast<float>(index) / static_cast<float>(k_crescent_steps - 1);
+    float const angle = 3.14159265F * (k_crescent_span * (t - 0.5F));
+    float const radius = 0.255F * scale;
+    desc.add_rotated_box(
+        base + QVector3D(std::sin(angle) * radius,
+                         (0.900F * scale) + (std::cos(angle) * radius * 0.55F),
+                         0.0F),
+        QVector3D(0.036F, 0.052F, 0.036F) * scale,
+        QVector3D(0.0F, 0.0F, -(angle * 180.0F / 3.14159265F)),
+        bronze,
+        states);
+  }
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_cone(base + QVector3D(side * 0.222F * scale, 0.928F * scale, 0.0F),
+                  base + QVector3D(side * 0.262F * scale, 1.115F * scale, 0.0F),
+                  0.036F * scale,
+                  bronze,
+                  states);
   }
 }
 
