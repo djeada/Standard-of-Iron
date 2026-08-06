@@ -178,17 +178,47 @@ Key properties that keep it smooth (Phase 6):
 `walk_profile()` / `run_profile()` in `animation/locomotion_manifest.cpp` hold the gait
 amplitudes. Note that `stride_length` is the distance the foot sweeps **relative to the
 body** over one stance, while the body itself covers `speed * cycle_time` per cycle. At
-the reference walk speed those numbers are far apart (roughly 0.4 against 2.0), so planted
-feet always slide somewhat — this is a stylised RTS gait, not a foot-locked one, and
+the reference walk speed those numbers are far apart, so planted feet always slide
+somewhat — this is a stylised RTS gait, not a foot-locked one, and
 `stride_distance_scale()` only keeps the ratio stable across speeds rather than closing it.
 
 The practical consequence: raising `stride_length` _reduces_ skate, it does not cause it.
-The original values were small enough that the legs read as a stiff shuffle from the game
-camera. The ceiling is leg reach — at a half-stride approaching `UPPER_LEG_LEN +
-LOWER_LEG_LEN` the pelvis has to drop to keep the foot on the ground, and the arena's
-`NoLimbOverextension` expectation is what catches overshoot. Review changes with the
-`humanoid_gait_review` scenario, which walks then runs three troop types across a close
-side-on camera.
+The values shipped before the hip-drop solve (0.40 walk / 0.58 run) were small enough that
+the legs read as a stiff shuffle from the game camera; they are now 0.64 and 0.98, which is
+roughly a real walking and running step for a 1.80 m rig.
+
+The ceiling used to be leg reach: at a half-stride approaching `UPPER_LEG_LEN +
+LOWER_LEG_LEN` the foot could no longer reach the ground from a fixed pelvis, and
+`solve_knee_ik` absorbed the deficit by clamping — which silently stretched the shin.
+`resolve_humanoid_locomotion_pose` now closes that loop itself: given the pelvis height,
+hip offsets and leg length, it computes the drop each foot needs and sinks the pelvis (and
+the whole upper body with it) by the larger of the two. Long strides therefore cost hip
+height, exactly as they do on a real walker, instead of costing bone length. The arena's
+`NoLimbOverextension` expectation still guards the arms.
+
+### Foot roll
+
+`HumanoidPose` carries `foot_pitch_l` / `foot_pitch_r`, and the `FootL` / `FootR` bones are
+built from that pitch instead of always standing square to the world. The gait drives it:
+the foot lands toes-up at heel strike, rolls flat through mid-stance, pushes off the toe at
+the end of stance, and picks the toe back up for swing clearance. `heel_strike_pitch`,
+`toe_off_pitch` and `swing_clearance_pitch` on the profile are the knobs; a runner lands
+much flatter and pushes off harder than a walker.
+
+Two things have to move with it or the foot leaves the ground:
+
+- `ankle_lift_for_pitch()` raises the ankle by however much the rotation would otherwise
+  drive the heel or the toe under the floor, so the contact point stays at ground level.
+- `palette_contact_y()` (`render/creature/pipeline/preparation_common.cpp`) grounds the
+  humanoid on the **sole**, not the ankle bone. It transforms a heel point and a toe point
+  through the posed and bind foot bones and takes the lower of the two. Grounding on the
+  ankle would have cancelled the ankle lift and dragged the model down at every toe-off.
+  `Animation::humanoid_foot_contact_lift()` is the same relationship exposed for callers
+  that only have a pitch.
+
+Review changes with the `humanoid_gait_review` scenario, or far faster with
+`build/bin/humanoid_preview --clip walk --view side --report`, which renders the baked
+clip as a phase strip and prints per-frame bone stretch.
 
 ---
 
@@ -302,6 +332,52 @@ lands when the blade visually connects** — not on the trigger frame.
 
 The visual side (`combat_visual_state.cpp`) eases each phase (`eased_combat_phase_progress`)
 and applies a lane-driven weight curve (`emphasis_scale` × finisher/amplified multipliers).
+
+### Arms are solved, not stretched
+
+Bone matrices are rigid — `make_bone_basis()` builds a rotation and a translation and no
+scale — so a pose that puts a hand further from the shoulder than the arm is long does not
+produce a long arm. It produces a forearm that ends in mid-air and a hand (and the weapon
+welded to it) floating away from the body. The authored RPG sword keys used to do this: at
+the strike frame the right hand sat 1.29 m from a 0.59 m arm, and the clips rendered with a
+detached hand and a sword planted in the ground.
+
+Two rules keep that from happening again:
+
+- `PosePrimitives::solve_arm_ik()` is a real two-bone solve, so `|shoulder→elbow|` and
+  `|elbow→hand|` are the bind lengths by construction. The old `elbow_bend_torso()`
+  heuristic placed the elbow a fraction along the shoulder-hand line and let the segments
+  come out however they came out — up to 35% over bind on the spear's offhand grip.
+- `place_hand_at()` clamps the request to the arm's reach before solving, so no authored
+  key can ask for an impossible pose. The reach fractions live together in
+  `pose_primitives.h` — relaxed (0.985), braced two-handed grip (0.96), committed melee
+  swing (0.94), seated rider (0.75) — because they are four deliberate policies, not four
+  copies of one number.
+
+Body deltas are applied **before** the hands are placed. Solving an arm against the shoulder
+it had last frame is how the bow ended up clamped short of full draw: the draw pose pushes
+the shoulder 0.20 m forward, and the hand target was only out of reach relative to where the
+shoulder had not moved to yet.
+
+### The blade has to travel
+
+A weapon is a static attachment welded to the `HandR` bone (`sword_make_static_attachment`),
+which means its direction in the world is entirely the hand bone's Y axis. The hand bone
+takes that axis from `pose.grip_axis_r`, and nothing set it for sword clips — so through
+every RTS sword swing the blade pointed at the sky and only the arm moved.
+
+`resolve_sword_pose()` now authors a blade direction alongside each hand key (guard →
+chambered behind the shoulder → apex → through the cut → follow-through → guard) and
+`aim_held_weapon()` converts it into the grip axis. `k_sword_blade_axis_in_grip` in
+`sword_renderer.h` is the single definition of where the blade sits in the grip frame; the
+static attachment, the runtime renderer and the bake-time aim all read it. The three
+infantry sword variants are a right-to-left cut, its mirror, and an overhead chop, and they
+now look like three different attacks.
+
+The infantry spear thrust had the same shape of problem in a different place:
+`resolve_infantry_spear_thrust_pose()` ignored `inputs.variant` entirely, so
+`attack_spear_a/b/c` baked byte-identical clips. It now offsets hand height, crouch, shaft
+pitch and reach per variant — a level thrust, a low one, and one over the shield rim.
 
 ---
 

@@ -3,8 +3,10 @@
 #include <QVector4D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 
 #include "../../../game/core/component.h"
 #include "../../../game/core/entity.h"
@@ -26,6 +28,7 @@
 #include "animation/clip_manifest.h"
 #include "animation/locomotion_manifest.h"
 #include "animation/playback_manifest.h"
+#include "animation/rig/humanoid_proportions.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -323,12 +326,26 @@ auto palette_contact_y(CreatureKind kind,
 
   switch (kind) {
   case CreatureKind::Humanoid: {
+
     auto const bind_palette = Render::Humanoid::humanoid_bind_palette();
+    constexpr std::array<QVector3D, 2> k_sole_points{
+        QVector3D{0.0F, -Render::GL::HumanProportions::FOOT_Y_OFFSET_DEFAULT, -0.060F},
+        QVector3D{0.0F, -Render::GL::HumanProportions::FOOT_Y_OFFSET_DEFAULT, 0.165F}};
+    auto const sole_lift = [&](std::size_t index) -> float {
+      if (index >= palette.size() || index >= bind_palette.size()) {
+        return 0.0F;
+      }
+      float lowest = std::numeric_limits<float>::max();
+      for (auto const& local : k_sole_points) {
+        float const posed = (palette[index] * QVector4D(local, 1.0F)).y();
+        float const bound = (bind_palette[index] * QVector4D(local, 1.0F)).y();
+        lowest = std::min(lowest, posed - bound);
+      }
+      return lowest;
+    };
     return std::min(
-        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL),
-                        bind_palette),
-        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR),
-                        bind_palette));
+        sole_lift(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL)),
+        sole_lift(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR)));
   }
   case CreatureKind::Horse: {
     auto const bind_palette = Render::Horse::horse_bind_palette();

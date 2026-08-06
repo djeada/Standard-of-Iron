@@ -71,6 +71,7 @@
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/pose_cache_components.h"
 #include "render/humanoid/pose_controller.h"
+#include "render/humanoid/pose_primitives.h"
 #include "render/humanoid/prepare.h"
 #include "render/humanoid/render_stats.h"
 #include "render/humanoid/skeleton.h"
@@ -2253,7 +2254,8 @@ TEST(AnimationCoreAttackPoseManifest, SpearVariantExposesOffhandGripPolicy) {
   });
 
   EXPECT_TRUE(thrust.use_offhand_spear_grip);
-  EXPECT_GT(thrust.right_hand.y, 1.20F);
+  EXPECT_GT(thrust.right_hand.y, 1.05F);
+  EXPECT_LT(thrust.right_hand.y, 1.20F);
   EXPECT_GT(thrust.right_hand.z, 0.40F);
   EXPECT_LT(thrust.right_hand.z, 0.45F);
   EXPECT_GT(thrust.foot_r_z_delta, 0.0F);
@@ -2466,7 +2468,9 @@ TEST(AnimationCoreAttackPoseManifest, HoldSpearThrustAppliesHoldDepth) {
 
 TEST(HumanoidPoseController, SpearAttackStaysWithinReachAndKeepsBodyPlanted) {
   using HP = Render::GL::HumanProportions;
-  constexpr float k_max_arm_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * 0.96F;
+  float const k_max_arm_reach =
+      Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(
+          1.0F, Render::Humanoid::PosePrimitives::k_braced_arm_reach_fraction);
   std::vector<float> const phases{
       0.0F, 0.10F, 0.20F, 0.30F, 0.40F, 0.50F, 0.60F, 0.70F, 0.84F, 1.0F};
 
@@ -8568,10 +8572,15 @@ TEST(HumanoidPrepare, RunPoseCanEnterFlightPhaseWhileWalkKeepsSupport) {
   float const run_ground =
       Render::GL::HumanProportions::GROUND_Y + run_pose.foot_y_offset;
 
-  EXPECT_TRUE(walk_pose.foot_l.y() <= walk_ground + 0.002F ||
-              walk_pose.foot_r.y() <= walk_ground + 0.002F);
-  EXPECT_GT(run_pose.foot_l.y(), run_ground + 0.004F);
-  EXPECT_GT(run_pose.foot_r.y(), run_ground + 0.004F);
+  auto const sole_y = [](float ankle_y, float pitch) {
+    return ankle_y - Animation::humanoid_foot_contact_lift(pitch);
+  };
+
+  EXPECT_TRUE(
+      sole_y(walk_pose.foot_l.y(), walk_pose.foot_pitch_l) <= walk_ground + 0.002F ||
+      sole_y(walk_pose.foot_r.y(), walk_pose.foot_pitch_r) <= walk_ground + 0.002F);
+  EXPECT_GT(sole_y(run_pose.foot_l.y(), run_pose.foot_pitch_l), run_ground + 0.004F);
+  EXPECT_GT(sole_y(run_pose.foot_r.y(), run_pose.foot_pitch_r), run_ground + 0.004F);
 }
 
 TEST(HumanoidPrepare, TemplatePrewarmRenderLeavesHumanoidAnimationStateUntouched) {

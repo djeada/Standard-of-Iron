@@ -431,11 +431,23 @@ TEST_F(HumanoidPoseControllerTest, LeanZeroAmountNoChange) {
 TEST_F(HumanoidPoseControllerTest, PlaceHandAtSetsHandPosition) {
   HumanoidPoseController controller(pose, anim_ctx);
 
-  QVector3D const target_position(0.30F, 1.20F, 0.80F);
+  QVector3D const target_position(0.30F, 1.20F, 0.35F);
 
   controller.place_hand_at(Side::Right, target_position);
 
   EXPECT_TRUE(approx_equal(pose.hand_r, target_position));
+}
+
+TEST_F(HumanoidPoseControllerTest, PlaceHandAtNeverStretchesTheArm) {
+  using HP = HumanProportions;
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  controller.place_hand_at(Side::Right, QVector3D(0.30F, 1.20F, 1.40F));
+
+  EXPECT_LE((pose.hand_r - pose.shoulder_r).length(),
+            HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN);
+  EXPECT_NEAR((pose.elbow_r - pose.shoulder_r).length(), HP::UPPER_ARM_LEN, 0.002F);
+  EXPECT_NEAR((pose.hand_r - pose.elbow_r).length(), HP::FORE_ARM_LEN, 0.002F);
 }
 
 TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
@@ -502,7 +514,7 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKPreventsGroundPenetration) {
 TEST_F(HumanoidPoseControllerTest, PlaceHandAtLeftHandWorks) {
   HumanoidPoseController controller(pose, anim_ctx);
 
-  QVector3D const target_position(-0.40F, 1.30F, 0.60F);
+  QVector3D const target_position(-0.40F, 1.30F, 0.30F);
 
   controller.place_hand_at(Side::Left, target_position);
 
