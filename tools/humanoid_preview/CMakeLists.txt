@@ -1,4 +1,8 @@
-add_executable(humanoid_preview main.cpp ${CMAKE_SOURCE_DIR}/render/software/software_rasterizer.cpp)
+add_executable(
+    humanoid_preview
+    main.cpp
+    ${CMAKE_SOURCE_DIR}/render/software/software_rasterizer.cpp
+)
 
 target_link_libraries(
     humanoid_preview
