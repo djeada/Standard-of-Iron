@@ -268,6 +268,41 @@ the colouring. The cart's wheel bands in the shader were updated to match the en
 wheels; the rack's weapon geometry was deliberately left where it is, and the additions
 sit in regions the shader treats as wood.
 
+## Nation emblems: one eagle, one crescent
+
+Every Roman building carries the **same aquila**, and every Carthaginian building the
+**same crescent-and-disc**. They are not per-renderer geometry: both are built once in
+`render/entity/building_ornaments.h` and used everywhere.
+
+- `Detail::add_eagle_silhouette` is the aquila itself — four swept wing feathers a side
+  over a darker shadow layer, a fanned tail, breast, neck, a head turned to its right and
+  a cone beak. That beak is what makes the silhouette read as a bird rather than a cross
+  at the game camera, which is what the old box-and-crossbar version looked like.
+- `add_roman_aquila_relief` mounts it on a wall inside a laurel wreath on an oxblood
+  plaque; `add_roman_roof_standard` mounts the _same function_ on a vexillum standard.
+- `Detail::add_tanit_sign` is the Punic sign — a true disc head, upturned arms and a
+  stepped triangular body — used by `add_punic_tanit_relief`.
+  `add_punic_horned_crown` is the roof piece: pedestal, pole, bronze disc, and a
+  continuous crescent arc with horn cones.
+
+Two rules the geometry has to keep:
+
+- **The roof signature survives minimal LOD.** `add_eagle_silhouette` and
+  `add_tanit_sign` take a `core_lod`: the relief passes `Full` (a wall carving is not
+  worth drawing at distance), the roof standard passes `All`, so the core body, head,
+  beak, inner wings and centre tail still draw when the fine feathers are dropped. A
+  distant building must still fly its bird. `building_archetype_desc_test` enforces both
+  halves of that.
+- **Recorder-based renderers use the same source.** The two barracks build their
+  archetypes from recorded draw commands rather than from a `BuildingArchetypeDesc`, so
+  they would otherwise need a second, drifting copy of the emblem. Instead
+  `render/entity/building_ornament_emit.h` replays a desc through an ordinary submitter,
+  and the barracks build the shared ornament into a throwaway desc and emit it. Adding a
+  feather to the eagle changes every Roman building at once, barracks included.
+
+Walls are deliberately left bare: a timber palisade is not a civic facade, and one
+emblem per segment would be both wrong and expensive.
+
 ## Arena scenarios
 
 - `world_prop_lineup` — every authored prop side by side, now including
@@ -282,3 +317,21 @@ Arena wall groups must land on even grid cells, so a `WallSegment` group needs a
 `count` when its origin sits on an even coordinate — `arena_scenarios_test` enforces it.
 Any scenario spawning `settlement_resident` groups must also assert
 `MovementAnimationObserved` for one of them.
+
+### Where scenario dressing actually lands
+
+`ArenaViewport::place_scenario_resource_patches` does not drop a `resource_patch` prop
+exactly where it is authored. Each prop is given a ground radius
+(`Game::Map::world_prop_ground_radius`, a per-type fraction of the render scale — camp
+props are wide, tree trunks are narrow) and is only placed where it stands clear of:
+
+- a building footprint plus `k_prop_building_clearance`,
+- water and bridges plus a dry margin,
+- a road plus a small clearance,
+- every prop already placed in the same pass, plus `k_prop_gap`.
+
+If the authored spot fails, the prop is nudged outward through three rings of candidate
+positions; if none is clear it is **skipped**. That is what stops a tent growing out of
+a house wall or a grove standing in a river, and it applies to every scenario, including
+new ones — but a patch authored somewhere hopeless still silently loses props, so author
+the dressing where it belongs and let the pass tidy the edges rather than relying on it.

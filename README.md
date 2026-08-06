@@ -505,6 +505,10 @@ The engine is moving from a single hardcoded nation toward a scalable multi-fact
 - A _resource economy_ with gathering, spending, and marketplace trade. Gathered goods are
   carried to the stockpile yard beside a barracks before they count; see
   [docs/RESOURCE_STOCKPILE.md](docs/RESOURCE_STOCKPILE.md).
+- _Settlement life_: workers keep their own round between the tree line and the yard
+  after one order, villagers work and loiter around the buildings and props of their
+  settlement, and they scatter when armed strangers arrive. See
+  [docs/SETTLEMENT_LIFE.md](docs/SETTLEMENT_LIFE.md).
 - _Campaign progression_ with mission unlocking and per-slot save metadata.
 - A _simulation kernel_ (`game_sim`) that builds and runs with no renderer linked, exercised by `bin/simulation_tests`, which links that kernel and nothing else.
 - A _session context_ that owns all per-match state, so two matches can run in one process and tests get isolation.

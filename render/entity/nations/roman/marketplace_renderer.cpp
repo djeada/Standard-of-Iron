@@ -427,7 +427,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                           BuildingFacadePlane::ZY,
                           0.72F,
                           c.gold,
-                          c.blue_accent);
+                          c.terracotta_dark);
   add_roman_roof_standard(
       desc, QVector3D(0.72F, hall_roof_y + 0.10F, 0.0F), 0.58F, c.gold, c.cloth_red);
 

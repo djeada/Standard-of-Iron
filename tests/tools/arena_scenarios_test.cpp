@@ -810,6 +810,7 @@ TEST(ArenaScenariosTest, RetargetScenarioChecksBothAmmunitionTypes) {
 
 TEST(ArenaScenariosTest, ListsEverySettlementAndEconomyScenario) {
   for (auto const* settlement_id : {Arena::Scenarios::k_village_harvest_cycle_id,
+                                    Arena::Scenarios::k_village_day_life_id,
                                     Arena::Scenarios::k_colony_founding_id,
                                     Arena::Scenarios::k_village_raid_id,
                                     Arena::Scenarios::k_frontier_outpost_id,
