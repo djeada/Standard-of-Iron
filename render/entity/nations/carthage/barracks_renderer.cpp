@@ -20,6 +20,7 @@
 #include "../../barracks_renderer_common.h"
 #include "../../barracks_stockpile.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornament_emit.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
@@ -722,45 +723,12 @@ void draw_carthage_roof(const DrawContext& p,
                QVector3D(0.06F, 0.05F, 0.06F),
                c.brick);
     }
-
-    draw_cyl(out,
-             p.model,
-             QVector3D(0.0F, 1.98F, -0.12F),
-             QVector3D(0.0F, 2.58F, -0.12F),
-             0.045F,
-             c.iron,
-             white);
-    draw_box(out,
-             unit,
-             white,
-             p.model,
-             QVector3D(0.0F, 2.34F, -0.12F),
-             QVector3D(0.09F, 0.13F, 0.08F),
-             c.ember);
-    draw_box(out,
-             unit,
-             white,
-             p.model,
-             QVector3D(0.0F, 2.62F, -0.12F),
-             QVector3D(0.08F, 0.14F, 0.08F),
-             c.bronze);
-    for (float const side : {-1.0F, 1.0F}) {
-      draw_box(out,
-               unit,
-               white,
-               p.model,
-               QVector3D(side * 0.20F, 2.42F, -0.12F),
-               QVector3D(0.16F, 0.045F, 0.06F),
-               c.bronze);
-      draw_box(out,
-               unit,
-               white,
-               p.model,
-               QVector3D(side * 0.34F, 2.56F, -0.12F),
-               QVector3D(0.05F, 0.16F, 0.05F),
-               c.iron);
-    }
   }
+
+  BuildingArchetypeDesc crown("carthage_barracks_crown");
+  add_punic_horned_crown(
+      crown, QVector3D(0.0F, 1.94F, -0.12F), 0.92F, c.iron, c.bronze, c.ember);
+  emit_building_ornament(crown, p.model, out, unit, white, detailed);
 }
 
 void draw_gate(const DrawContext& p,

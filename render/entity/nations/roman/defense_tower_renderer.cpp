@@ -270,7 +270,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         BuildingFacadePlane::XY,
         damaged ? 0.54F : 0.68F,
         c.gold,
-        c.blue_accent);
+        c.terracotta_dark);
     add_roman_roof_standard(desc,
                             QVector3D(0.0F, battlement_y + 0.20F, 0.0F),
                             damaged ? 0.48F : 0.66F,

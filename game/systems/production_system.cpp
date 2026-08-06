@@ -582,6 +582,13 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               reward_amount = k_collect_iron_ore_reward;
             }
             load_onto_hauler(e, resource_type, reward_amount);
+
+            if (!e->has_component<Engine::Core::AIControlledComponent>()) {
+              builder_prod->has_gather_order = true;
+              builder_prod->gather_product_type = builder_prod->product_type;
+              builder_prod->gather_anchor_x = builder_prod->task_target_x;
+              builder_prod->gather_anchor_z = builder_prod->task_target_z;
+            }
             if (auto* pathfinder = CommandService::get_pathfinder()) {
               Point const tree_grid = CommandService::world_to_grid(
                   builder_prod->task_target_x, builder_prod->task_target_z);

@@ -648,6 +648,11 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     builder_obj["bypass_movement_active"] = builder->bypass_movement_active;
     builder_obj["bypass_target_x"] = static_cast<double>(builder->bypass_target_x);
     builder_obj["bypass_target_z"] = static_cast<double>(builder->bypass_target_z);
+    builder_obj["has_gather_order"] = builder->has_gather_order;
+    builder_obj["gather_product_type"] =
+        QString::fromStdString(builder->gather_product_type);
+    builder_obj["gather_anchor_x"] = static_cast<double>(builder->gather_anchor_x);
+    builder_obj["gather_anchor_z"] = static_cast<double>(builder->gather_anchor_z);
     entity_obj["builder_production"] = builder_obj;
   }
 
@@ -793,10 +798,15 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     resident_obj["hearth_z"] = static_cast<double>(resident->hearth_z);
     resident_obj["roam_radius"] = static_cast<double>(resident->roam_radius);
     resident_obj["hearth_assigned"] = resident->hearth_assigned;
+    resident_obj["released"] = resident->released;
     resident_obj["errand"] = static_cast<int>(resident->errand);
+    resident_obj["role"] = static_cast<int>(resident->role);
     resident_obj["focus_id"] = static_cast<qint64>(resident->focus_id);
     resident_obj["errand_x"] = static_cast<double>(resident->errand_x);
     resident_obj["errand_z"] = static_cast<double>(resident->errand_z);
+    resident_obj["focus_x"] = static_cast<double>(resident->focus_x);
+    resident_obj["focus_z"] = static_cast<double>(resident->focus_z);
+    resident_obj["work_elapsed"] = static_cast<double>(resident->work_elapsed);
     resident_obj["errand_remaining"] = static_cast<double>(resident->errand_remaining);
     resident_obj["planned_dwell"] = static_cast<double>(resident->planned_dwell);
     resident_obj["think_cooldown"] = static_cast<double>(resident->think_cooldown);
@@ -1540,6 +1550,13 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(builder_obj["bypass_target_x"].toDouble(0.0));
     builder->bypass_target_z =
         static_cast<float>(builder_obj["bypass_target_z"].toDouble(0.0));
+    builder->has_gather_order = builder_obj["has_gather_order"].toBool(false);
+    builder->gather_product_type =
+        builder_obj["gather_product_type"].toString().toStdString();
+    builder->gather_anchor_x =
+        static_cast<float>(builder_obj["gather_anchor_x"].toDouble(0.0));
+    builder->gather_anchor_z =
+        static_cast<float>(builder_obj["gather_anchor_z"].toDouble(0.0));
   }
 
   if (json.contains("wall_segment")) {
@@ -1713,11 +1730,17 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     resident->roam_radius =
         static_cast<float>(resident_obj["roam_radius"].toDouble(16.0));
     resident->hearth_assigned = resident_obj["hearth_assigned"].toBool(false);
+    resident->released = resident_obj["released"].toBool(false);
     resident->errand = static_cast<SettlementErrand>(resident_obj["errand"].toInt(0));
+    resident->role = static_cast<SettlementErrandRole>(resident_obj["role"].toInt(0));
     resident->focus_id =
         static_cast<EntityID>(resident_obj["focus_id"].toVariant().toULongLong());
     resident->errand_x = static_cast<float>(resident_obj["errand_x"].toDouble(0.0));
     resident->errand_z = static_cast<float>(resident_obj["errand_z"].toDouble(0.0));
+    resident->focus_x = static_cast<float>(resident_obj["focus_x"].toDouble(0.0));
+    resident->focus_z = static_cast<float>(resident_obj["focus_z"].toDouble(0.0));
+    resident->work_elapsed =
+        static_cast<float>(resident_obj["work_elapsed"].toDouble(0.0));
     resident->errand_remaining =
         static_cast<float>(resident_obj["errand_remaining"].toDouble(0.0));
     resident->planned_dwell =

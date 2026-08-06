@@ -9,6 +9,7 @@
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
 #include "arena_wildlife_scenarios.h"
+#include "game/wildlife/wildlife_config.h"
 
 namespace Arena::Scenarios {
 namespace {
@@ -84,6 +85,14 @@ auto at(float time,
   result.command = command;
   result.group = std::move(source);
   result.target_group = std::move(target);
+  return result;
+}
+
+auto harvest_at(float time,
+                QString source,
+                QString resource_kind) -> ArenaScenarioStep {
+  auto result = at(time, Command::HarvestResource, std::move(source));
+  result.resource_kind = std::move(resource_kind);
   return result;
 }
 
@@ -6299,6 +6308,187 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_village_day_life_id),
+        QStringLiteral("Village Day Life"),
+        QStringLiteral("A close morning pass over a hamlet that keeps itself busy: "
+                       "the lane crowd works between the market, the houses and the "
+                       "temple porch, woodcutters and quarriers run their own round "
+                       "from the tree line to the barracks yard without being told "
+                       "twice, and the flock grazes the meadow behind the houses. "
+                       "This is the ambience reference scene - the camera sits close "
+                       "enough to read hands and gait."),
+        120.0F,
+        {36.0F, 47.0F, 26.0F});
+    s.camera_focus = QVector3D(-2.0F, 0.0F, 1.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.environment.start_time = 11.5F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.wildlife = Game::Wildlife::default_settings();
+    s.wildlife.enabled = true;
+    s.wildlife.seed = 20260805U;
+    s.wildlife.wolves.enabled = false;
+    s.wildlife.wolves.group_count = 0;
+    s.wildlife.sheep.enabled = true;
+    s.wildlife.sheep.group_count = 1;
+    s.wildlife.sheep.group_size_min = 5;
+    s.wildlife.sheep.group_size_max = 6;
+    s.wildlife.sheep.roam_radius = 6.0F;
+    s.wildlife.sheep.spawn_areas = {{-16.0F, 15.0F, 4.0F}};
+    s.wildlife.birds.enabled = true;
+    s.wildlife.birds.group_count = 1;
+    s.wildlife.birds.spawn_areas = {{6.0F, -14.0F, 8.0F}};
+
+    s.roads = {
+        street({-26.0F, 0.0F, 0.0F}, {26.0F, 0.0F, 0.0F}, 3.4F, "stone"),
+        street({-2.0F, 0.0F, 0.0F}, {-2.0F, 0.0F, 13.0F}, 2.6F, "stone"),
+        street({9.0F, 0.0F, 0.0F}, {9.0F, 0.0F, -10.0F}, 2.6F, "stone"),
+    };
+
+    s.resource_patches = {
+        patch("olive_tree", 5, {-17.0F, 0.0F, -11.0F}, {0.0F, 0.0F, 4.2F}, 1.15F),
+        patch("olive_tree", 4, {-22.0F, 0.0F, -9.0F}, {0.0F, 0.0F, 4.4F}, 1.1F),
+        patch("pine_tree", 4, {-21.0F, 0.0F, 4.0F}, {0.0F, 0.0F, 4.4F}, 1.05F),
+        patch("boulder", 5, {-15.0F, 0.0F, 14.0F}, {3.2F, 0.0F, 0.0F}, 1.15F),
+        patch("boulder", 3, {-4.0F, 0.0F, 17.0F}, {3.2F, 0.0F, 0.0F}, 1.05F),
+        patch("fire_camp", 1, {-5.0F, 0.0F, 11.5F}, {}, 0.85F),
+        patch("supply_cart", 3, {2.5F, 0.0F, -2.0F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("tent", 2, {-20.0F, 0.0F, 12.0F}, {4.2F, 0.0F, 0.0F}, 0.8F),
+        patch("weapon_rack", 1, {12.0F, 0.0F, 3.5F}, {}, 1.0F),
+        patch("plant", 7, {-8.0F, 0.0F, 15.0F}, {2.8F, 0.0F, 0.0F}, 0.9F),
+    };
+
+    auto woodcutters = group(QStringLiteral("village_woodcutters"),
+                             Troop::Builder,
+                             2,
+                             2,
+                             {-13.0F, 0.0F, -6.0F},
+                             1,
+                             {3.2F, 0.0F, 0.0F});
+    woodcutters.nation_id = Nation::RomanRepublic;
+
+    auto quarriers = group(QStringLiteral("village_quarriers"),
+                           Troop::Builder,
+                           2,
+                           2,
+                           {-11.0F, 0.0F, 10.0F},
+                           1,
+                           {3.2F, 0.0F, 0.0F});
+    quarriers.nation_id = Nation::RomanRepublic;
+
+    s.groups = {
+        building(QStringLiteral("day_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 2,
+                 1,
+                 {0.0F, 0.0F, -6.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("day_temple"),
+                 Game::Units::SpawnType::Temple,
+                 Nation::RomanRepublic,
+                 2,
+                 1,
+                 {9.0F, 0.0F, -12.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("day_houses_west"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 2,
+                 3,
+                 {-10.0F, 0.0F, 6.0F},
+                 {6.6F, 0.0F, 0.0F}),
+        building(QStringLiteral("day_houses_east"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 2,
+                 2,
+                 {8.5F, 0.0F, 6.0F},
+                 {6.6F, 0.0F, 0.0F}),
+        building(QStringLiteral("day_granary"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 2,
+                 1,
+                 {-10.0F, 0.0F, -7.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("day_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 2,
+                 1,
+                 {14.0F, 0.0F, -4.0F},
+                 {},
+                 180.0F),
+        residents(QStringLiteral("day_lane_folk"),
+                  Nation::RomanRepublic,
+                  2,
+                  4,
+                  {-3.0F, 0.0F, 2.5F},
+                  {4.0F, 0.0F, 0.0F},
+                  12.0F),
+        residents(QStringLiteral("day_market_folk"),
+                  Nation::RomanRepublic,
+                  2,
+                  3,
+                  {3.5F, 0.0F, -3.0F},
+                  {3.6F, 0.0F, 0.0F},
+                  10.0F),
+        residents(QStringLiteral("day_yard_folk"),
+                  Nation::RomanRepublic,
+                  2,
+                  3,
+                  {-9.0F, 0.0F, 9.0F},
+                  {3.6F, 0.0F, 0.0F},
+                  9.0F),
+        residents(QStringLiteral("day_temple_folk"),
+                  Nation::RomanRepublic,
+                  2,
+                  3,
+                  {10.0F, 0.0F, -8.0F},
+                  {3.4F, 0.0F, 0.0F},
+                  9.0F),
+        woodcutters,
+        quarriers,
+    };
+
+    s.steps = {
+        harvest_at(1.0F, QStringLiteral("village_woodcutters"), QStringLiteral("tree")),
+        harvest_at(
+            1.6F, QStringLiteral("village_quarriers"), QStringLiteral("boulder")),
+    };
+
+    add_settlement_acceptance(s,
+                              {QStringLiteral("day_market"),
+                               QStringLiteral("day_temple"),
+                               QStringLiteral("day_houses_west"),
+                               QStringLiteral("day_houses_east"),
+                               QStringLiteral("day_granary"),
+                               QStringLiteral("day_barracks")});
+    add_visual_stability(s,
+                         {QStringLiteral("day_lane_folk"),
+                          QStringLiteral("day_market_folk"),
+                          QStringLiteral("day_yard_folk"),
+                          QStringLiteral("day_temple_folk"),
+                          QStringLiteral("village_woodcutters"),
+                          QStringLiteral("village_quarriers")});
+    s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("day_lane_folk")));
+
+    s.expectations.push_back(expectation(Expect::OwnerHarvestsResource,
+                                         QStringLiteral("village_woodcutters"),
+                                         {},
+                                         8.0F));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_colony_founding_id),
         QStringLiteral("Colony Founding"),
         QStringLiteral("A Carthaginian colony breaks ground on the far side of the "
@@ -6643,13 +6833,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     };
 
     s.resource_patches = {
-        patch("olive_tree", 4, {-22.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 5.0F}, 1.1F),
-        patch("olive_tree", 4, {22.0F, 0.0F, 4.0F}, {0.0F, 0.0F, 5.0F}, 1.1F),
-        patch("supply_cart", 3, {-8.0F, 0.0F, -12.5F}, {3.4F, 0.0F, 0.0F}, 0.95F),
-        patch("fire_camp", 1, {6.0F, 0.0F, 12.0F}, {}, 0.85F),
-        patch("tent", 2, {8.0F, 0.0F, -12.5F}, {4.5F, 0.0F, 0.0F}, 0.8F),
-        patch("plant", 6, {-14.0F, 0.0F, 5.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
-        patch("plant", 6, {8.0F, 0.0F, -5.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+        patch("olive_tree", 4, {-22.0F, 0.0F, -19.0F}, {0.0F, 0.0F, 4.0F}, 1.1F),
+        patch("olive_tree", 4, {22.0F, 0.0F, 11.0F}, {0.0F, 0.0F, 4.0F}, 1.1F),
+        patch("supply_cart", 3, {-8.0F, 0.0F, -11.5F}, {3.4F, 0.0F, 0.0F}, 0.95F),
+        patch("fire_camp", 1, {6.0F, 0.0F, 12.5F}, {}, 0.85F),
+        patch("tent", 2, {13.0F, 0.0F, -11.0F}, {4.5F, 0.0F, 0.0F}, 0.8F),
+        patch("plant", 6, {-15.0F, 0.0F, 11.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+        patch("plant", 6, {8.0F, 0.0F, -19.5F}, {3.0F, 0.0F, 0.0F}, 0.9F),
     };
 
     s.groups = {

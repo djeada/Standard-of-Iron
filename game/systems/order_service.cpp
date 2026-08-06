@@ -89,6 +89,42 @@ void OrderService::clear_civilian_delivery(Engine::Core::Entity* entity) {
   entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
 }
 
+void OrderService::release_settlement_resident(Engine::Core::Entity* entity) {
+  if (entity == nullptr) {
+    return;
+  }
+
+  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Civilian) {
+    return;
+  }
+
+  auto* resident = entity->get_component<Engine::Core::SettlementResidentComponent>();
+  if (resident == nullptr) {
+    resident = entity->add_component<Engine::Core::SettlementResidentComponent>();
+  }
+  if (resident == nullptr) {
+    return;
+  }
+
+  resident->released = true;
+  resident->errand = Engine::Core::SettlementErrand::Settling;
+  resident->role = Engine::Core::SettlementErrandRole::Loiter;
+  resident->focus_id = 0;
+  resident->work_elapsed = 0.0F;
+}
+
+void OrderService::clear_builder_gather_order(Engine::Core::Entity* entity) {
+  if (entity == nullptr) {
+    return;
+  }
+
+  if (auto* builder =
+          entity->get_component<Engine::Core::BuilderProductionComponent>()) {
+    builder->clear_gather_order();
+  }
+}
+
 void OrderService::clear_builder_task(Engine::Core::Entity* entity) {
   if (entity == nullptr) {
     return;
@@ -203,6 +239,8 @@ void OrderService::prepare_for_move(Engine::Core::Entity* entity,
 
   if (should_clear_auxiliary_orders(kind)) {
     clear_civilian_delivery(entity);
+    clear_builder_gather_order(entity);
+    release_settlement_resident(entity);
     clear_patrol(entity);
   }
 
@@ -260,6 +298,8 @@ void OrderService::apply_stop(Engine::Core::Entity* entity) {
   reset_movement(entity);
   clear_attack_target(entity);
   clear_player_order_intent(entity);
+  clear_builder_gather_order(entity);
+  release_settlement_resident(entity);
   clear_patrol(entity);
   exit_hold_mode(entity);
   set_formation_mode_active(entity, false);

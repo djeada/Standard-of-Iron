@@ -23,6 +23,7 @@
 #include "../../barracks_renderer_common.h"
 #include "../../barracks_stockpile.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_ornament_emit.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
@@ -665,36 +666,12 @@ void draw_roofline(const DrawContext& p,
                QVector3D(0.0F, 2.74F, 0.92F),
                QVector3D(0.08F, 0.10F, 0.04F),
                c.gold);
-
-      draw_cyl(out,
-               p.model,
-               QVector3D(0.0F, 2.66F, 0.92F),
-               QVector3D(0.0F, 3.12F, 0.92F),
-               0.025F,
-               c.gold,
-               white);
-      draw_box(out,
-               unit,
-               white,
-               p.model,
-               QVector3D(0.0F, 2.90F, 0.92F),
-               QVector3D(0.12F, 0.07F, 0.035F),
-               c.terracotta_dark);
-      draw_box(out,
-               unit,
-               white,
-               p.model,
-               QVector3D(0.0F, 3.10F, 0.92F),
-               QVector3D(0.30F, 0.045F, 0.055F),
-               c.gold);
-      draw_box(out,
-               unit,
-               white,
-               p.model,
-               QVector3D(0.0F, 3.16F, 0.92F),
-               QVector3D(0.06F, 0.10F, 0.06F),
-               c.gold);
     }
+
+    BuildingArchetypeDesc aquila("roman_barracks_aquila");
+    add_roman_roof_standard(
+        aquila, QVector3D(0.0F, 2.64F, 0.92F), 0.86F, c.gold, c.terracotta_dark);
+    emit_building_ornament(aquila, p.model, out, unit, white, detailed);
   }
 }
 

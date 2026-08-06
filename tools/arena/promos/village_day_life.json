@@ -1,0 +1,290 @@
+{
+  "id": "village_day_life",
+  "title": "A DAY IN THE HAMLET",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.5
+  },
+  "shots": [
+    {
+      "name": "lane",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 14.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "point",
+        "point": [-2.0, 0.0, 1.0],
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 27,
+          "pitch": 24,
+          "yaw": 28,
+          "fov": 40,
+          "height": 1.8
+        },
+        {
+          "time": 6.0,
+          "distance": 23,
+          "pitch": 27,
+          "yaw": 46,
+          "fov": 40,
+          "height": 2.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE LANE"
+    },
+    {
+      "name": "market",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 26.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "day_market_folk",
+        "smoothing": 0.45
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15,
+          "pitch": 23,
+          "yaw": 34,
+          "fov": 38,
+          "height": 1.4
+        },
+        {
+          "time": 5.0,
+          "distance": 13,
+          "pitch": 26,
+          "yaw": 50,
+          "fov": 38,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "MARKET DAY",
+      "transition": {
+        "type": "dip",
+        "duration": 0.4
+      }
+    },
+    {
+      "name": "woodline",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 9.0,
+      "duration": 5.5,
+      "focus": {
+        "mode": "group",
+        "group": "village_woodcutters",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12,
+          "pitch": 14,
+          "yaw": 96,
+          "fov": 38,
+          "height": 1.2
+        },
+        {
+          "time": 5.5,
+          "distance": 10,
+          "pitch": 18,
+          "yaw": 78,
+          "fov": 38,
+          "height": 1.3,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE TREE LINE"
+    },
+    {
+      "name": "haul",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 20.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "group",
+        "group": "village_woodcutters",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 17,
+          "pitch": 20,
+          "yaw": 330,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 6.0,
+          "distance": 15,
+          "pitch": 24,
+          "yaw": 350,
+          "fov": 40,
+          "height": 1.7,
+          "ease": "linear"
+        }
+      ],
+      "caption": "EVERY LOAD WALKS HOME"
+    },
+    {
+      "name": "quarry",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 44.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "village_quarriers",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12,
+          "pitch": 15,
+          "yaw": 24,
+          "fov": 38,
+          "height": 1.2
+        },
+        {
+          "time": 5.0,
+          "distance": 11,
+          "pitch": 20,
+          "yaw": 8,
+          "fov": 38,
+          "height": 1.4,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AND THEY GO BACK ON THEIR OWN",
+      "transition": {
+        "type": "whip",
+        "duration": 0.22
+      }
+    },
+    {
+      "name": "hearth",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 58.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "day_yard_folk",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 14,
+          "pitch": 22,
+          "yaw": 44,
+          "fov": 38,
+          "height": 1.4
+        },
+        {
+          "time": 5.0,
+          "distance": 15,
+          "pitch": 25,
+          "yaw": 26,
+          "fov": 38,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE HOUSE YARDS"
+    },
+    {
+      "name": "flock",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 70.0,
+      "duration": 4.5,
+      "focus": {
+        "mode": "point",
+        "point": [-16.0, 0.0, 15.0],
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 16,
+          "pitch": 20,
+          "yaw": 6,
+          "fov": 38,
+          "height": 1.5
+        },
+        {
+          "time": 4.5,
+          "distance": 18,
+          "pitch": 24,
+          "yaw": 24,
+          "fov": 38,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE MEADOW"
+    },
+    {
+      "name": "wide",
+      "scenario": "village_day_life",
+      "seed": 8051,
+      "start": 82.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "point",
+        "point": [-2.0, 0.0, 1.0],
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 26,
+          "pitch": 22,
+          "yaw": 20,
+          "fov": 40,
+          "height": 2.0
+        },
+        {
+          "time": 7.0,
+          "distance": 42,
+          "pitch": 34,
+          "yaw": 44,
+          "fov": 40,
+          "height": 3.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "A PLACE THAT KEEPS ITSELF"
+    }
+  ],
+  "grade": {
+    "contrast": 1.08,
+    "saturation": 1.12,
+    "brightness": 0.04,
+    "gamma": 1.06,
+    "grain": 2,
+    "vignette": 0.08,
+    "sharpen": 0.6
+  },
+  "music": "assets/audio/music/base/base_army_camp_resting.ogg",
+  "music_start": 0.0
+}

@@ -378,6 +378,17 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
         .build_time = builder->build_time,
         .time_remaining = builder->time_remaining,
     };
+  } else if (auto const* resident =
+                 entity->get_component<SettlementResidentComponent>();
+
+             death == nullptr && resident != nullptr && resident->is_labouring()) {
+
+    action_inputs.construction = {
+        .active = true,
+        .build_time = resident->work_elapsed,
+        .time_remaining = 0.0F,
+        .cycles_per_second = k_settlement_labour_cycles_per_second,
+    };
   }
   if (combat != nullptr) {
     action_inputs.combat = {

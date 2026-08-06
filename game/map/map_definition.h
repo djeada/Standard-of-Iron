@@ -269,7 +269,7 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
   case WorldProp::Type::SupplyCart:
     return 1.28F;
   case WorldProp::Type::WeaponRack:
-    return 1.35F;
+    return 0.68F;
   case WorldProp::Type::Ruins:
     return 2.90F;
   case WorldProp::Type::DeadTree:
@@ -292,6 +292,35 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return 1.05F;
   }
   return 1.0F;
+}
+
+[[nodiscard]] constexpr auto world_prop_ground_fraction(WorldProp::Type type) -> float {
+  switch (type) {
+
+  case WorldProp::Type::PineTree:
+  case WorldProp::Type::OliveTree:
+  case WorldProp::Type::DeadTree:
+    return 0.22F;
+
+  case WorldProp::Type::Tent:
+  case WorldProp::Type::SupplyCart:
+  case WorldProp::Type::WeaponRack:
+  case WorldProp::Type::AbandonedHome:
+  case WorldProp::Type::Ruins:
+    return 0.55F;
+  case WorldProp::Type::FireCamp:
+    return 0.90F;
+  default:
+    break;
+  }
+  return 0.40F;
+}
+
+[[nodiscard]] constexpr auto world_prop_ground_radius(WorldProp::Type type,
+                                                      float authored_scale) -> float {
+  float const radius =
+      world_prop_render_scale(type) * authored_scale * world_prop_ground_fraction(type);
+  return radius > 0.5F ? radius : 0.5F;
 }
 
 enum class CoordSystem {
