@@ -897,6 +897,95 @@ TEST(FormationCombatGeometry, DefenderPublishesEveryIncomingMeleeFront) {
                           }));
 }
 
+TEST(FormationCombatGeometry, ACasualtyLeavesEverySurvivorWhereItStood) {
+  Engine::Core::World world;
+  auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* stats = unit->get_component<Engine::Core::UnitComponent>();
+
+  auto const before = Game::Systems::FormationCombat::resolve_layout(*unit);
+  ASSERT_EQ(before.live_slots.size(), 12U);
+
+  auto const casualties =
+      Game::Systems::Combat::apply_unit_damage(&world, unit, 10, 0U);
+  ASSERT_EQ(casualties.queued_soldier_casualties, 1);
+  ASSERT_GT(stats->health, 0);
+
+  auto const after = Game::Systems::FormationCombat::resolve_layout(*unit);
+  ASSERT_EQ(after.live_slots.size(), 11U);
+
+  for (auto const& survivor : after.live_slots) {
+    auto const previous = std::find_if(
+        before.live_slots.begin(),
+        before.live_slots.end(),
+        [&survivor](auto const& slot) { return slot.index == survivor.index; });
+    ASSERT_NE(previous, before.live_slots.end());
+    EXPECT_FLOAT_EQ(survivor.local_x, previous->local_x)
+        << "slot " << survivor.index << " slid sideways when a comrade fell";
+    EXPECT_FLOAT_EQ(survivor.local_z, previous->local_z)
+        << "slot " << survivor.index << " slid forward when a comrade fell";
+  }
+}
+
+TEST(FormationCombatGeometry, RepeatedCasualtiesNeverReorderTheSurvivingRanks) {
+  Engine::Core::World world;
+  auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* stats = unit->get_component<Engine::Core::UnitComponent>();
+
+  int const cols = Game::Systems::FormationCombat::resolve_layout(*unit).cols;
+  while (stats->health > 10) {
+    auto const before = Game::Systems::FormationCombat::resolve_layout(*unit);
+    Game::Systems::Combat::apply_unit_damage(&world, unit, 10, 0U);
+    auto const after = Game::Systems::FormationCombat::resolve_layout(*unit);
+    if (static_cast<int>(after.live_slots.size()) <= cols) {
+      break;
+    }
+    for (auto const& survivor : after.live_slots) {
+      auto const previous = std::find_if(
+          before.live_slots.begin(),
+          before.live_slots.end(),
+          [&survivor](auto const& slot) { return slot.index == survivor.index; });
+      ASSERT_NE(previous, before.live_slots.end());
+      EXPECT_FLOAT_EQ(survivor.local_x, previous->local_x);
+      EXPECT_FLOAT_EQ(survivor.local_z, previous->local_z);
+    }
+  }
+}
+
+TEST(FormationCombatGeometry, PublishedPresentationHoldsSlotsAcrossACasualty) {
+  Engine::Core::World world;
+  auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* target = add_spearmen(world, 2, 6.0F, 180.0F);
+  auto* target_ref = attacker->add_component<Engine::Core::AttackTargetComponent>();
+  target_ref->target_id = target->get_id();
+
+  Game::Systems::Combat::update_formation_contacts(&world);
+  auto const before =
+      target->get_component<Engine::Core::FormationPresentationComponent>()->soldiers;
+  ASSERT_EQ(before.size(), 12U);
+
+  Game::Systems::Combat::apply_unit_damage(&world, target, 10, attacker->get_id());
+  Game::Systems::Combat::update_formation_contacts(&world);
+
+  auto const* after =
+      target->get_component<Engine::Core::FormationPresentationComponent>();
+  ASSERT_NE(after, nullptr);
+  ASSERT_EQ(after->soldiers.size(), before.size());
+
+  std::size_t fallen = 0U;
+  for (std::size_t index = 0; index < after->soldiers.size(); ++index) {
+    EXPECT_EQ(after->soldiers[index].slot_index, before[index].slot_index);
+    if (!after->soldiers[index].alive) {
+      ++fallen;
+      continue;
+    }
+    EXPECT_FLOAT_EQ(after->soldiers[index].local_x, before[index].local_x)
+        << "published slot " << index << " moved when a comrade fell";
+    EXPECT_FLOAT_EQ(after->soldiers[index].local_z, before[index].local_z)
+        << "published slot " << index << " moved when a comrade fell";
+  }
+  EXPECT_EQ(fallen, 1U);
+}
+
 TEST(FormationCombatGeometry, FinalSurvivorsUseACompactCenteredLayout) {
   Engine::Core::World world;
   auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);

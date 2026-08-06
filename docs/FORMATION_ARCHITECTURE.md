@@ -57,6 +57,38 @@ Three properties the renderer depends on:
 `formed_ratio` (0..1) drives transitions: below 1 the block loosens and jitter
 rises, so forming and breaking read as visibly different from formed.
 
+### Casualties leave gaps, they do not re-deal the ranks
+
+A soldier's offset is a function of the query, so the only way a survivor can
+move is if something changes the query. `resolve_layout()` used to do exactly
+that: outside a melee lock it re-indexed the survivors into a dense grid, so
+every casualty gave every soldier behind the dead man his neighbour's slot, and
+the column count changed with the head count on top of that. One arrow made a
+whole company slide sideways.
+
+Survivors now keep their stable slot for as long as the unit is a block. Ranks
+only close when the remnant is at most one row wide (`live_count <= cols`), which
+is the case the compaction exists for — two survivors standing where corners of a
+12-man square used to be. That transition happens once in a unit's life instead
+of once per casualty.
+
+### One record of who is standing
+
+`FormationCombat::living_slot_indices()` is the only place that answers "which
+slots are alive". It reads `FormationRosterPresentationComponent`, which the
+damage path clears one slot at a time, and falls back to the health estimate
+(`resolve_surviving_individual_count`) only to bootstrap a unit that has never
+been hit.
+
+That matters because the renderer used to answer the same question itself, with
+the health rule, while the simulation answered it from the roster. The two agreed
+only by luck: whenever they disagreed — and entering or leaving combat was enough,
+because it toggled whether a published presentation existed — a different set of
+bodies was drawn and soldiers appeared to swap places with nobody dying. The
+renderer and the burning-unit effect now call the same function, and the
+renderer's slot positions come from the same `resolve_layout()` the simulation
+fights with rather than from a second copy of the placement rule.
+
 ### Selecting a layout
 
 `select_unit_layout(doctrine, troop_type, state)` resolves in three steps:

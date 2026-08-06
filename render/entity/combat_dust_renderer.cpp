@@ -639,8 +639,10 @@ void render_combat_dust(Renderer* renderer,
         std::max({transform->scale.x, transform->scale.y, transform->scale.z}));
     int const individuals_per_unit =
         std::max(1, resolved_individuals_per_unit(*unit_comp));
-    int const surviving_individuals = Engine::Core::resolve_surviving_individual_count(
-        unit_comp->health, unit_comp->max_health, individuals_per_unit);
+    auto const surviving_individuals =
+        static_cast<int>(Game::Systems::FormationCombat::living_slot_indices(
+                             *burning_entity, individuals_per_unit)
+                             .size());
     float const coverage_ratio = std::clamp(
         surviving_individuals / static_cast<float>(individuals_per_unit), 0.0F, 1.0F);
     float const footprint_scale =

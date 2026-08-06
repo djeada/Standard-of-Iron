@@ -213,7 +213,7 @@ uses_authored_rpg_sword_blade(const HumanoidAnimationContext& anim) noexcept -> 
 }
 
 [[nodiscard]] auto authored_sword_blade_dir() noexcept -> QVector3D {
-  return {0.02F, 0.97F, 0.0F};
+  return k_sword_blade_axis_in_grip;
 }
 
 auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& {
@@ -769,7 +769,7 @@ auto sword_make_static_attachment(const SwordRenderConfig& config,
                                   std::uint8_t base_role_byte)
     -> Render::Creature::StaticAttachmentSpec {
   return sword_make_static_attachment(
-      config, base_role_byte, QVector3D(0.02F, 0.97F, 0.0F));
+      config, base_role_byte, k_sword_blade_axis_in_grip);
 }
 
 auto sword_make_static_attachment(const SwordRenderConfig& config,

@@ -170,12 +170,19 @@ struct HumanoidLocomotionPoseInputs {
   float foot_y_offset{0.0F};
   PoseVec3 base_foot_l{};
   PoseVec3 base_foot_r{};
+
+  float pelvis_y{0.0F};
+  float hip_lateral_offset{0.0F};
+  float hip_vertical_offset{0.0F};
+  float leg_length{0.0F};
 };
 
 struct HumanoidLocomotionPoseSample {
   bool active{false};
   PoseVec3 foot_l{};
   PoseVec3 foot_r{};
+  float foot_pitch_l{0.0F};
+  float foot_pitch_r{0.0F};
   PoseVec3 pelvis_delta{};
   PoseVec3 shoulder_l_delta{};
   PoseVec3 shoulder_r_delta{};
@@ -186,6 +193,8 @@ struct HumanoidLocomotionPoseSample {
 };
 
 [[nodiscard]] auto wrap_locomotion_phase(float phase) noexcept -> float;
+
+[[nodiscard]] auto humanoid_foot_contact_lift(float foot_pitch) noexcept -> float;
 
 [[nodiscard]] auto humanoid_reference_cycle_time(
     HumanoidMotionState state,
