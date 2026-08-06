@@ -23,6 +23,8 @@ public:
   static void clear_civilian_delivery(Engine::Core::Entity* entity);
 
   static void clear_builder_task(Engine::Core::Entity* entity);
+  static void clear_builder_gather_order(Engine::Core::Entity* entity);
+  static void release_settlement_resident(Engine::Core::Entity* entity);
   static void clear_patrol(Engine::Core::Entity* entity);
   static void clear_attack_target(Engine::Core::Entity* entity);
   static void clear_player_order_intent(Engine::Core::Entity* entity);

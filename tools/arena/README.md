@@ -22,6 +22,7 @@ build-debug/bin/arena_app --scenario water_showcase
 build-debug/bin/arena_app --scenario unit_activity_showcase
 
 # Inhabited settlements, camps and the economy around them
+build-debug/bin/arena_app --scenario village_day_life
 build-debug/bin/arena_app --scenario village_harvest_cycle
 build-debug/bin/arena_app --scenario colony_founding
 build-debug/bin/arena_app --scenario village_raid
@@ -36,6 +37,13 @@ speed for visual inspection. Running without `--scenario` still opens the
 general Arena UI; use the **Units** panel to choose and load scenarios. The
 status bar reports the first automated failure and final PASS/FAIL result while
 the viewport remains available for normal RTS camera controls.
+
+`village_day_life` is the ambience reference scene: a close camera over a hamlet whose
+residents work its buildings and props and whose woodcutters and quarriers run their own
+round on a standing gather order after one initial job each. It is the scene to record
+for ambience footage and the scene to check after touching
+`SettlementLifeSystem` or `GatherLoopSystem` — see
+[docs/SETTLEMENT_LIFE.md](../../docs/SETTLEMENT_LIFE.md).
 
 ## Unit activity markers
 

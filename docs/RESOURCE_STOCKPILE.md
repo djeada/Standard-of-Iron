@@ -109,6 +109,15 @@ already uses for civilians tells the player what it is doing.
 - **The load survives a save.** `ResourceCarryComponent` is authoritative serialized
   state — dropping it would either delete the goods or hand them over for free.
 
+### The next load
+
+Unloading is no longer the end of the job. A worker that finished a harvest carries a
+**standing gather order**, and once the load is off its back `GatherLoopSystem` sends it
+back to the next node of the same kind near the one it last worked. A forest is one
+click, not one click per tree. The rules that end a round — and why the faction AI is
+deliberately left out of it — are in
+[SETTLEMENT_LIFE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SETTLEMENT_LIFE.md).
+
 ### What this changes elsewhere
 
 - Mission `accumulate_resources` objectives count a yield at unload, not at harvest, so a

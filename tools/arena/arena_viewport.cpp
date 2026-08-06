@@ -23,10 +23,13 @@
 #include <QtMath>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "animation/showcase_pose_manifest.h"
 #include "app/core/commander_control_controller.h"
@@ -2269,24 +2272,95 @@ void ArenaViewport::place_scenario_resource_patches(
     return;
   }
 
-  constexpr float k_prop_building_clearance = 1.6F;
+  constexpr float k_prop_building_clearance = 2.6F;
+
+  constexpr float k_prop_gap = 1.0F;
+
+  constexpr float k_prop_dry_margin = 1.0F;
+
+  constexpr float k_prop_road_clearance = 0.25F;
+
+  constexpr std::array<float, 4> k_nudge_rings{0.0F, 1.2F, 2.4F, 3.6F};
+  constexpr int k_nudge_directions = 8;
 
   auto& collision = Game::Systems::BuildingCollisionRegistry::instance();
-  const auto& terrain_field = Game::Map::TerrainService::instance().terrain_field();
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_field = terrain_service.terrain_field();
+
+  struct PlacedProp {
+    float x{0.0F};
+    float z{0.0F};
+    float radius{0.0F};
+  };
+  std::vector<PlacedProp> placed;
+  placed.reserve(m_world_props.size() + (definition.resource_patches.size() * 4));
+
+  for (const auto& existing : m_world_props) {
+    const QVector3D at = terrain_service.world_prop_world_position(existing);
+    placed.push_back(
+        {at.x(),
+         at.z(),
+         Game::Map::world_prop_ground_radius(existing.type, existing.scale)});
+  }
+
+  auto const stands_clear = [&](float x, float z, float radius) {
+    if (collision.is_circle_overlapping_building(
+            x, z, radius + k_prop_building_clearance)) {
+      return false;
+    }
+    if (terrain_service.is_point_near_water(x, z, radius + k_prop_dry_margin) ||
+        terrain_service.is_point_near_bridge(x, z, radius + k_prop_dry_margin)) {
+      return false;
+    }
+    if (terrain_service.is_point_near_road(x, z, radius + k_prop_road_clearance)) {
+      return false;
+    }
+    for (const auto& other : placed) {
+      float const dx = other.x - x;
+      float const dz = other.z - z;
+      float const minimum = other.radius + radius + k_prop_gap;
+      if (((dx * dx) + (dz * dz)) < (minimum * minimum)) {
+        return false;
+      }
+    }
+    return true;
+  };
 
   for (const auto& patch : definition.resource_patches) {
+    const auto type = world_prop_type_from_string(patch.prop_type);
+    float const radius = Game::Map::world_prop_ground_radius(type, patch.scale);
+
     for (int index = 0; index < patch.count; ++index) {
-      const QVector3D world_position =
-          scenario_origin + patch.origin + patch.spacing * index;
-      if (collision.is_circle_overlapping_building(
-              world_position.x(), world_position.z(), k_prop_building_clearance)) {
+      const QVector3D wanted = scenario_origin + patch.origin + patch.spacing * index;
+
+      std::optional<QVector3D> spot;
+      for (std::size_t ring = 0; ring < k_nudge_rings.size() && !spot.has_value();
+           ++ring) {
+        float const reach = k_nudge_rings.at(ring);
+        int const directions = reach <= 0.0F ? 1 : k_nudge_directions;
+        float const bias = static_cast<float>(ring) * 0.4F;
+        for (int step = 0; step < directions; ++step) {
+          float const angle = bias + (6.2831853F * static_cast<float>(step) /
+                                      static_cast<float>(std::max(1, directions)));
+          QVector3D const candidate(wanted.x() + (std::cos(angle) * reach),
+                                    wanted.y(),
+                                    wanted.z() + (std::sin(angle) * reach));
+          if (stands_clear(candidate.x(), candidate.z(), radius)) {
+            spot = candidate;
+            break;
+          }
+        }
+      }
+
+      if (!spot.has_value()) {
         continue;
       }
 
-      const QVector2D grid_position =
-          grid_position_from_world(terrain_field, world_position);
+      placed.push_back({spot->x(), spot->z(), radius});
+
+      const QVector2D grid_position = grid_position_from_world(terrain_field, *spot);
       Game::Map::WorldProp prop;
-      prop.type = world_prop_type_from_string(patch.prop_type);
+      prop.type = type;
       prop.x = grid_position.x();
       prop.z = grid_position.y();
       prop.scale = patch.scale;

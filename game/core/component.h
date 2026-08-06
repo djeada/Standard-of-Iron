@@ -1206,8 +1206,20 @@ public:
 
   EntityID structure_task_entity_id{0};
 
+  bool has_gather_order{false};
+  std::string gather_product_type{};
+  float gather_anchor_x{0.0F};
+  float gather_anchor_z{0.0F};
+
   BuilderTaskFault fault{BuilderTaskFault::None};
   float fault_display_remaining{0.0F};
+
+  void clear_gather_order() {
+    has_gather_order = false;
+    gather_product_type.clear();
+    gather_anchor_x = 0.0F;
+    gather_anchor_z = 0.0F;
+  }
 };
 
 class WallSegmentComponent : public Component {
@@ -1781,7 +1793,15 @@ enum class SettlementErrand : std::uint8_t {
   Settling = 0,
   WalkingTo = 1,
   Working = 2,
+  Fleeing = 3,
 };
+
+enum class SettlementErrandRole : std::uint8_t {
+  Loiter = 0,
+  Labour = 1,
+};
+
+inline constexpr float k_settlement_labour_cycles_per_second = 1.15F;
 
 class SettlementResidentComponent : public Component {
 public:
@@ -1792,14 +1812,24 @@ public:
   float roam_radius{16.0F};
   bool hearth_assigned{false};
 
+  bool released{false};
+
   SettlementErrand errand{SettlementErrand::Settling};
+  SettlementErrandRole role{SettlementErrandRole::Loiter};
   EntityID focus_id{0};
   float errand_x{0.0F};
   float errand_z{0.0F};
+  float focus_x{0.0F};
+  float focus_z{0.0F};
   float errand_remaining{0.0F};
   float planned_dwell{3.0F};
   float think_cooldown{0.0F};
+  float work_elapsed{0.0F};
   std::uint32_t rng_state{0U};
+
+  [[nodiscard]] auto is_labouring() const -> bool {
+    return errand == SettlementErrand::Working && role == SettlementErrandRole::Labour;
+  }
 };
 
 class WildlifeComponent : public Component {
