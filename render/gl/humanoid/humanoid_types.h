@@ -179,6 +179,9 @@ struct HumanoidPose {
 
   float foot_y_offset{};
   QVector3D foot_l, foot_r;
+
+  float foot_pitch_l{0.0F};
+  float foot_pitch_r{0.0F};
 };
 
 struct VariationParams {

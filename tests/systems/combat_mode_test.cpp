@@ -2337,6 +2337,59 @@ TEST_F(CombatModeTest, PerfectGuardNegatesDamageAndDoesNotConsumeCommanderComboS
   EXPECT_GT(target_cmd->punish_window_remaining, 0.0F);
 }
 
+TEST_F(CombatModeTest, ABeatenCommanderIsNeverStaggerLocked) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  auto* target = world->create_entity();
+  target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+  target->add_component<CommanderComponent>();
+  auto* combat_state = target->add_component<CombatStateComponent>();
+  combat_state->animation_state = CombatAnimationState::WindUp;
+
+  auto* target_rpg = target->add_component<RpgHealthComponent>();
+  target_rpg->active = true;
+  target_rpg->rpg_hp = 100000;
+  target_rpg->rpg_max_hp = 100000;
+
+  for (int blow = 0; blow < 12; ++blow) {
+    Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+        world.get(), target, 20, attacker->get_id());
+  }
+
+  auto const* stagger = target->get_component<StaggerComponent>();
+  ASSERT_NE(stagger, nullptr);
+
+  EXPECT_EQ(stagger->tier, StaggerTier::LightFlinch);
+  EXPECT_LE(stagger->remaining, 0.25F);
+}
+
+TEST_F(CombatModeTest, AStaggeredCommanderIsNotAPunishOpening) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  auto* target = world->create_entity();
+  target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* target_unit = target->add_component<UnitComponent>(100000, 100000, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+  target->add_component<StaggerComponent>(0.5F);
+
+  auto const first = Game::Systems::RpgCombat::deal_commander_attack_damage(
+      world.get(), target, 40, attacker->get_id());
+
+  target->remove_component<StaggerComponent>();
+  auto const second = Game::Systems::RpgCombat::deal_commander_attack_damage(
+      world.get(), target, 40, attacker->get_id());
+
+  EXPECT_EQ(first.effective_damage, second.effective_damage);
+}
+
 TEST_F(CombatModeTest, RtsDamageDoesNotReadCommanderGuardOrComboState) {
   auto* attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 1.0F);

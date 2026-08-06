@@ -131,14 +131,13 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         live_slot_indices.push_back(static_cast<int>(soldier.slot_index));
       }
     }
+  } else if (ctx.entity != nullptr) {
+    for (auto const slot : Game::Systems::FormationCombat::living_slot_indices(
+             *ctx.entity, total_layout_count)) {
+      live_slot_indices.push_back(static_cast<int>(slot));
+    }
   } else {
-    int const live_count =
-        unit_comp != nullptr
-            ? Engine::Core::resolve_surviving_individual_count(
-                  unit_comp->health, unit_comp->max_health, total_layout_count)
-            : total_layout_count;
-    int const first_live = std::max(0, total_layout_count - live_count);
-    for (int index = first_live; index < total_layout_count; ++index) {
+    for (int index = 0; index < total_layout_count; ++index) {
       live_slot_indices.push_back(index);
     }
   }
@@ -317,16 +316,32 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
   auto& soldier_layouts = *soldier_layout_storage;
 
-  if (has_shared_formation_layout && !anim.is_constructing &&
-      formation_presentation->soldiers.size() == soldier_layouts.size()) {
-    for (std::size_t index = 0; index < soldier_layouts.size(); ++index) {
-      auto const& shared_slot = formation_presentation->soldiers[index];
-      auto& render_slot = soldier_layouts[index];
-      render_slot.offset_x = shared_slot.local_x;
-      render_slot.offset_z = shared_slot.local_z;
-      render_slot.yaw_offset = shared_slot.local_yaw;
-      render_slot.row_index = static_cast<std::uint8_t>(shared_slot.row);
-      render_slot.col_index = static_cast<std::uint8_t>(shared_slot.col);
+  if (!anim.is_constructing) {
+    if (has_shared_formation_layout &&
+        formation_presentation->soldiers.size() == soldier_layouts.size()) {
+      for (std::size_t index = 0; index < soldier_layouts.size(); ++index) {
+        auto const& shared_slot = formation_presentation->soldiers[index];
+        auto& render_slot = soldier_layouts[index];
+        render_slot.offset_x = shared_slot.local_x;
+        render_slot.offset_z = shared_slot.local_z;
+        render_slot.yaw_offset = shared_slot.local_yaw;
+        render_slot.row_index = static_cast<std::uint8_t>(shared_slot.row);
+        render_slot.col_index = static_cast<std::uint8_t>(shared_slot.col);
+      }
+    } else if (ctx.entity != nullptr && !ctx.force_single_soldier) {
+
+      auto const layout = Game::Systems::FormationCombat::resolve_layout(*ctx.entity);
+      for (auto const& slot : layout.occupied_slots) {
+        if (slot.index >= soldier_layouts.size()) {
+          continue;
+        }
+        auto& render_slot = soldier_layouts[slot.index];
+        render_slot.offset_x = slot.local_x;
+        render_slot.offset_z = slot.local_z;
+        render_slot.yaw_offset = slot.local_yaw;
+        render_slot.row_index = static_cast<std::uint8_t>(slot.row);
+        render_slot.col_index = static_cast<std::uint8_t>(slot.col);
+      }
     }
   }
 

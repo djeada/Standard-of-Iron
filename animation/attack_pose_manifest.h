@@ -51,6 +51,10 @@ struct HumanoidSpearDirectionInputs {
 struct HumanoidWeaponAttackPoseSample {
   PoseVec3 right_hand{};
   PoseVec3 left_hand{};
+
+  bool has_blade_direction{false};
+  PoseVec3 blade_direction{0.12F, 0.86F, 0.50F};
+
   bool use_offhand_spear_grip{false};
   PoseVec3 offhand_spear_direction{0.05F, 0.55F, 0.85F};
   float offhand_along_offset{0.0F};

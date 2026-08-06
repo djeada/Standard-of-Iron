@@ -10,6 +10,8 @@
 
 namespace Render::GL {
 
+[[nodiscard]] auto baked_sword_direction() -> QVector3D;
+
 class HumanoidPoseController {
 public:
   HumanoidPoseController(HumanoidPose& pose, const HumanoidAnimationContext& anim_ctx);
@@ -29,7 +31,7 @@ public:
 
   void lean(const QVector3D& direction, float amount);
 
-  void place_hand_at(Side side, const QVector3D& target_position);
+  void place_hand_at(Side side, const QVector3D& requested_position);
 
   void aim_bow(float draw_phase);
   void bow_melee_strike(float attack_phase);

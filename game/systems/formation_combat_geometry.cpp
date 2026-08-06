@@ -144,18 +144,7 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
                entity.has_component<Engine::Core::BuildingComponent>() ? 1U : 0U);
   hash_combine(signature,
                entity.has_component<Engine::Core::ElephantComponent>() ? 1U : 0U);
-  if (auto const* attack = entity.get_component<Engine::Core::AttackComponent>()) {
-    hash_combine(signature, attack->in_melee_lock ? 1U : 0U);
-  }
-  if (auto const* contact =
-          entity.get_component<Engine::Core::FormationContactComponent>()) {
-    bool const holds_line =
-        contact->in_contact ||
-        std::any_of(contact->fronts.begin(),
-                    contact->fronts.end(),
-                    [](auto const& front) { return front.in_contact; });
-    hash_combine(signature, holds_line ? 1U : 0U);
-  }
+  hash_combine(signature, holds_formation_line(entity) ? 1U : 0U);
   if (auto const* roster =
           entity.get_component<Engine::Core::FormationRosterPresentationComponent>()) {
     hash_combine(signature, static_cast<std::uint64_t>(roster->total_count));
@@ -271,6 +260,37 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit,
   return definition;
 }
 
+auto living_slot_indices(const Engine::Core::Entity& entity,
+                         int total_count) -> std::vector<std::uint16_t> {
+  std::vector<std::uint16_t> living;
+  if (total_count <= 0) {
+    return living;
+  }
+  living.reserve(static_cast<std::size_t>(total_count));
+
+  auto const* roster =
+      entity.get_component<Engine::Core::FormationRosterPresentationComponent>();
+  if (roster != nullptr &&
+      roster->alive.size() == static_cast<std::size_t>(total_count)) {
+    for (int idx = 0; idx < total_count; ++idx) {
+      if (roster->alive[static_cast<std::size_t>(idx)] != 0U) {
+        living.push_back(static_cast<std::uint16_t>(idx));
+      }
+    }
+    return living;
+  }
+
+  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
+  int const live_count = unit != nullptr
+                             ? Engine::Core::resolve_surviving_individual_count(
+                                   unit->health, unit->max_health, total_count)
+                             : total_count;
+  for (int idx = std::max(0, total_count - live_count); idx < total_count; ++idx) {
+    living.push_back(static_cast<std::uint16_t>(idx));
+  }
+  return living;
+}
+
 auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   FormationLayout result;
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
@@ -337,15 +357,13 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   result.total_count = definition.total_count;
   result.cols = definition.max_per_row;
   result.rows = std::max(1, (result.total_count + result.cols - 1) / result.cols);
-  result.live_count = Engine::Core::resolve_surviving_individual_count(
-      unit->health, unit->max_health, result.total_count);
   result.spacing = definition.spacing;
   result.body_radius = std::max(
       0.05F, std::max(resolved_transform.scale.x, resolved_transform.scale.z) * 0.5F);
   result.seed = formation_seed(entity);
 
   result.all_slots.reserve(static_cast<std::size_t>(result.total_count));
-  result.live_slots.reserve(static_cast<std::size_t>(result.live_count));
+  result.live_slots.reserve(static_cast<std::size_t>(result.total_count));
   result.occupied_slots.reserve(static_cast<std::size_t>(result.total_count));
   auto resolve_slot = [&](int stable_idx,
                           int layout_idx,
@@ -384,27 +402,11 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   }
 
   std::vector<bool> live_slots(static_cast<std::size_t>(result.total_count), false);
-  bool roster_is_valid = false;
-  if (auto const* roster =
-          entity.get_component<Engine::Core::FormationRosterPresentationComponent>();
-      roster != nullptr && roster->total_count == result.total_count &&
-      roster->alive.size() == static_cast<std::size_t>(result.total_count)) {
-    int const roster_live_count = static_cast<int>(std::count(
-        roster->alive.begin(), roster->alive.end(), static_cast<std::uint8_t>(1U)));
-    roster_is_valid = roster_live_count == result.live_count;
-    if (roster_is_valid) {
-      for (int idx = 0; idx < result.total_count; ++idx) {
-        live_slots[static_cast<std::size_t>(idx)] =
-            roster->alive[static_cast<std::size_t>(idx)] != 0U;
-      }
-    }
+  for (auto const slot : living_slot_indices(entity, result.total_count)) {
+    live_slots[static_cast<std::size_t>(slot)] = true;
   }
-  if (!roster_is_valid) {
-    int const retired_count = result.total_count - result.live_count;
-    for (int idx = retired_count; idx < result.total_count; ++idx) {
-      live_slots[static_cast<std::size_t>(idx)] = true;
-    }
-  }
+  result.live_count =
+      static_cast<int>(std::count(live_slots.begin(), live_slots.end(), true));
 
   std::vector<bool> active_casualty_slots(static_cast<std::size_t>(result.total_count),
                                           false);
@@ -423,7 +425,9 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   int const compact_rows =
       std::max(1, (result.live_count + compact_cols - 1) / compact_cols);
 
-  bool const preserve_stable_slots = holds_formation_line(entity);
+  bool const remnant_closes_ranks = result.live_count <= result.cols;
+  bool const preserve_stable_slots =
+      holds_formation_line(entity) || !remnant_closes_ranks;
 
   int compact_idx = 0;
   for (int stable_idx = 0; stable_idx < result.total_count; ++stable_idx) {

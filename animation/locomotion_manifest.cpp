@@ -20,6 +20,14 @@ constexpr float k_arm_backward_bias = 1.18F;
 constexpr float k_reverse_stride_scale = 0.74F;
 constexpr float k_arm_back_lift_ratio = 0.35F;
 
+constexpr float k_foot_toe_length = 0.165F;
+constexpr float k_foot_heel_length = 0.060F;
+
+[[nodiscard]] auto ankle_lift_for_pitch(float pitch) noexcept -> float {
+  return (pitch < 0.0F) ? (k_foot_toe_length * -std::sin(pitch))
+                        : (k_foot_heel_length * std::sin(pitch));
+}
+
 [[nodiscard]] auto smoothing_alpha(float dt, float tau) noexcept -> float {
   if (dt <= 1.0e-4F) {
     return 1.0F;
@@ -119,6 +127,9 @@ struct LocomotionPoseProfile {
   float head_stabilization{0.0F};
   float contact_lift{0.0F};
   float knee_drive{0.0F};
+  float heel_strike_pitch{0.0F};
+  float toe_off_pitch{0.0F};
+  float swing_clearance_pitch{0.0F};
 };
 
 [[nodiscard]] auto blend_profile(const LocomotionPoseProfile& a,
@@ -147,6 +158,9 @@ struct LocomotionPoseProfile {
   out.head_stabilization = mix(a.head_stabilization, b.head_stabilization);
   out.contact_lift = mix(a.contact_lift, b.contact_lift);
   out.knee_drive = mix(a.knee_drive, b.knee_drive);
+  out.heel_strike_pitch = mix(a.heel_strike_pitch, b.heel_strike_pitch);
+  out.toe_off_pitch = mix(a.toe_off_pitch, b.toe_off_pitch);
+  out.swing_clearance_pitch = mix(a.swing_clearance_pitch, b.swing_clearance_pitch);
   return out;
 }
 
@@ -156,8 +170,8 @@ struct LocomotionPoseProfile {
   LocomotionPoseProfile profile{};
   profile.planted_fraction = 0.60F;
   profile.stride_length =
-      0.400F * inputs.walk_speed_multiplier * (0.88F + 0.14F * speed_factor);
-  profile.step_height = 0.070F * (0.92F + 0.10F * speed_factor);
+      0.640F * inputs.walk_speed_multiplier * (0.88F + 0.14F * speed_factor);
+  profile.step_height = 0.090F * (0.92F + 0.10F * speed_factor);
   profile.vertical_bob = 0.022F * speed_factor;
   profile.hip_sway = 0.028F * inputs.stance_width;
   profile.shoulder_counter_sway = 0.032F;
@@ -173,6 +187,10 @@ struct LocomotionPoseProfile {
   profile.head_stabilization = 0.72F;
   profile.contact_lift = 0.003F;
   profile.knee_drive = 0.022F;
+
+  profile.heel_strike_pitch = 0.26F;
+  profile.toe_off_pitch = -0.46F;
+  profile.swing_clearance_pitch = 0.14F;
   return profile;
 }
 
@@ -182,8 +200,8 @@ struct LocomotionPoseProfile {
   LocomotionPoseProfile profile{};
   profile.planted_fraction = 0.36F;
   profile.stride_length =
-      0.580F * inputs.walk_speed_multiplier * (0.90F + 0.14F * speed_factor);
-  profile.step_height = 0.125F * (0.88F + 0.18F * speed_factor);
+      0.980F * inputs.walk_speed_multiplier * (0.90F + 0.14F * speed_factor);
+  profile.step_height = 0.165F * (0.88F + 0.18F * speed_factor);
   profile.vertical_bob = 0.038F * speed_factor;
   profile.hip_sway = 0.016F * inputs.stance_width;
   profile.shoulder_counter_sway = 0.040F;
@@ -199,6 +217,10 @@ struct LocomotionPoseProfile {
   profile.head_stabilization = 0.88F;
   profile.contact_lift = 0.016F;
   profile.knee_drive = 0.038F;
+
+  profile.heel_strike_pitch = 0.09F;
+  profile.toe_off_pitch = -0.62F;
+  profile.swing_clearance_pitch = 0.20F;
   return profile;
 }
 
@@ -261,8 +283,10 @@ smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
                                            float turn_abs,
                                            float turn_step_bias,
                                            float weight_shift,
-                                           PoseVec3 base_foot) noexcept -> PoseVec3 {
+                                           PoseVec3 base_foot,
+                                           float& out_pitch) noexcept -> PoseVec3 {
   float z_pos = 0.0F;
+  float pitch = 0.0F;
   float foot_y = inputs.ground_y + inputs.foot_y_offset;
   float const foot_turn_scale = 1.0F - turn_amount * lateral_sign * 0.45F;
   float const acceleration_stride_scale =
@@ -281,6 +305,11 @@ smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
     z_pos = foot_stride_length * (0.50F - t + mid_stance * 0.03F);
     foot_y += (heel_settle * 0.55F + toe_off) * profile.contact_lift * stride_scale;
     foot_y -= mid_stance * 0.0018F * stride_scale;
+
+    float const heel_roll = 1.0F - smoothstep(std::clamp(t / 0.22F, 0.0F, 1.0F));
+    float const toe_roll = smoothstep(std::clamp((t - 0.66F) / 0.34F, 0.0F, 1.0F));
+    pitch =
+        (profile.heel_strike_pitch * heel_roll) + (profile.toe_off_pitch * toe_roll);
   } else {
     float const t = std::clamp((phase - planted_fraction) /
                                    std::max(1.0e-4F, 1.0F - planted_fraction),
@@ -294,7 +323,15 @@ smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
         lift_curve * foot_step_height +
         std::sin(t * std::numbers::pi_v<float>) * profile.knee_drive * step_scale +
         landing_soften * profile.contact_lift * 0.25F;
+
+    float const recover = smoothstep(std::clamp(t / 0.34F, 0.0F, 1.0F));
+    float const reach = smoothstep(std::clamp((t - 0.45F) / 0.55F, 0.0F, 1.0F));
+    pitch = std::lerp(profile.toe_off_pitch, profile.swing_clearance_pitch, recover);
+    pitch = std::lerp(pitch, profile.heel_strike_pitch, reach);
   }
+
+  out_pitch = pitch * locomotion_blend;
+  foot_y += ankle_lift_for_pitch(pitch);
 
   float const stance_turn_bias =
       turn_amount * lateral_sign * (0.014F + 0.006F * locomotion_blend);
@@ -362,6 +399,10 @@ build_targets(const HumanoidLocomotionInputs& inputs) noexcept -> LocomotionTarg
 }
 
 } // namespace
+
+auto humanoid_foot_contact_lift(float foot_pitch) noexcept -> float {
+  return ankle_lift_for_pitch(foot_pitch);
+}
 
 auto wrap_locomotion_phase(float phase) noexcept -> float {
   float wrapped = std::fmod(phase, 1.0F);
@@ -601,7 +642,8 @@ auto resolve_humanoid_base_pose(const HumanoidBasePoseInputs& inputs) noexcept
 
   float const arm_height_jitter = (hash_01(inputs.seed ^ 0xABCDU) - 0.5F) * 0.016F;
   float const arm_asymmetry = (hash_01(inputs.seed ^ 0xDEF0U) - 0.5F) * 0.018F;
-  float const relaxed_hand_y = hp.chest_y * h_scale - 0.120F + arm_height_jitter;
+  float const relaxed_hand_y = (hp.shoulder_y * h_scale) - (0.545F * h_scale) +
+                               arm_height_jitter + (inputs.posture_slump * 0.02F);
   float const hand_forward = 0.030F + inputs.posture_slump * 0.04F;
   sample.hand_l = {-half_shoulder_span * 0.62F - 0.022F + arm_asymmetry,
                    relaxed_hand_y,
@@ -724,7 +766,8 @@ auto resolve_humanoid_locomotion_pose(
                                           turn_abs,
                                           turn_step_bias,
                                           weight_shift,
-                                          inputs.base_foot_l);
+                                          inputs.base_foot_l,
+                                          sample.foot_pitch_l);
   sample.foot_r = resolve_locomotion_foot(inputs,
                                           profile,
                                           right_phase,
@@ -740,17 +783,37 @@ auto resolve_humanoid_locomotion_pose(
                                           turn_abs,
                                           turn_step_bias,
                                           weight_shift,
-                                          inputs.base_foot_r);
+                                          inputs.base_foot_r,
+                                          sample.foot_pitch_r);
 
-  sample.pelvis_delta.y += vertical_bob - braking_sink - pelvis_drop;
-  sample.shoulder_l_delta.y +=
-      shoulder_bob * 0.45F - braking_sink * 0.20F - pelvis_drop * 0.15F;
-  sample.shoulder_r_delta.y +=
-      shoulder_bob * 0.45F - braking_sink * 0.20F - pelvis_drop * 0.15F;
-  sample.neck_delta.y += neck_bob * 0.28F + head_counter_bob * 0.55F;
+  float stride_hip_drop = 0.0F;
+  if (inputs.leg_length > 1.0e-3F && inputs.pelvis_y > 1.0e-3F) {
+
+    float const hip_y = inputs.pelvis_y + inputs.hip_vertical_offset;
+    float const reach = inputs.leg_length * 0.995F;
+    auto required_drop = [&](const PoseVec3& foot, float lateral_sign) {
+      float const dx = foot.x - (lateral_sign * inputs.hip_lateral_offset);
+      float const dz = foot.z;
+      float const horizontal_sq = (dx * dx) + (dz * dz);
+      if (horizontal_sq >= reach * reach) {
+        return hip_y - foot.y;
+      }
+      float const vertical = std::sqrt((reach * reach) - horizontal_sq);
+      return std::max(0.0F, (hip_y - foot.y) - vertical);
+    };
+    stride_hip_drop = std::max(required_drop(sample.foot_l, -1.0F),
+                               required_drop(sample.foot_r, 1.0F));
+  }
+
+  sample.pelvis_delta.y += vertical_bob - braking_sink - pelvis_drop - stride_hip_drop;
+  sample.shoulder_l_delta.y += shoulder_bob * 0.45F - braking_sink * 0.20F -
+                               pelvis_drop * 0.15F - stride_hip_drop;
+  sample.shoulder_r_delta.y += shoulder_bob * 0.45F - braking_sink * 0.20F -
+                               pelvis_drop * 0.15F - stride_hip_drop;
+  sample.neck_delta.y += neck_bob * 0.28F + head_counter_bob * 0.55F - stride_hip_drop;
   sample.head_delta.y += head_bob * 0.18F +
                          acceleration_push * 0.003F * locomotion_blend +
-                         head_counter_bob;
+                         head_counter_bob - stride_hip_drop;
 
   sample.pelvis_delta.x += hip_sway + weight_shift + turn_lean * 0.55F;
   sample.shoulder_l_delta.x += shoulder_counter_sway + weight_shift * 0.28F + turn_lean;
@@ -784,6 +847,8 @@ auto resolve_humanoid_locomotion_pose(
   };
   apply_arm_swing(sample.hand_l_delta, left_phase, -1.0F);
   apply_arm_swing(sample.hand_r_delta, right_phase, 1.0F);
+  sample.hand_l_delta.y -= stride_hip_drop;
+  sample.hand_r_delta.y -= stride_hip_drop;
   sample.hand_l_delta.x += turn_amount * 0.010F * locomotion_blend;
   sample.hand_r_delta.x += turn_amount * 0.010F * locomotion_blend;
   return sample;

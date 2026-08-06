@@ -24,6 +24,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
 #include "animation/showcase_pose_manifest.h"
+#include "grip_axis.h"
 #include "humanoid_full_builder.h"
 #include "humanoid_renderer_base.h"
 #include "humanoid_spec.h"
@@ -891,6 +892,7 @@ struct AuthoredSwordPoseKey {
   float phase{0.0F};
   QVector3D right_hand;
   QVector3D left_hand;
+  QVector3D blade_dir{0.12F, 0.86F, 0.50F};
   QVector3D pelvis_delta;
   QVector3D shoulder_r_delta;
   QVector3D shoulder_l_delta;
@@ -906,111 +908,187 @@ using AuthoredSwordPoseKeys = std::array<AuthoredSwordPoseKey, 6>;
 
 auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
   static const AuthoredSwordPoseKeys slash_left{{
-      {0.00F, {0.24F, 1.22F, 0.18F}, {-0.22F, 1.16F, 0.18F}},
-      {0.16F, {0.46F, 1.44F, -0.26F}, {-0.26F, 1.10F, 0.20F}},
-      {0.38F,
-       {0.42F, 1.48F, 0.02F},
-       {-0.22F, 1.08F, 0.26F},
-       {0.02F, -0.03F, 0.04F},
-       {0.12F, 0.02F, -0.08F},
-       {-0.06F, -0.01F, 0.07F}},
-      {0.54F,
-       {-0.22F, 0.86F, 1.18F},
-       {0.04F, 0.98F, 0.66F},
-       {0.02F, -0.06F, 0.16F},
-       {0.20F, -0.12F, 0.16F},
-       {-0.12F, 0.04F, 0.02F},
-       {0.00F, -0.04F, 0.10F},
-       {0.00F, -0.03F, 0.06F},
-       {0.00F, 0.00F, 0.18F},
-       {0.00F, 0.00F, 0.10F}},
-      {0.76F, {-0.34F, 0.72F, 0.76F}, {-0.10F, 0.94F, 0.54F}, {0.00F, -0.04F, 0.10F}},
-      {1.00F, {0.22F, 1.16F, 0.24F}, {-0.22F, 1.12F, 0.18F}},
+      {.phase = 0.00F,
+       .right_hand = {0.24F, 1.22F, 0.18F},
+       .left_hand = {-0.22F, 1.16F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      {.phase = 0.16F,
+       .right_hand = {0.46F, 1.44F, -0.26F},
+       .left_hand = {-0.26F, 1.10F, 0.20F},
+       .blade_dir = {0.46F, 0.74F, -0.49F}},
+      {.phase = 0.38F,
+       .right_hand = {0.42F, 1.48F, 0.02F},
+       .left_hand = {-0.22F, 1.08F, 0.26F},
+       .blade_dir = {0.32F, 0.90F, -0.30F},
+       .pelvis_delta = {0.02F, -0.03F, 0.04F},
+       .shoulder_r_delta = {0.12F, 0.02F, -0.08F},
+       .shoulder_l_delta = {-0.06F, -0.01F, 0.07F}},
+      {.phase = 0.54F,
+       .right_hand = {-0.30F, 0.86F, 0.82F},
+       .left_hand = {0.04F, 0.98F, 0.66F},
+       .blade_dir = {-0.56F, -0.32F, 0.76F},
+       .pelvis_delta = {0.02F, -0.06F, 0.16F},
+       .shoulder_r_delta = {-0.12F, -0.12F, 0.26F},
+       .shoulder_l_delta = {-0.12F, 0.04F, 0.02F},
+       .neck_delta = {0.00F, -0.04F, 0.10F},
+       .head_delta = {0.00F, -0.03F, 0.06F},
+       .foot_r_delta = {0.00F, 0.00F, 0.18F},
+       .knee_r_delta = {0.00F, 0.00F, 0.10F}},
+      {.phase = 0.76F,
+       .right_hand = {-0.34F, 0.72F, 0.76F},
+       .left_hand = {-0.10F, 0.94F, 0.54F},
+       .blade_dir = {-0.84F, -0.44F, 0.32F},
+       .pelvis_delta = {0.00F, -0.04F, 0.10F},
+       .shoulder_r_delta = {-0.08F, -0.08F, 0.14F}},
+      {.phase = 1.00F,
+       .right_hand = {0.22F, 1.16F, 0.24F},
+       .left_hand = {-0.22F, 1.12F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
   }};
   static const AuthoredSwordPoseKeys slash_right{{
-      {0.00F, {0.22F, 1.18F, 0.20F}, {-0.22F, 1.14F, 0.18F}},
-      {0.16F, {-0.28F, 1.42F, -0.22F}, {-0.26F, 1.10F, 0.20F}},
-      {0.38F,
-       {-0.22F, 1.46F, 0.02F},
-       {-0.24F, 1.08F, 0.24F},
-       {-0.02F, -0.03F, 0.03F},
-       {-0.08F, 0.02F, 0.06F},
-       {0.10F, -0.02F, -0.08F}},
-      {0.54F,
-       {0.58F, 0.88F, 1.14F},
-       {0.10F, 0.98F, 0.66F},
-       {-0.02F, -0.06F, 0.15F},
-       {-0.18F, -0.10F, 0.14F},
-       {0.12F, 0.04F, 0.00F},
-       {0.00F, -0.04F, 0.08F},
-       {0.00F, -0.03F, 0.05F},
-       {0.00F, 0.00F, -0.02F},
-       {0.00F, 0.00F, -0.01F},
-       {0.00F, 0.00F, 0.12F},
-       {0.00F, 0.00F, 0.08F}},
-      {0.76F, {0.64F, 0.78F, 0.74F}, {0.04F, 0.94F, 0.54F}, {0.00F, -0.04F, 0.08F}},
-      {1.00F, {0.22F, 1.16F, 0.24F}, {-0.22F, 1.12F, 0.18F}},
+      {.phase = 0.00F,
+       .right_hand = {0.22F, 1.18F, 0.20F},
+       .left_hand = {-0.22F, 1.14F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      {.phase = 0.16F,
+       .right_hand = {-0.28F, 1.42F, -0.22F},
+       .left_hand = {-0.26F, 1.10F, 0.20F},
+       .blade_dir = {-0.46F, 0.74F, -0.49F}},
+      {.phase = 0.38F,
+       .right_hand = {-0.22F, 1.46F, 0.02F},
+       .left_hand = {-0.24F, 1.08F, 0.24F},
+       .blade_dir = {-0.32F, 0.90F, -0.30F},
+       .pelvis_delta = {-0.02F, -0.03F, 0.03F},
+       .shoulder_r_delta = {-0.08F, 0.02F, 0.06F},
+       .shoulder_l_delta = {0.10F, -0.02F, -0.08F}},
+      {.phase = 0.54F,
+       .right_hand = {0.66F, 0.88F, 0.80F},
+       .left_hand = {0.10F, 0.98F, 0.66F},
+       .blade_dir = {0.56F, -0.32F, 0.76F},
+       .pelvis_delta = {-0.02F, -0.06F, 0.15F},
+       .shoulder_r_delta = {0.16F, -0.10F, 0.24F},
+       .shoulder_l_delta = {0.12F, 0.04F, 0.00F},
+       .neck_delta = {0.00F, -0.04F, 0.08F},
+       .head_delta = {0.00F, -0.03F, 0.05F},
+       .foot_r_delta = {0.00F, 0.00F, -0.02F},
+       .knee_r_delta = {0.00F, 0.00F, -0.01F},
+       .foot_l_delta = {0.00F, 0.00F, 0.12F},
+       .knee_l_delta = {0.00F, 0.00F, 0.08F}},
+      {.phase = 0.76F,
+       .right_hand = {0.64F, 0.78F, 0.74F},
+       .left_hand = {0.04F, 0.94F, 0.54F},
+       .blade_dir = {0.84F, -0.44F, 0.32F},
+       .pelvis_delta = {0.00F, -0.04F, 0.08F},
+       .shoulder_r_delta = {0.12F, -0.06F, 0.12F}},
+      {.phase = 1.00F,
+       .right_hand = {0.22F, 1.16F, 0.24F},
+       .left_hand = {-0.22F, 1.12F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
   }};
   static const AuthoredSwordPoseKeys overhead{{
-      {0.00F, {0.22F, 1.18F, 0.20F}, {-0.22F, 1.12F, 0.18F}},
-      {0.18F, {0.18F, 1.58F, -0.32F}, {-0.18F, 1.18F, 0.20F}},
-      {0.42F,
-       {0.10F, 1.72F, -0.10F},
-       {-0.10F, 1.22F, 0.30F},
-       {0.00F, -0.03F, 0.02F},
-       {0.06F, 0.10F, -0.04F},
-       {-0.04F, 0.08F, -0.02F}},
-      {0.60F,
-       {0.02F, 0.78F, 1.22F},
-       {-0.02F, 0.96F, 0.74F},
-       {0.00F, -0.10F, 0.20F},
-       {0.04F, -0.18F, 0.20F},
-       {-0.04F, -0.06F, 0.12F},
-       {0.00F, -0.08F, 0.14F},
-       {0.00F, -0.06F, 0.10F},
-       {0.00F, 0.00F, 0.20F},
-       {0.00F, 0.00F, 0.12F}},
-      {0.82F, {-0.02F, 0.64F, 0.70F}, {-0.06F, 0.90F, 0.54F}},
-      {1.00F, {0.22F, 1.14F, 0.24F}, {-0.22F, 1.10F, 0.18F}},
+      {.phase = 0.00F,
+       .right_hand = {0.22F, 1.18F, 0.20F},
+       .left_hand = {-0.22F, 1.12F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      {.phase = 0.18F,
+       .right_hand = {0.18F, 1.58F, -0.32F},
+       .left_hand = {-0.18F, 1.18F, 0.20F},
+       .blade_dir = {0.10F, 0.97F, -0.22F}},
+      {.phase = 0.42F,
+       .right_hand = {0.10F, 1.72F, -0.10F},
+       .left_hand = {-0.10F, 1.22F, 0.30F},
+       .blade_dir = {0.04F, 0.99F, -0.10F},
+       .pelvis_delta = {0.00F, -0.03F, 0.02F},
+       .shoulder_r_delta = {0.06F, 0.10F, -0.04F},
+       .shoulder_l_delta = {-0.04F, 0.08F, -0.02F}},
+      {.phase = 0.60F,
+       .right_hand = {0.02F, 0.78F, 1.22F},
+       .left_hand = {-0.02F, 0.96F, 0.74F},
+       .blade_dir = {-0.04F, -0.50F, 0.87F},
+       .pelvis_delta = {0.00F, -0.10F, 0.20F},
+       .shoulder_r_delta = {0.04F, -0.18F, 0.20F},
+       .shoulder_l_delta = {-0.04F, -0.06F, 0.12F},
+       .neck_delta = {0.00F, -0.08F, 0.14F},
+       .head_delta = {0.00F, -0.06F, 0.10F},
+       .foot_r_delta = {0.00F, 0.00F, 0.20F},
+       .knee_r_delta = {0.00F, 0.00F, 0.12F}},
+      {.phase = 0.82F,
+       .right_hand = {-0.02F, 0.64F, 0.70F},
+       .left_hand = {-0.06F, 0.90F, 0.54F},
+       .blade_dir = {-0.10F, -0.78F, 0.62F}},
+      {.phase = 1.00F,
+       .right_hand = {0.22F, 1.14F, 0.24F},
+       .left_hand = {-0.22F, 1.10F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
   }};
   static const AuthoredSwordPoseKeys thrust{{
-      {0.00F, {0.20F, 1.16F, 0.18F}, {-0.22F, 1.12F, 0.18F}},
-      {0.14F, {0.28F, 1.18F, -0.30F}, {-0.18F, 1.08F, 0.18F}},
-      {0.34F, {0.18F, 1.10F, 0.28F}, {-0.06F, 1.06F, 0.34F}},
-      {0.48F,
-       {0.02F, 1.02F, 1.42F},
-       {0.00F, 1.02F, 0.74F},
-       {0.00F, -0.08F, 0.24F},
-       {0.00F, -0.08F, 0.24F},
-       {0.00F, -0.02F, 0.10F},
-       {0.00F, -0.04F, 0.12F},
-       {0.00F, -0.02F, 0.08F},
-       {0.00F, 0.00F, 0.26F},
-       {0.00F, 0.00F, 0.16F},
-       {0.00F, 0.00F, -0.08F}},
-      {0.72F, {0.08F, 1.02F, 1.02F}, {-0.04F, 1.00F, 0.58F}},
-      {1.00F, {0.22F, 1.14F, 0.24F}, {-0.22F, 1.10F, 0.18F}},
+      {.phase = 0.00F,
+       .right_hand = {0.20F, 1.16F, 0.18F},
+       .left_hand = {-0.22F, 1.12F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      {.phase = 0.14F,
+       .right_hand = {0.28F, 1.18F, -0.30F},
+       .left_hand = {-0.18F, 1.08F, 0.18F},
+       .blade_dir = {0.22F, 0.66F, 0.72F}},
+      {.phase = 0.34F,
+       .right_hand = {0.18F, 1.10F, 0.28F},
+       .left_hand = {-0.06F, 1.06F, 0.34F},
+       .blade_dir = {0.10F, 0.32F, 0.94F}},
+      {.phase = 0.48F,
+       .right_hand = {0.06F, 1.16F, 1.60F},
+       .left_hand = {0.00F, 1.02F, 0.74F},
+       .blade_dir = {0.03F, 0.08F, 1.00F},
+       .pelvis_delta = {0.00F, -0.08F, 0.30F},
+       .shoulder_r_delta = {0.00F, -0.06F, 0.40F},
+       .shoulder_l_delta = {0.00F, -0.02F, 0.10F},
+       .neck_delta = {0.00F, -0.04F, 0.12F},
+       .head_delta = {0.00F, -0.02F, 0.08F},
+       .foot_r_delta = {0.00F, 0.00F, 0.26F},
+       .knee_r_delta = {0.00F, 0.00F, 0.16F},
+       .foot_l_delta = {0.00F, 0.00F, -0.08F}},
+      {.phase = 0.72F,
+       .right_hand = {0.08F, 1.02F, 1.02F},
+       .left_hand = {-0.04F, 1.00F, 0.58F},
+       .blade_dir = {0.06F, 0.28F, 0.96F}},
+      {.phase = 1.00F,
+       .right_hand = {0.22F, 1.14F, 0.24F},
+       .left_hand = {-0.22F, 1.10F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
   }};
   static const AuthoredSwordPoseKeys finisher{{
-      {0.00F, {0.22F, 1.18F, 0.20F}, {-0.22F, 1.12F, 0.18F}},
-      {0.18F, {0.26F, 1.68F, -0.42F}, {-0.20F, 1.22F, 0.18F}},
-      {0.48F,
-       {0.12F, 1.84F, -0.18F},
-       {-0.08F, 1.28F, 0.30F},
-       {0.00F, -0.04F, 0.04F},
-       {0.08F, 0.12F, -0.08F}},
-      {0.66F,
-       {-0.10F, 0.58F, 1.42F},
-       {-0.02F, 0.86F, 0.82F},
-       {0.00F, -0.16F, 0.28F},
-       {0.02F, -0.26F, 0.30F},
-       {-0.06F, -0.10F, 0.16F},
-       {0.00F, -0.12F, 0.20F},
-       {0.00F, -0.10F, 0.14F},
-       {0.00F, 0.00F, 0.30F},
-       {0.00F, 0.00F, 0.18F}},
-      {0.86F, {-0.24F, 0.52F, 0.74F}, {-0.08F, 0.82F, 0.54F}},
-      {1.00F, {0.22F, 1.12F, 0.24F}, {-0.22F, 1.08F, 0.18F}},
+      {.phase = 0.00F,
+       .right_hand = {0.22F, 1.18F, 0.20F},
+       .left_hand = {-0.22F, 1.12F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      {.phase = 0.18F,
+       .right_hand = {0.26F, 1.68F, -0.42F},
+       .left_hand = {-0.20F, 1.22F, 0.18F},
+       .blade_dir = {0.14F, 0.96F, -0.24F}},
+      {.phase = 0.48F,
+       .right_hand = {0.12F, 1.84F, -0.18F},
+       .left_hand = {-0.08F, 1.28F, 0.30F},
+       .blade_dir = {0.06F, 0.99F, -0.12F},
+       .pelvis_delta = {0.00F, -0.04F, 0.04F},
+       .shoulder_r_delta = {0.08F, 0.12F, -0.08F}},
+      {.phase = 0.66F,
+       .right_hand = {-0.10F, 0.58F, 1.42F},
+       .left_hand = {-0.02F, 0.86F, 0.82F},
+       .blade_dir = {-0.06F, -0.62F, 0.78F},
+       .pelvis_delta = {0.00F, -0.16F, 0.28F},
+       .shoulder_r_delta = {0.02F, -0.26F, 0.30F},
+       .shoulder_l_delta = {-0.06F, -0.10F, 0.16F},
+       .neck_delta = {0.00F, -0.12F, 0.20F},
+       .head_delta = {0.00F, -0.10F, 0.14F},
+       .foot_r_delta = {0.00F, 0.00F, 0.30F},
+       .knee_r_delta = {0.00F, 0.00F, 0.18F}},
+      {.phase = 0.86F,
+       .right_hand = {-0.24F, 0.52F, 0.74F},
+       .left_hand = {-0.08F, 0.82F, 0.54F},
+       .blade_dir = {-0.14F, -0.86F, 0.48F}},
+      {.phase = 1.00F,
+       .right_hand = {0.22F, 1.12F, 0.24F},
+       .left_hand = {-0.22F, 1.08F, 0.18F},
+       .blade_dir = {0.12F, 0.86F, 0.50F}},
   }};
 
   switch (variant) {
@@ -1042,6 +1120,7 @@ auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
           .phase = clamped,
           .right_hand = blend_vec(from.right_hand, to.right_hand, t),
           .left_hand = blend_vec(from.left_hand, to.left_hand, t),
+          .blade_dir = blend_vec(from.blade_dir, to.blade_dir, t).normalized(),
           .pelvis_delta = blend_vec(from.pelvis_delta, to.pelvis_delta, t),
           .shoulder_r_delta = blend_vec(from.shoulder_r_delta, to.shoulder_r_delta, t),
           .shoulder_l_delta = blend_vec(from.shoulder_l_delta, to.shoulder_l_delta, t),
@@ -1057,17 +1136,13 @@ auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
   return keys.back();
 }
 
-void apply_authored_rpg_sword_pose(std::uint8_t variant,
+void apply_authored_rpg_sword_pose(Render::GL::HumanoidPoseController& ctrl,
+                                   std::uint8_t variant,
                                    float phase,
                                    Render::GL::HumanoidPose& pose) {
   auto const sample =
       sample_authored_sword_pose_key(rpg_sword_pose_keys(variant), phase);
-  pose.hand_r = sample.right_hand;
-  pose.hand_l = sample.left_hand;
-  pose.elbow_r =
-      blend_vec(pose.shoulder_r, pose.hand_r, 0.52F) + QVector3D(0.05F, -0.06F, -0.02F);
-  pose.elbow_l =
-      blend_vec(pose.shoulder_l, pose.hand_l, 0.55F) + QVector3D(-0.04F, -0.05F, 0.02F);
+
   pose.pelvis_pos += sample.pelvis_delta;
   pose.shoulder_r += sample.shoulder_r_delta;
   pose.shoulder_l += sample.shoulder_l_delta;
@@ -1077,6 +1152,11 @@ void apply_authored_rpg_sword_pose(std::uint8_t variant,
   pose.knee_r += sample.knee_r_delta;
   pose.foot_l += sample.foot_l_delta;
   pose.knee_l += sample.knee_l_delta;
+
+  ctrl.place_hand_at(Render::GL::Side::Right, sample.right_hand);
+  ctrl.place_hand_at(Render::GL::Side::Left, sample.left_hand);
+  pose.grip_axis_r = Render::Humanoid::hand_axis_for_weapon_direction(
+      sample.blade_dir, Render::GL::baked_sword_direction(), true);
 }
 
 void bake_hold_pose(BakeProfile profile,
@@ -1252,7 +1332,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     switch (clip.attack_type) {
     case BakerAttackType::Sword:
       if (is_rpg_sword_clip(clip)) {
-        apply_authored_rpg_sword_pose(clip.attack_variant, phase, pose);
+        apply_authored_rpg_sword_pose(ctrl, clip.attack_variant, phase, pose);
       } else if (profile == BakeProfile::SwordReady ||
                  profile == BakeProfile::Skeleton) {
         ctrl.combat_sword_slash_variant(phase, clip.attack_variant, sword_reach_scale);
@@ -1446,6 +1526,8 @@ void bake_humanoid_clip_frame(BakeProfile profile,
   }
 
   if (clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||
+      clip.attack_type == BakerAttackType::Sword ||
+      clip.attack_type == BakerAttackType::BowMelee ||
       clip.attack_type == BakerAttackType::Spear ||
       clip.attack_type == BakerAttackType::SpearFromHold ||
       clip.attack_type == BakerAttackType::Bow ||

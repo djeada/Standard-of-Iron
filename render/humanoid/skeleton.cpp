@@ -124,6 +124,11 @@ auto resolved_hand_axis(const Render::GL::HumanoidPose& pose,
   return axis;
 }
 
+auto foot_up_axis(float pitch) noexcept -> QVector3D {
+
+  return {0.0F, std::cos(pitch), -std::sin(pitch)};
+}
+
 auto humanoid_provider(void* user,
                        Creature::BoneIndex bone) noexcept -> Creature::BoneResolution {
   auto const* ctx = static_cast<const HumanoidProviderContext*>(user);
@@ -210,8 +215,9 @@ auto humanoid_provider(void* user,
     r.tail = p->foot_l;
     break;
   case HumanoidBone::FootL:
-    r.kind = Creature::BoneBasisKind::FromRootUp;
+    r.kind = Creature::BoneBasisKind::FromHeadTail;
     r.head = p->foot_l;
+    r.tail = p->foot_l + foot_up_axis(p->foot_pitch_l) * 0.10F;
     break;
   case HumanoidBone::HipR:
     r.kind = Creature::BoneBasisKind::FromHeadTail;
@@ -224,8 +230,9 @@ auto humanoid_provider(void* user,
     r.tail = p->foot_r;
     break;
   case HumanoidBone::FootR:
-    r.kind = Creature::BoneBasisKind::FromRootUp;
+    r.kind = Creature::BoneBasisKind::FromHeadTail;
     r.head = p->foot_r;
+    r.tail = p->foot_r + foot_up_axis(p->foot_pitch_r) * 0.10F;
     break;
   case HumanoidBone::Count:
     break;

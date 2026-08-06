@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "../creature/movement_state.h"
+#include "../equipment/weapons/sword_renderer.h"
 #include "animation/ambient_pose_manifest.h"
 #include "animation/attack_pose_manifest.h"
 #include "animation/hold_pose_manifest.h"
@@ -200,20 +201,21 @@ void apply_weapon_attack_sample(
     HumanoidPose& pose,
     const Animation::HumanoidWeaponAttackPoseSample& sample) {
   apply_weapon_attack_body_deltas(pose, sample);
-  auto clamp_to_attack_reach = [](const QVector3D& shoulder, QVector3D target) {
-    constexpr float k_max_arm_reach =
-        (HumanProportions::UPPER_ARM_LEN + HumanProportions::FORE_ARM_LEN) * 0.75F;
-    QVector3D const shoulder_to_hand = target - shoulder;
-    float const requested_reach = shoulder_to_hand.length();
-    if (requested_reach > k_max_arm_reach && requested_reach > 1.0e-6F) {
-      target = shoulder + shoulder_to_hand * (k_max_arm_reach / requested_reach);
-    }
-    return target;
+  auto clamp_to_attack_reach = [](const QVector3D& shoulder, const QVector3D& target) {
+    return Render::Humanoid::PosePrimitives::clamp_to_reach(
+        shoulder,
+        target,
+        Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(
+            1.0F, Render::Humanoid::PosePrimitives::k_committed_arm_reach_fraction));
   };
   controller.place_hand_at(
       Side::Right, clamp_to_attack_reach(pose.shoulder_r, to_qvec(sample.right_hand)));
   controller.place_hand_at(
       Side::Left, clamp_to_attack_reach(pose.shoulder_l, to_qvec(sample.left_hand)));
+
+  if (sample.has_blade_direction) {
+    aim_held_weapon(pose, to_qvec(sample.blade_direction), baked_sword_direction());
+  }
 }
 
 void apply_spear_attack_sample(
@@ -222,15 +224,12 @@ void apply_spear_attack_sample(
     const Animation::HumanoidWeaponAttackPoseSample& sample) {
   apply_weapon_attack_body_deltas(pose, sample);
 
-  auto clamp_to_arm_reach = [](const QVector3D& shoulder, QVector3D target) {
-    using HP = HumanProportions;
-    constexpr float k_max_arm_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * 0.96F;
-    QVector3D const shoulder_to_hand = target - shoulder;
-    float const requested_reach = shoulder_to_hand.length();
-    if (requested_reach > k_max_arm_reach) {
-      target = shoulder + shoulder_to_hand * (k_max_arm_reach / requested_reach);
-    }
-    return target;
+  auto clamp_to_arm_reach = [](const QVector3D& shoulder, const QVector3D& target) {
+    return Render::Humanoid::PosePrimitives::clamp_to_reach(
+        shoulder,
+        target,
+        Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(
+            1.0F, Render::Humanoid::PosePrimitives::k_braced_arm_reach_fraction));
   };
 
   QVector3D const hand_r_target =
@@ -273,22 +272,32 @@ void apply_held_pose_sample(HumanoidPoseController& controller,
   }
 
   if (sample.use_offhand_spear_grip) {
-    using HP = HumanProportions;
-    constexpr float k_max_arm_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * 0.96F;
-    QVector3D const shoulder_to_hand = hand_l_target - pose.shoulder_l;
-    float const requested_reach = shoulder_to_hand.length();
-    if (requested_reach > k_max_arm_reach && requested_reach > 1.0e-6F) {
-      hand_l_target =
-          pose.shoulder_l + shoulder_to_hand * (k_max_arm_reach / requested_reach);
-    }
+    hand_l_target = Render::Humanoid::PosePrimitives::clamp_to_reach(
+        pose.shoulder_l,
+        hand_l_target,
+        Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(
+            1.0F, Render::Humanoid::PosePrimitives::k_braced_arm_reach_fraction));
   }
 
+  apply_held_pose_body_deltas(pose, sample);
   controller.place_hand_at(Side::Right, hand_r_target);
   controller.place_hand_at(Side::Left, hand_l_target);
-  apply_held_pose_body_deltas(pose, sample);
 }
 
 } // namespace
+
+auto baked_sword_direction() -> QVector3D {
+
+  auto const& grip = Render::Humanoid::humanoid_bind_body_frames().grip_r;
+  QVector3D direction = (grip.right * k_sword_blade_axis_in_grip.x()) +
+                        (grip.up * k_sword_blade_axis_in_grip.y()) +
+                        (grip.forward * k_sword_blade_axis_in_grip.z());
+  if (direction.lengthSquared() < 1.0e-8F) {
+    return {0.0F, 1.0F, 0.0F};
+  }
+  direction.normalize();
+  return direction;
+}
 
 HumanoidPoseController::HumanoidPoseController(HumanoidPose& pose,
                                                const HumanoidAnimationContext& anim_ctx)
@@ -398,10 +407,15 @@ void HumanoidPoseController::lean(const QVector3D& direction, float amount) {
 }
 
 void HumanoidPoseController::place_hand_at(Side side,
-                                           const QVector3D& target_position) {
+                                           const QVector3D& requested_position) {
+  const QVector3D& shoulder = get_shoulder(side);
+
+  QVector3D const target_position = Render::Humanoid::PosePrimitives::clamp_to_reach(
+      shoulder,
+      requested_position,
+      Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit());
   get_hand(side) = target_position;
 
-  const QVector3D& shoulder = get_shoulder(side);
   const QVector3D outward_dir = compute_outward_dir(side);
 
   float const along_frac = (side == Side::Left) ? 0.45F : 0.48F;
@@ -487,9 +501,9 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
       .jitter_seed = m_anim_ctx.jitter_seed,
       .shoulder_y = HP::SHOULDER_Y,
   });
+  apply_bow_draw_body_deltas(m_pose, sample);
   place_hand_at(Side::Right, to_qvec(sample.right_hand));
   place_hand_at(Side::Left, to_qvec(sample.left_hand));
-  apply_bow_draw_body_deltas(m_pose, sample);
   aim_held_weapon(m_pose, QVector3D(0.0F, 1.0F, 0.0F), k_baked_bow_axis);
 }
 
@@ -535,8 +549,8 @@ void HumanoidPoseController::construction_saw(float work_phase) {
       .jitter_seed = m_anim_ctx.jitter_seed,
       .shoulder_y = HP::SHOULDER_Y,
   });
-  grasp_two_handed(to_qvec(sample.grip_center), sample.hand_separation);
   apply_construction_body_deltas(m_pose, sample);
+  grasp_two_handed(to_qvec(sample.grip_center), sample.hand_separation);
 }
 
 void HumanoidPoseController::construction_chisel(float work_phase, bool kneeling) {
@@ -549,9 +563,9 @@ void HumanoidPoseController::construction_chisel(float work_phase, bool kneeling
       .jitter_seed = m_anim_ctx.jitter_seed,
       .shoulder_y = HP::SHOULDER_Y,
   });
+  apply_construction_body_deltas(m_pose, sample);
   place_hand_at(Side::Left, to_qvec(sample.left_hand));
   place_hand_at(Side::Right, to_qvec(sample.right_hand));
-  apply_construction_body_deltas(m_pose, sample);
 }
 
 void HumanoidPoseController::spear_thrust(float attack_phase) {

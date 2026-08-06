@@ -4,9 +4,81 @@
 #include <cmath>
 
 #include "../gl/humanoid/humanoid_types.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "humanoid_math.h"
 
 namespace Render::Humanoid::PosePrimitives {
+
+namespace {
+
+using HP = Render::GL::HumanProportions;
+
+} // namespace
+
+auto arm_reach_limit(float upper_arm_len,
+                     float fore_arm_len,
+                     float fraction) noexcept -> float {
+  return (upper_arm_len + fore_arm_len) * fraction;
+}
+
+auto humanoid_arm_reach_limit(float height_scale, float fraction) noexcept -> float {
+  return arm_reach_limit(HP::UPPER_ARM_LEN, HP::FORE_ARM_LEN, fraction) * height_scale;
+}
+
+auto clamp_to_reach(const QVector3D& root,
+                    const QVector3D& target,
+                    float max_reach) -> QVector3D {
+  QVector3D const offset = target - root;
+  float const distance = offset.length();
+  if (distance <= max_reach || distance < 1e-5F) {
+    return target;
+  }
+  return root + offset * (max_reach / distance);
+}
+
+auto solve_arm_ik(const QVector3D& shoulder,
+                  const QVector3D& hand,
+                  const ArmIkParams& params) -> QVector3D {
+  QVector3D const shoulder_to_hand = hand - shoulder;
+  float const distance = shoulder_to_hand.length();
+  if (distance < 1e-5F) {
+    return shoulder + QVector3D(0.0F, -params.upper_arm_len, 0.0F);
+  }
+
+  float const min_reach =
+      std::max(std::abs(params.upper_arm_len - params.fore_arm_len) + 1e-4F, 1e-3F);
+  float const max_reach =
+      std::max(params.upper_arm_len + params.fore_arm_len - 1e-4F, min_reach + 1e-4F);
+  float const clamped_distance = std::clamp(distance, min_reach, max_reach);
+
+  QVector3D const dir = shoulder_to_hand / distance;
+
+  float cos_theta = ((params.upper_arm_len * params.upper_arm_len) +
+                     (clamped_distance * clamped_distance) -
+                     (params.fore_arm_len * params.fore_arm_len)) /
+                    (2.0F * params.upper_arm_len * clamped_distance);
+  cos_theta = std::clamp(cos_theta, -1.0F, 1.0F);
+  float const sin_theta = std::sqrt(std::max(0.0F, 1.0F - (cos_theta * cos_theta)));
+
+  QVector3D pole = params.bend_preference;
+  if (pole.lengthSquared() < 1e-6F) {
+    pole = QVector3D(0.0F, -1.0F, 0.0F);
+  } else {
+    pole.normalize();
+  }
+
+  QVector3D bend_axis = pole - dir * QVector3D::dotProduct(dir, pole);
+  if (bend_axis.lengthSquared() < 1e-6F) {
+    bend_axis = QVector3D::crossProduct(dir, QVector3D(0.0F, 1.0F, 0.0F));
+    if (bend_axis.lengthSquared() < 1e-6F) {
+      bend_axis = QVector3D::crossProduct(dir, QVector3D(1.0F, 0.0F, 0.0F));
+    }
+  }
+  bend_axis.normalize();
+
+  return shoulder + dir * (cos_theta * params.upper_arm_len) +
+         bend_axis * (sin_theta * params.upper_arm_len);
+}
 
 auto solve_elbow_ik(const QVector3D& shoulder,
                     const QVector3D& hand,
@@ -15,8 +87,25 @@ auto solve_elbow_ik(const QVector3D& shoulder,
                     float lateral_offset,
                     float y_bias,
                     float outward_sign) -> QVector3D {
-  return Render::GL::elbow_bend_torso(
-      shoulder, hand, outward_dir, along_frac, lateral_offset, y_bias, outward_sign);
+  (void)along_frac;
+
+  QVector3D outward = outward_dir * outward_sign;
+  if (outward.lengthSquared() < 1e-8F) {
+    outward = QVector3D(1.0F, 0.0F, 0.0F);
+  } else {
+    outward.normalize();
+  }
+
+  float const lateral_weight =
+      std::clamp(std::abs(lateral_offset) * 4.0F, 0.22F, 0.72F);
+  QVector3D const pole =
+      (outward * lateral_weight) + QVector3D(0.0F, -0.88F + (y_bias * 1.5F), -0.24F);
+
+  return solve_arm_ik(shoulder,
+                      hand,
+                      {.upper_arm_len = HP::UPPER_ARM_LEN,
+                       .fore_arm_len = HP::FORE_ARM_LEN,
+                       .bend_preference = pole});
 }
 
 auto solve_knee_ik(const QVector3D& hip,
