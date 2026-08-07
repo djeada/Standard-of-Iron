@@ -295,7 +295,22 @@ A defensive AI that only ever sits still is a punching bag, so `ChaseBehavior` g
 
 ### Assault waves: always offensive
 
-Scripted waves are the campaign's pressure, so they must not inherit the defensive posture of the AI that owns them. Wave units are spawned with `AssaultWaveComponent`; the snapshot marks them `is_assault`, and they are excluded from every ordinary force pool — attack force, gather, reserve, harass, and base defence recall. `AssaultBehavior` owns them instead: it advances them on the nearest visible enemy (falling back to a strategic objective) and switches to a direct attack once inside engagement range, regardless of whether the parent AI is Idle, Gathering or Defending. The component is serialized, so a save taken mid-wave restores an assault that is still an assault.
+Scripted waves are the campaign's pressure, so they must not inherit the defensive posture of the AI that owns them. Wave units are spawned with `AssaultWaveComponent`; the snapshot marks them `is_assault`, and they are excluded from every ordinary force pool — attack force, gather, reserve, harass, base defence recall, **and retreat**. `AssaultBehavior` owns them instead: it advances them on the nearest visible enemy (falling back to a strategic objective, then to the march target baked into the component) and switches to a direct attack once inside engagement range, regardless of whether the parent AI is Idle, Gathering or Defending. The component is serialized, so a save taken mid-wave restores an assault that is still an assault.
+
+A wave is a one-way trip. `RetreatBehavior` runs at `Critical`, above the assault, so before it skipped assault units a wounded wave unit was pulled back to its owner's home base — which in a campaign mission is usually on the far side of the map. From the player's seat that reads as the wave walking away instead of attacking. Assault units are now exempt from retreat entirely: they press on at any health.
+
+A wave also only hunts things somebody owns. Neutral property — roadside temples, ruins, unclaimed halls — is hostile to every AI and therefore shows up in the snapshot's enemy lists, so an assault used to stop and demolish whatever scenery it happened to march past. `select_assault_target` skips neutral-owned contacts entirely; capturing neutral ground is `ExpandBehavior`'s business and it never gets assault units. Neutral _barriers_ stay eligible as breach targets, because a wall in the corridor is in the way whoever owns it.
+
+#### Breaching versus flanking
+
+`AssaultBehavior` can break fortifications, but only ones that are genuinely in the way. It tracks, per assault unit, the best distance to the current objective and the time that best was last improved. Breaching is unlocked only when a unit has gained no ground for `k_advance_stall_seconds` (8 s); until then the wave keeps advancing and the pathfinder is free to route it around or through an opening. Once stalled, `select_breach_target` picks the barrier lying inside the corridor between the group and the objective (preferring gates) and the wave attacks it, holding a tighter engage radius so it presses the wall rather than milling around.
+
+The stall gate is what keeps the two cases separate:
+
+- **Camp fully enclosed** — no route exists, every unit stalls, the wave breaks the rampart down. This is the behaviour `WaveUnitsAttackTheRampartInTheirWay` pins.
+- **Rampart with open ends** (the first campaign mission's shape) — the wave keeps closing on the camp and the wall is simply walked past. Without the gate it would fixate on the wall in front of its spawn, kill it, then start on the neighbouring segment, and never enter the camp at all.
+
+Progress tracking resets whenever the objective moves more than `k_objective_drift`, so chasing a live target does not read as a stall.
 
 ### Skirmish: take the map, then come home when it burns
 

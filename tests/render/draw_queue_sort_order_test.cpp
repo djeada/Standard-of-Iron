@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <type_traits>
+#include <variant>
 
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
@@ -354,3 +356,51 @@ TEST(FrameBudgetConfig, PartialRenderDefaultsOff) {
 }
 
 } // namespace
+
+TEST(DrawQueueCommandTypes, IndexConstantsFollowTheVariantAlternatives) {
+  using Render::GL::DrawCmd;
+  using Render::GL::DrawCmdType;
+
+  static_assert(
+      std::is_same_v<std::variant_alternative_t<MeshCmdIndex, DrawCmd>, MeshCmd>);
+  static_assert(
+      std::is_same_v<std::variant_alternative_t<GroundMarkerCmdIndex, DrawCmd>,
+                     GroundMarkerCmd>);
+  static_assert(
+      std::is_same_v<std::variant_alternative_t<TerrainSurfaceCmdIndex, DrawCmd>,
+                     TerrainSurfaceCmd>);
+  static_assert(
+      std::is_same_v<std::variant_alternative_t<TerrainFeatureCmdIndex, DrawCmd>,
+                     TerrainFeatureCmd>);
+  static_assert(Render::GL::k_draw_cmd_type_count == std::variant_size_v<DrawCmd>);
+
+  const DrawCmd mesh{MeshCmd{}};
+  EXPECT_EQ(Render::GL::draw_cmd_type(mesh), DrawCmdType::Mesh);
+  const DrawCmd marker{GroundMarkerCmd{}};
+  EXPECT_EQ(Render::GL::draw_cmd_type(marker), DrawCmdType::GroundMarker);
+}
+
+TEST(DrawQueuePreparedBatches, BatchTypeAlwaysMatchesItsHeadCommand) {
+  DrawQueue queue;
+
+  TerrainSurfaceCmd chunk;
+  queue.submit(chunk);
+  MeshCmd mesh;
+  queue.submit(mesh);
+  MeshCmd second_mesh;
+  second_mesh.alpha = 0.4F;
+  queue.submit(second_mesh);
+  GroundMarkerCmd ring;
+  queue.submit(ring);
+  TerrainFeatureCmd feature;
+  queue.submit(feature);
+
+  queue.sort_for_batching();
+
+  ASSERT_FALSE(queue.prepared_batches().empty());
+  for (const auto& prepared : queue.prepared_batches()) {
+    EXPECT_EQ(prepared.type,
+              Render::GL::draw_cmd_type(queue.get_sorted(prepared.start)))
+        << "batch starting at " << prepared.start;
+  }
+}

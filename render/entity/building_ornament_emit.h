@@ -7,6 +7,8 @@
 #include "../gl/primitives.h"
 #include "../submitter.h"
 #include "building_archetype_desc.h"
+#include "building_decay.h"
+#include "building_state.h"
 
 namespace Render::GL {
 
@@ -17,7 +19,8 @@ inline void emit_building_ornament(const BuildingArchetypeDesc& desc,
                                    Texture* white,
                                    bool detailed,
                                    const QVector3D* palette = nullptr,
-                                   std::size_t palette_size = 0) {
+                                   std::size_t palette_size = 0,
+                                   BuildingState filter_state = BuildingState::Normal) {
   Mesh* const cube = unit_cube != nullptr ? unit_cube : get_unit_cube();
   if (cube == nullptr) {
     return;
@@ -38,6 +41,9 @@ inline void emit_building_ornament(const BuildingArchetypeDesc& desc,
 
   for (const auto& part : desc.parts()) {
     if (!detailed && (part.lod & BuildingLODMask::Minimal) == BuildingLODMask::None) {
+      continue;
+    }
+    if (!part_supports_state(part.states, filter_state)) {
       continue;
     }
 

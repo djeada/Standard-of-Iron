@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "../ai_behavior.h"
 
 namespace Game::Systems::AI {
@@ -21,7 +23,21 @@ public:
   [[nodiscard]] auto can_run_concurrently() const -> bool override { return true; }
 
 private:
+  struct AdvanceProgress {
+    float best_distance = 0.0F;
+    float last_gain_time = 0.0F;
+  };
+
+  [[nodiscard]] auto advance_is_stalled(Engine::Core::EntityID unit_id,
+                                        float distance_to_objective,
+                                        float game_time) -> bool;
+  void forget_advance_progress(float objective_x, float objective_z);
+
   float m_assault_timer = 0.0F;
+  std::unordered_map<Engine::Core::EntityID, AdvanceProgress> m_advance_progress;
+  float m_tracked_objective_x = 0.0F;
+  float m_tracked_objective_z = 0.0F;
+  bool m_has_tracked_objective = false;
 };
 
 } // namespace Game::Systems::AI

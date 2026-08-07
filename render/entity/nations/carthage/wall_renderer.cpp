@@ -33,14 +33,14 @@ const WallGeometry k_wall_geometry{.earthwork_base = true,
                                    .rail_radius = 0.055F,
                                    .berm_half_width = 0.28F,
                                    .berm_height = 0.20F};
-auto wall_archetypes() -> const std::array<RenderArchetype, 6>& {
-  static const std::array<RenderArchetype, 6> archetypes = build_wall_archetype_set(
+auto wall_archetypes() -> const WallArchetypeSet& {
+  static const WallArchetypeSet archetypes = build_wall_archetype_set(
       "carthage_wall_variant", k_wall_palette, k_wall_geometry);
   return archetypes;
 }
 
-auto gate_archetype() -> const RenderArchetype& {
-  static const RenderArchetype archetype = build_wall_gate_archetype(
+auto gate_archetype() -> const BuildingArchetypeSet& {
+  static const BuildingArchetypeSet archetype = build_wall_gate_archetype(
       "carthage_wall_variant", k_wall_palette, k_wall_geometry);
   return archetype;
 }

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "game/core/component.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
@@ -268,6 +269,93 @@ TEST_F(MissionWaveAssaultTest, WaveUnitsAttackTheRampartInTheirWay) {
   EXPECT_GT(attacking_the_rampart, 0)
       << "no wave unit was working on the rampart between it and the camp";
   EXPECT_GT(damage_dealt, 0) << "the wave stood at the wall without ever striking it";
+}
+
+TEST_F(MissionWaveAssaultTest, WaveReachesACampBehindAFlankableRampart) {
+  auto& session = make_match();
+
+  const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
+  spawn(session, Game::Units::SpawnType::Barracks, k_player, camp);
+
+  constexpr int k_pitch = Game::Systems::WallNetworkService::k_segment_spacing;
+  for (int grid_z = k_gate_grid_z - 8; grid_z <= k_gate_grid_z + 8; grid_z += k_pitch) {
+    spawn(session,
+          Game::Units::SpawnType::WallSegment,
+          k_player,
+          world_of(k_ring_east_x, grid_z));
+  }
+  Game::Systems::WallNetworkService::refresh_world(session.world());
+
+  make_defensive(session);
+  const auto wave = spawn_wave(session, 3);
+  ASSERT_EQ(wave.size(), 3U);
+
+  const float start = closest_wave_distance_to(session, wave, camp);
+  run_for(session, 90.0);
+  const float end = closest_wave_distance_to(session, wave, camp);
+
+  EXPECT_LT(end, start * 0.5F)
+      << "the wave never closed on a camp it had a route into: start " << start
+      << " end " << end;
+}
+
+TEST_F(MissionWaveAssaultTest, WaveWalksPastNeutralPropertyOnTheWayIn) {
+  auto& session = make_match();
+
+  const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
+  spawn(session, Game::Units::SpawnType::Barracks, k_player, camp);
+
+  const EntityID temple =
+      spawn(session,
+            Game::Units::SpawnType::Temple,
+            Game::Core::NEUTRAL_OWNER_ID,
+            world_of((k_camp_grid_x + k_wave_grid_x) / 2, k_gate_grid_z - 2));
+  ASSERT_NE(temple, 0U);
+
+  make_defensive(session);
+  const auto wave = spawn_wave(session, 3);
+  ASSERT_EQ(wave.size(), 3U);
+
+  const float start = closest_wave_distance_to(session, wave, camp);
+  run_for(session, 90.0);
+
+  EXPECT_LT(closest_wave_distance_to(session, wave, camp), start * 0.5F)
+      << "the wave stopped for a neutral building instead of marching on the camp";
+
+  auto* temple_entity = session.world().get_entity(temple);
+  ASSERT_NE(temple_entity, nullptr);
+  const auto* temple_unit = temple_entity->get_component<UnitComponent>();
+  ASSERT_NE(temple_unit, nullptr);
+  EXPECT_EQ(temple_unit->health, temple_unit->max_health)
+      << "the wave spent itself on scenery nobody owns";
+}
+
+TEST_F(MissionWaveAssaultTest, WoundedWaveUnitsPressOnInsteadOfRunningHome) {
+  auto& session = make_match();
+
+  const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
+  spawn(session, Game::Units::SpawnType::Barracks, k_player, camp);
+
+  const QVector3D ai_home = world_of(k_map_size - 4, k_map_size - 4);
+  spawn(session, Game::Units::SpawnType::Barracks, k_wave_ai, ai_home);
+
+  make_defensive(session);
+  const auto wave = spawn_wave(session, 3);
+  ASSERT_EQ(wave.size(), 3U);
+
+  for (const auto id : wave) {
+    auto* unit = session.world().get_entity(id)->get_component<UnitComponent>();
+    unit->health = std::max(1, unit->max_health / 10);
+  }
+
+  const float start_to_camp = closest_wave_distance_to(session, wave, camp);
+  const float start_to_home = closest_wave_distance_to(session, wave, ai_home);
+  run_for(session, 60.0);
+
+  EXPECT_LT(closest_wave_distance_to(session, wave, camp), start_to_camp * 0.5F)
+      << "a bloodied wave must keep coming, not turn around";
+  EXPECT_GT(closest_wave_distance_to(session, wave, ai_home), start_to_home)
+      << "the wave retreated toward its own base";
 }
 
 } // namespace

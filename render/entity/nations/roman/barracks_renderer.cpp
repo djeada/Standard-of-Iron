@@ -23,6 +23,7 @@
 #include "../../barracks_renderer_common.h"
 #include "../../barracks_stockpile.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_decay.h"
 #include "../../building_ornament_emit.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
@@ -114,6 +115,22 @@ void draw_roofline(const DrawContext& p,
                    BuildingState state,
                    bool detailed);
 
+auto barracks_ruin_desc(const RomanPalette& c) -> const BuildingArchetypeDesc& {
+  static const BuildingArchetypeDesc k_desc = [&] {
+    BuildingArchetypeDesc desc("roman_barracks_ruin");
+    add_ruin_dressing(desc,
+                      RuinDressing{.extent = QVector3D(1.46F, 0.0F, 1.28F),
+                                   .stone = c.limestone_shade,
+                                   .stone_dark = c.limestone_dark,
+                                   .timber = c.cedar_dark * 0.6F,
+                                   .ground_y = 0.16F,
+                                   .scale = 1.25F,
+                                   .seed = 443});
+    return desc;
+  }();
+  return k_desc;
+}
+
 auto build_barracks_archetype(BuildingState state,
                               Mesh* unit,
                               Texture* white) -> RenderArchetype {
@@ -127,6 +144,15 @@ auto build_barracks_archetype(BuildingState state,
     draw_colonnade(local_ctx, recorder, unit, white, palette, state, detailed);
     draw_terrace(local_ctx, recorder, unit, white, palette, state, detailed);
     draw_roofline(local_ctx, recorder, unit, white, palette, state, detailed);
+    emit_building_ornament(barracks_ruin_desc(palette),
+                           local_ctx.model,
+                           recorder,
+                           unit,
+                           white,
+                           detailed,
+                           nullptr,
+                           0,
+                           state);
   };
 
   TemplateRecorder full_recorder;
@@ -138,7 +164,8 @@ auto build_barracks_archetype(BuildingState state,
   return build_building_archetype_from_recorded_lods("roman_barracks",
                                                      full_recorder.take_commands(),
                                                      minimal_recorder.take_commands(),
-                                                     70.0F);
+                                                     70.0F,
+                                                     state);
 }
 
 auto barracks_archetype(BuildingState state,

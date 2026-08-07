@@ -56,15 +56,18 @@ struct WallGeometry {
   float masonry_height{1.34F};
 };
 
+struct WallArchetypeSet {
+  std::array<BuildingArchetypeSet, 6> variants;
+};
+
 auto build_wall_archetype_set(std::string_view name_prefix,
                               const WallPalette& palette,
-                              const WallGeometry& geometry)
-    -> std::array<RenderArchetype, 6>;
+                              const WallGeometry& geometry) -> WallArchetypeSet;
 auto wall_renderer_variants()
     -> const std::array<std::pair<std::string_view, WallVariant>, 7>&;
 void submit_wall_segment_variant(ISubmitter& out,
                                  const DrawContext& ctx,
-                                 const std::array<RenderArchetype, 6>& archetypes,
+                                 const WallArchetypeSet& archetypes,
                                  WallVariant variant);
 
 } // namespace Render::GL

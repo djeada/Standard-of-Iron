@@ -17,6 +17,7 @@
 #include "../i_render_backend.h"
 #include "../local_lighting.h"
 #include "../world_chunk.h"
+#include "directional_shadow_block.h"
 #include "persistent_buffer.h"
 #include "resources.h"
 #include "scene/camera.h"
@@ -299,8 +300,8 @@ private:
   std::size_t m_rigged_drawn_this_frame = 0;
   PlaybackStats m_last_playback_stats{};
 
-  std::array<QMatrix4x4, 4> m_directional_shadow_matrices{};
-  std::array<float, 4> m_directional_shadow_splits{};
+  std::array<QMatrix4x4, k_max_shadow_cascades> m_directional_shadow_matrices{};
+  std::array<float, k_max_shadow_cascades> m_directional_shadow_splits{};
   Shader* m_directional_shadow_depth_shader = nullptr;
   Shader* m_directional_shadow_rigged_shader = nullptr;
 

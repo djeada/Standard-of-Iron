@@ -1,3 +1,4 @@
+#include <array>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -164,4 +165,53 @@ TEST(LocalLightingTest, EqualScoresKeepInputOrderSoLightsDoNotSwap) {
     EXPECT_FLOAT_EQ(selected[i].color.x(), static_cast<float>(i))
         << "tie at index " << i << " did not keep input order";
   }
+}
+
+TEST(LocalLightingTest, Std140PackingMatchesTheUniformBlockSlots) {
+  std::array<Render::LocalLight, Render::k_max_local_lights> lights{};
+  for (auto& light : lights) {
+    light.radius = 0.0F;
+    light.intensity = 0.0F;
+  }
+  lights[0].position = QVector3D(1.0F, 2.0F, 3.0F);
+  lights[0].color = QVector3D(0.25F, 0.5F, 0.75F);
+  lights[0].radius = 7.0F;
+  lights[0].intensity = 1.5F;
+  lights[1].position = QVector3D(-4.0F, 0.0F, 8.0F);
+  lights[1].color = QVector3D(1.0F, 0.0F, 0.0F);
+  lights[1].radius = 3.0F;
+  lights[1].intensity = 0.5F;
+
+  const auto packed = Render::pack_local_lights_std140(lights);
+  using Block = Render::LocalLightingBlock;
+
+  EXPECT_FLOAT_EQ(packed[Block::k_position_radius_offset + 0], 1.0F);
+  EXPECT_FLOAT_EQ(packed[Block::k_position_radius_offset + 1], 2.0F);
+  EXPECT_FLOAT_EQ(packed[Block::k_position_radius_offset + 2], 3.0F);
+  EXPECT_FLOAT_EQ(packed[Block::k_position_radius_offset + 3], 7.0F);
+  EXPECT_FLOAT_EQ(packed[Block::k_color_intensity_offset + 0], 0.25F);
+  EXPECT_FLOAT_EQ(packed[Block::k_color_intensity_offset + 3], 1.5F);
+  EXPECT_FLOAT_EQ(packed[Block::k_position_radius_offset + 4], -4.0F);
+  EXPECT_FLOAT_EQ(packed[Block::k_color_intensity_offset + 7], 0.5F);
+  EXPECT_FLOAT_EQ(packed[Block::k_meta_offset], 2.0F);
+}
+
+TEST(LocalLightingTest, Std140PackingSkipsDarkLightsSoSlotsStayContiguous) {
+  std::array<Render::LocalLight, Render::k_max_local_lights> lights{};
+  for (auto& light : lights) {
+    light.radius = 0.0F;
+    light.intensity = 0.0F;
+  }
+  lights[0].radius = 0.0F;
+  lights[0].intensity = 1.0F;
+  lights[1].position = QVector3D(5.0F, 0.0F, 0.0F);
+  lights[1].radius = 4.0F;
+  lights[1].intensity = 2.0F;
+
+  const auto packed = Render::pack_local_lights_std140(lights);
+  using Block = Render::LocalLightingBlock;
+
+  EXPECT_FLOAT_EQ(packed[Block::k_position_radius_offset + 0], 5.0F)
+      << "the surviving light must land in the first slot";
+  EXPECT_FLOAT_EQ(packed[Block::k_meta_offset], 1.0F);
 }
