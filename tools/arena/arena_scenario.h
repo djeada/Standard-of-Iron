@@ -292,6 +292,8 @@ struct ArenaScenarioDefinition {
   float terrain_height_scale_override{0.0F};
 
   bool suppress_boundary_mountains{false};
+
+  bool suppress_combat_dust{false};
   ArenaCameraView camera;
   std::optional<QVector3D> camera_focus;
   bool suppress_terrain_scatter{false};

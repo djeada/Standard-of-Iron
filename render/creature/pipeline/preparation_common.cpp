@@ -212,7 +212,10 @@ auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
 
   auto const resolved_pose = resolved_humanoid_pose(anim);
   auto const state = resolved_pose.animation_state;
-  auto clip_variant = humanoid_clip_variant_for_state(archetype_id, anim, state);
+
+  auto clip_variant = anim.inputs.is_in_hold_mode
+                          ? std::uint8_t{0U}
+                          : humanoid_clip_variant_for_state(archetype_id, anim, state);
   auto clip_id = Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
       archetype_id, state, clip_variant);
   if (clip_id == ArchetypeDescriptor::k_unmapped_clip) {

@@ -8492,7 +8492,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
     s.force_full_creature_lod = true;
-    s.collect_animation_diagnostics = false;
     s.graphics_quality = Render::GraphicsQuality::Ultra;
     s.environment.start_time = 18.15F;
     s.environment.time_mode = Game::Map::TimeMode::Locked;
@@ -8789,7 +8788,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.environment.start_time = 16.4F;
     s.environment.time_mode = Game::Map::TimeMode::Locked;
 
-    s.environment.fog_density_override = 0.028F;
+    s.environment.fog_density_override = 0.020F;
     s.environment.exposure_override = 1.18F;
 
     auto scipio = group(QStringLiteral("scipio"),
@@ -8887,6 +8886,163 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                     QStringLiteral("scipio"),
                     QStringLiteral("hannibal")),
         expectation(Expect::HitReactionObserved, QStringLiteral("hannibal")),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_promo_wolf_attack_id),
+        QStringLiteral("Promo: Wolves on the Fold"),
+        QStringLiteral("Late-afternoon capture scene. A pack comes out of the east "
+                       "at villagers working the ground outside their houses, and "
+                       "the riders of the watch come down the street to answer it."),
+        44.0F,
+        {30.0F, 26.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 1.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.force_full_creature_lod = true;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.arena_floor_half_extent = 32.0F;
+    s.terrain_height_scale_override = 2.6F;
+
+    s.suppress_boundary_mountains = true;
+    s.suppress_combat_dust = true;
+    {
+
+      constexpr int k_ring_mounds = 26;
+      for (int i = 0; i < k_ring_mounds; ++i) {
+        float const fi = static_cast<float>(i);
+        float const angle =
+            2.0F * std::numbers::pi_v<float> * fi / static_cast<float>(k_ring_mounds);
+        float const wobble = std::sin(fi * 1.7F);
+        float const wobble2 = std::sin((fi * 0.9F) + 1.3F);
+        float const ring_radius = 44.0F + (2.0F * wobble2);
+        float const mound_radius = 14.0F + (2.0F * wobble);
+        float const height = 12.5F + (4.0F * wobble2);
+        s.elevation_patches.push_back(
+            {{ring_radius * std::sin(angle), 0.0F, ring_radius * std::cos(angle)},
+             mound_radius,
+             height});
+      }
+      for (int i = 0; i < k_ring_mounds; ++i) {
+        float const fi = static_cast<float>(i) + 0.5F;
+        float const angle =
+            2.0F * std::numbers::pi_v<float> * fi / static_cast<float>(k_ring_mounds);
+        float const wobble = std::sin((fi * 2.3F) + 0.7F);
+        s.elevation_patches.push_back({{(48.0F + (2.0F * wobble)) * std::sin(angle),
+                                        0.0F,
+                                        (48.0F + (2.0F * wobble)) * std::cos(angle)},
+                                       17.0F,
+                                       15.0F + (3.0F * wobble)});
+      }
+    }
+
+    s.environment.start_time = 13.0F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.environment.fog_density_override = 0.016F;
+    s.environment.exposure_override = 1.34F;
+
+    Game::Wildlife::WildlifeSettings wildlife = Game::Wildlife::default_settings();
+    wildlife.enabled = true;
+    wildlife.seed = 31337U;
+    wildlife.sheep.enabled = false;
+    wildlife.sheep.group_count = 0;
+    wildlife.birds.enabled = false;
+    wildlife.birds.group_count = 0;
+    wildlife.wolves.enabled = true;
+    wildlife.wolves.group_count = 1;
+    wildlife.wolves.group_size_min = 8;
+    wildlife.wolves.group_size_max = 8;
+    wildlife.wolves.aggression = 1.0F;
+    wildlife.wolves.alert_radius = 18.0F;
+    wildlife.wolves.roam_radius = 30.0F;
+    wildlife.wolves.respawn = false;
+    wildlife.wolves.spawn_areas = {{34.0F, 0.0F, 7.0F}};
+    s.wildlife = wildlife;
+
+    s.roads = {
+        street({-27.0F, 0.0F, -3.0F}, {18.0F, 0.0F, -3.0F}, 3.2F, "default"),
+        street({-13.0F, 0.0F, -3.0F}, {-13.0F, 0.0F, 9.0F}, 2.4F, "default"),
+    };
+
+    s.resource_patches = {
+        patch("fire_camp", 1, {-16.0F, 0.0F, 4.0F}, {}, 0.9F),
+        patch("tent", 2, {-21.0F, 0.0F, 6.0F}, {4.5F, 0.0F, 0.0F}, 0.8F),
+        patch("supply_cart", 2, {-9.0F, 0.0F, 6.0F}, {3.6F, 0.0F, 0.0F}, 0.95F),
+        patch("olive_tree", 5, {-24.0F, 0.0F, -13.0F}, {0.0F, 0.0F, 4.5F}, 1.1F),
+        patch("pine", 6, {30.0F, 0.0F, 16.0F}, {3.4F, 0.0F, 2.5F}, 1.2F),
+        patch("pine", 4, {26.0F, 0.0F, -18.0F}, {3.6F, 0.0F, 2.0F}, 1.15F),
+        patch("plant", 6, {6.0F, 0.0F, -12.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+    };
+
+    auto villagers = residents(QStringLiteral("villagers"),
+                               Nation::RomanRepublic,
+                               1,
+                               6,
+                               {4.0F, 0.0F, 4.0F},
+                               {2.8F, 0.0F, 0.0F},
+                               3.0F);
+
+    villagers.health_override = villagers.max_health_override = 205;
+
+    auto riders = group(QStringLiteral("riders"),
+                        Troop::MountedKnight,
+                        1,
+                        5,
+                        {-22.0F, 0.0F, -3.0F},
+                        1,
+                        {2.8F, 0.0F, 0.0F});
+
+    s.groups = {
+        building(QStringLiteral("village_homes"),
+                 Game::Units::SpawnType::Home,
+                 Nation::RomanRepublic,
+                 1,
+                 3,
+                 {-19.0F, 0.0F, -10.0F},
+                 {6.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("village_market"),
+                 Game::Units::SpawnType::Marketplace,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-13.0F, 0.0F, 8.0F},
+                 {},
+                 180.0F),
+        building(QStringLiteral("village_barracks"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {-22.0F, 0.0F, 2.0F},
+                 {},
+                 90.0F),
+        villagers,
+        riders,
+    };
+
+    auto rescue = at(10.5F, Command::Run, QStringLiteral("riders"));
+    rescue.destination = {2.0F, 0.0F, 4.0F};
+
+    s.steps = {
+        at(0.2F, Command::Hold, QStringLiteral("riders")),
+        at(10.1F, Command::Stop, QStringLiteral("riders")),
+        rescue,
+        at(18.0F, Command::Hold, QStringLiteral("riders")),
+    };
+
+    s.expectations = {
+        expectation(Expect::GroupExists, QStringLiteral("villagers")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("villagers")),
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("villagers")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("riders")),
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("villagers")),
+        expectation(Expect::WildlifeHuntObserved),
+        expectation(Expect::GroupHealthReduced, QStringLiteral("villagers")),
+        expectation(Expect::WildlifeCasualtyObserved),
     };
     result.push_back(std::move(s));
   }
@@ -9053,6 +9209,99 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         expectation(Expect::GroupIsRendered, QStringLiteral("line_archers")),
         expectation(Expect::GroupIsRendered, QStringLiteral("shield_line")),
         expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F)};
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_unarmed_support_brawl_id),
+        QStringLiteral("Unarmed Support Brawl"),
+        QStringLiteral("Roman and Carthaginian builders, civilians, and healers fight "
+                       "matching roles at close range. Validates the dedicated unarmed "
+                       "BPAT guard, jab, cross, hook, contact, and recovery path."),
+        10.0F,
+        {5.5F, 10.0F, 0.0F});
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.suppress_terrain_scatter = true;
+    s.camera_focus = QVector3D(0.5F, 0.8F, 0.0F);
+
+    auto roman_builders = group(QStringLiteral("roman_builders"),
+                                Troop::Builder,
+                                1,
+                                1,
+                                {-2.3F, 0.0F, -1.40F},
+                                1);
+    auto carthage_builders = group(QStringLiteral("carthage_builders"),
+                                   Troop::Builder,
+                                   2,
+                                   1,
+                                   {-2.3F, 0.0F, 1.40F},
+                                   1);
+    auto roman_civilians = group(QStringLiteral("roman_civilians"),
+                                 Troop::Civilian,
+                                 1,
+                                 1,
+                                 {0.0F, 0.0F, -1.40F},
+                                 1);
+    auto carthage_civilians = group(QStringLiteral("carthage_civilians"),
+                                    Troop::Civilian,
+                                    2,
+                                    1,
+                                    {0.0F, 0.0F, 1.40F},
+                                    1);
+    auto roman_healers = group(
+        QStringLiteral("roman_healers"), Troop::Healer, 1, 1, {2.3F, 0.0F, -1.40F}, 1);
+    auto carthage_healers = group(QStringLiteral("carthage_healers"),
+                                  Troop::Healer,
+                                  2,
+                                  1,
+                                  {2.3F, 0.0F, 1.40F},
+                                  1);
+    for (auto* combatant : {&roman_builders,
+                            &carthage_builders,
+                            &roman_civilians,
+                            &carthage_civilians,
+                            &roman_healers,
+                            &carthage_healers}) {
+      combatant->health_override = 600;
+      combatant->max_health_override = 600;
+    }
+    s.groups = {roman_builders,
+                carthage_builders,
+                roman_civilians,
+                carthage_civilians,
+                roman_healers,
+                carthage_healers};
+
+    struct Pair {
+      const char* roman;
+      const char* carthage;
+    };
+    constexpr std::array<Pair, 3> k_pairs{{
+        {"roman_builders", "carthage_builders"},
+        {"roman_civilians", "carthage_civilians"},
+        {"roman_healers", "carthage_healers"},
+    }};
+    for (auto const& pair : k_pairs) {
+      QString const roman = QString::fromLatin1(pair.roman);
+      QString const carthage = QString::fromLatin1(pair.carthage);
+      s.steps.push_back(at(0.35F, Command::Attack, roman, carthage));
+      s.steps.push_back(at(0.35F, Command::Attack, carthage, roman));
+      for (auto const& [actor, opponent] :
+           {std::pair{roman, carthage}, std::pair{carthage, roman}}) {
+        s.expectations.push_back(expectation(Expect::GroupIsRendered, actor));
+        s.expectations.push_back(expectation(Expect::AttackAnimationObserved, actor));
+        s.expectations.push_back(
+            expectation(Expect::RepeatedAttackAnimationObserved, actor, {}, 2.0F));
+        s.expectations.push_back(
+            expectation(Expect::AttackHasVisibleContact, actor, opponent));
+        s.expectations.push_back(expectation(Expect::NoLimbOverextension, actor));
+        s.expectations.push_back(expectation(Expect::NoUnexpectedFallPose, actor));
+      }
+    }
+    s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
     result.push_back(std::move(s));
   }
 

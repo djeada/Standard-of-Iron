@@ -1519,6 +1519,70 @@ TEST(HumanoidPrepare, BuiltInCiviliansSubmitRiggedGeometry) {
             0);
 }
 
+TEST(HumanoidPrepare, UnarmedSupportArchetypesRouteMeleeToDedicatedBpatClips) {
+  EXPECT_GT(render_builder_submission_count(
+                "troops/roman/builder", Game::Systems::NationID::RomanRepublic, false),
+            0);
+  EXPECT_GT(render_builder_submission_count(
+                "troops/carthage/builder", Game::Systems::NationID::Carthage, false),
+            0);
+  EXPECT_GT(render_civilian_submission_count("troops/roman/civilian",
+                                             Game::Systems::NationID::RomanRepublic),
+            0);
+  EXPECT_GT(render_civilian_submission_count("troops/carthage/civilian",
+                                             Game::Systems::NationID::Carthage),
+            0);
+  (void)render_runtime_mesh_count("troops/roman/healer",
+                                  Game::Units::SpawnType::Healer,
+                                  Game::Systems::NationID::RomanRepublic,
+                                  false);
+  (void)render_runtime_mesh_count("troops/carthage/healer",
+                                  Game::Units::SpawnType::Healer,
+                                  Game::Systems::NationID::Carthage,
+                                  false);
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  constexpr std::array<std::string_view, 6> k_unarmed_roles{{
+      "troops/roman/builder",
+      "troops/carthage/builder",
+      "troops/roman/civilian",
+      "troops/carthage/civilian",
+      "troops/roman/healer",
+      "troops/carthage/healer",
+  }};
+  for (auto const role : k_unarmed_roles) {
+    auto const archetype = find_archetype_id(role);
+    ASSERT_NE(archetype, Render::Creature::k_invalid_archetype) << role;
+    EXPECT_EQ(registry.clip_variant_count(
+                  archetype, Render::Creature::AnimationStateId::AttackMelee),
+              Animation::k_humanoid_unarmed_variant_count)
+        << role;
+    EXPECT_EQ(registry.resolve_bpat_clip(
+                  archetype, Render::Creature::AnimationStateId::AttackMelee, 0U),
+              Animation::k_humanoid_unarmed_jab_clip)
+        << role;
+    EXPECT_EQ(registry.resolve_bpat_clip(
+                  archetype, Render::Creature::AnimationStateId::AttackMelee, 1U),
+              Animation::k_humanoid_unarmed_cross_clip)
+        << role;
+    EXPECT_EQ(registry.resolve_bpat_clip(
+                  archetype, Render::Creature::AnimationStateId::AttackMelee, 2U),
+              Animation::k_humanoid_unarmed_hook_clip)
+        << role;
+  }
+
+  auto const armed_healer = find_archetype_id("troops/carthage/healer");
+  auto const unarmed_healer = find_archetype_id("troops/carthage/healer/unarmed");
+  ASSERT_NE(armed_healer, Render::Creature::k_invalid_archetype);
+  ASSERT_NE(unarmed_healer, Render::Creature::k_invalid_archetype);
+  auto const* armed_desc = registry.get(armed_healer);
+  auto const* unarmed_desc = registry.get(unarmed_healer);
+  ASSERT_NE(armed_desc, nullptr);
+  ASSERT_NE(unarmed_desc, nullptr);
+  EXPECT_EQ(armed_desc->bake_attachment_count, unarmed_desc->bake_attachment_count + 1U)
+      << "the Carthaginian healer must put the stave away for bare-hand combat";
+}
+
 TEST(HumanoidPrepare, BuiltInBuildersSubmitRiggedGeometryWhileConstructing) {
   EXPECT_GT(render_builder_submission_count(
                 "troops/roman/builder", Game::Systems::NationID::RomanRepublic, true),
@@ -2665,21 +2729,54 @@ TEST(HumanoidPoseController, SpearAttackStaysWithinReachAndKeepsBodyPlanted) {
 }
 
 TEST(AnimationCoreAttackPoseManifest, BasicMeleeStrikeOwnsGenericHitCurve) {
-  auto const sample = Animation::resolve_humanoid_weapon_attack_pose({
+  auto const guard = Animation::resolve_humanoid_weapon_attack_pose({
       .kind = Animation::HumanoidWeaponAttackKind::BasicMeleeStrike,
-      .attack_phase = 0.38F,
+      .attack_phase = 0.0F,
       .shoulder_y = 1.20F,
       .waist_y = 0.75F,
   });
+  EXPECT_GT(guard.left_hand.y, 1.25F);
+  EXPECT_GT(guard.right_hand.y, 1.25F);
+  EXPECT_GT(guard.left_hand.z, 0.20F);
+  EXPECT_GT(guard.right_hand.z, 0.20F);
+  EXPECT_LT(guard.pelvis_y_delta, 0.0F);
+  EXPECT_GT(guard.foot_l_z_delta, guard.foot_r_z_delta);
 
-  EXPECT_NEAR(sample.right_hand.x, 0.29F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.y, 1.215F, 0.0001F);
-  EXPECT_NEAR(sample.right_hand.z, 0.35F, 0.0001F);
-  EXPECT_NEAR(sample.left_hand.x, -0.15F, 0.0001F);
-  EXPECT_NEAR(sample.left_hand.y, 1.18F, 0.0001F);
-  EXPECT_NEAR(sample.left_hand.z, 0.24F, 0.0001F);
-  EXPECT_GT(sample.shoulder_r_z_delta, 0.0F);
-  EXPECT_GT(sample.foot_r_z_delta, 0.0F);
+  auto contact = [](std::uint8_t variant) {
+    return Animation::resolve_humanoid_weapon_attack_pose({
+        .kind = Animation::HumanoidWeaponAttackKind::BasicMeleeStrike,
+        .attack_phase = 0.50F,
+        .variant = variant,
+        .shoulder_y = 1.20F,
+        .waist_y = 0.75F,
+    });
+  };
+  auto const jab = contact(0U);
+  auto const cross = contact(1U);
+  auto const hook = contact(2U);
+
+  EXPECT_GT(jab.left_hand.z, 0.70F);
+  EXPECT_LT(jab.right_hand.z, 0.35F);
+  EXPECT_GT(cross.right_hand.z, 0.74F);
+  EXPECT_LT(cross.left_hand.z, 0.35F);
+  EXPECT_GT(cross.shoulder_r_z_delta - cross.shoulder_l_z_delta, 0.10F);
+  EXPECT_GT(hook.left_hand.x, 0.08F);
+  EXPECT_GT(hook.left_hand.z, 0.50F);
+  EXPECT_LT(hook.left_hand.z, jab.left_hand.z);
+
+  auto const recovered = Animation::resolve_humanoid_weapon_attack_pose({
+      .kind = Animation::HumanoidWeaponAttackKind::BasicMeleeStrike,
+      .attack_phase = 1.0F,
+      .variant = 2U,
+      .shoulder_y = 1.20F,
+      .waist_y = 0.75F,
+  });
+  EXPECT_NEAR(recovered.left_hand.x, guard.left_hand.x, 0.0001F);
+  EXPECT_NEAR(recovered.left_hand.y, guard.left_hand.y, 0.0001F);
+  EXPECT_NEAR(recovered.left_hand.z, guard.left_hand.z, 0.0001F);
+  EXPECT_NEAR(recovered.right_hand.x, guard.right_hand.x, 0.0001F);
+  EXPECT_NEAR(recovered.right_hand.y, guard.right_hand.y, 0.0001F);
+  EXPECT_NEAR(recovered.right_hand.z, guard.right_hand.z, 0.0001F);
 }
 
 TEST(AnimationCoreAttackPoseManifest, HumanoidBowDrawStartsAtAimPose) {

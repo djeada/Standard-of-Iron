@@ -354,6 +354,7 @@ private:
   void capture_attack_scrub_anchor();
   void apply_attack_scrub_override();
   void set_force_full_creature_lod(bool enabled);
+  void stamp_capture_alpha_opaque();
   void sample_frame_continuity();
   [[nodiscard]] auto ensure_capture_target() -> bool;
   void apply_cinematic_view();

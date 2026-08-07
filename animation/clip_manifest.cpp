@@ -93,6 +93,16 @@ rpg_sword_markers(SwordAttackAnimation animation) noexcept -> ClipMarkers {
   };
 }
 
+[[nodiscard]] constexpr auto unarmed_markers() noexcept -> ClipMarkers {
+  return {
+      .anticipation_start = 0.10F,
+      .weapon_release = 0.30F,
+      .contact = 0.50F,
+      .recover_unlocked = 0.70F,
+      .exit_safe = 0.94F,
+  };
+}
+
 [[nodiscard]] constexpr auto hold_markers() noexcept -> ClipMarkers {
   return {
       .anticipation_start = 0.0F,
@@ -118,6 +128,9 @@ auto humanoid_attack_clip(AttackClipFamily family,
                           bool mounted,
                           std::uint8_t variant) noexcept -> std::uint16_t {
   switch (family) {
+  case AttackClipFamily::Unarmed:
+    return static_cast<std::uint16_t>(k_humanoid_unarmed_jab_clip +
+                                      (variant % k_humanoid_unarmed_variant_count));
   case AttackClipFamily::Sword:
     if (mounted) {
       return k_humanoid_riding_sword_strike_clip;
@@ -291,6 +304,9 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
   }
 
   switch (inputs.state) {
+  case StateId::AttackMelee:
+    return static_cast<std::uint8_t>(inputs.attack_variant %
+                                     inputs.available_variant_count);
   case StateId::AttackSword:
   case StateId::AttackSpear:
   case StateId::AttackBow:
@@ -304,7 +320,6 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
   case StateId::Walk:
   case StateId::Run:
   case StateId::Hold:
-  case StateId::AttackMelee:
   case StateId::AttackRanged:
   case StateId::Die:
   case StateId::Dead:
@@ -335,6 +350,10 @@ auto resolve_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) noex
 auto authored_humanoid_clip_markers(
     std::uint16_t clip_id, HumanoidClipProfile profile) noexcept -> ClipMarkers {
   switch (clip_id) {
+  case k_humanoid_unarmed_jab_clip:
+  case k_humanoid_unarmed_cross_clip:
+  case k_humanoid_unarmed_hook_clip:
+    return unarmed_markers();
   case k_humanoid_attack_sword_a_clip:
   case k_humanoid_attack_sword_b_clip:
   case k_humanoid_attack_sword_c_clip:

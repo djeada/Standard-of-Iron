@@ -169,6 +169,7 @@ add_executable(
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp
+    render/wildlife_action_pose_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
     render/body_frames_test.cpp

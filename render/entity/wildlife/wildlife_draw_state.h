@@ -20,6 +20,10 @@ struct DrawState {
   QVector3D coat{0.8F, 0.8F, 0.8F};
   std::uint32_t seed{1U};
   Game::Wildlife::Behavior behavior{Game::Wildlife::Behavior::Graze};
+
+  float bite_progress{-1.0F};
+  float death_progress{-1.0F};
+  bool dead{false};
 };
 
 [[nodiscard]] auto resolve_draw_state(const DrawContext& ctx,

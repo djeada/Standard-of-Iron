@@ -29,6 +29,7 @@ constexpr std::array<BoneDef, k_bone_count> k_bones{{
     {"FootBR", bone_index(Bone::KneeBR)},
     {"NeckTop", bone_index(Bone::Body)},
     {"Head", bone_index(Bone::NeckTop)},
+    {"Jaw", bone_index(Bone::Head)},
     {"EarL", bone_index(Bone::Head)},
     {"EarR", bone_index(Bone::Head)},
     {"TailBase", bone_index(Bone::Body)},
@@ -110,6 +111,10 @@ auto resolve_joint(void* user, BoneIndex bone) -> BoneResolution {
   case Bone::Head:
     out.head = pose.poll;
     out.tail = pose.muzzle;
+    break;
+  case Bone::Jaw:
+    out.head = pose.jaw_hinge;
+    out.tail = pose.jaw_tip;
     break;
   case Bone::EarL:
     out.head = pose.ear_base_l;

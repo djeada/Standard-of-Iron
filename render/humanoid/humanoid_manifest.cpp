@@ -40,6 +40,7 @@ namespace {
 
 enum class BakerAttackType : std::uint8_t {
   None,
+  Unarmed,
   Sword,
   Spear,
   Bow,
@@ -734,6 +735,45 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      30.0F,
      2.2F,
      false},
+    {"unarmed_jab",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Unarmed,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     28U,
+     28.0F,
+     1.0F,
+     false},
+    {"unarmed_cross",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Unarmed,
+     1,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     28U,
+     28.0F,
+     1.0F,
+     false},
+    {"unarmed_hook",
+     Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Unarmed,
+     2,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     30U,
+     28.0F,
+     1.05F,
+     false},
 }};
 
 struct HumanoidSocketSpec {
@@ -1376,6 +1416,9 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
     float const sword_reach_scale = profile == BakeProfile::Skeleton ? 0.88F : 1.0F;
     switch (clip.attack_type) {
+    case BakerAttackType::Unarmed:
+      ctrl.unarmed_strike(phase, clip.attack_variant);
+      break;
     case BakerAttackType::Sword:
       if (is_rpg_sword_clip(clip)) {
         apply_authored_rpg_sword_pose(ctrl, clip.attack_variant, phase, pose);
@@ -1572,6 +1615,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
   }
 
   if (clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||
+      clip.attack_type == BakerAttackType::Unarmed ||
       clip.attack_type == BakerAttackType::Sword ||
       clip.attack_type == BakerAttackType::BowMelee ||
       clip.attack_type == BakerAttackType::Spear ||

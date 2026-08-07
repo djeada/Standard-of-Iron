@@ -17,14 +17,14 @@ auto attack_family_for_combat_family(Engine::Core::CombatAttackFamily family) no
     -> std::optional<Animation::AttackClipFamily> {
   using Engine::Core::CombatAttackFamily;
   switch (family) {
+  case CombatAttackFamily::None:
+    return Animation::AttackClipFamily::Unarmed;
   case CombatAttackFamily::Sword:
     return Animation::AttackClipFamily::Sword;
   case CombatAttackFamily::Spear:
     return Animation::AttackClipFamily::Spear;
   case CombatAttackFamily::Bow:
     return Animation::AttackClipFamily::Bow;
-  case CombatAttackFamily::None:
-    return std::nullopt;
   }
   return std::nullopt;
 }
