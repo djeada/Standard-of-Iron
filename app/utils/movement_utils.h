@@ -260,6 +260,7 @@ issue_builder_repair_command(Engine::Core::World* world,
         worker_position, structure_position, structure_key, unit_radius);
 
     Game::Systems::OrderService::clear_builder_task(entity);
+    Game::Systems::OrderService::clear_builder_gather_order(entity);
     builder->is_placement_preview = false;
     builder->product_type = std::string(Game::Systems::k_builder_product_repair);
     builder->build_time = Game::Systems::k_builder_repair_tick_seconds;

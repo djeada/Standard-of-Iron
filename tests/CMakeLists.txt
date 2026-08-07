@@ -110,6 +110,7 @@ add_executable(
     systems/production_system_test.cpp
     systems/resource_delivery_system_test.cpp
     systems/gather_loop_system_test.cpp
+    systems/auto_gather_test.cpp
     systems/settlement_life_system_test.cpp
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp

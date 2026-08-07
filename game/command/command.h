@@ -75,6 +75,13 @@ struct SetGateMode {
       Engine::Core::GateComponent::ManualMode::Automatic};
 };
 
+struct SetAutoGather {
+  std::vector<Engine::Core::EntityID> units;
+  bool active = true;
+
+  std::string priority_product_type;
+};
+
 struct Produce {
   Engine::Core::EntityID building = Engine::Core::NULL_ENTITY;
   Game::Units::TroopType product = Game::Units::TroopType::Archer;
@@ -89,6 +96,7 @@ using Payload = std::variant<Move,
                              Patrol,
                              SetRallyPoint,
                              SetGateMode,
+                             SetAutoGather,
                              Produce>;
 
 struct Command {

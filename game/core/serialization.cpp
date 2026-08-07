@@ -656,6 +656,9 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
         QString::fromStdString(builder->gather_product_type);
     builder_obj["gather_anchor_x"] = static_cast<double>(builder->gather_anchor_x);
     builder_obj["gather_anchor_z"] = static_cast<double>(builder->gather_anchor_z);
+    builder_obj["auto_gather"] = builder->auto_gather;
+    builder_obj["auto_gather_priority"] =
+        QString::fromStdString(builder->auto_gather_priority);
     entity_obj["builder_production"] = builder_obj;
   }
 
@@ -1565,6 +1568,9 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(builder_obj["gather_anchor_x"].toDouble(0.0));
     builder->gather_anchor_z =
         static_cast<float>(builder_obj["gather_anchor_z"].toDouble(0.0));
+    builder->auto_gather = builder_obj["auto_gather"].toBool(false);
+    builder->auto_gather_priority =
+        builder_obj["auto_gather_priority"].toString().toStdString();
   }
 
   if (json.contains("wall_segment")) {

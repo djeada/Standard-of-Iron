@@ -31,6 +31,14 @@ void ActivityViewModel::confirm_repair_at(qreal sx, qreal sy) {
   m_host->confirm_repair_at(sx, sy);
 }
 
+void ActivityViewModel::toggle_auto_gather(const QString& priority_product_type) {
+  if (m_host == nullptr) {
+    return;
+  }
+  m_host->ensure_initialized();
+  m_host->toggle_auto_gather(priority_product_type);
+}
+
 void ActivityViewModel::set_attack_target_hint(const QVariantMap& hint) {
   if (m_attack_target_hint == hint) {
     return;

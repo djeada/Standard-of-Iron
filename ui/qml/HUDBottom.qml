@@ -186,6 +186,18 @@ RowLayout {
                     game.placement.start_builder_construction("collect");
             }
         }, {
+            "id": "auto_gather",
+            "label": qsTr("Auto Gather"),
+            "needsTroops": true,
+            "hint": qsTr("Builders keep finding and collecting the nearest resource on their own. Any new order cancels it."),
+            "unavailable": qsTr("Auto Gather is only available to builders"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.activity) {
+                    game.activity.toggle_auto_gather();
+                    bottomRoot.update_action_states();
+                }
+            }
+        }, {
             "id": "repair",
             "label": qsTr("Repair"),
             "needsTroops": true,

@@ -5,6 +5,7 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/builder_product_types.h"
 #include "../systems/combat_rules.h"
 #include "../systems/command_service.h"
 #include "../systems/defense_formation_service.h"
@@ -205,6 +206,34 @@ void apply_run_mode(World& world, const SetRunMode& run) {
   });
 }
 
+void apply_auto_gather(World& world, const SetAutoGather& order) {
+  for_each_subject(world, order.units, [&order](Entity& entity) {
+    const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Builder) {
+      return;
+    }
+
+    auto* builder = entity.get_component<Engine::Core::BuilderProductionComponent>();
+    if (builder == nullptr || builder->is_placement_preview) {
+      return;
+    }
+
+    if (!order.active) {
+      builder->clear_auto_gather();
+      return;
+    }
+
+    builder->auto_gather = true;
+    builder->auto_gather_priority =
+        Game::Systems::is_harvest_builder_product(order.priority_product_type)
+            ? order.priority_product_type
+            : std::string{};
+
+    builder->clear_gather_order();
+    builder->clear_fault();
+  });
+}
+
 void apply_patrol(World& world, const Patrol& patrol) {
   for_each_subject(world, patrol.units, [&patrol](Entity& entity) {
     auto* component = entity.get_component<Engine::Core::PatrolComponent>();
@@ -256,6 +285,8 @@ void dispatch(World& world, const Command& command) {
               world, payload.building, payload.position.x(), payload.position.z());
         } else if constexpr (std::is_same_v<T, SetGateMode>) {
           apply_gate_mode(world, payload);
+        } else if constexpr (std::is_same_v<T, SetAutoGather>) {
+          apply_auto_gather(world, payload);
         } else if constexpr (std::is_same_v<T, Produce>) {
           Game::Systems::ProductionService::start_production(
               world, payload.building, payload.product);

@@ -33,6 +33,7 @@ constexpr std::array k_kind_names = std::to_array<KindName>({
     {ActivityKind::ChopWood, "chop_wood"},
     {ActivityKind::MineStone, "mine_stone"},
     {ActivityKind::MineIron, "mine_iron"},
+    {ActivityKind::AutoGather, "auto_gather"},
     {ActivityKind::Deliver, "deliver"},
     {ActivityKind::Heal, "heal"},
     {ActivityKind::Train, "train"},
@@ -78,6 +79,19 @@ auto builder_activity(const Engine::Core::Entity& entity,
 
   const bool has_job = builder.has_construction_site || builder.has_task_target ||
                        builder.structure_task_entity_id != 0;
+
+  if (builder.auto_gather && !has_job) {
+
+    const auto* carry = entity.get_component<Engine::Core::ResourceCarryComponent>();
+    if (carry != nullptr && !carry->empty()) {
+      return std::nullopt;
+    }
+
+    activity.kind = ActivityKind::AutoGather;
+    activity.state =
+        builder.has_active_fault() ? ActivityState::Unavailable : ActivityState::Queued;
+    return activity;
+  }
 
   if (builder.has_active_fault()) {
 

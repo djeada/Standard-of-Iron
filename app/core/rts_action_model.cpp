@@ -23,6 +23,7 @@ enum class ActionId {
   Stop,
   Deliver,
   Collect,
+  AutoGather,
   Build,
   Repair,
   Formation,
@@ -52,6 +53,7 @@ constexpr ActionId k_all_actions[] = {ActionId::Attack,
                                       ActionId::Stop,
                                       ActionId::Deliver,
                                       ActionId::Collect,
+                                      ActionId::AutoGather,
                                       ActionId::Build,
                                       ActionId::Repair,
                                       ActionId::Formation,
@@ -78,6 +80,8 @@ auto action_to_string(ActionId action) -> QString {
     return QStringLiteral("deliver");
   case ActionId::Collect:
     return QStringLiteral("collect");
+  case ActionId::AutoGather:
+    return QStringLiteral("auto_gather");
   case ActionId::Build:
     return QStringLiteral("build");
   case ActionId::Repair:
@@ -122,6 +126,9 @@ auto action_from_string(const QString& action_id) -> ActionId {
   }
   if (action_id == QStringLiteral("collect")) {
     return ActionId::Collect;
+  }
+  if (action_id == QStringLiteral("auto_gather")) {
+    return ActionId::AutoGather;
   }
   if (action_id == QStringLiteral("build")) {
     return ActionId::Build;
@@ -184,6 +191,7 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
   case ActionId::Deliver:
     return (unit != nullptr) && (unit->spawn_type == Game::Units::SpawnType::Civilian);
   case ActionId::Collect:
+  case ActionId::AutoGather:
   case ActionId::Build:
   case ActionId::Repair:
     return (unit != nullptr) && (unit->spawn_type == Game::Units::SpawnType::Builder);
@@ -247,6 +255,11 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
     return (builder != nullptr) &&
            builder->product_type ==
                std::string(Game::Systems::k_builder_product_repair);
+  }
+  case ActionId::AutoGather: {
+    const auto* builder =
+        entity.get_component<Engine::Core::BuilderProductionComponent>();
+    return (builder != nullptr) && builder->auto_gather;
   }
   case ActionId::Heal:
   case ActionId::Stop:
@@ -437,6 +450,8 @@ auto get_mode_availability(Engine::Core::World* world) -> QVariantMap {
       get_status(context, ActionId::Heal).eligible_count > 0;
   result[QStringLiteral("canBuild")] = get_status(context, ActionId::Build).enabled;
   result[QStringLiteral("canCollect")] = get_status(context, ActionId::Collect).enabled;
+  result[QStringLiteral("canAutoGather")] =
+      get_status(context, ActionId::AutoGather).enabled;
   result[QStringLiteral("canRepair")] = get_status(context, ActionId::Repair).enabled;
   result[QStringLiteral("canDeliver")] = get_status(context, ActionId::Deliver).enabled;
   result[QStringLiteral("canRally")] = get_status(context, ActionId::Rally).enabled;
