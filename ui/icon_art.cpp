@@ -126,6 +126,14 @@ auto build_catalog() -> std::vector<Art> {
        fill(QStringLiteral("M7.4 17.8 L8.9 19.3 L7.4 20.8 L5.9 19.3 Z"), Tone::Ember),
        fill(QStringLiteral("M13.6 17.6 L15 19 L13.6 20.4 L12.2 19 Z"), Tone::Ember)});
 
+  add("auto_gather",
+      {pick_head(),
+       pick_haft(),
+       line(QStringLiteral("M4.4 12 Q4.4 4.8 11.6 4.8 Q16.4 4.8 18.6 8.4"),
+            Tone::Ember,
+            2.0F),
+       fill(QStringLiteral("M15.4 3.2 L20.6 6.2 L15.4 9.2 Z"), Tone::Ember)});
+
   add("deliver",
       {fill(QStringLiteral("M4.4 10.2 L12.4 10.2 L12.4 19.6 L4.4 19.6 Z"), Tone::Metal),
        line(QStringLiteral("M4.4 13.6 L12.4 13.6"), Tone::Ink, 1.1F),

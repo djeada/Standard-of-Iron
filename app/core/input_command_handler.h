@@ -64,6 +64,7 @@ public:
   void on_gate_command();
   void on_guard_command();
   void on_formation_command();
+  void on_auto_gather_command(const QString& priority_product_type = {});
   void on_run_command();
   void on_guard_click(qreal sx, qreal sy, const ViewportState& viewport);
   void on_civilian_delivery_click(qreal sx,

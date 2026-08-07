@@ -418,6 +418,7 @@ public:
   [[nodiscard]] auto unit_activity(qulonglong unit_id) const -> QVariantMap override;
   [[nodiscard]] auto selection_activity_summary() const -> QVariantMap override;
   void toggle_repair_order() override;
+  void toggle_auto_gather(const QString& priority_product_type) override;
   void confirm_repair_at(qreal sx, qreal sy) override;
 
   [[nodiscard]] bool has_patrol_preview_waypoint() const;

@@ -161,4 +161,53 @@ TEST(RtsActionModel, ArmingRepairShowsUpAsTheCurrentCommandMode) {
             QStringLiteral("repair"));
 }
 
+TEST(RtsActionModel, AutoGatherIsOfferedToBuildersAndNobodyElse) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  EXPECT_FALSE(App::Core::get_action_states(context)
+                   .value(QStringLiteral("auto_gather"))
+                   .toMap()
+                   .value(QStringLiteral("enabled"))
+                   .toBool());
+
+  auto* builder = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+  builder->add_component<Engine::Core::BuilderProductionComponent>();
+
+  EXPECT_TRUE(App::Core::get_action_states(context)
+                  .value(QStringLiteral("auto_gather"))
+                  .toMap()
+                  .value(QStringLiteral("enabled"))
+                  .toBool());
+  EXPECT_TRUE(App::Core::get_mode_availability(&world)
+                  .value(QStringLiteral("canAutoGather"))
+                  .toBool());
+}
+
+TEST(RtsActionModel, AnAutoGatheringBuilderShowsTheOrderAsActive) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* first = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+  first->add_component<Engine::Core::BuilderProductionComponent>()->auto_gather = true;
+
+  EXPECT_EQ(App::Core::get_toggle_state(&world, QStringLiteral("auto_gather")),
+            QStringLiteral("all"));
+
+  auto* second = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+  second->add_component<Engine::Core::BuilderProductionComponent>();
+
+  EXPECT_EQ(App::Core::get_toggle_state(&world, QStringLiteral("auto_gather")),
+            QStringLiteral("mixed"));
+}
+
 } // namespace

@@ -888,6 +888,14 @@ void GameEngine::on_gate_command() {
   m_input_handler->on_gate_command();
 }
 
+void GameEngine::toggle_auto_gather(const QString& priority_product_type) {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_auto_gather_command(priority_product_type);
+}
+
 void GameEngine::on_guard_command() {
   if (!m_input_handler) {
     return;
