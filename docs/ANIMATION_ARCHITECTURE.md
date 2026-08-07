@@ -173,6 +173,42 @@ Key properties that keep it smooth (Phase 6):
 - **Turn (6.4):** a signed turn amount drives lean, torso twist, stride bias and
   inside/outside foot asymmetry.
 
+### The swing has to join the stance at the stance's own speed
+
+A planted foot slides backwards relative to the hips at `-stride / planted_fraction` per
+unit phase. `swing_travel()` is therefore a Hermite whose **end tangents carry that
+slope**, not an ease that starts and finishes at rest: the foot leaves the ground still
+travelling backwards, reaches its furthest forward point shortly before touchdown, and
+retracts into the plant. Take the tangents away and the foot path has a corner at toe-off
+and another at heel strike — one visible hitch per stride, which is what the old
+`0.68·smoothstep(t) + 0.32·√t` produced (√ has an _infinite_ slope at `t = 0`).
+
+The retraction near touchdown is also the cheapest foot-lock the stylised gait gets: the
+foot is moving with the ground at the moment it lands rather than against it.
+
+### Stand, walk and run are three clips, so the switch is a crossfade
+
+Selection resolves one baked clip, so a unit that starts or stops walking would cut
+between `idle` and `walk` on the frame the movement flag flips — mid-stride, both feet in
+the wrong place. `resolve_locomotion_crossfade()` (`animation/selection_manifest.cpp`)
+instead names a primary clip and a second one to blend against, and
+`humanoid_animation_selection.cpp` hangs the second on the request's `full_body_blend`
+layer. The played state stays whatever the movement says, so nothing downstream sees a
+walking unit reported as idle.
+
+The weight is **`locomotion_presence` / `run_presence`, not `locomotion_blend`**. The
+blends carry how fast the unit is going, so driving the clip mix from them would leave
+every unit slower than the reference walk permanently diluted with the stand — a builder
+at half reference speed would look like it never commits to a step. Presence only answers
+"is there a stride at all", eased over the same `tau`, so it settles at one for a crawl
+and a sprint alike.
+
+The stride also keeps _cycling_ while it fades: `resolve_humanoid_locomotion_sample()`
+integrates the phase at the last walking cadence for as long as presence is above
+`k_locomotion_residual_blend`, instead of handing it straight back to the idle free-run.
+A walk that froze mid-step and then vanished was the single most visible hitch in
+first-person play.
+
 ### Gait amplitude and the skate budget
 
 `walk_profile()` / `run_profile()` in `animation/locomotion_manifest.cpp` hold the gait
@@ -231,8 +267,9 @@ exist because an acrobatic move is not a small perturbation of a stance — a
 handstand inverts the whole body, so the additive delta vocabulary the ambient
 idles use (`ambient_pose_manifest.cpp`) cannot express it.
 
-`animation/showcase_pose_manifest.{h,cpp}` holds the keys and the forward
-kinematics that turn them into a complete `HumanoidPose`:
+`animation/showcase_pose_manifest.{h,cpp}` holds the keys; the forward kinematics
+that turn them into a complete `HumanoidPose` live in `animation/rig/pose_fk.h`,
+shared with the death collapses (§4c):
 
 ```
  ShowcaseKey  { root, body_pitch/roll/yaw, spine_*, head_pitch, blade_*, 4 limb aims }
@@ -297,6 +334,73 @@ and drawn from the cached preparation.
 
 ---
 
+## 4c. Dying (`animation/death_pose_manifest.{h,cpp}`)
+
+A death is authored the same way a showcase move is, and for the same reason. It
+used to be a list of per-joint offsets faded in with a smoothstep, and that has
+two failure modes that a fall exposes immediately:
+
+- **Segments came apart.** The offsets moved the shoulders and the hands but not
+  the elbows, and the head further than the neck. By the end of the clip the
+  forearms were **3.27× their bind length** (`humanoid_preview --report`) and the
+  head had visibly left the neck behind.
+- **Nobody reached the ground.** The pelvis only sank 0.42 m, so the body settled
+  into a floating half-crouch with its head hanging in the air — a shape the
+  corpse then held for as long as it was on the field.
+
+The falls are now `DeathKey` sequences resolved through the same forward
+kinematics as the showcase moves, shared in `animation/rig/pose_fk.h`: bone
+lengths are exact by construction, and the settled pose is authored where a body
+actually lies.
+
+```
+ DeathKey { root, body_pitch/roll/yaw, spine_*, head_*, foot_pitch, 4 limb aims }
+        │  keys eased per segment: falling segments ease *in* only (t²), so the
+        │  body accelerates into the ground instead of arriving softly
+        ▼
+ PoseFk  spine → neck/shoulders/head, limb aims → elbows/hands/knees/feet
+        ▼
+ whole-body rotation about the pelvis, then translation to the authored root
+```
+
+### Which way a man goes down
+
+Four collapses are authored. Three are reachable by an infantry casualty and are
+baked as **clip variants**, so `resolve_bpat_clip` picks one by adding the
+`death_variant` to the base clip index — hence `die_infantry`,
+`die_infantry_face`, `die_infantry_side` are contiguous in `clip_manifest.h`, and
+so are the three `dead_infantry*` clips that hold the corpses.
+
+| collapse        | what it is                                                | chosen when                  |
+| --------------- | --------------------------------------------------------- | ---------------------------- |
+| `BackSprawl`    | trunk arches, knees fold, hips land, shoulders whip down  | struck from the front        |
+| `FacePlant`     | folds over its own knees, lands face-down                 | cut down from behind         |
+| `SideCrumple`   | legs go out sideways, comes to rest twisted onto one side | taken on the flank           |
+| `MountedUnseat` | carried clear of the saddle before gravity gets him       | rider profile, not a variant |
+
+`infantry_death_variant()` (`damage_application.cpp`) takes the dot product of
+the blow direction against the casualty's facing. It is not a die roll: a man
+shot in the chest must not land on his face. Slot zero of a volley always takes
+the fall the blow argues for; the men behind him may be substituted onto the side
+crumple, which is where identical bodies would otherwise show.
+
+The trunk roll on the side falls deliberately stops short of 90°. The rig carries
+its shoulders as two points half a metre apart on a rigid spine, so a body laid
+exactly on its side puts the lower shoulder underground — and from the game
+camera a three-quarter roll reads as "dropped" anyway.
+
+Each collapse also owns its own length
+(`humanoid_death_collapse_duration`), and that one number drives both the baked
+frame count and the runtime `DeathAnimationComponent::state_duration`. They must
+agree or the body would still be moving when the clip runs out.
+
+`tests/render/creature/death_collapse_test.cpp` guards both original defects:
+every segment holds its bind length across every sampled phase of every fall, and
+no joint is driven through the ground. Review a change with
+`humanoid_preview --clip die_infantry --view iso --report`.
+
+---
+
 ## 5. Combat: visual state machine + marker-driven damage
 
 Melee combat is animated by a small per-swing state machine and, crucially, the **HP hit
@@ -332,6 +436,43 @@ lands when the blade visually connects** — not on the trigger frame.
 
 The visual side (`combat_visual_state.cpp`) eases each phase (`eased_combat_phase_progress`)
 and applies a lane-driven weight curve (`emphasis_scale` × finisher/amplified multipliers).
+
+### The stance bleeds through the whole swing
+
+`combat_attack_visual_weight()` never reaches 1: a swing peaks at 0.95 of the attack clip
+with the stance showing through the rest. That weight has to be _applied_ everywhere it is
+below one, not only during the wind-up and the exit. Blending the stance during
+Enter/Anticipation and nowhere else put a step in the mix exactly where anticipation hands
+over to the strike — the stance went from three tenths of the pose to none of it on one
+frame, right as the blade started to move.
+
+The authored RPG timeline had a second hole in the same curve: `exit_blend_progress` was
+pinned at zero, so `ExitBlend` evaluated to a _constant_ 0.80 for the whole recovery and
+then cut to the stance when the action ended. It is now read off the authored phase, so
+the weight actually walks down to zero and `use_base_selection` takes over cleanly before
+the move finishes.
+
+### A swing is one arc, not five lunges
+
+`sample_authored_sword_pose_key()` interpolates the authored keys with Hermite/Catmull-Rom
+tangents (central differences, zero at the first and last key). Easing each _segment_
+separately with its own smoothstep — the old behaviour — drove the blade's velocity to
+zero at every key, so a cut read as a series of short lunges with a stop between each.
+
+Blade direction is **slerped**, not lerp-and-normalise. The keys either side of a cut are
+up to 135° apart, and the chord path crawls near both ends and whips through the middle;
+slerp gives the cut a constant angular rate, which is what makes the arc readable.
+
+Every RPG sword move also starts and finishes on one shared `rpg_sword_guard_key()`. It
+has to be literally the same key, not five near-copies: the moves chain into one another
+and fall back to the stance when they end, and an 8 cm hand offset between the last frame
+of one and the first frame of the next is a snap at exactly the moment the player is
+watching the blade.
+
+Finally, the swing trail in `sword_renderer.cpp` is no longer gated off for the authored
+blade. Without it an RPG cut is a thin prism crossing the screen in five frames;
+`sword_trail_window()` takes the window from the move, because each RPG attack puts its
+cut in a different slice of its own timeline.
 
 ### Arms are solved, not stretched
 

@@ -363,6 +363,34 @@ void HumanoidPoseController::apply_showcase_move(Animation::HumanoidShowcaseMove
   }
 }
 
+void HumanoidPoseController::apply_death_collapse(
+    Animation::HumanoidDeathCollapse collapse, float phase) {
+  auto const sample = Animation::resolve_humanoid_death_pose({
+      .collapse = collapse,
+      .phase = phase,
+      .height_scale = 1.0F,
+  });
+  if (!sample.active) {
+    return;
+  }
+  m_pose.pelvis_pos = to_qvec(sample.pelvis);
+  m_pose.neck_base = to_qvec(sample.neck_base);
+  m_pose.head_pos = to_qvec(sample.head);
+  m_pose.shoulder_l = to_qvec(sample.shoulder_l);
+  m_pose.shoulder_r = to_qvec(sample.shoulder_r);
+  m_pose.elbow_l = to_qvec(sample.elbow_l);
+  m_pose.elbow_r = to_qvec(sample.elbow_r);
+  m_pose.hand_l = to_qvec(sample.hand_l);
+  m_pose.hand_r = to_qvec(sample.hand_r);
+  m_pose.knee_l = to_qvec(sample.knee_l);
+  m_pose.knee_r = to_qvec(sample.knee_r);
+  m_pose.foot_l = to_qvec(sample.foot_l);
+  m_pose.foot_r = to_qvec(sample.foot_r);
+  m_pose.foot_pitch_l = sample.foot_pitch_l;
+  m_pose.foot_pitch_r = sample.foot_pitch_r;
+  m_pose.foot_y_offset = 0.0F;
+}
+
 void HumanoidPoseController::kneel(float depth) {
   using HP = HumanProportions;
 

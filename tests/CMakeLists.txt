@@ -243,6 +243,7 @@ add_executable(
     render/creature/quadruped_gait_test.cpp
     ${_soi_optional_test_sources}
     render/creature/humanoid_prepare_test.cpp
+    render/creature/death_collapse_test.cpp
     render/creature/horse_prepare_test.cpp
     render/creature/elephant_prepare_test.cpp
     render/creature/quadruped_clip_set_test.cpp

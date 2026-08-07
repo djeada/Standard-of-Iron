@@ -10,6 +10,7 @@ add_library(
     clip_manifest.cpp
     combat_manifest.cpp
     action_manifest.cpp
+    death_pose_manifest.cpp
     elephant_gait_manifest.cpp
     attack_pose_manifest.cpp
     guard_manifest.cpp

@@ -293,6 +293,8 @@ struct HumanoidGaitDescriptor {
   bool is_airborne{false};
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
+  float locomotion_presence{0.0F};
+  float run_presence{0.0F};
   float turn_amount{0.0F};
 
   float travel_alignment{1.0F};

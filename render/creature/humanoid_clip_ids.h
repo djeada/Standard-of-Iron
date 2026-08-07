@@ -51,8 +51,18 @@ inline constexpr std::uint16_t k_humanoid_riding_spear_thrust_clip =
     Animation::k_humanoid_riding_spear_thrust_clip;
 inline constexpr std::uint16_t k_humanoid_die_infantry_clip =
     Animation::k_humanoid_die_infantry_clip;
+inline constexpr std::uint16_t k_humanoid_die_infantry_face_clip =
+    Animation::k_humanoid_die_infantry_face_clip;
+inline constexpr std::uint16_t k_humanoid_die_infantry_side_clip =
+    Animation::k_humanoid_die_infantry_side_clip;
 inline constexpr std::uint16_t k_humanoid_dead_infantry_clip =
     Animation::k_humanoid_dead_infantry_clip;
+inline constexpr std::uint16_t k_humanoid_dead_infantry_face_clip =
+    Animation::k_humanoid_dead_infantry_face_clip;
+inline constexpr std::uint16_t k_humanoid_dead_infantry_side_clip =
+    Animation::k_humanoid_dead_infantry_side_clip;
+inline constexpr std::uint8_t k_humanoid_infantry_death_variant_count =
+    Animation::k_humanoid_infantry_death_variant_count;
 inline constexpr std::uint16_t k_humanoid_die_mounted_clip =
     Animation::k_humanoid_die_mounted_clip;
 inline constexpr std::uint16_t k_humanoid_dead_mounted_clip =

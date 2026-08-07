@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <numbers>
+#include <numeric>
 #include <unordered_set>
 #include <vector>
 
@@ -67,6 +68,7 @@
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/cache_control.h"
+#include "render/humanoid/humanoid_manifest.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/pose_cache_components.h"
@@ -1246,6 +1248,142 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
   EXPECT_EQ(first.state, Render::Creature::AnimationStateId::Walk);
   EXPECT_EQ(second.state, Render::Creature::AnimationStateId::Walk);
   EXPECT_NE(first.phase, second.phase);
+}
+
+TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
+  class FixedSpecRenderer final : public Render::GL::HumanoidRendererBase {
+  public:
+    explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
+        : spec_(spec) {}
+
+    auto
+    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+      return spec_;
+    }
+
+  private:
+    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+  };
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  auto const warm_renderer = registry.get("troops/roman/swordsman");
+  ASSERT_TRUE(static_cast<bool>(warm_renderer));
+  {
+    Render::GL::DrawContext warm_ctx{};
+    warm_ctx.allow_template_cache = false;
+    Engine::Core::Entity warm_entity(998);
+    auto* warm_unit =
+        warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+    ASSERT_NE(warm_unit, nullptr);
+    warm_unit->spawn_type = Game::Units::SpawnType::Knight;
+    warm_unit->nation_id = Game::Systems::NationID::RomanRepublic;
+    warm_ctx.entity = &warm_entity;
+    CountingSubmitter warm_sink;
+    warm_renderer(warm_ctx, warm_sink);
+  }
+
+  auto const archetype_id = find_archetype_id("troops/roman/swordsman");
+  ASSERT_NE(archetype_id, Render::Creature::k_invalid_archetype);
+
+  Render::Creature::Pipeline::UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "troops/roman/swordsman";
+  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
+  spec.archetype_id = archetype_id;
+  spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
+  FixedSpecRenderer owner(spec);
+
+  Engine::Core::Entity entity(1);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto* movement = entity.add_component<Engine::Core::MovementComponent>();
+  auto* transform = entity.add_component<Engine::Core::TransformComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(motion, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  transform->position = {0.0F, 0.0F, 0.0F};
+  motion->initialized = true;
+  motion->snapshot_valid = true;
+  motion->direction_x = 0.0F;
+  motion->direction_z = 1.0F;
+
+  auto walk = [&]() {
+    MovementTestAccess::set_has_target(*movement, true);
+    MovementTestAccess::set_target_x(*movement, 0.0F);
+    MovementTestAccess::set_target_y(*movement, 40.0F);
+    MovementTestAccess::set_vx(*movement, 0.0F);
+    MovementTestAccess::set_vz(*movement, 2.2F);
+    motion->set_state(Engine::Core::MotionPresentationState::Walk);
+    motion->has_navigation_intent = true;
+    motion->has_movement_target = true;
+    motion->movement_target_x = 0.0F;
+    motion->movement_target_z = 40.0F;
+    motion->speed = 2.2F;
+  };
+  auto stand = [&]() {
+    MovementTestAccess::set_has_target(*movement, false);
+    MovementTestAccess::set_vx(*movement, 0.0F);
+    MovementTestAccess::set_vz(*movement, 0.0F);
+    motion->set_state(Engine::Core::MotionPresentationState::Idle);
+    motion->has_navigation_intent = false;
+    motion->has_movement_target = false;
+    motion->speed = 0.0F;
+  };
+
+  auto request_for_time = [&](float animation_time) {
+    Render::GL::DrawContext ctx{};
+    ctx.allow_template_cache = false;
+    ctx.force_humanoid_lod = true;
+    ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
+    ctx.animation_time = animation_time;
+    ctx.entity = &entity;
+    auto const anim = Render::GL::sample_anim_state(ctx);
+    Render::Humanoid::HumanoidPreparation prep;
+    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+    EXPECT_FALSE(prep.bodies.requests().empty());
+    Render::GL::advance_pose_cache_frame();
+    return prep.bodies.requests().front();
+  };
+
+  constexpr float k_step = 1.0F / 60.0F;
+  float time = 0.0F;
+  walk();
+  Render::Creature::CreatureRenderRequest settled{};
+  for (int frame = 0; frame < 90; ++frame) {
+    time += k_step;
+    settled = request_for_time(time);
+  }
+  ASSERT_EQ(settled.state, Render::Creature::AnimationStateId::Walk);
+  EXPECT_FALSE(settled.full_body_blend.active())
+      << "a settled walk is one clip, not a blend";
+
+  stand();
+  std::vector<float> stand_weights;
+  std::vector<float> phases;
+  for (int frame = 0; frame < 12; ++frame) {
+    time += k_step;
+    auto const request = request_for_time(time);
+    if (request.full_body_blend.active() &&
+        request.full_body_blend.state == Render::Creature::AnimationStateId::Walk) {
+      stand_weights.push_back(1.0F - request.full_body_blend.weight);
+      phases.push_back(request.full_body_blend.phase);
+    } else if (request.full_body_blend.active()) {
+      stand_weights.push_back(request.full_body_blend.weight);
+      phases.push_back(request.phase);
+    }
+  }
+
+  ASSERT_GE(stand_weights.size(), 8U) << "the stride vanished instead of blending out";
+  EXPECT_LT(stand_weights.front(), 0.35F) << "the stand should not appear all at once";
+  EXPECT_GT(stand_weights.back(), stand_weights.front())
+      << "the stand should keep taking over";
+
+  ASSERT_GE(phases.size(), 8U);
+  EXPECT_NE(phases.front(), phases.back());
 }
 
 TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
@@ -3788,6 +3926,263 @@ TEST(AnimationCoreLocomotionManifest, RunSampleIsDeterministic) {
   EXPECT_FLOAT_EQ(first.stride_distance, second.stride_distance);
   EXPECT_GT(first.cycle_time, 0.0F);
   EXPECT_GT(first.stride_distance, 0.0F);
+}
+
+namespace {
+
+auto walk_pose_inputs() -> Animation::HumanoidLocomotionPoseInputs {
+  Animation::HumanoidLocomotionPoseInputs inputs{};
+  inputs.state = Animation::HumanoidMotionState::Walk;
+  inputs.normalized_speed = 1.0F;
+  inputs.locomotion_blend = 1.0F;
+  inputs.stride_distance = 2.35F * 0.92F;
+  inputs.walk_speed_multiplier = 1.0F;
+  inputs.stance_width = 1.0F;
+  inputs.arm_swing_amplitude = 1.0F;
+  inputs.reference_walk_speed = 2.35F;
+  inputs.reference_run_speed = 5.10F;
+  inputs.ground_y = 0.0F;
+  inputs.foot_y_offset = 0.02F;
+  inputs.base_foot_l = {-0.20F, 0.02F, 0.02F};
+  inputs.base_foot_r = {0.20F, 0.02F, -0.02F};
+  return inputs;
+}
+
+auto foot_z_samples(Animation::HumanoidLocomotionPoseInputs inputs,
+                    int steps) -> std::vector<float> {
+  std::vector<float> samples;
+  samples.reserve(static_cast<std::size_t>(steps) + 1U);
+  for (int i = 0; i <= steps; ++i) {
+    inputs.cycle_phase = static_cast<float>(i) / static_cast<float>(steps);
+    samples.push_back(Animation::resolve_humanoid_locomotion_pose(inputs).foot_l.z);
+  }
+  return samples;
+}
+
+} // namespace
+
+TEST(AnimationCoreLocomotionManifest, WalkSwingLeavesTheGroundWithoutAJerk) {
+  constexpr int k_steps = 720;
+  auto const samples = foot_z_samples(walk_pose_inputs(), k_steps);
+
+  std::vector<float> deltas;
+  deltas.reserve(samples.size());
+  for (std::size_t i = 1; i < samples.size(); ++i) {
+    deltas.push_back(std::abs(samples[i] - samples[i - 1U]));
+  }
+  auto const mean_delta = std::accumulate(deltas.begin(), deltas.end(), 0.0F) /
+                          static_cast<float>(deltas.size());
+  auto const worst_delta = *std::max_element(deltas.begin(), deltas.end());
+
+  ASSERT_GT(mean_delta, 0.0F);
+  EXPECT_LT(worst_delta, mean_delta * 3.0F);
+}
+
+TEST(AnimationCoreLocomotionManifest, WalkCycleClosesOnItself) {
+  auto inputs = walk_pose_inputs();
+  constexpr float k_step = 1.0F / 720.0F;
+
+  inputs.cycle_phase = 0.0F;
+  auto const start = Animation::resolve_humanoid_locomotion_pose(inputs);
+  inputs.cycle_phase = 1.0F - k_step;
+  auto const wrap = Animation::resolve_humanoid_locomotion_pose(inputs);
+  inputs.cycle_phase = k_step;
+  auto const next = Animation::resolve_humanoid_locomotion_pose(inputs);
+
+  float const step_into_wrap = std::abs(start.foot_l.z - wrap.foot_l.z);
+  float const step_after_wrap = std::abs(next.foot_l.z - start.foot_l.z);
+  EXPECT_LT(step_into_wrap, 0.01F);
+  EXPECT_NEAR(step_into_wrap, step_after_wrap, 0.004F);
+  EXPECT_NEAR(start.foot_l.y, wrap.foot_l.y, 0.004F);
+  EXPECT_NEAR(start.foot_pitch_l, wrap.foot_pitch_l, 0.05F);
+}
+
+TEST(AnimationCoreLocomotionManifest, GaitKeepsCyclingWhileTheStrideBlendsOut) {
+  auto const walking =
+      step_locomotion(walking_inputs(), 0.0F, 1.0F, 0.0F, 1.0F, 60, 1.0F / 60.0F);
+  ASSERT_GT(walking.locomotion_blend, 0.5F);
+
+  auto inputs = walking_inputs();
+  inputs.movement_state = Animation::MovementState::Idle;
+  inputs.motion_state = Animation::HumanoidMotionState::Idle;
+  inputs.speed = 0.0F;
+  inputs.has_persistent_state = true;
+  inputs.allow_persistent_update = true;
+  inputs.previous = walking.persistent;
+  inputs.sample_time = walking.persistent.last_sample_time;
+
+  auto previous = walking;
+  float advanced = 0.0F;
+  for (int frame = 0; frame < 6; ++frame) {
+    inputs.sample_time += 1.0F / 60.0F;
+    auto const sample = Animation::resolve_humanoid_locomotion_sample(inputs);
+    float delta = sample.cycle_phase - previous.cycle_phase;
+    if (delta < -0.5F) {
+      delta += 1.0F;
+    }
+    EXPECT_GT(delta, 0.0F);
+    advanced += delta;
+    EXPECT_NEAR(sample.cycle_time, walking.cycle_time, 1.0e-4F);
+    inputs.previous = sample.persistent;
+    previous = sample;
+  }
+
+  EXPECT_NEAR(advanced, (6.0F / 60.0F) / walking.cycle_time, 0.02F);
+  EXPECT_LT(previous.locomotion_blend, walking.locomotion_blend);
+}
+
+namespace {
+
+struct SwingSample {
+  QVector3D hand;
+  QVector3D blade_axis;
+};
+
+auto bake_sword_swing(std::string_view clip_name) -> std::vector<SwingSample> {
+  auto const& manifest =
+      Render::Humanoid::humanoid_manifest(Render::Humanoid::BakeProfile::SwordReady);
+  std::size_t clip_index = manifest.clips.size();
+  for (std::size_t i = 0; i < manifest.clips.size(); ++i) {
+    if (manifest.clips[i].name == clip_name) {
+      clip_index = i;
+      break;
+    }
+  }
+  if (clip_index >= manifest.clips.size() || manifest.bake_clip_frame == nullptr) {
+    return {};
+  }
+
+  constexpr auto k_hand_r =
+      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
+  std::vector<SwingSample> samples;
+  samples.reserve(manifest.clips[clip_index].frame_count);
+  for (std::uint32_t frame = 0; frame < manifest.clips[clip_index].frame_count;
+       ++frame) {
+    std::vector<QMatrix4x4> palettes;
+    manifest.bake_clip_frame(clip_index, frame, palettes, nullptr);
+    if (palettes.size() <= k_hand_r) {
+      return {};
+    }
+    samples.push_back({palettes[k_hand_r].column(3).toVector3D(),
+                       palettes[k_hand_r].column(1).toVector3D().normalized()});
+  }
+  return samples;
+}
+
+auto angle_between(const QVector3D& a, const QVector3D& b) -> float {
+  return std::acos(std::clamp(QVector3D::dotProduct(a, b), -1.0F, 1.0F));
+}
+
+} // namespace
+
+TEST(HumanoidSwordSwing, RpgCutsSweepWithoutStallingOnAKey) {
+  for (auto const* clip : {"rpg_sword_slash_left",
+                           "rpg_sword_slash_right",
+                           "rpg_sword_overhead",
+                           "rpg_sword_finisher"}) {
+    auto const samples = bake_sword_swing(clip);
+    ASSERT_GE(samples.size(), 8U) << clip;
+
+    std::vector<float> steps;
+    steps.reserve(samples.size());
+    for (std::size_t i = 1; i + 1 < samples.size(); ++i) {
+      steps.push_back(angle_between(samples[i - 1U].blade_axis, samples[i].blade_axis));
+    }
+    auto const total = std::accumulate(steps.begin(), steps.end(), 0.0F);
+    auto const mean = total / static_cast<float>(steps.size());
+    auto const slowest = *std::min_element(steps.begin(), steps.end());
+    auto const fastest = *std::max_element(steps.begin(), steps.end());
+
+    EXPECT_GT(slowest, mean * 0.05F) << clip << ": blade stalls mid-swing";
+    EXPECT_LT(fastest, mean * 6.0F) << clip << ": blade whips through one frame";
+  }
+}
+
+TEST(HumanoidSwordSwing, RpgCutsReturnToTheGuardTheyStartedFrom) {
+  for (auto const* clip : {"rpg_sword_slash_left",
+                           "rpg_sword_slash_right",
+                           "rpg_sword_overhead",
+                           "rpg_sword_thrust",
+                           "rpg_sword_finisher"}) {
+    auto const samples = bake_sword_swing(clip);
+    ASSERT_GE(samples.size(), 8U) << clip;
+
+    EXPECT_LT((samples.front().hand - samples.back().hand).length(), 0.08F) << clip;
+    EXPECT_LT(angle_between(samples.front().blade_axis, samples.back().blade_axis),
+              0.20F)
+        << clip;
+  }
+}
+
+TEST(AnimationCoreLocomotionManifest, StridePresenceIsFullEvenForASlowWalk) {
+  auto slow = walking_inputs();
+  slow.speed = 0.9F;
+  auto const sample = step_locomotion(slow, 0.0F, 1.0F, 0.0F, 1.0F, 120, 1.0F / 60.0F);
+
+  EXPECT_LT(sample.locomotion_blend, 0.75F);
+  EXPECT_GT(sample.locomotion_presence, 0.99F);
+  EXPECT_LT(sample.run_presence, 0.01F);
+
+  auto fast = walking_inputs();
+  fast.speed = 2.4F;
+  auto const brisk = step_locomotion(fast, 0.0F, 1.0F, 0.0F, 1.0F, 120, 1.0F / 60.0F);
+  EXPECT_NEAR(brisk.locomotion_presence, sample.locomotion_presence, 0.01F);
+
+  auto running = walking_inputs();
+  running.movement_state = Animation::MovementState::Run;
+  running.motion_state = Animation::HumanoidMotionState::Run;
+  running.speed = 4.6F;
+  auto const sprint =
+      step_locomotion(running, 0.0F, 1.0F, 0.0F, 1.0F, 120, 1.0F / 60.0F);
+  EXPECT_GT(sprint.run_presence, 0.99F);
+}
+
+TEST(AnimationCoreSelectionManifest, LocomotionCrossfadePicksTheTwoLeadingClips) {
+  auto const standing = Animation::resolve_locomotion_crossfade({
+      .resolved = Animation::StateId::Idle,
+      .locomotion_presence = 0.0F,
+      .run_presence = 0.0F,
+  });
+  EXPECT_FALSE(standing.active);
+  EXPECT_EQ(standing.primary, Animation::StateId::Idle);
+
+  auto const walking = Animation::resolve_locomotion_crossfade({
+      .resolved = Animation::StateId::Walk,
+      .locomotion_presence = 1.0F,
+      .run_presence = 0.0F,
+  });
+  EXPECT_FALSE(walking.active);
+  EXPECT_EQ(walking.primary, Animation::StateId::Walk);
+
+  auto const starting = Animation::resolve_locomotion_crossfade({
+      .resolved = Animation::StateId::Walk,
+      .locomotion_presence = 0.35F,
+      .run_presence = 0.0F,
+  });
+  EXPECT_TRUE(starting.active);
+  EXPECT_EQ(starting.primary, Animation::StateId::Walk);
+  EXPECT_EQ(starting.secondary, Animation::StateId::Idle);
+  EXPECT_NEAR(starting.secondary_weight, 0.65F, 1.0e-4F);
+
+  auto const stopping = Animation::resolve_locomotion_crossfade({
+      .resolved = Animation::StateId::Idle,
+      .locomotion_presence = 0.80F,
+      .run_presence = 0.0F,
+  });
+  EXPECT_TRUE(stopping.active);
+  EXPECT_EQ(stopping.primary, Animation::StateId::Idle);
+  EXPECT_EQ(stopping.secondary, Animation::StateId::Walk);
+  EXPECT_NEAR(stopping.secondary_weight, 0.80F, 1.0e-4F);
+
+  auto const breaking_into_a_run = Animation::resolve_locomotion_crossfade({
+      .resolved = Animation::StateId::Run,
+      .locomotion_presence = 1.0F,
+      .run_presence = 0.6F,
+  });
+  EXPECT_TRUE(breaking_into_a_run.active);
+  EXPECT_EQ(breaking_into_a_run.primary, Animation::StateId::Run);
+  EXPECT_EQ(breaking_into_a_run.secondary, Animation::StateId::Walk);
+  EXPECT_NEAR(breaking_into_a_run.secondary_weight, 0.40F, 1.0e-4F);
 }
 
 TEST(AnimationCoreLocomotionManifest, MotionStateOwnsWalkRunSelection) {
@@ -8534,11 +8929,10 @@ TEST(HumanoidPrepare, TurnSignalCreatesInnerOuterStrideAsymmetry) {
   Render::GL::HumanoidRendererBase::compute_locomotion_pose(
       555U, 0.25F, turning, variation, turning_pose);
 
-  float const neutral_asymmetry =
-      std::abs(std::abs(neutral_pose.foot_l.z()) - std::abs(neutral_pose.foot_r.z()));
-  float const turning_asymmetry =
-      std::abs(std::abs(turning_pose.foot_l.z()) - std::abs(turning_pose.foot_r.z()));
-  EXPECT_GT(turning_asymmetry, neutral_asymmetry + 0.001F);
+  auto const reach_ratio = [](const Render::GL::HumanoidPose& pose) {
+    return std::abs(pose.foot_l.z()) / std::max(1.0e-4F, std::abs(pose.foot_r.z()));
+  };
+  EXPECT_GT(reach_ratio(turning_pose), reach_ratio(neutral_pose) * 1.05F);
   EXPECT_LT(turning_pose.foot_l.x(), turning_pose.foot_r.x());
 }
 

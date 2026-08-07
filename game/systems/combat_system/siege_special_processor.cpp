@@ -12,6 +12,7 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "../../visuals/team_colors.h"
+#include "../combat_rules.h"
 #include "../projectile_kind.h"
 #include "../projectile_system.h"
 #include "combat_random.h"
@@ -288,9 +289,17 @@ void process_loading_siege_unit(Engine::Core::World* world,
     loading = siege->add_component<Engine::Core::CatapultLoadingComponent>();
   }
 
-  if (is_motion_active(*siege) &&
+  auto const* attack = siege->get_component<Engine::Core::AttackComponent>();
+  bool const in_melee_lock =
+      attack != nullptr && attack->in_melee_lock &&
+      Game::Systems::CombatRules::participates_in_rts_melee_lock(siege);
+
+  if ((is_motion_active(*siege) || in_melee_lock) &&
       loading->state != Engine::Core::CatapultLoadingComponent::LoadingState::Idle) {
     reset_loading(*loading);
+  }
+  if (in_melee_lock) {
+    return;
   }
 
   if (loading->state == Engine::Core::CatapultLoadingComponent::LoadingState::Loading ||
