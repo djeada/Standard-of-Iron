@@ -13,6 +13,8 @@ void reset_humanoid_locomotion_state(
   state.filtered_turn = 0.0F;
   state.locomotion_blend = 0.0F;
   state.run_blend = 0.0F;
+  state.locomotion_presence = 0.0F;
+  state.run_presence = 0.0F;
   state.locomotion_state = Animation::HumanoidMotionState::Idle;
   state.locomotion_initialized = false;
   state.combat_visual = {};
@@ -210,6 +212,8 @@ namespace {
       .filtered_travel_alignment = component.filtered_travel_alignment,
       .locomotion_blend = component.locomotion_blend,
       .run_blend = component.run_blend,
+      .locomotion_presence = component.locomotion_presence,
+      .run_presence = component.run_presence,
       .reverse_gait = component.reverse_gait,
       .state = component.locomotion_state,
   };
@@ -230,6 +234,8 @@ void write_persistent_locomotion_to_component(
   component.reverse_gait = persistent.reverse_gait;
   component.locomotion_blend = persistent.locomotion_blend;
   component.run_blend = persistent.run_blend;
+  component.locomotion_presence = persistent.locomotion_presence;
+  component.run_presence = persistent.run_presence;
   component.locomotion_state = persistent.state;
 }
 
@@ -275,6 +281,8 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
   state.gait.stride_distance = sample.stride_distance;
   state.gait.locomotion_blend = sample.locomotion_blend;
   state.gait.run_blend = sample.run_blend;
+  state.gait.locomotion_presence = sample.locomotion_presence;
+  state.gait.run_presence = sample.run_presence;
   state.gait.turn_amount = sample.turn_amount;
   state.gait.travel_alignment = sample.travel_alignment;
   state.gait.reverse_gait = sample.reverse_gait;

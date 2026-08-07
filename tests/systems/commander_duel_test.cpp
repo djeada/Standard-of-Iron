@@ -9,8 +9,10 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/command_service.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/projectile_system.h"
 #include "game/systems/runtime_system_registry.h"
 #include "units/commander_catalog.h"
 #include "units/factory.h"
@@ -117,6 +119,178 @@ TEST(CommanderCatalogTest, EveryCommanderCarriesItsOwnSignatureMove) {
 
   EXPECT_EQ(moves.size(), definitions.size())
       << "two commanders share a signature move; each one has to fight like itself";
+}
+
+TEST_F(CommanderDuelTest, DuellistsCloseToWithinTheirWeaponsReach) {
+  struct Pair {
+    Game::Units::SpawnType a;
+    Game::Units::SpawnType b;
+    float max_settled;
+    const char* name;
+  };
+  for (auto const& pair : {Pair{Game::Units::SpawnType::RomanVeteranConsul,
+                                Game::Units::SpawnType::CarthageSwordCommander,
+                                1.45F,
+                                "sword commanders"},
+                           Pair{Game::Units::SpawnType::RomanVeteranConsul,
+                                Game::Units::SpawnType::Knight,
+                                1.40F,
+                                "commander against a swordsman"}}) {
+    Engine::Core::World world;
+    Game::Systems::register_runtime_systems(world);
+    auto* one = spawn(world,
+                      pair.a,
+                      1,
+                      QVector3D(-6.0F, 0.0F, 0.0F),
+                      Game::Systems::NationID::RomanRepublic);
+    auto* two = spawn(world,
+                      pair.b,
+                      2,
+                      QVector3D(6.0F, 0.0F, 0.0F),
+                      Game::Systems::NationID::Carthage);
+    ASSERT_NE(one, nullptr) << pair.name;
+    ASSERT_NE(two, nullptr) << pair.name;
+    order_attack(*one, *two);
+    order_attack(*two, *one);
+    for (int tick = 0; tick < 400; ++tick) {
+      world.update(0.05F);
+    }
+
+    auto const* ta = one->get_component<TransformComponent>();
+    auto const* tb = two->get_component<TransformComponent>();
+    ASSERT_NE(ta, nullptr);
+    ASSERT_NE(tb, nullptr);
+    float const settled =
+        std::hypot(tb->position.x - ta->position.x, tb->position.z - ta->position.z);
+    auto const geometry = Game::Systems::FormationCombat::contact_geometry(*one, *two);
+
+    EXPECT_LT(settled, pair.max_settled) << pair.name << " fights at arm's length";
+    EXPECT_GT(settled, geometry.contact_center_distance)
+        << pair.name << " has walked into its opponent";
+  }
+}
+
+TEST_F(CommanderDuelTest, SiegeEnginesStopShootingOnceLockedInMelee) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* ballista = spawn(world,
+                         Game::Units::SpawnType::Ballista,
+                         1,
+                         QVector3D(0.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::RomanRepublic);
+  auto* brawler = spawn(world,
+                        Game::Units::SpawnType::Knight,
+                        2,
+                        QVector3D(1.2F, 0.0F, 0.0F),
+                        Game::Systems::NationID::Carthage);
+  ASSERT_NE(ballista, nullptr);
+  ASSERT_NE(brawler, nullptr);
+  order_attack(*brawler, *ballista);
+  order_attack(*ballista, *brawler);
+
+  auto* projectiles = world.get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectiles, nullptr);
+
+  std::size_t seen = 0;
+  int locked_frames = 0;
+  int ranged_while_locked = 0;
+  int shots_while_locked = 0;
+  for (int tick = 0; tick < 400; ++tick) {
+    world.update(0.05F);
+    auto const* attack = ballista->get_component<Engine::Core::AttackComponent>();
+    ASSERT_NE(attack, nullptr);
+    bool const locked = attack->in_melee_lock;
+    if (locked) {
+      ++locked_frames;
+      if (attack->current_mode == Engine::Core::AttackComponent::CombatMode::Ranged) {
+        ++ranged_while_locked;
+      }
+    }
+    std::size_t const now =
+        projectiles->projectiles().size() + projectiles->spent_projectiles().size();
+    if (now > seen && locked) {
+      shots_while_locked += static_cast<int>(now - seen);
+    }
+    seen = std::max(seen, now);
+  }
+
+  ASSERT_GT(locked_frames, 200) << "the ballista never got dragged into a melee";
+  EXPECT_EQ(shots_while_locked, 0);
+  EXPECT_LE(ranged_while_locked, 1)
+      << "a locked engine may not sit in ranged mode; one frame of overlap is the "
+         "tick contact is made";
+}
+
+TEST_F(CommanderDuelTest, SiegeEnginesStillShootWhenNothingIsOnTopOfThem) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* ballista = spawn(world,
+                         Game::Units::SpawnType::Ballista,
+                         1,
+                         QVector3D(0.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::RomanRepublic);
+  auto* quarry = spawn(world,
+                       Game::Units::SpawnType::Knight,
+                       2,
+                       QVector3D(12.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::Carthage);
+  ASSERT_NE(ballista, nullptr);
+  ASSERT_NE(quarry, nullptr);
+  quarry->get_component<UnitComponent>()->speed = 0.0F;
+  order_attack(*ballista, *quarry);
+
+  auto* projectiles = world.get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectiles, nullptr);
+
+  std::size_t fired = 0;
+  for (int tick = 0; tick < 300; ++tick) {
+    world.update(0.05F);
+    fired = std::max(fired,
+                     projectiles->projectiles().size() +
+                         projectiles->spent_projectiles().size());
+  }
+  EXPECT_GT(fired, 0U) << "the melee-lock rule has silenced siege entirely";
+}
+
+TEST_F(CommanderDuelTest, ShootersSwitchToTheirSidearmWhenLocked) {
+  for (auto const spawn_type : {Game::Units::SpawnType::Archer,
+                                Game::Units::SpawnType::SkeletonArcher,
+                                Game::Units::SpawnType::GravePriest}) {
+    Engine::Core::World world;
+    Game::Systems::register_runtime_systems(world);
+    auto* shooter = spawn(world,
+                          spawn_type,
+                          1,
+                          QVector3D(0.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::RomanRepublic);
+    auto* brawler = spawn(world,
+                          Game::Units::SpawnType::Knight,
+                          2,
+                          QVector3D(1.2F, 0.0F, 0.0F),
+                          Game::Systems::NationID::Carthage);
+    ASSERT_NE(shooter, nullptr);
+    ASSERT_NE(brawler, nullptr);
+    order_attack(*brawler, *shooter);
+    order_attack(*shooter, *brawler);
+
+    int locked_frames = 0;
+    int ranged_while_locked = 0;
+    for (int tick = 0; tick < 400; ++tick) {
+      world.update(0.05F);
+      auto const* attack = shooter->get_component<Engine::Core::AttackComponent>();
+      if (attack == nullptr || !attack->in_melee_lock) {
+        continue;
+      }
+      ++locked_frames;
+      if (attack->current_mode == Engine::Core::AttackComponent::CombatMode::Ranged) {
+        ++ranged_while_locked;
+      }
+    }
+    ASSERT_GT(locked_frames, 200) << static_cast<int>(spawn_type);
+    EXPECT_LE(ranged_while_locked, 1) << static_cast<int>(spawn_type);
+  }
 }
 
 TEST_P(CommanderDuelTest, CommanderThrowsItsSignatureInADuel) {

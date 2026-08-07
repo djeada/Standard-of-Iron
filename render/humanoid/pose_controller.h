@@ -4,6 +4,7 @@
 
 #include <cstdint>
 
+#include "animation/death_pose_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "animation/showcase_pose_manifest.h"
 #include "humanoid_renderer_base.h"
@@ -25,6 +26,8 @@ public:
   void apply_ambient_idle_explicit(AmbientIdleType idle_type, float phase);
 
   void apply_showcase_move(Animation::HumanoidShowcaseMove move, float phase);
+
+  void apply_death_collapse(Animation::HumanoidDeathCollapse collapse, float phase);
 
   void kneel(float depth);
   void kneel_transition(float progress, bool standing_up);

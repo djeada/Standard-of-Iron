@@ -365,6 +365,73 @@ auto apply_ambient_idle_crossfade(HumanoidAnimationSelection& selection,
   return true;
 }
 
+auto locomotion_pose_intent(Render::Creature::AnimationStateId state) noexcept
+    -> Animation::PoseIntent {
+  switch (state) {
+  case Render::Creature::AnimationStateId::Walk:
+    return Animation::PoseIntent::Walk;
+  case Render::Creature::AnimationStateId::Run:
+    return Animation::PoseIntent::Run;
+  default:
+    return Animation::PoseIntent::Idle;
+  }
+}
+
+auto is_locomotion_state(Render::Creature::AnimationStateId state) noexcept -> bool {
+  return state == Render::Creature::AnimationStateId::Idle ||
+         state == Render::Creature::AnimationStateId::Walk ||
+         state == Render::Creature::AnimationStateId::Run;
+}
+
+auto apply_locomotion_crossfade(HumanoidAnimationSelection& selection,
+                                const Render::GL::HumanoidAnimationContext& anim,
+                                const UnitVisualSpec& spec,
+                                std::uint32_t seed,
+                                const Render::GL::HumanoidVariant* variant) noexcept
+    -> bool {
+
+  if (!is_locomotion_state(selection.state) || anim.inputs.is_attacking ||
+      anim.inputs.is_casting || anim.inputs.is_mounted ||
+      anim.inputs.has_showcase_clip || anim.inputs.is_in_hold_mode ||
+      anim.inputs.is_exiting_hold || anim.inputs.is_guarding ||
+      anim.inputs.is_exiting_guard || anim.inputs.is_hit_reacting ||
+      anim.inputs.is_healing || anim.inputs.is_constructing || anim.inputs.is_dying ||
+      anim.inputs.is_dead) {
+    return false;
+  }
+
+  auto const crossfade = Animation::resolve_locomotion_crossfade({
+      .resolved = selection.state,
+      .locomotion_presence = anim.gait.locomotion_presence,
+      .run_presence = anim.gait.run_presence,
+  });
+  if (!crossfade.active) {
+    return false;
+  }
+
+  auto const build = [&](Render::Creature::AnimationStateId state) {
+    return build_selection_for_pose(
+        spec,
+        anim,
+        Render::Creature::resolve_pose_for_intent(locomotion_pose_intent(state)),
+        seed,
+        variant);
+  };
+  auto const primary = build(crossfade.primary);
+  auto const secondary = build(crossfade.secondary);
+  if (!primary.clip_id.has_value() || !secondary.clip_id.has_value() ||
+      primary.clip_id == secondary.clip_id) {
+    return false;
+  }
+
+  selection = primary;
+  selection.full_body_blend =
+      playback_layer_from_selection(secondary,
+                                    crossfade.secondary_weight,
+                                    Render::Creature::PlaybackLayerMode::FullBodyBlend);
+  return true;
+}
+
 auto apply_hold_stance_crossfade(HumanoidAnimationSelection& selection,
                                  const Render::GL::HumanoidAnimationContext& anim,
                                  const UnitVisualSpec& spec,
@@ -410,6 +477,10 @@ auto resolve_humanoid_animation_selection(
     const Render::GL::HumanoidVariant* variant) noexcept -> HumanoidAnimationSelection {
   HumanoidAnimationSelection selection = build_selection_for_pose(
       spec, anim, Render::Creature::resolve_pose(anim.inputs), seed, variant);
+
+  if (apply_locomotion_crossfade(selection, anim, spec, seed, variant)) {
+    return selection;
+  }
 
   if (apply_ambient_idle_crossfade(selection, anim, spec, seed, variant)) {
     return selection;

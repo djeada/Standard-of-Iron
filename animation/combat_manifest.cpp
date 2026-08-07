@@ -290,7 +290,10 @@ auto build_resolved_state(const CombatPersistentState& persistent,
     resolved.phase = transaction_phase_from_attack_phase(resolved.attack_phase);
     resolved.phase_progress = transaction_phase_progress_from_attack_phase(
         resolved.attack_phase, resolved.phase);
-    resolved.exit_blend_progress = 0.0F;
+
+    resolved.exit_blend_progress = resolved.phase == CombatTransactionPhase::ExitBlend
+                                       ? resolved.phase_progress
+                                       : 0.0F;
     resolved.is_melee = raw.is_melee;
     resolved.attack_family = raw.attack_family;
     resolved.finisher_attack = raw.finisher_attack;

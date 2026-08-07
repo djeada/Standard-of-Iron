@@ -82,6 +82,28 @@ struct CombatPlaybackLayerPolicy {
   float combat_weight{0.0F};
 };
 
+struct LocomotionCrossfadeInputs {
+
+  StateId resolved{StateId::Idle};
+
+  float locomotion_presence{0.0F};
+  float run_presence{0.0F};
+};
+
+struct LocomotionCrossfade {
+  bool active{false};
+  StateId primary{StateId::Idle};
+  StateId secondary{StateId::Idle};
+  float secondary_weight{0.0F};
+};
+
+inline constexpr float k_locomotion_crossfade_epsilon = 0.012F;
+
+inline constexpr float k_combat_stance_blend_epsilon = 0.06F;
+
+[[nodiscard]] auto resolve_locomotion_crossfade(
+    const LocomotionCrossfadeInputs& inputs) noexcept -> LocomotionCrossfade;
+
 [[nodiscard]] auto
 seeded_visual_variant_index(std::uint32_t seed,
                             std::uint8_t stride) noexcept -> std::uint8_t;

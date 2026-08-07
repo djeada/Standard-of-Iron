@@ -216,6 +216,28 @@ uses_authored_rpg_sword_blade(const HumanoidAnimationContext& anim) noexcept -> 
   return k_sword_blade_axis_in_grip;
 }
 
+struct SwordTrailWindow {
+  float start{0.28F};
+  float end{0.68F};
+};
+
+[[nodiscard]] auto sword_trail_window(const HumanoidAnimationContext& anim,
+                                      bool authored) noexcept -> SwordTrailWindow {
+  if (!authored) {
+    return {};
+  }
+  switch (anim.inputs.sword_attack_animation) {
+  case Animation::SwordAttackAnimation::RpgOverhead:
+    return {0.36F, 0.74F};
+  case Animation::SwordAttackAnimation::RpgThrust:
+    return {0.28F, 0.64F};
+  case Animation::SwordAttackAnimation::RpgFinisher:
+    return {0.42F, 0.82F};
+  default:
+    return {0.32F, 0.72F};
+  }
+}
+
 auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& {
   struct CachedArchetype {
     SwordArchetypeKey key;
@@ -645,10 +667,11 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
                                  sword_local_pose(sword_dir),
                              palette_slots);
 
-  if (is_attacking && !use_authored_blade && attack_phase >= 0.28F &&
-      attack_phase < 0.68F) {
+  auto const trail = sword_trail_window(anim, use_authored_blade);
+  if (is_attacking && attack_phase >= trail.start && attack_phase < trail.end) {
     float const base_w = m_config.sword_width;
-    float const t = (attack_phase - 0.28F) / 0.40F;
+    float const t = clamp01((attack_phase - trail.start) /
+                            std::max(1.0e-3F, trail.end - trail.start));
 
     float const alpha = clamp01(0.60F * std::sin(t * std::numbers::pi_v<float>));
     QMatrix4x4 const sword_world =
@@ -691,8 +714,8 @@ void SwordRenderer::submit(const SwordRenderConfig& m_config,
         nullptr,
         alpha * 0.45F);
 
-    if (attack_phase >= 0.32F && attack_phase < 0.60F) {
-      float const ghost_t = (attack_phase - 0.32F) / 0.28F;
+    if (t >= 0.10F && t < 0.80F) {
+      float const ghost_t = (t - 0.10F) / 0.70F;
       float const ghost_alpha = clamp01(0.28F * (1.0F - ghost_t * ghost_t));
       QVector3D const ghost_end = blade_base + swing_dir * (0.42F + 0.22F * ghost_t);
       QVector3D const ghost_color =
