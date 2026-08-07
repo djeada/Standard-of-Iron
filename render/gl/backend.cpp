@@ -50,6 +50,7 @@
 #include "backend/water_pipeline.h"
 #include "buffer.h"
 #include "decoration_gpu.h"
+#include "directional_shadow_block.h"
 #include "gl/resources.h"
 #include "gl_debug_log.h"
 #include "mesh.h"
@@ -172,7 +173,8 @@ auto Backend::initialize() -> bool {
   qInfo() << "Backend: Frame UBO created at binding 0";
   glGenBuffers(1, &m_environment_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_environment_lighting_ubo);
-  constexpr GLsizeiptr environment_ubo_size = sizeof(float) * 28;
+  constexpr GLsizeiptr environment_ubo_size =
+      sizeof(float) * EnvironmentLightingState::k_packed_float_count;
   glBufferData(GL_UNIFORM_BUFFER, environment_ubo_size, nullptr, GL_DYNAMIC_DRAW);
   glBindBufferBase(GL_UNIFORM_BUFFER,
                    k_environment_lighting_binding_point,
@@ -182,7 +184,7 @@ auto Backend::initialize() -> bool {
   glGenBuffers(1, &m_local_lighting_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
   constexpr GLsizeiptr local_lighting_ubo_size =
-      sizeof(float) * ((Render::k_max_local_lights * 8) + 4);
+      sizeof(float) * Render::LocalLightingBlock::k_float_count;
   glBufferData(GL_UNIFORM_BUFFER, local_lighting_ubo_size, nullptr, GL_DYNAMIC_DRAW);
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
@@ -190,7 +192,10 @@ auto Backend::initialize() -> bool {
   qInfo() << "Backend: Local lighting UBO created at binding 2";
   glGenBuffers(1, &m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 80, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData(GL_UNIFORM_BUFFER,
+               sizeof(float) * DirectionalShadowBlock::k_float_count,
+               nullptr,
+               GL_DYNAMIC_DRAW);
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -445,39 +450,35 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                        m_directional_shadow_depth_shader != nullptr &&
                        m_directional_shadow_rigged_shader != nullptr;
 
-  std::array<float, 80> packed{};
-  if (!enabled) {
-    packed[68] = 0.0F;
-    if (m_directional_shadow_ubo != 0) {
-      glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
-      glBufferSubData(
-          GL_UNIFORM_BUFFER, 0, sizeof(float) * packed.size(), packed.data());
-      glBindBufferBase(GL_UNIFORM_BUFFER,
-                       k_directional_shadow_binding_point,
-                       m_directional_shadow_ubo);
-      glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  const auto upload_shadow_block = [this](const DirectionalShadowBlock& block) {
+    if (m_directional_shadow_ubo == 0) {
+      return;
     }
+    const auto packed = block.packed_std140();
+    glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER,
+                    0,
+                    static_cast<GLsizeiptr>(sizeof(float) * packed.size()),
+                    packed.data());
+    glBindBufferBase(GL_UNIFORM_BUFFER,
+                     k_directional_shadow_binding_point,
+                     m_directional_shadow_ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  };
+
+  if (!enabled) {
+    upload_shadow_block(DirectionalShadowBlock{});
     return;
   }
 
-  const int cascade_count = std::clamp(settings.cascade_count, 1, 4);
+  const int cascade_count =
+      std::clamp(settings.cascade_count, 1, k_max_shadow_cascades);
   ensure_directional_shadow_resources(settings.resolution, cascade_count);
   if (m_directional_shadow_fbo == 0 || m_directional_shadow_texture == 0) {
     return;
   }
 
-  if (m_directional_shadow_ubo != 0) {
-    const std::array<float, 80> disabled_shadow_sampling{};
-    glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
-    glBufferSubData(GL_UNIFORM_BUFFER,
-                    0,
-                    sizeof(float) * disabled_shadow_sampling.size(),
-                    disabled_shadow_sampling.data());
-    glBindBufferBase(GL_UNIFORM_BUFFER,
-                     k_directional_shadow_binding_point,
-                     m_directional_shadow_ubo);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  }
+  upload_shadow_block(DirectionalShadowBlock{});
 
   const float near_distance = std::max(cam.get_near(), 0.05F);
   const float far_distance =
@@ -648,8 +649,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                   1U, m_rigged_character_pipeline->max_instances_per_batch())
             : 1U;
     for (const PreparedBatch& prepared : queue.prepared_batches()) {
-      if (prepared.count == 0U ||
-          queue.get_sorted(prepared.start).index() != RiggedCreatureCmdIndex) {
+      if (prepared.count == 0U || prepared.type != DrawCmdType::RiggedCreature) {
         continue;
       }
       visible_rigged.clear();
@@ -765,33 +765,34 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
              previous_viewport[2],
              previous_viewport[3]);
 
-  for (int cascade = 0; cascade < 4; ++cascade) {
-    std::copy_n(m_directional_shadow_matrices[cascade].constData(),
-                16,
-                packed.data() + cascade * 16);
-    packed[64 + cascade] = m_directional_shadow_splits[cascade];
+  DirectionalShadowBlock block;
+  for (int cascade = 0; cascade < k_max_shadow_cascades; ++cascade) {
+    const auto slot = static_cast<std::size_t>(cascade);
+    block.light_view_projection[slot] = m_directional_shadow_matrices[slot];
+    block.split_distances[slot] = m_directional_shadow_splits[slot];
   }
-  packed[68] = 1.0F;
-  packed[69] = static_cast<float>(cascade_count);
-  packed[70] = 1.0F / static_cast<float>(m_directional_shadow_resolution);
+  block.enabled = 1.0F;
+  block.cascade_count = static_cast<float>(cascade_count);
+  block.shadow_map_texel_size =
+      1.0F / static_cast<float>(m_directional_shadow_resolution);
   const int weather_softening = m_environment_lighting.shadow_softness > 0.65F ? 1 : 0;
-  packed[71] =
+  block.pcf_radius =
       static_cast<float>(std::clamp(settings.pcf_radius + weather_softening, 1, 3));
+  block.camera_position = cam.get_position();
+  block.depth_bias = settings.depth_bias;
+  block.normal_bias = settings.normal_bias;
+  block.cascade_blend = settings.cascade_blend;
 
-  std::array<float, 80> complete{};
-  std::copy(packed.begin(), packed.end(), complete.begin());
-  complete[72] = cam.get_position().x();
-  complete[73] = cam.get_position().y();
-  complete[74] = cam.get_position().z();
-  complete[75] = 1.0F;
-  complete[76] = settings.depth_bias;
-  complete[77] = settings.normal_bias;
-  complete[78] = settings.cascade_blend;
+  const auto complete = block.packed_std140();
   glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
-  glBufferData(
-      GL_UNIFORM_BUFFER, sizeof(float) * complete.size(), nullptr, GL_DYNAMIC_DRAW);
-  glBufferSubData(
-      GL_UNIFORM_BUFFER, 0, sizeof(float) * complete.size(), complete.data());
+  glBufferData(GL_UNIFORM_BUFFER,
+               static_cast<GLsizeiptr>(sizeof(float) * complete.size()),
+               nullptr,
+               GL_DYNAMIC_DRAW);
+  glBufferSubData(GL_UNIFORM_BUFFER,
+                  0,
+                  static_cast<GLsizeiptr>(sizeof(float) * complete.size()),
+                  complete.data());
   glBindBufferBase(
       GL_UNIFORM_BUFFER, k_directional_shadow_binding_point, m_directional_shadow_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -859,25 +860,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
         candidates.end(), submitted_lights.begin(), submitted_lights.end());
     const auto selected =
         m_local_light_fader.update(candidates, cam.get_position(), m_animation_time);
-    std::array<float, (Render::k_max_local_lights * 8) + 4> packed{};
-    std::size_t active_count = 0;
-    for (const auto& light : selected) {
-      if (light.intensity <= 0.0F || light.radius <= 0.0F) {
-        continue;
-      }
-      packed[(active_count * 4) + 0] = light.position.x();
-      packed[(active_count * 4) + 1] = light.position.y();
-      packed[(active_count * 4) + 2] = light.position.z();
-      packed[(active_count * 4) + 3] = light.radius;
-      const std::size_t color_offset =
-          (Render::k_max_local_lights * 4) + (active_count * 4);
-      packed[color_offset + 0] = light.color.x();
-      packed[color_offset + 1] = light.color.y();
-      packed[color_offset + 2] = light.color.z();
-      packed[color_offset + 3] = light.intensity;
-      ++active_count;
-    }
-    packed[Render::k_max_local_lights * 8] = static_cast<float>(active_count);
+    const auto packed = Render::pack_local_lights_std140(selected);
     glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER,
                     0,
@@ -938,7 +921,7 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
     const auto now = std::chrono::steady_clock::now();
     if (now - last_report >= std::chrono::seconds(1)) {
       last_report = now;
-      std::array<std::size_t, 16> per_type{};
+      std::array<std::size_t, k_draw_cmd_type_count> per_type{};
       std::size_t scatter_instances = 0;
       std::size_t rig_gpu_palette = 0;
       std::size_t rig_cpu_palette = 0;
@@ -1080,40 +1063,38 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
     const std::size_t i = prepared.start;
     const std::size_t batch_end = prepared.end();
     const auto& cmd = queue.get_sorted(i);
-    if (cmd.index() == RiggedCreatureCmdIndex) {
+    if (prepared.type == DrawCmdType::RiggedCreature) {
       frame_rigged_commands += prepared.count;
     }
-    switch (cmd.index()) {
-    case CylinderCmdIndex:
-    case FogBatchCmdIndex:
+    switch (draw_cmd_type(cmd)) {
+    case DrawCmdType::Cylinder:
+    case DrawCmdType::FogBatch:
       execute_cylinder_commands(prepared, context);
       break;
-    case TerrainScatterCmdIndex:
+    case DrawCmdType::TerrainScatter:
       execute_scatter_commands(prepared, context);
       break;
-    case TerrainSurfaceCmdIndex:
+    case DrawCmdType::TerrainSurface:
       execute_terrain_commands(prepared, context);
       break;
-    case TerrainFeatureCmdIndex:
+    case DrawCmdType::TerrainFeature:
       execute_water_linear_commands(prepared, context);
       break;
-    case MeshCmdIndex:
-    case DrawPartCmdIndex:
+    case DrawCmdType::Mesh:
+    case DrawCmdType::DrawPart:
       execute_mesh_commands(prepared, context);
       break;
-    case RainBatchCmdIndex:
-    case GridCmdIndex:
-    case GroundMarkerCmdIndex:
-    case SelectionSmokeCmdIndex:
-    case PrimitiveBatchCmdIndex:
-    case EffectBatchCmdIndex:
-    case ModeIndicatorCmdIndex:
+    case DrawCmdType::RainBatch:
+    case DrawCmdType::Grid:
+    case DrawCmdType::GroundMarker:
+    case DrawCmdType::SelectionSmoke:
+    case DrawCmdType::PrimitiveBatch:
+    case DrawCmdType::EffectBatch:
+    case DrawCmdType::ModeIndicator:
       execute_effects_commands(prepared, context);
       break;
-    case RiggedCreatureCmdIndex:
+    case DrawCmdType::RiggedCreature:
       execute_rigged_commands(prepared, context);
-      break;
-    default:
       break;
     }
 

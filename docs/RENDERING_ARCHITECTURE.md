@@ -248,9 +248,15 @@ public:
 ### Wrapping a submitter
 
 Some passes want to watch or adjust submissions on their way through without becoming
-the destination. `DamageStateSubmitter` substitutes a damage material id when a caller
-did not pick one; `RiggedBodyProbeSubmitter` counts how many rigged bodies a unit
-renderer actually emitted, so the tracing build can warn when one emits none.
+the destination. `DamageStateSubmitter` folds a damage tier into the material id;
+`RiggedBodyProbeSubmitter` counts how many rigged bodies a unit renderer actually
+emitted, so the tracing build can warn when one emits none.
+
+The damage tier rides in the tens digit: `basic.frag` and `basic_instanced.frag` read
+`u_material_id % 10` as the surface material (wood, metal, cloth) and
+`u_material_id / 10` as the tier, so a sooted plank still shades as wood. It used to
+substitute the whole id, which meant only untagged parts ever caught soot — every
+plank, band, and awning on a burning building stayed factory-fresh.
 
 Both derive from `ForwardingSubmitter`, which implements every `ISubmitter` method by
 passing it to an inner submitter. A decorator then overrides only what it changes —
@@ -516,6 +522,50 @@ We use a fairly conservative subset of OpenGL 3.3:
 | GLSL 330 shaders    | All visual computation       |
 
 What we don't use: geometry shaders (compatibility issues on some drivers), compute shaders (require OpenGL 4.3), tessellation (not needed for our art style), multi-draw indirect (instancing is enough).
+
+## How buildings rot
+
+`get_building_state()` in `entity/building_state.h` maps a building's health ratio onto
+three states: `Normal` above 70%, `Damaged` above 30%, `Destroyed` below it. Every
+building resolves its state per frame and picks an archetype out of a
+`BuildingArchetypeSet` — three pre-built `RenderArchetype`s, one per state, all baked
+from one `BuildingArchetypeDesc`. Nothing is recomputed while a building burns; the
+switch is a pointer swap.
+
+There are three layers to the degraded look, and it matters that they stack:
+
+1. **Parts drop out.** Each part carries a `BuildingStateMask`. Merlons, roof standards,
+   awnings, and market wares are masked to the states where they still exist. This is
+   authored per building, and it is what shapes the silhouette.
+2. **Surviving parts are re-tinted.** `build_building_archetype()` runs every
+   non-palette colour through `decayed_color()` (`entity/building_decay.h`) before it
+   reaches the builder. The ramp desaturates, darkens brightness-proportionally, then
+   mixes patchily toward ash, rot-green, and stone dust using a per-part hash. The
+   darkening is scaled by luminance on purpose: a flat multiply turned dark timber into
+   near-black mud while barely touching white limestone. `Normal` returns the authored
+   colour untouched, so a healthy building is byte-identical to what its author drew.
+3. **Ruin dressing is added.** `add_ruin_dressing()` scatters a rubble field, charred
+   beams, scorch patches, and collapsed roof slabs, all masked to `Damaged` /
+   `Destroyed`. Damaged rubble uses `ring_bias` to hug the outside of the footprint at
+   terrain height, where it is visible; destroyed rubble fills the shell.
+
+Before this, degradation was subtractive only: a ruined home was a shorter, roofless,
+_pristine white_ box that read as unfinished construction rather than as a ruin.
+
+Walls and gates were worse — `build_wall_archetype_set()` and
+`build_wall_gate_archetype()` both hard-coded `BuildingState::Normal`, so the most
+frequently attacked structures in the game rendered identically at full health and at
+one hit from collapse. They now build the full three-state set: stakes snap at
+deterministic indices, rails and braces fall, merlons break off their coping, and the
+masonry core drops to a stump.
+
+Two things deliberately do _not_ decay: palette parts (team colour must stay readable
+for identification) and the shader-side soot, which is a separate signal applied through
+the material tier described above.
+
+The whole matrix is reviewable in seconds with
+`building_preview --states <outdir>`, which renders every type × nation × state into one
+contact sheet.
 
 ## How nations get their look
 

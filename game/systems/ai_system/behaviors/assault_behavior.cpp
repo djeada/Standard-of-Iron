@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../../core/ownership_constants.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
@@ -25,6 +26,10 @@ constexpr float k_barrier_search_radius = 120.0F;
 constexpr float k_breach_stand_off = 2.0F;
 constexpr float k_breach_spread = 1.6F;
 constexpr float k_breach_engage_radius = 4.0F;
+
+constexpr float k_advance_stall_seconds = 8.0F;
+constexpr float k_advance_gain_epsilon = 1.0F;
+constexpr float k_objective_drift = 6.0F;
 
 auto is_barrier(const ContactSnapshot& contact) -> bool {
   return contact.spawn_type == Game::Units::SpawnType::WallSegment ||
@@ -104,6 +109,10 @@ auto select_breach_target(const AISnapshot& snapshot,
   return best;
 }
 
+auto is_wave_quarry(const ContactSnapshot& contact) -> bool {
+  return !Game::Core::is_neutral_owner(contact.owner_id) && contact.health > 0;
+}
+
 auto select_assault_target(const AISnapshot& snapshot,
                            float reference_x,
                            float reference_z,
@@ -111,9 +120,17 @@ auto select_assault_target(const AISnapshot& snapshot,
   const ContactSnapshot* best = nullptr;
   float best_score = std::numeric_limits<float>::infinity();
 
-  const bool troops_in_sight = has_troop_contact(snapshot.visible_enemies);
+  const bool troops_in_sight =
+      std::any_of(snapshot.visible_enemies.begin(),
+                  snapshot.visible_enemies.end(),
+                  [](const ContactSnapshot& contact) {
+                    return !contact.is_building && is_wave_quarry(contact);
+                  });
 
   for (const auto& candidate : snapshot.visible_enemies) {
+    if (!is_wave_quarry(candidate)) {
+      continue;
+    }
     if (troops_in_sight && candidate.is_building) {
       continue;
     }
@@ -133,6 +150,9 @@ auto select_assault_target(const AISnapshot& snapshot,
   }
 
   for (const auto& objective : snapshot.strategic_objectives) {
+    if (!is_wave_quarry(objective)) {
+      continue;
+    }
     if (skip_barriers && is_barrier(objective)) {
       continue;
     }
@@ -148,6 +168,41 @@ auto select_assault_target(const AISnapshot& snapshot,
 }
 
 } // namespace
+
+void AssaultBehavior::forget_advance_progress(float objective_x, float objective_z) {
+  if (m_has_tracked_objective && distance_squared(objective_x,
+                                                  0.0F,
+                                                  objective_z,
+                                                  m_tracked_objective_x,
+                                                  0.0F,
+                                                  m_tracked_objective_z) <=
+                                     k_objective_drift * k_objective_drift) {
+    return;
+  }
+  m_advance_progress.clear();
+  m_tracked_objective_x = objective_x;
+  m_tracked_objective_z = objective_z;
+  m_has_tracked_objective = true;
+}
+
+auto AssaultBehavior::advance_is_stalled(Engine::Core::EntityID unit_id,
+                                         float distance_to_objective,
+                                         float game_time) -> bool {
+  auto [entry, inserted] = m_advance_progress.try_emplace(
+      unit_id, AdvanceProgress{distance_to_objective, game_time});
+  if (inserted) {
+    return false;
+  }
+
+  auto& progress = entry->second;
+  if (distance_to_objective < progress.best_distance - k_advance_gain_epsilon) {
+    progress.best_distance = distance_to_objective;
+    progress.last_gain_time = game_time;
+    return false;
+  }
+
+  return (game_time - progress.last_gain_time) >= k_advance_stall_seconds;
+}
 
 void AssaultBehavior::execute(const AISnapshot& snapshot,
                               AIContext& context,
@@ -207,9 +262,31 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
     }
   }
 
+  forget_advance_progress(objective_x, objective_z);
+
+  bool advance_stalled = false;
+  std::unordered_set<Engine::Core::EntityID> advancing_ids;
+  advancing_ids.reserve(assault_units.size());
+  for (const auto* unit : assault_units) {
+    const float distance_to_objective = std::sqrt(distance_squared(
+        unit->pos_x, 0.0F, unit->pos_z, objective_x, 0.0F, objective_z));
+    if (distance_to_objective <= k_engage_radius) {
+      continue;
+    }
+    advancing_ids.insert(unit->id);
+    if (advance_is_stalled(unit->id, distance_to_objective, snapshot.game_time)) {
+      advance_stalled = true;
+    }
+  }
+  std::erase_if(m_advance_progress, [&advancing_ids](const auto& entry) {
+    return !advancing_ids.contains(entry.first);
+  });
+
   const ContactSnapshot* target = objective;
   const auto* breach =
-      select_breach_target(snapshot, center_x, center_z, objective_x, objective_z);
+      advance_stalled
+          ? select_breach_target(snapshot, center_x, center_z, objective_x, objective_z)
+          : nullptr;
   if (breach != nullptr) {
     target = breach;
   }

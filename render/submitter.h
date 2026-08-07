@@ -652,7 +652,10 @@ public:
 
 private:
   [[nodiscard]] auto pick(int incoming_id) const noexcept -> int {
-    return (m_damage_id != 0 && incoming_id == 0) ? m_damage_id : incoming_id;
+    if (m_damage_id == 0 || incoming_id < 0 || incoming_id >= 10) {
+      return incoming_id;
+    }
+    return incoming_id + m_damage_id;
   }
 
   int m_damage_id;

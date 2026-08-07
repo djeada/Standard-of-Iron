@@ -6,8 +6,19 @@
 #include <cstdint>
 #include <string>
 
+#include "building_decay.h"
+
 namespace Render::GL {
 namespace {
+
+constexpr auto k_mask_intact = k_building_state_mask_intact;
+constexpr auto k_mask_broken = static_cast<BuildingStateMask>(
+    static_cast<std::uint8_t>(BuildingStateMask::Damaged) |
+    static_cast<std::uint8_t>(BuildingStateMask::Destroyed));
+
+auto span_seed(std::size_t dir, int index) -> int {
+  return (static_cast<int>(dir) * 101) + (index * 7) + 3;
+}
 
 constexpr std::uint8_t k_connection_north = 1U << 0U;
 constexpr std::uint8_t k_connection_east = 1U << 1U;
@@ -181,15 +192,81 @@ void add_stake_bindings(BuildingArchetypeDesc& desc,
                         const WallGeometry& geometry,
                         std::size_t dir,
                         float along,
-                        float radius) {
+                        float radius,
+                        BuildingStateMask states) {
   const float lateral_half = rail_offset(geometry) + (geometry.rail_radius * 0.9F);
   for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
     desc.add_box(point_at(dir, along, 0.0F, height),
                  extents_at(dir, radius * 0.95F, 0.042F, lateral_half),
                  binding_color(palette, geometry),
-                 BuildingStateMask::All,
+                 states,
                  BuildingLODMask::Full);
   }
+}
+
+void add_snapped_stake(BuildingArchetypeDesc& desc,
+                       const WallPalette& palette,
+                       std::size_t dir,
+                       float along,
+                       float lean,
+                       float radius,
+                       float top,
+                       BuildingStateMask states) {
+  desc.add_cylinder(point_at(dir, along, 0.0F, 0.02F),
+                    point_at(dir, along, lean, top),
+                    radius,
+                    palette.wood_mid,
+                    states);
+  desc.add_cone(point_at(dir, along, lean, top + 0.07F),
+                point_at(dir, along, lean, top - 0.02F),
+                radius * 1.04F,
+                palette.wood_dark * 0.75F,
+                states,
+                BuildingLODMask::Full);
+}
+
+void add_span_debris(BuildingArchetypeDesc& desc,
+                     const WallPalette& palette,
+                     std::size_t dir,
+                     float length,
+                     float lateral_half) {
+  const float along_half = length * 0.5F;
+  const QVector3D center = point_at(dir, along_half, 0.0F, 0.0F);
+  const QVector3D extent = extents_at(dir, along_half * 0.86F, 0.0F, lateral_half);
+
+  add_rubble_field(desc,
+                   RubbleField{.center = center,
+                               .extent = extent,
+                               .stone = palette.rubble,
+                               .stone_dark = palette.earth_dark,
+                               .chunk_scale = 0.85F,
+                               .count = 5,
+                               .seed = static_cast<int>(dir) * 23,
+                               .states = BuildingStateMask::Damaged});
+  add_rubble_field(desc,
+                   RubbleField{.center = center,
+                               .extent = extent * 1.15F,
+                               .stone = palette.rubble,
+                               .stone_dark = palette.earth_dark,
+                               .chunk_scale = 1.15F,
+                               .count = 11,
+                               .seed = (static_cast<int>(dir) * 23) + 500,
+                               .states = BuildingStateMask::Destroyed});
+  add_charred_beams(desc,
+                    CharredBeams{.center = center,
+                                 .extent = extent,
+                                 .timber = palette.wood_dark * 0.45F,
+                                 .length = 0.55F,
+                                 .radius = 0.05F,
+                                 .count = 3,
+                                 .seed = (static_cast<int>(dir) * 29) + 90,
+                                 .states = BuildingStateMask::Destroyed});
+  add_scorch_patch(desc,
+                   ScorchPatch{.center = center,
+                               .radius = along_half * 0.7F,
+                               .count = 4,
+                               .seed = (static_cast<int>(dir) * 37) + 130,
+                               .states = k_mask_broken});
 }
 
 void add_span_stakes(BuildingArchetypeDesc& desc,
@@ -208,15 +285,44 @@ void add_span_stakes(BuildingArchetypeDesc& desc,
     const float top = geometry.stake_height + stake_height_variation(geometry, i);
     const float lean = stake_lean(geometry, i);
 
+    const float roll = decay_hash(span_seed(dir, i));
+    const bool snaps_when_damaged = roll < 0.45F;
+    const bool stands_when_destroyed = roll > 0.78F;
+    const BuildingStateMask upright_states =
+        snaps_when_damaged ? BuildingStateMask::Normal : k_mask_intact;
+
     desc.add_cylinder(point_at(dir, along, 0.0F, 0.02F),
                       point_at(dir, along, lean, top),
                       radius,
-                      alternating_stake_color(palette, i));
+                      alternating_stake_color(palette, i),
+                      upright_states);
     desc.add_cone(point_at(dir, along, lean, top - 0.01F),
                   point_at(dir, along, lean, top + geometry.tip_height),
                   radius * 1.05F,
-                  palette.wood_dark);
-    add_stake_bindings(desc, palette, geometry, dir, along, radius);
+                  palette.wood_dark,
+                  upright_states);
+    add_stake_bindings(desc, palette, geometry, dir, along, radius, upright_states);
+
+    if (snaps_when_damaged) {
+      add_snapped_stake(desc,
+                        palette,
+                        dir,
+                        along,
+                        lean,
+                        radius,
+                        top * (0.38F + (roll * 0.50F)),
+                        BuildingStateMask::Damaged);
+    }
+    if (stands_when_destroyed) {
+      add_snapped_stake(desc,
+                        palette,
+                        dir,
+                        along,
+                        lean * 2.4F,
+                        radius,
+                        top * (0.09F + (roll * 0.17F)),
+                        BuildingStateMask::Destroyed);
+    }
   }
 
   if (!capped) {
@@ -229,11 +335,21 @@ void add_span_stakes(BuildingArchetypeDesc& desc,
   desc.add_cylinder(point_at(dir, along, 0.0F, 0.02F),
                     point_at(dir, along, 0.0F, top),
                     radius,
-                    palette.wood_mid);
+                    palette.wood_mid,
+                    k_mask_intact);
   desc.add_cone(point_at(dir, along, 0.0F, top - 0.01F),
                 point_at(dir, along, 0.0F, top + geometry.tip_height),
                 radius * 1.02F,
-                palette.wood_dark);
+                palette.wood_dark,
+                BuildingStateMask::Normal);
+  add_snapped_stake(desc,
+                    palette,
+                    dir,
+                    along,
+                    0.05F,
+                    radius,
+                    top * 0.20F,
+                    BuildingStateMask::Destroyed);
 }
 
 void add_rails(BuildingArchetypeDesc& desc,
@@ -263,11 +379,20 @@ void add_rails(BuildingArchetypeDesc& desc,
 
       const float lateral = static_cast<float>(side) * offset;
       for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
+        const bool upper = height > geometry.lower_rail_y;
         desc.add_cylinder(point_at(axis.positive, low, lateral, height),
                           point_at(axis.positive, high, lateral, height),
                           geometry.rail_radius,
-                          palette.wood_dark);
+                          palette.wood_dark,
+                          upper ? BuildingStateMask::Normal : k_mask_intact);
       }
+
+      desc.add_cylinder(
+          point_at(axis.positive, low * 0.72F, lateral * 1.7F, geometry.rail_radius),
+          point_at(axis.positive, high * 0.64F, lateral * 2.3F, geometry.rail_radius),
+          geometry.rail_radius * 0.92F,
+          palette.wood_dark * 0.62F,
+          BuildingStateMask::Destroyed);
     }
   }
 }
@@ -288,14 +413,14 @@ void add_span_braces(BuildingArchetypeDesc& desc,
                       point_at(dir, far_end, offset, geometry.upper_rail_y),
                       radius,
                       palette.wood_dark,
-                      BuildingStateMask::All,
+                      k_mask_intact,
                       BuildingLODMask::Full);
     if (geometry.cross_braced) {
       desc.add_cylinder(point_at(dir, far_end, offset, 0.32F),
                         point_at(dir, near_end, offset, geometry.upper_rail_y),
                         radius,
                         palette.wood_mid,
-                        BuildingStateMask::All,
+                        BuildingStateMask::Normal,
                         BuildingLODMask::Full);
     }
   }
@@ -308,18 +433,26 @@ void add_junction_post(BuildingArchetypeDesc& desc,
   desc.add_cylinder(QVector3D(0.0F, 0.02F, 0.0F),
                     QVector3D(0.0F, top, 0.0F),
                     geometry.post_radius,
-                    palette.wood_mid);
+                    palette.wood_mid,
+                    k_mask_intact);
   desc.add_cone(QVector3D(0.0F, top - 0.01F, 0.0F),
                 QVector3D(0.0F, top + (geometry.tip_height * 1.1F), 0.0F),
                 geometry.post_radius * 1.02F,
-                palette.wood_dark);
+                palette.wood_dark,
+                BuildingStateMask::Normal);
+
+  desc.add_cylinder(QVector3D(0.0F, 0.02F, 0.0F),
+                    QVector3D(0.04F, top * 0.24F, -0.03F),
+                    geometry.post_radius * 0.94F,
+                    palette.wood_dark,
+                    BuildingStateMask::Destroyed);
 
   for (const float height : {geometry.lower_rail_y, geometry.upper_rail_y}) {
     desc.add_cylinder(QVector3D(0.0F, height - 0.05F, 0.0F),
                       QVector3D(0.0F, height + 0.05F, 0.0F),
                       geometry.post_radius * 1.08F,
                       binding_color(palette, geometry),
-                      BuildingStateMask::All,
+                      k_mask_intact,
                       BuildingLODMask::Full);
   }
 }
@@ -376,17 +509,24 @@ void add_masonry(BuildingArchetypeDesc& desc,
   const float center_y = half_height + 0.06F;
   const float coping_y = center_y + half_height + 0.07F;
 
+  const float ruin_scale = 0.58F;
   desc.add_box(QVector3D(0.0F, center_y + 0.06F, 0.0F),
                QVector3D(half_width, half_height + 0.06F, half_width),
-               palette.wood_dark);
+               palette.wood_dark,
+               k_mask_intact);
+  desc.add_box(QVector3D(0.0F, (center_y + 0.06F) * ruin_scale, 0.0F),
+               QVector3D(half_width, (half_height + 0.06F) * ruin_scale, half_width),
+               palette.wood_dark,
+               BuildingStateMask::Destroyed);
   desc.add_box(QVector3D(0.0F, coping_y + 0.12F, 0.0F),
                QVector3D(half_width + 0.05F, 0.07F, half_width + 0.05F),
-               palette.masonry_accent);
+               palette.masonry_accent,
+               BuildingStateMask::Normal);
   if (palette.horned_masonry) {
     desc.add_box(QVector3D(0.0F, coping_y + 0.36F, 0.0F),
                  QVector3D(0.11F, 0.17F, 0.11F),
                  palette.wood_dark,
-                 BuildingStateMask::All,
+                 BuildingStateMask::Normal,
                  BuildingLODMask::Full);
   }
 
@@ -405,20 +545,38 @@ void add_masonry(BuildingArchetypeDesc& desc,
     const float along_center = half_width + along_half;
     desc.add_box(point_at(dir, along_center, 0.0F, center_y),
                  extents_at(dir, along_half, half_height, half_width * 0.82F),
-                 palette.wood_mid);
+                 palette.wood_mid,
+                 k_mask_intact);
+    desc.add_box(
+        point_at(dir, along_center, 0.0F, center_y * ruin_scale),
+        extents_at(dir, along_half, half_height * ruin_scale, half_width * 0.82F),
+        palette.wood_mid,
+        BuildingStateMask::Destroyed);
     desc.add_box(point_at(dir, along_center, 0.0F, coping_y),
                  extents_at(dir, along_half, 0.07F, half_width * 0.94F),
-                 palette.masonry_accent);
+                 palette.masonry_accent,
+                 k_mask_intact);
 
     for (int i = 0; i < k_merlons; ++i) {
       const float t = (static_cast<float>(i) + 0.5F) / static_cast<float>(k_merlons);
       const float along = half_width + ((length - half_width) * t);
+      const float roll = decay_hash(span_seed(dir, i) + 41);
+      const bool survives_damage = roll > 0.45F;
       desc.add_box(point_at(dir, along, 0.0F, coping_y + 0.19F),
                    extents_at(dir, 0.09F, 0.13F, half_width * 0.86F),
                    (i % 2 == 0) ? palette.masonry_accent : palette.wood_light,
-                   BuildingStateMask::All,
+                   survives_damage ? k_mask_intact : BuildingStateMask::Normal,
                    BuildingLODMask::Full);
+      if (!survives_damage) {
+        desc.add_box(point_at(dir, along, 0.0F, coping_y + 0.10F),
+                     extents_at(dir, 0.085F, 0.04F, half_width * 0.80F),
+                     palette.rubble,
+                     BuildingStateMask::Damaged,
+                     BuildingLODMask::Full);
+      }
     }
+
+    add_span_debris(desc, palette, dir, length, half_width);
   }
 }
 
@@ -441,6 +599,7 @@ void add_palisade(BuildingArchetypeDesc& desc,
     add_span_stakes(
         desc, palette, geometry, dir, length, layout[dir] == SpanKind::Open);
     add_span_braces(desc, palette, geometry, dir, rail_reach(layout, dir, geometry));
+    add_span_debris(desc, palette, dir, length, rail_offset(geometry) * 1.6F);
   }
 }
 
@@ -448,11 +607,10 @@ void add_palisade(BuildingArchetypeDesc& desc,
 
 auto build_wall_archetype_set(std::string_view name_prefix,
                               const WallPalette& palette,
-                              const WallGeometry& geometry)
-    -> std::array<RenderArchetype, 6> {
-  std::array<RenderArchetype, 6> out{};
+                              const WallGeometry& geometry) -> WallArchetypeSet {
+  WallArchetypeSet out{};
 
-  for (int i = 0; i < static_cast<int>(out.size()); ++i) {
+  for (int i = 0; i < static_cast<int>(out.variants.size()); ++i) {
     const auto variant = static_cast<WallVariant>(i);
     const auto layout = layout_for(variant);
     BuildingArchetypeDesc desc(std::string(name_prefix) + "_" + std::to_string(i));
@@ -463,8 +621,8 @@ auto build_wall_archetype_set(std::string_view name_prefix,
       add_palisade(desc, palette, geometry, layout);
     }
 
-    out[static_cast<std::size_t>(i)] =
-        build_building_archetype(desc, BuildingState::Normal);
+    out.variants[static_cast<std::size_t>(i)] = build_stateful_building_archetype_set(
+        [&](BuildingState state) { return build_building_archetype(desc, state); });
   }
 
   return out;
@@ -486,9 +644,12 @@ auto wall_renderer_variants()
 
 void submit_wall_segment_variant(ISubmitter& out,
                                  const DrawContext& ctx,
-                                 const std::array<RenderArchetype, 6>& archetypes,
+                                 const WallArchetypeSet& archetypes,
                                  WallVariant variant) {
-  submit_building_instance(out, ctx, archetypes[wall_archetype_index(variant)]);
+  submit_building_instance(out,
+                           ctx,
+                           archetypes.variants[wall_archetype_index(variant)].for_state(
+                               resolve_building_state(ctx)));
   draw_building_selection_overlay(out, ctx, BuildingSelectionStyle{2.0F, 2.0F});
 }
 

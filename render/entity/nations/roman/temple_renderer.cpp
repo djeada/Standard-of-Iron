@@ -8,6 +8,7 @@
 
 #include "../../../render_archetype.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_decay.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
@@ -617,6 +618,15 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   if (ruined) {
     add_roman_temple_ruin(desc, c, podium_y, cella_h);
   }
+
+  add_ruin_dressing(desc,
+                    RuinDressing{.extent = QVector3D(1.18F, 0.0F, 0.92F),
+                                 .stone = c.limestone,
+                                 .stone_dark = c.limestone_dark,
+                                 .timber = c.limestone_dark * 0.5F,
+                                 .ground_y = 0.29F,
+                                 .scale = 1.15F,
+                                 .seed = 269});
 
   return build_building_archetype(desc, state);
 }

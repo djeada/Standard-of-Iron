@@ -13,6 +13,7 @@
 #include "../geom/stone.h"
 #include "../gl/primitives.h"
 #include "../submitter.h"
+#include "building_decay.h"
 #include "building_render_common.h"
 #include "building_state.h"
 
@@ -547,6 +548,23 @@ void draw_barracks_stockpile(const DrawContext& ctx,
     return;
   }
 
+  const BuildingState state = resolve_building_state(ctx);
+  StockpileYardStyle decayed = style;
+  if (state != BuildingState::Normal) {
+    int seed = 0;
+    for (QVector3D* slot : {&decayed.gravel,
+                            &decayed.earth_light,
+                            &decayed.stone_light,
+                            &decayed.stone_mid,
+                            &decayed.stone_dark,
+                            &decayed.timber,
+                            &decayed.timber_dark,
+                            &decayed.ore,
+                            &decayed.ore_rust}) {
+      *slot = decayed_color(*slot, state, ++seed);
+    }
+  }
+
   Yard yard;
   yard.frame.translate(
       transform->position.x, transform->position.y, transform->position.z);
@@ -556,13 +574,13 @@ void draw_barracks_stockpile(const DrawContext& ctx,
   yard.white = white;
   yard.detailed = ctx.distance_sq <= k_detail_distance_sq;
 
-  draw_bed(out, yard, style);
-  draw_fence(out, yard, style);
+  draw_bed(out, yard, decayed);
+  draw_fence(out, yard, decayed);
   if (yard.detailed) {
-    draw_yard_clutter(out, yard, style);
+    draw_yard_clutter(out, yard, decayed);
   }
 
-  if (resolve_building_state(ctx) == BuildingState::Destroyed) {
+  if (state == BuildingState::Destroyed) {
     return;
   }
 
@@ -574,9 +592,9 @@ void draw_barracks_stockpile(const DrawContext& ctx,
   float const flash = std::clamp(
       stockpile->deposit_flash / k_stockpile_deposit_flash_seconds, 0.0F, 1.0F);
 
-  draw_timber_pile(out, yard, style, stockpile->wood_fill, flash);
-  draw_stone_pile(out, yard, style, stockpile->stone_fill, flash);
-  draw_ore_pile(out, yard, style, stockpile->iron_fill, flash);
+  draw_timber_pile(out, yard, decayed, stockpile->wood_fill, flash);
+  draw_stone_pile(out, yard, decayed, stockpile->stone_fill, flash);
+  draw_ore_pile(out, yard, decayed, stockpile->iron_fill, flash);
 }
 
 } // namespace Render::GL

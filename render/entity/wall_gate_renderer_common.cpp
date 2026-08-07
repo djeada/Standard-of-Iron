@@ -4,12 +4,14 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cstdint>
 #include <string>
 
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../gl/resources.h"
 #include "building_archetype_desc.h"
+#include "building_decay.h"
 #include "building_render_common.h"
 
 namespace Render::GL {
@@ -23,6 +25,8 @@ constexpr float k_leaf_thickness = 0.075F;
 constexpr float k_leaf_swing_degrees = 100.0F;
 constexpr float k_leaf_height_ratio = 0.82F;
 constexpr float k_detail_distance_sq = 900.0F;
+
+constexpr auto k_mask_intact = k_building_state_mask_intact;
 
 auto leaf_height(const WallGeometry& geometry) -> float {
   return geometry.stake_height * k_leaf_height_ratio;
@@ -40,19 +44,37 @@ void add_jamb(BuildingArchetypeDesc& desc,
   const float radius = geometry.post_radius * 1.05F;
   const float top = geometry.stake_height + geometry.post_extra_height + 0.18F;
 
-  desc.add_cylinder(
-      QVector3D(x, 0.02F, z), QVector3D(x, top, z), radius, palette.wood_mid);
+  const float lean =
+      (decay_hash(static_cast<int>((x * 31.0F) + (z * 7.0F))) - 0.5F) * 0.16F;
+
+  desc.add_cylinder(QVector3D(x, 0.02F, z),
+                    QVector3D(x, top, z),
+                    radius,
+                    palette.wood_mid,
+                    BuildingStateMask::Normal);
+  desc.add_cylinder(QVector3D(x, 0.02F, z),
+                    QVector3D(x + lean, top * 0.94F, z + (lean * 0.5F)),
+                    radius,
+                    palette.wood_mid,
+                    BuildingStateMask::Damaged);
+  desc.add_cylinder(QVector3D(x, 0.02F, z),
+                    QVector3D(x + (lean * 2.6F), top * 0.42F, z + (lean * 1.4F)),
+                    radius * 0.96F,
+                    palette.wood_dark,
+                    BuildingStateMask::Destroyed);
   desc.add_cone(QVector3D(x, top - 0.01F, z),
                 QVector3D(x, top + geometry.tip_height, z),
                 radius * 1.02F,
-                palette.wood_dark);
+                palette.wood_dark,
+                BuildingStateMask::Normal);
 
   for (const float band : {geometry.lower_rail_y, geometry.upper_rail_y}) {
     desc.add_cylinder(QVector3D(x, band - 0.05F, z),
                       QVector3D(x, band + 0.05F, z),
                       radius * 1.12F,
                       geometry.metal_bands ? palette.masonry_accent : palette.rope,
-                      BuildingStateMask::All,
+                      band > geometry.lower_rail_y ? BuildingStateMask::Normal
+                                                   : k_mask_intact,
                       BuildingLODMask::Full);
   }
 }
@@ -71,16 +93,36 @@ void add_piers(BuildingArchetypeDesc& desc,
     for (int i = 0; i < k_stakes_per_pier; ++i) {
       const float x = side * (pier_inner + (spacing * (static_cast<float>(i) + 0.5F)));
       const float height = geometry.stake_height * (i % 2 == 0 ? 1.0F : 0.94F);
+      const float roll = decay_hash((i * 13) + static_cast<int>(side * 5.0F) + 2);
+      const bool snaps = roll < 0.45F;
+      const BuildingStateMask upright =
+          snaps ? BuildingStateMask::Normal : k_mask_intact;
+
       desc.add_cylinder(QVector3D(x, 0.0F, 0.0F),
                         QVector3D(x, height, 0.0F),
                         stake_radius,
-                        (i % 2 == 0) ? palette.wood_mid : palette.wood_light);
+                        (i % 2 == 0) ? palette.wood_mid : palette.wood_light,
+                        upright);
       desc.add_cone(QVector3D(x, height - 0.01F, 0.0F),
                     QVector3D(x, height + geometry.tip_height, 0.0F),
                     stake_radius * 1.02F,
                     palette.wood_dark,
-                    BuildingStateMask::All,
+                    upright,
                     BuildingLODMask::Full);
+      if (snaps) {
+        desc.add_cylinder(QVector3D(x, 0.0F, 0.0F),
+                          QVector3D(x, height * (0.35F + (roll * 0.6F)), 0.0F),
+                          stake_radius,
+                          palette.wood_dark,
+                          BuildingStateMask::Damaged);
+      }
+      if (roll > 0.72F) {
+        desc.add_cylinder(QVector3D(x, 0.0F, 0.0F),
+                          QVector3D(x, height * (0.2F + (roll * 0.25F)), 0.0F),
+                          stake_radius * 0.95F,
+                          palette.wood_dark,
+                          BuildingStateMask::Destroyed);
+      }
     }
 
     const float mid = side * (pier_inner + (span * 0.5F));
@@ -88,7 +130,8 @@ void add_piers(BuildingArchetypeDesc& desc,
       desc.add_box(QVector3D(mid, rail, 0.0F),
                    QVector3D(span * 0.5F, 0.05F, stake_radius * 1.25F),
                    geometry.metal_bands ? palette.masonry_accent : palette.rope,
-                   BuildingStateMask::All,
+                   rail > geometry.lower_rail_y ? BuildingStateMask::Normal
+                                                : k_mask_intact,
                    BuildingLODMask::Full);
     }
 
@@ -104,7 +147,7 @@ void add_piers(BuildingArchetypeDesc& desc,
 
 auto build_wall_gate_archetype(std::string_view name_prefix,
                                const WallPalette& palette,
-                               const WallGeometry& geometry) -> RenderArchetype {
+                               const WallGeometry& geometry) -> BuildingArchetypeSet {
   BuildingArchetypeDesc desc(std::string(name_prefix) + "_gate");
 
   if (geometry.earthwork_base) {
@@ -128,32 +171,80 @@ auto build_wall_gate_archetype(std::string_view name_prefix,
   for (const float depth : {-k_jamb_depth, k_jamb_depth}) {
     desc.add_box(QVector3D(0.0F, lintel_y, depth),
                  QVector3D(k_jamb_offset + 0.18F, 0.095F, 0.08F),
-                 palette.wood_dark);
+                 palette.wood_dark,
+                 k_mask_intact);
   }
 
   desc.add_box(QVector3D(0.0F, lintel_y + 0.26F, 0.0F),
                QVector3D(k_jamb_offset + 0.26F, 0.085F, k_jamb_depth + 0.14F),
-               palette.wood_light);
+               palette.wood_light,
+               BuildingStateMask::Normal);
 
   for (int i = -2; i <= 2; ++i) {
     desc.add_box(QVector3D(static_cast<float>(i) * 0.74F, lintel_y + 0.40F, 0.0F),
                  QVector3D(0.22F, 0.06F, k_jamb_depth + 0.07F),
                  (i % 2 == 0) ? palette.wood_mid : palette.wood_light,
-                 BuildingStateMask::All,
+                 BuildingStateMask::Normal,
                  BuildingLODMask::Full);
   }
 
+  desc.add_rotated_box(QVector3D(0.35F, 0.10F, k_jamb_depth * 1.6F),
+                       QVector3D(k_jamb_offset * 0.9F, 0.075F, 0.16F),
+                       QVector3D(0.0F, 14.0F, 6.0F),
+                       palette.wood_dark,
+                       BuildingStateMask::Destroyed);
+
   add_piers(desc, palette, geometry);
 
-  return build_building_archetype(desc, BuildingState::Normal);
+  add_rubble_field(
+      desc,
+      RubbleField{
+          .center = QVector3D(0.0F, 0.0F, 0.0F),
+          .extent = QVector3D(k_structure_half_span * 0.85F, 0.0F, k_jamb_depth * 1.4F),
+          .stone = palette.rubble,
+          .stone_dark = palette.earth_dark,
+          .count = 6,
+          .seed = 71,
+          .states = BuildingStateMask::Damaged});
+  add_rubble_field(
+      desc,
+      RubbleField{.center = QVector3D(0.0F, 0.0F, 0.0F),
+                  .extent = QVector3D(k_structure_half_span, 0.0F, k_jamb_depth * 1.9F),
+                  .stone = palette.rubble,
+                  .stone_dark = palette.earth_dark,
+                  .chunk_scale = 1.2F,
+                  .count = 13,
+                  .seed = 311,
+                  .states = BuildingStateMask::Destroyed});
+  add_charred_beams(desc,
+                    CharredBeams{.center = QVector3D(0.0F, 0.0F, 0.0F),
+                                 .extent = QVector3D(k_jamb_offset, 0.0F, 0.35F),
+                                 .timber = palette.wood_dark * 0.45F,
+                                 .length = 0.8F,
+                                 .count = 4,
+                                 .seed = 209,
+                                 .states = BuildingStateMask::Destroyed});
+  add_scorch_patch(
+      desc,
+      ScorchPatch{.center = QVector3D(0.0F, 0.0F, 0.0F),
+                  .radius = k_jamb_offset * 1.3F,
+                  .count = 5,
+                  .seed = 407,
+                  .states = static_cast<BuildingStateMask>(
+                      static_cast<std::uint8_t>(BuildingStateMask::Damaged) |
+                      static_cast<std::uint8_t>(BuildingStateMask::Destroyed))});
+
+  return build_stateful_building_archetype_set(
+      [&](BuildingState state) { return build_building_archetype(desc, state); });
 }
 
 void submit_wall_gate(ISubmitter& out,
                       const DrawContext& ctx,
-                      const RenderArchetype& frame,
+                      const BuildingArchetypeSet& frame,
                       const WallPalette& palette,
                       const WallGeometry& geometry) {
-  submit_building_instance(out, ctx, frame);
+  const BuildingState state = resolve_building_state(ctx);
+  submit_building_instance(out, ctx, frame.for_state(state));
 
   Mesh* mesh = (ctx.resources != nullptr) ? ctx.resources->unit() : nullptr;
   Texture* white = (ctx.resources != nullptr) ? ctx.resources->white() : nullptr;
@@ -165,14 +256,24 @@ void submit_wall_gate(ISubmitter& out,
         (gate != nullptr) ? std::clamp(gate->open_amount, 0.0F, 1.0F) : 0.0F;
     const float swing_degrees = open_amount * k_leaf_swing_degrees;
 
-    const float height = leaf_height(geometry);
+    const float leaf_scale = (state == BuildingState::Damaged)     ? 0.86F
+                             : (state == BuildingState::Destroyed) ? 0.55F
+                                                                   : 1.0F;
+    const float height = leaf_height(geometry) * leaf_scale;
     const float length = k_jamb_offset;
     const bool detailed = ctx.distance_sq <= k_detail_distance_sq;
 
     for (const float side : {-1.0F, 1.0F}) {
+      if (state == BuildingState::Destroyed && side < 0.0F) {
+        continue;
+      }
+
       QMatrix4x4 hinge = ctx.model;
       hinge.translate(QVector3D(side * k_jamb_offset, 0.0F, 0.0F));
       hinge.rotate(-side * swing_degrees, 0.0F, 1.0F, 0.0F);
+      if (state == BuildingState::Destroyed) {
+        hinge.rotate(-14.0F, 0.0F, 0.0F, 1.0F);
+      }
 
       const float center_x = -side * length * 0.5F;
 
@@ -182,7 +283,7 @@ void submit_wall_gate(ISubmitter& out,
                           hinge,
                           QVector3D(center_x, (height * 0.5F) + 0.03F, 0.0F),
                           QVector3D(length * 0.5F, height * 0.5F, k_leaf_thickness),
-                          palette.wood_mid);
+                          decayed_color(palette.wood_mid, state, 5));
 
       if (!detailed) {
         continue;
@@ -195,8 +296,10 @@ void submit_wall_gate(ISubmitter& out,
                             hinge,
                             QVector3D(center_x, (height * band_ratio) + 0.03F, 0.0F),
                             QVector3D(length * 0.5F, 0.055F, k_leaf_thickness + 0.022F),
-                            geometry.metal_bands ? palette.masonry_accent
-                                                 : palette.wood_dark);
+                            decayed_color(geometry.metal_bands ? palette.masonry_accent
+                                                               : palette.wood_dark,
+                                          state,
+                                          7));
       }
 
       submit_building_box(
@@ -206,7 +309,7 @@ void submit_wall_gate(ISubmitter& out,
           hinge,
           QVector3D(-side * (length - 0.10F), (height * 0.5F) + 0.03F, 0.0F),
           QVector3D(0.055F, height * 0.42F, k_leaf_thickness + 0.03F),
-          palette.wood_dark);
+          decayed_color(palette.wood_dark, state, 9));
     }
   }
 

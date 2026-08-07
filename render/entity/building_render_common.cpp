@@ -204,7 +204,7 @@ void submit_building_instance(ISubmitter& out,
       damage_id = 10;
       break;
     case BuildingState::Destroyed:
-      damage_id = 11;
+      damage_id = 20;
       break;
     case BuildingState::Normal:
     default:

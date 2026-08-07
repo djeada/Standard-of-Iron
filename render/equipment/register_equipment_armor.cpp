@@ -3,7 +3,6 @@
 #include "armor/armor_light_carthage.h"
 #include "armor/carthage_shoulder_cover.h"
 #include "armor/cloak_renderer.h"
-#include "armor/commander_regalia.h"
 #include "armor/roman_armor.h"
 #include "armor/roman_greaves.h"
 #include "armor/roman_shoulder_cover.h"
@@ -124,27 +123,10 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
 template <CommanderCloakStyle Style>
 auto build_commander_cloak(std::uint8_t base_role_byte)
     -> std::vector<StaticAttachmentSpec> {
-  constexpr auto regalia_style = [] {
-    if constexpr (Style == CommanderCloakStyle::Fabius) {
-      return CommanderRegaliaStyle::Fabius;
-    } else if constexpr (Style == CommanderCloakStyle::Scipio) {
-      return CommanderRegaliaStyle::Scipio;
-    } else if constexpr (Style == CommanderCloakStyle::Marcellus) {
-      return CommanderRegaliaStyle::Marcellus;
-    } else if constexpr (Style == CommanderCloakStyle::Hanno) {
-      return CommanderRegaliaStyle::Hanno;
-    } else if constexpr (Style == CommanderCloakStyle::Hasdrubal) {
-      return CommanderRegaliaStyle::Hasdrubal;
-    } else {
-      return CommanderRegaliaStyle::Hannibal;
-    }
-  }();
   return {Render::GL::cloak_make_static_attachment(commander_cloak_config(Style),
                                                    Render::GL::shared_cloak_meshes(),
                                                    humanoid_chest_bone(),
-                                                   base_role_byte),
-          Render::GL::commander_regalia_make_static_attachment(
-              regalia_style, humanoid_chest_bone(), base_role_byte)};
+                                                   base_role_byte)};
 }
 
 template <CommanderCloakStyle Style>

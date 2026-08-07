@@ -7,7 +7,9 @@
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
+#include "../../building_decay.h"
 #include "../../building_render_common.h"
+#include "../../building_state.h"
 #include "../../registry.h"
 #include "game/core/component.h"
 
@@ -28,35 +30,39 @@ void draw_grave_banner(const DrawContext& p,
                        const QVector3D& team,
                        const BarracksFlagRenderer::ClothBannerResources* cloth) {
   const SepulcherPalette palette;
+  const BuildingState state = resolve_building_state(p);
 
   const QVector3D team_trim = team * 0.55F + palette.grave_iron * 0.45F;
+  const float wear = (state == BuildingState::Damaged)     ? 0.82F
+                     : (state == BuildingState::Destroyed) ? 0.55F
+                                                           : 1.0F;
 
   BarracksFlagRenderer::draw_hanging_banner(
       p,
       out,
       unit,
       white,
-      team,
-      team_trim,
+      decayed_color(team, state, 1),
+      decayed_color(team_trim, state, 2),
       {.pole_base = QVector3D(-2.10F, 0.0F, -1.70F),
-       .pole_height = 3.2F,
+       .pole_height = 3.2F * wear,
        .pole_radius = 0.055F,
-       .banner_width = 0.95F,
-       .banner_height = 1.15F,
+       .banner_width = 0.95F * wear,
+       .banner_height = 1.15F * wear,
        .connector_drop_ratio = 0.5F,
-       .pole_color = palette.grave_iron,
-       .beam_color = palette.bone,
-       .connector_color = palette.grave_iron_light,
+       .pole_color = decayed_color(palette.grave_iron, state, 3),
+       .beam_color = decayed_color(palette.bone, state, 4),
+       .connector_color = decayed_color(palette.grave_iron_light, state, 5),
 
-       .ornament_offset = QVector3D(0.0F, 3.34F, 0.0F),
+       .ornament_offset = QVector3D(0.0F, 3.34F * wear, 0.0F),
        .ornament_size = QVector3D(0.05F, 0.30F, 0.05F),
-       .ornament_color = palette.bone,
-       .ring_count = 3,
+       .ornament_color = decayed_color(palette.bone, state, 6),
+       .ring_count = (state == BuildingState::Destroyed) ? 1 : 3,
        .ring_y_start = 0.6F,
-       .ring_spacing = 0.72F,
+       .ring_spacing = 0.72F * wear,
        .ring_height = 0.03F,
        .ring_radius_scale = 1.8F,
-       .ring_color = palette.bone},
+       .ring_color = decayed_color(palette.bone, state, 7)},
       cloth);
 }
 

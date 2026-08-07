@@ -5,10 +5,13 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 
 namespace Render {
 
 struct EnvironmentLightingState {
+  static constexpr std::size_t k_packed_float_count = 28;
+
   QVector3D primary_direction{0.35F, 0.85F, 0.42F};
   QVector3D primary_color{1.0F, 0.95F, 0.86F};
   float primary_intensity = 1.0F;
@@ -44,7 +47,8 @@ struct EnvironmentLightingState {
     return result;
   }
 
-  [[nodiscard]] auto packed_std140() const noexcept -> std::array<float, 28> {
+  [[nodiscard]] auto
+  packed_std140() const noexcept -> std::array<float, k_packed_float_count> {
     const EnvironmentLightingState value = sanitized();
     return {
         value.primary_direction.x(),

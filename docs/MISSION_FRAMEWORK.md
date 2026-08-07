@@ -185,6 +185,23 @@ A wave counts as broken when every unit it spawned is dead, has routed, or when 
 least 90% of it is dead. Routed survivors are deliberately ignored — a single
 fleeing horseman must not be able to stall a `survive_waves` objective forever.
 
+#### What a wave marches on
+
+`entry_point` says where a wave arrives; it never says where it goes. The target is
+the player's camp, resolved once at mission setup by
+`App::Core::resolve_defense_reference` and carried on each spawned unit as the
+`AssaultWaveComponent` march target. The resolution is ordered so the camp, not the
+army's current sprawl, wins: the player's barracks, else the centre of the player's
+other halls, else the centre of the player's troops. Walls and gates are never
+anchors — a rampart's centroid sits on the camp's edge, not in it — and averaging
+every owned entity lets a stray scout or a herd of civilians drag the target off the
+camp entirely.
+
+The march target is a floor, not a leash. Once moving, `AssaultBehavior` prefers a
+live target — the nearest visible enemy troop, then any player building or commander
+— and only falls back to the baked march point when it can see nothing at all. See
+`docs/AI_ARCHITECTURE.md` for how the wave handles fortifications on the way in.
+
 ```json
 "waves": [
   {
