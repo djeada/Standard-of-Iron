@@ -128,7 +128,12 @@ auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegist
   for (ShieldFormationPose const pose : {ShieldFormationPose::GuardDefault,
                                          ShieldFormationPose::RomanFront,
                                          ShieldFormationPose::RomanTop,
-                                         ShieldFormationPose::CarthageFront}) {
+                                         ShieldFormationPose::RomanLeft,
+                                         ShieldFormationPose::RomanRight,
+                                         ShieldFormationPose::RomanRear,
+                                         ShieldFormationPose::CarthageFront,
+                                         ShieldFormationPose::CarthageLeft,
+                                         ShieldFormationPose::CarthageRight}) {
     push_guard_key(catalog.core_keys, pose, k_anim_frame_count - 1U);
   }
   push_anim_key(catalog.core_keys, PoseIntent::Construct, CombatAnimPhase::Idle, 0, 0);

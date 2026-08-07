@@ -168,7 +168,7 @@ add_library(
     systems/save_storage.cpp
     systems/nation_registry.cpp
     systems/nation_loader.cpp
-    systems/defense_formation_service.cpp
+    systems/defensive_unit_layout_service.cpp
     systems/formation_combat_geometry.cpp
     formation/formation_roles.cpp
     formation/army_formation_types.cpp

@@ -157,6 +157,7 @@ void reset_humanoid_animation_state(
       .hold_requested = presentation.hold_requested,
       .hold_exit_requested = presentation.hold_exit_requested,
       .raw_guard_requested = presentation.guard_requested,
+      .defensive_layout_locked = presentation.defensive_layout_locked,
       .hold_entry_progress = presentation.hold_entry_progress,
       .hold_exit_progress = presentation.hold_exit_progress,
       .previous_hold_pose_progress =
@@ -214,6 +215,7 @@ void apply_presentation_sample(
   anim.cast_kind = presentation.cast == Engine::Core::CreatureCastPresentation::Fireball
                        ? CastVisualKind::Fireball
                        : CastVisualKind::None;
+  anim.is_defensive_layout_locked = presentation.defensive_layout_locked;
   anim.is_hit_reacting = presentation.is_hit_reacting;
   anim.hit_reaction_intensity = presentation.hit_reaction_intensity;
   anim.hit_recoil_x = presentation.hit_recoil_x;

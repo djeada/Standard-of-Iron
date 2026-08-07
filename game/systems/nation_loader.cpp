@@ -145,13 +145,13 @@ parse_doctrine_id(const QJsonObject& obj) -> std::optional<FormationDoctrineId> 
   return std::nullopt;
 }
 
-[[nodiscard]] auto parse_defense_formation(const QJsonObject& obj)
-    -> std::optional<Game::Systems::DefenseFormationProfile> {
+[[nodiscard]] auto parse_defensive_unit_layout(const QJsonObject& obj)
+    -> std::optional<Game::Systems::DefensiveUnitLayoutProfile> {
   if (obj.isEmpty()) {
     return std::nullopt;
   }
 
-  Game::Systems::DefenseFormationProfile profile{};
+  Game::Systems::DefensiveUnitLayoutProfile profile{};
   profile.id = read_string(obj, "id", QStringLiteral("shield_wall")).toStdString();
   profile.display_name =
       read_string(obj, "display_name", QString::fromStdString(profile.id))
@@ -168,13 +168,6 @@ parse_doctrine_id(const QJsonObject& obj) -> std::optional<FormationDoctrineId> 
     return std::nullopt;
   }
 
-  profile.min_units = read_int_opt(obj, "min_units").value_or(profile.min_units);
-  profile.max_units_per_rank =
-      read_int_opt(obj, "max_units_per_rank").value_or(profile.max_units_per_rank);
-  profile.rank_spacing =
-      read_float_opt(obj, "rank_spacing").value_or(profile.rank_spacing);
-  profile.file_spacing =
-      read_float_opt(obj, "file_spacing").value_or(profile.file_spacing);
   profile.form_seconds =
       read_float_opt(obj, "form_seconds").value_or(profile.form_seconds);
   profile.break_seconds =
@@ -203,11 +196,6 @@ parse_doctrine_id(const QJsonObject& obj) -> std::optional<FormationDoctrineId> 
                                          .value_or(profile.attack_output_multiplier);
   profile.frontal_arc_degrees =
       read_float_opt(obj, "frontal_arc_degrees").value_or(profile.frontal_arc_degrees);
-  profile.cohesion_radius =
-      read_float_opt(obj, "cohesion_radius").value_or(profile.cohesion_radius);
-  profile.min_cohesion_ratio =
-      read_float_opt(obj, "min_cohesion_ratio").value_or(profile.min_cohesion_ratio);
-
   return profile;
 }
 
@@ -490,8 +478,8 @@ auto NationLoader::load_from_file(const QString& path) -> std::optional<Nation> 
   if (auto doctrine = parse_doctrine_id(root)) {
     nation.doctrine = *doctrine;
   }
-  nation.defense_formation =
-      parse_defense_formation(ensure_object(root.value("defense_formation")));
+  nation.defensive_unit_layout =
+      parse_defensive_unit_layout(ensure_object(root.value("defensive_unit_layout")));
   nation.playable = read_bool(root, "playable", nation.playable);
   nation.has_economy = read_bool(root, "has_economy", nation.has_economy);
   nation.ai_profile =

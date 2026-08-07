@@ -15,7 +15,6 @@
 #include "combat_status_effect_system.h"
 #include "combat_system.h"
 #include "commander_system.h"
-#include "defense_formation_service.h"
 #include "engagement_slot_system.h"
 #include "gate_system.h"
 #include "gather_loop_system.h"
@@ -49,7 +48,6 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<MovementSystem>());
   world.add_system(std::make_unique<PatrolSystem>());
   world.add_system(std::make_unique<GuardSystem>());
-  world.add_system(std::make_unique<DefenseFormationSystem>());
   world.add_system(std::make_unique<Game::Formation::ArmyFormationRuntime>());
   world.add_system(std::make_unique<Game::Formation::UnitLayoutStateSystem>());
 

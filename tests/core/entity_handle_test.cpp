@@ -328,4 +328,63 @@ TEST(WorldIterationTest, ForEachVisitsExactlyTheLiveEntities) {
   EXPECT_EQ(world.entity_count(), 1U);
 }
 
+TEST(RenderSnapshotTest, CarriesTheUnitLayoutStateTheRendererDrawsFrom) {
+  World world;
+  world.request_render_snapshots();
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  auto* layout = entity->add_component<Engine::Core::UnitLayoutStateComponent>();
+  layout->state = 1U;
+  layout->phase = 1U;
+  layout->layout_id = 21U;
+  layout->transition_progress = 1.0F;
+  EntityID const id = entity->get_id();
+
+  world.update(1.0F / 60.0F);
+  auto snapshot = world.acquire_render_snapshot();
+  ASSERT_NE(snapshot, nullptr);
+  auto* copied = snapshot->get_entity(id);
+  ASSERT_NE(copied, nullptr);
+  auto const* copied_layout =
+      copied->get_component<Engine::Core::UnitLayoutStateComponent>();
+  ASSERT_NE(copied_layout, nullptr)
+      << "the renderer cannot select a defensive layout it cannot see";
+  EXPECT_EQ(copied_layout->state, 1U);
+  EXPECT_EQ(copied_layout->layout_id, 21U);
+}
+
+TEST(RenderSnapshotTest, RefreshesWhenTheUnitLayoutStateChanges) {
+  World world;
+  world.request_render_snapshots();
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  auto* layout = entity->add_component<Engine::Core::UnitLayoutStateComponent>();
+  layout->layout_id = 20U;
+  layout->state = 0U;
+  EntityID const id = entity->get_id();
+
+  world.update(1.0F / 60.0F);
+  ASSERT_EQ(world.acquire_render_snapshot()
+                ->get_entity(id)
+                ->get_component<Engine::Core::UnitLayoutStateComponent>()
+                ->layout_id,
+            20U);
+
+  layout->layout_id = 21U;
+  layout->state = 1U;
+  world.update(1.0F / 60.0F);
+
+  auto const* refreshed = world.acquire_render_snapshot()
+                              ->get_entity(id)
+                              ->get_component<Engine::Core::UnitLayoutStateComponent>();
+  ASSERT_NE(refreshed, nullptr);
+  EXPECT_EQ(refreshed->layout_id, 21U)
+      << "a reused snapshot entity kept a stale layout, so the shell never appeared";
+  EXPECT_EQ(refreshed->state, 1U);
+}
+
 } // namespace
