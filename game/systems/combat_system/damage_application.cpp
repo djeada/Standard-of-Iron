@@ -475,7 +475,9 @@ void begin_death_sequence(Engine::Core::Entity* target,
     return;
   }
 
-  auto const profile = resolve_death_profile(unit);
+  auto const profile = target->has_component<Engine::Core::WildlifeComponent>()
+                           ? Engine::Core::DeathSequenceProfile::Horse
+                           : resolve_death_profile(unit);
   auto const variant = resolve_death_variant(target, attacker, profile);
   apply_death_sequence(*death, profile, variant);
 }

@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <numbers>
 #include <span>
 #include <string_view>
 #include <vector>
@@ -55,7 +56,7 @@ constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
      false,
      WolfGait::Walk},
     {{"run", 14U, 26.0F, true}, 1.0F, 0.0F, 0.25F, false, false, false, WolfGait::Run},
-    {{"bite", 18U, 24.0F, true},
+    {{"bite", 18U, 24.0F, false},
      0.0F,
      0.55F,
      1.0F,
@@ -84,9 +85,11 @@ void bake_wolf_clip_frame(std::size_t clip_index,
                           std::vector<QMatrix4x4>* out_socket_transforms) {
   (void)out_socket_transforms;
   const WolfClipSpec& clip = k_wolf_clips[clip_index];
-  float const phase =
-      static_cast<float>(frame_index) /
-      static_cast<float>(std::max<std::uint32_t>(clip.desc.frame_count, 1U));
+  std::uint32_t const phase_divisor =
+      clip.desc.loops ? clip.desc.frame_count
+                      : std::max<std::uint32_t>(clip.desc.frame_count, 2U) - 1U;
+  float const phase = static_cast<float>(frame_index) /
+                      static_cast<float>(std::max<std::uint32_t>(phase_divisor, 1U));
 
   WolfDrive drive;
   drive.stride_phase = phase;
@@ -95,7 +98,17 @@ void bake_wolf_clip_frame(std::size_t clip_index,
   drive.ear_pin = clip.ear_pin;
   drive.gait = clip.gait;
   if (clip.bites) {
-    drive.lunge = std::max(0.0F, std::sin(phase * 6.28318530718F));
+    constexpr float k_contact_phase = 0.34F;
+    auto smoothstep = [](float value) {
+      float const t = std::clamp(value, 0.0F, 1.0F);
+      return t * t * (3.0F - (2.0F * t));
+    };
+    float const windup = smoothstep(phase / k_contact_phase);
+    float const recovery =
+        1.0F - smoothstep((phase - k_contact_phase) / (1.0F - k_contact_phase));
+    drive.lunge = windup * recovery;
+    drive.jaw_open = std::sin(std::numbers::pi_v<float> *
+                              std::clamp(phase / k_contact_phase, 0.0F, 1.0F));
     drive.stride_phase = 0.0F;
   }
   if (clip.collapses) {
@@ -104,32 +117,6 @@ void bake_wolf_clip_frame(std::size_t clip_index,
   }
 
   RigPose pose = wolf_pose(drive);
-  if (clip.collapses) {
-    float const drop = drive.collapse;
-    auto sink = [drop](QVector3D& p) {
-      p.setY(p.y() * (1.0F - (drop * 0.78F)));
-      p.setX(p.x() + (drop * 0.20F));
-    };
-    sink(pose.root);
-    sink(pose.body_rear);
-    sink(pose.body_front);
-    for (auto& leg : pose.legs) {
-      sink(leg.shoulder);
-      sink(leg.knee);
-      sink(leg.foot);
-      sink(leg.toe);
-    }
-    sink(pose.withers);
-    sink(pose.poll);
-    sink(pose.muzzle);
-    sink(pose.ear_base_l);
-    sink(pose.ear_tip_l);
-    sink(pose.ear_base_r);
-    sink(pose.ear_tip_r);
-    sink(pose.tail_base);
-    sink(pose.tail_mid);
-    sink(pose.tail_tip);
-  }
 
   BonePalette palette{};
   evaluate_wildlife_skeleton(pose, palette);

@@ -1,0 +1,560 @@
+{
+  "id": "wolf_attack",
+  "title": "WOLVES ON THE FOLD",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.4
+  },
+  "shots": [
+    {
+      "name": "village",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 1.0,
+      "duration": 3.0,
+      "focus": {
+        "mode": "point",
+        "point": [-14, 0.0, 0],
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 27,
+          "pitch": 11,
+          "yaw": 70,
+          "fov": 42,
+          "height": 2.2
+        },
+        {
+          "time": 3.0,
+          "distance": 23,
+          "pitch": 13,
+          "yaw": 88,
+          "fov": 42,
+          "height": 2.1,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "A VILLAGE AT THE EDGE OF THE FIELDS"
+    },
+    {
+      "name": "at_work",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 3.2,
+      "duration": 2.6,
+      "focus": {
+        "mode": "group",
+        "group": "villagers",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.5,
+          "pitch": 9,
+          "yaw": 316,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 2.6,
+          "distance": 7.5,
+          "pitch": 11,
+          "yaw": 336,
+          "fov": 40,
+          "height": 1.1,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ITS PEOPLE ARE IN THE OPEN"
+    },
+    {
+      "name": "the_pack",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 4.4,
+      "duration": 1.9,
+      "focus": {
+        "mode": "point",
+        "point": [16, 0.0, 6],
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 13,
+          "pitch": 7,
+          "yaw": 300,
+          "fov": 40,
+          "height": 1.0
+        },
+        {
+          "time": 1.9,
+          "distance": 8.5,
+          "pitch": 9,
+          "yaw": 322,
+          "fov": 40,
+          "height": 0.9,
+          "ease": "out"
+        }
+      ],
+      "caption": "SOMETHING COMES OUT OF THE EAST"
+    },
+    {
+      "name": "they_strike",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 6.05,
+      "duration": 1.2,
+      "slow_motion": 2.2,
+      "shake": 0.018,
+      "focus": {
+        "mode": "point",
+        "point": [11.5, 0.0, 4.5],
+        "smoothing": 0.15
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 6.2,
+          "pitch": 8,
+          "yaw": 312,
+          "fov": 38,
+          "height": 1.0,
+          "roll": -2
+        },
+        {
+          "time": 2.64,
+          "distance": 5.0,
+          "pitch": 11,
+          "yaw": 334,
+          "fov": 38,
+          "height": 0.95,
+          "roll": 2,
+          "ease": "linear"
+        }
+      ],
+      "caption": "WOLVES",
+      "transition": {
+        "type": "flash",
+        "duration": 0.16
+      }
+    },
+    {
+      "name": "mauled",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 8.4,
+      "duration": 2.4,
+      "focus": {
+        "mode": "point",
+        "point": [11, 0.0, 4.5],
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 5.6,
+          "pitch": 9,
+          "yaw": 330,
+          "fov": 40,
+          "height": 0.95
+        },
+        {
+          "time": 2.4,
+          "distance": 4.6,
+          "pitch": 12,
+          "yaw": 310,
+          "fov": 40,
+          "height": 0.9,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "a_death",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 10.55,
+      "duration": 1.6,
+      "slow_motion": 2.0,
+      "shake": 0.012,
+      "focus": {
+        "mode": "point",
+        "point": [10, 0.0, 4.5],
+        "smoothing": 0.15
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 5.2,
+          "pitch": 10,
+          "yaw": 322,
+          "fov": 38,
+          "height": 0.95
+        },
+        {
+          "time": 3.0,
+          "distance": 4.3,
+          "pitch": 13,
+          "yaw": 344,
+          "fov": 38,
+          "height": 0.85,
+          "ease": "linear"
+        }
+      ],
+      "caption": "THEY CANNOT HOLD THEM OFF",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.3
+      }
+    },
+    {
+      "name": "turn_out",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 13.6,
+      "duration": 2.2,
+      "focus": {
+        "mode": "group",
+        "group": "riders",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12,
+          "pitch": 9,
+          "yaw": 122,
+          "fov": 40,
+          "height": 1.4
+        },
+        {
+          "time": 2.2,
+          "distance": 9.5,
+          "pitch": 11,
+          "yaw": 100,
+          "fov": 40,
+          "height": 1.3,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE WATCH TURNS OUT",
+      "transition": {
+        "type": "whip",
+        "duration": 0.2
+      }
+    },
+    {
+      "name": "the_charge",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 15.75,
+      "duration": 2.75,
+      "shake": 0.012,
+      "focus": {
+        "mode": "group",
+        "group": "riders",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 11,
+          "pitch": 7,
+          "yaw": 304,
+          "fov": 42,
+          "height": 1.3
+        },
+        {
+          "time": 2.6,
+          "distance": 8.0,
+          "pitch": 9,
+          "yaw": 332,
+          "fov": 42,
+          "height": 1.2,
+          "ease": "linear"
+        }
+      ],
+      "caption": "RIDE"
+    },
+    {
+      "name": "impact",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 17.3,
+      "duration": 1.3,
+      "slow_motion": 2.2,
+      "shake": 0.02,
+      "focus": {
+        "mode": "point",
+        "point": [14, 0.0, 4.5],
+        "smoothing": 0.15
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 7.0,
+          "pitch": 9,
+          "yaw": 318,
+          "fov": 38,
+          "height": 1.0,
+          "roll": 2
+        },
+        {
+          "time": 3.08,
+          "distance": 5.5,
+          "pitch": 12,
+          "yaw": 340,
+          "fov": 38,
+          "height": 0.95,
+          "roll": -2,
+          "ease": "linear"
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.16
+      }
+    },
+    {
+      "name": "run_them_down",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 18.6,
+      "duration": 2.6,
+      "focus": {
+        "mode": "group",
+        "group": "riders",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.0,
+          "pitch": 10,
+          "yaw": 328,
+          "fov": 40,
+          "height": 1.1
+        },
+        {
+          "time": 2.6,
+          "distance": 7.0,
+          "pitch": 13,
+          "yaw": 350,
+          "fov": 40,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE PACK BREAKS"
+    },
+    {
+      "name": "after",
+      "scenario": "promo_wolf_attack",
+      "seed": 101,
+      "start": 27.5,
+      "duration": 4.2,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0.0, 4],
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10,
+          "pitch": 10,
+          "yaw": 96,
+          "fov": 40,
+          "height": 1.6
+        },
+        {
+          "time": 4.2,
+          "distance": 28,
+          "pitch": 14,
+          "yaw": 76,
+          "fov": 40,
+          "height": 2.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "STANDARD OF IRON"
+    }
+  ],
+  "grade": {
+    "contrast": 1.18,
+    "saturation": 1.26,
+    "brightness": 0.02,
+    "gamma": 1.0,
+    "grain": 2,
+    "vignette": 0.18,
+    "sharpen": 0.85
+  },
+  "music": "assets/audio/music/combat/combat_cavalry_flank_fast.ogg",
+  "music_start": 0.0,
+  "sfx": [
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_howl_distant.ogg",
+      "at": 0.35,
+      "gain": 1.3
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_growl_low.ogg",
+      "at": 4.6,
+      "gain": 1.95
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_pack_attack.ogg",
+      "at": 6.45,
+      "gain": 1.45
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 7.16,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/orders/run_kit_rattle.ogg",
+      "at": 7.53,
+      "gain": 1.35
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 8.19,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 9.25,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 9.81,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 10.88,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 11.78,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 12.44,
+      "gain": 3.6
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 13.38,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 13.91,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/orders/attack_horn_stab.ogg",
+      "at": 13.93,
+      "gain": 2.2
+    },
+    {
+      "file": "assets/audio/sfx/orders/run_kit_rattle.ogg",
+      "at": 14.23,
+      "gain": 1.2
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 14.38,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 14.91,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 15.41,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_cavalry_charge.ogg",
+      "at": 15.58,
+      "gain": 1.55
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 15.85,
+      "gain": 3.6
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 16.4,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
+      "at": 16.58,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 17.26,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 17.96,
+      "gain": 1.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/numidian_cavalry_chase.ogg",
+      "at": 20.73,
+      "gain": 1.2
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 21.06,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 21.55,
+      "gain": 1.7
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 21.93,
+      "gain": 1.5
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_snarl_bark.ogg",
+      "at": 22.25,
+      "gain": 1.4
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 22.95,
+      "gain": 1.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/soldiers_victory_cheer.ogg",
+      "at": 23.53,
+      "gain": 1.1
+    }
+  ]
+}

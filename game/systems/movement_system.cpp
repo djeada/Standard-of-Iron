@@ -355,6 +355,10 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
     return false;
   }
 
+  if (opponent->get_component<Engine::Core::CommanderComponent>() == nullptr) {
+    return false;
+  }
+
   auto const* opponent_attack =
       opponent->get_component<Engine::Core::AttackComponent>();
   if (opponent_attack == nullptr || !opponent_attack->in_melee_lock ||

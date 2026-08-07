@@ -82,6 +82,23 @@ auto resolve_draw_state(const DrawContext& ctx, float top_speed) -> DrawState {
     state.alert = wildlife->behavior == Game::Wildlife::Behavior::Flee ||
                   wildlife->behavior == Game::Wildlife::Behavior::Stalk ||
                   wildlife->alarm_timer > 0.0F;
+    if (wildlife->bite_timer > 0.0F) {
+      constexpr float k_bite_seconds =
+          Engine::Core::WildlifeComponent::k_bite_animation_seconds;
+      state.bite_progress =
+          std::clamp(1.0F - (wildlife->bite_timer / k_bite_seconds), 0.0F, 1.0F);
+    }
+  }
+
+  if (const auto* death =
+          ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()) {
+    if (death->state == Engine::Core::DeathSequenceState::DeadHold) {
+      state.dead = true;
+      state.death_progress = 1.0F;
+    } else {
+      state.death_progress = std::clamp(
+          death->state_time / std::max(death->state_duration, 0.001F), 0.0F, 1.0F);
+    }
   }
 
   float speed = 0.0F;

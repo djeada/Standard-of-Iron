@@ -25,6 +25,7 @@ enum class HumanoidClipProfile : std::uint8_t {
 };
 
 enum class AttackClipFamily : std::uint8_t {
+  Unarmed,
   Sword,
   Spear,
   Bow
@@ -154,7 +155,11 @@ inline constexpr std::uint16_t k_humanoid_showcase_side_aerial_clip = 42U;
 inline constexpr std::uint16_t k_humanoid_showcase_sword_flourish_clip = 43U;
 inline constexpr std::uint16_t k_humanoid_showcase_spear_throw_clip = 44U;
 inline constexpr std::uint16_t k_humanoid_showcase_clip_count = 6U;
-inline constexpr std::uint16_t k_humanoid_clip_count = 45U;
+inline constexpr std::uint16_t k_humanoid_unarmed_jab_clip = 45U;
+inline constexpr std::uint16_t k_humanoid_unarmed_cross_clip = 46U;
+inline constexpr std::uint16_t k_humanoid_unarmed_hook_clip = 47U;
+inline constexpr std::uint8_t k_humanoid_unarmed_variant_count = 3U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 48U;
 
 inline constexpr float k_humanoid_idle_breath_cycle_time = 8.0F;
 inline constexpr std::uint32_t k_humanoid_idle_breath_frames = 90U;
@@ -258,7 +263,7 @@ humanoid_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::Walk)] = k_humanoid_walk_clip;
   t[state_index(StateId::Run)] = k_humanoid_run_clip;
   t[state_index(StateId::Hold)] = k_humanoid_hold_clip;
-  t[state_index(StateId::AttackMelee)] = k_humanoid_hold_clip;
+  t[state_index(StateId::AttackMelee)] = k_humanoid_unarmed_jab_clip;
   t[state_index(StateId::AttackRanged)] = k_humanoid_hold_clip;
   t[state_index(StateId::Die)] = k_humanoid_die_infantry_clip;
   t[state_index(StateId::Dead)] = k_humanoid_dead_infantry_clip;
@@ -280,6 +285,7 @@ humanoid_variant_count_table() noexcept -> std::array<std::uint8_t, state_count(
   t[state_index(StateId::Idle)] = k_humanoid_idle_variant_count;
   t[state_index(StateId::AttackSword)] = k_humanoid_attack_sword_variant_count;
   t[state_index(StateId::AttackSpear)] = k_humanoid_attack_spear_variant_count;
+  t[state_index(StateId::AttackMelee)] = k_humanoid_unarmed_variant_count;
   t[state_index(StateId::Die)] = k_humanoid_infantry_death_variant_count;
   t[state_index(StateId::Dead)] = k_humanoid_infantry_death_variant_count;
   return t;

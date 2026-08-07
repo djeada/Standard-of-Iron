@@ -546,11 +546,15 @@ void HumanoidPoseController::bow_melee_strike(float attack_phase) {
 }
 
 void HumanoidPoseController::melee_strike(float strike_phase) {
+  unarmed_strike(strike_phase, 0U);
+}
+
+void HumanoidPoseController::unarmed_strike(float strike_phase, std::uint8_t variant) {
   auto const sample = Animation::resolve_humanoid_weapon_attack_pose(
       weapon_attack_pose_inputs(Animation::HumanoidWeaponAttackKind::BasicMeleeStrike,
                                 m_anim_ctx,
                                 strike_phase,
-                                0U,
+                                variant,
                                 1.0F));
   apply_weapon_attack_sample(*this, m_pose, sample);
 }

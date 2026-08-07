@@ -221,10 +221,12 @@ auto world_prop_type_from_string(const QString& prop_type)
   if (normalized == QStringLiteral("boulder")) {
     return Game::Map::WorldProp::Type::Boulder;
   }
-  if (normalized == QStringLiteral("pine_tree")) {
+  if (normalized == QStringLiteral("pine_tree") ||
+      normalized == QStringLiteral("pine")) {
     return Game::Map::WorldProp::Type::PineTree;
   }
-  if (normalized == QStringLiteral("olive_tree")) {
+  if (normalized == QStringLiteral("olive_tree") ||
+      normalized == QStringLiteral("olive")) {
     return Game::Map::WorldProp::Type::OliveTree;
   }
   if (normalized == QStringLiteral("plant")) {
@@ -239,6 +241,9 @@ auto world_prop_type_from_string(const QString& prop_type)
   if (normalized == QStringLiteral("statue")) {
     return Game::Map::WorldProp::Type::Statue;
   }
+
+  qWarning() << "Arena: unknown world prop type" << prop_type
+             << "- falling back to a fire camp";
   return Game::Map::WorldProp::Type::FireCamp;
 }
 
@@ -593,7 +598,11 @@ void ArenaViewport::paintGL() {
     }
     Render::GL::render_healer_auras(m_renderer.get(), res, m_world.get());
     Render::GL::render_commander_auras(m_renderer.get(), res, m_world.get());
-    Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
+
+    if (m_scenario_runner == nullptr ||
+        !m_scenario_runner->definition().suppress_combat_dust) {
+      Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
+    }
     render_attack_range_rings(res);
     if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr) {
       Engine::Core::EntityID locked_target_id = 0;
@@ -678,6 +687,7 @@ void ArenaViewport::paintGL() {
   timings.overlays_ms = elapsed_phase_ms();
 
   if (capture_frame) {
+    stamp_capture_alpha_opaque();
     QImage const captured = m_capture_target->toImage();
     m_capture_target->release();
     if (context() != nullptr) {
@@ -3594,6 +3604,25 @@ void ArenaViewport::set_force_full_creature_lod(bool enabled) {
   m_force_full_creature_lod = enabled;
   if (m_renderer != nullptr) {
     m_renderer->set_force_full_creature_lod(enabled);
+  }
+}
+
+void ArenaViewport::stamp_capture_alpha_opaque() {
+  auto* functions = context() != nullptr ? context()->functions() : nullptr;
+  if (functions == nullptr) {
+    return;
+  }
+
+  const bool scissor_was_enabled = functions->glIsEnabled(GL_SCISSOR_TEST);
+  if (scissor_was_enabled) {
+    functions->glDisable(GL_SCISSOR_TEST);
+  }
+  functions->glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+  functions->glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+  functions->glClear(GL_COLOR_BUFFER_BIT);
+  functions->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  if (scissor_was_enabled) {
+    functions->glEnable(GL_SCISSOR_TEST);
   }
 }
 
