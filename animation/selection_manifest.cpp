@@ -1,6 +1,7 @@
 #include "selection_manifest.h"
 
 #include <algorithm>
+#include <array>
 #include <utility>
 
 namespace Animation {
@@ -169,23 +170,58 @@ auto resolve_combat_playback_layer_policy(
     return policy;
   }
 
-  if (inputs.phase == CombatTransactionPhase::Enter ||
-      inputs.phase == CombatTransactionPhase::Anticipation) {
-    if (inputs.selection_state_differs_from_base) {
+  float const stance_weight = 1.0F - policy.combat_weight;
+  if (inputs.selection_state_differs_from_base) {
+    if (stance_weight > k_combat_stance_blend_epsilon) {
       policy.full_body_source = PlaybackLayerSource::Base;
-      policy.full_body_weight = 1.0F - policy.combat_weight;
+      policy.full_body_weight = stance_weight;
     }
-  } else if (inputs.phase == CombatTransactionPhase::ExitBlend) {
-    if (inputs.selection_state_differs_from_base) {
-      policy.full_body_source = PlaybackLayerSource::Base;
-      policy.full_body_weight = 1.0F - policy.combat_weight;
-    } else if (inputs.action_state_differs_from_selection) {
-      policy.full_body_source = PlaybackLayerSource::Action;
-      policy.full_body_weight = policy.combat_weight;
-    }
+  } else if (inputs.phase == CombatTransactionPhase::ExitBlend &&
+             inputs.action_state_differs_from_selection) {
+    policy.full_body_source = PlaybackLayerSource::Action;
+    policy.full_body_weight = policy.combat_weight;
   }
 
   return policy;
+}
+
+auto resolve_locomotion_crossfade(const LocomotionCrossfadeInputs& inputs) noexcept
+    -> LocomotionCrossfade {
+  float const locomotion = std::clamp(inputs.locomotion_presence, 0.0F, 1.0F);
+  float const run = std::clamp(inputs.run_presence, 0.0F, 1.0F);
+
+  struct Candidate {
+    StateId state;
+    float weight;
+  };
+  std::array<Candidate, 3> const candidates{{
+      {StateId::Idle, 1.0F - locomotion},
+      {StateId::Walk, locomotion * (1.0F - run)},
+      {StateId::Run, locomotion * run},
+  }};
+
+  LocomotionCrossfade crossfade{};
+  crossfade.primary = inputs.resolved;
+  crossfade.secondary = inputs.resolved;
+
+  float primary_weight = 0.0F;
+  float secondary_weight = -1.0F;
+  for (auto const& candidate : candidates) {
+    if (candidate.state == crossfade.primary) {
+      primary_weight = candidate.weight;
+    } else if (candidate.weight > secondary_weight) {
+      secondary_weight = candidate.weight;
+      crossfade.secondary = candidate.state;
+    }
+  }
+
+  float const pair_total = primary_weight + std::max(0.0F, secondary_weight);
+  if (pair_total <= 1.0e-4F || crossfade.secondary == crossfade.primary) {
+    return crossfade;
+  }
+  crossfade.secondary_weight = std::max(0.0F, secondary_weight) / pair_total;
+  crossfade.active = crossfade.secondary_weight > k_locomotion_crossfade_epsilon;
+  return crossfade;
 }
 
 } // namespace Animation

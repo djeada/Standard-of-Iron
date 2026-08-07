@@ -98,6 +98,8 @@ signed_travel_alignment(float entity_forward_x,
 constexpr float k_reverse_gait_enter_alignment = -0.30F;
 constexpr float k_reverse_gait_exit_alignment = -0.05F;
 
+constexpr float k_locomotion_residual_blend = 0.02F;
+
 struct LocomotionTargets {
   float normalized_speed{0.0F};
   float locomotion_blend{0.0F};
@@ -247,6 +249,16 @@ struct LocomotionPoseProfile {
   return t * t * (3.0F - 2.0F * t);
 }
 
+constexpr float k_swing_tangent_ratio = 0.75F;
+
+[[nodiscard]] auto swing_travel(float t, float planted_fraction) noexcept -> float {
+  float const stance_slope = -k_swing_tangent_ratio * (1.0F - planted_fraction) /
+                             std::max(0.05F, planted_fraction);
+  float const t2 = t * t;
+  float const t3 = t2 * t;
+  return (stance_slope * ((2.0F * t3) - (3.0F * t2) + t)) + ((3.0F * t2) - (2.0F * t3));
+}
+
 [[nodiscard]] auto
 smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
   if (t <= start || t >= end) {
@@ -315,7 +327,7 @@ smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
                                    std::max(1.0e-4F, 1.0F - planted_fraction),
                                0.0F,
                                1.0F);
-    float const travel = 0.68F * smoothstep(t) + 0.32F * std::sqrt(t);
+    float const travel = swing_travel(t, planted_fraction);
     float const lift_curve = std::sin(t * std::numbers::pi_v<float>);
     float const landing_soften = smooth_pulse(t, 0.72F, 0.90F, 1.0F);
     z_pos = -foot_stride_length * 0.50F + (foot_stride_length * 1.00F) * travel;
@@ -471,24 +483,45 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
                                              inputs.tuning.turn_blend_tau);
   }
 
+  bool const has_locomotion = is_moving(inputs.movement_state);
+
+  sample.locomotion_presence = has_locomotion ? 1.0F : 0.0F;
+  sample.run_presence =
+      (has_locomotion && inputs.motion_state == HumanoidMotionState::Run) ? 1.0F : 0.0F;
+  if (previous.initialized) {
+    sample.locomotion_presence = smooth_towards(previous.locomotion_presence,
+                                                sample.locomotion_presence,
+                                                delta_time,
+                                                inputs.tuning.locomotion_blend_tau);
+    sample.run_presence = smooth_towards(previous.run_presence,
+                                         sample.run_presence,
+                                         delta_time,
+                                         inputs.tuning.run_blend_tau);
+  }
+
+  bool const residual_gait = !has_locomotion && previous.initialized &&
+                             sample.locomotion_presence > k_locomotion_residual_blend;
+  bool const gait_running = has_locomotion || residual_gait;
+
   sample.reverse_gait = previous.initialized ? previous.reverse_gait : false;
-  if (is_moving(inputs.movement_state)) {
+  if (has_locomotion) {
     if (sample.travel_alignment <= k_reverse_gait_enter_alignment) {
       sample.reverse_gait = true;
     } else if (sample.travel_alignment >= k_reverse_gait_exit_alignment) {
       sample.reverse_gait = false;
     }
-  } else {
+  } else if (!residual_gait) {
     sample.reverse_gait = false;
   }
 
-  if (previous.initialized && is_moving(inputs.movement_state)) {
+  if (previous.initialized && gait_running) {
     float const previous_cycle_time =
         (previous.cycle_time > 1.0e-4F) ? previous.cycle_time : targets.cycle_time;
-    sample.cycle_time = smooth_towards(previous_cycle_time,
-                                       targets.cycle_time,
-                                       delta_time,
-                                       inputs.tuning.cadence_blend_tau);
+    sample.cycle_time = has_locomotion ? smooth_towards(previous_cycle_time,
+                                                        targets.cycle_time,
+                                                        delta_time,
+                                                        inputs.tuning.cadence_blend_tau)
+                                       : previous_cycle_time;
     float const phase_direction = sample.reverse_gait ? -1.0F : 1.0F;
     sample.cycle_phase =
         wrap_locomotion_phase(previous.phase + phase_direction * delta_time /
@@ -523,10 +556,9 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
                                          inputs.tuning.acceleration_blend_tau);
   }
 
-  sample.stride_distance =
-      is_moving(inputs.movement_state)
-          ? sample.speed * sample.cycle_time * std::max(0.0F, sample.locomotion_blend)
-          : 0.0F;
+  sample.stride_distance = gait_running ? sample.speed * sample.cycle_time *
+                                              std::max(0.0F, sample.locomotion_blend)
+                                        : 0.0F;
 
   sample.persistent = previous;
   if (inputs.has_persistent_state && inputs.allow_persistent_update) {
@@ -543,6 +575,8 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
     sample.persistent.reverse_gait = sample.reverse_gait;
     sample.persistent.locomotion_blend = sample.locomotion_blend;
     sample.persistent.run_blend = sample.run_blend;
+    sample.persistent.locomotion_presence = sample.locomotion_presence;
+    sample.persistent.run_presence = sample.run_presence;
     sample.persistent.state = sample.state;
   }
 

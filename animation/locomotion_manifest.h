@@ -36,6 +36,9 @@ struct HumanoidLocomotionPersistentState {
   float filtered_travel_alignment{1.0F};
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
+
+  float locomotion_presence{0.0F};
+  float run_presence{0.0F};
   bool reverse_gait{false};
   HumanoidMotionState state{HumanoidMotionState::Idle};
 };
@@ -65,6 +68,8 @@ struct HumanoidLocomotionSample {
   float stride_distance{0.0F};
   float locomotion_blend{0.0F};
   float run_blend{0.0F};
+  float locomotion_presence{0.0F};
+  float run_presence{0.0F};
   float turn_amount{0.0F};
 
   float travel_alignment{1.0F};

@@ -67,12 +67,6 @@ auto single_body_radius(const Engine::Core::Entity& entity,
                         const Engine::Core::TransformComponent::Vec3& scale) noexcept
     -> float {
   float radius = std::max(0.05F, std::max(scale.x, scale.z) * 0.5F);
-  if (auto const* unit = entity.get_component<Engine::Core::UnitComponent>()) {
-    radius = std::max(
-        radius,
-        Game::Units::TroopConfig::instance().get_selection_ring_size(unit->spawn_type) *
-            0.5F);
-  }
   if (entity.has_component<Engine::Core::ElephantComponent>()) {
     float const visual_scale =
         std::max(0.05F, std::max(std::abs(scale.x), std::abs(scale.z)));

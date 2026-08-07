@@ -237,12 +237,15 @@ int main(int argc, char** argv) {
   static_assert(Render::Creature::k_humanoid_riding_sword_strike_clip == 21U);
   static_assert(Render::Creature::k_humanoid_riding_spear_thrust_clip == 22U);
   static_assert(Render::Creature::k_humanoid_die_infantry_clip == 23U);
-  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 26U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_left_clip == 27U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_right_clip == 28U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_overhead_clip == 29U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_thrust_clip == 30U);
-  static_assert(Render::Creature::k_humanoid_rpg_sword_finisher_clip == 31U);
+  static_assert(Render::Creature::k_humanoid_dead_infantry_clip ==
+                Render::Creature::k_humanoid_die_infantry_clip +
+                    Render::Creature::k_humanoid_infantry_death_variant_count);
+  static_assert(Render::Creature::k_humanoid_dead_mounted_clip == 30U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_left_clip == 31U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_slash_right_clip == 32U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_overhead_clip == 33U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_thrust_clip == 34U);
+  static_assert(Render::Creature::k_humanoid_rpg_sword_finisher_clip == 35U);
   std::filesystem::path out_dir = "assets/creatures";
   if (argc >= 2) {
     out_dir = argv[1];

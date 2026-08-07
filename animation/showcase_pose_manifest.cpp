@@ -6,87 +6,28 @@
 #include <numbers>
 #include <span>
 
+#include "rig/pose_fk.h"
+
 namespace Animation {
 
 namespace {
 
-struct Mat3 {
-  std::array<float, 9> m{1.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 1.0F};
-};
-
-[[nodiscard]] auto identity() noexcept -> Mat3 {
-  return Mat3{};
-}
-
-[[nodiscard]] auto rot_x(float radians) noexcept -> Mat3 {
-  float const c = std::cos(radians);
-  float const s = std::sin(radians);
-  return Mat3{{1.0F, 0.0F, 0.0F, 0.0F, c, -s, 0.0F, s, c}};
-}
-
-[[nodiscard]] auto rot_y(float radians) noexcept -> Mat3 {
-  float const c = std::cos(radians);
-  float const s = std::sin(radians);
-  return Mat3{{c, 0.0F, s, 0.0F, 1.0F, 0.0F, -s, 0.0F, c}};
-}
-
-[[nodiscard]] auto rot_z(float radians) noexcept -> Mat3 {
-  float const c = std::cos(radians);
-  float const s = std::sin(radians);
-  return Mat3{{c, -s, 0.0F, s, c, 0.0F, 0.0F, 0.0F, 1.0F}};
-}
-
-[[nodiscard]] auto multiply(const Mat3& a, const Mat3& b) noexcept -> Mat3 {
-  Mat3 out{};
-  for (int row = 0; row < 3; ++row) {
-    for (int col = 0; col < 3; ++col) {
-      float sum = 0.0F;
-      for (int k = 0; k < 3; ++k) {
-        sum += a.m[(row * 3) + k] * b.m[(k * 3) + col];
-      }
-      out.m[(row * 3) + col] = sum;
-    }
-  }
-  return out;
-}
-
-[[nodiscard]] auto transform(const Mat3& a, PoseVec3 v) noexcept -> PoseVec3 {
-  return {a.m[0] * v.x + a.m[1] * v.y + a.m[2] * v.z,
-          a.m[3] * v.x + a.m[4] * v.y + a.m[5] * v.z,
-          a.m[6] * v.x + a.m[7] * v.y + a.m[8] * v.z};
-}
-
-[[nodiscard]] auto add(PoseVec3 a, PoseVec3 b) noexcept -> PoseVec3 {
-  return {a.x + b.x, a.y + b.y, a.z + b.z};
-}
-
-[[nodiscard]] auto sub(PoseVec3 a, PoseVec3 b) noexcept -> PoseVec3 {
-  return {a.x - b.x, a.y - b.y, a.z - b.z};
-}
-
-[[nodiscard]] auto scaled(PoseVec3 a, float k) noexcept -> PoseVec3 {
-  return {a.x * k, a.y * k, a.z * k};
-}
-
-[[nodiscard]] auto radians(float degrees) noexcept -> float {
-  return degrees * (std::numbers::pi_v<float> / 180.0F);
-}
-
-[[nodiscard]] auto smoothstep(float t) noexcept -> float {
-  t = std::clamp(t, 0.0F, 1.0F);
-  return t * t * (3.0F - (2.0F * t));
-}
-
-[[nodiscard]] auto ramp(float phase, float start, float span) noexcept -> float {
-  return smoothstep((phase - start) / std::max(1.0e-4F, span));
-}
-
-struct ShowcaseLimbAim {
-  float pitch{0.0F};
-  float splay{0.0F};
-  float yaw{0.0F};
-  float bend{0.0F};
-};
+using PoseFk::add;
+using PoseFk::identity;
+using PoseFk::limb_segments;
+using PoseFk::LimbSegments;
+using PoseFk::Mat3;
+using PoseFk::multiply;
+using PoseFk::radians;
+using PoseFk::ramp;
+using PoseFk::rot_x;
+using PoseFk::rot_y;
+using PoseFk::rot_z;
+using PoseFk::scaled;
+using PoseFk::smoothstep;
+using PoseFk::sub;
+using PoseFk::transform;
+using ShowcaseLimbAim = PoseFk::LimbAim;
 
 struct ShowcaseKey {
   float t{0.0F};
@@ -1158,25 +1099,6 @@ blend_key(const ShowcaseKey& a, const ShowcaseKey& b, float u) noexcept -> Showc
     }
   }
   return keys.back();
-}
-
-struct LimbSegments {
-  PoseVec3 upper{};
-  PoseVec3 lower{};
-};
-
-[[nodiscard]] auto limb_segments(const ShowcaseLimbAim& aim,
-                                 float side_sign,
-                                 float bend_sign,
-                                 const Mat3& pre) noexcept -> LimbSegments {
-  constexpr PoseVec3 k_down{0.0F, -1.0F, 0.0F};
-  Mat3 const base = multiply(
-      pre, multiply(rot_y(radians(aim.yaw)), rot_z(radians(aim.splay) * side_sign)));
-  LimbSegments out{};
-  out.upper = transform(multiply(base, rot_x(-radians(aim.pitch))), k_down);
-  out.lower = transform(
-      multiply(base, rot_x(-radians(aim.pitch + (bend_sign * aim.bend)))), k_down);
-  return out;
 }
 
 } // namespace

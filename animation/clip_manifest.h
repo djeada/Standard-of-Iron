@@ -129,27 +129,32 @@ inline constexpr std::uint16_t k_humanoid_riding_reining_clip = 19U;
 inline constexpr std::uint16_t k_humanoid_riding_bow_shot_clip = 20U;
 inline constexpr std::uint16_t k_humanoid_riding_sword_strike_clip = 21U;
 inline constexpr std::uint16_t k_humanoid_riding_spear_thrust_clip = 22U;
+
 inline constexpr std::uint16_t k_humanoid_die_infantry_clip = 23U;
-inline constexpr std::uint16_t k_humanoid_dead_infantry_clip = 24U;
-inline constexpr std::uint16_t k_humanoid_die_mounted_clip = 25U;
-inline constexpr std::uint16_t k_humanoid_dead_mounted_clip = 26U;
-inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_left_clip = 27U;
-inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_right_clip = 28U;
-inline constexpr std::uint16_t k_humanoid_rpg_sword_overhead_clip = 29U;
-inline constexpr std::uint16_t k_humanoid_rpg_sword_thrust_clip = 30U;
-inline constexpr std::uint16_t k_humanoid_rpg_sword_finisher_clip = 31U;
-inline constexpr std::uint16_t k_humanoid_archer_melee_clip = 32U;
-inline constexpr std::uint16_t k_humanoid_hold_spear_attack_clip = 33U;
-inline constexpr std::uint16_t k_humanoid_hold_bow_attack_clip = 34U;
-inline constexpr std::uint16_t k_humanoid_showcase_first_clip = 35U;
-inline constexpr std::uint16_t k_humanoid_showcase_jump_clip = 35U;
-inline constexpr std::uint16_t k_humanoid_showcase_front_flip_clip = 36U;
-inline constexpr std::uint16_t k_humanoid_showcase_handstand_clip = 37U;
-inline constexpr std::uint16_t k_humanoid_showcase_side_aerial_clip = 38U;
-inline constexpr std::uint16_t k_humanoid_showcase_sword_flourish_clip = 39U;
-inline constexpr std::uint16_t k_humanoid_showcase_spear_throw_clip = 40U;
+inline constexpr std::uint16_t k_humanoid_die_infantry_face_clip = 24U;
+inline constexpr std::uint16_t k_humanoid_die_infantry_side_clip = 25U;
+inline constexpr std::uint16_t k_humanoid_dead_infantry_clip = 26U;
+inline constexpr std::uint16_t k_humanoid_dead_infantry_face_clip = 27U;
+inline constexpr std::uint16_t k_humanoid_dead_infantry_side_clip = 28U;
+inline constexpr std::uint16_t k_humanoid_die_mounted_clip = 29U;
+inline constexpr std::uint16_t k_humanoid_dead_mounted_clip = 30U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_left_clip = 31U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_slash_right_clip = 32U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_overhead_clip = 33U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_thrust_clip = 34U;
+inline constexpr std::uint16_t k_humanoid_rpg_sword_finisher_clip = 35U;
+inline constexpr std::uint16_t k_humanoid_archer_melee_clip = 36U;
+inline constexpr std::uint16_t k_humanoid_hold_spear_attack_clip = 37U;
+inline constexpr std::uint16_t k_humanoid_hold_bow_attack_clip = 38U;
+inline constexpr std::uint16_t k_humanoid_showcase_first_clip = 39U;
+inline constexpr std::uint16_t k_humanoid_showcase_jump_clip = 39U;
+inline constexpr std::uint16_t k_humanoid_showcase_front_flip_clip = 40U;
+inline constexpr std::uint16_t k_humanoid_showcase_handstand_clip = 41U;
+inline constexpr std::uint16_t k_humanoid_showcase_side_aerial_clip = 42U;
+inline constexpr std::uint16_t k_humanoid_showcase_sword_flourish_clip = 43U;
+inline constexpr std::uint16_t k_humanoid_showcase_spear_throw_clip = 44U;
 inline constexpr std::uint16_t k_humanoid_showcase_clip_count = 6U;
-inline constexpr std::uint16_t k_humanoid_clip_count = 41U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 45U;
 
 inline constexpr float k_humanoid_idle_breath_cycle_time = 8.0F;
 inline constexpr std::uint32_t k_humanoid_idle_breath_frames = 90U;
@@ -164,6 +169,7 @@ inline constexpr std::uint8_t k_humanoid_idle_variant_count = 6U;
 inline constexpr std::uint8_t k_humanoid_attack_sword_variant_count = 3U;
 inline constexpr std::uint8_t k_humanoid_attack_spear_variant_count = 3U;
 inline constexpr std::uint8_t k_humanoid_riding_sword_variant_count = 1U;
+inline constexpr std::uint8_t k_humanoid_infantry_death_variant_count = 3U;
 
 inline constexpr std::uint16_t k_horse_idle_clip = 0U;
 inline constexpr std::uint16_t k_horse_walk_clip = 1U;
@@ -274,6 +280,8 @@ humanoid_variant_count_table() noexcept -> std::array<std::uint8_t, state_count(
   t[state_index(StateId::Idle)] = k_humanoid_idle_variant_count;
   t[state_index(StateId::AttackSword)] = k_humanoid_attack_sword_variant_count;
   t[state_index(StateId::AttackSpear)] = k_humanoid_attack_spear_variant_count;
+  t[state_index(StateId::Die)] = k_humanoid_infantry_death_variant_count;
+  t[state_index(StateId::Dead)] = k_humanoid_infantry_death_variant_count;
   return t;
 }
 

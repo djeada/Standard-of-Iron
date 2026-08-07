@@ -23,6 +23,7 @@
 #include "../horse/horse_motion.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
+#include "animation/death_pose_manifest.h"
 #include "animation/showcase_pose_manifest.h"
 #include "grip_axis.h"
 #include "humanoid_full_builder.h"
@@ -50,11 +51,6 @@ enum class BakerHoldType : std::uint8_t {
   None,
   Spear,
   Bow
-};
-enum class BakerDeathType : std::uint8_t {
-  None,
-  Infantry,
-  Mounted
 };
 enum class BakerRidingType : std::uint8_t {
   None,
@@ -126,7 +122,8 @@ struct HumanoidClipSpec {
   Render::GL::HumanoidMotionState state;
   BakerAttackType attack_type{BakerAttackType::None};
   std::uint8_t attack_variant{0};
-  BakerDeathType death_type{BakerDeathType::None};
+  Animation::HumanoidDeathCollapse death_collapse{
+      Animation::HumanoidDeathCollapse::None};
   BakerRidingType riding_type{BakerRidingType::None};
   BakerHoldType hold_type{BakerHoldType::None};
   BakerAmbientIdleType ambient_idle_type{BakerAmbientIdleType::None};
@@ -151,7 +148,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -164,7 +161,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::SitDown,
@@ -177,7 +174,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::Jump,
@@ -190,7 +187,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::RaiseWeapon,
@@ -203,7 +200,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::ShiftWeight,
@@ -216,7 +213,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::PlantFlag,
@@ -229,7 +226,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Walk,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -242,7 +239,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Run,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -255,7 +252,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Hold,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::Spear,
      BakerAmbientIdleType::None,
@@ -268,7 +265,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Hold,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::Bow,
      BakerAmbientIdleType::None,
@@ -281,7 +278,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -294,7 +291,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      1,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -307,7 +304,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      2,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -320,7 +317,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Spear,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -333,7 +330,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Spear,
      1,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -346,7 +343,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Spear,
      2,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -359,7 +356,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Bow,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -372,7 +369,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::Idle,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -385,7 +382,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::Charge,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -398,7 +395,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Hold,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::Reining,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -411,7 +408,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::BowShot,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -424,7 +421,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::SwordStrike,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -437,7 +434,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::SpearThrust,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -450,20 +447,75 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::Infantry,
+     Animation::HumanoidDeathCollapse::BackSprawl,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
      BakerShowcaseType::None,
-     20U,
-     24.0F,
+     Animation::humanoid_death_collapse_frames(
+         Animation::HumanoidDeathCollapse::BackSprawl),
+     Animation::k_humanoid_death_bake_fps,
+     1.0F,
+     false},
+    {"die_infantry_face",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::FacePlant,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     Animation::humanoid_death_collapse_frames(
+         Animation::HumanoidDeathCollapse::FacePlant),
+     Animation::k_humanoid_death_bake_fps,
+     1.0F,
+     false},
+    {"die_infantry_side",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::SideCrumple,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     Animation::humanoid_death_collapse_frames(
+         Animation::HumanoidDeathCollapse::SideCrumple),
+     Animation::k_humanoid_death_bake_fps,
      1.0F,
      false},
     {"dead_infantry",
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::Infantry,
+     Animation::HumanoidDeathCollapse::BackSprawl,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     1U,
+     1.0F,
+     1.0F,
+     true},
+    {"dead_infantry_face",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::FacePlant,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     1U,
+     1.0F,
+     1.0F,
+     true},
+    {"dead_infantry_side",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::SideCrumple,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -476,20 +528,21 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::Mounted,
+     Animation::HumanoidDeathCollapse::MountedUnseat,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
      BakerShowcaseType::None,
-     20U,
-     24.0F,
+     Animation::humanoid_death_collapse_frames(
+         Animation::HumanoidDeathCollapse::MountedUnseat),
+     Animation::k_humanoid_death_bake_fps,
      1.0F,
      false},
     {"dead_mounted",
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::Mounted,
+     Animation::HumanoidDeathCollapse::MountedUnseat,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -502,7 +555,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -515,7 +568,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      1,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -528,7 +581,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      3,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -541,7 +594,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      4,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -554,7 +607,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::Sword,
      5,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -567,7 +620,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::BowMelee,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -580,7 +633,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::SpearFromHold,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -593,7 +646,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Attacking,
      BakerAttackType::BowFromHold,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -607,7 +660,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -620,7 +673,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -633,7 +686,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -646,7 +699,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -659,7 +712,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -672,7 +725,7 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None,
      0,
-     BakerDeathType::None,
+     Animation::HumanoidDeathCollapse::None,
      BakerRidingType::None,
      BakerHoldType::None,
      BakerAmbientIdleType::None,
@@ -906,12 +959,20 @@ struct AuthoredSwordPoseKey {
 
 using AuthoredSwordPoseKeys = std::array<AuthoredSwordPoseKey, 6>;
 
+constexpr QVector3D k_rpg_sword_guard_right_hand{0.22F, 1.18F, 0.20F};
+constexpr QVector3D k_rpg_sword_guard_left_hand{-0.22F, 1.13F, 0.18F};
+constexpr QVector3D k_rpg_sword_guard_blade_dir{0.12F, 0.86F, 0.50F};
+
+auto rpg_sword_guard_key(float phase) -> AuthoredSwordPoseKey {
+  return {.phase = phase,
+          .right_hand = k_rpg_sword_guard_right_hand,
+          .left_hand = k_rpg_sword_guard_left_hand,
+          .blade_dir = k_rpg_sword_guard_blade_dir};
+}
+
 auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
   static const AuthoredSwordPoseKeys slash_left{{
-      {.phase = 0.00F,
-       .right_hand = {0.24F, 1.22F, 0.18F},
-       .left_hand = {-0.22F, 1.16F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(0.00F),
       {.phase = 0.16F,
        .right_hand = {0.46F, 1.44F, -0.26F},
        .left_hand = {-0.26F, 1.10F, 0.20F},
@@ -940,16 +1001,10 @@ auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
        .blade_dir = {-0.84F, -0.44F, 0.32F},
        .pelvis_delta = {0.00F, -0.04F, 0.10F},
        .shoulder_r_delta = {-0.08F, -0.08F, 0.14F}},
-      {.phase = 1.00F,
-       .right_hand = {0.22F, 1.16F, 0.24F},
-       .left_hand = {-0.22F, 1.12F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(1.00F),
   }};
   static const AuthoredSwordPoseKeys slash_right{{
-      {.phase = 0.00F,
-       .right_hand = {0.22F, 1.18F, 0.20F},
-       .left_hand = {-0.22F, 1.14F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(0.00F),
       {.phase = 0.16F,
        .right_hand = {-0.28F, 1.42F, -0.22F},
        .left_hand = {-0.26F, 1.10F, 0.20F},
@@ -980,16 +1035,10 @@ auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
        .blade_dir = {0.84F, -0.44F, 0.32F},
        .pelvis_delta = {0.00F, -0.04F, 0.08F},
        .shoulder_r_delta = {0.12F, -0.06F, 0.12F}},
-      {.phase = 1.00F,
-       .right_hand = {0.22F, 1.16F, 0.24F},
-       .left_hand = {-0.22F, 1.12F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(1.00F),
   }};
   static const AuthoredSwordPoseKeys overhead{{
-      {.phase = 0.00F,
-       .right_hand = {0.22F, 1.18F, 0.20F},
-       .left_hand = {-0.22F, 1.12F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(0.00F),
       {.phase = 0.18F,
        .right_hand = {0.18F, 1.58F, -0.32F},
        .left_hand = {-0.18F, 1.18F, 0.20F},
@@ -1016,16 +1065,10 @@ auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
        .right_hand = {-0.02F, 0.64F, 0.70F},
        .left_hand = {-0.06F, 0.90F, 0.54F},
        .blade_dir = {-0.10F, -0.78F, 0.62F}},
-      {.phase = 1.00F,
-       .right_hand = {0.22F, 1.14F, 0.24F},
-       .left_hand = {-0.22F, 1.10F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(1.00F),
   }};
   static const AuthoredSwordPoseKeys thrust{{
-      {.phase = 0.00F,
-       .right_hand = {0.20F, 1.16F, 0.18F},
-       .left_hand = {-0.22F, 1.12F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(0.00F),
       {.phase = 0.14F,
        .right_hand = {0.28F, 1.18F, -0.30F},
        .left_hand = {-0.18F, 1.08F, 0.18F},
@@ -1050,16 +1093,10 @@ auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
        .right_hand = {0.08F, 1.02F, 1.02F},
        .left_hand = {-0.04F, 1.00F, 0.58F},
        .blade_dir = {0.06F, 0.28F, 0.96F}},
-      {.phase = 1.00F,
-       .right_hand = {0.22F, 1.14F, 0.24F},
-       .left_hand = {-0.22F, 1.10F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(1.00F),
   }};
   static const AuthoredSwordPoseKeys finisher{{
-      {.phase = 0.00F,
-       .right_hand = {0.22F, 1.18F, 0.20F},
-       .left_hand = {-0.22F, 1.12F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(0.00F),
       {.phase = 0.18F,
        .right_hand = {0.26F, 1.68F, -0.42F},
        .left_hand = {-0.20F, 1.22F, 0.18F},
@@ -1085,10 +1122,7 @@ auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
        .right_hand = {-0.24F, 0.52F, 0.74F},
        .left_hand = {-0.08F, 0.82F, 0.54F},
        .blade_dir = {-0.14F, -0.86F, 0.48F}},
-      {.phase = 1.00F,
-       .right_hand = {0.22F, 1.12F, 0.24F},
-       .left_hand = {-0.22F, 1.08F, 0.18F},
-       .blade_dir = {0.12F, 0.86F, 0.50F}},
+      rpg_sword_guard_key(1.00F),
   }};
 
   switch (variant) {
@@ -1106,34 +1140,81 @@ auto rpg_sword_pose_keys(std::uint8_t variant) -> const AuthoredSwordPoseKeys& {
   }
 }
 
+auto slerp_dir(const QVector3D& from, const QVector3D& to, float t) -> QVector3D {
+  if (from.lengthSquared() < 1.0e-8F || to.lengthSquared() < 1.0e-8F) {
+    return blend_vec(from, to, t);
+  }
+  QVector3D const a = from.normalized();
+  QVector3D const b = to.normalized();
+  float const dot = std::clamp(QVector3D::dotProduct(a, b), -1.0F, 1.0F);
+  if (dot > 0.9995F) {
+    QVector3D const straight = blend_vec(a, b, t);
+    return straight.lengthSquared() > 1.0e-8F ? straight.normalized() : a;
+  }
+  QVector3D ortho = b - (a * dot);
+  if (ortho.lengthSquared() < 1.0e-8F) {
+
+    ortho = QVector3D::crossProduct(a, QVector3D(0.0F, 1.0F, 0.0F));
+    if (ortho.lengthSquared() < 1.0e-8F) {
+      ortho = QVector3D::crossProduct(a, QVector3D(1.0F, 0.0F, 0.0F));
+    }
+  }
+  ortho.normalize();
+  float const theta = std::acos(dot) * std::clamp(t, 0.0F, 1.0F);
+  return (a * std::cos(theta)) + (ortho * std::sin(theta));
+}
+
 auto sample_authored_sword_pose_key(const AuthoredSwordPoseKeys& keys,
                                     float phase) -> AuthoredSwordPoseKey {
   float const clamped = std::clamp(phase, 0.0F, 1.0F);
-  for (std::size_t i = 1; i < keys.size(); ++i) {
-    if (clamped <= keys[i].phase) {
-      auto const& from = keys[i - 1U];
-      auto const& to = keys[i];
-      float const span = std::max(0.001F, to.phase - from.phase);
-      float const raw_t = std::clamp((clamped - from.phase) / span, 0.0F, 1.0F);
-      float const t = raw_t * raw_t * (3.0F - 2.0F * raw_t);
-      return {
-          .phase = clamped,
-          .right_hand = blend_vec(from.right_hand, to.right_hand, t),
-          .left_hand = blend_vec(from.left_hand, to.left_hand, t),
-          .blade_dir = blend_vec(from.blade_dir, to.blade_dir, t).normalized(),
-          .pelvis_delta = blend_vec(from.pelvis_delta, to.pelvis_delta, t),
-          .shoulder_r_delta = blend_vec(from.shoulder_r_delta, to.shoulder_r_delta, t),
-          .shoulder_l_delta = blend_vec(from.shoulder_l_delta, to.shoulder_l_delta, t),
-          .neck_delta = blend_vec(from.neck_delta, to.neck_delta, t),
-          .head_delta = blend_vec(from.head_delta, to.head_delta, t),
-          .foot_r_delta = blend_vec(from.foot_r_delta, to.foot_r_delta, t),
-          .knee_r_delta = blend_vec(from.knee_r_delta, to.knee_r_delta, t),
-          .foot_l_delta = blend_vec(from.foot_l_delta, to.foot_l_delta, t),
-          .knee_l_delta = blend_vec(from.knee_l_delta, to.knee_l_delta, t),
-      };
-    }
+  std::size_t segment = 1U;
+  while (segment + 1U < keys.size() && clamped > keys[segment].phase) {
+    ++segment;
   }
-  return keys.back();
+  auto const& from = keys[segment - 1U];
+  auto const& to = keys[segment];
+  float const span = std::max(0.001F, to.phase - from.phase);
+  float const t = std::clamp((clamped - from.phase) / span, 0.0F, 1.0F);
+
+  using Channel = QVector3D AuthoredSwordPoseKey::*;
+  auto tangent = [&keys](std::size_t index, Channel channel) -> QVector3D {
+    if (index == 0U || index + 1U >= keys.size()) {
+      return {};
+    }
+    float const window =
+        std::max(0.001F, keys[index + 1U].phase - keys[index - 1U].phase);
+    return (keys[index + 1U].*channel - keys[index - 1U].*channel) / window;
+  };
+
+  float const t2 = t * t;
+  float const t3 = t2 * t;
+  float const h00 = (2.0F * t3) - (3.0F * t2) + 1.0F;
+  float const h10 = t3 - (2.0F * t2) + t;
+  float const h01 = (-2.0F * t3) + (3.0F * t2);
+  float const h11 = t3 - t2;
+  auto hermite = [&](Channel channel) -> QVector3D {
+    return (from.*channel * h00) + (tangent(segment - 1U, channel) * span * h10) +
+           (to.*channel * h01) + (tangent(segment, channel) * span * h11);
+  };
+
+  bool const terminal_segment = segment == 1U || segment + 1U == keys.size();
+  float const blade_t = terminal_segment ? (t * t * (3.0F - 2.0F * t)) : t;
+
+  return {
+      .phase = clamped,
+      .right_hand = hermite(&AuthoredSwordPoseKey::right_hand),
+      .left_hand = hermite(&AuthoredSwordPoseKey::left_hand),
+      .blade_dir = slerp_dir(from.blade_dir, to.blade_dir, blade_t),
+      .pelvis_delta = hermite(&AuthoredSwordPoseKey::pelvis_delta),
+      .shoulder_r_delta = hermite(&AuthoredSwordPoseKey::shoulder_r_delta),
+      .shoulder_l_delta = hermite(&AuthoredSwordPoseKey::shoulder_l_delta),
+      .neck_delta = hermite(&AuthoredSwordPoseKey::neck_delta),
+      .head_delta = hermite(&AuthoredSwordPoseKey::head_delta),
+      .foot_r_delta = hermite(&AuthoredSwordPoseKey::foot_r_delta),
+      .knee_r_delta = hermite(&AuthoredSwordPoseKey::knee_r_delta),
+      .foot_l_delta = hermite(&AuthoredSwordPoseKey::foot_l_delta),
+      .knee_l_delta = hermite(&AuthoredSwordPoseKey::knee_l_delta),
+  };
 }
 
 void apply_authored_rpg_sword_pose(Render::GL::HumanoidPoseController& ctrl,
@@ -1189,50 +1270,13 @@ void bake_hold_pose(BakeProfile profile,
   }
 }
 
-void bake_death_pose(BakerDeathType death_type,
+void bake_death_pose(Animation::HumanoidDeathCollapse collapse,
                      float blend,
                      Render::GL::HumanoidPose& pose) {
-  float const fall = std::clamp(blend, 0.0F, 1.0F);
-  float const eased = fall * fall * (3.0F - 2.0F * fall);
-  float const side_sign = (death_type == BakerDeathType::Mounted) ? -1.0F : 1.0F;
-
-  pose.pelvis_pos.setY(pose.pelvis_pos.y() - 0.42F * eased);
-  pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.36F * eased);
-
-  pose.neck_base.setY(pose.neck_base.y() - 0.58F * eased);
-  pose.neck_base.setZ(pose.neck_base.z() - 0.52F * eased);
-  pose.head_pos.setY(pose.head_pos.y() - 0.72F * eased);
-  pose.head_pos.setZ(pose.head_pos.z() - 0.64F * eased);
-  pose.head_pos.setX(pose.head_pos.x() + side_sign * 0.12F * eased);
-
-  pose.shoulder_l.setY(pose.shoulder_l.y() - 0.45F * eased);
-  pose.shoulder_r.setY(pose.shoulder_r.y() - 0.42F * eased);
-  pose.shoulder_l.setZ(pose.shoulder_l.z() - 0.28F * eased);
-  pose.shoulder_r.setZ(pose.shoulder_r.z() - 0.22F * eased);
-  pose.shoulder_l.setX(pose.shoulder_l.x() - side_sign * 0.08F * eased);
-  pose.shoulder_r.setX(pose.shoulder_r.x() - side_sign * 0.03F * eased);
-
-  pose.hand_l.setY(pose.hand_l.y() - 0.58F * eased);
-  pose.hand_r.setY(pose.hand_r.y() - 0.52F * eased);
-  pose.hand_l.setZ(pose.hand_l.z() - 0.40F * eased);
-  pose.hand_r.setZ(pose.hand_r.z() - 0.28F * eased);
-  pose.hand_l.setX(pose.hand_l.x() - side_sign * 0.14F * eased);
-  pose.hand_r.setX(pose.hand_r.x() - side_sign * 0.06F * eased);
-
-  pose.knee_l.setY(pose.knee_l.y() - 0.26F * eased);
-  pose.knee_r.setY(pose.knee_r.y() - 0.24F * eased);
-  pose.knee_l.setZ(pose.knee_l.z() + 0.18F * eased);
-  pose.knee_r.setZ(pose.knee_r.z() + 0.08F * eased);
-  pose.foot_l.setZ(pose.foot_l.z() + 0.28F * eased);
-  pose.foot_r.setZ(pose.foot_r.z() + 0.12F * eased);
-
-  if (death_type == BakerDeathType::Mounted) {
-    pose.pelvis_pos.setX(pose.pelvis_pos.x() + side_sign * 0.22F * eased);
-    pose.neck_base.setX(pose.neck_base.x() + side_sign * 0.26F * eased);
-    pose.head_pos.setX(pose.head_pos.x() + side_sign * 0.34F * eased);
-    pose.foot_l.setX(pose.foot_l.x() + side_sign * 0.16F * eased);
-    pose.foot_r.setX(pose.foot_r.x() + side_sign * 0.12F * eased);
-  }
+  Render::GL::HumanoidAnimationContext anim_ctx{};
+  anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
+  Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+  ctrl.apply_death_collapse(collapse, std::clamp(blend, 0.0F, 1.0F));
 }
 
 [[nodiscard]] auto
@@ -1296,7 +1340,8 @@ void bake_humanoid_clip_frame(BakeProfile profile,
 
   Render::GL::HumanoidPose pose{};
 
-  if (clip.death_type != BakerDeathType::None) {
+  if (clip.death_collapse != Animation::HumanoidDeathCollapse::None) {
+
     Render::GL::HumanoidGaitDescriptor gait{};
     gait.state = Render::GL::HumanoidMotionState::Idle;
     gait.cycle_time = 1.6F;
@@ -1305,8 +1350,9 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     gait.normalized_speed = 0.0F;
     Render::GL::HumanoidRendererBase::compute_locomotion_pose(
         0U, 0.0F, gait, variation, pose);
+
     float const death_blend = clip.loops ? 1.0F : phase;
-    bake_death_pose(clip.death_type, death_blend, pose);
+    bake_death_pose(clip.death_collapse, death_blend, pose);
   } else if (clip.attack_type != BakerAttackType::None) {
 
     Render::GL::HumanoidGaitDescriptor hold_gait{};
