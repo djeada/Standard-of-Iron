@@ -29,8 +29,8 @@ constexpr float k_far_distance_sq = 120.0F * 120.0F;
 constexpr float k_detail_distance_sq = 46.0F * 46.0F;
 constexpr float k_cull_radius = 0.8F;
 
-constexpr float k_carry_height = 1.02F;
-constexpr float k_carry_forward = 0.22F;
+constexpr float k_carry_height = 1.00F;
+constexpr float k_carry_forward = 0.30F;
 constexpr int k_max_visible_carriers = 8;
 
 constexpr QVector3D k_timber{0.47F, 0.32F, 0.18F};
@@ -105,29 +105,37 @@ void draw_log(ISubmitter& out,
               const QMatrix4x4& frame,
               std::uint32_t seed,
               bool detailed) {
-  constexpr float k_radius = 0.064F;
-  constexpr float k_half_length = 0.32F;
+  constexpr float k_radius = 0.062F;
+  constexpr float k_half_length = 0.40F;
+  constexpr std::array<std::array<float, 2>, 3> k_bundle{
+      {{-0.066F, 0.0F}, {0.066F, 0.0F}, {0.0F, 0.112F}}};
 
-  float const skew = jitter(seed, 0.06F);
-  QVector3D const left(-k_half_length, k_carry_height, k_carry_forward - skew);
-  QVector3D const right(k_half_length, k_carry_height, k_carry_forward + skew);
-
-  out.mesh(get_unit_cylinder(10),
-           Render::Geom::cylinder_between(frame, left, right, k_radius),
-           tint(k_timber, 0.86F + (rand01(seed * 3U) * 0.30F)));
-
-  if (!detailed) {
-    return;
-  }
   Mesh* const cube = get_unit_cube();
-  for (const auto& end : {left, right}) {
-    put(out,
-        cube,
-        frame,
-        end,
-        QVector3D(0.012F, k_radius * 0.82F, k_radius * 0.82F),
-        QVector3D(),
-        tint(k_timber_cut, 0.94F + (rand01(seed * 7U) * 0.12F)));
+  for (std::size_t i = 0; i < k_bundle.size(); ++i) {
+    auto const log_seed = static_cast<std::uint32_t>(seed + 17U + (i * 41U));
+    float const skew = jitter(log_seed, 0.035F);
+    float const half_length = k_half_length + jitter(log_seed * 3U, 0.045F);
+    float const y = k_carry_height + k_bundle.at(i).at(1);
+    float const z = k_carry_forward + k_bundle.at(i).at(0);
+    QVector3D const left(-half_length, y - skew, z);
+    QVector3D const right(half_length, y + skew, z);
+
+    out.mesh(get_unit_cylinder(10),
+             Render::Geom::cylinder_between(frame, left, right, k_radius),
+             tint(k_timber, 0.84F + (rand01(log_seed * 5U) * 0.32F)));
+
+    if (!detailed) {
+      continue;
+    }
+    for (const auto& end : {left, right}) {
+      put(out,
+          cube,
+          frame,
+          end,
+          QVector3D(0.013F, k_radius * 0.84F, k_radius * 0.84F),
+          QVector3D(),
+          tint(k_timber_cut, 0.94F + (rand01(log_seed * 7U) * 0.12F)));
+    }
   }
 }
 
@@ -139,10 +147,10 @@ void draw_block(ISubmitter& out,
   put(out,
       cube,
       frame,
-      QVector3D(0.0F, k_carry_height - 0.06F, k_carry_forward + 0.04F),
-      QVector3D(0.125F, 0.086F, 0.104F),
-      QVector3D(0.0F, jitter(seed, 9.0F), 0.0F),
-      tint(k_stone_light, 0.88F + (rand01(seed * 3U) * 0.20F)));
+      QVector3D(0.0F, k_carry_height - 0.02F, k_carry_forward + 0.02F),
+      QVector3D(0.170F, 0.110F, 0.130F),
+      QVector3D(0.0F, jitter(seed, 7.0F), 0.0F),
+      tint(k_stone_light, 0.84F + (rand01(seed * 3U) * 0.20F)));
 
   if (!detailed) {
     return;
@@ -152,8 +160,8 @@ void draw_block(ISubmitter& out,
       (stone != nullptr) ? stone : cube,
       frame,
       QVector3D(
-          jitter(seed * 5U, 0.05F), k_carry_height + 0.09F, k_carry_forward + 0.03F),
-      QVector3D(0.058F, 0.044F, 0.052F),
+          jitter(seed * 5U, 0.05F), k_carry_height + 0.14F, k_carry_forward + 0.01F),
+      QVector3D(0.072F, 0.052F, 0.064F),
       QVector3D(0.0F, rand01(seed * 11U) * 360.0F, 0.0F),
       tint(k_stone_dark, 1.05F + (rand01(seed * 13U) * 0.20F)));
 }
@@ -164,9 +172,18 @@ void draw_ore_basket(ISubmitter& out,
                      bool detailed) {
   Mesh* const basket = get_unit_tapered_cylinder(0.72F, 1.0F, 10);
   QMatrix4x4 body = frame;
-  body.translate(0.0F, k_carry_height - 0.09F, k_carry_forward + 0.02F);
-  body.scale(0.125F, 0.092F, 0.112F);
+  body.translate(0.0F, k_carry_height - 0.04F, k_carry_forward);
+  body.scale(0.175F, 0.125F, 0.155F);
   out.mesh(basket, body, tint(k_basket, 0.90F + (rand01(seed) * 0.22F)));
+
+  Mesh* const cube = get_unit_cube();
+  put(out,
+      cube,
+      frame,
+      QVector3D(0.0F, k_carry_height + 0.085F, k_carry_forward),
+      QVector3D(0.180F, 0.018F, 0.160F),
+      QVector3D(),
+      tint(k_basket, 0.70F));
 
   if (!detailed) {
     return;
@@ -174,20 +191,20 @@ void draw_ore_basket(ISubmitter& out,
   Mesh* const stone = Render::Geom::Stone::get();
   Mesh* const fallback = get_unit_sphere();
   constexpr std::array<std::array<float, 2>, 3> k_lumps{
-      {{-0.055F, -0.030F}, {0.050F, 0.025F}, {0.000F, 0.055F}}};
+      {{-0.072F, -0.040F}, {0.068F, 0.032F}, {0.000F, 0.076F}}};
   for (std::size_t i = 0; i < k_lumps.size(); ++i) {
     auto const lump_seed = static_cast<std::uint32_t>(seed + 61U + (i * 37U));
-    float const radius = 0.044F + (rand01(lump_seed) * 0.016F);
+    float const radius = 0.058F + (rand01(lump_seed) * 0.020F);
     QVector3D const base = (rand01(lump_seed * 3U) > 0.6F) ? k_ore_rust : k_ore;
     put(out,
         (stone != nullptr) ? stone : fallback,
         frame,
         QVector3D(k_lumps.at(i).at(0),
-                  k_carry_height + 0.01F + (radius * 0.5F),
-                  k_carry_forward + 0.02F + k_lumps.at(i).at(1)),
+                  k_carry_height + 0.10F + (radius * 0.45F),
+                  k_carry_forward + k_lumps.at(i).at(1)),
         QVector3D(radius, radius * 0.78F, radius * 0.92F),
         QVector3D(0.0F, rand01(lump_seed * 5U) * 360.0F, 0.0F),
-        tint(base, 0.92F + (rand01(lump_seed * 7U) * 0.26F)));
+        tint(base, 0.98F + (rand01(lump_seed * 7U) * 0.26F)));
   }
 }
 
@@ -259,6 +276,9 @@ auto submit_carried_loads(Engine::Core::World* world,
     bool const detailed = distance_sq <= k_detail_distance_sq;
 
     float const unit_yaw = transform->rotation.y;
+    QVector3D const body_scale(std::max(transform->scale.x, 0.01F),
+                               std::max(transform->scale.y, 0.01F),
+                               std::max(transform->scale.z, 0.01F));
 
     auto submit_at = [&](float local_x, float local_z, float local_yaw, int slot) {
       QMatrix4x4 frame;
@@ -266,6 +286,7 @@ auto submit_carried_loads(Engine::Core::World* world,
       frame.rotate(unit_yaw, 0.0F, 1.0F, 0.0F);
       frame.translate(local_x, 0.0F, local_z);
       frame.rotate(local_yaw, 0.0F, 1.0F, 0.0F);
+      frame.scale(body_scale);
       draw_load(out,
                 frame,
                 type,
