@@ -309,52 +309,160 @@ using DrawCmd = std::variant<GridCmd,
                              DrawPartCmd,
                              RiggedCreatureCmd>;
 
-enum class DrawCmdType : std::uint8_t {
-  Grid = 0,
-  GroundMarker = 1,
-  SelectionSmoke = 2,
-  Cylinder = 3,
-  Mesh = 4,
-  FogBatch = 5,
-  TerrainScatter = 6,
-  RainBatch = 7,
-  TerrainSurface = 8,
-  TerrainFeature = 9,
-  PrimitiveBatch = 10,
-  EffectBatch = 11,
-  ModeIndicator = 12,
-  DrawPart = 13,
-  RiggedCreature = 14
+namespace detail {
+
+template <typename Cmd, typename Variant>
+struct DrawCmdIndexOf;
+
+template <typename Cmd, typename... Alternatives>
+struct DrawCmdIndexOf<Cmd, std::variant<Alternatives...>> {
+  static constexpr std::size_t value = [] {
+    constexpr bool matches[] = {std::is_same_v<Cmd, Alternatives>...};
+    std::size_t found = sizeof...(Alternatives);
+    for (std::size_t i = 0; i < sizeof...(Alternatives); ++i) {
+      if (matches[i]) {
+        found = i;
+        break;
+      }
+    }
+    return found;
+  }();
 };
 
-constexpr std::size_t MeshCmdIndex = static_cast<std::size_t>(DrawCmdType::Mesh);
-constexpr std::size_t GridCmdIndex = static_cast<std::size_t>(DrawCmdType::Grid);
-constexpr std::size_t GroundMarkerCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::GroundMarker);
-constexpr std::size_t SelectionSmokeCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::SelectionSmoke);
-constexpr std::size_t CylinderCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::Cylinder);
-constexpr std::size_t FogBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::FogBatch);
-constexpr std::size_t TerrainScatterCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::TerrainScatter);
-constexpr std::size_t RainBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::RainBatch);
-constexpr std::size_t TerrainSurfaceCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::TerrainSurface);
-constexpr std::size_t TerrainFeatureCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::TerrainFeature);
-constexpr std::size_t PrimitiveBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::PrimitiveBatch);
-constexpr std::size_t EffectBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::EffectBatch);
-constexpr std::size_t ModeIndicatorCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::ModeIndicator);
-constexpr std::size_t DrawPartCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::DrawPart);
-constexpr std::size_t RiggedCreatureCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::RiggedCreature);
+} // namespace detail
+
+template <typename Cmd>
+inline constexpr std::size_t cmd_index_of = detail::DrawCmdIndexOf<Cmd, DrawCmd>::value;
+
+inline constexpr std::size_t k_draw_cmd_type_count = std::variant_size_v<DrawCmd>;
+
+enum class DrawCmdType : std::uint8_t {
+  Grid = static_cast<std::uint8_t>(cmd_index_of<GridCmd>),
+  GroundMarker = static_cast<std::uint8_t>(cmd_index_of<GroundMarkerCmd>),
+  SelectionSmoke = static_cast<std::uint8_t>(cmd_index_of<SelectionSmokeCmd>),
+  Cylinder = static_cast<std::uint8_t>(cmd_index_of<CylinderCmd>),
+  Mesh = static_cast<std::uint8_t>(cmd_index_of<MeshCmd>),
+  FogBatch = static_cast<std::uint8_t>(cmd_index_of<FogBatchCmd>),
+  TerrainScatter = static_cast<std::uint8_t>(cmd_index_of<TerrainScatterCmd>),
+  RainBatch = static_cast<std::uint8_t>(cmd_index_of<RainBatchCmd>),
+  TerrainSurface = static_cast<std::uint8_t>(cmd_index_of<TerrainSurfaceCmd>),
+  TerrainFeature = static_cast<std::uint8_t>(cmd_index_of<TerrainFeatureCmd>),
+  PrimitiveBatch = static_cast<std::uint8_t>(cmd_index_of<PrimitiveBatchCmd>),
+  EffectBatch = static_cast<std::uint8_t>(cmd_index_of<EffectBatchCmd>),
+  ModeIndicator = static_cast<std::uint8_t>(cmd_index_of<ModeIndicatorCmd>),
+  DrawPart = static_cast<std::uint8_t>(cmd_index_of<DrawPartCmd>),
+  RiggedCreature = static_cast<std::uint8_t>(cmd_index_of<RiggedCreatureCmd>)
+};
+
+constexpr std::size_t MeshCmdIndex = cmd_index_of<MeshCmd>;
+constexpr std::size_t GridCmdIndex = cmd_index_of<GridCmd>;
+constexpr std::size_t GroundMarkerCmdIndex = cmd_index_of<GroundMarkerCmd>;
+constexpr std::size_t SelectionSmokeCmdIndex = cmd_index_of<SelectionSmokeCmd>;
+constexpr std::size_t CylinderCmdIndex = cmd_index_of<CylinderCmd>;
+constexpr std::size_t FogBatchCmdIndex = cmd_index_of<FogBatchCmd>;
+constexpr std::size_t TerrainScatterCmdIndex = cmd_index_of<TerrainScatterCmd>;
+constexpr std::size_t RainBatchCmdIndex = cmd_index_of<RainBatchCmd>;
+constexpr std::size_t TerrainSurfaceCmdIndex = cmd_index_of<TerrainSurfaceCmd>;
+constexpr std::size_t TerrainFeatureCmdIndex = cmd_index_of<TerrainFeatureCmd>;
+constexpr std::size_t PrimitiveBatchCmdIndex = cmd_index_of<PrimitiveBatchCmd>;
+constexpr std::size_t EffectBatchCmdIndex = cmd_index_of<EffectBatchCmd>;
+constexpr std::size_t ModeIndicatorCmdIndex = cmd_index_of<ModeIndicatorCmd>;
+constexpr std::size_t DrawPartCmdIndex = cmd_index_of<DrawPartCmd>;
+constexpr std::size_t RiggedCreatureCmdIndex = cmd_index_of<RiggedCreatureCmd>;
+
+enum class RenderPassOrder : std::uint8_t {
+  TerrainSurface = 0,
+  TerrainFeature = 1,
+  TerrainScatter = 2,
+  RainBatch = 3,
+  PrimitiveBatch = 4,
+  Mesh = 5,
+  Cylinder = 6,
+  FogBatch = 7,
+  SelectionSmoke = 8,
+  Grid = 9,
+  EffectBatch = 10,
+  GroundMarker = 16,
+  ModeIndicator = 17
+};
+
+template <typename Cmd>
+struct DrawCmdTraits;
+
+template <>
+struct DrawCmdTraits<GridCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::Grid;
+};
+template <>
+struct DrawCmdTraits<GroundMarkerCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::GroundMarker;
+};
+template <>
+struct DrawCmdTraits<SelectionSmokeCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::SelectionSmoke;
+};
+template <>
+struct DrawCmdTraits<CylinderCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::Cylinder;
+};
+template <>
+struct DrawCmdTraits<MeshCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::Mesh;
+};
+template <>
+struct DrawCmdTraits<FogBatchCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::FogBatch;
+};
+template <>
+struct DrawCmdTraits<TerrainScatterCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::TerrainScatter;
+};
+template <>
+struct DrawCmdTraits<RainBatchCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::RainBatch;
+};
+template <>
+struct DrawCmdTraits<TerrainSurfaceCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::TerrainSurface;
+};
+template <>
+struct DrawCmdTraits<TerrainFeatureCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::TerrainFeature;
+};
+template <>
+struct DrawCmdTraits<PrimitiveBatchCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::PrimitiveBatch;
+};
+template <>
+struct DrawCmdTraits<EffectBatchCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::EffectBatch;
+};
+template <>
+struct DrawCmdTraits<ModeIndicatorCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::ModeIndicator;
+};
+template <>
+struct DrawCmdTraits<DrawPartCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::Mesh;
+};
+template <>
+struct DrawCmdTraits<RiggedCreatureCmd> {
+  static constexpr RenderPassOrder pass = RenderPassOrder::Mesh;
+};
+
+namespace detail {
+
+template <std::size_t... Index>
+constexpr auto build_render_pass_table(std::index_sequence<Index...>)
+    -> std::array<std::uint8_t, sizeof...(Index)> {
+  return {static_cast<std::uint8_t>(
+      DrawCmdTraits<std::variant_alternative_t<Index, DrawCmd>>::pass)...};
+}
+
+} // namespace detail
+
+inline constexpr auto k_render_pass_by_cmd_type =
+    detail::build_render_pass_table(std::make_index_sequence<k_draw_cmd_type_count>{});
 
 inline auto draw_cmd_type(const DrawCmd& cmd) -> DrawCmdType {
   return static_cast<DrawCmdType>(cmd.index());
@@ -605,94 +713,81 @@ private:
   }
 
   void populate_sort_identity_prefix(const DrawCmd& cmd, SortIdentity& identity) const {
-    enum class RenderOrder : uint8_t {
-      TerrainSurface = 0,
-      TerrainFeature = 1,
-      TerrainScatter = 2,
-      RainBatch = 3,
-      PrimitiveBatch = 4,
-      Mesh = 5,
-      Cylinder = 6,
-      FogBatch = 7,
-      SelectionSmoke = 8,
-      Grid = 9,
-      EffectBatch = 10,
-      GroundMarker = 16,
-      ModeIndicator = 17
-    };
-
-    static constexpr uint8_t k_type_order[] = {
-        static_cast<uint8_t>(RenderOrder::Grid),
-        static_cast<uint8_t>(RenderOrder::GroundMarker),
-        static_cast<uint8_t>(RenderOrder::SelectionSmoke),
-        static_cast<uint8_t>(RenderOrder::Cylinder),
-        static_cast<uint8_t>(RenderOrder::Mesh),
-        static_cast<uint8_t>(RenderOrder::FogBatch),
-        static_cast<uint8_t>(RenderOrder::TerrainScatter),
-        static_cast<uint8_t>(RenderOrder::RainBatch),
-        static_cast<uint8_t>(RenderOrder::TerrainSurface),
-        static_cast<uint8_t>(RenderOrder::TerrainFeature),
-        static_cast<uint8_t>(RenderOrder::PrimitiveBatch),
-        static_cast<uint8_t>(RenderOrder::EffectBatch),
-        static_cast<uint8_t>(RenderOrder::ModeIndicator),
-        static_cast<uint8_t>(RenderOrder::Mesh),
-        static_cast<uint8_t>(RenderOrder::Mesh)};
-
     const std::size_t type_index = cmd.index();
-    constexpr std::size_t type_count = sizeof(k_type_order) / sizeof(k_type_order[0]);
-    const uint8_t type_order = type_index < type_count
-                                   ? k_type_order[type_index]
-                                   : static_cast<uint8_t>(type_index);
+    identity.pass = type_index < k_render_pass_by_cmd_type.size()
+                        ? k_render_pass_by_cmd_type[type_index]
+                        : static_cast<std::uint8_t>(type_index);
 
-    identity.pass = type_order;
-
-    if (cmd.index() == MeshCmdIndex) {
+    switch (draw_cmd_type(cmd)) {
+    case DrawCmdType::Mesh: {
       const auto& mesh = std::get<MeshCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Mesh);
       identity.transparency_bucket = transparency_bucket(mesh.alpha);
-    } else if (cmd.index() == TerrainScatterCmdIndex) {
+      break;
+    }
+    case DrawCmdType::TerrainScatter: {
       const auto& deco = std::get<TerrainScatterCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainScatterGrass) +
                           static_cast<std::uint8_t>(deco.species);
-    } else if (cmd.index() == TerrainSurfaceCmdIndex) {
+      break;
+    }
+    case DrawCmdType::TerrainSurface:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainSurface);
-    } else if (cmd.index() == TerrainFeatureCmdIndex) {
+      break;
+    case DrawCmdType::TerrainFeature: {
       const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainFeatureWater) +
                           static_cast<std::uint8_t>(feature.kind);
       identity.transparency_bucket = transparency_bucket(feature.alpha);
-    } else if (cmd.index() == PrimitiveBatchCmdIndex) {
+      break;
+    }
+    case DrawCmdType::PrimitiveBatch: {
       const auto& prim = std::get<PrimitiveBatchCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::PrimitiveSphere) +
                           static_cast<std::uint8_t>(prim.type);
-    } else if (cmd.index() == DrawPartCmdIndex) {
+      break;
+    }
+    case DrawCmdType::DrawPart: {
       const auto& part = std::get<DrawPartCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::DrawPart);
       identity.transparency_bucket = transparency_bucket(part.alpha);
-    } else if (cmd.index() == RiggedCreatureCmdIndex) {
+      break;
+    }
+    case DrawCmdType::RiggedCreature: {
       const auto& rig = std::get<RiggedCreatureCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::RiggedCreature);
       identity.transparency_bucket = transparency_bucket(rig.alpha);
-    } else if (cmd.index() == CylinderCmdIndex) {
-      const auto& cy = std::get<CylinderCmdIndex>(cmd);
+      break;
+    }
+    case DrawCmdType::Cylinder: {
+      const auto& cylinder = std::get<CylinderCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Cylinder);
-      identity.transparency_bucket = transparency_bucket(cy.alpha);
-    } else if (cmd.index() == FogBatchCmdIndex) {
+      identity.transparency_bucket = transparency_bucket(cylinder.alpha);
+      break;
+    }
+    case DrawCmdType::FogBatch:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Fog);
-    } else if (cmd.index() == RainBatchCmdIndex) {
+      break;
+    case DrawCmdType::RainBatch:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Rain);
-    } else if (cmd.index() == EffectBatchCmdIndex) {
+      break;
+    case DrawCmdType::EffectBatch:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Effect);
-    } else if (cmd.index() == SelectionSmokeCmdIndex) {
+      break;
+    case DrawCmdType::SelectionSmoke:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::SelectionSmoke);
       identity.transparency_bucket = 1U;
-    } else if (cmd.index() == GridCmdIndex) {
+      break;
+    case DrawCmdType::Grid:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Grid);
-    } else if (cmd.index() == GroundMarkerCmdIndex) {
+      break;
+    case DrawCmdType::GroundMarker:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::GroundMarker);
       identity.transparency_bucket = 1U;
-    } else if (cmd.index() == ModeIndicatorCmdIndex) {
+      break;
+    case DrawCmdType::ModeIndicator:
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::ModeIndicator);
+      break;
     }
   }
 
@@ -706,25 +801,30 @@ private:
   }
 
   [[nodiscard]] auto preserves_append_order(const DrawCmd& cmd) const -> bool {
-    switch (cmd.index()) {
-    case TerrainScatterCmdIndex:
-    case RainBatchCmdIndex:
-    case TerrainSurfaceCmdIndex:
-    case PrimitiveBatchCmdIndex:
-    case FogBatchCmdIndex:
-    case SelectionSmokeCmdIndex:
-    case GroundMarkerCmdIndex:
-    case GridCmdIndex:
-    case EffectBatchCmdIndex:
+    switch (draw_cmd_type(cmd)) {
+    case DrawCmdType::TerrainScatter:
+    case DrawCmdType::RainBatch:
+    case DrawCmdType::TerrainSurface:
+    case DrawCmdType::PrimitiveBatch:
+    case DrawCmdType::FogBatch:
+    case DrawCmdType::SelectionSmoke:
+    case DrawCmdType::GroundMarker:
+    case DrawCmdType::Grid:
+    case DrawCmdType::EffectBatch:
       return true;
-    case TerrainFeatureCmdIndex: {
+    case DrawCmdType::TerrainFeature: {
       const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
       return feature.kind != LinearFeatureKind::Shoreline ||
              !feature.visibility.enabled;
     }
-    default:
+    case DrawCmdType::Mesh:
+    case DrawCmdType::Cylinder:
+    case DrawCmdType::DrawPart:
+    case DrawCmdType::RiggedCreature:
+    case DrawCmdType::ModeIndicator:
       return false;
     }
+    return false;
   }
 
   void record_submission_bucket(const DrawCmd& cmd) {
@@ -754,51 +854,78 @@ private:
     SortIdentity identity;
     populate_sort_identity_prefix(cmd, identity);
 
-    if (cmd.index() == MeshCmdIndex) {
+    switch (draw_cmd_type(cmd)) {
+    case DrawCmdType::Mesh: {
       const auto& mesh = std::get<MeshCmdIndex>(cmd);
       identity.material = pack_12(sort_id(mesh.shader));
       identity.mesh = pack_16(sort_id(mesh.mesh));
       identity.texture = pack_12(sort_id(mesh.texture));
-    } else if (cmd.index() == TerrainScatterCmdIndex) {
+      break;
+    }
+    case DrawCmdType::TerrainScatter: {
       const auto& deco = std::get<TerrainScatterCmdIndex>(cmd);
       identity.material = pack_12(sort_id(deco.material));
       identity.mesh = pack_16(sort_id(deco.instance_buffer));
-    } else if (cmd.index() == FogBatchCmdIndex) {
+      break;
+    }
+    case DrawCmdType::FogBatch: {
       const auto& fog = std::get<FogBatchCmdIndex>(cmd);
       identity.mesh = pack_16(sort_id(
           fog.instance_buffer != nullptr ? static_cast<const void*>(fog.instance_buffer)
                                          : static_cast<const void*>(fog.instances)));
-    } else if (cmd.index() == TerrainSurfaceCmdIndex) {
+      break;
+    }
+    case DrawCmdType::TerrainSurface: {
       const auto& chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
       identity.material = pack_12(chunk.sort_key);
       identity.mesh = pack_16(sort_id(chunk.mesh));
       identity.texture = pack_12(sort_id(chunk.material));
-    } else if (cmd.index() == TerrainFeatureCmdIndex) {
+      break;
+    }
+    case DrawCmdType::TerrainFeature: {
       const auto& feature = std::get<TerrainFeatureCmdIndex>(cmd);
       identity.mesh = pack_16(sort_id(feature.mesh));
       identity.texture = pack_12(sort_id(feature.visibility.texture));
-    } else if (cmd.index() == PrimitiveBatchCmdIndex) {
+      break;
+    }
+    case DrawCmdType::PrimitiveBatch: {
       const auto& prim = std::get<PrimitiveBatchCmdIndex>(cmd);
       identity.mesh = pack_16(static_cast<std::uint32_t>(std::min<std::size_t>(
           prim.instance_count(), std::numeric_limits<std::uint16_t>::max())));
-    } else if (cmd.index() == DrawPartCmdIndex) {
+      break;
+    }
+    case DrawCmdType::DrawPart: {
       const auto& part = std::get<DrawPartCmdIndex>(cmd);
       identity.material = pack_12(sort_id(part.material));
       identity.mesh = pack_16(sort_id(part.mesh));
       identity.texture = pack_12(sort_id(part.texture));
       identity.skeleton = part.palette.empty() ? 0U : 1U;
-    } else if (cmd.index() == RiggedCreatureCmdIndex) {
+      break;
+    }
+    case DrawCmdType::RiggedCreature: {
       const auto& rig = std::get<RiggedCreatureCmdIndex>(cmd);
       identity.material = pack_12(sort_id(rig.material));
       identity.mesh = pack_16(sort_id(rig.mesh));
       identity.texture = pack_12(sort_id(rig.texture));
       identity.skeleton = pack_4(rig.bone_count);
-    } else if (cmd.index() == EffectBatchCmdIndex) {
+      break;
+    }
+    case DrawCmdType::EffectBatch: {
       const auto& effect = std::get<EffectBatchCmdIndex>(cmd);
       identity.material = pack_12(static_cast<std::uint32_t>(effect.kind));
-    } else if (cmd.index() == ModeIndicatorCmdIndex) {
+      break;
+    }
+    case DrawCmdType::ModeIndicator: {
       const auto& mode = std::get<ModeIndicatorCmdIndex>(cmd);
       identity.material = pack_12(static_cast<std::uint32_t>(mode.mode_type));
+      break;
+    }
+    case DrawCmdType::Grid:
+    case DrawCmdType::GroundMarker:
+    case DrawCmdType::SelectionSmoke:
+    case DrawCmdType::Cylinder:
+    case DrawCmdType::RainBatch:
+      break;
     }
 
     return identity.pack();
@@ -814,21 +941,24 @@ private:
       PreparedBatchKind kind = PreparedBatchKind::Single;
       std::size_t end = i + 1;
 
-      if (head.index() == CylinderCmdIndex) {
+      switch (type) {
+      case DrawCmdType::Cylinder:
         while (end < count && get_sorted(end).index() == CylinderCmdIndex) {
           ++end;
         }
         if (end - i > 1U) {
           kind = PreparedBatchKind::CylinderInstanced;
         }
-      } else if (head.index() == MeshCmdIndex) {
+        break;
+      case DrawCmdType::Mesh:
         while (end < count && can_batch_mesh(i, end)) {
           ++end;
         }
         if (end - i > 1U) {
           kind = PreparedBatchKind::MeshInstanced;
         }
-      } else if (head.index() == DrawPartCmdIndex) {
+        break;
+      case DrawCmdType::DrawPart: {
         while (end < count && can_batch_draw_part(i, end)) {
           ++end;
         }
@@ -838,21 +968,25 @@ private:
         } else {
           end = i + 1;
         }
-      } else if (head.index() == RiggedCreatureCmdIndex) {
+        break;
+      }
+      case DrawCmdType::RiggedCreature:
         while (end < count && can_batch_rigged(i, end)) {
           ++end;
         }
         if (end - i > 1U) {
           kind = PreparedBatchKind::RiggedCreatureInstanced;
         }
-      } else if (head.index() == GroundMarkerCmdIndex) {
+        break;
+      case DrawCmdType::GroundMarker:
         while (end < count && get_sorted(end).index() == GroundMarkerCmdIndex) {
           ++end;
         }
         if (end - i > 1U) {
           kind = PreparedBatchKind::GroundMarkerInstanced;
         }
-      } else if (head.index() == EffectBatchCmdIndex) {
+        break;
+      case DrawCmdType::EffectBatch: {
         const auto& head_eff = std::get<EffectBatchCmdIndex>(head);
         while (end < count) {
           const DrawCmd& next_cmd = get_sorted(end);
@@ -867,7 +1001,9 @@ private:
         if (end - i > 1U) {
           kind = PreparedBatchKind::EffectInstanced;
         }
-      } else if (head.index() == ModeIndicatorCmdIndex) {
+        break;
+      }
+      case DrawCmdType::ModeIndicator: {
         const auto& head_mode = std::get<ModeIndicatorCmdIndex>(head);
         while (end < count) {
           const DrawCmd& next_cmd = get_sorted(end);
@@ -883,14 +1019,25 @@ private:
         if (end - i > 1U) {
           kind = PreparedBatchKind::ModeIndicatorInstanced;
         }
-      } else if (head.index() == TerrainSurfaceCmdIndex) {
+        break;
+      }
+      case DrawCmdType::TerrainSurface:
         while (end < count && can_batch_terrain_surface(i, end)) {
           ++end;
         }
-      } else if (head.index() == TerrainFeatureCmdIndex) {
+        break;
+      case DrawCmdType::TerrainFeature:
         while (end < count && can_batch_terrain_feature(i, end)) {
           ++end;
         }
+        break;
+      case DrawCmdType::Grid:
+      case DrawCmdType::SelectionSmoke:
+      case DrawCmdType::FogBatch:
+      case DrawCmdType::TerrainScatter:
+      case DrawCmdType::RainBatch:
+      case DrawCmdType::PrimitiveBatch:
+        break;
       }
 
       m_prepared_batches.push_back(

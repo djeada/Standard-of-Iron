@@ -15,6 +15,7 @@
 #include "../../../submitter.h"
 #include "../../../template_cache.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_decay.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
@@ -428,6 +429,15 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                          c.wood_dark,
                          c.cloth_gold,
                          c.ember);
+
+  add_ruin_dressing(desc,
+                    RuinDressing{.extent = QVector3D(1.12F, 0.0F, 1.12F),
+                                 .stone = c.sandstone,
+                                 .stone_dark = c.sandstone_dark,
+                                 .timber = c.sandstone_dark * 0.5F,
+                                 .ground_y = 0.14F,
+                                 .scale = 1.0F,
+                                 .seed = 223});
 
   return build_building_archetype(desc, state);
 }

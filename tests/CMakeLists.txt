@@ -315,6 +315,7 @@ add_executable(
     core/mission_definition_view_test.cpp
     core/mission_events_test.cpp
     core/mission_wave_director_test.cpp
+    core/campaign_wave_assault_test.cpp
     core/production_manager_test.cpp
     core/selection_query_service_test.cpp
     core/rts_action_model_test.cpp

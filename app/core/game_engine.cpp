@@ -3377,25 +3377,8 @@ void GameEngine::restore_mission_waves(const QJsonObject& wave_state) {
 
   const auto& mission = *m_campaign_manager->current_mission_definition();
 
-  QVector3D defense_reference{0.0F, 0.0F, 0.0F};
-  int anchor_count = 0;
-  for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr ||
-        unit->owner_id != m_runtime.local_owner_id || unit->health <= 0) {
-      continue;
-    }
-    defense_reference +=
-        QVector3D(transform->position.x, transform->position.y, transform->position.z);
-    anchor_count++;
-  }
-  if (anchor_count > 0) {
-    defense_reference /= static_cast<float>(anchor_count);
-  }
+  const QVector3D defense_reference =
+      App::Core::resolve_defense_reference(*m_world, m_runtime.local_owner_id);
 
   m_pending_mission_waves = App::Core::build_pending_mission_waves(
       {.mission = mission,

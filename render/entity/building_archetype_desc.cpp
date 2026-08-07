@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "../gl/primitives.h"
+#include "building_decay.h"
 
 namespace Render::GL {
 namespace {
@@ -56,12 +57,13 @@ auto supports_lod(BuildingLODMask mask, RenderArchetypeLod lod) -> bool {
 }
 
 void add_part_to_builder(RenderArchetypeBuilder& builder,
-                         const BuildingPartDesc& part) {
+                         const BuildingPartDesc& part,
+                         const QVector3D& color) {
   switch (part.kind) {
   case BuildingPartKind::Box:
     builder.add_box(part.point_a,
                     part.point_b,
-                    part.color,
+                    color,
                     part.texture,
                     part.alpha,
                     part.material_id,
@@ -95,7 +97,7 @@ void add_part_to_builder(RenderArchetypeBuilder& builder,
     } else {
       builder.add_mesh(get_unit_cube(),
                        model,
-                       part.color,
+                       color,
                        part.texture,
                        part.alpha,
                        part.material_id,
@@ -107,7 +109,7 @@ void add_part_to_builder(RenderArchetypeBuilder& builder,
     builder.add_cylinder(part.point_a,
                          part.point_b,
                          part.radius,
-                         part.color,
+                         color,
                          part.texture,
                          part.alpha,
                          part.material_id,
@@ -117,7 +119,7 @@ void add_part_to_builder(RenderArchetypeBuilder& builder,
     builder.add_cone(part.point_a,
                      part.point_b,
                      part.radius,
-                     part.color,
+                     color,
                      part.texture,
                      part.alpha,
                      part.material_id,
@@ -268,42 +270,44 @@ auto build_building_archetype(const BuildingArchetypeDesc& desc,
                               BuildingState state) -> RenderArchetype {
   RenderArchetypeBuilder builder(desc.name());
 
+  const auto emit_parts = [&](RenderArchetypeLod lod) {
+    int seed = 0;
+    for (const auto& part : desc.parts()) {
+      ++seed;
+      if (!supports_state(part.states, state)) {
+        continue;
+      }
+      if (!supports_lod(part.lod, lod)) {
+        continue;
+      }
+      add_part_to_builder(builder, part, decayed_color(part.color, state, seed));
+    }
+  };
+
   builder.use_lod(RenderArchetypeLod::Full);
   builder.set_max_distance(desc.full_lod_max_distance());
-  for (const auto& part : desc.parts()) {
-    if (!supports_state(part.states, state)) {
-      continue;
-    }
-    if (!supports_lod(part.lod, RenderArchetypeLod::Full)) {
-      continue;
-    }
-    add_part_to_builder(builder, part);
-  }
+  emit_parts(RenderArchetypeLod::Full);
 
   builder.use_lod(RenderArchetypeLod::Minimal);
   builder.set_max_distance(std::numeric_limits<float>::infinity());
-  for (const auto& part : desc.parts()) {
-    if (!supports_state(part.states, state)) {
-      continue;
-    }
-    if (!supports_lod(part.lod, RenderArchetypeLod::Minimal)) {
-      continue;
-    }
-    add_part_to_builder(builder, part);
-  }
+  emit_parts(RenderArchetypeLod::Minimal);
 
   return std::move(builder).build();
 }
 
 auto build_building_archetype_from_recorded(
-    std::string name, const std::vector<RecordedMeshCmd>& commands) -> RenderArchetype {
+    std::string name,
+    const std::vector<RecordedMeshCmd>& commands,
+    BuildingState state) -> RenderArchetype {
   RenderArchetypeBuilder builder(std::move(name));
   builder.set_max_distance(std::numeric_limits<float>::infinity());
 
+  int seed = 0;
   for (const auto& cmd : commands) {
+    ++seed;
     builder.add_mesh(cmd.mesh,
                      cmd.local_model,
-                     cmd.color,
+                     decayed_color(cmd.color, state, seed),
                      cmd.texture,
                      cmd.alpha,
                      cmd.material_id,
@@ -317,14 +321,17 @@ auto build_building_archetype_from_recorded_lods(
     std::string name,
     const std::vector<RecordedMeshCmd>& full_commands,
     const std::vector<RecordedMeshCmd>& minimal_commands,
-    float full_lod_max_distance) -> RenderArchetype {
+    float full_lod_max_distance,
+    BuildingState state) -> RenderArchetype {
   RenderArchetypeBuilder builder(std::move(name));
   builder.set_max_distance(full_lod_max_distance);
 
+  int seed = 0;
   for (const auto& cmd : full_commands) {
+    ++seed;
     builder.add_mesh(cmd.mesh,
                      cmd.local_model,
-                     cmd.color,
+                     decayed_color(cmd.color, state, seed),
                      cmd.texture,
                      cmd.alpha,
                      cmd.material_id,
@@ -333,10 +340,12 @@ auto build_building_archetype_from_recorded_lods(
 
   builder.use_lod(RenderArchetypeLod::Minimal);
   builder.set_max_distance(std::numeric_limits<float>::infinity());
+  seed = 0;
   for (const auto& cmd : minimal_commands) {
+    ++seed;
     builder.add_mesh(cmd.mesh,
                      cmd.local_model,
-                     cmd.color,
+                     decayed_color(cmd.color, state, seed),
                      cmd.texture,
                      cmd.alpha,
                      cmd.material_id,

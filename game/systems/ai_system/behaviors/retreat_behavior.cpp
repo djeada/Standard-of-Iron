@@ -45,6 +45,10 @@ void RetreatBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
+    if (entity.is_assault) {
+      continue;
+    }
+
     if (entity.max_health <= 0) {
       continue;
     }
@@ -133,7 +137,7 @@ auto RetreatBehavior::should_execute(const AISnapshot& snapshot,
   const float critical_health = context.strategy_config.retreat_threshold;
 
   for (const auto& entity : snapshot.friendly_units) {
-    if (entity.is_building) {
+    if (entity.is_building || entity.is_assault) {
       continue;
     }
 

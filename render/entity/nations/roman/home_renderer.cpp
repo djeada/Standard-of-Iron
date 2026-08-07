@@ -8,6 +8,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../submitter.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_decay.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
@@ -336,6 +337,15 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                           0.62F,
                           c.gold,
                           c.terracotta_dark);
+
+  add_ruin_dressing(desc,
+                    RuinDressing{.extent = QVector3D(0.98F, 0.0F, 0.98F),
+                                 .stone = c.limestone_shade,
+                                 .stone_dark = c.limestone_dark,
+                                 .timber = c.terracotta_dark * 0.45F,
+                                 .ground_y = 0.16F,
+                                 .scale = 1.0F,
+                                 .seed = 101});
 
   return build_building_archetype(desc, state);
 }

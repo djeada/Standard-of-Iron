@@ -3,10 +3,14 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <locale>
+#include <map>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "render/gl/directional_shadow_block.h"
+#include "render/local_lighting.h"
 
 namespace {
 
@@ -81,6 +85,56 @@ void expect_literal_smoothstep_edges_are_ordered(const std::string& shader_sourc
     EXPECT_LT(edge0, edge1) << shader_name
                             << " contains reversed smoothstep edges: " << it->str();
   }
+}
+
+struct Std140Block {
+  std::vector<std::string> member_names;
+  std::size_t float_count = 0;
+};
+
+auto parse_std140_block(const std::string& glsl,
+                        const std::string& block_name,
+                        const std::map<std::string, std::size_t>& array_extents)
+    -> Std140Block {
+  Std140Block parsed;
+  const std::regex block(R"(layout\(std140\)\s+uniform\s+)" + block_name +
+                         R"(\s*\{([^}]*)\})");
+  std::smatch match;
+  if (!std::regex_search(glsl, match, block)) {
+    return parsed;
+  }
+  const std::string body = match[1].str();
+
+  const std::regex member(
+      R"((mat4|vec4|vec3|vec2|float|int)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:\[\s*([A-Za-z0-9_]+)\s*\])?\s*;)");
+  for (auto it = std::sregex_iterator(body.begin(), body.end(), member);
+       it != std::sregex_iterator();
+       ++it) {
+    const std::string type = (*it)[1].str();
+    parsed.member_names.push_back((*it)[2].str());
+
+    std::size_t elements = 1;
+    if ((*it)[3].matched) {
+      const std::string extent = (*it)[3].str();
+      const auto named = array_extents.find(extent);
+      elements = named != array_extents.end()
+                     ? named->second
+                     : static_cast<std::size_t>(std::stoul(extent));
+    }
+
+    const std::size_t slots_per_element = type == "mat4" ? 4U : 1U;
+    parsed.float_count += elements * slots_per_element * 4U;
+  }
+  return parsed;
+}
+
+auto glsl_int_constant(const std::string& glsl, const std::string& name) -> int {
+  std::smatch match;
+  const std::regex declaration(R"(const\s+int\s+)" + name + R"(\s*=\s*([0-9]+)\s*;)");
+  if (!std::regex_search(glsl, match, declaration)) {
+    return -1;
+  }
+  return std::stoi(match[1].str());
 }
 
 } // namespace
@@ -454,4 +508,56 @@ TEST(ShaderSource, RoadsKeepPackedEarthSeparateFromPaving) {
   EXPECT_NE(flat.find("vec2 aggregate_cells = worley_f("), std::string::npos);
   EXPECT_NE(flat.find("float rut_left ="), std::string::npos);
   EXPECT_NE(flat.find("u_alpha * edge_alpha"), std::string::npos);
+}
+
+TEST(ShaderSource, DirectionalShadowBlockMatchesTheUploadedStruct) {
+  const auto root = find_repo_root();
+  const auto glsl =
+      read_text(root / "assets" / "shaders" / "include" / "directional_shadows.glsl");
+  ASSERT_FALSE(glsl.empty());
+
+  const int declared_cascades = glsl_int_constant(glsl, "SOI_MAX_SHADOW_CASCADES");
+  EXPECT_EQ(declared_cascades, Render::GL::k_max_shadow_cascades);
+  ASSERT_GT(declared_cascades, 0);
+
+  const auto block = parse_std140_block(
+      glsl,
+      "DirectionalShadows",
+      {{"SOI_MAX_SHADOW_CASCADES", static_cast<std::size_t>(declared_cascades)}});
+  ASSERT_FALSE(block.member_names.empty()) << "DirectionalShadows block not found";
+
+  EXPECT_EQ(block.float_count, Render::GL::DirectionalShadowBlock::k_float_count)
+      << "the shader block and DirectionalShadowBlock no longer agree on size";
+
+  const std::vector<std::string> expected_order{"u_shadow_light_vp",
+                                                "u_shadow_split_distances",
+                                                "u_shadow_params",
+                                                "u_shadow_camera_position",
+                                                "u_shadow_bias"};
+  EXPECT_EQ(block.member_names, expected_order)
+      << "DirectionalShadowBlock::packed_std140 writes these in declaration order";
+}
+
+TEST(ShaderSource, LocalLightingBlockMatchesTheUploadedStruct) {
+  const auto root = find_repo_root();
+  const auto glsl =
+      read_text(root / "assets" / "shaders" / "include" / "local_lighting.glsl");
+  ASSERT_FALSE(glsl.empty());
+
+  const int declared_lights = glsl_int_constant(glsl, "SOI_MAX_LOCAL_LIGHTS");
+  EXPECT_EQ(static_cast<std::size_t>(declared_lights), Render::k_max_local_lights);
+  ASSERT_GT(declared_lights, 0);
+
+  const auto block = parse_std140_block(
+      glsl,
+      "LocalLighting",
+      {{"SOI_MAX_LOCAL_LIGHTS", static_cast<std::size_t>(declared_lights)}});
+  ASSERT_FALSE(block.member_names.empty()) << "LocalLighting block not found";
+
+  EXPECT_EQ(block.float_count, Render::LocalLightingBlock::k_float_count);
+
+  const std::vector<std::string> expected_order{
+      "u_local_position_radius", "u_local_color_intensity", "u_local_light_meta"};
+  EXPECT_EQ(block.member_names, expected_order)
+      << "pack_local_lights_std140 writes these in declaration order";
 }

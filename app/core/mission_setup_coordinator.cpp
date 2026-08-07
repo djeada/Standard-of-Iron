@@ -132,6 +132,56 @@ void assign_wave_phases(std::vector<PendingMissionWave>& waves, std::size_t begi
 
 } // namespace
 
+auto resolve_defense_reference(Engine::Core::World& world,
+                               int local_owner_id) -> QVector3D {
+
+  QVector3D barracks;
+  QVector3D halls;
+  QVector3D troops;
+  int barracks_count = 0;
+  int hall_count = 0;
+  int troop_count = 0;
+
+  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr) {
+      continue;
+    }
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->owner_id != local_owner_id ||
+        unit->health <= 0) {
+      continue;
+    }
+
+    const QVector3D position(
+        transform->position.x, transform->position.y, transform->position.z);
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      barracks += position;
+      barracks_count++;
+    } else if (entity->has_component<Engine::Core::BuildingComponent>()) {
+      if (unit->spawn_type != Game::Units::SpawnType::WallSegment &&
+          unit->spawn_type != Game::Units::SpawnType::WallGate) {
+        halls += position;
+        hall_count++;
+      }
+    } else {
+      troops += position;
+      troop_count++;
+    }
+  }
+
+  if (barracks_count > 0) {
+    return barracks / static_cast<float>(barracks_count);
+  }
+  if (hall_count > 0) {
+    return halls / static_cast<float>(hall_count);
+  }
+  if (troop_count > 0) {
+    return troops / static_cast<float>(troop_count);
+  }
+  return {0.0F, 0.0F, 0.0F};
+}
+
 auto wave_unit_total(const PendingMissionWave& wave) -> int {
   int total = 0;
   for (const auto& comp : wave.composition) {
@@ -631,25 +681,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
   spawn_buildings_for_owner(
       local_owner_id, player_nation_id, mission.player_setup.starting_buildings);
 
-  QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
-  int local_force_anchor_count = 0;
-  for (auto* entity : ctx.world.get_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr || unit->owner_id != local_owner_id ||
-        unit->health <= 0) {
-      continue;
-    }
-    defense_reference_world_position +=
-        QVector3D(transform->position.x, transform->position.y, transform->position.z);
-    local_force_anchor_count++;
-  }
-  if (local_force_anchor_count > 0) {
-    defense_reference_world_position /= static_cast<float>(local_force_anchor_count);
-  }
+  const QVector3D defense_reference_world_position =
+      resolve_defense_reference(ctx.world, local_owner_id);
 
   int ai_owner_id = 2;
   int default_team_id = 1;

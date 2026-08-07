@@ -8,6 +8,7 @@
 
 #include "../../../render_archetype.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_decay.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
@@ -607,6 +608,15 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   if (state == BuildingState::Destroyed) {
     add_carthage_temple_ruin(desc, c, podium_y, wall_h);
   }
+
+  add_ruin_dressing(desc,
+                    RuinDressing{.extent = QVector3D(1.18F, 0.0F, 0.98F),
+                                 .stone = c.sandstone,
+                                 .stone_dark = c.basalt,
+                                 .timber = c.basalt * 0.7F,
+                                 .ground_y = 0.28F,
+                                 .scale = 1.15F,
+                                 .seed = 311});
 
   return build_building_archetype(desc, state);
 }

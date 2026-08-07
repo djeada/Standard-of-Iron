@@ -13,6 +13,7 @@
 #include "../../../submitter.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_decay.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../defense_tower_renderer_common.h"
@@ -277,6 +278,25 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                             c.gold,
                             c.terracotta_dark);
   }
+
+  add_broken_rim(desc,
+                 BrokenRim{.center = QVector3D(0.0F, shaft_top - 0.17F, 0.0F),
+                           .color = c.limestone_dark,
+                           .radius = shaft_radius * 0.94F,
+                           .chunk_half = 0.15F,
+                           .rise = 0.13F,
+                           .count = 8,
+                           .seed = 353});
+
+  add_ruin_dressing(desc,
+                    RuinDressing{.extent = QVector3D(0.98F, 0.0F, 0.98F),
+                                 .apron_extent = QVector3D(1.46F, 0.0F, 1.46F),
+                                 .stone = c.limestone_shade,
+                                 .stone_dark = c.limestone_dark,
+                                 .timber = c.limestone_dark * 0.5F,
+                                 .ground_y = 0.34F,
+                                 .scale = 0.95F,
+                                 .seed = 353});
 
   return build_building_archetype(desc, state);
 }

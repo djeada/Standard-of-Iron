@@ -1,12 +1,14 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
 
 #include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_decay.h"
 #include "render/entity/building_ornaments.h"
 #include "render/gl/primitives.h"
 #include "render/render_archetype.h"
@@ -129,9 +131,65 @@ TEST(BuildingArchetypeDesc, ArchetypeSetSelectsStateVariant) {
   EXPECT_EQ(set.for_state(BuildingState::Normal).lods[0].draws[0].color,
             QVector3D(1.0F, 0.0F, 0.0F));
   EXPECT_EQ(set.for_state(BuildingState::Damaged).lods[0].draws[0].color,
-            QVector3D(0.0F, 1.0F, 0.0F));
+            decayed_color(QVector3D(0.0F, 1.0F, 0.0F), BuildingState::Damaged, 1));
   EXPECT_EQ(set.for_state(BuildingState::Destroyed).lods[0].draws[0].color,
-            QVector3D(0.0F, 0.0F, 1.0F));
+            decayed_color(QVector3D(0.0F, 0.0F, 1.0F), BuildingState::Destroyed, 1));
+}
+
+TEST(BuildingArchetypeDesc, HealthyStateKeepsAuthoredColors) {
+  using namespace Render::GL;
+
+  BuildingArchetypeDesc desc("healthy_color_test");
+  const QVector3D authored(0.82F, 0.44F, 0.19F);
+  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F), authored);
+
+  const RenderArchetype archetype =
+      build_building_archetype(desc, BuildingState::Normal);
+
+  ASSERT_EQ(archetype.lods[0].draws.size(), 1U);
+  EXPECT_EQ(archetype.lods[0].draws[0].color, authored);
+}
+
+TEST(BuildingArchetypeDesc, DecayDarkensAndDesaturatesEveryState) {
+  using namespace Render::GL;
+
+  const QVector3D authored(0.90F, 0.86F, 0.80F);
+  const QVector3D damaged = decayed_color(authored, BuildingState::Damaged, 3);
+  const QVector3D destroyed = decayed_color(authored, BuildingState::Destroyed, 3);
+
+  const auto luma = [](const QVector3D& c) {
+    return (0.299F * c.x()) + (0.587F * c.y()) + (0.114F * c.z());
+  };
+  const auto chroma = [](const QVector3D& c) {
+    return std::max({c.x(), c.y(), c.z()}) - std::min({c.x(), c.y(), c.z()});
+  };
+
+  EXPECT_LT(luma(damaged), luma(authored));
+  EXPECT_LT(luma(destroyed), luma(damaged));
+  EXPECT_LE(chroma(destroyed), chroma(authored) + 1e-4F);
+}
+
+TEST(BuildingArchetypeDesc, RuinDressingOnlyAppearsOnDamagedStates) {
+  using namespace Render::GL;
+
+  BuildingArchetypeDesc desc("ruin_dressing_test");
+  desc.add_box(QVector3D(0.0F, 0.5F, 0.0F),
+               QVector3D(1.0F, 0.5F, 1.0F),
+               QVector3D(0.8F, 0.8F, 0.8F));
+  const std::size_t authored_parts = desc.parts().size();
+
+  add_ruin_dressing(desc, RuinDressing{.extent = QVector3D(1.0F, 0.0F, 1.0F)});
+  EXPECT_GT(desc.parts().size(), authored_parts);
+
+  const RenderArchetype normal = build_building_archetype(desc, BuildingState::Normal);
+  const RenderArchetype damaged =
+      build_building_archetype(desc, BuildingState::Damaged);
+  const RenderArchetype destroyed =
+      build_building_archetype(desc, BuildingState::Destroyed);
+
+  EXPECT_EQ(normal.lods[0].draws.size(), authored_parts);
+  EXPECT_GT(damaged.lods[0].draws.size(), normal.lods[0].draws.size());
+  EXPECT_GT(destroyed.lods[0].draws.size(), damaged.lods[0].draws.size());
 }
 
 TEST(BuildingArchetypeDesc, FiltersBuildingLODMask) {
