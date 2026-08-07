@@ -208,6 +208,42 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_wildlife_wolf_ambush_id),
+        QStringLiteral("Wildlife: Wolf Ambush"),
+        QStringLiteral("A pack rushes a lone patrol instead of a herd: the wolves "
+                       "close and bite, the soldiers answer, and both sides take "
+                       "losses."),
+        24.0F,
+        {22.0F, 46.0F, 26.0F});
+    Game::Wildlife::WildlifeSettings settings = Game::Wildlife::default_settings();
+    settings.enabled = true;
+    settings.seed = 31337U;
+    settings.sheep.enabled = false;
+    settings.sheep.group_count = 0;
+    settings.birds.enabled = false;
+    settings.birds.group_count = 0;
+    settings.wolves.enabled = true;
+    settings.wolves.group_count = 1;
+    settings.wolves.group_size_min = 4;
+    settings.wolves.group_size_max = 4;
+    settings.wolves.aggression = 1.0F;
+    settings.wolves.roam_radius = 16.0F;
+    settings.wolves.respawn = false;
+    settings.wolves.spawn_areas = {{10.0F, 0.0F, 0.0F}};
+    s.wildlife = settings;
+    s.groups = {patrol_group(
+        QStringLiteral("patrol"), Troop::Swordsman, {-14.0F, 0.0F, 0.0F}, 1)};
+    s.steps = {move_step(2.0F, QStringLiteral("patrol"), {2.0F, 0.0F, 0.0F})};
+    s.expectations = {
+        expectation(Expect::WildlifeHuntObserved),
+        expectation(Expect::GroupHealthReduced, QStringLiteral("patrol")),
+        expectation(Expect::WildlifeCasualtyObserved),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_wildlife_bird_scatter_id),
         QStringLiteral("Wildlife: Bird Scatter"),
         QStringLiteral("Flocks cruise and perch until a column marches underneath, "

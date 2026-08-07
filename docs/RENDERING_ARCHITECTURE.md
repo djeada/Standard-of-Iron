@@ -658,6 +658,29 @@ silently become visible to the other.
 
 **Caching.** `CreatureRenderBatch::add_humanoid` calls `resolve_pose_intent` once and passes the result into both `humanoid_state_for_anim` (via its two-argument overload) and the variant-table dispatch block. No system in the critical render path calls the resolver more than once per entity per frame.
 
+### Sword points are flattened cones, not spikes
+
+Every sword in the game — both nations, every commander variant, the mounted riders, and
+the baked static attachment — comes out of the single `sword_archetype` builder in
+`render/equipment/weapons/sword_renderer.cpp`. The blade below the point is a stack of
+oriented boxes: wide in the guard axis, thin (about a sixth of the blade width) in the
+flat axis.
+
+The point used to be `cone_from_to(blade3, blade4, tip_half_w)`, a _round_ cone whose
+radius came from `blade_tip_width_scale`. On the Roman gladius that is a 0.010 radius
+stuck on the end of a blade 0.065 half-wide, so the last fifth of every sword read as a
+needle welded to a blade. The fix is `oriented_cone_between`, which takes the same basis
+as `oriented_box_between` but doubles the length column, because the unit cone spans
+±0.5 in Y while the unit cube spans ±1. Feeding it the blade's own half-width and
+half-depth makes the point an elliptical cone whose base exactly matches the cross
+section it grows out of: a triangle seen from the flat side, a thin wedge seen edge-on,
+continuous silhouette from both.
+
+Consequence for the config: `blade_tip_width_scale` no longer sets the width of anything.
+It only shifts `tip_start_dist`, so a smaller value means the point starts further back
+and the triangle is longer and keener. The point's width is always the blade's width —
+anything else reintroduces the shoulder step that made the old tip look like a pin.
+
 > For the full animation/pose pipeline — bake step, BPAT clip resolution and sampling,
 > the procedural locomotion shaper, the combat visual state machine with marker-driven
 > melee damage sync, and the shared quadruped gait — see
