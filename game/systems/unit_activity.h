@@ -25,6 +25,7 @@ enum class ActivityKind : std::uint8_t {
   ChopWood,
   MineStone,
   MineIron,
+  AutoGather,
   Deliver,
   Heal,
   Train,

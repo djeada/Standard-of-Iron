@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QString>
 #include <QVariantList>
 #include <QVariantMap>
 
@@ -20,6 +21,7 @@ public:
   [[nodiscard]] virtual auto selection_activity_summary() const -> QVariantMap = 0;
   virtual void toggle_repair_order() = 0;
   virtual void confirm_repair_at(qreal sx, qreal sy) = 0;
+  virtual void toggle_auto_gather(const QString& priority_product_type) = 0;
 };
 
 class ActivityViewModel : public QObject {
@@ -36,6 +38,8 @@ public:
 
   Q_INVOKABLE void begin_repair_order();
   Q_INVOKABLE void confirm_repair_at(qreal sx, qreal sy);
+
+  Q_INVOKABLE void toggle_auto_gather(const QString& priority_product_type = {});
 
   [[nodiscard]] auto attack_target_hint() const -> QVariantMap {
     return m_attack_target_hint;

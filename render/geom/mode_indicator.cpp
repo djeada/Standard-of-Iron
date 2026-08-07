@@ -45,6 +45,7 @@ constexpr std::array<KindStyle, k_indicator_kind_count> k_kind_styles = {{
     {IndicatorKind::ChopWood, {0.66F, 0.90F, 0.26F}, true},
     {IndicatorKind::MineStone, {0.80F, 0.82F, 0.86F}, true},
     {IndicatorKind::MineIron, {0.56F, 0.66F, 0.92F}, true},
+    {IndicatorKind::AutoGather, {0.86F, 0.94F, 0.44F}, true},
     {IndicatorKind::Deliver, {0.94F, 0.78F, 0.94F}, true},
     {IndicatorKind::Heal, {0.72F, 1.00F, 0.72F}, true},
     {IndicatorKind::Train, {0.80F, 0.58F, 1.00F}, true},
@@ -216,6 +217,18 @@ void build_mine_iron(GlyphBuilder& builder) {
   builder.end_glyph(k_glyph_extrusion);
 }
 
+void build_auto_gather(GlyphBuilder& builder) {
+
+  builder.begin_glyph();
+  builder.ring({0.0F, 0.02F}, 0.185F, 0.310F, 26, 0.55F, 4.90F);
+  builder.arrow_head({0.30F, 0.22F}, {0.30F, 0.95F}, 0.20F, 0.155F);
+  builder.end_glyph(k_glyph_extrusion);
+
+  builder.set_layer(GlyphLayer::Accent);
+  builder.set_depth(k_glyph_detail_depth);
+  builder.disc({0.0F, 0.02F}, 0.098F, 16);
+}
+
 void build_deliver(GlyphBuilder& builder) {
   builder.begin_glyph();
   builder.rect({0.0F, -0.22F}, {0.26F, 0.17F});
@@ -371,6 +384,9 @@ auto build_indicator_glyph(IndicatorKind kind) -> GlyphBuilder {
     break;
   case IndicatorKind::MineIron:
     build_mine_iron(builder);
+    break;
+  case IndicatorKind::AutoGather:
+    build_auto_gather(builder);
     break;
   case IndicatorKind::Deliver:
     build_deliver(builder);

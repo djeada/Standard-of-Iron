@@ -23,6 +23,7 @@ QtObject {
     readonly property string disclosureOpen: "▾"
     readonly property string heal: "✚"
     readonly property string collect: "⛏"
+    readonly property string autoGather: "⟳"
     readonly property string deliver: "⇥"
     readonly property string aura: "◌"
     readonly property string gate: "\u25A2"
@@ -67,6 +68,7 @@ QtObject {
             "build": root.build,
             "heal": root.heal,
             "collect": root.collect,
+            "auto_gather": root.autoGather,
             "rally": root.rally,
             "deliver": root.deliver,
             "aura": root.aura,

@@ -49,6 +49,9 @@ public:
   auto on_gate_command() -> CommandResult;
   auto on_guard_command() -> CommandResult;
   auto on_formation_command() -> CommandResult;
+
+  auto
+  on_auto_gather_command(const QString& priority_product_type = {}) -> CommandResult;
   auto on_run_command() -> CommandResult;
   void enable_run_mode_for_selected();
   void disable_run_mode_for_selected();
@@ -163,6 +166,7 @@ signals:
   void guard_mode_changed(bool active);
   void formation_mode_changed(bool active);
   void run_mode_changed(bool active);
+  void auto_gather_changed(bool active);
   void formation_placement_started();
   void formation_placement_updated(QVector3D position, float angle);
   void formation_placement_ended();

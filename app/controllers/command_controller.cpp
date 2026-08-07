@@ -217,6 +217,44 @@ auto CommandController::on_hold_command() -> CommandResult {
   return result;
 }
 
+auto CommandController::on_auto_gather_command(const QString& priority_product_type)
+    -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  auto const builders = App::Core::filter_selected_units_for_action(
+      m_world, m_selection_system->get_selected_units(), QStringLiteral("auto_gather"));
+  if (builders.empty()) {
+    return result;
+  }
+
+  int already_gathering = 0;
+  for (auto const id : builders) {
+    auto* entity = m_world->get_entity(id);
+    const auto* builder =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::BuilderProductionComponent>()
+            : nullptr;
+    already_gathering += (builder != nullptr && builder->auto_gather) ? 1 : 0;
+  }
+
+  const bool should_enable = already_gathering < static_cast<int>(builders.size());
+
+  submit(m_world,
+         Game::Command::SetAutoGather{.units = builders,
+                                      .active = should_enable,
+                                      .priority_product_type =
+                                          priority_product_type.toStdString()});
+
+  emit auto_gather_changed(should_enable);
+
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
+}
+
 namespace {
 
 auto gate_mode_name(Engine::Core::GateComponent::ManualMode mode) -> QString {

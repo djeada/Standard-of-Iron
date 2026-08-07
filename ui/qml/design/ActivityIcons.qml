@@ -77,6 +77,12 @@ QtObject {
                 "hint": qsTr("Working an ore deposit for iron."),
                 "resource": "iron"
             },
+            "auto_gather": {
+                "icon": "auto_gather",
+                "label": qsTr("Auto gathering"),
+                "hint": qsTr("Standing order: seek out the nearest resource and keep collecting."),
+                "resource": ""
+            },
             "deliver": {
                 "icon": "deliver",
                 "label": qsTr("Delivering"),

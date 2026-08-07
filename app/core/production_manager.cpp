@@ -123,6 +123,7 @@ void clear_builder_assignment(Engine::Core::BuilderProductionComponent* builder_
   builder_prod->is_placement_preview = false;
   builder_prod->construction_site_entity_id = 0;
   builder_prod->queued_construction_site_ids.clear();
+  builder_prod->clear_auto_gather();
   clear_builder_task_target(builder_prod);
 }
 
@@ -1165,6 +1166,7 @@ void ProductionManager::on_construction_confirm() {
         continue;
       }
 
+      builder_prod->clear_auto_gather();
       builder_prod->is_placement_preview = false;
       builder_prod->product_type = product_type;
       builder_prod->build_time = build_time;
@@ -1349,6 +1351,7 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
       continue;
     }
 
+    builder_prod->clear_auto_gather();
     builder_prod->product_type = item_str;
     builder_prod->build_time = build_time;
     builder_prod->time_remaining = build_time;
