@@ -23,6 +23,8 @@ constexpr float k_graze_dwell_max = 8.5F;
 constexpr float k_alarm_duration = 3.5F;
 constexpr float k_wolf_detect_multiplier = 1.4F;
 constexpr float k_wolf_bite_range = 1.35F;
+constexpr float k_wolf_defend_leash_multiplier = 2.2F;
+constexpr float k_livestock_preference = 0.7F;
 constexpr float k_pack_approach_spacing = 1.1F;
 constexpr float k_wolf_avoid_base_strength = 2.5F;
 constexpr float k_civilian_standoff = 3.0F;
@@ -76,6 +78,52 @@ void bolt_away_from(const NatureContext& ctx,
   actions.move_to(ctx, target_x, target_z);
 }
 
+auto distance_to(const NatureContext& ctx, const PreyRef& prey) -> float {
+  float const dx = prey.x - ctx.x;
+  float const dz = prey.z - ctx.z;
+  return std::sqrt((dx * dx) + (dz * dz));
+}
+
+auto bite_reach(const PreyRef& prey) -> float {
+  return k_wolf_bite_range + prey.radius;
+}
+
+auto overwhelmed(const NatureContext& ctx) -> bool {
+  return ctx.threats->strength_within(ctx.x, ctx.z, ctx.config->alert_radius) >=
+         wolf_avoid_threshold(*ctx.config);
+}
+
+auto guarded(const NatureContext& ctx, const PreyRef& prey) -> bool {
+  return ctx.threats->strength_within(prey.x, prey.z, ctx.config->alert_radius) >=
+         wolf_avoid_threshold(*ctx.config);
+}
+
+void close_and_bite(const NatureContext& ctx,
+                    NatureActions& actions,
+                    const PreyRef& prey) {
+  auto& wildlife = *ctx.wildlife;
+  wildlife.behavior = Behavior::Stalk;
+  wildlife.focus_id = prey.id;
+  actions.set_travel_speed(ctx, true);
+
+  if (distance_to(ctx, prey) <= bite_reach(prey)) {
+    actions.halt(ctx);
+    if (actions.bite(ctx, prey)) {
+      actions.note(NatureEvent::Bite);
+    }
+    return;
+  }
+
+  float const approach_angle =
+      static_cast<float>((wildlife.rng_state >> 8U) & 0xFFFFU) * (k_two_pi / 65536.0F);
+  float const spacing = k_pack_approach_spacing + prey.radius;
+  float const approach_x = prey.x + (std::cos(approach_angle) * spacing);
+  float const approach_z = prey.z + (std::sin(approach_angle) * spacing);
+  wildlife.target_x = approach_x;
+  wildlife.target_z = approach_z;
+  actions.move_to(ctx, approach_x, approach_z);
+}
+
 auto wander_anchor(const NatureContext& ctx, float& anchor_x, float& anchor_z) -> void {
   const auto& wildlife = *ctx.wildlife;
   anchor_x = ctx.herd.center_x;
@@ -99,9 +147,12 @@ public:
   }
 
   auto try_run(const NatureContext& ctx, NatureActions& actions) -> bool override {
-    ThreatQuery threat = ctx.threats->nearest(ctx.x, ctx.z, ctx.config->alert_radius);
-    if (threat.found && threat.strength < k_sheep_flee_strength_threshold) {
-      threat.found = false;
+    ThreatQuery threat = wounding_attacker(ctx, actions);
+    if (!threat.found) {
+      threat = ctx.threats->nearest(ctx.x, ctx.z, ctx.config->alert_radius);
+      if (threat.found && threat.strength < k_sheep_flee_strength_threshold) {
+        threat.found = false;
+      }
     }
     if (!threat.found) {
       threat = actions.nearest_pack_hunter(ctx.x, ctx.z, ctx.config->alert_radius);
@@ -119,6 +170,29 @@ public:
     actions.alert_herd(wildlife.group_id, k_alarm_duration);
     bolt_away_from(ctx, actions, threat.x, threat.z, 2.5F);
     return true;
+  }
+
+private:
+  static auto wounding_attacker(const NatureContext& ctx,
+                                NatureActions& actions) -> ThreatQuery {
+    auto& wildlife = *ctx.wildlife;
+    if (wildlife.hostile_timer <= 0.0F || wildlife.aggressor_id == 0) {
+      return {};
+    }
+    PreyRef const foe = actions.locate(wildlife.aggressor_id);
+    if (!foe.valid()) {
+      wildlife.aggressor_id = 0;
+      wildlife.hostile_timer = 0.0F;
+      return {};
+    }
+
+    ThreatQuery out;
+    out.found = true;
+    out.x = foe.x;
+    out.z = foe.z;
+    out.distance = distance_to(ctx, foe);
+    out.strength = 1.0F;
+    return out;
   }
 };
 
@@ -247,9 +321,7 @@ public:
   }
 
   auto try_run(const NatureContext& ctx, NatureActions& actions) -> bool override {
-    float const nearby =
-        ctx.threats->strength_within(ctx.x, ctx.z, ctx.config->alert_radius);
-    if (nearby < wolf_avoid_threshold(*ctx.config)) {
+    if (!overwhelmed(ctx)) {
       return false;
     }
     ThreatQuery const threat =
@@ -262,6 +334,44 @@ public:
     wildlife.behavior = Behavior::Flee;
     wildlife.state_timer = k_alarm_duration;
     bolt_away_from(ctx, actions, threat.x, threat.z, 3.0F);
+    return true;
+  }
+};
+
+class DefendBehavior : public NatureBehavior {
+public:
+  [[nodiscard]] auto name() const noexcept -> std::string_view override {
+    return "wolf.defend";
+  }
+  [[nodiscard]] auto priority() const noexcept -> NaturePriority override {
+    return NaturePriority::Survival;
+  }
+
+  auto try_run(const NatureContext& ctx, NatureActions& actions) -> bool override {
+    auto& wildlife = *ctx.wildlife;
+    if (wildlife.hostile_timer <= 0.0F || wildlife.aggressor_id == 0) {
+      return false;
+    }
+    if (overwhelmed(ctx)) {
+      return false;
+    }
+
+    PreyRef const foe = actions.locate(wildlife.aggressor_id);
+    if (!foe.valid()) {
+      wildlife.aggressor_id = 0;
+      wildlife.hostile_timer = 0.0F;
+      return false;
+    }
+    float const leash = ctx.config->roam_radius * k_wolf_defend_leash_multiplier;
+    if (distance_to(ctx, foe) > leash) {
+      return false;
+    }
+
+    if (wildlife.behavior != Behavior::Stalk) {
+      actions.note(NatureEvent::Hunt);
+    }
+    actions.mark_hostile(ctx, foe.id, true);
+    close_and_bite(ctx, actions, foe);
     return true;
   }
 };
@@ -280,13 +390,8 @@ public:
       return false;
     }
     float const detect_radius = ctx.config->roam_radius * k_wolf_detect_multiplier;
-    PreyRef const prey = actions.nearest_prey(ctx.x, ctx.z, detect_radius);
+    PreyRef const prey = pick_prey(ctx, actions, detect_radius);
     if (!prey.valid()) {
-      return false;
-    }
-    float const guarded =
-        ctx.threats->strength_within(prey.x, prey.z, ctx.config->alert_radius);
-    if (guarded >= wolf_avoid_threshold(*ctx.config)) {
       return false;
     }
 
@@ -294,32 +399,33 @@ public:
     if (wildlife.behavior != Behavior::Stalk) {
       actions.note(NatureEvent::Hunt);
     }
-    wildlife.behavior = Behavior::Stalk;
-    wildlife.focus_id = prey.id;
-    actions.set_travel_speed(ctx, true);
-
-    float const dx = prey.x - ctx.x;
-    float const dz = prey.z - ctx.z;
-    float const distance = std::sqrt((dx * dx) + (dz * dz));
-    if (distance <= k_wolf_bite_range) {
-      actions.halt(ctx);
-      if (actions.bite(ctx, prey)) {
-        actions.note(NatureEvent::Bite);
-      }
-      return true;
+    if (!prey.livestock) {
+      actions.mark_hostile(ctx, prey.id, true);
     }
-
-    float const approach_angle =
-        static_cast<float>((wildlife.rng_state >> 8U) & 0xFFFFU) *
-        (k_two_pi / 65536.0F);
-    float const approach_x =
-        prey.x + (std::cos(approach_angle) * k_pack_approach_spacing);
-    float const approach_z =
-        prey.z + (std::sin(approach_angle) * k_pack_approach_spacing);
-    wildlife.target_x = approach_x;
-    wildlife.target_z = approach_z;
-    actions.move_to(ctx, approach_x, approach_z);
+    close_and_bite(ctx, actions, prey);
     return true;
+  }
+
+private:
+  static auto pick_prey(const NatureContext& ctx,
+                        NatureActions& actions,
+                        float detect_radius) -> PreyRef {
+    PreyRef const livestock = actions.nearest_prey(ctx.x, ctx.z, detect_radius);
+    PreyRef const quarry = actions.nearest_quarry(ctx.x, ctx.z, detect_radius);
+    bool const prefer_livestock =
+        livestock.valid() &&
+        (!quarry.valid() || (distance_to(ctx, livestock) * k_livestock_preference) <=
+                                distance_to(ctx, quarry));
+
+    PreyRef const first = prefer_livestock ? livestock : quarry;
+    PreyRef const second = prefer_livestock ? quarry : livestock;
+    if (first.valid() && !guarded(ctx, first)) {
+      return first;
+    }
+    if (second.valid() && !guarded(ctx, second)) {
+      return second;
+    }
+    return {};
   }
 };
 
@@ -375,7 +481,7 @@ void NatureBrain::add(std::unique_ptr<NatureBehavior> behavior) {
                        behavior,
                        [](const std::unique_ptr<NatureBehavior>& lhs,
                           const std::unique_ptr<NatureBehavior>& rhs) {
-                         return static_cast<std::uint8_t>(lhs->priority()) >
+                         return static_cast<std::uint8_t>(lhs->priority()) >=
                                 static_cast<std::uint8_t>(rhs->priority());
                        });
   m_behaviors.insert(position, std::move(behavior));
@@ -406,6 +512,7 @@ auto make_sheep_brain() -> NatureBrain {
 
 auto make_wolf_brain() -> NatureBrain {
   NatureBrain brain;
+  brain.add(std::make_unique<DefendBehavior>());
   brain.add(std::make_unique<WolfRetreatBehavior>());
   brain.add(std::make_unique<StalkPreyBehavior>());
   brain.add(std::make_unique<MenaceBehavior>());

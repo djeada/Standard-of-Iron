@@ -258,6 +258,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   WildlifeBirdsScattered,
   WildlifeBirdFlyoverObserved,
   WildlifePopulationHeld,
+  WildlifeCasualtyObserved,
   RangeIndicatorObserved,
   RangeIndicatorCountAtMost,
 };

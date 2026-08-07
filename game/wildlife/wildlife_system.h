@@ -113,6 +113,13 @@ private:
     Species species{Species::Sheep};
   };
 
+  struct QuarryRef {
+    Engine::Core::EntityID id{0};
+    float x{0.0F};
+    float z{0.0F};
+    bool civilian{false};
+  };
+
   void ensure_factory_registry();
   void spawn_initial_population(Engine::Core::World& world);
   void plan_groups();
@@ -131,6 +138,8 @@ private:
              Species species);
 
   void alert_group(std::uint16_t group_id, float duration);
+  void
+  rally_pack(std::uint16_t group_id, Engine::Core::EntityID foe_id, float duration);
   void issue_move(Engine::Core::World& world,
                   Engine::Core::EntityID entity_id,
                   float world_x,
@@ -150,11 +159,14 @@ private:
                                      float& out_z) const -> bool;
   [[nodiscard]] auto
   nearest_prey(float world_x, float world_z, float radius) const -> const AnimalRef*;
+  [[nodiscard]] auto
+  nearest_quarry(float world_x, float world_z, float radius) const -> const QuarryRef*;
 
   WildlifeSettings m_settings{};
   std::vector<GroupState> m_groups;
   std::vector<GroupRuntime> m_group_runtime;
   std::vector<AnimalRef> m_animals;
+  std::vector<QuarryRef> m_quarry;
   ThreatField m_threats;
   WildlifeStats m_stats{};
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory_registry;
