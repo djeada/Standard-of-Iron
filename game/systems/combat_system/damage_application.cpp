@@ -566,6 +566,18 @@ auto has_active_engagement(Engine::Core::World* world,
   return is_valid_enemy_unit(unit, current, true);
 }
 
+auto note_wildlife_aggressor(Engine::Core::Entity* target,
+                             Engine::Core::EntityID attacker_id) -> bool {
+  auto* wildlife = target->get_component<Engine::Core::WildlifeComponent>();
+  if (wildlife == nullptr) {
+    return false;
+  }
+  wildlife->aggressor_id = attacker_id;
+  wildlife->hostile_timer = Game::Wildlife::k_hostility_duration;
+  wildlife->think_cooldown = 0.0F;
+  return true;
+}
+
 auto can_retaliate(Engine::Core::Entity* entity,
                    const Engine::Core::UnitComponent* unit) -> bool {
   if ((entity == nullptr) || (unit == nullptr)) {
@@ -663,6 +675,10 @@ void assign_retaliation_target_if_needed(Engine::Core::World* world,
   }
 
   if (!is_valid_retaliation_attacker(attacker)) {
+    return;
+  }
+
+  if (note_wildlife_aggressor(target, attacker->get_id())) {
     return;
   }
 

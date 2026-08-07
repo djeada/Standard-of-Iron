@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include <limits>
 #include <utility>
+#include <vector>
 
 #include "render/entity/registry.h"
 #include "render/entity/renderer_constants.h"
@@ -481,6 +482,59 @@ TEST(StatelessWeaponRenderers, RpgSwordCutDrawsATrailAcrossItsStrikeWindow) {
   EXPECT_GT(archetype_count_at(0.45F), 1U);
   EXPECT_GT(archetype_count_at(0.60F), 1U);
   EXPECT_EQ(archetype_count_at(0.90F), 1U);
+}
+
+TEST(StatelessWeaponRenderers, SwordPointIsAFlatTriangleNotARoundPin) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  auto draw_aabb = [](const Render::GL::RenderArchetypeDraw& draw) {
+    AABB box;
+    for (const auto& v : draw.mesh->get_vertices()) {
+      box.include(
+          draw.local_model.map(QVector3D{v.position[0], v.position[1], v.position[2]}));
+    }
+    return box;
+  };
+
+  const std::vector<SwordRenderConfig> configs{SwordRenderConfig{},
+                                               RomanSwordRenderer{}.base_config()};
+  for (const auto& config : configs) {
+    EquipmentBatch batch;
+    SwordRenderer::submit(config, ctx, frames, palette, anim, batch);
+    ASSERT_FALSE(batch.archetypes.empty());
+    ASSERT_NE(batch.archetypes.front().archetype, nullptr);
+
+    AABB point;
+    float widest_blade = 0.0F;
+    for (const auto& draw : batch.archetypes.front().archetype->lods[0].draws) {
+      if (draw.mesh == nullptr) {
+        continue;
+      }
+      const AABB box = draw_aabb(draw);
+      if (box.mx.y() > point.mx.y()) {
+        point = box;
+      }
+    }
+    for (const auto& draw : batch.archetypes.front().archetype->lods[0].draws) {
+      if (draw.mesh == nullptr) {
+        continue;
+      }
+      const AABB box = draw_aabb(draw);
+      if (box.mn.y() > config.sword_length * 0.30F && box.mx.y() < point.mx.y()) {
+        widest_blade = std::max(widest_blade, box.mx.x() - box.mn.x());
+      }
+    }
+
+    const float point_width = point.mx.x() - point.mn.x();
+    const float point_thickness = point.mx.z() - point.mn.z();
+
+    ASSERT_GT(widest_blade, 0.0F);
+    EXPECT_GT(point_width, widest_blade * 0.70F);
+    EXPECT_LT(point_thickness, point_width * 0.55F);
+  }
 }
 
 TEST(StatelessWeaponRenderers, SwordProfileFieldsChangeVisibleMesh) {

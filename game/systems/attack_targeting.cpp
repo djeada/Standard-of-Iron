@@ -148,7 +148,8 @@ auto collect_attack_target_highlights(const AttackTargetingRequest& request)
     if (entity == nullptr) {
       continue;
     }
-    if (!Combat::is_valid_enemy_of_owner(request.local_owner_id, entity, true)) {
+    if (!Combat::is_auto_acquirable_enemy_of_owner(
+            request.local_owner_id, entity, true)) {
       continue;
     }
 

@@ -45,6 +45,8 @@ struct PreyRef {
   Engine::Core::EntityID id{0};
   float x{0.0F};
   float z{0.0F};
+  float radius{0.0F};
+  bool livestock{false};
 
   [[nodiscard]] auto valid() const noexcept -> bool { return entity != nullptr; }
 };
@@ -74,6 +76,9 @@ public:
   virtual void halt(const NatureContext& ctx) = 0;
   virtual void set_travel_speed(const NatureContext& ctx, bool urgent) = 0;
   virtual void alert_herd(std::uint16_t group_id, float duration) = 0;
+  virtual void mark_hostile(const NatureContext& ctx,
+                            Engine::Core::EntityID foe_id,
+                            bool rally_pack) = 0;
   virtual void note(NatureEvent event) = 0;
 
   [[nodiscard]] virtual auto pick_open_point(std::uint32_t& rng,
@@ -85,6 +90,9 @@ public:
                                              float& out_z) -> bool = 0;
   [[nodiscard]] virtual auto
   nearest_prey(float world_x, float world_z, float radius) -> PreyRef = 0;
+  [[nodiscard]] virtual auto
+  nearest_quarry(float world_x, float world_z, float radius) -> PreyRef = 0;
+  [[nodiscard]] virtual auto locate(Engine::Core::EntityID entity_id) -> PreyRef = 0;
   [[nodiscard]] virtual auto
   nearest_pack_hunter(float world_x, float world_z, float radius) -> ThreatQuery = 0;
   [[nodiscard]] virtual auto bite(const NatureContext& ctx,

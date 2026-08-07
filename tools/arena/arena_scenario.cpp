@@ -324,6 +324,8 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("WildlifeBirdFlyoverObserved");
   case ArenaExpectationKind::WildlifePopulationHeld:
     return QStringLiteral("WildlifePopulationHeld");
+  case ArenaExpectationKind::WildlifeCasualtyObserved:
+    return QStringLiteral("WildlifeCasualtyObserved");
   }
   return QStringLiteral("Unknown");
 }
@@ -4133,6 +4135,15 @@ struct ArenaScenarioRunner::Impl {
         }
         break;
       }
+      case ArenaExpectationKind::WildlifeCasualtyObserved:
+        if (wildlife_observation.min_population >=
+            wildlife_observation.peak_population) {
+          add_issue(QStringLiteral("wildlife_never_culled"),
+                    QStringLiteral("no animal was killed during the run (population "
+                                   "held at %1)")
+                        .arg(wildlife_observation.peak_population));
+        }
+        break;
       case ArenaExpectationKind::NoRenderVisibilityChurn:
       case ArenaExpectationKind::RpgFormationSurvivesLensGap:
       case ArenaExpectationKind::FullCreatureDetailOnly:

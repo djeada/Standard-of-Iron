@@ -382,7 +382,7 @@ find_nearest_tower_target(Engine::Core::Entity* tower,
     if (entity == tower) {
       continue;
     }
-    if (!is_valid_enemy_unit(tower_unit, entity, true)) {
+    if (!is_auto_acquirable_enemy(tower_unit, entity, true)) {
       continue;
     }
     if (entity->has_component<Engine::Core::BuildingComponent>() &&

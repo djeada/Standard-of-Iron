@@ -35,11 +35,27 @@ guarantees:
 
 - `VisibilityService` skips neutral units when it gathers vision sources, so wildlife
   never reveals a tile. A sheep cannot scout for you.
-- Wildlife is filtered out of automatic target selection (`is_valid_enemy_unit`) and never
-  auto-engages anything itself. Troops walk past a herd instead of stopping to kill it; a
-  hunt is something the player orders explicitly.
 - `is_troop_spawn` excludes both wildlife spawn types, so population counts, victory
   conditions and formation code ignore them.
+
+Neutrality decides who may be shot at, not what an animal _is_ to the combat code. An
+animal is an ordinary enemy of every owner (`is_valid_enemy_unit`), which is what makes an
+ordered hunt land, lets a wolf's bite provoke the retaliation every other hit provokes, and
+lets a soldier's swing connect with the wolf that is chewing on him. What neutrality buys
+is the second predicate, `is_auto_acquirable_enemy`: **passive** wildlife — every sheep, and
+any wolf that is not currently in a fight — is skipped by everything that picks a target on
+its own, so troops march past a herd, guard mode ignores it, towers do not waste bolts on
+it and the attack cursor does not paint a marker over every animal on the map. A wolf that
+has committed to a person, or that has been hit by one, carries `hostile_timer` for a few
+seconds; while it burns, that wolf is a target troops will take on their own initiative,
+which is what turns a pack rush into a fight instead of a massacre.
+
+The retaliation hook is the one place where wildlife takes a different path from a troop:
+`assign_retaliation_target_if_needed` records the attacker in `WildlifeComponent`
+(`aggressor_id`, `hostile_timer`) and stops, rather than hanging an `AttackTargetComponent`
+on the animal. An animal that carried one would be driven by the RTS attack processor and
+by its own brain at the same time, and the two would fight over its movement orders every
+tick.
 
 The renderer applies the matching rule on the presentation side: a bird is only submitted
 when its tile is _currently visible_, not merely explored, so a flock scattering in the
@@ -63,27 +79,37 @@ and the stat counters.
 `NatureBrain::tick` walks the behaviours from highest priority down and stops at the first
 one that returns true, so the priority ladder _is_ the animal's mind:
 
-| Priority   | Sheep           | Wolf           |
-| ---------- | --------------- | -------------- |
-| `Survival` | `sheep.flee`    | `wolf.retreat` |
-| `Interest` | `sheep.regroup` | `wolf.stalk`   |
-| `Routine`  | `sheep.graze`   | `wolf.menace`  |
-| `Ambient`  | `sheep.drift`   | `wolf.prowl`   |
+| Priority   | Sheep           | Wolf                          |
+| ---------- | --------------- | ----------------------------- |
+| `Survival` | `sheep.flee`    | `wolf.defend`, `wolf.retreat` |
+| `Interest` | `sheep.regroup` | `wolf.stalk`                  |
+| `Routine`  | `sheep.graze`   | `wolf.menace`                 |
+| `Ambient`  | `sheep.drift`   | `wolf.prowl`                  |
 
-**Sheep** graze, drift and panic. `sheep.flee` fires on any armed troop or wolf inside the
-alert radius and broadcasts the alarm to the whole group, so the herd bolts together;
+Two behaviours may share a priority, and `NatureBrain::add` keeps ties in registration
+order, so the table reads top to bottom exactly as the brain evaluates it.
+
+**Sheep** graze, drift and panic. `sheep.flee` fires on whoever last wounded the animal, on
+any armed troop or wolf inside the
+alert radius, and broadcasts the alarm to the whole group, so the herd bolts together;
 civilians and builders are deliberately weak threats, because a shepherd should not
 stampede the flock. `sheep.regroup` pulls back a sheep that has drifted too far from the
 centroid, which is what makes a herd read as a herd rather than as eight independent
 animals. Otherwise `sheep.graze` dwells in place and `sheep.drift` wanders near the herd.
 
-**Wolves** prowl, hunt and retreat. `wolf.retreat` calls the hunt off when troop strength
-near the wolf exceeds its tolerance (scaled by aggression). `wolf.stalk` picks the nearest
-sheep inside the detection radius, declines if the prey is standing behind a formation,
-and otherwise approaches on a per-wolf angle so the pack surrounds it instead of stacking;
-inside bite range it applies melee damage on the attack cooldown. With aggression at or
-above 0.5, `wolf.menace` closes on isolated civilians and holds a standoff distance —
-menacing, never damaging. `wolf.prowl` roams the pack anchor.
+**Wolves** prowl, hunt, fight and retreat. `wolf.defend` turns the animal on whoever
+wounded it and calls the rest of the pack in, unless the wolf is outnumbered — the same
+tolerance `wolf.retreat` uses, so exactly one of the two takes the tick: a pack answers a
+lone hunter and scatters from a column. `wolf.stalk` weighs the nearest sheep against the
+nearest person inside the detection radius, preferring livestock at equal distance and
+civilians over soldiers, and declines a quarry that is standing behind enough strength to
+hurt the pack — which, since a person counts toward the strength around themself, is what
+reduces to "wolves take the isolated and leave the escorted alone". It approaches on a
+per-wolf angle so the pack surrounds the target instead of stacking, and inside bite range
+applies melee damage on the attack cooldown. Committing to a person, rather than to a
+sheep, is what marks the wolf hostile. With aggression at or above 0.5, `wolf.menace`
+closes on civilians it declined to hunt and holds a standoff distance — menacing, never
+damaging. `wolf.prowl` roams the pack anchor.
 
 The ambient behaviours never decline, so an animal always has something to do.
 
@@ -194,8 +220,8 @@ same map always lays out the same way.
 ## Persistence
 
 The animals themselves are ordinary entities, so the world snapshot already carries them;
-`WildlifeComponent` adds species, behaviour, group id, anchor, timers and the RNG state to
-the entity payload. What the entity stream cannot express is the _population plan_ — the
+`WildlifeComponent` adds species, behaviour, group id, anchor, timers, the animal's
+current aggressor and the RNG state to the entity payload. What the entity stream cannot express is the _population plan_ — the
 group anchors, their desired sizes and their respawn countdowns — plus the birds, which
 have no entities at all. Those live in a `wildlife` object in the save metadata, written
 and restored beside the undead-zone state. A restored system does not re-run its initial
@@ -271,7 +297,7 @@ a white fleece is what made a grazing herd read as plastic.
 
 ## Arena fixtures
 
-Nine scenarios cover the feature; run them with
+Ten scenarios cover the feature; run them with
 `arena_app --batch --scenario <id>`:
 
 | Scenario                     | What it proves                                              |
@@ -280,6 +306,7 @@ Nine scenarios cover the feature; run them with
 | `wildlife_herd_flees_troops` | A patrol triggers the herd's flee response                  |
 | `wildlife_wolf_hunt`         | Pack stalking, bites, herd panic                            |
 | `wildlife_wolf_pack`         | Undisturbed prowl: wolf silhouette, coat and gait           |
+| `wildlife_wolf_ambush`       | A pack rushes a lone patrol; both sides take losses         |
 | `wildlife_bird_scatter`      | Resident flock cruise and burst under a marching column     |
 | `wildlife_bird_flyover`      | Empty sky, then a flock crosses it and leaves               |
 | `wildlife_mixed_pasture`     | Sheep, wolves and a passing flock in one frame              |
@@ -288,7 +315,8 @@ Nine scenarios cover the feature; run them with
 
 They assert through wildlife-specific expectations (`WildlifeGrazingObserved`,
 `WildlifeFleeObserved`, `WildlifeHuntObserved`, `WildlifeBirdsScattered`,
-`WildlifeBirdFlyoverObserved`, `WildlifePopulationHeld`) rather than by eye.
+`WildlifeBirdFlyoverObserved`, `WildlifePopulationHeld`,
+`WildlifeCasualtyObserved`) rather than by eye.
 
 ## Authoring in the map editor
 

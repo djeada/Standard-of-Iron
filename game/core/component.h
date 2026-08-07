@@ -1858,8 +1858,14 @@ public:
   float think_cooldown{0.0F};
   float state_timer{0.0F};
   float alarm_timer{0.0F};
+  float hostile_timer{0.0F};
   EntityID focus_id{0};
+  EntityID aggressor_id{0};
   std::uint32_t rng_state{0U};
+
+  [[nodiscard]] auto is_hostile() const noexcept -> bool {
+    return species == Game::Wildlife::Species::Wolf && hostile_timer > 0.0F;
+  }
 };
 
 class MovementIntentComponent : public Component {
