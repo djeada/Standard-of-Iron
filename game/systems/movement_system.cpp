@@ -32,6 +32,11 @@ static constexpr float k_stuck_progress_epsilon_sq = 0.15F * 0.15F;
 namespace {
 
 constexpr float hold_mode_turn_speed_degrees = 180.0F;
+
+constexpr float k_duel_footwork_degrees_per_second = 44.0F;
+constexpr float k_duel_footwork_period_seconds = 9.0F;
+constexpr float k_duel_footwork_turn_degrees_per_second = 360.0F;
+constexpr float k_duel_min_reach_sq = 0.04F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 constexpr float full_translation_heading_error_degrees = 20.0F;
 constexpr float stopped_translation_heading_error_degrees = 100.0F;
@@ -244,6 +249,8 @@ void MovementSystem::update(Engine::Core::World* world, float delta_time) {
     }
   }
 
+  m_duel_clock += delta_time;
+
   process_pending_path_requests(*world);
   world->each<Engine::Core::MovementComponent>(
       [this, world, delta_time](Engine::Core::EntityID id,
@@ -333,6 +340,68 @@ void MovementSystem::repath_after_obstruction_release(
   }
 }
 
+auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
+                                         Engine::Core::World* world,
+                                         Engine::Core::TransformComponent& transform,
+                                         const Engine::Core::AttackComponent& attack,
+                                         float delta_time) const -> bool {
+  if (world == nullptr ||
+      entity->get_component<Engine::Core::CommanderComponent>() == nullptr) {
+    return false;
+  }
+
+  auto* opponent = world->get_entity(attack.melee_lock_target_id);
+  if (opponent == nullptr) {
+    return false;
+  }
+
+  auto const* opponent_attack =
+      opponent->get_component<Engine::Core::AttackComponent>();
+  if (opponent_attack == nullptr || !opponent_attack->in_melee_lock ||
+      opponent_attack->melee_lock_target_id != entity->get_id()) {
+    return false;
+  }
+
+  auto const* opponent_transform =
+      opponent->get_component<Engine::Core::TransformComponent>();
+  if (opponent_transform == nullptr) {
+    return false;
+  }
+
+  float const rx = transform.position.x - opponent_transform->position.x;
+  float const rz = transform.position.z - opponent_transform->position.z;
+  if ((rx * rx) + (rz * rz) < k_duel_min_reach_sq) {
+    return false;
+  }
+
+  auto const lhs = std::min(entity->get_id(), opponent->get_id());
+  auto const rhs = std::max(entity->get_id(), opponent->get_id());
+  float const direction = (((lhs + rhs) & 1U) == 0U) ? 1.0F : -1.0F;
+  float const sway = std::sin(m_duel_clock * 2.0F * std::numbers::pi_v<float> /
+                              k_duel_footwork_period_seconds);
+  float const angle = direction * sway * k_duel_footwork_degrees_per_second *
+                      delta_time * std::numbers::pi_v<float> / 180.0F;
+
+  float const cos_a = std::cos(angle);
+  float const sin_a = std::sin(angle);
+  transform.position.x = opponent_transform->position.x + (rx * cos_a) - (rz * sin_a);
+  transform.position.z = opponent_transform->position.z + (rx * sin_a) + (rz * cos_a);
+
+  float const face_x = opponent_transform->position.x - transform.position.x;
+  float const face_z = opponent_transform->position.z - transform.position.z;
+  float const target_yaw =
+      std::atan2(face_x, face_z) * 180.0F / std::numbers::pi_v<float>;
+  float const current = transform.rotation.y;
+  float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
+  transform.rotation.y =
+      current + std::clamp(diff,
+                           -k_duel_footwork_turn_degrees_per_second * delta_time,
+                           k_duel_footwork_turn_degrees_per_second * delta_time);
+  transform.desired_yaw = transform.rotation.y;
+  transform.has_desired_yaw = false;
+  return true;
+}
+
 void MovementSystem::move_unit(Engine::Core::Entity* entity,
                                Engine::Core::World* world,
                                float delta_time) {
@@ -412,8 +481,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     movement->clear_path();
-    transform->desired_yaw = transform->rotation.y;
-    transform->has_desired_yaw = false;
+    if (!apply_duel_footwork(entity, world, *transform, *atk, delta_time)) {
+      transform->desired_yaw = transform->rotation.y;
+      transform->has_desired_yaw = false;
+    }
     return;
   }
 

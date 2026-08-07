@@ -80,6 +80,15 @@ Two settings matter more than they look:
   the ground is rough enough to break the shapes up. The floor eases into the
   surrounding noise over a taper rather than stepping out of it, so the
   mountains do not stand as a wall on the touchline.
+- **the horizon** — the grey ring on the skyline is not the arena terrain and
+  no floor extent or fog density will move it. It is `MapBoundaryFogRenderer`,
+  drawn from the height map's own dimensions, and `arena_floor_half_extent`
+  clamps to the 96x96 grid (about 45 either way) however large a number it is
+  given. `suppress_boundary_mountains` configures that ring away — but the ring
+  is also what hides the cut edge of the field, so a scene that suppresses it
+  has to close its own horizon. `elevation_patches` laid in an overlapping ring
+  does that in the scene's own grass; make the mounds tall enough that the
+  widest shot's camera still sits below their tops.
 - **the environment overrides** — leave `exposure_override` and
   `fog_density_override` alone unless the scene really needs them. Setting them
   is what turned the first generation of capture scenarios into murk. Locking
@@ -140,6 +149,41 @@ ffmpeg -v info -i 01_shot.mp4 \
 Note that the _finished cut_ opens on black by design — `promo-edit.py` applies
 an `OPENING_FADE` from black, so a dark first frame there is the edit, not the
 recorder.
+
+## The commander duel reel
+
+`commander_duel.json` over `promo_commander_duel` is the single-combat reel:
+both armies halt in line, Scipio and Hannibal walk out, and the fight runs until
+Hannibal goes down. Four things about it generalise to any close shot of a
+fight:
+
+- **Frame the pair side-on, and compute the angle rather than guessing.** The
+  camera offset is `(sin(yaw), _, cos(yaw))`, so a side-on lens sits
+  perpendicular to the line between the two fighters:
+  `yaw = atan2(-(b.z - a.z), b.x - a.x)`. Duellists circle each other, so that
+  angle moves through the fight — read the pair's positions out of `trace.jsonl`
+  at each shot's window and set the keys from them. A yaw that happens to lie
+  along the pair puts one man completely behind the other, which is what a
+  "why is the hero's back to me" shot always turns out to be.
+- **Stay on the lit arc.** With this scenario's hour the field reads well from
+  roughly `yaw 300` through `140`; the opposite side is in the ring's shadow and
+  comes back muddy. Keeping every shot on one side also keeps the cut on one
+  side of the line.
+- **Cut to the trace, not to the clock.** Signature moves are the beats worth
+  slow-motion, and they are the frames where a commander's `combat_action_id` is
+  `RtsCommander*`. The killing blow is the frame the loser's health reaches
+  zero — several seconds before the body is removed, so a shot authored off the
+  removal time opens on a corpse.
+- **Distance 7–9 m is the usable close range.** Nearer than about 6 m the troop
+  meshes stop holding up and the fighters overlap; further than about 10 m the
+  duel stops being the subject.
+
+```sh
+build/bin/arena_app --promo-spec tools/arena/promos/commander_duel.json \
+  --promo-out artifacts/promo
+scripts/promo-edit.py --spec tools/arena/promos/commander_duel.json \
+  --clips artifacts/promo/commander_duel
+```
 
 ## The humanoid showcase reel
 
