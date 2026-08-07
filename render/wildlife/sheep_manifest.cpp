@@ -27,8 +27,6 @@ struct SheepClipSpec {
   SheepGait gait{SheepGait::Stand};
 };
 
-// Each locomotion clip bakes one gait cycle, so the renderer plays exactly one clip
-// per `sheep_gait_advance(gait)` of ground covered.
 constexpr std::array<SheepClipSpec, 6> k_sheep_clips{{
     {{"idle", 20U, 20.0F, true}, 0.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
     {{"graze", 24U, 20.0F, true}, 1.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},

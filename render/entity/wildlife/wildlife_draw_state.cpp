@@ -11,9 +11,6 @@ namespace Render::GL::Wildlife {
 
 namespace {
 
-// Where each animal is in its gait cycle. Held here rather than on the entity because
-// the stride that converts ground into cycles is a property of the model, and the
-// simulation has no business knowing it.
 struct GaitCursor {
   float distance{0.0F};
   float cycles{0.0F};
@@ -116,8 +113,6 @@ auto gait_phase(const DrawState& state, float advance) -> float {
   }
   cursor.stamp = state.time;
 
-  // Zero when the same animal is drawn twice in one frame, so extra passes cannot
-  // wind the cycle on.
   float const stepped = state.distance - cursor.distance;
   cursor.distance = state.distance;
   if (advance > 1.0e-4F && stepped > 0.0F) {

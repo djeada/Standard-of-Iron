@@ -15,7 +15,6 @@ namespace Render::GL::Wildlife {
 
 namespace {
 
-// The catalogue speed for wildlife/sheep.
 constexpr float k_top_speed = 1.5F;
 constexpr float k_run_threshold = 0.45F;
 
@@ -37,8 +36,6 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
                                      hash_unit_float(state.seed, 29U))
                              : mixed(wool, QVector3D(0.50F, 0.40F, 0.30F), 0.74F);
 
-  // Fleece is greasy and dusty, never paper white, and the tuft roles need real
-  // separation or the lumps flatten into one blob at gameplay distance.
   wool = mixed(wool, QVector3D(0.80F, 0.77F, 0.70F), 0.34F);
   QVector3D const shade =
       mixed(tinted(wool, 0.70F), QVector3D(0.34F, 0.30F, 0.26F), 0.22F);

@@ -41,8 +41,6 @@ struct WolfDrive {
   WolfGait gait{WolfGait::Stand};
 };
 
-// Ground the body covers per gait cycle. The renderer divides distance travelled by
-// this to get the animation phase, which is what keeps planted paws from sliding.
 [[nodiscard]] auto wolf_gait_advance(WolfGait gait) noexcept -> float;
 
 [[nodiscard]] auto wolf_bind_pose() noexcept -> const RigPose&;

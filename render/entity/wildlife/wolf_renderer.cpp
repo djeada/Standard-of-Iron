@@ -15,8 +15,6 @@ namespace Render::GL::Wildlife {
 
 namespace {
 
-// The catalogue speed for wildlife/wolf. Ratios are taken against it so the gait
-// thresholds below mean the same thing they read as.
 constexpr float k_top_speed = 3.1F;
 constexpr float k_run_threshold = 0.30F;
 
@@ -31,8 +29,7 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
 
   Render::GL::WildlifeVariant variant;
   variant.roles[Render::Wildlife::k_wolf_role_fur - 1U] = base;
-  // The dark roles need a floor. Taken all the way down, a black-morph wolf's saddle
-  // and paws land under the scene's ambient and punch holes in its own silhouette.
+
   variant.roles[Render::Wildlife::k_wolf_role_saddle - 1U] =
       mixed(base, QVector3D(0.24F, 0.21F, 0.18F), 0.55F);
   variant.roles[Render::Wildlife::k_wolf_role_pale - 1U] =

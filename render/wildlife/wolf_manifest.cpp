@@ -29,8 +29,6 @@ struct WolfClipSpec {
   WolfGait gait{WolfGait::Stand};
 };
 
-// Each locomotion clip bakes one gait cycle, so the renderer plays exactly one clip
-// per `wolf_gait_advance(gait)` of ground covered.
 constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
     {{"idle", 20U, 20.0F, true},
      0.0F,

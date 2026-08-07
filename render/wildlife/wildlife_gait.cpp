@@ -9,8 +9,6 @@ namespace {
 
 constexpr float k_pi = 3.14159265F;
 
-// Perpendicular to `dir` within the animal's sagittal plane. Legs never leave that
-// plane, so the two-bone solve is planar and the knee only has two choices.
 auto sagittal_normal(const QVector3D& dir) noexcept -> QVector3D {
   return {0.0F, dir.z(), -dir.y()};
 }
@@ -35,9 +33,7 @@ auto make_leg_rest(const QVector3D& hip,
   QVector3D const span = ankle - hip;
   float const len = span.length();
   if (len > 1.0e-5F) {
-    // A sheep's hock falls behind the hip-to-fetlock line and its carpus in front of
-    // it. Reading the side off the standing pose keeps the solved knee on whichever
-    // side the model was drawn with.
+
     float const side = QVector3D::dotProduct(knee - hip, sagittal_normal(span / len));
     rest.bend = side < 0.0F ? -1.0F : 1.0F;
   }

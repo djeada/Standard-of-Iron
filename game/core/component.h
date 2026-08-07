@@ -261,10 +261,6 @@ private:
   float goal_x{0.0F}, goal_y{0.0F};
   float vx{0.0F}, vz{0.0F};
 
-  // Ground actually covered, in world units, accumulated where the movement system
-  // commits a step. Animation that has to stay in step with the map - a gait cycle
-  // above all - drives off this rather than off elapsed time, so a planted foot
-  // cannot slide when the entity accelerates or gets blocked.
   float travelled{0.0F};
 
   std::vector<std::pair<float, float>> path;

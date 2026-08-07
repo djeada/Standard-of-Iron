@@ -220,8 +220,6 @@ auto ring_centroid(const std::vector<QVector3D>& ring) -> QVector3D {
   return sum / static_cast<float>(ring.size());
 }
 
-// Newell's method: right-handed, so a ring wound counter-clockwise when viewed from
-// the +axis side returns a normal pointing along +axis.
 auto ring_normal(const std::vector<QVector3D>& ring) -> QVector3D {
   QVector3D normal;
   for (std::size_t i = 0; i < ring.size(); ++i) {
@@ -234,8 +232,6 @@ auto ring_normal(const std::vector<QVector3D>& ring) -> QVector3D {
   return normal;
 }
 
-// Reverses every ring when the strip would come out inside-out. A no-op for rings
-// already wound so that the first one's normal points down the strip.
 void orient_ring_strip_outward(std::vector<std::vector<QVector3D>>& rings) {
   if (rings.size() < 2U || rings.front().size() < 3U) {
     return;
@@ -354,12 +350,6 @@ auto build_barrel_mesh(const BarrelNode& node) -> std::unique_ptr<Render::GL::Me
     }
   }
 
-  // append_ring_strip takes the ring winding at face value, so whether a barrel ends
-  // up with outward normals depends on which end of the animal its rings were
-  // authored from. Getting it backwards lights the whole torso as if it were inside
-  // out - a flat dark shell that reads as a missing colour role, not as geometry - so
-  // decide from the geometry rather than trusting the author: the first ring's polygon
-  // normal has to point along the strip.
   orient_ring_strip_outward(rings);
 
   std::vector<Render::GL::Vertex> vertices;

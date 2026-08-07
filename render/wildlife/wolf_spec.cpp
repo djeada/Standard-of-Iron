@@ -20,10 +20,6 @@ using Render::Creature::Quadruped::TubeNode;
 
 constexpr float k_two_pi = 6.28318530718F;
 
-// Authored against a standing shoulder height of 0.646. A wolf is built the opposite
-// way to the sheep it hunts: legs are half its height, the chest is deep and narrow
-// rather than round, the belly tucks up hard behind the last rib, and the back is
-// long - 1.23 shoulder heights from brisket to croup.
 constexpr float k_fore_half_width = 0.088F;
 constexpr float k_hind_half_width = 0.094F;
 
@@ -35,11 +31,6 @@ struct BodyRing {
   float bottom;
 };
 
-// Withers at 0.646, deepest at the heart girth, tucked up hard at the loin, then a
-// slight rise over the croup. Plan-view sections of a CC0 reference wolf show the
-// waist is as much a narrowing as a tuck: half the body's width goes at the loin,
-// 0.14 against 0.22 over the ribs and hips. That pinch, the topline dip behind the
-// shoulder, and the belly tuck are what read as "wolf" at any distance.
 constexpr std::array<BodyRing, 14> k_body_rings{{
     {0.396F, 0.466F, 0.028F, 0.044F, 0.046F},
     {0.372F, 0.470F, 0.062F, 0.088F, 0.090F},
@@ -57,8 +48,6 @@ constexpr std::array<BodyRing, 14> k_body_rings{{
     {-0.444F, 0.510F, 0.024F, 0.034F, 0.030F},
 }};
 
-// How far down the back the dark saddle reaches, per ring. Waving it stops the fur
-// boundary reading as a painted stripe.
 constexpr std::array<float, k_body_rings.size()> k_saddle_reach{{0.62F,
                                                                  0.50F,
                                                                  0.30F,
@@ -82,7 +71,6 @@ struct LegPlan {
   bool hind;
 };
 
-// Diagonal pairs move together: a wolf trots.
 constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
     {-k_fore_half_width, 0.0F, false},
     {k_fore_half_width, 0.5F, false},
@@ -90,9 +78,6 @@ constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
     {k_hind_half_width, 0.0F, true},
 }};
 
-// Standing joints. Both limbs carry a real angle at rest - the fore at the elbow, the
-// hind through the stifle and hock - because a column that stands dead straight has no
-// travel left to fold into, and its paw can only swing through the ground on an arc.
 struct LegRestPlan {
   float knee_y;
   float knee_z;
@@ -109,10 +94,6 @@ constexpr LegRestPlan k_fore_rest{
 constexpr LegRestPlan k_hind_rest{
     0.286F, -0.140F, 0.134F, -0.256F, 0.024F, -0.220F, 0.438F, -0.222F};
 
-// The fore limb folds least, so it sets the stride both ends have to share: 0.30 at
-// most before the paw outruns its reach and the leg locks straight. Each plan sits
-// just inside that, which puts the cadence at 3.1 units/s near 4 Hz for the run and
-// keeps the walk under 2.5 Hz across its whole speed band.
 constexpr GaitPlan k_gait_stalk{0.130F, 0.70F, 0.014F, 0.030F};
 constexpr GaitPlan k_gait_walk{0.235F, 0.62F, 0.028F, 0.060F};
 constexpr GaitPlan k_gait_run{0.290F, 0.38F, 0.074F, 0.100F};
@@ -148,9 +129,6 @@ auto leg_rests() noexcept -> const std::array<LegRest, k_leg_count>& {
   return rests;
 }
 
-// Mirrors the cross-section make_oval_ring builds: the fraction of a ring's
-// half_width the barrel actually has at a given height, with the height measured in
-// units of the ring's vertical radius out from its centre.
 auto oval_width_fraction(float height) -> float {
   constexpr std::array<std::pair<float, float>, 6> k_profile{{{1.00F, 0.00F},
                                                               {0.85F, 0.45F},
@@ -170,8 +148,6 @@ auto oval_width_fraction(float height) -> float {
   return 0.0F;
 }
 
-// A shell that sits `k_saddle_relief` proud of the body wherever it is widest, so the
-// dark back is a layer of fur over the barrel rather than a second torso volume.
 auto saddle_rings() -> std::vector<Render::Creature::Quadruped::BarrelRing> {
   std::vector<Render::Creature::Quadruped::BarrelRing> rings;
   rings.reserve(k_body_rings.size());
@@ -415,8 +391,7 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                        bind.poll,
                        0.078F,
                        0.062F));
-  // The ruff has to stay inside the chest's width. Wider than the body it becomes a
-  // collar the head is posted through.
+
   nodes.push_back(ellipsoid("wolf.ruff",
                             Bone::NeckTop,
                             k_wolf_role_fur,
@@ -573,8 +548,6 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
         hind ? QVector3D(0.056F, 0.100F, 0.096F) : QVector3D(0.048F, 0.086F, 0.078F)));
   }
 
-  // One continuous brush. Stacking ellipsoids along the tail segmented it into a
-  // caterpillar; the swell has to live in the tube radii instead.
   nodes.push_back(tube("wolf.tail.base",
                        Bone::TailBase,
                        k_wolf_role_fur,

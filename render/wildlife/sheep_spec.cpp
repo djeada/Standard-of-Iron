@@ -22,19 +22,12 @@ using Render::Creature::Quadruped::TubeNode;
 
 constexpr float k_two_pi = 6.28318530718F;
 
-// Everything below is authored against a standing shoulder height of 0.612 and holds
-// the proportions a sheep is recognised by: legs 47% of that height, barrel 0.53 deep
-// and 0.55 wide, 1.19 shoulder heights long, and widest across the hips.
 constexpr float k_hip_y = 0.300F;
 constexpr float k_knee_y = 0.164F;
 constexpr float k_fetlock_y = 0.052F;
 constexpr float k_fore_hip_z = 0.180F;
 constexpr float k_hind_hip_z = -0.212F;
 
-// Neck root sits at the front of the chest, not on top of the withers: that is what
-// lets the muzzle reach the grass over a neck this short. A sheep carries its head
-// barely above its own topline with the face angled down, which is most of what
-// separates its profile from a goat's.
 constexpr QVector3D k_withers(0.0F, 0.452F, 0.250F);
 constexpr QVector3D k_poll_up(0.0F, 0.616F, 0.366F);
 constexpr QVector3D k_graze_dir(0.0F, -0.974F, 0.226F);
@@ -48,18 +41,6 @@ struct BodyRing {
   float bottom;
 };
 
-// Traced off the sagittal section of a CC0 reference ewe and scaled to a shoulder
-// height of 0.612. A section beats sampling vertices per slab: the reference is only
-// 610 triangles, far too few for a min/max per slice to describe its outline, and the
-// legs sit off the centreline so the plane cuts the body alone.
-//
-// The three things that section says, and that the earlier barrel had wrong: the
-// brisket hangs well below the flank rather than the underline running flat; the
-// topline crests behind centre and dips again over the shoulder; and the barrel is
-// only about as wide at mid-body as it is deep, flaring out across the hips. The
-// ring-to-ring jitter on top of that is the whole of the fleece texture - separate
-// clumps laid over this surface intersect it in hard lines that flat shading turns
-// into plates, so the wool has to be breathed into the barrel itself.
 constexpr std::array<BodyRing, 19> k_body_rings{{
     {-0.343F, 0.395F, 0.067F, 0.095F, 0.095F},
     {-0.318F, 0.398F, 0.141F, 0.144F, 0.144F},
@@ -82,9 +63,6 @@ constexpr std::array<BodyRing, 19> k_body_rings{{
     {0.300F, 0.480F, 0.040F, 0.120F, 0.120F},
 }};
 
-// Diagonal pairs, and enough angle at rest for the limb to fold: a carpus carried
-// slightly forward in front, a hock set back behind. A leg that stands dead straight
-// has no travel to give and can only swing its hoof through the ground on an arc.
 struct LegPlan {
   float x;
   float z;
@@ -100,9 +78,6 @@ constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
     {0.114F, k_hind_hip_z, 0.0F, -0.056F, 0.006F},
 }};
 
-// The fore limb folds least, so it sets the stride both ends have to share: 0.24 at
-// most before the hoof outruns its reach and the leg locks straight. At the sheep's
-// 1.5 units/s that puts the run near 2.9 Hz and holds the walk under 2.4 Hz.
 constexpr GaitPlan k_gait_walk{0.185F, 0.64F, 0.024F, 0.060F};
 constexpr GaitPlan k_gait_run{0.230F, 0.44F, 0.058F, 0.100F};
 
@@ -173,9 +148,6 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
       QVector3D::crossProduct(facing, QVector3D(1.0F, 0.0F, 0.0F)).normalized();
   QVector3D const side = QVector3D::crossProduct(head_up, facing).normalized();
 
-  // The head hangs well off the neck axis when the sheep is up, so the face points
-  // forward and down, and straightens into line with the neck as it swings down to
-  // graze.
   QVector3D const muzzle_dir =
       (facing - (head_up * (1.58F - (drive.graze * 1.38F)))).normalized();
 
@@ -390,8 +362,6 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                             bind.poll + (facing * 0.036F) + (head_up * 0.008F),
                             {0.070F, 0.066F, 0.080F}));
 
-  // The fleece line stops at the poll. Sat any further forward this reads as a cap
-  // pulled over the head rather than the end of the wool.
   nodes.push_back(ellipsoid("sheep.poll_wool",
                             Bone::Head,
                             k_sheep_role_wool_light,
@@ -457,8 +427,6 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     const LegJoints& joints = bind.legs[i];
     bool const hind = i >= 2U;
 
-    // Thigh and shoulder mass ride the leg bone so they swing with it; the skirt
-    // belongs to the body and just closes the seam under the barrel.
     nodes.push_back(ellipsoid(hind ? "sheep.thigh" : "sheep.shoulder",
                               k_shoulders[i],
                               k_sheep_role_wool,

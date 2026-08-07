@@ -38,8 +38,6 @@ struct SheepDrive {
   SheepGait gait{SheepGait::Stand};
 };
 
-// Ground the body covers per gait cycle. The renderer divides distance travelled by
-// this to get the animation phase, which is what keeps planted hooves from sliding.
 [[nodiscard]] auto sheep_gait_advance(SheepGait gait) noexcept -> float;
 
 [[nodiscard]] auto sheep_bind_pose() noexcept -> const RigPose&;
