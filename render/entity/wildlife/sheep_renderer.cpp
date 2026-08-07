@@ -91,8 +91,20 @@ void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Sheep;
   inputs.variant = resolve_variant(state);
-  inputs.phase = gait_phase(state, Render::Wildlife::sheep_gait_advance(gait));
-  inputs.state = state_for_gait(state, gait);
+
+  float const walk_phase =
+      gait_phase(state, Render::Wildlife::sheep_gait_advance(gait));
+
+  if (state.dead) {
+    inputs.state = Render::Creature::AnimationStateId::Dead;
+    inputs.phase = 1.0F;
+  } else if (state.death_progress >= 0.0F) {
+    inputs.state = Render::Creature::AnimationStateId::Die;
+    inputs.phase = state.death_progress;
+  } else {
+    inputs.phase = walk_phase;
+    inputs.state = state_for_gait(state, gait);
+  }
 
   Render::Wildlife::submit_wildlife(ctx, inputs, out);
 }

@@ -28,11 +28,12 @@ enum class Bone : std::uint8_t {
   FootBR = 13,
   NeckTop = 14,
   Head = 15,
-  EarL = 16,
-  EarR = 17,
-  TailBase = 18,
-  TailTip = 19,
-  Count = 20,
+  Jaw = 16,
+  EarL = 17,
+  EarR = 18,
+  TailBase = 19,
+  TailTip = 20,
+  Count = 21,
 };
 
 inline constexpr std::size_t k_bone_count = static_cast<std::size_t>(Bone::Count);
@@ -65,6 +66,8 @@ struct RigPose {
   QVector3D withers{};
   QVector3D poll{};
   QVector3D muzzle{};
+  QVector3D jaw_hinge{};
+  QVector3D jaw_tip{};
 
   QVector3D ear_base_l{};
   QVector3D ear_tip_l{};

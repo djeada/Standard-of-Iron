@@ -83,5 +83,13 @@ inline constexpr std::uint16_t k_humanoid_hold_spear_attack_clip =
     Animation::k_humanoid_hold_spear_attack_clip;
 inline constexpr std::uint16_t k_humanoid_hold_bow_attack_clip =
     Animation::k_humanoid_hold_bow_attack_clip;
+inline constexpr std::uint16_t k_humanoid_unarmed_jab_clip =
+    Animation::k_humanoid_unarmed_jab_clip;
+inline constexpr std::uint16_t k_humanoid_unarmed_cross_clip =
+    Animation::k_humanoid_unarmed_cross_clip;
+inline constexpr std::uint16_t k_humanoid_unarmed_hook_clip =
+    Animation::k_humanoid_unarmed_hook_clip;
+inline constexpr std::uint8_t k_humanoid_unarmed_variant_count =
+    Animation::k_humanoid_unarmed_variant_count;
 
 } // namespace Render::Creature

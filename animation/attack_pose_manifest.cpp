@@ -881,85 +881,124 @@ resolve_classic_spear_pose(const HumanoidWeaponAttackPoseInputs& inputs,
 [[nodiscard]] auto
 resolve_basic_melee_pose(const HumanoidWeaponAttackPoseInputs& inputs) noexcept
     -> HumanoidWeaponAttackPoseSample {
-  float const strike_phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
+  float const phase = std::clamp(inputs.attack_phase, 0.0F, 1.0F);
   float const shoulder_y = inputs.shoulder_y;
-
-  PoseVec3 const rest_pos{0.22F, shoulder_y + 0.02F, 0.18F};
-  PoseVec3 const chamber_pos{0.30F, shoulder_y + 0.08F, 0.05F};
-  PoseVec3 const strike_pos{0.28F, shoulder_y - 0.05F, 0.65F};
-  PoseVec3 const followthrough_pos{0.10F, shoulder_y - 0.12F, 0.55F};
-
   HumanoidWeaponAttackPoseSample sample{};
-  float torso_twist = 0.0F;
+  auto const mix = [](float from, float to, float t) {
+    return from + ((to - from) * t);
+  };
+
+  PoseVec3 const guard_l{-0.14F, shoulder_y + 0.10F, 0.29F};
+  PoseVec3 const guard_r{0.14F, shoulder_y + 0.11F, 0.27F};
+  PoseVec3 chamber_l = guard_l;
+  PoseVec3 chamber_r = guard_r;
+  PoseVec3 contact_l = guard_l;
+  PoseVec3 contact_r = guard_r;
+  PoseVec3 follow_l = guard_l;
+  PoseVec3 follow_r = guard_r;
+
+  float chamber_rotation = 0.0F;
+  float contact_rotation = 0.0F;
+  float follow_rotation = 0.0F;
+  float contact_lean = 0.0F;
+  float follow_lean = 0.0F;
+  float contact_step_l = 0.0F;
+  float contact_step_r = 0.0F;
+
+  switch (inputs.variant % 3U) {
+  case 0U:
+    chamber_l = {-0.20F, shoulder_y + 0.12F, 0.20F};
+    contact_l = {-0.055F, shoulder_y + 0.055F, 0.735F};
+    follow_l = {-0.035F, shoulder_y + 0.035F, 0.665F};
+    chamber_rotation = -0.035F;
+    contact_rotation = 0.045F;
+    follow_rotation = 0.030F;
+    contact_lean = 0.040F;
+    follow_lean = 0.032F;
+    contact_step_l = 0.075F;
+    break;
+  case 1U:
+    chamber_r = {0.25F, shoulder_y + 0.08F, 0.16F};
+    contact_r = {0.045F, shoulder_y + 0.035F, 0.765F};
+    follow_r = {-0.015F, shoulder_y + 0.005F, 0.685F};
+    chamber_rotation = -0.080F;
+    contact_rotation = 0.135F;
+    follow_rotation = 0.095F;
+    contact_lean = 0.070F;
+    follow_lean = 0.052F;
+    contact_step_r = 0.070F;
+    contact_step_l = 0.018F;
+    break;
+  default:
+    chamber_l = {-0.30F, shoulder_y + 0.06F, 0.30F};
+    contact_l = {0.115F, shoulder_y + 0.035F, 0.555F};
+    follow_l = {0.175F, shoulder_y - 0.015F, 0.475F};
+    chamber_rotation = -0.105F;
+    contact_rotation = 0.155F;
+    follow_rotation = 0.105F;
+    contact_lean = 0.050F;
+    follow_lean = 0.038F;
+    contact_step_l = 0.048F;
+    contact_step_r = 0.018F;
+    break;
+  }
+
+  float rotation = 0.0F;
   float forward_lean = 0.0F;
-  float shoulder_dip = 0.0F;
-  float step_forward = 0.0F;
+  float step_l = 0.0F;
+  float step_r = 0.0F;
 
-  if (strike_phase < 0.20F) {
-    float const t = strike_phase / 0.20F;
-    float const ease_t = t * t;
-    sample.right_hand = lerp(rest_pos, chamber_pos, ease_t);
-    sample.left_hand = {-0.18F, shoulder_y + 0.02F, 0.22F - 0.08F * t};
-    torso_twist = -0.04F * ease_t;
-    shoulder_dip = -0.02F * ease_t;
-  } else if (strike_phase < 0.28F) {
-    sample.right_hand = chamber_pos;
-    sample.left_hand = {-0.18F, shoulder_y + 0.02F, 0.14F};
-    torso_twist = -0.04F;
-    shoulder_dip = -0.02F;
-  } else if (strike_phase < 0.48F) {
-    float const t = (strike_phase - 0.28F) / 0.20F;
-    float const power_t = smoothstep(t);
-    sample.right_hand = lerp(chamber_pos, strike_pos, power_t);
-    sample.left_hand = {-0.18F + 0.06F * power_t,
-                        shoulder_y + 0.02F - 0.08F * power_t,
-                        0.14F + 0.20F * power_t};
-    torso_twist = -0.04F + 0.10F * power_t;
-    forward_lean = 0.08F * power_t;
-    shoulder_dip = -0.02F + 0.05F * power_t;
-    step_forward = 0.06F * power_t;
-  } else if (strike_phase < 0.65F) {
-    float const t = (strike_phase - 0.48F) / 0.17F;
-    float const ease_t = t * t;
-    sample.right_hand = lerp(strike_pos, followthrough_pos, ease_t);
-    sample.left_hand = {-0.12F, shoulder_y - 0.06F, 0.34F};
-    torso_twist = 0.06F - 0.02F * t;
-    forward_lean = 0.08F - 0.03F * t;
-    shoulder_dip = 0.03F;
-    step_forward = 0.06F;
+  if (phase < 0.10F) {
+
+    sample.left_hand = guard_l;
+    sample.right_hand = guard_r;
+  } else if (phase < 0.30F) {
+    float const t = smoothstep((phase - 0.10F) / 0.20F);
+    sample.left_hand = lerp(guard_l, chamber_l, t);
+    sample.right_hand = lerp(guard_r, chamber_r, t);
+    rotation = chamber_rotation * t;
+  } else if (phase < 0.50F) {
+    float const t = smoothstep((phase - 0.30F) / 0.20F);
+    sample.left_hand = lerp(chamber_l, contact_l, t);
+    sample.right_hand = lerp(chamber_r, contact_r, t);
+    rotation = mix(chamber_rotation, contact_rotation, t);
+    forward_lean = contact_lean * t;
+    step_l = contact_step_l * t;
+    step_r = contact_step_r * t;
+  } else if (phase < 0.64F) {
+    float const t = smoothstep((phase - 0.50F) / 0.14F);
+    sample.left_hand = lerp(contact_l, follow_l, t);
+    sample.right_hand = lerp(contact_r, follow_r, t);
+    rotation = mix(contact_rotation, follow_rotation, t);
+    forward_lean = mix(contact_lean, follow_lean, t);
+    step_l = contact_step_l;
+    step_r = contact_step_r;
   } else {
-    float const t = (strike_phase - 0.65F) / 0.35F;
-    float const ease_t = ease_out(t);
-    sample.right_hand = lerp(followthrough_pos, rest_pos, ease_t);
-    sample.left_hand = {-0.12F + (-0.18F + 0.12F) * ease_t,
-                        shoulder_y - 0.06F * (1.0F - ease_t) + 0.02F * ease_t,
-                        0.34F * (1.0F - ease_t) + 0.22F * ease_t};
-    torso_twist = 0.04F * (1.0F - ease_t);
-    forward_lean = 0.05F * (1.0F - ease_t);
-    shoulder_dip = 0.03F * (1.0F - ease_t);
-    step_forward = 0.06F * (1.0F - ease_t);
+    float const t = ease_out((phase - 0.64F) / 0.36F);
+    sample.left_hand = lerp(follow_l, guard_l, t);
+    sample.right_hand = lerp(follow_r, guard_r, t);
+    rotation = follow_rotation * (1.0F - t);
+    forward_lean = follow_lean * (1.0F - t);
+    step_l = contact_step_l * (1.0F - t);
+    step_r = contact_step_r * (1.0F - t);
   }
 
-  if (std::abs(torso_twist) > 0.001F) {
-    sample.shoulder_r_z_delta += torso_twist;
-    sample.shoulder_l_z_delta -= torso_twist * 0.5F;
-  }
-
-  if (forward_lean > 0.001F) {
-    sample.shoulder_l_z_delta += forward_lean;
-    sample.shoulder_r_z_delta += forward_lean;
-    sample.neck_z_delta += forward_lean * 0.8F;
-    sample.head_z_delta += forward_lean * 0.6F;
-  }
-
-  if (std::abs(shoulder_dip) > 0.001F) {
-    sample.shoulder_r_y_delta += shoulder_dip;
-  }
-
-  if (step_forward > 0.001F) {
-    sample.foot_r_z_delta += step_forward;
-    sample.knee_r_z_delta += step_forward * 0.5F;
-  }
+  sample.pelvis_y_delta -= 0.035F;
+  sample.pelvis_z_delta += rotation * 0.24F;
+  sample.shoulder_l_z_delta -= rotation * 0.48F;
+  sample.shoulder_r_z_delta += rotation * 0.48F;
+  sample.shoulder_l_x_delta += rotation * 0.16F;
+  sample.shoulder_r_x_delta -= rotation * 0.16F;
+  sample.shoulder_l_z_delta += forward_lean;
+  sample.shoulder_r_z_delta += forward_lean;
+  sample.neck_z_delta += forward_lean * 0.72F;
+  sample.head_z_delta += forward_lean * 0.48F;
+  sample.foot_l_z_delta += 0.055F + step_l;
+  sample.knee_l_z_delta += 0.032F + step_l * 0.55F;
+  sample.foot_r_z_delta -= 0.045F;
+  sample.foot_r_z_delta += step_r;
+  sample.knee_r_z_delta -= 0.025F;
+  sample.knee_r_z_delta += step_r * 0.55F;
 
   return sample;
 }

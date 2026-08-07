@@ -39,6 +39,7 @@ public:
   void aim_bow(float draw_phase);
   void bow_melee_strike(float attack_phase);
   void melee_strike(float strike_phase);
+  void unarmed_strike(float strike_phase, std::uint8_t variant);
   void grasp_two_handed(const QVector3D& grip_center, float hand_separation);
   void spear_thrust(float attack_phase);
   void spear_thrust_from_hold(float attack_phase, float hold_depth);

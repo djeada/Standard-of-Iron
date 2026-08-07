@@ -37,6 +37,7 @@ struct WolfDrive {
   float crouch{0.0F};
   float ear_pin{0.0F};
   float lunge{0.0F};
+  float jaw_open{0.0F};
   float collapse{0.0F};
   WolfGait gait{WolfGait::Stand};
 };

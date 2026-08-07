@@ -152,6 +152,8 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
       (facing - (head_up * (1.58F - (drive.graze * 1.38F)))).normalized();
 
   pose.muzzle = poll + (muzzle_dir * k_head_length);
+  pose.jaw_hinge = poll + (facing * 0.060F) - (head_up * 0.018F);
+  pose.jaw_tip = pose.muzzle - (head_up * 0.014F);
 
   for (int sign_index = 0; sign_index < 2; ++sign_index) {
     float const sign = sign_index == 0 ? -1.0F : 1.0F;
@@ -173,6 +175,47 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
   }
 }
 
+void apply_collapse(RigPose& pose, const SheepDrive& drive) {
+  float const fall = std::clamp(drive.collapse, 0.0F, 1.0F);
+  if (fall <= 0.0F) {
+    return;
+  }
+
+  float const ease = fall * fall * (3.0F - (2.0F * fall));
+  float const roll = 0.125F * ease;
+
+  auto settle = [&](QVector3D& p, float keep, float side) {
+    p.setY(0.058F + ((p.y() - 0.058F) * keep));
+    p.setX(p.x() + side);
+  };
+
+  settle(pose.root, 1.0F - (0.55F * ease), roll * 0.4F);
+  settle(pose.body_rear, 1.0F - (0.74F * ease), roll);
+  settle(pose.body_front, 1.0F - (0.72F * ease), roll);
+  settle(pose.withers, 1.0F - (0.76F * ease), roll);
+
+  for (std::size_t i = 0; i < k_leg_count; ++i) {
+    float const out = (i % 2U == 0U) ? -1.0F : 1.0F;
+    settle(pose.legs[i].shoulder, 1.0F - (0.72F * ease), roll);
+    settle(pose.legs[i].knee, 1.0F - (0.88F * ease), roll + (out * 0.070F * ease));
+    settle(pose.legs[i].foot, 1.0F - (0.94F * ease), roll + (out * 0.120F * ease));
+    settle(pose.legs[i].toe, 1.0F - (0.96F * ease), roll + (out * 0.145F * ease));
+  }
+
+  settle(pose.poll, 1.0F - (0.84F * ease), roll * 1.2F);
+  settle(pose.muzzle, 1.0F - (0.94F * ease), roll * 1.5F);
+  settle(pose.jaw_hinge, 1.0F - (0.90F * ease), roll * 1.3F);
+  settle(pose.jaw_tip, 1.0F - (0.95F * ease), roll * 1.5F);
+  settle(pose.ear_base_l, 1.0F - (0.84F * ease), roll * 1.2F);
+  settle(pose.ear_base_r, 1.0F - (0.84F * ease), roll * 1.2F);
+  settle(pose.ear_tip_l, 1.0F - (0.88F * ease), roll * 1.4F);
+  settle(pose.ear_tip_r, 1.0F - (0.88F * ease), roll * 1.4F);
+
+  settle(pose.tail_base, 1.0F - (0.76F * ease), roll);
+  settle(pose.tail_mid, 1.0F - (0.88F * ease), roll * 1.3F);
+  settle(pose.tail_tip, 1.0F - (0.94F * ease), roll * 1.5F);
+}
+
 auto make_pose(const SheepDrive& drive) -> RigPose {
   RigPose pose;
   float const bob =
@@ -190,6 +233,8 @@ auto make_pose(const SheepDrive& drive) -> RigPose {
   pose.tail_base = QVector3D(0.0F, 0.520F, -0.300F);
   pose.tail_mid = QVector3D(wag * 0.5F, 0.446F, -0.330F);
   pose.tail_tip = QVector3D(wag, 0.382F, -0.336F);
+
+  apply_collapse(pose, drive);
   return pose;
 }
 
@@ -391,6 +436,13 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                             k_sheep_role_nose,
                             bind.muzzle + (facing * 0.006F),
                             {0.030F, 0.026F, 0.024F}));
+  nodes.push_back(tube("sheep.jaw",
+                       Bone::Jaw,
+                       k_sheep_role_face,
+                       bind.jaw_hinge,
+                       bind.jaw_tip,
+                       0.030F,
+                       0.022F));
   for (float sign : {-1.0F, 1.0F}) {
     nodes.push_back(ellipsoid("sheep.eye",
                               Bone::Head,

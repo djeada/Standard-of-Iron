@@ -146,6 +146,22 @@ ffmpeg -v info -i 01_shot.mp4 \
   -fps_mode passthrough -f null - 2>&1 | grep YAVG
 ```
 
+## The captured frame is stamped opaque
+
+Every blended pass dents the framebuffer's alpha where it covered a pixel. The
+scatter shaders write their coverage as source alpha, so a leaf silhouette ends
+the frame at an alpha of `1/255`. Nothing on screen reads that channel, which is
+why the game looks right — but a capture does: the FBO comes back from `QImage`
+labelled premultiplied, and the conversion on the way to the encoder divides
+colour by alpha, which turned every plant edge into a white fringe that existed
+only in recorded footage.
+
+`ArenaViewport::stamp_capture_alpha_opaque` clears the alpha channel back to
+opaque behind a colour mask, immediately before the readback, so colour is
+untouched. If a new translucent pass ever shows a bright outline in captures and
+not in the game, check the alpha channel of the poster PNG first — the fringe
+pixels will be the non-opaque ones, and it is not a shading bug.
+
 Note that the _finished cut_ opens on black by design — `promo-edit.py` applies
 an `OPENING_FADE` from black, so a dark first frame there is the edit, not the
 recorder.
