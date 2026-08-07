@@ -221,6 +221,14 @@ Shot fields:
 gameplay-camera shots with the bow HUD on, cut end to end across one
 deterministic run of nine aimed kills.
 
+`promo_commander_duel` stages single combat for filming: both armies drawn up in
+line as spectators, a ring of low hills closing the horizon, and Scipio against
+Hannibal in the ground between them until Hannibal falls. It is the scene to
+record for duel footage and the scene to check after touching commander
+signatures or the melee lock. See
+[docs/PROMO_CAPTURE.md](../../docs/PROMO_CAPTURE.md) for how its shots are
+aimed.
+
 ## RPG commander scenarios
 
 The `rpg_*` scenarios run the production `CommanderControlController`, so the

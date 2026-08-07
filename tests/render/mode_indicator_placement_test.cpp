@@ -8,6 +8,7 @@
 #include "game/core/world.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/camera_visibility_service.h"
+#include "render/combat_dust_defaults.h"
 #include "render/draw_queue.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/geom/mode_indicator.h"
@@ -252,8 +253,11 @@ TEST_F(SceneRendererEffects, CombatDustUsesStrongerDefaultsForMeleeLockUnits) {
   EXPECT_FLOAT_EQ(cmd.position.x(), 4.0F);
   EXPECT_FLOAT_EQ(cmd.position.y(), 0.05F);
   EXPECT_FLOAT_EQ(cmd.position.z(), -2.0F);
-  EXPECT_FLOAT_EQ(cmd.radius, 2.8F);
-  EXPECT_FLOAT_EQ(cmd.intensity, 0.9F);
+
+  EXPECT_GT(Render::CombatDustDefaults::k_radius, 0.0F);
+  EXPECT_GT(Render::CombatDustDefaults::k_intensity, 0.0F);
+  EXPECT_FLOAT_EQ(cmd.radius, Render::CombatDustDefaults::k_radius);
+  EXPECT_FLOAT_EQ(cmd.intensity, Render::CombatDustDefaults::k_intensity);
 }
 
 TEST_F(SceneRendererEffects, BurningUnitsEnqueueVisibleFlames) {

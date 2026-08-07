@@ -288,6 +288,10 @@ struct ArenaScenarioDefinition {
   float duration_seconds{12.0F};
 
   float arena_floor_half_extent{18.0F};
+
+  float terrain_height_scale_override{0.0F};
+
+  bool suppress_boundary_mountains{false};
   ArenaCameraView camera;
   std::optional<QVector3D> camera_focus;
   bool suppress_terrain_scatter{false};

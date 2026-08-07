@@ -142,10 +142,10 @@ void main() {
 
   float rim = 1.0 - smoothstep(0.0, 0.14, -sdf);
 
-  vec3 Ntemp = normalize(mix(N, Nshape, 0.65 * rim));
-  N = normalize(mix(Ntemp, v_normal, 0.25 * rim));
+  vec3 Ntemp = normalize(mix(N, Nshape, 0.32 * rim));
+  N = normalize(mix(Ntemp, v_normal, 0.45 * rim));
 
-  float edge_atten = mix(1.0, 0.72, rim);
+  float edge_atten = mix(1.0, 0.55, rim);
 
   vec3 L = environment_primary_direction();
 

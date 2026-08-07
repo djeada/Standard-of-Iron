@@ -123,6 +123,27 @@ The `process_attacks()` processor handles:
 - projectile-based attacks configured through `SpecialAttackComponent`;
 - combat animation triggers.
 
+### Duel footwork
+
+`MovementSystem::move_unit` zeroes velocity and freezes facing for the whole
+time a unit is in a melee lock, which is what stops a mass melee sliding around.
+For a commander locked one-on-one that read as two statues trading blows on a
+metronome, so `apply_duel_footwork` gives that case a slow circling instead.
+
+It applies only when the entity has a `CommanderComponent` **and** its lock
+target is locked back onto it, so line infantry and any crowd around a shared
+target are untouched. Each duellist turns about its opponent's position rather
+than about the midpoint: rotation about the other man preserves the distance
+between them exactly, whichever order the two are updated in, so circling can
+never walk a fighter out of his own reach. Both derive the same direction from
+the pair's ids, so the pair turns rigidly, and the rate is a sine that reverses
+every `k_duel_footwork_period_seconds` so a long duel reads as footwork rather
+than as a turntable.
+
+The arena trace is how to check it: post-contact `position` spread should be
+about a metre in each axis, and the separation between the two should not drift
+at all.
+
 ### Applying Damage
 
 Resolved attacks should apply damage through:
