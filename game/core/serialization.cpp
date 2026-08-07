@@ -833,7 +833,9 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     wildlife_obj["think_cooldown"] = static_cast<double>(wildlife->think_cooldown);
     wildlife_obj["state_timer"] = static_cast<double>(wildlife->state_timer);
     wildlife_obj["alarm_timer"] = static_cast<double>(wildlife->alarm_timer);
+    wildlife_obj["hostile_timer"] = static_cast<double>(wildlife->hostile_timer);
     wildlife_obj["focus_id"] = static_cast<qint64>(wildlife->focus_id);
+    wildlife_obj["aggressor_id"] = static_cast<qint64>(wildlife->aggressor_id);
     wildlife_obj["rng_state"] = static_cast<qint64>(wildlife->rng_state);
     entity_obj["wildlife"] = wildlife_obj;
   }
@@ -1786,8 +1788,12 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(wildlife_obj["state_timer"].toDouble(0.0));
     wildlife->alarm_timer =
         static_cast<float>(wildlife_obj["alarm_timer"].toDouble(0.0));
+    wildlife->hostile_timer =
+        static_cast<float>(wildlife_obj["hostile_timer"].toDouble(0.0));
     wildlife->focus_id =
         static_cast<EntityID>(wildlife_obj["focus_id"].toVariant().toULongLong());
+    wildlife->aggressor_id =
+        static_cast<EntityID>(wildlife_obj["aggressor_id"].toVariant().toULongLong());
     wildlife->rng_state =
         static_cast<std::uint32_t>(wildlife_obj["rng_state"].toVariant().toULongLong());
   }

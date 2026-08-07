@@ -41,6 +41,7 @@ constexpr float k_pack_approach_spacing = 1.1F;
 constexpr float k_wolf_avoid_base_strength = 2.5F;
 constexpr float k_civilian_standoff = 3.0F;
 constexpr float k_civilian_threat_strength = 0.3F;
+constexpr float k_civilian_quarry_preference = 0.5F;
 constexpr float k_troop_threat_strength = 1.0F;
 constexpr float k_sheep_flee_strength_threshold = 0.5F;
 constexpr float k_spawn_scatter = 3.2F;
@@ -81,6 +82,29 @@ auto is_civilian_spawn(Game::Units::SpawnType type) -> bool {
          type == Game::Units::SpawnType::Builder;
 }
 
+auto resolve_prey(Engine::Core::World& world,
+                  Engine::Core::EntityID entity_id) -> PreyRef {
+  auto* entity = world.get_entity(entity_id);
+  if (entity == nullptr ||
+      entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    return {};
+  }
+  const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  if (unit == nullptr || transform == nullptr || unit->health <= 0) {
+    return {};
+  }
+
+  PreyRef prey;
+  prey.entity = entity;
+  prey.id = entity_id;
+  prey.x = transform->position.x;
+  prey.z = transform->position.z;
+  prey.radius = std::max(0.0F, std::max(transform->scale.x, transform->scale.z) * 0.5F);
+  prey.livestock = is_wildlife_entity(*entity);
+  return prey;
+}
+
 } // namespace
 
 WildlifeSystem::WildlifeSystem() = default;
@@ -108,6 +132,7 @@ void WildlifeSystem::configure(const WildlifeSettings& settings,
   m_groups.clear();
   m_group_runtime.clear();
   m_animals.clear();
+  m_quarry.clear();
   m_threats.clear();
   m_stats.reset();
   m_next_group_id = 0U;
@@ -327,6 +352,7 @@ void WildlifeSystem::spawn_initial_population(Engine::Core::World& world) {
 
 void WildlifeSystem::rebuild_threats(Engine::Core::World& world) {
   m_threats.clear();
+  m_quarry.clear();
   for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr || is_wildlife_entity(*entity)) {
       continue;
@@ -349,6 +375,13 @@ void WildlifeSystem::rebuild_threats(Engine::Core::World& world) {
     source.strength = threat_strength_of(*unit);
     source.civilian = is_civilian_spawn(unit->spawn_type);
     m_threats.add(source);
+
+    QuarryRef quarry;
+    quarry.id = entity->get_id();
+    quarry.x = source.x;
+    quarry.z = source.z;
+    quarry.civilian = source.civilian;
+    m_quarry.push_back(quarry);
   }
   m_threats.finalize();
 }
@@ -428,6 +461,29 @@ auto WildlifeSystem::nearest_prey(float world_x,
   return best;
 }
 
+auto WildlifeSystem::nearest_quarry(float world_x,
+                                    float world_z,
+                                    float radius) const -> const QuarryRef* {
+  const QuarryRef* best = nullptr;
+  float best_score = 0.0F;
+  for (const auto& quarry : m_quarry) {
+    float const dx = quarry.x - world_x;
+    float const dz = quarry.z - world_z;
+    float const distance_sq = (dx * dx) + (dz * dz);
+    if (distance_sq >= radius * radius) {
+      continue;
+    }
+    float const score =
+        distance_sq * (quarry.civilian ? k_civilian_quarry_preference : 1.0F);
+    if (best != nullptr && score >= best_score) {
+      continue;
+    }
+    best_score = score;
+    best = &quarry;
+  }
+  return best;
+}
+
 void WildlifeSystem::alert_group(std::uint16_t group_id, float duration) {
   for (const auto& animal : m_animals) {
     if (animal.group != group_id || animal.entity == nullptr) {
@@ -436,6 +492,25 @@ void WildlifeSystem::alert_group(std::uint16_t group_id, float duration) {
     auto* wildlife = animal.entity->get_component<Engine::Core::WildlifeComponent>();
     if (wildlife != nullptr) {
       wildlife->alarm_timer = std::max(wildlife->alarm_timer, duration);
+    }
+  }
+}
+
+void WildlifeSystem::rally_pack(std::uint16_t group_id,
+                                Engine::Core::EntityID foe_id,
+                                float duration) {
+  for (const auto& animal : m_animals) {
+    if (animal.group != group_id || animal.species != Species::Wolf ||
+        animal.entity == nullptr) {
+      continue;
+    }
+    auto* wildlife = animal.entity->get_component<Engine::Core::WildlifeComponent>();
+    if (wildlife == nullptr) {
+      continue;
+    }
+    wildlife->hostile_timer = std::max(wildlife->hostile_timer, duration);
+    if (wildlife->aggressor_id == 0) {
+      wildlife->aggressor_id = foe_id;
     }
   }
 }
@@ -485,6 +560,18 @@ public:
     m_owner.alert_group(group_id, duration);
   }
 
+  void mark_hostile(const NatureContext& ctx,
+                    Engine::Core::EntityID foe_id,
+                    bool rally_pack) override {
+    auto& wildlife = *ctx.wildlife;
+    wildlife.hostile_timer = Game::Wildlife::k_hostility_duration;
+    wildlife.aggressor_id = foe_id;
+    if (rally_pack) {
+      m_owner.rally_pack(
+          wildlife.group_id, foe_id, Game::Wildlife::k_hostility_duration);
+    }
+  }
+
   void note(NatureEvent event) override {
     switch (event) {
     case NatureEvent::Flee:
@@ -512,10 +599,22 @@ public:
 
   auto nearest_prey(float world_x, float world_z, float radius) -> PreyRef override {
     const AnimalRef* found = m_owner.nearest_prey(world_x, world_z, radius);
-    if (found == nullptr || found->entity == nullptr) {
+    if (found == nullptr) {
       return {};
     }
-    return PreyRef{found->entity, found->id, found->x, found->z};
+    return resolve_prey(m_world, found->id);
+  }
+
+  auto nearest_quarry(float world_x, float world_z, float radius) -> PreyRef override {
+    const QuarryRef* found = m_owner.nearest_quarry(world_x, world_z, radius);
+    if (found == nullptr) {
+      return {};
+    }
+    return resolve_prey(m_world, found->id);
+  }
+
+  auto locate(Engine::Core::EntityID entity_id) -> PreyRef override {
+    return resolve_prey(m_world, entity_id);
   }
 
   auto nearest_pack_hunter(float world_x,
@@ -652,6 +751,10 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
 
     wildlife->state_timer = std::max(0.0F, wildlife->state_timer - delta_time);
     wildlife->alarm_timer = std::max(0.0F, wildlife->alarm_timer - delta_time);
+    wildlife->hostile_timer = std::max(0.0F, wildlife->hostile_timer - delta_time);
+    if (wildlife->hostile_timer <= 0.0F) {
+      wildlife->aggressor_id = 0;
+    }
     wildlife->think_cooldown -= delta_time;
     if (wildlife->think_cooldown > 0.0F) {
       continue;

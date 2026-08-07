@@ -14,6 +14,8 @@ enum class Species : std::uint8_t {
 
 inline constexpr std::size_t k_species_count = 3U;
 
+inline constexpr float k_hostility_duration = 9.0F;
+
 enum class Behavior : std::uint8_t {
   Graze = 0,
   Roam = 1,

@@ -124,9 +124,6 @@ auto is_valid_enemy_of_owner(int attacker_owner_id,
   if ((target_unit == nullptr) || (target_unit->health <= 0)) {
     return false;
   }
-  if (target->has_component<Engine::Core::WildlifeComponent>()) {
-    return false;
-  }
   if (target_unit->owner_id == attacker_owner_id) {
     return false;
   }
@@ -141,6 +138,31 @@ auto is_valid_enemy_of_owner(int attacker_owner_id,
   }
 
   return true;
+}
+
+auto is_passive_wildlife(Engine::Core::Entity* target) -> bool {
+  if (target == nullptr) {
+    return false;
+  }
+  const auto* wildlife = target->get_component<Engine::Core::WildlifeComponent>();
+  return (wildlife != nullptr) && !wildlife->is_hostile();
+}
+
+auto is_auto_acquirable_enemy(const Engine::Core::UnitComponent* attacker_unit,
+                              Engine::Core::Entity* target,
+                              bool allow_buildings) -> bool {
+  if (attacker_unit == nullptr) {
+    return false;
+  }
+  return is_auto_acquirable_enemy_of_owner(
+      attacker_unit->owner_id, target, allow_buildings);
+}
+
+auto is_auto_acquirable_enemy_of_owner(int attacker_owner_id,
+                                       Engine::Core::Entity* target,
+                                       bool allow_buildings) -> bool {
+  return is_valid_enemy_of_owner(attacker_owner_id, target, allow_buildings) &&
+         !is_passive_wildlife(target);
 }
 
 auto combat_radius(Engine::Core::Entity* entity) -> float {
@@ -335,7 +357,7 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
       continue;
     }
 
-    if (!is_valid_enemy_unit(unit_comp, target, false)) {
+    if (!is_auto_acquirable_enemy(unit_comp, target, false)) {
       continue;
     }
 

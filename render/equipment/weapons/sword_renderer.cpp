@@ -162,6 +162,19 @@ auto oriented_box_between(const QVector3D& start,
   return local;
 }
 
+auto oriented_cone_between(const QVector3D& start,
+                           const QVector3D& end,
+                           float half_width,
+                           float half_depth,
+                           QVector3D right_hint = QVector3D(1.0F,
+                                                            0.0F,
+                                                            0.0F)) -> QMatrix4x4 {
+  QMatrix4x4 local =
+      oriented_box_between(start, end, half_width, half_depth, right_hint);
+  local.setColumn(1, local.column(1) * 2.0F);
+  return local;
+}
+
 auto hand_basis_transform(const QMatrix4x4& parent,
                           const AttachmentFrame& hand) -> QMatrix4x4 {
   QMatrix4x4 local;
@@ -281,7 +294,6 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
   float const upper_half_w = lerp(mid_half_w,
                                   base_half_w * 0.64F,
                                   clamp_f((taper_bias - 0.25F) * 0.9F, 0.0F, 1.0F));
-  float const tip_half_w = std::max(base_half_w * tip_scale, blade_thickness * 0.65F);
   float const belly_y = lerp(ricasso_len, l, 0.34F + taper_bias * 0.18F);
   float const tip_start_dist = lerp(belly_y, l, 0.44F + (1.0F - tip_scale) * 0.18F);
   float const handle_len = clamp_f(base_w * 1.35F, 0.09F, 0.16F);
@@ -424,7 +436,11 @@ auto sword_archetype(const SwordRenderConfig& config) -> const RenderArchetype& 
                            config.material_id);
 
   builder.add_palette_mesh(get_unit_cone(),
-                           Render::Geom::cone_from_to(blade3, blade4, tip_half_w),
+                           oriented_cone_between(blade3,
+                                                 blade4,
+                                                 upper_half_w,
+                                                 blade_thickness * 0.86F,
+                                                 QVector3D(1.0F, 0.0F, 0.0F)),
                            k_metal_slot,
                            nullptr,
                            1.0F,

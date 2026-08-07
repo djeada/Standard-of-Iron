@@ -13,6 +13,10 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/combat_system/attack_processor.h"
+#include "game/systems/combat_system/combat_action_processor.h"
+#include "game/systems/combat_system/combat_utils.h"
+#include "game/systems/combat_system/damage_application.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -60,6 +64,25 @@ auto make_settings() -> WildlifeSettings {
   return settings;
 }
 
+auto lone_wolf_settings() -> WildlifeSettings {
+  WildlifeSettings settings = make_settings();
+  settings.sheep.enabled = false;
+  settings.sheep.group_count = 0;
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 1;
+  settings.wolves.group_size_min = 1;
+  settings.wolves.group_size_max = 1;
+  settings.wolves.aggression = 1.0F;
+  settings.wolves.roam_radius = 12.0F;
+  settings.wolves.spawn_areas = {{4.0F, 0.0F, 1.0F}};
+  return settings;
+}
+
+auto beside(Entity* entity, float offset_x) -> QVector3D {
+  const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  return {transform->position.x + offset_x, 0.0F, transform->position.z};
+}
+
 auto count_species(World& world, Species species) -> int {
   int count = 0;
   for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
@@ -96,6 +119,22 @@ auto add_troop(World& world,
   unit->spawn_type = type;
   unit->health = 100;
   unit->max_health = 100;
+  return entity;
+}
+
+auto add_armed_troop(World& world, const QVector3D& position) -> Entity* {
+  auto* entity = add_troop(world, position);
+  auto* attack = entity->add_component<Engine::Core::AttackComponent>();
+  attack->range = 1.6F;
+  attack->damage = 12;
+  attack->cooldown = 0.6F;
+  attack->melee_range = 1.6F;
+  attack->melee_damage = 12;
+  attack->melee_cooldown = 0.6F;
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
   return entity;
 }
 
@@ -269,6 +308,127 @@ TEST_F(WildlifeSystemTest, WolvesBackOffFromLargeFormations) {
   const auto* wolf = wolves.front()->get_component<Engine::Core::WildlifeComponent>();
   ASSERT_NE(wolf, nullptr);
   EXPECT_EQ(wolf->behavior, Behavior::Flee);
+}
+
+TEST_F(WildlifeSystemTest, WolvesHuntIsolatedPeople) {
+  World world;
+  WildlifeSystem system;
+  system.configure(lone_wolf_settings(), 1U);
+  system.update(&world, 0.1F);
+
+  auto wolves = collect_species(world, Species::Wolf);
+  ASSERT_EQ(wolves.size(), 1U);
+  auto* victim =
+      add_troop(world, beside(wolves.front(), 1.0F), Game::Units::SpawnType::Civilian);
+  auto* victim_unit = victim->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(victim_unit, nullptr);
+
+  advance(system, world, 4.0F);
+
+  const auto* wolf = wolves.front()->get_component<Engine::Core::WildlifeComponent>();
+  ASSERT_NE(wolf, nullptr);
+  EXPECT_EQ(wolf->behavior, Behavior::Stalk);
+  EXPECT_EQ(wolf->focus_id, victim->get_id());
+  EXPECT_TRUE(wolf->is_hostile());
+  EXPECT_GT(system.stats().bites, 0U);
+  EXPECT_LT(victim_unit->health, victim_unit->max_health);
+}
+
+TEST_F(WildlifeSystemTest, WolvesLeaveEscortedPeopleAlone) {
+  World world;
+  WildlifeSystem system;
+  system.configure(lone_wolf_settings(), 1U);
+  system.update(&world, 0.1F);
+
+  auto wolves = collect_species(world, Species::Wolf);
+  ASSERT_EQ(wolves.size(), 1U);
+  const QVector3D victim_position = beside(wolves.front(), 1.0F);
+  auto* victim = add_troop(world, victim_position, Game::Units::SpawnType::Civilian);
+  auto* victim_unit = victim->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(victim_unit, nullptr);
+  for (int index = 0; index < 6; ++index) {
+    add_troop(world,
+              QVector3D(victim_position.x() + 1.0F + static_cast<float>(index) * 0.4F,
+                        0.0F,
+                        victim_position.z() + 1.0F));
+  }
+
+  advance(system, world, 4.0F);
+
+  const auto* wolf = wolves.front()->get_component<Engine::Core::WildlifeComponent>();
+  ASSERT_NE(wolf, nullptr);
+  EXPECT_FALSE(wolf->is_hostile());
+  EXPECT_EQ(system.stats().bites, 0U);
+  EXPECT_EQ(victim_unit->health, victim_unit->max_health);
+}
+
+TEST_F(WildlifeSystemTest, WoundedWolvesTurnOnTheirAttacker) {
+  World world;
+  WildlifeSystem system;
+  system.configure(lone_wolf_settings(), 1U);
+  system.update(&world, 0.1F);
+
+  auto wolves = collect_species(world, Species::Wolf);
+  ASSERT_EQ(wolves.size(), 1U);
+  auto* wolf_entity = wolves.front();
+  auto* hunter = add_troop(world, beside(wolf_entity, 1.0F));
+  auto* hunter_unit = hunter->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(hunter_unit, nullptr);
+
+  Game::Systems::Combat::apply_unit_damage(&world, wolf_entity, 5, hunter->get_id());
+
+  const auto* wolf = wolf_entity->get_component<Engine::Core::WildlifeComponent>();
+  ASSERT_NE(wolf, nullptr);
+  EXPECT_TRUE(wolf->is_hostile());
+  EXPECT_EQ(wolf->aggressor_id, hunter->get_id());
+  EXPECT_EQ(wolf_entity->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+
+  advance(system, world, 3.0F);
+
+  EXPECT_EQ(wolf->behavior, Behavior::Stalk);
+  EXPECT_GT(system.stats().bites, 0U);
+  EXPECT_LT(hunter_unit->health, hunter_unit->max_health);
+}
+
+TEST_F(WildlifeSystemTest, TroopsAnswerAWolfThatBitesThem) {
+  World world;
+  WildlifeSystem system;
+  system.configure(lone_wolf_settings(), 1U);
+  system.update(&world, 0.1F);
+
+  auto wolves = collect_species(world, Species::Wolf);
+  ASSERT_EQ(wolves.size(), 1U);
+  auto* wolf_entity = wolves.front();
+  auto* wolf_unit = wolf_entity->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(wolf_unit, nullptr);
+  auto* soldier = add_armed_troop(world, beside(wolf_entity, 1.2F));
+  soldier->get_component<Engine::Core::UnitComponent>()
+      ->render_individuals_per_unit_override = 1;
+  wolf_unit->render_individuals_per_unit_override = 1;
+
+  advance(system, world, 3.0F);
+
+  ASSERT_GT(system.stats().bites, 0U);
+  const auto* order = soldier->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(order, nullptr);
+  EXPECT_EQ(order->target_id, wolf_entity->get_id());
+
+  auto* soldier_transform = soldier->get_component<Engine::Core::TransformComponent>();
+  soldier_transform->rotation.y = 270.0F;
+  auto* soldier_attack = soldier->get_component<Engine::Core::AttackComponent>();
+  soldier_attack->time_since_last = soldier_attack->melee_cooldown;
+
+  Game::Systems::Combat::process_attacks(
+      &world, Game::Systems::Combat::build_combat_query_context(&world), 0.016F);
+
+  EXPECT_TRUE(soldier_attack->in_melee_lock);
+  EXPECT_EQ(soldier_attack->melee_lock_target_id, wolf_entity->get_id());
+
+  auto* state = soldier->get_component<Engine::Core::CombatStateComponent>();
+  Game::Systems::Combat::process_authored_combat_action(&world, *soldier, state, 0.39F);
+  Game::Systems::Combat::process_authored_combat_action(&world, *soldier, state, 0.02F);
+
+  EXPECT_LT(wolf_unit->health, wolf_unit->max_health);
 }
 
 TEST_F(WildlifeSystemTest, LostHerdMembersRespawnAfterTheConfiguredDelay) {

@@ -9,6 +9,7 @@
 #include "animation/death_pose_manifest.h"
 #include "core/component.h"
 #include "core/entity.h"
+#include "core/ownership_constants.h"
 #include "core/world.h"
 #include "systems/arrow_projectile.h"
 #include "systems/cleanup_system.h"
@@ -861,6 +862,52 @@ TEST_F(CombatModeTest, EnemyValidityHelperAllowsBuildingsOnlyWhenRequested) {
       Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, building, false));
   EXPECT_TRUE(
       Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, building, true));
+}
+
+TEST_F(CombatModeTest, OnlyHostileWildlifeIsAcquiredWithoutAnOrder) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+
+  auto* sheep = world->create_entity();
+  sheep->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  auto* sheep_unit = sheep->add_component<UnitComponent>(28, 28, 1.5F, 0.0F);
+  sheep_unit->owner_id = Game::Core::NEUTRAL_OWNER_ID;
+  sheep->add_component<WildlifeComponent>()->species = Game::Wildlife::Species::Sheep;
+
+  auto* wolf = world->create_entity();
+  wolf->add_component<TransformComponent>(4.0F, 0.0F, 0.0F);
+  auto* wolf_unit = wolf->add_component<UnitComponent>(55, 55, 3.1F, 14.0F);
+  wolf_unit->owner_id = Game::Core::NEUTRAL_OWNER_ID;
+  auto* wolf_state = wolf->add_component<WildlifeComponent>();
+  wolf_state->species = Game::Wildlife::Species::Wolf;
+
+  EXPECT_TRUE(Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, sheep, false));
+  EXPECT_TRUE(Game::Systems::Combat::is_valid_enemy_unit(attacker_unit, wolf, false));
+  EXPECT_FALSE(
+      Game::Systems::Combat::is_auto_acquirable_enemy(attacker_unit, sheep, false));
+  EXPECT_FALSE(
+      Game::Systems::Combat::is_auto_acquirable_enemy(attacker_unit, wolf, false));
+
+  {
+    auto const query_context =
+        Game::Systems::Combat::build_combat_query_context(world.get());
+    EXPECT_EQ(Game::Systems::Combat::find_nearest_enemy(attacker, query_context, 10.0F),
+              nullptr);
+  }
+
+  wolf_state->hostile_timer = 5.0F;
+  EXPECT_TRUE(
+      Game::Systems::Combat::is_auto_acquirable_enemy(attacker_unit, wolf, false));
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  auto* target =
+      Game::Systems::Combat::find_nearest_enemy(attacker, query_context, 10.0F);
+
+  ASSERT_NE(target, nullptr);
+  EXPECT_EQ(target->get_id(), wolf->get_id());
 }
 
 TEST_F(CombatModeTest, AutoEngagementUsesNearestEnemyInsideGuardRadius) {
