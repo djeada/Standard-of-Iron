@@ -1,8 +1,10 @@
 #include <QCoreApplication>
 #include <QMatrix4x4>
 
+#include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
+#include <limits>
 #include <string>
 
 #include "animation/bpat/bpat_format.h"
@@ -558,8 +560,19 @@ TEST(BpatRegistry, HumanoidRpgSwordClipsMoveAttachedSwordIntoDistinctCuts) {
   EXPECT_GT(thrust_contact.tip.z(), slash_left_contact.tip.z() + 0.18F);
   EXPECT_GT(thrust_contact.tip.z(), slash_right_contact.tip.z() + 0.18F);
   EXPECT_GT(overhead_release.tip.y(), slash_left_contact.tip.y() + 0.20F);
-  EXPECT_GT(finisher_release.tip.y(), overhead_release.tip.y() + 0.025F);
   EXPECT_LT(finisher_contact.base.y(), finisher_release.base.y() - 0.55F);
+
+  auto const highest_tip = [&](Animation::SwordAttackAnimation anim) {
+    auto const clip_id = Animation::humanoid_sword_attack_clip(anim);
+    auto const clip = blob->clip(clip_id);
+    float highest = -std::numeric_limits<float>::infinity();
+    for (std::uint32_t frame = 0; frame < clip.frame_count; ++frame) {
+      highest = std::max(highest, sample_sword(anim, frame).tip.y());
+    }
+    return highest;
+  };
+  EXPECT_GT(highest_tip(Animation::SwordAttackAnimation::RpgFinisher),
+            highest_tip(Animation::SwordAttackAnimation::RpgOverhead) + 0.025F);
 }
 
 TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {

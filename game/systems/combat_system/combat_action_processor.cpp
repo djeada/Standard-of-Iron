@@ -559,7 +559,14 @@ void process_authored_combat_action(
   if (is_rts_attack_action(action_id)) {
     auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
     auto const* target = entity.get_component<Engine::Core::AttackTargetComponent>();
+
+    auto const* attack = entity.get_component<Engine::Core::AttackComponent>();
+    bool const shooting_from_a_melee =
+        !is_rts_melee_action(action_id) && attack != nullptr && attack->in_melee_lock &&
+        Game::Systems::CombatRules::participates_in_rts_melee_lock(&entity);
+
     bool const interrupted = unit == nullptr || unit->health <= 0 ||
+                             shooting_from_a_melee ||
                              entity.has_component<Engine::Core::StaggerComponent>() ||
                              (target != nullptr && target->target_id != 0 &&
                               target->target_id != action->active_target_id);

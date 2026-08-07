@@ -23,7 +23,7 @@ void update_combat_mode(Engine::Core::Entity* attacker,
   bool const in_melee_combat =
       attack_comp->in_melee_lock &&
       Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker);
-  if (in_melee_combat && attack_comp->can_melee) {
+  if (in_melee_combat) {
 
     attack_comp->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
     return;

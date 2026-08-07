@@ -426,16 +426,21 @@ TEST(StatelessWeaponRenderers, RpgSwordAttackUsesAuthoredGripInsteadOfVariantSwa
   auto anim_b = anim_a;
   anim_b.inputs.attack_variant = 4U;
   anim_b.inputs.finisher_attack = true;
-  anim_b.attack_phase = 0.62F;
 
   EquipmentBatch batch_a;
   EquipmentBatch batch_b;
   SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim_a, batch_a);
   SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim_b, batch_b);
 
-  EXPECT_EQ(batch_a.archetypes.size(), 1U);
-  EXPECT_EQ(batch_b.archetypes.size(), 1U);
   EXPECT_EQ(hash_batch(batch_a), hash_batch(batch_b));
+
+  auto guard_only = anim_a;
+  guard_only.attack_phase = 0.02F;
+  EquipmentBatch guard_batch;
+  SwordRenderer::submit(
+      SwordRenderConfig{}, ctx, frames, palette, guard_only, guard_batch);
+  EXPECT_EQ(guard_batch.archetypes.size(), 1U);
+  EXPECT_GT(batch_a.archetypes.size(), guard_batch.archetypes.size());
 
   auto moved_grip_frames = frames;
   moved_grip_frames.grip_r.origin += QVector3D(0.0F, 0.24F, 0.0F);
@@ -443,6 +448,39 @@ TEST(StatelessWeaponRenderers, RpgSwordAttackUsesAuthoredGripInsteadOfVariantSwa
   SwordRenderer::submit(
       SwordRenderConfig{}, ctx, moved_grip_frames, palette, anim_a, moved_grip_batch);
   EXPECT_NE(hash_batch(batch_a), hash_batch(moved_grip_batch));
+}
+
+TEST(StatelessWeaponRenderers, RpgSwordCutDrawsATrailAcrossItsStrikeWindow) {
+  auto frames = make_frames();
+  frames.hand_r.radius = 0.05F;
+  frames.hand_r.depth = 0.10F;
+  frames.grip_r = frames.hand_r;
+  frames.grip_r.radius = 0.05F;
+  frames.grip_r.depth = 0.10F;
+
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  auto anim = make_anim();
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Sword;
+  anim.inputs.has_sword_attack_animation = true;
+  anim.inputs.has_attack_offset = true;
+  anim.inputs.sword_attack_animation = Animation::SwordAttackAnimation::RpgSlashLeft;
+
+  auto archetype_count_at = [&](float phase) {
+    auto sampled = anim;
+    sampled.attack_phase = phase;
+    EquipmentBatch batch;
+    SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, sampled, batch);
+    return batch.archetypes.size();
+  };
+
+  EXPECT_EQ(archetype_count_at(0.10F), 1U);
+  EXPECT_GT(archetype_count_at(0.45F), 1U);
+  EXPECT_GT(archetype_count_at(0.60F), 1U);
+  EXPECT_EQ(archetype_count_at(0.90F), 1U);
 }
 
 TEST(StatelessWeaponRenderers, SwordProfileFieldsChangeVisibleMesh) {

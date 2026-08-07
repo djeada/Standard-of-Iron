@@ -6,6 +6,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
+#include "animation/death_pose_manifest.h"
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
@@ -2202,7 +2203,12 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   ASSERT_NE(death, nullptr);
   EXPECT_EQ(death->state, DeathSequenceState::Dying);
   EXPECT_EQ(death->profile, DeathSequenceProfile::Infantry);
-  EXPECT_EQ(death->sequence_variant, 0U);
+
+  EXPECT_EQ(Animation::humanoid_infantry_death_collapse(death->sequence_variant),
+            Animation::HumanoidDeathCollapse::SideCrumple);
+  EXPECT_FLOAT_EQ(death->state_duration,
+                  Animation::humanoid_death_collapse_duration(
+                      Animation::HumanoidDeathCollapse::SideCrumple));
   EXPECT_FALSE(target->has_component<PendingRemovalComponent>());
   EXPECT_FALSE(movement->get_has_target());
 
@@ -2224,6 +2230,33 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   EXPECT_LE(blood_stain->aspect_ratio, 1.34F);
   EXPECT_GE(blood_stain->seed, 0.0F);
   EXPECT_LT(blood_stain->seed, 1.0F);
+}
+
+TEST_F(CombatModeTest, TheFallMatchesWhereTheKillingBlowCameFrom) {
+
+  auto kill_from = [this](float attacker_x, float attacker_z) {
+    auto* attacker = world->create_entity();
+    attacker->add_component<TransformComponent>(attacker_x, 0.0F, attacker_z);
+    auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+    attacker_unit->owner_id = 1;
+    attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+    auto* target = world->create_entity();
+    target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+    auto* target_unit = target->add_component<UnitComponent>(30, 100, 1.0F, 12.0F);
+    target_unit->owner_id = 2;
+
+    Game::Systems::Combat::deal_damage(world.get(), target, 120, attacker->get_id());
+    auto const* death = target->get_component<DeathAnimationComponent>();
+    EXPECT_NE(death, nullptr);
+    return death != nullptr
+               ? Animation::humanoid_infantry_death_collapse(death->sequence_variant)
+               : Animation::HumanoidDeathCollapse::None;
+  };
+
+  EXPECT_EQ(kill_from(0.0F, 4.0F), Animation::HumanoidDeathCollapse::BackSprawl);
+  EXPECT_EQ(kill_from(0.0F, -4.0F), Animation::HumanoidDeathCollapse::FacePlant);
+  EXPECT_EQ(kill_from(4.0F, 0.0F), Animation::HumanoidDeathCollapse::SideCrumple);
 }
 
 TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {

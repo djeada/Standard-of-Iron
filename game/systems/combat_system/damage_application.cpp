@@ -22,6 +22,7 @@
 #include "../marketplace_system.h"
 #include "../order_service.h"
 #include "../wall_network_service.h"
+#include "animation/death_pose_manifest.h"
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "structure_combat.h"
@@ -62,16 +63,72 @@ struct DeathSequenceTiming {
   std::uint8_t sequence_variant{0U};
 };
 
+auto infantry_death_variant(Engine::Core::Entity* target,
+                            Engine::Core::Entity* attacker,
+                            std::uint16_t slot) -> std::uint8_t {
+  using Animation::HumanoidDeathCollapse;
+
+  auto const variant_for = [](HumanoidDeathCollapse collapse) -> std::uint8_t {
+    for (std::uint8_t v = 0U; v < Animation::k_humanoid_infantry_death_variant_count;
+         ++v) {
+      if (Animation::humanoid_infantry_death_collapse(v) == collapse) {
+        return v;
+      }
+    }
+    return 0U;
+  };
+
+  auto const jitter = static_cast<std::uint32_t>(
+      (target != nullptr ? target->get_id() * 2654435761U : 0U) + (slot * 40503U));
+  bool const flanked_by_jitter = slot != 0U && (jitter >> 13U) % 3U == 0U;
+
+  auto const* target_transform =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  auto const* attacker_transform =
+      attacker != nullptr ? attacker->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+  if (target_transform == nullptr || attacker_transform == nullptr) {
+    return variant_for(flanked_by_jitter ? HumanoidDeathCollapse::SideCrumple
+                                         : HumanoidDeathCollapse::BackSprawl);
+  }
+
+  float const to_attacker_x =
+      attacker_transform->position.x - target_transform->position.x;
+  float const to_attacker_z =
+      attacker_transform->position.z - target_transform->position.z;
+  float const length_sq =
+      (to_attacker_x * to_attacker_x) + (to_attacker_z * to_attacker_z);
+  if (length_sq < 1.0e-4F) {
+    return variant_for(HumanoidDeathCollapse::BackSprawl);
+  }
+
+  float const yaw = target_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const facing_dot =
+      ((std::sin(yaw) * to_attacker_x) + (std::cos(yaw) * to_attacker_z)) /
+      std::sqrt(length_sq);
+
+  if (facing_dot > 0.42F) {
+    return variant_for(flanked_by_jitter ? HumanoidDeathCollapse::SideCrumple
+                                         : HumanoidDeathCollapse::BackSprawl);
+  }
+  if (facing_dot < -0.42F) {
+    return variant_for(flanked_by_jitter ? HumanoidDeathCollapse::SideCrumple
+                                         : HumanoidDeathCollapse::FacePlant);
+  }
+  return variant_for(HumanoidDeathCollapse::SideCrumple);
+}
+
 auto resolve_death_variant(Engine::Core::Entity* target,
                            Engine::Core::Entity* attacker,
-                           Engine::Core::DeathSequenceProfile profile) -> std::uint8_t {
-  (void)target;
-  (void)attacker;
+                           Engine::Core::DeathSequenceProfile profile,
+                           std::uint16_t slot = 0U) -> std::uint8_t {
   switch (profile) {
+  case Engine::Core::DeathSequenceProfile::Infantry:
+    return infantry_death_variant(target, attacker, slot);
   case Engine::Core::DeathSequenceProfile::MountedRider:
   case Engine::Core::DeathSequenceProfile::Elephant:
   case Engine::Core::DeathSequenceProfile::Horse:
-  case Engine::Core::DeathSequenceProfile::Infantry:
   default:
     return 0U;
   }
@@ -83,7 +140,8 @@ auto resolve_death_timing(Engine::Core::DeathSequenceProfile profile,
   timing.sequence_variant = variant;
   switch (profile) {
   case Engine::Core::DeathSequenceProfile::MountedRider:
-    timing.state_duration = 1.15F;
+    timing.state_duration = Animation::humanoid_death_collapse_duration(
+        Animation::HumanoidDeathCollapse::MountedUnseat);
     timing.dead_hold_duration = 0.95F;
     break;
   case Engine::Core::DeathSequenceProfile::Horse:
@@ -97,6 +155,9 @@ auto resolve_death_timing(Engine::Core::DeathSequenceProfile profile,
     break;
   case Engine::Core::DeathSequenceProfile::Infantry:
   default:
+
+    timing.state_duration = Animation::humanoid_death_collapse_duration(
+        Animation::humanoid_infantry_death_collapse(variant));
     break;
   }
   return timing;
@@ -257,8 +318,6 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
     return 0;
   }
 
-  auto const variant = resolve_death_variant(target, attacker, profile);
-  auto const timing = resolve_death_timing(profile, variant);
   auto const* presentation =
       target->get_component<Engine::Core::FormationPresentationComponent>();
   auto presentation_for_slot =
@@ -320,6 +379,9 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
       entry.local_z = soldier->local_z;
       entry.local_yaw = soldier->local_yaw;
     }
+    auto const variant = resolve_death_variant(
+        target, attacker, profile, static_cast<std::uint16_t>(slot));
+    auto const timing = resolve_death_timing(profile, variant);
     entry.profile = profile;
     entry.state = Engine::Core::DeathSequenceState::Dying;
     entry.state_time = 0.0F;
