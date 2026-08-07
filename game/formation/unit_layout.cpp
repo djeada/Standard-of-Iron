@@ -425,13 +425,13 @@ void register_rome_styles(std::vector<UnitLayoutStyle>& out) {
   }
   {
     auto style = make_style("rome.shield_wall", UnitLayoutShape::Shell);
-    style.lateral_spacing_scale = 0.68F;
-    style.depth_spacing_scale = 0.72F;
-    style.front_rank_tightening = 0.12F;
+    style.lateral_spacing_scale = 0.34F;
+    style.depth_spacing_scale = 0.36F;
+    style.front_rank_tightening = 0.20F;
     style.lateral_jitter = 0.004F;
     style.depth_jitter = 0.004F;
     style.facing_jitter_degrees = 0.3F;
-    style.min_separation_scale = 0.84F;
+    style.min_separation_scale = 0.30F;
     out.push_back(style);
   }
   {

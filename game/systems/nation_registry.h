@@ -44,15 +44,10 @@ struct NationTroopVariant {
   std::vector<std::string> abilities;
 };
 
-struct DefenseFormationProfile {
+struct DefensiveUnitLayoutProfile {
   std::string id;
   std::string display_name;
   std::vector<Game::Units::TroopType> eligible_troops;
-
-  int min_units = 3;
-  int max_units_per_rank = 4;
-  float rank_spacing = 1.6F;
-  float file_spacing = 1.4F;
 
   float form_seconds = 2.5F;
   float break_seconds = 1.2F;
@@ -69,9 +64,6 @@ struct DefenseFormationProfile {
   float attack_output_multiplier = 0.55F;
 
   float frontal_arc_degrees = 100.0F;
-  float cohesion_radius = 3.2F;
-  float min_cohesion_ratio = 0.6F;
-
   [[nodiscard]] auto is_eligible_troop(Game::Units::TroopType unit_type) const -> bool {
     return std::find(eligible_troops.begin(), eligible_troops.end(), unit_type) !=
            eligible_troops.end();
@@ -95,7 +87,7 @@ struct Nation {
   std::optional<Game::Units::BuildingType> primary_building =
       Game::Units::BuildingType::Barracks;
   Game::Formation::FormationDoctrineId doctrine{"rome"};
-  std::optional<DefenseFormationProfile> defense_formation;
+  std::optional<DefensiveUnitLayoutProfile> defensive_unit_layout;
   bool playable = true;
   bool has_economy = true;
   std::string ai_profile = "standard";

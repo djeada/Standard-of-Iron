@@ -159,7 +159,22 @@ inline constexpr std::uint16_t k_humanoid_unarmed_jab_clip = 45U;
 inline constexpr std::uint16_t k_humanoid_unarmed_cross_clip = 46U;
 inline constexpr std::uint16_t k_humanoid_unarmed_hook_clip = 47U;
 inline constexpr std::uint8_t k_humanoid_unarmed_variant_count = 3U;
-inline constexpr std::uint16_t k_humanoid_clip_count = 48U;
+
+inline constexpr std::uint16_t k_humanoid_testudo_first_clip = 48U;
+inline constexpr std::uint16_t k_humanoid_testudo_front_clip = 48U;
+inline constexpr std::uint16_t k_humanoid_testudo_top_clip = 49U;
+inline constexpr std::uint16_t k_humanoid_testudo_left_clip = 50U;
+inline constexpr std::uint16_t k_humanoid_testudo_right_clip = 51U;
+inline constexpr std::uint16_t k_humanoid_testudo_rear_clip = 52U;
+inline constexpr std::uint8_t k_humanoid_testudo_clip_count = 5U;
+
+inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_first_clip = 53U;
+inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_front_clip = 53U;
+inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_left_clip = 54U;
+inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_right_clip = 55U;
+inline constexpr std::uint8_t k_humanoid_carthage_shield_wall_clip_count = 3U;
+
+inline constexpr std::uint16_t k_humanoid_clip_count = 56U;
 
 inline constexpr float k_humanoid_idle_breath_cycle_time = 8.0F;
 inline constexpr std::uint32_t k_humanoid_idle_breath_frames = 90U;

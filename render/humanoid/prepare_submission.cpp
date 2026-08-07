@@ -220,7 +220,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   if (ctx.entity != nullptr) {
     if (const auto* layout_state =
             ctx.entity->get_component<Engine::Core::UnitLayoutStateComponent>()) {
-      formed_ratio = std::clamp(layout_state->transition_progress, 0.0F, 1.0F);
+      formed_ratio = Game::Formation::UnitLayoutStateSystem::formed_ratio(*ctx.entity);
       if (layout_state->layout_id != Game::Formation::k_invalid_layout) {
         unit_layout = layout_state->layout_id;
       }
@@ -523,13 +523,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         soldier_render_anim.shield_formation_pose == ShieldFormationPose::None) {
       auto const visual_spec = owner.visual_spec();
       int const row = static_cast<int>(layout.row_index);
-      int const col = idx % cols;
+      int const col = static_cast<int>(layout.col_index);
       soldier_render_anim.shield_formation_pose = shared_guard_shield_pose(
           unit_comp,
           visual_spec,
           creature_presentation != nullptr &&
               creature_presentation->formation_guard_active,
           creature_presentation != nullptr && creature_presentation->guard_requested,
+          creature_presentation != nullptr &&
+              creature_presentation->defensive_layout_locked,
           row,
           col,
           rows,

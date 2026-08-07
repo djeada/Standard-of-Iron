@@ -13,6 +13,7 @@
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/builder_product_types.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/gather_loop_system.h"
 #include "game/systems/order_service.h"
@@ -30,9 +31,16 @@ using Game::Map::WorldProp;
 
 class AutoGatherTest : public ::testing::Test {
 protected:
-  void TearDown() override {
+  void SetUp() override { reset_shared_state(); }
+
+  void TearDown() override { reset_shared_state(); }
+
+  static void reset_shared_state() {
     Game::Map::TerrainService::instance().clear();
     Game::Map::VisibilityService::instance().reset();
+    Game::Systems::OwnerRegistry::instance().clear();
+    Game::Systems::PlayerResourceRegistry::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
   struct Node {
@@ -58,7 +66,13 @@ protected:
                                      .z = node.z + k_grid_origin});
     }
     Game::Map::TerrainService::instance().initialize(map_def);
+    Game::Map::VisibilityService::instance().initialize(
+        map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
+    Game::Map::VisibilityService::instance().reveal_all();
     Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+    if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
+      pathfinder->update_navigation_grid();
+    }
   }
 
   static auto

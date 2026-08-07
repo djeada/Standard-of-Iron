@@ -41,8 +41,11 @@ auto resolve_humanoid_stance_targets(const HumanoidStanceTargetInputs& inputs) n
     targets.hold_exit_progress = std::clamp(inputs.hold_exit_progress, 0.0F, 1.0F);
   }
 
+  bool const defensive_layout_holds = inputs.defensive_layout_locked &&
+                                      !inputs.action.is_dying && !inputs.action.is_dead;
   targets.guard =
-      inputs.raw_guard_requested && humanoid_action_allows_guard_pose(inputs.action);
+      inputs.raw_guard_requested &&
+      (defensive_layout_holds || humanoid_action_allows_guard_pose(inputs.action));
   return targets;
 }
 

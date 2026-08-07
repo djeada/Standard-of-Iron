@@ -670,6 +670,8 @@ TEST(ArenaScenariosTest, FormationScenariosCoverBothLayers) {
                                      QStringLiteral("unit_layout_casualty_reflow"),
                                      QStringLiteral("unit_layout_slope_adaptation"),
                                      QStringLiteral("unit_layout_defensive_transition"),
+                                     QStringLiteral("unit_layout_testudo_lock"),
+                                     QStringLiteral("unit_layout_shield_wall_lock"),
                                      QStringLiteral("unit_layout_disruption_recovery"),
                                      QStringLiteral("unit_layout_large_army_cost")};
   const QString army_formation_ids[] = {
@@ -749,6 +751,56 @@ TEST(ArenaScenariosTest, ArmyFormationScenariosIssueFormationMoves) {
                                      Arena::ScenarioCommandKind::FormationMove;
                             }))
         << option.id.toStdString() << " never issues a FormationMove";
+  }
+}
+
+TEST(ArenaScenariosTest, DefensiveLayoutScenariosUseOneLogicalUnit) {
+  struct Case {
+    QString id;
+    Game::Systems::NationID nation;
+  };
+  const Case cases[] = {
+      {QStringLiteral("unit_layout_testudo_lock"),
+       Game::Systems::NationID::RomanRepublic},
+      {QStringLiteral("unit_layout_shield_wall_lock"),
+       Game::Systems::NationID::Carthage},
+  };
+
+  for (auto const& entry : cases) {
+    auto const* scenario = Arena::Scenarios::find_definition(entry.id);
+    ASSERT_NE(scenario, nullptr) << entry.id.toStdString();
+    EXPECT_TRUE(Arena::validate_scenario(*scenario).empty()) << entry.id.toStdString();
+
+    auto const cohort = std::find_if(
+        scenario->groups.begin(), scenario->groups.end(), [](auto const& group) {
+          return group.name == QStringLiteral("cohort");
+        });
+    ASSERT_NE(cohort, scenario->groups.end()) << entry.id.toStdString();
+    EXPECT_EQ(cohort->nation_id, entry.nation) << entry.id.toStdString();
+    EXPECT_EQ(cohort->troop_type, Game::Units::TroopType::Swordsman)
+        << entry.id.toStdString();
+    EXPECT_EQ(cohort->count, 1)
+        << entry.id.toStdString()
+        << " must demonstrate an internal soldier layout, not an army formation";
+
+    auto const engage = std::find_if(
+        scenario->steps.begin(), scenario->steps.end(), [](auto const& step) {
+          return step.command == Arena::ScenarioCommandKind::Guard && step.enabled;
+        });
+    ASSERT_NE(engage, scenario->steps.end())
+        << entry.id.toStdString() << " never enters Defense Mode";
+    EXPECT_TRUE(engage->target_group.isEmpty())
+        << entry.id.toStdString()
+        << " must not move the logical unit into an inter-unit slot";
+
+    EXPECT_TRUE(std::any_of(scenario->steps.begin(),
+                            scenario->steps.end(),
+                            [](auto const& step) {
+                              return step.command ==
+                                         Arena::ScenarioCommandKind::Guard &&
+                                     !step.enabled;
+                            }))
+        << entry.id.toStdString() << " never leaves Defense Mode again";
   }
 }
 

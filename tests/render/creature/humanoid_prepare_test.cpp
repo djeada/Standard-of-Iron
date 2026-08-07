@@ -31,6 +31,8 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "game/formation/unit_layout.h"
+#include "game/formation/unit_layout_state_system.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/creature/animation_state_components.h"
@@ -2322,6 +2324,7 @@ TEST(AnimationCoreGuardManifest, RomanInteriorFormationUsesTopShield) {
       .has_left_hand_shield = true,
       .infantry_formation_unit = true,
       .formation_active = true,
+      .defensive_layout_locked = true,
       .shield_family = Animation::GuardShieldFamily::Roman,
       .row = 1,
       .col = 1,
@@ -2330,6 +2333,29 @@ TEST(AnimationCoreGuardManifest, RomanInteriorFormationUsesTopShield) {
   });
 
   EXPECT_EQ(pose, Animation::ShieldFormationPose::RomanTop);
+}
+
+TEST(AnimationCoreGuardManifest, TheShieldRoofWaitsForTheTestudoToLockIn) {
+  auto const inputs_for = [](bool locked) {
+    return Animation::HumanoidGuardShieldPoseInputs{
+        .has_left_hand_shield = true,
+        .infantry_formation_unit = true,
+        .formation_active = true,
+        .guard_mode_active = true,
+        .defensive_layout_locked = locked,
+        .shield_family = Animation::GuardShieldFamily::Roman,
+        .row = 1,
+        .col = 1,
+        .rows = 3,
+        .cols = 3,
+    };
+  };
+
+  EXPECT_EQ(Animation::resolve_humanoid_guard_shield_pose(inputs_for(false)),
+            Animation::ShieldFormationPose::RomanFront)
+      << "guard mode alone must not raise shields overhead";
+  EXPECT_EQ(Animation::resolve_humanoid_guard_shield_pose(inputs_for(true)),
+            Animation::ShieldFormationPose::RomanTop);
 }
 
 TEST(AnimationCoreGuardManifest, GuardFallbackUsesNationFrontShield) {
@@ -2358,23 +2384,22 @@ TEST(AnimationCoreGuardManifest, GuardFallbackUsesNationFrontShield) {
 TEST(AnimationCoreGuardManifest, AttachmentProfilesExposeShieldTurns) {
   auto const roman_front = Animation::guard_shield_attachment_profile(
       Animation::ShieldFormationPose::RomanFront);
-  EXPECT_FLOAT_EQ(roman_front.base_yaw_degrees, -90.0F);
-  EXPECT_FLOAT_EQ(roman_front.yaw_degrees, 180.0F);
-  EXPECT_FLOAT_EQ(roman_front.pitch_degrees, -8.0F);
-  EXPECT_FLOAT_EQ(roman_front.translate_y, 0.06F);
-  EXPECT_FLOAT_EQ(roman_front.translate_z, 0.06F);
-
   auto const roman_top = Animation::guard_shield_attachment_profile(
       Animation::ShieldFormationPose::RomanTop);
-  EXPECT_FLOAT_EQ(roman_top.pitch_degrees, -78.0F);
-  EXPECT_FLOAT_EQ(roman_top.translate_y, 0.20F);
-  EXPECT_FLOAT_EQ(roman_top.translate_z, -0.03F);
-
   auto const carthage = Animation::guard_shield_attachment_profile(
       Animation::ShieldFormationPose::CarthageFront);
-  EXPECT_FLOAT_EQ(carthage.pitch_degrees, -40.0F);
-  EXPECT_FLOAT_EQ(carthage.translate_y, 0.14F);
-  EXPECT_FLOAT_EQ(carthage.translate_z, 0.03F);
+
+  EXPECT_FLOAT_EQ(roman_front.base_yaw_degrees, -90.0F);
+  EXPECT_FLOAT_EQ(roman_front.yaw_degrees, 180.0F);
+  EXPECT_FLOAT_EQ(roman_top.yaw_degrees, 180.0F);
+
+  EXPECT_GT(roman_front.pitch_degrees, -25.0F);
+  EXPECT_LT(roman_top.pitch_degrees, -60.0F);
+  EXPECT_LT(roman_top.pitch_degrees, carthage.pitch_degrees);
+  EXPECT_LT(carthage.pitch_degrees, roman_front.pitch_degrees);
+
+  EXPECT_GT(roman_top.translate_y, roman_front.translate_y);
+  EXPECT_GT(roman_front.translate_z, 0.0F);
 }
 
 TEST(AnimationCoreAttackPoseManifest, CombatSwordVariantOwnsReachAndBodyDrive) {
@@ -2972,15 +2997,18 @@ TEST(AnimationCoreHoldPoseManifest, GuardStanceOwnsFormationTargetsAndDeltas) {
       .shoulder_y = 1.20F,
   });
 
+  auto const front = Animation::resolve_humanoid_guard_stance_pose({
+      .pose = Animation::ShieldFormationPose::RomanFront,
+      .amount = 0.50F,
+      .shoulder_y = 1.20F,
+  });
+
   EXPECT_TRUE(top.active);
   EXPECT_FLOAT_EQ(top.blend_amount, 0.50F);
-  EXPECT_FLOAT_EQ(top.right_hand.x, 0.14F);
-  EXPECT_FLOAT_EQ(top.right_hand.y, 0.98F);
-  EXPECT_FLOAT_EQ(top.left_hand.y, 1.54F);
-  EXPECT_FLOAT_EQ(top.shoulder_l_delta.y, 0.04F);
-  EXPECT_FLOAT_EQ(top.shoulder_l_delta.z, 0.10F);
-  EXPECT_FLOAT_EQ(top.neck_delta.y, -0.02F);
-  EXPECT_FLOAT_EQ(top.head_delta.z, 0.045F);
+  EXPECT_GT(top.left_hand.y, 1.20F + 0.30F);
+  EXPECT_GT(top.left_hand.y, front.left_hand.y);
+  EXPECT_GT(top.shoulder_l_delta.y, 0.0F);
+  EXPECT_GT(front.left_hand.z, top.left_hand.z);
   EXPECT_FALSE(inactive.active);
 }
 
@@ -5098,6 +5126,41 @@ TEST(HumanoidPrepare, MovingCombatSelectionProducesUpperBodyOverlay) {
   EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
   EXPECT_NE(selection.upper_body_overlay.state, selection.state);
   EXPECT_GT(selection.upper_body_overlay.weight, 0.7F);
+}
+
+TEST(HumanoidPrepare, BothDefensiveDoctrinesUseBakedUpperBodyPosesWhileWalking) {
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::PlaybackLayerMode;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/defensive_layout_overlay";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  auto overlay_clip_for = [&](Render::GL::ShieldFormationPose pose) {
+    Render::GL::HumanoidAnimationContext anim{};
+    anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+    anim.inputs.is_guarding = true;
+    anim.inputs.guard_pose_progress = 1.0F;
+    anim.inputs.is_defensive_layout_locked = true;
+    anim.inputs.shield_formation_pose = pose;
+    anim.gait.cycle_phase = 0.35F;
+    auto const selection = resolve_humanoid_animation_selection(spec, anim, 29U);
+    EXPECT_TRUE(selection.upper_body_overlay.active());
+    EXPECT_EQ(selection.upper_body_overlay.mode, PlaybackLayerMode::UpperBodyOverlay);
+    return selection.upper_body_overlay.clip_id;
+  };
+
+  auto const roman = overlay_clip_for(Render::GL::ShieldFormationPose::RomanTop);
+  auto const carthage =
+      overlay_clip_for(Render::GL::ShieldFormationPose::CarthageFront);
+  ASSERT_TRUE(roman.has_value());
+  ASSERT_TRUE(carthage.has_value());
+  EXPECT_EQ(*roman, Animation::k_humanoid_testudo_top_clip);
+  EXPECT_EQ(*carthage, Animation::k_humanoid_carthage_shield_wall_front_clip);
+  EXPECT_NE(*roman, *carthage);
 }
 
 TEST(HumanoidPrepare, HeldSpearCombatKeepsCompleteKneelingWeaponPose) {
@@ -7530,6 +7593,16 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
       return std::unordered_set<Render::Creature::ArchetypeId>{};
     }
     formation_mode->active = true;
+
+    auto* layout = entity.add_component<Engine::Core::UnitLayoutStateComponent>();
+    EXPECT_NE(layout, nullptr);
+    if (layout == nullptr) {
+      return std::unordered_set<Render::Creature::ArchetypeId>{};
+    }
+    layout->state =
+        static_cast<std::uint8_t>(Game::Formation::UnitLayoutState::Defensive);
+    layout->phase = static_cast<std::uint8_t>(Game::Formation::LayoutPhase::Formed);
+    layout->transition_progress = 1.0F;
     ctx.entity = &entity;
 
     Render::GL::AnimationInputs guard_anim{};
@@ -7550,11 +7623,110 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
   auto const carthage_archetypes =
       collect_archetypes(Game::Systems::NationID::Carthage);
 
-  ASSERT_EQ(roman_archetypes.size(), 2U);
-  ASSERT_EQ(carthage_archetypes.size(), 1U);
+  EXPECT_EQ(roman_archetypes.size(), 5U)
+      << "a locked testudo faces shields front, left, right, rear and overhead";
+  EXPECT_EQ(carthage_archetypes.size(), 3U)
+      << "the shield wall faces front and to both flanks, and never roofs over";
   EXPECT_EQ(roman_archetypes.count(base_archetype), 0U);
   EXPECT_EQ(carthage_archetypes.count(base_archetype), 0U);
-  EXPECT_EQ(roman_archetypes.count(*carthage_archetypes.begin()), 0U);
+  for (auto const archetype : carthage_archetypes) {
+    EXPECT_EQ(roman_archetypes.count(archetype), 0U)
+        << "the two doctrines must not share a shield archetype";
+  }
+}
+
+TEST(AnimationCoreGuardManifest, TheTestudoOwnsAContiguousBakedClipBlock) {
+
+  EXPECT_EQ(Animation::k_humanoid_testudo_front_clip,
+            Animation::k_humanoid_testudo_first_clip);
+  EXPECT_EQ(Animation::k_humanoid_testudo_top_clip,
+            Animation::k_humanoid_testudo_first_clip + 1U);
+  EXPECT_EQ(Animation::k_humanoid_testudo_left_clip,
+            Animation::k_humanoid_testudo_first_clip + 2U);
+  EXPECT_EQ(Animation::k_humanoid_testudo_right_clip,
+            Animation::k_humanoid_testudo_first_clip + 3U);
+  EXPECT_EQ(Animation::k_humanoid_testudo_rear_clip,
+            Animation::k_humanoid_testudo_first_clip + 4U);
+  EXPECT_EQ(Animation::k_humanoid_testudo_clip_count, 5U);
+  EXPECT_LT(Animation::k_humanoid_testudo_rear_clip, Animation::k_humanoid_clip_count)
+      << "the testudo block must fit inside the baked clip table";
+}
+
+TEST(AnimationCoreGuardManifest, CarthageShieldWallOwnsDistinctBakedPoses) {
+  EXPECT_EQ(Animation::k_humanoid_carthage_shield_wall_front_clip,
+            Animation::k_humanoid_carthage_shield_wall_first_clip);
+  EXPECT_EQ(Animation::k_humanoid_carthage_shield_wall_left_clip,
+            Animation::k_humanoid_carthage_shield_wall_first_clip + 1U);
+  EXPECT_EQ(Animation::k_humanoid_carthage_shield_wall_right_clip,
+            Animation::k_humanoid_carthage_shield_wall_first_clip + 2U);
+  EXPECT_EQ(Animation::k_humanoid_carthage_shield_wall_clip_count, 3U);
+  EXPECT_LT(Animation::k_humanoid_carthage_shield_wall_right_clip,
+            Animation::k_humanoid_clip_count);
+}
+
+TEST(AnimationCoreGuardManifest, EveryTestudoSlotGetsTheShieldFacingItsPositionNeeds) {
+  using Animation::FormationShieldFacing;
+  using Animation::resolve_formation_shield_facing;
+
+  EXPECT_EQ(resolve_formation_shield_facing(3, 2, 4, 5), FormationShieldFacing::Front);
+  EXPECT_EQ(resolve_formation_shield_facing(0, 2, 4, 5), FormationShieldFacing::Rear);
+  EXPECT_EQ(resolve_formation_shield_facing(1, 0, 4, 5), FormationShieldFacing::Left);
+  EXPECT_EQ(resolve_formation_shield_facing(2, 4, 4, 5), FormationShieldFacing::Right);
+  EXPECT_EQ(resolve_formation_shield_facing(1, 2, 4, 5), FormationShieldFacing::Top);
+
+  EXPECT_EQ(resolve_formation_shield_facing(0, 0, 1, 1), FormationShieldFacing::Front)
+      << "a lone man presents to the front rather than roofing over himself";
+}
+
+TEST(AnimationCoreGuardManifest, TheShellFacesShieldsOutwardOnEverySide) {
+  auto const pose_at = [](int row, int col, Animation::GuardShieldFamily family) {
+    return Animation::resolve_humanoid_guard_shield_pose({
+        .has_left_hand_shield = true,
+        .infantry_formation_unit = true,
+        .formation_active = true,
+        .defensive_layout_locked = true,
+        .shield_family = family,
+        .row = row,
+        .col = col,
+        .rows = 4,
+        .cols = 5,
+    });
+  };
+
+  using Pose = Animation::ShieldFormationPose;
+  auto const roman = Animation::GuardShieldFamily::Roman;
+  EXPECT_EQ(pose_at(3, 2, roman), Pose::RomanFront);
+  EXPECT_EQ(pose_at(1, 2, roman), Pose::RomanTop);
+  EXPECT_EQ(pose_at(1, 0, roman), Pose::RomanLeft);
+  EXPECT_EQ(pose_at(1, 4, roman), Pose::RomanRight);
+  EXPECT_EQ(pose_at(0, 2, roman), Pose::RomanRear);
+
+  auto const carthage = Animation::GuardShieldFamily::Carthage;
+  EXPECT_EQ(pose_at(3, 2, carthage), Pose::CarthageFront);
+  EXPECT_EQ(pose_at(1, 0, carthage), Pose::CarthageLeft);
+  EXPECT_EQ(pose_at(1, 4, carthage), Pose::CarthageRight);
+  EXPECT_EQ(pose_at(1, 2, carthage), Pose::CarthageFront)
+      << "a shield wall has no roof; interior men keep facing forward";
+  EXPECT_EQ(pose_at(0, 2, carthage), Pose::CarthageFront)
+      << "a shield wall does not cover its own back";
+}
+
+TEST(AnimationCoreGuardManifest, ShieldFacingsTurnTheShieldToDifferentQuarters) {
+  using Pose = Animation::ShieldFormationPose;
+  auto const yaw = [](Pose pose) {
+    return Animation::guard_shield_attachment_profile(pose).yaw_degrees;
+  };
+  auto const pitch = [](Pose pose) {
+    return Animation::guard_shield_attachment_profile(pose).pitch_degrees;
+  };
+
+  EXPECT_NE(yaw(Pose::RomanLeft), yaw(Pose::RomanFront));
+  EXPECT_NE(yaw(Pose::RomanRight), yaw(Pose::RomanFront));
+  EXPECT_NE(yaw(Pose::RomanRight), yaw(Pose::RomanLeft));
+  EXPECT_NE(yaw(Pose::RomanRear), yaw(Pose::RomanFront));
+  EXPECT_LT(pitch(Pose::RomanTop), pitch(Pose::RomanFront))
+      << "only the roof lays the shield toward horizontal";
+  EXPECT_NE(yaw(Pose::CarthageLeft), yaw(Pose::CarthageRight));
 }
 
 TEST(HumanoidPrepare, RomanFormationFrontShieldMatchesDefaultRomanGuardFallback) {

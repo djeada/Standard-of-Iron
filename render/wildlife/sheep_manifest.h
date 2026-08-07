@@ -4,6 +4,8 @@
 
 namespace Render::Wildlife {
 
+[[nodiscard]] auto sheep_graze_amount(float phase) noexcept -> float;
+
 [[nodiscard]] auto
 sheep_manifest() noexcept -> const Render::Creature::SpeciesManifest&;
 
