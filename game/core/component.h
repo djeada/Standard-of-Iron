@@ -159,6 +159,7 @@ public:
   [[nodiscard]] auto get_goal_y() const -> float { return goal_y; }
   [[nodiscard]] auto get_vx() const -> float { return vx; }
   [[nodiscard]] auto get_vz() const -> float { return vz; }
+  [[nodiscard]] auto get_travelled() const -> float { return travelled; }
   [[nodiscard]] auto get_path() const -> const std::vector<std::pair<float, float>>& {
     return path;
   }
@@ -259,6 +260,9 @@ private:
   float target_x{0.0F}, target_y{0.0F};
   float goal_x{0.0F}, goal_y{0.0F};
   float vx{0.0F}, vz{0.0F};
+
+  float travelled{0.0F};
+
   std::vector<std::pair<float, float>> path;
   std::size_t path_index{0};
 

@@ -24,15 +24,16 @@ struct SheepClipSpec {
   float alert{0.0F};
   bool collapses{false};
   bool holds_collapsed{false};
+  SheepGait gait{SheepGait::Stand};
 };
 
 constexpr std::array<SheepClipSpec, 6> k_sheep_clips{{
-    {{"idle", 20U, 20.0F, true}, 0.0F, 0.0F, 0.0F, false, false},
-    {{"graze", 24U, 20.0F, true}, 1.0F, 0.0F, 0.0F, false, false},
-    {{"walk", 24U, 24.0F, true}, 0.0F, 0.42F, 0.0F, false, false},
-    {{"run", 16U, 24.0F, true}, 0.0F, 1.0F, 1.0F, false, false},
-    {{"die", 20U, 20.0F, false}, 0.0F, 0.0F, 1.0F, true, false},
-    {{"dead", 1U, 1.0F, true}, 0.0F, 0.0F, 0.0F, true, true},
+    {{"idle", 20U, 20.0F, true}, 0.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
+    {{"graze", 24U, 20.0F, true}, 1.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
+    {{"walk", 24U, 24.0F, true}, 0.0F, 0.42F, 0.0F, false, false, SheepGait::Walk},
+    {{"run", 16U, 24.0F, true}, 0.0F, 1.0F, 1.0F, false, false, SheepGait::Run},
+    {{"die", 20U, 20.0F, false}, 0.0F, 0.0F, 1.0F, true, false, SheepGait::Stand},
+    {{"dead", 1U, 1.0F, true}, 0.0F, 0.0F, 0.0F, true, true, SheepGait::Stand},
 }};
 
 constexpr std::array<Render::Creature::BakeClipDescriptor, k_sheep_clips.size()>
@@ -60,6 +61,7 @@ void bake_sheep_clip_frame(std::size_t clip_index,
   drive.speed_ratio = clip.speed_ratio;
   drive.alert = clip.alert;
   drive.stride_phase = phase;
+  drive.gait = clip.gait;
   if (clip.collapses) {
     drive.collapse = clip.holds_collapsed ? 1.0F : phase;
     drive.stride_phase = 0.0F;

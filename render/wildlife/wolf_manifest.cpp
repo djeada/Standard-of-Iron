@@ -26,16 +26,45 @@ struct WolfClipSpec {
   bool bites{false};
   bool collapses{false};
   bool holds_collapsed{false};
+  WolfGait gait{WolfGait::Stand};
 };
 
 constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
-    {{"idle", 20U, 20.0F, true}, 0.0F, 0.0F, 0.0F, false, false, false},
-    {{"stalk", 28U, 20.0F, true}, 0.30F, 1.0F, 0.85F, false, false, false},
-    {{"walk", 24U, 24.0F, true}, 0.45F, 0.0F, 0.0F, false, false, false},
-    {{"run", 14U, 26.0F, true}, 1.0F, 0.0F, 0.25F, false, false, false},
-    {{"bite", 18U, 24.0F, true}, 0.0F, 0.55F, 1.0F, true, false, false},
-    {{"die", 20U, 20.0F, false}, 0.0F, 0.0F, 1.0F, false, true, false},
-    {{"dead", 1U, 1.0F, true}, 0.0F, 0.0F, 1.0F, false, true, true},
+    {{"idle", 20U, 20.0F, true},
+     0.0F,
+     0.0F,
+     0.0F,
+     false,
+     false,
+     false,
+     WolfGait::Stand},
+    {{"stalk", 28U, 20.0F, true},
+     0.30F,
+     1.0F,
+     0.85F,
+     false,
+     false,
+     false,
+     WolfGait::Stalk},
+    {{"walk", 24U, 24.0F, true},
+     0.45F,
+     0.0F,
+     0.0F,
+     false,
+     false,
+     false,
+     WolfGait::Walk},
+    {{"run", 14U, 26.0F, true}, 1.0F, 0.0F, 0.25F, false, false, false, WolfGait::Run},
+    {{"bite", 18U, 24.0F, true},
+     0.0F,
+     0.55F,
+     1.0F,
+     true,
+     false,
+     false,
+     WolfGait::Stand},
+    {{"die", 20U, 20.0F, false}, 0.0F, 0.0F, 1.0F, false, true, false, WolfGait::Stand},
+    {{"dead", 1U, 1.0F, true}, 0.0F, 0.0F, 1.0F, false, true, true, WolfGait::Stand},
 }};
 
 constexpr std::array<Render::Creature::BakeClipDescriptor, k_wolf_clips.size()>
@@ -64,6 +93,7 @@ void bake_wolf_clip_frame(std::size_t clip_index,
   drive.speed_ratio = clip.speed_ratio;
   drive.crouch = clip.crouch;
   drive.ear_pin = clip.ear_pin;
+  drive.gait = clip.gait;
   if (clip.bites) {
     drive.lunge = std::max(0.0F, std::sin(phase * 6.28318530718F));
     drive.stride_phase = 0.0F;
