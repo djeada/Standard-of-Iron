@@ -1593,6 +1593,18 @@ TEST_F(CombatModeTest, MeleeContactTimingComesFromAnimationManifest) {
       Game::Systems::Combat::melee_contact_time_for_unit(
           Game::Units::SpawnType::Archer, CombatAttackFamily::Bow, 0U, k_cooldown),
       CombatStateComponent::k_melee_contact_fraction * k_cooldown);
+  for (auto const spawn_type : {Game::Units::SpawnType::Builder,
+                                Game::Units::SpawnType::Civilian,
+                                Game::Units::SpawnType::Healer}) {
+    EXPECT_NEAR(Game::Systems::Combat::melee_contact_time_for_unit(
+                    spawn_type, CombatAttackFamily::None, 7U, k_cooldown),
+                Animation::authored_humanoid_clip_markers(
+                    Animation::k_humanoid_unarmed_cross_clip,
+                    Animation::HumanoidClipProfile::Default)
+                        .contact *
+                    k_cooldown,
+                0.0001F);
+  }
 }
 
 TEST_F(CombatModeTest, MeleeContactFractionIsWithinSwing) {

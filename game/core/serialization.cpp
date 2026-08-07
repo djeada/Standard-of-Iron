@@ -834,6 +834,9 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     wildlife_obj["state_timer"] = static_cast<double>(wildlife->state_timer);
     wildlife_obj["alarm_timer"] = static_cast<double>(wildlife->alarm_timer);
     wildlife_obj["hostile_timer"] = static_cast<double>(wildlife->hostile_timer);
+    wildlife_obj["bite_timer"] = static_cast<double>(wildlife->bite_timer);
+    wildlife_obj["bite_target_id"] = static_cast<qint64>(wildlife->bite_target_id);
+    wildlife_obj["bite_impact_pending"] = wildlife->bite_impact_pending;
     wildlife_obj["focus_id"] = static_cast<qint64>(wildlife->focus_id);
     wildlife_obj["aggressor_id"] = static_cast<qint64>(wildlife->aggressor_id);
     wildlife_obj["rng_state"] = static_cast<qint64>(wildlife->rng_state);
@@ -1790,6 +1793,10 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(wildlife_obj["alarm_timer"].toDouble(0.0));
     wildlife->hostile_timer =
         static_cast<float>(wildlife_obj["hostile_timer"].toDouble(0.0));
+    wildlife->bite_timer = static_cast<float>(wildlife_obj["bite_timer"].toDouble(0.0));
+    wildlife->bite_target_id =
+        static_cast<EntityID>(wildlife_obj["bite_target_id"].toVariant().toULongLong());
+    wildlife->bite_impact_pending = wildlife_obj["bite_impact_pending"].toBool(false);
     wildlife->focus_id =
         static_cast<EntityID>(wildlife_obj["focus_id"].toVariant().toULongLong());
     wildlife->aggressor_id =

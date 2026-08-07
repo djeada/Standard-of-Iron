@@ -76,8 +76,9 @@ auto state_for_gait(const DrawState& state, Render::Wildlife::WolfGait gait)
   case Render::Wildlife::WolfGait::Stand:
     break;
   }
+
   return state.behavior == Game::Wildlife::Behavior::Stalk
-             ? Render::Creature::AnimationStateId::AttackMelee
+             ? Render::Creature::AnimationStateId::Hold
              : Render::Creature::AnimationStateId::Idle;
 }
 
@@ -88,8 +89,22 @@ void draw_wolf(const DrawContext& ctx, ISubmitter& out) {
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Wolf;
   inputs.variant = resolve_variant(state);
-  inputs.phase = gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
-  inputs.state = state_for_gait(state, gait);
+
+  float const walk_phase = gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
+
+  if (state.dead) {
+    inputs.state = Render::Creature::AnimationStateId::Dead;
+    inputs.phase = 1.0F;
+  } else if (state.death_progress >= 0.0F) {
+    inputs.state = Render::Creature::AnimationStateId::Die;
+    inputs.phase = state.death_progress;
+  } else if (state.bite_progress >= 0.0F) {
+    inputs.state = Render::Creature::AnimationStateId::AttackMelee;
+    inputs.phase = state.bite_progress;
+  } else {
+    inputs.phase = walk_phase;
+    inputs.state = state_for_gait(state, gait);
+  }
 
   Render::Wildlife::submit_wildlife(ctx, inputs, out);
 }

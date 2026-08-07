@@ -15,6 +15,7 @@
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/horse/horse_motion.h"
 #include "render/humanoid/skeleton.h"
+#include "render/wildlife/wildlife_rig.h"
 #include "tests/render/test_asset_paths.h"
 
 using namespace Render::Creature::Bpat;
@@ -54,6 +55,97 @@ TEST(BpatRegistry, LoadsAllSpecies) {
   EXPECT_TRUE(reg.has_species(k_species_humanoid_skeleton));
   EXPECT_TRUE(reg.has_species(k_species_sheep));
   EXPECT_TRUE(reg.has_species(k_species_wolf));
+}
+
+TEST(BpatRegistry, WildlifeBakesArticulatedBiteAndContinuousDeaths) {
+  auto const root = TestAssets::find_creature_assets_dir("wolf.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked wildlife .bpat assets not found in CWD";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_wolf, root + "/wolf.bpat"));
+  ASSERT_TRUE(reg.load_species(k_species_sheep, root + "/sheep.bpat"));
+
+  auto matrix_delta = [](const QMatrix4x4& a, const QMatrix4x4& b) {
+    float worst = 0.0F;
+    for (int i = 0; i < 16; ++i) {
+      worst = std::max(worst, std::abs(a.constData()[i] - b.constData()[i]));
+    }
+    return worst;
+  };
+  auto sample = [&](std::uint32_t species, std::uint16_t clip, std::uint32_t frame) {
+    std::array<QMatrix4x4, 64> palette{};
+    EXPECT_EQ(reg.sample_palette(species, clip, frame, palette),
+              Render::Wildlife::k_bone_count);
+    return palette;
+  };
+
+  auto const* wolf = reg.blob(k_species_wolf);
+  auto const* sheep = reg.blob(k_species_sheep);
+  ASSERT_NE(wolf, nullptr);
+  ASSERT_NE(sheep, nullptr);
+  EXPECT_EQ(wolf->bone_count(), Render::Wildlife::k_bone_count);
+  EXPECT_EQ(sheep->bone_count(), Render::Wildlife::k_bone_count);
+
+  auto const bite = wolf->clip(Animation::k_wolf_bite_clip);
+  ASSERT_GE(bite.frame_count, 12U);
+  EXPECT_FALSE(bite.loops);
+
+  std::uint32_t const jaw_open_frame = bite.frame_count / 6U;
+  std::uint32_t const contact_frame =
+      static_cast<std::uint32_t>(std::lround((bite.frame_count - 1U) * 0.34F));
+  auto const bite_start = sample(k_species_wolf, Animation::k_wolf_bite_clip, 0U);
+  auto const jaw_open =
+      sample(k_species_wolf, Animation::k_wolf_bite_clip, jaw_open_frame);
+  auto const contact =
+      sample(k_species_wolf, Animation::k_wolf_bite_clip, contact_frame);
+
+  auto const jaw = static_cast<std::size_t>(Render::Wildlife::Bone::Jaw);
+  EXPECT_GT(matrix_delta(jaw_open[jaw], bite_start[jaw]), 0.05F)
+      << "the baked bite must open its articulated jaw during wind-up";
+  EXPECT_GT(matrix_delta(jaw_open[jaw], contact[jaw]), 0.05F)
+      << "the baked jaw must close again at the contact frame";
+
+  constexpr std::array<Render::Wildlife::Bone, 5> k_full_body_bones{{
+      Render::Wildlife::Bone::Body,
+      Render::Wildlife::Bone::ShoulderFL,
+      Render::Wildlife::Bone::ShoulderFR,
+      Render::Wildlife::Bone::Head,
+      Render::Wildlife::Bone::TailBase,
+  }};
+  for (auto const bone : k_full_body_bones) {
+    auto const index = static_cast<std::size_t>(bone);
+    EXPECT_GT(matrix_delta(contact[index], bite_start[index]), 0.01F)
+        << "baked bite leaves bone " << index << " static";
+  }
+
+  auto expect_death_ends_at_dead_pose =
+      [&](std::uint32_t species, std::uint16_t die_clip, std::uint16_t dead_clip) {
+        auto const* blob = reg.blob(species);
+        ASSERT_NE(blob, nullptr);
+        auto const die = blob->clip(die_clip);
+        auto const dead = blob->clip(dead_clip);
+        ASSERT_GT(die.frame_count, 1U);
+        ASSERT_EQ(dead.frame_count, 1U);
+        EXPECT_FALSE(die.loops);
+
+        auto const dying = sample(species, die_clip, die.frame_count / 2U);
+        auto const died = sample(species, die_clip, die.frame_count - 1U);
+        auto const corpse = sample(species, dead_clip, 0U);
+        auto const body = static_cast<std::size_t>(Render::Wildlife::Bone::Body);
+        EXPECT_GT(matrix_delta(dying[body], died[body]), 0.01F)
+            << "death clip must progressively collapse";
+        for (std::size_t bone = 0; bone < Render::Wildlife::k_bone_count; ++bone) {
+          EXPECT_LT(matrix_delta(died[bone], corpse[bone]), 1.0e-4F)
+              << "die-to-dead pose discontinuity at bone " << bone;
+        }
+      };
+
+  expect_death_ends_at_dead_pose(
+      k_species_wolf, Animation::k_wolf_die_clip, Animation::k_wolf_dead_clip);
+  expect_death_ends_at_dead_pose(
+      k_species_sheep, Animation::k_sheep_die_clip, Animation::k_sheep_dead_clip);
 }
 
 TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
@@ -249,6 +341,87 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
   }
   EXPECT_TRUE(any_different)
       << "attack_sword_a mid-frame palette must differ from idle frame 0";
+}
+
+TEST(BpatRegistry, UnarmedClipsBakeGuardDistinctStrikesAndBalancedRecovery) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked humanoid .bpat asset not found in CWD";
+  }
+  auto& reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(k_species_humanoid, root + "/humanoid.bpat"));
+  auto const* blob = reg.blob(k_species_humanoid);
+  ASSERT_NE(blob, nullptr);
+
+  constexpr std::array<std::uint16_t, 3> k_clips{{
+      Animation::k_humanoid_unarmed_jab_clip,
+      Animation::k_humanoid_unarmed_cross_clip,
+      Animation::k_humanoid_unarmed_hook_clip,
+  }};
+  constexpr std::array<std::string_view, 3> k_names{{
+      "unarmed_jab",
+      "unarmed_cross",
+      "unarmed_hook",
+  }};
+
+  auto sample = [&](std::uint16_t clip_id, std::uint32_t frame) {
+    std::array<QMatrix4x4, 64> palette{};
+    EXPECT_EQ(reg.sample_palette(
+                  k_species_humanoid, clip_id, frame, std::span<QMatrix4x4>(palette)),
+              static_cast<std::uint32_t>(HumanoidBone::Count));
+    return palette;
+  };
+  auto delta = [](const QMatrix4x4& a, const QMatrix4x4& b) {
+    float result = 0.0F;
+    for (int i = 0; i < 16; ++i) {
+      result = std::max(result, std::abs(a.constData()[i] - b.constData()[i]));
+    }
+    return result;
+  };
+  auto position = [](const auto& palette, HumanoidBone bone) {
+    return palette[static_cast<std::size_t>(bone)].column(3).toVector3D();
+  };
+
+  std::array<std::array<QMatrix4x4, 64>, 3> contacts{};
+  for (std::size_t i = 0; i < k_clips.size(); ++i) {
+    auto const clip = blob->clip(k_clips[i]);
+    ASSERT_GE(clip.frame_count, 28U);
+    EXPECT_EQ(clip.name, k_names[i]);
+    EXPECT_FALSE(clip.loops);
+    EXPECT_NEAR(clip.marker_contact, 0.50F, 0.0001F);
+
+    auto const guard = sample(k_clips[i], 0U);
+    auto const contact_frame = static_cast<std::uint32_t>(
+        std::lround((clip.frame_count - 1U) * clip.marker_contact));
+    contacts[i] = sample(k_clips[i], contact_frame);
+    auto const recovered = sample(k_clips[i], clip.frame_count - 1U);
+    for (std::size_t bone = 0; bone < static_cast<std::size_t>(HumanoidBone::Count);
+         ++bone) {
+      EXPECT_LT(delta(guard[bone], recovered[bone]), 1.0e-4F)
+          << k_names[i] << " recovery discontinuity at bone " << bone;
+    }
+
+    EXPECT_GT(delta(guard[static_cast<std::size_t>(HumanoidBone::Pelvis)],
+                    contacts[i][static_cast<std::size_t>(HumanoidBone::Pelvis)]),
+              0.01F)
+        << k_names[i] << " lacks hip drive";
+    EXPECT_GT(delta(guard[static_cast<std::size_t>(HumanoidBone::FootL)],
+                    contacts[i][static_cast<std::size_t>(HumanoidBone::FootL)]),
+              0.01F)
+        << k_names[i] << " lacks lead-foot movement";
+  }
+
+  QVector3D const jab_l = position(contacts[0], HumanoidBone::HandL);
+  QVector3D const jab_r = position(contacts[0], HumanoidBone::HandR);
+  QVector3D const cross_l = position(contacts[1], HumanoidBone::HandL);
+  QVector3D const cross_r = position(contacts[1], HumanoidBone::HandR);
+  QVector3D const hook_l = position(contacts[2], HumanoidBone::HandL);
+  EXPECT_GT(jab_l.z(), jab_r.z() + 0.25F);
+  EXPECT_GT(cross_r.z(), cross_l.z() + 0.25F);
+  EXPECT_GT(hook_l.x(), jab_l.x() + 0.10F);
+  EXPECT_LT(hook_l.z(), jab_l.z() - 0.08F);
 }
 
 TEST(BpatRegistry, HumanoidAttackClipsBakeDenseFramesAndOrderedMarkers) {

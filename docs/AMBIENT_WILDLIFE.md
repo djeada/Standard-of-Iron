@@ -263,8 +263,8 @@ Sheep and wolves also have a full `SpeciesManifest` under `render/wildlife/`, al
 the horse and the elephant, so their geometry and animation can be produced at build time
 instead of assembled every frame:
 
-- `wildlife_rig.{h,cpp}` — the shared twenty-bone quadruped rig (root, body, four
-  three-joint legs, neck, head, two ears and a two-segment tail).
+- `wildlife_rig.{h,cpp}` — the shared twenty-one-bone quadruped rig (root, body, four
+  three-joint legs, neck, head, articulated jaw, two ears and a two-segment tail).
 - `sheep_spec.cpp` / `wolf_spec.cpp` — the bind pose, the pose function each clip samples,
   and the whole-mesh node graphs authored as `Quadruped::MeshNode` shapes.
 - `sheep_manifest.cpp` / `wolf_manifest.cpp` — clip descriptors and the bake callback.

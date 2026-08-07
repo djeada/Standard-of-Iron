@@ -72,6 +72,7 @@ inline constexpr char k_healer_identity_lineup_id[] = "healer_identity_lineup";
 inline constexpr char k_healer_lod_probe_id[] = "healer_lod_probe";
 inline constexpr char k_troop_identity_lineup_id[] = "troop_identity_lineup";
 inline constexpr char k_worker_identity_lineup_id[] = "worker_identity_lineup";
+inline constexpr char k_unarmed_support_brawl_id[] = "unarmed_support_brawl";
 inline constexpr char k_helmet_identity_review_id[] = "helmet_identity_review";
 inline constexpr char k_commander_helmet_review_id[] = "commander_helmet_review";
 inline constexpr char k_roman_settlement_works_id[] = "roman_settlement_works";
@@ -195,6 +196,7 @@ inline constexpr char k_promo_last_stand_id[] = "promo_last_stand";
 inline constexpr char k_promo_night_of_the_dead_id[] = "promo_night_of_the_dead";
 inline constexpr char k_promo_storm_charge_id[] = "promo_storm_charge";
 inline constexpr char k_promo_commander_duel_id[] = "promo_commander_duel";
+inline constexpr char k_promo_wolf_attack_id[] = "promo_wolf_attack";
 
 inline constexpr char k_weather_rain_light_id[] = "weather_rain_light";
 inline constexpr char k_weather_rain_medium_id[] = "weather_rain_medium";

@@ -180,6 +180,33 @@ TEST(WorldPresentationTest, PublishesDetachedDoubleBufferedRenderWorlds) {
       second->get_entity(id)->get_component<TransformComponent>()->position.x, 9.0F);
 }
 
+TEST(WorldPresentationTest, RenderSnapshotCarriesWildlifeActionState) {
+  World world;
+  world.request_render_snapshots();
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  auto* wildlife = entity->add_component<Engine::Core::WildlifeComponent>();
+  wildlife->species = Game::Wildlife::Species::Wolf;
+  wildlife->behavior = Game::Wildlife::Behavior::Stalk;
+  wildlife->bite_timer = 0.37F;
+  wildlife->bite_target_id = 91U;
+  wildlife->bite_impact_pending = true;
+  EntityID const id = entity->get_id();
+
+  world.update(1.0F / 60.0F);
+  auto snapshot = world.acquire_render_snapshot();
+  ASSERT_NE(snapshot, nullptr);
+  auto const* copied =
+      snapshot->get_entity(id)->get_component<Engine::Core::WildlifeComponent>();
+  ASSERT_NE(copied, nullptr);
+  EXPECT_EQ(copied->behavior, Game::Wildlife::Behavior::Stalk);
+  EXPECT_FLOAT_EQ(copied->bite_timer, 0.37F);
+  EXPECT_EQ(copied->bite_target_id, 91U);
+  EXPECT_TRUE(copied->bite_impact_pending);
+}
+
 TEST(ComponentIndexTest, DestroyingAnEntityDropsItFromEveryIndex) {
   World world;
 

@@ -596,6 +596,8 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<FormationHitPresentationComponent>(source, destination);
   copy_snapshot_component<SoldierCasualtyAnimationComponent>(source, destination);
   copy_snapshot_component<DeathAnimationComponent>(source, destination);
+
+  copy_snapshot_component<WildlifeComponent>(source, destination);
   copy_snapshot_component<BuilderProductionComponent>(source, destination);
   copy_snapshot_component<ProductionComponent>(source, destination);
   copy_snapshot_component<CaptureComponent>(source, destination);

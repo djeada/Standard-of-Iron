@@ -1859,6 +1859,12 @@ public:
   float state_timer{0.0F};
   float alarm_timer{0.0F};
   float hostile_timer{0.0F};
+
+  static constexpr float k_bite_animation_seconds = 0.55F;
+  static constexpr float k_bite_impact_phase = 0.34F;
+  float bite_timer{0.0F};
+  EntityID bite_target_id{0};
+  bool bite_impact_pending{false};
   EntityID focus_id{0};
   EntityID aggressor_id{0};
   std::uint32_t rng_state{0U};

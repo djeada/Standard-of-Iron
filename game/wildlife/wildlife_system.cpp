@@ -644,12 +644,15 @@ public:
 
   auto bite(const NatureContext& ctx, const PreyRef& prey) -> bool override {
     auto* attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
-    if (attack == nullptr || ctx.wildlife->state_timer > 0.0F) {
+    if (attack == nullptr || ctx.wildlife->state_timer > 0.0F ||
+        ctx.wildlife->bite_timer > 0.0F) {
       return false;
     }
-    Game::Systems::Combat::apply_unit_damage(
-        &m_world, prey.entity, attack->melee_damage, ctx.entity->get_id());
     ctx.wildlife->state_timer = std::max(0.35F, attack->melee_cooldown);
+    ctx.wildlife->bite_timer =
+        Engine::Core::WildlifeComponent::k_bite_animation_seconds;
+    ctx.wildlife->bite_target_id = prey.id;
+    ctx.wildlife->bite_impact_pending = true;
     return true;
   }
 
@@ -752,6 +755,33 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
     wildlife->state_timer = std::max(0.0F, wildlife->state_timer - delta_time);
     wildlife->alarm_timer = std::max(0.0F, wildlife->alarm_timer - delta_time);
     wildlife->hostile_timer = std::max(0.0F, wildlife->hostile_timer - delta_time);
+    float const bite_timer_before = wildlife->bite_timer;
+    wildlife->bite_timer = std::max(0.0F, wildlife->bite_timer - delta_time);
+    constexpr float k_bite_impact_remaining =
+        Engine::Core::WildlifeComponent::k_bite_animation_seconds *
+        (1.0F - Engine::Core::WildlifeComponent::k_bite_impact_phase);
+    if (wildlife->bite_impact_pending && bite_timer_before > k_bite_impact_remaining &&
+        wildlife->bite_timer <= k_bite_impact_remaining) {
+      PreyRef const prey = resolve_prey(*world, wildlife->bite_target_id);
+      auto const* wolf_transform =
+          animal.entity->get_component<Engine::Core::TransformComponent>();
+      auto const* attack =
+          animal.entity->get_component<Engine::Core::AttackComponent>();
+      if (prey.valid() && wolf_transform != nullptr && attack != nullptr) {
+        float const dx = prey.x - wolf_transform->position.x;
+        float const dz = prey.z - wolf_transform->position.z;
+        float const contact_reach = k_wolf_bite_range + prey.radius + 0.30F;
+        if ((dx * dx) + (dz * dz) <= contact_reach * contact_reach) {
+          Game::Systems::Combat::apply_unit_damage(
+              world, prey.entity, attack->melee_damage, animal.entity->get_id());
+        }
+      }
+      wildlife->bite_impact_pending = false;
+      wildlife->bite_target_id = 0;
+    } else if (wildlife->bite_timer <= 0.0F) {
+      wildlife->bite_impact_pending = false;
+      wildlife->bite_target_id = 0;
+    }
     if (wildlife->hostile_timer <= 0.0F) {
       wildlife->aggressor_id = 0;
     }

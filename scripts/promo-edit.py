@@ -16,11 +16,19 @@ camera work they belong to::
       "subtitle": "STANDARD OF IRON",
       "grade": {"contrast": 1.12, "saturation": 1.14},
       "transition": {"type": "dissolve", "duration": 0.35},
+      "sfx": [
+        {"file": "assets/audio/sfx/combat/roman_cavalry_charge.ogg",
+         "at": 12.4, "gain": 0.9}
+      ],
       "shots": [
         {"name": "collision", "caption": "HOLD THE LINE",
          "transition": {"type": "dip", "duration": 0.5}, ...}
       ]
     }
+
+``sfx`` cues are timed one-shots laid over the score. ``at`` is a time on the
+finished, blended timeline -- the same one caption timing uses -- so a cue is
+placed against the cut the viewer sees rather than against raw clip lengths.
 
 A shot's ``transition`` describes how the cut *into* it is played, so the first
 shot's is ignored. The spec-level ``transition`` is the default for every join;
@@ -77,6 +85,7 @@ MASTER_TOOL_CANDIDATES = (
     "build-debug/bin/audio_master_preview",
 )
 PLATFORM_CEILING = 0.631
+SCORE_UNDER_SFX = 1.0
 
 
 def find_master_tool() -> Path | None:
@@ -88,6 +97,62 @@ def find_master_tool() -> Path | None:
         if candidate.is_file() and os.access(candidate, os.X_OK):
             return candidate
     return None
+
+
+def build_sfx_layer(
+    filter_complex: str,
+    cues: list[dict],
+    first_input: int,
+    bed_label: str,
+) -> tuple[str, list[str]]:
+    """Lay timed one-shots over the score and mix them into a single bus.
+
+    A cue is ``{"file": ..., "at": <seconds on the finished timeline>}`` plus an
+    optional linear ``gain``. Times are measured on the *blended* timeline, the
+    same one captions use, because that is the cut the viewer hears.
+
+    ``amix`` defaults to dividing by the number of inputs, which would drop the
+    score by 10 dB the moment a single wolf barks over it; ``normalize=0`` keeps
+    every input at the level it was given.
+
+    **The score is not ducked.** Sidechaining the music under the effects was
+    tried and removed: a reel with twenty-odd cues spends most of its length
+    inside one cue or another, so the score was pulled down for 9% of its
+    windows and the result read as quiet and discontinuous — the music pumping
+    against the action rather than playing under it.
+
+    A static balance does the same job without moving: the score sits at
+    ``SCORE_UNDER_SFX`` for the whole cut and the effects are mixed on top with
+    their own gains. That leaves the score continuous and lets any number of
+    cues overlap, which is what a mixer is for. The limiter at the end catches
+    the sum.
+    """
+    inputs: list[str] = []
+    labels: list[str] = []
+    for index, cue in enumerate(cues):
+        path = Path(cue["file"])
+        if not path.is_file():
+            fail(f"sfx file not found: {path}")
+        at_ms = int(round(max(0.0, float(cue.get("at", 0.0))) * 1000.0))
+        gain = float(cue.get("gain", 1.0))
+        label = f"sfx{index}"
+        inputs += ["-i", str(path)]
+        filter_complex += (
+            f";[{first_input + index}:a]aformat=channel_layouts=stereo,"
+            f"aresample=48000,volume={gain:.3f},"
+            f"adelay={at_ms}|{at_ms}[{label}]"
+        )
+        labels.append(f"[{label}]")
+
+    filter_complex += (
+        f";{''.join(labels)}amix=inputs={len(labels)}:duration=longest:"
+        f"dropout_transition=0:normalize=0[sfxmix]"
+        f";[{bed_label}]volume={SCORE_UNDER_SFX:.3f}[bedlow]"
+        f";[bedlow][sfxmix]amix=inputs=2:duration=first:"
+        f"dropout_transition=0:normalize=0,"
+        f"alimiter=limit={PLATFORM_CEILING:.3f}:level=disabled[aout]"
+    )
+    return filter_complex, inputs
 
 
 def master_music(track: Path, workdir: Path) -> Path | None:
@@ -425,6 +490,11 @@ def main() -> int:
     )
     parser.add_argument("--music", type=Path, help="override the spec's music track")
     parser.add_argument(
+        "--no-sfx",
+        action="store_true",
+        help="drop the spec's sound-effect cues and score with music alone",
+    )
+    parser.add_argument(
         "--music-start",
         type=float,
         help="seconds into the track to start (default: the spec's value)",
@@ -608,6 +678,9 @@ def main() -> int:
 
         mode = "drums"
 
+    sfx_cues: list[dict] = [] if args.no_sfx else list(spec.get("sfx", []))
+    bed_label = "abed" if sfx_cues and mode != "none" else "aout"
+
     audio_index = len(shots)
     workdir: tempfile.TemporaryDirectory | None = None
     if mode == "music":
@@ -629,15 +702,22 @@ def main() -> int:
             f";[{audio_index}:a]aformat=channel_layouts=stereo,aresample=48000,"
             f"{level},"
             f"afade=t=in:st=0:d=1.0,"
-            f"afade=t=out:st={max(0.0, total - 1.8):.3f}:d=1.8[aout]"
+            f"afade=t=out:st={max(0.0, total - 1.8):.3f}:d=1.8[{bed_label}]"
         )
     elif mode == "drums":
         command += ["-f", "lavfi", "-i", build_drum_bed(total, args.tempo)]
         filter_complex += (
             f";[{audio_index}:a]afade=t=in:st=0:d=0.6,"
             f"afade=t=out:st={max(0.0, total - 1.2):.3f}:d=1.2,"
-            f"alimiter=limit={PLATFORM_CEILING:.3f}:level=disabled[aout]"
+            f"alimiter=limit={PLATFORM_CEILING:.3f}:level=disabled[{bed_label}]"
         )
+
+    if sfx_cues and mode != "none":
+        filter_complex, sfx_inputs = build_sfx_layer(
+            filter_complex, sfx_cues, len(shots) + 1, bed_label
+        )
+        command += sfx_inputs
+        print(f"promo-edit: mixing {len(sfx_cues)} sound effect cue(s) over the score")
 
     command += ["-filter_complex", filter_complex, "-map", "[vout]"]
     if mode != "none":

@@ -334,6 +334,41 @@ TEST_F(WildlifeSystemTest, WolvesHuntIsolatedPeople) {
   EXPECT_LT(victim_unit->health, victim_unit->max_health);
 }
 
+TEST_F(WildlifeSystemTest, WolfBiteDamageLandsAtTheAnimatedContactFrame) {
+  World world;
+  WildlifeSystem system;
+  system.configure(lone_wolf_settings(), 1U);
+  system.update(&world, 0.1F);
+
+  auto wolves = collect_species(world, Species::Wolf);
+  ASSERT_EQ(wolves.size(), 1U);
+  auto* wolf = wolves.front()->get_component<Engine::Core::WildlifeComponent>();
+  ASSERT_NE(wolf, nullptr);
+  auto* victim =
+      add_troop(world, beside(wolves.front(), 1.0F), Game::Units::SpawnType::Civilian);
+  auto* victim_unit = victim->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(victim_unit, nullptr);
+  int const starting_health = victim_unit->health;
+
+  wolf->think_cooldown = 0.0F;
+  wolf->state_timer = 0.0F;
+  system.update(&world, 0.35F);
+
+  EXPECT_GT(wolf->bite_timer, 0.0F);
+  EXPECT_TRUE(wolf->bite_impact_pending);
+  EXPECT_EQ(wolf->bite_target_id, victim->get_id());
+  EXPECT_EQ(victim_unit->health, starting_health)
+      << "damage must wait for the BPAT bite contact pose";
+
+  system.update(&world, 0.10F);
+  EXPECT_EQ(victim_unit->health, starting_health);
+  system.update(&world, 0.10F);
+
+  EXPECT_LT(victim_unit->health, starting_health);
+  EXPECT_FALSE(wolf->bite_impact_pending);
+  EXPECT_EQ(wolf->bite_target_id, 0U);
+}
+
 TEST_F(WildlifeSystemTest, WolvesLeaveEscortedPeopleAlone) {
   World world;
   WildlifeSystem system;

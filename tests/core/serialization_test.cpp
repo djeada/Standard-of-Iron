@@ -2180,6 +2180,10 @@ TEST_F(SerializationTest, WildlifeComponentRoundTrip) {
   wildlife->think_cooldown = 0.35F;
   wildlife->state_timer = 1.25F;
   wildlife->alarm_timer = 2.5F;
+  wildlife->hostile_timer = 4.25F;
+  wildlife->bite_timer = 0.31F;
+  wildlife->bite_target_id = 77U;
+  wildlife->bite_impact_pending = true;
   wildlife->focus_id = 42U;
   wildlife->rng_state = 987654321U;
 
@@ -2203,6 +2207,10 @@ TEST_F(SerializationTest, WildlifeComponentRoundTrip) {
   EXPECT_FLOAT_EQ(restored->think_cooldown, 0.35F);
   EXPECT_FLOAT_EQ(restored->state_timer, 1.25F);
   EXPECT_FLOAT_EQ(restored->alarm_timer, 2.5F);
+  EXPECT_FLOAT_EQ(restored->hostile_timer, 4.25F);
+  EXPECT_FLOAT_EQ(restored->bite_timer, 0.31F);
+  EXPECT_EQ(restored->bite_target_id, 77U);
+  EXPECT_TRUE(restored->bite_impact_pending);
   EXPECT_EQ(restored->focus_id, 42U);
   EXPECT_EQ(restored->rng_state, 987654321U);
 }

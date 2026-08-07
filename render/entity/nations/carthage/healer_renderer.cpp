@@ -490,44 +490,66 @@ auto dark_mage_make_static_attachment(const RenderArchetype& archetype,
   return spec;
 }
 
-auto carthage_dark_mage_archetype() -> Render::Creature::ArchetypeId {
-  static const auto archetype = []() {
-    auto& registry = Render::Creature::ArchetypeRegistry::instance();
-    const auto* base_desc =
-        registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
-    if (base_desc == nullptr) {
-      return Render::Creature::k_invalid_archetype;
-    }
+auto register_carthage_dark_mage_archetype(
+    std::string_view debug_name, bool carry_stave) -> Render::Creature::ArchetypeId {
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  const auto* base_desc =
+      registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
+  if (base_desc == nullptr) {
+    return Render::Creature::k_invalid_archetype;
+  }
 
-    const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
-    const TorsoLocalFrame torso_local =
-        make_torso_local_frame(QMatrix4x4{}, bind_frames.torso);
-    QMatrix4x4 const head_bind =
-        make_humanoid_attachment_transform_scaled(QMatrix4x4{},
-                                                  bind_frames.head,
-                                                  QVector3D(0.0F, 0.0F, 0.0F),
-                                                  QVector3D(1.0F, 1.0F, 1.0F));
+  const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const TorsoLocalFrame torso_local =
+      make_torso_local_frame(QMatrix4x4{}, bind_frames.torso);
+  QMatrix4x4 const head_bind =
+      make_humanoid_attachment_transform_scaled(QMatrix4x4{},
+                                                bind_frames.head,
+                                                QVector3D(0.0F, 0.0F, 0.0F),
+                                                QVector3D(1.0F, 1.0F, 1.0F));
 
-    Render::Creature::ArchetypeDescriptor desc = *base_desc;
-    desc.debug_name = "troops/carthage/healer";
-    desc.bake_attachments[desc.bake_attachment_count++] =
-        dark_mage_make_static_attachment(
-            dark_mage_robe_archetype(),
-            static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
-            torso_local.world);
-    desc.bake_attachments[desc.bake_attachment_count++] =
-        dark_mage_make_static_attachment(
-            dark_mage_hood_archetype(),
-            static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head),
-            head_bind);
+  Render::Creature::ArchetypeDescriptor desc = *base_desc;
+  desc.debug_name = std::string(debug_name);
+  desc.bake_attachments[desc.bake_attachment_count++] =
+      dark_mage_make_static_attachment(
+          dark_mage_robe_archetype(),
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest),
+          torso_local.world);
+  desc.bake_attachments[desc.bake_attachment_count++] =
+      dark_mage_make_static_attachment(
+          dark_mage_hood_archetype(),
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head),
+          head_bind);
+  if (carry_stave) {
     desc.bake_attachments[desc.bake_attachment_count++] =
         dark_mage_stave_make_static_attachment();
-    desc.role_count =
-        static_cast<std::uint8_t>(k_dark_mage_base_role + k_dark_mage_role_count);
-    desc.append_extra_role_colors_fn(&dark_mage_extra_role_colors);
-    return registry.register_archetype(desc);
-  }();
+  }
+  desc.role_count =
+      static_cast<std::uint8_t>(k_dark_mage_base_role + k_dark_mage_role_count);
+  desc.append_extra_role_colors_fn(&dark_mage_extra_role_colors);
+  return registry.register_archetype(desc);
+}
+
+auto carthage_dark_mage_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype =
+      register_carthage_dark_mage_archetype("troops/carthage/healer", true);
   return archetype;
+}
+
+auto carthage_dark_mage_unarmed_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype =
+      register_carthage_dark_mage_archetype("troops/carthage/healer/unarmed", false);
+  return archetype;
+}
+
+auto carthage_healer_variant_table() -> const Animation::ArchetypeVariantTable& {
+  static const Animation::ArchetypeVariantTable table = [] {
+    Animation::ArchetypeVariantTable value;
+    value.archetype_for_pose[static_cast<std::size_t>(
+        Animation::PoseIntent::AttackMelee)] = carthage_dark_mage_unarmed_archetype();
+    return value;
+  }();
+  return table;
 }
 
 auto make_healer_spec(std::string_view renderer_key,
@@ -570,6 +592,7 @@ const Render::Creature::Pipeline::UnitVisualSpec& carthage_healer_visual_spec(
     out.owned_legacy_slots = LegacySlotMask::AllHumanoid;
     out.archetype_id = carthage_dark_mage_archetype();
     out.creature_asset_id = Render::Creature::Pipeline::k_stave_caster_humanoid_asset;
+    out.animation_manifest.variant_table = &carthage_healer_variant_table();
     return out;
   }();
   static const auto grave_priest_spec =
