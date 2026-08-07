@@ -1,0 +1,349 @@
+{
+  "id": "commander_duel",
+  "title": "THE DUEL",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.4
+  },
+  "shots": [
+    {
+      "name": "armies",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 1.2,
+      "duration": 3.2,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 0.0],
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30,
+          "pitch": 14,
+          "yaw": 78,
+          "fov": 42,
+          "height": 2.2
+        },
+        {
+          "time": 3.2,
+          "distance": 25,
+          "pitch": 12,
+          "yaw": 92,
+          "fov": 42,
+          "height": 2.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "TWO ARMIES. ONE FIELD."
+    },
+    {
+      "name": "walk_out",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 3.9,
+      "duration": 2.35,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15,
+          "pitch": 11,
+          "yaw": 100,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 2.35,
+          "distance": 10.5,
+          "pitch": 10,
+          "yaw": 86,
+          "fov": 40,
+          "height": 1.4,
+          "ease": "out"
+        }
+      ],
+      "caption": "EACH SENDS OUT ONE MAN"
+    },
+    {
+      "name": "first_clash",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 6.45,
+      "duration": 1.05,
+      "slow_motion": 2.4,
+      "shake": 0.05,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.16
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.2,
+          "pitch": 13,
+          "yaw": 52,
+          "fov": 38,
+          "height": 1.5,
+          "roll": -2
+        },
+        {
+          "time": 2.52,
+          "distance": 7.8,
+          "pitch": 16,
+          "yaw": 14,
+          "fov": 38,
+          "height": 1.5,
+          "roll": 2,
+          "ease": "linear"
+        }
+      ],
+      "caption": "SCIPIO   vs   HANNIBAL",
+      "transition": {
+        "type": "flash",
+        "duration": 0.15
+      }
+    },
+    {
+      "name": "trade",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 9.4,
+      "duration": 2.8,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.8,
+          "pitch": 10,
+          "yaw": 116,
+          "fov": 40,
+          "height": 1.5
+        },
+        {
+          "time": 2.8,
+          "distance": 7.6,
+          "pitch": 13,
+          "yaw": 138,
+          "fov": 40,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "riposte",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 13.35,
+      "duration": 1.05,
+      "slow_motion": 2.2,
+      "shake": 0.04,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.16
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.4,
+          "pitch": 12,
+          "yaw": 6,
+          "fov": 38,
+          "height": 1.5
+        },
+        {
+          "time": 2.31,
+          "distance": 7.2,
+          "pitch": 15,
+          "yaw": 338,
+          "fov": 38,
+          "height": 1.5,
+          "ease": "linear"
+        }
+      ],
+      "caption": "THE CONSULAR RIPOSTE",
+      "transition": {
+        "type": "whip",
+        "duration": 0.2
+      }
+    },
+    {
+      "name": "footwork",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 16.6,
+      "duration": 2.8,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10.0,
+          "pitch": 8,
+          "yaw": 334,
+          "fov": 40,
+          "height": 1.4
+        },
+        {
+          "time": 2.8,
+          "distance": 8.8,
+          "pitch": 11,
+          "yaw": 358,
+          "fov": 40,
+          "height": 1.45,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "NEITHER GIVES GROUND"
+    },
+    {
+      "name": "encircling_cut",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 20.1,
+      "duration": 1.1,
+      "slow_motion": 2.2,
+      "shake": 0.045,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.16
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.6,
+          "pitch": 12,
+          "yaw": 58,
+          "fov": 38,
+          "height": 1.5,
+          "roll": 2
+        },
+        {
+          "time": 2.42,
+          "distance": 7.4,
+          "pitch": 15,
+          "yaw": 122,
+          "fov": 38,
+          "height": 1.5,
+          "roll": -2,
+          "ease": "linear"
+        }
+      ],
+      "caption": "THE ENCIRCLING CUT",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    },
+    {
+      "name": "final_blow",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 31.85,
+      "duration": 1.6,
+      "slow_motion": 2.4,
+      "shake": 0.05,
+      "focus": {
+        "mode": "group_pair",
+        "group": "scipio",
+        "second_group": "hannibal",
+        "smoothing": 0.16
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 7.8,
+          "pitch": 13,
+          "yaw": 356,
+          "fov": 38,
+          "height": 1.5,
+          "roll": -2
+        },
+        {
+          "time": 3.84,
+          "distance": 6.6,
+          "pitch": 17,
+          "yaw": 336,
+          "fov": 38,
+          "height": 1.4,
+          "roll": 2,
+          "ease": "linear"
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.16
+      }
+    },
+    {
+      "name": "aftermath",
+      "scenario": "promo_commander_duel",
+      "seed": 2024,
+      "start": 34.5,
+      "duration": 4.0,
+      "focus": {
+        "mode": "group",
+        "group": "scipio",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9,
+          "pitch": 12,
+          "yaw": 96,
+          "fov": 40,
+          "height": 1.6
+        },
+        {
+          "time": 4.0,
+          "distance": 26,
+          "pitch": 18,
+          "yaw": 74,
+          "fov": 40,
+          "height": 2.8,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "STANDARD OF IRON"
+    }
+  ],
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.14,
+    "brightness": 0.03,
+    "gamma": 1.04,
+    "grain": 2,
+    "vignette": 0.12,
+    "sharpen": 0.7
+  },
+  "music": "assets/audio/music/menu/main_theme_rome_vs_carthage.ogg",
+  "music_start": 0.0
+}

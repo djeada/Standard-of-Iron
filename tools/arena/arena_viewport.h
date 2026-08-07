@@ -414,6 +414,7 @@ private:
   std::vector<Game::Map::RoadSegment> m_arena_roads;
   std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
   float m_arena_floor_half_extent = 18.0F;
+  bool m_suppress_boundary_mountains = false;
   std::vector<Game::Map::UndeadZone> m_arena_undead_zones;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =
       Game::Map::WorldProp::Type::FireCamp;

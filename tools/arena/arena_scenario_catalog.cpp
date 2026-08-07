@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <initializer_list>
 #include <iterator>
+#include <numbers>
 #include <tuple>
 #include <utility>
 
@@ -8745,6 +8747,146 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         expectation(Expect::GroupIsRendered, QStringLiteral("roman_cavalry")),
         expectation(Expect::GroupIsRendered, QStringLiteral("punic_wall")),
         expectation(Expect::AttackAnimationObserved, QStringLiteral("punic_wall")),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_promo_commander_duel_id),
+        QStringLiteral("Promo: The Duel"),
+        QStringLiteral("Golden-hour capture scene. Both armies halt in line and "
+                       "Scipio walks out to meet Hannibal in the ground between "
+                       "them. Long enough for the consular riposte and the "
+                       "encircling cut to come round several times."),
+        40.0F,
+        {15.0F, 12.0F, 90.0F});
+    s.camera_focus = QVector3D(0.0F, 1.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.force_full_creature_lod = true;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.arena_floor_half_extent = 30.0F;
+
+    s.terrain_height_scale_override = 2.6F;
+
+    s.suppress_boundary_mountains = true;
+    {
+
+      constexpr int k_ring_mounds = 18;
+      constexpr float k_ring_radius = 41.0F;
+      for (int i = 0; i < k_ring_mounds; ++i) {
+        float const angle = 2.0F * std::numbers::pi_v<float> * static_cast<float>(i) /
+                            static_cast<float>(k_ring_mounds);
+        float const wobble = 0.5F * std::sin(static_cast<float>(i) * 2.3F);
+        s.elevation_patches.push_back(
+            {{k_ring_radius * std::sin(angle), 0.0F, k_ring_radius * std::cos(angle)},
+             20.0F,
+             13.5F + (2.5F * wobble)});
+      }
+    }
+    s.environment.start_time = 16.4F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.environment.fog_density_override = 0.028F;
+    s.environment.exposure_override = 1.18F;
+
+    auto scipio = group(QStringLiteral("scipio"),
+                        Troop::RomanVeteranConsul,
+                        1,
+                        1,
+                        {0.0F, 0.0F, -9.0F},
+                        1);
+    auto hannibal = group(QStringLiteral("hannibal"),
+                          Troop::CarthageSwordCommander,
+                          2,
+                          1,
+                          {0.0F, 0.0F, 9.0F},
+                          1);
+
+    scipio.health_override = scipio.max_health_override = 4600;
+    hannibal.health_override = hannibal.max_health_override = 1800;
+
+    s.groups = {
+        scipio,
+        hannibal,
+        group(QStringLiteral("roman_line"),
+              Troop::Swordsman,
+              1,
+              9,
+              {-13.6F, 0.0F, -16.0F},
+              8,
+              {3.4F, 0.0F, 0.0F}),
+        group(QStringLiteral("roman_spears"),
+              Troop::Spearman,
+              1,
+              7,
+              {-10.2F, 0.0F, -20.5F},
+              8,
+              {3.4F, 0.0F, 0.0F}),
+        group(QStringLiteral("roman_horse"),
+              Troop::MountedKnight,
+              1,
+              4,
+              {19.0F, 0.0F, -18.0F},
+              4,
+              {3.6F, 0.0F, 0.0F}),
+        group(QStringLiteral("punic_line"),
+              Troop::Swordsman,
+              2,
+              9,
+              {-13.6F, 0.0F, 16.0F},
+              8,
+              {3.4F, 0.0F, 0.0F}),
+        group(QStringLiteral("punic_spears"),
+              Troop::Spearman,
+              2,
+              7,
+              {-10.2F, 0.0F, 20.5F},
+              8,
+              {3.4F, 0.0F, 0.0F}),
+        group(QStringLiteral("punic_horse"),
+              Troop::MountedKnight,
+              2,
+              4,
+              {-24.0F, 0.0F, 18.0F},
+              4,
+              {3.6F, 0.0F, 0.0F}),
+    };
+
+    s.resource_patches = {
+        {QStringLiteral("pine"), 6, {-34.0F, 0.0F, -30.0F}, {4.0F, 0.0F, 2.5F}, 1.3F},
+        {QStringLiteral("pine"), 5, {24.0F, 0.0F, -32.0F}, {4.2F, 0.0F, 2.0F}, 1.2F},
+        {QStringLiteral("pine"), 5, {-30.0F, 0.0F, 30.0F}, {4.2F, 0.0F, 2.0F}, 1.25F},
+        {QStringLiteral("boulder"), 3, {30.0F, 0.0F, 8.0F}, {3.4F, 0.0F, 2.0F}, 1.1F},
+        {QStringLiteral("boulder"), 2, {-31.0F, 0.0F, -6.0F}, {3.6F, 0.0F, 2.0F}, 1.0F},
+    };
+
+    for (auto const& held : {QStringLiteral("roman_line"),
+                             QStringLiteral("roman_spears"),
+                             QStringLiteral("roman_horse"),
+                             QStringLiteral("punic_line"),
+                             QStringLiteral("punic_spears"),
+                             QStringLiteral("punic_horse")}) {
+      s.steps.push_back(at(0.2F, Command::Hold, held));
+    }
+    s.steps.push_back(at(
+        0.6F, Command::Attack, QStringLiteral("scipio"), QStringLiteral("hannibal")));
+    s.steps.push_back(at(
+        0.6F, Command::Attack, QStringLiteral("hannibal"), QStringLiteral("scipio")));
+
+    s.expectations = {
+        expectation(Expect::GroupExists, QStringLiteral("scipio")),
+        expectation(Expect::GroupDestroyed, QStringLiteral("hannibal")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("scipio")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("hannibal")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("roman_line")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("punic_line")),
+        expectation(Expect::AttackHasVisibleContact,
+                    QStringLiteral("scipio"),
+                    QStringLiteral("hannibal")),
+        expectation(Expect::HitReactionObserved, QStringLiteral("hannibal")),
     };
     result.push_back(std::move(s));
   }
