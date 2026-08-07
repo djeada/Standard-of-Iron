@@ -409,6 +409,20 @@ void InputCommandHandler::on_formation_command() {
   }
 }
 
+void InputCommandHandler::on_auto_gather_command(const QString& priority_product_type) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (m_command_controller == nullptr) {
+    return;
+  }
+
+  auto result = m_command_controller->on_auto_gather_command(priority_product_type);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
 void InputCommandHandler::on_run_command() {
   if (m_is_spectator_mode) {
     return;

@@ -2,18 +2,27 @@
 
 #include <QVector3D>
 
+#include <algorithm>
 #include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "../map/visibility_service.h"
 #include "builder_product_types.h"
 #include "command_service.h"
+#include "owner_registry.h"
+#include "pathfinding.h"
 
 namespace Game::Systems {
 namespace {
 
 constexpr float k_work_standoff = 1.8F;
+
+constexpr int k_work_position_search_radius = 4;
 
 auto find_next_node(const std::string& product_type,
                     float anchor_x,
@@ -31,6 +40,16 @@ auto find_next_node(const std::string& product_type,
     return terrain.find_iron_ore_near_world(anchor_x, anchor_z, radius);
   }
   return std::nullopt;
+}
+
+auto harvest_product_for(Game::Map::WorldProp::Type type) -> std::string_view {
+  if (Game::Map::is_tree_world_prop_type(type)) {
+    return k_builder_product_cut_tree;
+  }
+  if (Game::Map::is_boulder_world_prop_type(type)) {
+    return k_builder_product_collect_stone;
+  }
+  return k_builder_product_collect_iron_ore;
 }
 
 auto work_position_beside(const Game::Map::WorldPropTarget& node,
@@ -67,6 +86,165 @@ auto is_free_for_the_next_load(const Engine::Core::Entity& worker,
   return movement != nullptr && !movement->get_has_target();
 }
 
+struct Candidate {
+  Game::Map::WorldPropTarget target;
+  float distance_sq{0.0F};
+  bool matches_priority{false};
+};
+
+auto node_is_hidden_by_fog(const Engine::Core::Entity& worker,
+                           float x,
+                           float z) -> bool {
+  const auto* unit = worker.get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr ||
+      unit->owner_id != OwnerRegistry::instance().get_local_player_id()) {
+    return false;
+  }
+  auto const& visibility = Game::Map::VisibilityService::instance();
+  if (!visibility.is_initialized()) {
+    return false;
+  }
+  return !visibility.is_explored_world(x, z);
+}
+
+auto rank_nearby_nodes(const Engine::Core::Entity& worker,
+                       const Engine::Core::BuilderProductionComponent& builder,
+                       float from_x,
+                       float from_z) -> std::vector<Candidate> {
+  auto const& terrain = Game::Map::TerrainService::instance();
+  std::string_view const priority = builder.auto_gather_priority;
+
+  std::vector<Candidate> candidates;
+  for (const auto& prop : terrain.world_props()) {
+    if (!Game::Map::is_harvestable_world_prop_type(prop.type) ||
+        terrain.is_world_prop_reserved(prop.id)) {
+      continue;
+    }
+
+    auto const position = terrain.world_prop_world_position(prop);
+    if (node_is_hidden_by_fog(worker, position.x(), position.z())) {
+      continue;
+    }
+
+    float const dx = position.x() - from_x;
+    float const dz = position.z() - from_z;
+    candidates.push_back(Candidate{
+        .target =
+            {.id = prop.id, .type = prop.type, .x = position.x(), .z = position.z()},
+        .distance_sq = (dx * dx) + (dz * dz),
+        .matches_priority =
+            !priority.empty() && harvest_product_for(prop.type) == priority});
+  }
+
+  auto const closest_first = [](const Candidate& a, const Candidate& b) {
+    if (a.matches_priority != b.matches_priority) {
+      return a.matches_priority;
+    }
+    if (a.distance_sq != b.distance_sq) {
+      return a.distance_sq < b.distance_sq;
+    }
+
+    return a.target.id < b.target.id;
+  };
+
+  auto const shortlist =
+      std::min(candidates.size(),
+               static_cast<std::size_t>(GatherLoopSystem::k_auto_gather_attempts));
+  std::partial_sort(candidates.begin(),
+                    candidates.begin() + static_cast<std::ptrdiff_t>(shortlist),
+                    candidates.end(),
+                    closest_first);
+  candidates.resize(shortlist);
+  return candidates;
+}
+
+auto node_is_workable(const Game::Map::WorldPropTarget& node,
+                      float worker_x,
+                      float worker_z) -> bool {
+
+  Point const node_grid = CommandService::world_to_grid(node.x, node.z);
+  auto const standing_cell = CommandService::find_nearest_walkable_grid(
+      node_grid, k_work_position_search_radius);
+  if (!standing_cell.has_value()) {
+    return false;
+  }
+
+  auto* pathfinder = CommandService::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return true;
+  }
+
+  Point const start = CommandService::world_to_grid(worker_x, worker_z);
+  if (start.x == standing_cell->x && start.y == standing_cell->y) {
+    return true;
+  }
+
+  if (!pathfinder->is_walkable(start.x, start.y)) {
+    return true;
+  }
+
+  auto const path = pathfinder->find_path(start, *standing_cell);
+  return !path.empty() && path.back().x == standing_cell->x &&
+         path.back().y == standing_cell->y;
+}
+
+void assign_node(Engine::Core::BuilderProductionComponent& builder,
+                 Engine::Core::MovementComponent& movement,
+                 std::string_view product_type,
+                 const Game::Map::WorldPropTarget& node,
+                 const QVector3D& work_position) {
+  builder.product_type = std::string(product_type);
+  builder.time_remaining = builder.build_time;
+  builder.has_construction_site = true;
+  builder.construction_site_x = work_position.x();
+  builder.construction_site_z = work_position.z();
+  builder.construction_site_rotation_y = 0.0F;
+  builder.at_construction_site = false;
+  builder.in_progress = false;
+  builder.construction_complete = false;
+  builder.bypass_movement_active = false;
+  builder.has_task_target = true;
+  builder.task_target_id = node.id;
+  builder.task_target_x = node.x;
+  builder.task_target_z = node.z;
+  builder.task_target_reserved = true;
+  builder.clear_fault();
+
+  movement.set_rest_position(work_position.x(), work_position.z());
+}
+
+auto take_next_auto_gather_node(Engine::Core::Entity& worker,
+                                Engine::Core::BuilderProductionComponent& builder,
+                                Engine::Core::TransformComponent& transform,
+                                Engine::Core::MovementComponent& movement) -> bool {
+  auto& terrain = Game::Map::TerrainService::instance();
+  auto const candidates =
+      rank_nearby_nodes(worker, builder, transform.position.x, transform.position.z);
+
+  for (const auto& candidate : candidates) {
+    if (!node_is_workable(
+            candidate.target, transform.position.x, transform.position.z)) {
+      continue;
+    }
+
+    QVector3D const work_position = work_position_beside(
+        candidate.target, transform.position.x, transform.position.z);
+
+    if (!terrain.reserve_world_prop(candidate.target.id)) {
+      continue;
+    }
+
+    assign_node(builder,
+                movement,
+                harvest_product_for(candidate.target.type),
+                candidate.target,
+                work_position);
+    return true;
+  }
+
+  return false;
+}
+
 } // namespace
 
 void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
@@ -85,15 +263,23 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
   for (auto* entity :
        world->get_entities_with<Engine::Core::BuilderProductionComponent>()) {
     auto* builder = entity->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder == nullptr || !builder->has_gather_order) {
+    if (builder == nullptr || (!builder->has_gather_order && !builder->auto_gather)) {
       continue;
     }
 
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (builder->is_placement_preview || unit == nullptr || unit->health <= 0 ||
+    if (builder->is_placement_preview || unit == nullptr || unit->health <= 0) {
+      builder->clear_gather_order();
+      builder->clear_auto_gather();
+      continue;
+    }
+
+    if (builder->has_gather_order &&
         !is_harvest_builder_product(builder->gather_product_type)) {
       builder->clear_gather_order();
-      continue;
+      if (!builder->auto_gather) {
+        continue;
+      }
     }
 
     if (!is_free_for_the_next_load(*entity, *builder)) {
@@ -103,6 +289,15 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     auto* movement = entity->get_component<Engine::Core::MovementComponent>();
     if (transform == nullptr || movement == nullptr) {
+      continue;
+    }
+
+    if (builder->auto_gather) {
+      if (!take_next_auto_gather_node(*entity, *builder, *transform, *movement)) {
+
+        builder->report_fault(Engine::Core::BuilderTaskFault::TargetLost,
+                              k_think_interval);
+      }
       continue;
     }
 
@@ -121,24 +316,8 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
     QVector3D const work_position =
         work_position_beside(*next, transform->position.x, transform->position.z);
 
-    builder->product_type = builder->gather_product_type;
-    builder->time_remaining = builder->build_time;
-    builder->has_construction_site = true;
-    builder->construction_site_x = work_position.x();
-    builder->construction_site_z = work_position.z();
-    builder->construction_site_rotation_y = 0.0F;
-    builder->at_construction_site = false;
-    builder->in_progress = false;
-    builder->construction_complete = false;
-    builder->bypass_movement_active = false;
-    builder->has_task_target = true;
-    builder->task_target_id = next->id;
-    builder->task_target_x = next->x;
-    builder->task_target_z = next->z;
-    builder->task_target_reserved = true;
-    builder->clear_fault();
-
-    movement->set_rest_position(work_position.x(), work_position.z());
+    assign_node(
+        *builder, *movement, builder->gather_product_type, *next, work_position);
   }
 }
 

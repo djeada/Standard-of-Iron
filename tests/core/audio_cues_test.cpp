@@ -96,14 +96,27 @@ protected:
     if (!audio.initialize()) {
       GTEST_SKIP() << "Audio backend is unavailable in this environment";
     }
+
+    m_saved_master = audio.get_master_volume();
+    m_saved_sound = audio.get_sound_volume();
+    audio.set_master_volume(1.0F);
+    audio.set_sound_volume(1.0F);
+
     AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Startup);
     AudioResourceLoader::load_audio_cues();
   }
 
   void TearDown() override {
     Game::Audio::CueRegistry::instance().clear();
-    AudioSystem::get_instance().shutdown();
+    auto& audio = AudioSystem::get_instance();
+    audio.set_master_volume(m_saved_master);
+    audio.set_sound_volume(m_saved_sound);
+    audio.shutdown();
   }
+
+private:
+  float m_saved_master{1.0F};
+  float m_saved_sound{1.0F};
 };
 
 TEST_F(ShippedAudioTest, TheCommandersBowCuesReachTheMixer) {

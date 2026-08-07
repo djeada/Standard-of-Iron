@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <string>
 
 #include "app/controllers/command_controller.h"
 #include "game/core/component.h"
@@ -143,6 +144,59 @@ TEST_F(CommandControllerTest, PatrolClickAppliesOnlyToEligibleUnits) {
   EXPECT_TRUE(archer_patrol->patrolling);
   EXPECT_EQ(archer_patrol->waypoints.size(), 2U);
   EXPECT_EQ(tower->get_component<Engine::Core::PatrolComponent>(), nullptr);
+}
+
+TEST_F(CommandControllerTest, AutoGatherIsGivenToBuildersAndToggledAsAGroup) {
+  auto* first = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* second = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* archer = create_unit(-1.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  ASSERT_NE(archer, nullptr);
+  first->add_component<Engine::Core::BuilderProductionComponent>();
+  second->add_component<Engine::Core::BuilderProductionComponent>();
+
+  selection_system->select_unit(first->get_id());
+  selection_system->select_unit(second->get_id());
+  selection_system->select_unit(archer->get_id());
+
+  auto const turned_on = command_controller->on_auto_gather_command();
+  EXPECT_TRUE(turned_on.input_consumed);
+  EXPECT_TRUE(
+      first->get_component<Engine::Core::BuilderProductionComponent>()->auto_gather);
+  EXPECT_TRUE(
+      second->get_component<Engine::Core::BuilderProductionComponent>()->auto_gather);
+  EXPECT_EQ(archer->get_component<Engine::Core::BuilderProductionComponent>(), nullptr);
+
+  command_controller->on_auto_gather_command();
+  EXPECT_FALSE(
+      first->get_component<Engine::Core::BuilderProductionComponent>()->auto_gather);
+  EXPECT_FALSE(
+      second->get_component<Engine::Core::BuilderProductionComponent>()->auto_gather);
+}
+
+TEST_F(CommandControllerTest, AutoGatherCarriesThePreferredResourceThrough) {
+  auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(builder, nullptr);
+  builder->add_component<Engine::Core::BuilderProductionComponent>();
+  selection_system->select_unit(builder->get_id());
+
+  command_controller->on_auto_gather_command(QStringLiteral("collect_iron_ore"));
+
+  const auto* production =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  EXPECT_TRUE(production->auto_gather);
+  EXPECT_EQ(production->auto_gather_priority, std::string("collect_iron_ore"));
+}
+
+TEST_F(CommandControllerTest, AutoGatherIgnoresASelectionWithoutBuilders) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  auto const result = command_controller->on_auto_gather_command();
+
+  EXPECT_FALSE(result.input_consumed);
 }
 
 } // namespace

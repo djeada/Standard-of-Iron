@@ -29,7 +29,7 @@ auto all_kinds() -> std::vector<IndicatorKind> {
 }
 
 TEST(ModeIndicator, CoversEveryActivityTheSimulationCanReport) {
-  EXPECT_EQ(Render::Geom::k_indicator_kind_count, 16U);
+  EXPECT_EQ(Render::Geom::k_indicator_kind_count, 17U);
 
   for (IndicatorKind const kind : all_kinds()) {
     auto const id = Game::Systems::activity_kind_id(kind);

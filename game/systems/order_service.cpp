@@ -122,6 +122,7 @@ void OrderService::clear_builder_gather_order(Engine::Core::Entity* entity) {
   if (auto* builder =
           entity->get_component<Engine::Core::BuilderProductionComponent>()) {
     builder->clear_gather_order();
+    builder->clear_auto_gather();
   }
 }
 

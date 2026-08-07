@@ -1215,6 +1215,10 @@ public:
   float gather_anchor_x{0.0F};
   float gather_anchor_z{0.0F};
 
+  bool auto_gather{false};
+
+  std::string auto_gather_priority{};
+
   BuilderTaskFault fault{BuilderTaskFault::None};
   float fault_display_remaining{0.0F};
 
@@ -1223,6 +1227,11 @@ public:
     gather_product_type.clear();
     gather_anchor_x = 0.0F;
     gather_anchor_z = 0.0F;
+  }
+
+  void clear_auto_gather() {
+    auto_gather = false;
+    auto_gather_priority.clear();
   }
 };
 

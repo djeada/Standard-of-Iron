@@ -10,6 +10,8 @@ public:
 
   static constexpr float k_search_radius = 22.0F;
 
+  static constexpr int k_auto_gather_attempts = 6;
+
   GatherLoopSystem() = default;
   ~GatherLoopSystem() override = default;
 

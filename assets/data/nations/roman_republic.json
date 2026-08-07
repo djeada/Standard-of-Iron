@@ -390,7 +390,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.84,
+        "render_scale": 0.756,
         "selection_ring_size": 1.9,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/commanders/fabius_maximus"
@@ -424,7 +424,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.84,
+        "render_scale": 0.756,
         "selection_ring_size": 1.85,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/commanders/scipio_africanus"
@@ -458,7 +458,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.84,
+        "render_scale": 0.756,
         "selection_ring_size": 1.8,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/commanders/marcellus"
