@@ -109,6 +109,7 @@ constexpr int k_terrain_width = 96;
 constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
 constexpr float k_default_floor_extent = 18.0F;
+constexpr float k_default_terrain_height_scale = 6.0F;
 constexpr int k_selection_drag_threshold = 6;
 constexpr int k_interactive_frame_interval_ms = 8;
 
@@ -1639,8 +1640,14 @@ void ArenaViewport::configure_rendering_from_terrain() {
                       m_weather_type);
   }
   if (m_boundary_fog != nullptr) {
-    m_boundary_fog->configure(
-        height_map->get_width(), height_map->get_height(), height_map->get_tile_size());
+
+    if (m_suppress_boundary_mountains) {
+      m_boundary_fog->configure(0, 0, height_map->get_tile_size());
+    } else {
+      m_boundary_fog->configure(height_map->get_width(),
+                                height_map->get_height(),
+                                height_map->get_tile_size());
+    }
   }
   m_renderer->set_environment_lighting(active_lighting());
   set_wireframe_enabled(m_wireframe_enabled);
@@ -2565,16 +2572,20 @@ void ArenaViewport::reset_arena() {
   clear_undead_zones();
   clear_wildlife();
   clear_units();
-  const bool had_custom_terrain = !m_arena_rivers.empty() || !m_arena_lakes.empty() ||
-                                  !m_arena_bridges.empty() || !m_arena_roads.empty() ||
-                                  !m_arena_elevation_patches.empty() ||
-                                  m_arena_floor_half_extent != k_default_floor_extent;
+  const bool had_custom_terrain =
+      !m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
+      !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
+      m_arena_floor_half_extent != k_default_floor_extent ||
+      m_terrain_settings.height_scale != k_default_terrain_height_scale ||
+      m_suppress_boundary_mountains;
   m_arena_rivers.clear();
   m_arena_lakes.clear();
   m_arena_bridges.clear();
   m_arena_roads.clear();
   m_arena_elevation_patches.clear();
   m_arena_floor_half_extent = k_default_floor_extent;
+  m_terrain_settings.height_scale = k_default_terrain_height_scale;
+  m_suppress_boundary_mountains = false;
   clear_world_props();
   if (had_custom_terrain && m_world_props.empty()) {
     reconfigure_terrain_from_state();
@@ -3266,9 +3277,15 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_arena_roads = definition->roads;
   m_arena_elevation_patches = definition->elevation_patches;
   m_arena_floor_half_extent = definition->arena_floor_half_extent;
+  if (definition->terrain_height_scale_override > 0.0F) {
+    m_terrain_settings.height_scale = definition->terrain_height_scale_override;
+  }
+  m_suppress_boundary_mountains = definition->suppress_boundary_mountains;
   if (!m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
       !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
-      m_arena_floor_half_extent != k_default_floor_extent) {
+      m_arena_floor_half_extent != k_default_floor_extent ||
+      m_terrain_settings.height_scale != k_default_terrain_height_scale ||
+      m_suppress_boundary_mountains) {
     reconfigure_terrain_from_state();
   }
   auto& owners = Game::Systems::OwnerRegistry::instance();

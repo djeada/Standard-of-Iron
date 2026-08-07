@@ -41,6 +41,12 @@ private:
                                       const Engine::Core::TransformComponent& transform,
                                       Engine::Core::MovementComponent& movement,
                                       bool include_first_waypoint = false) -> bool;
+  auto apply_duel_footwork(Engine::Core::Entity* entity,
+                           Engine::Core::World* world,
+                           Engine::Core::TransformComponent& transform,
+                           const Engine::Core::AttackComponent& attack,
+                           float delta_time) const -> bool;
+
   static void
   assign_navigation_target(Pathfinding* pathfinder,
                            const Engine::Core::TransformComponent& transform,
@@ -75,6 +81,8 @@ private:
                                    const std::vector<Engine::Core::Entity*>& movers);
 
   std::uint64_t m_obstruction_revision{0};
+
+  float m_duel_clock{0.0F};
   void process_pending_path_requests(Engine::Core::World& world);
   struct PendingPathRequest {
     Engine::Core::EntityID entity_id{0};
