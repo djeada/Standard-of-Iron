@@ -17,7 +17,7 @@
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
 #include "../command_service.h"
-#include "../defense_formation_service.h"
+#include "../defensive_unit_layout_service.h"
 #include "../formation_combat_geometry.h"
 #include "../marketplace_system.h"
 #include "../order_service.h"
@@ -534,6 +534,9 @@ auto blood_stain_scale(const Engine::Core::UnitComponent* unit) -> float {
 }
 
 auto retaliation_should_chase(Engine::Core::Entity* entity) -> bool {
+  if (Game::Systems::DefensiveUnitLayoutService::holds_position(*entity)) {
+    return false;
+  }
   auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
   return (hold_mode == nullptr) || !hold_mode->active;
 }
@@ -854,16 +857,16 @@ void add_or_extend_stagger(Engine::Core::Entity* entity,
 
 namespace {
 
-[[nodiscard]] auto
-apply_defense_formation_damage_scaling(const Engine::Core::Entity& target,
-                                       const Engine::Core::Entity* attacker,
-                                       const std::optional<QVector3D>& contact_point,
-                                       int damage) -> int {
+[[nodiscard]] auto apply_defensive_unit_layout_damage_scaling(
+    const Engine::Core::Entity& target,
+    const Engine::Core::Entity* attacker,
+    const std::optional<QVector3D>& contact_point,
+    int damage) -> int {
   if (damage <= 0) {
     return damage;
   }
 
-  Game::Systems::DefenseFormationDamageContext context{};
+  Game::Systems::DefensiveUnitLayoutDamageContext context{};
   if (attacker != nullptr) {
     if (const auto* attacker_unit =
             attacker->get_component<Engine::Core::UnitComponent>()) {
@@ -885,11 +888,11 @@ apply_defense_formation_damage_scaling(const Engine::Core::Entity& target,
   }
 
   float multiplier =
-      Game::Systems::DefenseFormationService::damage_multiplier(target, context);
+      Game::Systems::DefensiveUnitLayoutService::damage_multiplier(target, context);
   multiplier *= Game::Formation::ArmyFormationRuntime::damage_taken_multiplier(target);
   if (attacker != nullptr) {
     multiplier *=
-        Game::Systems::DefenseFormationService::attack_output_multiplier(*attacker);
+        Game::Systems::DefensiveUnitLayoutService::attack_output_multiplier(*attacker);
   }
 
   if (multiplier >= 0.999F && multiplier <= 1.001F) {
@@ -937,7 +940,7 @@ apply_unit_damage(Engine::Core::World* world,
       structure ? resolve_structure_damage(attacker, damage) : damage;
   int const effective_damage = structure
                                    ? raw_damage
-                                   : apply_defense_formation_damage_scaling(
+                                   : apply_defensive_unit_layout_damage_scaling(
                                          *target, attacker, contact_point, raw_damage);
   result.previous_health = unit->health;
   result.new_health = result.previous_health;

@@ -18,6 +18,7 @@
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
+#include "../../game/formation/unit_layout_state_system.h"
 #include "../../game/systems/formation_combat_geometry.h"
 #include "../../game/systems/nation_id.h"
 #include "../../game/systems/troop_profile_service.h"
@@ -84,6 +85,7 @@ auto shared_guard_shield_pose(
     const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
     bool formation_active,
     bool guard_mode_active,
+    bool defensive_layout_locked,
     int row,
     int col,
     int rows,

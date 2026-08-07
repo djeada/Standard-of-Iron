@@ -108,6 +108,31 @@ void apply_role_specific_combat_clip(
   }
 }
 
+[[nodiscard]] auto
+defensive_layout_clip_for(Render::GL::ShieldFormationPose pose) -> std::uint16_t {
+  switch (pose) {
+  case Render::GL::ShieldFormationPose::RomanTop:
+    return Animation::k_humanoid_testudo_top_clip;
+  case Render::GL::ShieldFormationPose::RomanLeft:
+    return Animation::k_humanoid_testudo_left_clip;
+  case Render::GL::ShieldFormationPose::RomanRight:
+    return Animation::k_humanoid_testudo_right_clip;
+  case Render::GL::ShieldFormationPose::RomanRear:
+    return Animation::k_humanoid_testudo_rear_clip;
+  case Render::GL::ShieldFormationPose::RomanFront:
+    return Animation::k_humanoid_testudo_front_clip;
+  case Render::GL::ShieldFormationPose::CarthageFront:
+    return Animation::k_humanoid_carthage_shield_wall_front_clip;
+  case Render::GL::ShieldFormationPose::CarthageLeft:
+    return Animation::k_humanoid_carthage_shield_wall_left_clip;
+  case Render::GL::ShieldFormationPose::CarthageRight:
+    return Animation::k_humanoid_carthage_shield_wall_right_clip;
+  default:
+    break;
+  }
+  return Animation::k_unmapped_clip;
+}
+
 auto guard_shield_turn(Render::GL::ShieldFormationPose pose) -> QMatrix4x4 {
   auto const profile = Animation::guard_shield_attachment_profile(pose);
   QMatrix4x4 guard_turn;
@@ -132,6 +157,16 @@ auto guard_pose_suffix(Render::GL::ShieldFormationPose pose) -> const char* {
     return "_guard_shield_roman_top";
   case Render::GL::ShieldFormationPose::CarthageFront:
     return "_guard_shield_carthage_front";
+  case Render::GL::ShieldFormationPose::RomanLeft:
+    return "_guard_shield_roman_left";
+  case Render::GL::ShieldFormationPose::RomanRight:
+    return "_guard_shield_roman_right";
+  case Render::GL::ShieldFormationPose::RomanRear:
+    return "_guard_shield_roman_rear";
+  case Render::GL::ShieldFormationPose::CarthageLeft:
+    return "_guard_shield_carthage_left";
+  case Render::GL::ShieldFormationPose::CarthageRight:
+    return "_guard_shield_carthage_right";
   case Render::GL::ShieldFormationPose::GuardDefault:
     return "_guard_shield";
   case Render::GL::ShieldFormationPose::None:
@@ -318,8 +353,10 @@ auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
     spec.archetype_id =
         Render::Humanoid::resolve_facial_hair_archetype(spec.archetype_id, variant);
   }
-  if (Render::GL::guard_pose_amount(anim) > 0.0F && !has_locomotion &&
-      !anim.is_attacking) {
+
+  if (Render::GL::guard_pose_amount(anim) > 0.0F &&
+      (anim.is_defensive_layout_locked || !has_locomotion) &&
+      (anim.is_defensive_layout_locked || !anim.is_attacking)) {
     auto pose = anim.shield_formation_pose;
     if (pose == Render::GL::ShieldFormationPose::None) {
       pose = Render::GL::ShieldFormationPose::GuardDefault;
@@ -478,7 +515,28 @@ auto resolve_humanoid_animation_selection(
   HumanoidAnimationSelection selection = build_selection_for_pose(
       spec, anim, Render::Creature::resolve_pose(anim.inputs), seed, variant);
 
+  auto const defensive_clip =
+      anim.inputs.is_defensive_layout_locked
+          ? defensive_layout_clip_for(anim.inputs.shield_formation_pose)
+          : Animation::k_unmapped_clip;
+  auto const apply_defensive_overlay = [&](HumanoidAnimationSelection& target) {
+    if (defensive_clip == Animation::k_unmapped_clip) {
+      return;
+    }
+    HumanoidAnimationSelection defensive = target;
+    defensive.clip_id = defensive_clip;
+    defensive.clip_variant = 0U;
+    target.upper_body_overlay = playback_layer_from_selection(
+        defensive, 1.0F, Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
+  };
+
   if (apply_locomotion_crossfade(selection, anim, spec, seed, variant)) {
+    apply_defensive_overlay(selection);
+    return selection;
+  }
+
+  if (defensive_clip != Animation::k_unmapped_clip) {
+    apply_defensive_overlay(selection);
     return selection;
   }
 

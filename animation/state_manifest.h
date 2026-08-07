@@ -17,6 +17,7 @@ struct HumanoidStanceTargetInputs {
   bool hold_requested{false};
   bool hold_exit_requested{false};
   bool raw_guard_requested{false};
+  bool defensive_layout_locked{false};
   float hold_entry_progress{0.0F};
   float hold_exit_progress{0.0F};
   float previous_hold_pose_progress{0.0F};

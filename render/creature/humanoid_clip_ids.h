@@ -77,6 +77,18 @@ inline constexpr std::uint16_t k_humanoid_rpg_sword_thrust_clip =
     Animation::k_humanoid_rpg_sword_thrust_clip;
 inline constexpr std::uint16_t k_humanoid_rpg_sword_finisher_clip =
     Animation::k_humanoid_rpg_sword_finisher_clip;
+inline constexpr std::uint16_t k_humanoid_testudo_first_clip =
+    Animation::k_humanoid_testudo_first_clip;
+inline constexpr std::uint16_t k_humanoid_testudo_rear_clip =
+    Animation::k_humanoid_testudo_rear_clip;
+inline constexpr std::uint8_t k_humanoid_testudo_clip_count =
+    Animation::k_humanoid_testudo_clip_count;
+inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_first_clip =
+    Animation::k_humanoid_carthage_shield_wall_first_clip;
+inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_right_clip =
+    Animation::k_humanoid_carthage_shield_wall_right_clip;
+inline constexpr std::uint8_t k_humanoid_carthage_shield_wall_clip_count =
+    Animation::k_humanoid_carthage_shield_wall_clip_count;
 inline constexpr std::uint16_t k_humanoid_archer_melee_clip =
     Animation::k_humanoid_archer_melee_clip;
 inline constexpr std::uint16_t k_humanoid_hold_spear_attack_clip =

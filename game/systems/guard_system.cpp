@@ -32,14 +32,6 @@ void GuardSystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    if (auto const* formation =
-            entity->get_component<Engine::Core::DefenseFormationComponent>();
-        formation != nullptr &&
-        formation->state != Engine::Core::DefenseFormationState::Normal) {
-
-      continue;
-    }
-
     if (unit->health <= 0) {
       continue;
     }

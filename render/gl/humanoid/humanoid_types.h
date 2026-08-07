@@ -100,6 +100,7 @@ struct AnimationInputs {
   std::uint8_t death_variant{0};
   float idle_duration{0.0F};
   bool is_guarding{false};
+  bool is_defensive_layout_locked{false};
   bool is_exiting_guard{false};
   float guard_pose_progress{0.0F};
   ShieldFormationPose shield_formation_pose{ShieldFormationPose::None};

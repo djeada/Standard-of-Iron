@@ -30,6 +30,7 @@
 #include "game/systems/combat_system/structure_combat.h"
 #include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/command_service.h"
+#include "game/systems/defensive_unit_layout_service.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/order_service.h"
 #include "game/systems/projectile_kind.h"
@@ -188,6 +189,8 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("MovementAnimationObserved");
   case ArenaExpectationKind::AttackAnimationObserved:
     return QStringLiteral("AttackAnimationObserved");
+  case ArenaExpectationKind::DefensiveUnitLayoutLocked:
+    return QStringLiteral("DefensiveUnitLayoutLocked");
   case ArenaExpectationKind::HoldPoseMaintained:
     return QStringLiteral("HoldPoseMaintained");
   case ArenaExpectationKind::RepeatedAttackAnimationObserved:
@@ -490,7 +493,6 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
         step.command == ScenarioCommandKind::Attack ||
         step.command == ScenarioCommandKind::AttackMove ||
         step.command == ScenarioCommandKind::Charge ||
-        step.command == ScenarioCommandKind::Guard ||
         step.command == ScenarioCommandKind::ReleaseReserve ||
         step.command == ScenarioCommandKind::MeleeLock;
     check_group(step.target_group,
@@ -741,6 +743,7 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;
+  QHash<QString, bool> defensive_layout_locked;
   QHash<QString, bool> useful_bot_action;
   QHash<QString, UndeadZoneObservation> undead_zone_states;
   QHash<QString, QSet<Engine::Core::EntityID>> undead_zone_entities;
@@ -2099,6 +2102,9 @@ struct ArenaScenarioRunner::Impl {
           break;
         }
       }
+    }
+    if (Game::Systems::DefensiveUnitLayoutService::is_formed(*entity)) {
+      defensive_layout_locked[group] = true;
     }
     QVector3D const position = vector_from_transform(*transform);
     if (!initial_elevation.contains(group)) {
@@ -3699,6 +3705,15 @@ struct ArenaScenarioRunner::Impl {
                         .arg(observation.lateral_offset, 0, 'f', 2)
                         .arg(tolerance, 0, 'f', 2)
                   : QStringLiteral("%1 produced no bridge-midspan alignment sample")
+                        .arg(expectation.group));
+        }
+        break;
+      }
+      case ArenaExpectationKind::DefensiveUnitLayoutLocked: {
+        if (!defensive_layout_locked.value(expectation.group, false)) {
+          add_issue(QStringLiteral("defensive_unit_layout_never_locked"),
+                    QStringLiteral("%1 never locked its internal defensive unit "
+                                   "layout")
                         .arg(expectation.group));
         }
         break;

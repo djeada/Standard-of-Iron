@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "../../animation/action_manifest.h"
+#include "../formation/unit_layout.h"
 #include "../systems/building_collision_registry.h"
 #include "../systems/owner_registry.h"
 #include "../systems/troop_count_registry.h"
@@ -508,6 +509,13 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
   auto const* brace = entity->get_component<SpearBraceComponent>();
   next.formation_guard_active = (formation_mode != nullptr && formation_mode->active) ||
                                 (guard_mode != nullptr && guard_mode->active);
+
+  auto const* unit_layout = entity->get_component<UnitLayoutStateComponent>();
+  next.defensive_layout_locked =
+      unit_layout != nullptr &&
+      unit_layout->state ==
+          static_cast<std::uint8_t>(Game::Formation::UnitLayoutState::Defensive) &&
+      unit_layout->is_formed();
   next.guard_requested =
       (next.fpv_controlled && commander_guard != nullptr && commander_guard->active) ||
       (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Knight &&
@@ -542,21 +550,23 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
                        next.is_dead || next.target_id != 0U;
 
   next.revision = presentation->revision;
-  bool const changed = presentation->snapshot_valid != next.snapshot_valid ||
-                       presentation->target_id != next.target_id ||
-                       presentation->target_alive != next.target_alive ||
-                       presentation->combat_active != next.combat_active ||
-                       presentation->is_attacking != next.is_attacking ||
-                       presentation->is_melee != next.is_melee ||
-                       presentation->combat_phase != next.combat_phase ||
-                       presentation->is_hit_reacting != next.is_hit_reacting ||
-                       presentation->is_dying != next.is_dying ||
-                       presentation->is_dead != next.is_dead ||
-                       presentation->guard_requested != next.guard_requested ||
-                       presentation->hold_requested != next.hold_requested ||
-                       presentation->showcase_active != next.showcase_active ||
-                       presentation->showcase_move != next.showcase_move ||
-                       presentation->showcase_phase != next.showcase_phase;
+  bool const changed =
+      presentation->snapshot_valid != next.snapshot_valid ||
+      presentation->target_id != next.target_id ||
+      presentation->target_alive != next.target_alive ||
+      presentation->combat_active != next.combat_active ||
+      presentation->is_attacking != next.is_attacking ||
+      presentation->is_melee != next.is_melee ||
+      presentation->combat_phase != next.combat_phase ||
+      presentation->is_hit_reacting != next.is_hit_reacting ||
+      presentation->is_dying != next.is_dying ||
+      presentation->is_dead != next.is_dead ||
+      presentation->guard_requested != next.guard_requested ||
+      presentation->defensive_layout_locked != next.defensive_layout_locked ||
+      presentation->hold_requested != next.hold_requested ||
+      presentation->showcase_active != next.showcase_active ||
+      presentation->showcase_move != next.showcase_move ||
+      presentation->showcase_phase != next.showcase_phase;
   if (changed) {
     ++next.revision;
   }
@@ -610,6 +620,8 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<GuardModeComponent>(source, destination);
   copy_snapshot_component<HoldModeComponent>(source, destination);
   copy_snapshot_component<FormationModeComponent>(source, destination);
+
+  copy_snapshot_component<UnitLayoutStateComponent>(source, destination);
   copy_snapshot_component<SpearBraceComponent>(source, destination);
   copy_snapshot_component<StaminaComponent>(source, destination);
   copy_snapshot_component<MoraleComponent>(source, destination);
@@ -726,6 +738,12 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     for (float const channel : renderable->color) {
       render_hash_float(signature, channel);
     }
+  }
+  if (auto const* layout = entity.get_component<UnitLayoutStateComponent>()) {
+    render_hash_combine(signature, layout->state);
+    render_hash_combine(signature, layout->phase);
+    render_hash_combine(signature, layout->layout_id);
+    render_hash_float(signature, layout->transition_progress);
   }
   if (auto const* morale = entity.get_component<MoraleComponent>()) {
     render_hash_float(signature, morale->morale);

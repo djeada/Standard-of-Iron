@@ -48,6 +48,32 @@ auto step_at(float time,
   return result;
 }
 
+auto guard_step(float time,
+                QString source,
+                QString anchor,
+                bool enabled = true) -> ArenaScenarioStep {
+  ArenaScenarioStep result;
+  result.name =
+      QStringLiteral("%1_%2_guard").arg(QString::number(time, 'f', 2), source);
+  result.trigger = {Trigger::AtTime, time, {}, {}, 0.0F};
+  result.command = Command::Guard;
+  result.group = std::move(source);
+  result.target_group = std::move(anchor);
+  result.enabled = enabled;
+  return result;
+}
+
+auto attack_step(float time, QString source, QString target) -> ArenaScenarioStep {
+  ArenaScenarioStep result;
+  result.name =
+      QStringLiteral("%1_%2_attack").arg(QString::number(time, 'f', 2), source);
+  result.trigger = {Trigger::AtTime, time, {}, {}, 0.0F};
+  result.command = Command::Attack;
+  result.group = std::move(source);
+  result.target_group = std::move(target);
+  return result;
+}
+
 auto expect(Expect kind,
             QString source = {},
             QString target = {},
@@ -374,6 +400,90 @@ void add_unit_layout_scenarios(std::vector<ArenaScenarioDefinition>& out) {
         expect(Expect::MovementIsContinuous, QStringLiteral("shields"), {}, 0.0F, 8.5F),
     };
     add_layout_expectations(s, {QStringLiteral("shields"), QStringLiteral("volley")});
+    out.push_back(std::move(s));
+  }
+
+  {
+    auto s = formation_definition(
+        QStringLiteral("unit_layout_testudo_lock"),
+        QStringLiteral("Unit Layout: Roman Testudo Locks and Releases"),
+        QStringLiteral("The soldiers inside one Roman swordsman unit close into a "
+                       "testudo under a Carthaginian volley, then open ranks again. "
+                       "The logical unit itself must never be re-slotted or moved."),
+        16.0F,
+        three_quarter_camera(30.0F));
+    s.groups = {
+        troop_group(QStringLiteral("cohort"),
+                    Troop::Swordsman,
+                    Nation::RomanRepublic,
+                    1,
+                    1,
+                    {0.0F, 0.0F, 0.0F},
+                    25,
+                    {}),
+        troop_group(QStringLiteral("volley"),
+                    Troop::Archer,
+                    Nation::Carthage,
+                    2,
+                    3,
+                    {0.0F, 0.0F, 15.0F},
+                    10),
+    };
+    s.groups.front().health_override = 10000;
+    s.groups.front().max_health_override = 10000;
+    s.groups.back().attack_range_override = 18.0F;
+    s.steps = {
+        attack_step(0.5F, QStringLiteral("volley"), QStringLiteral("cohort")),
+        guard_step(1.0F, QStringLiteral("cohort"), {}),
+        guard_step(11.0F, QStringLiteral("cohort"), {}, false),
+    };
+    s.expectations = {
+        expect(Expect::DefensiveUnitLayoutLocked, QStringLiteral("cohort")),
+        expect(Expect::NoRootTeleport, QStringLiteral("cohort")),
+    };
+    add_layout_expectations(s, {QStringLiteral("cohort")});
+    out.push_back(std::move(s));
+  }
+
+  {
+    auto s = formation_definition(
+        QStringLiteral("unit_layout_shield_wall_lock"),
+        QStringLiteral("Unit Layout: Carthaginian Shield Wall Locks and Releases"),
+        QStringLiteral("One Carthaginian swordsman unit closes into its wider, "
+                       "shallower shield wall, with raised front-facing shields and "
+                       "no Roman testudo roof."),
+        16.0F,
+        three_quarter_camera(30.0F));
+    s.groups = {
+        troop_group(QStringLiteral("cohort"),
+                    Troop::Swordsman,
+                    Nation::Carthage,
+                    1,
+                    1,
+                    {0.0F, 0.0F, 0.0F},
+                    25,
+                    {}),
+        troop_group(QStringLiteral("volley"),
+                    Troop::Archer,
+                    Nation::RomanRepublic,
+                    2,
+                    3,
+                    {0.0F, 0.0F, 15.0F},
+                    10),
+    };
+    s.groups.front().health_override = 10000;
+    s.groups.front().max_health_override = 10000;
+    s.groups.back().attack_range_override = 18.0F;
+    s.steps = {
+        attack_step(0.5F, QStringLiteral("volley"), QStringLiteral("cohort")),
+        guard_step(1.0F, QStringLiteral("cohort"), {}),
+        guard_step(11.0F, QStringLiteral("cohort"), {}, false),
+    };
+    s.expectations = {
+        expect(Expect::DefensiveUnitLayoutLocked, QStringLiteral("cohort")),
+        expect(Expect::NoRootTeleport, QStringLiteral("cohort")),
+    };
+    add_layout_expectations(s, {QStringLiteral("cohort")});
     out.push_back(std::move(s));
   }
 

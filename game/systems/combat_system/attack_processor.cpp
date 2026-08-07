@@ -18,6 +18,7 @@
 #include "../combat_actions/combat_action_events.h"
 #include "../combat_rules.h"
 #include "../command_service.h"
+#include "../defensive_unit_layout_service.h"
 #include "../formation_combat_geometry.h"
 #include "../healing_rules.h"
 #include "../order_service.h"
@@ -1325,6 +1326,11 @@ void process_attacks(Engine::Core::World* world,
 
           auto* hold_mode = attacker->get_component<Engine::Core::HoldModeComponent>();
           if ((hold_mode != nullptr) && hold_mode->active) {
+            attacker->remove_component<Engine::Core::AttackTargetComponent>();
+            continue;
+          }
+
+          if (Game::Systems::DefensiveUnitLayoutService::holds_position(*attacker)) {
             attacker->remove_component<Engine::Core::AttackTargetComponent>();
             continue;
           }
