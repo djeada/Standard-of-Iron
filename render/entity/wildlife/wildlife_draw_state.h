@@ -11,8 +11,9 @@
 namespace Render::GL::Wildlife {
 
 struct DrawState {
-  float phase{0.0F};
   float speed_ratio{0.0F};
+  float distance{0.0F};
+  float time{0.0F};
   float alarm{0.0F};
   bool grazing{false};
   bool alert{false};
@@ -22,7 +23,9 @@ struct DrawState {
 };
 
 [[nodiscard]] auto resolve_draw_state(const DrawContext& ctx,
-                                      float stride_rate) -> DrawState;
+                                      float top_speed) -> DrawState;
+
+[[nodiscard]] auto gait_phase(const DrawState& state, float advance) -> float;
 
 [[nodiscard]] auto tinted(const QVector3D& color, float factor) -> QVector3D;
 

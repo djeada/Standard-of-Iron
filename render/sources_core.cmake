@@ -4,6 +4,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/scene_walk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/bird_flock_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wildlife_rig.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wildlife_gait.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/sheep_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/sheep_manifest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wolf_spec.cpp

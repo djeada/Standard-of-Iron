@@ -212,6 +212,39 @@ auto make_round_ring(QVector3D center,
   return make_oriented_ring(center, QVector3D(0.0F, 0.0F, 1.0F), rx, ry, vertex_count);
 }
 
+auto ring_centroid(const std::vector<QVector3D>& ring) -> QVector3D {
+  QVector3D sum;
+  for (const QVector3D& p : ring) {
+    sum += p;
+  }
+  return sum / static_cast<float>(ring.size());
+}
+
+auto ring_normal(const std::vector<QVector3D>& ring) -> QVector3D {
+  QVector3D normal;
+  for (std::size_t i = 0; i < ring.size(); ++i) {
+    const QVector3D& a = ring[i];
+    const QVector3D& b = ring[(i + 1U) % ring.size()];
+    normal += QVector3D((a.y() - b.y()) * (a.z() + b.z()),
+                        (a.z() - b.z()) * (a.x() + b.x()),
+                        (a.x() - b.x()) * (a.y() + b.y()));
+  }
+  return normal;
+}
+
+void orient_ring_strip_outward(std::vector<std::vector<QVector3D>>& rings) {
+  if (rings.size() < 2U || rings.front().size() < 3U) {
+    return;
+  }
+  QVector3D const axis = ring_centroid(rings.back()) - ring_centroid(rings.front());
+  if (QVector3D::dotProduct(ring_normal(rings.front()), axis) >= 0.0F) {
+    return;
+  }
+  for (std::vector<QVector3D>& ring : rings) {
+    std::reverse(ring.begin(), ring.end());
+  }
+}
+
 void append_ring_strip(std::vector<Render::GL::Vertex>& vertices,
                        std::vector<unsigned int>& indices,
                        const std::vector<std::vector<QVector3D>>& rings) {
@@ -316,6 +349,8 @@ auto build_barrel_mesh(const BarrelNode& node) -> std::unique_ptr<Render::GL::Me
                                      ring.half_width * node.scale.x()));
     }
   }
+
+  orient_ring_strip_outward(rings);
 
   std::vector<Render::GL::Vertex> vertices;
   std::vector<unsigned int> indices;

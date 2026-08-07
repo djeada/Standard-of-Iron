@@ -673,6 +673,15 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     }
   }
 
+  float const stepped_x = transform->position.x - old_x;
+  float const stepped_z = transform->position.z - old_z;
+  movement->travelled += std::sqrt((stepped_x * stepped_x) + (stepped_z * stepped_z));
+
+  constexpr float k_travelled_wrap = 4096.0F;
+  if (movement->travelled >= k_travelled_wrap) {
+    movement->travelled -= k_travelled_wrap;
+  }
+
   finalize_orientation(entity, transform, movement, delta_time);
 }
 
