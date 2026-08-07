@@ -15,6 +15,7 @@
 #include "../../../submitter.h"
 #include "../../../template_cache.h"
 #include "../../building_archetype_desc.h"
+#include "../../building_decay.h"
 #include "../../building_ornaments.h"
 #include "../../building_render_common.h"
 #include "../../building_state.h"
@@ -430,6 +431,15 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                           c.terracotta_dark);
   add_roman_roof_standard(
       desc, QVector3D(0.72F, hall_roof_y + 0.10F, 0.0F), 0.58F, c.gold, c.cloth_red);
+
+  add_ruin_dressing(desc,
+                    RuinDressing{.extent = QVector3D(1.16F, 0.0F, 1.16F),
+                                 .stone = c.limestone_shade,
+                                 .stone_dark = c.limestone_dark,
+                                 .timber = c.cedar_dark,
+                                 .ground_y = 0.16F,
+                                 .scale = 1.0F,
+                                 .seed = 181});
 
   return build_building_archetype(desc, state);
 }

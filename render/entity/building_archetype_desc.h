@@ -122,12 +122,15 @@ private:
 auto build_building_archetype(const BuildingArchetypeDesc& desc,
                               BuildingState state) -> RenderArchetype;
 auto build_building_archetype_from_recorded(
-    std::string name, const std::vector<RecordedMeshCmd>& commands) -> RenderArchetype;
+    std::string name,
+    const std::vector<RecordedMeshCmd>& commands,
+    BuildingState state = BuildingState::Normal) -> RenderArchetype;
 auto build_building_archetype_from_recorded_lods(
     std::string name,
     const std::vector<RecordedMeshCmd>& full_commands,
     const std::vector<RecordedMeshCmd>& minimal_commands,
-    float full_lod_max_distance = 60.0F) -> RenderArchetype;
+    float full_lod_max_distance = 60.0F,
+    BuildingState state = BuildingState::Normal) -> RenderArchetype;
 
 struct BuildingArchetypeSet {
   std::array<RenderArchetype, 3> states;

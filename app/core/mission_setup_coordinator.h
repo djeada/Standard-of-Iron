@@ -113,6 +113,9 @@ struct MissionWaveEffects {
   std::vector<Engine::Core::EntityID> spawned_entity_ids;
 };
 
+[[nodiscard]] auto resolve_defense_reference(Engine::Core::World& world,
+                                             int local_owner_id) -> QVector3D;
+
 [[nodiscard]] auto wave_unit_total(const PendingMissionWave& wave) -> int;
 
 [[nodiscard]] auto

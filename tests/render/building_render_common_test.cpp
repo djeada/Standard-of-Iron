@@ -9,6 +9,7 @@
 #include "game/core/entity.h"
 #include "render/entity/building_render_common.h"
 #include "render/entity/registry.h"
+#include "render/entity/wall_renderer_common.h"
 #include "render/submitter.h"
 
 namespace {
@@ -17,6 +18,7 @@ struct RecordedMesh {
   Render::GL::Mesh* mesh{nullptr};
   QMatrix4x4 model;
   QVector3D color{1.0F, 1.0F, 1.0F};
+  int material_id{0};
 };
 
 class RecordingSubmitter final : public Render::GL::ISubmitter {
@@ -28,8 +30,8 @@ public:
             const QVector3D& color,
             Render::GL::Texture*,
             float,
-            int) override {
-    meshes.push_back({mesh, model, color});
+            int material_id) override {
+    meshes.push_back({mesh, model, color, material_id});
   }
 
   void cylinder(
@@ -97,6 +99,44 @@ TEST(BuildingRenderCommon, ResolvesBuildingStateFromUnitHealth) {
 
   unit->health = 10;
   EXPECT_EQ(resolve_building_state(ctx), BuildingState::Destroyed);
+}
+
+TEST(BuildingRenderCommon, DamageMaterialTierPreservesSurfaceMaterial) {
+  using namespace Render::GL;
+
+  for (const int damage_tier : {10, 20}) {
+    RecordingSubmitter recorder;
+    DamageStateSubmitter damaged(recorder, damage_tier);
+    for (const int surface : {0, 1, 2, 3, 4}) {
+      damaged.mesh(nullptr, QMatrix4x4{}, QVector3D{}, nullptr, 1.0F, surface);
+    }
+
+    ASSERT_EQ(recorder.meshes.size(), 5U);
+    for (std::size_t i = 0; i < recorder.meshes.size(); ++i) {
+      EXPECT_EQ(recorder.meshes[i].material_id % 10, static_cast<int>(i));
+      EXPECT_EQ(recorder.meshes[i].material_id / 10, damage_tier / 10);
+    }
+  }
+}
+
+TEST(BuildingRenderCommon, WallArchetypeSetDiffersPerState) {
+  using namespace Render::GL;
+
+  const WallArchetypeSet set =
+      build_wall_archetype_set("test_wall", WallPalette{}, WallGeometry{});
+
+  for (const auto& variant : set.variants) {
+    const std::size_t normal =
+        variant.for_state(BuildingState::Normal).lods[0].draws.size();
+    const std::size_t damaged =
+        variant.for_state(BuildingState::Damaged).lods[0].draws.size();
+    const std::size_t destroyed =
+        variant.for_state(BuildingState::Destroyed).lods[0].draws.size();
+
+    EXPECT_GT(normal, 0U);
+    EXPECT_NE(normal, damaged);
+    EXPECT_NE(damaged, destroyed);
+  }
 }
 
 TEST(BuildingRenderCommon, RegisteredVariantDispatcherRoutesByNation) {

@@ -1,5 +1,6 @@
 #include <array>
 #include <gtest/gtest.h>
+#include <string>
 
 #include "render/creature/archetype_registry.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
@@ -314,7 +315,7 @@ TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsResolveAllExpectedHandles) 
   }
 }
 
-TEST_F(EquipmentLoadoutCatalogTest, CommanderRegaliaUsesSixDistinctHelmetAndCloakSets) {
+TEST_F(EquipmentLoadoutCatalogTest, CommanderLoadoutsUseSixDistinctHelmetAndCloakSets) {
   struct ExpectedRegalia {
     const char* renderer_key;
     const char* helmet;
@@ -353,6 +354,36 @@ TEST_F(EquipmentLoadoutCatalogTest, CommanderRegaliaUsesSixDistinctHelmetAndCloa
       EXPECT_NE(helmet_handles[left], helmet_handles[right]);
       EXPECT_NE(cloak_handles[left], cloak_handles[right]);
     }
+  }
+}
+
+TEST_F(EquipmentLoadoutCatalogTest, CommanderCloaksExcludePrimitiveRegalia) {
+  constexpr std::array<const char*, 6> renderer_keys{
+      "troops/roman/commanders/fabius_maximus",
+      "troops/roman/commanders/scipio_africanus",
+      "troops/roman/commanders/marcellus",
+      "troops/carthage/commanders/hanno_the_great",
+      "troops/carthage/commanders/hasdrubal_barca",
+      "troops/carthage/commanders/hannibal_barca",
+  };
+
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const* base = registry.get(Render::Creature::ArchetypeRegistry::k_humanoid_base);
+  ASSERT_NE(base, nullptr);
+
+  for (auto const* renderer_key : renderer_keys) {
+    SCOPED_TRACE(renderer_key);
+    auto const loadout = Render::GL::Nation::resolve_equipment_loadout(renderer_key);
+    ASSERT_TRUE(loadout.found);
+    ASSERT_NE(loadout.cloak_handle, k_invalid_equipment_handle);
+
+    std::array const handles{loadout.cloak_handle};
+    std::string const debug_name = std::string(renderer_key) + "/cloak_only";
+    auto const archetype = Render::GL::resolve_humanoid_equipment_archetype(
+        debug_name, Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
+    auto const* desc = registry.get(archetype);
+    ASSERT_NE(desc, nullptr);
+    EXPECT_EQ(desc->bake_attachment_count, base->bake_attachment_count + 1U);
   }
 }
 

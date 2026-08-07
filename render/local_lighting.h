@@ -73,6 +73,50 @@ struct LocalLight {
   return result;
 }
 
+struct LocalLightingBlock {
+  static constexpr std::size_t k_vec4_floats = 4;
+  static constexpr std::size_t k_float_count =
+      (k_max_local_lights * k_vec4_floats * 2) + k_vec4_floats;
+
+  using Packed = std::array<float, k_float_count>;
+
+  static constexpr std::size_t k_position_radius_offset = 0;
+  static constexpr std::size_t k_color_intensity_offset =
+      k_max_local_lights * k_vec4_floats;
+  static constexpr std::size_t k_meta_offset = k_max_local_lights * k_vec4_floats * 2;
+};
+
+[[nodiscard]] inline auto
+pack_local_lights_std140(const std::array<LocalLight, k_max_local_lights>& lights)
+    -> LocalLightingBlock::Packed {
+  LocalLightingBlock::Packed packed{};
+  std::size_t active_count = 0;
+
+  for (const auto& light : lights) {
+    if (light.intensity <= 0.0F || light.radius <= 0.0F) {
+      continue;
+    }
+    const std::size_t slot = active_count * LocalLightingBlock::k_vec4_floats;
+    const std::size_t position_offset =
+        LocalLightingBlock::k_position_radius_offset + slot;
+    packed[position_offset + 0] = light.position.x();
+    packed[position_offset + 1] = light.position.y();
+    packed[position_offset + 2] = light.position.z();
+    packed[position_offset + 3] = light.radius;
+
+    const std::size_t color_offset =
+        LocalLightingBlock::k_color_intensity_offset + slot;
+    packed[color_offset + 0] = light.color.x();
+    packed[color_offset + 1] = light.color.y();
+    packed[color_offset + 2] = light.color.z();
+    packed[color_offset + 3] = light.intensity;
+    ++active_count;
+  }
+
+  packed[LocalLightingBlock::k_meta_offset] = static_cast<float>(active_count);
+  return packed;
+}
+
 inline constexpr float k_local_light_fade_seconds = 0.35F;
 inline constexpr float k_local_light_match_distance = 0.75F;
 

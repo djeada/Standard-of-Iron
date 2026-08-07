@@ -23,19 +23,22 @@ float wood_grain(vec2 p, float y) {
   return grain * 0.13 + fine - knot;
 }
 
-vec3 procedural_material_variation(vec3 base_color, vec3 world_pos, vec3 normal) {
+vec3 procedural_material_variation(vec3 base_color,
+                                   vec3 world_pos,
+                                   vec3 normal,
+                                   int material_id) {
   vec2 uv = world_pos.xz * 4.0;
 
   float avg_color = (base_color.r + base_color.g + base_color.b) / 3.0;
 
   bool b_is_wood = false, b_is_metal = false, b_is_cloth = false;
-  if (u_material_id == 2) {
+  if (material_id == 2) {
     b_is_wood = true;
-  } else if (u_material_id == 1) {
+  } else if (material_id == 1) {
     b_is_metal = true;
-  } else if (u_material_id == 3) {
+  } else if (material_id == 3) {
     b_is_cloth = true;
-  } else if (u_material_id != 4) {
+  } else if (material_id != 4) {
 
     b_is_wood =
         (base_color.r < base_color.g * 2.5 && base_color.r > base_color.b * 1.45 &&
@@ -82,10 +85,12 @@ void main() {
   }
 
   vec3 normal = normalize(v_normal);
-  color = procedural_material_variation(color, v_world_pos, normal);
+  int soi_material = u_material_id % 10;
+  int soi_damage_tier = u_material_id / 10;
+  color = procedural_material_variation(color, v_world_pos, normal, soi_material);
 
-  if (u_material_id >= 10) {
-    float soot_amt = float(u_material_id - 9) * 0.45;
+  if (soi_damage_tier > 0) {
+    float soot_amt = float(soi_damage_tier) * 0.45;
     vec2 soot_uv = v_world_pos.xz * 3.5;
     float soot_patch =
         soi_noise_3d41e6(soot_uv) * 0.6 + soi_noise_3d41e6(soot_uv * 4.1) * 0.4;
