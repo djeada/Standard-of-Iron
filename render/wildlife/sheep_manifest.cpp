@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <span>
 #include <string_view>
@@ -29,7 +30,7 @@ struct SheepClipSpec {
 
 constexpr std::array<SheepClipSpec, 6> k_sheep_clips{{
     {{"idle", 20U, 20.0F, true}, 0.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
-    {{"graze", 24U, 20.0F, true}, 1.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
+    {{"graze", 120U, 24.0F, true}, 1.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
     {{"walk", 24U, 24.0F, true}, 0.0F, 0.42F, 0.0F, false, false, SheepGait::Walk},
     {{"run", 16U, 24.0F, true}, 0.0F, 1.0F, 1.0F, false, false, SheepGait::Run},
     {{"die", 20U, 20.0F, false}, 0.0F, 0.0F, 1.0F, true, false, SheepGait::Stand},
@@ -59,7 +60,7 @@ void bake_sheep_clip_frame(std::size_t clip_index,
                       static_cast<float>(std::max<std::uint32_t>(phase_divisor, 1U));
 
   SheepDrive drive;
-  drive.graze = clip.graze;
+  drive.graze = clip.graze > 0.0F ? sheep_graze_amount(phase) : 0.0F;
   drive.speed_ratio = clip.speed_ratio;
   drive.alert = clip.alert;
   drive.stride_phase = phase;
@@ -77,6 +78,25 @@ void bake_sheep_clip_frame(std::size_t clip_index,
 }
 
 } // namespace
+
+auto sheep_graze_amount(float phase) noexcept -> float {
+  float const wrapped = phase - std::floor(phase);
+  constexpr float k_lower_end = 0.28F;
+  constexpr float k_raise_start = 0.72F;
+
+  auto const smoother_step = [](float value) {
+    float const t = std::clamp(value, 0.0F, 1.0F);
+    return t * t * t * ((t * ((t * 6.0F) - 15.0F)) + 10.0F);
+  };
+
+  if (wrapped < k_lower_end) {
+    return smoother_step(wrapped / k_lower_end);
+  }
+  if (wrapped <= k_raise_start) {
+    return 1.0F;
+  }
+  return 1.0F - smoother_step((wrapped - k_raise_start) / (1.0F - k_raise_start));
+}
 
 auto sheep_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
   static const Render::Creature::SpeciesManifest manifest = [] {

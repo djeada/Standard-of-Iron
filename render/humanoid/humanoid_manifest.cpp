@@ -51,8 +51,52 @@ enum class BakerAttackType : std::uint8_t {
 enum class BakerHoldType : std::uint8_t {
   None,
   Spear,
-  Bow
+  Bow,
+  TestudoFront,
+  TestudoTop,
+  TestudoLeft,
+  TestudoRight,
+  TestudoRear,
+  CarthageShieldWallFront,
+  CarthageShieldWallLeft,
+  CarthageShieldWallRight
 };
+
+[[nodiscard]] constexpr auto
+is_defensive_shield_hold(BakerHoldType type) noexcept -> bool {
+  return type == BakerHoldType::TestudoFront || type == BakerHoldType::TestudoTop ||
+         type == BakerHoldType::TestudoLeft || type == BakerHoldType::TestudoRight ||
+         type == BakerHoldType::TestudoRear ||
+         type == BakerHoldType::CarthageShieldWallFront ||
+         type == BakerHoldType::CarthageShieldWallLeft ||
+         type == BakerHoldType::CarthageShieldWallRight;
+}
+
+[[nodiscard]] constexpr auto
+defensive_shield_pose(BakerHoldType type) noexcept -> Animation::ShieldFormationPose {
+  switch (type) {
+  case BakerHoldType::TestudoTop:
+    return Animation::ShieldFormationPose::RomanTop;
+  case BakerHoldType::TestudoLeft:
+    return Animation::ShieldFormationPose::RomanLeft;
+  case BakerHoldType::TestudoRight:
+    return Animation::ShieldFormationPose::RomanRight;
+  case BakerHoldType::TestudoRear:
+    return Animation::ShieldFormationPose::RomanRear;
+  case BakerHoldType::CarthageShieldWallFront:
+    return Animation::ShieldFormationPose::CarthageFront;
+  case BakerHoldType::CarthageShieldWallLeft:
+    return Animation::ShieldFormationPose::CarthageLeft;
+  case BakerHoldType::CarthageShieldWallRight:
+    return Animation::ShieldFormationPose::CarthageRight;
+  case BakerHoldType::TestudoFront:
+  case BakerHoldType::None:
+  case BakerHoldType::Spear:
+  case BakerHoldType::Bow:
+    break;
+  }
+  return Animation::ShieldFormationPose::RomanFront;
+}
 enum class BakerRidingType : std::uint8_t {
   None,
   Idle,
@@ -774,6 +818,110 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      28.0F,
      1.05F,
      false},
+    {"testudo_front",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::TestudoFront,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"testudo_top",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::TestudoTop,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"testudo_left",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::TestudoLeft,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"testudo_right",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::TestudoRight,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"testudo_rear",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::TestudoRear,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"carthage_shield_wall_front",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::CarthageShieldWallFront,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"carthage_shield_wall_left",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::CarthageShieldWallLeft,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
+    {"carthage_shield_wall_right",
+     Render::GL::HumanoidMotionState::Hold,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::CarthageShieldWallRight,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     24.0F,
+     1.8F,
+     true},
 }};
 
 struct HumanoidSocketSpec {
@@ -1294,14 +1442,25 @@ void bake_hold_pose(BakeProfile profile,
   Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
 
   float kneel_depth = 0.875F;
-  if (profile == BakeProfile::SwordReady) {
+  bool kneels = true;
+  if (is_defensive_shield_hold(hold_type)) {
+    bool const carthaginian = hold_type == BakerHoldType::CarthageShieldWallFront ||
+                              hold_type == BakerHoldType::CarthageShieldWallLeft ||
+                              hold_type == BakerHoldType::CarthageShieldWallRight;
+    kneels = !carthaginian;
+    kneel_depth = hold_type == BakerHoldType::TestudoFront ? 0.70F : 0.95F;
+  } else if (profile == BakeProfile::SwordReady) {
     kneel_depth = 0.825F;
   } else if (hold_type == BakerHoldType::Bow) {
     kneel_depth = 1.125F;
   }
 
-  ctrl.kneel(kneel_depth);
-  if (profile == BakeProfile::SwordReady) {
+  if (kneels) {
+    ctrl.kneel(kneel_depth);
+  }
+  if (is_defensive_shield_hold(hold_type)) {
+    ctrl.guard_sword_and_shield_formation(defensive_shield_pose(hold_type), 1.0F);
+  } else if (profile == BakeProfile::SwordReady) {
     ctrl.guard_sword_and_shield_for_defense();
   } else if (hold_type == BakerHoldType::Bow) {
     ctrl.hold_bow_ready();

@@ -62,7 +62,7 @@ ASSET_CONTEXTS: list[dict] = [
         "glob": "data/nations/*.json",
         "paths": [
             "display_name",
-            "defense_formation/display_name",
+            "defensive_unit_layout/display_name",
         ],
     },
     {

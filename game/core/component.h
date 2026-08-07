@@ -1457,38 +1457,6 @@ public:
   float kneel_duration;
 };
 
-enum class DefenseFormationState : std::uint8_t {
-  Normal = 0,
-  Forming = 1,
-  Formed = 2,
-  Breaking = 3
-};
-
-class DefenseFormationComponent : public Component {
-public:
-  DefenseFormationComponent() = default;
-
-  [[nodiscard]] auto is_engaged() const -> bool {
-    return state == DefenseFormationState::Forming ||
-           state == DefenseFormationState::Formed;
-  }
-
-  [[nodiscard]] auto is_formed() const -> bool {
-    return state == DefenseFormationState::Formed;
-  }
-
-  DefenseFormationState state{DefenseFormationState::Normal};
-  std::uint64_t formation_id{0};
-  int slot_index{-1};
-  int rank{0};
-  int file{0};
-  float slot_x{0.0F};
-  float slot_z{0.0F};
-  float facing_degrees{0.0F};
-  float state_time{0.0F};
-  float cohesion{1.0F};
-};
-
 class GuardModeComponent : public Component {
 public:
   GuardModeComponent()
@@ -2073,6 +2041,7 @@ public:
 
   bool guard_requested{false};
   bool formation_guard_active{false};
+  bool defensive_layout_locked{false};
   Game::Systems::UnitActivity activity{};
   bool hold_requested{false};
   bool hold_exit_requested{false};

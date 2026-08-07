@@ -3,17 +3,15 @@
   "display_name": "Roman Republic",
   "primary_building": "barracks",
   "doctrine": "rome",
-  "defense_formation": {
+  "defensive_unit_layout": {
     "id": "testudo",
     "display_name": "Testudo",
-    "eligible_troops": ["swordsman"],
-    "min_units": 3,
-    "max_units_per_rank": 3,
-    "rank_spacing": 1.35,
-    "file_spacing": 1.15,
+    "eligible_troops": [
+      "swordsman"
+    ],
     "form_seconds": 3.0,
     "break_seconds": 1.4,
-    "move_speed_multiplier": 0.3,
+    "move_speed_multiplier": 0.42,
     "turn_speed_multiplier": 0.35,
     "allows_charge": false,
     "damage_multipliers": {
@@ -24,9 +22,7 @@
       "cavalry_impact": 0.85
     },
     "attack_output_multiplier": 0.45,
-    "frontal_arc_degrees": 110.0,
-    "cohesion_radius": 2.8,
-    "min_cohesion_ratio": 0.6
+    "frontal_arc_degrees": 110.0
   },
   "troops": [
     {
@@ -143,21 +139,21 @@
       "combat": {
         "health": 2000,
         "max_health": 2000,
-      "speed": 4.4,
-      "vision_range": 17.5,
-      "ranged_range": 1.5,
-      "ranged_damage": 5,
-      "ranged_cooldown": 1.9,
-      "melee_range": 2.1,
-      "melee_damage": 40,
-      "melee_cooldown": 0.75,
-      "can_ranged": false,
-      "can_melee": true
-    },
-    "visuals": {
-      "render_scale": 0.8,
-      "selection_ring_size": 2.05,
-      "renderer_id": "troops/roman/horse_swordsman"
+        "speed": 4.4,
+        "vision_range": 17.5,
+        "ranged_range": 1.5,
+        "ranged_damage": 5,
+        "ranged_cooldown": 1.9,
+        "melee_range": 2.1,
+        "melee_damage": 40,
+        "melee_cooldown": 0.75,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.8,
+        "selection_ring_size": 2.05,
+        "renderer_id": "troops/roman/horse_swordsman"
       },
       "formation": {
         "individuals_per_unit": 9,
@@ -210,21 +206,21 @@
       "combat": {
         "health": 1550,
         "max_health": 1550,
-      "speed": 4.0,
-      "vision_range": 18.0,
-      "ranged_range": 8.6,
-      "ranged_damage": 44,
-      "ranged_cooldown": 1.1,
-      "melee_range": 1.8,
-      "melee_damage": 9,
-      "melee_cooldown": 0.9,
-      "can_ranged": true,
-      "can_melee": true
-    },
-    "visuals": {
-      "render_scale": 0.75,
-      "selection_ring_size": 1.8,
-      "renderer_id": "troops/roman/horse_archer"
+        "speed": 4.0,
+        "vision_range": 18.0,
+        "ranged_range": 8.6,
+        "ranged_damage": 44,
+        "ranged_cooldown": 1.1,
+        "melee_range": 1.8,
+        "melee_damage": 9,
+        "melee_cooldown": 0.9,
+        "can_ranged": true,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.75,
+        "selection_ring_size": 1.8,
+        "renderer_id": "troops/roman/horse_archer"
       },
       "formation": {
         "individuals_per_unit": 10,
@@ -243,21 +239,21 @@
       "combat": {
         "health": 1800,
         "max_health": 1800,
-      "speed": 4.0,
-      "vision_range": 16.0,
-      "ranged_range": 1.5,
-      "ranged_damage": 5,
-      "ranged_cooldown": 2.0,
-      "melee_range": 3.0,
-      "melee_damage": 38,
-      "melee_cooldown": 0.83,
-      "can_ranged": false,
-      "can_melee": true
-    },
-    "visuals": {
-      "render_scale": 0.78,
-      "selection_ring_size": 1.9,
-      "renderer_id": "troops/roman/horse_spearman"
+        "speed": 4.0,
+        "vision_range": 16.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 5,
+        "ranged_cooldown": 2.0,
+        "melee_range": 3.0,
+        "melee_damage": 38,
+        "melee_cooldown": 0.83,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.78,
+        "selection_ring_size": 1.9,
+        "renderer_id": "troops/roman/horse_spearman"
       },
       "formation": {
         "individuals_per_unit": 9,

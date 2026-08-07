@@ -16,7 +16,7 @@
 #include "combat_system/structure_combat.h"
 #include "command_service.h"
 #include "core/component.h"
-#include "defense_formation_service.h"
+#include "defensive_unit_layout_service.h"
 #include "formation_combat_geometry.h"
 #include "gate_service.h"
 #include "order_service.h"
@@ -88,7 +88,7 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
                                 const Engine::Core::StaminaComponent* stamina)
     -> float {
   return max_navigation_speed(unit, stamina) *
-         DefenseFormationService::move_speed_multiplier(entity) *
+         DefensiveUnitLayoutService::move_speed_multiplier(entity) *
          Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
 }
 
@@ -209,8 +209,11 @@ void finalize_orientation(Engine::Core::Entity* entity,
       (unit != nullptr ? formation_turn_speed_degrees(
                              *entity, *unit, desired_yaw_turn_speed_degrees)
                        : desired_yaw_turn_speed_degrees) *
-      DefenseFormationService::turn_speed_multiplier(*entity);
-  if (speed2 > 1e-5F) {
+      DefensiveUnitLayoutService::turn_speed_multiplier(*entity);
+
+  bool const shell_holds_its_face =
+      DefensiveUnitLayoutService::holds_position(*entity) && transform->has_desired_yaw;
+  if (speed2 > 1e-5F && !shell_holds_its_face) {
     float const target_yaw = std::atan2(movement->get_vx(), movement->get_vz()) *
                              180.0F / std::numbers::pi_v<float>;
     float const current = transform->rotation.y;
@@ -225,7 +228,7 @@ void finalize_orientation(Engine::Core::Entity* entity,
     float const step =
         std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
     transform->rotation.y = current + step;
-    if (std::fabs(diff) < 0.5F) {
+    if (std::fabs(diff) < 0.5F && !shell_holds_its_face) {
       transform->has_desired_yaw = false;
     }
   }

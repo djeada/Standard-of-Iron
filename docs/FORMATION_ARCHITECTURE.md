@@ -433,6 +433,28 @@ signal. Phase is carried by both colour and text, which
 `tst_formation_status_badge.qml` locks in along with the fallback for an
 unknown phase.
 
+## Defence Mode: an internal unit layout
+
+Defence Mode does not create an army formation. Each selected logical unit keeps its world position, facing, orders, and identity. The command only sets `GuardModeComponent`; `UnitLayoutStateSystem` independently changes the soldiers inside each eligible unit from the doctrine normal layout to its defensive layout. There is no minimum selection size, shared formation id, inter-unit slot, cohesion tally, casualty reflow, or terrain-fitting pass.
+
+Faction data lives under `defensive_unit_layout` in the nation JSON. It names eligible troop types, transition times, movement limits, and directional combat modifiers. It deliberately contains no fields for arranging multiple units. Rome maps swordsmen to `rome.shield_wall`; Carthage maps swordsmen to `carthage.shield_wall`; other troops and nations keep their ordinary internal layout.
+
+### Rome: a closed testudo shell
+
+The Roman style is a compact `shell`. The front rank holds overlapping shields forward, the rear rank faces shields backward, flank files turn shields outward, and only the remaining interior soldiers form the overhead roof. `rank_slot_for` numbers the front rank as `rows - 1`, which `resolve_formation_shield_facing` follows explicitly. This avoids reversing the front and rear poses.
+
+The five Roman upper-body poses are baked as the contiguous `testudo_front`, `testudo_top`, `testudo_left`, `testudo_right`, and `testudo_rear` BPAT clips. They are applied as `UpperBodyOverlay` layers, so a moving testudo keeps its authored walk in the legs instead of sliding on a frozen hold pose.
+
+### Carthage: a related but open shield wall
+
+The Carthaginian layout is a wider `arc`, not a roofed shell. Its front and interior soldiers keep shields raised forward while the outside files angle shields left or right. Three separate `carthage_shield_wall_*` BPAT clips give those poses authored arms as well as rotated shield attachments. The stance remains higher, the block forms and moves faster, and it gives materially less missile cover than the Roman testudo.
+
+### State and rendering contract
+
+`UnitLayoutStateComponent` is the sole authoritative transition state. Nation-specific `form_seconds` and `break_seconds` drive `Forming` and `Breaking`; gameplay bonuses and the baked defensive overlay begin only at `Formed` and end immediately when the requested state is no longer defensive. The component is serialized and copied into render snapshots, and its fields participate in the render signature so cached snapshots cannot retain a stale layout.
+
+The Arena scenarios `unit_layout_testudo_lock` and `unit_layout_shield_wall_lock` each spawn exactly one logical swordsman unit. Their lock expectation observes `DefensiveUnitLayoutService::is_formed`; the scenarios therefore prove an internal layout transition without smuggling an army-scale formation back into Defence Mode.
+
 ## AI
 
 `Game::Systems::AI::plan_ai_formation` builds `ArmyFormationMember`s from AI
@@ -474,6 +496,7 @@ See `assets/data/formations/README.md` for the file schemas.
 | `tests/formation/formation_terrain_navigation_test.cpp` | slots against rivers, bridges, hills, walls and buildings; reachability; no stacking                  |
 | `tests/formation/formation_cohesion_test.cpp`           | measured cohesion, phase thresholds, the damage multiplier through `apply_unit_damage`, save/load     |
 | `tests/formation/formation_planner_cache_test.cpp`      | layout/place equivalence, layout signature, slot separation under the hash grid, per-plan cost report |
+| `tests/systems/defensive_unit_layout_test.cpp`          | defensive unit layouts: single-unit activation, faction timing and geometry, modifiers, transitions   |
 | `tests/ui/qml/tst_formation_status_badge.qml`           | the persistent badge: phase labels, distinct phase colours, unknown-phase fallback                    |
 | `tests/ui/qml/tst_formation_panel.qml`                  | the planner survives being shown and expanded, one silhouette per intent, the band the HUD gives it   |
 | `tests/core/input_command_handler_test.cpp`             | who opens the planner, arrow and committed facing agree, slots keep their meaning across selections   |
@@ -488,6 +511,12 @@ visual side and need a real GPU context; `tests/tools/arena_scenarios_test.cpp`
 asserts headlessly that each one exists, spawns groups, carries expectations,
 issues a `FormationMove`, and — for the terrain fixtures — actually declares the
 rivers, bridges, elevation patches, walls and buildings it claims to test.
+
+`unit_layout_testudo_lock` and `unit_layout_shield_wall_lock` give the same
+Defence Mode order to one Roman and one Carthaginian logical unit. The
+`DefensiveUnitLayoutLocked` expectation fails unless that unit reaches `Formed`
+through the real game loop. Both scenarios assert that the unit root does not
+teleport; only its internal soldiers may change slots.
 
 ## Showing it off
 

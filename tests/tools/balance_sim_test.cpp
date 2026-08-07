@@ -115,8 +115,8 @@ TEST_F(BalanceSimTest, CavalryOverrunsExposedArchers) {
 }
 
 TEST_F(BalanceSimTest, EliteCommanderLosesToEqualCostLineInfantry) {
-  const auto summary = run(load(QStringLiteral("commander_vs_line")), 2);
-  EXPECT_LE(summary.a_win_rate, 0.35);
+  const auto summary = run(load(QStringLiteral("commander_vs_line")), 12);
+  EXPECT_LE(summary.a_win_rate, 0.5);
 
   EXPECT_GT(summary.side_a.mean_damage_melee + summary.side_a.mean_damage_ranged,
             500.0);

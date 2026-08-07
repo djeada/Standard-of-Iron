@@ -27,6 +27,7 @@
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/skeleton.h"
 #include "render/submitter.h"
+#include "render/wildlife/sheep_manifest.h"
 #include "tests/render/test_asset_paths.h"
 
 namespace {
@@ -38,6 +39,39 @@ using Render::Creature::CreatureRenderRequest;
 using Render::Creature::Pipeline::CreatureKind;
 using Render::Creature::Pipeline::CreaturePipeline;
 using namespace Render::Creature::Bpat;
+
+TEST(SheepAnimation, GrazeHeadUsesLongEasedTransitionsAndAStableHold) {
+  using Render::Wildlife::sheep_graze_amount;
+
+  EXPECT_FLOAT_EQ(sheep_graze_amount(0.0F), 0.0F);
+  EXPECT_GT(sheep_graze_amount(0.10F), 0.0F);
+  EXPECT_LT(sheep_graze_amount(0.10F), sheep_graze_amount(0.20F));
+  EXPECT_FLOAT_EQ(sheep_graze_amount(0.30F), 1.0F);
+  EXPECT_FLOAT_EQ(sheep_graze_amount(0.50F), 1.0F);
+  EXPECT_FLOAT_EQ(sheep_graze_amount(0.70F), 1.0F);
+  EXPECT_GT(sheep_graze_amount(0.80F), sheep_graze_amount(0.90F));
+  EXPECT_NEAR(sheep_graze_amount(0.999F), 0.0F, 1.0e-4F);
+  EXPECT_FLOAT_EQ(sheep_graze_amount(1.0F), 0.0F);
+
+  float maximum_frame_step = 0.0F;
+  float previous = sheep_graze_amount(0.0F);
+  for (int frame = 1; frame <= 120; ++frame) {
+    float const current = sheep_graze_amount(static_cast<float>(frame) / 120.0F);
+    maximum_frame_step = std::max(maximum_frame_step, std::fabs(current - previous));
+    previous = current;
+  }
+  EXPECT_LT(maximum_frame_step, 0.08F)
+      << "the baked head pose still changes too much between adjacent frames";
+
+  auto const& manifest = Render::Wildlife::sheep_manifest();
+  auto const graze =
+      std::find_if(manifest.clips.begin(), manifest.clips.end(), [](auto const& clip) {
+        return clip.name == std::string_view("graze");
+      });
+  ASSERT_NE(graze, manifest.clips.end());
+  EXPECT_GE(graze->frame_count, 120U);
+  EXPECT_GE(static_cast<float>(graze->frame_count) / graze->fps, 5.0F);
+}
 
 auto palette_contact_y(CreatureKind kind,
                        std::span<const QMatrix4x4> palette) -> float {

@@ -120,14 +120,22 @@ private:
 };
 
 TEST_F(ShippedAudioTest, TheCommandersBowCuesReachTheMixer) {
+  auto& audio = AudioSystem::get_instance();
+  audio.set_master_volume(1.0F);
+  audio.set_sound_volume(1.0F);
 
   auto plays_audibly = [](const char* cue_id) {
     for (int attempt = 0; attempt < 60; ++attempt) {
-      if (Game::Audio::play_cue(cue_id) &&
-          AudioSystem::get_instance().get_active_channel_count() > 0) {
-        return true;
+      if (!Game::Audio::play_cue(cue_id)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        continue;
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      for (int settle = 0; settle < 50; ++settle) {
+        if (AudioSystem::get_instance().get_active_channel_count() > 0) {
+          return true;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      }
     }
     return false;
   };

@@ -122,16 +122,16 @@ auto resolve_humanoid_guard_stance_pose(
 
   switch (inputs.pose) {
   case ShieldFormationPose::RomanTop:
-    sample.right_hand = {0.14F, shoulder_y - 0.22F, 0.12F};
-    sample.left_hand = {-0.04F, shoulder_y + 0.34F, 0.20F};
-    sample.shoulder_l_delta = {0.0F, 0.08F * amount, 0.20F * amount};
+    sample.right_hand = {0.14F, shoulder_y - 0.22F, 0.10F};
+    sample.left_hand = {-0.02F, shoulder_y + 0.46F, 0.22F};
+    sample.shoulder_l_delta = {0.0F, 0.18F * amount, 0.10F * amount};
     sample.shoulder_r_delta = {0.0F, -0.06F * amount, 0.03F * amount};
     sample.neck_delta = {0.0F, -0.04F * amount, 0.12F * amount};
     sample.head_delta = {0.0F, -0.05F * amount, 0.09F * amount};
     break;
   case ShieldFormationPose::RomanFront:
     sample.right_hand = {0.20F, shoulder_y - 0.20F, 0.20F};
-    sample.left_hand = {-0.10F, shoulder_y + 0.14F, 0.56F};
+    sample.left_hand = {-0.08F, shoulder_y - 0.04F, 0.52F};
     sample.shoulder_l_delta = {0.0F, 0.06F * amount, 0.17F * amount};
     sample.shoulder_r_delta = {0.0F, -0.05F * amount, 0.05F * amount};
     sample.neck_delta = {0.0F, -0.02F * amount, 0.11F * amount};
@@ -144,6 +144,32 @@ auto resolve_humanoid_guard_stance_pose(
     sample.shoulder_r_delta = {0.0F, -0.03F * amount, 0.08F * amount};
     sample.neck_delta = {0.0F, -0.02F * amount, 0.09F * amount};
     sample.head_delta = {0.0F, -0.02F * amount, 0.06F * amount};
+    break;
+  case ShieldFormationPose::RomanLeft:
+  case ShieldFormationPose::CarthageLeft:
+    sample.right_hand = {0.18F, shoulder_y - 0.20F, 0.16F};
+    sample.left_hand = {-0.42F, shoulder_y + 0.16F, 0.22F};
+    sample.shoulder_l_delta = {-0.06F * amount, 0.05F * amount, 0.06F * amount};
+    sample.shoulder_r_delta = {0.0F, -0.04F * amount, 0.05F * amount};
+    sample.neck_delta = {-0.02F * amount, -0.02F * amount, 0.05F * amount};
+    sample.head_delta = {-0.02F * amount, -0.02F * amount, 0.04F * amount};
+    break;
+  case ShieldFormationPose::RomanRight:
+  case ShieldFormationPose::CarthageRight:
+    sample.right_hand = {0.22F, shoulder_y - 0.20F, 0.16F};
+    sample.left_hand = {0.30F, shoulder_y + 0.16F, 0.22F};
+    sample.shoulder_l_delta = {0.08F * amount, 0.05F * amount, 0.06F * amount};
+    sample.shoulder_r_delta = {0.02F * amount, -0.04F * amount, 0.05F * amount};
+    sample.neck_delta = {0.02F * amount, -0.02F * amount, 0.05F * amount};
+    sample.head_delta = {0.02F * amount, -0.02F * amount, 0.04F * amount};
+    break;
+  case ShieldFormationPose::RomanRear:
+    sample.right_hand = {0.18F, shoulder_y - 0.22F, 0.10F};
+    sample.left_hand = {-0.16F, shoulder_y + 0.12F, -0.30F};
+    sample.shoulder_l_delta = {0.0F, 0.05F * amount, -0.12F * amount};
+    sample.shoulder_r_delta = {0.0F, -0.04F * amount, 0.02F * amount};
+    sample.neck_delta = {0.0F, -0.01F * amount, -0.04F * amount};
+    sample.head_delta = {0.0F, -0.01F * amount, -0.03F * amount};
     break;
   case ShieldFormationPose::GuardDefault:
   case ShieldFormationPose::None:

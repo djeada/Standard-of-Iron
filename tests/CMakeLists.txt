@@ -102,7 +102,7 @@ add_executable(
     systems/attack_targeting_test.cpp
     systems/combat_mode_test.cpp
     systems/hold_mode_test.cpp
-    systems/defense_formation_test.cpp
+    systems/defensive_unit_layout_test.cpp
     systems/rpg_bow_test.cpp
     systems/rpg_engagement_system_test.cpp
     systems/commander_system_test.cpp
