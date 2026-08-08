@@ -67,7 +67,7 @@ All commands should show Qt libraries as external dependencies, confirming dynam
 
 ### Synthesised cue sounds
 
-The 60 sound effects listed with `"source": "synth"` in
+The 106 sound effects listed with `"source": "synth"` in
 `assets/audio/audio_manifest.json` are generated from the recipes in
 `tools/audio_synth/` by `make audio-assets`. They are original work produced by
 this repository's own code: nothing is sampled, and no third-party recording or
@@ -78,8 +78,9 @@ alert and commander-combat cues. See `tools/audio_synth/README.md`.
 
 ### Wildlife effects (`assets/audio/sfx/wildlife/`)
 
-All five are cut from recordings of real animals. Synthesised versions were
-tried first and abandoned: measured against this repository's own
+Five of the six files here are cut from the recordings below; the sixth,
+`wolf_bite_snap.ogg`, is CC0 and listed under the composed cues. Synthesised
+versions were tried first and abandoned: measured against this repository's own
 `combat/elephant_charge_carthage.ogg`, the generated growl scored **0.994
 cosine similarity on its band profile** — it was, spectrally, an elephant, and
 listeners heard exactly that. Real canid growls sit far lower (about 60% of
@@ -184,16 +185,145 @@ Choice collections are the uploader's own recordings, released for commercial
 use; the aporee recordings are the contributors' own, released into the public
 domain through the aporee project.
 
-### Music, voices and the remaining effects
+### Music (`assets/audio/music/`)
 
-**Provenance not yet recorded.** The music and voice tracks, and the combat and
-alert recordings that predate the synthesised set, are not covered by this file.
-Whoever sourced them should record here, per asset or per batch: the origin, the
-licence, and whether commercial use and redistribution are granted. If any of it
-came from a generative audio service, note the service and the plan the output
-was produced under, since commercial rights usually depend on the tier.
+All twenty tracks were generated locally with **Meta's AudioCraft**, running on
+the project author's own machine. Nothing was sourced from a hosted service, so
+no provider's terms of service or subscription tier applies to the output — the
+only instrument that carries a licence here is the model itself.
 
-This matters before shipping: `assets/audio/music`, `assets/audio/voices` and
-part of `assets/audio/sfx` are redistributed inside the binary via `assets.qrc`.
-The ambience beds are not embedded, but they are installed alongside the binary
-and redistributed just the same.
+| Directory   | Tracks | Examples                                                              |
+| ----------- | -----: | --------------------------------------------------------------------- |
+| `menu/`     |      2 | `main_theme_rome_vs_carthage`, `main_theme_ancient_mediterranean_war` |
+| `combat/`   |      6 | `combat_infantry_clash_loop`, `combat_large_scale_rome_carthage`      |
+| `base/`     |      5 | `base_pre_battle_deployment`, `base_barracks_recruitment`             |
+| `stingers/` |      5 | `victory_roman_fanfare`, `defeat_tragic_low_brass`                    |
+| `campaign/` |      2 | `campaign_hannibal_march`, `strategy_command_tent`                    |
+
+AudioCraft is split across two licences, and only one of them governs generated
+audio:
+
+- the **code** in [facebookresearch/audiocraft](https://github.com/facebookresearch/audiocraft)
+  is MIT;
+- the **model weights** — MusicGen and AudioGen alike — are released under
+  [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/), which permits
+  use for non-commercial purposes only.
+
+#### What that means for distribution
+
+> **Standard of Iron must not be sold, nor bundled into anything sold, while
+> these tracks remain in it.**
+
+The game is MIT-licensed and given away at no charge, so shipping these tracks
+in the release packages is consistent with the weights' non-commercial terms
+today. That is a property of how the game is distributed, not a property of the
+audio, and it stops holding the moment money changes hands — a paid release, a
+paid storefront tier, a commercial bundle, or a sponsorship that makes the
+download a paid good.
+
+If the project ever wants that option, the twenty tracks have to be replaced, or
+the weights separately licensed from Meta. Anyone doing the replacing should
+treat this section as the checklist: it is the only part of the shipped audio
+with a restriction attached.
+
+The prompts and generation settings were not kept alongside the renders, so
+these files are committed artefacts rather than reproducible ones — unlike the
+synthesised cues, there is no recipe in the tree that regenerates them.
+
+### Voices (`assets/audio/voices/`)
+
+All thirty-one voice lines were **recorded by Adam Djellouli**, the project
+author, and are original work created for this project. No third-party
+recording, voice library, or speech-synthesis service is involved, and no
+performer's rights other than the author's own attach to them.
+
+| Directory     | Lines | Covers                                          |
+| ------------- | ----: | ----------------------------------------------- |
+| `roman/`      |    12 | one acknowledgement line per Roman unit type    |
+| `carthage/`   |    16 | the Carthaginian unit types, plus named leaders |
+| `commanders/` |     3 | Marcellus, Scipio, Fabius Maximus               |
+
+They are covered by the same MIT licence as the rest of the repository and carry
+no attribution obligation or usage restriction. Unlike the music above, they
+place no limit on commercial distribution.
+
+### Composed battle cues (`assets/audio/sfx/`)
+
+Thirty-two cues — the alerts, the mass-battle beds, the arrow and volley
+layers, the unit stingers and `wolf_bite_snap` — were **generated with
+AudioCraft and have been replaced with CC0 material**. They were the second half
+of the non-commercial restriction; rebuilding them leaves the music as the only
+part of the game carrying one.
+
+They are composed rather than extracted: a Punic-war battlefield is not
+something anyone holds a field recording of, so each cue is a stack of CC0
+recordings summed together, offset, filtered and enveloped.
+`tools/audio_field/battle.py` is the recipe — which recordings, which windows,
+what shaping — and `tools/audio_field/build_battle.py` renders it.
+
+| Cues                                                                                                                                                    | Built from                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| the five `alerts/`, `roman_war_horns_orders`                                                                                                            | HORNS, `HORNTrad-…CU_Viking War` — the one period-plausible horn in the collection; ranked copies make one horn into a relayed order                                               |
+| `battlefield_crowd_chaos`, `_distant_mass_01`/`_02`, `aftermath_battlefield`, `army_retreat_panic`, `soldiers_victory_cheer`, `carthage_prepare_battle` | CROWDS, `CRWDApls-…Crowd Applause, Cheering, Yelling, Whooping`, high-passed off the applause and lowpassed for distance                                                           |
+| `army_march_dirt_mass`, `spearmen_formation_advance`                                                                                                    | FOOTSTEPS, `FEETHmn-…Running, Rocky Road` and `…On Grass`, summed against themselves at offsets sharing no common factor; MUSICAL, `MUSCPerc-…Drum, Snare, Military Marching Band` |
+| the eight arrow and volley cues                                                                                                                         | SWOOSHES, `SWSH-…Swishes, Big, Low`, `…Medium Low`, `…Stick, Small, Swishes, X4`, `…Cloth, Swoosh`, `WHSH-…Fly By, Short`                                                          |
+| `roman_shield_wall_impact`, `gladius_shield_impacts_close`, `arrows_impact_shields_dirt`                                                                | FIGHT, `FGHTImpt-…Boxing Glove Hits`, `…Smacks, Rapid`, `FGHTBf-…Bodyfall, On Grass`; METAL, `METLImpt-…Metal, Clang, Thin 01` and `…Clang, Dull, Quiet`                           |
+| `roman_cavalry_charge`, `numidian_cavalry_chase`, `horse_gallop_close_pass`                                                                             | FOOTSTEPS, `FEETHors-…Horse Galloping, Coconut Shells, Looped 01`/`02`/`03` — three separate performances, so a charge is three horses rather than one horse three times           |
+| `elephant_charge_carthage`, `elephant_panic`                                                                                                            | ANIMALS, `ANMLWild-CU_Elephant Trumpet`                                                                                                                                            |
+| `wolf_bite_snap`                                                                                                                                        | ANIMALS, `ANMLDog-…Aggessive Dog Barks, Snarls` — the same species reasoning the other five wildlife cues use                                                                      |
+| `low_resources_click`                                                                                                                                   | METAL, `METLImpt-…Metal, Clang, Dull, Quiet`                                                                                                                                       |
+
+Every source above is from **The Designer's Choice UCS Collection**, original
+recordings by Nicholas A. Judy, released **CC0 1.0** and explicitly cleared for
+commercial use — the same collection the sword hits and footsteps already come
+from. CC0 requires no attribution; it is recorded here because the provenance of
+every shipped file should be answerable.
+
+Two things were fixed in passing, because the replacements had to be measured
+against the originals anyway:
+
+- **28 of the 32 originals decoded over 0 dBFS**, by up to +2.33 dB. They were
+  mastered to full scale and Vorbis is lossy, so they clipped on playback. Every
+  rebuilt cue is ceilinged at −1.9 dBFS.
+- **The alert cues were all exactly 10.0 seconds and the combat cues exactly
+  5.0**, which is AudioCraft's generation length rather than a decision about
+  how long a horn should sound. They are now as long as they need to be, from
+  0.5 s for the resource click to 8 s for the aftermath bed.
+
+Effect cues are deliberately not loudness-normalised at runtime — the level in
+the file is the design decision (see `docs/AUDIO_MASTERING.md`). Each
+replacement is therefore matched to the RMS of the file it replaces, so the mix
+is unchanged.
+
+Every track under `assets/audio/sfx/` now carries a `source` tag in the
+manifest — `synth` for the 106 generated cues, `field` for the 69 cut or
+composed from recordings — so "where did this sound come from" is answerable
+without reading this file.
+
+### Where the audio actually ships
+
+`assets/audio/music`, `assets/audio/voices` and part of `assets/audio/sfx` are
+redistributed inside the binary via `assets.qrc`. The ambience beds are not
+embedded, but they are installed alongside the binary and redistributed just the
+same.
+
+## Bundled Libraries
+
+Two single-header libraries are vendored under `third_party/` and compiled
+directly into the game binary, so their terms travel with every release
+package.
+
+| Library                                           | Version               | Licence                                                | Used for                       |
+| ------------------------------------------------- | --------------------- | ------------------------------------------------------ | ------------------------------ |
+| [miniaudio](https://github.com/mackron/miniaudio) | v0.11.23 (2025-09-11) | Public domain (Unlicense) **or** MIT-0, at your option | audio device output and mixing |
+| [stb_vorbis](https://github.com/nothings/stb)     | v1.22                 | Public domain (Unlicense) **or** MIT, at your option   | Ogg Vorbis decoding            |
+
+**This project takes the public-domain option for both.** Neither library then
+requires attribution or a licence notice in the binary. They are recorded here
+for the same reason as everything else in this file: what ships should be
+answerable. If a downstream redistributor prefers the MIT option instead, the
+full licence text sits at the bottom of each vendored header.
+
+Neither library is modified. Both are permissive enough to impose no
+restriction on commercial use — the only such restriction in this project comes
+from the music above.

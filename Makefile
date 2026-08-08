@@ -78,6 +78,7 @@ help:
 	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into docs/AUDIO_WISHLIST.md"
 	@echo "  $(GREEN)audio-check$(RESET)   - Fail when cues, manifest and audio files disagree"
 	@echo "  $(GREEN)audio-field-ambience$(RESET) - Rebuild recorded ambience beds from their sources"
+	@echo "  $(GREEN)audio-battle$(RESET)  - Rebuild composed battle cues from their CC0 sources"
 	@echo "  $(GREEN)translations$(RESET)  - Refresh .ts/.qm catalogues and translator CSVs"
 	@echo "  $(GREEN)translations-check$(RESET) - Fail when assets gained untranslated player text"
 	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
@@ -369,6 +370,16 @@ audio-field-ambience:
 	@$(PYTHON) tools/audio_field/build_beds.py
 	@echo "$(GREEN)✓ Recorded ambience beds rebuilt$(RESET)"
 
+# Same deal as the beds above: committed output, network needed, run it when a
+# recipe in tools/audio_field/battle.py changes. These replaced the AudioCraft
+# cues whose model licence forbade selling the game.
+## Rebuild the composed battle cues from their CC0 sources.
+.PHONY: audio-battle
+audio-battle:
+	@echo "$(BOLD)$(BLUE)Rebuilding composed battle cues...$(RESET)"
+	@$(PYTHON) tools/audio_field/build_battle.py
+	@echo "$(GREEN)✓ Composed battle cues rebuilt$(RESET)"
+
 # Rewrite docs/AUDIO_WISHLIST.md from the cue catalog, the manifest and the
 # assets on disk. Run it any time you want the current list of missing sounds.
 .PHONY: audio-preview
@@ -507,7 +518,8 @@ format-strip-comments: strip-comments
 .PHONY: translations translations-check
 
 LUPDATE ?= $(shell command -v lupdate 2>/dev/null || echo /usr/lib/qt6/bin/lupdate)
-TS_FILES := translations/app_en.ts translations/app_de.ts translations/app_pt_br.ts
+TS_FILES := translations/app_en.ts translations/app_de.ts translations/app_es.ts \
+	translations/app_pt_br.ts translations/app_ar.ts
 TS_SOURCE_DIRS := ui app game scene render main.cpp
 # lupdate only parses code, so player-visible text authored in assets/ (mission
 # briefings, objective lines, map and unit names) is mirrored into a generated

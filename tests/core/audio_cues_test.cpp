@@ -208,4 +208,41 @@ TEST_F(AudioCueRegistryTest, SilentCuesAreReportedForAuditing) {
   EXPECT_NE(std::find(silent.begin(), silent.end(), "test.cue.reported"), silent.end());
 }
 
+TEST(AudioProvenanceTest, EveryEffectDeclaresWhereItCameFrom) {
+  QFile file(QStringLiteral("assets/audio/audio_manifest.json"));
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly)) << "assets/audio/audio_manifest.json";
+  const QJsonDocument document = QJsonDocument::fromJson(file.readAll());
+  const QJsonArray tracks = document.object().value(QStringLiteral("tracks")).toArray();
+  ASSERT_FALSE(tracks.isEmpty());
+
+  const QSet<QString> known = {QStringLiteral("synth"), QStringLiteral("field")};
+  QStringList untagged;
+  QStringList unknown;
+  int effects = 0;
+
+  for (const QJsonValue& value : tracks) {
+    const QJsonObject track = value.toObject();
+    if (track.value(QStringLiteral("category")).toString() != QStringLiteral("sfx")) {
+      continue;
+    }
+    ++effects;
+    const QString path = track.value(QStringLiteral("path")).toString();
+    const QString source = track.value(QStringLiteral("tags"))
+                               .toObject()
+                               .value(QStringLiteral("source"))
+                               .toString();
+    if (source.isEmpty()) {
+      untagged.append(path);
+    } else if (!known.contains(source)) {
+      unknown.append(path + " -> " + source);
+    }
+  }
+
+  EXPECT_GT(effects, 0);
+  EXPECT_TRUE(untagged.isEmpty())
+      << "effects with no source tag: " << untagged.join(", ").toStdString();
+  EXPECT_TRUE(unknown.isEmpty()) << "effects with an unrecognised source tag: "
+                                 << unknown.join(", ").toStdString();
+}
+
 } // namespace

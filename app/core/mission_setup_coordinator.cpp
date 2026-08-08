@@ -657,9 +657,12 @@ auto MissionSetupCoordinator::apply_mission_setup(
   const int local_owner_id = ctx.local_owner_id;
   if (owner_registry.get_owner_type(local_owner_id) ==
       Game::Systems::OwnerType::Neutral) {
-    owner_registry.register_owner_with_id(local_owner_id,
-                                          Game::Systems::OwnerType::Player,
-                                          "Player " + std::to_string(local_owner_id));
+    owner_registry.register_owner_with_id(
+        local_owner_id,
+        Game::Systems::OwnerType::Player,
+        QCoreApplication::translate("MissionSetupCoordinator", "Player %1")
+            .arg(local_owner_id)
+            .toStdString());
   }
   owner_registry.set_owner_team(local_owner_id, 0);
 
@@ -689,9 +692,12 @@ auto MissionSetupCoordinator::apply_mission_setup(
   for (const auto& ai_setup : mission.ai_setups) {
     if (owner_registry.get_owner_type(ai_owner_id) ==
         Game::Systems::OwnerType::Neutral) {
-      owner_registry.register_owner_with_id(ai_owner_id,
-                                            Game::Systems::OwnerType::AI,
-                                            "AI Player " + std::to_string(ai_owner_id));
+      owner_registry.register_owner_with_id(
+          ai_owner_id,
+          Game::Systems::OwnerType::AI,
+          QCoreApplication::translate("MissionSetupCoordinator", "AI Player %1")
+              .arg(ai_owner_id)
+              .toStdString());
     }
 
     int team_id = 0;
@@ -1023,9 +1029,12 @@ auto MissionSetupCoordinator::spawn_wave(const MissionWaveContext& ctx,
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   if (owner_registry.get_owner_type(wave.owner_id) ==
       Game::Systems::OwnerType::Neutral) {
-    owner_registry.register_owner_with_id(wave.owner_id,
-                                          Game::Systems::OwnerType::AI,
-                                          "AI Wave " + std::to_string(wave.owner_id));
+    owner_registry.register_owner_with_id(
+        wave.owner_id,
+        Game::Systems::OwnerType::AI,
+        QCoreApplication::translate("MissionSetupCoordinator", "AI Wave %1")
+            .arg(wave.owner_id)
+            .toStdString());
   }
 
   const bool ai_controlled = owner_registry.is_ai(wave.owner_id);

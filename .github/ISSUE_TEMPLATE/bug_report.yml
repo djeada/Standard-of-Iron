@@ -1,0 +1,84 @@
+---
+name: Bug report
+description: Something in the game behaves wrongly, crashes, or will not start.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this.
+
+        The two fields that save the most back-and-forth are the **version** and
+        the **platform**. Without them a report often cannot be reproduced at
+        all, because the same symptom has different causes on different
+        graphics drivers.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: >-
+        Settings → About shows it, or use the version in the file name of the
+        package you downloaded.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux (AppImage)
+        - Linux (built from source)
+        - Windows (ZIP)
+        - Windows (built from source)
+        - macOS (DMG)
+        - macOS (built from source)
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Graphics card and driver
+      description: >-
+        The game needs an OpenGL 3.3 core profile. On Linux, `glxinfo | grep
+        "OpenGL renderer"` answers this; on Windows, dxdiag does.
+      placeholder: "NVIDIA GTX 1060, driver 550.107"
+    validations:
+      required: false
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        If it happens in a specific mission or on a specific map, name it. If it
+        only happens sometimes, say roughly how often.
+      placeholder: |
+        1. Start the Trebia mission
+        2. Select a builder and order Auto Gather
+        3. ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output
+      description: >-
+        Running the game from a terminal prints diagnostics that usually
+        identify a startup or renderer failure immediately. Paste anything that
+        looks relevant.
+      render: shell
+    validations:
+      required: false

@@ -205,7 +205,7 @@ Item {
         let defaultCommander = default_commander_entry(defaultNation.id);
         players_model.append({
                 "player_id": humanPlayerId,
-                "playerName": "Player " + (humanPlayerId + 1),
+                "playerName": qsTr("Player %1").arg(humanPlayerId + 1),
                 "colorIndex": 0,
                 "colorHex": Theme.playerColors[0].hex,
                 "colorName": Theme.playerColors[0].name,
@@ -260,7 +260,7 @@ Item {
         let defaultCommander = default_commander_entry(defaultNation.id);
         players_model.append({
                 "player_id": nextId,
-                "playerName": "CPU " + nextId,
+                "playerName": qsTr("CPU %1").arg(nextId),
                 "colorIndex": colorIdx,
                 "colorHex": Theme.playerColors[colorIdx].hex,
                 "colorName": Theme.playerColors[colorIdx].name,
@@ -681,7 +681,7 @@ Item {
                                     }
 
                                     Text {
-                                        text: "›"
+                                        text: Design.Icons.chevronForward
                                         font.pointSize: 18
                                         color: (index === list.currentIndex) ? Theme.textMain : Theme.textHint
 
@@ -958,7 +958,8 @@ Item {
                 color: Theme.textSubLite
                 font.pixelSize: 13
                 wrapMode: Text.WordWrap
-                maximumLineCount: 2
+                maximumLineCount: 3
+                elide: Text.ElideRight
                 lineHeight: 1.3
 
                 anchors {

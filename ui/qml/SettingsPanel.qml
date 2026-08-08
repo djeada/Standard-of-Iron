@@ -873,7 +873,7 @@ Item {
                             }
 
                             Label {
-                                text: qsTr("Version 1.0.0")
+                                text: qsTr("Version %1").arg(Qt.application.version)
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeSmall
                             }
@@ -912,6 +912,38 @@ Item {
 
                             Label {
                                 text: "<a href='https://www.gnu.org/licenses/lgpl-3.0.html'>" + qsTr("LGPL v3 License") + "</a> | <a href='https://www.qt.io'>" + qsTr("Qt Website") + "</a>"
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                textFormat: Text.RichText
+                                onLinkActivated: function (link) {
+                                    Qt.openUrlExternally(link);
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.NoButton
+                                    cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Music generated with Meta's AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: qsTr("Voice lines recorded by Adam Djellouli.")
+                                color: Theme.textSub
+                                font.pointSize: Theme.fontSizeSmall
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: "<a href='https://creativecommons.org/licenses/by-nc/4.0/'>" + qsTr("CC BY-NC 4.0 License") + "</a> | <a href='https://github.com/facebookresearch/audiocraft'>" + qsTr("AudioCraft") + "</a>"
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeSmall
                                 textFormat: Text.RichText

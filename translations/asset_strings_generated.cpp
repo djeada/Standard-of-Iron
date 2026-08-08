@@ -1,429 +1,154 @@
-
+// GENERATED FILE -- DO NOT EDIT.
+//
+// Regenerate with:  scripts/extract-asset-strings.py
+// Verify in CI with: scripts/extract-asset-strings.py --check
+//
+// Player-visible strings extracted from assets/. lupdate parses this file to
+// discover source text it cannot find in hand-written code; the runtime looks
+// the same strings up through Game::Util::tr_asset(). Nothing here is called.
 
 #include <QtGlobal>
 
 namespace {
 
+// clang-format off
 [[maybe_unused]] const char* const k_asset_strings[] = {
-
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's "
-        "elephants, while Masinissa and Laelius commanded superior allied cavalry. The "
-        "returning cavalry helped decide the battle. The Sepulcher intervention is the "
-        "campaign's deliberate dark-fantasy break from history."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "215-212 BC: Hannibal campaigned across Campania while Capua served as his "
-        "principal Italian ally and winter base. This dark-fantasy composite condenses "
-        "several Roman attempts to contain and isolate the Carthaginian army."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "216 BC: beside the Aufidus, Hannibal's deliberately yielding "
-                      "center drew a much larger Roman infantry mass forward while "
-                      "African infantry attacked its flanks and Carthaginian cavalry "
-                      "closed the rear. Two Roman camps supported the army."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake "
-        "Trasimene and attacked from concealed high ground in morning mist. The Roman "
-        "marching column had little room to deploy and Flaminius was killed."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "218 BC: Hannibal crossed the Alps with a multinational army, "
-                      "cavalry, baggage train, and surviving elephants. Ancient "
-                      "sources disagree on the route; this scenario combines contested "
-                      "passes and local attacks into one dark-fantasy ascent."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, "
-        "rafts, and a detached force sent across to turn local opposition. Scipio "
-        "arrived too late; this altered history places Roman advance camps on the "
-        "far-bank road to create the opening Carthage-versus-Rome engagement."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "218 BC: the Ticinus was primarily a cavalry engagement between "
-                      "reconnaissance forces. Roman consul Publius Cornelius Scipio "
-                      "was wounded and rescued during the retreat; the camp assault is "
-                      "a plausible dark-fantasy extension of that pursuit."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "A broad river operation with ferries, wooded detours, "
-                      "bridgeheads, and fortified supply quarters; the Iron Sepulcher "
-                      "occupies an avoidable ruin on the southern flank."),
+    // 228 strings across 7 contexts.
+    // ---- Missions (108) ----
+    QT_TRANSLATE_NOOP("Missions", "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history."),
+    QT_TRANSLATE_NOOP("Missions", "215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army."),
+    QT_TRANSLATE_NOOP("Missions", "216 BC: beside the Aufidus, Hannibal's deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army."),
+    QT_TRANSLATE_NOOP("Missions", "217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed."),
+    QT_TRANSLATE_NOOP("Missions", "218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent."),
+    QT_TRANSLATE_NOOP("Missions", "218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement."),
+    QT_TRANSLATE_NOOP("Missions", "218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit."),
+    QT_TRANSLATE_NOOP("Missions", "A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank."),
+    QT_TRANSLATE_NOOP("Missions", "A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column."),
     QT_TRANSLATE_NOOP("Missions", "A commander alone cannot defend a city quarter."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "A general alone on a dead field is just the last corpse standing."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "ASSAULT I: infantry from north and south; cavalry raiders and "
-                      "engineers on the eastern consular road."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "ASSAULT II: the Roman horns answer one another. Rotate the "
-                      "reserve before all three roads close."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "ASSAULT III: siege engines and veteran cohorts. Hold every gate "
-                      "until the twentieth minute."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "After Cannae, Rome refuses the battle Hannibal wants. The Republic instead "
-        "presses every road, ally, granary, and walled town. Beneath the orchards, "
-        "Iron Sepulcher graves make even a successful defense feel temporary."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Another Roman wave is flanking from the southeast. Rotate quickly."),
+    QT_TRANSLATE_NOOP("Missions", "A general alone on a dead field is just the last corpse standing."),
+    QT_TRANSLATE_NOOP("Missions", "A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time."),
+    QT_TRANSLATE_NOOP("Missions", "ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road."),
+    QT_TRANSLATE_NOOP("Missions", "ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close."),
+    QT_TRANSLATE_NOOP("Missions", "ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute."),
+    QT_TRANSLATE_NOOP("Missions", "After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary."),
+    QT_TRANSLATE_NOOP("Missions", "An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted."),
+    QT_TRANSLATE_NOOP("Missions", "Another Roman wave is flanking from the southeast. Rotate quickly."),
     QT_TRANSLATE_NOOP("Missions", "Battle of Cannae"),
     QT_TRANSLATE_NOOP("Missions", "Battle of Lake Trasimene"),
     QT_TRANSLATE_NOOP("Missions", "Battle of Ticino"),
     QT_TRANSLATE_NOOP("Missions", "Battle of Trebia"),
     QT_TRANSLATE_NOOP("Missions", "Battle of Zama"),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Between assaults, seize the eastern Roman siege camp."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Break all three Roman assault phases. The quarter holds when "
-                      "the last consular column is dead in the streets."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Break both Iron Sepulcher attacks. At Zama, the dead no longer "
-                      "remain outside the battle."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Break three Roman columns before the survivors find the ford again."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Build a durable economy, keep the camp gates supplied, rotate reserves "
-        "between roads, and survive three clearly timed assault phases."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Burn every cursed guardian from the sepulcher ruins. Kill what cannot die."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Clear the pass before the mountain closes it. Every hour lost "
-                      "is more men fed to the cold."),
-    QT_TRANSLATE_NOOP(
-        "Missions", "Counterattack now. Break them while they are split by the river."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Cross before the Roman runners reach their garrison. Every "
-                      "second spent waiting feeds the blade."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Cross the Rhône by one of several prepared routes, sever the eastern supply "
-        "road, and capture two Roman advance camps before Scipio reaches the river."),
+    QT_TRANSLATE_NOOP("Missions", "Between assaults, seize the eastern Roman siege camp."),
+    QT_TRANSLATE_NOOP("Missions", "Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets."),
+    QT_TRANSLATE_NOOP("Missions", "Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle."),
+    QT_TRANSLATE_NOOP("Missions", "Break three Roman columns before the survivors find the ford again."),
+    QT_TRANSLATE_NOOP("Missions", "Burn every cursed guardian from the sepulcher ruins. Kill what cannot die."),
+    QT_TRANSLATE_NOOP("Missions", "Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold."),
+    QT_TRANSLATE_NOOP("Missions", "Counterattack now. Break them while they are split by the river."),
+    QT_TRANSLATE_NOOP("Missions", "Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade."),
+    QT_TRANSLATE_NOOP("Missions", "Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river."),
     QT_TRANSLATE_NOOP("Missions", "Crossing the Alps"),
     QT_TRANSLATE_NOOP("Missions", "Crossing the Rhône"),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Crush all three Roman camps and seal the iron tomb shut. No escape."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Crush both Roman breakout columns before they claw through the hillside."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Cut timber for the sledges, break stone for the road, and draw iron for the "
-        "shoes and axles. The column crosses on what your builders can carry."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "December 218 BC: Hannibal provoked Tiberius Sempronius Longus "
-                      "into crossing the cold Trebia before breakfast. Carthaginian "
-                      "infantry, cavalry, elephants, and Mago's hidden detachment "
-                      "struck the exhausted Roman army from front, flanks, and rear."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Defend Hannibal's fortified Campanian supply town and break all three "
-        "coordinated Roman assaults arriving from separate consular roads."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Defense-to-offense transition. Teaches when to absorb the "
-                      "crossing, then commit the hidden strike force."),
-    QT_TRANSLATE_NOOP(
-        "Missions", "Drive the dead from the shrine. Salt the earth where they stood."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Endure both waves from the depths. Do not flinch when the ground tears open."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Every soldier lost is counted by the enemy tonight."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Execute the encirclement, then seize all three Roman camps "
-                      "before their reserves can restore the line."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, "
-        "and seize all four Roman camps while breaking both risings of the dead."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Final ridge ahead. Break the last camp to open the descent."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "First battle on Italian soil. Win the cavalry duel, then seize "
-                      "the Roman reserve camp before fresh reinforcements regroup."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Fix the Roman center in place. Keep both cavalry wings active."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Full-spectrum command. Teaches managing elephants and flank "
-                      "pressure while transitioning into a decisive camp assault."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Grave-lights move among the western orchards. The Iron Sepulcher is watching, "
-        "but the legions remain the greater danger."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Hannibal falls, and the allied towns abandon the field."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Hannibal's first Italian victory is a test of tempo and cavalry control. "
-        "Ford-shades complicate the flanks but do not replace the Roman enemy."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Hannibal's masterpiece becomes a prolonged operational battle, "
-                      "not a single frontal collision."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Hold discipline. Let the Romans commit at the ford."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Hold the river line and break all three Roman crossings. Let "
-                      "the cold and the water do the work Sempronius will not."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Hold the ruins. Force the Romans to fight on two grounds at once."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Hold the southern bank through all three crossings. Sempronius spends his "
-        "army on the ice; you have only to still be standing."),
-    QT_TRANSLATE_NOOP(
-        "Missions", "If the central camp falls, the Campanian alliance dies with it."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Introduce maze navigation, multiple river crossings, and "
-                      "dealing with scattered enemy patrols plus fortified positions."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Investigate the cursed shrine, survive the awakening, and clear the ruins."),
+    QT_TRANSLATE_NOOP("Missions", "Crush all three Roman camps and seal the iron tomb shut. No escape."),
+    QT_TRANSLATE_NOOP("Missions", "Crush both Roman breakout columns before they claw through the hillside."),
+    QT_TRANSLATE_NOOP("Missions", "Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry."),
+    QT_TRANSLATE_NOOP("Missions", "December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago's hidden detachment struck the exhausted Roman army from front, flanks, and rear."),
+    QT_TRANSLATE_NOOP("Missions", "Defend Hannibal's fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads."),
+    QT_TRANSLATE_NOOP("Missions", "Drive the dead from the shrine. Salt the earth where they stood."),
+    QT_TRANSLATE_NOOP("Missions", "Endure both waves from the depths. Do not flinch when the ground tears open."),
+    QT_TRANSLATE_NOOP("Missions", "Every soldier lost is counted by the enemy tonight."),
+    QT_TRANSLATE_NOOP("Missions", "Execute the encirclement, then seize all three Roman camps before their reserves can restore the line."),
+    QT_TRANSLATE_NOOP("Missions", "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead."),
+    QT_TRANSLATE_NOOP("Missions", "Final ridge ahead. Break the last camp to open the descent."),
+    QT_TRANSLATE_NOOP("Missions", "First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup."),
+    QT_TRANSLATE_NOOP("Missions", "Fix the Roman center in place. Keep both cavalry wings active."),
+    QT_TRANSLATE_NOOP("Missions", "Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger."),
+    QT_TRANSLATE_NOOP("Missions", "Hannibal falls, and the allied towns abandon the field."),
+    QT_TRANSLATE_NOOP("Missions", "Hannibal's first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy."),
+    QT_TRANSLATE_NOOP("Missions", "Hannibal's masterpiece becomes a prolonged operational battle, not a single frontal collision."),
+    QT_TRANSLATE_NOOP("Missions", "High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting."),
+    QT_TRANSLATE_NOOP("Missions", "Hold discipline. Let the Romans commit at the ford."),
+    QT_TRANSLATE_NOOP("Missions", "Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not."),
+    QT_TRANSLATE_NOOP("Missions", "Hold the ruins. Force the Romans to fight on two grounds at once."),
+    QT_TRANSLATE_NOOP("Missions", "Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing."),
+    QT_TRANSLATE_NOOP("Missions", "If the central camp falls, the Campanian alliance dies with it."),
+    QT_TRANSLATE_NOOP("Missions", "Investigate the cursed shrine, survive the awakening, and clear the ruins."),
     QT_TRANSLATE_NOOP("Missions", "Iron Sepulcher Watch"),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Iron bells answer beneath the western flank. The Sepulcher is "
-                      "advancing on Carthage as well as Rome."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Large-scale offense with multi-front awareness. Teaches "
-                      "maintaining the pocket while rotating into camp assaults."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Long-form offensive progression. Teaches keeping the column "
-                      "moving while absorbing attrition at each pass."),
-    QT_TRANSLATE_NOOP(
-        "Missions", "Lose the river camp and the cold takes what the Romans couldn't."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Lose the supply camp and the army starves before it reaches the snow line."),
+    QT_TRANSLATE_NOOP("Missions", "Iron bells answer beneath the south-western crossing. The Sepulcher is advancing on Carthage as well as Rome."),
+    QT_TRANSLATE_NOOP("Missions", "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."),
+    QT_TRANSLATE_NOOP("Missions", "Lose the river camp and the cold takes what the Romans couldn't."),
+    QT_TRANSLATE_NOOP("Missions", "Lose the supply camp and the army starves before it reaches the snow line."),
     QT_TRANSLATE_NOOP("Missions", "Lose your camp and the tempo dies with it."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Mobile offense with cavalry tempo. Teaches when to press an "
-                      "early advantage and convert it into a camp assault."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Multi-vector offense from concealed positions. Teaches closing "
-                      "exits before shifting to camp seizure."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Navigate through the maze of hills and valleys. Watch for enemy patrols!"),
+    QT_TRANSLATE_NOOP("Missions", "Masinissa's Numidian horse is entering from the north-eastern road."),
+    QT_TRANSLATE_NOOP("Missions", "Navigate through the maze of hills and valleys. Watch for enemy patrols!"),
     QT_TRANSLATE_NOOP("Missions", "No living formation remains to hold the gates."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Numidian cavalry is entering from the southeastern flank."),
+    QT_TRANSLATE_NOOP("Missions", "Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number."),
     QT_TRANSLATE_NOOP("Missions", "One minute. Spend the reserve; save the camp."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Preserve the market and four homes: Campania is being defended "
-                      "for its people and supplies, not merely its walls."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Provision the column for the descent: harvest timber, stone and iron from the "
-        "pass while the mountain tribes contest every switchback."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Raze every Roman post. Leave Scipio nothing to rally behind."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Rear guard deployment detected in the north. This is the final phase."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Roman cavalry is attempting a breakout from the south. Intercept them."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Roman cavalry screens the field. Punch through before reserves arrive."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Roman cavalry waves intensify. Collapse one flank before the "
-                      "rear guard arrives."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Roman reinforcements are approaching from the eastern road."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Roman reserves are entering from the northern camp. Close the pocket faster."),
+    QT_TRANSLATE_NOOP("Missions", "Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls."),
+    QT_TRANSLATE_NOOP("Missions", "Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback."),
+    QT_TRANSLATE_NOOP("Missions", "Raze every Roman post. Leave Scipio nothing to rally behind."),
+    QT_TRANSLATE_NOOP("Missions", "Rear guard deployment detected across the southern wadi. This is the final phase."),
+    QT_TRANSLATE_NOOP("Missions", "Roman cavalry is attempting a breakout from the south. Intercept them."),
+    QT_TRANSLATE_NOOP("Missions", "Roman cavalry screens the field. Punch through before reserves arrive."),
+    QT_TRANSLATE_NOOP("Missions", "Roman cavalry waves intensify. Collapse one flank before the rear guard arrives."),
+    QT_TRANSLATE_NOOP("Missions", "Roman reinforcements are approaching from the eastern road."),
+    QT_TRANSLATE_NOOP("Missions", "Roman reserves are entering from the northern camp. Close the pocket faster."),
     QT_TRANSLATE_NOOP("Missions", "Roman reserves are moving from the western bank."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Scipio extends the line. Keep your center steady and protect "
-                      "elephants from isolation."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Seal the road. Let no scout cross the Ticino alive."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Second pass defenders are reinforcing. Keep the column moving."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Second-wave Roman cavalry is maneuvering for your rear. "
-                      "Rebalance your flanks."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Seize all four Roman camps — the consular line, Masinissa's Numidians, the "
-        "rear guard, and the northern camp — before the cavalry closes your rear."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Seize both Roman camps. The ambush is not finished until their "
-                      "flags come down."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Seize the two river forts. Leave no crossing for Scipio's army to inherit."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Spring the ambush and capture both Roman field camps within twenty minutes, "
-        "before the mist lifts and a cohort escapes the basin."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Stand your ground. The last soldier alone is not a force — he "
-                      "is a sacrifice."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Strike now. Close the western route and split their line."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Take the bridge camp and the eastern reserve quarter before the "
-                      "Roman scouts vanish into the fog."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "Take the first pass quickly before the next ambush line assembles."),
+    QT_TRANSLATE_NOOP("Missions", "Scipio extends the line. Keep your center steady and protect elephants from isolation."),
+    QT_TRANSLATE_NOOP("Missions", "Seal the road. Let no scout cross the Ticino alive."),
+    QT_TRANSLATE_NOOP("Missions", "Second pass defenders are reinforcing. Keep the column moving."),
+    QT_TRANSLATE_NOOP("Missions", "Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks."),
+    QT_TRANSLATE_NOOP("Missions", "Seize all four Roman camps — the consular line, Masinissa's Numidians, the rear guard, and the northern camp — before the cavalry closes your rear."),
+    QT_TRANSLATE_NOOP("Missions", "Seize both Roman camps. The ambush is not finished until their flags come down."),
+    QT_TRANSLATE_NOOP("Missions", "Seize the two river forts. Leave no crossing for Scipio's army to inherit."),
+    QT_TRANSLATE_NOOP("Missions", "Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin."),
+    QT_TRANSLATE_NOOP("Missions", "Stand your ground. The last soldier alone is not a force — he is a sacrifice."),
+    QT_TRANSLATE_NOOP("Missions", "Strike now. Close the western route and split their line."),
+    QT_TRANSLATE_NOOP("Missions", "Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid."),
+    QT_TRANSLATE_NOOP("Missions", "Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog."),
+    QT_TRANSLATE_NOOP("Missions", "Take the first pass quickly before the next ambush line assembles."),
     QT_TRANSLATE_NOOP("Missions", "The Campanian Vigil"),
-    QT_TRANSLATE_NOOP(
-        "Missions", "The Roman column enters the corridor. Wait for full commitment."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "The Roman column walks into a geographical trap and is "
-                      "destroyed by converging attacks while the lakeside Sepulcher "
-                      "altar remains an optional horror."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "The Roman villages are heavily defended. Coordinate your attacks!"),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "The Romans are baited into the winter river and punished by Mago's concealed "
-        "force, then the defense becomes an assault on a complete winter camp."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "The commander falls — and every line collapses behind him."),
-    QT_TRANSLATE_NOOP(
-        "Missions", "The commander falls — the vigil ends. And the dead keep walking."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "The crossing is a running battle against terrain, local "
-                      "resistance, and Roman influence. Sepulcher grave-lights remain "
-                      "a dangerous side path rather than the campaign's main enemy."),
-    QT_TRANSLATE_NOOP(
-        "Missions",
-        "The final confrontation is Carthage against three coordinated Roman commands, "
-        "until an Iron Sepulcher host attacks from the battlefield's neglected flank."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Three Roman columns have entered the consular roads. The first "
-                      "coordinated assault arrives at 17:00."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Twenty minutes before the mist lifts. If a cohort clears the "
-                      "basin, Rome learns the shape of the trap."),
-    QT_TRANSLATE_NOOP("Missions",
-                      "Two bridges cross the Rhône. Choose your path wisely - you may "
-                      "need both routes!"),
+    QT_TRANSLATE_NOOP("Missions", "The Roman column enters the corridor. Wait for full commitment."),
+    QT_TRANSLATE_NOOP("Missions", "The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror."),
+    QT_TRANSLATE_NOOP("Missions", "The Roman villages are heavily defended. Coordinate your attacks!"),
+    QT_TRANSLATE_NOOP("Missions", "The Romans are baited into the winter river and punished by Mago's concealed force, then the defense becomes an assault on a complete winter camp."),
+    QT_TRANSLATE_NOOP("Missions", "The commander falls — and every line collapses behind him."),
+    QT_TRANSLATE_NOOP("Missions", "The commander falls — the vigil ends. And the dead keep walking."),
+    QT_TRANSLATE_NOOP("Missions", "The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign's main enemy."),
+    QT_TRANSLATE_NOOP("Missions", "The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield's neglected flank."),
+    QT_TRANSLATE_NOOP("Missions", "The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here."),
+    QT_TRANSLATE_NOOP("Missions", "Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00."),
+    QT_TRANSLATE_NOOP("Missions", "Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe."),
+    QT_TRANSLATE_NOOP("Missions", "Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap."),
+    QT_TRANSLATE_NOOP("Missions", "Two bridges cross the Rhône. Choose your path wisely - you may need both routes!"),
     QT_TRANSLATE_NOOP("Missions", "Your camp falls — the field goes with it."),
     QT_TRANSLATE_NOOP("Missions", "Your command falls — and the wings fold inward."),
 
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain "
-        "near Zama. The elephant lanes are prepared, the Roman camps are fortified, "
-        "and the Iron Sepulcher no longer waits at the edge of history. Take all four "
-        "camps and break both risings of the dead — nothing less ends this war."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids "
-        "another Cannae and attacks roads, farms, and loyalties. Fortify the Punic "
-        "supply quarter and break all three coordinated assaults — the quarter is not "
-        "held until the last consular column lies dead in the streets."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "216 BC: the consuls mass Rome's greatest field army beside the Aufidus. Yield "
-        "the Punic center by design, win both cavalry wings, close the double "
-        "envelopment, then take the principal camp, the reserve camp, and the allied "
-        "camp across the river road."),
-    QT_TRANSLATE_NOOP("Campaigns",
-                      "217 BC: Flaminius pursues along the northern shore of Lake "
-                      "Trasimene. Mist closes the road between lake and wooded height "
-                      "— and it will not hold for long. Strike the length of the "
-                      "column and seize both field posts within twenty minutes, before "
-                      "the air clears and a cohort carries word out of the basin."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army "
-        "through the freezing Trebia. Hold the southern line and break all three "
-        "crossings. You need not take his camp — you need only be standing when the "
-        "river has finished with him."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, "
-        "baggage animals, and elephants. The pass cannot be taken by the sword alone — "
-        "it must be paid for in timber, stone and iron. Set your builders to the "
-        "slopes while the mountain peoples contest every switchback; do not follow the "
-        "grave-lights into the snow."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "218 BC: near the Ticinus, Scipio's reconnaissance force tests Hannibal's "
-        "cavalry. Win the mounted engagement, cut the bridge road, and overrun both "
-        "Roman camps before their scouts carry a clean account back to the consul."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can "
-        "bring his army from Massalia. In this altered campaign, Roman advance posts "
-        "hold the eastern approaches. Cross by ford, pontoon, or wooded detour and "
-        "seize their river camps."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "At dawn the market still stands and the consular roads are choked with Roman "
-        "shields. Campania has bought the army another season, though every ally now "
-        "understands how long Rome is willing to bleed."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "Command Hannibal's Carthaginian army from the Alpine invasion of 218 BC to "
-        "Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied "
-        "economies, and survive the Republic's answering legions while the Iron "
-        "Sepulcher watches from roads older than either empire."),
-    QT_TRANSLATE_NOOP("Campaigns",
-                      "Flaminius and much of his army are lost beside the lake. Rome "
-                      "names Fabius dictator. In the drowned reeds, an Iron Sepulcher "
-                      "altar has fed well without choosing a side."),
+    // ---- Campaigns (18) ----
+    QT_TRANSLATE_NOOP("Campaigns", "202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war."),
+    QT_TRANSLATE_NOOP("Campaigns", "215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets."),
+    QT_TRANSLATE_NOOP("Campaigns", "216 BC: the consuls mass Rome's greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road."),
+    QT_TRANSLATE_NOOP("Campaigns", "217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin."),
+    QT_TRANSLATE_NOOP("Campaigns", "218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him."),
+    QT_TRANSLATE_NOOP("Campaigns", "218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow."),
+    QT_TRANSLATE_NOOP("Campaigns", "218 BC: near the Ticinus, Scipio's reconnaissance force tests Hannibal's cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul."),
+    QT_TRANSLATE_NOOP("Campaigns", "218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps."),
+    QT_TRANSLATE_NOOP("Campaigns", "At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed."),
+    QT_TRANSLATE_NOOP("Campaigns", "Command Hannibal's Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic's answering legions while the Iron Sepulcher watches from roads older than either empire."),
+    QT_TRANSLATE_NOOP("Campaigns", "Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side."),
     QT_TRANSLATE_NOOP("Campaigns", "The Barcid Road"),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "The Roman army is destroyed and the camps are taken, yet Rome refuses "
-        "negotiation. So many dead lie on the plain that the Sepulcher's iron bells "
-        "sound beneath the earth for seven nights."),
-    QT_TRANSLATE_NOOP("Campaigns",
-                      "The Roman screen breaks and Scipio is carried from the field "
-                      "wounded. The Insubres see that Carthage can defeat Rome on "
-                      "Italian ground—but pale riders still haunt the abandoned ford."),
-    QT_TRANSLATE_NOOP(
-        "Campaigns",
-        "The column reaches the plain of the Po diminished but unbroken. Italy lies "
-        "below, and fires answer from Gallic settlements. Behind you, the sealed "
-        "shrine in the pass begins counting the dead."),
-    QT_TRANSLATE_NOOP("Campaigns",
-                      "The ferries and supply road belong to Carthage. Scipio finds "
-                      "abandoned standards and cold cooking fires; Hannibal is already "
-                      "turning toward the mountains."),
-    QT_TRANSLATE_NOOP("Campaigns",
-                      "The last standards fall under an African sky. Rome and Carthage "
-                      "will remember the field differently; the Iron Sepulcher "
-                      "remembers only that both armies finally entered its reach."),
-    QT_TRANSLATE_NOOP("Campaigns",
-                      "The survivors flee toward Placentia through sleet and mud. "
-                      "Roman tents, grain, and weapons are captured; bodies beneath "
-                      "the ice rise only when nobody is watching."),
+    QT_TRANSLATE_NOOP("Campaigns", "The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher's iron bells sound beneath the earth for seven nights."),
+    QT_TRANSLATE_NOOP("Campaigns", "The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford."),
+    QT_TRANSLATE_NOOP("Campaigns", "The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead."),
+    QT_TRANSLATE_NOOP("Campaigns", "The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains."),
+    QT_TRANSLATE_NOOP("Campaigns", "The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach."),
+    QT_TRANSLATE_NOOP("Campaigns", "The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching."),
 
-    QT_TRANSLATE_NOOP(
-        "Maps",
-        "A balanced Mediterranean skirmish map set among olive groves, dry wadis, "
-        "terraced hills, and dusty farm roads. Control of the center and side ridges "
-        "helps, but victory is standard barracks elimination."),
-    QT_TRANSLATE_NOOP(
-        "Maps",
-        "A dense symmetrical forest battlefield for two active players, built around "
-        "road reading, ambush woods, hill control, side objectives, and two neutral "
-        "barracks. There are no rivers, bridges, or mountains. Roads deliberately "
-        "route around hills instead of crossing over them."),
-    QT_TRANSLATE_NOOP(
-        "Maps",
-        "A large balanced mountain skirmish map with two fortified bases, a contested "
-        "central ridge, narrow high passes, flank trails, alpine streams, and strong "
-        "archer positions. Victory is standard barracks elimination."),
-    QT_TRANSLATE_NOOP(
-        "Maps",
-        "A rich strategic crossroads map with contested central bridges, neutral "
-        "corner barracks, flank routes, and high ground around key crossings."),
+    // ---- Maps (18) ----
+    QT_TRANSLATE_NOOP("Maps", "A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination."),
+    QT_TRANSLATE_NOOP("Maps", "A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them."),
+    QT_TRANSLATE_NOOP("Maps", "A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination."),
+    QT_TRANSLATE_NOOP("Maps", "A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings."),
     QT_TRANSLATE_NOOP("Maps", "Battle of Cannae"),
     QT_TRANSLATE_NOOP("Maps", "Battle of Lake Trasimene"),
     QT_TRANSLATE_NOOP("Maps", "Battle of Ticino"),
@@ -436,29 +161,34 @@ namespace {
     QT_TRANSLATE_NOOP("Maps", "Iron Sepulcher Watch"),
     QT_TRANSLATE_NOOP("Maps", "Mountain Strongholds"),
     QT_TRANSLATE_NOOP("Maps", "River Crossroads"),
-    QT_TRANSLATE_NOOP("Maps",
-                      "Small authored scenario that demonstrates ruins, a shrine, and "
-                      "undead awakening zones."),
+    QT_TRANSLATE_NOOP("Maps", "Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones."),
     QT_TRANSLATE_NOOP("Maps", "Spanish Olive Grove"),
 
+    // ---- Nations (5) ----
     QT_TRANSLATE_NOOP("Nations", "Carthaginian Empire"),
     QT_TRANSLATE_NOOP("Nations", "Roman Republic"),
     QT_TRANSLATE_NOOP("Nations", "Shield Wall"),
     QT_TRANSLATE_NOOP("Nations", "Testudo"),
     QT_TRANSLATE_NOOP("Nations", "The Iron Sepulcher"),
 
+    // ---- Units (37) ----
     QT_TRANSLATE_NOOP("Units", "African War Elephant"),
+    QT_TRANSLATE_NOOP("Units", "Archer"),
     QT_TRANSLATE_NOOP("Units", "Auxiliary Archer"),
     QT_TRANSLATE_NOOP("Units", "Ballista"),
+    QT_TRANSLATE_NOOP("Units", "Builder"),
     QT_TRANSLATE_NOOP("Units", "Carthaginian Ballista"),
     QT_TRANSLATE_NOOP("Units", "Carthaginian Catapult"),
+    QT_TRANSLATE_NOOP("Units", "Catapult"),
     QT_TRANSLATE_NOOP("Units", "Citizen Infantry"),
+    QT_TRANSLATE_NOOP("Units", "Civilian"),
     QT_TRANSLATE_NOOP("Units", "Equites"),
     QT_TRANSLATE_NOOP("Units", "Faber"),
     QT_TRANSLATE_NOOP("Units", "Grave Priest"),
     QT_TRANSLATE_NOOP("Units", "Hannibal Barca"),
     QT_TRANSLATE_NOOP("Units", "Hanno the Great"),
     QT_TRANSLATE_NOOP("Units", "Hasdrubal Barca"),
+    QT_TRANSLATE_NOOP("Units", "Healer"),
     QT_TRANSLATE_NOOP("Units", "Horse Archer"),
     QT_TRANSLATE_NOOP("Units", "Horse Spearman"),
     QT_TRANSLATE_NOOP("Units", "Legionary"),
@@ -466,6 +196,7 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Libyan Archer"),
     QT_TRANSLATE_NOOP("Units", "Marcus Claudius Marcellus"),
     QT_TRANSLATE_NOOP("Units", "Medicus"),
+    QT_TRANSLATE_NOOP("Units", "Mounted Knight"),
     QT_TRANSLATE_NOOP("Units", "Numidian Cavalry"),
     QT_TRANSLATE_NOOP("Units", "Onager"),
     QT_TRANSLATE_NOOP("Units", "Phoenician Craftsman"),
@@ -474,30 +205,57 @@ namespace {
     QT_TRANSLATE_NOOP("Units", "Sacred Band Healer"),
     QT_TRANSLATE_NOOP("Units", "Skeleton Archer"),
     QT_TRANSLATE_NOOP("Units", "Skeleton Swordsman"),
+    QT_TRANSLATE_NOOP("Units", "Spearman"),
+    QT_TRANSLATE_NOOP("Units", "Swordsman"),
     QT_TRANSLATE_NOOP("Units", "Triarius"),
+    QT_TRANSLATE_NOOP("Units", "War Elephant"),
 
+    // ---- Formation (5) ----
     QT_TRANSLATE_NOOP("Formation", "Carthage"),
-    QT_TRANSLATE_NOOP("Formation",
-                      "Requires at least one siege engine in the selection."),
-    QT_TRANSLATE_NOOP("Formation",
-                      "Requires cavalry or mounted troops to close the encirclement."),
+    QT_TRANSLATE_NOOP("Formation", "Requires at least one siege engine in the selection."),
+    QT_TRANSLATE_NOOP("Formation", "Requires cavalry or mounted troops to close the encirclement."),
     QT_TRANSLATE_NOOP("Formation", "Roman Republic"),
     QT_TRANSLATE_NOOP("Formation", "The Iron Sepulcher"),
 
+    // ---- CampaignMap (37) ----
+    QT_TRANSLATE_NOOP("CampaignMap", "Aleria"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Ariminum"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Capua"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Caralis"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Carthage"),
     QT_TRANSLATE_NOOP("CampaignMap", "Carthage Core"),
     QT_TRANSLATE_NOOP("CampaignMap", "Carthaginian Iberia"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Cirta"),
     QT_TRANSLATE_NOOP("CampaignMap", "Cisalpine Gaul"),
     QT_TRANSLATE_NOOP("CampaignMap", "Corsica"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Emporiae"),
     QT_TRANSLATE_NOOP("CampaignMap", "Etruria"),
     QT_TRANSLATE_NOOP("CampaignMap", "Iberian Interior"),
-    QT_TRANSLATE_NOOP("CampaignMap", "Illyria"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Illyrian Coast"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Illyrian Interior"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Leptis"),
     QT_TRANSLATE_NOOP("CampaignMap", "Libya"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Lilybaeum"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Massalia"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Mediolanum"),
+    QT_TRANSLATE_NOOP("CampaignMap", "New Carthage"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Numantia"),
     QT_TRANSLATE_NOOP("CampaignMap", "Numidia"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Placentia"),
     QT_TRANSLATE_NOOP("CampaignMap", "Roman Core"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Rome"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Saguntum"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Salona"),
     QT_TRANSLATE_NOOP("CampaignMap", "Sardinia"),
     QT_TRANSLATE_NOOP("CampaignMap", "Sicily"),
     QT_TRANSLATE_NOOP("CampaignMap", "Southern Italy"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Syracuse"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Tarentum"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Tarraco"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Tingis"),
     QT_TRANSLATE_NOOP("CampaignMap", "Transalpine Gaul"),
+    QT_TRANSLATE_NOOP("CampaignMap", "Veii"),
 };
+// clang-format on
 
 } // namespace

@@ -321,11 +321,12 @@ TEST(CommanderControlRegressionTest,
   const auto hud_source = read_text(root / "ui" / "qml" / "HUD.qml");
   const auto commander_hud_source =
       read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
-  const auto qrc_source = read_text(root / "qml_resources.qrc");
+
+  const auto cmake_source = read_text(root / "CMakeLists.txt");
   const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(commander_hud_source.empty());
-  ASSERT_FALSE(qrc_source.empty());
+  ASSERT_FALSE(cmake_source.empty());
   ASSERT_FALSE(engine_header.empty());
 
   EXPECT_TRUE(contains(hud_source, "Loader {"));
@@ -334,7 +335,7 @@ TEST(CommanderControlRegressionTest,
                "sourceComponent: typeof game !== 'undefined' && game.control_mode === "
                "\"commander\" ? commanderBottomHudComponent : rtsBottomHudComponent"));
   EXPECT_TRUE(contains(hud_source, "HUDBottomCommander {"));
-  EXPECT_TRUE(contains(qrc_source, "ui/qml/HUDBottomCommander.qml"));
+  EXPECT_TRUE(contains(cmake_source, "ui/qml/HUDBottomCommander.qml"));
   EXPECT_TRUE(contains(commander_hud_source, "game.get_controlled_commander_status"));
   EXPECT_TRUE(contains(commander_hud_source, "game.commander_trigger_rally"));
   EXPECT_TRUE(contains(engine_header,
