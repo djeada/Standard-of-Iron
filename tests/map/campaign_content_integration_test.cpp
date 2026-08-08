@@ -1,11 +1,18 @@
 
 
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QPointF>
 #include <QString>
 
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <map>
+#include <set>
 #include <vector>
 
 #include "core/world.h"
@@ -106,7 +113,7 @@ TEST_F(CampaignContentIntegrationTest, EveryMissionsGroundStandsUpAndMeansWhatIt
           << where << " dead zone " << zone.id.toStdString() << " pays nothing";
     }
 
-    ASSERT_FALSE(map.groves.empty()) << where << " ships no wood";
+    ASSERT_FALSE(map.forests.empty()) << where << " ships no forest";
 
     Game::Systems::Pathfinding pathfinding(map.grid.width, map.grid.height);
     pathfinding.update_navigation_grid();
@@ -196,3 +203,85 @@ TEST_F(CampaignContentIntegrationTest, ScheduledWolfPacksBuildTowardTheLateCampa
 }
 
 } // namespace
+
+TEST_F(CampaignContentIntegrationTest, EveryAuthoredSettlementStandsOnGroundItCanHold) {
+  const auto campaign = load_campaign();
+  ASSERT_FALSE(campaign.missions.empty());
+
+  int authored_maps = 0;
+  for (const auto& entry : campaign.missions) {
+    const std::string where = entry.mission_id.toStdString();
+
+    Game::Mission::MissionDefinition mission;
+    QString mission_error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        asset_path(QStringLiteral("missions/%1.json").arg(entry.mission_id)),
+        mission,
+        &mission_error))
+        << where << ": " << mission_error.toStdString();
+
+    const QString map_file = QFileInfo(mission.map_path).fileName();
+    Game::Map::MapDefinition map;
+    QString map_error;
+    ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+        asset_path(QStringLiteral("maps/%1").arg(map_file)), map, &map_error))
+        << where << ": " << map_error.toStdString();
+
+    QFile source(asset_path(QStringLiteral("maps/%1").arg(map_file)));
+    ASSERT_TRUE(source.open(QIODevice::ReadOnly)) << where;
+    const QJsonObject root = QJsonDocument::fromJson(source.readAll()).object();
+
+    std::map<int, std::vector<QPointF>> authored_by_player;
+    for (const auto& value : root.value(QStringLiteral("structures")).toArray()) {
+      const QJsonObject entry_obj = value.toObject();
+      if (!entry_obj.value(QStringLiteral("authored")).toBool() ||
+          !entry_obj.contains(QStringLiteral("x"))) {
+        continue;
+      }
+      authored_by_player[entry_obj.value(QStringLiteral("player_id")).toInt()]
+          .emplace_back(entry_obj.value(QStringLiteral("x")).toDouble(),
+                        entry_obj.value(QStringLiteral("z")).toDouble());
+    }
+    if (authored_by_player.empty()) {
+      continue;
+    }
+    authored_maps += 1;
+
+    Game::Map::TerrainHeightMap height_map(
+        map.grid.width, map.grid.height, map.grid.tile_size);
+    height_map.build_from_features(map.terrain);
+
+    for (const auto& [player, spots] : authored_by_player) {
+      std::vector<float> on_hill;
+      for (const QPointF& spot : spots) {
+        const int grid_x = static_cast<int>(std::lround(spot.x()));
+        const int grid_z = static_cast<int>(std::lround(spot.y()));
+        const auto type = height_map.getTerrainType(grid_x, grid_z);
+        EXPECT_TRUE(type == Game::Map::TerrainType::Flat ||
+                    type == Game::Map::TerrainType::Hill)
+            << where << " (player " << player << "): authored building at " << grid_x
+            << "," << grid_z << " stands on " << Game::Map::terrain_type_to_string(type)
+            << ", which nothing can be built on";
+        if (type == Game::Map::TerrainType::Hill) {
+          on_hill.push_back(height_map.get_height_at_grid(grid_x, grid_z));
+        }
+      }
+
+      if (on_hill.size() < 2) {
+        continue;
+      }
+      const float highest = *std::max_element(on_hill.begin(), on_hill.end());
+      const float lowest = *std::min_element(on_hill.begin(), on_hill.end());
+      if (highest < 1.0F) {
+        continue;
+      }
+      EXPECT_GT(lowest, highest * 0.88F)
+          << where << " (player " << player
+          << "): a hill settlement has buildings at different heights, so some are "
+             "down a slope: "
+          << lowest << " vs " << highest;
+    }
+  }
+
+  EXPECT_GT(authored_maps, 0) << "no campaign map ships an authored settlement";
+}

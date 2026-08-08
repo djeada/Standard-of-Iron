@@ -588,13 +588,13 @@ TEST_F(PathfindingTest, FindPathReturnsClosestReachableRouteWhenGoalIsSealedOff)
   EXPECT_TRUE(pathfinding.is_walkable(path.back().x, path.back().y));
 }
 
-TEST_F(PathfindingTest, GroveGroundIsForestThatOnlyLightUnitsMayEnter) {
+TEST_F(PathfindingTest, ForestGroundOnlyLightUnitsMayEnter) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 32;
   map_def.grid.height = 32;
   map_def.grid.tile_size = 1.0F;
   map_def.biome.procedural_trees_enabled = false;
-  map_def.groves.push_back({.id = "wood", .x = 16.0F, .z = 16.0F, .radius = 4.0F});
+  map_def.forests.push_back({.id = "wood", .x = 16.0F, .z = 16.0F, .radius = 4.0F});
 
   Game::Map::TerrainService::instance().initialize(map_def);
 
@@ -619,7 +619,7 @@ TEST_F(PathfindingTest, HeavyUnitsRouteAroundAWoodThatLightUnitsWalkThrough) {
   map_def.grid.height = 41;
   map_def.grid.tile_size = 1.0F;
   map_def.biome.procedural_trees_enabled = false;
-  map_def.groves.push_back({.id = "screen", .x = 20.0F, .z = 20.0F, .radius = 6.0F});
+  map_def.forests.push_back({.id = "screen", .x = 20.0F, .z = 20.0F, .radius = 6.0F});
 
   Game::Map::TerrainService::instance().initialize(map_def);
 

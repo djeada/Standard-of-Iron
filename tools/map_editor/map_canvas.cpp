@@ -18,7 +18,11 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <vector>
 
+#include "canvas_input.h"
 #include "canvas_transform.h"
 #include "commander_preview.h"
 #include "element_ops.h"
@@ -26,6 +30,7 @@
 #include "spawn_icon_library.h"
 #include "troop_tool_specs.h"
 #include "ui/theme.h"
+#include "wall_geometry.h"
 
 namespace MapEditor {
 
@@ -101,7 +106,7 @@ auto terrain_footprint_cells(const TerrainElement& elem) -> float {
 
 constexpr std::array<int, 8> k_category_paint_order = {
     static_cast<int>(ElementKind::Terrain),
-    static_cast<int>(ElementKind::Grove),
+    static_cast<int>(ElementKind::Forest),
     static_cast<int>(ElementKind::Linear),
     static_cast<int>(ElementKind::WildlifeArea),
     static_cast<int>(ElementKind::WorldProp),
@@ -144,12 +149,12 @@ auto default_wildlife_radius(const QString& species) -> float {
 
 auto wildlife_area_style(const QString& species) -> WildlifeAreaStyle {
   if (species == QLatin1String("wolves")) {
-    return {QColor(120, 60, 50, 46), QColor(214, 118, 92, 190), QStringLiteral("🐺")};
+    return {QColor(120, 60, 50, 46), QColor(214, 118, 92, 190), QStringLiteral("W")};
   }
   if (species == QLatin1String("birds")) {
-    return {QColor(60, 96, 130, 44), QColor(126, 184, 226, 185), QStringLiteral("🐦")};
+    return {QColor(60, 96, 130, 44), QColor(126, 184, 226, 185), QStringLiteral("∧")};
   }
-  return {QColor(190, 190, 170, 48), QColor(226, 224, 190, 195), QStringLiteral("🐑")};
+  return {QColor(190, 190, 170, 48), QColor(226, 224, 190, 195), QStringLiteral("S")};
 }
 
 void draw_troop_marker(QPainter& painter,
@@ -1134,8 +1139,8 @@ void MapCanvas::draw_one_element(QPainter& painter, const ElementRef& ref) {
   case ElementKind::UndeadZone:
     draw_undead_zone_element(painter, ref.index);
     break;
-  case ElementKind::Grove:
-    draw_grove_element(painter, ref.index);
+  case ElementKind::Forest:
+    draw_forest_element(painter, ref.index);
     break;
   case ElementKind::WildlifeArea:
     draw_wildlife_area_element(painter, ref.index);
@@ -1304,6 +1309,42 @@ void MapCanvas::draw_world_prop_element(QPainter& painter, int i) {
   }
 }
 
+void MapCanvas::draw_gate_element(QPainter& painter,
+                                  const StructureElement& elem,
+                                  bool is_selected,
+                                  bool is_hovered,
+                                  const QColor& hover_ring_color) {
+  const QPoint pos = grid_to_widget(elem.x, elem.z);
+  const auto cell_px = static_cast<double>(grid_cell_size) * m_zoom;
+  const double half_span = std::max(WallGeometry::k_gate_span * 0.5 * cell_px, 6.0);
+  const double half_depth = std::max(WallGeometry::k_gate_depth * 0.5 * cell_px, 3.0);
+  const double pier = std::max(half_span * 0.28, 3.0);
+
+  const QColor body = player_color_for_editor(elem.player_id);
+
+  painter.save();
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.translate(pos);
+  painter.rotate(static_cast<double>(elem.rotation));
+
+  painter.setPen(QPen(body.darker(160), 1));
+  painter.setBrush(body);
+  painter.drawRect(QRectF(-half_span, -half_depth, pier, half_depth * 2.0));
+  painter.drawRect(QRectF(half_span - pier, -half_depth, pier, half_depth * 2.0));
+
+  painter.setBrush(Qt::NoBrush);
+  painter.setPen(QPen(body.lighter(130), 1, Qt::DotLine));
+  painter.drawLine(QPointF(-half_span + pier, 0.0), QPointF(half_span - pier, 0.0));
+
+  QPen outline(is_selected  ? QColor(Qt::yellow)
+               : is_hovered ? hover_ring_color
+                            : body.lighter(150),
+               is_selected || is_hovered ? 2 : 1);
+  painter.setPen(outline);
+  painter.drawRect(QRectF(-half_span, -half_depth, half_span * 2.0, half_depth * 2.0));
+  painter.restore();
+}
+
 void MapCanvas::draw_structure_element(QPainter& painter, int i) {
   const QColor& hover_ring_color =
       m_current_tool == ToolType::Eraser ? k_hover_erase_color : k_hover_select_color;
@@ -1312,6 +1353,12 @@ void MapCanvas::draw_structure_element(QPainter& painter, int i) {
 
   bool const is_selected = is_selected_element(3, i);
   bool const is_hovered = (m_hovered_type == 3 && m_hovered_index == i);
+
+  if (elem.type == QStringLiteral("wall_gate")) {
+    draw_gate_element(painter, elem, is_selected, is_hovered, hover_ring_color);
+    return;
+  }
+
   if (is_selected) {
     painter.setPen(QPen(Qt::yellow, 2));
   } else if (is_hovered) {
@@ -1512,18 +1559,18 @@ void MapCanvas::draw_undead_zone_element(QPainter& painter, int i) {
   painter.restore();
 }
 
-void MapCanvas::draw_grove_element(QPainter& painter, int i) {
-  if (i < 0 || i >= m_map_data->groves().size()) {
+void MapCanvas::draw_forest_element(QPainter& painter, int i) {
+  if (i < 0 || i >= m_map_data->forests().size()) {
     return;
   }
 
   const QColor& hover_ring_color =
       m_current_tool == ToolType::Eraser ? k_hover_erase_color : k_hover_select_color;
 
-  const auto& elem = m_map_data->groves()[i];
+  const auto& elem = m_map_data->forests()[i];
   QPoint const center = grid_to_widget(elem.x, elem.z);
 
-  auto const kind = static_cast<int>(ElementKind::Grove);
+  auto const kind = static_cast<int>(ElementKind::Forest);
   bool const is_selected = is_selected_element(kind, i);
   bool const is_hovered = (m_hovered_type == kind && m_hovered_index == i);
 
@@ -1551,7 +1598,7 @@ void MapCanvas::draw_grove_element(QPainter& painter, int i) {
   painter.setFont(f);
   painter.drawText(QRect(center.x() - 10, center.y() - 10, 20, 20),
                    Qt::AlignCenter,
-                   QStringLiteral("\U0001F332"));
+                   QStringLiteral("\u2660"));
 
   if (labels_visible() && !elem.id.isEmpty()) {
     painter.drawText(center.x() + radius_px + 4, center.y(), elem.id);
@@ -1574,8 +1621,14 @@ void MapCanvas::draw_wildlife_area_element(QPainter& painter, int i) {
 
   const int radius_px = static_cast<int>(elem.radius * m_zoom * grid_cell_size);
 
+  const int marker_px = std::max(marker_radius_px(), 4);
+
   painter.save();
   painter.setRenderHint(QPainter::Antialiasing, true);
+
+  painter.setBrush(Qt::NoBrush);
+  painter.setPen(QPen(style.outline, 1, Qt::DotLine));
+  painter.drawEllipse(center, radius_px, radius_px);
 
   painter.setBrush(style.fill);
   if (is_selected) {
@@ -1583,21 +1636,24 @@ void MapCanvas::draw_wildlife_area_element(QPainter& painter, int i) {
   } else if (is_hovered) {
     painter.setPen(QPen(hover_ring_color, 2));
   } else {
-    painter.setPen(QPen(style.outline, 1, Qt::DashLine));
+    painter.setPen(QPen(style.outline, 1));
   }
-  painter.drawEllipse(center, radius_px, radius_px);
+  painter.drawEllipse(center, marker_px, marker_px);
 
   painter.setPen(style.outline);
   QFont f = painter.font();
-  f.setPointSize(9);
+  f.setPointSize(std::clamp(marker_px, 7, 14));
   painter.setFont(f);
   painter.drawText(
-      QRect(center.x() - 10, center.y() - 10, 20, 20), Qt::AlignCenter, style.glyph);
+      QRect(
+          center.x() - marker_px, center.y() - marker_px, marker_px * 2, marker_px * 2),
+      Qt::AlignCenter,
+      style.glyph);
 
   if (labels_visible()) {
     f.setPointSize(7);
     painter.setFont(f);
-    painter.drawText(QRect(center.x() - 50, center.y() + radius_px + 2, 100, 14),
+    painter.drawText(QRect(center.x() - 50, center.y() + marker_px + 2, 100, 14),
                      Qt::AlignCenter,
                      wildlife_species_label(elem.species));
   }
@@ -2252,14 +2308,19 @@ void MapCanvas::mousePressEvent(QMouseEvent* event) {
   m_last_mouse_pos = event->pos();
 
   if (event->button() == Qt::RightButton) {
-
-    if (m_is_placing_linear) {
+    switch (right_click_action(m_is_placing_linear, m_current_tool)) {
+    case RightClickAction::CancelLinearDraw:
       m_is_placing_linear = false;
       emit status_hint_changed("");
       update();
-      return;
+      break;
+    case RightClickAction::ClearTool:
+      clear_tool();
+      break;
+    case RightClickAction::ShowContextMenu:
+      show_context_menu(event->pos());
+      break;
     }
-    show_context_menu(event->pos());
     return;
   }
 
@@ -2714,14 +2775,6 @@ void MapCanvas::show_context_menu(const QPoint& pos) {
             &QAction::triggered,
             this,
             &MapCanvas::grid_double_clicked);
-
-    if (m_current_tool != ToolType::Select) {
-      menu.addSeparator();
-      connect(menu.addAction(QStringLiteral("Clear tool")),
-              &QAction::triggered,
-              this,
-              &MapCanvas::clear_tool);
-    }
   }
 
   menu.exec(global_pos);
@@ -2826,18 +2879,18 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     consider_hit(5, i, -1, (cursor - center_vec).length(), zone_radius_px + 4.0F, 6);
   }
 
-  const auto& groves = m_map_data->groves();
-  for (int i = groves.size() - 1; i >= 0; --i) {
-    const auto& elem = groves[i];
+  const auto& forests = m_map_data->forests();
+  for (int i = forests.size() - 1; i >= 0; --i) {
+    const auto& elem = forests[i];
     const QPoint center = grid_to_widget(elem.x, elem.z);
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
-    const float grove_radius_px = elem.radius * m_zoom * grid_cell_size;
-    consider_hit(static_cast<int>(ElementKind::Grove),
+    const float forest_radius_px = elem.radius * m_zoom * grid_cell_size;
+    consider_hit(static_cast<int>(ElementKind::Forest),
                  i,
                  -1,
                  (cursor - center_vec).length(),
-                 grove_radius_px + 4.0F,
+                 forest_radius_px + 4.0F,
                  8);
   }
 
@@ -2847,12 +2900,12 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QPoint center = grid_to_widget(elem.x, elem.z);
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
-    const float area_radius_px = elem.radius * m_zoom * grid_cell_size;
+
     consider_hit(static_cast<int>(ElementKind::WildlifeArea),
                  i,
                  -1,
                  (cursor - center_vec).length(),
-                 area_radius_px + 4.0F,
+                 point_hit_radius_px,
                  7);
   }
 
@@ -2862,7 +2915,13 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     const QPoint center = grid_to_widget(elem.x, elem.z);
     const QVector2D center_vec(static_cast<float>(center.x()),
                                static_cast<float>(center.y()));
-    consider_hit(3, i, -1, (cursor - center_vec).length(), point_hit_radius_px, 1);
+
+    const float reach = elem.type == QStringLiteral("wall_gate")
+                            ? std::max(point_hit_radius_px,
+                                       WallGeometry::k_gate_span * 0.5F *
+                                           static_cast<float>(grid_cell_size) * m_zoom)
+                            : point_hit_radius_px;
+    consider_hit(3, i, -1, (cursor - center_vec).length(), reach, 1);
   }
 
   const auto& world_props = m_map_data->world_props();
@@ -2931,6 +2990,45 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
   return result;
 }
 
+void MapCanvas::place_gate(const QPointF& grid_pos) {
+  namespace WG = WallGeometry;
+  const WG::GatePlacement plan = WG::plan_gate(m_map_data->linear_elements(), grid_pos);
+
+  StructureElement gate;
+  gate.type = QStringLiteral("wall_gate");
+  gate.player_id = m_current_player_id;
+  gate.nation = m_current_nation;
+  gate.max_population = 100;
+
+  gate.x = plan.x;
+  gate.z = plan.z;
+  gate.rotation = plan.rotation;
+
+  if (plan.wall_index < 0) {
+    m_map_data->execute_command(std::make_unique<AddStructureCmd>(m_map_data, gate));
+    emit status_hint_changed(
+        "Gate placed clear of any wall - draw a wall through it to seal the ring");
+    return;
+  }
+
+  const LinearElement run = m_map_data->linear_elements()[plan.wall_index];
+  gate.player_id = run.player_id > 0 ? run.player_id : m_current_player_id;
+  gate.nation = run.nation.isEmpty() ? m_current_nation : run.nation;
+
+  std::vector<std::unique_ptr<Command>> steps;
+  steps.push_back(std::make_unique<RemoveLinearCmd>(m_map_data, plan.wall_index, run));
+  for (const bool keep_low : {true, false}) {
+    if (auto piece =
+            WG::trim_run_to_gate(run, plan.horizontal, plan.centre, keep_low)) {
+      steps.push_back(std::make_unique<AddLinearCmd>(m_map_data, *piece));
+    }
+  }
+  steps.push_back(std::make_unique<AddStructureCmd>(m_map_data, gate));
+  m_map_data->execute_command(
+      std::make_unique<CompositeCmd>(std::move(steps), QStringLiteral("Set gate")));
+  emit status_hint_changed("");
+}
+
 void MapCanvas::place_element(const QPointF& raw_grid_pos) {
   if (m_map_data == nullptr) {
     return;
@@ -2994,6 +3092,8 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
     elem.max_population = default_max_population;
     elem.nation = m_current_nation;
     m_map_data->execute_command(std::make_unique<AddStructureCmd>(m_map_data, elem));
+  } else if (m_current_tool == ToolType::Gate) {
+    place_gate(grid_pos);
   } else if (is_troop_tool(m_current_tool)) {
     TroopSpawnElement elem;
     elem.type = troop_type_for_tool(m_current_tool);
@@ -3011,13 +3111,13 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
       return;
     }
     m_map_data->execute_command(std::make_unique<AddTroopSpawnCmd>(m_map_data, elem));
-  } else if (m_current_tool == ToolType::Grove) {
-    GroveElement elem;
-    static int grove_counter = 0;
-    elem.id = QStringLiteral("wood_%1").arg(++grove_counter);
+  } else if (m_current_tool == ToolType::Forest) {
+    ForestElement elem;
+    static int forest_counter = 0;
+    elem.id = QStringLiteral("forest_%1").arg(++forest_counter);
     elem.x = static_cast<float>(grid_pos.x());
     elem.z = static_cast<float>(grid_pos.y());
-    m_map_data->execute_command(std::make_unique<AddGroveCmd>(m_map_data, elem));
+    m_map_data->execute_command(std::make_unique<AddForestCmd>(m_map_data, elem));
   } else if (is_wildlife_tool(m_current_tool)) {
     WildlifeAreaElement elem;
     elem.species = wildlife_species_for_tool(m_current_tool);
@@ -3100,10 +3200,14 @@ void MapCanvas::finish_linear_element(const QPointF& grid_pos) {
     break;
   case ToolType::Wall:
     elem.type = "wall";
-    elem.width = 2.0F;
+    elem.width = WallGeometry::k_lattice;
     elem.player_id = m_current_player_id;
     elem.nation = m_current_nation;
-    elem.end = axis_aligned_endpoint(elem.start, elem.end);
+    elem.start = QVector2D(WallGeometry::snap(elem.start.x()),
+                           WallGeometry::snap(elem.start.y()));
+    elem.end = axis_aligned_endpoint(
+        elem.start,
+        QVector2D(WallGeometry::snap(elem.end.x()), WallGeometry::snap(elem.end.y())));
     break;
   default:
     break;

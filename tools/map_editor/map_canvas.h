@@ -114,6 +114,11 @@ private:
   void draw_one_element(QPainter& painter, const ElementRef& ref);
   void draw_terrain_element(QPainter& painter, int index);
   void draw_world_prop_element(QPainter& painter, int index);
+  void draw_gate_element(QPainter& painter,
+                         const StructureElement& elem,
+                         bool is_selected,
+                         bool is_hovered,
+                         const QColor& hover_ring_color);
   void draw_structure_element(QPainter& painter, int index);
   void draw_troop_spawn_element(QPainter& painter, int index);
   void draw_linear_element(QPainter& painter, int index);
@@ -121,7 +126,7 @@ private:
   [[nodiscard]] QPolygonF linear_polyline_px(const LinearElement& elem) const;
   void draw_undead_zone_element(QPainter& painter, int index);
   void draw_wildlife_area_element(QPainter& painter, int index);
-  void draw_grove_element(QPainter& painter, int index);
+  void draw_forest_element(QPainter& painter, int index);
   void draw_linear_preview(QPainter& painter);
   void draw_mission_overlays(QPainter& painter);
   void draw_derived_commanders(QPainter& painter);
@@ -167,6 +172,7 @@ private:
   void update_canvas_cursor(const QPoint& pos);
   [[nodiscard]] bool is_forced_pan_gesture(const QMouseEvent* event) const;
 
+  void place_gate(const QPointF& grid_pos);
   void place_element(const QPointF& grid_pos);
   void start_linear_element(const QPointF& grid_pos);
   void finish_linear_element(const QPointF& grid_pos);

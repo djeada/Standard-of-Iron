@@ -1,6 +1,6 @@
 {
   "name": "Forest Battlefield",
-  "description": "A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.",
+  "description": "A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.",
   "coord_system": "grid",
   "max_troops_per_player": 2000,
   "grid": {
@@ -208,33 +208,6 @@
       ]
     },
     {
-      "id": "central_shrine_ridge",
-      "type": "hill",
-      "x": 125,
-      "z": 125,
-      "radius": 18,
-      "height": 3.6,
-      "description": "Central forest shrine ridge. Strong for archers, but all roads bend around it and approach only through entrance pockets.",
-      "entrances": [
-        {
-          "x": 125,
-          "z": 104
-        },
-        {
-          "x": 125,
-          "z": 146
-        },
-        {
-          "x": 104,
-          "z": 125
-        },
-        {
-          "x": 146,
-          "z": 125
-        }
-      ]
-    },
-    {
       "id": "central_west_clearing",
       "type": "flat",
       "x": 101,
@@ -271,6 +244,40 @@
       "description": "Southern central clearing for rotations between the shrine and the south lodge."
     },
     {
+      "id": "central_shrine_ridge",
+      "type": "hill",
+      "x": 125,
+      "z": 125,
+      "radius": 18,
+      "height": 3.6,
+      "description": "Central forest shrine ridge. Strong for archers, but all roads bend around it and approach only through entrance pockets.",
+      "entrances": [
+        {
+          "x": 125,
+          "z": 104
+        },
+        {
+          "x": 125,
+          "z": 146
+        },
+        {
+          "x": 104,
+          "z": 125
+        },
+        {
+          "x": 146,
+          "z": 125
+        }
+      ]
+    },
+    {
+      "id": "south_neutral_lodge_village",
+      "type": "flat",
+      "x": 82,
+      "z": 174,
+      "description": "Abandoned hunter lodge converted into a neutral barracks objective."
+    },
+    {
       "id": "south_lodge_ridge",
       "type": "hill",
       "x": 80,
@@ -294,6 +301,13 @@
           "z": 158
         }
       ]
+    },
+    {
+      "id": "north_neutral_lodge_village",
+      "type": "flat",
+      "x": 168,
+      "z": 76,
+      "description": "Abandoned hunter lodge converted into a neutral barracks objective."
     },
     {
       "id": "north_lodge_ridge",
@@ -497,115 +511,11 @@
       ]
     },
     {
-      "id": "western_dense_forest",
-      "type": "forest",
-      "x": 44,
-      "z": 112,
-      "radius": 25,
-      "density": 0.78,
-      "description": "Western dense forest. Strong infantry ambush zone, weak cavalry terrain."
-    },
-    {
-      "id": "eastern_dense_forest",
-      "type": "forest",
-      "x": 206,
-      "z": 138,
-      "radius": 25,
-      "density": 0.78,
-      "description": "Eastern dense forest. Mirrored ambush zone."
-    },
-    {
-      "id": "southern_pinewood",
-      "type": "forest",
-      "x": 74,
-      "z": 202,
-      "radius": 21,
-      "density": 0.72,
-      "description": "Southern pinewood near the lower side route."
-    },
-    {
-      "id": "northern_pinewood",
-      "type": "forest",
-      "x": 176,
-      "z": 48,
-      "radius": 21,
-      "density": 0.72,
-      "description": "Northern pinewood near the upper side route."
-    },
-    {
-      "id": "central_west_copse",
-      "type": "forest",
-      "x": 105,
-      "z": 96,
-      "radius": 15,
-      "density": 0.58,
-      "description": "Central west copse masking movement toward the shrine ring."
-    },
-    {
-      "id": "central_east_copse",
-      "type": "forest",
-      "x": 145,
-      "z": 154,
-      "radius": 15,
-      "density": 0.58,
-      "description": "Central east copse masking movement away from the shrine ring."
-    },
-    {
-      "id": "south_archer_wood",
-      "type": "forest",
-      "x": 94,
-      "z": 144,
-      "radius": 12,
-      "density": 0.52,
-      "description": "Small archer wood near the southern central approach."
-    },
-    {
-      "id": "north_archer_wood",
-      "type": "forest",
-      "x": 156,
-      "z": 106,
-      "radius": 12,
-      "density": 0.52,
-      "description": "Small archer wood near the northern central approach."
-    },
-    {
-      "id": "north_shadow_wood",
-      "type": "forest",
-      "x": 118,
-      "z": 34,
-      "radius": 16,
-      "density": 0.62,
-      "description": "Forest pocket used by scouts moving along the northern outer road."
-    },
-    {
-      "id": "south_shadow_wood",
-      "type": "forest",
-      "x": 132,
-      "z": 216,
-      "radius": 16,
-      "density": 0.62,
-      "description": "Mirrored forest pocket used by scouts moving along the southern outer road."
-    },
-    {
-      "id": "south_neutral_lodge_village",
-      "type": "flat",
-      "x": 82,
-      "z": 174,
-      "description": "Abandoned hunter lodge converted into a neutral barracks objective."
-    },
-    {
-      "id": "north_neutral_lodge_village",
-      "type": "flat",
-      "x": 168,
-      "z": 76,
-      "description": "Abandoned hunter lodge converted into a neutral barracks objective."
-    },
-    {
       "id": "central_shrine_village",
       "type": "flat",
       "x": 125,
       "z": 125,
-      "description": "Ruined woodland shrine at the central ridge."
+      "description": "Ruined forest shrine at the central ridge."
     }
   ],
   "roads": [
@@ -2147,7 +2057,7 @@
     "stone": 50,
     "iron": 100
   },
-  "theme": "Two armies fight over a rain-soaked woodland shrine where every path feels like an ambush.",
+  "theme": "Two armies fight over a rain-soaked forest shrine where every path feels like an ambush.",
   "structures": [
     {
       "id": "player_1_main_barracks",
@@ -2187,6 +2097,44 @@
       "max_population": 120,
       "description": "Neutral southern hunter lodge barracks. Can be captured by either active player.",
       "capture_reward": "spearman_support"
+    }
+  ],
+  "forests": [
+    {
+      "id": "western_dense_forest",
+      "x": 31.52,
+      "z": 172.73,
+      "radius": 23
+    },
+    {
+      "id": "eastern_dense_forest",
+      "x": 218.48,
+      "z": 77.27,
+      "radius": 23
+    },
+    {
+      "id": "southern_pine_forest",
+      "x": 72.44,
+      "z": 209.85,
+      "radius": 21
+    },
+    {
+      "id": "northern_pine_forest",
+      "x": 177.56,
+      "z": 40.15,
+      "radius": 21
+    },
+    {
+      "id": "north_shadow_forest",
+      "x": 138.78,
+      "z": 22,
+      "radius": 14
+    },
+    {
+      "id": "south_shadow_forest",
+      "x": 111.22,
+      "z": 228,
+      "radius": 14
     }
   ]
 }

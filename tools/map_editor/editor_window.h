@@ -53,12 +53,15 @@ private slots:
 private:
   void setup_ui();
   void setup_menus();
+  void reset_to_new_map();
   void update_window_title();
   void update_current_file_label();
   void show_action_feedback(const QString& message, bool success = true);
   void show_load_failure(const QString& file_path, const QString& error_message);
   void show_save_failure(const QString& file_path, const QString& error_message);
   [[nodiscard]] QString default_map_dialog_path(const QString& fallback_name) const;
+  [[nodiscard]] static QString load_last_dialog_directory();
+  static void remember_dialog_directory(const QString& file_path);
   bool save_map_to_path(const QString& file_path, bool update_current_path);
   bool save_mission_to_path(const QString& file_path, bool update_current_path);
   bool save_current_document();

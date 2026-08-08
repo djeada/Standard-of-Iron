@@ -78,6 +78,52 @@ Rules the generator enforces, and the reasons behind them:
   for something else - a road threading past it, one wall of a pass - author
   `"grow_hill": false` and the settlement is shrunk to the crown it already has.
 
+### Authored settlements
+
+A settlement marked `"authored": true` is laid out by hand in `structures` and
+`generate-map-settlements.py` leaves both it and its buildings alone - it carries
+through anything tagged `"authored": true` exactly as it already carries landmark
+pieces. The intent entry stays in `settlements` so the map still says what the
+place is; only the generation is skipped.
+
+Author one when the template is the wrong answer, and the clearest case is a
+settlement on a hill. A hill's flat crown is an ellipse, and a rectangle inscribed
+in an ellipse reaches only 0.707 of its half-extents, so even a 176x152 rise
+carries a ring of about 42x34 - a citadel, not the 116x100 town template. The
+generator's response to that is to shove the town off the hill; authoring the
+settlement instead lets the hill stay the point of the place. `Crossing the
+Rhone`'s Roman citadel is the worked example.
+
+Every campaign settlement is authored now - all 30 of them. Each one is laid out
+for what the place is rather than from one template: a winter camp is hut rows
+with a fire between each pair, a supply depot is a cart yard round its market, a
+Numidian camp is a stepped stockade with no straight street in it, a pass fort
+doubles the towers on the walls the road runs between, a colonia gets one street
+and two housing blocks. The ring itself is fitted to the ground that is free at
+that site, so no two are the same size or shape either.
+
+Three rules an authored ring has to earn back, because it gives up the
+generator's checks:
+
+- **Wall runs sit on the 2-cell lattice and only run along an axis.** A diagonal
+  side cannot be walled - it would be laid as a straight run in the wrong place
+  and the circuit would not close. An irregular outline is built by stepping the
+  corners instead.
+- **A road that crosses the circuit gets a gate on the crossing, and no building
+  stands in a roadway.** Gates open for their owner and allies only, so a wall
+  across a road with no gate on it severs the network; and the road generator
+  will not route around a building, so one in the road is one nobody can pass.
+- **Nothing an enemy is meant to assault is a sealed ring.** The Rhone start is
+  an open screen - three sides, no fourth - because the first Roman wave has to
+  be able to reach it, and it cannot walk through a gate it does not own.
+
+Two guards hold the line: `CampaignContentIntegrationTest.EveryAuthoredSettlementStandsOnGroundItCanHold`
+fails if an authored building stands on water or a mountain, or slides off a hill
+crown onto a slope; `MissionAssetRulesTest.OffensivePlayerCampsUseAuthoredMinimalStructures`
+keeps the player's start on the offensive missions to a bare barracks. Those camps
+are made of dressing instead - tent rows, cooking fires, the baggage park - which
+costs the player no structures and still reads as an army camped for the night.
+
 ### Walls and gates
 
 - **A wall ring has no holes.** It is laid one cell at a time on the runtime's
@@ -102,12 +148,12 @@ Rules the generator enforces, and the reasons behind them:
 
 The ground between settlements needs places worth walking to. A map's
 `landmarks` array is authored intent - a handful of lines each - and
-`scripts/generate-map-landmarks.py` stamps it into temples, props, guards and
-groves. Four kinds:
+`scripts/generate-map-landmarks.py` stamps it into temples, props and guards.
+Four kinds:
 
 - **sanctuary** - a temple standing outside any settlement, a statue-lined
-  approach, ruins and a fire. Put one on a hill crown or at a wood's edge; it is
-  the map's second temple and its most visible detour.
+  approach, ruins and a fire. Put one on a hill crown or at a forest's edge; it
+  is the map's second temple and its most visible detour.
 - **shrine** - a wayside altar of statues and ruins at a junction or a crossing.
 - **hamlet** - a dead village of abandoned homes, ruins and dead trees, for a
   burnt flank or the ground around a Sepulcher zone.
@@ -132,34 +178,100 @@ Everything the tool writes carries a `landmark` key naming its landmark, across
 previous output and leaves untagged entries alone. So the two generators can run
 in either order, and hand-placed scatter survives both.
 
-### Groves
+### Forests
 
-A map's `groves` array places standalone woods, and the engine reads it: every
-open cell inside a grove's radius becomes a **forest** cell in the navigation
-grid. Forest is passable to commanders, archers, swordsmen, healers, builders,
-civilians, the Sepulcher's dead and wildlife. It is closed to spearmen, all
-cavalry, catapults, ballistae and elephants - they path around it.
+A map's `forests` array is the only way to author forest. There is no
+`terrain` entry of type `forest` any more; a forest is one object, `id`, `x`,
+`z`, `radius`, and the engine reads it twice.
 
-So a wood is a filter, not just a screen. Place one for what it lets through:
+**As movement.** Every open cell inside the radius becomes a **forest** cell in
+the navigation grid. Forest is passable to commanders, archers, swordsmen,
+healers, builders, civilians, the Sepulcher's dead and wildlife. It is closed to
+spearmen, all cavalry, catapults, ballistae and elephants - they path around it.
+
+**As ground.** The map loader raises a Forest terrain feature over the same
+circle, which colours the ground as forest and multiplies the pine and olive
+scatter, so a forest you can see is exactly a forest cavalry cannot enter.
+
+So a forest is a filter, not just a screen. Place one for what it lets through:
 the approach to a wall with no gate on it, the flank of a road a column has to
 march down, the timber a gather objective is measured against, the den a wolf
-pack comes out of. A wood across the only route to a camp makes that camp an
+pack comes out of. A forest across the only route to a camp makes that camp an
 infantry problem.
 
-Two rules keep this from stranding an army:
+Three rules keep this from stranding an army or fighting the terrain:
 
-- **A road driven through a wood stays open to everyone.** Forest is only
-  applied to cells that are not on a road, so laying a road across a wood is how
-  you leave a lane for the siege train.
+- **A road driven through a forest stays open to everyone.** Forest is only
+  applied to cells that are not on a road, so laying a road across a forest is
+  how you leave a lane for the siege train.
 - **Trunks, boulders and buildings keep their own cell value.** Forest only
-  claims ground that was already walkable, so a wood never turns a blocked cell
-  passable.
+  claims ground that was already walkable, so a forest never turns a blocked
+  cell passable.
+- **A forest laid over a hill is clipped, not blended.** The terrain feature
+  paints only cells that are still flat, so the hill wins and the forest fills
+  the ground around it. Overlap one deliberately and you get less forest than
+  the radius suggests.
 
-A wood inside 22 units of a settlement wall grows through the streets and is
-rejected. Woods are editable in the map editor under Terrain → Wood.
+A forest inside 22 units of a settlement wall grows through the streets and is
+rejected. Forests are editable in the map editor under Terrain → Forest.
 
 After moving settlements or resizing hills, re-run the road generator: approach
 roads and bridges are routed around terrain and must be repaired.
+
+## Map editor
+
+Open and Save As start in the last directory you used, remembered across runs in
+`QSettings` under `map_editor/last_dialog_directory`. With nothing remembered
+they start at the repository's `assets/maps`, resolved by walking up from the
+executable rather than from the working directory: the editor is normally
+launched from `build/bin`, which holds a _copy_ of `assets`, and editing that
+copy loses the work the next time the build runs.
+
+The editor asks to save on File → New, File → Open and on close, and never at
+startup. A panel that writes to the document while it is being built - a spin
+box firing `valueChanged` from its own initial value, say - makes the empty
+document look modified, and the first thing the user then sees is a save prompt
+for a map they have not touched. Refresh handlers block their widgets' signals
+for that reason; the startup path also resets the document without prompting, so
+a missed blocker is a stale window title rather than a modal on launch.
+
+### Walls and gates in the editor
+
+Walls and gates are one tool group because they are one structure. Both live on
+the runtime's two-cell lattice (`WallNetworkService::k_segment_spacing`), so the
+editor snaps both to even grid coordinates: a wall drawn a cell off the lattice
+and a gate set into it would never line up in game.
+
+Drawing a wall snaps both endpoints and keeps the run axis aligned. Setting a
+gate does the rest of the work for you:
+
+- Click on a run and the gate takes that run's axis and line, snaps along it, and
+  inherits its owner and nation. Rotation is derived, not typed - 0 spans x, 90
+  spans z.
+- The run is split around the opening in the same edit, leaving wall faces six
+  cells apart, which is the gate's own span. A gate at the end of a run leaves
+  one piece; a gate longer than the run leaves none.
+- The whole thing is one undo step.
+- Click clear of every run and you get a free-standing gate on the lattice,
+  with the status bar saying so, for when the wall comes later.
+
+A gate is drawn as its real 6x2 footprint - two piers in the owner's colour with
+the opening between them - rather than as another building dot, so a ring reads
+at a glance as wall, wall, opening.
+
+Right-click puts the armed tool away and goes back to Select, on the canvas and
+in the tool panel both, so you drop a brush the same way you drop anything else.
+With nothing armed, right-click is the context menu it always was - that is the
+only way to reach Edit JSON, Duplicate and Delete on an element. A half-drawn
+wall or road is cancelled first, so the first right-click drops the pending
+endpoint and the second puts the tool away.
+
+### Herds in the editor
+
+A sheep pasture or wolf range is a herd, not a landform. It is drawn as a
+unit-sized marker like a troop spawn, with the roam radius behind it as a
+hairline, and it is picked up by that marker rather than by its whole range -
+a range-sized click target swallows everything standing inside it.
 
 ## Water
 

@@ -16,9 +16,9 @@ namespace {
 
 class GatherLoopSystemTest : public ::testing::Test {
 protected:
-  void SetUp() override { lay_out_a_grove(3); }
+  void SetUp() override { lay_out_trees(3); }
 
-  static void lay_out_a_grove(int tree_count) {
+  static void lay_out_trees(int tree_count) {
     Game::Map::MapDefinition map_def;
     map_def.grid.width = 64;
     map_def.grid.height = 64;
@@ -63,7 +63,7 @@ protected:
   }
 };
 
-TEST_F(GatherLoopSystemTest, AFreeWorkerTakesTheNextTreeInTheGroveByItself) {
+TEST_F(GatherLoopSystemTest, AFreeWorkerTakesTheNextTreeInTheStandByItself) {
   Engine::Core::World world;
   auto* worker = add_woodcutter(world, 6.0F, 6.0F);
 

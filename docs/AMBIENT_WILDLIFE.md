@@ -231,9 +231,9 @@ written into the save alongside the elapsed clock, so reloading a mission does n
 spent pack in again. A wave pack is a normal group once it lands — it hunts, it can be
 killed, and `respawn: false` keeps it dead.
 
-Woods are the natural place to den a pack. Wolves count as forest-passable, so a pack in a
-grove can come at a column that has no way to follow it in; see
-[the grove rules](../scripts/RTS_MAP_DESIGN.md).
+Forests are the natural place to den a pack. Wolves count as forest-passable, so a pack in a
+forest can come at a column that has no way to follow it in; see
+[the forest rules](../scripts/RTS_MAP_DESIGN.md).
 
 ### Derived placement
 

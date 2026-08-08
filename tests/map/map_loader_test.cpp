@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include "game/map/map_loader.h"
+#include "game/map/procedural_tree_generation.h"
 #include "game/map/terrain.h"
 #include "game/systems/resource_types.h"
 
@@ -886,4 +887,110 @@ TEST(MapLoaderTest, LoadsEveryShippedMapWithTheCanonicalStructureSchema) {
         maps_dir.filePath(map_name), map_def, &error))
         << map_name.toStdString() << ": " << error.toStdString();
   }
+}
+
+TEST(MapLoaderTest, AnAuthoredForestBecomesBothNavigationDataAndForestGround) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Forest Ground Test"},
+      {"grid", QJsonObject{{"width", 41}, {"height", 41}, {"tile_size", 1.0}}},
+      {"forests",
+       QJsonArray{
+           QJsonObject{{"id", "screen"}, {"x", 20}, {"z", 20}, {"radius", 6.0}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map.forests.size(), 1U);
+  EXPECT_EQ(map.forests[0].id, QStringLiteral("screen"));
+
+  const auto forest_features =
+      std::count_if(map.terrain.begin(), map.terrain.end(), [](const auto& feature) {
+        return feature.type == Game::Map::TerrainType::Forest;
+      });
+  ASSERT_EQ(forest_features, 1)
+      << "the loader must raise a Forest terrain feature over every authored "
+         "forest, or the trees never thicken over it";
+
+  Game::Map::TerrainHeightMap height_map(map.grid.width, map.grid.height, 1.0F);
+  height_map.build_from_features(map.terrain);
+  EXPECT_EQ(height_map.getTerrainType(20, 20), Game::Map::TerrainType::Forest);
+  EXPECT_EQ(height_map.getTerrainType(0, 0), Game::Map::TerrainType::Flat);
+}
+
+TEST(MapLoaderTest, AForestOverAHillIsClippedRatherThanFlatteningIt) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject hill{
+      {"type", "hill"}, {"x", 20}, {"z", 20}, {"radius", 6.0}, {"height", 3.0}};
+  const QJsonObject root{
+      {"name", "Forest Over Hill Test"},
+      {"grid", QJsonObject{{"width", 41}, {"height", 41}, {"tile_size", 1.0}}},
+      {"terrain", QJsonArray{hill}},
+      {"forests",
+       QJsonArray{QJsonObject{
+           {"id", "over_the_hill"}, {"x", 20}, {"z", 20}, {"radius", 14.0}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
+      << error.toStdString();
+
+  Game::Map::TerrainHeightMap height_map(map.grid.width, map.grid.height, 1.0F);
+  height_map.build_from_features(map.terrain);
+
+  EXPECT_EQ(height_map.getTerrainType(20, 20), Game::Map::TerrainType::Hill)
+      << "the forest is appended after the terrain, so the hill keeps its crown";
+  EXPECT_GT(height_map.get_height_at_grid(20, 20), 0.5F);
+  EXPECT_EQ(height_map.getTerrainType(20, 33), Game::Map::TerrainType::Forest)
+      << "and the forest still claims the flat ground beyond the hill";
+}
+
+TEST(MapLoaderTest, AForestIsWhereTheTreesActuallyThicken) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Tree Density Test"},
+      {"grid", QJsonObject{{"width", 161}, {"height", 161}, {"tile_size", 1.0}}},
+      {"forests",
+       QJsonArray{QJsonObject{{"id", "big"}, {"x", 80}, {"z", 80}, {"radius", 50.0}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
+      << error.toStdString();
+
+  const auto count_trees = [&](const std::vector<Game::Map::TerrainFeature>& features) {
+    Game::Map::TerrainHeightMap height_map(
+        map.grid.width, map.grid.height, map.grid.tile_size);
+    height_map.build_from_features(features);
+    const auto props = Game::Map::generate_procedural_world_props(
+        height_map, map.biome, map.coordSystem, {});
+    return std::count_if(props.begin(), props.end(), [](const Game::Map::WorldProp& p) {
+      return Game::Map::is_tree_world_prop_type(p.type);
+    });
+  };
+
+  const auto with_forest = count_trees(map.terrain);
+  const auto bare_ground = count_trees({});
+
+  EXPECT_GT(with_forest, bare_ground)
+      << "an authored forest has to raise the tree scatter over its ground; "
+         "with_forest="
+      << with_forest << " bare=" << bare_ground;
 }

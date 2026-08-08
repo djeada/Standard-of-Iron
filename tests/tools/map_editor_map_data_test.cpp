@@ -853,7 +853,7 @@ TEST(MapEditorMapDataTest, RadiusOnlyTerrainKeepsExtentsUnauthored) {
   EXPECT_NEAR(saved_hill.value(MapJsonKeys::depth).toDouble(), 60.0, 1e-6);
 }
 
-TEST(MapEditorMapDataTest, GrovesAndUndeadClearRewardsSurviveARoundTrip) {
+TEST(MapEditorMapDataTest, ForestsAndUndeadClearRewardsSurviveARoundTrip) {
   QTemporaryDir const temp_dir;
   ASSERT_TRUE(temp_dir.isValid());
 
@@ -869,7 +869,7 @@ TEST(MapEditorMapDataTest, GrovesAndUndeadClearRewardsSurviveARoundTrip) {
       {MapJsonKeys::biome,
        QJsonObject{{"procedural_boulders_enabled", false},
                    {"procedural_iron_ore_enabled", false}}},
-      {"groves",
+      {"forests",
        QJsonArray{QJsonObject{{"id", "north_screen"},
                               {MapJsonKeys::x, 20},
                               {MapJsonKeys::z, 30},
@@ -896,19 +896,19 @@ TEST(MapEditorMapDataTest, GrovesAndUndeadClearRewardsSurviveARoundTrip) {
   MapEditor::MapData data;
   ASSERT_TRUE(data.load_from_json(input_path));
 
-  ASSERT_EQ(data.groves().size(), 1);
-  EXPECT_EQ(data.groves().first().id, "north_screen");
-  EXPECT_FLOAT_EQ(data.groves().first().radius, 14.5F);
+  ASSERT_EQ(data.forests().size(), 1);
+  EXPECT_EQ(data.forests().first().id, "north_screen");
+  EXPECT_FLOAT_EQ(data.forests().first().radius, 14.5F);
   ASSERT_EQ(data.undead_zones().size(), 1);
   EXPECT_EQ(data.undead_zones().first().clear_reward.value("gold").toInt(), 120);
 
   ASSERT_TRUE(data.save_to_json(output_path));
   const QJsonObject output = read_json(output_path);
 
-  ASSERT_TRUE(output.value("groves").isArray());
-  const QJsonObject saved_grove = output.value("groves").toArray().first().toObject();
-  EXPECT_EQ(saved_grove.value("id").toString(), "north_screen");
-  EXPECT_DOUBLE_EQ(saved_grove.value(MapJsonKeys::radius).toDouble(), 14.5);
+  ASSERT_TRUE(output.value("forests").isArray());
+  const QJsonObject saved_forest = output.value("forests").toArray().first().toObject();
+  EXPECT_EQ(saved_forest.value("id").toString(), "north_screen");
+  EXPECT_DOUBLE_EQ(saved_forest.value(MapJsonKeys::radius).toDouble(), 14.5);
 
   const QJsonObject saved_zone =
       output.value(MapJsonKeys::undead_zones).toArray().first().toObject();
@@ -931,4 +931,49 @@ TEST(MapEditorMapDataTest, GrovesAndUndeadClearRewardsSurviveARoundTrip) {
   EXPECT_DOUBLE_EQ(saved_wolf_waves.first().toObject().value("timing").toDouble(),
                    240.0);
   EXPECT_EQ(saved_wolf_waves.first().toObject().value("pack_size").toInt(), 5);
+}
+
+TEST(MapEditorMapDataTest, AGateKeepsTheRotationThatDecidesWhichAxisItSpans) {
+  QTemporaryDir temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString input_path = temp_dir.filePath("gate_rotation.json");
+  const QString output_path = temp_dir.filePath("gate_rotation_out.json");
+
+  const QJsonObject root{
+      {"name", "Gate Rotation"},
+      {MapJsonKeys::grid,
+       QJsonObject{{MapJsonKeys::width, 64},
+                   {MapJsonKeys::height, 64},
+                   {MapJsonKeys::tile_size, 1.0}}},
+      {MapJsonKeys::structures,
+       QJsonArray{QJsonObject{{MapJsonKeys::type, "wall_gate"},
+                              {MapJsonKeys::x, 20},
+                              {MapJsonKeys::z, 42},
+                              {MapJsonKeys::rotation, 90.0},
+                              {MapJsonKeys::player_id, 2}},
+                  QJsonObject{{MapJsonKeys::type, "wall_segment"},
+                              {MapJsonKeys::start, QJsonArray{20, 22}},
+                              {MapJsonKeys::end, QJsonArray{20, 38}},
+                              {MapJsonKeys::width, 2.0},
+                              {MapJsonKeys::player_id, 2}}}}};
+  write_json(input_path, root);
+
+  MapEditor::MapData data;
+  QString error;
+  ASSERT_TRUE(data.load_from_json(input_path, &error)) << error.toStdString();
+
+  ASSERT_EQ(data.structures().size(), 1);
+  EXPECT_EQ(data.structures().first().type, "wall_gate");
+  EXPECT_FLOAT_EQ(data.structures().first().rotation, 90.0F);
+  ASSERT_EQ(data.linear_elements().size(), 1)
+      << "the wall run stays a linear element, not a structure";
+
+  ASSERT_TRUE(data.save_to_json(output_path, &error)) << error.toStdString();
+  const QJsonObject output = read_json(output_path);
+  const QJsonArray saved = output.value(MapJsonKeys::structures).toArray();
+  const auto gate = std::find_if(saved.begin(), saved.end(), [](const QJsonValue& v) {
+    return v.toObject().value(MapJsonKeys::type).toString() == "wall_gate";
+  });
+  ASSERT_NE(gate, saved.end());
+  EXPECT_DOUBLE_EQ(gate->toObject().value(MapJsonKeys::rotation).toDouble(), 90.0);
 }

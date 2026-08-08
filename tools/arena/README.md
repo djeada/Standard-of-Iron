@@ -397,7 +397,7 @@ quietly stops living is a test failure rather than a thing someone has to notice
 in a screenshot.
 
 - `rival_economies` gives Roman and Carthaginian AI builders equivalent starter
-  settlements with finite stockpiles plus authored olive groves, stone, and iron.
+  settlements with finite stockpiles plus authored olive trees, stone, and iron.
   Builders must harvest missing materials and then complete construction. Roman
   AI uses a defensive camp plan; Carthaginian AI uses a compact economic plan.
 - `architecture_and_props_showcase` presents all Roman and Carthaginian building
