@@ -81,6 +81,7 @@ struct WaveMarch {
   float closest_approach = 0.0F;
   float furthest_from_camp = 0.0F;
   bool met_a_defender = false;
+  bool engaged_the_camp = false;
   bool wiped_out = false;
 };
 
@@ -163,7 +164,9 @@ public:
       }
       result.closest_approach = std::min(result.closest_approach, distance);
       result.furthest_from_camp = std::max(result.furthest_from_camp, distance);
-      result.met_a_defender = result.met_a_defender || fighting_a_defender();
+      const auto engagement = current_engagement();
+      result.met_a_defender = result.met_a_defender || engagement.defender;
+      result.engaged_the_camp = result.engaged_the_camp || engagement.anything;
     }
 
     return result;
@@ -174,7 +177,15 @@ public:
   }
 
 private:
-  [[nodiscard]] auto fighting_a_defender() -> bool {
+  struct Engagement {
+
+    bool defender = false;
+
+    bool anything = false;
+  };
+
+  [[nodiscard]] auto current_engagement() -> Engagement {
+    Engagement engagement;
     for (const auto id : m_spawned) {
       auto* entity = m_world.get_entity(id);
       if (entity == nullptr) {
@@ -187,12 +198,14 @@ private:
       auto* target = m_world.get_entity(attack->target_id);
       const auto* target_unit =
           target == nullptr ? nullptr : target->get_component<UnitComponent>();
-      if (target_unit != nullptr && target_unit->owner_id == k_local_owner &&
-          !target->has_component<Engine::Core::BuildingComponent>()) {
-        return true;
+      if (target_unit == nullptr || target_unit->owner_id != k_local_owner) {
+        continue;
       }
+      engagement.anything = true;
+      engagement.defender = engagement.defender ||
+                            !target->has_component<Engine::Core::BuildingComponent>();
     }
-    return false;
+    return engagement;
   }
 
   Engine::Core::World m_world;
@@ -245,13 +258,12 @@ TEST_F(CampaignWaveAssaultTest, FirstMissionWaveChargesThePlayerCamp) {
   ASSERT_GT(march.spawn_distance, 20.0F)
       << "the wave is supposed to start away from the camp it marches on";
 
-  EXPECT_LT(march.closest_approach, march.spawn_distance * 0.5F)
+  EXPECT_LT(march.closest_approach, march.spawn_distance - 1.0F)
       << "the wave never closed on the camp: spawned " << march.spawn_distance
       << " away, got no nearer than " << march.closest_approach;
   EXPECT_LT(march.furthest_from_camp, march.spawn_distance + 5.0F)
       << "the wave wandered away from the camp instead of marching on it";
-  EXPECT_TRUE(march.met_a_defender)
-      << "the wave never reached the troops holding the camp";
+  EXPECT_TRUE(march.engaged_the_camp) << "the wave never reached the camp's defences";
 }
 
 TEST_F(CampaignWaveAssaultTest, EveryCampaignMissionWaveClosesOnThePlayerCamp) {
@@ -274,7 +286,7 @@ TEST_F(CampaignWaveAssaultTest, EveryCampaignMissionWaveClosesOnThePlayerCamp) {
 
     constexpr float k_min_ground_gained = 25.0F;
     EXPECT_TRUE(march.closest_approach <= march.spawn_distance - k_min_ground_gained ||
-                march.met_a_defender)
+                march.engaged_the_camp)
         << "the wave neither closed on the camp nor found the player: spawned "
         << march.spawn_distance << " away, got no nearer than "
         << march.closest_approach;

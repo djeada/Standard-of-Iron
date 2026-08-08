@@ -132,6 +132,7 @@ add_executable(
     headless/gate_traversal_test.cpp
     headless/wall_siege_test.cpp
     headless/mission_wave_assault_test.cpp
+    headless/tight_gap_navigation_test.cpp
     architecture/layering_test.cpp
     architecture/qml_surface_test.cpp
     architecture/documentation_accuracy_test.cpp

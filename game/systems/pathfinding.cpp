@@ -48,10 +48,6 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
                                            : Pathfinding::CellValue::Blocked;
 }
 
-auto occupied_cell_to_grid(int cell, float grid_offset) -> int {
-  return static_cast<int>(std::lround((static_cast<float>(cell) + 0.5F) - grid_offset));
-}
-
 void merge_dirty_regions(std::vector<DirtyRegion>& regions) {
   constexpr std::size_t k_max_individual_regions = 256U;
   if (regions.size() > k_max_individual_regions) {
@@ -146,9 +142,38 @@ auto Pathfinding::grid_to_world(const Point& grid_pos) const -> QVector3D {
           static_cast<float>(grid_pos.y) + m_grid_offset_z};
 }
 
+auto Pathfinding::cells_covering(float center_x,
+                                 float center_z,
+                                 float half_x,
+                                 float half_z) const -> CellRange {
+
+  constexpr float k_area_epsilon = 1.0e-4F;
+  half_x = std::max(0.0F, half_x - k_area_epsilon);
+  half_z = std::max(0.0F, half_z - k_area_epsilon);
+
+  Point const low = world_to_grid(center_x - half_x, center_z - half_z);
+  Point const high = world_to_grid(center_x + half_x, center_z + half_z);
+  return {.min_x = std::min(low.x, high.x),
+          .max_x = std::max(low.x, high.x),
+          .min_z = std::min(low.y, high.y),
+          .max_z = std::max(low.y, high.y)};
+}
+
+auto Pathfinding::cell_range_world_bounds(const CellRange& range) const -> WorldRect {
+  QVector3D const low = grid_to_world({range.min_x, range.min_z});
+  QVector3D const high = grid_to_world({range.max_x, range.max_z});
+  float const half_cell = m_grid_cell_size * 0.5F;
+  return {.min_x = low.x() - half_cell,
+          .max_x = high.x() + half_cell,
+          .min_z = low.z() - half_cell,
+          .max_z = high.z() + half_cell};
+}
+
 void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
   std::unique_lock<std::shared_mutex> const lock(m_navigation_mutex);
   m_navigation_grid.set(x, y, is_obstacle ? CellValue::Blocked : CellValue::Walkable);
+
+  rebuild_clearance(x - 1, x + 1, y - 1, y + 1);
   m_navigation_revision.fetch_add(1, std::memory_order_release);
 }
 
@@ -216,31 +241,75 @@ auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
 auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
                                             const QVector3D& to,
                                             Passability passability) const -> bool {
-  auto segment_point_walkable = [this, passability](const QVector3D& point) -> bool {
-    return is_world_position_walkable(point, passability);
-  };
 
-  if (!segment_point_walkable(to)) {
+  constexpr float k_boundary_epsilon = 1.0e-5F;
+
+  if (!is_world_position_walkable(to, passability)) {
     return false;
   }
 
-  QVector3D const direction = to - from;
-  float const length = direction.length();
-  if (length < 0.5F) {
-    return true;
-  }
+  float const start_u = from.x() - m_grid_offset_x + 0.5F;
+  float const start_v = from.z() - m_grid_offset_z + 0.5F;
+  float const end_u = to.x() - m_grid_offset_x + 0.5F;
+  float const end_v = to.z() - m_grid_offset_z + 0.5F;
 
-  constexpr float sample_interval = 0.5F;
-  int const num_samples = static_cast<int>(length / sample_interval);
-  for (int i = 1; i <= num_samples; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
-    QVector3D const sample_pos = from + direction * t;
-    if (!segment_point_walkable(sample_pos)) {
+  int cell_x = static_cast<int>(std::floor(start_u));
+  int cell_z = static_cast<int>(std::floor(start_v));
+  int const end_x = static_cast<int>(std::floor(end_u));
+  int const end_z = static_cast<int>(std::floor(end_v));
+
+  float const delta_u = end_u - start_u;
+  float const delta_v = end_v - start_v;
+
+  int const step_x = delta_u > 0.0F ? 1 : (delta_u < 0.0F ? -1 : 0);
+  int const step_z = delta_v > 0.0F ? 1 : (delta_v < 0.0F ? -1 : 0);
+
+  auto next_boundary = [](float start, float delta, int step, int cell) -> float {
+    if (step == 0) {
+      return std::numeric_limits<float>::infinity();
+    }
+    float const boundary =
+        step > 0 ? static_cast<float>(cell + 1) : static_cast<float>(cell);
+    return (boundary - start) / delta;
+  };
+
+  float travel_x = next_boundary(start_u, delta_u, step_x, cell_x);
+  float travel_z = next_boundary(start_v, delta_v, step_z, cell_z);
+  float const stride_x =
+      step_x == 0 ? std::numeric_limits<float>::infinity() : 1.0F / std::abs(delta_u);
+  float const stride_z =
+      step_z == 0 ? std::numeric_limits<float>::infinity() : 1.0F / std::abs(delta_v);
+
+  int const max_steps = std::abs(end_x - cell_x) + std::abs(end_z - cell_z) + 2;
+  for (int taken = 0; taken < max_steps; ++taken) {
+    if (cell_x == end_x && cell_z == end_z) {
+      return true;
+    }
+
+    if (travel_x < travel_z - k_boundary_epsilon) {
+      cell_x += step_x;
+      travel_x += stride_x;
+    } else if (travel_z < travel_x - k_boundary_epsilon) {
+      cell_z += step_z;
+      travel_z += stride_z;
+    } else {
+
+      if (!is_walkable(cell_x + step_x, cell_z, passability) ||
+          !is_walkable(cell_x, cell_z + step_z, passability)) {
+        return false;
+      }
+      cell_x += step_x;
+      cell_z += step_z;
+      travel_x += stride_x;
+      travel_z += stride_z;
+    }
+
+    if (!is_walkable(cell_x, cell_z, passability)) {
       return false;
     }
   }
 
-  return true;
+  return cell_x == end_x && cell_z == end_z;
 }
 
 auto Pathfinding::path_waypoint_world_position(const Point& path_cell) const
@@ -309,31 +378,7 @@ void Pathfinding::process_dirty_regions() {
       m_full_update_required = false;
 
       m_navigation_grid.fill(CellValue::Walkable);
-
-      auto& terrain_service = Game::Map::TerrainService::instance();
-      if (terrain_service.is_initialized()) {
-        const Game::Map::TerrainHeightMap* height_map =
-            terrain_service.get_height_map();
-
-        for (int z = 0; z < m_height; ++z) {
-          for (int x = 0; x < m_width; ++x) {
-            m_navigation_grid.set(
-                x, z, terrain_cell_value(terrain_service, height_map, x, z));
-          }
-        }
-      }
-
-      auto& registry = BuildingCollisionRegistry::instance();
-      const auto& buildings = registry.get_all_buildings();
-
-      for (const auto& building : buildings) {
-        apply_building_cells(building, 0, m_width - 1, 0, m_height - 1);
-      }
-
-      force_navigation_passages_walkable(0, m_width - 1, 0, m_height - 1);
-      apply_forest_cells(0, m_width - 1, 0, m_height - 1);
-      apply_resource_prop_cells(0, m_width - 1, 0, m_height - 1);
-      force_map_passage_cells_walkable(0, m_width - 1, 0, m_height - 1);
+      update_region(0, m_width - 1, 0, m_height - 1);
 
       return;
     }
@@ -354,6 +399,7 @@ void Pathfinding::process_dirty_regions() {
 }
 
 void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
+
   auto& terrain_service = Game::Map::TerrainService::instance();
   const Game::Map::TerrainHeightMap* height_map = nullptr;
 
@@ -371,6 +417,9 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
     }
   }
 
+  apply_forest_cells(min_x, max_x, min_z, max_z);
+  apply_resource_prop_cells(min_x, max_x, min_z, max_z);
+
   auto& registry = BuildingCollisionRegistry::instance();
   registry.for_each_building_in_region(
       static_cast<float>(min_x) + m_grid_offset_x,
@@ -382,9 +431,9 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
       });
 
   force_navigation_passages_walkable(min_x, max_x, min_z, max_z);
-  apply_forest_cells(min_x, max_x, min_z, max_z);
-  apply_resource_prop_cells(min_x, max_x, min_z, max_z);
   force_map_passage_cells_walkable(min_x, max_x, min_z, max_z);
+
+  rebuild_clearance(min_x - 1, max_x + 1, min_z - 1, max_z + 1);
 }
 
 void Pathfinding::force_navigation_passages_walkable(int min_x,
@@ -399,21 +448,29 @@ void Pathfinding::force_navigation_passages_walkable(int min_x,
     return;
   }
 
-  for (const auto& passage :
-       BuildingCollisionRegistry::instance().navigation_passages()) {
-    auto cells = BuildingCollisionRegistry::get_rect_grid_cells(passage.center_x,
-                                                                passage.center_z,
-                                                                passage.width,
-                                                                passage.depth,
-                                                                0.0F,
-                                                                m_grid_cell_size);
-    for (const auto& cell : cells) {
-      int const grid_x = static_cast<int>(std::round(cell.first - m_grid_offset_x));
-      int const grid_z = static_cast<int>(std::round(cell.second - m_grid_offset_z));
-      if (grid_x < min_x || grid_x > max_x || grid_z < min_z || grid_z > max_z) {
-        continue;
+  constexpr float k_touch_epsilon = 1.0e-3F;
+
+  auto const& registry = BuildingCollisionRegistry::instance();
+  for (const auto& passage : registry.navigation_passages()) {
+    auto const range = cells_covering(
+        passage.center_x, passage.center_z, passage.width * 0.5F, passage.depth * 0.5F);
+    for (int grid_z = std::max(range.min_z, min_z);
+         grid_z <= std::min(range.max_z, max_z);
+         ++grid_z) {
+      for (int grid_x = std::max(range.min_x, min_x);
+           grid_x <= std::min(range.max_x, max_x);
+           ++grid_x) {
+        auto const cell = cell_range_world_bounds(
+            {.min_x = grid_x, .max_x = grid_x, .min_z = grid_z, .max_z = grid_z});
+        if (registry.is_rect_overlapping_blocking_building(cell.min_x + k_touch_epsilon,
+                                                           cell.max_x - k_touch_epsilon,
+                                                           cell.min_z + k_touch_epsilon,
+                                                           cell.max_z - k_touch_epsilon,
+                                                           passage.source_entity_id)) {
+          continue;
+        }
+        m_navigation_grid.set(grid_x, grid_z, CellValue::Walkable);
       }
-      m_navigation_grid.set(grid_x, grid_z, CellValue::Walkable);
     }
   }
 }
@@ -423,13 +480,16 @@ void Pathfinding::apply_building_cells(
   if (!building.blocks_navigation) {
     return;
   }
-  auto const cells =
-      BuildingCollisionRegistry::get_occupied_grid_cells(building, m_grid_cell_size);
-  for (auto const& cell : cells) {
-    int const grid_x = occupied_cell_to_grid(cell.first, m_grid_offset_x);
-    int const grid_z = occupied_cell_to_grid(cell.second, m_grid_offset_z);
-    if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z && grid_z <= max_z &&
-        grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
+  auto const range = cells_covering(building.center_x,
+                                    building.center_z,
+                                    (building.width * 0.5F) + building.grid_padding,
+                                    (building.depth * 0.5F) + building.grid_padding);
+  int const from_x = std::max({range.min_x, min_x, 0});
+  int const to_x = std::min({range.max_x, max_x, m_width - 1});
+  int const from_z = std::max({range.min_z, min_z, 0});
+  int const to_z = std::min({range.max_z, max_z, m_height - 1});
+  for (int grid_z = from_z; grid_z <= to_z; ++grid_z) {
+    for (int grid_x = from_x; grid_x <= to_x; ++grid_x) {
       m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
     }
   }
@@ -457,12 +517,29 @@ void Pathfinding::force_map_passage_cells_walkable(int min_x,
     return;
   }
 
+  constexpr float k_touch_epsilon = 1.0e-3F;
+  auto const& registry = BuildingCollisionRegistry::instance();
+
   for (int z = min_z; z <= max_z; ++z) {
     for (int x = min_x; x <= max_x; ++x) {
-      if (height_map->isBridgeCell(x, z) || height_map->isBridgeCenterline(x, z) ||
-          height_map->isHillEntrance(x, z)) {
-        m_navigation_grid.set(x, z, CellValue::Walkable);
+      if (m_navigation_grid.get(x, z) == CellValue::Walkable) {
+        continue;
       }
+      if (!height_map->isBridgeCell(x, z) && !height_map->isBridgeCenterline(x, z) &&
+          !height_map->isHillEntrance(x, z)) {
+        continue;
+      }
+
+      auto const cell =
+          cell_range_world_bounds({.min_x = x, .max_x = x, .min_z = z, .max_z = z});
+      if (registry.is_rect_overlapping_blocking_building(cell.min_x + k_touch_epsilon,
+                                                         cell.max_x - k_touch_epsilon,
+                                                         cell.min_z + k_touch_epsilon,
+                                                         cell.max_z -
+                                                             k_touch_epsilon)) {
+        continue;
+      }
+      m_navigation_grid.set(x, z, CellValue::Walkable);
     }
   }
 }
@@ -774,6 +851,14 @@ auto Pathfinding::find_path_internal(const Point& start,
       break;
     }
 
+    int arrival_x = 0;
+    int arrival_z = 0;
+    if (current.index != start_idx) {
+      Point const came_from = to_point(get_parent(buffers, current.index, generation));
+      arrival_x = current_point.x - came_from.x;
+      arrival_z = current_point.y - came_from.y;
+    }
+
     std::array<Point, 8> neighbors{};
     const std::size_t neighbor_count =
         collect_neighbors(current_point, neighbors, passability);
@@ -789,7 +874,14 @@ auto Pathfinding::find_path_internal(const Point& start,
         continue;
       }
 
-      const int tentative_gcost = current.g_cost + 1;
+      const int step_x = neighbor.x - current_point.x;
+      const int step_z = neighbor.y - current_point.y;
+      const bool turns = (arrival_x != 0 || arrival_z != 0) &&
+                         (step_x != arrival_x || step_z != arrival_z);
+      const int tentative_gcost =
+          current.g_cost +
+          ((step_x != 0 && step_z != 0) ? k_diagonal_step_cost : k_straight_step_cost) +
+          clearance_penalty(neighbor.x, neighbor.y) + (turns ? k_turn_penalty : 0);
       if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
         continue;
       }
@@ -808,19 +900,21 @@ auto Pathfinding::find_path_internal(const Point& start,
       return {start};
     }
     std::vector<Point> partial_path;
-    partial_path.reserve(static_cast<std::size_t>(best_reachable_g + 1));
+    int const partial_cells = (best_reachable_g / k_straight_step_cost) + 1;
+    partial_path.reserve(static_cast<std::size_t>(partial_cells));
     build_path(start_idx,
                best_reachable_idx,
                generation,
-               best_reachable_g + 1,
+               partial_cells,
                buffers,
                partial_path);
     return partial_path;
   }
 
   std::vector<Point> path;
-  path.reserve(final_cost + 1);
-  build_path(start_idx, end_idx, generation, final_cost + 1, buffers, path);
+  int const path_cells = (final_cost / k_straight_step_cost) + 1;
+  path.reserve(static_cast<std::size_t>(path_cells));
+  build_path(start_idx, end_idx, generation, path_cells, buffers, path);
   return path;
 }
 
@@ -891,7 +985,64 @@ auto Pathfinding::resolve_walkable_endpoint(const Point& requested,
 }
 
 auto Pathfinding::calculate_heuristic(const Point& a, const Point& b) -> int {
-  return std::abs(a.x - b.x) + std::abs(a.y - b.y);
+
+  int const dx = std::abs(a.x - b.x);
+  int const dy = std::abs(a.y - b.y);
+  int const diagonal = std::min(dx, dy);
+  int const straight = std::max(dx, dy) - diagonal;
+  int const octile =
+      (diagonal * k_diagonal_step_cost) + (straight * k_straight_step_cost);
+  return octile * k_heuristic_weight_numerator / k_heuristic_weight_denominator;
+}
+
+auto Pathfinding::clearance_penalty(int x, int y) const -> int {
+  auto const index = static_cast<std::size_t>(to_index(x, y));
+  if (index >= m_clearance_penalty.size()) {
+    return 0;
+  }
+  return m_clearance_penalty[index];
+}
+
+void Pathfinding::rebuild_clearance(int min_x, int max_x, int min_z, int max_z) {
+  auto const total =
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
+  if (m_clearance_penalty.size() != total) {
+    m_clearance_penalty.assign(total, 0);
+  }
+
+  min_x = std::max(0, min_x);
+  max_x = std::min(m_width - 1, max_x);
+  min_z = std::max(0, min_z);
+  max_z = std::min(m_height - 1, max_z);
+  if (min_x > max_x || min_z > max_z) {
+    return;
+  }
+
+  for (int z = min_z; z <= max_z; ++z) {
+    auto* row = &m_clearance_penalty[static_cast<std::size_t>(to_index(min_x, z))];
+    std::fill(row, row + (max_x - min_x + 1), std::uint8_t{0});
+  }
+
+  auto const penalty = static_cast<std::uint8_t>(k_edge_step_penalty);
+  for (int z = min_z - 1; z <= max_z + 1; ++z) {
+    for (int x = min_x - 1; x <= max_x + 1; ++x) {
+      if (is_walkable(x, z)) {
+        continue;
+      }
+      int const from_z = std::max(z - 1, min_z);
+      int const to_z = std::min(z + 1, max_z);
+      int const from_x = std::max(x - 1, min_x);
+      int const to_x = std::min(x + 1, max_x);
+      for (int nz = from_z; nz <= to_z; ++nz) {
+        for (int nx = from_x; nx <= to_x; ++nx) {
+          if (nx == x && nz == z) {
+            continue;
+          }
+          m_clearance_penalty[static_cast<std::size_t>(to_index(nx, nz))] = penalty;
+        }
+      }
+    }
+  }
 }
 
 auto Pathfinding::search_buffers_for(const Pathfinding* pathfinding) -> SearchBuffers& {

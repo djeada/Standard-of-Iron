@@ -109,14 +109,12 @@ protected:
   }
 };
 
-void expect_passage_on_gate_cell(const NavigationPassage& passage,
-                                 const Entity& gate_entity) {
-  const auto* wall = gate_entity.get_component<WallSegmentComponent>();
-  ASSERT_NE(wall, nullptr);
-  const auto expected =
-      CommandService::grid_to_world(Point{wall->grid_x, wall->grid_z});
-  EXPECT_FLOAT_EQ(passage.center_x, expected.x());
-  EXPECT_FLOAT_EQ(passage.center_z, expected.z());
+void expect_passage_on_gate(const NavigationPassage& passage,
+                            const Entity& gate_entity) {
+  const auto* transform = gate_entity.get_component<TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_FLOAT_EQ(passage.center_x, transform->position.x);
+  EXPECT_FLOAT_EQ(passage.center_z, transform->position.z);
 }
 
 } // namespace
@@ -298,7 +296,7 @@ TEST_F(GateSystemTest, LiveGateOpensAPassageInTheNavigationGrid) {
 
   const auto& passages = BuildingCollisionRegistry::instance().navigation_passages();
   ASSERT_EQ(passages.size(), 1U);
-  expect_passage_on_gate_cell(passages.front(), *gate_entity);
+  expect_passage_on_gate(passages.front(), *gate_entity);
 }
 
 TEST_F(GateSystemTest, DestroyedGateLeavesAPassableBreach) {
