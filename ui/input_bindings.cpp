@@ -739,7 +739,7 @@ auto InputBindings::format(const Chord& chord) -> QString {
 
   if (chord.mouse_button != 0) {
     for (const auto& entry : k_button_names) {
-      if (chord.mouse_button == entry.button) {
+      if (chord.mouse_button == static_cast<int>(entry.button)) {
         return modifiers_to_string(chord.modifiers) + QString::fromLatin1(entry.name);
       }
     }
@@ -805,7 +805,7 @@ auto InputBindings::describe(const QString& shortcut) -> QString {
   }
   if (chord.mouse_button != 0) {
     for (const auto& entry : k_button_names) {
-      if (chord.mouse_button == entry.button) {
+      if (chord.mouse_button == static_cast<int>(entry.button)) {
         return modifiers_to_string(chord.modifiers) + tr(entry.name);
       }
     }

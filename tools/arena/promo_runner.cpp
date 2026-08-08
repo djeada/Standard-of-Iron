@@ -18,6 +18,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -80,12 +81,13 @@ void paint_rpg_bow_hud(QImage& frame, const ArenaViewport::RpgBowHudState& state
   if (state.bow_stance) {
 
     const double half_fov =
-        std::clamp(static_cast<double>(state.fov_degrees), 20.0, 110.0) * M_PI / 360.0;
+        std::clamp(static_cast<double>(state.fov_degrees), 20.0, 110.0) *
+        std::numbers::pi / 360.0;
     const double focal = (height * 0.5) / std::tan(half_fov);
     const double spread = std::min(
         height * 0.14,
         focal * std::tan(std::min(14.0, static_cast<double>(state.spread_degrees)) *
-                         M_PI / 180.0));
+                         std::numbers::pi / 180.0));
 
     QColor reticle(243, 239, 230, 245);
     if (state.strained) {

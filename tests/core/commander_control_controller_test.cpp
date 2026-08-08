@@ -127,7 +127,8 @@ TEST_F(CommanderControlControllerTest, WalkingAsksForAFootstepOnEveryStride) {
   Render::GL::Camera camera;
   for (int frame = 0; frame < 90; ++frame) {
     controller.input().forward = true;
-    controller.update(world, commander->get_id(), 1, camera, 1.0F / 30.0F);
+    static_cast<void>(
+        controller.update(world, commander->get_id(), 1, camera, 1.0F / 30.0F));
   }
 
   const std::vector<std::string> asked = registry.silent_cues();

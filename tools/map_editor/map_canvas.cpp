@@ -19,6 +19,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <vector>
 
@@ -2076,8 +2077,9 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     const float inner_r = sr * 0.45F;
     QPolygonF star;
     for (int k = 0; k < points * 2; ++k) {
-      const float angle =
-          static_cast<float>(k) * M_PI / static_cast<float>(points) - M_PI_2;
+      const float angle = static_cast<float>(k) * std::numbers::pi_v<float> /
+                              static_cast<float>(points) -
+                          std::numbers::pi_v<float> * 0.5F;
       const float r = (k % 2 == 0) ? sr : inner_r;
       star << QPointF(r * std::cos(angle), r * std::sin(angle));
     }

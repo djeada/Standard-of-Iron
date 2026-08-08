@@ -105,13 +105,31 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Building in DEBUG mode with GDB support")
 else()
     # Release/RelWithDebInfo: optimize for performance
+    # ---- Floating point ----
+    # The codebase guards roughly forty inputs with std::isfinite: volumes read
+    # back from the settings file, camera angles, impact geometry. Those guards
+    # only exist if the compiler is not allowed to assume operands are finite.
+    #
+    # Both -ffast-math and MSVC's /fp:fast grant exactly that permission, so an
+    # optimised build folds every one of those checks to "true" and the clamp
+    # behind it disappears. It is invisible in development because Debug builds
+    # do not use these flags, and it diverges per platform, which is worse than
+    # being uniformly wrong. Clang says so out loud (-Wnan-infinity-disabled);
+    # GCC and MSVC do it silently.
+    #
+    # GCC and Clang can keep the rest of fast math and give the finiteness
+    # assumption back with -fno-finite-math-only. MSVC has no such sub-switch,
+    # so Windows uses /fp:precise -- the same reasoning, and the only setting
+    # there that keeps the guards alive.
     if(MSVC)
         # MSVC Release flags
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /Oi /Ot /GL /fp:fast")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /Oi /Ot /GL /fp:precise")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
     else()
         # GCC/Clang Release flags
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -funroll-loops -ftree-vectorize")
+        set(CMAKE_CXX_FLAGS
+            "${CMAKE_CXX_FLAGS} -O3 -ffast-math -fno-finite-math-only -funroll-loops -ftree-vectorize"
+        )
         # Keep release artifacts on the compiler's portable architecture
         # baseline. CI-runner-specific -march flags can make packaged builds
         # crash on otherwise supported user CPUs.
@@ -133,6 +151,90 @@ else()
         endif()
     endif()
     message(STATUS "Building in RELEASE mode with optimizations")
+endif()
+
+# ---- Portability warnings ----
+# The game is developed on Linux/GCC and shipped on macOS/AppleClang and
+# Windows/MSVC. This option turns on the warnings that catch, on Linux, the
+# constructs that behave differently on those other two toolchains. It is OFF
+# by default so a normal build stays quiet; CI turns it on (see `make
+# portability` and the portability job in quality.yml).
+#
+# The set is split in two deliberately:
+#
+#   * ERRORS are the diagnostics that indicate real divergence between
+#     compilers -- unspecified evaluation order, dangling references, missing
+#     returns, disabled NaN handling. Every one of these is at zero, so the
+#     gate is meaningful: a new hit is a regression, not a backlog item.
+#   * The rest stay warnings. There are ~2,700 of them (mostly -Wswitch and
+#     -Wmissing-field-initializers) and they are stylistic, not portability
+#     signal. Promoting them would drown the ones that matter.
+#
+# Anything suppressed here is suppressed because it is noise, never because a
+# real finding was inconvenient.
+option(SOI_STRICT_WARNINGS "Compile with the cross-platform portability warning set" OFF)
+if(SOI_STRICT_WARNINGS)
+    if(MSVC)
+        add_compile_options(
+            /W4
+            /permissive- # Reject the Microsoft language extensions
+            /we4715 # Not all control paths return a value
+            /we4172 # Returning the address of a local
+            /we4239 # Non-standard binding of a temporary to a reference
+            /wd4100 # Unreferenced formal parameter
+            /wd4189 # Local variable initialised but not referenced
+            /wd4244 # Narrowing conversion
+            /wd4267 # size_t narrowing
+            /wd4505 # Unreferenced local function
+        )
+    else()
+        add_compile_options(-Wall -Wextra)
+        # -Werror=unused-result belongs to this set on merit but cannot live
+        # here: moc emits `_t->some_getter();` for every invokable, so a
+        # [[nodiscard]] getter on a Q_OBJECT fails the build from generated
+        # code we do not own, and 42 headers have that shape. It is enforced in
+        # scripts/check-portability.py instead, which only sees our own
+        # translation units.
+        add_compile_options(
+            -Werror=return-type
+            -Werror=sign-compare
+            -Werror=range-loop-construct
+            -Wno-switch
+            -Wno-missing-field-initializers
+            -Wno-unused-parameter
+            -Wno-unused-variable
+            -Wno-unused-function
+        )
+        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            add_compile_options(
+                # The Apple toolchain is Clang, so these are the ones that
+                # speak for macOS.
+                -Werror=unsequenced
+                -Werror=dangling-gsl
+                -Werror=inconsistent-missing-override
+                # Fires if anyone reinstates -ffast-math without
+                # -fno-finite-math-only and silently deletes the isfinite
+                # guards again. See the floating point note above.
+                -Werror=nan-infinity-disabled
+                -Wno-unused-private-field
+                -Wno-unused-lambda-capture
+                -Wno-unused-local-typedef
+                -Wno-mismatched-tags
+                -Wno-shadow-field
+                -Wno-range-loop-bind-reference
+            )
+        else()
+            add_compile_options(
+                -Werror=sequence-point
+                -Wno-unused-but-set-variable
+                -Wno-unused-local-typedefs
+            )
+            if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
+                add_compile_options(-Werror=dangling-reference)
+            endif()
+        endif()
+    endif()
+    message(STATUS "Portability warning set enabled (SOI_STRICT_WARNINGS)")
 endif()
 
 # ---- Qt ----

@@ -138,11 +138,13 @@ auto plan_side(const FixtureSide& side,
       const float depth =
           -static_cast<float>(row + row_offset) * rank_spacing * enemy_direction;
 
+      const float depth_jitter = jitter(seed, salt++, jitter_magnitude);
+      const float lateral_jitter = jitter(seed, salt++, jitter_magnitude);
+
       Game::Units::SpawnParams params;
-      params.position =
-          QVector3D(centre.x() + depth + jitter(seed, salt++, jitter_magnitude),
-                    0.0F,
-                    centre.z() + lateral + jitter(seed, salt++, jitter_magnitude));
+      params.position = QVector3D(centre.x() + depth + depth_jitter,
+                                  0.0F,
+                                  centre.z() + lateral + lateral_jitter);
 
       params.rotation_y = enemy_direction > 0.0F ? 90.0F : 270.0F;
       params.player_id = owner_id;
