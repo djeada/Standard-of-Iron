@@ -1,6 +1,8 @@
 #pragma once
 #include <QOpenGLFunctions_3_3_Core>
 
+#include "platform_gl.h"
+
 namespace Render::GL {
 
 struct DepthMaskScope {
@@ -67,7 +69,7 @@ struct BlendScope {
   }
   ~BlendScope() {
     glBlendFunc(static_cast<GLenum>(prev_src_rgb), static_cast<GLenum>(prev_dst_rgb));
-    glBlendEquation(static_cast<GLenum>(prev_equation_rgb));
+    Platform::set_blend_equation(static_cast<GLenum>(prev_equation_rgb));
     if (prev_enable != 0U) {
       glEnable(GL_BLEND);
     } else {

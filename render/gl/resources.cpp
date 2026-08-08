@@ -2,12 +2,12 @@
 
 #include <QVector3D>
 
-#include <GL/gl.h>
 #include <cmath>
 #include <memory>
 
 #include "gl/mesh.h"
 #include "gl/texture.h"
+#include "platform_gl.h"
 #include "render_constants.h"
 
 namespace Render::GL {

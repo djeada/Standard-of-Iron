@@ -5,7 +5,6 @@
 #include <QOpenGLVersionFunctionsFactory>
 #include <QtGlobal>
 
-#include <GL/gl.h>
 #include <cstring>
 #include <limits>
 #include <sstream>
@@ -17,6 +16,7 @@
 #include "creature/rigged_mesh_registry.h"
 #include "creature/runtime_bake_guard.h"
 #include "creature/spec.h"
+#include "gl/platform_gl.h"
 
 namespace Render::GL {
 

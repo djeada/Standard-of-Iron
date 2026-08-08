@@ -8,7 +8,6 @@
 #include <QTextStream>
 #include <QtGlobal>
 
-#include <GL/gl.h>
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -20,6 +19,7 @@
 #include "../../rigged_mesh.h"
 #include "../backend.h"
 #include "../buffer.h"
+#include "../platform_gl.h"
 #include "../shader_cache.h"
 #include "../texture.h"
 #include "../ubo_bindings.h"

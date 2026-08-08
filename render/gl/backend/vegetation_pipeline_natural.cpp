@@ -7,7 +7,6 @@
 #include <qstringliteral.h>
 #include <qvectornd.h>
 
-#include <GL/gl.h>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -16,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "../platform_gl.h"
 #include "../render_constants.h"
 #include "dead_tree_mesh.h"
 #include "gl/shader_cache.h"

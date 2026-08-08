@@ -9,7 +9,6 @@
 #include <qstringliteral.h>
 #include <qvectornd.h>
 
-#include <GL/gl.h>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -18,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "../platform_gl.h"
 #include "../render_constants.h"
 #include "gl/shader_cache.h"
 #include "mesh_buffers.h"
