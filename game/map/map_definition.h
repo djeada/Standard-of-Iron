@@ -112,7 +112,7 @@ struct UndeadWave {
   std::vector<UndeadWaveUnitSpawn> units;
 };
 
-struct Grove {
+struct Forest {
   QString id;
   float x = 0.0F;
   float z = 0.0F;
@@ -444,7 +444,7 @@ struct MapDefinition {
   std::vector<StructureEntry> structures;
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
-  std::vector<Grove> groves;
+  std::vector<Forest> forests;
   std::vector<FogZone> fog_zones;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;

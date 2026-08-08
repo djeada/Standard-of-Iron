@@ -332,6 +332,6 @@ props are wide, tree trunks are narrow) and is only placed where it stands clear
 
 If the authored spot fails, the prop is nudged outward through three rings of candidate
 positions; if none is clear it is **skipped**. That is what stops a tent growing out of
-a house wall or a grove standing in a river, and it applies to every scenario, including
+a house wall or a forest standing in a river, and it applies to every scenario, including
 new ones — but a patch authored somewhere hopeless still silently loses props, so author
 the dressing where it belongs and let the pass tidy the edges rather than relying on it.

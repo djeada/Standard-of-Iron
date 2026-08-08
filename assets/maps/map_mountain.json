@@ -140,6 +140,20 @@
       ]
     },
     {
+      "type": "flat",
+      "x": 150,
+      "z": 150,
+      "width": 70,
+      "depth": 58,
+      "description": "Central saddle clearing around the fortress ridge."
+    },
+    {
+      "type": "flat",
+      "x": 150,
+      "z": 150,
+      "description": "Abandoned mountain fortress ruins."
+    },
+    {
       "type": "hill",
       "x": 150,
       "z": 150,
@@ -168,17 +182,9 @@
       ]
     },
     {
-      "type": "flat",
-      "x": 150,
-      "z": 150,
-      "width": 70,
-      "depth": 58,
-      "description": "Central saddle clearing around the fortress ridge."
-    },
-    {
       "type": "hill",
-      "x": 96,
-      "z": 122,
+      "x": 100.7,
+      "z": 153.65,
       "width": 26,
       "depth": 14,
       "height": 3.0,
@@ -186,19 +192,19 @@
       "description": "Western approach ridge controlling the main valley road.",
       "entrances": [
         {
-          "x": 82,
-          "z": 119
+          "x": 86.7,
+          "z": 150.65
         },
         {
-          "x": 110,
-          "z": 125
+          "x": 114.7,
+          "z": 156.65
         }
       ]
     },
     {
       "type": "hill",
-      "x": 204,
-      "z": 178,
+      "x": 199.3,
+      "z": 146.35,
       "width": 26,
       "depth": 14,
       "height": 3.0,
@@ -206,19 +212,19 @@
       "description": "Eastern approach ridge controlling the main valley road.",
       "entrances": [
         {
-          "x": 190,
-          "z": 175
+          "x": 185.3,
+          "z": 143.35
         },
         {
-          "x": 218,
-          "z": 181
+          "x": 213.3,
+          "z": 149.35
         }
       ]
     },
     {
       "type": "hill",
-      "x": 142,
-      "z": 62,
+      "x": 148.67,
+      "z": 52.02,
       "width": 42,
       "depth": 14,
       "height": 3.2,
@@ -226,19 +232,19 @@
       "description": "Northern high-pass overlook. Excellent archer ground, but far from both bases.",
       "entrances": [
         {
-          "x": 121,
-          "z": 62
+          "x": 127.67,
+          "z": 52.02
         },
         {
-          "x": 163,
-          "z": 62
+          "x": 169.67,
+          "z": 52.02
         }
       ]
     },
     {
       "type": "hill",
-      "x": 158,
-      "z": 238,
+      "x": 151.33,
+      "z": 247.98,
       "width": 42,
       "depth": 14,
       "height": 3.2,
@@ -246,14 +252,20 @@
       "description": "Southern high-pass overlook. Mirrors the northern overlook.",
       "entrances": [
         {
-          "x": 137,
-          "z": 238
+          "x": 130.33,
+          "z": 247.98
         },
         {
-          "x": 179,
-          "z": 238
+          "x": 172.33,
+          "z": 247.98
         }
       ]
+    },
+    {
+      "type": "flat",
+      "x": 72,
+      "z": 202,
+      "description": "Ruined goat-herder hamlet on the lower trail."
     },
     {
       "type": "hill",
@@ -274,6 +286,12 @@
           "z": 206
         }
       ]
+    },
+    {
+      "type": "flat",
+      "x": 228,
+      "z": 98,
+      "description": "Ruined watch hamlet on the upper trail."
     },
     {
       "type": "hill",
@@ -374,72 +392,6 @@
       "radius": 16,
       "height": 8.5,
       "description": "Northeastern map-edge mountain."
-    },
-    {
-      "type": "forest",
-      "x": 86,
-      "z": 92,
-      "radius": 13,
-      "density": 0.42,
-      "description": "Lower pine cover near Player 1 approach."
-    },
-    {
-      "type": "forest",
-      "x": 214,
-      "z": 208,
-      "radius": 13,
-      "density": 0.42,
-      "description": "Lower pine cover near Player 2 approach."
-    },
-    {
-      "type": "forest",
-      "x": 102,
-      "z": 198,
-      "radius": 15,
-      "density": 0.46,
-      "description": "Southern pine belt along the flank trail."
-    },
-    {
-      "type": "forest",
-      "x": 198,
-      "z": 102,
-      "radius": 15,
-      "density": 0.46,
-      "description": "Northern pine belt along the upper flank trail."
-    },
-    {
-      "type": "forest",
-      "x": 136,
-      "z": 132,
-      "radius": 10,
-      "density": 0.38,
-      "description": "Small central pine patch masking infantry movement."
-    },
-    {
-      "type": "forest",
-      "x": 164,
-      "z": 168,
-      "radius": 10,
-      "density": 0.38,
-      "description": "Mirrored central pine patch."
-    },
-    {
-      "type": "flat",
-      "x": 150,
-      "z": 150,
-      "description": "Abandoned mountain fortress ruins."
-    },
-    {
-      "type": "flat",
-      "x": 72,
-      "z": 202,
-      "description": "Ruined goat-herder hamlet on the lower trail."
-    },
-    {
-      "type": "flat",
-      "x": 228,
-      "z": 98,
-      "description": "Ruined watch hamlet on the upper trail."
     }
   ],
   "rivers": [
@@ -1189,6 +1141,44 @@
       "max_population": 220,
       "nation": "roman_republic",
       "description": "Player 2 mountain barracks"
+    }
+  ],
+  "forests": [
+    {
+      "id": "mountain_forest_1",
+      "x": 30.79,
+      "z": 101.38,
+      "radius": 13
+    },
+    {
+      "id": "mountain_forest_2",
+      "x": 269.21,
+      "z": 198.62,
+      "radius": 13
+    },
+    {
+      "id": "mountain_forest_3",
+      "x": 80.47,
+      "z": 256.14,
+      "radius": 15
+    },
+    {
+      "id": "mountain_forest_4",
+      "x": 219.53,
+      "z": 43.86,
+      "radius": 15
+    },
+    {
+      "id": "mountain_forest_5",
+      "x": 149.93,
+      "z": 86.07,
+      "radius": 10
+    },
+    {
+      "id": "mountain_forest_6",
+      "x": 150.07,
+      "z": 213.93,
+      "radius": 10
     }
   ]
 }

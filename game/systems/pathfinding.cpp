@@ -486,7 +486,7 @@ void Pathfinding::rebuild_forest_index() {
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height), false);
 
   auto& terrain_service = Game::Map::TerrainService::instance();
-  if (!terrain_service.is_initialized() || terrain_service.groves().empty()) {
+  if (!terrain_service.is_initialized() || terrain_service.forests().empty()) {
     return;
   }
 
@@ -496,14 +496,14 @@ void Pathfinding::rebuild_forest_index() {
   bool const world_space =
       terrain_service.coord_system() == Game::Map::CoordSystem::World;
 
-  for (auto const& grove : terrain_service.groves()) {
-    float center_x = grove.x;
-    float center_z = grove.z;
-    float radius = grove.radius;
+  for (auto const& forest : terrain_service.forests()) {
+    float center_x = forest.x;
+    float center_z = forest.z;
+    float radius = forest.radius;
     if (world_space) {
-      center_x = grove.x / tile_size - m_grid_offset_x;
-      center_z = grove.z / tile_size - m_grid_offset_z;
-      radius = grove.radius / tile_size;
+      center_x = forest.x / tile_size - m_grid_offset_x;
+      center_z = forest.z / tile_size - m_grid_offset_z;
+      radius = forest.radius / tile_size;
     }
 
     int const min_x = std::max(0, static_cast<int>(std::floor(center_x - radius)));

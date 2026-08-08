@@ -372,6 +372,8 @@ add_executable(
     tools/map_editor_map_data_test.cpp
     tools/map_editor_mission_data_test.cpp
     tools/map_editor_canvas_transform_test.cpp
+    tools/map_editor_canvas_input_test.cpp
+    tools/map_editor_wall_geometry_test.cpp
     tools/map_editor_element_ops_test.cpp
     tools/map_editor_wildlife_test.cpp
     tools/map_editor_json_schema_test.cpp

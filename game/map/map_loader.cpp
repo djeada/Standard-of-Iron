@@ -612,24 +612,53 @@ void append_undead_wave_units_from_object(const QJsonObject& obj, UndeadWave& ou
 void read_starting_resources(const QJsonObject& obj,
                              Game::Systems::ResourceAmounts& out);
 
-void read_groves(const QJsonArray& arr, std::vector<Grove>& out) {
+void read_forests(const QJsonArray& arr, std::vector<Forest>& out) {
   out.clear();
   out.reserve(arr.size());
-  int next_grove_index = 1;
+  int next_forest_index = 1;
   for (const auto& val : arr) {
     auto obj = val.toObject();
-    Grove grove;
-    grove.id = obj.value(ID).toString().trimmed();
-    if (grove.id.isEmpty()) {
-      grove.id = QStringLiteral("grove_%1").arg(next_grove_index++);
+    Forest forest;
+    forest.id = obj.value(ID).toString().trimmed();
+    if (forest.id.isEmpty()) {
+      forest.id = QStringLiteral("forest_%1").arg(next_forest_index++);
     }
-    grove.x = float(obj.value(X).toDouble(0.0));
-    grove.z = float(obj.value(Z).toDouble(0.0));
-    grove.radius = float(obj.value(RADIUS).toDouble(grove.radius));
-    if (grove.radius <= 0.0F) {
+    forest.x = float(obj.value(X).toDouble(0.0));
+    forest.z = float(obj.value(Z).toDouble(0.0));
+    forest.radius = float(obj.value(RADIUS).toDouble(forest.radius));
+    if (forest.radius <= 0.0F) {
       continue;
     }
-    out.push_back(grove);
+    out.push_back(forest);
+  }
+}
+
+void append_forest_terrain(const std::vector<Forest>& forests,
+                           const GridDefinition& grid,
+                           CoordSystem coord_sys,
+                           std::vector<TerrainFeature>& out_terrain) {
+  constexpr float grid_center_offset = 0.5F;
+  constexpr float min_tile_size = 0.0001F;
+  const float tile =
+      coord_sys == CoordSystem::Grid ? std::max(min_tile_size, grid.tile_size) : 1.0F;
+
+  out_terrain.reserve(out_terrain.size() + forests.size());
+  for (const auto& forest : forests) {
+    TerrainFeature feature;
+    feature.type = TerrainType::Forest;
+    if (coord_sys == CoordSystem::Grid) {
+      feature.center_x =
+          (forest.x - (grid.width * grid_center_offset - grid_center_offset)) * tile;
+      feature.center_z =
+          (forest.z - (grid.height * grid_center_offset - grid_center_offset)) * tile;
+      feature.radius = forest.radius * tile;
+    } else {
+      feature.center_x = forest.x;
+      feature.center_z = forest.z;
+      feature.radius = forest.radius;
+    }
+    feature.height = 0.0F;
+    out_terrain.push_back(feature);
   }
 }
 
@@ -1419,10 +1448,10 @@ auto MapLoader::load_from_json_file(const QString& path,
     out_map.undead_zones.clear();
   }
 
-  if (root.contains(GROVES) && root.value(GROVES).isArray()) {
-    read_groves(root.value(GROVES).toArray(), out_map.groves);
+  if (root.contains(FORESTS) && root.value(FORESTS).isArray()) {
+    read_forests(root.value(FORESTS).toArray(), out_map.forests);
   } else {
-    out_map.groves.clear();
+    out_map.forests.clear();
   }
 
   out_map.lakes.clear();
@@ -1446,6 +1475,9 @@ auto MapLoader::load_from_json_file(const QString& path,
       return feature.type == TerrainType::Lake;
     });
   }
+
+  append_forest_terrain(
+      out_map.forests, out_map.grid, out_map.coordSystem, out_map.terrain);
 
   if (root.contains(RIVERS) && root.value(RIVERS).isArray()) {
     read_rivers(root.value(RIVERS).toArray(),

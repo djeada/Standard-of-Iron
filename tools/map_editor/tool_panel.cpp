@@ -2,6 +2,7 @@
 
 #include <QButtonGroup>
 #include <QComboBox>
+#include <QContextMenuEvent>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
@@ -78,7 +79,13 @@ auto toolDescription(ToolType tool) -> QString {
   case ToolType::Temple:
     return "Place a temple building and assign it to a player.";
   case ToolType::Wall:
-    return "Draw a wall segment between two points and assign it to a player.";
+    return "Draw a wall run between two points. Runs snap to the 2-cell wall "
+           "lattice and stay axis aligned, and they break around any gate they "
+           "cross.";
+  case ToolType::Gate:
+    return "Set a gate into a wall. Click on a run and the gate takes its axis, "
+           "snaps to the lattice and opens a 6-cell gap in it. Click off a run to "
+           "place a free-standing gate.";
   case ToolType::Eraser:
     return "Remove the element or segment under the cursor.";
   case ToolType::TroopArcher:
@@ -106,8 +113,8 @@ auto toolDescription(ToolType tool) -> QString {
   case ToolType::UndeadZone:
     return "Place an undead zone (shrine or ruins anchor with skeleton wave spawns). "
            "Double-click to edit waves.";
-  case ToolType::Grove:
-    return "Plant a wood. Its ground is closed to horses, siege and elephants; only "
+  case ToolType::Forest:
+    return "Plant a forest. Its ground is closed to horses, siege and elephants; only "
            "foot troops, builders and civilians can thread it.";
   case ToolType::WildlifeSheep:
     return "Mark a sheep pasture. Herds spawn inside the circle and graze within it.";
@@ -211,14 +218,15 @@ void ToolPanel::setup_ui() {
                   "\u25B3",
                   "Place mountain peaks.",
                   ToolType::Mountain);
-  add_tool_button(terrain_layout,
-                  1,
-                  0,
-                  "Wood",
-                  "\U0001F332",
-                  "Plant a wood. Its ground is closed to horses, siege and elephants; "
-                  "only foot troops, builders and civilians can thread it.",
-                  ToolType::Grove);
+  add_tool_button(
+      terrain_layout,
+      1,
+      0,
+      "Forest",
+      "\u2660",
+      "Plant a forest. Its ground is closed to horses, siege and elephants; "
+      "only foot troops, builders and civilians can thread it.",
+      ToolType::Forest);
   layout->addWidget(terrain_group);
 
   auto* props_group = new QGroupBox("World Props", this);
@@ -414,7 +422,7 @@ void ToolPanel::setup_ui() {
       0,
       0,
       "Sheep",
-      "🐑",
+      "S",
       "Mark a sheep pasture. Herds spawn inside the circle and graze within it.",
       ToolType::WildlifeSheep);
   add_tool_button(
@@ -422,14 +430,14 @@ void ToolPanel::setup_ui() {
       0,
       1,
       "Wolves",
-      "🐺",
+      "W",
       "Mark a wolf range. Packs den inside the circle and hunt out from it.",
       ToolType::WildlifeWolves);
   add_tool_button(wildlife_layout,
                   0,
                   2,
                   "Birds",
-                  "🐦",
+                  "∧",
                   "Mark a bird roost. Only used when a map turns flyovers off and "
                   "keeps the flock resident.",
                   ToolType::WildlifeBirds);
@@ -460,14 +468,27 @@ void ToolPanel::setup_ui() {
                   "\u2550",
                   "Draw a bridge between two points.",
                   ToolType::Bridge);
-  add_tool_button(paths_layout,
-                  1,
-                  1,
+  layout->addWidget(paths_group);
+
+  auto* fortification_group = new QGroupBox("Walls & Gates", this);
+  auto* fortification_layout = new QGridLayout(fortification_group);
+  fortification_layout->setHorizontalSpacing(6);
+  fortification_layout->setVerticalSpacing(6);
+  add_tool_button(fortification_layout,
+                  0,
+                  0,
                   "Wall",
                   "\u25AC",
-                  "Draw a wall segment between two points and assign a player.",
+                  toolDescription(ToolType::Wall),
                   ToolType::Wall);
-  layout->addWidget(paths_group);
+  add_tool_button(fortification_layout,
+                  0,
+                  1,
+                  "Gate",
+                  "\u2510\u250C",
+                  toolDescription(ToolType::Gate),
+                  ToolType::Gate);
+  layout->addWidget(fortification_group);
 
   auto* structures_group = new QGroupBox("Structures", this);
   auto* structures_layout = new QGridLayout(structures_group);
@@ -526,7 +547,8 @@ void ToolPanel::setup_ui() {
                       "Drag: move selected elements or endpoints\n"
                       "Middle click / Ctrl+drag: pan\n"
                       "Mouse wheel: zoom\n"
-                      "Right click / Escape: return to Select\n"
+                      "Right click / Escape: put the tool away\n"
+                      "Right click with no tool armed: context menu\n"
                       "Del / Backspace: delete selected\n"
                       "Shift + click/drag: free placement (no snap)\n"
                       "Double-click element: edit JSON (hills include a top-grid)\n"
@@ -602,6 +624,15 @@ void ToolPanel::update_active_tool_label(const QString& description) {
 
 void ToolPanel::clear_selection() {
   set_current_tool(ToolType::Select);
+}
+
+void ToolPanel::contextMenuEvent(QContextMenuEvent* event) {
+  if (m_current_tool == ToolType::Select) {
+    QWidget::contextMenuEvent(event);
+    return;
+  }
+  clear_selection();
+  event->accept();
 }
 
 } // namespace MapEditor

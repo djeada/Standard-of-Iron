@@ -31,7 +31,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
     case ScatterSceneArchetype::FertilePatch:
       scene_multiplier = 0.60F;
       break;
-    case ScatterSceneArchetype::ShelteredGrove:
+    case ScatterSceneArchetype::ShelteredHollow:
       scene_multiplier = 0.75F;
       break;
     case ScatterSceneArchetype::OpenField:
@@ -49,7 +49,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
     case ScatterSceneArchetype::FertilePatch:
       scene_multiplier = 1.45F;
       break;
-    case ScatterSceneArchetype::ShelteredGrove:
+    case ScatterSceneArchetype::ShelteredHollow:
       scene_multiplier = 1.25F;
       break;
     case ScatterSceneArchetype::RockyPatch:
@@ -70,7 +70,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
     break;
   case ScatterRuleSpecies::Pine:
     switch (sample.archetype) {
-    case ScatterSceneArchetype::ShelteredGrove:
+    case ScatterSceneArchetype::ShelteredHollow:
       scene_multiplier = 1.60F;
       break;
     case ScatterSceneArchetype::RockyPatch:
@@ -106,7 +106,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
     case ScatterSceneArchetype::RiverFringe:
       scene_multiplier = 0.25F;
       break;
-    case ScatterSceneArchetype::ShelteredGrove:
+    case ScatterSceneArchetype::ShelteredHollow:
       scene_multiplier = 0.55F;
       break;
     case ScatterSceneArchetype::FertilePatch:
@@ -142,7 +142,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
     case ScatterSceneArchetype::FertilePatch:
       scene_multiplier = 0.65F;
       break;
-    case ScatterSceneArchetype::ShelteredGrove:
+    case ScatterSceneArchetype::ShelteredHollow:
       scene_multiplier = 0.55F;
       break;
     }
@@ -186,7 +186,7 @@ scatter_density_multiplier(ScatterRuleSpecies species,
     case ScatterSceneArchetype::FertilePatch:
       scene_multiplier = 0.35F;
       break;
-    case ScatterSceneArchetype::ShelteredGrove:
+    case ScatterSceneArchetype::ShelteredHollow:
       scene_multiplier = 0.45F;
       break;
     }
@@ -282,14 +282,14 @@ scatter_cluster_satellite_count(ScatterRuleSpecies species,
         sample.archetype == ScatterSceneArchetype::FertilePatch) {
       min_satellites = sample.cluster_bias > 0.35F ? 1 : 0;
       max_satellites = 3;
-    } else if (sample.archetype == ScatterSceneArchetype::ShelteredGrove) {
+    } else if (sample.archetype == ScatterSceneArchetype::ShelteredHollow) {
       max_satellites = 2;
     } else {
       max_satellites = 1;
     }
     break;
   case ScatterRuleSpecies::Pine:
-    max_satellites = sample.archetype == ScatterSceneArchetype::ShelteredGrove ? 2 : 1;
+    max_satellites = sample.archetype == ScatterSceneArchetype::ShelteredHollow ? 2 : 1;
     break;
   case ScatterRuleSpecies::Olive:
     max_satellites = (sample.archetype == ScatterSceneArchetype::DryClearing ||

@@ -135,7 +135,7 @@ The same order is used for regional rebuilds: reset the region to terrain, reapp
 
 ## Forest cells and passability
 
-`CellValue::Forest` marks the open ground inside an authored grove (`groves` in the map
+`CellValue::Forest` marks the open ground inside an authored forest (`forests` in the map
 file). It is the one cell value whose walkability depends on who is asking:
 
 ```cpp
