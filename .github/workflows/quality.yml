@@ -72,9 +72,14 @@ jobs:
           git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
             | xargs -0 -r python scripts/check-quality-markers.py
 
-      # scripts/validate_shader_config.py is deliberately absent: it reports 24
-      # pre-existing content issues on main and would make this gate red from
-      # day one. Fix those, then add it here.
+      # There used to be a scripts/validate_shader_config.py here, excluded
+      # because it "reports 24 pre-existing content issues on main". Those 24
+      # were not real: it expected a per-nation, per-unit .vert/.frag pair and a
+      # shader_id in every style file, which is an architecture the renderer no
+      # longer uses -- units go through the shared character_skinned* shaders
+      # with styles registered from render/entity/nations/. The script was
+      # obsolete rather than the content, so it has been deleted. Anything
+      # replacing it should assert on style registration, not on file names.
       - name: Static content validation
         run: |
           python scripts/validate_shader_uniforms.py

@@ -864,7 +864,8 @@
       "max_instances": 6,
       "load_policy": "mission",
       "tags": {
-        "role": "charge"
+        "role": "charge",
+        "source": "field"
       }
     },
     {
@@ -880,7 +881,8 @@
       "max_instances": 6,
       "load_policy": "mission",
       "tags": {
-        "state": "tense"
+        "state": "tense",
+        "source": "field"
       }
     },
     {
@@ -896,7 +898,8 @@
       "max_instances": 4,
       "load_policy": "mission",
       "tags": {
-        "role": "volley"
+        "role": "volley",
+        "source": "field"
       }
     },
     {
@@ -910,7 +913,8 @@
       "load_policy": "mission",
       "tags": {
         "role": "volley",
-        "variant": "volley"
+        "variant": "volley",
+        "source": "field"
       }
     },
     {
@@ -924,7 +928,8 @@
       "load_policy": "mission",
       "tags": {
         "role": "volley",
-        "variant": "close"
+        "variant": "close",
+        "source": "field"
       }
     },
     {
@@ -938,7 +943,8 @@
       "load_policy": "mission",
       "tags": {
         "role": "volley",
-        "variant": "snap"
+        "variant": "snap",
+        "source": "field"
       }
     },
     {
@@ -954,7 +960,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "state": "combat"
+        "state": "combat",
+        "source": "field"
       }
     },
     {
@@ -970,7 +977,8 @@
       "max_instances": 4,
       "load_policy": "mission",
       "tags": {
-        "state": "combat"
+        "state": "combat",
+        "source": "field"
       }
     },
     {
@@ -984,7 +992,8 @@
       "load_policy": "mission",
       "tags": {
         "state": "combat",
-        "variant": "alternate"
+        "variant": "alternate",
+        "source": "field"
       }
     },
     {
@@ -1000,7 +1009,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "attack_family": "cavalry"
+        "attack_family": "cavalry",
+        "source": "field"
       }
     },
     {
@@ -1014,7 +1024,8 @@
       "load_policy": "mission",
       "tags": {
         "attack_family": "cavalry",
-        "variant": "gallop"
+        "variant": "gallop",
+        "source": "field"
       }
     },
     {
@@ -1029,7 +1040,8 @@
       "tags": {
         "attack_family": "cavalry",
         "faction": "carthage",
-        "variant": "numidian"
+        "variant": "numidian",
+        "source": "field"
       }
     },
     {
@@ -1045,7 +1057,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "attack_family": "elephant"
+        "attack_family": "elephant",
+        "source": "field"
       }
     },
     {
@@ -1059,7 +1072,8 @@
       "load_policy": "mission",
       "tags": {
         "attack_family": "elephant",
-        "variant": "panic"
+        "variant": "panic",
+        "source": "field"
       }
     },
     {
@@ -1075,7 +1089,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "attack_family": "death"
+        "attack_family": "death",
+        "source": "field"
       }
     },
     {
@@ -1089,7 +1104,8 @@
       "load_policy": "mission",
       "tags": {
         "state": "defeat",
-        "variant": "aftermath"
+        "variant": "aftermath",
+        "source": "field"
       }
     },
     {
@@ -1103,7 +1119,8 @@
       "load_policy": "mission",
       "tags": {
         "role": "charge",
-        "variant": "shield"
+        "variant": "shield",
+        "source": "field"
       }
     },
     {
@@ -1117,7 +1134,8 @@
       "load_policy": "mission",
       "tags": {
         "role": "charge",
-        "variant": "formation"
+        "variant": "formation",
+        "source": "field"
       }
     },
     {
@@ -1130,7 +1148,8 @@
       "max_instances": 1,
       "load_policy": "mission",
       "tags": {
-        "state": "victory"
+        "state": "victory",
+        "source": "field"
       }
     },
     {
@@ -1145,7 +1164,8 @@
       "tags": {
         "state": "combat",
         "faction": "roman",
-        "role": "stinger"
+        "role": "stinger",
+        "source": "field"
       }
     },
     {
@@ -1160,7 +1180,8 @@
       "tags": {
         "state": "combat",
         "faction": "carthage",
-        "role": "stinger"
+        "role": "stinger",
+        "source": "field"
       }
     },
     {
@@ -1173,7 +1194,8 @@
       "max_instances": 1,
       "load_policy": "mission",
       "tags": {
-        "state": "defeat"
+        "state": "defeat",
+        "source": "field"
       }
     },
     {
@@ -1187,7 +1209,8 @@
       "load_policy": "mission",
       "tags": {
         "alert": "reinforcements",
-        "variant": "march"
+        "variant": "march",
+        "source": "field"
       }
     },
     {
@@ -1201,7 +1224,8 @@
       "load_policy": "mission",
       "tags": {
         "attack_family": "arrow",
-        "variant": "flyby"
+        "variant": "flyby",
+        "source": "field"
       }
     },
     {
@@ -1215,7 +1239,8 @@
       "load_policy": "mission",
       "tags": {
         "attack_family": "arrow",
-        "variant": "overhead"
+        "variant": "overhead",
+        "source": "field"
       }
     },
     {
@@ -1229,7 +1254,8 @@
       "load_policy": "mission",
       "tags": {
         "attack_family": "arrow",
-        "variant": "overhead_soft"
+        "variant": "overhead_soft",
+        "source": "field"
       }
     },
     {
@@ -1243,7 +1269,8 @@
       "load_policy": "mission",
       "tags": {
         "attack_family": "arrow",
-        "variant": "overhead_dark"
+        "variant": "overhead_dark",
+        "source": "field"
       }
     },
     {
@@ -1258,7 +1285,8 @@
       "max_instances": 1,
       "load_policy": "startup",
       "tags": {
-        "alert": "population_limit"
+        "alert": "population_limit",
+        "source": "field"
       }
     },
     {
@@ -1273,7 +1301,8 @@
       "max_instances": 1,
       "load_policy": "startup",
       "tags": {
-        "alert": "reinforcements"
+        "alert": "reinforcements",
+        "source": "field"
       }
     },
     {
@@ -1288,7 +1317,8 @@
       "max_instances": 1,
       "load_policy": "startup",
       "tags": {
-        "alert": "low_resources"
+        "alert": "low_resources",
+        "source": "field"
       }
     },
     {
@@ -1329,7 +1359,8 @@
       "max_instances": 1,
       "load_policy": "startup",
       "tags": {
-        "alert": "enemy_reinforcements"
+        "alert": "enemy_reinforcements",
+        "source": "field"
       }
     },
     {
@@ -1344,7 +1375,8 @@
       "max_instances": 1,
       "load_policy": "startup",
       "tags": {
-        "alert": "enemy_spotted"
+        "alert": "enemy_spotted",
+        "source": "field"
       }
     },
     {
@@ -2501,7 +2533,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "sword"
+        "attack_family": "sword",
+        "source": "field"
       }
     },
     {
@@ -2514,7 +2547,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "sword"
+        "attack_family": "sword",
+        "source": "field"
       }
     },
     {
@@ -2527,7 +2561,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "sword"
+        "attack_family": "sword",
+        "source": "field"
       }
     },
     {
@@ -2540,7 +2575,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "sword"
+        "attack_family": "sword",
+        "source": "field"
       }
     },
     {
@@ -2553,7 +2589,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "spear"
+        "attack_family": "spear",
+        "source": "field"
       }
     },
     {
@@ -2566,7 +2603,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "spear"
+        "attack_family": "spear",
+        "source": "field"
       }
     },
     {
@@ -2579,7 +2617,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "spear"
+        "attack_family": "spear",
+        "source": "field"
       }
     },
     {
@@ -2592,7 +2631,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "spear"
+        "attack_family": "spear",
+        "source": "field"
       }
     },
     {
@@ -2605,7 +2645,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "spear"
+        "attack_family": "spear",
+        "source": "field"
       }
     },
     {
@@ -2618,7 +2659,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "spear"
+        "attack_family": "spear",
+        "source": "field"
       }
     },
     {
@@ -2631,7 +2673,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "arrow"
+        "attack_family": "arrow",
+        "source": "field"
       }
     },
     {
@@ -2644,7 +2687,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "arrow"
+        "attack_family": "arrow",
+        "source": "field"
       }
     },
     {
@@ -2657,7 +2701,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "arrow"
+        "attack_family": "arrow",
+        "source": "field"
       }
     },
     {
@@ -2670,7 +2715,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "generic"
+        "attack_family": "generic",
+        "source": "field"
       }
     },
     {
@@ -2683,7 +2729,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "generic"
+        "attack_family": "generic",
+        "source": "field"
       }
     },
     {
@@ -2696,7 +2743,8 @@
       "max_instances": 4,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "generic"
+        "attack_family": "generic",
+        "source": "field"
       }
     },
     {
@@ -2709,7 +2757,8 @@
       "max_instances": 3,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "siege"
+        "attack_family": "siege",
+        "source": "field"
       }
     },
     {
@@ -2722,7 +2771,8 @@
       "max_instances": 3,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "siege"
+        "attack_family": "siege",
+        "source": "field"
       }
     },
     {
@@ -2735,7 +2785,8 @@
       "max_instances": 3,
       "load_policy": "startup",
       "tags": {
-        "attack_family": "siege"
+        "attack_family": "siege",
+        "source": "field"
       }
     },
     {
@@ -2748,7 +2799,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "grass"
+        "surface": "grass",
+        "source": "field"
       }
     },
     {
@@ -2761,7 +2813,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "grass"
+        "surface": "grass",
+        "source": "field"
       }
     },
     {
@@ -2774,7 +2827,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "grass"
+        "surface": "grass",
+        "source": "field"
       }
     },
     {
@@ -2787,7 +2841,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "grass"
+        "surface": "grass",
+        "source": "field"
       }
     },
     {
@@ -2800,7 +2855,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "stone"
+        "surface": "stone",
+        "source": "field"
       }
     },
     {
@@ -2813,7 +2869,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "stone"
+        "surface": "stone",
+        "source": "field"
       }
     },
     {
@@ -2826,7 +2883,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "stone"
+        "surface": "stone",
+        "source": "field"
       }
     },
     {
@@ -2839,7 +2897,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "stone"
+        "surface": "stone",
+        "source": "field"
       }
     },
     {
@@ -2852,7 +2911,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "run"
+        "surface": "run",
+        "source": "field"
       }
     },
     {
@@ -2865,7 +2925,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "run"
+        "surface": "run",
+        "source": "field"
       }
     },
     {
@@ -2878,7 +2939,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "run"
+        "surface": "run",
+        "source": "field"
       }
     },
     {
@@ -2891,7 +2953,8 @@
       "max_instances": 6,
       "load_policy": "startup",
       "tags": {
-        "surface": "run"
+        "surface": "run",
+        "source": "field"
       }
     },
     {
@@ -2904,7 +2967,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "species": "wolf"
+        "species": "wolf",
+        "source": "field"
       }
     },
     {
@@ -2917,7 +2981,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "species": "wolf"
+        "species": "wolf",
+        "source": "field"
       }
     },
     {
@@ -2930,7 +2995,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "species": "wolf"
+        "species": "wolf",
+        "source": "field"
       }
     },
     {
@@ -2943,7 +3009,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "species": "wolf"
+        "species": "wolf",
+        "source": "field"
       }
     },
     {
@@ -2956,7 +3023,8 @@
       "max_instances": 3,
       "load_policy": "mission",
       "tags": {
-        "species": "wolf"
+        "species": "wolf",
+        "source": "field"
       }
     },
     {
@@ -2969,7 +3037,8 @@
       "max_instances": 2,
       "load_policy": "mission",
       "tags": {
-        "species": "wolf"
+        "species": "wolf",
+        "source": "field"
       }
     }
   ]

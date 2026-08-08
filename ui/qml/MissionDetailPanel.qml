@@ -36,6 +36,28 @@ Rectangle {
 
     signal start_mission_clicked
 
+    function terrain_label(key) {
+        switch (key) {
+        case "apulian_river_plain":
+            return qsTr("Apulian river plain");
+        case "campanian_plain":
+            return qsTr("Campanian plain");
+        case "lakeside_hill_country":
+            return qsTr("Lakeside hill country");
+        case "mountain":
+            return qsTr("Mountain");
+        case "north_african_plain":
+            return qsTr("North African plain");
+        case "po_valley_river_plain":
+            return qsTr("Po valley river plain");
+        case "river_valley":
+            return qsTr("River valley");
+        case "winter_river_plain":
+            return qsTr("Winter river plain");
+        }
+        return Design.Icons.humanise(key);
+    }
+
     function resolve_player_faction() {
         if (mission_definition && mission_definition.player_setup) {
             var player_setup = mission_definition.player_setup;
@@ -250,7 +272,7 @@ Rectangle {
                                     text: {
                                         if (!mission_definition || !mission_definition.terrain_type)
                                             return "";
-                                        return Design.Icons.humanise(mission_definition.terrain_type);
+                                        return terrain_label(mission_definition.terrain_type);
                                     }
                                     color: "#ffffff"
                                     font.pointSize: Theme.fontSizeTiny

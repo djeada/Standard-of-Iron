@@ -124,3 +124,9 @@ actionlint
 
 # Generated Arena gameplay reports, traces, and frame captures
 /artifacts/
+
+# AppImage packaging leftovers (scripts/package-appimage.sh)
+/AppDir/
+/.linuxdeploy-tools/
+/*.AppImage
+/*.AppImage.sha256

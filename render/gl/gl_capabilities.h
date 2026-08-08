@@ -79,29 +79,64 @@ public:
     return ctx->hasExtension(QByteArray(extension));
   }
 
-  [[nodiscard]] static auto has_compute_shaders() -> bool {
+  static constexpr int k_required_major = 3;
+  static constexpr int k_required_minor = 3;
+
+  [[nodiscard]] static auto meets_minimum_version() -> bool {
     auto* ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       return false;
     }
     const auto format = ctx->format();
-    const bool core_43 = format.majorVersion() > 4 ||
-                         (format.majorVersion() == 4 && format.minorVersion() >= 3);
-    return core_43 || ctx->hasExtension(QByteArrayLiteral("GL_ARB_compute_shader"));
+    return format.majorVersion() > k_required_major ||
+           (format.majorVersion() == k_required_major &&
+            format.minorVersion() >= k_required_minor);
   }
 
-  [[nodiscard]] static auto has_indirect_draw() -> bool {
+  static void report_minimum_version() {
+    auto* ctx = QOpenGLContext::currentContext();
+    if (ctx == nullptr) {
+      qCritical() << "SOI_GL_FLOOR: FAIL - no current OpenGL context";
+      return;
+    }
+    const auto format = ctx->format();
+    const QString found =
+        QStringLiteral("%1.%2 %3")
+            .arg(format.majorVersion())
+            .arg(format.minorVersion())
+            .arg(format.profile() == QSurfaceFormat::CoreProfile
+                     ? QStringLiteral("Core")
+                 : format.profile() == QSurfaceFormat::CompatibilityProfile
+                     ? QStringLiteral("Compatibility")
+                     : QStringLiteral("NoProfile"));
+
+    if (!meets_minimum_version()) {
+      qCritical() << "SOI_GL_FLOOR: FAIL - need OpenGL" << k_required_major << "."
+                  << k_required_minor << "Core, got" << found;
+      return;
+    }
+
+    if (format.profile() == QSurfaceFormat::CompatibilityProfile) {
+      qWarning() << "SOI_GL_FLOOR: WARN - compatibility profile:" << found;
+      return;
+    }
+
+    qInfo() << "SOI_GL_FLOOR: PASS -" << found;
+  }
+
+  [[nodiscard]] static auto has_core_4_3() -> bool {
     auto* ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       return false;
     }
     const auto format = ctx->format();
-    const bool core_43 = format.majorVersion() > 4 ||
-                         (format.majorVersion() == 4 && format.minorVersion() >= 3);
-    return core_43 || (ctx->hasExtension(QByteArrayLiteral("GL_ARB_draw_indirect")) &&
-                       ctx->hasExtension(
-                           QByteArrayLiteral("GL_ARB_shader_storage_buffer_object")));
+    return format.majorVersion() > 4 ||
+           (format.majorVersion() == 4 && format.minorVersion() >= 3);
   }
+
+  [[nodiscard]] static auto has_compute_shaders() -> bool { return has_core_4_3(); }
+
+  [[nodiscard]] static auto has_indirect_draw() -> bool { return has_core_4_3(); }
 };
 
 } // namespace Render::GL

@@ -204,7 +204,7 @@ Item {
                             }
 
                             Text {
-                                text: "›"
+                                text: Design.Icons.chevronForward
                                 font.pointSize: Theme.fontSizeHero
                                 color: Theme.textHint
                             }
@@ -628,7 +628,7 @@ Item {
                             property var _pos: (label_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(label_uv[0], label_uv[1]) : Qt.point(0, 0)
 
                             visible: false
-                            text: modelData.name
+                            text: modelData.display_name || modelData.name
                             color: (campaignMapLoader.item && campaignMapLoader.item.hover_province_id === modelData.id) ? Theme.accent : Theme.textMain
                             font.pointSize: Theme.fontSizeSmall
                             font.bold: true
@@ -672,7 +672,7 @@ Item {
                                 }
 
                                 Text {
-                                    text: city_data.name
+                                    text: city_data.display_name || city_data.name
                                     color: "#111111"
                                     font.pointSize: Theme.fontSizeTiny
                                     font.bold: true
@@ -850,7 +850,7 @@ Item {
                                 }
 
                                 Text {
-                                    text: "›"
+                                    text: Design.Icons.chevronForward
                                     font.pointSize: Theme.fontSizeTitle
                                     color: Theme.textHint
                                 }

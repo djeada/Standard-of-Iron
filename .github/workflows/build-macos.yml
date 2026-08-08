@@ -36,12 +36,18 @@ jobs:
       APP_NAME: standard_of_iron
       APP_DIR: build/bin
       QML_DIR: ui/qml
-      DMG_NAME: standard_of_iron-macos.dmg
       CMAKE_CXX_COMPILER_LAUNCHER: ccache
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
+
+      - name: Resolve release version
+        run: |
+          set -euo pipefail
+          version="$(bash scripts/release-version.sh)"
+          echo "SOI_VERSION=${version}" >> "$GITHUB_ENV"
+          echo "Packaging version ${version}"
 
       - name: Install build tools
         run: brew install ninja ffmpeg
@@ -54,10 +60,53 @@ jobs:
           cache: true
           modules: qt5compat qtmultimedia
 
+      # The architectures are read off the Qt that was actually installed rather
+      # than assumed. Qt 6 ships macOS as a universal framework, but "clang_64"
+      # is a name, not a promise -- and a wrong guess here is the difference
+      # between a native Apple Silicon build and one that only runs under
+      # Rosetta 2. Whatever Qt provides is what the game is built for, and the
+      # build fails later if the binary does not come out matching.
+      - name: Resolve target architectures from the installed Qt
+        run: |
+          set -euo pipefail
+          core="${QT_ROOT_DIR}/lib/QtCore.framework/Versions/A/QtCore"
+          if [ ! -f "${core}" ]; then
+            core="$(find "${QT_ROOT_DIR}/lib" -name 'libQt6Core*.dylib' | head -1)"
+          fi
+          test -n "${core}" && test -f "${core}"
+
+          archs="$(lipo -archs "${core}")"
+          echo "Qt was built for: ${archs}"
+          lipo -info "${core}"
+
+          # CMake wants a semicolon-separated list; lipo prints spaces.
+          cmake_archs="$(echo "${archs}" | tr ' ' ';')"
+          echo "SOI_MACOS_ARCHS=${cmake_archs}" >> "$GITHUB_ENV"
+
+          case "${archs}" in
+            *arm64*\ *x86_64*|*x86_64*\ *arm64*) tag="universal" ;;
+            *arm64*)  tag="arm64" ;;
+            *x86_64*) tag="x86_64" ;;
+            *) echo "::error::unrecognised Qt architecture set '${archs}'"; exit 1 ;;
+          esac
+          echo "SOI_ARCH_TAG=${tag}" >> "$GITHUB_ENV"
+          echo "DMG_NAME=standard_of_iron-${SOI_VERSION}-macos-${tag}.dmg" >> "$GITHUB_ENV"
+
+          echo "Runner is natively $(uname -m); building ${tag} (${archs})"
+          {
+            echo "### macOS build"
+            echo
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| Qt architectures | \`${archs}\` |"
+            echo "| Building | \`${tag}\` |"
+            echo "| Runner native arch | \`$(uname -m)\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
-          key: macos-${{ inputs.build-type }}
+          key: macos-${{ inputs.build-type }}-${{ env.SOI_ARCH_TAG }}
           max-size: 500M
 
       - name: Cache CMake FetchContent dependencies
@@ -68,17 +117,47 @@ jobs:
           restore-keys: deps-macos-
 
       - name: Configure
-        # clang_64 is the x86_64 Qt variant; target x86_64 explicitly so that
-        # the build is consistent on both Intel and Apple Silicon runners.
-        # The resulting binary runs on Apple Silicon via Rosetta 2.
+        # CMAKE_OSX_DEPLOYMENT_TARGET is deliberately not set: Qt defaults it to
+        # its own minimum (macOS 12 for Qt 6.8), and hard-coding a different
+        # floor here would either drop platforms Qt supports or claim ones it
+        # does not.
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -DDEFAULT_LANG=en \
-            -DCMAKE_OSX_ARCHITECTURES=x86_64
+            -DCMAKE_OSX_ARCHITECTURES="${SOI_MACOS_ARCHS}"
 
       - name: Build
         run: cmake --build build --config ${BUILD_TYPE}
+
+      # A universal build that silently lost a slice is indistinguishable from
+      # a working one until an Apple Silicon player reports that it will not
+      # start -- or starts under Rosetta and runs badly. Check the binary.
+      - name: Verify the binary carries the architectures asked for
+        run: |
+          set -euo pipefail
+          binary="${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+          test -f "${binary}" || binary="${APP_DIR}/${APP_NAME}"
+          lipo -info "${binary}"
+
+          built="$(lipo -archs "${binary}")"
+          status=0
+          for want in $(echo "${SOI_MACOS_ARCHS}" | tr ';' ' '); do
+            case " ${built} " in
+              *" ${want} "*) echo "ok: ${want}" ;;
+              *) echo "::error::${want} is missing from the built binary ($built)"; status=1 ;;
+            esac
+          done
+
+          # The deployment target decides which macOS versions can run this at
+          # all, so put it where a release can be checked against it later.
+          target="$(otool -l "${binary}" | awk '/LC_BUILD_VERSION/{f=1} f&&/minos/{print $2; exit}')"
+          echo "Minimum macOS: ${target:-unknown}"
+          {
+            echo "| Built architectures | \`${built}\` |"
+            echo "| Minimum macOS | \`${target:-unknown}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "${status}"
 
       - name: Unit tests
         env:
@@ -97,16 +176,76 @@ jobs:
           mkdir -p "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets"
           rsync -a assets/ "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets/"
 
+      # Qt is LGPL v3, so its notice has to travel with the binary rather than
+      # living only in the source repository. The music additionally carries a
+      # non-commercial restriction, which a player can only discover if the
+      # file recording it is in the package they downloaded.
+      - name: Copy licences into .app bundle
+        run: |
+          set -euo pipefail
+          dest="${APP_DIR}/${APP_NAME}.app/Contents/Resources"
+          cp LICENSE THIRD_PARTY_LICENSES.md "${dest}/"
+          test -s "${dest}/LICENSE"
+          test -s "${dest}/THIRD_PARTY_LICENSES.md"
+
+      # arm64 macOS refuses to run a binary whose signature does not match its
+      # contents -- it is not a warning there, the kernel kills the process.
+      # macdeployqt rewrites the executable's load commands and everything above
+      # adds files to the bundle, so whatever ad-hoc signature the linker
+      # applied is stale by now. Re-seal before anything tries to launch it.
+      # The real signing step below replaces this when credentials exist.
+      - name: Re-sign the bundle (ad-hoc)
+        run: |
+          set -euo pipefail
+          bundle="${APP_DIR}/${APP_NAME}.app"
+          codesign --force --deep --sign - "${bundle}"
+          codesign --verify --deep --strict --verbose=2 "${bundle}"
+          echo "Bundle re-sealed after deployment and asset copying"
+
+      # On an Apple Silicon runner a universal build runs its arm64 slice here,
+      # natively -- which is the only thing that actually answers "does this
+      # work on Apple Silicon". macOS caps OpenGL at 4.1 and has deprecated it
+      # entirely, so this is also the check that the renderer's 3.3-core floor
+      # still holds on Apple's driver.
       - name: Verify packaged gameplay renderer
         run: |
           set -o pipefail
-          "${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}" \
-            --renderer-self-test 2>&1 | tee renderer_self_test.log
+          binary="${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+          echo "Running the ${SOI_ARCH_TAG} build natively as $(uname -m)"
+
+          "${binary}" --renderer-self-test 2>&1 | tee renderer_self_test.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
+
           # Music and ambience are read from assets/ rather than embedded in
           # the binary, so a package that loses that directory renders fine and
           # is simply mute. The self-test reports on it; fail the release here.
           grep -q "SOI_AUDIO_SELF_TEST: PASS" renderer_self_test.log
+          # Apple caps OpenGL at 4.1 and deprecated it; if a driver ever hands
+          # back a 2.1 compatibility context the renderer must say so loudly
+          # rather than draw nothing.
+          grep -q "SOI_GL_FLOOR: PASS" renderer_self_test.log
+
+          # Apple's driver reports the context it actually gave us. Record it:
+          # a release that quietly dropped to a 2.1 compatibility context would
+          # otherwise only show up as missing geometry on a player's machine.
+          grep -E "Version:|Renderer:|Context Version:|Profile:" \
+            renderer_self_test.log || true
+          {
+            echo "| Ran natively as | \`$(uname -m)\` |"
+            echo "| GL context | \`$(grep -m1 'Context Version:' renderer_self_test.log | sed 's/.*Context Version: *//' || echo unknown)\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # OpenGL 3.3 Core is the floor on every platform. Apple caps at 4.1, so
+      # anything the renderer gains from 4.3+ (compute, SSBO, indirect draw)
+      # must stay optional -- the same fallback the Linux job forces on. If this
+      # ever fails, the GPU crowd path has stopped being optional.
+      - name: Verify the OpenGL 3.3 fallback path
+        run: |
+          set -o pipefail
+          binary="${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
+          SOI_RENDER_DISABLE_GPU_CROWD_CULL=1 "${binary}" \
+            --renderer-self-test 2>&1 | tee renderer_fallback.log
+          grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_fallback.log
 
       - name: Create DMG
         id: package

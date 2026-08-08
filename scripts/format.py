@@ -11,6 +11,14 @@ classes of operation separate:
 
 Formatting never rewrites semantics and never deletes comments.
 
+EXCLUDED_FILES lists generated sources whose generator is the only thing
+allowed to write them.  translations/asset_strings_generated.cpp is there
+because the comment-stripping pass deleted its `// clang-format off` guard and
+its "DO NOT EDIT" header, clang-format then reflowed the table, and
+`extract-asset-strings.py --check` -- which compares bytes -- called the result
+stale.  Before the exclusion, `make format` and `make translations-check` could
+not both pass on the same tree.
+
 Usage:
     python scripts/format.py --all --fix
     python scripts/format.py --all --check
@@ -117,6 +125,10 @@ EXCLUDED_DIR_NAMES = {
     "dist",
 }
 
+EXCLUDED_FILES = {
+    "translations/asset_strings_generated.cpp",
+}
+
 LANGUAGE_BY_SUFFIX: dict[str, str] = {
     ".c": "cxx",
     ".cc": "cxx",
@@ -157,6 +169,8 @@ def is_excluded(rel_path: str) -> bool:
     if not parts:
         return True
     if any(part in EXCLUDED_DIR_NAMES for part in parts):
+        return True
+    if PurePosixPath(rel_path).as_posix() in EXCLUDED_FILES:
         return True
 
     return parts[0].startswith("build")

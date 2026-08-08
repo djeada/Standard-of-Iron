@@ -4,6 +4,9 @@ import QtQuick 2.15
 QtObject {
     id: root
 
+    readonly property bool mirrored: Qt.application.layoutDirection === Qt.RightToLeft
+    readonly property string chevronForward: root.mirrored ? "‹" : "›"
+
     readonly property string move: "➜"
     readonly property string attack: "⚔"
     readonly property string patrol: "⇄"
@@ -19,7 +22,7 @@ QtObject {
     readonly property string commander: "♛"
     readonly property string search: "⌕"
     readonly property string close: "×"
-    readonly property string disclosureClosed: "▸"
+    readonly property string disclosureClosed: root.mirrored ? "◂" : "▸"
     readonly property string disclosureOpen: "▾"
     readonly property string heal: "✚"
     readonly property string collect: "⛏"

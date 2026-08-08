@@ -2563,8 +2563,12 @@ void CampaignMapView::load_province_labels() {
   for (const auto& prov_val : provinces) {
     const QJsonObject prov = prov_val.toObject();
     QVariantMap entry;
+    const QString province_name = prov.value("name").toString();
     entry.insert(QStringLiteral("id"), prov.value("id").toString());
-    entry.insert(QStringLiteral("name"), prov.value("name").toString());
+    entry.insert(QStringLiteral("name"), province_name);
+    entry.insert(
+        QStringLiteral("display_name"),
+        Game::Util::tr_asset(Game::Util::k_campaign_map_context, province_name));
     entry.insert(QStringLiteral("owner"), prov.value("owner").toString());
 
     const QJsonArray label_uv = prov.value("label_uv").toArray();
@@ -2593,6 +2597,8 @@ void CampaignMapView::load_province_labels() {
 
       QVariantMap city_entry;
       city_entry.insert(QStringLiteral("name"), name);
+      city_entry.insert(QStringLiteral("display_name"),
+                        Game::Util::tr_asset(Game::Util::k_campaign_map_context, name));
       city_entry.insert(QStringLiteral("uv"), uv_list);
       city_list.push_back(city_entry);
     }
