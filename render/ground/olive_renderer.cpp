@@ -115,8 +115,8 @@ void OliveRenderer::append_world_prop_olives() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0x7B3E5F1CU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.17F, 0.25F, 0.17F);
-      const QVector3D var_color(0.40F, 0.45F, 0.34F);
+      const QVector3D base_color(0.215F, 0.290F, 0.185F);
+      const QVector3D var_color(0.480F, 0.570F, 0.340F);
       QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
 
       tint *= remap(rand_01(var_state), 0.82F, 1.20F);
@@ -200,17 +200,17 @@ void OliveRenderer::generate_procedural_olives(
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
 
-    QVector3D const base_color(0.14F + scene.dryness * 0.05F,
-                               0.21F + scene.rockiness * 0.03F,
-                               0.15F + scene.dryness * 0.03F);
-    QVector3D const var_color(0.44F + scene.cluster_bias * 0.05F,
-                              0.50F + scene.rockiness * 0.05F,
-                              0.37F + scene.cluster_bias * 0.04F);
+    QVector3D const base_color(0.160F + scene.dryness * 0.05F,
+                               0.245F + scene.rockiness * 0.04F,
+                               0.170F + scene.dryness * 0.03F);
+    QVector3D const var_color(0.495F + scene.cluster_bias * 0.05F,
+                              0.605F + scene.rockiness * 0.05F,
+                              0.355F + scene.cluster_bias * 0.04F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 
     float const gray_mix = remap(
         rand_01(state), 0.08F + scene.rockiness * 0.04F, 0.18F + scene.dryness * 0.08F);
-    QVector3D const gray_tint(0.44F, 0.47F, 0.43F);
+    QVector3D const gray_tint(0.530F, 0.560F, 0.500F);
     tint_color = tint_color * (1.0F - gray_mix) + gray_tint * gray_mix;
 
     tint_color *= remap(rand_01(state), 0.80F, 1.22F);
