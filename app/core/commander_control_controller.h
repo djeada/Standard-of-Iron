@@ -130,6 +130,8 @@ private:
                      Engine::Core::Entity& commander,
                      Render::GL::Camera& camera,
                      float dt);
+  void play_footstep_if_stride_landed(const Engine::Core::Entity& commander,
+                                      float previous_bob_phase);
   [[nodiscard]] auto look_sensitivity_scale() const -> float;
   void update_lock_on_yaw(Engine::Core::World& world,
                           Engine::Core::Entity& commander,

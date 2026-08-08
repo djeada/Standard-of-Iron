@@ -77,6 +77,7 @@ help:
 	@echo "  $(GREEN)audio-preview$(RESET) - Render before/after WAVs of the decode-time mastering"
 	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into docs/AUDIO_WISHLIST.md"
 	@echo "  $(GREEN)audio-check$(RESET)   - Fail when cues, manifest and audio files disagree"
+	@echo "  $(GREEN)audio-field-ambience$(RESET) - Rebuild recorded ambience beds from their sources"
 	@echo "  $(GREEN)translations$(RESET)  - Refresh .ts/.qm catalogues and translator CSVs"
 	@echo "  $(GREEN)translations-check$(RESET) - Fail when assets gained untranslated player text"
 	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
@@ -350,12 +351,23 @@ audio-assets:
 	@$(MAKE) --no-print-directory audio-report
 	@echo "$(GREEN)✓ Cue sounds rendered and registered$(RESET)"
 
-## Re-render the looping ambience beds at the mixer's sample rate.
+## Re-render the synthesised ambience beds at the mixer's sample rate.
 .PHONY: audio-ambience
 audio-ambience:
 	@echo "$(BOLD)$(BLUE)Synthesising ambience beds...$(RESET)"
 	@$(PYTHON) tools/audio_synth/synthesize_ambience.py
 	@echo "$(GREEN)✓ Ambience beds rendered$(RESET)"
+
+# The nature beds are cut from public-domain recordings rather than generated,
+# so they are committed and this is not part of audio-assets: it needs a network
+# and it re-downloads tens of megabytes. Run it when a source or a window in
+# tools/audio_field/sources.py changes.
+## Rebuild the recorded ambience beds from their public-domain sources.
+.PHONY: audio-field-ambience
+audio-field-ambience:
+	@echo "$(BOLD)$(BLUE)Rebuilding recorded ambience beds...$(RESET)"
+	@$(PYTHON) tools/audio_field/build_beds.py
+	@echo "$(GREEN)✓ Recorded ambience beds rebuilt$(RESET)"
 
 # Rewrite docs/AUDIO_WISHLIST.md from the cue catalog, the manifest and the
 # assets on disk. Run it any time you want the current list of missing sounds.
