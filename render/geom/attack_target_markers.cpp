@@ -20,7 +20,7 @@ constexpr float k_hovered_alpha = 0.9F;
 constexpr float k_hostile_thickness = 0.09F;
 constexpr float k_hovered_thickness = 0.16F;
 constexpr float k_hovered_ring_scale = 1.18F;
-constexpr float k_glyph_alpha = 0.95F;
+constexpr float k_glyph_alpha = Render::Geom::k_indicator_alpha;
 
 const QVector3D k_hostile_color(0.86F, 0.22F, 0.16F);
 const QVector3D k_hovered_color(1.0F, 0.42F, 0.28F);

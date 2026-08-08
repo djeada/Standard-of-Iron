@@ -273,7 +273,7 @@ void GlyphBuilder::emit_skirt(const std::vector<BoundaryEdge>& edges,
     return;
   }
 
-  constexpr int k_corner_segments = 7;
+  constexpr int k_corner_segments = 12;
 
   for (BoundaryEdge const& edge : edges) {
     QVector2D const inner_from = edge.from + edge.outward * inner_offset;
@@ -371,7 +371,7 @@ void GlyphBuilder::polyline(std::span<const QVector2D> points,
     const QVector2D& b = points[(i + 1U) % points.size()];
     bar(a, b, width);
     if (i + 1U < segments || closed) {
-      disc(b, width * 0.5F, 8);
+      disc(b, width * 0.5F, 14);
     }
   }
 }
