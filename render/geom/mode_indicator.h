@@ -20,7 +20,8 @@ inline constexpr std::size_t k_indicator_kind_count =
     static_cast<std::size_t>(IndicatorKind::Blocked) + 1U;
 
 constexpr float k_indicator_height_base = 2.05F;
-constexpr float k_indicator_alpha = 0.95F;
+
+constexpr float k_indicator_alpha = 1.0F;
 constexpr float k_indicator_height_multiplier = 1.35F;
 constexpr float k_indicator_render_scale_height_multiplier = 2.2F;
 constexpr float k_indicator_head_gap = 0.45F;
