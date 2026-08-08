@@ -84,3 +84,31 @@ jobs:
         run: |
           python scripts/validate_shader_uniforms.py
           python scripts/validate_opengl_requirements.py
+
+  # The two portability passes that need no compiler and no Qt. The third one
+  # (Clang + libc++ over every translation unit) needs a configured build tree,
+  # so it lives in build-linux.yml where one already exists.
+  portability:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Install glslang
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends glslang-tools
+
+      # Mesa accepts GLSL that Apple's front end rejects, and a shader that
+      # fails to compile on macOS is a silently missing object rather than a
+      # crash. --require-all means a missing glslangValidator fails the job
+      # instead of quietly skipping the pass.
+      - name: Portability (GLSL and Windows)
+        run: python scripts/check-portability.py --only glsl,windows --require-all

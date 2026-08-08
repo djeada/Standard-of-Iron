@@ -19,7 +19,7 @@ public:
 
   auto uses_mounted_pipeline() const noexcept -> bool override { return true; }
 
-  virtual auto get_mount_scale() const -> float = 0;
+  auto get_mount_scale() const -> float override = 0;
 
   void set_mount_visual(Render::Creature::ArchetypeId id, std::string_view debug_name) {
     m_mount_archetype_id = id;

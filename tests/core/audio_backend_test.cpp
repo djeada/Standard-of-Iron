@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <numbers>
 #include <vector>
 
 #include "game/audio/miniaudio_backend.h"
@@ -34,7 +35,7 @@ auto write_tone_wav(const QString& path, float amplitude) -> bool {
   stream.writeRawData("data", 4);
   stream << payload;
   for (int frame = 0; frame < TONE_FRAMES; ++frame) {
-    const double phase = 2.0 * M_PI * 440.0 * frame / SAMPLE_RATE;
+    const double phase = 2.0 * std::numbers::pi * 440.0 * frame / SAMPLE_RATE;
     const auto value = static_cast<std::int16_t>(amplitude * std::sin(phase) * 32000.0);
     stream << value << value;
   }
@@ -62,7 +63,7 @@ auto write_unclosed_bed_wav(const QString& path, int frames, float amplitude) ->
   stream << payload;
   const double cycles = 200.25;
   for (int frame = 0; frame < frames; ++frame) {
-    const double phase = 2.0 * M_PI * cycles * frame / frames;
+    const double phase = 2.0 * std::numbers::pi * cycles * frame / frames;
     const auto value = static_cast<std::int16_t>(amplitude * std::sin(phase) * 32000.0);
     stream << value << value;
   }

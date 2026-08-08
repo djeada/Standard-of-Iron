@@ -17,7 +17,7 @@ float hash31(vec3 p) {
   return fract((p.x + p.y) * p.z);
 }
 
-float noise3(vec3 p) {
+float stone_noise3(vec3 p) {
   vec3 i = floor(p);
   vec3 f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
@@ -38,8 +38,8 @@ void main() {
   vec3 H = normalize(L + V);
 
   vec3 p = v_local_pos;
-  float broad = noise3(p * 3.2 + vec3(1.7, 5.1, 2.3));
-  float grain = noise3(p * 13.0 + v_world_pos * 0.12);
+  float broad = stone_noise3(p * 3.2 + vec3(1.7, 5.1, 2.3));
+  float grain = stone_noise3(p * 13.0 + v_world_pos * 0.12);
   float strata = 0.5 + 0.5 * sin(p.y * 22.0 + p.x * 4.0 + broad * 3.2);
   float fissure_field = abs(sin(p.x * 13.0 - p.z * 9.0 + p.y * 6.0 + broad * 4.0));
   float fissures = 1.0 - smoothstep(0.035, 0.14, fissure_field);
@@ -49,13 +49,13 @@ void main() {
   stone = mix(stone, stone * vec3(0.55, 0.58, 0.60), fissures * 0.72);
 
   float upward = smoothstep(0.28, 0.86, N.y);
-  float lichen_noise = noise3(v_world_pos * 1.8 + vec3(3.0, 8.0, 1.0));
+  float lichen_noise = stone_noise3(v_world_pos * 1.8 + vec3(3.0, 8.0, 1.0));
   float lichen = upward * smoothstep(0.58, 0.82, lichen_noise) * 0.34;
   vec3 lichen_color = vec3(0.24, 0.28, 0.20);
   stone = mix(stone, lichen_color, lichen);
 
   float ground_damp = (1.0 - smoothstep(0.02, 0.24, p.y)) *
-                      smoothstep(0.28, 0.72, noise3(v_world_pos * 0.9));
+                      smoothstep(0.28, 0.72, stone_noise3(v_world_pos * 0.9));
   stone = mix(stone, stone * vec3(0.52, 0.58, 0.60), ground_damp * 0.58);
 
   float ndotl = max(dot(N, L), 0.0);

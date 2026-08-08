@@ -91,6 +91,24 @@ jobs:
           cmake --build build --parallel \
             --target soi_test_binaries content_validator
 
+      # macOS ships AppleClang and libc++; this runner is GCC and libstdc++.
+      # libstdc++ pulls in far more transitively than libc++ does, so a missing
+      # include builds here and fails on macOS, and Clang diagnoses several
+      # things GCC is silent about. Reparsing the translation units the build
+      # just configured turns a macOS-only build failure into a Linux one for
+      # the cost of a syntax-only pass -- nothing is linked, so Qt being built
+      # against libstdc++ does not matter.
+      #
+      # This runs here rather than in build-linux.yml because that job is on
+      # ubuntu-22.04 for AppImage glibc reasons, and -Wnan-infinity-disabled
+      # needs Clang 18. Without it the fast-math guard would go unenforced.
+      - name: Portability (macOS toolchain)
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y --no-install-recommends clang libc++-dev
+          python3 scripts/check-portability.py --only apple --require-all \
+            --build-dir build
+
       - name: Unit tests
         env:
           QT_QPA_PLATFORM: offscreen

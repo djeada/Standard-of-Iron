@@ -116,12 +116,17 @@ void add_produce_basket(BuildingArchetypeDesc& desc,
   for (float const x : {-0.055F, 0.0F, 0.055F}) {
     for (float const z : {-0.040F, 0.040F}) {
       QVector3D const fruit_base = base + QVector3D(x, 0.10F, z);
+      QVector3D const fruit_tip =
+          fruit_base +
+          QVector3D(0.0F, 0.055F + 0.008F * static_cast<float>(index), 0.0F);
+      QVector3D const& fruit_colour = (index % 2 == 0) ? produce_a : produce_b;
       desc.add_cone(fruit_base,
-                    fruit_base + QVector3D(0.0F, 0.055F + 0.008F * index, 0.0F),
+                    fruit_tip,
                     0.035F,
-                    (index++ % 2 == 0) ? produce_a : produce_b,
+                    fruit_colour,
                     BuildingStateMask::Normal,
                     BuildingLODMask::Full);
+      ++index;
     }
   }
 }

@@ -752,7 +752,7 @@ TEST_F(TerrainServiceTest, HillFootprintOnlyExtendsAtItsWalkableEntranceApron) {
   };
   height_map.build_from_features({hill});
 
-  for (auto const [x, z] : {std::pair{30, 19}, std::pair{41, 30}, std::pair{30, 41}}) {
+  for (auto const& [x, z] : {std::pair{30, 19}, std::pair{41, 30}, std::pair{30, 41}}) {
     EXPECT_FLOAT_EQ(height_map.get_height_at_grid(x, z), 0.0F);
     EXPECT_EQ(height_map.getTerrainType(x, z), Game::Map::TerrainType::Flat);
     EXPECT_TRUE(height_map.is_walkable(x, z));

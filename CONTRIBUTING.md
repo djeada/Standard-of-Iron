@@ -58,6 +58,7 @@ differs from the pin; a minor/patch difference is reported as drift.
 | `make lint-changed`         | Lint only what changed (includes changed-file clang-tidy)          |
 | `make quality`              | `format-check` + `lint` + quality-marker scan                      |
 | `make validate`             | `quality` + build + tests + content validation                     |
+| `make portability`          | macOS and Windows checks, run from Linux (see below)               |
 | `make strip-comments`       | **Destructive**: delete comments. Needs `STRIP_COMMENTS_CONFIRM=1` |
 
 `FORMAT_BASE` defaults to `origin/main`:
@@ -105,6 +106,50 @@ sudo apt-get install qtdeclarative5-dev-tools    # Ubuntu/Debian (Qt5)
 They land in `/usr/lib/qt6/bin/` or `/usr/lib/qt5/bin/`; the driver searches
 those paths automatically, and `QMLFORMAT` / `QMLLINT` override the lookup.
 
+### Catching macOS and Windows problems from Linux
+
+Almost all development happens on Linux, with GCC, libstdc++ and Mesa. The game
+ships on macOS (AppleClang, libc++, Apple's GL front end) and Windows (MSVC).
+Those toolchains reject things this one accepts, and without help you find out
+at the point a release tag is already cut.
+
+Two targets close most of that gap without leaving Linux:
+
+```bash
+make portability-lint    # three static passes, a couple of minutes
+make portability-build   # full compile with the warnings promoted to errors
+```
+
+`make portability-lint` runs `scripts/check-portability.py`, which is three
+passes:
+
+| Pass      | Stands in for          | Finds                                                                                               |
+| --------- | ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `apple`   | AppleClang + libc++    | Includes that only libstdc++ provides transitively; unsequenced modification; dangling references   |
+| `glsl`    | Apple's GLSL front end | Shaders Mesa accepts and a spec-literal compiler rejects - a missing object on screen, not a crash  |
+| `windows` | MSVC and NTFS          | Math constants MSVC's `<cmath>` hides; filenames Windows cannot create; `MAX_PATH`; case collisions |
+
+It needs `clang`, `libc++-dev` and `glslang-tools`. Passes whose tool is
+missing are skipped locally; CI passes `--require-all`, so there a missing
+tool is a failure rather than a silent gap.
+
+`make portability-build` configures a separate `build-strict/` tree with
+`-DSOI_STRICT_WARNINGS=ON`. That option is defined in `CMakeLists.txt` and
+splits its diagnostics deliberately: the ones that indicate genuine divergence
+between compilers are **errors** and are all at zero, so a new hit is a
+regression; the roughly 2,700 stylistic warnings (mostly `-Wswitch` and
+`-Wmissing-field-initializers`) stay warnings, because promoting them would
+bury the signal.
+
+In CI, `glsl` and `windows` run in the `portability` job of `quality.yml`, which
+needs no compiler. `apple` runs in the pull-request test job, which already has
+a configured tree - and specifically there rather than in `build-linux.yml`,
+because that job is on ubuntu-22.04 for AppImage glibc reasons and
+`-Wnan-infinity-disabled` needs Clang 18. An unknown `-Werror=` name is only a
+warning to Clang, so on an older one the fast-math guard would appear to pass
+without ever being checked; `check-portability.py` refuses to run rather than
+report a green it did not earn.
+
 ## Continuous Integration
 
 CI runs in three tiers of increasing thoroughness. Pull requests stay cheap so
@@ -114,7 +159,10 @@ the point at which every supported platform must actually ship.
 **Pull requests** (`.github/workflows/pr.yml`) run two jobs in parallel:
 
 - `quality` - formatting, linting, quality markers and the static content
-  validators. No compiler, fails in about a minute.
+  validators, plus the compiler-free half of the portability gate (GLSL and
+  Windows). No compiler, fails in about a minute.
+- The `test` job below also runs the `apple` portability pass, reparsing every
+  translation unit with Clang and libc++.
 - `test` - Linux configure and build of the test targets only
   (`soi_test_binaries`, `content_validator`), then unit tests, content
   validation, the validator integration tests, and advisory clang-tidy over
