@@ -115,8 +115,8 @@ void PineRenderer::append_world_prop_pines() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0x4A7F2C9EU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.09F, 0.20F, 0.13F);
-      const QVector3D var_color(0.28F, 0.42F, 0.23F);
+      const QVector3D base_color(0.115F, 0.245F, 0.150F);
+      const QVector3D var_color(0.330F, 0.520F, 0.270F);
       QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
 
       tint *= remap(rand_01(var_state), 0.80F, 1.22F);
@@ -202,17 +202,17 @@ void PineRenderer::generate_procedural_pines(std::vector<TreeInstanceGpu>& out) 
                         tile_safe * scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);
-    QVector3D const base_color(0.07F + scene.shelter * 0.03F,
-                               0.16F + scene.shelter * 0.07F,
-                               0.13F + scene.shelter * 0.04F);
-    QVector3D const var_color(0.33F + scene.cluster_bias * 0.05F,
-                              0.49F + scene.shelter * 0.07F,
-                              0.25F + scene.cluster_bias * 0.04F);
+    QVector3D const base_color(0.095F + scene.shelter * 0.03F,
+                               0.200F + scene.shelter * 0.08F,
+                               0.150F + scene.shelter * 0.04F);
+    QVector3D const var_color(0.345F + scene.cluster_bias * 0.05F,
+                              0.545F + scene.shelter * 0.08F,
+                              0.285F + scene.cluster_bias * 0.04F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 
     float const brown_mix = remap(
         rand_01(state), 0.03F + scene.dryness * 0.05F, 0.10F + scene.rockiness * 0.06F);
-    QVector3D const brown_tint(0.27F, 0.25F, 0.19F);
+    QVector3D const brown_tint(0.34F, 0.31F, 0.23F);
     tint_color = tint_color * (1.0F - brown_mix) + brown_tint * brown_mix;
 
     tint_color *= remap(rand_01(state), 0.78F, 1.24F);

@@ -17,13 +17,13 @@ constexpr float k_glyph_detail_depth = 0.118F;
 
 constexpr GlyphBuilder::GlyphExtrusion k_glyph_extrusion{
     .outline_depth = 0.030F,
-    .outline_width = 0.036F,
+    .outline_width = 0.034F,
     .back_depth = 0.030F,
     .face_depth = k_glyph_face_depth,
     .shadow_depth = -0.070F,
-    .shadow_grow = 0.052F,
-    .halo_grow = 0.118F,
-    .shadow_offset = {0.004F, -0.009F},
+    .shadow_grow = 0.046F,
+    .halo_grow = 0.112F,
+    .shadow_offset = {0.008F, -0.020F},
 };
 
 struct KindStyle {
@@ -61,30 +61,42 @@ constexpr std::array<KindStyle, k_indicator_kind_count> k_kind_styles = {{
 }
 
 void add_sword(GlyphBuilder& builder, float rotation) {
+  const std::array<QVector2D, 4> blade = {{
+      {-0.056F, -0.07F},
+      {0.056F, -0.07F},
+      {0.042F, 0.30F},
+      {-0.042F, 0.30F},
+  }};
   builder.set_transform({0.0F, -0.02F}, rotation);
-  builder.bar({0.0F, -0.02F}, {0.0F, 0.26F}, 0.135F);
-  builder.arrow_head({0.0F, 0.44F}, {0.0F, 1.0F}, 0.20F, 0.088F);
-  builder.bar({-0.20F, -0.06F}, {0.20F, -0.06F}, 0.100F);
-  builder.bar({0.0F, -0.04F}, {0.0F, -0.26F}, 0.092F);
-  builder.disc({0.0F, -0.30F}, 0.072F, 12);
+  builder.convex(blade);
+  builder.arrow_head({0.0F, 0.46F}, {0.0F, 1.0F}, 0.16F, 0.042F);
+  builder.bar({-0.155F, -0.07F}, {0.155F, -0.07F}, 0.072F);
+  builder.bar({0.0F, -0.07F}, {0.0F, -0.28F}, 0.068F);
+  builder.disc({0.0F, -0.30F}, 0.054F, 18);
   builder.reset_transform();
 }
 
 void build_attack(GlyphBuilder& builder) {
   builder.begin_glyph();
-  add_sword(builder, 0.62F);
-  add_sword(builder, -0.62F);
+  add_sword(builder, 0.72F);
+  add_sword(builder, -0.72F);
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_guard(GlyphBuilder& builder) {
-  const std::array<QVector2D, 6> shield = {{
-      {0.00F, 0.34F},
-      {-0.27F, 0.21F},
-      {-0.27F, -0.06F},
-      {0.00F, -0.36F},
-      {0.27F, -0.06F},
-      {0.27F, 0.21F},
+  const std::array<QVector2D, 7> shield = {{
+      {-0.29F, 0.32F},
+      {0.29F, 0.32F},
+      {0.29F, 0.02F},
+      {0.17F, -0.22F},
+      {0.00F, -0.38F},
+      {-0.17F, -0.22F},
+      {-0.29F, 0.02F},
+  }};
+  const std::array<QVector2D, 3> chevron = {{
+      {-0.15F, 0.11F},
+      {0.00F, -0.04F},
+      {0.15F, 0.11F},
   }};
   builder.begin_glyph();
   builder.convex(shield);
@@ -92,191 +104,238 @@ void build_guard(GlyphBuilder& builder) {
 
   builder.set_layer(GlyphLayer::Accent);
   builder.set_depth(k_glyph_detail_depth);
-  builder.disc({0.0F, 0.0F}, 0.105F, 18);
+  builder.polyline(chevron, 0.086F);
 }
 
 void build_hold(GlyphBuilder& builder) {
-  const std::array<QVector2D, 3> pennant = {{
-      {0.04F, 0.36F},
-      {0.38F, 0.17F},
-      {0.04F, -0.02F},
+  const std::array<QVector2D, 4> banner = {{
+      {0.02F, 0.38F},
+      {0.36F, 0.29F},
+      {0.36F, 0.09F},
+      {0.02F, 0.18F},
   }};
   builder.begin_glyph();
-  builder.bar({-0.04F, 0.40F}, {-0.04F, -0.30F}, 0.115F);
-  builder.convex(pennant);
-  builder.bar({-0.30F, -0.34F}, {0.24F, -0.34F}, 0.110F);
+  builder.bar({-0.04F, 0.42F}, {-0.04F, -0.26F}, 0.090F);
+  builder.convex(banner);
+  builder.rect({-0.02F, -0.30F}, {0.13F, 0.045F});
+  builder.rect({-0.02F, -0.38F}, {0.23F, 0.050F});
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_patrol(GlyphBuilder& builder) {
-  constexpr float radius = 0.26F;
-  constexpr float width = 0.115F;
   builder.begin_glyph();
-  for (int side = 0; side < 2; ++side) {
-    float const base = side == 0 ? 0.35F : 0.35F + k_pi;
-    builder.ring(
-        {0.0F, 0.0F}, radius - width * 0.5F, radius + width * 0.5F, 12, base, 2.05F);
-    float const tip_angle = base + 2.05F;
-    QVector2D const tip(std::cos(tip_angle) * radius, std::sin(tip_angle) * radius);
-    QVector2D const tangent(-std::sin(tip_angle), std::cos(tip_angle));
-    builder.arrow_head(tip + tangent * 0.19F, tangent, 0.21F, 0.15F);
-  }
+  builder.bar({-0.30F, 0.16F}, {0.15F, 0.16F}, 0.105F);
+  builder.arrow_head({0.36F, 0.16F}, {1.0F, 0.0F}, 0.21F, 0.150F);
+  builder.bar({0.30F, -0.16F}, {-0.15F, -0.16F}, 0.105F);
+  builder.arrow_head({-0.36F, -0.16F}, {-1.0F, 0.0F}, 0.21F, 0.150F);
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_move(GlyphBuilder& builder) {
   const std::array<QVector2D, 3> chevron = {{
-      {-0.24F, -0.06F},
-      {0.00F, 0.16F},
-      {0.24F, -0.06F},
+      {-0.26F, -0.04F},
+      {0.00F, 0.19F},
+      {0.26F, -0.04F},
   }};
   const std::array<QVector2D, 3> chevron_low = {{
-      {-0.24F, -0.26F},
+      {-0.26F, -0.27F},
       {0.00F, -0.04F},
-      {0.24F, -0.26F},
+      {0.26F, -0.27F},
   }};
   builder.begin_glyph();
-  builder.polyline(chevron, 0.125F);
-  builder.polyline(chevron_low, 0.125F);
+  builder.polyline(chevron, 0.128F);
+  builder.polyline(chevron_low, 0.128F);
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_construct(GlyphBuilder& builder) {
+  const std::array<QVector2D, 6> head = {{
+      {-0.26F, 0.36F},
+      {0.26F, 0.36F},
+      {0.30F, 0.28F},
+      {0.26F, 0.16F},
+      {-0.26F, 0.16F},
+      {-0.30F, 0.28F},
+  }};
   builder.begin_glyph();
-  builder.set_transform({0.0F, 0.0F}, -0.35F);
-  builder.rect({0.0F, 0.23F}, {0.24F, 0.125F});
-  builder.rect({-0.15F, 0.34F}, {0.095F, 0.075F});
-  builder.bar({0.0F, 0.20F}, {0.0F, -0.34F}, 0.105F);
+  builder.set_transform({0.02F, -0.02F}, -0.30F);
+  builder.convex(head);
+  builder.bar({0.0F, 0.20F}, {0.0F, -0.36F}, 0.098F);
   builder.reset_transform();
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_repair(GlyphBuilder& builder) {
   builder.begin_glyph();
-  builder.bar({-0.15F, -0.19F}, {0.13F, 0.13F}, 0.125F);
-  builder.ring({0.19F, 0.20F}, 0.070F, 0.165F, 14, 1.15F, 4.55F);
-  builder.ring({-0.21F, -0.24F}, 0.052F, 0.125F, 12, 1.15F + k_pi, 4.55F);
+  builder.bar({-0.17F, -0.21F}, {0.17F, 0.21F}, 0.104F);
+  builder.ring({0.23F, 0.27F}, 0.082F, 0.180F, 20, 1.10F, 4.55F);
+  builder.ring({-0.23F, -0.27F}, 0.082F, 0.180F, 20, 1.10F + k_pi, 4.55F);
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_dismantle(GlyphBuilder& builder) {
   builder.begin_glyph();
-  builder.rect({-0.19F, -0.28F}, {0.15F, 0.090F});
-  builder.rect({0.15F, -0.28F}, {0.15F, 0.090F});
-  builder.rect({-0.28F, -0.07F}, {0.11F, 0.090F});
-  builder.rect({-0.01F, -0.07F}, {0.14F, 0.090F});
-  builder.rect({-0.18F, 0.14F}, {0.15F, 0.090F});
-  builder.rect({0.21F, 0.24F}, {0.14F, 0.085F}, 0.62F);
+  builder.rect({-0.180F, -0.32F}, {0.145F, 0.078F});
+  builder.rect({0.155F, -0.32F}, {0.145F, 0.078F});
+  builder.rect({-0.290F, -0.15F}, {0.035F, 0.078F});
+  builder.rect({-0.020F, -0.15F}, {0.185F, 0.078F});
+  builder.rect({0.255F, -0.15F}, {0.050F, 0.078F});
+  builder.rect({-0.180F, 0.02F}, {0.145F, 0.078F});
+  builder.rect({0.105F, 0.02F}, {0.100F, 0.078F});
+  builder.rect({-0.24F, 0.19F}, {0.085F, 0.078F});
+  builder.rect({0.13F, 0.25F}, {0.115F, 0.070F}, 0.55F);
+  builder.rect({0.33F, 0.09F}, {0.070F, 0.055F}, -0.75F);
   builder.end_glyph(k_glyph_extrusion);
+}
+
+void add_axe(GlyphBuilder& builder) {
+  const std::array<QVector2D, 5> bit = {{
+      {0.06F, 0.345F},
+      {0.30F, 0.325F},
+      {0.44F, 0.20F},
+      {0.42F, 0.02F},
+      {0.06F, 0.19F},
+  }};
+
+  builder.bar({0.0F, 0.32F}, {0.0F, -0.38F}, 0.092F);
+  builder.rect({0.005F, 0.25F}, {0.075F, 0.095F});
+  builder.convex(bit);
 }
 
 void build_chop_wood(GlyphBuilder& builder) {
-  const std::array<QVector2D, 5> blade = {{
-      {0.00F, 0.34F},
-      {0.20F, 0.36F},
-      {0.34F, 0.16F},
-      {0.30F, -0.04F},
-      {0.10F, 0.00F},
-  }};
   builder.begin_glyph();
-  builder.bar({-0.20F, -0.34F}, {0.08F, 0.26F}, 0.105F);
-  builder.convex(blade);
+  builder.set_transform({-0.03F, 0.0F}, 0.30F);
+  add_axe(builder);
+  builder.reset_transform();
   builder.end_glyph(k_glyph_extrusion);
 }
 
+void add_pickaxe(GlyphBuilder& builder) {
+
+  builder.bar({0.0F, 0.24F}, {0.0F, -0.38F}, 0.092F);
+
+  for (int side = 0; side < 2; ++side) {
+    float const sign = side == 0 ? -1.0F : 1.0F;
+    builder.quad(
+        {0.0F, 0.30F}, {sign * 0.19F, 0.245F}, {sign * 0.17F, 0.120F}, {0.0F, 0.165F});
+    builder.quad({sign * 0.19F, 0.245F},
+                 {sign * 0.34F, 0.135F},
+                 {sign * 0.29F, 0.020F},
+                 {sign * 0.17F, 0.120F});
+    builder.tri({sign * 0.34F, 0.135F}, {sign * 0.45F, -0.10F}, {sign * 0.29F, 0.020F});
+  }
+}
+
 void build_mine_stone(GlyphBuilder& builder) {
-  const std::array<QVector2D, 5> head = {{
-      {-0.40F, -0.08F},
-      {-0.22F, 0.16F},
-      {0.00F, 0.24F},
-      {0.22F, 0.16F},
-      {0.40F, -0.08F},
-  }};
   builder.begin_glyph();
-  builder.bar({0.0F, 0.22F}, {0.0F, -0.38F}, 0.105F);
-  builder.polyline(head, 0.100F);
+
+  builder.set_transform({0.0F, -0.02F}, -0.34F);
+  add_pickaxe(builder);
+  builder.reset_transform();
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_mine_iron(GlyphBuilder& builder) {
   const std::array<QVector2D, 4> lower = {{
-      {-0.38F, -0.30F},
-      {0.38F, -0.30F},
-      {0.27F, -0.04F},
-      {-0.27F, -0.04F},
+      {-0.40F, -0.32F},
+      {0.36F, -0.32F},
+      {0.28F, -0.11F},
+      {-0.32F, -0.11F},
   }};
   const std::array<QVector2D, 4> upper = {{
-      {-0.25F, -0.01F},
-      {0.25F, -0.01F},
-      {0.15F, 0.25F},
-      {-0.15F, 0.25F},
+      {-0.14F, -0.03F},
+      {0.42F, -0.03F},
+      {0.34F, 0.18F},
+      {-0.06F, 0.18F},
   }};
   builder.begin_glyph();
   builder.convex(lower);
   builder.convex(upper);
   builder.end_glyph(k_glyph_extrusion);
+
+  builder.set_layer(GlyphLayer::Accent);
+  builder.set_depth(k_glyph_detail_depth);
+  builder.bar({0.04F, 0.115F}, {0.22F, 0.115F}, 0.036F);
+  builder.bar({-0.22F, -0.175F}, {0.04F, -0.175F}, 0.036F);
 }
 
 void build_auto_gather(GlyphBuilder& builder) {
-
+  const std::array<QVector2D, 4> pile = {{
+      {-0.26F, -0.36F},
+      {0.26F, -0.36F},
+      {0.16F, -0.14F},
+      {-0.16F, -0.14F},
+  }};
   builder.begin_glyph();
-  builder.ring({0.0F, 0.02F}, 0.185F, 0.310F, 26, 0.55F, 4.90F);
-  builder.arrow_head({0.30F, 0.22F}, {0.30F, 0.95F}, 0.20F, 0.155F);
+  builder.convex(pile);
+  for (int side = 0; side < 2; ++side) {
+    float const sign = side == 0 ? -1.0F : 1.0F;
+    builder.bar({sign * 0.35F, 0.38F}, {sign * 0.22F, 0.14F}, 0.086F);
+    builder.arrow_head(
+        {sign * 0.129F, -0.027F}, {-sign * 0.478F, -0.878F}, 0.20F, 0.150F);
+  }
+  builder.end_glyph(k_glyph_extrusion);
+}
+
+void build_deliver(GlyphBuilder& builder) {
+  const std::array<QVector2D, 4> crate = {{
+      {-0.28F, -0.34F},
+      {0.28F, -0.34F},
+      {0.24F, -0.05F},
+      {-0.24F, -0.05F},
+  }};
+  builder.begin_glyph();
+  builder.convex(crate);
+  builder.rect({0.0F, 0.005F}, {0.30F, 0.058F});
+  builder.bar({0.0F, 0.42F}, {0.0F, 0.24F}, 0.100F);
+  builder.arrow_head({0.0F, 0.11F}, {0.0F, -1.0F}, 0.16F, 0.145F);
   builder.end_glyph(k_glyph_extrusion);
 
   builder.set_layer(GlyphLayer::Accent);
   builder.set_depth(k_glyph_detail_depth);
-  builder.disc({0.0F, 0.02F}, 0.098F, 16);
-}
-
-void build_deliver(GlyphBuilder& builder) {
-  builder.begin_glyph();
-  builder.rect({0.0F, -0.22F}, {0.26F, 0.17F});
-  builder.rect({0.0F, 0.00F}, {0.32F, 0.065F});
-  builder.bar({0.0F, 0.42F}, {0.0F, 0.22F}, 0.115F);
-  builder.arrow_head({0.0F, 0.11F}, {0.0F, -1.0F}, 0.16F, 0.155F);
-  builder.end_glyph(k_glyph_extrusion);
-
-  builder.set_layer(GlyphLayer::Outline);
-  builder.set_depth(k_glyph_detail_depth);
-  builder.bar({0.0F, -0.36F}, {0.0F, -0.10F}, 0.080F);
+  builder.bar({-0.17F, -0.21F}, {0.17F, -0.21F}, 0.044F);
 }
 
 void build_heal(GlyphBuilder& builder) {
   builder.begin_glyph();
-  builder.bar({0.0F, -0.28F}, {0.0F, 0.28F}, 0.155F);
-  builder.bar({-0.28F, 0.0F}, {0.28F, 0.0F}, 0.155F);
+  builder.bar({0.0F, -0.30F}, {0.0F, 0.30F}, 0.170F);
+  builder.bar({-0.29F, 0.0F}, {0.29F, 0.0F}, 0.160F);
   builder.end_glyph(k_glyph_extrusion);
 }
 
 void build_train(GlyphBuilder& builder) {
-  const std::array<QVector2D, 3> upper = {{
-      {-0.19F, 0.24F},
-      {0.19F, 0.24F},
-      {0.00F, 0.01F},
+  const std::array<QVector2D, 4> upper = {{
+      {-0.20F, 0.22F},
+      {0.20F, 0.22F},
+      {0.035F, -0.025F},
+      {-0.035F, -0.025F},
   }};
-  const std::array<QVector2D, 3> lower = {{
-      {-0.19F, -0.24F},
-      {0.19F, -0.24F},
-      {0.00F, -0.01F},
+  const std::array<QVector2D, 4> lower = {{
+      {-0.20F, -0.22F},
+      {0.20F, -0.22F},
+      {0.035F, 0.025F},
+      {-0.035F, 0.025F},
   }};
   builder.begin_glyph();
   builder.convex(upper);
   builder.convex(lower);
-  builder.rect({0.0F, 0.30F}, {0.27F, 0.065F});
-  builder.rect({0.0F, -0.30F}, {0.27F, 0.065F});
+  builder.rect({0.0F, 0.29F}, {0.26F, 0.070F});
+  builder.rect({0.0F, -0.29F}, {0.26F, 0.070F});
   builder.end_glyph(k_glyph_extrusion);
 
   builder.set_layer(GlyphLayer::Accent);
   builder.set_depth(k_glyph_detail_depth);
-  builder.tri({-0.12F, -0.18F}, {0.12F, -0.18F}, {0.0F, -0.03F});
+  builder.tri({-0.115F, -0.175F}, {0.115F, -0.175F}, {0.0F, -0.035F});
 }
 
 void build_blocked(GlyphBuilder& builder) {
-  const std::array<QVector2D, 3> warning = {{
-      {0.00F, 0.31F},
-      {-0.30F, -0.24F},
-      {0.30F, -0.24F},
+  const std::array<QVector2D, 6> warning = {{
+      {-0.06F, 0.34F},
+      {0.06F, 0.34F},
+      {0.34F, -0.19F},
+      {0.29F, -0.27F},
+      {-0.29F, -0.27F},
+      {-0.34F, -0.19F},
   }};
   builder.begin_glyph();
   builder.convex(warning);
@@ -284,8 +343,8 @@ void build_blocked(GlyphBuilder& builder) {
 
   builder.set_layer(GlyphLayer::Outline);
   builder.set_depth(k_glyph_detail_depth);
-  builder.bar({0.0F, 0.15F}, {0.0F, -0.05F}, 0.098F);
-  builder.disc({0.0F, -0.14F}, 0.062F, 10);
+  builder.bar({0.0F, 0.17F}, {0.0F, -0.04F}, 0.094F);
+  builder.disc({0.0F, -0.14F}, 0.060F, 12);
 }
 
 void build_idle(GlyphBuilder& builder) {
