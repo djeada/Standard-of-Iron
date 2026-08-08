@@ -2711,6 +2711,22 @@
       "player_id": 3,
       "behavior": "guard",
       "landmark": "trebia_ford_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 298.0,
+      "z": 290.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "trebia_south_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 302.0,
+      "z": 290.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "trebia_south_sanctuary"
     }
   ],
   "world_props": [
@@ -4199,7 +4215,11 @@
             "grave_priest": 1
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 150,
+        "food": 120
+      }
     }
   ],
   "lakes": [],
@@ -5739,5 +5759,68 @@
       "z": 560,
       "radius": 32
     }
-  ]
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 90.0,
+      "spawn_areas": [
+        {
+          "x": 200,
+          "z": 560,
+          "radius": 28
+        }
+      ]
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 2,
+      "group_size_max": 4,
+      "roam_radius": 22.0,
+      "aggression": 0.6,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 470,
+          "z": 250,
+          "radius": 26
+        }
+      ],
+      "waves": [
+        {
+          "timing": 200.0,
+          "pack_size": 4,
+          "x": 470,
+          "z": 250,
+          "radius": 24,
+          "label": "Wolves are down off the bank."
+        },
+        {
+          "timing": 400.0,
+          "pack_size": 5,
+          "x": 200,
+          "z": 560,
+          "radius": 26,
+          "label": "A second pack has come up behind the south screen."
+        }
+      ]
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 9,
+      "flight_height": 14.0,
+      "flyover_interval_min": 45.0,
+      "flyover_interval_max": 120.0
+    }
+  }
 }

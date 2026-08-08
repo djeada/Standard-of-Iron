@@ -69,6 +69,8 @@ auto category_label(int kind) -> QString {
     return QStringLiteral("Undead zone");
   case ElementKind::WildlifeArea:
     return QStringLiteral("Wildlife");
+  case ElementKind::Grove:
+    return QStringLiteral("Wood");
   }
   return {};
 }
@@ -89,6 +91,8 @@ auto count(const MapData& data, int kind) -> int {
     return static_cast<int>(data.undead_zones().size());
   case ElementKind::WildlifeArea:
     return static_cast<int>(data.wildlife_areas().size());
+  case ElementKind::Grove:
+    return static_cast<int>(data.groves().size());
   }
   return 0;
 }
@@ -116,6 +120,8 @@ auto snapshot(const MapData& data, int kind, int index) -> ElementSnapshot {
     return data.undead_zones()[index];
   case ElementKind::WildlifeArea:
     return data.wildlife_areas()[index];
+  case ElementKind::Grove:
+    return data.groves()[index];
   }
   return {};
 }
@@ -125,6 +131,7 @@ auto type_name(const ElementSnapshot& snap) -> QString {
                         [](std::monostate) { return QString{}; },
                         [](const UndeadZoneElement& e) { return e.anchor_type; },
                         [](const WildlifeAreaElement& e) { return e.species; },
+                        [](const GroveElement&) { return QStringLiteral("grove"); },
                         [](const auto& e) { return e.type; },
                     },
                     snap);
@@ -136,6 +143,9 @@ auto display_name(const ElementSnapshot& snap) -> QString {
   }
   if (const auto* area = std::get_if<WildlifeAreaElement>(&snap)) {
     return wildlife_species_label(area->species);
+  }
+  if (const auto* grove = std::get_if<GroveElement>(&snap)) {
+    return grove->id.isEmpty() ? QStringLiteral("wood") : grove->id;
   }
   return type_name(snap);
 }
@@ -316,6 +326,9 @@ auto summary(const ElementSnapshot& snap) -> QString {
   } else if (const auto* area = std::get_if<WildlifeAreaElement>(&snap)) {
     text +=
         QStringLiteral("\nrange %1").arg(static_cast<double>(area->radius), 0, 'f', 1);
+  } else if (const auto* grove = std::get_if<GroveElement>(&snap)) {
+    text += QStringLiteral("\nradius %1")
+                .arg(static_cast<double>(grove->radius), 0, 'f', 1);
   }
 
   return text;
@@ -332,6 +345,7 @@ void apply(MapData& data, int index, const ElementSnapshot& snap) {
           [&](const TroopSpawnElement& e) { data.update_troop_spawn(index, e); },
           [&](const UndeadZoneElement& e) { data.update_undead_zone(index, e); },
           [&](const WildlifeAreaElement& e) { data.update_wildlife_area(index, e); },
+          [&](const GroveElement& e) { data.update_grove(index, e); },
       },
       snap);
 }
@@ -359,6 +373,9 @@ auto make_add(MapData& data, const ElementSnapshot& snap) -> std::unique_ptr<Com
                         },
                         [&](const WildlifeAreaElement& e) -> std::unique_ptr<Command> {
                           return std::make_unique<AddWildlifeAreaCmd>(&data, e);
+                        },
+                        [&](const GroveElement& e) -> std::unique_ptr<Command> {
+                          return std::make_unique<AddGroveCmd>(&data, e);
                         },
                     },
                     snap);
@@ -389,6 +406,8 @@ auto make_remove(MapData& data, int kind, int index) -> std::unique_ptr<Command>
   case ElementKind::WildlifeArea:
     return std::make_unique<RemoveWildlifeAreaCmd>(
         &data, index, data.wildlife_areas()[index]);
+  case ElementKind::Grove:
+    return std::make_unique<RemoveGroveCmd>(&data, index, data.groves()[index]);
   }
   return {};
 }
@@ -431,6 +450,10 @@ auto make_update(MapData& data,
           [&](const WildlifeAreaElement& e) -> std::unique_ptr<Command> {
             return std::make_unique<UpdateWildlifeAreaCmd>(
                 &data, index, std::get<WildlifeAreaElement>(before), e, description);
+          },
+          [&](const GroveElement& e) -> std::unique_ptr<Command> {
+            return std::make_unique<UpdateGroveCmd>(
+                &data, index, std::get<GroveElement>(before), e, description);
           },
       },
       after);

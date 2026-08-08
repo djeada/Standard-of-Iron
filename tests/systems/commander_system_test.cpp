@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "game/core/component.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/systems/command_service.h"
 #include "game/systems/commander_system.h"
@@ -1160,6 +1161,101 @@ TEST(CommanderAuraAbilityTest, TroopsOutsideRadiusGetNoBoost) {
   EXPECT_EQ(ally_unit->health, base_health);
   auto* buff = ally->get_component<Engine::Core::CommanderAuraBuffComponent>();
   EXPECT_TRUE(buff == nullptr || !buff->active);
+}
+
+namespace {
+
+struct CollapseFixture {
+  Engine::Core::Entity* commander = nullptr;
+  Engine::Core::Entity* barracks = nullptr;
+  Engine::Core::Entity* marketplace = nullptr;
+  Engine::Core::Entity* troop = nullptr;
+};
+
+auto add_owned_unit(Engine::Core::World& world,
+                    int owner_id,
+                    Game::Units::SpawnType spawn_type,
+                    float x) -> Engine::Core::Entity* {
+  auto* entity = world.create_entity();
+  auto* unit = entity->add_component<Engine::Core::UnitComponent>();
+  auto* transform = entity->add_component<Engine::Core::TransformComponent>();
+  unit->owner_id = owner_id;
+  unit->spawn_type = spawn_type;
+  unit->health = 100;
+  unit->max_health = 100;
+  transform->position = {x, 0.0F, 0.0F};
+  if (Game::Units::is_building_spawn(spawn_type)) {
+    entity->add_component<Engine::Core::BuildingComponent>();
+    entity->add_component<Engine::Core::RenderableComponent>("", "");
+  }
+  return entity;
+}
+
+auto build_collapse_scenario(Engine::Core::World& world,
+                             int owner_id) -> CollapseFixture {
+  CollapseFixture fixture;
+  fixture.commander =
+      add_owned_unit(world, owner_id, Game::Units::SpawnType::Knight, 0.0F);
+  fixture.commander->add_component<Engine::Core::CommanderComponent>();
+  fixture.barracks =
+      add_owned_unit(world, owner_id, Game::Units::SpawnType::Barracks, 10.0F);
+  fixture.marketplace =
+      add_owned_unit(world, owner_id, Game::Units::SpawnType::Marketplace, 20.0F);
+  fixture.troop =
+      add_owned_unit(world, owner_id, Game::Units::SpawnType::Spearman, 30.0F);
+  return fixture;
+}
+
+} // namespace
+
+TEST(CommanderSystemTest, CommanderDeathTurnsTheNationsCampsNeutralAndDisbandsIt) {
+  Engine::Core::World world;
+  auto fixture = build_collapse_scenario(world, 2);
+
+  auto* bystander = add_owned_unit(world, 1, Game::Units::SpawnType::Spearman, 40.0F);
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 0.1F);
+  EXPECT_EQ(fixture.barracks->get_component<Engine::Core::UnitComponent>()->owner_id, 2)
+      << "a living commander must keep its nation intact";
+
+  fixture.commander->get_component<Engine::Core::UnitComponent>()->health = 0;
+  system.update(&world, 0.1F);
+
+  EXPECT_EQ(fixture.barracks->get_component<Engine::Core::UnitComponent>()->owner_id,
+            Game::Core::NEUTRAL_OWNER_ID)
+      << "camps must be left standing and capturable, not destroyed";
+  EXPECT_GT(fixture.barracks->get_component<Engine::Core::UnitComponent>()->health, 0);
+  EXPECT_TRUE(
+      fixture.marketplace->has_component<Engine::Core::PendingRemovalComponent>());
+  EXPECT_EQ(fixture.troop->get_component<Engine::Core::UnitComponent>()->health, 0);
+
+  EXPECT_EQ(bystander->get_component<Engine::Core::UnitComponent>()->health, 100)
+      << "another owner's forces must be untouched";
+}
+
+TEST(CommanderSystemTest, NationOnlyCollapsesWhenItsLastCommanderFalls) {
+  Engine::Core::World world;
+  auto fixture = build_collapse_scenario(world, 2);
+
+  auto* second_commander =
+      add_owned_unit(world, 2, Game::Units::SpawnType::Knight, 5.0F);
+  second_commander->add_component<Engine::Core::CommanderComponent>();
+
+  Game::Systems::CommanderSystem system;
+  fixture.commander->get_component<Engine::Core::UnitComponent>()->health = 0;
+  system.update(&world, 0.1F);
+
+  EXPECT_EQ(fixture.barracks->get_component<Engine::Core::UnitComponent>()->owner_id,
+            2);
+  EXPECT_EQ(fixture.troop->get_component<Engine::Core::UnitComponent>()->health, 100);
+
+  second_commander->get_component<Engine::Core::UnitComponent>()->health = 0;
+  system.update(&world, 0.1F);
+
+  EXPECT_EQ(fixture.barracks->get_component<Engine::Core::UnitComponent>()->owner_id,
+            Game::Core::NEUTRAL_OWNER_ID);
+  EXPECT_EQ(fixture.troop->get_component<Engine::Core::UnitComponent>()->health, 0);
 }
 
 } // namespace

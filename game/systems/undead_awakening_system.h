@@ -81,6 +81,9 @@ private:
   void refresh_active_spawns(Engine::Core::World& world, RuntimeZone& zone) const;
   void refresh_anchor_structure(Engine::Core::World& world, RuntimeZone& zone);
   void break_garrison(Engine::Core::World& world, RuntimeZone& zone, bool captured);
+  void pay_clear_reward(Engine::Core::World& world,
+                        const RuntimeZone& zone,
+                        bool captured) const;
   void refresh_capture_lock(Engine::Core::World& world, const RuntimeZone& zone) const;
   void awaken_zone(Engine::Core::World& world, RuntimeZone& zone);
   void try_spawn_next_wave(Engine::Core::World& world, RuntimeZone& zone);

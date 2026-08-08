@@ -1,6 +1,8 @@
 #include "wildlife_rig.h"
 
+#include <algorithm>
 #include <array>
+#include <cmath>
 #include <string_view>
 
 namespace Render::Wildlife {
@@ -156,6 +158,58 @@ void evaluate_wildlife_skeleton(const RigPose& pose, BonePalette& out) noexcept 
                                       const_cast<RigPose*>(&pose),
                                       QVector3D(1.0F, 0.0F, 0.0F),
                                       std::span<QMatrix4x4>(out));
+}
+
+namespace {
+
+[[nodiscard]] auto saturate(float value) noexcept -> float {
+  return std::clamp(value, 0.0F, 1.0F);
+}
+
+[[nodiscard]] auto smoothstep01(float t) noexcept -> float {
+  float const x = saturate(t);
+  return x * x * (3.0F - (2.0F * x));
+}
+
+[[nodiscard]] auto ease_out(float t) noexcept -> float {
+  float const inv = 1.0F - saturate(t);
+  return 1.0F - (inv * inv);
+}
+
+[[nodiscard]] auto ease_in(float t) noexcept -> float {
+  float const x = saturate(t);
+  return x * x;
+}
+
+} // namespace
+
+auto death_motion(float phase) noexcept -> DeathMotion {
+  float const p = saturate(phase);
+  constexpr float k_impact = 0.58F;
+
+  DeathMotion motion;
+  motion.buckle = ease_out(p / 0.22F);
+  motion.fall = ease_in(p / k_impact);
+  motion.roll = smoothstep01((p - 0.18F) / 0.62F);
+  motion.head = ease_in((p - 0.10F) / 0.62F);
+
+  if (p > k_impact) {
+    float const since = (p - k_impact) / (1.0F - k_impact);
+    motion.settle = std::exp(-5.0F * since) * std::sin(since * 12.0F);
+  }
+
+  motion.thrash =
+      std::sin(p * 22.0F) * (1.0F - smoothstep01(p / 0.30F)) * saturate(p / 0.06F);
+  return motion;
+}
+
+auto roll_about_spine(const QVector3D& point,
+                      const QVector3D& pivot,
+                      float radians) noexcept -> QVector3D {
+  QVector3D const d = point - pivot;
+  float const c = std::cos(radians);
+  float const s = std::sin(radians);
+  return pivot + QVector3D((d.x() * c) - (d.y() * s), (d.x() * s) + (d.y() * c), d.z());
 }
 
 } // namespace Render::Wildlife

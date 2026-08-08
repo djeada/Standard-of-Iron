@@ -1,6 +1,8 @@
 #include "wildlife_system.h"
 
+#include <QCoreApplication>
 #include <QJsonArray>
+#include <QString>
 #include <QVector3D>
 
 #include <algorithm>
@@ -349,6 +351,73 @@ void WildlifeSystem::spawn_initial_population(Engine::Core::World& world) {
     for (int member = 0; member < group.desired_size; ++member) {
       spawn_member(world, group, config);
     }
+  }
+}
+
+void WildlifeSystem::release_due_packs(Engine::Core::World& world, float delta_time) {
+  const auto& config = m_settings.for_species(Species::Wolf);
+  if (config.waves.empty()) {
+    return;
+  }
+
+  m_elapsed += delta_time;
+  if (m_released_waves.size() != config.waves.size()) {
+    m_released_waves.resize(config.waves.size(), false);
+  }
+
+  for (std::size_t index = 0; index < config.waves.size(); ++index) {
+    if (m_released_waves[index]) {
+      continue;
+    }
+    const auto& wave = config.waves[index];
+    if (m_elapsed < wave.timing) {
+
+      break;
+    }
+    m_released_waves[index] = true;
+
+    GroupState group;
+    group.id = m_next_group_id++;
+    group.species = Species::Wolf;
+    group.roam_radius = std::max(config.roam_radius, wave.area.radius);
+    group.rng_state = seed_for(m_seed, Species::Wolf, static_cast<int>(index) + 4096);
+    group.desired_size = wave.pack_size;
+
+    float anchor_x = wave.area.x;
+    float anchor_z = wave.area.z;
+    bool anchored = false;
+    for (float scale : {1.0F, 1.8F, 3.0F}) {
+      if (pick_open_point(group.rng_state,
+                          wave.area.x,
+                          wave.area.z,
+                          0.0F,
+                          wave.area.radius * scale,
+                          anchor_x,
+                          anchor_z)) {
+        anchored = true;
+        break;
+      }
+    }
+    if (!anchored) {
+      continue;
+    }
+
+    group.home_x = anchor_x;
+    group.home_z = anchor_z;
+    m_groups.push_back(group);
+    m_group_runtime.emplace_back();
+
+    auto& stored = m_groups.back();
+    for (int member = 0; member < stored.desired_size; ++member) {
+      spawn_member(world, stored, config);
+    }
+
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::MissionAnnouncementEvent(
+            wave.label.empty()
+                ? QCoreApplication::translate("WildlifeSystem",
+                                              "Wolves are moving on the valley.")
+                : QString::fromStdString(wave.label)));
   }
 }
 
@@ -735,6 +804,8 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
     }
   }
 
+  release_due_packs(*world, delta_time);
+
   m_threat_refresh -= delta_time;
   if (m_threat_refresh <= 0.0F) {
     m_threat_refresh = k_threat_refresh_interval;
@@ -834,6 +905,13 @@ auto WildlifeSystem::serialize_state() const -> QJsonObject {
   state["enabled"] = m_enabled;
   state["seed"] = static_cast<qint64>(m_seed);
   state["next_group_id"] = static_cast<int>(m_next_group_id);
+  state["elapsed"] = static_cast<double>(m_elapsed);
+
+  QJsonArray released_waves;
+  for (bool const released : m_released_waves) {
+    released_waves.append(released);
+  }
+  state["released_waves"] = released_waves;
 
   QJsonArray groups;
   for (const auto& group : m_groups) {
@@ -910,6 +988,12 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
   m_seed = static_cast<std::uint32_t>(state.value("seed").toVariant().toULongLong());
   m_next_group_id =
       static_cast<std::uint16_t>(state.value("next_group_id").toInt(m_next_group_id));
+  m_elapsed = static_cast<float>(state.value("elapsed").toDouble(0.0));
+
+  m_released_waves.clear();
+  for (const auto& value : state.value("released_waves").toArray()) {
+    m_released_waves.push_back(value.toBool(false));
+  }
 
   m_groups.clear();
   const QJsonArray groups = state.value("groups").toArray();

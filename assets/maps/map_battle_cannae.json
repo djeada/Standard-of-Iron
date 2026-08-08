@@ -2025,6 +2025,22 @@
       "player_id": 3,
       "behavior": "guard",
       "landmark": "cannae_ridge_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 138.0,
+      "z": 606.0,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "cannae_south_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 142.0,
+      "z": 606.0,
+      "player_id": 4,
+      "behavior": "guard",
+      "landmark": "cannae_south_sanctuary"
     }
   ],
   "world_props": [
@@ -3525,7 +3541,11 @@
             "skeleton_archer": 2
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 180,
+        "food": 140
+      }
     }
   ],
   "lakes": [],
@@ -5331,5 +5351,68 @@
       "z": 180,
       "radius": 26
     }
-  ]
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 0,
+    "sheep": {
+      "enabled": true,
+      "groups": 3,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 90.0,
+      "spawn_areas": [
+        {
+          "x": 60,
+          "z": 180,
+          "radius": 24
+        }
+      ]
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 2,
+      "group_size_max": 4,
+      "roam_radius": 22.0,
+      "aggression": 0.6,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 560,
+          "z": 420,
+          "radius": 26
+        }
+      ],
+      "waves": [
+        {
+          "timing": 260.0,
+          "pack_size": 5,
+          "x": 330,
+          "z": 180,
+          "radius": 26,
+          "label": "Wolves have found the river screen."
+        },
+        {
+          "timing": 480.0,
+          "pack_size": 6,
+          "x": 560,
+          "z": 420,
+          "radius": 26,
+          "label": "The east pack is hunting the pocket."
+        }
+      ]
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 9,
+      "flight_height": 14.0,
+      "flyover_interval_min": 45.0,
+      "flyover_interval_max": 120.0
+    }
+  }
 }

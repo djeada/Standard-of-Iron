@@ -99,8 +99,9 @@ auto terrain_footprint_cells(const TerrainElement& elem) -> float {
   return std::max(extent > 0.0F ? extent : 0.0F, elem.radius);
 }
 
-constexpr std::array<int, 7> k_category_paint_order = {
+constexpr std::array<int, 8> k_category_paint_order = {
     static_cast<int>(ElementKind::Terrain),
+    static_cast<int>(ElementKind::Grove),
     static_cast<int>(ElementKind::Linear),
     static_cast<int>(ElementKind::WildlifeArea),
     static_cast<int>(ElementKind::WorldProp),
@@ -1133,6 +1134,9 @@ void MapCanvas::draw_one_element(QPainter& painter, const ElementRef& ref) {
   case ElementKind::UndeadZone:
     draw_undead_zone_element(painter, ref.index);
     break;
+  case ElementKind::Grove:
+    draw_grove_element(painter, ref.index);
+    break;
   case ElementKind::WildlifeArea:
     draw_wildlife_area_element(painter, ref.index);
     break;
@@ -1503,6 +1507,54 @@ void MapCanvas::draw_undead_zone_element(QPainter& painter, int i) {
     painter.drawText(QRect(center.x() - 40, center.y() + radius_px + 2, 80, 14),
                      Qt::AlignCenter,
                      elem.id);
+  }
+
+  painter.restore();
+}
+
+void MapCanvas::draw_grove_element(QPainter& painter, int i) {
+  if (i < 0 || i >= m_map_data->groves().size()) {
+    return;
+  }
+
+  const QColor& hover_ring_color =
+      m_current_tool == ToolType::Eraser ? k_hover_erase_color : k_hover_select_color;
+
+  const auto& elem = m_map_data->groves()[i];
+  QPoint const center = grid_to_widget(elem.x, elem.z);
+
+  auto const kind = static_cast<int>(ElementKind::Grove);
+  bool const is_selected = is_selected_element(kind, i);
+  bool const is_hovered = (m_hovered_type == kind && m_hovered_index == i);
+
+  const int radius_px = static_cast<int>(elem.radius * m_zoom * grid_cell_size);
+
+  const QColor fill(46, 92, 52, 90);
+  const QColor outline(104, 168, 108);
+
+  painter.save();
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  painter.setBrush(fill);
+  if (is_selected) {
+    painter.setPen(QPen(Qt::yellow, 2));
+  } else if (is_hovered) {
+    painter.setPen(QPen(hover_ring_color, 2));
+  } else {
+    painter.setPen(QPen(outline, 1, Qt::DashLine));
+  }
+  painter.drawEllipse(center, radius_px, radius_px);
+
+  painter.setPen(outline);
+  QFont f = painter.font();
+  f.setPointSize(9);
+  painter.setFont(f);
+  painter.drawText(QRect(center.x() - 10, center.y() - 10, 20, 20),
+                   Qt::AlignCenter,
+                   QStringLiteral("\U0001F332"));
+
+  if (labels_visible() && !elem.id.isEmpty()) {
+    painter.drawText(center.x() + radius_px + 4, center.y(), elem.id);
   }
 
   painter.restore();
@@ -2774,6 +2826,21 @@ MapCanvas::HitResult MapCanvas::hit_test(const QPoint& pos) const {
     consider_hit(5, i, -1, (cursor - center_vec).length(), zone_radius_px + 4.0F, 6);
   }
 
+  const auto& groves = m_map_data->groves();
+  for (int i = groves.size() - 1; i >= 0; --i) {
+    const auto& elem = groves[i];
+    const QPoint center = grid_to_widget(elem.x, elem.z);
+    const QVector2D center_vec(static_cast<float>(center.x()),
+                               static_cast<float>(center.y()));
+    const float grove_radius_px = elem.radius * m_zoom * grid_cell_size;
+    consider_hit(static_cast<int>(ElementKind::Grove),
+                 i,
+                 -1,
+                 (cursor - center_vec).length(),
+                 grove_radius_px + 4.0F,
+                 8);
+  }
+
   const auto& wildlife_areas = m_map_data->wildlife_areas();
   for (int i = wildlife_areas.size() - 1; i >= 0; --i) {
     const auto& elem = wildlife_areas[i];
@@ -2944,6 +3011,13 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
       return;
     }
     m_map_data->execute_command(std::make_unique<AddTroopSpawnCmd>(m_map_data, elem));
+  } else if (m_current_tool == ToolType::Grove) {
+    GroveElement elem;
+    static int grove_counter = 0;
+    elem.id = QStringLiteral("wood_%1").arg(++grove_counter);
+    elem.x = static_cast<float>(grid_pos.x());
+    elem.z = static_cast<float>(grid_pos.y());
+    m_map_data->execute_command(std::make_unique<AddGroveCmd>(m_map_data, elem));
   } else if (is_wildlife_tool(m_current_tool)) {
     WildlifeAreaElement elem;
     elem.species = wildlife_species_for_tool(m_current_tool);

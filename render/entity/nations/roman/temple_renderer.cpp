@@ -34,6 +34,7 @@ struct RomanTemplePalette {
   QVector3D soot{0.16F, 0.14F, 0.12F};
   QVector3D flame{0.88F, 0.47F, 0.12F};
   QVector3D cedar{0.40F, 0.25F, 0.13F};
+  QVector3D verdigris{0.29F, 0.46F, 0.40F};
 };
 
 constexpr std::uint8_t k_temple_team_slot = 1;
@@ -249,15 +250,17 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   desc.set_full_lod_max_distance(84.0F);
 
   desc.add_box(
-      QVector3D(0.0F, 0.050F, 0.0F), QVector3D(1.38F, 0.050F, 1.10F), c.limestone_dark);
+      QVector3D(0.0F, 0.055F, 0.0F), QVector3D(1.38F, 0.055F, 1.10F), c.limestone_dark);
   desc.add_box(
-      QVector3D(0.0F, 0.155F, 0.0F), QVector3D(1.31F, 0.055F, 1.03F), c.limestone);
+      QVector3D(0.0F, 0.195F, 0.0F), QVector3D(1.33F, 0.085F, 1.05F), c.limestone);
   desc.add_box(
-      QVector3D(0.0F, 0.248F, 0.0F), QVector3D(1.25F, 0.038F, 0.97F), c.marble_shade);
+      QVector3D(0.0F, 0.345F, 0.0F), QVector3D(1.29F, 0.065F, 1.01F), c.limestone);
   desc.add_box(
-      QVector3D(0.0F, 0.296F, 0.0F), QVector3D(1.27F, 0.010F, 0.99F), c.marble);
+      QVector3D(0.0F, 0.435F, 0.0F), QVector3D(1.25F, 0.038F, 0.97F), c.marble_shade);
+  desc.add_box(
+      QVector3D(0.0F, 0.478F, 0.0F), QVector3D(1.27F, 0.010F, 0.99F), c.marble);
 
-  float const podium_y = 0.306F;
+  float const podium_y = 0.488F;
 
   for (int course = 0; course < 4; ++course) {
     float const course_y = 0.110F + 0.048F * static_cast<float>(course);
@@ -275,22 +278,22 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
   }
 
-  for (int step = 0; step < 4; ++step) {
+  for (int step = 0; step < 6; ++step) {
     float const step_index = static_cast<float>(step);
-    float const top = 0.076F * (step_index + 1.0F);
-    desc.add_box(QVector3D(-1.605F + 0.088F * step_index, top * 0.5F, 0.0F),
-                 QVector3D(0.046F, top * 0.5F, 0.76F),
+    float const top = 0.081F * (step_index + 1.0F);
+    desc.add_box(QVector3D(-1.700F + 0.078F * step_index, top * 0.5F, 0.0F),
+                 QVector3D(0.041F, top * 0.5F, 0.76F),
                  (step % 2 == 0) ? c.marble_shade : c.limestone,
                  k_building_state_mask_intact);
   }
   for (float const cheek : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(-1.47F, 0.15F, cheek * 0.815F),
-                 QVector3D(0.20F, 0.15F, 0.055F),
+    desc.add_box(QVector3D(-1.50F, 0.24F, cheek * 0.815F),
+                 QVector3D(0.26F, 0.24F, 0.055F),
                  c.limestone,
                  k_building_state_mask_intact);
   }
 
-  float const column_height = 1.18F * height_multiplier;
+  float const column_height = 1.52F * height_multiplier;
   bool const ruined = state == BuildingState::Destroyed;
 
   int column_index = 0;
@@ -434,7 +437,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
 
   float const pediment_y = entablature_y + 0.152F;
 
-  float const pediment_rise = 0.62F;
+  float const pediment_rise = 0.42F;
   float const pediment_half_z = 0.90F;
 
   auto add_tympanum = [&](float face_x, float face_dir, const QVector3D& field) {
@@ -509,7 +512,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       pediment_half_z,
       pediment_rise,
       0.038F,
-      c.terracotta);
+      c.bronze);
 
   {
     float const theta = std::atan2(pediment_rise, pediment_half_z);
@@ -518,7 +521,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
         std::sqrt(pediment_half_z * pediment_half_z + pediment_rise * pediment_rise) *
         0.5F;
     float const surface_lift = (0.038F + 0.012F) / std::cos(theta);
-    QVector3D const cover_tile = c.terracotta * 0.72F + c.terracotta_dark * 0.28F;
+    QVector3D const cover_tile = c.bronze * 0.62F + c.verdigris * 0.38F;
     for (int rib = 0; rib < 17; ++rib) {
       float const x = -1.22F + static_cast<float>(rib) * 0.155F;
       for (float const side : {-1.0F, 1.0F}) {
@@ -536,7 +539,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
 
   desc.add_box(QVector3D(0.02F, pediment_y + pediment_rise + 0.030F, 0.0F),
                QVector3D(1.30F, 0.030F, 0.058F),
-               c.terracotta_dark,
+               c.gold,
                k_building_state_mask_intact);
 
   for (float const side : {-1.0F, 1.0F}) {
@@ -544,7 +547,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       float const x = -1.20F + static_cast<float>(antefix) * 0.30F;
       desc.add_box(QVector3D(x, pediment_y + 0.052F, side * 0.905F),
                    QVector3D(0.036F, 0.042F, 0.014F),
-                   c.terracotta_dark,
+                   c.verdigris,
                    k_building_state_mask_intact,
                    BuildingLODMask::Full);
       desc.add_box(QVector3D(x, pediment_y + 0.084F, side * 0.905F),

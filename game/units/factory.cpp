@@ -51,6 +51,21 @@ auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> boo
 
 } // namespace
 
+void UnitFactoryRegistry::apply_forest_passability(Engine::Core::World& world,
+                                                   Unit* unit,
+                                                   SpawnType type) {
+  if (unit == nullptr) {
+    return;
+  }
+  auto* entity = world.get_entity(unit->id());
+  if (entity == nullptr) {
+    return;
+  }
+  if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
+    movement->set_can_enter_forest(can_enter_forest(type));
+  }
+}
+
 void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::Archer,
                        [](Engine::Core::World& world, const SpawnParams& params) {

@@ -74,6 +74,7 @@ add_executable(
     map/wave_archetype_catalog_test.cpp
     map/campaign_loader_test.cpp
     map/campaign_roster_test.cpp
+    map/campaign_content_integration_test.cpp
     map/campaign_province_data_test.cpp
     map/time_of_day_test.cpp
     systems/rain_manager_test.cpp

@@ -106,6 +106,9 @@ auto toolDescription(ToolType tool) -> QString {
   case ToolType::UndeadZone:
     return "Place an undead zone (shrine or ruins anchor with skeleton wave spawns). "
            "Double-click to edit waves.";
+  case ToolType::Grove:
+    return "Plant a wood. Its ground is closed to horses, siege and elephants; only "
+           "foot troops, builders and civilians can thread it.";
   case ToolType::WildlifeSheep:
     return "Mark a sheep pasture. Herds spawn inside the circle and graze within it.";
   case ToolType::WildlifeWolves:
@@ -208,6 +211,14 @@ void ToolPanel::setup_ui() {
                   "\u25B3",
                   "Place mountain peaks.",
                   ToolType::Mountain);
+  add_tool_button(terrain_layout,
+                  1,
+                  0,
+                  "Wood",
+                  "\U0001F332",
+                  "Plant a wood. Its ground is closed to horses, siege and elephants; "
+                  "only foot troops, builders and civilians can thread it.",
+                  ToolType::Grove);
   layout->addWidget(terrain_group);
 
   auto* props_group = new QGroupBox("World Props", this);

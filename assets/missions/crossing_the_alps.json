@@ -2,7 +2,7 @@
   "id": "crossing_the_alps",
   "title": "Crossing the Alps",
   "summary": "Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.",
-  "teaching_goal": "Long-form offensive progression. Teaches keeping the column moving while absorbing attrition at each pass.",
+  "teaching_goal": "Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.",
   "narrative_intent": "The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign's main enemy.",
   "historical_context": "218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.",
   "terrain_type": "mountain",
@@ -206,6 +206,10 @@
         "iron": 300
       },
       "description": "Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
@@ -220,7 +224,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -273,5 +277,6 @@
     }
   ],
   "include_ambient_undead": false,
-  "theme": "The mountain takes more lives than any sword. Reach the valley or feed the snow."
+  "theme": "The mountain takes more lives than any sword. Reach the valley or feed the snow.",
+  "victory_mode": "all"
 }

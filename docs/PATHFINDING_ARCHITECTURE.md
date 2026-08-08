@@ -133,6 +133,38 @@ Units are not written into this grid. A unit standing in a cell does not make th
 
 The same order is used for regional rebuilds: reset the region to terrain, reapply buildings/resources intersecting the region, then force mandatory traversal cells in that region to `Walkable`.
 
+## Forest cells and passability
+
+`CellValue::Forest` marks the open ground inside an authored grove (`groves` in the map
+file). It is the one cell value whose walkability depends on who is asking:
+
+```cpp
+enum class Passability : std::uint8_t { Light, Heavy };
+```
+
+`Light` treats `Forest` as walkable; `Heavy` does not. Everything else — `Walkable`,
+`Blocked`, `Tree`, `Boulder`, `IronOre` — reads the same for both. `find_path`,
+`is_walkable`, `is_world_position_walkable`, `is_world_segment_walkable` and
+`find_nearest_walkable_point` all take a `Passability`, defaulting to `Light`.
+
+Which units are light is decided by `Game::Units::can_enter_forest`: commanders, archers,
+swordsmen, healers, builders, civilians, the Sepulcher's dead and wildlife. Spearmen,
+cavalry, catapults, ballistae and elephants are heavy. The answer is stamped onto
+`MovementComponent` once at spawn, in `UnitFactoryRegistry::create`, so no call site has to
+look up a spawn type to path.
+
+Three details that matter:
+
+- **The path cache is keyed on passability.** Without that, a route computed for a
+  swordsman would be served to the elephant behind him.
+- **A group move uses the heaviest member's passability.** A shared corridor has to be
+  walkable by everyone who will follow it; light units that fall back to individual paths
+  still get `Light`.
+- **Forest only claims cells that were already `Walkable`,** and roads are excluded, so a
+  road driven through a wood stays a lane the siege train can use. `apply_forest_cells`
+  runs after the terrain and building passes and before the bridge/hill-entrance pass, so
+  a bridge or ramp inside a wood also stays open.
+
 ## Enemy Units Are Not Empty Ground
 
 This is the most important separation in the system:

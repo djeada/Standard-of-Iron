@@ -242,9 +242,18 @@ auto rotate_about_x(const QVector3D& point,
   return pivot + QVector3D(d.x(), (d.y() * c) - (d.z() * s), (d.y() * s) + (d.z() * c));
 }
 
+auto rotate_about_y(const QVector3D& point,
+                    const QVector3D& pivot,
+                    float radians) -> QVector3D {
+  QVector3D const d = point - pivot;
+  float const c = std::cos(radians);
+  float const s = std::sin(radians);
+  return pivot + QVector3D((d.x() * c) + (d.z() * s), d.y(), (d.z() * c) - (d.x() * s));
+}
+
 void apply_lunge(RigPose& pose, const WolfDrive& drive) {
   float const lunge = std::clamp(drive.lunge, 0.0F, 1.0F);
-  if (lunge <= 0.0F && drive.jaw_open <= 0.0F) {
+  if (lunge <= 0.0F && drive.jaw_open <= 0.0F && drive.head_shake == 0.0F) {
     return;
   }
 
@@ -292,6 +301,29 @@ void apply_lunge(RigPose& pose, const WolfDrive& drive) {
 
   pose.jaw_tip = rotate_about_x(pose.jaw_tip, pose.jaw_hinge, 0.50F * drive.jaw_open);
 
+  if (drive.head_shake != 0.0F) {
+    float const yaw = 0.55F * drive.head_shake;
+    QVector3D const neck = pose.withers;
+    pose.poll = rotate_about_y(pose.poll, neck, yaw);
+    pose.muzzle = rotate_about_y(pose.muzzle, neck, yaw);
+    pose.jaw_hinge = rotate_about_y(pose.jaw_hinge, neck, yaw);
+    pose.jaw_tip = rotate_about_y(pose.jaw_tip, neck, yaw);
+    pose.ear_base_l = rotate_about_y(pose.ear_base_l, neck, yaw);
+    pose.ear_base_r = rotate_about_y(pose.ear_base_r, neck, yaw);
+    pose.ear_tip_l = rotate_about_y(pose.ear_tip_l, neck, yaw);
+    pose.ear_tip_r = rotate_about_y(pose.ear_tip_r, neck, yaw);
+
+    float const counter = -0.18F * drive.head_shake;
+    QVector3D const spine_pivot = pose.body_rear;
+    pose.body_front = rotate_about_y(pose.body_front, spine_pivot, counter);
+    pose.withers = rotate_about_y(pose.withers, spine_pivot, counter);
+    for (std::size_t i = 0; i < 2U; ++i) {
+      pose.legs[i].shoulder =
+          rotate_about_y(pose.legs[i].shoulder, spine_pivot, counter);
+      pose.legs[i].knee = rotate_about_y(pose.legs[i].knee, spine_pivot, counter);
+    }
+  }
+
   pose.tail_base += surge;
   pose.tail_mid += surge;
   pose.tail_tip += surge;
@@ -301,45 +333,73 @@ void apply_lunge(RigPose& pose, const WolfDrive& drive) {
 }
 
 void apply_collapse(RigPose& pose, const WolfDrive& drive) {
-  float const fall = std::clamp(drive.collapse, 0.0F, 1.0F);
-  if (fall <= 0.0F) {
+  float const phase = std::clamp(drive.collapse, 0.0F, 1.0F);
+  if (phase <= 0.0F) {
     return;
   }
 
-  float const ease = fall * fall * (3.0F - (2.0F * fall));
-  float const roll = 0.135F * ease;
+  DeathMotion const m = death_motion(phase);
 
-  auto settle = [&](QVector3D& p, float keep, float side) {
-    p.setY(0.055F + ((p.y() - 0.055F) * keep));
-    p.setX(p.x() + side);
+  constexpr float k_lying_y = 0.150F;
+  constexpr float k_rest_body_y = 0.505F;
+  constexpr float k_roll_radians = -1.42F;
+
+  float const descent = (k_rest_body_y - k_lying_y) * m.fall;
+  QVector3D const spine(0.0F, k_lying_y, 0.0F);
+  float const roll = k_roll_radians * m.roll;
+
+  float const head_descent = (k_rest_body_y - k_lying_y) * m.head;
+
+  auto settle_bounce = [&](float weight) {
+    return m.settle * 0.022F * weight;
   };
 
-  settle(pose.root, 1.0F - (0.55F * ease), roll * 0.4F);
-  settle(pose.body_rear, 1.0F - (0.72F * ease), roll);
-  settle(pose.body_front, 1.0F - (0.70F * ease), roll);
-  settle(pose.withers, 1.0F - (0.74F * ease), roll);
+  auto place = [&](QVector3D& p, float descent_amount, float bounce_weight) {
+    p.setY(p.y() - descent_amount + settle_bounce(bounce_weight));
+    p = roll_about_spine(p, spine, roll);
+    p.setY(std::max(p.y(), 0.018F));
+  };
+
+  place(pose.root, descent * 0.92F, 0.5F);
+  place(pose.body_rear, descent, 1.0F);
+  place(pose.body_front, descent, 0.9F);
+  place(pose.withers, descent, 0.8F);
 
   for (std::size_t i = 0; i < k_leg_count; ++i) {
     float const out = (i % 2U == 0U) ? -1.0F : 1.0F;
-    settle(pose.legs[i].shoulder, 1.0F - (0.70F * ease), roll);
-    settle(pose.legs[i].knee, 1.0F - (0.86F * ease), roll + (out * 0.075F * ease));
-    settle(pose.legs[i].foot, 1.0F - (0.94F * ease), roll + (out * 0.130F * ease));
-    settle(pose.legs[i].toe, 1.0F - (0.96F * ease), roll + (out * 0.155F * ease));
+    float const fold = m.buckle;
+    float const twitch = m.thrash * 0.030F * out;
+
+    pose.legs[i].knee += QVector3D(0.0F, -0.055F * fold, 0.030F * fold * out);
+    pose.legs[i].foot += QVector3D(0.0F, -0.090F * fold, 0.062F * fold * out + twitch);
+    pose.legs[i].toe += QVector3D(0.0F, -0.100F * fold, 0.076F * fold * out + twitch);
+
+    place(pose.legs[i].shoulder, descent, 0.9F);
+    place(pose.legs[i].knee, descent, 0.7F);
+    place(pose.legs[i].foot, descent, 0.5F);
+    place(pose.legs[i].toe, descent, 0.4F);
   }
 
-  settle(pose.poll, 1.0F - (0.80F * ease), roll * 1.2F);
-  settle(pose.muzzle, 1.0F - (0.92F * ease), roll * 1.5F);
-  pose.muzzle += QVector3D(0.0F, 0.0F, 0.045F * ease);
-  settle(pose.jaw_hinge, 1.0F - (0.88F * ease), roll * 1.3F);
-  settle(pose.jaw_tip, 1.0F - (0.94F * ease), roll * 1.5F);
-  settle(pose.ear_base_l, 1.0F - (0.82F * ease), roll * 1.2F);
-  settle(pose.ear_base_r, 1.0F - (0.82F * ease), roll * 1.2F);
-  settle(pose.ear_tip_l, 1.0F - (0.86F * ease), roll * 1.4F);
-  settle(pose.ear_tip_r, 1.0F - (0.86F * ease), roll * 1.4F);
+  place(pose.poll, head_descent, 0.7F);
+  place(pose.muzzle, head_descent, 0.6F);
+  pose.muzzle += QVector3D(0.0F, 0.0F, 0.055F * m.head);
+  place(pose.jaw_hinge, head_descent, 0.6F);
+  place(pose.jaw_tip, head_descent, 0.5F);
 
-  settle(pose.tail_base, 1.0F - (0.74F * ease), roll);
-  settle(pose.tail_mid, 1.0F - (0.88F * ease), roll * 1.3F);
-  settle(pose.tail_tip, 1.0F - (0.94F * ease), roll * 1.6F);
+  pose.jaw_tip += QVector3D(0.0F, -0.022F * m.head, 0.014F * m.head);
+
+  place(pose.ear_base_l, head_descent, 0.5F);
+  place(pose.ear_base_r, head_descent, 0.5F);
+  place(pose.ear_tip_l, head_descent, 0.4F);
+  place(pose.ear_tip_r, head_descent, 0.4F);
+
+  float const tail_lag = std::clamp(m.head * 1.05F, 0.0F, 1.0F);
+  float const tail_flick = m.thrash * 0.045F;
+  pose.tail_mid += QVector3D(tail_flick, 0.0F, 0.0F);
+  pose.tail_tip += QVector3D(tail_flick * 1.6F, 0.0F, 0.0F);
+  place(pose.tail_base, descent, 0.8F);
+  place(pose.tail_mid, (k_rest_body_y - k_lying_y) * tail_lag, 0.6F);
+  place(pose.tail_tip, (k_rest_body_y - k_lying_y) * tail_lag, 0.5F);
 }
 
 auto make_pose(const WolfDrive& drive) -> RigPose {

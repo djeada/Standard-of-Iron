@@ -70,6 +70,8 @@ struct AccumulateResourcesVictoryRule {
   ResourceAmounts required;
 };
 
+struct EliminateCommandersVictoryRule {};
+
 using VictoryRule = std::variant<EliminationVictoryRule,
                                  SurviveTimeVictoryRule,
                                  ControlStructuresVictoryRule,
@@ -78,7 +80,8 @@ using VictoryRule = std::variant<EliminationVictoryRule,
                                  PurifyShrineVictoryRule,
                                  SurviveUndeadWaveVictoryRule,
                                  SurviveWavesVictoryRule,
-                                 AccumulateResourcesVictoryRule>;
+                                 AccumulateResourcesVictoryRule,
+                                 EliminateCommandersVictoryRule>;
 
 struct NoUnitsDefeatRule {};
 
@@ -144,6 +147,7 @@ private:
     bool local_has_units = false;
     int local_commander_count = 0;
     int local_non_commander_troop_count = 0;
+    int enemy_commander_count = 0;
     QHash<QString, int> enemy_structure_counts;
     QHash<QString, int> local_owned_structure_counts;
     QHash<QString, int> local_captured_structure_counts;
@@ -155,7 +159,7 @@ private:
   void mark_world_dirty();
   void reevaluate_world_state();
   void refresh_rule_metadata();
-  void update_only_commander_defeat_arming(const WorldSummary& summary);
+  void update_rule_arming(const WorldSummary& summary);
   void evaluate_polled_rules();
   void evaluate_world_state(Engine::Core::World& world);
   void evaluate_rules(const WorldSummary& summary);
@@ -182,6 +186,8 @@ private:
   bool m_requires_captured_structure_tracking = false;
   bool m_has_only_commander_defeat_rule = false;
   bool m_only_commander_defeat_armed = false;
+  bool m_has_eliminate_commanders_rule = false;
+  bool m_eliminate_commanders_armed = false;
   bool m_world_state_dirty = false;
   std::vector<QString> m_only_commander_structure_types;
 

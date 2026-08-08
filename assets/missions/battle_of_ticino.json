@@ -2,7 +2,7 @@
   "id": "battle_of_ticino",
   "title": "Battle of Ticino",
   "summary": "First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.",
-  "teaching_goal": "Mobile offense with cavalry tempo. Teaches when to press an early advantage and convert it into a camp assault.",
+  "teaching_goal": "High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting.",
   "narrative_intent": "Hannibal's first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.",
   "historical_context": "218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.",
   "terrain_type": "po_valley_river_plain",
@@ -151,6 +151,10 @@
       ],
       "min_count": 2,
       "description": "Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
@@ -165,7 +169,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -218,5 +222,6 @@
     }
   ],
   "include_ambient_undead": false,
-  "theme": "Hannibal's riders descend through river fog to trap Roman scouts before they escape across a torch-lit bridge."
+  "theme": "Hannibal's riders descend through river fog to trap Roman scouts before they escape across a torch-lit bridge.",
+  "victory_mode": "all"
 }

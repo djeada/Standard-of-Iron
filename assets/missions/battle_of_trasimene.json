@@ -2,7 +2,7 @@
   "id": "battle_of_trasimene",
   "title": "Battle of Lake Trasimene",
   "summary": "Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.",
-  "teaching_goal": "Multi-vector offense from concealed positions. Teaches closing exits before shifting to camp seizure.",
+  "teaching_goal": "A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time.",
   "narrative_intent": "The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.",
   "historical_context": "217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.",
   "terrain_type": "lakeside_hill_country",
@@ -122,6 +122,10 @@
       ],
       "min_count": 2,
       "description": "Seize both Roman camps. The ambush is not finished until their flags come down."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
@@ -133,7 +137,7 @@
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Your camp falls — the field goes with it."
+      "description": "Your camp falls \u2014 the field goes with it."
     },
     {
       "type": "lose_all_units",
@@ -141,7 +145,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -194,5 +198,6 @@
     }
   ],
   "include_ambient_undead": false,
-  "theme": "Legions march in column through the shoreline corridor — and the hills swallow them whole."
+  "theme": "Legions march in column through the shoreline corridor \u2014 and the hills swallow them whole.",
+  "victory_mode": "all"
 }
