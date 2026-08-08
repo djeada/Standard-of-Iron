@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(StandardOfIron VERSION 1.0.0 LANGUAGES CXX)
+project(StandardOfIron VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -148,15 +148,23 @@ if(Qt6_FOUND)
     set(QT_VERSION_MAJOR 6)
     find_package(OpenGL REQUIRED)
 else()
-    message(STATUS "Qt6 not found, trying Qt5")
-    find_package(
-        Qt5
-        REQUIRED
-        COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql Multimedia
+    # The Qt5 fallback is gone rather than merely unused. Its resource manifest,
+    # qml_resources.qrc, listed 36 of the 88 QML files and two -- Constants.qml
+    # and Colors.js -- that have not existed for a long time. Nothing built from
+    # it could have started: SettingsPanel, CampaignScreen and the whole design
+    # system were absent. Because only the Qt6 branch is exercised, that rotted
+    # silently for as long as it took someone to audit it.
+    #
+    # Failing here is the honest outcome. A build that configures on Qt5 and
+    # then dies at runtime on missing QML is strictly worse than one that says
+    # up front what it needs.
+    message(
+        FATAL_ERROR
+        "Qt6 was not found. Standard of Iron requires Qt 6.4 or newer "
+        "(see the Requirements section of README.md). The Qt5 code paths were "
+        "removed after the audit for v0.1.0: they had rotted past the point of "
+        "producing a runnable game."
     )
-    message(STATUS "Using Qt5")
-    set(QT_VERSION_MAJOR 5)
-    find_package(OpenGL REQUIRED)
 endif()
 
 if(COMMAND qt_standard_project_setup)
@@ -178,10 +186,6 @@ if(COMMAND qt_policy)
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-if(QT_VERSION_MAJOR EQUAL 5)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/compat/qt5)
-endif()
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -302,7 +306,9 @@ set(SOI_ASSET_STRINGS_CPP "${CMAKE_CURRENT_SOURCE_DIR}/translations/asset_string
 set(SOI_TS_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_en.ts"
     "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_de.ts"
+    "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_es.ts"
     "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_pt_br.ts"
+    "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_ar.ts"
 )
 
 # Some distributions ship the lrelease binary without the LinguistTools CMake
@@ -474,22 +480,12 @@ target_link_libraries(
 set_target_properties(app_core PROPERTIES AUTOMOC ON)
 
 # ---- Executable ----
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt6_add_executable(standard_of_iron
-        main.cpp
-        ui/campaign_map_view.cpp
-        ui/gl_view.cpp
-        ${SOI_ASSET_STRINGS_CPP}
-    )
-else()
-    add_executable(
-        standard_of_iron
-        main.cpp
-        ui/campaign_map_view.cpp
-        ui/gl_view.cpp
-        ${SOI_ASSET_STRINGS_CPP}
-    )
-endif()
+qt6_add_executable(standard_of_iron
+    main.cpp
+    ui/campaign_map_view.cpp
+    ui/gl_view.cpp
+    ${SOI_ASSET_STRINGS_CPP}
+)
 
 # ---- QML module ----
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -616,24 +612,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
         DEPENDENCIES
             Qt6::QuickControls2
     )
-else()
-    qt5_add_resources(qml_resources qml_resources.qrc)
-    qt5_add_resources(design_resources design_resources.qrc)
-    qt5_add_resources(assets_resources assets.qrc)
-    qt5_add_resources(translations_resources ${SOI_TRANSLATIONS_QRC})
-    set(campaign_map_resources)
-    if(GENERATED_CAMPAIGN_MAP_QRC)
-        qt5_add_resources(campaign_map_resources ${GENERATED_CAMPAIGN_MAP_QRC})
-    endif()
-    target_sources(
-        standard_of_iron
-        PRIVATE
-            ${qml_resources}
-            ${design_resources}
-            ${assets_resources}
-            ${translations_resources}
-            ${campaign_map_resources}
-    )
 endif()
 
 add_dependencies(standard_of_iron translations_qm)
@@ -667,6 +645,13 @@ add_dependencies(
     app_core
 )
 
+# The version reaches the running game from exactly one place: the project()
+# call above. main.cpp feeds it to QCoreApplication::applicationVersion(), and
+# QML reads it back as Qt.application.version. Nothing else may spell it out --
+# a hard-coded copy in a .qml or a .ts file silently outlives the tag it was
+# written for.
+target_compile_definitions(standard_of_iron PRIVATE SOI_VERSION="${PROJECT_VERSION}")
+
 # Windows-specific OpenGL linking
 if(WIN32)
     target_link_libraries(standard_of_iron PRIVATE opengl32)
@@ -674,11 +659,7 @@ if(WIN32)
     target_compile_definitions(standard_of_iron PRIVATE NOMINMAX)
 endif()
 
-if(QT_VERSION_MAJOR EQUAL 6)
-    target_link_libraries(standard_of_iron PRIVATE Qt6::QuickControls2)
-else()
-    target_link_libraries(standard_of_iron PRIVATE Qt5::QuickControls2)
-endif()
+target_link_libraries(standard_of_iron PRIVATE Qt6::QuickControls2)
 
 set_target_properties(
     standard_of_iron

@@ -1,5 +1,7 @@
+#include <QCoreApplication>
 #include <QSettings>
 #include <QTemporaryDir>
+#include <QTranslator>
 #include <Qt>
 
 #include <gtest/gtest.h>
@@ -93,6 +95,25 @@ TEST_F(InputBindingsTest, MouseChordsRoundTrip) {
   EXPECT_EQ(chord.mouse_button, Qt::RightButton);
   EXPECT_EQ(chord.modifiers, Qt::ControlModifier);
   EXPECT_EQ(chord.key, 0);
+}
+
+TEST_F(InputBindingsTest, MouseLabelsAreTranslatedForDisplayButStoredInEnglish) {
+  QTranslator translator;
+  ASSERT_TRUE(translator.load(QStringLiteral(":/translations/app_de.qm")));
+  ASSERT_TRUE(QCoreApplication::installTranslator(&translator));
+
+  const QString stored = InputBindings::encode_mouse(Qt::LeftButton, Qt::NoModifier);
+  EXPECT_EQ(stored, QStringLiteral("Mouse Left"));
+  EXPECT_NE(InputBindings::describe(stored), stored);
+  EXPECT_EQ(InputBindings::parse(stored).mouse_button, Qt::LeftButton);
+
+  const QString modified =
+      InputBindings::encode_mouse(Qt::RightButton, Qt::ControlModifier);
+  EXPECT_EQ(modified, QStringLiteral("Ctrl+Mouse Right"));
+  EXPECT_TRUE(InputBindings::describe(modified).startsWith(QStringLiteral("Ctrl+")));
+  EXPECT_NE(InputBindings::describe(modified), modified);
+
+  QCoreApplication::removeTranslator(&translator);
 }
 
 TEST_F(InputBindingsTest, ABareModifierBindsToItselfRatherThanQualifyingNothing) {

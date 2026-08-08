@@ -35,11 +35,11 @@ struct NamedButton {
 };
 
 constexpr std::array<NamedButton, 5> k_button_names{
-    {{Qt::LeftButton, "Mouse Left"},
-     {Qt::RightButton, "Mouse Right"},
-     {Qt::MiddleButton, "Mouse Middle"},
-     {Qt::BackButton, "Mouse Back"},
-     {Qt::ForwardButton, "Mouse Forward"}}};
+    {{Qt::LeftButton, QT_TRANSLATE_NOOP("InputBindings", "Mouse Left")},
+     {Qt::RightButton, QT_TRANSLATE_NOOP("InputBindings", "Mouse Right")},
+     {Qt::MiddleButton, QT_TRANSLATE_NOOP("InputBindings", "Mouse Middle")},
+     {Qt::BackButton, QT_TRANSLATE_NOOP("InputBindings", "Mouse Back")},
+     {Qt::ForwardButton, QT_TRANSLATE_NOOP("InputBindings", "Mouse Forward")}}};
 
 struct NamedBareKey {
   Qt::Key key;
@@ -804,6 +804,11 @@ auto InputBindings::describe(const QString& shortcut) -> QString {
     return tr("Unbound");
   }
   if (chord.mouse_button != 0) {
+    for (const auto& entry : k_button_names) {
+      if (chord.mouse_button == entry.button) {
+        return modifiers_to_string(chord.modifiers) + tr(entry.name);
+      }
+    }
     return shortcut;
   }
   for (const auto& entry : k_bare_modifier_keys) {

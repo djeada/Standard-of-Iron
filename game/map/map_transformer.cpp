@@ -1,5 +1,6 @@
 #include "map_transformer.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QVector3D>
 #include <qglobal.h>
@@ -300,9 +301,12 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
                                                       ? Game::Systems::OwnerType::Player
                                                       : Game::Systems::OwnerType::AI;
 
-      std::string const owner_name = is_local_player
-                                         ? "Player " + std::to_string(player_id)
-                                         : "AI Player " + std::to_string(player_id);
+      std::string const owner_name =
+          (is_local_player
+               ? QCoreApplication::translate("MapTransformer", "Player %1")
+               : QCoreApplication::translate("MapTransformer", "AI Player %1"))
+              .arg(player_id)
+              .toStdString();
 
       owner_registry.register_owner_with_id(player_id, owner_type, owner_name);
     }

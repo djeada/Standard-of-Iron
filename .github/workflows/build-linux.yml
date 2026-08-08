@@ -43,6 +43,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Resolve release version
+        run: |
+          set -euo pipefail
+          version="$(bash scripts/release-version.sh)"
+          echo "SOI_VERSION=${version}" >> "$GITHUB_ENV"
+          echo "Packaging version ${version}"
+
       - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
         with:
           version: "6.8.2"
@@ -90,13 +97,20 @@ jobs:
         run: |
           set -euo pipefail
           ./scripts/package-appimage.sh "${APP_NAME}" "${APP_DIR}" ui/qml
-          name="$(ls ./*.AppImage | head -1)"
-          echo "name=$(basename "$name")" >> "$GITHUB_OUTPUT"
+
+          # linuxdeploy names the output after the .desktop entry, which knows
+          # nothing about versions. Two releases would otherwise arrive in a
+          # player's downloads folder under the same file name.
+          built="$(ls ./*.AppImage | head -1)"
+          versioned="standard_of_iron-${SOI_VERSION}-linux-x86_64.AppImage"
+          mv "${built}" "${versioned}"
+          echo "name=${versioned}" >> "$GITHUB_OUTPUT"
 
       - name: Verify packaged gameplay renderer (Mesa software OpenGL)
+        env:
+          APPIMAGE: ${{ steps.package.outputs.name }}
         run: |
           set -o pipefail
-          APPIMAGE=$(ls ./*.AppImage | head -1)
           chmod +x "$APPIMAGE"
 
           # LIBGL_ALWAYS_SOFTWARE=1 forces Mesa's llvmpipe, which supports
@@ -109,6 +123,7 @@ jobs:
           xvfb-run --auto-servernum -- "$APPIMAGE" --renderer-self-test \
             2>&1 | tee renderer_self_test.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_GL_FLOOR: PASS" renderer_self_test.log
 
           # GPU crowd culling needs compute shaders, SSBOs and indirect draw.
           # OpenGL 3.3 Core stays the floor, so the renderer must present the
@@ -123,9 +138,10 @@ jobs:
           grep -q "SOI_AUDIO_SELF_TEST: PASS" renderer_self_test.log
 
       - name: Verify package integrity
+        env:
+          APPIMAGE: ${{ steps.package.outputs.name }}
         run: |
           set -euo pipefail
-          APPIMAGE=$(basename "$(ls ./*.AppImage | head -1)")
           test -s "$APPIMAGE"
           # A truncated or asset-less AppImage is a few MB; a real one is far
           # larger. Catch broken packaging before it reaches a release.
@@ -141,7 +157,7 @@ jobs:
         with:
           name: ${{ inputs.artifact-name }}
           path: |
-            ./*.AppImage
-            ./*.AppImage.sha256
+            ${{ steps.package.outputs.name }}
+            ${{ steps.package.outputs.name }}.sha256
           retention-days: 14
           if-no-files-found: error

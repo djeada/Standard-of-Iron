@@ -498,3 +498,9 @@ endif()
 if(TARGET synthesize_ambience_assets)
     add_dependencies(soi_test_binaries synthesize_ambience_assets)
 endif()
+
+# The gameplay acceptance gate. scripts/run-tests.sh treats a missing binary as
+# an error rather than a skip, so it has to be built alongside the unit suites.
+if(TARGET battlefield_gameplay_verifier)
+    add_dependencies(soi_test_binaries battlefield_gameplay_verifier)
+endif()

@@ -25,7 +25,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-
 ASSET_CONTEXTS: list[dict] = [
     {
         "context": "Missions",
@@ -67,7 +66,7 @@ ASSET_CONTEXTS: list[dict] = [
     },
     {
         "context": "Units",
-        "glob": "data/nations/*.json",
+        "glob": ["data/nations/*.json", "data/troops/*.json"],
         "paths": ["troops[]/display_name"],
     },
     {
@@ -81,7 +80,7 @@ ASSET_CONTEXTS: list[dict] = [
     {
         "context": "CampaignMap",
         "glob": "campaign_map/provinces.json",
-        "paths": ["provinces[]/name"],
+        "paths": ["provinces[]/name", "provinces[]/cities[]/name"],
     },
 ]
 
@@ -144,7 +143,10 @@ def collect(assets_dir: Path) -> list[tuple[str, list[str]]]:
     out: list[tuple[str, list[str]]] = []
     for spec in ASSET_CONTEXTS:
         found: set[str] = set()
-        files = sorted(assets_dir.glob(spec["glob"]))
+        patterns = spec["glob"]
+        if isinstance(patterns, str):
+            patterns = [patterns]
+        files = sorted({path for p in patterns for path in assets_dir.glob(p)})
         if not files:
             print(
                 f"warning: no files matched {spec['glob']} for context "

@@ -12,6 +12,15 @@ draw, and every one of them must fail soft to the 3.3 path.  Adding a 4.30
 shader without listing it here, or listing one that is not capability gated,
 fails this check.
 
+The capability probes gate on the context *version* (4.3) and nothing else.
+That is deliberate, and it is the second half of the same rule as the shader
+headers: a '#version 430' shader needs GLSL 4.30, which needs OpenGL 4.3, so
+4.3 is both necessary and sufficient.  Probing the extension string instead is
+wrong in both directions — an extension can be advertised on a 3.3 context,
+where the shader cannot compile and the driver crashes partway through the
+frame, and a strict 4.3+ core profile may omit the string precisely because
+compute is core there, which would switch the fast path off on good hardware.
+
 Checks:
   1. Every baseline shader (.vert/.frag) must start with '#version 330 core'.
      Shaders in OPTIONAL_GL43_SHADERS may declare '#version 430 core'.
@@ -20,7 +29,10 @@ Checks:
   3. main.cpp must not set QSurfaceFormat::CompatibilityProfile, and must not
      request a context above 3.3 — raising the request raises the floor.
   4. Every shader, including compute shaders, must be compiled into assets.qrc.
-  5. Every release workflow must execute the packaged renderer self-test.
+  5. Every release workflow must execute the packaged renderer self-test, and
+     must assert the driver actually granted the 3.3 Core floor.  Requesting a
+     context is not the same as getting one: macOS caps OpenGL at 4.1 and can
+     hand back a 2.1 compatibility context, which draws nothing.
 
 Usage:
     python3 scripts/validate_opengl_requirements.py
@@ -152,6 +164,11 @@ def check_release_renderer_self_tests(root: Path) -> list[str]:
         if "SOI_RENDERER_SELF_TEST: PASS" not in content:
             errors.append(
                 f"{workflow.relative_to(root)}: strict PASS marker check missing"
+            )
+        if "SOI_GL_FLOOR: PASS" not in content:
+            errors.append(
+                f"{workflow.relative_to(root)}: does not assert the OpenGL 3.3"
+                " Core floor was actually granted"
             )
     return errors
 

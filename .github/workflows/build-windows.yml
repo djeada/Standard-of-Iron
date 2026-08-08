@@ -49,6 +49,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Resolve release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(bash scripts/release-version.sh)"
+          echo "SOI_VERSION=${version}" >> "$GITHUB_ENV"
+          echo "Packaging version ${version}"
+
       - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
 
       # The build renders the ambience beds from tools/audio_synth, which needs
@@ -530,6 +538,19 @@ jobs:
             if (($output -join "`n") -notmatch "SOI_AUDIO_SELF_TEST: PASS") {
               Write-Error "The packaged game cannot reach all of its audio assets"
             }
+            # opengl32sw.dll is Mesa llvmpipe and gives a 3.3+ Core context. If a
+            # future Qt ships a build that only reaches 3.1, or ANGLE gets
+            # substituted, the shaders stop compiling -- catch it here rather
+            # than on the machine of the one player without a GPU driver.
+            if (($output -join "`n") -notmatch "SOI_GL_FLOOR: PASS") {
+              Write-Error "The bundled software renderer is below the OpenGL 3.3 Core floor"
+            }
+            $context = ($output | Select-String 'Context Version:' | Select-Object -First 1)
+            $renderer = ($output | Select-String 'Renderer:' | Select-Object -First 1)
+            "### Windows build`n`n| | |`n| --- | --- |" |
+              Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            "| Software GL context | ``$context`` |`n| Renderer | ``$renderer`` |" |
+              Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
           } finally {
             Pop-Location
           }
@@ -570,11 +591,27 @@ jobs:
 
           Write-Host "Build is self-contained and runtime ready."
 
+      # Qt is LGPL v3, so its notice has to travel with the binary rather than
+      # living only in the source repository. The music additionally carries a
+      # non-commercial restriction, which a player can only discover if the
+      # file recording it is in the package they downloaded.
+      - name: Copy licences into the payload
+        shell: pwsh
+        run: |
+          Copy-Item LICENSE, THIRD_PARTY_LICENSES.md -Destination $env:APP_DIR -Force
+          foreach ($f in @('LICENSE', 'THIRD_PARTY_LICENSES.md')) {
+            $p = Join-Path $env:APP_DIR $f
+            if (-not (Test-Path $p) -or (Get-Item $p).Length -eq 0) {
+              Write-Error "$f is missing from the payload"
+              exit 1
+            }
+          }
+
       - name: Zip
         id: package
         shell: pwsh
         run: |
-          $zip = "standard_of_iron-win-x64-${{ inputs.build-type }}.zip"
+          $zip = "standard_of_iron-$env:SOI_VERSION-win-x64.zip"
           if (Test-Path $zip) { Remove-Item $zip -Force }
           Compress-Archive -Path "$env:APP_DIR\*" -DestinationPath $zip -Force
           "name=$zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
@@ -604,7 +641,7 @@ jobs:
         with:
           name: ${{ inputs.artifact-name }}
           path: |
-            standard_of_iron-win-x64-*.zip
-            standard_of_iron-win-x64-*.zip.sha256
+            standard_of_iron-*-win-x64.zip
+            standard_of_iron-*-win-x64.zip.sha256
           retention-days: 14
           if-no-files-found: error

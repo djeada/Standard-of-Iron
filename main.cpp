@@ -541,6 +541,8 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Creating QGuiApplication...";
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
+
+  app.setApplicationVersion(QStringLiteral(SOI_VERSION));
   const bool renderer_self_test =
       QCoreApplication::arguments().contains(QStringLiteral("--renderer-self-test"));
 
@@ -831,6 +833,11 @@ auto main(int argc, char* argv[]) -> int {
                    &LanguageManager::language_changed,
                    engine.get(),
                    &QQmlApplicationEngine::retranslate);
+
+  QObject::connect(language_manager.get(),
+                   &LanguageManager::language_changed,
+                   Theme::instance(),
+                   &Theme::player_colors_changed);
   qInfo() << "Language change handler connected";
 
   qInfo() << "Finding QQuickWindow...";

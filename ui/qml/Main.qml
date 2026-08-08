@@ -62,6 +62,8 @@ ApplicationWindow {
     height: 720
     visibility: Window.FullScreen
     visible: true
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+    LayoutMirroring.childrenInherit: true
     title: qsTr("Standard of Iron - RTS Game")
     color: Theme.bg
     Component.onCompleted: {

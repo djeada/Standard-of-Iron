@@ -1,5 +1,6 @@
 #include "theme.h"
 
+#include <QCoreApplication>
 #include <QString>
 #include <qglobal.h>
 #include <qjsengine.h>
@@ -44,16 +45,29 @@ auto Theme::create(QQmlEngine* engine, QJSEngine* scriptEngine) -> Theme* {
 }
 
 QVariantList Theme::playerColors() {
+  const auto name = [](const char* source) {
+    return QCoreApplication::translate("Theme", source);
+  };
+
   QVariantList colors;
-  colors.append(QVariantMap{{"name", "Red"}, {"hex", "#E74C3C"}});
-  colors.append(QVariantMap{{"name", "Blue"}, {"hex", "#3498DB"}});
-  colors.append(QVariantMap{{"name", "Brown"}, {"hex", "#8B4513"}});
-  colors.append(QVariantMap{{"name", "Green"}, {"hex", "#2ECC71"}});
-  colors.append(QVariantMap{{"name", "Yellow"}, {"hex", "#F1C40F"}});
-  colors.append(QVariantMap{{"name", "Orange"}, {"hex", "#E67E22"}});
-  colors.append(QVariantMap{{"name", "Purple"}, {"hex", "#9B59B6"}});
-  colors.append(QVariantMap{{"name", "Cyan"}, {"hex", "#1ABC9C"}});
-  colors.append(QVariantMap{{"name", "Pink"}, {"hex", "#E91E63"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Red"))},
+                            {"hex", "#E74C3C"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Blue"))},
+                            {"hex", "#3498DB"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Brown"))},
+                            {"hex", "#8B4513"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Green"))},
+                            {"hex", "#2ECC71"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Yellow"))},
+                            {"hex", "#F1C40F"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Orange"))},
+                            {"hex", "#E67E22"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Purple"))},
+                            {"hex", "#9B59B6"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Cyan"))},
+                            {"hex", "#1ABC9C"}});
+  colors.append(QVariantMap{{"name", name(QT_TRANSLATE_NOOP("Theme", "Pink"))},
+                            {"hex", "#E91E63"}});
   return colors;
 }
 

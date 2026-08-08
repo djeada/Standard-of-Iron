@@ -159,6 +159,37 @@ jobs:
           pattern: release-*
           merge-multiple: true
 
+      # The notes come from CHANGELOG.md rather than from generate_release_notes.
+      # Auto-generation walks back to the previous tag, and on a first release
+      # that means every merged pull request since the repository began -- a wall
+      # of "Chore/format wildlife gait models" that tells a player nothing.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Extract release notes for this tag
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+
+          # Everything between this version's heading and the next version
+          # heading. The trailing link definitions are markdown plumbing and are
+          # dropped; "## Save compatibility" is deliberately kept, because a
+          # release that silently discards saves should say so on its own page.
+          awk -v want="${version}" '
+            /^## \[/ {
+              if (found) { exit }
+              if (index($0, "[" want "]") > 0) { found = 1; next }
+            }
+            found && !/^\[[^]]+\]:/ { print }
+          ' CHANGELOG.md > release_notes.md
+
+          if [ ! -s release_notes.md ]; then
+            echo "::error::CHANGELOG.md has no section for ${version}. Add one before tagging."
+            exit 1
+          fi
+          cat release_notes.md
+
       - name: Publish
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
@@ -168,7 +199,7 @@ jobs:
             packages/*.zip
             packages/*.sha256
           fail_on_unmatched_files: true
-          generate_release_notes: true
+          body_path: release_notes.md
 
       # A release that silently lost a platform's download is the exact
       # failure this pipeline exists to prevent, so confirm what landed.
