@@ -1,175 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="en_US">
+<TS version="2.1" language="ar">
 <context>
     <name>ActivityIcons</name>
     <message>
         <source>Idle</source>
-        <translation>Idle</translation>
+        <translation>خامل</translation>
     </message>
     <message>
         <source>Standing by and awaiting orders.</source>
-        <translation>Standing by and awaiting orders.</translation>
+        <translation>في وضع الاستعداد بانتظار الأوامر.</translation>
     </message>
     <message>
         <source>Moving</source>
-        <translation>Moving</translation>
+        <translation>يتحرك</translation>
     </message>
     <message>
         <source>Marching to the ordered position.</source>
-        <translation>Marching to the ordered position.</translation>
+        <translation>يزحف إلى الموقع المأمور به.</translation>
     </message>
     <message>
         <source>Attacking</source>
-        <translation>Attacking</translation>
+        <translation>يهاجم</translation>
     </message>
     <message>
         <source>Engaging the assigned target.</source>
-        <translation>Engaging the assigned target.</translation>
+        <translation>يشتبك مع الهدف المكلَّف به.</translation>
     </message>
     <message>
         <source>Patrolling</source>
-        <translation>Patrolling</translation>
+        <translation>يدوريّ</translation>
     </message>
     <message>
         <source>Walking the patrol route between its waypoints.</source>
-        <translation>Walking the patrol route between its waypoints.</translation>
+        <translation>يسلك مسار الدورية بين نقاطه.</translation>
     </message>
     <message>
         <source>Guarding</source>
-        <translation>Guarding</translation>
+        <translation>يحرس</translation>
     </message>
     <message>
         <source>Holding a guard post and answering threats near it.</source>
-        <translation>Holding a guard post and answering threats near it.</translation>
+        <translation>يثبت في مركز حراسة ويردّ على التهديدات القريبة منه.</translation>
     </message>
     <message>
         <source>Holding position</source>
-        <translation>Holding position</translation>
+        <translation>يثبت في موضعه</translation>
     </message>
     <message>
         <source>Rooted in place; it will not pursue.</source>
-        <translation>Rooted in place; it will not pursue.</translation>
+        <translation>راسخ في مكانه؛ لن يطارد.</translation>
     </message>
     <message>
         <source>Building</source>
-        <translation>Building</translation>
+        <translation>يبني</translation>
     </message>
     <message>
         <source>Raising a structure on the marked site.</source>
-        <translation>Raising a structure on the marked site.</translation>
+        <translation>يشيّد بناءً في الموقع المحدَّد.</translation>
     </message>
     <message>
         <source>Repairing</source>
-        <translation>Repairing</translation>
+        <translation>يصلح</translation>
     </message>
     <message>
         <source>Mending a damaged structure.</source>
-        <translation>Mending a damaged structure.</translation>
+        <translation>يرمّم بناءً متضرراً.</translation>
     </message>
     <message>
         <source>Dismantling</source>
-        <translation>Dismantling</translation>
+        <translation>يفكّك</translation>
     </message>
     <message>
         <source>Taking a structure apart.</source>
-        <translation>Taking a structure apart.</translation>
+        <translation>يفكّك بناءً إلى أجزائه.</translation>
     </message>
     <message>
         <source>Cutting timber</source>
-        <translation>Cutting timber</translation>
+        <translation>يقطع الخشب</translation>
     </message>
     <message>
         <source>Felling a tree for wood.</source>
-        <translation>Felling a tree for wood.</translation>
+        <translation>يسقط شجرة للحصول على الخشب.</translation>
     </message>
     <message>
         <source>Quarrying stone</source>
-        <translation>Quarrying stone</translation>
+        <translation>يقلع الحجر</translation>
     </message>
     <message>
         <source>Breaking a boulder for stone.</source>
-        <translation>Breaking a boulder for stone.</translation>
+        <translation>يكسر صخرة للحصول على الحجر.</translation>
     </message>
     <message>
         <source>Mining iron</source>
-        <translation>Mining iron</translation>
+        <translation>يستخرج الحديد</translation>
     </message>
     <message>
         <source>Working an ore deposit for iron.</source>
-        <translation>Working an ore deposit for iron.</translation>
+        <translation>يستثمر منجم خام للحصول على الحديد.</translation>
     </message>
     <message>
         <source>Auto gathering</source>
-        <translation>Auto gathering</translation>
+        <translation>جمع تلقائي</translation>
     </message>
     <message>
         <source>Standing order: seek out the nearest resource and keep collecting.</source>
-        <translation>Standing order: seek out the nearest resource and keep collecting.</translation>
+        <translation>أمر دائم: ابحث عن أقرب مورد وواصل الجمع.</translation>
     </message>
     <message>
         <source>Delivering</source>
-        <translation>Delivering</translation>
+        <translation>يوصل</translation>
     </message>
     <message>
         <source>Carrying its load to the barracks.</source>
-        <translation>Carrying its load to the barracks.</translation>
+        <translation>يحمل حمولته إلى الثكنة.</translation>
     </message>
     <message>
         <source>Healing</source>
-        <translation>Healing</translation>
+        <translation>يعالج</translation>
     </message>
     <message>
         <source>Tending wounded allies nearby.</source>
-        <translation>Tending wounded allies nearby.</translation>
+        <translation>يداوي الحلفاء الجرحى القريبين.</translation>
     </message>
     <message>
         <source>Training</source>
-        <translation>Training</translation>
+        <translation>يدرّب</translation>
     </message>
     <message>
         <source>Producing the next unit in the queue.</source>
-        <translation>Producing the next unit in the queue.</translation>
+        <translation>ينتج الوحدة التالية في الطابور.</translation>
     </message>
     <message>
         <source>Blocked</source>
-        <translation>Blocked</translation>
+        <translation>محجوب</translation>
     </message>
     <message>
         <source>Waiting: the way is blocked or the target is gone.</source>
-        <translation>Waiting: the way is blocked or the target is gone.</translation>
+        <translation>في الانتظار: الطريق مسدود أو الهدف اختفى.</translation>
     </message>
     <message>
         <source>Active</source>
-        <translation>Active</translation>
+        <translation>نشط</translation>
     </message>
     <message>
         <source>Work is under way.</source>
-        <translation>Work is under way.</translation>
+        <translation>العمل جارٍ.</translation>
     </message>
     <message>
         <source>Queued</source>
-        <translation>Queued</translation>
+        <translation>في الطابور</translation>
     </message>
     <message>
         <source>Ordered, but the unit is still on its way.</source>
-        <translation>Ordered, but the unit is still on its way.</translation>
+        <translation>صدر الأمر، لكن الوحدة ما زالت في الطريق.</translation>
     </message>
     <message>
         <source>Unavailable</source>
-        <translation>Unavailable</translation>
+        <translation>غير متاح</translation>
     </message>
     <message>
         <source>The target cannot be worked; give a new order.</source>
-        <translation>The target cannot be worked; give a new order.</translation>
+        <translation>لا يمكن العمل على هذا الهدف؛ أصدر أمراً جديداً.</translation>
     </message>
     <message>
         <source>Interrupted</source>
-        <translation>Interrupted</translation>
+        <translation>متوقف</translation>
     </message>
     <message>
         <source>Work stopped part-way; re-issue the order to resume.</source>
-        <translation>Work stopped part-way; re-issue the order to resume.</translation>
+        <translation>توقف العمل في منتصفه؛ أعد إصدار الأمر لاستئنافه.</translation>
     </message>
     <message>
         <source>%1 — %2</source>
@@ -177,975 +177,975 @@
     </message>
     <message>
         <source>%1 (%2 units)</source>
-        <translation>%1 (%2 units)</translation>
+        <translation>%1 (%2 وحدة)</translation>
     </message>
 </context>
 <context>
     <name>App::Controllers::CommandController</name>
     <message>
         <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>Not enough wood, stone, or iron to recruit this unit.</translation>
+        <translation>لا يكفي الخشب أو الحجر أو الحديد لتجنيد هذه الوحدة.</translation>
     </message>
     <message>
         <source>%1 of %2 positions do not fit on this ground.</source>
-        <translation>%1 of %2 positions do not fit on this ground.</translation>
+        <translation>%1 من %2 من المواضع لا تتسع على هذه الأرض.</translation>
     </message>
     <message>
         <source>Automatic</source>
-        <translation>Automatic</translation>
+        <translation>تلقائي</translation>
     </message>
 </context>
 <context>
     <name>App::Models::GraphicsSettingsProxy</name>
     <message>
         <source>Low</source>
-        <translation>Low</translation>
+        <translation>منخفض</translation>
     </message>
     <message>
         <source>Medium</source>
-        <translation>Medium</translation>
+        <translation>متوسط</translation>
     </message>
     <message>
         <source>High</source>
-        <translation>High</translation>
+        <translation>عالٍ</translation>
     </message>
     <message>
         <source>Ultra</source>
-        <translation>Ultra</translation>
+        <translation>فائق</translation>
     </message>
     <message>
         <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Maximum performance. Aggressive LOD, reduced detail at distance.</translation>
+        <translation>أقصى أداء. تبسيط حادّ للتفاصيل، وتفاصيل أقل على البعد.</translation>
     </message>
     <message>
         <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Balanced performance and quality. Recommended for most systems.</translation>
+        <translation>توازن بين الأداء والجودة. موصى به لمعظم الأجهزة.</translation>
     </message>
     <message>
         <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Higher quality. More detail visible at distance. Requires better hardware.</translation>
+        <translation>جودة أعلى. تفاصيل أكثر ظهوراً على البعد. يتطلب عتاداً أفضل.</translation>
     </message>
     <message>
         <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Maximum quality. Full detail always. Best hardware recommended.</translation>
+        <translation>أقصى جودة. تفاصيل كاملة دائماً. يُنصح بأفضل عتاد.</translation>
     </message>
 </context>
 <context>
     <name>App::ViewModels::SaveSlotsViewModel</name>
     <message>
         <source>Cannot export a save with an empty name</source>
-        <translation>Cannot export a save with an empty name</translation>
+        <translation>لا يمكن تصدير حفظ بلا اسم</translation>
     </message>
 </context>
 <context>
     <name>BattleSummary</name>
     <message>
         <source>SCORE</source>
-        <translation>SCORE</translation>
+        <translation>النتيجة</translation>
     </message>
     <message>
         <source>YOU</source>
-        <translation>YOU</translation>
+        <translation>أنت</translation>
     </message>
     <message>
         <source>Return to Menu</source>
-        <translation>Return to Menu</translation>
+        <translation>العودة إلى القائمة</translation>
     </message>
     <message>
         <source>Victory Secured</source>
-        <translation>Victory Secured</translation>
+        <translation>تحقق النصر</translation>
     </message>
     <message>
         <source>Army Broken</source>
-        <translation>Army Broken</translation>
+        <translation>تحطّم الجيش</translation>
     </message>
     <message>
         <source>Held the Field</source>
-        <translation>Held the Field</translation>
+        <translation>صمد في الميدان</translation>
     </message>
     <message>
         <source>Routed</source>
-        <translation>Routed</translation>
+        <translation>اندحر</translation>
     </message>
     <message>
         <source>Kills</source>
-        <translation>Kills</translation>
+        <translation>القتلى في صفوف العدو</translation>
     </message>
     <message>
         <source>Losses</source>
-        <translation>Losses</translation>
+        <translation>الخسائر</translation>
     </message>
     <message>
         <source>Units trained</source>
-        <translation>Units trained</translation>
+        <translation>الوحدات المدرَّبة</translation>
     </message>
     <message>
         <source>Villages</source>
-        <translation>Villages</translation>
+        <translation>القرى</translation>
     </message>
     <message>
         <source>Play time</source>
-        <translation>Play time</translation>
+        <translation>زمن اللعب</translation>
     </message>
     <message>
         <source>Back</source>
-        <translation>Back</translation>
+        <translation>رجوع</translation>
     </message>
 </context>
 <context>
     <name>BriefingLayout</name>
     <message>
         <source>Victory Conditions — complete all</source>
-        <translation>Victory Conditions — complete all</translation>
+        <translation>شروط النصر — أنجزها كلها</translation>
     </message>
     <message>
         <source>Victory Conditions — complete any</source>
-        <translation>Victory Conditions — complete any</translation>
+        <translation>شروط النصر — أنجز أياً منها</translation>
     </message>
     <message>
         <source>Victory Conditions</source>
-        <translation>Victory Conditions</translation>
+        <translation>شروط النصر</translation>
     </message>
     <message>
         <source>Complete the objective</source>
-        <translation>Complete the objective</translation>
+        <translation>أنجز الهدف</translation>
     </message>
     <message>
         <source>Defeat Conditions</source>
-        <translation>Defeat Conditions</translation>
+        <translation>شروط الهزيمة</translation>
     </message>
     <message>
         <source>Avoid this condition</source>
-        <translation>Avoid this condition</translation>
+        <translation>تجنّب هذا الشرط</translation>
     </message>
     <message>
         <source>Optional Objectives</source>
-        <translation>Optional Objectives</translation>
+        <translation>أهداف اختيارية</translation>
     </message>
     <message>
         <source>Optional objective</source>
-        <translation>Optional objective</translation>
+        <translation>هدف اختياري</translation>
     </message>
     <message>
         <source>No mission objectives available.
 This may be a skirmish, or objectives have not been configured.</source>
-        <translation>No mission objectives available.
-This may be a skirmish, or objectives have not been configured.</translation>
+        <translation>لا توجد أهداف للمهمة.
+قد تكون هذه مناوشة، أو أن الأهداف لم تُضبط بعد.</translation>
     </message>
 </context>
 <context>
     <name>CampaignMap</name>
     <message>
         <source>Carthage Core</source>
-        <translation>Carthage Core</translation>
+        <translation>قلب قرطاج</translation>
     </message>
     <message>
         <source>Carthaginian Iberia</source>
-        <translation>Carthaginian Iberia</translation>
+        <translation>إيبيريا القرطاجية</translation>
     </message>
     <message>
         <source>Cisalpine Gaul</source>
-        <translation>Cisalpine Gaul</translation>
+        <translation>بلاد الغال السيسالبية</translation>
     </message>
     <message>
         <source>Corsica</source>
-        <translation>Corsica</translation>
+        <translation>كورسيكا</translation>
     </message>
     <message>
         <source>Etruria</source>
-        <translation>Etruria</translation>
+        <translation>إتروريا</translation>
     </message>
     <message>
         <source>Iberian Interior</source>
-        <translation>Iberian Interior</translation>
+        <translation>الداخل الإيبيري</translation>
     </message>
     <message>
         <source>Libya</source>
-        <translation>Libya</translation>
+        <translation>ليبيا</translation>
     </message>
     <message>
         <source>Numidia</source>
-        <translation>Numidia</translation>
+        <translation>نوميديا</translation>
     </message>
     <message>
         <source>Roman Core</source>
-        <translation>Roman Core</translation>
+        <translation>قلب روما</translation>
     </message>
     <message>
         <source>Sardinia</source>
-        <translation>Sardinia</translation>
+        <translation>سردينيا</translation>
     </message>
     <message>
         <source>Sicily</source>
-        <translation>Sicily</translation>
+        <translation>صقلية</translation>
     </message>
     <message>
         <source>Southern Italy</source>
-        <translation>Southern Italy</translation>
+        <translation>جنوب إيطاليا</translation>
     </message>
     <message>
         <source>Transalpine Gaul</source>
-        <translation>Transalpine Gaul</translation>
+        <translation>بلاد الغال الترانسالبية</translation>
     </message>
     <message>
         <source>Illyrian Coast</source>
-        <translation>Illyrian Coast</translation>
+        <translation>الساحل الإيليري</translation>
     </message>
     <message>
         <source>Illyrian Interior</source>
-        <translation>Illyrian Interior</translation>
+        <translation>الداخل الإيليري</translation>
     </message>
     <message>
         <source>Aleria</source>
-        <translation>Aleria</translation>
+        <translation>أليريا</translation>
     </message>
     <message>
         <source>Ariminum</source>
-        <translation>Ariminum</translation>
+        <translation>أريمينوم</translation>
     </message>
     <message>
         <source>Capua</source>
-        <translation>Capua</translation>
+        <translation>كابوا</translation>
     </message>
     <message>
         <source>Caralis</source>
-        <translation>Caralis</translation>
+        <translation>كاراليس</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Carthage</translation>
+        <translation>قرطاج</translation>
     </message>
     <message>
         <source>Cirta</source>
-        <translation>Cirta</translation>
+        <translation>سيرتا</translation>
     </message>
     <message>
         <source>Emporiae</source>
-        <translation>Emporiae</translation>
+        <translation>إمبورياي</translation>
     </message>
     <message>
         <source>Leptis</source>
-        <translation>Leptis</translation>
+        <translation>لبدة</translation>
     </message>
     <message>
         <source>Lilybaeum</source>
-        <translation>Lilybaeum</translation>
+        <translation>ليليبايوم</translation>
     </message>
     <message>
         <source>Massalia</source>
-        <translation>Massalia</translation>
+        <translation>ماسّاليا</translation>
     </message>
     <message>
         <source>Mediolanum</source>
-        <translation>Mediolanum</translation>
+        <translation>ميديولانوم</translation>
     </message>
     <message>
         <source>New Carthage</source>
-        <translation>New Carthage</translation>
+        <translation>قرطاجنة الجديدة</translation>
     </message>
     <message>
         <source>Numantia</source>
-        <translation>Numantia</translation>
+        <translation>نومانتيا</translation>
     </message>
     <message>
         <source>Placentia</source>
-        <translation>Placentia</translation>
+        <translation>بلاسنتيا</translation>
     </message>
     <message>
         <source>Rome</source>
-        <translation>Rome</translation>
+        <translation>روما</translation>
     </message>
     <message>
         <source>Saguntum</source>
-        <translation>Saguntum</translation>
+        <translation>ساغونتوم</translation>
     </message>
     <message>
         <source>Salona</source>
-        <translation>Salona</translation>
+        <translation>سالونا</translation>
     </message>
     <message>
         <source>Syracuse</source>
-        <translation>Syracuse</translation>
+        <translation>سيراكوزا</translation>
     </message>
     <message>
         <source>Tarentum</source>
-        <translation>Tarentum</translation>
+        <translation>تارنتوم</translation>
     </message>
     <message>
         <source>Tarraco</source>
-        <translation>Tarraco</translation>
+        <translation>تاراكو</translation>
     </message>
     <message>
         <source>Tingis</source>
-        <translation>Tingis</translation>
+        <translation>طنجة</translation>
     </message>
     <message>
         <source>Veii</source>
-        <translation>Veii</translation>
+        <translation>فييي</translation>
     </message>
 </context>
 <context>
     <name>CampaignMenu</name>
     <message>
         <source>Campaign Missions</source>
-        <translation>Campaign Missions</translation>
+        <translation>مهام الحملة</translation>
     </message>
     <message>
         <source>← Back</source>
-        <translation>← Back</translation>
+        <translation>→ رجوع</translation>
     </message>
     <message>
         <source>✓ Completed</source>
-        <translation>✓ Completed</translation>
+        <translation>✓ مكتملة</translation>
     </message>
     <message>
         <source>Locked</source>
-        <translation>Locked</translation>
+        <translation>مقفلة</translation>
     </message>
     <message>
         <source>No campaign missions available</source>
-        <translation>No campaign missions available</translation>
+        <translation>لا توجد مهام حملة متاحة</translation>
     </message>
     <message>
         <source>Rome</source>
-        <translation>Rome</translation>
+        <translation>روما</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Carthage</translation>
+        <translation>قرطاج</translation>
     </message>
     <message>
         <source>Neutral</source>
-        <translation>Neutral</translation>
+        <translation>محايد</translation>
     </message>
     <message>
         <source>Loading map…</source>
-        <translation>Loading map…</translation>
+        <translation>جارٍ تحميل الخريطة…</translation>
     </message>
     <message>
         <source>Control: </source>
-        <translation>Control: </translation>
+        <translation>السيطرة: </translation>
     </message>
     <message>
         <source>Legend</source>
-        <translation>Legend</translation>
+        <translation>مفتاح الرموز</translation>
     </message>
     <message>
         <source>Select a Mission</source>
-        <translation>Select a Mission</translation>
+        <translation>اختر مهمة</translation>
     </message>
     <message>
         <source>Mission briefing...</source>
-        <translation>Mission briefing...</translation>
+        <translation>إحاطة المهمة...</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancel</translation>
+        <translation>إلغاء</translation>
     </message>
 </context>
 <context>
     <name>CampaignScreen</name>
     <message>
         <source>Campaign War Table • Mediterranean Theater</source>
-        <translation>Campaign War Table • Mediterranean Theater</translation>
+        <translation>طاولة حرب الحملة • مسرح البحر المتوسط</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>الحملة</translation>
     </message>
     <message>
         <source>Campaign Chronicle • </source>
-        <translation>Campaign Chronicle • </translation>
+        <translation>سجل الحملة • </translation>
     </message>
     <message>
         <source>← Back</source>
-        <translation>← Back</translation>
+        <translation>→ رجوع</translation>
     </message>
     <message>
         <source>Campaign Chronicle</source>
-        <translation>Campaign Chronicle</translation>
+        <translation>سجل الحملة</translation>
     </message>
     <message>
         <source>Campaign Progress:</source>
-        <translation>Campaign Progress:</translation>
+        <translation>تقدّم الحملة:</translation>
     </message>
 </context>
 <context>
     <name>Campaigns</name>
     <message>
         <source>202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war.</source>
-        <translation>202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war.</translation>
+        <translation>202 ق.م: بعد استدعائه إلى أفريقيا، يواجه حنبعل سكيبيو وماسينيسا في السهل قرب زاما. مسارات الفيلة مُهيَّأة، والمعسكرات الرومانية محصَّنة، ولم يعد ضريح الحديد ينتظر على هامش التاريخ. استولِ على المعسكرات الأربعة كلها واكسر نهضتَي الموتى — ولا شيء دون ذلك ينهي هذه الحرب.</translation>
     </message>
     <message>
         <source>215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets.</source>
-        <translation>215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets.</translation>
+        <translation>215-212 ق.م: تسند كابوا وحلفاء كامبانيا حنبعل، بينما تتجنب روما كانّاي أخرى وتهاجم الطرق والمزارع والولاءات. حصّن حي الإمداد البوني واكسر الهجمات الثلاثة المنسّقة — لا يُعدّ الحي محفوظاً حتى يسقط آخر رتل قنصلي صريعاً في الشوارع.</translation>
     </message>
     <message>
         <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</source>
-        <translation>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</translation>
+        <translation>216 ق.م: يحشد القنصلان أعظم جيوش روما الميدانية بجانب نهر أوفيدوس. تراجع بالقلب البوني عمداً، واظفر بجناحَي الفرسان، وأطبق التطويق المزدوج، ثم استولِ على المعسكر الرئيسي ومعسكر الاحتياط والمعسكر الحليف عبر طريق النهر.</translation>
     </message>
     <message>
         <source>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
-        <translation>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</translation>
+        <translation>217 ق.م: يطارد فلامينيوس على طول الشاطئ الشمالي لبحيرة تراسيميني. يغلق الضباب الطريق بين البحيرة والمرتفع المشجَّر — ولن يدوم طويلاً. اضرب الرتل على امتداده واستولِ على المركزين الميدانيين خلال عشرين دقيقة، قبل أن يصفو الهواء وتحمل كتيبة الخبر خارج الحوض.</translation>
     </message>
     <message>
         <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</source>
-        <translation>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</translation>
+        <translation>218 ق.م، شتاءً: يبتلع سمبرونيوس لونغوس الطُّعم ويدفع جيشه الجائع عبر مياه تريبيا المتجمدة. اثبت على الخط الجنوبي واكسر المعابر الثلاثة. لا حاجة بك إلى الاستيلاء على معسكره — يكفي أن تظل واقفاً حين يفرغ النهر منه.</translation>
     </message>
     <message>
         <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
-        <translation>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</translation>
+        <translation>218 ق.م: ينعطف حنبعل من نهر الرون إلى جبال الألب بجنوده وفرسانه ودوابّ الحمل والفيلة. لا يُؤخذ الممر بالسيف وحده — بل يُدفع ثمنه خشباً وحجراً وحديداً. أرسل بنّاءيك إلى المنحدرات بينما تنازعك شعوب الجبل كل منعطف؛ ولا تتبع أضواء القبور إلى الثلج.</translation>
     </message>
     <message>
         <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</source>
-        <translation>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</translation>
+        <translation>218 ق.م: قرب نهر تيتشينو، تختبر قوة استطلاع سكيبيو فرسان حنبعل. اظفر باشتباك الفرسان، واقطع طريق الجسر، واجتَح المعسكرين الرومانيين قبل أن يحمل كشّافتهم تقريراً واضحاً إلى القنصل.</translation>
     </message>
     <message>
         <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
-        <translation>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</translation>
+        <translation>218 ق.م: يجب تأمين نهر الرون قبل أن يتمكن بوبليوس كورنيليوس سكيبيو من جلب جيشه من ماسّاليا. في هذه الحملة المُبدَّلة، تحرس مراكز رومانية متقدمة المداخل الشرقية. اعبر من المخاضة أو على المعديات أو بالالتفاف عبر الغابة، واستولِ على معسكراتهم النهرية.</translation>
     </message>
     <message>
         <source>At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.</source>
-        <translation>At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.</translation>
+        <translation>عند الفجر ما زالت السوق قائمة، والطرق القنصلية مكتظّة بالدروع الرومانية. اشترت كامبانيا للجيش موسماً آخر، وإن أدرك كل حليف الآن كم هي روما مستعدة أن تنزف.</translation>
     </message>
     <message>
         <source>Command Hannibal&apos;s Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic&apos;s answering legions while the Iron Sepulcher watches from roads older than either empire.</source>
-        <translation>Command Hannibal&apos;s Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic&apos;s answering legions while the Iron Sepulcher watches from roads older than either empire.</translation>
+        <translation>قُد جيش حنبعل القرطاجي من اجتياح الألب عام 218 ق.م حتى زاما عام 202 ق.م. اكسر المعسكرات الرومانية، وخذ المدن المحصّنة، واحفظ اقتصادات الحلفاء، وانجُ من فيالق الجمهورية المضادّة، بينما يراقب ضريح الحديد من طرق أقدم من الإمبراطوريتين معاً.</translation>
     </message>
     <message>
         <source>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</source>
-        <translation>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</translation>
+        <translation>يهلك فلامينيوس ومعظم جيشه بجانب البحيرة. تسمّي روما فابيوس ديكتاتوراً. وبين القصب الغارق، شبع مذبح لضريح الحديد دون أن ينحاز إلى أحد.</translation>
     </message>
     <message>
         <source>The Barcid Road</source>
-        <translation>The Barcid Road</translation>
+        <translation>طريق البرقيين</translation>
     </message>
     <message>
         <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
-        <translation>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</translation>
+        <translation>دُمِّر الجيش الروماني وأُخذت المعسكرات، ومع ذلك ترفض روما التفاوض. من كثرة القتلى في السهل ظلّت أجراس الضريح الحديدية تُقرع تحت الأرض سبع ليالٍ.</translation>
     </message>
     <message>
         <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</source>
-        <translation>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</translation>
+        <translation>ينكسر الستار الروماني ويُحمل سكيبيو جريحاً من الميدان. يرى الإنسوبريون أن قرطاج قادرة على هزيمة روما فوق تراب إيطاليا — لكن فرساناً شاحبين ما زالوا يجوبون المخاضة المهجورة.</translation>
     </message>
     <message>
         <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
-        <translation>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</translation>
+        <translation>يبلغ الرتل سهل البو منهكاً لكنه غير مكسور. تمتد إيطاليا في الأسفل، وتردّ النيران من مستوطنات الغال. وخلفك، يبدأ الضريح المختوم في الممر بعدّ الموتى.</translation>
     </message>
     <message>
         <source>The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.</source>
-        <translation>The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.</translation>
+        <translation>المعديات وطريق الإمداد صارت لقرطاج. لا يجد سكيبيو سوى رايات مهجورة ونيران طهي باردة؛ أما حنبعل فقد انعطف نحو الجبال.</translation>
     </message>
     <message>
         <source>The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.</source>
-        <translation>The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.</translation>
+        <translation>تسقط آخر الرايات تحت سماء أفريقية. ستتذكر روما وقرطاج هذا الميدان على نحوين مختلفين؛ أما ضريح الحديد فلا يتذكر إلا أن الجيشين دخلا أخيراً في متناوله.</translation>
     </message>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
-        <translation>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</translation>
+        <translation>يفرّ الناجون نحو بلاسنتيا عبر الصقيع والوحل. تُغنم الخيام والحبوب والأسلحة الرومانية؛ أما الأجساد تحت الجليد فلا تنهض إلا حين لا يراها أحد.</translation>
     </message>
 </context>
 <context>
     <name>CommanderSystem</name>
     <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
-        <translation>Their commander is dead. The host breaks and its camps stand empty.</translation>
+        <translation>مات قائدهم. تتفكك الحشود وتخلو معسكراتها.</translation>
     </message>
     <message>
         <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
-        <translation>%1 has lost its commander. The host breaks and its camps stand empty.</translation>
+        <translation>فقد %1 قائده. تتفكك الحشود وتخلو معسكراتها.</translation>
     </message>
 </context>
 <context>
     <name>Commanders</name>
     <message>
         <source>Quintus Fabius Maximus</source>
-        <translation>Quintus Fabius Maximus</translation>
+        <translation>كوينتوس فابيوس مكسيموس</translation>
     </message>
     <message>
         <source>Rome&apos;s delaying strategist who preserves armies through discipline and staying power.</source>
-        <translation>Rome&apos;s delaying strategist who preserves armies through discipline and staying power.</translation>
+        <translation>استراتيجي روما المماطل، يحفظ الجيوش بالانضباط وطول النَّفَس.</translation>
     </message>
     <message>
         <source>A campaign and scenario commander; never produced from a barracks.</source>
-        <translation>A campaign and scenario commander; never produced from a barracks.</translation>
+        <translation>قائد حملات وسيناريوهات؛ لا يُنتَج من ثكنة أبداً.</translation>
     </message>
     <message>
         <source>Heavy spear commander who anchors a disciplined battle line.</source>
-        <translation>Heavy spear commander who anchors a disciplined battle line.</translation>
+        <translation>قائد رماح ثقيلة يثبّت خط قتال منضبطاً.</translation>
     </message>
     <message>
         <source>Boosts nearby troop endurance and slows collapse in grind fights.</source>
-        <translation>Boosts nearby troop endurance and slows collapse in grind fights.</translation>
+        <translation>يعزز جَلَد القوات القريبة ويبطّئ الانهيار في معارك الاستنزاف.</translation>
     </message>
     <message>
         <source>Lower offensive pressure and weaker pursuit potential.</source>
-        <translation>Lower offensive pressure and weaker pursuit potential.</translation>
+        <translation>ضغط هجومي أقل وقدرة مطاردة أضعف.</translation>
     </message>
     <message>
         <source>Fabian Endurance keeps nearby cohorts in line for prolonged fighting.</source>
-        <translation>Fabian Endurance keeps nearby cohorts in line for prolonged fighting.</translation>
+        <translation>«جَلَد فابيوس» يبقي الكتائب القريبة متماسكة في القتال الطويل.</translation>
     </message>
     <message>
         <source>Rally of Patience stabilizes wavering lines during attritional combat.</source>
-        <translation>Rally of Patience stabilizes wavering lines during attritional combat.</translation>
+        <translation>«نداء الصبر» يثبّت الخطوط المتذبذبة أثناء قتال الاستنزاف.</translation>
     </message>
     <message>
         <source>If killed or wounded, nearby allies lose confidence and the aura shuts off.</source>
-        <translation>If killed or wounded, nearby allies lose confidence and the aura shuts off.</translation>
+        <translation>إن قُتل أو جُرح، فقد الحلفاء القريبون ثقتهم وانطفأت الهالة.</translation>
     </message>
     <message>
         <source>Publius Cornelius Scipio</source>
-        <translation>Publius Cornelius Scipio</translation>
+        <translation>بوبليوس كورنيليوس سكيبيو</translation>
     </message>
     <message>
         <source>Aggressive Roman consul focused on decisive strikes and tactical initiative.</source>
-        <translation>Aggressive Roman consul focused on decisive strikes and tactical initiative.</translation>
+        <translation>قنصل روماني هجومي يركّز على الضربات الحاسمة وزمام المبادرة التكتيكية.</translation>
     </message>
     <message>
         <source>Sword-and-shield infantry commander who leads close behind the main assault line.</source>
-        <translation>Sword-and-shield infantry commander who leads close behind the main assault line.</translation>
+        <translation>قائد مشاة بالسيف والترس يقود من خلف خط الاقتحام الرئيسي مباشرة.</translation>
     </message>
     <message>
         <source>Improves nearby offensive output and enables sharper counter-pushes.</source>
-        <translation>Improves nearby offensive output and enables sharper counter-pushes.</translation>
+        <translation>يحسّن القدرة الهجومية القريبة ويتيح هجمات مضادة أشد.</translation>
     </message>
     <message>
         <source>More vulnerable if isolated away from supporting infantry.</source>
-        <translation>More vulnerable if isolated away from supporting infantry.</translation>
+        <translation>أكثر عرضة للخطر إن انعزل بعيداً عن المشاة المساندة.</translation>
     </message>
     <message>
         <source>Consular Assault boosts nearby legion attack tempo.</source>
-        <translation>Consular Assault boosts nearby legion attack tempo.</translation>
+        <translation>«الاقتحام القنصلي» يرفع وتيرة هجوم الفيلق القريب.</translation>
     </message>
     <message>
         <source>Consular Rally rapidly restores morale to wavering assault cohorts.</source>
-        <translation>Consular Rally rapidly restores morale to wavering assault cohorts.</translation>
+        <translation>«النداء القنصلي» يعيد المعنويات سريعاً إلى كتائب الاقتحام المتذبذبة.</translation>
     </message>
     <message>
         <source>Death of the consul causes a severe morale shock to nearby Romans.</source>
-        <translation>Death of the consul causes a severe morale shock to nearby Romans.</translation>
+        <translation>موت القنصل يوقع صدمة معنوية شديدة بالرومان القريبين.</translation>
     </message>
     <message>
         <source>Marcus Claudius Marcellus</source>
-        <translation>Marcus Claudius Marcellus</translation>
+        <translation>ماركوس كلوديوس مارتشيلوس</translation>
     </message>
     <message>
         <source>Roman field commander known for fast shock actions and relentless pressure.</source>
-        <translation>Roman field commander known for fast shock actions and relentless pressure.</translation>
+        <translation>قائد ميداني روماني معروف بضربات الصدم السريعة والضغط المتواصل.</translation>
     </message>
     <message>
         <source>Lightly armored bow commander who supports aggressive vanguard action.</source>
-        <translation>Lightly armored bow commander who supports aggressive vanguard action.</translation>
+        <translation>قائد رماية خفيف التدريع يساند عمل الطليعة الهجومي.</translation>
     </message>
     <message>
         <source>Raises maneuver speed for nearby troops, enabling faster local redeployment.</source>
-        <translation>Raises maneuver speed for nearby troops, enabling faster local redeployment.</translation>
+        <translation>يرفع سرعة مناورة القوات القريبة، فيتيح إعادة انتشار محلية أسرع.</translation>
     </message>
     <message>
         <source>Lower staying power than other Roman commanders.</source>
-        <translation>Lower staying power than other Roman commanders.</translation>
+        <translation>قدرة على الصمود أقل من سائر القادة الرومان.</translation>
     </message>
     <message>
         <source>Vanguard Tempo accelerates nearby infantry movement and line repositioning.</source>
-        <translation>Vanguard Tempo accelerates nearby infantry movement and line repositioning.</translation>
+        <translation>«إيقاع الطليعة» يسرّع حركة المشاة القريبة وإعادة تموضع الخط.</translation>
     </message>
     <message>
         <source>Vanguard Rally snaps wavering attackers back into coherent motion.</source>
-        <translation>Vanguard Rally snaps wavering attackers back into coherent motion.</translation>
+        <translation>«نداء الطليعة» يعيد المهاجمين المتذبذبين إلى حركة متماسكة.</translation>
     </message>
     <message>
         <source>If Marcellus falls, nearby attackers suffer immediate morale drop.</source>
-        <translation>If Marcellus falls, nearby attackers suffer immediate morale drop.</translation>
+        <translation>إن سقط مارتشيلوس، هبطت معنويات المهاجمين القريبين فوراً.</translation>
     </message>
     <message>
         <source>Hanno the Great</source>
-        <translation>Hanno the Great</translation>
+        <translation>حنون العظيم</translation>
     </message>
     <message>
         <source>Bronze-spear commander coordinating disciplined mercenary infantry.</source>
-        <translation>Bronze-spear commander coordinating disciplined mercenary infantry.</translation>
+        <translation>قائد الرمح البرونزي ينسّق مشاة مرتزقة منضبطة.</translation>
     </message>
     <message>
         <source>Mediocre direct combat impact and risky if exposed.</source>
-        <translation>Mediocre direct combat impact and risky if exposed.</translation>
+        <translation>أثر متواضع في القتال المباشر، ومجازفة إن انكشف.</translation>
     </message>
     <message>
         <source>Treasury Rally restores wavering troops and keeps formations from breaking.</source>
-        <translation>Treasury Rally restores wavering troops and keeps formations from breaking.</translation>
+        <translation>«نداء الخزينة» يعيد القوات المتذبذبة ويمنع التشكيلات من الانكسار.</translation>
     </message>
     <message>
         <source>Death triggers contract panic, reducing confidence in nearby troops.</source>
-        <translation>Death triggers contract panic, reducing confidence in nearby troops.</translation>
+        <translation>موته يثير ذعر العقود، فتقلّ ثقة القوات القريبة.</translation>
     </message>
     <message>
         <source>Hasdrubal Barca</source>
-        <translation>Hasdrubal Barca</translation>
+        <translation>حصدربعل برقا</translation>
     </message>
     <message>
         <source>Mobile Carthaginian field commander built around decisive flanking momentum.</source>
-        <translation>Mobile Carthaginian field commander built around decisive flanking momentum.</translation>
+        <translation>قائد ميداني قرطاجي متحرك، مبني على زخم الالتفاف الحاسم.</translation>
     </message>
     <message>
         <source>Fast bow commander built around flanking pressure and withdrawal.</source>
-        <translation>Fast bow commander built around flanking pressure and withdrawal.</translation>
+        <translation>قائد رماية سريع مبني على ضغط الأجنحة والانسحاب.</translation>
     </message>
     <message>
         <source>Increases nearby unit speed for coordinated flanks and withdrawals.</source>
-        <translation>Increases nearby unit speed for coordinated flanks and withdrawals.</translation>
+        <translation>يزيد سرعة الوحدات القريبة لالتفافات وانسحابات منسّقة.</translation>
     </message>
     <message>
         <source>Less resilient in prolonged frontal attrition.</source>
-        <translation>Less resilient in prolonged frontal attrition.</translation>
+        <translation>أقل صموداً في الاستنزاف الأمامي الطويل.</translation>
     </message>
     <message>
         <source>Barcid Maneuver grants nearby troops superior movement control.</source>
-        <translation>Barcid Maneuver grants nearby troops superior movement control.</translation>
+        <translation>«مناورة البرقيين» تمنح القوات القريبة تحكّماً فائقاً في الحركة.</translation>
     </message>
     <message>
         <source>Flank Rally rapidly restores wavering units preparing to maneuver.</source>
-        <translation>Flank Rally rapidly restores wavering units preparing to maneuver.</translation>
+        <translation>«نداء الجناح» يعيد سريعاً الوحدات المتذبذبة المتأهبة للمناورة.</translation>
     </message>
     <message>
         <source>Loss of Hasdrubal sharply drops morale among nearby mobile forces.</source>
-        <translation>Loss of Hasdrubal sharply drops morale among nearby mobile forces.</translation>
+        <translation>فقدان حصدربعل يهوي بمعنويات القوات المتحركة القريبة.</translation>
     </message>
     <message>
         <source>Hannibal Barca</source>
-        <translation>Hannibal Barca</translation>
+        <translation>حنبعل برقا</translation>
     </message>
     <message>
         <source>Carthage&apos;s premier battlefield commander from the Hannibal campaign.</source>
-        <translation>Carthage&apos;s premier battlefield commander from the Hannibal campaign.</translation>
+        <translation>قائد قرطاج الأول في ساحة المعركة، من حملة حنبعل.</translation>
     </message>
     <message>
         <source>Elite sword commander with an iconic standard and sacred-band armor.</source>
-        <translation>Elite sword commander with an iconic standard and sacred-band armor.</translation>
+        <translation>قائد سيف نخبوي براية شهيرة ودرع الكتيبة المقدسة.</translation>
     </message>
     <message>
         <source>Delivers a strong nearby attack bonus and elite crisis rally response.</source>
-        <translation>Delivers a strong nearby attack bonus and elite crisis rally response.</translation>
+        <translation>يمنح زيادة هجوم قوية في محيطه واستجابة نخبوية عند الأزمات.</translation>
     </message>
     <message>
         <source>High-value target; losing him causes severe local collapse.</source>
-        <translation>High-value target; losing him causes severe local collapse.</translation>
+        <translation>هدف عالي القيمة؛ فقدانه يسبب انهياراً محلياً شديداً.</translation>
     </message>
     <message>
         <source>Hannibalic Offensive amplifies nearby attack power before decisive engagements.</source>
-        <translation>Hannibalic Offensive amplifies nearby attack power before decisive engagements.</translation>
+        <translation>«الهجوم الحنبعلي» يضاعف قوة الهجوم القريبة قبل الاشتباكات الحاسمة.</translation>
     </message>
     <message>
         <source>Supreme Rally restores routing or wavering units to fighting order.</source>
-        <translation>Supreme Rally restores routing or wavering units to fighting order.</translation>
+        <translation>«النداء الأعلى» يعيد الوحدات المنهزمة أو المتذبذبة إلى نظام القتال.</translation>
     </message>
     <message>
         <source>If Hannibal is killed or wounded, nearby allied morale takes a heavy shock and aura ends.</source>
-        <translation>If Hannibal is killed or wounded, nearby allied morale takes a heavy shock and aura ends.</translation>
+        <translation>إن قُتل حنبعل أو جُرح، تلقّت معنويات الحلفاء القريبين صدمة ثقيلة وانتهت الهالة.</translation>
     </message>
     <message>
         <source>Nearby allied spearmen regenerate health fastest inside the aura.</source>
-        <translation>Nearby allied spearmen regenerate health fastest inside the aura.</translation>
+        <translation>رماحة الحلفاء القريبون يستعيدون الصحة بأسرع وتيرة داخل الهالة.</translation>
     </message>
     <message>
         <source>Bracing Thrust</source>
-        <translation>Bracing Thrust</translation>
+        <translation>الطعنة الثابتة</translation>
     </message>
     <message>
         <source>Nearby allied swordsmen gain the most bonus damage in aura range.</source>
-        <translation>Nearby allied swordsmen gain the most bonus damage in aura range.</translation>
+        <translation>سيّافة الحلفاء القريبون ينالون أكبر ضرر إضافي في مدى الهالة.</translation>
     </message>
     <message>
         <source>Consular Riposte</source>
-        <translation>Consular Riposte</translation>
+        <translation>الردّ القنصلي</translation>
     </message>
     <message>
         <source>Nearby allied archers move fastest while in aura range.</source>
-        <translation>Nearby allied archers move fastest while in aura range.</translation>
+        <translation>رماة الحلفاء القريبون يتحركون بأسرع وتيرة داخل مدى الهالة.</translation>
     </message>
     <message>
         <source>Point-blank Volley</source>
-        <translation>Point-blank Volley</translation>
+        <translation>رشقة من مسافة صفر</translation>
     </message>
     <message>
         <source>Carthaginian phalanx commander who holds ground with hired spear levies.</source>
-        <translation>Carthaginian phalanx commander who holds ground with hired spear levies.</translation>
+        <translation>قائد كتيبة قرطاجي يثبّت الأرض بحشود رماحة مأجورة.</translation>
     </message>
     <message>
         <source>Keeps a braced spear line standing far longer than it should.</source>
-        <translation>Keeps a braced spear line standing far longer than it should.</translation>
+        <translation>يبقي خط الرماح المشرَّع صامداً أطول بكثير مما ينبغي.</translation>
     </message>
     <message>
         <source>Contract Discipline knits nearby spear levies into an unbroken hedge.</source>
-        <translation>Contract Discipline knits nearby spear levies into an unbroken hedge.</translation>
+        <translation>«انضباط العقد» ينسج حشود الرماحة القريبة سياجاً لا ينفرط.</translation>
     </message>
     <message>
         <source>Nearby allied spearmen recover health fastest inside the aura.</source>
-        <translation>Nearby allied spearmen recover health fastest inside the aura.</translation>
+        <translation>رماحة الحلفاء القريبون يستردّون الصحة بأسرع وتيرة داخل الهالة.</translation>
     </message>
     <message>
         <source>Phalanx Sweep</source>
-        <translation>Phalanx Sweep</translation>
+        <translation>كسحة الكتيبة</translation>
     </message>
     <message>
         <source>Nearby allied archers gain the most movement speed in aura range.</source>
-        <translation>Nearby allied archers gain the most movement speed in aura range.</translation>
+        <translation>رماة الحلفاء القريبون ينالون أكبر زيادة في سرعة الحركة داخل مدى الهالة.</translation>
     </message>
     <message>
         <source>Hunting Shot</source>
-        <translation>Hunting Shot</translation>
+        <translation>رمية الصيد</translation>
     </message>
     <message>
         <source>Nearby allied swordsmen gain substantial attack damage in aura range.</source>
-        <translation>Nearby allied swordsmen gain substantial attack damage in aura range.</translation>
+        <translation>سيّافة الحلفاء القريبون ينالون ضرر هجوم كبيراً في مدى الهالة.</translation>
     </message>
     <message>
         <source>Encircling Cut</source>
-        <translation>Encircling Cut</translation>
+        <translation>الضربة المطوِّقة</translation>
     </message>
 </context>
 <context>
     <name>ComponentGallery</name>
     <message>
         <source>Iron and Ember</source>
-        <translation>Iron and Ember</translation>
+        <translation>حديد وجمر</translation>
     </message>
     <message>
         <source>Scale %1×  ·  %2  ·  colour vision: %3</source>
-        <translation>Scale %1×  ·  %2  ·  colour vision: %3</translation>
+        <translation>المقياس %1×  ·  %2  ·  رؤية الألوان: %3</translation>
     </message>
     <message>
         <source>reduced motion</source>
-        <translation>reduced motion</translation>
+        <translation>حركة مخفَّضة</translation>
     </message>
     <message>
         <source>full motion</source>
-        <translation>full motion</translation>
+        <translation>حركة كاملة</translation>
     </message>
     <message>
         <source>Buttons</source>
-        <translation>Buttons</translation>
+        <translation>الأزرار</translation>
     </message>
     <message>
         <source>Primary</source>
-        <translation>Primary</translation>
+        <translation>أساسي</translation>
     </message>
     <message>
         <source>Secondary</source>
-        <translation>Secondary</translation>
+        <translation>ثانوي</translation>
     </message>
     <message>
         <source>Destructive</source>
-        <translation>Destructive</translation>
+        <translation>تدميري</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation>Disabled</translation>
+        <translation>معطّل</translation>
     </message>
     <message>
         <source>Unavailable in this state</source>
-        <translation>Unavailable in this state</translation>
+        <translation>غير متاح في هذه الحالة</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation>Search</translation>
+        <translation>بحث</translation>
     </message>
     <message>
         <source>Selected</source>
-        <translation>Selected</translation>
+        <translation>محدَّد</translation>
     </message>
     <message>
         <source>Orders</source>
-        <translation>Orders</translation>
+        <translation>الأوامر</translation>
     </message>
     <message>
         <source>Attack</source>
-        <translation>Attack</translation>
+        <translation>هجوم</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Guard</translation>
+        <translation>حراسة</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Patrol</translation>
+        <translation>دورية</translation>
     </message>
     <message>
         <source>Rally</source>
-        <translation>Rally</translation>
+        <translation>تجميع</translation>
     </message>
     <message>
         <source>Build</source>
-        <translation>Build</translation>
+        <translation>بناء</translation>
     </message>
     <message>
         <source>Build is only available to builders</source>
-        <translation>Build is only available to builders</translation>
+        <translation>البناء متاح للبنّائين فقط</translation>
     </message>
     <message>
         <source>Faction skins</source>
-        <translation>Faction skins</translation>
+        <translation>مظاهر الفصائل</translation>
     </message>
     <message>
         <source>Selection</source>
-        <translation>Selection</translation>
+        <translation>التحديد</translation>
     </message>
     <message>
         <source>Roman Spearmen ×24</source>
-        <translation>Roman Spearmen ×24</translation>
+        <translation>رماحة رومان ×24</translation>
     </message>
     <message>
         <source>Defense formation</source>
-        <translation>Defense formation</translation>
+        <translation>تشكيل دفاعي</translation>
     </message>
     <message>
         <source>Spearmen</source>
-        <translation>Spearmen</translation>
+        <translation>الرماحة</translation>
     </message>
     <message>
         <source>Archers</source>
-        <translation>Archers</translation>
+        <translation>الرماة</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation>Inputs</translation>
+        <translation>المدخلات</translation>
     </message>
     <message>
         <source>Balanced</source>
-        <translation>Balanced</translation>
+        <translation>متوازن</translation>
     </message>
     <message>
         <source>Aggressive</source>
-        <translation>Aggressive</translation>
+        <translation>هجومي</translation>
     </message>
     <message>
         <source>Defensive</source>
-        <translation>Defensive</translation>
+        <translation>دفاعي</translation>
     </message>
     <message>
         <source>Reduced motion</source>
-        <translation>Reduced motion</translation>
+        <translation>حركة مخفَّضة</translation>
     </message>
     <message>
         <source>Collapses transitions to an instant state change</source>
-        <translation>Collapses transitions to an instant state change</translation>
+        <translation>يختصر الانتقالات إلى تغيّر فوري في الحالة</translation>
     </message>
     <message>
         <source>Objectives</source>
-        <translation>Objectives</translation>
+        <translation>الأهداف</translation>
     </message>
     <message>
         <source>Capture the eastern barracks</source>
-        <translation>Capture the eastern barracks</translation>
+        <translation>استولِ على الثكنة الشرقية</translation>
     </message>
     <message>
         <source>Hold the ford until dusk</source>
-        <translation>Hold the ford until dusk</translation>
+        <translation>اثبت عند المخاضة حتى الغسق</translation>
     </message>
     <message>
         <source>Do not lose the commander</source>
-        <translation>Do not lose the commander</translation>
+        <translation>لا تفقد القائد</translation>
     </message>
     <message>
         <source>Take no losses</source>
-        <translation>Take no losses</translation>
+        <translation>لا تتكبّد أي خسائر</translation>
     </message>
     <message>
         <source>Notification priorities</source>
-        <translation>Notification priorities</translation>
+        <translation>أولويات الإشعارات</translation>
     </message>
     <message>
         <source>Commander under attack</source>
-        <translation>Commander under attack</translation>
+        <translation>القائد تحت الهجوم</translation>
     </message>
     <message>
         <source>Eastern approach, 3 hostiles</source>
-        <translation>Eastern approach, 3 hostiles</translation>
+        <translation>المدخل الشرقي، 3 معادين</translation>
     </message>
     <message>
         <source>Barracks destroyed</source>
-        <translation>Barracks destroyed</translation>
+        <translation>دُمِّرت الثكنة</translation>
     </message>
     <message>
         <source>Spearmen ready</source>
-        <translation>Spearmen ready</translation>
+        <translation>الرماحة جاهزون</translation>
     </message>
     <message>
         <source>Supply route restored</source>
-        <translation>Supply route restored</translation>
+        <translation>أُعيد فتح طريق الإمداد</translation>
     </message>
     <message>
         <source>Unit activities</source>
-        <translation>Unit activities</translation>
+        <translation>أنشطة الوحدات</translation>
     </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
-        <translation>Press a key or click a mouse button. Backspace clears it, Esc cancels.</translation>
+        <translation>اضغط مفتاحاً أو زر فأرة. مفتاح المسافة للخلف يمسحه، وEsc يلغي.</translation>
     </message>
     <message>
         <source>Select a command to rebind it.</source>
-        <translation>Select a command to rebind it.</translation>
+        <translation>اختر أمراً لإعادة تعيينه.</translation>
     </message>
     <message>
         <source>Reset all</source>
-        <translation>Reset all</translation>
+        <translation>إعادة تعيين الكل</translation>
     </message>
     <message>
         <source>Every binding is already at its default.</source>
-        <translation>Every binding is already at its default.</translation>
+        <translation>كل تعيين هو أصلاً على قيمته الافتراضية.</translation>
     </message>
     <message>
         <source>%1 is already used by %2.</source>
-        <translation>%1 is already used by %2.</translation>
+        <translation>%1 مستخدم بالفعل من قِبل %2.</translation>
     </message>
     <message>
         <source>Use it here anyway</source>
-        <translation>Use it here anyway</translation>
+        <translation>استخدمه هنا على أي حال</translation>
     </message>
     <message>
         <source>Keep as it is</source>
-        <translation>Keep as it is</translation>
+        <translation>أبقِه كما هو</translation>
     </message>
     <message>
         <source>Taking it leaves the other command unbound.</source>
-        <translation>Taking it leaves the other command unbound.</translation>
+        <translation>أخذه يترك الأمر الآخر بلا تعيين.</translation>
     </message>
     <message>
         <source>Conflicts with %1</source>
-        <translation>Conflicts with %1</translation>
+        <translation>يتعارض مع %1</translation>
     </message>
     <message>
         <source>Press a key…</source>
-        <translation>Press a key…</translation>
+        <translation>اضغط مفتاحاً…</translation>
     </message>
     <message>
         <source>Unbound</source>
-        <translation>Unbound</translation>
+        <translation>بلا تعيين</translation>
     </message>
     <message>
         <source>Default</source>
-        <translation>Default</translation>
+        <translation>افتراضي</translation>
     </message>
     <message>
         <source>This binding is already the default.</source>
-        <translation>This binding is already the default.</translation>
+        <translation>هذا التعيين هو الافتراضي أصلاً.</translation>
     </message>
 </context>
 <context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
-        <translation>Standard</translation>
+        <translation>قياسي</translation>
     </message>
     <message>
         <source>Iron and Ember</source>
-        <translation>Iron and Ember</translation>
+        <translation>حديد وجمر</translation>
     </message>
     <message>
         <source>Roman Republic</source>
-        <translation>Roman Republic</translation>
+        <translation>الجمهورية الرومانية</translation>
     </message>
     <message>
         <source>Senatus Populusque Romanus</source>
@@ -1153,253 +1153,253 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Carthage</translation>
+        <translation>قرطاج</translation>
     </message>
     <message>
         <source>Qart-Ḥadašt</source>
-        <translation>Qart-Ḥadašt</translation>
+        <translation>قرت حدشت</translation>
     </message>
     <message>
         <source>Iron Sepulcher</source>
-        <translation>Iron Sepulcher</translation>
+        <translation>ضريح الحديد</translation>
     </message>
     <message>
         <source>The watch does not sleep</source>
-        <translation>The watch does not sleep</translation>
+        <translation>الحرس لا ينام</translation>
     </message>
 </context>
 <context>
     <name>Formation</name>
     <message>
         <source>No units selected.</source>
-        <translation>No units selected.</translation>
+        <translation>لم تُحدَّد أي وحدة.</translation>
     </message>
     <message>
         <source>No units eligible for formation placement.</source>
-        <translation>No units eligible for formation placement.</translation>
+        <translation>لا توجد وحدات مؤهلة للانتشار في تشكيل.</translation>
     </message>
     <message>
         <source>This doctrine has no template for the chosen formation.</source>
-        <translation>This doctrine has no template for the chosen formation.</translation>
+        <translation>لا يملك هذا المذهب قالباً للتشكيل المختار.</translation>
     </message>
     <message>
         <source>No part of this formation fits on the chosen ground.</source>
-        <translation>No part of this formation fits on the chosen ground.</translation>
+        <translation>لا يتسع أي جزء من هذا التشكيل على الأرض المختارة.</translation>
     </message>
     <message>
         <source>Faction Default</source>
-        <translation>Faction Default</translation>
+        <translation>افتراضي الفصيل</translation>
     </message>
     <message>
         <source>Line</source>
-        <translation>Line</translation>
+        <translation>خط</translation>
     </message>
     <message>
         <source>Column</source>
-        <translation>Column</translation>
+        <translation>رتل</translation>
     </message>
     <message>
         <source>Defensive</source>
-        <translation>Defensive</translation>
+        <translation>دفاعي</translation>
     </message>
     <message>
         <source>Assault</source>
-        <translation>Assault</translation>
+        <translation>اقتحام</translation>
     </message>
     <message>
         <source>Encirclement</source>
-        <translation>Encirclement</translation>
+        <translation>تطويق</translation>
     </message>
     <message>
         <source>Siege Escort</source>
-        <translation>Siege Escort</translation>
+        <translation>مرافقة الحصار</translation>
     </message>
     <message>
         <source>Neutral</source>
-        <translation>Neutral</translation>
+        <translation>محايد</translation>
     </message>
     <message>
         <source>Roman Republic</source>
-        <translation>Roman Republic</translation>
+        <translation>الجمهورية الرومانية</translation>
     </message>
     <message>
         <source>Requires at least one siege engine in the selection.</source>
-        <translation>Requires at least one siege engine in the selection.</translation>
+        <translation>يتطلب آلة حصار واحدة على الأقل ضمن التحديد.</translation>
     </message>
     <message>
         <source>Requires cavalry or mounted troops to close the encirclement.</source>
-        <translation>Requires cavalry or mounted troops to close the encirclement.</translation>
+        <translation>يتطلب فرساناً أو قوات راكبة لإطباق التطويق.</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Carthage</translation>
+        <translation>قرطاج</translation>
     </message>
     <message>
         <source>The Iron Sepulcher</source>
-        <translation>The Iron Sepulcher</translation>
+        <translation>ضريح الحديد</translation>
     </message>
     <message>
         <source>%1 has no template for this intent.</source>
-        <translation>%1 has no template for this intent.</translation>
+        <translation>لا يملك %1 قالباً لهذا الغرض.</translation>
     </message>
     <message>
         <source>The selection lacks the troop types this formation needs.</source>
-        <translation>The selection lacks the troop types this formation needs.</translation>
+        <translation>ينقص التحديدَ أنواعُ القوات التي يحتاجها هذا التشكيل.</translation>
     </message>
     <message>
         <source>Encirclement needs at least three units.</source>
-        <translation>Encirclement needs at least three units.</translation>
+        <translation>التطويق يحتاج ثلاث وحدات على الأقل.</translation>
     </message>
     <message>
         <source>Forming up</source>
-        <translation>Forming up</translation>
+        <translation>يتشكّل</translation>
     </message>
     <message>
         <source>Formed</source>
-        <translation>Formed</translation>
+        <translation>متشكّل</translation>
     </message>
     <message>
         <source>Disrupted</source>
-        <translation>Disrupted</translation>
+        <translation>مضطرب</translation>
     </message>
     <message>
         <source>Breaking</source>
-        <translation>Breaking</translation>
+        <translation>ينكسر</translation>
     </message>
 </context>
 <context>
     <name>FormationPanel</name>
     <message>
         <source>The deployment this faction fights in by default. No setup needed.</source>
-        <translation>The deployment this faction fights in by default. No setup needed.</translation>
+        <translation>الانتشار الذي يقاتل به هذا الفصيل افتراضياً. لا يحتاج إعداداً.</translation>
     </message>
     <message>
         <source>Widest frontage. Best for meeting an advance head on.</source>
-        <translation>Widest frontage. Best for meeting an advance head on.</translation>
+        <translation>أوسع جبهة. الأفضل لملاقاة تقدّم وجهاً لوجه.</translation>
     </message>
     <message>
         <source>Narrow and deep. Best for moving through gates and passes.</source>
-        <translation>Narrow and deep. Best for moving through gates and passes.</translation>
+        <translation>ضيق وعميق. الأفضل للعبور من البوابات والممرات.</translation>
     </message>
     <message>
         <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>Compressed frontage with reserves. Best for holding ground.</translation>
+        <translation>جبهة مضغوطة مع احتياطي. الأفضل للثبات على الأرض.</translation>
     </message>
     <message>
         <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>Weighted front with skirmishers ahead. Best for breaking a line.</translation>
+        <translation>جبهة مثقلة مع مناوشين في المقدمة. الأفضل لكسر خط.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
-        <translation>Wide flanks that close around a target. Needs cavalry.</translation>
+        <translation>أجنحة واسعة تُطبق على هدف. يحتاج فرساناً.</translation>
     </message>
     <message>
         <source>Engines protected behind infantry. Needs a siege engine.</source>
-        <translation>Engines protected behind infantry. Needs a siege engine.</translation>
+        <translation>آلات محميّة خلف المشاة. يحتاج آلة حصار.</translation>
     </message>
     <message>
         <source>Frontage</source>
-        <translation>Frontage</translation>
+        <translation>عرض الجبهة</translation>
     </message>
     <message>
         <source>Narrow</source>
-        <translation>Narrow</translation>
+        <translation>ضيق</translation>
     </message>
     <message>
         <source>Balanced</source>
-        <translation>Balanced</translation>
+        <translation>متوازن</translation>
     </message>
     <message>
         <source>Wide</source>
-        <translation>Wide</translation>
+        <translation>واسع</translation>
     </message>
     <message>
         <source>Depth</source>
-        <translation>Depth</translation>
+        <translation>العمق</translation>
     </message>
     <message>
         <source>Shallow</source>
-        <translation>Shallow</translation>
+        <translation>ضحل</translation>
     </message>
     <message>
         <source>Deep</source>
-        <translation>Deep</translation>
+        <translation>عميق</translation>
     </message>
     <message>
         <source>Spacing</source>
-        <translation>Spacing</translation>
+        <translation>التباعد</translation>
     </message>
     <message>
         <source>Tight</source>
-        <translation>Tight</translation>
+        <translation>متقارب</translation>
     </message>
     <message>
         <source>Normal</source>
-        <translation>Normal</translation>
+        <translation>عادي</translation>
     </message>
     <message>
         <source>Loose</source>
-        <translation>Loose</translation>
+        <translation>متباعد</translation>
     </message>
     <message>
         <source>Left</source>
-        <translation>Left</translation>
+        <translation>يسار</translation>
     </message>
     <message>
         <source>Split</source>
-        <translation>Split</translation>
+        <translation>مقسوم</translation>
     </message>
     <message>
         <source>Right</source>
-        <translation>Right</translation>
+        <translation>يمين</translation>
     </message>
     <message>
         <source>None</source>
-        <translation>None</translation>
+        <translation>بلا</translation>
     </message>
     <message>
         <source>One row</source>
-        <translation>One row</translation>
+        <translation>صف واحد</translation>
     </message>
     <message>
         <source>Two rows</source>
-        <translation>Two rows</translation>
+        <translation>صفّان</translation>
     </message>
     <message>
         <source>Mixed armies</source>
-        <translation>Mixed armies</translation>
+        <translation>جيوش مختلطة</translation>
     </message>
     <message>
         <source>By role</source>
-        <translation>By role</translation>
+        <translation>حسب الدور</translation>
     </message>
     <message>
         <source>Separate contingents</source>
-        <translation>Separate contingents</translation>
+        <translation>فرق منفصلة</translation>
     </message>
     <message>
         <source>Doctrine</source>
-        <translation>Doctrine</translation>
+        <translation>المذهب</translation>
     </message>
     <message>
         <source>Reset to faction default</source>
-        <translation>Reset to faction default</translation>
+        <translation>الرجوع إلى افتراضي الفصيل</translation>
     </message>
     <message>
         <source>%1 m</source>
-        <translation>%1 m</translation>
+        <translation>%1 م</translation>
     </message>
     <message>
         <source>Choose a formation</source>
-        <translation>Choose a formation</translation>
+        <translation>اختر تشكيلاً</translation>
     </message>
     <message>
         <source>%1 · %2 units</source>
-        <translation>%1 · %2 units</translation>
+        <translation>%1 · %2 وحدة</translation>
     </message>
     <message>
         <source>Shape</source>
-        <translation>Shape</translation>
+        <translation>الشكل</translation>
     </message>
     <message>
         <source>%1 × %2</source>
@@ -1407,847 +1407,847 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
     <message>
         <source>In place</source>
-        <translation>In place</translation>
+        <translation>في موضعه</translation>
     </message>
     <message>
         <source>%1 position(s) nudged to fit the ground.</source>
-        <translation>%1 position(s) nudged to fit the ground.</translation>
+        <translation>أُزيح %1 من المواضع لتناسب الأرض.</translation>
     </message>
     <message>
         <source>Drag on the ground to set width and facing.</source>
-        <translation>Drag on the ground to set width and facing.</translation>
+        <translation>اسحب على الأرض لتحديد العرض والاتجاه.</translation>
     </message>
     <message>
         <source>Click to deploy · Wheel to turn · Ctrl+wheel for depth · Right-click or Esc to cancel</source>
-        <translation>Click to deploy · Wheel to turn · Ctrl+wheel for depth · Right-click or Esc to cancel</translation>
+        <translation>انقر للنشر · العجلة للدوران · Ctrl+العجلة للعمق · النقر الأيمن أو Esc للإلغاء</translation>
     </message>
     <message>
         <source>Hide fine tuning</source>
-        <translation>Hide fine tuning</translation>
+        <translation>إخفاء الضبط الدقيق</translation>
     </message>
     <message>
         <source>Fine tuning</source>
-        <translation>Fine tuning</translation>
+        <translation>الضبط الدقيق</translation>
     </message>
     <message>
         <source>How wide the deployment spreads before it starts adding ranks behind.</source>
-        <translation>How wide the deployment spreads before it starts adding ranks behind.</translation>
+        <translation>إلى أي عرض ينتشر التشكيل قبل أن يبدأ بإضافة صفوف خلفه.</translation>
     </message>
     <message>
         <source>How many ranks stand behind the front. Deeper hits harder but covers less ground.</source>
-        <translation>How many ranks stand behind the front. Deeper hits harder but covers less ground.</translation>
+        <translation>كم صفاً يقف خلف الجبهة. الأعمق يضرب أقوى لكنه يغطي أرضاً أقل.</translation>
     </message>
     <message>
         <source>The gap between units. Tight holds shape better; loose loses less to area attacks.</source>
-        <translation>The gap between units. Tight holds shape better; loose loses less to area attacks.</translation>
+        <translation>الفجوة بين الوحدات. المتقارب يحفظ الشكل أفضل؛ والمتباعد يخسر أقل أمام الهجمات المساحية.</translation>
     </message>
     <message>
         <source>Which wing the cavalry weights. Split puts an equal body on each wing.</source>
-        <translation>Which wing the cavalry weights. Split puts an equal body on each wing.</translation>
+        <translation>أي جناح تثقله الفرسان. المقسوم يضع قوة متساوية على كل جناح.</translation>
     </message>
     <message>
         <source>Cavalry wing</source>
-        <translation>Cavalry wing</translation>
+        <translation>جناح الفرسان</translation>
     </message>
     <message>
         <source>Where archers and slingers stand. Skirmish sends them out ahead and pulls them back on contact.</source>
-        <translation>Where archers and slingers stand. Skirmish sends them out ahead and pulls them back on contact.</translation>
+        <translation>أين يقف الرماة والمقلاعيون. المناوشة ترسلهم إلى الأمام وتسحبهم عند الاشتباك.</translation>
     </message>
     <message>
         <source>Missile troops</source>
-        <translation>Missile troops</translation>
+        <translation>قوات الرمي</translation>
     </message>
     <message>
         <source>In front</source>
-        <translation>In front</translation>
+        <translation>في المقدمة</translation>
     </message>
     <message>
         <source>Behind</source>
-        <translation>Behind</translation>
+        <translation>في المؤخرة</translation>
     </message>
     <message>
         <source>Skirmish ahead</source>
-        <translation>Skirmish ahead</translation>
+        <translation>مناوشة في المقدمة</translation>
     </message>
     <message>
         <source>Rows held back from the fighting line to plug gaps.</source>
-        <translation>Rows held back from the fighting line to plug gaps.</translation>
+        <translation>صفوف تُبقى خلف خط القتال لسدّ الثغرات.</translation>
     </message>
     <message>
         <source>Reserve rows</source>
-        <translation>Reserve rows</translation>
+        <translation>صفوف الاحتياط</translation>
     </message>
     <message>
         <source>Doctrine decides</source>
-        <translation>Doctrine decides</translation>
+        <translation>المذهب يقرّر</translation>
     </message>
     <message>
         <source>Reform is faster and copes with chokepoints. Maintain keeps the shape on the march but moves slower.</source>
-        <translation>Reform is faster and copes with chokepoints. Maintain keeps the shape on the march but moves slower.</translation>
+        <translation>إعادة التشكيل أسرع وتتعامل مع المضائق. أما الحفاظ فيُبقي الشكل أثناء الزحف لكنه أبطأ.</translation>
     </message>
     <message>
         <source>On the march</source>
-        <translation>On the march</translation>
+        <translation>أثناء الزحف</translation>
     </message>
     <message>
         <source>Reform on arrival</source>
-        <translation>Reform on arrival</translation>
+        <translation>أعد التشكيل عند الوصول</translation>
     </message>
     <message>
         <source>Hold the shape</source>
-        <translation>Hold the shape</translation>
+        <translation>حافظ على الشكل</translation>
     </message>
     <message>
         <source>How a selection drawn from several factions is arranged.</source>
-        <translation>How a selection drawn from several factions is arranged.</translation>
+        <translation>كيف يُرتَّب تحديد مأخوذ من عدة فصائل.</translation>
     </message>
     <message>
         <source>Follow the commander</source>
-        <translation>Follow the commander</translation>
+        <translation>اتبع القائد</translation>
     </message>
     <message>
         <source>Follow the majority</source>
-        <translation>Follow the majority</translation>
+        <translation>اتبع الأغلبية</translation>
     </message>
     <message>
         <source>Sorting groups the same troop types together. Keeping the order leaves each unit where it already stands in the line.</source>
-        <translation>Sorting groups the same troop types together. Keeping the order leaves each unit where it already stands in the line.</translation>
+        <translation>الفرز يجمع أنواع القوات المتماثلة معاً. وحفظ الترتيب يترك كل وحدة حيث تقف أصلاً في الخط.</translation>
     </message>
     <message>
         <source>Slot order</source>
-        <translation>Slot order</translation>
+        <translation>ترتيب المواضع</translation>
     </message>
     <message>
         <source>Sort by type</source>
-        <translation>Sort by type</translation>
+        <translation>افرز حسب النوع</translation>
     </message>
     <message>
         <source>Keep current order</source>
-        <translation>Keep current order</translation>
+        <translation>احفظ الترتيب الحالي</translation>
     </message>
     <message>
         <source>Which drill book shapes the deployment. Automatic follows the troops you selected.</source>
-        <translation>Which drill book shapes the deployment. Automatic follows the troops you selected.</translation>
+        <translation>أي دليل تدريب يشكّل الانتشار. التلقائي يتبع القوات التي حددتها.</translation>
     </message>
 </context>
 <context>
     <name>FormationStatusBadge</name>
     <message>
         <source>Formed</source>
-        <translation>Formed</translation>
+        <translation>متشكّل</translation>
     </message>
     <message>
         <source>Disrupted</source>
-        <translation>Disrupted</translation>
+        <translation>مضطرب</translation>
     </message>
     <message>
         <source>Breaking</source>
-        <translation>Breaking</translation>
+        <translation>ينكسر</translation>
     </message>
     <message>
         <source>Forming up</source>
-        <translation>Forming up</translation>
+        <translation>يتشكّل</translation>
     </message>
     <message>
         <source>The line is holding its shape and takes reduced damage.</source>
-        <translation>The line is holding its shape and takes reduced damage.</translation>
+        <translation>الخط يحافظ على شكله ويتلقى ضرراً أقل.</translation>
     </message>
     <message>
         <source>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</source>
-        <translation>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</translation>
+        <translation>تفكك الخط وصار يتلقى ضرراً إضافياً. أعد إصدار أمر التشكيل لإعادة تنظيمه.</translation>
     </message>
     <message>
         <source>The formation is breaking up.</source>
-        <translation>The formation is breaking up.</translation>
+        <translation>التشكيل آخذ في التفكك.</translation>
     </message>
     <message>
         <source>Units are still moving into their slots.</source>
-        <translation>Units are still moving into their slots.</translation>
+        <translation>الوحدات ما زالت تتجه إلى مواضعها.</translation>
     </message>
     <message>
         <source>Cohesion %1%</source>
-        <translation>Cohesion %1%</translation>
+        <translation>التماسك %1%</translation>
     </message>
     <message>
         <source>%1 units</source>
-        <translation>%1 units</translation>
+        <translation>%1 وحدة</translation>
     </message>
     <message>
         <source>Selection spans several formations.</source>
-        <translation>Selection spans several formations.</translation>
+        <translation>التحديد يشمل عدة تشكيلات.</translation>
     </message>
     <message>
         <source>%1 slot(s) blocked by terrain.</source>
-        <translation>%1 slot(s) blocked by terrain.</translation>
+        <translation>%1 من المواضع تحجبها التضاريس.</translation>
     </message>
 </context>
 <context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
-        <translation>Standard of Iron — Iron and Ember Gallery</translation>
+        <translation>Standard of Iron — معرض الحديد والجمر</translation>
     </message>
     <message>
         <source>Scale</source>
-        <translation>Scale</translation>
+        <translation>المقياس</translation>
     </message>
     <message>
         <source>Reduce motion</source>
-        <translation>Reduce motion</translation>
+        <translation>تقليل الحركة</translation>
     </message>
     <message>
         <source>High contrast</source>
-        <translation>High contrast</translation>
+        <translation>تباين عالٍ</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation>Reset</translation>
+        <translation>إعادة تعيين</translation>
     </message>
     <message>
         <source>Iron and Ember — every control the product may use</source>
-        <translation>Iron and Ember — every control the product may use</translation>
+        <translation>الحديد والجمر — كل عنصر تحكم قد يستخدمه المنتج</translation>
     </message>
 </context>
 <context>
     <name>Game::Systems</name>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>مخزن الحفظ غير متاح</translation>
     </message>
 </context>
 <context>
     <name>Game::Systems::SaveLoadService</name>
     <message>
         <source>Cannot save: empty slot name</source>
-        <translation>Cannot save: empty slot name</translation>
+        <translation>تعذّر الحفظ: اسم الخانة فارغ</translation>
     </message>
     <message>
         <source>Save service is shutting down</source>
-        <translation>Save service is shutting down</translation>
+        <translation>خدمة الحفظ قيد الإغلاق</translation>
     </message>
     <message>
         <source>Queued</source>
-        <translation>Queued</translation>
+        <translation>في الطابور</translation>
     </message>
     <message>
         <source>Serializing world</source>
-        <translation>Serializing world</translation>
+        <translation>جارٍ تسلسل العالم</translation>
     </message>
     <message>
         <source>Compressing</source>
-        <translation>Compressing</translation>
+        <translation>جارٍ الضغط</translation>
     </message>
     <message>
         <source>Writing</source>
-        <translation>Writing</translation>
+        <translation>جارٍ الكتابة</translation>
     </message>
     <message>
         <source>Exception while saving: %1</source>
-        <translation>Exception while saving: %1</translation>
+        <translation>استثناء أثناء الحفظ: %1</translation>
     </message>
     <message>
         <source>Save cancelled</source>
-        <translation>Save cancelled</translation>
+        <translation>أُلغي الحفظ</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation>Done</translation>
+        <translation>تم</translation>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
+        <translation>مخزن الحفظ غير متاح</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; is corrupted: %2</source>
-        <translation>Save slot &apos;%1&apos; is corrupted: %2</translation>
+        <translation>خانة الحفظ «%1» تالفة: %2</translation>
     </message>
     <message>
         <source>Exception while loading save &apos;%1&apos;: %2</source>
-        <translation>Exception while loading save &apos;%1&apos;: %2</translation>
+        <translation>استثناء أثناء تحميل الحفظ «%1»: %2</translation>
     </message>
     <message>
         <source>Cannot write &apos;%1&apos;: %2</source>
-        <translation>Cannot write &apos;%1&apos;: %2</translation>
+        <translation>تعذّرت الكتابة إلى «%1»: %2</translation>
     </message>
     <message>
         <source>Failed to write &apos;%1&apos;: %2</source>
-        <translation>Failed to write &apos;%1&apos;: %2</translation>
+        <translation>فشلت الكتابة إلى «%1»: %2</translation>
     </message>
     <message>
         <source>Cannot read &apos;%1&apos;: %2</source>
-        <translation>Cannot read &apos;%1&apos;: %2</translation>
+        <translation>تعذّرت قراءة «%1»: %2</translation>
     </message>
 </context>
 <context>
     <name>GameEngine</name>
     <message>
         <source>wood</source>
-        <translation>wood</translation>
+        <translation>خشب</translation>
     </message>
     <message>
         <source>stone</source>
-        <translation>stone</translation>
+        <translation>حجر</translation>
     </message>
     <message>
         <source>iron</source>
-        <translation>iron</translation>
+        <translation>حديد</translation>
     </message>
     <message>
         <source>Maximum troop limit reached. Cannot produce more units.</source>
-        <translation>Maximum troop limit reached. Cannot produce more units.</translation>
+        <translation>بلغت الحد الأقصى للقوات. لا يمكن إنتاج وحدات أخرى.</translation>
     </message>
     <message>
         <source>Not enough manpower. Build homes or wait for families.</source>
-        <translation>Not enough manpower. Build homes or wait for families.</translation>
+        <translation>لا تكفي القوى البشرية. ابنِ مساكن أو انتظر قدوم العائلات.</translation>
     </message>
     <message>
         <source>Select your marketplace to trade.</source>
-        <translation>Select your marketplace to trade.</translation>
+        <translation>اختر سوقك للتجارة.</translation>
     </message>
     <message>
         <source>Marketplace can trade only wood, stone, or iron.</source>
-        <translation>Marketplace can trade only wood, stone, or iron.</translation>
+        <translation>السوق لا يتاجر إلا بالخشب أو الحجر أو الحديد.</translation>
     </message>
     <message>
         <source>Not enough gold to buy %1.</source>
-        <translation>Not enough gold to buy %1.</translation>
+        <translation>لا يكفي الذهب لشراء %1.</translation>
     </message>
     <message>
         <source>Cannot buy %1 right now.</source>
-        <translation>Cannot buy %1 right now.</translation>
+        <translation>لا يمكن شراء %1 الآن.</translation>
     </message>
     <message>
         <source>Not enough %1 to sell.</source>
-        <translation>Not enough %1 to sell.</translation>
+        <translation>لا يكفي %1 للبيع.</translation>
     </message>
     <message>
         <source>Cannot sell %1 right now.</source>
-        <translation>Cannot sell %1 right now.</translation>
+        <translation>لا يمكن بيع %1 الآن.</translation>
     </message>
     <message>
         <source>Campaign manager not initialized</source>
-        <translation>Campaign manager not initialized</translation>
+        <translation>مدير الحملة غير مهيّأ</translation>
     </message>
     <message>
         <source>Failed to load mission</source>
-        <translation>Failed to load mission</translation>
+        <translation>فشل تحميل المهمة</translation>
     </message>
     <message>
         <source>Failed to load mission preview: %1</source>
-        <translation>Failed to load mission preview: %1</translation>
+        <translation>فشل تحميل معاينة المهمة: %1</translation>
     </message>
     <message>
         <source>Cannot start skirmish: renderer not initialized</source>
-        <translation>Cannot start skirmish: renderer not initialized</translation>
+        <translation>تعذّر بدء المناوشة: محرك العرض غير مهيّأ</translation>
     </message>
     <message>
         <source>Save: not initialized</source>
-        <translation>Save: not initialized</translation>
+        <translation>الحفظ: غير مهيّأ</translation>
     </message>
     <message>
         <source>A save is already in progress</source>
-        <translation>A save is already in progress</translation>
+        <translation>هناك عملية حفظ جارية بالفعل</translation>
     </message>
     <message>
         <source>Queued</source>
-        <translation>Queued</translation>
+        <translation>في الطابور</translation>
     </message>
     <message>
         <source>Cancelling...</source>
-        <translation>Cancelling...</translation>
+        <translation>جارٍ الإلغاء...</translation>
     </message>
     <message>
         <source>Load: not initialized</source>
-        <translation>Load: not initialized</translation>
+        <translation>التحميل: غير مهيّأ</translation>
     </message>
 </context>
 <context>
     <name>GameView</name>
     <message>
         <source>%1/%2 walls  •  %3 wood</source>
-        <translation>%1/%2 walls  •  %3 wood</translation>
+        <translation>%1/%2 من الأسوار  •  %3 خشب</translation>
     </message>
     <message>
         <source>Enemy target</source>
-        <translation>Enemy target</translation>
+        <translation>هدف معادٍ</translation>
     </message>
     <message>
         <source>Cannot attack ally</source>
-        <translation>Cannot attack ally</translation>
+        <translation>لا يمكن مهاجمة حليف</translation>
     </message>
     <message>
         <source>Cannot attack this target</source>
-        <translation>Cannot attack this target</translation>
+        <translation>لا يمكن مهاجمة هذا الهدف</translation>
     </message>
     <message>
         <source>Selection cannot attack</source>
-        <translation>Selection cannot attack</translation>
+        <translation>التحديد لا يستطيع الهجوم</translation>
     </message>
     <message>
         <source>In range</source>
-        <translation>In range</translation>
+        <translation>ضمن المدى</translation>
     </message>
     <message>
         <source>Too close</source>
-        <translation>Too close</translation>
+        <translation>قريب جداً</translation>
     </message>
     <message>
         <source>Out of range</source>
-        <translation>Out of range</translation>
+        <translation>خارج المدى</translation>
     </message>
     <message>
         <source>No firing line</source>
-        <translation>No firing line</translation>
+        <translation>لا خط رماية</translation>
     </message>
 </context>
 <context>
     <name>HUDBottom</name>
     <message>
         <source>Attack</source>
-        <translation>Attack</translation>
+        <translation>هجوم</translation>
     </message>
     <message>
         <source>Select troops first</source>
-        <translation>Select troops first</translation>
+        <translation>حدّد القوات أولاً</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Guard</translation>
+        <translation>حراسة</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Patrol</translation>
+        <translation>دورية</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation>Stop</translation>
+        <translation>توقّف</translation>
     </message>
     <message>
         <source>Hold</source>
-        <translation>Hold</translation>
+        <translation>اثبت</translation>
     </message>
     <message>
         <source>No troops selected</source>
-        <translation>No troops selected</translation>
+        <translation>لم تُحدَّد أي قوات</translation>
     </message>
     <message>
         <source>Orders ready</source>
-        <translation>Orders ready</translation>
+        <translation>الأوامر جاهزة</translation>
     </message>
     <message>
         <source>Attack order</source>
-        <translation>Attack order</translation>
+        <translation>أمر هجوم</translation>
     </message>
     <message>
         <source>Guard order</source>
-        <translation>Guard order</translation>
+        <translation>أمر حراسة</translation>
     </message>
     <message>
         <source>Patrol order</source>
-        <translation>Patrol order</translation>
+        <translation>أمر دورية</translation>
     </message>
     <message>
         <source>Medic order</source>
-        <translation>Medic order</translation>
+        <translation>أمر إسعاف</translation>
     </message>
     <message>
         <source>Engineer order</source>
-        <translation>Engineer order</translation>
+        <translation>أمر هندسة</translation>
     </message>
     <message>
         <source>Collection order</source>
-        <translation>Collection order</translation>
+        <translation>أمر جمع</translation>
     </message>
     <message>
         <source>Barracks delivery</source>
-        <translation>Barracks delivery</translation>
+        <translation>التوصيل إلى الثكنة</translation>
     </message>
     <message>
         <source>Formation order</source>
-        <translation>Formation order</translation>
+        <translation>أمر تشكيل</translation>
     </message>
     <message>
         <source>Rally order</source>
-        <translation>Rally order</translation>
+        <translation>أمر تجميع</translation>
     </message>
     <message>
         <source>Stop command</source>
-        <translation>Stop command</translation>
+        <translation>أمر التوقف</translation>
     </message>
     <message>
         <source>Attack enemy units or buildings. Only eligible selected troops receive the order.</source>
-        <translation>Attack enemy units or buildings. Only eligible selected troops receive the order.</translation>
+        <translation>هاجم وحدات العدو أو مبانيه. لا يتلقى الأمر إلا القوات المحددة المؤهلة.</translation>
     </message>
     <message>
         <source>Attack is not available for the current selection</source>
-        <translation>Attack is not available for the current selection</translation>
+        <translation>الهجوم غير متاح للتحديد الحالي</translation>
     </message>
     <message>
         <source>Guard a position. Only guard-capable troops receive the order.</source>
-        <translation>Guard a position. Only guard-capable troops receive the order.</translation>
+        <translation>احرس موقعاً. لا يتلقى الأمر إلا القوات القادرة على الحراسة.</translation>
     </message>
     <message>
         <source>Guard is not available for the current selection</source>
-        <translation>Guard is not available for the current selection</translation>
+        <translation>الحراسة غير متاحة للتحديد الحالي</translation>
     </message>
     <message>
         <source>Patrol between waypoints.</source>
-        <translation>Patrol between waypoints.</translation>
+        <translation>سِر دورية بين نقاط المسار.</translation>
     </message>
     <message>
         <source>Patrol is not available for the current selection</source>
-        <translation>Patrol is not available for the current selection</translation>
+        <translation>الدورية غير متاحة للتحديد الحالي</translation>
     </message>
     <message>
         <source>Medic</source>
-        <translation>Medic</translation>
+        <translation>إسعاف</translation>
     </message>
     <message>
         <source>Healers tend nearby allies on their own.</source>
-        <translation>Healers tend nearby allies on their own.</translation>
+        <translation>المعالجون يداوون الحلفاء القريبين من تلقاء أنفسهم.</translation>
     </message>
     <message>
         <source>Healers automatically heal nearby allies. This is passive, not a manual order.</source>
-        <translation>Healers automatically heal nearby allies. This is passive, not a manual order.</translation>
+        <translation>المعالجون يداوون الحلفاء القريبين تلقائياً. هذا سلوك تلقائي لا أمر يدوي.</translation>
     </message>
     <message>
         <source>Select healer units</source>
-        <translation>Select healer units</translation>
+        <translation>حدّد وحدات المعالجين</translation>
     </message>
     <message>
         <source>Stop all actions immediately.</source>
-        <translation>Stop all actions immediately.</translation>
+        <translation>أوقف كل الأفعال فوراً.</translation>
     </message>
     <message>
         <source>Hold position and defend.</source>
-        <translation>Hold position and defend.</translation>
+        <translation>اثبت في الموضع ودافع.</translation>
     </message>
     <message>
         <source>Hold is not available for the current selection</source>
-        <translation>Hold is not available for the current selection</translation>
+        <translation>الثبات غير متاح للتحديد الحالي</translation>
     </message>
     <message>
         <source>Build</source>
-        <translation>Build</translation>
+        <translation>بناء</translation>
     </message>
     <message>
         <source>Open builder orders and place structures.</source>
-        <translation>Open builder orders and place structures.</translation>
+        <translation>افتح أوامر البنّاء وضع الأبنية.</translation>
     </message>
     <message>
         <source>Build is only available to builders</source>
-        <translation>Build is only available to builders</translation>
+        <translation>البناء متاح للبنّائين فقط</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation>Collect</translation>
+        <translation>اجمع</translation>
     </message>
     <message>
         <source>Click a tree, boulder or ore deposit. Right-click to cancel.</source>
-        <translation>Click a tree, boulder or ore deposit. Right-click to cancel.</translation>
+        <translation>انقر على شجرة أو صخرة أو منجم خام. النقر الأيمن للإلغاء.</translation>
     </message>
     <message>
         <source>Collect is only available to builders</source>
-        <translation>Collect is only available to builders</translation>
+        <translation>الجمع متاح للبنّائين فقط</translation>
     </message>
     <message>
         <source>Deliver</source>
-        <translation>Deliver</translation>
+        <translation>أوصِل</translation>
     </message>
     <message>
         <source>Click a friendly barracks. Only selected civilians receive the order.</source>
-        <translation>Click a friendly barracks. Only selected civilians receive the order.</translation>
+        <translation>انقر على ثكنة صديقة. لا يتلقى الأمر إلا المدنيون المحددون.</translation>
     </message>
     <message>
         <source>Deliver is only available to civilians</source>
-        <translation>Deliver is only available to civilians</translation>
+        <translation>التوصيل متاح للمدنيين فقط</translation>
     </message>
     <message>
         <source>Rally</source>
-        <translation>Rally</translation>
+        <translation>تجميع</translation>
     </message>
     <message>
         <source>The commander plants a rally flag; troops march to it once placed.</source>
-        <translation>The commander plants a rally flag; troops march to it once placed.</translation>
+        <translation>يغرس القائد راية تجميع؛ وتزحف القوات إليها بمجرد وضعها.</translation>
     </message>
     <message>
         <source>Select a commander to use rally</source>
-        <translation>Select a commander to use rally</translation>
+        <translation>حدّد قائداً لاستخدام التجميع</translation>
     </message>
     <message>
         <source>Gate</source>
-        <translation>Gate</translation>
+        <translation>بوابة</translation>
     </message>
     <message>
         <source>Cycle the selected gates: automatic, held open, held shut.</source>
-        <translation>Cycle the selected gates: automatic, held open, held shut.</translation>
+        <translation>بدّل حالة البوابات المحددة: تلقائية، مفتوحة دائماً، مغلقة دائماً.</translation>
     </message>
     <message>
         <source>Select one of your gates to control it</source>
-        <translation>Select one of your gates to control it</translation>
+        <translation>حدّد إحدى بواباتك للتحكم بها</translation>
     </message>
     <message>
         <source>Aura</source>
-        <translation>Aura</translation>
+        <translation>هالة</translation>
     </message>
     <message>
         <source>Temporarily empower nearby troops. A glow marks every affected soldier.</source>
-        <translation>Temporarily empower nearby troops. A glow marks every affected soldier.</translation>
+        <translation>عزّز القوات القريبة مؤقتاً. يميّز وهجٌ كل جندي متأثر.</translation>
     </message>
     <message>
         <source>Select a ready commander to activate the aura</source>
-        <translation>Select a ready commander to activate the aura</translation>
+        <translation>حدّد قائداً جاهزاً لتفعيل الهالة</translation>
     </message>
     <message>
         <source>Repair order</source>
-        <translation>Repair order</translation>
+        <translation>أمر إصلاح</translation>
     </message>
     <message>
         <source>Auto Gather</source>
-        <translation>Auto Gather</translation>
+        <translation>جمع تلقائي</translation>
     </message>
     <message>
         <source>Builders keep finding and collecting the nearest resource on their own. Any new order cancels it.</source>
-        <translation>Builders keep finding and collecting the nearest resource on their own. Any new order cancels it.</translation>
+        <translation>يواصل البنّاؤون البحث عن أقرب مورد وجمعه من تلقاء أنفسهم. وأي أمر جديد يلغي ذلك.</translation>
     </message>
     <message>
         <source>Auto Gather is only available to builders</source>
-        <translation>Auto Gather is only available to builders</translation>
+        <translation>الجمع التلقائي متاح للبنّائين فقط</translation>
     </message>
     <message>
         <source>Repair</source>
-        <translation>Repair</translation>
+        <translation>أصلِح</translation>
     </message>
     <message>
         <source>Click a damaged building of yours. Right-click to cancel.</source>
-        <translation>Click a damaged building of yours. Right-click to cancel.</translation>
+        <translation>انقر على مبنى متضرر من مبانيك. النقر الأيمن للإلغاء.</translation>
     </message>
     <message>
         <source>Repair is only available to builders</source>
-        <translation>Repair is only available to builders</translation>
+        <translation>الإصلاح متاح للبنّائين فقط</translation>
     </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
     <message>
         <source>Commander</source>
-        <translation>Commander</translation>
+        <translation>القائد</translation>
     </message>
     <message>
         <source>Commander unavailable</source>
-        <translation>Commander unavailable</translation>
+        <translation>القائد غير متاح</translation>
     </message>
     <message>
         <source>Choose destination</source>
-        <translation>Choose destination</translation>
+        <translation>اختر الوجهة</translation>
     </message>
     <message>
         <source>Planting flag</source>
-        <translation>Planting flag</translation>
+        <translation>يغرس الراية</translation>
     </message>
     <message>
         <source>Moving commander</source>
-        <translation>Moving commander</translation>
+        <translation>ينقل القائد</translation>
     </message>
     <message>
         <source>Flag active</source>
-        <translation>Flag active</translation>
+        <translation>الراية فاعلة</translation>
     </message>
     <message>
         <source>Ready</source>
-        <translation>Ready</translation>
+        <translation>جاهز</translation>
     </message>
     <message>
         <source>Left-click a destination to confirm the rally flag.</source>
-        <translation>Left-click a destination to confirm the rally flag.</translation>
+        <translation>انقر بالزر الأيسر على وجهة لتأكيد راية التجميع.</translation>
     </message>
     <message>
         <source>The commander is planting the flag. Interruptions will cancel the rally.</source>
-        <translation>The commander is planting the flag. Interruptions will cancel the rally.</translation>
+        <translation>القائد يغرس الراية. أي مقاطعة ستلغي التجميع.</translation>
     </message>
     <message>
         <source>The commander is marching to the chosen point before planting the flag.</source>
-        <translation>The commander is marching to the chosen point before planting the flag.</translation>
+        <translation>القائد يزحف إلى النقطة المختارة قبل غرس الراية.</translation>
     </message>
     <message>
         <source>Troops have already received a normal move order to this rally flag.</source>
-        <translation>Troops have already received a normal move order to this rally flag.</translation>
+        <translation>تلقت القوات أصلاً أمر تحرك عادياً نحو راية التجميع هذه.</translation>
     </message>
     <message>
         <source>Choose a destination, march there, plant the flag, then order all controllable troops there.</source>
-        <translation>Choose a destination, march there, plant the flag, then order all controllable troops there.</translation>
+        <translation>اختر وجهة، وازحف إليها، واغرس الراية، ثم مُر كل القوات القابلة للسيطرة بالتوجه إليها.</translation>
     </message>
     <message>
         <source>Cancel Rally Placement</source>
-        <translation>Cancel Rally Placement</translation>
+        <translation>إلغاء وضع التجميع</translation>
     </message>
     <message>
         <source>Rally In Progress</source>
-        <translation>Rally In Progress</translation>
+        <translation>التجميع جارٍ</translation>
     </message>
     <message>
         <source>Reposition Rally [R]</source>
-        <translation>Reposition Rally [R]</translation>
+        <translation>نقل التجميع [R]</translation>
     </message>
     <message>
         <source>Place Rally [R]</source>
-        <translation>Place Rally [R]</translation>
+        <translation>وضع التجميع [R]</translation>
     </message>
     <message>
         <source>Vanguard Rush</source>
-        <translation>Vanguard Rush</translation>
+        <translation>اندفاعة الطليعة</translation>
     </message>
     <message>
         <source>Explode forward into the focused enemy and open a punish.</source>
-        <translation>Explode forward into the focused enemy and open a punish.</translation>
+        <translation>انفجر إلى الأمام في العدو المستهدَف وافتح فرصة عقاب.</translation>
     </message>
     <message>
         <source>Second Wind</source>
-        <translation>Second Wind</translation>
+        <translation>النفَس الثاني</translation>
     </message>
     <message>
         <source>Recover posture and stamina, then steady yourself for the next exchange.</source>
-        <translation>Recover posture and stamina, then steady yourself for the next exchange.</translation>
+        <translation>استعد اتزانك وجَلَدك، ثم تهيّأ للتبادل التالي.</translation>
     </message>
     <message>
         <source>Shield Bash</source>
-        <translation>Shield Bash</translation>
+        <translation>ضربة الترس</translation>
     </message>
     <message>
         <source>Guard-gated stagger burst that punishes enemies crowding your front.</source>
-        <translation>Guard-gated stagger burst that punishes enemies crowding your front.</translation>
+        <translation>دفعة إرباك مشروطة بالحراسة تعاقب الأعداء المحتشدين أمامك.</translation>
     </message>
     <message>
         <source>Command Aura</source>
-        <translation>Command Aura</translation>
+        <translation>هالة القيادة</translation>
     </message>
     <message>
         <source>Temporarily empower nearby troops. A glow marks every affected soldier.</source>
-        <translation>Temporarily empower nearby troops. A glow marks every affected soldier.</translation>
+        <translation>عزّز القوات القريبة مؤقتاً. يميّز وهجٌ كل جندي متأثر.</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation>Disconnected</translation>
+        <translation>منقطع</translation>
     </message>
     <message>
         <source>Guard broken</source>
-        <translation>Guard broken</translation>
+        <translation>انكسرت الحراسة</translation>
     </message>
     <message>
         <source>Punish window</source>
-        <translation>Punish window</translation>
+        <translation>نافذة العقاب</translation>
     </message>
     <message>
         <source>Sprinting</source>
-        <translation>Sprinting</translation>
+        <translation>يعدو</translation>
     </message>
     <message>
         <source>Steady</source>
-        <translation>Steady</translation>
+        <translation>ثابت</translation>
     </message>
     <message>
         <source>COMMANDER</source>
-        <translation>COMMANDER</translation>
+        <translation>القائد</translation>
     </message>
     <message>
         <source>Frontline command</source>
-        <translation>Frontline command</translation>
+        <translation>قيادة الخط الأمامي</translation>
     </message>
     <message>
         <source>Aura active</source>
-        <translation>Aura active</translation>
+        <translation>الهالة فاعلة</translation>
     </message>
     <message>
         <source>Aura ready</source>
-        <translation>Aura ready</translation>
+        <translation>الهالة جاهزة</translation>
     </message>
     <message>
         <source>Aura cooling</source>
-        <translation>Aura cooling</translation>
+        <translation>الهالة تبرد</translation>
     </message>
     <message>
         <source>HP %1/%2</source>
-        <translation>HP %1/%2</translation>
+        <translation>الصحة %1/%2</translation>
     </message>
     <message>
         <source>STM %1%</source>
-        <translation>STM %1%</translation>
+        <translation>الجَلَد %1%</translation>
     </message>
     <message>
         <source>Stable</source>
-        <translation>Stable</translation>
+        <translation>مستقر</translation>
     </message>
     <message>
         <source>Posture</source>
-        <translation>Posture</translation>
+        <translation>الاتزان</translation>
     </message>
     <message>
         <source>%1 camera</source>
-        <translation>%1 camera</translation>
+        <translation>كاميرا %1</translation>
     </message>
     <message>
         <source>Chase</source>
-        <translation>Chase</translation>
+        <translation>مطاردة</translation>
     </message>
     <message>
         <source>State: %1</source>
-        <translation>State: %1</translation>
+        <translation>الحالة: %1</translation>
     </message>
     <message>
         <source>Perfect guard live</source>
-        <translation>Perfect guard live</translation>
+        <translation>الحراسة المثالية فاعلة</translation>
     </message>
     <message>
         <source>Finisher primed</source>
-        <translation>Finisher primed</translation>
+        <translation>الضربة القاضية مهيّأة</translation>
     </message>
     <message>
         <source>Aura %1</source>
-        <translation>Aura %1</translation>
+        <translation>الهالة %1</translation>
     </message>
     <message>
         <source>empowers nearby troops</source>
-        <translation>empowers nearby troops</translation>
+        <translation>تعزّز القوات القريبة</translation>
     </message>
     <message>
         <source>is recovering</source>
-        <translation>is recovering</translation>
+        <translation>تستعيد قدرتها</translation>
     </message>
     <message>
         <source>Camera: %1</source>
-        <translation>Camera: %1</translation>
+        <translation>الكاميرا: %1</translation>
     </message>
     <message>
         <source>ORDERS</source>
-        <translation>ORDERS</translation>
+        <translation>الأوامر</translation>
     </message>
     <message>
         <source>ABILITIES</source>
-        <translation>ABILITIES</translation>
+        <translation>القدرات</translation>
     </message>
     <message>
         <source>Rally</source>
-        <translation>Rally</translation>
+        <translation>تجميع</translation>
     </message>
     <message>
         <source>Command Aura Active · %1s</source>
-        <translation>Command Aura Active · %1s</translation>
+        <translation>هالة القيادة فاعلة · %1 ث</translation>
     </message>
     <message>
         <source>Activate Command Aura [3]</source>
-        <translation>Activate Command Aura [3]</translation>
+        <translation>تفعيل هالة القيادة [3]</translation>
     </message>
     <message>
         <source>Command Aura · %1s cooldown</source>
-        <translation>Command Aura · %1s cooldown</translation>
+        <translation>هالة القيادة · تبريد %1 ث</translation>
     </message>
     <message>
         <source>Temporarily empower nearby troops. Every affected soldier receives a visible glow.</source>
-        <translation>Temporarily empower nearby troops. Every affected soldier receives a visible glow.</translation>
+        <translation>عزّز القوات القريبة مؤقتاً. يحصل كل جندي متأثر على وهج مرئي.</translation>
     </message>
     <message>
         <source>Combo</source>
-        <translation>Combo</translation>
+        <translation>سلسلة</translation>
     </message>
     <message>
         <source>%1 [%2]</source>
@@ -2255,114 +2255,114 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
     <message>
         <source>COMBAT CONTROLS</source>
-        <translation>COMBAT CONTROLS</translation>
+        <translation>أدوات التحكم القتالية</translation>
     </message>
     <message>
         <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[LMB] Strike  [RMB] Guard</translation>
+        <translation>[الزر الأيسر] ضربة  [الزر الأيمن] حراسة</translation>
     </message>
     <message>
         <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Space] Dodge  [Alt] Jump</translation>
+        <translation>[مسافة] مراوغة  [Alt] قفز</translation>
     </message>
     <message>
         <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Move  [Shift] Sprint</translation>
+        <translation>[WASD] حركة  [Shift] عَدْو</translation>
     </message>
     <message>
         <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Cycle Target  [3] Aura  [C] Camera</translation>
+        <translation>[Tab] تبديل الهدف  [3] الهالة  [C] الكاميرا</translation>
     </message>
     <message>
         <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Rally Orders  [Enter] Return to RTS</translation>
+        <translation>[R] أوامر التجميع  [Enter] العودة إلى وضع RTS</translation>
     </message>
     <message>
         <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Bash  [1] Rush  [2] Second Wind</translation>
+        <translation>[F] ضربة الترس  [1] اندفاعة  [2] النفَس الثاني</translation>
     </message>
     <message>
         <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</translation>
+        <translation>[Tab] الهدف  [1] اندفاعة  [2] النفَس الثاني  [3] الهالة  [F] ضربة الترس</translation>
     </message>
     <message>
         <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Place Rally  [C] Camera  [Enter] Return to RTS</translation>
+        <translation>[R] وضع التجميع  [C] الكاميرا  [Enter] العودة إلى وضع RTS</translation>
     </message>
     <message>
         <source>Rally autopilot engaged until the flag is planted</source>
-        <translation>Rally autopilot engaged until the flag is planted</translation>
+        <translation>الطيار الآلي للتجميع مفعَّل حتى تُغرس الراية</translation>
     </message>
     <message>
         <source>Combat HUD synced for close-quarters command</source>
-        <translation>Combat HUD synced for close-quarters command</translation>
+        <translation>واجهة القتال متزامنة للقيادة في الاشتباك القريب</translation>
     </message>
     <message>
         <source>First-person command engaged</source>
-        <translation>First-person command engaged</translation>
+        <translation>تم تفعيل القيادة بمنظور الشخص الأول</translation>
     </message>
     <message>
         <source>The aura is not ready yet.</source>
-        <translation>The aura is not ready yet.</translation>
+        <translation>الهالة ليست جاهزة بعد.</translation>
     </message>
 </context>
 <context>
     <name>HUDTop</name>
     <message>
         <source>MINIMAP</source>
-        <translation>MINIMAP</translation>
+        <translation>الخريطة المصغّرة</translation>
     </message>
     <message>
         <source> [You]</source>
-        <translation> [You]</translation>
+        <translation> [أنت]</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Resume</translation>
+        <translation>استئناف</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation>Pause</translation>
+        <translation>إيقاف مؤقت</translation>
     </message>
     <message>
         <source>Resume the battle to change speed</source>
-        <translation>Resume the battle to change speed</translation>
+        <translation>استأنف المعركة لتغيير السرعة</translation>
     </message>
     <message>
         <source>Follow the selection with the camera</source>
-        <translation>Follow the selection with the camera</translation>
+        <translation>تتبّع التحديد بالكاميرا</translation>
     </message>
     <message>
         <source>Reset the camera</source>
-        <translation>Reset the camera</translation>
+        <translation>إعادة ضبط الكاميرا</translation>
     </message>
     <message>
         <source>SPECTATOR</source>
-        <translation>SPECTATOR</translation>
+        <translation>مُشاهِد</translation>
     </message>
     <message>
         <source>Watching a CPU-only match. You cannot issue commands.</source>
-        <translation>Watching a CPU-only match. You cannot issue commands.</translation>
+        <translation>أنت تشاهد مباراة بين الحاسوب فقط. لا يمكنك إصدار أوامر.</translation>
     </message>
     <message>
         <source>Population</source>
-        <translation>Population</translation>
+        <translation>التعداد</translation>
     </message>
     <message>
         <source>Human players</source>
-        <translation>Human players</translation>
+        <translation>اللاعبون البشر</translation>
     </message>
     <message>
         <source>AI players</source>
-        <translation>AI players</translation>
+        <translation>لاعبو الذكاء الاصطناعي</translation>
     </message>
     <message>
         <source>Enemies defeated</source>
-        <translation>Enemies defeated</translation>
+        <translation>الأعداء المهزومون</translation>
     </message>
     <message>
         <source>Minimap</source>
-        <translation>Minimap</translation>
+        <translation>الخريطة المصغّرة</translation>
     </message>
     <message>
         <source> (%1/%2)</source>
@@ -2373,126 +2373,126 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <name>InputBindings</name>
     <message>
         <source>Unbound</source>
-        <translation>Unbound</translation>
+        <translation>بلا تعيين</translation>
     </message>
     <message>
         <source>Mouse Left</source>
-        <translation>Mouse Left</translation>
+        <translation>زر الفأرة الأيسر</translation>
     </message>
     <message>
         <source>Mouse Right</source>
-        <translation>Mouse Right</translation>
+        <translation>زر الفأرة الأيمن</translation>
     </message>
     <message>
         <source>Mouse Middle</source>
-        <translation>Mouse Middle</translation>
+        <translation>زر الفأرة الأوسط</translation>
     </message>
     <message>
         <source>Mouse Back</source>
-        <translation>Mouse Back</translation>
+        <translation>زر الفأرة للخلف</translation>
     </message>
     <message>
         <source>Mouse Forward</source>
-        <translation>Mouse Forward</translation>
+        <translation>زر الفأرة للأمام</translation>
     </message>
 </context>
 <context>
     <name>IronCommandButton</name>
     <message>
         <source>%1 of %2</source>
-        <translation>%1 of %2</translation>
+        <translation>%1 من %2</translation>
     </message>
     <message>
         <source>Pick a target</source>
-        <translation>Pick a target</translation>
+        <translation>اختر هدفاً</translation>
     </message>
 </context>
 <context>
     <name>IronDialog</name>
     <message>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation>موافق</translation>
     </message>
 </context>
 <context>
     <name>IronOutcomeOverlay</name>
     <message>
         <source>Battle Report</source>
-        <translation>Battle Report</translation>
+        <translation>تقرير المعركة</translation>
     </message>
     <message>
         <source>The Campaign is Won</source>
-        <translation>The Campaign is Won</translation>
+        <translation>تم كسب الحملة</translation>
     </message>
     <message>
         <source>Victory Secured</source>
-        <translation>Victory Secured</translation>
+        <translation>تحقق النصر</translation>
     </message>
     <message>
         <source>Army Broken</source>
-        <translation>Army Broken</translation>
+        <translation>تحطّم الجيش</translation>
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>
-        <translation>Every mission has fallen to your standard.</translation>
+        <translation>سقطت كل مهمة تحت رايتك.</translation>
     </message>
     <message>
         <source>Enemy command has fallen.</source>
-        <translation>Enemy command has fallen.</translation>
+        <translation>سقطت قيادة العدو.</translation>
     </message>
     <message>
         <source>Your command has collapsed.</source>
-        <translation>Your command has collapsed.</translation>
+        <translation>انهارت قيادتك.</translation>
     </message>
 </context>
 <context>
     <name>IronSearchField</name>
     <message>
         <source>Search</source>
-        <translation>Search</translation>
+        <translation>بحث</translation>
     </message>
 </context>
 <context>
     <name>IronSelectionSummary</name>
     <message>
         <source>Selected units</source>
-        <translation>Selected units</translation>
+        <translation>الوحدات المحددة</translation>
     </message>
     <message>
         <source>SELECTION</source>
-        <translation>SELECTION</translation>
+        <translation>التحديد</translation>
     </message>
     <message>
         <source>SELECTED UNIT</source>
-        <translation>SELECTED UNIT</translation>
+        <translation>الوحدة المحددة</translation>
     </message>
     <message>
         <source>SELECTED FORCE</source>
-        <translation>SELECTED FORCE</translation>
+        <translation>القوة المحددة</translation>
     </message>
     <message>
         <source>%1 soldiers ready</source>
-        <translation>%1 soldiers ready</translation>
+        <translation>%1 جندياً جاهزون</translation>
     </message>
     <message>
         <source>1 unit</source>
-        <translation>1 unit</translation>
+        <translation>وحدة واحدة</translation>
     </message>
     <message>
         <source>%1 units</source>
-        <translation>%1 units</translation>
+        <translation>%1 وحدة</translation>
     </message>
     <message>
         <source>%1 units  ·  %2 types</source>
-        <translation>%1 units  ·  %2 types</translation>
+        <translation>%1 وحدة  ·  %2 نوعاً</translation>
     </message>
     <message>
         <source>Drag a box over your troops, or click a unit</source>
-        <translation>Drag a box over your troops, or click a unit</translation>
+        <translation>اسحب مستطيلاً فوق قواتك، أو انقر على وحدة</translation>
     </message>
     <message>
         <source>HEALTH</source>
-        <translation>HEALTH</translation>
+        <translation>الصحة</translation>
     </message>
     <message>
         <source>%1%</source>
@@ -2500,110 +2500,110 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
     <message>
         <source>STAMINA</source>
-        <translation>STAMINA</translation>
+        <translation>الجَلَد</translation>
     </message>
     <message>
         <source>%1 wounded</source>
-        <translation>%1 wounded</translation>
+        <translation>%1 جريحاً</translation>
     </message>
     <message>
         <source> (mixed)</source>
-        <translation> (mixed)</translation>
+        <translation> (مختلط)</translation>
     </message>
 </context>
 <context>
     <name>LevelLoader</name>
     <message>
         <source>Map load failed: %1</source>
-        <translation>Map load failed: %1</translation>
+        <translation>فشل تحميل الخريطة: %1</translation>
     </message>
 </context>
 <context>
     <name>LevelOrchestrator</name>
     <message>
         <source>Prewarming templates: scanning unit profiles...</source>
-        <translation>Prewarming templates: scanning unit profiles...</translation>
+        <translation>تسخين القوالب: جارٍ فحص ملفات الوحدات...</translation>
     </message>
     <message>
         <source>Prewarming templates: %1 / %2</source>
-        <translation>Prewarming templates: %1 / %2</translation>
+        <translation>تسخين القوالب: %1 / %2</translation>
     </message>
     <message>
         <source>Queued deferred template warmup (%1 additional)</source>
-        <translation>Queued deferred template warmup (%1 additional)</translation>
+        <translation>أُدرج تسخين القوالب المؤجل في الطابور (%1 إضافية)</translation>
     </message>
     <message>
         <source>Template warmup complete (%1 core, %2 total)</source>
-        <translation>Template warmup complete (%1 core, %2 total)</translation>
+        <translation>اكتمل تسخين القوالب (%1 أساسية، %2 إجمالاً)</translation>
     </message>
     <message>
         <source>Template warmup cancelled</source>
-        <translation>Template warmup cancelled</translation>
+        <translation>أُلغي تسخين القوالب</translation>
     </message>
 </context>
 <context>
     <name>LoadGamePanel</name>
     <message>
         <source>Load Game</source>
-        <translation>Load Game</translation>
+        <translation>تحميل لعبة</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancel</translation>
+        <translation>إلغاء</translation>
     </message>
     <message>
         <source>No saves found</source>
-        <translation>No saves found</translation>
+        <translation>لم يُعثر على حفوظات</translation>
     </message>
     <message>
         <source>No Preview</source>
-        <translation>No Preview</translation>
+        <translation>لا معاينة</translation>
     </message>
     <message>
         <source>Load</source>
-        <translation>Load</translation>
+        <translation>تحميل</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Delete</translation>
+        <translation>حذف</translation>
     </message>
     <message>
         <source>Confirm Delete</source>
-        <translation>Confirm Delete</translation>
+        <translation>تأكيد الحذف</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the save:
 &quot;%1&quot;?
 
 This action cannot be undone.</source>
-        <translation>Are you sure you want to delete the save:
-&quot;%1&quot;?
+        <translation>هل تريد بالتأكيد حذف الحفظ:
+«%1»؟
 
-This action cannot be undone.</translation>
+لا يمكن التراجع عن هذا الإجراء.</translation>
     </message>
     <message>
         <source>%1h %2m</source>
-        <translation>%1h %2m</translation>
+        <translation>%1 س %2 د</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1m</translation>
+        <translation>%1 د</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>الحملة</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>مناوشة</translation>
     </message>
     <message>
         <source>%1 - autosave</source>
-        <translation>%1 - autosave</translation>
+        <translation>%1 - حفظ تلقائي</translation>
     </message>
     <message>
         <source>%1 - quicksave</source>
-        <translation>%1 - quicksave</translation>
+        <translation>%1 - حفظ سريع</translation>
     </message>
     <message>
         <source>%1 · %2</source>
@@ -2611,184 +2611,184 @@ This action cannot be undone.</translation>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Saved %1</translation>
+        <translation>حُفظت في %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Played %1</translation>
+        <translation>لُعبت %1</translation>
     </message>
     <message>
         <source>Export</source>
-        <translation>Export</translation>
+        <translation>تصدير</translation>
     </message>
     <message>
         <source>Exported to %1</source>
-        <translation>Exported to %1</translation>
+        <translation>صُدّرت إلى %1</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation>Export failed</translation>
+        <translation>فشل التصدير</translation>
     </message>
     <message>
         <source>Verify</source>
-        <translation>Verify</translation>
+        <translation>تحقّق</translation>
     </message>
     <message>
         <source>Verification Passed</source>
-        <translation>Verification Passed</translation>
+        <translation>نجح التحقّق</translation>
     </message>
     <message>
         <source>Verification Failed</source>
-        <translation>Verification Failed</translation>
+        <translation>فشل التحقّق</translation>
     </message>
     <message>
         <source>&quot;%1&quot; is intact. The save file has not been corrupted.</source>
-        <translation>&quot;%1&quot; is intact. The save file has not been corrupted.</translation>
+        <translation>«%1» سليمة. لم يتلف ملف الحفظ.</translation>
     </message>
     <message>
         <source>&quot;%1&quot; is corrupted and cannot be loaded. The save failed its integrity check.</source>
-        <translation>&quot;%1&quot; is corrupted and cannot be loaded. The save failed its integrity check.</translation>
+        <translation>«%1» تالفة ولا يمكن تحميلها. لم يجتز الحفظ فحص السلامة.</translation>
     </message>
     <message>
         <source>Import...</source>
-        <translation>Import...</translation>
+        <translation>استيراد...</translation>
     </message>
     <message>
         <source>Save Verification</source>
-        <translation>Save Verification</translation>
+        <translation>التحقّق من الحفظ</translation>
     </message>
     <message>
         <source>Import Save</source>
-        <translation>Import Save</translation>
+        <translation>استيراد حفظ</translation>
     </message>
     <message>
         <source>Save files found in the exports folder:</source>
-        <translation>Save files found in the exports folder:</translation>
+        <translation>ملفات حفظ عُثر عليها في مجلد التصدير:</translation>
     </message>
     <message>
         <source>Import</source>
-        <translation>Import</translation>
+        <translation>استيراد</translation>
     </message>
     <message>
         <source>Imported as &quot;%1&quot;</source>
-        <translation>Imported as &quot;%1&quot;</translation>
+        <translation>استُوردت باسم «%1»</translation>
     </message>
     <message>
         <source>Import failed</source>
-        <translation>Import failed</translation>
+        <translation>فشل الاستيراد</translation>
     </message>
     <message>
         <source>No importable save files were found.</source>
-        <translation>No importable save files were found.</translation>
+        <translation>لم يُعثر على ملفات حفظ قابلة للاستيراد.</translation>
     </message>
     <message>
         <source>Untitled Save</source>
-        <translation>Untitled Save</translation>
+        <translation>حفظ بلا عنوان</translation>
     </message>
     <message>
         <source>Unknown Map</source>
-        <translation>Unknown Map</translation>
+        <translation>خريطة مجهولة</translation>
     </message>
     <message>
         <source>Pick a saved game first.</source>
-        <translation>Pick a saved game first.</translation>
+        <translation>اختر لعبة محفوظة أولاً.</translation>
     </message>
 </context>
 <context>
     <name>LoadScreen</name>
     <message>
         <source>Loading...</source>
-        <translation>Loading...</translation>
+        <translation>جارٍ التحميل...</translation>
     </message>
 </context>
 <context>
     <name>LoadingProgressTracker</name>
     <message>
         <source>Not Started</source>
-        <translation>Not Started</translation>
+        <translation>لم يبدأ</translation>
     </message>
     <message>
         <source>Initializing...</source>
-        <translation>Initializing...</translation>
+        <translation>جارٍ التهيئة...</translation>
     </message>
     <message>
         <source>Loading Map Data...</source>
-        <translation>Loading Map Data...</translation>
+        <translation>جارٍ تحميل بيانات الخريطة...</translation>
     </message>
     <message>
         <source>Loading Terrain...</source>
-        <translation>Loading Terrain...</translation>
+        <translation>جارٍ تحميل التضاريس...</translation>
     </message>
     <message>
         <source>Loading Biome...</source>
-        <translation>Loading Biome...</translation>
+        <translation>جارٍ تحميل الإقليم الحيوي...</translation>
     </message>
     <message>
         <source>Loading Water Features...</source>
-        <translation>Loading Water Features...</translation>
+        <translation>جارٍ تحميل المسطحات المائية...</translation>
     </message>
     <message>
         <source>Loading Roads...</source>
-        <translation>Loading Roads...</translation>
+        <translation>جارٍ تحميل الطرق...</translation>
     </message>
     <message>
         <source>Loading Environment...</source>
-        <translation>Loading Environment...</translation>
+        <translation>جارٍ تحميل البيئة...</translation>
     </message>
     <message>
         <source>Loading Fog...</source>
-        <translation>Loading Fog...</translation>
+        <translation>جارٍ تحميل الضباب...</translation>
     </message>
     <message>
         <source>Loading Units &amp; Buildings...</source>
-        <translation>Loading Units &amp; Buildings...</translation>
+        <translation>جارٍ تحميل الوحدات والمباني...</translation>
     </message>
     <message>
         <source>Loading Audio...</source>
-        <translation>Loading Audio...</translation>
+        <translation>جارٍ تحميل الصوت...</translation>
     </message>
     <message>
         <source>Generating Minimap...</source>
-        <translation>Generating Minimap...</translation>
+        <translation>جارٍ توليد الخريطة المصغّرة...</translation>
     </message>
     <message>
         <source>Initializing Game Systems...</source>
-        <translation>Initializing Game Systems...</translation>
+        <translation>جارٍ تهيئة أنظمة اللعبة...</translation>
     </message>
     <message>
         <source>Finalizing...</source>
-        <translation>Finalizing...</translation>
+        <translation>جارٍ الإنهاء...</translation>
     </message>
     <message>
         <source>Complete</source>
-        <translation>Complete</translation>
+        <translation>اكتمل</translation>
     </message>
     <message>
         <source>Failed</source>
-        <translation>Failed</translation>
+        <translation>فشل</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>مجهول</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
         <source>Standard of Iron - RTS Game</source>
-        <translation>Standard of Iron - RTS Game</translation>
+        <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
     </message>
     <message>
         <source>PAUSED</source>
-        <translation>PAUSED</translation>
+        <translation>متوقفة مؤقتاً</translation>
     </message>
     <message>
         <source>Press Space to resume</source>
-        <translation>Press Space to resume</translation>
+        <translation>اضغط المسافة للاستئناف</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Error</translation>
+        <translation>خطأ</translation>
     </message>
 </context>
 <context>
@@ -2799,99 +2799,99 @@ This action cannot be undone.</translation>
     </message>
     <message>
         <source>Save Game</source>
-        <translation>Save Game</translation>
+        <translation>حفظ اللعبة</translation>
     </message>
     <message>
         <source>Load Game</source>
-        <translation>Load Game</translation>
+        <translation>تحميل لعبة</translation>
     </message>
     <message>
         <source>Settings</source>
-        <translation>Settings</translation>
+        <translation>الإعدادات</translation>
     </message>
     <message>
         <source>Exit</source>
-        <translation>Exit</translation>
+        <translation>خروج</translation>
     </message>
     <message>
         <source>Play Skirmish</source>
-        <translation>Play Skirmish</translation>
+        <translation>خُض مناوشة</translation>
     </message>
     <message>
         <source>Choose the field and deploy armies</source>
-        <translation>Choose the field and deploy armies</translation>
+        <translation>اختر الميدان وانشر الجيوش</translation>
     </message>
     <message>
         <source>Battle</source>
-        <translation>Battle</translation>
+        <translation>معركة</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>الحملة</translation>
     </message>
     <message>
         <source>March through the Second Punic War</source>
-        <translation>March through the Second Punic War</translation>
+        <translation>زحف عبر الحرب البونيقية الثانية</translation>
     </message>
     <message>
         <source>War Map</source>
-        <translation>War Map</translation>
+        <translation>خريطة الحرب</translation>
     </message>
     <message>
         <source>Objectives</source>
-        <translation>Objectives</translation>
+        <translation>الأهداف</translation>
     </message>
     <message>
         <source>Review active orders</source>
-        <translation>Review active orders</translation>
+        <translation>راجع الأوامر السارية</translation>
     </message>
     <message>
         <source>Orders</source>
-        <translation>Orders</translation>
+        <translation>الأوامر</translation>
     </message>
     <message>
         <source>Record the current campaign state</source>
-        <translation>Record the current campaign state</translation>
+        <translation>سجّل حالة الحملة الراهنة</translation>
     </message>
     <message>
         <source>Archive</source>
-        <translation>Archive</translation>
+        <translation>أرشيف</translation>
     </message>
     <message>
         <source>Return to a saved command</source>
-        <translation>Return to a saved command</translation>
+        <translation>عُد إلى قيادة محفوظة</translation>
     </message>
     <message>
         <source>Return</source>
-        <translation>Return</translation>
+        <translation>عودة</translation>
     </message>
     <message>
         <source>Display, audio, and controls</source>
-        <translation>Display, audio, and controls</translation>
+        <translation>العرض والصوت وأدوات التحكم</translation>
     </message>
     <message>
         <source>Options</source>
-        <translation>Options</translation>
+        <translation>خيارات</translation>
     </message>
     <message>
         <source>Leave the war table</source>
-        <translation>Leave the war table</translation>
+        <translation>غادر طاولة الحرب</translation>
     </message>
     <message>
         <source>Retire</source>
-        <translation>Retire</translation>
+        <translation>انسحاب</translation>
     </message>
     <message>
         <source>Rome and Carthage at the edge of empire</source>
-        <translation>Rome and Carthage at the edge of empire</translation>
+        <translation>روما وقرطاج على حافة الإمبراطورية</translation>
     </message>
     <message>
         <source>SECOND PUNIC WAR</source>
-        <translation>SECOND PUNIC WAR</translation>
+        <translation>الحرب البونيقية الثانية</translation>
     </message>
     <message>
         <source>Legions, fleets, elephants, and contested supply lines</source>
-        <translation>Legions, fleets, elephants, and contested supply lines</translation>
+        <translation>فيالق وأساطيل وفيلة وخطوط إمداد متنازع عليها</translation>
     </message>
     <message>
         <source>SPQR</source>
@@ -2899,7 +2899,7 @@ This action cannot be undone.</translation>
     </message>
     <message>
         <source>QART-HADAST</source>
-        <translation>QART-HADAST</translation>
+        <translation>قرت حدشت</translation>
     </message>
     <message>
         <source>Enter</source>
@@ -2911,1468 +2911,1468 @@ This action cannot be undone.</translation>
     </message>
     <message>
         <source>Navigate</source>
-        <translation>Navigate</translation>
+        <translation>تنقّل</translation>
     </message>
     <message>
         <source>Confirm</source>
-        <translation>Confirm</translation>
+        <translation>تأكيد</translation>
     </message>
     <message>
         <source>Resume battle</source>
-        <translation>Resume battle</translation>
+        <translation>استئناف المعركة</translation>
     </message>
     <message>
         <source>Hannibal Barca</source>
-        <translation>Hannibal Barca</translation>
+        <translation>حنبعل برقا</translation>
     </message>
     <message>
         <source>Scipio Africanus</source>
-        <translation>Scipio Africanus</translation>
+        <translation>سكيبيو الأفريقي</translation>
     </message>
     <message>
         <source>CARTHAGE</source>
-        <translation>CARTHAGE</translation>
+        <translation>قرطاج</translation>
     </message>
     <message>
         <source>ROME</source>
-        <translation>ROME</translation>
+        <translation>روما</translation>
     </message>
 </context>
 <context>
     <name>MapListPanel</name>
     <message>
         <source>Maps</source>
-        <translation>Maps</translation>
+        <translation>الخرائط</translation>
     </message>
     <message>
         <source>No maps available</source>
-        <translation>No maps available</translation>
+        <translation>لا توجد خرائط متاحة</translation>
     </message>
 </context>
 <context>
     <name>MapPreview</name>
     <message>
         <source>Map Preview</source>
-        <translation>Map Preview</translation>
+        <translation>معاينة الخريطة</translation>
     </message>
     <message>
         <source>Player bases shown as colored circles</source>
-        <translation>Player bases shown as colored circles</translation>
+        <translation>تظهر قواعد اللاعبين كدوائر ملوّنة</translation>
     </message>
     <message>
         <source>Select a map
 to see preview</source>
-        <translation>Select a map
-to see preview</translation>
+        <translation>اختر خريطة
+لعرض المعاينة</translation>
     </message>
     <message>
         <source>No preview available</source>
-        <translation>No preview available</translation>
+        <translation>لا تتوفر معاينة</translation>
     </message>
 </context>
 <context>
     <name>MapSelect</name>
     <message>
         <source>Maps</source>
-        <translation>Maps</translation>
+        <translation>الخرائط</translation>
     </message>
     <message>
         <source>No maps available</source>
-        <translation>No maps available</translation>
+        <translation>لا توجد خرائط متاحة</translation>
     </message>
     <message>
         <source>Loading maps...</source>
-        <translation>Loading maps...</translation>
+        <translation>جارٍ تحميل الخرائط...</translation>
     </message>
     <message>
         <source>► %1</source>
-        <translation>► %1</translation>
+        <translation>◄ %1</translation>
     </message>
     <message>
         <source>Select a map to continue</source>
-        <translation>Select a map to continue</translation>
+        <translation>اختر خريطة للمتابعة</translation>
     </message>
     <message>
         <source>Loading map details...</source>
-        <translation>Loading map details...</translation>
+        <translation>جارٍ تحميل تفاصيل الخريطة...</translation>
     </message>
     <message>
         <source>No Map Selected</source>
-        <translation>No Map Selected</translation>
+        <translation>لم تُحدَّد خريطة</translation>
     </message>
     <message>
         <source>Players</source>
-        <translation>Players</translation>
+        <translation>اللاعبون</translation>
     </message>
     <message>
         <source>• Click color/team to cycle</source>
-        <translation>• Click color/team to cycle</translation>
+        <translation>• انقر على اللون أو الفريق للتبديل</translation>
     </message>
     <message>
         <source>Player color: %1 - Click to change</source>
-        <translation>Player color: %1 - Click to change</translation>
+        <translation>لون اللاعب: %1 - انقر للتغيير</translation>
     </message>
     <message>
         <source>Color</source>
-        <translation>Color</translation>
+        <translation>لون</translation>
     </message>
     <message>
         <source>Team %1 - Click to change</source>
-        <translation>Team %1 - Click to change</translation>
+        <translation>الفريق %1 - انقر للتغيير</translation>
     </message>
     <message>
         <source>Team %1</source>
-        <translation>Team %1</translation>
+        <translation>الفريق %1</translation>
     </message>
     <message>
         <source>Remove player</source>
-        <translation>Remove player</translation>
+        <translation>إزالة اللاعب</translation>
     </message>
     <message>
         <source>+ Add CPU</source>
-        <translation>+ Add CPU</translation>
+        <translation>+ إضافة حاسوب</translation>
     </message>
     <message>
         <source>Add AI opponent</source>
-        <translation>Add AI opponent</translation>
+        <translation>إضافة خصم ذكاء اصطناعي</translation>
     </message>
     <message>
         <source>Back</source>
-        <translation>Back</translation>
+        <translation>رجوع</translation>
     </message>
     <message>
         <source>Return to main menu (Esc)</source>
-        <translation>Return to main menu (Esc)</translation>
+        <translation>العودة إلى القائمة الرئيسية (Esc)</translation>
     </message>
     <message>
         <source>Play</source>
-        <translation>Play</translation>
+        <translation>ابدأ</translation>
     </message>
     <message>
         <source>Start game (Enter)</source>
-        <translation>Start game (Enter)</translation>
+        <translation>بدء اللعبة (Enter)</translation>
     </message>
     <message>
         <source>Roman Republic</source>
-        <translation>Roman Republic</translation>
+        <translation>الجمهورية الرومانية</translation>
     </message>
     <message>
         <source>Commander</source>
-        <translation>Commander</translation>
+        <translation>القائد</translation>
     </message>
     <message>
         <source>• Click nation tag to change</source>
-        <translation>• Click nation tag to change</translation>
+        <translation>• انقر على وسم الأمة للتغيير</translation>
     </message>
     <message>
         <source>Disable player (spectator mode)</source>
-        <translation>Disable player (spectator mode)</translation>
+        <translation>تعطيل اللاعب (وضع المشاهدة)</translation>
     </message>
     <message>
         <source>Enable player</source>
-        <translation>Enable player</translation>
+        <translation>تفعيل اللاعب</translation>
     </message>
     <message>
         <source>Nation: %1 - Click to change</source>
-        <translation>Nation: %1 - Click to change</translation>
+        <translation>الأمة: %1 - انقر للتغيير</translation>
     </message>
     <message>
         <source>Nation</source>
-        <translation>Nation</translation>
+        <translation>الأمة</translation>
     </message>
     <message>
         <source>Commander: %1 - Click to change</source>
-        <translation>Commander: %1 - Click to change</translation>
+        <translation>القائد: %1 - انقر للتغيير</translation>
     </message>
     <message>
         <source>Available Player Slots: %1</source>
-        <translation>Available Player Slots: %1</translation>
+        <translation>خانات اللاعبين المتاحة: %1</translation>
     </message>
     <message>
         <source>Select your player ID:</source>
-        <translation>Select your player ID:</translation>
+        <translation>اختر معرّف لاعبك:</translation>
     </message>
     <message>
         <source>ID %1</source>
-        <translation>ID %1</translation>
+        <translation>المعرّف %1</translation>
     </message>
     <message>
         <source>All other slots will be CPU-controlled</source>
-        <translation>All other slots will be CPU-controlled</translation>
+        <translation>ستتحكم الحاسوب بكل الخانات الأخرى</translation>
     </message>
     <message>
         <source>CPU will control: ID %1</source>
-        <translation>CPU will control: ID %1</translation>
+        <translation>سيتحكم الحاسوب بـ: المعرّف %1</translation>
     </message>
     <message>
         <source>, ID </source>
-        <translation>, ID </translation>
+        <translation>، المعرّف </translation>
     </message>
     <message>
         <source>Need at least 1 enabled player to start</source>
-        <translation>Need at least 1 enabled player to start</translation>
+        <translation>يلزم لاعب مفعَّل واحد على الأقل للبدء</translation>
     </message>
     <message>
         <source>Need at least 2 enabled players to start</source>
-        <translation>Need at least 2 enabled players to start</translation>
+        <translation>يلزم لاعبان مفعَّلان على الأقل للبدء</translation>
     </message>
     <message>
         <source>At least two teams must be selected to start a match</source>
-        <translation>At least two teams must be selected to start a match</translation>
+        <translation>يجب اختيار فريقين على الأقل لبدء مباراة</translation>
     </message>
     <message>
         <source>Every slot on this map is taken</source>
-        <translation>Every slot on this map is taken</translation>
+        <translation>كل خانة في هذه الخريطة مشغولة</translation>
     </message>
     <message>
         <source>Player %1</source>
-        <translation>Player %1</translation>
+        <translation>اللاعب %1</translation>
     </message>
     <message>
         <source>CPU %1</source>
-        <translation>CPU %1</translation>
+        <translation>الحاسوب %1</translation>
     </message>
 </context>
 <context>
     <name>MapTransformer</name>
     <message>
         <source>Player %1</source>
-        <translation>Player %1</translation>
+        <translation>اللاعب %1</translation>
     </message>
     <message>
         <source>AI Player %1</source>
-        <translation>AI Player %1</translation>
+        <translation>لاعب الذكاء الاصطناعي %1</translation>
     </message>
 </context>
 <context>
     <name>Maps</name>
     <message>
         <source>Unnamed Map</source>
-        <translation>Unnamed Map</translation>
+        <translation>خريطة بلا اسم</translation>
     </message>
     <message>
         <source>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</source>
-        <translation>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</translation>
+        <translation>خريطة مناوشة متوسطية متوازنة بين بساتين الزيتون والأودية الجافة والتلال المدرَّجة ودروب المزارع المغبرّة. السيطرة على الوسط والحواف الجانبية تفيد، لكن النصر هو إبادة الثكنات المعتادة.</translation>
     </message>
     <message>
         <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
-        <translation>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</translation>
+        <translation>ميدان غابات كثيف ومتناظر للاعبَين نشطين، مبني على قراءة الطرق، وأحراش الكمائن، والسيطرة على التلال، وأهداف جانبية، وثكنتين محايدتين. لا أنهار ولا جسور ولا جبال. وتلتف الطرق عمداً حول التلال بدل عبورها.</translation>
     </message>
     <message>
         <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
-        <translation>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</translation>
+        <translation>خريطة مناوشة جبلية واسعة ومتوازنة، بقاعدتين محصّنتين، وحافة وسطى متنازع عليها، وممرات عالية ضيقة، ودروب جانبية، وجداول ألبية، ومواضع رماية قوية. النصر هو إبادة الثكنات المعتادة.</translation>
     </message>
     <message>
         <source>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</source>
-        <translation>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</translation>
+        <translation>خريطة مفترق طرق استراتيجية غنية، بجسور وسطى متنازع عليها، وثكنات محايدة في الأركان، ومسارات جانبية، ومرتفعات حول المعابر الرئيسية.</translation>
     </message>
     <message>
         <source>Battle of Cannae</source>
-        <translation>Battle of Cannae</translation>
+        <translation>معركة كانّاي</translation>
     </message>
     <message>
         <source>Battle of Lake Trasimene</source>
-        <translation>Battle of Lake Trasimene</translation>
+        <translation>معركة بحيرة تراسيميني</translation>
     </message>
     <message>
         <source>Battle of Ticino</source>
-        <translation>Battle of Ticino</translation>
+        <translation>معركة تيتشينو</translation>
     </message>
     <message>
         <source>Battle of Trebia</source>
-        <translation>Battle of Trebia</translation>
+        <translation>معركة تريبيا</translation>
     </message>
     <message>
         <source>Battle of Zama</source>
-        <translation>Battle of Zama</translation>
+        <translation>معركة زاما</translation>
     </message>
     <message>
         <source>Campania Campaign</source>
-        <translation>Campania Campaign</translation>
+        <translation>حملة كامبانيا</translation>
     </message>
     <message>
         <source>Crossing the Alps</source>
-        <translation>Crossing the Alps</translation>
+        <translation>عبور جبال الألب</translation>
     </message>
     <message>
         <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>Crossing the Rhone - Polished Maze Version</translation>
+        <translation>عبور الرون - نسخة المتاهة المنقّحة</translation>
     </message>
     <message>
         <source>Forest Battlefield</source>
-        <translation>Forest Battlefield</translation>
+        <translation>ميدان الغابة</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
-        <translation>Iron Sepulcher Watch</translation>
+        <translation>حراسة ضريح الحديد</translation>
     </message>
     <message>
         <source>Mountain Strongholds</source>
-        <translation>Mountain Strongholds</translation>
+        <translation>معاقل الجبل</translation>
     </message>
     <message>
         <source>River Crossroads</source>
-        <translation>River Crossroads</translation>
+        <translation>مفترق النهر</translation>
     </message>
     <message>
         <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</translation>
+        <translation>سيناريو صغير مُعدّ يعرض أطلالاً ومزاراً ومناطق لصحوة الموتى.</translation>
     </message>
     <message>
         <source>Spanish Olive Grove</source>
-        <translation>Spanish Olive Grove</translation>
+        <translation>بستان الزيتون الإسباني</translation>
     </message>
 </context>
 <context>
     <name>MediterraneanMapPanel</name>
     <message>
         <source>Loading map…</source>
-        <translation>Loading map…</translation>
+        <translation>جارٍ تحميل الخريطة…</translation>
     </message>
     <message>
         <source>Tilt -</source>
-        <translation>Tilt -</translation>
+        <translation>إمالة -</translation>
     </message>
     <message>
         <source>Tilt +</source>
-        <translation>Tilt +</translation>
+        <translation>إمالة +</translation>
     </message>
     <message>
         <source>Reset view</source>
-        <translation>Reset view</translation>
+        <translation>إعادة ضبط العرض</translation>
     </message>
     <message>
         <source>Control: </source>
-        <translation>Control: </translation>
+        <translation>السيطرة: </translation>
     </message>
     <message>
         <source>Legend</source>
-        <translation>Legend</translation>
+        <translation>مفتاح الرموز</translation>
     </message>
     <message>
         <source>Rome</source>
-        <translation>Rome</translation>
+        <translation>روما</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Carthage</translation>
+        <translation>قرطاج</translation>
     </message>
     <message>
         <source>Neutral</source>
-        <translation>Neutral</translation>
+        <translation>محايد</translation>
     </message>
     <message>
         <source>Mission Region</source>
-        <translation>Mission Region</translation>
+        <translation>منطقة المهمة</translation>
     </message>
     <message>
         <source>Rhône</source>
-        <translation>Rhône</translation>
+        <translation>الرون</translation>
     </message>
     <message>
         <source>N. Italy</source>
-        <translation>N. Italy</translation>
+        <translation>شمال إيطاليا</translation>
     </message>
     <message>
         <source>Trasimene</source>
-        <translation>Trasimene</translation>
+        <translation>تراسيميني</translation>
     </message>
     <message>
         <source>Cannae</source>
-        <translation>Cannae</translation>
+        <translation>كانّاي</translation>
     </message>
     <message>
         <source>Zama</source>
-        <translation>Zama</translation>
+        <translation>زاما</translation>
     </message>
     <message>
         <source>The Alps</source>
-        <translation>The Alps</translation>
+        <translation>جبال الألب</translation>
     </message>
     <message>
         <source>Campania</source>
-        <translation>Campania</translation>
+        <translation>كامبانيا</translation>
     </message>
     <message>
         <source>S. Italy</source>
-        <translation>S. Italy</translation>
+        <translation>جنوب إيطاليا</translation>
     </message>
     <message>
         <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
-        <translation>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</translation>
+        <translation>الأسهم للتحريك  ·  السحب للتدوير  ·  العجلة أو +/- للتقريب  ·  Home لإعادة الضبط</translation>
     </message>
 </context>
 <context>
     <name>MissionDetailPanel</name>
     <message>
         <source>Suffete Command</source>
-        <translation>Suffete Command</translation>
+        <translation>قيادة الشوفيطين</translation>
     </message>
     <message>
         <source>Consular Command</source>
-        <translation>Consular Command</translation>
+        <translation>القيادة القنصلية</translation>
     </message>
     <message>
         <source>Carthaginian High Command</source>
-        <translation>Carthaginian High Command</translation>
+        <translation>القيادة القرطاجية العليا</translation>
     </message>
     <message>
         <source>Roman High Command</source>
-        <translation>Roman High Command</translation>
+        <translation>القيادة الرومانية العليا</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Unknown</translation>
+        <translation>مجهول</translation>
     </message>
     <message>
         <source>Sealed</source>
-        <translation>Sealed</translation>
+        <translation>مختومة</translation>
     </message>
     <message>
         <source>In Progress</source>
-        <translation>In Progress</translation>
+        <translation>قيد التنفيذ</translation>
     </message>
     <message>
         <source>Rewards: Sealed until prior victories</source>
-        <translation>Rewards: Sealed until prior victories</translation>
+        <translation>المكافآت: مختومة حتى تتحقق الانتصارات السابقة</translation>
     </message>
     <message>
         <source>Rewards: Laurels Inscribed • Veteran Honors Claimed</source>
-        <translation>Rewards: Laurels Inscribed • Veteran Honors Claimed</translation>
+        <translation>المكافآت: أكاليل منقوشة • أوسمة المحاربين القدامى مُنحت</translation>
     </message>
     <message>
         <source>Rewards: Bronze Standard • Veteran Cohort</source>
-        <translation>Rewards: Bronze Standard • Veteran Cohort</translation>
+        <translation>المكافآت: راية برونزية • كتيبة مخضرمة</translation>
     </message>
     <message>
         <source>Dispatch: </source>
-        <translation>Dispatch: </translation>
+        <translation>البلاغ: </translation>
     </message>
     <message>
         <source>Campaign Objectives (complete all):</source>
-        <translation>Campaign Objectives (complete all):</translation>
+        <translation>أهداف الحملة (أنجزها كلها):</translation>
     </message>
     <message>
         <source>Campaign Objectives (complete any):</source>
-        <translation>Campaign Objectives (complete any):</translation>
+        <translation>أهداف الحملة (أنجز أياً منها):</translation>
     </message>
     <message>
         <source>Campaign Objectives:</source>
-        <translation>Campaign Objectives:</translation>
+        <translation>أهداف الحملة:</translation>
     </message>
     <message>
         <source>Complete mission objective</source>
-        <translation>Complete mission objective</translation>
+        <translation>أنجز هدف المهمة</translation>
     </message>
     <message>
         <source>Optional:</source>
-        <translation>Optional:</translation>
+        <translation>اختياري:</translation>
     </message>
     <message>
         <source>Complete optional objective</source>
-        <translation>Complete optional objective</translation>
+        <translation>أنجز الهدف الاختياري</translation>
     </message>
     <message>
         <source>Failure:</source>
-        <translation>Failure:</translation>
+        <translation>الإخفاق:</translation>
     </message>
     <message>
         <source>Avoid mission failure</source>
-        <translation>Avoid mission failure</translation>
+        <translation>تجنّب إخفاق المهمة</translation>
     </message>
     <message>
         <source>• Complete the mission successfully</source>
-        <translation>• Complete the mission successfully</translation>
+        <translation>• أنجز المهمة بنجاح</translation>
     </message>
     <message>
         <source>Army Composition:</source>
-        <translation>Army Composition:</translation>
+        <translation>تركيب الجيش:</translation>
     </message>
     <message>
         <source>Historical Ledger:</source>
-        <translation>Historical Ledger:</translation>
+        <translation>السجل التاريخي:</translation>
     </message>
     <message>
         <source>Casualties Forecast: </source>
-        <translation>Casualties Forecast: </translation>
+        <translation>تقدير الخسائر: </translation>
     </message>
     <message>
         <source>Tactical Rating: </source>
-        <translation>Tactical Rating: </translation>
+        <translation>التقييم التكتيكي: </translation>
     </message>
     <message>
         <source>Campaign Success: </source>
-        <translation>Campaign Success: </translation>
+        <translation>نجاح الحملة: </translation>
     </message>
     <message>
         <source>Opposition Command</source>
-        <translation>Opposition Command</translation>
+        <translation>قيادة الخصم</translation>
     </message>
     <message>
         <source>Field Command Pending</source>
-        <translation>Field Command Pending</translation>
+        <translation>قيادة الميدان قيد التعيين</translation>
     </message>
     <message>
         <source>No named commander assigned to this force.</source>
-        <translation>No named commander assigned to this force.</translation>
+        <translation>لم يُعيَّن قائد مسمّى لهذه القوة.</translation>
     </message>
     <message>
         <source>Orders sealed until prior victories are secured.</source>
-        <translation>Orders sealed until prior victories are secured.</translation>
+        <translation>الأوامر مختومة حتى تتحقق الانتصارات السابقة.</translation>
     </message>
     <message>
         <source>Victory recorded. You may replay this engagement at will.</source>
-        <translation>Victory recorded. You may replay this engagement at will.</translation>
+        <translation>سُجِّل النصر. يمكنك إعادة خوض هذه المعركة متى شئت.</translation>
     </message>
     <message>
         <source>Orders issued. Deploy when ready.</source>
-        <translation>Orders issued. Deploy when ready.</translation>
+        <translation>صدرت الأوامر. انشر قواتك عندما تجهز.</translation>
     </message>
     <message>
         <source>Replay Mission</source>
-        <translation>Replay Mission</translation>
+        <translation>إعادة المهمة</translation>
     </message>
     <message>
         <source>Start Mission</source>
-        <translation>Start Mission</translation>
+        <translation>بدء المهمة</translation>
     </message>
     <message>
         <source>Complete previous missions to unlock</source>
-        <translation>Complete previous missions to unlock</translation>
+        <translation>أنجز المهام السابقة لفتحها</translation>
     </message>
     <message>
         <source>Locked</source>
-        <translation>Locked</translation>
+        <translation>مقفلة</translation>
     </message>
     <message>
         <source>✓ Completed</source>
-        <translation>✓ Completed</translation>
+        <translation>✓ مكتملة</translation>
     </message>
     <message>
         <source>Apulian river plain</source>
-        <translation>Apulian river plain</translation>
+        <translation>سهل أبوليا النهري</translation>
     </message>
     <message>
         <source>Campanian plain</source>
-        <translation>Campanian plain</translation>
+        <translation>سهل كامبانيا</translation>
     </message>
     <message>
         <source>Lakeside hill country</source>
-        <translation>Lakeside hill country</translation>
+        <translation>تلال ضفة البحيرة</translation>
     </message>
     <message>
         <source>Mountain</source>
-        <translation>Mountain</translation>
+        <translation>جبل</translation>
     </message>
     <message>
         <source>North African plain</source>
-        <translation>North African plain</translation>
+        <translation>سهل شمال أفريقيا</translation>
     </message>
     <message>
         <source>Po valley river plain</source>
-        <translation>Po valley river plain</translation>
+        <translation>سهل وادي البو النهري</translation>
     </message>
     <message>
         <source>River valley</source>
-        <translation>River valley</translation>
+        <translation>وادٍ نهري</translation>
     </message>
     <message>
         <source>Winter river plain</source>
-        <translation>Winter river plain</translation>
+        <translation>سهل نهري شتوي</translation>
     </message>
 </context>
 <context>
     <name>MissionListItem</name>
     <message>
         <source>✓ Archived</source>
-        <translation>✓ Archived</translation>
+        <translation>✓ مؤرشفة</translation>
     </message>
     <message>
         <source>Sealed</source>
-        <translation>Sealed</translation>
+        <translation>مختومة</translation>
     </message>
     <message>
         <source>Open Order</source>
-        <translation>Open Order</translation>
+        <translation>أمر مفتوح</translation>
     </message>
     <message>
         <source>Difficulty:</source>
-        <translation>Difficulty:</translation>
+        <translation>الصعوبة:</translation>
     </message>
 </context>
 <context>
     <name>MissionSetupCoordinator</name>
     <message>
         <source>east</source>
-        <translation>east</translation>
+        <translation>الشرق</translation>
     </message>
     <message>
         <source>west</source>
-        <translation>west</translation>
+        <translation>الغرب</translation>
     </message>
     <message>
         <source>south</source>
-        <translation>south</translation>
+        <translation>الجنوب</translation>
     </message>
     <message>
         <source>north</source>
-        <translation>north</translation>
+        <translation>الشمال</translation>
     </message>
     <message>
         <source>southeast</source>
-        <translation>southeast</translation>
+        <translation>الجنوب الشرقي</translation>
     </message>
     <message>
         <source>northeast</source>
-        <translation>northeast</translation>
+        <translation>الشمال الشرقي</translation>
     </message>
     <message>
         <source>southwest</source>
-        <translation>southwest</translation>
+        <translation>الجنوب الغربي</translation>
     </message>
     <message>
         <source>northwest</source>
-        <translation>northwest</translation>
+        <translation>الشمال الغربي</translation>
     </message>
     <message>
         <source>Enemy</source>
-        <translation>Enemy</translation>
+        <translation>العدو</translation>
     </message>
     <message>
         <source>Assault phase %1/%2: %3 from the %4 (%5 units)</source>
-        <translation>Assault phase %1/%2: %3 from the %4 (%5 units)</translation>
+        <translation>مرحلة الاقتحام %1/%2: %3 من %4 (%5 وحدة)</translation>
     </message>
     <message>
         <source>Wave %1/%2 forming to the %3: %4, roughly %5 troops. Brace.</source>
-        <translation>Wave %1/%2 forming to the %3: %4, roughly %5 troops. Brace.</translation>
+        <translation>الموجة %1/%2 تتشكّل في %3: %4، نحو %5 من المقاتلين. استعدّ.</translation>
     </message>
     <message>
         <source>Wave %1/%2 broken. The line holds.</source>
-        <translation>Wave %1/%2 broken. The line holds.</translation>
+        <translation>انكسرت الموجة %1/%2. الخط صامد.</translation>
     </message>
     <message>
         <source>All %1 assault phases broken. Nothing else is coming.</source>
-        <translation>All %1 assault phases broken. Nothing else is coming.</translation>
+        <translation>انكسرت مراحل الاقتحام الـ%1 كلها. لن يأتي شيء آخر.</translation>
     </message>
     <message>
         <source>Player %1</source>
-        <translation>Player %1</translation>
+        <translation>اللاعب %1</translation>
     </message>
     <message>
         <source>AI Player %1</source>
-        <translation>AI Player %1</translation>
+        <translation>لاعب الذكاء الاصطناعي %1</translation>
     </message>
     <message>
         <source>AI Wave %1</source>
-        <translation>AI Wave %1</translation>
+        <translation>موجة الذكاء الاصطناعي %1</translation>
     </message>
 </context>
 <context>
     <name>Missions</name>
     <message>
         <source>202 BC: Scipio arranged lanes through his infantry to blunt Hannibal&apos;s elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
-        <translation>202 BC: Scipio arranged lanes through his infantry to blunt Hannibal&apos;s elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign&apos;s deliberate dark-fantasy break from history.</translation>
+        <translation>202 ق.م: رتّب سكيبيو ممرات بين مشاته لتحييد فيلة حنبعل، فيما قاد ماسينيسا ولاليوس فرساناً حلفاء متفوقين. وقد أسهمت عودة الفرسان في حسم المعركة. أما تدخّل الضريح فهو انفصال الحملة المتعمَّد عن التاريخ نحو الفانتازيا المظلمة.</translation>
     </message>
     <message>
         <source>215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.</source>
-        <translation>215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.</translation>
+        <translation>215-212 ق.م: خاض حنبعل حملته عبر كامبانيا، وكانت كابوا حليفته الإيطالية الرئيسية وقاعدته الشتوية. وهذا التركيب الفانتازي المظلم يختزل عدة محاولات رومانية لاحتواء الجيش القرطاجي وعزله.</translation>
     </message>
     <message>
         <source>216 BC: beside the Aufidus, Hannibal&apos;s deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.</source>
-        <translation>216 BC: beside the Aufidus, Hannibal&apos;s deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.</translation>
+        <translation>216 ق.م: بجانب نهر أوفيدوس، جذب قلبُ حنبعل المتراجع عمداً كتلةً رومانية من المشاة أكبر بكثير إلى الأمام، بينما هاجم المشاة الأفارقة جناحيها وأطبق الفرسان القرطاجيون على مؤخرتها. وكان معسكران رومانيان يسندان الجيش.</translation>
     </message>
     <message>
         <source>217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.</source>
-        <translation>217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.</translation>
+        <translation>217 ق.م: استدرج حنبعل غايوس فلامينيوس على طول الشاطئ الشمالي الضيق لبحيرة تراسيميني، وهاجم من مرتفعات مخفية في ضباب الصباح. لم يجد الرتل الروماني الزاحف مجالاً للانتشار، وقُتل فلامينيوس.</translation>
     </message>
     <message>
         <source>218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.</source>
-        <translation>218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.</translation>
+        <translation>218 ق.م: عبر حنبعل جبال الألب بجيش متعدد الأمم وفرسان وقافلة أمتعة وما بقي من الفيلة. تختلف المصادر القديمة في المسار؛ وهذا السيناريو يجمع الممرات المتنازع عليها والهجمات المحلية في صعود واحد ذي طابع فانتازي مظلم.</translation>
     </message>
     <message>
         <source>218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.</source>
-        <translation>218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.</translation>
+        <translation>218 ق.م: عبر حنبعل نهر الرون أعلى مصبّه بالقوارب والأطواف وقوة منفصلة أُرسلت إلى الضفة الأخرى لتطويق المقاومة المحلية. ووصل سكيبيو متأخراً؛ وهذا التاريخ المُبدَّل يضع معسكرات رومانية متقدمة على طريق الضفة البعيدة ليصنع أول اشتباك بين قرطاج وروما.</translation>
     </message>
     <message>
         <source>218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.</source>
-        <translation>218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.</translation>
+        <translation>218 ق.م: كان تيتشينو في المقام الأول اشتباك فرسان بين قوتَي استطلاع. جُرح القنصل الروماني بوبليوس كورنيليوس سكيبيو وأُنقذ أثناء الانسحاب؛ أما اقتحام المعسكر فهو امتداد فانتازي مظلم معقول لتلك المطاردة.</translation>
     </message>
     <message>
         <source>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</source>
-        <translation>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</translation>
+        <translation>عملية نهرية واسعة بمعديات والتفافات عبر الغابة ورؤوس جسور وأحياء إمداد محصّنة؛ ويحتل ضريح الحديد أطلالاً يمكن تجنّبها على الجناح الجنوبي.</translation>
     </message>
     <message>
         <source>A commander alone cannot defend a city quarter.</source>
-        <translation>A commander alone cannot defend a city quarter.</translation>
+        <translation>لا يستطيع قائد وحده أن يدافع عن حي في مدينة.</translation>
     </message>
     <message>
         <source>A general alone on a dead field is just the last corpse standing.</source>
-        <translation>A general alone on a dead field is just the last corpse standing.</translation>
+        <translation>قائد وحيد في ميدان ميت ليس إلا آخر جثة واقفة.</translation>
     </message>
     <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
-        <translation>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</translation>
+        <translation>بعد كانّاي، ترفض روما المعركة التي يريدها حنبعل. وتضغط الجمهورية بدلاً من ذلك على كل طريق وحليف ومخزن غلال ومدينة مسوّرة. وتحت البساتين، تجعل قبور ضريح الحديد حتى الدفاع الناجح يبدو مؤقتاً.</translation>
     </message>
     <message>
         <source>Battle of Cannae</source>
-        <translation>Battle of Cannae</translation>
+        <translation>معركة كانّاي</translation>
     </message>
     <message>
         <source>Battle of Lake Trasimene</source>
-        <translation>Battle of Lake Trasimene</translation>
+        <translation>معركة بحيرة تراسيميني</translation>
     </message>
     <message>
         <source>Battle of Ticino</source>
-        <translation>Battle of Ticino</translation>
+        <translation>معركة تيتشينو</translation>
     </message>
     <message>
         <source>Battle of Trebia</source>
-        <translation>Battle of Trebia</translation>
+        <translation>معركة تريبيا</translation>
     </message>
     <message>
         <source>Battle of Zama</source>
-        <translation>Battle of Zama</translation>
+        <translation>معركة زاما</translation>
     </message>
     <message>
         <source>Between assaults, seize the eastern Roman siege camp.</source>
-        <translation>Between assaults, seize the eastern Roman siege camp.</translation>
+        <translation>بين الاقتحامات، استولِ على معسكر الحصار الروماني الشرقي.</translation>
     </message>
     <message>
         <source>Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets.</source>
-        <translation>Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets.</translation>
+        <translation>اكسر مراحل الاقتحام الرومانية الثلاث. لا يصمد الحي إلا حين يسقط آخر رتل قنصلي صريعاً في الشوارع.</translation>
     </message>
     <message>
         <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
-        <translation>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</translation>
+        <translation>اكسر هجومَي ضريح الحديد. في زاما، لم يعد الموتى خارج المعركة.</translation>
     </message>
     <message>
         <source>Break three Roman columns before the survivors find the ford again.</source>
-        <translation>Break three Roman columns before the survivors find the ford again.</translation>
+        <translation>اكسر ثلاثة أرتال رومانية قبل أن يجد الناجون المخاضة من جديد.</translation>
     </message>
     <message>
         <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</translation>
+        <translation>أحرق كل حارس ملعون في أطلال الضريح. اقتل ما لا يموت.</translation>
     </message>
     <message>
         <source>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</source>
-        <translation>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</translation>
+        <translation>افتح الممر قبل أن يغلقه الجبل. كل ساعة تضيع تعني رجالاً أكثر يلتهمهم البرد.</translation>
     </message>
     <message>
         <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
-        <translation>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</translation>
+        <translation>اعبر قبل أن يبلغ سُعاة روما حاميتهم. كل ثانية انتظار تُطعم النصل.</translation>
     </message>
     <message>
         <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
-        <translation>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</translation>
+        <translation>اعبر نهر الرون من أحد المسارات المهيّأة، واقطع طريق الإمداد الشرقي، واستولِ على معسكرين رومانيين متقدمين قبل أن يبلغ سكيبيو النهر.</translation>
     </message>
     <message>
         <source>Crossing the Alps</source>
-        <translation>Crossing the Alps</translation>
+        <translation>عبور جبال الألب</translation>
     </message>
     <message>
         <source>Crossing the Rhône</source>
-        <translation>Crossing the Rhône</translation>
+        <translation>عبور نهر الرون</translation>
     </message>
     <message>
         <source>Crush all three Roman camps and seal the iron tomb shut. No escape.</source>
-        <translation>Crush all three Roman camps and seal the iron tomb shut. No escape.</translation>
+        <translation>اسحق المعسكرات الرومانية الثلاثة واختم القبر الحديدي. لا مهرب.</translation>
     </message>
     <message>
         <source>Crush both Roman breakout columns before they claw through the hillside.</source>
-        <translation>Crush both Roman breakout columns before they claw through the hillside.</translation>
+        <translation>اسحق رتلَي الاختراق الرومانيين قبل أن يشقّا طريقهما عبر سفح التل.</translation>
     </message>
     <message>
         <source>Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry.</source>
-        <translation>Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry.</translation>
+        <translation>اقطع الخشب للزحّافات، واكسر الحجر للطريق، واستخرج الحديد للنعال والمحاور. يعبر الرتل بما يقدر بنّاؤوك على حمله.</translation>
     </message>
     <message>
         <source>December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago&apos;s hidden detachment struck the exhausted Roman army from front, flanks, and rear.</source>
-        <translation>December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago&apos;s hidden detachment struck the exhausted Roman army from front, flanks, and rear.</translation>
+        <translation>كانون الأول 218 ق.م: استدرج حنبعل تيبيريوس سمبرونيوس لونغوس إلى عبور تريبيا الباردة قبل الفطور. وضرب المشاة القرطاجيون والفرسان والفيلة وفرقة ماغو المخبأة الجيشَ الروماني المنهك من الأمام والجناحين والمؤخرة.</translation>
     </message>
     <message>
         <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
-        <translation>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</translation>
+        <translation>دافع عن بلدة الإمداد الكامبانية المحصّنة لحنبعل، واكسر الاقتحامات الرومانية الثلاثة المنسّقة القادمة من طرق قنصلية مختلفة.</translation>
     </message>
     <message>
         <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
-        <translation>Drive the dead from the shrine. Salt the earth where they stood.</translation>
+        <translation>اطرد الموتى من المزار. وامْلأ بالملح الأرض التي وقفوا عليها.</translation>
     </message>
     <message>
         <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>Endure both waves from the depths. Do not flinch when the ground tears open.</translation>
+        <translation>اصمد أمام الموجتين الصاعدتين من الأعماق. لا تجفل حين تنشقّ الأرض.</translation>
     </message>
     <message>
         <source>Every soldier lost is counted by the enemy tonight.</source>
-        <translation>Every soldier lost is counted by the enemy tonight.</translation>
+        <translation>كل جندي تفقده يحصيه العدو الليلة.</translation>
     </message>
     <message>
         <source>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</source>
-        <translation>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</translation>
+        <translation>نفّذ التطويق، ثم استولِ على المعسكرات الرومانية الثلاثة قبل أن يتمكن احتياطهم من ترميم الخط.</translation>
     </message>
     <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
-        <translation>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</translation>
+        <translation>المعركة الأخيرة في أفريقيا: حيّد خط سكيبيو، وانجُ من الفرسان النوميديين، واستولِ على المعسكرات الرومانية الأربعة مع كسر نهضتَي الموتى.</translation>
     </message>
     <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
-        <translation>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</translation>
+        <translation>أول معركة على التراب الإيطالي. اظفر بمبارزة الفرسان، ثم استولِ على معسكر الاحتياط الروماني قبل أن تتجمع نجدات جديدة.</translation>
     </message>
     <message>
         <source>Hannibal falls, and the allied towns abandon the field.</source>
-        <translation>Hannibal falls, and the allied towns abandon the field.</translation>
+        <translation>يسقط حنبعل، فتتخلى المدن الحليفة عن الميدان.</translation>
     </message>
     <message>
         <source>Hannibal&apos;s first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.</source>
-        <translation>Hannibal&apos;s first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.</translation>
+        <translation>انتصار حنبعل الإيطالي الأول اختبار للإيقاع وللسيطرة على الفرسان. أشباح المخاضة تعقّد الأجنحة لكنها لا تحلّ محل العدو الروماني.</translation>
     </message>
     <message>
         <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
-        <translation>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</translation>
+        <translation>تتحول تحفة حنبعل إلى معركة عملياتية ممتدة، لا إلى صدام أمامي واحد.</translation>
     </message>
     <message>
         <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
-        <translation>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</translation>
+        <translation>اثبت على خط النهر واكسر المعابر الرومانية الثلاثة. ودَع البرد والماء يؤديان العمل الذي يأباه سمبرونيوس.</translation>
     </message>
     <message>
         <source>Hold the ruins. Force the Romans to fight on two grounds at once.</source>
-        <translation>Hold the ruins. Force the Romans to fight on two grounds at once.</translation>
+        <translation>اثبت في الأطلال. أجبر الرومان على القتال في أرضين معاً.</translation>
     </message>
     <message>
         <source>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</source>
-        <translation>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</translation>
+        <translation>اثبت على الضفة الجنوبية خلال المعابر الثلاثة. سمبرونيوس ينفق جيشه على الجليد؛ وليس عليك إلا أن تظل واقفاً.</translation>
     </message>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
-        <translation>If the central camp falls, the Campanian alliance dies with it.</translation>
+        <translation>إن سقط المعسكر الأوسط، مات معه الحلف الكامباني.</translation>
     </message>
     <message>
         <source>Investigate the cursed shrine, survive the awakening, and clear the ruins.</source>
-        <translation>Investigate the cursed shrine, survive the awakening, and clear the ruins.</translation>
+        <translation>تحرَّ المزار الملعون، وانجُ من الصحوة، وطهّر الأطلال.</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
-        <translation>Iron Sepulcher Watch</translation>
+        <translation>حراسة ضريح الحديد</translation>
     </message>
     <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
-        <translation>Lose the river camp and the cold takes what the Romans couldn&apos;t.</translation>
+        <translation>افقد معسكر النهر يأخذ البردُ ما عجز عنه الرومان.</translation>
     </message>
     <message>
         <source>Lose the supply camp and the army starves before it reaches the snow line.</source>
-        <translation>Lose the supply camp and the army starves before it reaches the snow line.</translation>
+        <translation>افقد معسكر الإمداد يجُع الجيش قبل أن يبلغ خط الثلج.</translation>
     </message>
     <message>
         <source>Lose your camp and the tempo dies with it.</source>
-        <translation>Lose your camp and the tempo dies with it.</translation>
+        <translation>افقد معسكرك يمت الإيقاع معه.</translation>
     </message>
     <message>
         <source>No living formation remains to hold the gates.</source>
-        <translation>No living formation remains to hold the gates.</translation>
+        <translation>لم يبقَ تشكيل حيّ يحفظ البوابات.</translation>
     </message>
     <message>
         <source>Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls.</source>
-        <translation>Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls.</translation>
+        <translation>احفظ السوق وأربعة مساكن: كامبانيا يُدافَع عنها لأجل أهلها وإمداداتها، لا لأجل أسوارها وحدها.</translation>
     </message>
     <message>
         <source>Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.</source>
-        <translation>Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.</translation>
+        <translation>جهّز الرتل للنزول: احصد الخشب والحجر والحديد من الممر بينما تنازعك قبائل الجبل كل منعطف.</translation>
     </message>
     <message>
         <source>Raze every Roman post. Leave Scipio nothing to rally behind.</source>
-        <translation>Raze every Roman post. Leave Scipio nothing to rally behind.</translation>
+        <translation>سوِّ كل مركز روماني بالأرض. لا تترك لسكيبيو ما يلتفّ خلفه.</translation>
     </message>
     <message>
         <source>Seal the road. Let no scout cross the Ticino alive.</source>
-        <translation>Seal the road. Let no scout cross the Ticino alive.</translation>
+        <translation>أغلق الطريق. لا تدع كشّافاً يعبر تيتشينو حياً.</translation>
     </message>
     <message>
         <source>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</source>
-        <translation>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</translation>
+        <translation>استولِ على المعسكرات الرومانية الأربعة — الخط القنصلي، ونوميديّي ماسينيسا، ومؤخرة الجيش، والمعسكر الشمالي — قبل أن يطبق الفرسان على مؤخرتك.</translation>
     </message>
     <message>
         <source>Seize both Roman camps. The ambush is not finished until their flags come down.</source>
-        <translation>Seize both Roman camps. The ambush is not finished until their flags come down.</translation>
+        <translation>استولِ على المعسكرين الرومانيين. لا ينتهي الكمين حتى تُنزَل راياتهم.</translation>
     </message>
     <message>
         <source>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</source>
-        <translation>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</translation>
+        <translation>استولِ على حصنَي النهر. لا تترك معبراً يرثه جيش سكيبيو.</translation>
     </message>
     <message>
         <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
-        <translation>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</translation>
+        <translation>أطلق الكمين واستولِ على المعسكرين الرومانيين الميدانيين خلال عشرين دقيقة، قبل أن ينقشع الضباب وتفلت كتيبة من الحوض.</translation>
     </message>
     <message>
         <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</translation>
+        <translation>اثبت في أرضك. آخر جندي وحده ليس قوة — بل قرباناً.</translation>
     </message>
     <message>
         <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
-        <translation>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</translation>
+        <translation>خذ معسكر الجسر وحيّ الاحتياط الشرقي قبل أن يذوب كشّافة روما في الضباب.</translation>
     </message>
     <message>
         <source>The Campanian Vigil</source>
-        <translation>The Campanian Vigil</translation>
+        <translation>سهر كامبانيا</translation>
     </message>
     <message>
         <source>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</source>
-        <translation>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</translation>
+        <translation>يسير الرتل الروماني إلى فخ جغرافي فيُدمَّر بهجمات متقاربة، بينما يبقى مذبح الضريح على ضفة البحيرة هولاً اختيارياً.</translation>
     </message>
     <message>
         <source>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</source>
-        <translation>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</translation>
+        <translation>يُستدرج الرومان إلى النهر الشتوي فتعاقبهم قوة ماغو المخبأة، ثم يتحول الدفاع إلى اقتحام معسكر شتوي كامل.</translation>
     </message>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
-        <translation>The commander falls — and every line collapses behind him.</translation>
+        <translation>يسقط القائد — فينهار كل خط خلفه.</translation>
     </message>
     <message>
         <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>The commander falls — the vigil ends. And the dead keep walking.</translation>
+        <translation>يسقط القائد — وينتهي السهر. ويواصل الموتى مسيرهم.</translation>
     </message>
     <message>
         <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
-        <translation>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</translation>
+        <translation>العبور معركة متصلة ضد التضاريس والمقاومة المحلية والنفوذ الروماني. وتبقى أضواء قبور الضريح مساراً جانبياً خطراً لا العدو الرئيسي للحملة.</translation>
     </message>
     <message>
         <source>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</source>
-        <translation>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</translation>
+        <translation>المواجهة الأخيرة هي قرطاج ضد ثلاث قيادات رومانية منسّقة، حتى يهاجم حشد من ضريح الحديد من جناح الميدان المهمَل.</translation>
     </message>
     <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
-        <translation>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</translation>
+        <translation>عشرون دقيقة قبل أن ينقشع الضباب. إن خرجت كتيبة من الحوض، عرفت روما شكل الفخ.</translation>
     </message>
     <message>
         <source>Your camp falls — the field goes with it.</source>
-        <translation>Your camp falls — the field goes with it.</translation>
+        <translation>يسقط معسكرك — ويذهب الميدان معه.</translation>
     </message>
     <message>
         <source>Your command falls — and the wings fold inward.</source>
-        <translation>Your command falls — and the wings fold inward.</translation>
+        <translation>تسقط قيادتك — فينطوي الجناحان إلى الداخل.</translation>
     </message>
     <message>
         <source>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</source>
-        <translation>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</translation>
+        <translation>الاقتحام الأول: مشاة من الشمال والجنوب؛ ومغيرون من الفرسان ومهندسون على الطريق القنصلي الشرقي.</translation>
     </message>
     <message>
         <source>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</source>
-        <translation>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</translation>
+        <translation>الاقتحام الثاني: أبواق روما يجيب بعضها بعضاً. أدِر الاحتياط قبل أن تُغلق الطرق الثلاثة.</translation>
     </message>
     <message>
         <source>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</source>
-        <translation>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</translation>
+        <translation>الاقتحام الثالث: آلات حصار وكتائب مخضرمة. اثبت عند كل بوابة حتى الدقيقة العشرين.</translation>
     </message>
     <message>
         <source>Another Roman wave is flanking from the southeast. Rotate quickly.</source>
-        <translation>Another Roman wave is flanking from the southeast. Rotate quickly.</translation>
+        <translation>موجة رومانية أخرى تلتف من الجنوب الشرقي. أدِر قواتك سريعاً.</translation>
     </message>
     <message>
         <source>Counterattack now. Break them while they are split by the river.</source>
-        <translation>Counterattack now. Break them while they are split by the river.</translation>
+        <translation>هاجم مضاداً الآن. اكسرهم والنهر يشطرهم.</translation>
     </message>
     <message>
         <source>Final ridge ahead. Break the last camp to open the descent.</source>
-        <translation>Final ridge ahead. Break the last camp to open the descent.</translation>
+        <translation>الحافة الأخيرة أمامك. اكسر المعسكر الأخير لتفتح طريق النزول.</translation>
     </message>
     <message>
         <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
-        <translation>Fix the Roman center in place. Keep both cavalry wings active.</translation>
+        <translation>ثبّت القلب الروماني في مكانه. وأبقِ جناحَي الفرسان فاعلين.</translation>
     </message>
     <message>
         <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
-        <translation>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</translation>
+        <translation>تتحرك أضواء القبور بين البساتين الغربية. ضريح الحديد يراقب، لكن الفيالق تبقى الخطر الأكبر.</translation>
     </message>
     <message>
         <source>Hold discipline. Let the Romans commit at the ford.</source>
-        <translation>Hold discipline. Let the Romans commit at the ford.</translation>
+        <translation>تمسّك بالانضباط. ودَع الرومان يزجّون بقواتهم عند المخاضة.</translation>
     </message>
     <message>
         <source>Navigate through the maze of hills and valleys. Watch for enemy patrols!</source>
-        <translation>Navigate through the maze of hills and valleys. Watch for enemy patrols!</translation>
+        <translation>شقّ طريقك عبر متاهة التلال والوديان. احذر دوريات العدو!</translation>
     </message>
     <message>
         <source>One minute. Spend the reserve; save the camp.</source>
-        <translation>One minute. Spend the reserve; save the camp.</translation>
+        <translation>دقيقة واحدة. أنفق الاحتياط؛ وأنقذ المعسكر.</translation>
     </message>
     <message>
         <source>Roman cavalry is attempting a breakout from the south. Intercept them.</source>
-        <translation>Roman cavalry is attempting a breakout from the south. Intercept them.</translation>
+        <translation>الفرسان الرومان يحاولون اختراقاً من الجنوب. اعترضهم.</translation>
     </message>
     <message>
         <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
-        <translation>Roman cavalry screens the field. Punch through before reserves arrive.</translation>
+        <translation>الفرسان الرومان يسترون الميدان. اخترقهم قبل وصول الاحتياط.</translation>
     </message>
     <message>
         <source>Roman cavalry waves intensify. Collapse one flank before the rear guard arrives.</source>
-        <translation>Roman cavalry waves intensify. Collapse one flank before the rear guard arrives.</translation>
+        <translation>تشتد موجات الفرسان الرومان. أسقط أحد الجناحين قبل وصول مؤخرة الجيش.</translation>
     </message>
     <message>
         <source>Roman reinforcements are approaching from the eastern road.</source>
-        <translation>Roman reinforcements are approaching from the eastern road.</translation>
+        <translation>نجدات رومانية تقترب من الطريق الشرقي.</translation>
     </message>
     <message>
         <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
-        <translation>Roman reserves are entering from the northern camp. Close the pocket faster.</translation>
+        <translation>احتياط روما يدخل من المعسكر الشمالي. أغلق الجيب أسرع.</translation>
     </message>
     <message>
         <source>Roman reserves are moving from the western bank.</source>
-        <translation>Roman reserves are moving from the western bank.</translation>
+        <translation>احتياط روما يتحرك من الضفة الغربية.</translation>
     </message>
     <message>
         <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
-        <translation>Scipio extends the line. Keep your center steady and protect elephants from isolation.</translation>
+        <translation>سكيبيو يمدّ خطه. أبقِ قلبك ثابتاً واحمِ الفيلة من العزل.</translation>
     </message>
     <message>
         <source>Second pass defenders are reinforcing. Keep the column moving.</source>
-        <translation>Second pass defenders are reinforcing. Keep the column moving.</translation>
+        <translation>مدافعو الممر الثاني يتلقون نجدات. أبقِ الرتل متحركاً.</translation>
     </message>
     <message>
         <source>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</source>
-        <translation>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</translation>
+        <translation>فرسان الموجة الرومانية الثانية يناورون نحو مؤخرتك. أعد توازن جناحيك.</translation>
     </message>
     <message>
         <source>Strike now. Close the western route and split their line.</source>
-        <translation>Strike now. Close the western route and split their line.</translation>
+        <translation>اضرب الآن. أغلق المسار الغربي واشطر خطهم.</translation>
     </message>
     <message>
         <source>Take the first pass quickly before the next ambush line assembles.</source>
-        <translation>Take the first pass quickly before the next ambush line assembles.</translation>
+        <translation>خذ الممر الأول سريعاً قبل أن يتجمع خط الكمين التالي.</translation>
     </message>
     <message>
         <source>The Roman column enters the corridor. Wait for full commitment.</source>
-        <translation>The Roman column enters the corridor. Wait for full commitment.</translation>
+        <translation>الرتل الروماني يدخل الممر. انتظر حتى ينخرط بالكامل.</translation>
     </message>
     <message>
         <source>The Roman villages are heavily defended. Coordinate your attacks!</source>
-        <translation>The Roman villages are heavily defended. Coordinate your attacks!</translation>
+        <translation>القرى الرومانية محميّة بشدة. نسّق هجماتك!</translation>
     </message>
     <message>
         <source>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</source>
-        <translation>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</translation>
+        <translation>دخلت ثلاثة أرتال رومانية الطرق القنصلية. يصل الاقتحام المنسّق الأول في الساعة 17:00.</translation>
     </message>
     <message>
         <source>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</source>
-        <translation>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</translation>
+        <translation>جسران يعبران نهر الرون. اختر طريقك بحكمة - قد تحتاج المسارين معاً!</translation>
     </message>
     <message>
         <source>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
-        <translation>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</translation>
+        <translation>يُؤخذ المعسكر بالوقوف فيه لا بتسويته بالأرض. تسعة رجال لا يقتلون ثمانية وثلاثين، لكنهم يستطيعون الثبات في ساحتَي بوابة مدةً تكفي للاستيلاء عليهما — والرتل الروماني بلا قائده يكفّ عن كونه رتلاً.</translation>
     </message>
     <message>
         <source>A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time.</source>
-        <translation>A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time.</translation>
+        <translation>تقوم الأمة على قائدها. اقتله تسكن المعسكرات وتبقى بلا صاحب — وهذه، أمام ساعة من عشرين دقيقة، هي النسخة الوحيدة من هذه المعركة التي تنتهي في وقتها.</translation>
     </message>
     <message>
         <source>An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.</source>
-        <translation>An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.</translation>
+        <translation>يسير الاقتحام نحو معسكرك لكنه ينحرف إلى ما تراه عيناه. أغرِه بشيء ظاهر يأخذ الأرض التي اخترتها بدل الأرض التي أرادها.</translation>
     </message>
     <message>
         <source>High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting.</source>
-        <translation>High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting.</translation>
+        <translation>المرتفع يضاعف الرامي ويحصّنه ممن يرمونه. والحافة المشرفة على المعسكر الروماني أثمن من السرية الإضافية التي كنت ستنفق الدقائق نفسها في تجنيدها.</translation>
     </message>
     <message>
         <source>Iron bells answer beneath the south-western crossing. The Sepulcher is advancing on Carthage as well as Rome.</source>
-        <translation>Iron bells answer beneath the south-western crossing. The Sepulcher is advancing on Carthage as well as Rome.</translation>
+        <translation>أجراس حديدية تجيب تحت المعبر الجنوبي الغربي. الضريح يزحف على قرطاج كما يزحف على روما.</translation>
     </message>
     <message>
         <source>Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field.</source>
-        <translation>Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field.</translation>
+        <translation>اقتل كل قائد معادٍ. تموت الأمة بموت من يقودها: تصير معسكراتها محايدة، وتنهار أعمالها، وتترك قواتها الميدان.</translation>
     </message>
     <message>
         <source>Masinissa&apos;s Numidian horse is entering from the north-eastern road.</source>
-        <translation>Masinissa&apos;s Numidian horse is entering from the north-eastern road.</translation>
+        <translation>فرسان ماسينيسا النوميديون يدخلون من الطريق الشمالي الشرقي.</translation>
     </message>
     <message>
         <source>Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number.</source>
-        <translation>Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number.</translation>
+        <translation>لا جديد يُعلَّم هنا. الحافة والطُّعم وقطع الرأس كلها أمور تعرفها؛ وكانّاي لا تسألك إلا إن كنت تستطيع تنفيذ ثلاثتها معاً أمام أربعة أضعاف عددك.</translation>
     </message>
     <message>
         <source>Rear guard deployment detected across the southern wadi. This is the final phase.</source>
-        <translation>Rear guard deployment detected across the southern wadi. This is the final phase.</translation>
+        <translation>رُصد انتشار مؤخرة الجيش عبر الوادي الجنوبي. هذه هي المرحلة الأخيرة.</translation>
     </message>
     <message>
         <source>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</source>
-        <translation>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</translation>
+        <translation>الإمداد هدف — وهو سلاح ذو حدّين. سوقك ومساكنك هي ما يزحف إليه الرومان فعلاً، ومعسكر حصارهم يحتفظ بمخزونه في متناول غارة.</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
-        <translation>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</translation>
+        <translation>المزارات التي مررت بها طوال الحملة لم تكن يوماً ديكوراً. زاما تعيد قراءة كل خريطة سبقتها — وليس للضريح قائد يُقتل، فالقاعدة الوحيدة التي خدمتك منذ تراسيميني هي القاعدة الوحيدة التي لن تنفع هنا.</translation>
     </message>
     <message>
         <source>Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.</source>
-        <translation>Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.</translation>
+        <translation>لا يُحتسب الخشب إلا حين يفرغه بنّاء في المعسكر. وأغنى الأحراش أبعدها عن المخزن، فالمهمة تُكسب بطول المسير لا بضربة الفأس.</translation>
     </message>
 </context>
 <context>
     <name>Nations</name>
     <message>
         <source>Roman Republic</source>
-        <translation>Roman Republic</translation>
+        <translation>الجمهورية الرومانية</translation>
     </message>
     <message>
         <source>Carthaginian Empire</source>
-        <translation>Carthaginian Empire</translation>
+        <translation>الإمبراطورية القرطاجية</translation>
     </message>
     <message>
         <source>The Iron Sepulcher</source>
-        <translation>The Iron Sepulcher</translation>
+        <translation>ضريح الحديد</translation>
     </message>
     <message>
         <source>Shield Wall</source>
-        <translation>Shield Wall</translation>
+        <translation>جدار التروس</translation>
     </message>
     <message>
         <source>Testudo</source>
-        <translation>Testudo</translation>
+        <translation>السلحفاة</translation>
     </message>
 </context>
 <context>
     <name>ObjectivesPanel</name>
     <message>
         <source>Mission briefing</source>
-        <translation>Mission briefing</translation>
+        <translation>إحاطة المهمة</translation>
     </message>
     <message>
         <source>Mission Briefing</source>
-        <translation>Mission Briefing</translation>
+        <translation>إحاطة المهمة</translation>
     </message>
     <message>
         <source>Close the briefing</source>
-        <translation>Close the briefing</translation>
+        <translation>إغلاق الإحاطة</translation>
     </message>
     <message>
         <source>To Battle</source>
-        <translation>To Battle</translation>
+        <translation>إلى المعركة</translation>
     </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
     <message>
         <source>Continue</source>
-        <translation>Continue</translation>
+        <translation>متابعة</translation>
     </message>
 </context>
 <context>
     <name>PlayerConfigPanel</name>
     <message>
         <source>Select a map</source>
-        <translation>Select a map</translation>
+        <translation>اختر خريطة</translation>
     </message>
     <message>
         <source>Players (%1)</source>
-        <translation>Players (%1)</translation>
+        <translation>اللاعبون (%1)</translation>
     </message>
     <message>
         <source>Click color/team to cycle</source>
-        <translation>Click color/team to cycle</translation>
+        <translation>انقر على اللون أو الفريق للتبديل</translation>
     </message>
     <message>
         <source>Select a map to configure players</source>
-        <translation>Select a map to configure players</translation>
+        <translation>اختر خريطة لضبط اللاعبين</translation>
     </message>
     <message>
         <source>+ Add CPU</source>
-        <translation>+ Add CPU</translation>
+        <translation>+ إضافة حاسوب</translation>
     </message>
     <message>
         <source>Add AI player to the game</source>
-        <translation>Add AI player to the game</translation>
+        <translation>أضف لاعب ذكاء اصطناعي إلى اللعبة</translation>
     </message>
     <message>
         <source>Max players reached</source>
-        <translation>Max players reached</translation>
+        <translation>بلغت الحد الأقصى للاعبين</translation>
     </message>
     <message>
         <source>%1 slot available</source>
-        <translation>%1 slot available</translation>
+        <translation>خانة %1 متاحة</translation>
     </message>
     <message>
         <source>%1 slots available</source>
-        <translation>%1 slots available</translation>
+        <translation>%1 من الخانات متاحة</translation>
     </message>
     <message>
         <source>(map preview)</source>
-        <translation>(map preview)</translation>
+        <translation>(معاينة الخريطة)</translation>
     </message>
     <message>
         <source>Every slot on this map is taken</source>
-        <translation>Every slot on this map is taken</translation>
+        <translation>كل خانة في هذه الخريطة مشغولة</translation>
     </message>
 </context>
 <context>
     <name>PlayerListItem</name>
     <message>
         <source>Color</source>
-        <translation>Color</translation>
+        <translation>لون</translation>
     </message>
     <message>
         <source>Click to change color</source>
-        <translation>Click to change color</translation>
+        <translation>انقر لتغيير اللون</translation>
     </message>
     <message>
         <source>Click to change team</source>
-        <translation>Click to change team</translation>
+        <translation>انقر لتغيير الفريق</translation>
     </message>
     <message>
         <source>Remove player</source>
-        <translation>Remove player</translation>
+        <translation>إزالة اللاعب</translation>
     </message>
 </context>
 <context>
     <name>ProductionManager</name>
     <message>
         <source>gold</source>
-        <translation>gold</translation>
+        <translation>ذهب</translation>
     </message>
     <message>
         <source>food</source>
-        <translation>food</translation>
+        <translation>طعام</translation>
     </message>
     <message>
         <source>wood</source>
-        <translation>wood</translation>
+        <translation>خشب</translation>
     </message>
     <message>
         <source>stone</source>
-        <translation>stone</translation>
+        <translation>حجر</translation>
     </message>
     <message>
         <source>iron</source>
-        <translation>iron</translation>
+        <translation>حديد</translation>
     </message>
     <message>
         <source>resources</source>
-        <translation>resources</translation>
+        <translation>موارد</translation>
     </message>
     <message>
         <source>Not enough %1.</source>
-        <translation>Not enough %1.</translation>
+        <translation>لا يكفي %1.</translation>
     </message>
     <message>
         <source>Select a tree, boulder, or iron ore deposit.</source>
-        <translation>Select a tree, boulder, or iron ore deposit.</translation>
+        <translation>اختر شجرة أو صخرة أو منجم خام حديد.</translation>
     </message>
     <message>
         <source>Select a tree to chop.</source>
-        <translation>Select a tree to chop.</translation>
+        <translation>اختر شجرة لقطعها.</translation>
     </message>
     <message>
         <source>Select a boulder to collect.</source>
-        <translation>Select a boulder to collect.</translation>
+        <translation>اختر صخرة لجمعها.</translation>
     </message>
     <message>
         <source>Select iron ore to collect.</source>
-        <translation>Select iron ore to collect.</translation>
+        <translation>اختر خام حديد لجمعه.</translation>
     </message>
     <message>
         <source>No available builder can chop that tree.</source>
-        <translation>No available builder can chop that tree.</translation>
+        <translation>لا يوجد بنّاء متاح يستطيع قطع تلك الشجرة.</translation>
     </message>
     <message>
         <source>No available builder can collect that boulder.</source>
-        <translation>No available builder can collect that boulder.</translation>
+        <translation>لا يوجد بنّاء متاح يستطيع جمع تلك الصخرة.</translation>
     </message>
     <message>
         <source>No available builder can collect that iron ore.</source>
-        <translation>No available builder can collect that iron ore.</translation>
+        <translation>لا يوجد بنّاء متاح يستطيع جمع خام الحديد ذاك.</translation>
     </message>
     <message>
         <source>No available builder can collect that resource.</source>
-        <translation>No available builder can collect that resource.</translation>
+        <translation>لا يوجد بنّاء متاح يستطيع جمع ذلك المورد.</translation>
     </message>
     <message>
         <source>No walkable spot near that tree.</source>
-        <translation>No walkable spot near that tree.</translation>
+        <translation>لا موضع صالح للمشي قرب تلك الشجرة.</translation>
     </message>
     <message>
         <source>No walkable spot near that boulder.</source>
-        <translation>No walkable spot near that boulder.</translation>
+        <translation>لا موضع صالح للمشي قرب تلك الصخرة.</translation>
     </message>
     <message>
         <source>No walkable spot near that iron ore.</source>
-        <translation>No walkable spot near that iron ore.</translation>
+        <translation>لا موضع صالح للمشي قرب خام الحديد ذاك.</translation>
     </message>
     <message>
         <source>No walkable spot near that resource.</source>
-        <translation>No walkable spot near that resource.</translation>
+        <translation>لا موضع صالح للمشي قرب ذلك المورد.</translation>
     </message>
     <message>
         <source>Drag out a wall line first.</source>
-        <translation>Drag out a wall line first.</translation>
+        <translation>ارسم خط سور أولاً بالسحب.</translation>
     </message>
     <message>
         <source>Choose a build location.</source>
-        <translation>Choose a build location.</translation>
+        <translation>اختر موقع البناء.</translation>
     </message>
     <message>
         <source>That resource is already assigned.</source>
-        <translation>That resource is already assigned.</translation>
+        <translation>ذلك المورد مخصَّص بالفعل.</translation>
     </message>
     <message>
         <source>Cannot build there.</source>
-        <translation>Cannot build there.</translation>
+        <translation>لا يمكن البناء هناك.</translation>
     </message>
     <message>
         <source>Blocked by an existing wall.</source>
-        <translation>Blocked by an existing wall.</translation>
+        <translation>يحجبه سور قائم.</translation>
     </message>
     <message>
         <source>Not enough wood.</source>
-        <translation>Not enough wood.</translation>
+        <translation>لا يكفي الخشب.</translation>
     </message>
     <message>
         <source>No valid wall segments in that drag.</source>
-        <translation>No valid wall segments in that drag.</translation>
+        <translation>لا مقاطع سور صالحة في ذلك السحب.</translation>
     </message>
     <message>
         <source>No available builder.</source>
-        <translation>No available builder.</translation>
+        <translation>لا يوجد بنّاء متاح.</translation>
     </message>
     <message>
         <source>That structure cannot be placed.</source>
-        <translation>That structure cannot be placed.</translation>
+        <translation>لا يمكن وضع ذلك البناء.</translation>
     </message>
     <message>
         <source>Building factory unavailable.</source>
-        <translation>Building factory unavailable.</translation>
+        <translation>مصنع المباني غير متاح.</translation>
     </message>
     <message>
         <source>Failed to place building.</source>
-        <translation>Failed to place building.</translation>
+        <translation>فشل وضع المبنى.</translation>
     </message>
 </context>
 <context>
     <name>ProductionPanel</name>
     <message>
         <source>PRODUCTION QUEUE</source>
-        <translation>PRODUCTION QUEUE</translation>
+        <translation>طابور الإنتاج</translation>
     </message>
     <message>
         <source>RECRUIT UNITS</source>
-        <translation>RECRUIT UNITS</translation>
+        <translation>تجنيد الوحدات</translation>
     </message>
     <message>
         <source>Queue is full (5/5)</source>
-        <translation>Queue is full (5/5)</translation>
+        <translation>الطابور ممتلئ (5/5)</translation>
     </message>
     <message>
         <source>Cannot recruit</source>
-        <translation>Cannot recruit</translation>
+        <translation>تعذّر التجنيد</translation>
     </message>
     <message>
         <source>Set where newly recruited units will gather.
 Right-click to cancel.</source>
-        <translation>Set where newly recruited units will gather.
-Right-click to cancel.</translation>
+        <translation>حدّد أين تتجمع الوحدات المجنّدة حديثاً.
+النقر الأيمن للإلغاء.</translation>
     </message>
     <message>
         <source>Right-click to cancel</source>
-        <translation>Right-click to cancel</translation>
+        <translation>النقر الأيمن للإلغاء</translation>
     </message>
     <message>
         <source>No Barracks Selected</source>
-        <translation>No Barracks Selected</translation>
+        <translation>لم تُحدَّد ثكنة</translation>
     </message>
     <message>
         <source>Select a barracks to recruit units</source>
-        <translation>Select a barracks to recruit units</translation>
+        <translation>اختر ثكنة لتجنيد الوحدات</translation>
     </message>
     <message>
         <source>Wood</source>
-        <translation>Wood</translation>
+        <translation>خشب</translation>
     </message>
     <message>
         <source>Stone</source>
-        <translation>Stone</translation>
+        <translation>حجر</translation>
     </message>
     <message>
         <source>Iron</source>
-        <translation>Iron</translation>
+        <translation>حديد</translation>
     </message>
     <message>
         <source>Catapult</source>
-        <translation>Catapult</translation>
+        <translation>منجنيق</translation>
     </message>
     <message>
         <source>Long-range siege weapon
 Effective against structures</source>
-        <translation>Long-range siege weapon
-Effective against structures</translation>
+        <translation>سلاح حصار بعيد المدى
+فعّال ضد المباني</translation>
     </message>
     <message>
         <source>Ballista</source>
-        <translation>Ballista</translation>
+        <translation>بالِستا</translation>
     </message>
     <message>
         <source>Precision siege weapon
 Effective against units</source>
-        <translation>Precision siege weapon
-Effective against units</translation>
+        <translation>سلاح حصار دقيق
+فعّال ضد الوحدات</translation>
     </message>
     <message>
         <source>Defense Tower</source>
-        <translation>Defense Tower</translation>
+        <translation>برج دفاعي</translation>
     </message>
     <message>
         <source>Stationary defense structure
 Shoots arrows at enemies</source>
-        <translation>Stationary defense structure
-Shoots arrows at enemies</translation>
+        <translation>بناء دفاعي ثابت
+يرمي السهام على الأعداء</translation>
     </message>
     <message>
         <source>Home</source>
-        <translation>Home</translation>
+        <translation>مسكن</translation>
     </message>
     <message>
         <source>Residential building
 Adds +50 population to nearest barracks</source>
-        <translation>Residential building
-Adds +50 population to nearest barracks</translation>
+        <translation>مبنى سكني
+يضيف 50+ إلى تعداد أقرب ثكنة</translation>
     </message>
     <message>
         <source>Marketplace</source>
-        <translation>Marketplace</translation>
+        <translation>سوق</translation>
     </message>
     <message>
         <source>Trade building
 Buy or sell resources for gold</source>
-        <translation>Trade building
-Buy or sell resources for gold</translation>
+        <translation>مبنى تجاري
+اشترِ الموارد أو بعها مقابل الذهب</translation>
     </message>
     <message>
         <source>Wall Segment</source>
-        <translation>Wall Segment</translation>
+        <translation>مقطع سور</translation>
     </message>
     <message>
         <source>Wooden defensive wall
 Blocks enemy movement</source>
-        <translation>Wooden defensive wall
-Blocks enemy movement</translation>
+        <translation>سور دفاعي خشبي
+يمنع حركة العدو</translation>
     </message>
     <message>
         <source>Wall Gate</source>
-        <translation>Wall Gate</translation>
+        <translation>بوابة سور</translation>
     </message>
     <message>
         <source>Gated opening in a wall
 Opens for your troops and allies</source>
-        <translation>Gated opening in a wall
-Opens for your troops and allies</translation>
+        <translation>فتحة مبوَّبة في السور
+تُفتح لقواتك وحلفائك</translation>
     </message>
     <message>
         <source>wood</source>
-        <translation>wood</translation>
+        <translation>خشب</translation>
     </message>
     <message>
         <source>stone</source>
-        <translation>stone</translation>
+        <translation>حجر</translation>
     </message>
     <message>
         <source>iron</source>
-        <translation>iron</translation>
+        <translation>حديد</translation>
     </message>
     <message>
         <source>gold</source>
-        <translation>gold</translation>
+        <translation>ذهب</translation>
     </message>
     <message>
         <source>%1 %2</source>
@@ -4380,1071 +4380,1071 @@ Opens for your troops and allies</translation>
     </message>
     <message>
         <source>%1 wood</source>
-        <translation>%1 wood</translation>
+        <translation>%1 خشب</translation>
     </message>
     <message>
         <source>%1 stone</source>
-        <translation>%1 stone</translation>
+        <translation>%1 حجر</translation>
     </message>
     <message>
         <source>%1 iron</source>
-        <translation>%1 iron</translation>
+        <translation>%1 حديد</translation>
     </message>
     <message>
         <source>%1 gold</source>
-        <translation>%1 gold</translation>
+        <translation>%1 ذهب</translation>
     </message>
     <message>
         <source>Not enough available population</source>
-        <translation>Not enough available population</translation>
+        <translation>التعداد المتاح لا يكفي</translation>
     </message>
     <message>
         <source>Not enough %1</source>
-        <translation>Not enough %1</translation>
+        <translation>لا يكفي %1</translation>
     </message>
     <message>
         <source>Already building...</source>
-        <translation>Already building...</translation>
+        <translation>قيد البناء بالفعل...</translation>
     </message>
     <message>
         <source>%1s</source>
-        <translation>%1s</translation>
+        <translation>%1 ث</translation>
     </message>
     <message>
         <source>Idle</source>
-        <translation>Idle</translation>
+        <translation>خامل</translation>
     </message>
     <message>
         <source>Available Population: %1 / %2</source>
-        <translation>Available Population: %1 / %2</translation>
+        <translation>التعداد المتاح: %1 / %2</translation>
     </message>
     <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Recruit %1
-Cost: %2
-Build time: %3s</translation>
+        <translation>جنّد %1
+الكلفة: %2
+زمن الإنتاج: %3 ث</translation>
     </message>
     <message>
         <source>population</source>
-        <translation>population</translation>
+        <translation>التعداد</translation>
     </message>
     <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
 Carthage exclusive</source>
-        <translation>Recruit %1
-Cost: %2
-Build time: %3s
-Carthage exclusive</translation>
+        <translation>جنّد %1
+الكلفة: %2
+زمن الإنتاج: %3 ث
+حصري لقرطاج</translation>
     </message>
     <message>
         <source>HOME RECRUITMENT</source>
-        <translation>HOME RECRUITMENT</translation>
+        <translation>التجنيد من المساكن</translation>
     </message>
     <message>
         <source>Available civilians: %1 / %2</source>
-        <translation>Available civilians: %1 / %2</translation>
+        <translation>المدنيون المتاحون: %1 / %2</translation>
     </message>
     <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
 Use Deliver mode, then click a friendly barracks to add 50 available population.</source>
-        <translation>Recruit %1
-Cost: %2
-Build time: %3s
-Use Deliver mode, then click a friendly barracks to add 50 available population.</translation>
+        <translation>جنّد %1
+الكلفة: %2
+زمن الإنتاج: %3 ث
+استخدم وضع التوصيل ثم انقر على ثكنة صديقة لإضافة 50 إلى التعداد المتاح.</translation>
     </message>
     <message>
         <source>families</source>
-        <translation>families</translation>
+        <translation>عائلات</translation>
     </message>
     <message>
         <source>This home already committed its 3 civilians</source>
-        <translation>This home already committed its 3 civilians</translation>
+        <translation>هذا المسكن قدّم مدنييه الثلاثة بالفعل</translation>
     </message>
     <message>
         <source>Click Map to Set Rally</source>
-        <translation>Click Map to Set Rally</translation>
+        <translation>انقر على الخريطة لتحديد نقطة التجميع</translation>
     </message>
     <message>
         <source>Set Rally Point</source>
-        <translation>Set Rally Point</translation>
+        <translation>تحديد نقطة التجميع</translation>
     </message>
     <message>
         <source>BUILDER CONSTRUCTION</source>
-        <translation>BUILDER CONSTRUCTION</translation>
+        <translation>أعمال البناء</translation>
     </message>
     <message>
         <source>Build siege weapons, structures, and gather wood, stone, and iron</source>
-        <translation>Build siege weapons, structures, and gather wood, stone, and iron</translation>
+        <translation>ابنِ آلات الحصار والمنشآت، واجمع الخشب والحجر والحديد</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
-        <translation>Select a structure to build</translation>
+        <translation>اختر بناءً لتشييده</translation>
     </message>
     <message>
         <source>Cut Tree</source>
-        <translation>Cut Tree</translation>
+        <translation>اقطع شجرة</translation>
     </message>
     <message>
         <source>Collect Stone</source>
-        <translation>Collect Stone</translation>
+        <translation>اجمع الحجر</translation>
     </message>
     <message>
         <source>Collect Iron Ore</source>
-        <translation>Collect Iron Ore</translation>
+        <translation>اجمع خام الحديد</translation>
     </message>
     <message>
         <source>Task: %1</source>
-        <translation>Task: %1</translation>
+        <translation>المهمة: %1</translation>
     </message>
     <message>
         <source>Building: %1</source>
-        <translation>Building: %1</translation>
+        <translation>قيد البناء: %1</translation>
     </message>
     <message>
         <source>Build Catapult
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Catapult
+        <translation>ابنِ منجنيقاً
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>Build Ballista
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Ballista
+        <translation>ابنِ بالِستا
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>Build Defense Tower
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Defense Tower
+        <translation>ابنِ برجاً دفاعياً
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>Build Home
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Home
+        <translation>ابنِ مسكناً
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>Build Wall Segment
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Wall Segment
+        <translation>ابنِ مقطع سور
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>Build Wall Gate
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Wall Gate
+        <translation>ابنِ بوابة سور
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>Build Marketplace
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Marketplace
+        <translation>ابنِ سوقاً
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>MARKETPLACE</source>
-        <translation>MARKETPLACE</translation>
+        <translation>السوق</translation>
     </message>
     <message>
         <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>Trade resources for gold at fixed exchange rates</translation>
+        <translation>قايض الموارد بالذهب بأسعار صرف ثابتة</translation>
     </message>
     <message>
         <source>Select your marketplace to trade</source>
-        <translation>Select your marketplace to trade</translation>
+        <translation>اختر سوقك للتجارة</translation>
     </message>
     <message>
         <source>Gold: %1    Trade size: %2</source>
-        <translation>Gold: %1    Trade size: %2</translation>
+        <translation>الذهب: %1    حجم الصفقة: %2</translation>
     </message>
     <message>
         <source>Trading is available only for your own marketplace.</source>
-        <translation>Trading is available only for your own marketplace.</translation>
+        <translation>التجارة متاحة في سوقك أنت فقط.</translation>
     </message>
     <message>
         <source>You have %1</source>
-        <translation>You have %1</translation>
+        <translation>لديك %1</translation>
     </message>
     <message>
         <source>Buy %1 (%2g)</source>
-        <translation>Buy %1 (%2g)</translation>
+        <translation>اشترِ %1 (%2 ذ)</translation>
     </message>
     <message>
         <source>Spend %1 gold to buy %2 %3</source>
-        <translation>Spend %1 gold to buy %2 %3</translation>
+        <translation>أنفق %1 من الذهب لشراء %2 %3</translation>
     </message>
     <message>
         <source>Sell %1 (+%2g)</source>
-        <translation>Sell %1 (+%2g)</translation>
+        <translation>بِع %1 (+%2 ذ)</translation>
     </message>
     <message>
         <source>Sell %1 %2 for %3 gold</source>
-        <translation>Sell %1 %2 for %3 gold</translation>
+        <translation>بِع %1 %2 مقابل %3 من الذهب</translation>
     </message>
     <message>
         <source>Mounted Knight</source>
-        <translation>Mounted Knight</translation>
+        <translation>فارس مدرَّع</translation>
     </message>
     <message>
         <source>Horse Archer</source>
-        <translation>Horse Archer</translation>
+        <translation>رامٍ فارس</translation>
     </message>
     <message>
         <source>Horse Spearman</source>
-        <translation>Horse Spearman</translation>
+        <translation>رامح فارس</translation>
     </message>
     <message>
         <source>War Elephant</source>
-        <translation>War Elephant</translation>
+        <translation>فيل حرب</translation>
     </message>
     <message>
         <source>Build a barracks before setting a rally point.</source>
-        <translation>Build a barracks before setting a rally point.</translation>
+        <translation>ابنِ ثكنة قبل تحديد نقطة تجميع.</translation>
     </message>
     <message>
         <source>Temple</source>
-        <translation>Temple</translation>
+        <translation>معبد</translation>
     </message>
     <message>
         <source>Build Temple
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Build Temple
+        <translation>ابنِ معبداً
 %1
-Cost: %2
-Build time: %3s</translation>
+الكلفة: %2
+زمن البناء: %3 ث</translation>
     </message>
     <message>
         <source>Sanctuary of the nation
 Wide vision and a durable settlement anchor</source>
-        <translation>Sanctuary of the nation
-Wide vision and a durable settlement anchor</translation>
+        <translation>حرم الأمة
+رؤية واسعة ومرتكز متين للمستوطنة</translation>
     </message>
     <message>
         <source>TEMPLE</source>
-        <translation>TEMPLE</translation>
+        <translation>المعبد</translation>
     </message>
     <message>
         <source>The sanctuary of your nation, raised in its own architectural style</source>
-        <translation>The sanctuary of your nation, raised in its own architectural style</translation>
+        <translation>حرم أمتك، مشيَّد على طرازها المعماري</translation>
     </message>
     <message>
         <source>Watches over a wide stretch of ground and holds a settlement together</source>
-        <translation>Watches over a wide stretch of ground and holds a settlement together</translation>
+        <translation>يشرف على رقعة واسعة من الأرض ويشدّ المستوطنة إلى بعضها</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>System</source>
-        <translation>System</translation>
+        <translation>النظام</translation>
     </message>
     <message>
         <source>Camera</source>
-        <translation>Camera</translation>
+        <translation>الكاميرا</translation>
     </message>
     <message>
         <source>Selection</source>
-        <translation>Selection</translation>
+        <translation>التحديد</translation>
     </message>
     <message>
         <source>Orders</source>
-        <translation>Orders</translation>
+        <translation>الأوامر</translation>
     </message>
     <message>
         <source>Commander movement</source>
-        <translation>Commander movement</translation>
+        <translation>حركة القائد</translation>
     </message>
     <message>
         <source>Commander combat</source>
-        <translation>Commander combat</translation>
+        <translation>قتال القائد</translation>
     </message>
     <message>
         <source>Open menu</source>
-        <translation>Open menu</translation>
+        <translation>فتح القائمة</translation>
     </message>
     <message>
         <source>Also cancels a placement or rally in progress</source>
-        <translation>Also cancels a placement or rally in progress</translation>
+        <translation>يلغي أيضاً وضعاً أو تجميعاً جارياً</translation>
     </message>
     <message>
         <source>Switch between army and commander</source>
-        <translation>Switch between army and commander</translation>
+        <translation>التبديل بين الجيش والقائد</translation>
     </message>
     <message>
         <source>Quick save</source>
-        <translation>Quick save</translation>
+        <translation>حفظ سريع</translation>
     </message>
     <message>
         <source>Quick load</source>
-        <translation>Quick load</translation>
+        <translation>تحميل سريع</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation>Pause</translation>
+        <translation>إيقاف مؤقت</translation>
     </message>
     <message>
         <source>Pan camera up</source>
-        <translation>Pan camera up</translation>
+        <translation>تحريك الكاميرا للأعلى</translation>
     </message>
     <message>
         <source>Hold Shift while panning to move faster</source>
-        <translation>Hold Shift while panning to move faster</translation>
+        <translation>اضغط Shift أثناء التحريك للتنقل أسرع</translation>
     </message>
     <message>
         <source>Pan camera down</source>
-        <translation>Pan camera down</translation>
+        <translation>تحريك الكاميرا للأسفل</translation>
     </message>
     <message>
         <source>Pan camera left</source>
-        <translation>Pan camera left</translation>
+        <translation>تحريك الكاميرا يساراً</translation>
     </message>
     <message>
         <source>Pan camera right</source>
-        <translation>Pan camera right</translation>
+        <translation>تحريك الكاميرا يميناً</translation>
     </message>
     <message>
         <source>Rotate camera left</source>
-        <translation>Rotate camera left</translation>
+        <translation>تدوير الكاميرا يساراً</translation>
     </message>
     <message>
         <source>Rotate camera right</source>
-        <translation>Rotate camera right</translation>
+        <translation>تدوير الكاميرا يميناً</translation>
     </message>
     <message>
         <source>Orbit camera left</source>
-        <translation>Orbit camera left</translation>
+        <translation>إدارة الكاميرا يساراً</translation>
     </message>
     <message>
         <source>Orbit camera right</source>
-        <translation>Orbit camera right</translation>
+        <translation>إدارة الكاميرا يميناً</translation>
     </message>
     <message>
         <source>Select unit or drag a selection box</source>
-        <translation>Select unit or drag a selection box</translation>
+        <translation>تحديد وحدة أو سحب مستطيل تحديد</translation>
     </message>
     <message>
         <source>Select all troops</source>
-        <translation>Select all troops</translation>
+        <translation>تحديد كل القوات</translation>
     </message>
     <message>
         <source>Move or attack-move to the cursor</source>
-        <translation>Move or attack-move to the cursor</translation>
+        <translation>التحرك أو الهجوم أثناء التحرك نحو المؤشر</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation>Stop</translation>
+        <translation>توقّف</translation>
     </message>
     <message>
         <source>Attack</source>
-        <translation>Attack</translation>
+        <translation>هجوم</translation>
     </message>
     <message>
         <source>Move</source>
-        <translation>Move</translation>
+        <translation>تحرّك</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Patrol</translation>
+        <translation>دورية</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Guard</translation>
+        <translation>حراسة</translation>
     </message>
     <message>
         <source>Hold position</source>
-        <translation>Hold position</translation>
+        <translation>اثبت في الموضع</translation>
     </message>
     <message>
         <source>Deploy the selection in a formation</source>
-        <translation>Deploy the selection in a formation</translation>
+        <translation>نشر التحديد في تشكيل</translation>
     </message>
     <message>
         <source>Opens the formation planner for the selected troops</source>
-        <translation>Opens the formation planner for the selected troops</translation>
+        <translation>يفتح مخطّط التشكيلات للقوات المحددة</translation>
     </message>
     <message>
         <source>Place commander rally flag</source>
-        <translation>Place commander rally flag</translation>
+        <translation>وضع راية تجميع القائد</translation>
     </message>
     <message>
         <source>Shares its key with orbit camera left by default and takes priority only while a rally can be placed</source>
-        <translation>Shares its key with orbit camera left by default and takes priority only while a rally can be placed</translation>
+        <translation>يشترك في مفتاحه مع إدارة الكاميرا يساراً افتراضياً، ولا تكون له الأولوية إلا حين يمكن وضع تجميع</translation>
     </message>
     <message>
         <source>Move forward</source>
-        <translation>Move forward</translation>
+        <translation>التقدم للأمام</translation>
     </message>
     <message>
         <source>Move back</source>
-        <translation>Move back</translation>
+        <translation>التراجع للخلف</translation>
     </message>
     <message>
         <source>Strafe left</source>
-        <translation>Strafe left</translation>
+        <translation>الانزلاق يساراً</translation>
     </message>
     <message>
         <source>Strafe right</source>
-        <translation>Strafe right</translation>
+        <translation>الانزلاق يميناً</translation>
     </message>
     <message>
         <source>Turn left</source>
-        <translation>Turn left</translation>
+        <translation>الالتفات يساراً</translation>
     </message>
     <message>
         <source>Turn right</source>
-        <translation>Turn right</translation>
+        <translation>الالتفات يميناً</translation>
     </message>
     <message>
         <source>Sprint</source>
-        <translation>Sprint</translation>
+        <translation>عَدْو</translation>
     </message>
     <message>
         <source>Dodge</source>
-        <translation>Dodge</translation>
+        <translation>مراوغة</translation>
     </message>
     <message>
         <source>Jump</source>
-        <translation>Jump</translation>
+        <translation>قفز</translation>
     </message>
     <message>
         <source>Block</source>
-        <translation>Block</translation>
+        <translation>صدّ</translation>
     </message>
     <message>
         <source>Cycle locked target</source>
-        <translation>Cycle locked target</translation>
+        <translation>تبديل الهدف المقفل</translation>
     </message>
     <message>
         <source>Special action</source>
-        <translation>Special action</translation>
+        <translation>فعل خاص</translation>
     </message>
     <message>
         <source>Vanguard rush</source>
-        <translation>Vanguard rush</translation>
+        <translation>اندفاعة الطليعة</translation>
     </message>
     <message>
         <source>Second wind</source>
-        <translation>Second wind</translation>
+        <translation>النفَس الثاني</translation>
     </message>
     <message>
         <source>Commanding aura</source>
-        <translation>Commanding aura</translation>
+        <translation>هالة القيادة</translation>
     </message>
     <message>
         <source>Rally nearby troops</source>
-        <translation>Rally nearby troops</translation>
+        <translation>تجميع القوات القريبة</translation>
     </message>
     <message>
         <source>Switch between melee weapon and bow</source>
-        <translation>Switch between melee weapon and bow</translation>
+        <translation>التبديل بين سلاح الاشتباك والقوس</translation>
     </message>
     <message>
         <source>Toggle first and third person</source>
-        <translation>Toggle first and third person</translation>
+        <translation>التبديل بين منظور الشخص الأول والثالث</translation>
     </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
     <message>
         <source>HP %1/%2</source>
-        <translation>HP %1/%2</translation>
+        <translation>الصحة %1/%2</translation>
     </message>
     <message>
         <source>STM %1%</source>
-        <translation>STM %1%</translation>
+        <translation>الجَلَد %1%</translation>
     </message>
     <message>
         <source>FINISHER</source>
-        <translation>FINISHER</translation>
+        <translation>الضربة القاضية</translation>
     </message>
     <message>
         <source>COMBO</source>
-        <translation>COMBO</translation>
+        <translation>سلسلة</translation>
     </message>
     <message>
         <source>POSTURE</source>
-        <translation>POSTURE</translation>
+        <translation>الاتزان</translation>
     </message>
     <message>
         <source>GUARD BROKEN</source>
-        <translation>GUARD BROKEN</translation>
+        <translation>انكسرت الحراسة</translation>
     </message>
     <message>
         <source>⚡ PUNISH ⚡</source>
-        <translation>⚡ PUNISH ⚡</translation>
+        <translation>⚡ عقاب ⚡</translation>
     </message>
     <message>
         <source>BASH</source>
-        <translation>BASH</translation>
+        <translation>ضربة ترس</translation>
     </message>
     <message>
         <source>RUSH</source>
-        <translation>RUSH</translation>
+        <translation>اندفاعة</translation>
     </message>
     <message>
         <source>WIND</source>
-        <translation>WIND</translation>
+        <translation>نفَس</translation>
     </message>
     <message>
         <source>READY</source>
-        <translation>READY</translation>
+        <translation>جاهز</translation>
     </message>
     <message>
         <source>BOW  ·  X</source>
-        <translation>BOW  ·  X</translation>
+        <translation>قوس  ·  X</translation>
     </message>
     <message>
         <source>BLADE  ·  X</source>
-        <translation>BLADE  ·  X</translation>
+        <translation>نصل  ·  X</translation>
     </message>
 </context>
 <context>
     <name>RpgTargetBar</name>
     <message>
         <source>BROKEN</source>
-        <translation>BROKEN</translation>
+        <translation>مكسورة</translation>
     </message>
     <message>
         <source>STAGGERED</source>
-        <translation>STAGGERED</translation>
+        <translation>مترنّح</translation>
     </message>
 </context>
 <context>
     <name>SaveFile</name>
     <message>
         <source>Save payload has no checksum</source>
-        <translation>Save payload has no checksum</translation>
+        <translation>بيانات الحفظ بلا مجموع تحقّق</translation>
     </message>
     <message>
         <source>Save payload is corrupted (stored checksum mismatch)</source>
-        <translation>Save payload is corrupted (stored checksum mismatch)</translation>
+        <translation>بيانات الحفظ تالفة (مجموع التحقّق المخزَّن غير مطابق)</translation>
     </message>
     <message>
         <source>Save payload is corrupted (decompression failed)</source>
-        <translation>Save payload is corrupted (decompression failed)</translation>
+        <translation>بيانات الحفظ تالفة (فشل فك الضغط)</translation>
     </message>
     <message>
         <source>Save payload is corrupted (expected %1 bytes, got %2)</source>
-        <translation>Save payload is corrupted (expected %1 bytes, got %2)</translation>
+        <translation>بيانات الحفظ تالفة (كان المتوقع %1 بايت والموجود %2)</translation>
     </message>
     <message>
         <source>Save payload is corrupted (content checksum mismatch)</source>
-        <translation>Save payload is corrupted (content checksum mismatch)</translation>
+        <translation>بيانات الحفظ تالفة (مجموع تحقّق المحتوى غير مطابق)</translation>
     </message>
     <message>
         <source>Not a Standard of Iron save file</source>
-        <translation>Not a Standard of Iron save file</translation>
+        <translation>ليس ملف حفظ للعبة Standard of Iron</translation>
     </message>
     <message>
         <source>Unsupported save file version %1 (expected %2)</source>
-        <translation>Unsupported save file version %1 (expected %2)</translation>
+        <translation>إصدار ملف الحفظ %1 غير مدعوم (المتوقع %2)</translation>
     </message>
     <message>
         <source>Save file header is truncated</source>
-        <translation>Save file header is truncated</translation>
+        <translation>ترويسة ملف الحفظ مبتورة</translation>
     </message>
     <message>
         <source>Save file header is corrupted: %1</source>
-        <translation>Save file header is corrupted: %1</translation>
+        <translation>ترويسة ملف الحفظ تالفة: %1</translation>
     </message>
     <message>
         <source>Save file uses an unknown compression format</source>
-        <translation>Save file uses an unknown compression format</translation>
+        <translation>ملف الحفظ يستخدم صيغة ضغط مجهولة</translation>
     </message>
     <message>
         <source>Save file declares implausible sizes</source>
-        <translation>Save file declares implausible sizes</translation>
+        <translation>ملف الحفظ يعلن أحجاماً غير معقولة</translation>
     </message>
     <message>
         <source>Save file body is truncated</source>
-        <translation>Save file body is truncated</translation>
+        <translation>متن ملف الحفظ مبتور</translation>
     </message>
     <message>
         <source>Save file preview image is corrupted</source>
-        <translation>Save file preview image is corrupted</translation>
+        <translation>صورة معاينة ملف الحفظ تالفة</translation>
     </message>
 </context>
 <context>
     <name>SaveGamePanel</name>
     <message>
         <source>Save Game</source>
-        <translation>Save Game</translation>
+        <translation>حفظ اللعبة</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancel</translation>
+        <translation>إلغاء</translation>
     </message>
     <message>
         <source>Save Name:</source>
-        <translation>Save Name:</translation>
+        <translation>اسم الحفظ:</translation>
     </message>
     <message>
         <source>Enter save name...</source>
-        <translation>Enter save name...</translation>
+        <translation>أدخل اسم الحفظ...</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation>Save</translation>
+        <translation>حفظ</translation>
     </message>
     <message>
         <source>Existing Saves</source>
-        <translation>Existing Saves</translation>
+        <translation>الحفوظات الموجودة</translation>
     </message>
     <message>
         <source>No Preview</source>
-        <translation>No Preview</translation>
+        <translation>لا معاينة</translation>
     </message>
     <message>
         <source>Slot: %1</source>
-        <translation>Slot: %1</translation>
+        <translation>الخانة: %1</translation>
     </message>
     <message>
         <source>Last saved: %1</source>
-        <translation>Last saved: %1</translation>
+        <translation>آخر حفظ: %1</translation>
     </message>
     <message>
         <source>Overwrite</source>
-        <translation>Overwrite</translation>
+        <translation>استبدال</translation>
     </message>
     <message>
         <source>Confirm Overwrite</source>
-        <translation>Confirm Overwrite</translation>
+        <translation>تأكيد الاستبدال</translation>
     </message>
     <message>
         <source>Are you sure you want to overwrite the save:
 &quot;%1&quot;?</source>
-        <translation>Are you sure you want to overwrite the save:
-&quot;%1&quot;?</translation>
+        <translation>هل تريد بالتأكيد استبدال الحفظ:
+«%1»؟</translation>
     </message>
     <message>
         <source>%1 - %2 (%3 KB on disk)</source>
-        <translation>%1 - %2 (%3 KB on disk)</translation>
+        <translation>%1 - %2 (%3 ك.ب على القرص)</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Campaign</translation>
+        <translation>الحملة</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Skirmish</translation>
+        <translation>مناوشة</translation>
     </message>
     <message>
         <source>Untitled Save</source>
-        <translation>Untitled Save</translation>
+        <translation>حفظ بلا عنوان</translation>
     </message>
     <message>
         <source>Unknown Map</source>
-        <translation>Unknown Map</translation>
+        <translation>خريطة مجهولة</translation>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Name the save first.</translation>
+        <translation>سمِّ الحفظ أولاً.</translation>
     </message>
 </context>
 <context>
     <name>SaveProgressOverlay</name>
     <message>
         <source>Save failed</source>
-        <translation>Save failed</translation>
+        <translation>فشل الحفظ</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot;</source>
-        <translation>Saving &quot;%1&quot;</translation>
+        <translation>جارٍ حفظ «%1»</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>Cancel</translation>
+        <translation>إلغاء</translation>
     </message>
 </context>
 <context>
     <name>SaveStorage</name>
     <message>
         <source>Failed to begin transaction</source>
-        <translation>Failed to begin transaction</translation>
+        <translation>فشل بدء المعاملة</translation>
     </message>
     <message>
         <source>Failed to commit transaction</source>
-        <translation>Failed to commit transaction</translation>
+        <translation>فشل تثبيت المعاملة</translation>
     </message>
     <message>
         <source>Failed to open save database</source>
-        <translation>Failed to open save database</translation>
+        <translation>فشل فتح قاعدة بيانات الحفظ</translation>
     </message>
     <message>
         <source>Failed to read schema version</source>
-        <translation>Failed to read schema version</translation>
+        <translation>فشل قراءة إصدار المخطط</translation>
     </message>
     <message>
         <source>Failed to record schema version</source>
-        <translation>Failed to record schema version</translation>
+        <translation>فشل تسجيل إصدار المخطط</translation>
     </message>
     <message>
         <source>Failed to drop table %1</source>
-        <translation>Failed to drop table %1</translation>
+        <translation>فشل حذف الجدول %1</translation>
     </message>
     <message>
         <source>Failed to create save schema</source>
-        <translation>Failed to create save schema</translation>
+        <translation>فشل إنشاء مخطط الحفظ</translation>
     </message>
     <message>
         <source>Failed to prepare save query</source>
-        <translation>Failed to prepare save query</translation>
+        <translation>فشل تحضير استعلام الحفظ</translation>
     </message>
     <message>
         <source>Failed to persist save slot</source>
-        <translation>Failed to persist save slot</translation>
+        <translation>فشل تثبيت خانة الحفظ</translation>
     </message>
     <message>
         <source>Failed to read save slot</source>
-        <translation>Failed to read save slot</translation>
+        <translation>فشل قراءة خانة الحفظ</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; not found</source>
-        <translation>Save slot &apos;%1&apos; not found</translation>
+        <translation>لم يُعثر على خانة الحفظ «%1»</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; uses unsupported format version %2</source>
-        <translation>Save slot &apos;%1&apos; uses unsupported format version %2</translation>
+        <translation>خانة الحفظ «%1» تستخدم إصدار الصيغة %2 غير المدعوم</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; uses an unknown compression format</source>
-        <translation>Save slot &apos;%1&apos; uses an unknown compression format</translation>
+        <translation>خانة الحفظ «%1» تستخدم صيغة ضغط مجهولة</translation>
     </message>
     <message>
         <source>Failed to enumerate save slots</source>
-        <translation>Failed to enumerate save slots</translation>
+        <translation>فشل تعداد خانات الحفظ</translation>
     </message>
     <message>
         <source>Failed to look up save slot</source>
-        <translation>Failed to look up save slot</translation>
+        <translation>فشل البحث عن خانة الحفظ</translation>
     </message>
     <message>
         <source>Failed to store save preview</source>
-        <translation>Failed to store save preview</translation>
+        <translation>فشل تخزين معاينة الحفظ</translation>
     </message>
     <message>
         <source>Failed to delete save slot</source>
-        <translation>Failed to delete save slot</translation>
+        <translation>فشل حذف خانة الحفظ</translation>
     </message>
     <message>
         <source>Failed to get campaign progress</source>
-        <translation>Failed to get campaign progress</translation>
+        <translation>فشل جلب تقدّم الحملة</translation>
     </message>
     <message>
         <source>Failed to mark campaign as completed</source>
-        <translation>Failed to mark campaign as completed</translation>
+        <translation>فشل وسم الحملة كمكتملة</translation>
     </message>
     <message>
         <source>Failed to prepare mission result insert</source>
-        <translation>Failed to prepare mission result insert</translation>
+        <translation>فشل تحضير إدراج نتيجة المهمة</translation>
     </message>
     <message>
         <source>Failed to save mission result</source>
-        <translation>Failed to save mission result</translation>
+        <translation>فشل حفظ نتيجة المهمة</translation>
     </message>
     <message>
         <source>Failed to get mission progress</source>
-        <translation>Failed to get mission progress</translation>
+        <translation>فشل جلب تقدّم المهمة</translation>
     </message>
     <message>
         <source>Failed to get campaign mission progress</source>
-        <translation>Failed to get campaign mission progress</translation>
+        <translation>فشل جلب تقدّم مهمة الحملة</translation>
     </message>
     <message>
         <source>Failed to register campaign mission</source>
-        <translation>Failed to register campaign mission</translation>
+        <translation>فشل تسجيل مهمة الحملة</translation>
     </message>
     <message>
         <source>Failed to mark mission as completed</source>
-        <translation>Failed to mark mission as completed</translation>
+        <translation>فشل وسم المهمة كمكتملة</translation>
     </message>
     <message>
         <source>Failed to unlock next mission</source>
-        <translation>Failed to unlock next mission</translation>
+        <translation>فشل فتح المهمة التالية</translation>
     </message>
     <message>
         <source>Failed to prune removed campaign missions</source>
-        <translation>Failed to prune removed campaign missions</translation>
+        <translation>فشل تنقية مهام الحملة المحذوفة</translation>
     </message>
     <message>
         <source>Failed to look up the completed mission</source>
-        <translation>Failed to look up the completed mission</translation>
+        <translation>فشل البحث عن المهمة المكتملة</translation>
     </message>
     <message>
         <source>Mission %1 is not part of campaign %2</source>
-        <translation>Mission %1 is not part of campaign %2</translation>
+        <translation>المهمة %1 ليست جزءاً من الحملة %2</translation>
     </message>
     <message>
         <source>Failed to find the next mission</source>
-        <translation>Failed to find the next mission</translation>
+        <translation>فشل العثور على المهمة التالية</translation>
     </message>
     <message>
         <source>Failed to count remaining missions</source>
-        <translation>Failed to count remaining missions</translation>
+        <translation>فشل إحصاء المهام المتبقية</translation>
     </message>
 </context>
 <context>
     <name>SettingsPanel</name>
     <message>
         <source>Settings</source>
-        <translation>Settings</translation>
+        <translation>الإعدادات</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Close</translation>
+        <translation>إغلاق</translation>
     </message>
     <message>
         <source>Language</source>
-        <translation>Language</translation>
+        <translation>اللغة</translation>
     </message>
     <message>
         <source>Select Language:</source>
-        <translation>Select Language:</translation>
+        <translation>اختر اللغة:</translation>
     </message>
     <message>
         <source>Language changes apply immediately</source>
-        <translation>Language changes apply immediately</translation>
+        <translation>تُطبَّق تغييرات اللغة فوراً</translation>
     </message>
     <message>
         <source>Protanopia (red-blind)</source>
-        <translation>Protanopia (red-blind)</translation>
+        <translation>عمى البروتانوبيا (عمى الأحمر)</translation>
     </message>
     <message>
         <source>Deuteranopia (green-blind)</source>
-        <translation>Deuteranopia (green-blind)</translation>
+        <translation>عمى الديوتيرانوبيا (عمى الأخضر)</translation>
     </message>
     <message>
         <source>Tritanopia (blue-blind)</source>
-        <translation>Tritanopia (blue-blind)</translation>
+        <translation>عمى التريتانوبيا (عمى الأزرق)</translation>
     </message>
     <message>
         <source>Standard</source>
-        <translation>Standard</translation>
+        <translation>قياسي</translation>
     </message>
     <message>
         <source>Audio Settings</source>
-        <translation>Audio Settings</translation>
+        <translation>إعدادات الصوت</translation>
     </message>
     <message>
         <source>Master Volume:</source>
-        <translation>Master Volume:</translation>
+        <translation>مستوى الصوت العام:</translation>
     </message>
     <message>
         <source>Music Volume:</source>
-        <translation>Music Volume:</translation>
+        <translation>مستوى الموسيقى:</translation>
     </message>
     <message>
         <source>SFX Volume:</source>
-        <translation>SFX Volume:</translation>
+        <translation>مستوى المؤثرات:</translation>
     </message>
     <message>
         <source>Voice Volume:</source>
-        <translation>Voice Volume:</translation>
+        <translation>مستوى الأصوات البشرية:</translation>
     </message>
     <message>
         <source>Ambience Volume:</source>
-        <translation>Ambience Volume:</translation>
+        <translation>مستوى الأجواء:</translation>
     </message>
     <message>
         <source>Graphics Settings</source>
-        <translation>Graphics Settings</translation>
+        <translation>إعدادات الرسوميات</translation>
     </message>
     <message>
         <source>Graphics Quality:</source>
-        <translation>Graphics Quality:</translation>
+        <translation>جودة الرسوميات:</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Autosave</translation>
+        <translation>الحفظ التلقائي</translation>
     </message>
     <message>
         <source>Autosaves to keep:</source>
-        <translation>Autosaves to keep:</translation>
+        <translation>عدد الحفوظات التلقائية المحفوظة:</translation>
     </message>
     <message>
         <source>Autosave every:</source>
-        <translation>Autosave every:</translation>
+        <translation>احفظ تلقائياً كل:</translation>
     </message>
     <message>
         <source>Off</source>
-        <translation>Off</translation>
+        <translation>معطّل</translation>
     </message>
     <message>
         <source>%1 min</source>
-        <translation>%1 min</translation>
+        <translation>%1 د</translation>
     </message>
     <message>
         <source>Older autosaves beyond this count are deleted automatically.</source>
-        <translation>Older autosaves beyond this count are deleted automatically.</translation>
+        <translation>تُحذف الحفوظات التلقائية الأقدم من هذا العدد تلقائياً.</translation>
     </message>
     <message>
         <source>Accessibility</source>
-        <translation>Accessibility</translation>
+        <translation>إمكانية الوصول</translation>
     </message>
     <message>
         <source>Interface Scale:</source>
-        <translation>Interface Scale:</translation>
+        <translation>مقياس الواجهة:</translation>
     </message>
     <message>
         <source>Colour Vision:</source>
-        <translation>Colour Vision:</translation>
+        <translation>رؤية الألوان:</translation>
     </message>
     <message>
         <source>Reduce motion</source>
-        <translation>Reduce motion</translation>
+        <translation>تقليل الحركة</translation>
     </message>
     <message>
         <source>Removes transitions and idle animations across every screen</source>
-        <translation>Removes transitions and idle animations across every screen</translation>
+        <translation>يزيل الانتقالات والحركات الساكنة من كل الشاشات</translation>
     </message>
     <message>
         <source>High contrast</source>
-        <translation>High contrast</translation>
+        <translation>تباين عالٍ</translation>
     </message>
     <message>
         <source>Raises panel and text contrast for low vision</source>
-        <translation>Raises panel and text contrast for low vision</translation>
+        <translation>يرفع تباين اللوحات والنصوص لضعاف البصر</translation>
     </message>
     <message>
         <source>Always show keyboard focus</source>
-        <translation>Always show keyboard focus</translation>
+        <translation>أظهر مؤشر تركيز لوحة المفاتيح دائماً</translation>
     </message>
     <message>
         <source>Keeps the focus outline visible even after clicking</source>
-        <translation>Keeps the focus outline visible even after clicking</translation>
+        <translation>يُبقي إطار التركيز ظاهراً حتى بعد النقر</translation>
     </message>
     <message>
         <source>These settings apply to the campaign, skirmish and editor tools alike.</source>
-        <translation>These settings apply to the campaign, skirmish and editor tools alike.</translation>
+        <translation>تنطبق هذه الإعدادات على الحملة والمناوشة وأدوات المحرر سواءً بسواء.</translation>
     </message>
     <message>
         <source>About</source>
-        <translation>About</translation>
+        <translation>عن اللعبة</translation>
     </message>
     <message>
         <source>Standard of Iron - RTS Game</source>
-        <translation>Standard of Iron - RTS Game</translation>
+        <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
     </message>
     <message>
         <source>Version %1</source>
-        <translation>Version %1</translation>
+        <translation>الإصدار %1</translation>
     </message>
     <message>
         <source>Third-Party Software</source>
-        <translation>Third-Party Software</translation>
+        <translation>برمجيات الطرف الثالث</translation>
     </message>
     <message>
         <source>This game uses the Qt framework, licensed under the GNU Lesser General Public License v3 (LGPL v3).</source>
-        <translation>This game uses the Qt framework, licensed under the GNU Lesser General Public License v3 (LGPL v3).</translation>
+        <translation>تستخدم هذه اللعبة إطار عمل Qt المرخَّص بموجب رخصة جنو العمومية الصغرى الإصدار 3 (LGPL v3).</translation>
     </message>
     <message>
         <source>Qt is dynamically linked, allowing you to replace Qt libraries with your own versions.</source>
-        <translation>Qt is dynamically linked, allowing you to replace Qt libraries with your own versions.</translation>
+        <translation>يُربط Qt ديناميكياً، ما يتيح لك استبدال مكتباته بنسخك الخاصة.</translation>
     </message>
     <message>
         <source>LGPL v3 License</source>
-        <translation>LGPL v3 License</translation>
+        <translation>رخصة LGPL v3</translation>
     </message>
     <message>
         <source>Qt Website</source>
-        <translation>Qt Website</translation>
+        <translation>موقع Qt</translation>
     </message>
     <message>
         <source>Controls</source>
-        <translation>Controls</translation>
+        <translation>أدوات التحكم</translation>
     </message>
     <message>
         <source>Edge scrolling</source>
-        <translation>Edge scrolling</translation>
+        <translation>التمرير من الحواف</translation>
     </message>
     <message>
         <source>Pans the camera when the cursor reaches the edge of the screen</source>
-        <translation>Pans the camera when the cursor reaches the edge of the screen</translation>
+        <translation>يحرّك الكاميرا حين يبلغ المؤشر حافة الشاشة</translation>
     </message>
     <message>
         <source>Edge scroll speed:</source>
-        <translation>Edge scroll speed:</translation>
+        <translation>سرعة التمرير من الحواف:</translation>
     </message>
     <message>
         <source>Team ring patterns</source>
-        <translation>Team ring patterns</translation>
+        <translation>أنماط حلقات الفرق</translation>
     </message>
     <message>
         <source>On automatically while a colour vision mode is selected</source>
-        <translation>On automatically while a colour vision mode is selected</translation>
+        <translation>يُفعَّل تلقائياً ما دام وضع رؤية الألوان مختاراً</translation>
     </message>
     <message>
         <source>Marks each side with its own selection ring shape as well as its colour</source>
-        <translation>Marks each side with its own selection ring shape as well as its colour</translation>
+        <translation>يميّز كل طرف بشكل حلقة تحديد خاص به إضافة إلى لونه</translation>
     </message>
     <message>
         <source>Damage numbers</source>
-        <translation>Damage numbers</translation>
+        <translation>أرقام الضرر</translation>
     </message>
     <message>
         <source>Shows the damage dealt above each hit while leading the commander</source>
-        <translation>Shows the damage dealt above each hit while leading the commander</translation>
+        <translation>يعرض الضرر المُوقَع فوق كل إصابة أثناء قيادة القائد</translation>
     </message>
     <message>
         <source>Screen effects:</source>
-        <translation>Screen effects:</translation>
+        <translation>مؤثرات الشاشة:</translation>
     </message>
     <message>
         <source>Camera motion:</source>
-        <translation>Camera motion:</translation>
+        <translation>حركة الكاميرا:</translation>
     </message>
     <message>
         <source>Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.</source>
-        <translation>Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.</translation>
+        <translation>يقلّل اهتزاز الرأس وتمايله أثناء قيادة القائد. ولا يحدّ أبداً من حركة الكاميرا التي تطلبها.</translation>
     </message>
     <message>
         <source>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</source>
-        <translation>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</translation>
+        <translation>أُنتجت الموسيقى بأداة AudioCraft من ميتا، ونماذجها مرخَّصة برخصة CC BY-NC 4.0. تُوزَّع هذه اللعبة مجاناً، وهو ما تجيزه تلك الرخصة؛ ولا يجوز بيعها.</translation>
     </message>
     <message>
         <source>Voice lines recorded by Adam Djellouli.</source>
-        <translation>Voice lines recorded by Adam Djellouli.</translation>
+        <translation>سجّل الأصوات آدم جلولي.</translation>
     </message>
     <message>
         <source>CC BY-NC 4.0 License</source>
-        <translation>CC BY-NC 4.0 License</translation>
+        <translation>رخصة CC BY-NC 4.0</translation>
     </message>
     <message>
         <source>AudioCraft</source>
@@ -5455,316 +5455,316 @@ Wide vision and a durable settlement anchor</translation>
     <name>SkirmishLoader</name>
     <message>
         <source>Invalid team configuration: At least two teams must be selected to start a match.</source>
-        <translation>Invalid team configuration: At least two teams must be selected to start a match.</translation>
+        <translation>إعداد الفرق غير صالح: يجب اختيار فريقين على الأقل لبدء مباراة.</translation>
     </message>
 </context>
 <context>
     <name>Theme</name>
     <message>
         <source>Red</source>
-        <translation>Red</translation>
+        <translation>أحمر</translation>
     </message>
     <message>
         <source>Blue</source>
-        <translation>Blue</translation>
+        <translation>أزرق</translation>
     </message>
     <message>
         <source>Brown</source>
-        <translation>Brown</translation>
+        <translation>بني</translation>
     </message>
     <message>
         <source>Green</source>
-        <translation>Green</translation>
+        <translation>أخضر</translation>
     </message>
     <message>
         <source>Yellow</source>
-        <translation>Yellow</translation>
+        <translation>أصفر</translation>
     </message>
     <message>
         <source>Orange</source>
-        <translation>Orange</translation>
+        <translation>برتقالي</translation>
     </message>
     <message>
         <source>Purple</source>
-        <translation>Purple</translation>
+        <translation>بنفسجي</translation>
     </message>
     <message>
         <source>Cyan</source>
-        <translation>Cyan</translation>
+        <translation>سماوي</translation>
     </message>
     <message>
         <source>Pink</source>
-        <translation>Pink</translation>
+        <translation>وردي</translation>
     </message>
 </context>
 <context>
     <name>UndeadAwakeningSystem</name>
     <message>
         <source>Iron Sepulcher %1</source>
-        <translation>Iron Sepulcher %1</translation>
+        <translation>ضريح الحديد %1</translation>
     </message>
     <message>
         <source>The shrine answers to you now. Its dead fall still.</source>
-        <translation>The shrine answers to you now. Its dead fall still.</translation>
+        <translation>صار المزار يأتمر بك الآن. وسكن موتاه.</translation>
     </message>
     <message>
         <source>The shrine is broken. Every risen guardian crumbles.</source>
-        <translation>The shrine is broken. Every risen guardian crumbles.</translation>
+        <translation>تحطّم المزار. وانهار كل حارس نهض منه.</translation>
     </message>
     <message>
         <source>Wave %1/%2</source>
-        <translation>Wave %1/%2</translation>
+        <translation>الموجة %1/%2</translation>
     </message>
     <message>
         <source>The Iron Sepulcher wakes. %1 rises to meet you.</source>
-        <translation>The Iron Sepulcher wakes. %1 rises to meet you.</translation>
+        <translation>يستيقظ ضريح الحديد. ينهض %1 للقائك.</translation>
     </message>
     <message>
         <source>%1 claws out of the ground.</source>
-        <translation>%1 claws out of the ground.</translation>
+        <translation>يشقّ %1 طريقه من باطن الأرض.</translation>
     </message>
     <message>
         <source>The risen guardians are put down. The ground is quiet.</source>
-        <translation>The risen guardians are put down. The ground is quiet.</translation>
+        <translation>أُجهز على الحرّاس الناهضين. وسكنت الأرض.</translation>
     </message>
     <message>
         <source>The barrow gives up its hoard: %1.</source>
-        <translation>The barrow gives up its hoard: %1.</translation>
+        <translation>يجود التلّ الجنائزي بكنزه: %1.</translation>
     </message>
 </context>
 <context>
     <name>Units</name>
     <message>
         <source>Archer</source>
-        <translation>Archer</translation>
+        <translation>رامٍ</translation>
     </message>
     <message>
         <source>Swordsman</source>
-        <translation>Swordsman</translation>
+        <translation>سيّاف</translation>
     </message>
     <message>
         <source>Spearman</source>
-        <translation>Spearman</translation>
+        <translation>رامح</translation>
     </message>
     <message>
         <source>Mounted Knight</source>
-        <translation>Mounted Knight</translation>
+        <translation>فارس مدرَّع</translation>
     </message>
     <message>
         <source>Horse Archer</source>
-        <translation>Horse Archer</translation>
+        <translation>رامٍ فارس</translation>
     </message>
     <message>
         <source>Horse Spearman</source>
-        <translation>Horse Spearman</translation>
+        <translation>رامح فارس</translation>
     </message>
     <message>
         <source>Healer</source>
-        <translation>Healer</translation>
+        <translation>معالج</translation>
     </message>
     <message>
         <source>Skeleton Swordsman</source>
-        <translation>Skeleton Swordsman</translation>
+        <translation>سيّاف هيكلي</translation>
     </message>
     <message>
         <source>Skeleton Archer</source>
-        <translation>Skeleton Archer</translation>
+        <translation>رامٍ هيكلي</translation>
     </message>
     <message>
         <source>Grave Priest</source>
-        <translation>Grave Priest</translation>
+        <translation>كاهن القبور</translation>
     </message>
     <message>
         <source>Catapult</source>
-        <translation>Catapult</translation>
+        <translation>منجنيق</translation>
     </message>
     <message>
         <source>Ballista</source>
-        <translation>Ballista</translation>
+        <translation>بالِستا</translation>
     </message>
     <message>
         <source>War Elephant</source>
-        <translation>War Elephant</translation>
+        <translation>فيل حرب</translation>
     </message>
     <message>
         <source>Quintus Fabius Maximus</source>
-        <translation>Quintus Fabius Maximus</translation>
+        <translation>كوينتوس فابيوس مكسيموس</translation>
     </message>
     <message>
         <source>Publius Cornelius Scipio</source>
-        <translation>Publius Cornelius Scipio</translation>
+        <translation>بوبليوس كورنيليوس سكيبيو</translation>
     </message>
     <message>
         <source>Marcus Claudius Marcellus</source>
-        <translation>Marcus Claudius Marcellus</translation>
+        <translation>ماركوس كلوديوس مارتشيلوس</translation>
     </message>
     <message>
         <source>Hanno the Great</source>
-        <translation>Hanno the Great</translation>
+        <translation>حنون العظيم</translation>
     </message>
     <message>
         <source>Hasdrubal Barca</source>
-        <translation>Hasdrubal Barca</translation>
+        <translation>حصدربعل برقا</translation>
     </message>
     <message>
         <source>Hannibal Barca</source>
-        <translation>Hannibal Barca</translation>
+        <translation>حنبعل برقا</translation>
     </message>
     <message>
         <source>Builder</source>
-        <translation>Builder</translation>
+        <translation>بنّاء</translation>
     </message>
     <message>
         <source>Civilian</source>
-        <translation>Civilian</translation>
+        <translation>مدني</translation>
     </message>
     <message>
         <source>Sheep</source>
-        <translation>Sheep</translation>
+        <translation>خروف</translation>
     </message>
     <message>
         <source>Wolf</source>
-        <translation>Wolf</translation>
+        <translation>ذئب</translation>
     </message>
     <message>
         <source>Unknown Troop</source>
-        <translation>Unknown Troop</translation>
+        <translation>قوة مجهولة</translation>
     </message>
     <message>
         <source>African War Elephant</source>
-        <translation>African War Elephant</translation>
+        <translation>فيل حرب أفريقي</translation>
     </message>
     <message>
         <source>Auxiliary Archer</source>
-        <translation>Auxiliary Archer</translation>
+        <translation>رامٍ مساعد</translation>
     </message>
     <message>
         <source>Carthaginian Ballista</source>
-        <translation>Carthaginian Ballista</translation>
+        <translation>بالِستا قرطاجية</translation>
     </message>
     <message>
         <source>Carthaginian Catapult</source>
-        <translation>Carthaginian Catapult</translation>
+        <translation>منجنيق قرطاجي</translation>
     </message>
     <message>
         <source>Citizen Infantry</source>
-        <translation>Citizen Infantry</translation>
+        <translation>مشاة المواطنين</translation>
     </message>
     <message>
         <source>Equites</source>
-        <translation>Equites</translation>
+        <translation>الفرسان الرومان</translation>
     </message>
     <message>
         <source>Faber</source>
-        <translation>Faber</translation>
+        <translation>الصانع الروماني</translation>
     </message>
     <message>
         <source>Legionary</source>
-        <translation>Legionary</translation>
+        <translation>جندي فيلق</translation>
     </message>
     <message>
         <source>Liby-Phoenician Spear</source>
-        <translation>Liby-Phoenician Spear</translation>
+        <translation>رامح ليبي فينيقي</translation>
     </message>
     <message>
         <source>Libyan Archer</source>
-        <translation>Libyan Archer</translation>
+        <translation>رامٍ ليبي</translation>
     </message>
     <message>
         <source>Medicus</source>
-        <translation>Medicus</translation>
+        <translation>الطبيب الروماني</translation>
     </message>
     <message>
         <source>Numidian Cavalry</source>
-        <translation>Numidian Cavalry</translation>
+        <translation>فرسان نوميديون</translation>
     </message>
     <message>
         <source>Onager</source>
-        <translation>Onager</translation>
+        <translation>أوناجر</translation>
     </message>
     <message>
         <source>Phoenician Craftsman</source>
-        <translation>Phoenician Craftsman</translation>
+        <translation>صانع فينيقي</translation>
     </message>
     <message>
         <source>Sacred Band Healer</source>
-        <translation>Sacred Band Healer</translation>
+        <translation>معالج الكتيبة المقدسة</translation>
     </message>
     <message>
         <source>Triarius</source>
-        <translation>Triarius</translation>
+        <translation>تريّاري</translation>
     </message>
 </context>
 <context>
     <name>WallNetworkService</name>
     <message>
         <source>Blocked by an existing wall.</source>
-        <translation>Blocked by an existing wall.</translation>
+        <translation>يحجبه سور قائم.</translation>
     </message>
     <message>
         <source>Cannot build there.</source>
-        <translation>Cannot build there.</translation>
+        <translation>لا يمكن البناء هناك.</translation>
     </message>
 </context>
 <context>
     <name>WaveArchetype</name>
     <message>
         <source>Probing column</source>
-        <translation>Probing column</translation>
+        <translation>رتل استطلاع</translation>
     </message>
     <message>
         <source>Assault line</source>
-        <translation>Assault line</translation>
+        <translation>خط اقتحام</translation>
     </message>
     <message>
         <source>Cavalry flank</source>
-        <translation>Cavalry flank</translation>
+        <translation>جناح فرسان</translation>
     </message>
     <message>
         <source>Skirmish screen</source>
-        <translation>Skirmish screen</translation>
+        <translation>ستار مناوشة</translation>
     </message>
     <message>
         <source>Siege column</source>
-        <translation>Siege column</translation>
+        <translation>رتل حصار</translation>
     </message>
     <message>
         <source>Elite guard</source>
-        <translation>Elite guard</translation>
+        <translation>حرس النخبة</translation>
     </message>
 </context>
 <context>
     <name>WaveTracker</name>
     <message>
         <source>All waves broken</source>
-        <translation>All waves broken</translation>
+        <translation>انكسرت كل الموجات</translation>
     </message>
     <message>
         <source>Incoming</source>
-        <translation>Incoming</translation>
+        <translation>قادمة</translation>
     </message>
     <message>
         <source>Engaged</source>
-        <translation>Engaged</translation>
+        <translation>مشتبكة</translation>
     </message>
     <message>
         <source>Next wave</source>
-        <translation>Next wave</translation>
+        <translation>الموجة التالية</translation>
     </message>
     <message>
         <source>Wave %1 / %2</source>
-        <translation>Wave %1 / %2</translation>
+        <translation>الموجة %1 / %2</translation>
     </message>
     <message>
         <source>%1 left</source>
-        <translation>%1 left</translation>
+        <translation>بقي %1</translation>
     </message>
 </context>
 <context>
     <name>WildlifeSystem</name>
     <message>
         <source>Wolves are moving on the valley.</source>
-        <translation>Wolves are moving on the valley.</translation>
+        <translation>الذئاب تتحرك نحو الوادي.</translation>
     </message>
 </context>
 <context>
@@ -5781,17 +5781,17 @@ To fix:
 - Run run_debug_softwaregl.cmd or set QT_OPENGL=software
 - Update graphics drivers
 - On VMs: Enable 3D acceleration in VM settings</source>
-        <translation>Failed to initialize OpenGL renderer.
+        <translation>فشلت تهيئة محرك عرض OpenGL.
 
-This usually means:
-1. Graphics drivers don&apos;t support required OpenGL 3.3 Core Profile
-2. Running in a VM with incomplete OpenGL support
-3. Qt software OpenGL fallback is unavailable or failed to initialize
+يعني هذا عادةً:
+1. أن تعريفات الرسوميات لا تدعم ملف OpenGL 3.3 Core المطلوب
+2. أن التشغيل يجري في آلة افتراضية بدعم OpenGL ناقص
+3. أن بديل OpenGL البرمجي في Qt غير متاح أو فشلت تهيئته
 
-To fix:
-- Run run_debug_softwaregl.cmd or set QT_OPENGL=software
-- Update graphics drivers
-- On VMs: Enable 3D acceleration in VM settings</translation>
+للإصلاح:
+- شغّل run_debug_softwaregl.cmd أو اضبط QT_OPENGL=software
+- حدّث تعريفات الرسوميات
+- في الآلات الافتراضية: فعّل تسريع الرسوم ثلاثية الأبعاد في إعداداتها</translation>
     </message>
 </context>
 </TS>

@@ -22,7 +22,16 @@ auto RenderBootstrap::initialize(Renderer& renderer, Camera& camera) -> bool {
 
   qInfo() << "RenderBootstrap: Logging OpenGL capabilities...";
   GLCapabilities::log_capabilities();
+  GLCapabilities::report_minimum_version();
   qInfo() << "RenderBootstrap: Capabilities logged";
+
+  if (!GLCapabilities::meets_minimum_version()) {
+    qCritical() << "RenderBootstrap: the driver is below the OpenGL"
+                << GLCapabilities::k_required_major << "."
+                << GLCapabilities::k_required_minor
+                << "Core floor the renderer requires";
+    return false;
+  }
 
   qInfo() << "RenderBootstrap: Calling renderer.initialize()...";
   if (!renderer.initialize()) {

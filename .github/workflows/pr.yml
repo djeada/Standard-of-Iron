@@ -96,6 +96,13 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: bash scripts/run-tests.sh build --gtest_brief=1
 
+      # The catalogues are tracked, so they drift the moment someone adds a
+      # qsTr() without rerunning `make translations`. They had drifted by 275
+      # strings before the v0.1.0 audit caught it, precisely because nothing
+      # here looked. This job already has a full Qt, so lupdate is available.
+      - name: Translation coverage
+        run: make translations-check
+
       - name: Content validation
         run: ./build/bin/content_validator assets
 

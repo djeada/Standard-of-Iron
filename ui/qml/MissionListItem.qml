@@ -230,10 +230,17 @@ Rectangle {
         }
 
         Text {
+            id: advanceArrow
+
             text: "➤"
             font.pointSize: Theme.fontSizeTitle
             color: "#c29555"
             Layout.alignment: Qt.AlignVCenter
+
+            transform: Scale {
+                origin.x: advanceArrow.width / 2
+                xScale: Design.Icons.mirrored ? -1 : 1
+            }
         }
     }
 

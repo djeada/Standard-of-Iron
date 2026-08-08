@@ -7,10 +7,18 @@ CC0 recordings rather than generating them:
 | ------------------------------ | ------------- | ------------------- | ----------------------- |
 | Looping ambience beds          | `sources.py`  | `build_beds.py`     | `assets/audio/ambience` |
 | Short combat and movement cues | `oneshots.py` | `build_oneshots.py` | `assets/audio/sfx`      |
+| Composed battle cues           | `battle.py`   | `build_battle.py`   | `assets/audio/sfx`      |
 
-Both are documented below. `slice.py` is shared: it finds the individual hits
-inside a recording, which is what the one-shot builder needs and what the
+All three are documented below. `slice.py` is shared: it finds the individual
+hits inside a recording, which is what the one-shot builder needs and what the
 marching ambience beds are layered from.
+
+The three differ in what they do to a source. `build_beds.py` cuts one window
+and loop-seals it. `build_oneshots.py` finds the transients in a performance
+and keeps the best few. `build_battle.py` sums several recordings together to
+make a sound nobody recorded — there is no field recording of a Punic-war
+battlefield, so a volley is a swish fired six times inside a third of a second
+and a cavalry charge is three separate gallop performances laid over each other.
 
 ## Ambience beds
 

@@ -302,6 +302,7 @@ Rectangle {
                 var rank = root.city_rank[city.name];
                 markers.push({
                         "name": city.name,
+                        "display_name": city.display_name || city.name,
                         "uv": city.uv,
                         "rank": rank === undefined ? root.city_rank_default : rank,
                         "labelled": false,
@@ -330,7 +331,7 @@ Rectangle {
     function label_plate_size(marker) {
         var capital = marker.rank === 0;
         var metrics = capital ? capital_metrics : town_metrics;
-        metrics.text = marker.name;
+        metrics.text = marker.display_name || marker.name;
         var pad_x = capital ? root.capital_plate_pad_x : root.town_plate_pad_x;
         return {
             "width": metrics.advanceWidth + pad_x * 2,
@@ -984,7 +985,7 @@ Rectangle {
                         id: label_text
 
                         anchors.centerIn: parent
-                        text: city_marker.modelData.name
+                        text: city_marker.modelData.display_name || city_marker.modelData.name
                         color: "#241a10"
                         font.family: root.map_label_family
                         font.pixelSize: city_marker.is_capital ? root.capital_font_px : root.town_font_px

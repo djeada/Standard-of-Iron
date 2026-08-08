@@ -2,6 +2,7 @@
 
 #include <QCoreApplication>
 #include <QDebug>
+#include <QGuiApplication>
 #include <qcoreapplication.h>
 #include <qglobal.h>
 #include <qobject.h>
@@ -10,11 +11,19 @@
 
 #include "user_settings.h"
 
+namespace {
+
+auto layout_direction_for(const QString& language) -> Qt::LayoutDirection {
+  return language == QLatin1String("ar") ? Qt::RightToLeft : Qt::LeftToRight;
+}
+
+} // namespace
+
 LanguageManager::LanguageManager(QObject* parent)
     : QObject(parent)
     , m_current_language("en")
     , m_translator(new QTranslator(this)) {
-  m_available_languages << "en" << "de" << "pt_br";
+  m_available_languages << "en" << "de" << "es" << "pt_br" << "ar";
 
 #ifndef DEFAULT_LANG
 #define DEFAULT_LANG "en"
@@ -63,6 +72,7 @@ void LanguageManager::load_language(const QString& language) {
   }
 
   QCoreApplication::installTranslator(m_translator);
+  QGuiApplication::setLayoutDirection(layout_direction_for(language));
   m_current_language = language;
   App::Core::UserSettings::save_language(language);
   qInfo() << "Language changed to:" << language;
@@ -76,8 +86,14 @@ auto LanguageManager::language_display_name(const QString& language) -> QString 
   if (language == "de") {
     return "Deutsch (German)";
   }
+  if (language == "es") {
+    return "Español (Spanish)";
+  }
   if (language == "pt_br") {
     return "Português (Brasil)";
+  }
+  if (language == "ar") {
+    return "العربية (Arabic)";
   }
   return language;
 }

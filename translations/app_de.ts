@@ -2,6 +2,185 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="de_DE">
 <context>
+    <name>ActivityIcons</name>
+    <message>
+        <source>Idle</source>
+        <translation>Untätig</translation>
+    </message>
+    <message>
+        <source>Standing by and awaiting orders.</source>
+        <translation>Bereit und wartet auf Befehle.</translation>
+    </message>
+    <message>
+        <source>Moving</source>
+        <translation>In Bewegung</translation>
+    </message>
+    <message>
+        <source>Marching to the ordered position.</source>
+        <translation>Marschiert zur befohlenen Position.</translation>
+    </message>
+    <message>
+        <source>Attacking</source>
+        <translation>Greift an</translation>
+    </message>
+    <message>
+        <source>Engaging the assigned target.</source>
+        <translation>Bekämpft das zugewiesene Ziel.</translation>
+    </message>
+    <message>
+        <source>Patrolling</source>
+        <translation>Patrouilliert</translation>
+    </message>
+    <message>
+        <source>Walking the patrol route between its waypoints.</source>
+        <translation>Läuft die Patrouillenroute zwischen den Wegpunkten ab.</translation>
+    </message>
+    <message>
+        <source>Guarding</source>
+        <translation>Bewacht</translation>
+    </message>
+    <message>
+        <source>Holding a guard post and answering threats near it.</source>
+        <translation>Hält einen Wachposten und reagiert auf Bedrohungen in der Nähe.</translation>
+    </message>
+    <message>
+        <source>Holding position</source>
+        <translation>Hält Stellung</translation>
+    </message>
+    <message>
+        <source>Rooted in place; it will not pursue.</source>
+        <translation>Fest an Ort und Stelle; verfolgt nicht.</translation>
+    </message>
+    <message>
+        <source>Building</source>
+        <translation>Baut</translation>
+    </message>
+    <message>
+        <source>Raising a structure on the marked site.</source>
+        <translation>Errichtet ein Bauwerk auf dem markierten Platz.</translation>
+    </message>
+    <message>
+        <source>Repairing</source>
+        <translation>Repariert</translation>
+    </message>
+    <message>
+        <source>Mending a damaged structure.</source>
+        <translation>Setzt ein beschädigtes Bauwerk instand.</translation>
+    </message>
+    <message>
+        <source>Dismantling</source>
+        <translation>Reißt ab</translation>
+    </message>
+    <message>
+        <source>Taking a structure apart.</source>
+        <translation>Nimmt ein Bauwerk auseinander.</translation>
+    </message>
+    <message>
+        <source>Cutting timber</source>
+        <translation>Fällt Holz</translation>
+    </message>
+    <message>
+        <source>Felling a tree for wood.</source>
+        <translation>Fällt einen Baum für Holz.</translation>
+    </message>
+    <message>
+        <source>Quarrying stone</source>
+        <translation>Bricht Stein</translation>
+    </message>
+    <message>
+        <source>Breaking a boulder for stone.</source>
+        <translation>Zerschlägt einen Felsblock für Stein.</translation>
+    </message>
+    <message>
+        <source>Mining iron</source>
+        <translation>Schürft Eisen</translation>
+    </message>
+    <message>
+        <source>Working an ore deposit for iron.</source>
+        <translation>Baut ein Erzvorkommen für Eisen ab.</translation>
+    </message>
+    <message>
+        <source>Auto gathering</source>
+        <translation>Sammelt selbstständig</translation>
+    </message>
+    <message>
+        <source>Standing order: seek out the nearest resource and keep collecting.</source>
+        <translation>Dauerbefehl: die nächste Ressource aufsuchen und weiter sammeln.</translation>
+    </message>
+    <message>
+        <source>Delivering</source>
+        <translation>Liefert ab</translation>
+    </message>
+    <message>
+        <source>Carrying its load to the barracks.</source>
+        <translation>Trägt seine Last zur Kaserne.</translation>
+    </message>
+    <message>
+        <source>Healing</source>
+        <translation>Heilt</translation>
+    </message>
+    <message>
+        <source>Tending wounded allies nearby.</source>
+        <translation>Versorgt verwundete Verbündete in der Nähe.</translation>
+    </message>
+    <message>
+        <source>Training</source>
+        <translation>Bildet aus</translation>
+    </message>
+    <message>
+        <source>Producing the next unit in the queue.</source>
+        <translation>Stellt die nächste Einheit der Warteschlange her.</translation>
+    </message>
+    <message>
+        <source>Blocked</source>
+        <translation>Blockiert</translation>
+    </message>
+    <message>
+        <source>Waiting: the way is blocked or the target is gone.</source>
+        <translation>Wartet: der Weg ist versperrt oder das Ziel ist fort.</translation>
+    </message>
+    <message>
+        <source>Active</source>
+        <translation>Aktiv</translation>
+    </message>
+    <message>
+        <source>Work is under way.</source>
+        <translation>Die Arbeit läuft.</translation>
+    </message>
+    <message>
+        <source>Queued</source>
+        <translation>In Warteschlange</translation>
+    </message>
+    <message>
+        <source>Ordered, but the unit is still on its way.</source>
+        <translation>Befohlen, doch die Einheit ist noch unterwegs.</translation>
+    </message>
+    <message>
+        <source>Unavailable</source>
+        <translation>Nicht verfügbar</translation>
+    </message>
+    <message>
+        <source>The target cannot be worked; give a new order.</source>
+        <translation>Das Ziel kann nicht bearbeitet werden; erteilt einen neuen Befehl.</translation>
+    </message>
+    <message>
+        <source>Interrupted</source>
+        <translation>Unterbrochen</translation>
+    </message>
+    <message>
+        <source>Work stopped part-way; re-issue the order to resume.</source>
+        <translation>Die Arbeit brach ab; erteilt den Befehl erneut, um fortzufahren.</translation>
+    </message>
+    <message>
+        <source>%1 — %2</source>
+        <translation>%1 — %2</translation>
+    </message>
+    <message>
+        <source>%1 (%2 units)</source>
+        <translation>%1 (%2 Einheiten)</translation>
+    </message>
+</context>
+<context>
     <name>App::Controllers::CommandController</name>
     <message>
         <source>Not enough wood, stone, or iron to recruit this unit.</source>
@@ -10,6 +189,10 @@
     <message>
         <source>%1 of %2 positions do not fit on this ground.</source>
         <translation>%1 von %2 Positionen passen nicht auf diesen Untergrund.</translation>
+    </message>
+    <message>
+        <source>Automatic</source>
+        <translation>Automatisch</translation>
     </message>
 </context>
 <context>
@@ -177,10 +360,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Iberisches Binnenland</translation>
     </message>
     <message>
-        <source>Illyria</source>
-        <translation>Illyrien</translation>
-    </message>
-    <message>
         <source>Libya</source>
         <translation>Libyen</translation>
     </message>
@@ -207,6 +386,102 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Transalpine Gaul</source>
         <translation>Gallia transalpina</translation>
+    </message>
+    <message>
+        <source>Illyrian Coast</source>
+        <translation>Illyrische Küste</translation>
+    </message>
+    <message>
+        <source>Illyrian Interior</source>
+        <translation>Illyrisches Binnenland</translation>
+    </message>
+    <message>
+        <source>Aleria</source>
+        <translation>Aleria</translation>
+    </message>
+    <message>
+        <source>Ariminum</source>
+        <translation>Ariminum</translation>
+    </message>
+    <message>
+        <source>Capua</source>
+        <translation>Capua</translation>
+    </message>
+    <message>
+        <source>Caralis</source>
+        <translation>Caralis</translation>
+    </message>
+    <message>
+        <source>Carthage</source>
+        <translation>Karthago</translation>
+    </message>
+    <message>
+        <source>Cirta</source>
+        <translation>Cirta</translation>
+    </message>
+    <message>
+        <source>Emporiae</source>
+        <translation>Emporiae</translation>
+    </message>
+    <message>
+        <source>Leptis</source>
+        <translation>Leptis</translation>
+    </message>
+    <message>
+        <source>Lilybaeum</source>
+        <translation>Lilybaeum</translation>
+    </message>
+    <message>
+        <source>Massalia</source>
+        <translation>Massalia</translation>
+    </message>
+    <message>
+        <source>Mediolanum</source>
+        <translation>Mediolanum</translation>
+    </message>
+    <message>
+        <source>New Carthage</source>
+        <translation>Neukarthago</translation>
+    </message>
+    <message>
+        <source>Numantia</source>
+        <translation>Numantia</translation>
+    </message>
+    <message>
+        <source>Placentia</source>
+        <translation>Placentia</translation>
+    </message>
+    <message>
+        <source>Rome</source>
+        <translation>Rom</translation>
+    </message>
+    <message>
+        <source>Saguntum</source>
+        <translation>Saguntum</translation>
+    </message>
+    <message>
+        <source>Salona</source>
+        <translation>Salona</translation>
+    </message>
+    <message>
+        <source>Syracuse</source>
+        <translation>Syrakus</translation>
+    </message>
+    <message>
+        <source>Tarentum</source>
+        <translation>Tarent</translation>
+    </message>
+    <message>
+        <source>Tarraco</source>
+        <translation>Tarraco</translation>
+    </message>
+    <message>
+        <source>Tingis</source>
+        <translation>Tingis</translation>
+    </message>
+    <message>
+        <source>Veii</source>
+        <translation>Veji</translation>
     </message>
 </context>
 <context>
@@ -371,6 +646,17 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>CommanderSystem</name>
+    <message>
+        <source>Their commander is dead. The host breaks and its camps stand empty.</source>
+        <translation>Ihr Befehlshaber ist tot. Das Heer zerbricht und seine Lager stehen leer.</translation>
+    </message>
+    <message>
+        <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
+        <translation>%1 hat seinen Befehlshaber verloren. Das Heer zerbricht und seine Lager stehen leer.</translation>
+    </message>
+</context>
+<context>
     <name>Commanders</name>
     <message>
         <source>Quintus Fabius Maximus</source>
@@ -399,10 +685,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Fabian Endurance keeps nearby cohorts in line for prolonged fighting.</source>
         <translation>Fabische Ausdauer hält nahe Kohorten für langanhaltende Kämpfe in der Linie.</translation>
-    </message>
-    <message>
-        <source>Nearby allied infantry regenerate health while inside the aura.</source>
-        <translation>Verbündete Infanterie in der Nähe regeneriert Lebenspunkte innerhalb der Aura.</translation>
     </message>
     <message>
         <source>Rally of Patience stabilizes wavering lines during attritional combat.</source>
@@ -437,10 +719,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Konsularischer Angriff steigert das Angriffstempo naher Legionen.</translation>
     </message>
     <message>
-        <source>Nearby allied troops gain bonus melee and ranged damage in aura range.</source>
-        <translation>Verbündete Truppen in Aurareichweite erhalten zusätzlichen Nah- und Fernkampfschaden.</translation>
-    </message>
-    <message>
         <source>Consular Rally rapidly restores morale to wavering assault cohorts.</source>
         <translation>Konsularischer Sammelruf stellt die Moral wankender Angriffskohorten rasch wieder her.</translation>
     </message>
@@ -473,10 +751,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Vorhuttempo beschleunigt Bewegung und Neuausrichtung naher Infanterie.</translation>
     </message>
     <message>
-        <source>Nearby allied infantry move faster while in aura range.</source>
-        <translation>Verbündete Infanterie in Aurareichweite bewegt sich schneller.</translation>
-    </message>
-    <message>
         <source>Vanguard Rally snaps wavering attackers back into coherent motion.</source>
         <translation>Sammelruf der Vorhut reißt wankende Angreifer in geordnete Bewegung zurück.</translation>
     </message>
@@ -489,28 +763,12 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Hanno der Große</translation>
     </message>
     <message>
-        <source>Carthaginian political commander who leverages resources and manpower flows.</source>
-        <translation>Karthagischer politischer Befehlshaber, der Ressourcen- und Menschenströme lenkt.</translation>
-    </message>
-    <message>
         <source>Bronze-spear commander coordinating disciplined mercenary infantry.</source>
         <translation>Befehlshaber mit Bronzespeer, der disziplinierte Söldnerinfanterie koordiniert.</translation>
     </message>
     <message>
-        <source>Accelerates nearby barracks production through logistical oversight.</source>
-        <translation>Beschleunigt die Produktion naher Kasernen durch logistische Aufsicht.</translation>
-    </message>
-    <message>
         <source>Mediocre direct combat impact and risky if exposed.</source>
         <translation>Mäßige unmittelbare Kampfwirkung und riskant, wenn er ungedeckt bleibt.</translation>
-    </message>
-    <message>
-        <source>Contract Logistics boosts nearby production tempo and reserve buildup.</source>
-        <translation>Vertragslogistik steigert das Produktionstempo und den Reserveaufbau in der Nähe.</translation>
-    </message>
-    <message>
-        <source>Nearby allied barracks train units faster while in aura range.</source>
-        <translation>Verbündete Kasernen in Aurareichweite bilden Einheiten schneller aus.</translation>
     </message>
     <message>
         <source>Treasury Rally restores wavering troops and keeps formations from breaking.</source>
@@ -545,10 +803,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Barkidisches Manöver verleiht nahen Truppen überlegene Bewegungskontrolle.</translation>
     </message>
     <message>
-        <source>Nearby allied troops gain movement speed while within aura range.</source>
-        <translation>Verbündete Truppen in Aurareichweite gewinnen an Bewegungstempo.</translation>
-    </message>
-    <message>
         <source>Flank Rally rapidly restores wavering units preparing to maneuver.</source>
         <translation>Sammelruf der Flanke richtet wankende Einheiten vor dem Manöver rasch wieder auf.</translation>
     </message>
@@ -581,16 +835,72 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Hannibalische Offensive verstärkt die Angriffskraft in der Nähe vor entscheidenden Gefechten.</translation>
     </message>
     <message>
-        <source>Nearby allied troops gain substantial attack damage in aura range.</source>
-        <translation>Verbündete Truppen in Aurareichweite gewinnen erheblichen Angriffsschaden.</translation>
-    </message>
-    <message>
         <source>Supreme Rally restores routing or wavering units to fighting order.</source>
         <translation>Oberster Sammelruf bringt fliehende oder wankende Einheiten in Gefechtsordnung zurück.</translation>
     </message>
     <message>
         <source>If Hannibal is killed or wounded, nearby allied morale takes a heavy shock and aura ends.</source>
         <translation>Wird Hannibal getötet oder verwundet, erleidet die Moral naher Verbündeter einen schweren Schock und die Aura endet.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen regenerate health fastest inside the aura.</source>
+        <translation>Verbündete Speerträger in der Nähe regenerieren innerhalb der Aura am schnellsten.</translation>
+    </message>
+    <message>
+        <source>Bracing Thrust</source>
+        <translation>Gestemmter Stoß</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain the most bonus damage in aura range.</source>
+        <translation>Verbündete Schwertkämpfer in der Nähe erhalten in Aurareichweite den größten Schadensbonus.</translation>
+    </message>
+    <message>
+        <source>Consular Riposte</source>
+        <translation>Konsularische Riposte</translation>
+    </message>
+    <message>
+        <source>Nearby allied archers move fastest while in aura range.</source>
+        <translation>Verbündete Bogenschützen in der Nähe bewegen sich in Aurareichweite am schnellsten.</translation>
+    </message>
+    <message>
+        <source>Point-blank Volley</source>
+        <translation>Salve aus nächster Nähe</translation>
+    </message>
+    <message>
+        <source>Carthaginian phalanx commander who holds ground with hired spear levies.</source>
+        <translation>Karthagischer Phalanxbefehlshaber, der mit angeworbenen Speeraufgeboten Boden hält.</translation>
+    </message>
+    <message>
+        <source>Keeps a braced spear line standing far longer than it should.</source>
+        <translation>Hält eine gestemmte Speerlinie weit länger stehen, als sie sollte.</translation>
+    </message>
+    <message>
+        <source>Contract Discipline knits nearby spear levies into an unbroken hedge.</source>
+        <translation>Vertragsdisziplin fügt nahe Speeraufgebote zu einer ungebrochenen Hecke.</translation>
+    </message>
+    <message>
+        <source>Nearby allied spearmen recover health fastest inside the aura.</source>
+        <translation>Verbündete Speerträger in der Nähe erholen sich innerhalb der Aura am schnellsten.</translation>
+    </message>
+    <message>
+        <source>Phalanx Sweep</source>
+        <translation>Phalanxstoß</translation>
+    </message>
+    <message>
+        <source>Nearby allied archers gain the most movement speed in aura range.</source>
+        <translation>Verbündete Bogenschützen in der Nähe gewinnen in Aurareichweite das meiste Tempo.</translation>
+    </message>
+    <message>
+        <source>Hunting Shot</source>
+        <translation>Jagdschuss</translation>
+    </message>
+    <message>
+        <source>Nearby allied swordsmen gain substantial attack damage in aura range.</source>
+        <translation>Verbündete Schwertkämpfer in der Nähe gewinnen in Aurareichweite erheblichen Angriffsschaden.</translation>
+    </message>
+    <message>
+        <source>Encircling Cut</source>
+        <translation>Umfassender Hieb</translation>
     </message>
 </context>
 <context>
@@ -657,7 +967,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Patrouillieren</translation>
+        <translation>Patrouille</translation>
     </message>
     <message>
         <source>Rally</source>
@@ -762,6 +1072,65 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Supply route restored</source>
         <translation>Nachschubweg wiederhergestellt</translation>
+    </message>
+    <message>
+        <source>Unit activities</source>
+        <translation>Einheitentätigkeiten</translation>
+    </message>
+</context>
+<context>
+    <name>ControlsBindingList</name>
+    <message>
+        <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
+        <translation>Drückt eine Taste oder klickt eine Maustaste. Rücktaste löscht, Esc bricht ab.</translation>
+    </message>
+    <message>
+        <source>Select a command to rebind it.</source>
+        <translation>Wählt einen Befehl, um ihn neu zu belegen.</translation>
+    </message>
+    <message>
+        <source>Reset all</source>
+        <translation>Alle zurücksetzen</translation>
+    </message>
+    <message>
+        <source>Every binding is already at its default.</source>
+        <translation>Jede Belegung entspricht bereits der Voreinstellung.</translation>
+    </message>
+    <message>
+        <source>%1 is already used by %2.</source>
+        <translation>%1 wird bereits von %2 verwendet.</translation>
+    </message>
+    <message>
+        <source>Use it here anyway</source>
+        <translation>Trotzdem hier verwenden</translation>
+    </message>
+    <message>
+        <source>Keep as it is</source>
+        <translation>Unverändert lassen</translation>
+    </message>
+    <message>
+        <source>Taking it leaves the other command unbound.</source>
+        <translation>Übernehmt Ihr sie, bleibt der andere Befehl unbelegt.</translation>
+    </message>
+    <message>
+        <source>Conflicts with %1</source>
+        <translation>Konflikt mit %1</translation>
+    </message>
+    <message>
+        <source>Press a key…</source>
+        <translation>Taste drücken …</translation>
+    </message>
+    <message>
+        <source>Unbound</source>
+        <translation>Unbelegt</translation>
+    </message>
+    <message>
+        <source>Default</source>
+        <translation>Voreinstellung</translation>
+    </message>
+    <message>
+        <source>This binding is already the default.</source>
+        <translation>Diese Belegung ist bereits die Voreinstellung.</translation>
     </message>
 </context>
 <context>
@@ -881,6 +1250,22 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Encirclement needs at least three units.</source>
         <translation>Eine Umfassung benötigt mindestens drei Einheiten.</translation>
     </message>
+    <message>
+        <source>Forming up</source>
+        <translation>Formiert sich</translation>
+    </message>
+    <message>
+        <source>Formed</source>
+        <translation>Formiert</translation>
+    </message>
+    <message>
+        <source>Disrupted</source>
+        <translation>Zerrüttet</translation>
+    </message>
+    <message>
+        <source>Breaking</source>
+        <translation>Zerbricht</translation>
+    </message>
 </context>
 <context>
     <name>FormationPanel</name>
@@ -911,22 +1296,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Engines protected behind infantry. Needs a siege engine.</source>
         <translation>Maschinen hinter der Infanterie geschützt. Benötigt eine Belagerungsmaschine.</translation>
-    </message>
-    <message>
-        <source>Formation</source>
-        <translation>Formation</translation>
-    </message>
-    <message>
-        <source>Drag to set frontage and facing • Wheel: depth • Alt: strong flank • Shift: keep order • Ctrl: tighter • Esc: cancel</source>
-        <translation>Ziehen für Frontbreite und Ausrichtung • Rad: Tiefe • Alt: starker Flügel • Umschalt: Reihenfolge halten • Strg: enger • Esc: abbrechen</translation>
-    </message>
-    <message>
-        <source>Hide advanced options</source>
-        <translation>Erweiterte Optionen ausblenden</translation>
-    </message>
-    <message>
-        <source>Advanced options</source>
-        <translation>Erweiterte Optionen</translation>
     </message>
     <message>
         <source>Frontage</source>
@@ -973,10 +1342,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Locker</translation>
     </message>
     <message>
-        <source>Cavalry</source>
-        <translation>Kavallerie</translation>
-    </message>
-    <message>
         <source>Left</source>
         <translation>Links</translation>
     </message>
@@ -987,30 +1352,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Right</source>
         <translation>Rechts</translation>
-    </message>
-    <message>
-        <source>Ranged</source>
-        <translation>Fernkampf</translation>
-    </message>
-    <message>
-        <source>Rear</source>
-        <translation>Hinten</translation>
-    </message>
-    <message>
-        <source>Front</source>
-        <translation>Vorn</translation>
-    </message>
-    <message>
-        <source>Skirmish</source>
-        <translation>Plänkeln</translation>
-    </message>
-    <message>
-        <source>Reserve</source>
-        <translation>Reserve</translation>
-    </message>
-    <message>
-        <source>Automatic</source>
-        <translation>Automatisch</translation>
     </message>
     <message>
         <source>None</source>
@@ -1025,24 +1366,8 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Zwei Reihen</translation>
     </message>
     <message>
-        <source>Movement</source>
-        <translation>Bewegung</translation>
-    </message>
-    <message>
-        <source>Reform at destination</source>
-        <translation>Am Ziel neu formieren</translation>
-    </message>
-    <message>
-        <source>Maintain formation</source>
-        <translation>Formation beibehalten</translation>
-    </message>
-    <message>
         <source>Mixed armies</source>
         <translation>Gemischte Heere</translation>
-    </message>
-    <message>
-        <source>Majority doctrine</source>
-        <translation>Doktrin der Mehrheit</translation>
     </message>
     <message>
         <source>By role</source>
@@ -1053,28 +1378,207 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Getrennte Kontingente</translation>
     </message>
     <message>
-        <source>Commander</source>
-        <translation>Befehlshaber</translation>
-    </message>
-    <message>
         <source>Doctrine</source>
         <translation>Doktrin</translation>
     </message>
     <message>
-        <source>Rome</source>
-        <translation>Rom</translation>
-    </message>
-    <message>
-        <source>Carthage</source>
-        <translation>Karthago</translation>
-    </message>
-    <message>
-        <source>Iron Sepulcher</source>
-        <translation>Eisernes Grabmal</translation>
-    </message>
-    <message>
         <source>Reset to faction default</source>
         <translation>Auf Fraktionsstandard zurücksetzen</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>Choose a formation</source>
+        <translation>Formation wählen</translation>
+    </message>
+    <message>
+        <source>%1 · %2 units</source>
+        <translation>%1 · %2 Einheiten</translation>
+    </message>
+    <message>
+        <source>Shape</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <source>%1 × %2</source>
+        <translation>%1 × %2</translation>
+    </message>
+    <message>
+        <source>In place</source>
+        <translation>An Ort und Stelle</translation>
+    </message>
+    <message>
+        <source>%1 position(s) nudged to fit the ground.</source>
+        <translation>%1 Position(en) an den Untergrund angepasst.</translation>
+    </message>
+    <message>
+        <source>Drag on the ground to set width and facing.</source>
+        <translation>Zieht auf dem Boden, um Breite und Ausrichtung festzulegen.</translation>
+    </message>
+    <message>
+        <source>Click to deploy · Wheel to turn · Ctrl+wheel for depth · Right-click or Esc to cancel</source>
+        <translation>Klicken zum Aufstellen · Rad zum Drehen · Strg+Rad für Tiefe · Rechtsklick oder Esc bricht ab</translation>
+    </message>
+    <message>
+        <source>Hide fine tuning</source>
+        <translation>Feinabstimmung ausblenden</translation>
+    </message>
+    <message>
+        <source>Fine tuning</source>
+        <translation>Feinabstimmung</translation>
+    </message>
+    <message>
+        <source>How wide the deployment spreads before it starts adding ranks behind.</source>
+        <translation>Wie breit die Aufstellung wird, ehe sie Glieder dahinter anlegt.</translation>
+    </message>
+    <message>
+        <source>How many ranks stand behind the front. Deeper hits harder but covers less ground.</source>
+        <translation>Wie viele Glieder hinter der Front stehen. Tiefer schlägt härter, deckt aber weniger Boden.</translation>
+    </message>
+    <message>
+        <source>The gap between units. Tight holds shape better; loose loses less to area attacks.</source>
+        <translation>Der Abstand zwischen den Einheiten. Eng hält die Form besser; weit verliert weniger an Flächenangriffe.</translation>
+    </message>
+    <message>
+        <source>Which wing the cavalry weights. Split puts an equal body on each wing.</source>
+        <translation>Welchen Flügel die Reiterei verstärkt. Geteilt stellt auf jeden Flügel gleich viel.</translation>
+    </message>
+    <message>
+        <source>Cavalry wing</source>
+        <translation>Reiterflügel</translation>
+    </message>
+    <message>
+        <source>Where archers and slingers stand. Skirmish sends them out ahead and pulls them back on contact.</source>
+        <translation>Wo Bogenschützen und Schleuderer stehen. Plänkeln schickt sie vor und zieht sie bei Feindberührung zurück.</translation>
+    </message>
+    <message>
+        <source>Missile troops</source>
+        <translation>Fernkampftruppen</translation>
+    </message>
+    <message>
+        <source>In front</source>
+        <translation>Davor</translation>
+    </message>
+    <message>
+        <source>Behind</source>
+        <translation>Dahinter</translation>
+    </message>
+    <message>
+        <source>Skirmish ahead</source>
+        <translation>Vorn plänkeln</translation>
+    </message>
+    <message>
+        <source>Rows held back from the fighting line to plug gaps.</source>
+        <translation>Reihen, die hinter der Kampflinie bleiben, um Lücken zu schließen.</translation>
+    </message>
+    <message>
+        <source>Reserve rows</source>
+        <translation>Reservereihen</translation>
+    </message>
+    <message>
+        <source>Doctrine decides</source>
+        <translation>Die Doktrin entscheidet</translation>
+    </message>
+    <message>
+        <source>Reform is faster and copes with chokepoints. Maintain keeps the shape on the march but moves slower.</source>
+        <translation>Neu formieren ist schneller und kommt mit Engstellen zurecht. Beibehalten wahrt die Form im Marsch, ist aber langsamer.</translation>
+    </message>
+    <message>
+        <source>On the march</source>
+        <translation>Im Marsch</translation>
+    </message>
+    <message>
+        <source>Reform on arrival</source>
+        <translation>Bei Ankunft neu formieren</translation>
+    </message>
+    <message>
+        <source>Hold the shape</source>
+        <translation>Die Form wahren</translation>
+    </message>
+    <message>
+        <source>How a selection drawn from several factions is arranged.</source>
+        <translation>Wie eine Auswahl aus mehreren Fraktionen geordnet wird.</translation>
+    </message>
+    <message>
+        <source>Follow the commander</source>
+        <translation>Dem Befehlshaber folgen</translation>
+    </message>
+    <message>
+        <source>Follow the majority</source>
+        <translation>Der Mehrheit folgen</translation>
+    </message>
+    <message>
+        <source>Sorting groups the same troop types together. Keeping the order leaves each unit where it already stands in the line.</source>
+        <translation>Sortieren fasst gleiche Truppentypen zusammen. Die Ordnung zu behalten lässt jede Einheit dort, wo sie in der Linie bereits steht.</translation>
+    </message>
+    <message>
+        <source>Slot order</source>
+        <translation>Reihenfolge der Plätze</translation>
+    </message>
+    <message>
+        <source>Sort by type</source>
+        <translation>Nach Typ sortieren</translation>
+    </message>
+    <message>
+        <source>Keep current order</source>
+        <translation>Aktuelle Ordnung behalten</translation>
+    </message>
+    <message>
+        <source>Which drill book shapes the deployment. Automatic follows the troops you selected.</source>
+        <translation>Welche Exerziervorschrift die Aufstellung formt. Automatisch richtet sich nach den gewählten Truppen.</translation>
+    </message>
+</context>
+<context>
+    <name>FormationStatusBadge</name>
+    <message>
+        <source>Formed</source>
+        <translation>Formiert</translation>
+    </message>
+    <message>
+        <source>Disrupted</source>
+        <translation>Zerrüttet</translation>
+    </message>
+    <message>
+        <source>Breaking</source>
+        <translation>Zerbricht</translation>
+    </message>
+    <message>
+        <source>Forming up</source>
+        <translation>Formiert sich</translation>
+    </message>
+    <message>
+        <source>The line is holding its shape and takes reduced damage.</source>
+        <translation>Die Linie hält ihre Form und erleidet verringerten Schaden.</translation>
+    </message>
+    <message>
+        <source>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</source>
+        <translation>Die Linie ist auseinandergefallen und erleidet zusätzlichen Schaden. Erteilt den Formationsbefehl erneut, um sie neu zu formieren.</translation>
+    </message>
+    <message>
+        <source>The formation is breaking up.</source>
+        <translation>Die Formation zerfällt.</translation>
+    </message>
+    <message>
+        <source>Units are still moving into their slots.</source>
+        <translation>Die Einheiten rücken noch auf ihre Plätze.</translation>
+    </message>
+    <message>
+        <source>Cohesion %1%</source>
+        <translation>Zusammenhalt %1 %</translation>
+    </message>
+    <message>
+        <source>%1 units</source>
+        <translation>%1 Einheiten</translation>
+    </message>
+    <message>
+        <source>Selection spans several formations.</source>
+        <translation>Die Auswahl umfasst mehrere Formationen.</translation>
+    </message>
+    <message>
+        <source>%1 slot(s) blocked by terrain.</source>
+        <translation>%1 Platz/Plätze durch Gelände versperrt.</translation>
     </message>
 </context>
 <context>
@@ -1102,6 +1606,13 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Iron and Ember — every control the product may use</source>
         <translation>Eisen und Glut — jedes Bedienelement, das das Produkt nutzen kann</translation>
+    </message>
+</context>
+<context>
+    <name>Game::Systems</name>
+    <message>
+        <source>Save storage unavailable</source>
+        <translation>Spielstandspeicher nicht verfügbar</translation>
     </message>
 </context>
 <context>
@@ -1305,7 +1816,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Patrouillieren</translation>
+        <translation>Patrouille</translation>
     </message>
     <message>
         <source>Stop</source>
@@ -1313,7 +1824,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>Hold</source>
-        <translation>Stellung halten</translation>
+        <translation>Halten</translation>
     </message>
     <message>
         <source>No troops selected</source>
@@ -1416,18 +1927,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Stellung halten ist für die aktuelle Auswahl nicht verfügbar</translation>
     </message>
     <message>
-        <source>Formation</source>
-        <translation>Formation</translation>
-    </message>
-    <message>
-        <source>Arrange the selection in a tactical formation.</source>
-        <translation>Ordne die Auswahl in einer taktischen Formation an.</translation>
-    </message>
-    <message>
-        <source>Select multiple units to use formation</source>
-        <translation>Mehrere Einheiten auswählen, um Formationen zu nutzen</translation>
-    </message>
-    <message>
         <source>Build</source>
         <translation>Bauen</translation>
     </message>
@@ -1498,6 +1997,34 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Select a ready commander to activate the aura</source>
         <translation>Wähle einen bereiten Kommandanten, um die Aura zu aktivieren</translation>
+    </message>
+    <message>
+        <source>Repair order</source>
+        <translation>Reparaturbefehl</translation>
+    </message>
+    <message>
+        <source>Auto Gather</source>
+        <translation>Selbst sammeln</translation>
+    </message>
+    <message>
+        <source>Builders keep finding and collecting the nearest resource on their own. Any new order cancels it.</source>
+        <translation>Baumeister suchen und sammeln die nächste Ressource selbstständig weiter. Jeder neue Befehl hebt das auf.</translation>
+    </message>
+    <message>
+        <source>Auto Gather is only available to builders</source>
+        <translation>Selbst sammeln steht nur Baumeistern zur Verfügung</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Reparieren</translation>
+    </message>
+    <message>
+        <source>Click a damaged building of yours. Right-click to cancel.</source>
+        <translation>Klickt auf eines Eurer beschädigten Gebäude. Rechtsklick bricht ab.</translation>
+    </message>
+    <message>
+        <source>Repair is only available to builders</source>
+        <translation>Reparieren steht nur Baumeistern zur Verfügung</translation>
     </message>
 </context>
 <context>
@@ -1774,6 +2301,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>First-person command engaged</source>
         <translation>Ego-Perspektive-Kommando aktiv</translation>
     </message>
+    <message>
+        <source>The aura is not ready yet.</source>
+        <translation>Die Aura ist noch nicht bereit.</translation>
+    </message>
 </context>
 <context>
     <name>HUDTop</name>
@@ -1833,36 +2364,36 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Minimap</source>
         <translation>Minikarte</translation>
     </message>
+    <message>
+        <source> (%1/%2)</source>
+        <translation> (%1/%2)</translation>
+    </message>
 </context>
 <context>
-    <name>HUDVictory</name>
+    <name>InputBindings</name>
     <message>
-        <source>The Campaign is Won</source>
-        <translation>Der Feldzug ist gewonnen</translation>
+        <source>Unbound</source>
+        <translation>Unbelegt</translation>
     </message>
     <message>
-        <source>Victory Secured</source>
-        <translation>Sieg errungen</translation>
+        <source>Mouse Left</source>
+        <translation>Maus links</translation>
     </message>
     <message>
-        <source>Army Broken</source>
-        <translation>Armee zerschlagen</translation>
+        <source>Mouse Right</source>
+        <translation>Maus rechts</translation>
     </message>
     <message>
-        <source>Every mission has fallen to your standard.</source>
-        <translation>Jede Mission ist unter deinem Feldzeichen gefallen.</translation>
+        <source>Mouse Middle</source>
+        <translation>Maus Mitte</translation>
     </message>
     <message>
-        <source>Enemy command has fallen.</source>
-        <translation>Das feindliche Kommando ist gefallen.</translation>
+        <source>Mouse Back</source>
+        <translation>Maus zurück</translation>
     </message>
     <message>
-        <source>Your command has collapsed.</source>
-        <translation>Dein Kommando ist zusammengebrochen.</translation>
-    </message>
-    <message>
-        <source>Battle Report</source>
-        <translation>Schlachtbericht</translation>
+        <source>Mouse Forward</source>
+        <translation>Maus vorwärts</translation>
     </message>
 </context>
 <context>
@@ -1881,6 +2412,37 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>OK</source>
         <translation>OK</translation>
+    </message>
+</context>
+<context>
+    <name>IronOutcomeOverlay</name>
+    <message>
+        <source>Battle Report</source>
+        <translation>Schlachtbericht</translation>
+    </message>
+    <message>
+        <source>The Campaign is Won</source>
+        <translation>Der Feldzug ist gewonnen</translation>
+    </message>
+    <message>
+        <source>Victory Secured</source>
+        <translation>Sieg errungen</translation>
+    </message>
+    <message>
+        <source>Army Broken</source>
+        <translation>Armee zerschlagen</translation>
+    </message>
+    <message>
+        <source>Every mission has fallen to your standard.</source>
+        <translation>Jede Mission ist Eurem Feldzeichen erlegen.</translation>
+    </message>
+    <message>
+        <source>Enemy command has fallen.</source>
+        <translation>Die feindliche Führung ist gefallen.</translation>
+    </message>
+    <message>
+        <source>Your command has collapsed.</source>
+        <translation>Eure Führung ist zusammengebrochen.</translation>
     </message>
 </context>
 <context>
@@ -1929,10 +2491,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Ziehe einen Rahmen über deine Truppen oder klicke eine Einheit an</translation>
     </message>
     <message>
-        <source>Ready for orders</source>
-        <translation>Bereit für Befehle</translation>
-    </message>
-    <message>
         <source>HEALTH</source>
         <translation>GESUNDHEIT</translation>
     </message>
@@ -1947,6 +2505,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>%1 wounded</source>
         <translation>%1 verwundet</translation>
+    </message>
+    <message>
+        <source> (mixed)</source>
+        <translation> (gemischt)</translation>
     </message>
 </context>
 <context>
@@ -2126,6 +2688,10 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
     <message>
         <source>Unknown Map</source>
         <translation>Unbekannte Karte</translation>
+    </message>
+    <message>
+        <source>Pick a saved game first.</source>
+        <translation>Wählt zuerst einen Spielstand.</translation>
     </message>
 </context>
 <context>
@@ -2316,20 +2882,8 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
         <translation>Zurücktreten</translation>
     </message>
     <message>
-        <source>SPQR  /  QART-HADAST</source>
-        <translation>SPQR  /  QART-HADAST</translation>
-    </message>
-    <message>
         <source>Rome and Carthage at the edge of empire</source>
         <translation>Rom und Karthago am Rand des Weltreichs</translation>
-    </message>
-    <message>
-        <source>HANNIBAL BARCA</source>
-        <translation>HANNIBAL BARKAS</translation>
-    </message>
-    <message>
-        <source>General of Carthage</source>
-        <translation>Feldherr von Karthago</translation>
     </message>
     <message>
         <source>SECOND PUNIC WAR</source>
@@ -2338,6 +2892,50 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
     <message>
         <source>Legions, fleets, elephants, and contested supply lines</source>
         <translation>Legionen, Flotten, Elefanten und umkämpfte Nachschubwege</translation>
+    </message>
+    <message>
+        <source>SPQR</source>
+        <translation>SPQR</translation>
+    </message>
+    <message>
+        <source>QART-HADAST</source>
+        <translation>QART-HADAST</translation>
+    </message>
+    <message>
+        <source>Enter</source>
+        <translation>Enter</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
+        <source>Navigate</source>
+        <translation>Navigieren</translation>
+    </message>
+    <message>
+        <source>Confirm</source>
+        <translation>Bestätigen</translation>
+    </message>
+    <message>
+        <source>Resume battle</source>
+        <translation>Schlacht fortsetzen</translation>
+    </message>
+    <message>
+        <source>Hannibal Barca</source>
+        <translation>Hannibal Barkas</translation>
+    </message>
+    <message>
+        <source>Scipio Africanus</source>
+        <translation>Scipio Africanus</translation>
+    </message>
+    <message>
+        <source>CARTHAGE</source>
+        <translation>KARTHAGO</translation>
+    </message>
+    <message>
+        <source>ROME</source>
+        <translation>ROM</translation>
     </message>
 </context>
 <context>
@@ -2522,6 +3120,29 @@ um die Vorschau zu sehen</translation>
         <source>At least two teams must be selected to start a match</source>
         <translation>Es müssen mindestens zwei Teams ausgewählt sein, um ein Match zu starten</translation>
     </message>
+    <message>
+        <source>Every slot on this map is taken</source>
+        <translation>Jeder Platz auf dieser Karte ist belegt</translation>
+    </message>
+    <message>
+        <source>Player %1</source>
+        <translation>Spieler %1</translation>
+    </message>
+    <message>
+        <source>CPU %1</source>
+        <translation>CPU %1</translation>
+    </message>
+</context>
+<context>
+    <name>MapTransformer</name>
+    <message>
+        <source>Player %1</source>
+        <translation>Spieler %1</translation>
+    </message>
+    <message>
+        <source>AI Player %1</source>
+        <translation>KI-Spieler %1</translation>
+    </message>
 </context>
 <context>
     <name>Maps</name>
@@ -2641,10 +3262,6 @@ um die Vorschau zu sehen</translation>
         <translation>Neutral</translation>
     </message>
     <message>
-        <source>Drag to rotate  ·  Shift or right-drag to pan  ·  Scroll to zoom</source>
-        <translation>Ziehen zum Drehen  ·  Umschalt oder Rechtsziehen zum Verschieben  ·  Scrollen zum Zoomen</translation>
-    </message>
-    <message>
         <source>Mission Region</source>
         <translation>Missionsregion</translation>
     </message>
@@ -2667,6 +3284,22 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Zama</source>
         <translation>Zama</translation>
+    </message>
+    <message>
+        <source>The Alps</source>
+        <translation>Die Alpen</translation>
+    </message>
+    <message>
+        <source>Campania</source>
+        <translation>Kampanien</translation>
+    </message>
+    <message>
+        <source>S. Italy</source>
+        <translation>Süditalien</translation>
+    </message>
+    <message>
+        <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
+        <translation>Pfeile schwenken  ·  Ziehen dreht  ·  Scrollen oder +/− zoomt  ·  Pos1 setzt zurück</translation>
     </message>
 </context>
 <context>
@@ -2815,6 +3448,38 @@ um die Vorschau zu sehen</translation>
         <source>✓ Completed</source>
         <translation>✓ Abgeschlossen</translation>
     </message>
+    <message>
+        <source>Apulian river plain</source>
+        <translation>Apulische Flussebene</translation>
+    </message>
+    <message>
+        <source>Campanian plain</source>
+        <translation>Kampanische Ebene</translation>
+    </message>
+    <message>
+        <source>Lakeside hill country</source>
+        <translation>Hügelland am See</translation>
+    </message>
+    <message>
+        <source>Mountain</source>
+        <translation>Gebirge</translation>
+    </message>
+    <message>
+        <source>North African plain</source>
+        <translation>Nordafrikanische Ebene</translation>
+    </message>
+    <message>
+        <source>Po valley river plain</source>
+        <translation>Flussebene der Poebene</translation>
+    </message>
+    <message>
+        <source>River valley</source>
+        <translation>Flusstal</translation>
+    </message>
+    <message>
+        <source>Winter river plain</source>
+        <translation>Winterliche Flussebene</translation>
+    </message>
 </context>
 <context>
     <name>MissionListItem</name>
@@ -2876,6 +3541,30 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Assault phase %1/%2: %3 from the %4 (%5 units)</source>
         <translation>Angriffswelle %1/%2: %3 aus dem %4 (%5 Einheiten)</translation>
+    </message>
+    <message>
+        <source>Wave %1/%2 forming to the %3: %4, roughly %5 troops. Brace.</source>
+        <translation>Welle %1/%2 formiert sich im %3: %4, etwa %5 Krieger. Macht Euch bereit.</translation>
+    </message>
+    <message>
+        <source>Wave %1/%2 broken. The line holds.</source>
+        <translation>Welle %1/%2 gebrochen. Die Linie hält.</translation>
+    </message>
+    <message>
+        <source>All %1 assault phases broken. Nothing else is coming.</source>
+        <translation>Alle %1 Angriffsphasen gebrochen. Es kommt nichts mehr.</translation>
+    </message>
+    <message>
+        <source>Player %1</source>
+        <translation>Spieler %1</translation>
+    </message>
+    <message>
+        <source>AI Player %1</source>
+        <translation>KI-Spieler %1</translation>
+    </message>
+    <message>
+        <source>AI Wave %1</source>
+        <translation>KI-Welle %1</translation>
     </message>
 </context>
 <context>
@@ -2961,10 +3650,6 @@ um die Vorschau zu sehen</translation>
         <translation>Brecht drei römische Kolonnen, ehe die Überlebenden die Furt wiederfinden.</translation>
     </message>
     <message>
-        <source>Build a durable economy, keep the camp gates supplied, rotate reserves between roads, and survive three clearly timed assault phases.</source>
-        <translation>Baut eine tragfähige Wirtschaft auf, versorgt die Lagertore, verlegt Reserven zwischen den Straßen und übersteht drei klar getaktete Angriffsphasen.</translation>
-    </message>
-    <message>
         <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
         <translation>Brennt jeden verfluchten Wächter aus den Grabruinen. Tötet, was nicht sterben kann.</translation>
     </message>
@@ -3009,10 +3694,6 @@ um die Vorschau zu sehen</translation>
         <translation>Verteidigt Hannibals befestigte kampanische Nachschubstadt und brecht alle drei abgestimmten römischen Angriffe, die über getrennte Konsularstraßen anrücken.</translation>
     </message>
     <message>
-        <source>Defense-to-offense transition. Teaches when to absorb the crossing, then commit the hidden strike force.</source>
-        <translation>Übergang von der Verteidigung zum Angriff. Lehrt, wann man den Übergang abfängt und dann die verborgene Stoßtruppe einsetzt.</translation>
-    </message>
-    <message>
         <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
         <translation>Vertreibt die Toten aus dem Schrein. Salzt die Erde, auf der sie standen.</translation>
     </message>
@@ -3035,10 +3716,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
         <translation>Erste Schlacht auf italischem Boden. Gewinnt das Reiterduell und nehmt dann das römische Reservelager, ehe frische Verstärkungen sich sammeln.</translation>
-    </message>
-    <message>
-        <source>Full-spectrum command. Teaches managing elephants and flank pressure while transitioning into a decisive camp assault.</source>
-        <translation>Führung über die volle Breite. Lehrt den Umgang mit Elefanten und Flankendruck beim Übergang in einen entscheidenden Lagerangriff.</translation>
     </message>
     <message>
         <source>Hannibal falls, and the allied towns abandon the field.</source>
@@ -3069,24 +3746,12 @@ um die Vorschau zu sehen</translation>
         <translation>Fällt das zentrale Lager, stirbt das kampanische Bündnis mit ihm.</translation>
     </message>
     <message>
-        <source>Introduce maze navigation, multiple river crossings, and dealing with scattered enemy patrols plus fortified positions.</source>
-        <translation>Führt Labyrinth-Navigation, mehrfache Flussübergänge sowie den Umgang mit verstreuten Feindpatrouillen und befestigten Stellungen ein.</translation>
-    </message>
-    <message>
         <source>Investigate the cursed shrine, survive the awakening, and clear the ruins.</source>
         <translation>Erkundet den verfluchten Schrein, übersteht das Erwachen und säubert die Ruinen.</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
         <translation>Wacht am Eisernen Grabmal</translation>
-    </message>
-    <message>
-        <source>Large-scale offense with multi-front awareness. Teaches maintaining the pocket while rotating into camp assaults.</source>
-        <translation>Großangriff mit Blick für mehrere Fronten. Lehrt, den Kessel zu halten und dabei in Lagerangriffe überzugehen.</translation>
-    </message>
-    <message>
-        <source>Long-form offensive progression. Teaches keeping the column moving while absorbing attrition at each pass.</source>
-        <translation>Langgezogener Offensivverlauf. Lehrt, die Kolonne in Bewegung zu halten und an jedem Pass Verluste aufzufangen.</translation>
     </message>
     <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
@@ -3099,14 +3764,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Lose your camp and the tempo dies with it.</source>
         <translation>Verliert Ihr Euer Lager, stirbt das Tempo mit ihm.</translation>
-    </message>
-    <message>
-        <source>Mobile offense with cavalry tempo. Teaches when to press an early advantage and convert it into a camp assault.</source>
-        <translation>Beweglicher Angriff im Reitertempo. Lehrt, wann man einen frühen Vorteil nutzt und ihn in einen Lagerangriff verwandelt.</translation>
-    </message>
-    <message>
-        <source>Multi-vector offense from concealed positions. Teaches closing exits before shifting to camp seizure.</source>
-        <translation>Angriff aus mehreren Richtungen aus verdeckten Stellungen. Lehrt, die Ausgänge zu schließen, ehe man zur Lagereinnahme übergeht.</translation>
     </message>
     <message>
         <source>No living formation remains to hold the gates.</source>
@@ -3229,24 +3886,12 @@ um die Vorschau zu sehen</translation>
         <translation>Wahrt die Disziplin. Lasst die Römer sich an der Furt festlegen.</translation>
     </message>
     <message>
-        <source>Iron bells answer beneath the western flank. The Sepulcher is advancing on Carthage as well as Rome.</source>
-        <translation>Eiserne Glocken antworten unter der Westflanke. Das Grabmal rückt gegen Karthago ebenso vor wie gegen Rom.</translation>
-    </message>
-    <message>
         <source>Navigate through the maze of hills and valleys. Watch for enemy patrols!</source>
         <translation>Findet den Weg durch das Labyrinth aus Hügeln und Tälern. Achtet auf feindliche Patrouillen!</translation>
     </message>
     <message>
-        <source>Numidian cavalry is entering from the southeastern flank.</source>
-        <translation>Numidische Reiterei rückt über die südöstliche Flanke ein.</translation>
-    </message>
-    <message>
         <source>One minute. Spend the reserve; save the camp.</source>
         <translation>Eine Minute. Setzt die Reserve ein und rettet das Lager.</translation>
-    </message>
-    <message>
-        <source>Rear guard deployment detected in the north. This is the final phase.</source>
-        <translation>Im Norden wird eine Nachhut in Stellung gebracht. Dies ist die letzte Phase.</translation>
     </message>
     <message>
         <source>Roman cavalry is attempting a breakout from the south. Intercept them.</source>
@@ -3307,6 +3952,54 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</source>
         <translation>Zwei Brücken führen über die Rhone. Wählt Euren Weg mit Bedacht – Ihr könntet beide Routen brauchen!</translation>
+    </message>
+    <message>
+        <source>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
+        <translation>Ein Lager nimmt man, indem man darin steht, nicht indem man es schleift. Neun Mann können achtunddreißig nicht töten, doch sie können zwei Torhöfe lange genug halten, um sie zu beanspruchen – und eine römische Kolonne ohne ihren Befehlshaber hört auf, eine Kolonne zu sein.</translation>
+    </message>
+    <message>
+        <source>A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time.</source>
+        <translation>Ein Volk steht und fällt mit seinem Befehlshaber. Tötet ihn, und die Lager werden still und herrenlos – was gegen eine Uhr von zwanzig Minuten die einzige Fassung dieser Schlacht ist, die rechtzeitig endet.</translation>
+    </message>
+    <message>
+        <source>An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.</source>
+        <translation>Ein Angriff marschiert auf Euer Lager zu, wendet sich aber allem zu, was er sieht. Ködert ihn mit etwas Sichtbarem, und er nimmt den Boden, den Ihr gewählt habt, statt den, den er wollte.</translation>
+    </message>
+    <message>
+        <source>High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting.</source>
+        <translation>Höhe verdoppelt einen Bogenschützen und härtet ihn gegen das, was zurückschießt. Der Grat über dem römischen Lager ist mehr wert als die zusätzliche Schwadron, für die Ihr dieselben Minuten aufgewendet hättet.</translation>
+    </message>
+    <message>
+        <source>Iron bells answer beneath the south-western crossing. The Sepulcher is advancing on Carthage as well as Rome.</source>
+        <translation>Eiserne Glocken antworten unter dem südwestlichen Übergang. Das Grabmal rückt gegen Karthago vor wie gegen Rom.</translation>
+    </message>
+    <message>
+        <source>Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field.</source>
+        <translation>Tötet jeden feindlichen Befehlshaber. Ein Volk stirbt mit dem Mann, der es führt: seine Lager werden neutral, seine Werke fallen und seine Truppen verlassen das Feld.</translation>
+    </message>
+    <message>
+        <source>Masinissa&apos;s Numidian horse is entering from the north-eastern road.</source>
+        <translation>Masinissas numidische Reiterei trifft auf der nordöstlichen Straße ein.</translation>
+    </message>
+    <message>
+        <source>Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number.</source>
+        <translation>Hier wird nichts Neues gelehrt. Der Grat, der Köder und die Enthauptung sind alles Dinge, die Ihr bereits kennt; Cannae fragt nur, ob Ihr drei davon zugleich gegen die vierfache Übermacht führen könnt.</translation>
+    </message>
+    <message>
+        <source>Rear guard deployment detected across the southern wadi. This is the final phase.</source>
+        <translation>Nachhut jenseits des südlichen Wadis entdeckt. Dies ist die letzte Phase.</translation>
+    </message>
+    <message>
+        <source>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</source>
+        <translation>Nachschub ist ein Ziel – und das gilt für beide Seiten. Euer Markt und Eure Häuser sind das, worauf die Römer in Wahrheit marschieren, und ihr Belagerungslager hält seinen eigenen Vorrat in Reichweite eines Überfalls.</translation>
+    </message>
+    <message>
+        <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
+        <translation>Die Schreine, an denen Ihr den ganzen Feldzug vorbeigegangen seid, waren nie bloße Kulisse. Zama liest jede Karte hinter sich neu – und das Grabmal hat keinen Befehlshaber zu töten, sodass die eine Regel, die Euch seit Trasimene gedient hat, die eine Regel ist, die hier nicht greift.</translation>
+    </message>
+    <message>
+        <source>Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.</source>
+        <translation>Holz zählt erst, wenn ein Baumeister es im Lager ablädt. Die reichsten Bestände liegen am weitesten vom Lagerplatz, sodass diese Mission über die Länge des Weges gewonnen wird, nicht über den Schwung der Axt.</translation>
     </message>
 </context>
 <context>
@@ -3399,6 +4092,10 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>(map preview)</source>
         <translation>(Kartenvorschau)</translation>
+    </message>
+    <message>
+        <source>Every slot on this map is taken</source>
+        <translation>Jeder Platz auf dieser Karte ist belegt</translation>
     </message>
 </context>
 <context>
@@ -3935,6 +4632,253 @@ Bauzeit: %3 s</translation>
         <source>War Elephant</source>
         <translation>Kriegselefant</translation>
     </message>
+    <message>
+        <source>Build a barracks before setting a rally point.</source>
+        <translation>Errichtet eine Kaserne, ehe Ihr einen Sammelpunkt setzt.</translation>
+    </message>
+    <message>
+        <source>Temple</source>
+        <translation>Tempel</translation>
+    </message>
+    <message>
+        <source>Build Temple
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Tempel bauen
+%1
+Kosten: %2
+Bauzeit: %3 s</translation>
+    </message>
+    <message>
+        <source>Sanctuary of the nation
+Wide vision and a durable settlement anchor</source>
+        <translation>Heiligtum des Volkes
+Weite Sicht und ein dauerhafter Anker der Siedlung</translation>
+    </message>
+    <message>
+        <source>TEMPLE</source>
+        <translation>TEMPEL</translation>
+    </message>
+    <message>
+        <source>The sanctuary of your nation, raised in its own architectural style</source>
+        <translation>Das Heiligtum Eures Volkes, errichtet im eigenen Baustil</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together</source>
+        <translation>Überwacht einen weiten Landstrich und hält eine Siedlung zusammen</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>System</source>
+        <translation>System</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Kamera</translation>
+    </message>
+    <message>
+        <source>Selection</source>
+        <translation>Auswahl</translation>
+    </message>
+    <message>
+        <source>Orders</source>
+        <translation>Befehle</translation>
+    </message>
+    <message>
+        <source>Commander movement</source>
+        <translation>Bewegung des Kommandanten</translation>
+    </message>
+    <message>
+        <source>Commander combat</source>
+        <translation>Kampf des Kommandanten</translation>
+    </message>
+    <message>
+        <source>Open menu</source>
+        <translation>Menü öffnen</translation>
+    </message>
+    <message>
+        <source>Also cancels a placement or rally in progress</source>
+        <translation>Bricht auch eine laufende Platzierung oder Sammlung ab</translation>
+    </message>
+    <message>
+        <source>Switch between army and commander</source>
+        <translation>Zwischen Armee und Kommandant wechseln</translation>
+    </message>
+    <message>
+        <source>Quick save</source>
+        <translation>Schnellspeichern</translation>
+    </message>
+    <message>
+        <source>Quick load</source>
+        <translation>Schnellladen</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Pause</translation>
+    </message>
+    <message>
+        <source>Pan camera up</source>
+        <translation>Kamera nach oben schwenken</translation>
+    </message>
+    <message>
+        <source>Hold Shift while panning to move faster</source>
+        <translation>Haltet Umschalt beim Schwenken, um schneller zu bewegen</translation>
+    </message>
+    <message>
+        <source>Pan camera down</source>
+        <translation>Kamera nach unten schwenken</translation>
+    </message>
+    <message>
+        <source>Pan camera left</source>
+        <translation>Kamera nach links schwenken</translation>
+    </message>
+    <message>
+        <source>Pan camera right</source>
+        <translation>Kamera nach rechts schwenken</translation>
+    </message>
+    <message>
+        <source>Rotate camera left</source>
+        <translation>Kamera nach links drehen</translation>
+    </message>
+    <message>
+        <source>Rotate camera right</source>
+        <translation>Kamera nach rechts drehen</translation>
+    </message>
+    <message>
+        <source>Orbit camera left</source>
+        <translation>Kamera nach links umkreisen</translation>
+    </message>
+    <message>
+        <source>Orbit camera right</source>
+        <translation>Kamera nach rechts umkreisen</translation>
+    </message>
+    <message>
+        <source>Select unit or drag a selection box</source>
+        <translation>Einheit wählen oder Auswahlrahmen ziehen</translation>
+    </message>
+    <message>
+        <source>Select all troops</source>
+        <translation>Alle Truppen wählen</translation>
+    </message>
+    <message>
+        <source>Move or attack-move to the cursor</source>
+        <translation>Zum Zeiger bewegen oder angreifend vorrücken</translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation>Halt</translation>
+    </message>
+    <message>
+        <source>Attack</source>
+        <translation>Angreifen</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Bewegen</translation>
+    </message>
+    <message>
+        <source>Patrol</source>
+        <translation>Patrouille</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Bewachen</translation>
+    </message>
+    <message>
+        <source>Hold position</source>
+        <translation>Stellung halten</translation>
+    </message>
+    <message>
+        <source>Deploy the selection in a formation</source>
+        <translation>Die Auswahl in einer Formation aufstellen</translation>
+    </message>
+    <message>
+        <source>Opens the formation planner for the selected troops</source>
+        <translation>Öffnet den Formationsplaner für die gewählten Truppen</translation>
+    </message>
+    <message>
+        <source>Place commander rally flag</source>
+        <translation>Sammelfahne des Kommandanten setzen</translation>
+    </message>
+    <message>
+        <source>Shares its key with orbit camera left by default and takes priority only while a rally can be placed</source>
+        <translation>Teilt sich die Taste standardmäßig mit „Kamera nach links umkreisen“ und hat nur Vorrang, solange eine Sammlung gesetzt werden kann</translation>
+    </message>
+    <message>
+        <source>Move forward</source>
+        <translation>Vorwärts</translation>
+    </message>
+    <message>
+        <source>Move back</source>
+        <translation>Rückwärts</translation>
+    </message>
+    <message>
+        <source>Strafe left</source>
+        <translation>Seitwärts nach links</translation>
+    </message>
+    <message>
+        <source>Strafe right</source>
+        <translation>Seitwärts nach rechts</translation>
+    </message>
+    <message>
+        <source>Turn left</source>
+        <translation>Nach links drehen</translation>
+    </message>
+    <message>
+        <source>Turn right</source>
+        <translation>Nach rechts drehen</translation>
+    </message>
+    <message>
+        <source>Sprint</source>
+        <translation>Sprinten</translation>
+    </message>
+    <message>
+        <source>Dodge</source>
+        <translation>Ausweichen</translation>
+    </message>
+    <message>
+        <source>Jump</source>
+        <translation>Springen</translation>
+    </message>
+    <message>
+        <source>Block</source>
+        <translation>Blocken</translation>
+    </message>
+    <message>
+        <source>Cycle locked target</source>
+        <translation>Anvisiertes Ziel wechseln</translation>
+    </message>
+    <message>
+        <source>Special action</source>
+        <translation>Sonderaktion</translation>
+    </message>
+    <message>
+        <source>Vanguard rush</source>
+        <translation>Vorhutsturm</translation>
+    </message>
+    <message>
+        <source>Second wind</source>
+        <translation>Zweiter Atem</translation>
+    </message>
+    <message>
+        <source>Commanding aura</source>
+        <translation>Befehlsaura</translation>
+    </message>
+    <message>
+        <source>Rally nearby troops</source>
+        <translation>Truppen in der Nähe sammeln</translation>
+    </message>
+    <message>
+        <source>Switch between melee weapon and bow</source>
+        <translation>Zwischen Nahkampfwaffe und Bogen wechseln</translation>
+    </message>
+    <message>
+        <source>Toggle first and third person</source>
+        <translation>Zwischen Ich- und Verfolgerperspektive wechseln</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -3981,6 +4925,14 @@ Bauzeit: %3 s</translation>
     <message>
         <source>READY</source>
         <translation>BEREIT</translation>
+    </message>
+    <message>
+        <source>BOW  ·  X</source>
+        <translation>BOGEN  ·  X</translation>
+    </message>
+    <message>
+        <source>BLADE  ·  X</source>
+        <translation>KLINGE  ·  X</translation>
     </message>
 </context>
 <context>
@@ -4121,6 +5073,10 @@ Bauzeit: %3 s</translation>
         <source>Unknown Map</source>
         <translation>Unbekannte Karte</translation>
     </message>
+    <message>
+        <source>Name the save first.</source>
+        <translation>Benennt den Spielstand zuerst.</translation>
+    </message>
 </context>
 <context>
     <name>SaveProgressOverlay</name>
@@ -4240,16 +5196,28 @@ Bauzeit: %3 s</translation>
         <translation>Die Mission konnte nicht als abgeschlossen markiert werden</translation>
     </message>
     <message>
-        <source>Failed to find completed mission order</source>
-        <translation>Die Reihenfolge der abgeschlossenen Mission konnte nicht ermittelt werden</translation>
-    </message>
-    <message>
         <source>Failed to unlock next mission</source>
         <translation>Die nächste Mission konnte nicht freigeschaltet werden</translation>
     </message>
     <message>
-        <source>No next mission found to unlock (completed mission order: %1)</source>
-        <translation>Keine nächste Mission zum Freischalten gefunden (Reihenfolge der abgeschlossenen Mission: %1)</translation>
+        <source>Failed to prune removed campaign missions</source>
+        <translation>Entfernte Feldzugsmissionen konnten nicht bereinigt werden</translation>
+    </message>
+    <message>
+        <source>Failed to look up the completed mission</source>
+        <translation>Die abgeschlossene Mission konnte nicht ermittelt werden</translation>
+    </message>
+    <message>
+        <source>Mission %1 is not part of campaign %2</source>
+        <translation>Mission %1 gehört nicht zum Feldzug %2</translation>
+    </message>
+    <message>
+        <source>Failed to find the next mission</source>
+        <translation>Die nächste Mission konnte nicht gefunden werden</translation>
+    </message>
+    <message>
+        <source>Failed to count remaining missions</source>
+        <translation>Die verbleibenden Missionen konnten nicht gezählt werden</translation>
     </message>
 </context>
 <context>
@@ -4395,8 +5363,8 @@ Bauzeit: %3 s</translation>
         <translation>Standard of Iron – Echtzeit-Strategiespiel</translation>
     </message>
     <message>
-        <source>Version 1.0.0</source>
-        <translation>Version 1.0.0</translation>
+        <source>Version %1</source>
+        <translation>Version %1</translation>
     </message>
     <message>
         <source>Third-Party Software</source>
@@ -4418,12 +5386,115 @@ Bauzeit: %3 s</translation>
         <source>Qt Website</source>
         <translation>Qt-Website</translation>
     </message>
+    <message>
+        <source>Controls</source>
+        <translation>Steuerung</translation>
+    </message>
+    <message>
+        <source>Edge scrolling</source>
+        <translation>Bildschirmrand-Scrollen</translation>
+    </message>
+    <message>
+        <source>Pans the camera when the cursor reaches the edge of the screen</source>
+        <translation>Schwenkt die Kamera, wenn der Zeiger den Bildschirmrand erreicht</translation>
+    </message>
+    <message>
+        <source>Edge scroll speed:</source>
+        <translation>Randscroll-Geschwindigkeit:</translation>
+    </message>
+    <message>
+        <source>Team ring patterns</source>
+        <translation>Ringmuster der Parteien</translation>
+    </message>
+    <message>
+        <source>On automatically while a colour vision mode is selected</source>
+        <translation>Automatisch aktiv, solange ein Farbsehmodus gewählt ist</translation>
+    </message>
+    <message>
+        <source>Marks each side with its own selection ring shape as well as its colour</source>
+        <translation>Kennzeichnet jede Seite zusätzlich zur Farbe durch eine eigene Form des Auswahlrings</translation>
+    </message>
+    <message>
+        <source>Damage numbers</source>
+        <translation>Schadenszahlen</translation>
+    </message>
+    <message>
+        <source>Shows the damage dealt above each hit while leading the commander</source>
+        <translation>Zeigt den ausgeteilten Schaden über jedem Treffer, während Ihr den Kommandanten führt</translation>
+    </message>
+    <message>
+        <source>Screen effects:</source>
+        <translation>Bildschirmeffekte:</translation>
+    </message>
+    <message>
+        <source>Camera motion:</source>
+        <translation>Kamerabewegung:</translation>
+    </message>
+    <message>
+        <source>Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.</source>
+        <translation>Verringert Kopfwippen und Schwanken, während Ihr den Kommandanten führt. Von Euch angeforderte Kamerabewegungen werden nie eingeschränkt.</translation>
+    </message>
+    <message>
+        <source>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</source>
+        <translation>Musik erzeugt mit Metas AudioCraft, dessen Modelle unter CC BY-NC 4.0 lizenziert sind. Dieses Spiel wird kostenlos abgegeben, was diese Lizenz erlaubt; es darf nicht verkauft werden.</translation>
+    </message>
+    <message>
+        <source>Voice lines recorded by Adam Djellouli.</source>
+        <translation>Sprachaufnahmen von Adam Djellouli eingesprochen.</translation>
+    </message>
+    <message>
+        <source>CC BY-NC 4.0 License</source>
+        <translation>Lizenz CC BY-NC 4.0</translation>
+    </message>
+    <message>
+        <source>AudioCraft</source>
+        <translation>AudioCraft</translation>
+    </message>
 </context>
 <context>
     <name>SkirmishLoader</name>
     <message>
         <source>Invalid team configuration: At least two teams must be selected to start a match.</source>
         <translation>Ungültige Teamkonfiguration: Es müssen mindestens zwei Teams ausgewählt sein, um ein Match zu starten.</translation>
+    </message>
+</context>
+<context>
+    <name>Theme</name>
+    <message>
+        <source>Red</source>
+        <translation>Rot</translation>
+    </message>
+    <message>
+        <source>Blue</source>
+        <translation>Blau</translation>
+    </message>
+    <message>
+        <source>Brown</source>
+        <translation>Braun</translation>
+    </message>
+    <message>
+        <source>Green</source>
+        <translation>Grün</translation>
+    </message>
+    <message>
+        <source>Yellow</source>
+        <translation>Gelb</translation>
+    </message>
+    <message>
+        <source>Orange</source>
+        <translation>Orange</translation>
+    </message>
+    <message>
+        <source>Purple</source>
+        <translation>Violett</translation>
+    </message>
+    <message>
+        <source>Cyan</source>
+        <translation>Türkis</translation>
+    </message>
+    <message>
+        <source>Pink</source>
+        <translation>Rosa</translation>
     </message>
 </context>
 <context>
@@ -4455,6 +5526,10 @@ Bauzeit: %3 s</translation>
     <message>
         <source>The risen guardians are put down. The ground is quiet.</source>
         <translation>Die erhobenen Wächter sind niedergestreckt. Der Boden ist still.</translation>
+    </message>
+    <message>
+        <source>The barrow gives up its hoard: %1.</source>
+        <translation>Der Hügel gibt seinen Hort preis: %1.</translation>
     </message>
 </context>
 <context>
@@ -4629,6 +5704,67 @@ Bauzeit: %3 s</translation>
     <message>
         <source>Cannot build there.</source>
         <translation>Dort kann nicht gebaut werden.</translation>
+    </message>
+</context>
+<context>
+    <name>WaveArchetype</name>
+    <message>
+        <source>Probing column</source>
+        <translation>Erkundungskolonne</translation>
+    </message>
+    <message>
+        <source>Assault line</source>
+        <translation>Angriffslinie</translation>
+    </message>
+    <message>
+        <source>Cavalry flank</source>
+        <translation>Reiterflanke</translation>
+    </message>
+    <message>
+        <source>Skirmish screen</source>
+        <translation>Plänklerschirm</translation>
+    </message>
+    <message>
+        <source>Siege column</source>
+        <translation>Belagerungskolonne</translation>
+    </message>
+    <message>
+        <source>Elite guard</source>
+        <translation>Elitewache</translation>
+    </message>
+</context>
+<context>
+    <name>WaveTracker</name>
+    <message>
+        <source>All waves broken</source>
+        <translation>Alle Wellen gebrochen</translation>
+    </message>
+    <message>
+        <source>Incoming</source>
+        <translation>Im Anmarsch</translation>
+    </message>
+    <message>
+        <source>Engaged</source>
+        <translation>Im Gefecht</translation>
+    </message>
+    <message>
+        <source>Next wave</source>
+        <translation>Nächste Welle</translation>
+    </message>
+    <message>
+        <source>Wave %1 / %2</source>
+        <translation>Welle %1 / %2</translation>
+    </message>
+    <message>
+        <source>%1 left</source>
+        <translation>Noch %1</translation>
+    </message>
+</context>
+<context>
+    <name>WildlifeSystem</name>
+    <message>
+        <source>Wolves are moving on the valley.</source>
+        <translation>Wölfe ziehen auf das Tal zu.</translation>
     </message>
 </context>
 <context>

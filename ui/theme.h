@@ -97,7 +97,7 @@ class Theme : public QObject {
   Q_PROPERTY(int fontSizeTitle READ fontSizeTitle NOTIFY metrics_changed)
   Q_PROPERTY(int fontSizeHero READ fontSizeHero NOTIFY metrics_changed)
 
-  Q_PROPERTY(QVariantList playerColors READ playerColors CONSTANT)
+  Q_PROPERTY(QVariantList playerColors READ playerColors NOTIFY player_colors_changed)
   Q_PROPERTY(QVariantList teamIcons READ teamIcons CONSTANT)
   Q_PROPERTY(QVariantList factions READ factions CONSTANT)
   Q_PROPERTY(QVariantMap unitIcons READ unitIcons CONSTANT)
@@ -207,6 +207,8 @@ public:
 
 signals:
   void metrics_changed();
+
+  void player_colors_changed();
 
 private:
   explicit Theme(QObject* parent = nullptr);
