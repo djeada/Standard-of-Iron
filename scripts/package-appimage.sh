@@ -57,6 +57,44 @@ fetch_tool \
 # linuxdeploy finds its plugins by scanning PATH for `linuxdeploy-plugin-*`.
 export PATH="${PWD}/${TOOL_DIR}:${PATH}"
 
+# The Qt SDK can ship SQL drivers for optional databases whose proprietary
+# client libraries are not present on the runner. The game only uses SQLite,
+# so give linuxdeploy-plugin-qt a sanitized plugin tree containing that driver
+# while leaving the rest of the Qt installation untouched.
+QMAKE_BIN="$(command -v qmake || true)"
+if [ -z "${QMAKE_BIN}" ]; then
+  echo "error: qmake is required for Qt deployment" >&2
+  exit 1
+fi
+
+QT_PLUGIN_SOURCE="$("${QMAKE_BIN}" -query QT_INSTALL_PLUGINS)"
+QT_PLUGIN_ROOT="$(mktemp -d)"
+trap 'rm -rf "${QT_PLUGIN_ROOT}"' EXIT
+cp -a "${QT_PLUGIN_SOURCE}/." "${QT_PLUGIN_ROOT}/"
+
+if [ ! -s "${QT_PLUGIN_ROOT}/sqldrivers/libqsqlite.so" ]; then
+  echo "error: Qt SQLite SQL driver is missing from ${QT_PLUGIN_SOURCE}" >&2
+  exit 1
+fi
+find "${QT_PLUGIN_ROOT}/sqldrivers" \
+  -maxdepth 1 \
+  \( -type f -o -type l \) \
+  -name 'libqsql*.so' \
+  ! -name 'libqsqlite.so' \
+  -delete
+
+QMAKE_WRAPPER="${QT_PLUGIN_ROOT}/qmake-sqlite-only"
+cat >"${QMAKE_WRAPPER}" <<EOF
+#!/bin/sh
+if [ "\${1-}" = "-query" ]; then
+  "${QMAKE_BIN}" "\$@" | sed 's|^QT_INSTALL_PLUGINS:.*|QT_INSTALL_PLUGINS:${QT_PLUGIN_ROOT}|'
+else
+  exec "${QMAKE_BIN}" "\$@"
+fi
+EOF
+chmod +x "${QMAKE_WRAPPER}"
+export QMAKE="${QMAKE_WRAPPER}"
+
 echo "=== Preparing AppDir ==="
 mkdir -p AppDir/usr/bin
 cp "${APP_DIR}/${APP_NAME}" AppDir/usr/bin/
