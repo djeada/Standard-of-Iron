@@ -3,9 +3,10 @@
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 
-#include <GL/gl.h>
 #include <cstddef>
 #include <initializer_list>
+
+#include "platform_gl.h"
 
 namespace Render::GL {
 

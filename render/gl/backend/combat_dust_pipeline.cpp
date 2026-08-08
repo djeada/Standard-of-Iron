@@ -109,7 +109,7 @@ void restore_effect_render_state(const EffectRenderState& state) {
   glDepthMask(state.depth_mask_enabled);
   glBlendFunc(static_cast<GLenum>(state.blend_src_rgb),
               static_cast<GLenum>(state.blend_dst_rgb));
-  glBlendEquation(static_cast<GLenum>(state.blend_equation_rgb));
+  Platform::set_blend_equation(static_cast<GLenum>(state.blend_equation_rgb));
   if (state.blend_enabled != 0U) {
     glEnable(GL_BLEND);
   } else {

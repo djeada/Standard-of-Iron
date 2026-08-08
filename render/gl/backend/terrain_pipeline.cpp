@@ -6,12 +6,12 @@
 #include <qopenglext.h>
 #include <qvectornd.h>
 
-#include <GL/gl.h>
 #include <cmath>
 #include <cstddef>
 #include <numbers>
 
 #include "../backend.h"
+#include "../platform_gl.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
 

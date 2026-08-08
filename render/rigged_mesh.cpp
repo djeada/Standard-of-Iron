@@ -4,12 +4,12 @@
 #include <QOpenGLContext>
 #include <qopenglext.h>
 
-#include <GL/gl.h>
 #include <atomic>
 #include <cstddef>
 #include <utility>
 
 #include "gl/gl_lifetime.h"
+#include "gl/platform_gl.h"
 
 namespace Render::GL {
 

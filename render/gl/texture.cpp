@@ -6,7 +6,7 @@
 #include <qhashfunctions.h>
 #include <qimage.h>
 
-#include <GL/gl.h>
+#include "platform_gl.h"
 
 namespace Render::GL {
 
