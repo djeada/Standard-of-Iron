@@ -10,6 +10,26 @@
 #include <GL/gl.h>
 #endif
 
+#ifndef GL_DRAW_INDIRECT_BUFFER
+#define GL_DRAW_INDIRECT_BUFFER 0x8F3F
+#endif
+
+#ifndef GL_SHADER_STORAGE_BUFFER
+#define GL_SHADER_STORAGE_BUFFER 0x90D2
+#endif
+
+#ifndef GL_COMMAND_BARRIER_BIT
+#define GL_COMMAND_BARRIER_BIT 0x00000040
+#endif
+
+#ifndef GL_ELEMENT_ARRAY_BARRIER_BIT
+#define GL_ELEMENT_ARRAY_BARRIER_BIT 0x00000002
+#endif
+
+#ifndef GL_SHADER_STORAGE_BARRIER_BIT
+#define GL_SHADER_STORAGE_BARRIER_BIT 0x00002000
+#endif
+
 namespace Render::GL::Platform {
 
 inline void set_blend_equation(GLenum equation) {

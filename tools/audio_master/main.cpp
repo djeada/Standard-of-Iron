@@ -4,7 +4,17 @@
 #define MA_ENABLE_MP3
 #define MA_ENABLE_FLAC
 #define MA_ENABLE_VORBIS
+#pragma push_macro("TRUE")
+#pragma push_macro("FALSE")
+#pragma push_macro("L")
+#pragma push_macro("C")
+#pragma push_macro("R")
 #include <stb_vorbis.h>
+#pragma pop_macro("R")
+#pragma pop_macro("C")
+#pragma pop_macro("L")
+#pragma pop_macro("FALSE")
+#pragma pop_macro("TRUE")
 #define STB_VORBIS_INCLUDE_STB_VORBIS_H
 #include <algorithm>
 #include <chrono>
