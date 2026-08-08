@@ -1550,22 +1550,27 @@ def validate(
 
 
 def build_structures(
-    settlements: Sequence[Settlement], landmarks: Sequence[dict] = ()
+    settlements: Sequence[Settlement], carried: Sequence[dict] = ()
 ) -> list[dict]:
     """Serialise every settlement, buildings before walls.
 
     The map editor canonicalises structures into point buildings followed by
     line walls, so emitting them in that order keeps an editor round-trip
-    byte-stable (see MapEditorMapDataTest.RealMapRoundTrips...). Landmark
-    buildings belong to generate-map-landmarks.py; they are carried through
-    untouched, in the point-building half where the editor would put them.
+    byte-stable (see MapEditorMapDataTest.RealMapRoundTrips...). Entries this
+    tool does not own - landmark pieces and authored settlements - are carried
+    through untouched, but they are split the same way: a carried wall run has to
+    land in the wall half or the round trip reorders the array.
     """
+    carried_points = [e for e in carried if e.get("type") != "wall_segment"]
+    carried_walls = [e for e in carried if e.get("type") == "wall_segment"]
+
     entries: list[dict] = []
     for settlement in settlements:
         entries.extend(building.to_json() for building in settlement.buildings)
-    entries.extend(landmarks)
+    entries.extend(carried_points)
     for settlement in settlements:
         entries.extend(wall.to_json() for wall in settlement.walls)
+    entries.extend(carried_walls)
     return entries
 
 
@@ -1602,7 +1607,14 @@ def process_map(
         print(f"{path}: SKIP: no settlements block")
         return True
 
-    settlements = [Settlement.from_json(entry) for entry in raw_settlements]
+    settlements = [
+        Settlement.from_json(entry)
+        for entry in raw_settlements
+        if not entry.get("authored")
+    ]
+    authored = [entry for entry in raw_settlements if entry.get("authored")]
+    for entry in authored:
+        print(f"  authored: {entry.get('id')} is laid out by hand, left alone")
     terrain = definition.get("terrain") or []
 
     for settlement in settlements:
@@ -1741,7 +1753,7 @@ def process_map(
             [
                 entry
                 for entry in definition.get("structures") or []
-                if entry.get("landmark") is not None
+                if entry.get("landmark") is not None or entry.get("authored")
             ],
         )
         path.write_text(serialise_like(path, definition))

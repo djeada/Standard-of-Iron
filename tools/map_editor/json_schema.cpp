@@ -220,11 +220,21 @@ auto linear_schema(const QString& sub_type) -> JsonSchema {
 }
 
 auto structure_schema(const QString& sub_type) -> JsonSchema {
+  const bool is_gate = sub_type == QStringLiteral("wall_gate");
+
   JsonSchema schema;
-  schema.title = QStringLiteral("Structure");
-  schema.summary = QStringLiteral(
-      "Pre-placed building. Player 0 is neutral; 1+ belong to the matching player "
-      "slot in the mission.");
+  schema.title = is_gate ? QStringLiteral("Wall gate") : QStringLiteral("Structure");
+  schema.summary =
+      is_gate
+          ? QStringLiteral(
+                "The opening in a wall ring. It holds six cells of the run and "
+                "sits on the same two-cell lattice the wall does, so x and z "
+                "must both be even. Rotation is not decoration: 0 spans x, 90 "
+                "spans z, and a gate across the wrong axis leaves a hole beside "
+                "it. Gates open for their owner and allies only.")
+          : QStringLiteral(
+                "Pre-placed building. Player 0 is neutral; 1+ belong to the matching "
+                "player slot in the mission.");
 
   schema.fields = {
       required_field("type",
@@ -401,27 +411,29 @@ auto JsonSchema::find(const QString& key) const -> const JsonFieldSpec* {
   return nullptr;
 }
 
-auto grove_schema() -> JsonSchema {
+auto forest_schema() -> JsonSchema {
   JsonSchema schema;
-  schema.title = QStringLiteral("Wood");
+  schema.title = QStringLiteral("Forest");
   schema.summary = QStringLiteral(
-      "A standalone wood. Its ground is closed to cavalry, siege and elephants; "
-      "commanders, archers, swordsmen, healers, builders, civilians and wildlife "
-      "thread it freely. A road driven through a wood stays open to everyone, so "
-      "lay one across a wood you still want a column to be able to cross.");
+      "A forest. Its ground is closed to cavalry, siege and elephants; commanders, "
+      "archers, swordsmen, healers, builders, civilians and wildlife thread it "
+      "freely, and the tree scatter thickens over it. A road driven through a "
+      "forest stays open to everyone, so lay one across a forest you still want a "
+      "column to be able to cross. A forest laid over a hill is clipped to the "
+      "open ground around it.");
 
   schema.fields = {
       optional_field("id",
                      "string",
                      "auto",
                      "Name used in the editor and in map notes.",
-                     QStringLiteral("wood_1")),
+                     QStringLiteral("forest_1")),
       grid_x_field(),
       grid_z_field(),
       optional_field("radius",
                      "number",
                      "12",
-                     "How far the wood reaches from its centre, in cells.",
+                     "How far the forest reaches from its centre, in cells.",
                      12.0),
   };
   return schema;
@@ -444,8 +456,8 @@ auto schema_for_element(int element_kind, const QString& sub_type) -> JsonSchema
     return undead_zone_schema();
   case ElementKind::WildlifeArea:
     return wildlife_area_schema();
-  case ElementKind::Grove:
-    return grove_schema();
+  case ElementKind::Forest:
+    return forest_schema();
   }
   return {};
 }
@@ -610,7 +622,7 @@ auto schema_for_biome() -> JsonSchema {
           "procedural_trees_enabled",
           "bool",
           "preset",
-          "Scatters pines and olives procedurally. Disable to hand-place wood.",
+          "Scatters pines and olives procedurally. Disable to hand-place forests.",
           true),
       optional_field("irregularity_scale",
                      "number",

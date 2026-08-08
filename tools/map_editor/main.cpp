@@ -12,6 +12,8 @@ auto main(int argc, char* argv[]) -> int {
   QApplication app(argc, argv);
   QApplication::setApplicationName("Standard of Iron Map Editor");
   QApplication::setApplicationVersion("1.0");
+
+  QApplication::setOrganizationName("djeada");
   UiShell::apply(app);
 
   QCommandLineParser parser;

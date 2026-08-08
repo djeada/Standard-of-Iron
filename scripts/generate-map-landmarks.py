@@ -4,9 +4,9 @@
 A campaign map's interest does not all come from its settlements. The ground
 between them needs places worth walking to: a sanctuary on a ridge with a
 statue-lined way up to it, a burnt-out hamlet at a crossroads, a picket camped
-beside a monument at the edge of a wood. This tool turns a map's ``landmarks``
-array - authorial intent, a handful of lines each - into the temples, props,
-troops and groves that make those places exist.
+beside a monument at the edge of a forest. This tool turns a map's ``landmarks``
+array - authorial intent, a handful of lines each - into the temples, props and
+troops that make those places exist.
 
 Kinds
   sanctuary  a temple outside any settlement, a statue-lined approach, ruins
@@ -14,13 +14,10 @@ Kinds
   hamlet     a dead village of abandoned homes, ruins and dead trees
   watch      a picket beside a monument: tents, cart, rack, one statue
 
-A map may also carry a ``groves`` array of standalone woods. A forest does not
-block movement - it marks its ground as forest, which thickens the tree scatter
-and gives the ground cover - so a grove is placed for what it screens: the
-approach to a wall with no gate on it, the flank of a road a column has to march
-down, the timber a gather objective is measured against. Groves are validated for
-open ground and settlement clearance like everything else here, and carry the
-same ``landmark`` tag.
+A map's ``forests`` array is authored by hand and read straight by the engine,
+so nothing here writes it. It is validated on every run: a forest centre has to
+be open ground and clear of settlement walls, because a forest grown through the
+streets is one nobody can build in.
 
 Everything this tool writes carries a ``landmark`` key naming the landmark it
 belongs to, and a run removes its own previous output before writing the new
@@ -63,7 +60,7 @@ PROP_SPACING = 3.5
 
 LANDMARK_SPACING = 60.0
 
-GROVE_KEEP_OUT = 22.0
+FOREST_KEEP_OUT = 22.0
 
 
 @dataclass
@@ -175,13 +172,11 @@ class Landmark:
     player_id: int = -1
     on_hill: bool = False
     guards: tuple[tuple[str, int], ...] = ()
-    forest: dict | None = None
     scale: float = 1.0
 
     props: list[dict] = field(default_factory=list)
     structures: list[dict] = field(default_factory=list)
     spawns: list[dict] = field(default_factory=list)
-    groves: list[dict] = field(default_factory=list)
 
     @staticmethod
     def from_json(entry: dict) -> "Landmark":
@@ -208,7 +203,6 @@ class Landmark:
             player_id=int(entry.get("player_id", -1)),
             on_hill=bool(entry.get("on_hill", False)),
             guards=guards,
-            forest=entry.get("forest"),
             scale=float(entry.get("scale", 1.0)),
         )
 
@@ -377,7 +371,7 @@ def hill_crown_at(
 
 
 def place(landmark: Landmark, site: Site) -> None:
-    """Lay out one landmark's temple, props, groves and guards."""
+    """Lay out one landmark's temple, props and guards."""
     spec = KIND_SPECS[landmark.kind]
     forward, left = FACING_FRAMES[landmark.facing]
     crown: tuple[float, float] | None = None
@@ -478,23 +472,6 @@ def place(landmark: Landmark, site: Site) -> None:
             )
         guard_row += 1
 
-    if landmark.forest:
-        bearing = str(landmark.forest.get("bearing", "east")).lower()
-        if bearing not in FACING_FRAMES:
-            raise LandmarkError(f"{landmark.id}: unknown forest bearing {bearing}")
-        direction = FACING_FRAMES[bearing][0]
-        radius = float(landmark.forest.get("radius", 26.0))
-        distance = float(landmark.forest.get("distance", radius + 16.0))
-        landmark.groves.append(
-            {
-                "type": "forest",
-                "x": round(landmark.x - direction[0] * distance, 2),
-                "z": round(landmark.z - direction[1] * distance, 2),
-                "radius": round(radius, 2),
-                LANDMARK_KEY: landmark.id,
-            }
-        )
-
 
 def bearing_degrees(facing: str, across: float) -> float:
     """Yaw for a prop, so paired statues turn to face each other across a way."""
@@ -517,36 +494,32 @@ def strip_generated(entries: Sequence[dict] | None) -> list[dict]:
     return [entry for entry in entries or [] if entry.get(LANDMARK_KEY) is None]
 
 
-def plan_groves(definition: dict, site: Site) -> list[dict]:
-    """Turn the map's standalone ``groves`` intent into forest features."""
-    planned: list[dict] = []
-    for entry in definition.get("groves") or []:
+def check_forests(definition: dict, site: Site) -> int:
+    """Validate the map's hand-authored forests. Nothing here writes them.
+
+    The engine reads ``forests`` directly - the navigation grid closes their
+    ground to cavalry, siege and elephants, and the loader raises a Forest
+    terrain feature over each one so the trees thicken. This tool only checks
+    that each one stands somewhere a forest can stand.
+    """
+    for entry in definition.get("forests") or []:
         missing = [key for key in ("id", "x", "z", "radius") if key not in entry]
         if missing:
-            raise LandmarkError(f"grove is missing {', '.join(missing)}")
+            raise LandmarkError(f"forest is missing {', '.join(missing)}")
         x = float(entry["x"])
         z = float(entry["z"])
         if not site.base_walkable.walkable(x, z):
             raise LandmarkError(
-                f"{entry['id']}: a grove centre must be open ground, "
+                f"{entry['id']}: a forest centre must be open ground, "
                 f"{x:.0f},{z:.0f} is not"
             )
         clearance = settlement_clearance(definition, x, z)
-        if clearance < GROVE_KEEP_OUT:
+        if clearance < FOREST_KEEP_OUT:
             raise LandmarkError(
-                f"{entry['id']}: {clearance:.0f} from a settlement wall; a wood "
-                f"inside {GROVE_KEEP_OUT:.0f} grows through the streets"
+                f"{entry['id']}: {clearance:.0f} from a settlement wall; a forest "
+                f"inside {FOREST_KEEP_OUT:.0f} grows through the streets"
             )
-        planned.append(
-            {
-                "type": "forest",
-                "x": round(x, 2),
-                "z": round(z, 2),
-                "radius": round(float(entry["radius"]), 2),
-                LANDMARK_KEY: str(entry["id"]),
-            }
-        )
-    return planned
+    return len(definition.get("forests") or [])
 
 
 def order_structures(kept: list[dict], fresh: list[dict]) -> list[dict]:
@@ -577,18 +550,16 @@ def process_map(path: Path, *, write: bool) -> bool:
 
     landmarks = [Landmark.from_json(entry) for entry in raw_landmarks]
     site = Site(definition)
-    standalone = plan_groves(definition, site)
+    forest_count = check_forests(definition, site)
 
     structures: list[dict] = []
     props: list[dict] = []
     spawns: list[dict] = []
-    groves: list[dict] = list(standalone)
     for landmark in landmarks:
         place(landmark, site)
         structures.extend(landmark.structures)
         props.extend(landmark.props)
         spawns.extend(landmark.spawns)
-        groves.extend(landmark.groves)
 
     temples = sum(1 for entry in structures if entry["type"] == "temple")
     statues = sum(1 for prop in props if prop["type"] == "statue")
@@ -597,7 +568,7 @@ def process_map(path: Path, *, write: bool) -> bool:
         f"{path} [{'GENERATE' if write else 'VALIDATE'}] PASS: "
         f"landmarks={len(landmarks)}, temples={temples}, statues={statues}, "
         f"abandoned_homes={homes}, props={len(props)}, guards={len(spawns)}, "
-        f"groves={len(groves)}"
+        f"forests={forest_count} (checked, not written)"
     )
     for landmark in landmarks:
         thin = len(landmark.props) < len(KIND_SPECS[landmark.kind].pieces) - 2
@@ -624,9 +595,9 @@ def process_map(path: Path, *, write: bool) -> bool:
     )
     definition["world_props"] = strip_generated(definition.get("world_props")) + props
     definition["spawns"] = strip_generated(definition.get("spawns")) + spawns
-    definition["terrain"] = strip_generated(definition.get("terrain")) + groves
+    definition["terrain"] = strip_generated(definition.get("terrain"))
     path.write_text(serialise_like(path, definition))
-    print(f"  wrote {len(structures) + len(props) + len(spawns) + len(groves)} entries")
+    print(f"  wrote {len(structures) + len(props) + len(spawns)} entries")
     return True
 
 

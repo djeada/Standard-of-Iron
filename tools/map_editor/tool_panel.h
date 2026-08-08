@@ -3,70 +3,16 @@
 #include <QIcon>
 #include <QWidget>
 
+#include "tool_type.h"
+
 class QButtonGroup;
 class QComboBox;
+class QContextMenuEvent;
 class QGridLayout;
 class QLabel;
 class QToolButton;
 
 namespace MapEditor {
-
-enum class ToolType {
-  Select,
-  Hill,
-  Mountain,
-  River,
-  Road,
-  Bridge,
-  PropFirecamp,
-  PropTent,
-  PropSupplyCart,
-  PropWeaponRack,
-  PropRuins,
-  PropMagicShrine,
-  PropDeadTree,
-  PropBoulder,
-  PropPineTree,
-  PropOliveTree,
-  PropPlant,
-  PropIronOre,
-  PropAbandonedHome,
-  PropStatue,
-  TroopArcher,
-  TroopSwordsman,
-  TroopSpearman,
-  TroopHorseSwordsman,
-  TroopHorseArcher,
-  TroopHorseSpearman,
-  TroopHealer,
-  TroopCatapult,
-  TroopBallista,
-  TroopElephant,
-  TroopRomanLegionOrganizer,
-  TroopRomanVeteranConsul,
-  TroopRomanFieldCommander,
-  TroopCarthageSpearCommander,
-  TroopCarthageBowCommander,
-  TroopCarthageSwordCommander,
-  TroopSkeletonSwordsman,
-  TroopSkeletonArcher,
-  TroopGravePriest,
-  TroopCivilian,
-  TroopBuilder,
-  UndeadZone,
-  Grove,
-  WildlifeSheep,
-  WildlifeWolves,
-  WildlifeBirds,
-  Barracks,
-  Village,
-  DefenseTower,
-  Home,
-  Marketplace,
-  Temple,
-  Wall,
-  Eraser
-};
 
 class ToolPanel : public QWidget {
   Q_OBJECT
@@ -83,6 +29,9 @@ signals:
   void tool_selected(ToolType tool);
   void player_id_changed(int player_id);
   void nation_changed(const QString& nation);
+
+protected:
+  void contextMenuEvent(QContextMenuEvent* event) override;
 
 private:
   void setup_ui();

@@ -11,7 +11,7 @@ enum class ScatterSceneArchetype {
   RockyPatch,
   RiverFringe,
   CampOutskirts,
-  ShelteredGrove,
+  ShelteredHollow,
 };
 
 enum class ScatterRuleSpecies {

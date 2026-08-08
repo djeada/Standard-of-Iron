@@ -23,6 +23,7 @@
 #include <QProcess>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QSettings>
 #include <QSignalBlocker>
 #include <QSplitter>
 #include <QStatusBar>
@@ -44,6 +45,15 @@
 #include "troop_tool_specs.h"
 
 namespace {
+
+constexpr auto k_last_dialog_directory_key = "map_editor/last_dialog_directory";
+
+auto editor_settings() -> QSettings {
+  return QSettings(QSettings::IniFormat,
+                   QSettings::UserScope,
+                   QCoreApplication::organizationName(),
+                   QCoreApplication::applicationName());
+}
 
 auto createGuideSection(const QString& title,
                         const QString& body,
@@ -250,6 +260,9 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
     const QSignalBlocker block_weather(weather);
     const QSignalBlocker block_weather_intensity(weather_intensity);
 
+    const QSignalBlocker block_wind_strength(wind_strength);
+    const QSignalBlocker block_wind_direction(wind_direction);
+
     const double hour =
         environment.value(MapEditor::MapJsonKeys::start_time).toDouble(13.0);
     time->setValue(hour);
@@ -430,7 +443,7 @@ EditorWindow::EditorWindow(QWidget* parent)
   setWindowTitle("Standard of Iron - Map Editor");
   resize(1400, 900);
 
-  new_map();
+  reset_to_new_map();
 }
 
 EditorWindow::~EditorWindow() = default;
@@ -800,17 +813,21 @@ void EditorWindow::setup_menus() {
   test_menu->addAction(launch_arena_action);
 }
 
-void EditorWindow::new_map() {
-  if (!maybe_save()) {
-    return;
-  }
-
+void EditorWindow::reset_to_new_map() {
   m_map_data->clear();
   set_mission_mode(false);
   m_current_file_path.clear();
   m_linked_map_file_path.clear();
   update_window_title();
   update_current_file_label();
+}
+
+void EditorWindow::new_map() {
+  if (!maybe_save()) {
+    return;
+  }
+
+  reset_to_new_map();
   show_action_feedback("Created a new unsaved map.");
 }
 
@@ -866,6 +883,8 @@ bool EditorWindow::load_file(const QString& file_path) {
   const QJsonObject probe_root = probe_document.object();
   const bool is_mission = probe_root.contains(QStringLiteral("map_path")) &&
                           probe_root.contains(QStringLiteral("player_setup"));
+
+  remember_dialog_directory(file_path);
 
   QString error_message;
   if (is_mission) {
@@ -1263,6 +1282,7 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     json[MapJsonKeys::type] = elem.type;
     json[MapJsonKeys::x] = static_cast<double>(elem.x);
     json[MapJsonKeys::z] = static_cast<double>(elem.z);
+    json[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
     json[MapJsonKeys::player_id] = elem.player_id;
     if (elem.max_population != 100) {
       json[MapJsonKeys::max_population] = elem.max_population;
@@ -1347,19 +1367,19 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
 
     title = "Edit Wildlife Range: " + wildlife_species_label(elem.species);
-  } else if (element_type == static_cast<int>(ElementKind::Grove)) {
-    const auto& groves = m_map_data->groves();
-    if (index < 0 || index >= groves.size()) {
+  } else if (element_type == static_cast<int>(ElementKind::Forest)) {
+    const auto& forests = m_map_data->forests();
+    if (index < 0 || index >= forests.size()) {
       return;
     }
-    const auto& elem = groves[index];
+    const auto& elem = forests[index];
 
     json["id"] = elem.id;
     json[MapJsonKeys::x] = static_cast<double>(elem.x);
     json[MapJsonKeys::z] = static_cast<double>(elem.z);
     json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
 
-    title = "Edit Wood: " + (elem.id.isEmpty() ? QStringLiteral("wood") : elem.id);
+    title = "Edit Forest: " + (elem.id.isEmpty() ? QStringLiteral("forest") : elem.id);
   } else {
     return;
   }
@@ -1531,6 +1551,7 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.type = new_json[MapJsonKeys::type].toString();
       elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
       elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
+      elem.rotation = static_cast<float>(new_json[MapJsonKeys::rotation].toDouble(0.0));
       elem.player_id = new_json[MapJsonKeys::player_id].toInt(0);
       elem.max_population = new_json[MapJsonKeys::max_population].toInt(100);
       elem.nation = new_json[MapJsonKeys::nation].toString();
@@ -1539,6 +1560,7 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       const QStringList known_keys = {MapJsonKeys::type,
                                       MapJsonKeys::x,
                                       MapJsonKeys::z,
+                                      MapJsonKeys::rotation,
                                       MapJsonKeys::player_id,
                                       MapJsonKeys::max_population,
                                       MapJsonKeys::nation};
@@ -1627,15 +1649,15 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                                   m_map_data->wildlife_areas()[index],
                                                   elem,
                                                   "Edit wildlife range"));
-    } else if (element_type == static_cast<int>(ElementKind::Grove)) {
-      GroveElement elem;
+    } else if (element_type == static_cast<int>(ElementKind::Forest)) {
+      ForestElement elem;
       elem.id = new_json["id"].toString();
       elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
       elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
       elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(12.0));
 
-      m_map_data->execute_command(std::make_unique<UpdateGroveCmd>(
-          m_map_data, index, m_map_data->groves()[index], elem, "Edit wood"));
+      m_map_data->execute_command(std::make_unique<UpdateForestCmd>(
+          m_map_data, index, m_map_data->forests()[index], elem, "Edit forest"));
     }
   }
 }
@@ -1708,7 +1730,14 @@ QString EditorWindow::default_map_dialog_path(const QString& fallback_name) cons
     return m_current_file_path;
   }
 
-  const QDir repo_maps_dir(QDir::current().filePath("assets/maps"));
+  const QString remembered = load_last_dialog_directory();
+  if (!remembered.isEmpty() && QDir(remembered).exists()) {
+    return fallback_name.isEmpty() ? remembered
+                                   : QDir(remembered).filePath(fallback_name);
+  }
+
+  const QDir repo_maps_dir(
+      QDir(repository_root()).filePath(QStringLiteral("assets/maps")));
   if (repo_maps_dir.exists()) {
     return fallback_name.isEmpty() ? repo_maps_dir.absolutePath()
                                    : repo_maps_dir.filePath(fallback_name);
@@ -1719,6 +1748,18 @@ QString EditorWindow::default_map_dialog_path(const QString& fallback_name) cons
   }
 
   return QDir::currentPath();
+}
+
+QString EditorWindow::load_last_dialog_directory() {
+  return editor_settings().value(k_last_dialog_directory_key).toString();
+}
+
+void EditorWindow::remember_dialog_directory(const QString& file_path) {
+  const QString directory = QFileInfo(file_path).absolutePath();
+  if (directory.isEmpty()) {
+    return;
+  }
+  editor_settings().setValue(k_last_dialog_directory_key, directory);
 }
 
 bool EditorWindow::save_map_to_path(const QString& file_path,
@@ -1734,6 +1775,7 @@ bool EditorWindow::save_map_to_path(const QString& file_path,
     m_current_file_path = absolute_path;
   }
 
+  remember_dialog_directory(absolute_path);
   m_map_data->set_modified(false);
   update_window_title();
   update_current_file_label();
@@ -1769,6 +1811,7 @@ bool EditorWindow::save_mission_to_path(const QString& file_path,
   if (update_current_path) {
     m_current_file_path = absolute_path;
   }
+  remember_dialog_directory(absolute_path);
   m_mission_data->set_modified(false);
   update_window_title();
   update_current_file_label();
@@ -2112,10 +2155,16 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
     if (index < structures.size()) {
       const auto& e = structures[index];
       type_name = e.type;
-      coords = QString("(%1, %2) P%3")
-                   .arg(static_cast<int>(e.x))
-                   .arg(static_cast<int>(e.z))
-                   .arg(e.player_id);
+      coords = e.type == QStringLiteral("wall_gate")
+                   ? QString("(%1, %2) P%3 %4°")
+                         .arg(static_cast<int>(e.x))
+                         .arg(static_cast<int>(e.z))
+                         .arg(e.player_id)
+                         .arg(static_cast<int>(e.rotation))
+                   : QString("(%1, %2) P%3")
+                         .arg(static_cast<int>(e.x))
+                         .arg(static_cast<int>(e.z))
+                         .arg(e.player_id);
     }
   } else if (element_type == 4) {
     const auto& troop_spawns = m_map_data->troop_spawns();
@@ -2150,11 +2199,11 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
                    .arg(static_cast<int>(e.z))
                    .arg(static_cast<int>(e.radius));
     }
-  } else if (element_type == static_cast<int>(ElementKind::Grove)) {
-    const auto& groves = m_map_data->groves();
-    if (index < groves.size()) {
-      const auto& e = groves[index];
-      type_name = QStringLiteral("wood");
+  } else if (element_type == static_cast<int>(ElementKind::Forest)) {
+    const auto& forests = m_map_data->forests();
+    if (index < forests.size()) {
+      const auto& e = forests[index];
+      type_name = QStringLiteral("forest");
       coords = QString("(%1, %2) r=%3")
                    .arg(static_cast<int>(e.x))
                    .arg(static_cast<int>(e.z))

@@ -122,7 +122,7 @@ public:
     } else if (sample.dryness > 0.60F) {
       sample.archetype = ScatterSceneArchetype::DryClearing;
     } else if (sample.shelter > 0.58F && sample.fertility > 0.45F) {
-      sample.archetype = ScatterSceneArchetype::ShelteredGrove;
+      sample.archetype = ScatterSceneArchetype::ShelteredHollow;
     } else if (sample.fertility > 0.58F) {
       sample.archetype = ScatterSceneArchetype::FertilePatch;
     } else {

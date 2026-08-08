@@ -100,7 +100,7 @@ public:
   [[nodiscard]] auto navigation_topology_revision() const -> std::uint64_t {
     return m_navigation_topology_revision;
   }
-  [[nodiscard]] auto groves() const -> const std::vector<Grove>& { return m_groves; }
+  [[nodiscard]] auto forests() const -> const std::vector<Forest>& { return m_forests; }
 
   [[nodiscard]] auto authored_world_props() const -> const std::vector<WorldProp>& {
     return m_authored_world_props;
@@ -211,7 +211,7 @@ private:
   CoordSystem m_coord_system{CoordSystem::Grid};
   std::vector<WorldProp> m_authored_world_props;
   std::vector<WorldProp> m_world_props;
-  std::vector<Grove> m_groves;
+  std::vector<Forest> m_forests;
   std::vector<RoadSegment> m_road_segments;
   struct RoadQuerySegment {
     float start_x{0.0F};

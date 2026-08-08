@@ -1,1186 +1,1517 @@
 {
-  "name": "Spanish Olive Grove",
-  "description": "A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.",
-  "coord_system": "grid",
-  "max_troops_per_player": 2000,
-  "grid": {
-    "width": 280,
-    "height": 280,
-    "tile_size": 1.0
-  },
-  "biome": {
-    "ground_type": "grass_dry",
-    "seed": 34619,
-    "patch_density": 3.05,
-    "patch_jitter": 0.8,
-    "blade_height": [
-      0.35,
-      0.9
-    ],
-    "blade_width": [
-      0.022,
-      0.048
-    ],
-    "sway_strength": 0.2,
-    "sway_speed": 1.05,
-    "height_noise": [
-      0.18,
-      0.06
-    ],
-    "grass_primary": [
-      0.18,
-      0.32,
-      0.12
-    ],
-    "grass_secondary": [
-      0.25,
-      0.42,
-      0.16
-    ],
-    "grass_dry": [
-      0.56,
-      0.48,
-      0.28
-    ],
-    "soil_color": [
-      0.67,
-      0.55,
-      0.36
-    ],
-    "rock_low": [
-      0.58,
-      0.54,
-      0.46
-    ],
-    "rock_high": [
-      0.76,
-      0.72,
-      0.64
-    ],
-    "plant_density": 0.58,
-    "ground_irregularity_enabled": true,
-    "irregularity_scale": 0.14,
-    "irregularity_amplitude": 0.065,
-    "spawn_edge_padding": 0.0
-  },
-  "camera": {
-    "center": [
-      140,
-      0,
-      140
-    ],
-    "distance": 86.0,
-    "tilt_deg": 48.0,
-    "yaw": 220.0,
-    "fov_y": 45.0,
-    "near": 1.0,
-    "far": 650.0
-  },
-  "time_of_day": "afternoon",
-  "terrain": [
-    {
-      "type": "flat",
-      "x": 64,
-      "z": 72,
-      "width": 46,
-      "depth": 40,
-      "description": "Southwestern Carthaginian base clearing."
+    "biome": {
+        "blade_height": [
+            0.35000000000000003,
+            0.9
+        ],
+        "blade_width": [
+            0.02,
+            0.05
+        ],
+        "grass_dry": [
+            0.56,
+            0.48,
+            0.28
+        ],
+        "grass_primary": [
+            0.18,
+            0.32,
+            0.12
+        ],
+        "grass_secondary": [
+            0.25,
+            0.42,
+            0.16
+        ],
+        "ground_irregularity_enabled": true,
+        "ground_type": "grass_dry",
+        "height_noise": [
+            0.18,
+            0.06
+        ],
+        "irregularity_amplitude": 0.07,
+        "irregularity_scale": 0.14,
+        "patch_density": 3.0500000000000003,
+        "patch_jitter": 0.8,
+        "plant_density": 0.58,
+        "rock_high": [
+            0.76,
+            0.72,
+            0.64
+        ],
+        "rock_low": [
+            0.58,
+            0.54,
+            0.46
+        ],
+        "seed": 34619,
+        "soil_color": [
+            0.67,
+            0.55,
+            0.36
+        ],
+        "spawn_edge_padding": 0,
+        "sway_speed": 1.05,
+        "sway_strength": 0.2
     },
-    {
-      "type": "flat",
-      "x": 216,
-      "z": 208,
-      "width": 46,
-      "depth": 40,
-      "description": "Northeastern Roman base clearing."
-    },
-    {
-      "type": "hill",
-      "x": 64,
-      "z": 72,
-      "radius": 15,
-      "height": 2.3,
-      "description": "Carthaginian camp rise overlooking the lower olive terraces.",
-      "entrances": [
+    "bridges": [
         {
-          "x": 80,
-          "z": 72
+            "end": [
+                96.62,
+                84.56
+            ],
+            "height": 0.55,
+            "start": [
+                93.19,
+                82.14
+            ],
+            "width": 8.0
         },
         {
-          "x": 64,
-          "z": 88
+            "end": [
+                183.38,
+                195.44
+            ],
+            "height": 0.55,
+            "start": [
+                186.81,
+                197.86
+            ],
+            "width": 8.0
+        },
+        {
+            "end": [
+                107.71,
+                69.46
+            ],
+            "height": 0.55,
+            "start": [
+                104.38,
+                66.89
+            ],
+            "width": 3.9
+        },
+        {
+            "end": [
+                172.29,
+                210.54
+            ],
+            "height": 0.55,
+            "start": [
+                175.62,
+                213.11
+            ],
+            "width": 3.9
         }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 216,
-      "z": 208,
-      "radius": 15,
-      "height": 2.3,
-      "description": "Roman camp rise overlooking the upper olive terraces.",
-      "entrances": [
-        {
-          "x": 200,
-          "z": 208
-        },
-        {
-          "x": 216,
-          "z": 192
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 140,
-      "z": 140,
-      "radius": 20,
-      "height": 3.4,
-      "description": "Central olive press hill. Powerful but exposed from four approaches.",
-      "entrances": [
-        {
-          "x": 140,
-          "z": 118
-        },
-        {
-          "x": 140,
-          "z": 162
-        },
-        {
-          "x": 118,
-          "z": 140
-        },
-        {
-          "x": 162,
-          "z": 140
-        }
-      ]
-    },
-    {
-      "type": "flat",
-      "x": 140,
-      "z": 140,
-      "width": 68,
-      "depth": 56,
-      "description": "Cleared estate ground around the central olive press."
-    },
-    {
-      "type": "hill",
-      "x": 92,
-      "z": 102,
-      "radius": 13,
-      "height": 2.2,
-      "description": "Lower western terrace. Good archer ground for early map control.",
-      "entrances": [
-        {
-          "x": 78,
-          "z": 102
-        },
-        {
-          "x": 106,
-          "z": 102
-        },
-        {
-          "x": 92,
-          "z": 88
-        },
-        {
-          "x": 92,
-          "z": 116
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 188,
-      "z": 178,
-      "radius": 13,
-      "height": 2.2,
-      "description": "Upper eastern terrace mirroring the lower western terrace.",
-      "entrances": [
-        {
-          "x": 174,
-          "z": 178
-        },
-        {
-          "x": 202,
-          "z": 178
-        },
-        {
-          "x": 188,
-          "z": 164
-        },
-        {
-          "x": 188,
-          "z": 192
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 82,
-      "z": 194,
-      "width": 34,
-      "depth": 16,
-      "height": 2.5,
-      "rotation": 18,
-      "description": "Southwestern ridge above the dry wadi flank route.",
-      "entrances": [
-        {
-          "x": 66,
-          "z": 190
-        },
-        {
-          "x": 98,
-          "z": 198
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 198,
-      "z": 86,
-      "width": 34,
-      "depth": 16,
-      "height": 2.5,
-      "rotation": 198,
-      "description": "Northeastern ridge above the northern farm road.",
-      "entrances": [
-        {
-          "x": 182,
-          "z": 82
-        },
-        {
-          "x": 214,
-          "z": 90
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 140,
-      "z": 62,
-      "width": 44,
-      "depth": 14,
-      "height": 2.6,
-      "rotation": 95,
-      "description": "Northern terraced ridge. Strong for archers but slightly out of the way.",
-      "entrances": [
-        {
-          "x": 118,
-          "z": 62
-        },
-        {
-          "x": 162,
-          "z": 62
-        }
-      ]
-    },
-    {
-      "type": "hill",
-      "x": 140,
-      "z": 218,
-      "width": 44,
-      "depth": 14,
-      "height": 2.6,
-      "rotation": 275,
-      "description": "Southern terraced ridge overlooking the wadi trail.",
-      "entrances": [
-        {
-          "x": 118,
-          "z": 218
-        },
-        {
-          "x": 162,
-          "z": 218
-        }
-      ]
-    },
-    {
-      "type": "forest",
-      "x": 70,
-      "z": 118,
-      "radius": 17,
-      "density": 0.52,
-      "description": "Western olive grove. Good for infantry ambushes near the lower road."
-    },
-    {
-      "type": "forest",
-      "x": 210,
-      "z": 162,
-      "radius": 17,
-      "density": 0.52,
-      "description": "Eastern olive grove mirroring the western grove."
-    },
-    {
-      "type": "forest",
-      "x": 104,
-      "z": 72,
-      "radius": 15,
-      "density": 0.46,
-      "description": "Lower orchard belt near the Carthaginian approach."
-    },
-    {
-      "type": "forest",
-      "x": 176,
-      "z": 208,
-      "radius": 15,
-      "density": 0.46,
-      "description": "Upper orchard belt near the Roman approach."
-    },
-    {
-      "type": "forest",
-      "x": 96,
-      "z": 188,
-      "radius": 16,
-      "density": 0.5,
-      "description": "Southern olive grove around the wadi trail."
-    },
-    {
-      "type": "forest",
-      "x": 184,
-      "z": 92,
-      "radius": 16,
-      "density": 0.5,
-      "description": "Northern olive grove around the upper farm road."
-    },
-    {
-      "type": "forest",
-      "x": 120,
-      "z": 124,
-      "radius": 11,
-      "density": 0.42,
-      "description": "Central west olive rows masking movement toward the estate."
-    },
-    {
-      "type": "forest",
-      "x": 160,
-      "z": 156,
-      "radius": 11,
-      "density": 0.42,
-      "description": "Central east olive rows masking movement away from the estate."
-    },
-    {
-      "type": "flat",
-      "x": 140,
-      "z": 140,
-      "description": "Old olive press estate at the center of the valley."
-    },
-    {
-      "type": "flat",
-      "x": 82,
-      "z": 194,
-      "description": "Abandoned shepherd hamlet near the southern wadi."
-    },
-    {
-      "type": "flat",
-      "x": 198,
-      "z": 86,
-      "description": "Abandoned farmstead near the northern terrace road."
-    },
-    {
-      "type": "mountain",
-      "x": 30,
-      "z": 34,
-      "radius": 14,
-      "height": 6.8,
-      "description": "Southwestern rocky boundary."
-    },
-    {
-      "type": "mountain",
-      "x": 250,
-      "z": 246,
-      "radius": 14,
-      "height": 6.8,
-      "description": "Northeastern rocky boundary."
-    },
-    {
-      "type": "mountain",
-      "x": 34,
-      "z": 246,
-      "radius": 12,
-      "height": 6.2,
-      "description": "Southern map-edge limestone outcrop."
-    },
-    {
-      "type": "mountain",
-      "x": 246,
-      "z": 34,
-      "radius": 12,
-      "height": 6.2,
-      "description": "Northern map-edge limestone outcrop."
-    }
-  ],
-  "rivers": [
-    {
-      "start": [
-        28,
-        164
-      ],
-      "end": [
-        122,
-        152
-      ],
-      "width": 4.2,
-      "description": "Western dry wadi. It slows direct movement into the center."
-    },
-    {
-      "start": [
-        158,
-        128
-      ],
-      "end": [
-        252,
-        116
-      ],
-      "width": 4.2,
-      "description": "Eastern dry wadi mirroring the western channel."
-    },
-    {
-      "start": [
-        74,
-        222
-      ],
-      "end": [
-        176,
-        214
-      ],
-      "width": 3.8,
-      "description": "Southern irrigation ditch along the flank road."
-    },
-    {
-      "start": [
-        104,
-        58
-      ],
-      "end": [
-        206,
-        66
-      ],
-      "width": 3.8,
-      "description": "Northern irrigation ditch below the terrace ridge."
-    }
-  ],
-  "bridges": [
-    {
-      "start": [
-        98,
-        154
-      ],
-      "end": [
-        110,
-        152
-      ],
-      "width": 4.5,
-      "height": 0.55,
-      "description": "Western wadi stone crossing."
-    },
-    {
-      "start": [
-        170,
-        128
-      ],
-      "end": [
-        182,
-        126
-      ],
-      "width": 4.5,
-      "height": 0.55,
-      "description": "Eastern wadi stone crossing."
-    },
-    {
-      "start": [
-        126,
-        216
-      ],
-      "end": [
-        138,
-        216
-      ],
-      "width": 4.0,
-      "height": 0.5,
-      "description": "Southern irrigation crossing."
-    },
-    {
-      "start": [
-        142,
-        64
-      ],
-      "end": [
-        154,
-        64
-      ],
-      "width": 4.0,
-      "height": 0.5,
-      "description": "Northern irrigation crossing."
-    },
-    {
-      "start": [
-        134,
-        134
-      ],
-      "end": [
-        146,
-        146
-      ],
-      "width": 5.0,
-      "height": 0.6,
-      "description": "Old estate causeway below the olive press hill."
-    }
-  ],
-  "roads": [
-    {
-      "start": [
-        64,
-        72
-      ],
-      "end": [
-        216,
-        208
-      ],
-      "width": 4.0,
-      "style": "default",
-      "waypoints": [
-        [
-          64,
-          72
-        ],
-        [
-          84,
-          88
-        ],
-        [
-          104,
-          108
-        ],
-        [
-          122,
-          128
-        ],
-        [
-          140,
-          140
-        ],
-        [
-          158,
-          152
-        ],
-        [
-          178,
-          172
-        ],
-        [
-          198,
-          192
-        ],
-        [
-          216,
-          208
-        ]
-      ],
-      "description": "Main estate road. Fastest route, but it passes through the central olive press."
-    },
-    {
-      "start": [
-        64,
-        72
-      ],
-      "end": [
-        198,
-        86
-      ],
-      "width": 3.0,
-      "style": "default",
-      "waypoints": [
-        [
-          64,
-          72
-        ],
-        [
-          86,
-          58
-        ],
-        [
-          112,
-          58
-        ],
-        [
-          140,
-          62
-        ],
-        [
-          168,
-          70
-        ],
-        [
-          198,
-          86
-        ]
-      ],
-      "description": "Northern terrace road. Strong for archers and infantry."
-    },
-    {
-      "start": [
-        216,
-        208
-      ],
-      "end": [
-        82,
-        194
-      ],
-      "width": 3.0,
-      "style": "default",
-      "waypoints": [
-        [
-          216,
-          208
-        ],
-        [
-          194,
-          222
-        ],
-        [
-          168,
-          222
-        ],
-        [
-          140,
-          218
-        ],
-        [
-          112,
-          210
-        ],
-        [
-          82,
-          194
-        ]
-      ],
-      "description": "Southern wadi road. Longer, safer from center pressure, good for flanking."
-    },
-    {
-      "start": [
-        64,
-        72
-      ],
-      "end": [
-        82,
-        194
-      ],
-      "width": 2.7,
-      "style": "default",
-      "waypoints": [
-        [
-          64,
-          72
-        ],
-        [
-          52,
-          100
-        ],
-        [
-          56,
-          132
-        ],
-        [
-          66,
-          164
-        ],
-        [
-          82,
-          194
-        ]
-      ],
-      "description": "Western olive trail. Slow but hidden."
-    },
-    {
-      "start": [
-        216,
-        208
-      ],
-      "end": [
-        198,
-        86
-      ],
-      "width": 2.7,
-      "style": "default",
-      "waypoints": [
-        [
-          216,
-          208
-        ],
-        [
-          228,
-          180
-        ],
-        [
-          224,
-          148
-        ],
-        [
-          214,
-          116
-        ],
-        [
-          198,
-          86
-        ]
-      ],
-      "description": "Eastern olive trail. Mirrors the western trail."
-    },
-    {
-      "start": [
-        82,
-        194
-      ],
-      "end": [
-        140,
-        140
-      ],
-      "width": 2.6,
-      "style": "default",
-      "waypoints": [
-        [
-          82,
-          194
-        ],
-        [
-          100,
-          180
-        ],
-        [
-          120,
-          160
-        ],
-        [
-          140,
-          140
-        ]
-      ],
-      "description": "Southern side path to the central estate."
-    },
-    {
-      "start": [
-        198,
-        86
-      ],
-      "end": [
-        140,
-        140
-      ],
-      "width": 2.6,
-      "style": "default",
-      "waypoints": [
-        [
-          198,
-          86
-        ],
-        [
-          180,
-          100
-        ],
-        [
-          160,
-          120
-        ],
-        [
-          140,
-          140
-        ]
-      ],
-      "description": "Northern side path to the central estate."
-    },
-    {
-      "start": [
-        92,
-        102
-      ],
-      "end": [
-        188,
-        178
-      ],
-      "width": 2.5,
-      "style": "default",
-      "waypoints": [
-        [
-          92,
-          102
-        ],
-        [
-          112,
-          112
-        ],
-        [
-          130,
-          128
-        ],
-        [
-          150,
-          150
-        ],
-        [
-          168,
-          166
-        ],
-        [
-          188,
-          178
-        ]
-      ],
-      "description": "Inner terrace road connecting the two secondary hills."
-    }
-  ],
-  "spawns": [
-    {
-      "type": "archer",
-      "x": 60,
-      "z": 78,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 70,
-      "z": 66,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 56,
-      "z": 72,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 64,
-      "z": 62,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 68,
-      "z": 78,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 74,
-      "z": 72,
-      "player_id": 1
-    },
-    {
-      "type": "horse_archer",
-      "x": 78,
-      "z": 84,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 52,
-      "z": 86,
-      "player_id": 1
-    },
-    {
-      "type": "healer",
-      "x": 54,
-      "z": 64,
-      "player_id": 1
-    },
-    {
-      "type": "catapult",
-      "x": 48,
-      "z": 72,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 220,
-      "z": 202,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 210,
-      "z": 214,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 224,
-      "z": 208,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 216,
-      "z": 218,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 212,
-      "z": 202,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 206,
-      "z": 208,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 202,
-      "z": 196,
-      "player_id": 2
-    },
-    {
-      "type": "horse_archer",
-      "x": 228,
-      "z": 196,
-      "player_id": 2
-    },
-    {
-      "type": "healer",
-      "x": 226,
-      "z": 216,
-      "player_id": 2
-    },
-    {
-      "type": "catapult",
-      "x": 232,
-      "z": 208,
-      "player_id": 2
-    }
-  ],
-  "firecamps": [
-    {
-      "x": 58,
-      "z": 78,
-      "intensity": 1.05,
-      "radius": 3.2
-    },
-    {
-      "x": 76,
-      "z": 64,
-      "intensity": 1.1,
-      "radius": 3.0
-    },
-    {
-      "x": 222,
-      "z": 202,
-      "intensity": 1.05,
-      "radius": 3.1
-    },
-    {
-      "x": 204,
-      "z": 216,
-      "intensity": 0.95,
-      "radius": 2.9
-    },
-    {
-      "x": 135,
-      "z": 145,
-      "intensity": 1.1,
-      "radius": 3.4
-    },
-    {
-      "x": 145,
-      "z": 135,
-      "intensity": 1.1,
-      "radius": 3.4
-    },
-    {
-      "x": 82,
-      "z": 194,
-      "intensity": 0.82,
-      "radius": 2.6
-    },
-    {
-      "x": 198,
-      "z": 86,
-      "intensity": 0.82,
-      "radius": 2.6
-    },
-    {
-      "x": 140,
-      "z": 62,
-      "intensity": 0.75,
-      "radius": 2.4
-    },
-    {
-      "x": 140,
-      "z": 218,
-      "intensity": 0.75,
-      "radius": 2.4
-    }
-  ],
-  "world_props": [
-    {
-      "type": "tent",
-      "x": 58,
-      "z": 66,
-      "scale": 1.0,
-      "rotation": 0.6
-    },
-    {
-      "type": "tent",
-      "x": 72,
-      "z": 78,
-      "scale": 1.0,
-      "rotation": 2.4
-    },
-    {
-      "type": "supply_cart",
-      "x": 66,
-      "z": 86,
-      "scale": 1.0,
-      "rotation": 1.4
-    },
-    {
-      "type": "weapon_rack",
-      "x": 78,
-      "z": 68,
-      "scale": 1.0,
-      "rotation": 4.1
-    },
-    {
-      "type": "tent",
-      "x": 222,
-      "z": 214,
-      "scale": 1.0,
-      "rotation": 3.6
-    },
-    {
-      "type": "tent",
-      "x": 208,
-      "z": 202,
-      "scale": 1.0,
-      "rotation": 5.6
-    },
-    {
-      "type": "supply_cart",
-      "x": 214,
-      "z": 194,
-      "scale": 1.0,
-      "rotation": 2.2
-    },
-    {
-      "type": "weapon_rack",
-      "x": 202,
-      "z": 212,
-      "scale": 1.0,
-      "rotation": 0.9
-    },
-    {
-      "type": "ruins",
-      "x": 136,
-      "z": 138,
-      "scale": 1.2,
-      "rotation": 1.0
-    },
-    {
-      "type": "ruins",
-      "x": 145,
-      "z": 142,
-      "scale": 1.1,
-      "rotation": 2.8
-    },
-    {
-      "type": "ruins",
-      "x": 140,
-      "z": 148,
-      "scale": 0.9,
-      "rotation": 4.6
-    },
-    {
-      "type": "supply_cart",
-      "x": 132,
-      "z": 146,
-      "scale": 0.9,
-      "rotation": 2.5
-    },
-    {
-      "type": "dead_tree",
-      "x": 70,
-      "z": 118,
-      "scale": 1.0,
-      "rotation": 0.8
-    },
-    {
-      "type": "dead_tree",
-      "x": 80,
-      "z": 112,
-      "scale": 0.9,
-      "rotation": 3.0
-    },
-    {
-      "type": "dead_tree",
-      "x": 210,
-      "z": 162,
-      "scale": 1.0,
-      "rotation": 4.2
-    },
-    {
-      "type": "dead_tree",
-      "x": 200,
-      "z": 168,
-      "scale": 0.9,
-      "rotation": 5.7
-    },
-    {
-      "type": "ruins",
-      "x": 80,
-      "z": 190,
-      "scale": 0.9,
-      "rotation": 1.8
-    },
-    {
-      "type": "ruins",
-      "x": 200,
-      "z": 90,
-      "scale": 0.9,
-      "rotation": 4.8
-    }
-  ],
-  "victory": {
-    "type": "elimination",
-    "key_structures": [
-      "barracks"
     ],
-    "defeat_conditions": [
-      "no_key_structures",
-      "no_commander",
-      "only_commander_remaining"
+    "camera": {
+        "center": [
+            140,
+            0,
+            140
+        ],
+        "distance": 86,
+        "far": 650,
+        "fov_y": 45,
+        "near": 1,
+        "tilt_deg": 48,
+        "yaw": 220
+    },
+    "coord_system": "grid",
+    "description": "A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.",
+    "environment": {
+        "day_length_seconds": 1800,
+        "lighting_profile": "mediterranean_summer",
+        "start_time": 17,
+        "time_mode": "locked"
+    },
+    "forests": [
+        {
+            "id": "west_olive_forest",
+            "radius": 17,
+            "x": 32.81,
+            "z": 125.8
+        },
+        {
+            "id": "east_olive_forest",
+            "radius": 17,
+            "x": 247.19,
+            "z": 154.2
+        },
+        {
+            "id": "lower_orchard_forest",
+            "radius": 15,
+            "x": 98.02,
+            "z": 41.78
+        },
+        {
+            "id": "upper_orchard_forest",
+            "radius": 15,
+            "x": 181.98,
+            "z": 238.22
+        },
+        {
+            "id": "south_olive_forest",
+            "radius": 16,
+            "x": 94.82,
+            "z": 166.66
+        },
+        {
+            "id": "north_olive_forest",
+            "radius": 16,
+            "x": 185.18,
+            "z": 113.34
+        },
+        {
+            "id": "central_west_olive_rows",
+            "radius": 11,
+            "x": 91.99,
+            "z": 134.75
+        },
+        {
+            "id": "central_east_olive_rows",
+            "radius": 11,
+            "x": 188.01,
+            "z": 145.25
+        }
+    ],
+    "grid": {
+        "height": 280,
+        "tile_size": 1,
+        "width": 280
+    },
+    "max_troops_per_player": 2000,
+    "name": "Spanish Olive Grove",
+    "rain": {
+        "enabled": false
+    },
+    "rivers": [
+        {
+            "description": "Western dry wadi, cutting the Carthaginian corner off from the olive press.",
+            "end": [
+                172.0,
+                0.0
+            ],
+            "start": [
+                0.0,
+                192.0
+            ],
+            "waypoints": [
+                [
+                    0.0,
+                    192.0
+                ],
+                [
+                    19.46,
+                    174.82
+                ],
+                [
+                    38.05,
+                    156.87
+                ],
+                [
+                    55.25,
+                    137.67
+                ],
+                [
+                    71.06,
+                    117.22
+                ],
+                [
+                    86.0,
+                    96.0
+                ],
+                [
+                    100.94,
+                    74.78
+                ],
+                [
+                    116.75,
+                    54.33
+                ],
+                [
+                    133.95,
+                    35.13
+                ],
+                [
+                    152.54,
+                    17.18
+                ],
+                [
+                    172.0,
+                    -0.0
+                ]
+            ],
+            "width": 4.2
+        },
+        {
+            "description": "Eastern dry wadi, mirroring the western channel.",
+            "end": [
+                108.0,
+                280.0
+            ],
+            "start": [
+                280.0,
+                88.0
+            ],
+            "waypoints": [
+                [
+                    280.0,
+                    88.0
+                ],
+                [
+                    260.54,
+                    105.18
+                ],
+                [
+                    241.95,
+                    123.13
+                ],
+                [
+                    224.75,
+                    142.33
+                ],
+                [
+                    208.94,
+                    162.78
+                ],
+                [
+                    194.0,
+                    184.0
+                ],
+                [
+                    179.06,
+                    205.22
+                ],
+                [
+                    163.25,
+                    225.67
+                ],
+                [
+                    146.05,
+                    244.87
+                ],
+                [
+                    127.46,
+                    262.82
+                ],
+                [
+                    108.0,
+                    280.0
+                ]
+            ],
+            "width": 4.2
+        }
+    ],
+    "roads": [
+        {
+            "end": [
+                197,
+                208
+            ],
+            "start": [
+                83,
+                72
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    83,
+                    72
+                ],
+                [
+                    88.8966,
+                    79.1183
+                ],
+                [
+                    93.1894,
+                    82.1407
+                ],
+                [
+                    96.6236,
+                    84.5586
+                ],
+                [
+                    100.9164,
+                    87.5809
+                ],
+                [
+                    114.0513,
+                    95.7882
+                ],
+                [
+                    127.1861,
+                    103.9956
+                ],
+                [
+                    140.321,
+                    112.2029
+                ],
+                [
+                    153.4558,
+                    120.4103
+                ],
+                [
+                    157.8741,
+                    124.3426
+                ],
+                [
+                    162.1259,
+                    129.6574
+                ],
+                [
+                    164.4396,
+                    134.9676
+                ],
+                [
+                    166.829,
+                    151.0958
+                ],
+                [
+                    169.2184,
+                    167.224
+                ],
+                [
+                    171.6077,
+                    183.3523
+                ],
+                [
+                    173.9834,
+                    187.7973
+                ],
+                [
+                    179.0836,
+                    192.4191
+                ],
+                [
+                    183.3764,
+                    195.4414
+                ],
+                [
+                    186.8106,
+                    197.8593
+                ],
+                [
+                    191.1034,
+                    200.8817
+                ],
+                [
+                    197,
+                    208
+                ]
+            ],
+            "width": 4.0
+        },
+        {
+            "end": [
+                1,
+                72
+            ],
+            "start": [
+                83,
+                72
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    83,
+                    72
+                ],
+                [
+                    82.2485,
+                    65.2362
+                ],
+                [
+                    80.3351,
+                    61.4865
+                ],
+                [
+                    72.6649,
+                    54.5135
+                ],
+                [
+                    68.75,
+                    53
+                ],
+                [
+                    58.25,
+                    53
+                ],
+                [
+                    53.8733,
+                    53.7347
+                ],
+                [
+                    40.655,
+                    58.301
+                ],
+                [
+                    27.4367,
+                    62.8673
+                ],
+                [
+                    14.2183,
+                    67.4337
+                ],
+                [
+                    1,
+                    72
+                ]
+            ],
+            "width": 3.0
+        },
+        {
+            "end": [
+                278,
+                208
+            ],
+            "start": [
+                197,
+                208
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    197,
+                    208
+                ],
+                [
+                    197.7515,
+                    201.2362
+                ],
+                [
+                    199.6649,
+                    197.4865
+                ],
+                [
+                    207.3351,
+                    190.5135
+                ],
+                [
+                    211.25,
+                    189
+                ],
+                [
+                    221.75,
+                    189
+                ],
+                [
+                    226.1225,
+                    189.7468
+                ],
+                [
+                    239.0918,
+                    194.3101
+                ],
+                [
+                    252.0612,
+                    198.8734
+                ],
+                [
+                    265.0306,
+                    203.4367
+                ],
+                [
+                    278,
+                    208
+                ]
+            ],
+            "width": 3.0
+        },
+        {
+            "end": [
+                64,
+                1
+            ],
+            "start": [
+                83,
+                72
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    83,
+                    72
+                ],
+                [
+                    82.2485,
+                    65.2362
+                ],
+                [
+                    81.3727,
+                    60.8392
+                ],
+                [
+                    77.0295,
+                    45.8794
+                ],
+                [
+                    72.6863,
+                    30.9196
+                ],
+                [
+                    68.3432,
+                    15.9598
+                ],
+                [
+                    64,
+                    1
+                ]
+            ],
+            "width": 3.0
+        },
+        {
+            "end": [
+                216,
+                278
+            ],
+            "start": [
+                197,
+                208
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    197,
+                    208
+                ],
+                [
+                    197.7515,
+                    214.7638
+                ],
+                [
+                    198.6368,
+                    219.158
+                ],
+                [
+                    202.9776,
+                    233.8685
+                ],
+                [
+                    207.3184,
+                    248.579
+                ],
+                [
+                    211.6592,
+                    263.2895
+                ],
+                [
+                    216,
+                    278
+                ]
+            ],
+            "width": 3.0
+        },
+        {
+            "end": [
+                196,
+                60
+            ],
+            "start": [
+                83,
+                72
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    83,
+                    72
+                ],
+                [
+                    91.6147,
+                    67.8411
+                ],
+                [
+                    100.2293,
+                    63.6823
+                ],
+                [
+                    104.3828,
+                    66.8934
+                ],
+                [
+                    107.7056,
+                    69.4622
+                ],
+                [
+                    111.8591,
+                    72.6733
+                ],
+                [
+                    128.6873,
+                    70.1387
+                ],
+                [
+                    145.5154,
+                    67.604
+                ],
+                [
+                    162.3436,
+                    65.0693
+                ],
+                [
+                    179.1718,
+                    62.5347
+                ],
+                [
+                    196,
+                    60
+                ]
+            ],
+            "width": 2.7
+        },
+        {
+            "end": [
+                84,
+                220
+            ],
+            "start": [
+                197,
+                208
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    197,
+                    208
+                ],
+                [
+                    188.3853,
+                    212.1589
+                ],
+                [
+                    179.7707,
+                    216.3177
+                ],
+                [
+                    175.6172,
+                    213.1066
+                ],
+                [
+                    172.2944,
+                    210.5378
+                ],
+                [
+                    168.1409,
+                    207.3267
+                ],
+                [
+                    151.3127,
+                    209.8613
+                ],
+                [
+                    134.4846,
+                    212.396
+                ],
+                [
+                    117.6564,
+                    214.9307
+                ],
+                [
+                    100.8282,
+                    217.4653
+                ],
+                [
+                    84,
+                    220
+                ]
+            ],
+            "width": 2.7
+        },
+        {
+            "end": [
+                153.4558,
+                120.4103
+            ],
+            "start": [
+                196,
+                60
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    196,
+                    60
+                ],
+                [
+                    187.8253,
+                    68.6289
+                ],
+                [
+                    179.6506,
+                    77.2577
+                ],
+                [
+                    176.7763,
+                    81.0646
+                ],
+                [
+                    169.0028,
+                    94.1798
+                ],
+                [
+                    161.2293,
+                    107.2951
+                ],
+                [
+                    153.4558,
+                    120.4103
+                ]
+            ],
+            "width": 3.2
+        },
+        {
+            "end": [
+                171.6077,
+                183.3523
+            ],
+            "start": [
+                84,
+                220
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    84,
+                    220
+                ],
+                [
+                    98.6013,
+                    213.8921
+                ],
+                [
+                    113.2026,
+                    207.7841
+                ],
+                [
+                    127.8038,
+                    201.6762
+                ],
+                [
+                    142.4051,
+                    195.5682
+                ],
+                [
+                    157.0064,
+                    189.4603
+                ],
+                [
+                    171.6077,
+                    183.3523
+                ]
+            ],
+            "width": 3.2
+        }
+    ],
+    "spawns": [
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "archer",
+            "x": 60,
+            "z": 78
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "archer",
+            "x": 70,
+            "z": 66
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "swordsman",
+            "x": 56,
+            "z": 72
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "swordsman",
+            "x": 64,
+            "z": 62
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "spearman",
+            "x": 68,
+            "z": 78
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "spearman",
+            "x": 74,
+            "z": 72
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "horse_archer",
+            "x": 78,
+            "z": 84
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "horse_swordsman",
+            "x": 52,
+            "z": 86
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "healer",
+            "x": 54,
+            "z": 64
+        },
+        {
+            "max_population": -1,
+            "player_id": 1,
+            "type": "catapult",
+            "x": 48,
+            "z": 72
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "archer",
+            "x": 220,
+            "z": 202
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "archer",
+            "x": 210,
+            "z": 214
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "swordsman",
+            "x": 224,
+            "z": 208
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "swordsman",
+            "x": 216,
+            "z": 218
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "spearman",
+            "x": 212,
+            "z": 202
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "spearman",
+            "x": 206,
+            "z": 208
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "horse_swordsman",
+            "x": 228,
+            "z": 194
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "horse_archer",
+            "x": 202,
+            "z": 196
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "healer",
+            "x": 226,
+            "z": 216
+        },
+        {
+            "max_population": -1,
+            "player_id": 2,
+            "type": "catapult",
+            "x": 232,
+            "z": 208
+        }
+    ],
+    "starting_resources": {
+        "food": 200,
+        "gold": 200,
+        "iron": 100,
+        "stone": 100,
+        "wood": 150
+    },
+    "structures": [
+        {
+            "description": "Player 1 Carthaginian barracks",
+            "max_population": 240,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "barracks",
+            "x": 64,
+            "z": 72
+        },
+        {
+            "description": "Player 2 Roman barracks",
+            "max_population": 240,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "barracks",
+            "x": 216,
+            "z": 208
+        }
+    ],
+    "terrain": [
+        {
+            "depth": 40,
+            "description": "Southwestern Carthaginian base clearing.",
+            "height": 3,
+            "type": "flat",
+            "width": 46,
+            "x": 64,
+            "z": 72
+        },
+        {
+            "depth": 40,
+            "description": "Northeastern Roman base clearing.",
+            "height": 3,
+            "type": "flat",
+            "width": 46,
+            "x": 216,
+            "z": 208
+        },
+        {
+            "description": "Carthaginian camp rise overlooking the lower olive terraces.",
+            "entrances": [
+                {
+                    "x": 80,
+                    "z": 72
+                },
+                {
+                    "x": 64,
+                    "z": 88
+                }
+            ],
+            "height": 2.3000000000000003,
+            "radius": 15,
+            "type": "hill",
+            "x": 64,
+            "z": 72
+        },
+        {
+            "description": "Roman camp rise overlooking the upper olive terraces.",
+            "entrances": [
+                {
+                    "x": 200,
+                    "z": 208
+                },
+                {
+                    "x": 216,
+                    "z": 192
+                }
+            ],
+            "height": 2.3000000000000003,
+            "radius": 15,
+            "type": "hill",
+            "x": 216,
+            "z": 208
+        },
+        {
+            "depth": 56,
+            "description": "Cleared estate ground around the central olive press.",
+            "height": 3,
+            "type": "flat",
+            "width": 68,
+            "x": 140,
+            "z": 140
+        },
+        {
+            "description": "Central olive press hill. Powerful but exposed from four approaches.",
+            "entrances": [
+                {
+                    "x": 140,
+                    "z": 118
+                },
+                {
+                    "x": 140,
+                    "z": 162
+                },
+                {
+                    "x": 118,
+                    "z": 140
+                },
+                {
+                    "x": 162,
+                    "z": 140
+                }
+            ],
+            "height": 3.4,
+            "radius": 20,
+            "type": "hill",
+            "x": 140,
+            "z": 140
+        },
+        {
+            "description": "Lower western terrace. Good archer ground for early map control.",
+            "entrances": [
+                {
+                    "x": 78,
+                    "z": 102
+                },
+                {
+                    "x": 106,
+                    "z": 102
+                },
+                {
+                    "x": 92,
+                    "z": 88
+                },
+                {
+                    "x": 92,
+                    "z": 116
+                }
+            ],
+            "height": 2.2,
+            "radius": 13,
+            "type": "hill",
+            "x": 92,
+            "z": 102
+        },
+        {
+            "description": "Upper eastern terrace mirroring the lower western terrace.",
+            "entrances": [
+                {
+                    "x": 174,
+                    "z": 178
+                },
+                {
+                    "x": 202,
+                    "z": 178
+                },
+                {
+                    "x": 188,
+                    "z": 164
+                },
+                {
+                    "x": 188,
+                    "z": 192
+                }
+            ],
+            "height": 2.2,
+            "radius": 13,
+            "type": "hill",
+            "x": 188,
+            "z": 178
+        },
+        {
+            "description": "Abandoned shepherd hamlet near the southern wadi.",
+            "height": 3,
+            "radius": 10,
+            "type": "flat",
+            "x": 82,
+            "z": 194
+        },
+        {
+            "depth": 16,
+            "description": "Southwestern ridge above the dry wadi flank route.",
+            "entrances": [
+                {
+                    "x": 66,
+                    "z": 190
+                },
+                {
+                    "x": 98,
+                    "z": 198
+                }
+            ],
+            "height": 2.5,
+            "rotation": 18,
+            "type": "hill",
+            "width": 34,
+            "x": 82,
+            "z": 194
+        },
+        {
+            "description": "Abandoned farmstead near the northern terrace road.",
+            "height": 3,
+            "radius": 10,
+            "type": "flat",
+            "x": 198,
+            "z": 86
+        },
+        {
+            "depth": 16,
+            "description": "Northeastern ridge above the northern farm road.",
+            "entrances": [
+                {
+                    "x": 182,
+                    "z": 82
+                },
+                {
+                    "x": 214,
+                    "z": 90
+                }
+            ],
+            "height": 2.5,
+            "rotation": 198,
+            "type": "hill",
+            "width": 34,
+            "x": 198,
+            "z": 86
+        },
+        {
+            "depth": 14,
+            "description": "Northern terraced ridge. Strong for archers but slightly out of the way.",
+            "entrances": [
+                {
+                    "x": 110.22,
+                    "z": 30.96
+                },
+                {
+                    "x": 154.22,
+                    "z": 30.96
+                }
+            ],
+            "height": 2.6,
+            "rotation": 95,
+            "type": "hill",
+            "width": 44,
+            "x": 132.22,
+            "z": 30.96
+        },
+        {
+            "depth": 14,
+            "description": "Southern terraced ridge overlooking the wadi trail.",
+            "entrances": [
+                {
+                    "x": 125.78,
+                    "z": 249.04
+                },
+                {
+                    "x": 169.78,
+                    "z": 249.04
+                }
+            ],
+            "height": 2.6,
+            "rotation": 275,
+            "type": "hill",
+            "width": 44,
+            "x": 147.78,
+            "z": 249.04
+        },
+        {
+            "description": "Old olive press estate at the center of the valley.",
+            "height": 3,
+            "radius": 10,
+            "type": "flat",
+            "x": 140,
+            "z": 140
+        },
+        {
+            "description": "Southwestern rocky boundary.",
+            "height": 6.8,
+            "radius": 14,
+            "type": "mountain",
+            "x": 30,
+            "z": 34
+        },
+        {
+            "description": "Northeastern rocky boundary.",
+            "height": 6.8,
+            "radius": 14,
+            "type": "mountain",
+            "x": 250,
+            "z": 246
+        },
+        {
+            "description": "Southern map-edge limestone outcrop.",
+            "height": 6.2,
+            "radius": 12,
+            "type": "mountain",
+            "x": 34,
+            "z": 246
+        },
+        {
+            "description": "Northern map-edge limestone outcrop.",
+            "height": 6.2,
+            "radius": 12,
+            "type": "mountain",
+            "x": 246,
+            "z": 34
+        }
+    ],
+    "undead_zones": [
+        {
+            "anchor_type": "ruins",
+            "awaken_on": [
+                "unit_enters_radius"
+            ],
+            "clear_reward": {
+                "food": 120,
+                "gold": 150
+            },
+            "id": "frozen_dead",
+            "leash_radius": 43,
+            "owner_id": 99,
+            "radius": 24.19,
+            "team_id": 99,
+            "waves": [
+                {
+                    "trigger": "initial",
+                    "units": {
+                        "skeleton_swordsman": 3
+                    }
+                },
+                {
+                    "trigger": "after_clear",
+                    "units": {
+                        "grave_priest": 1,
+                        "skeleton_archer": 2
+                    }
+                }
+            ],
+            "x": 96,
+            "z": 261
+        }
+    ],
+    "victory": {
+        "defeat_conditions": [
+            "no_key_structures",
+            "no_commander",
+            "only_commander_remaining"
+        ],
+        "key_structures": [
+            "barracks"
+        ],
+        "type": "elimination"
+    },
+    "world_props": [
+        {
+            "rotation": 0.6,
+            "scale": 1,
+            "type": "tent",
+            "x": 58,
+            "z": 66
+        },
+        {
+            "rotation": 2.4,
+            "scale": 1,
+            "type": "tent",
+            "x": 72,
+            "z": 78
+        },
+        {
+            "rotation": 1.4000000000000001,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 66,
+            "z": 86
+        },
+        {
+            "rotation": 4.1,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 78,
+            "z": 68
+        },
+        {
+            "rotation": 3.6,
+            "scale": 1,
+            "type": "tent",
+            "x": 222,
+            "z": 214
+        },
+        {
+            "rotation": 5.6000000000000005,
+            "scale": 1,
+            "type": "tent",
+            "x": 208,
+            "z": 202
+        },
+        {
+            "rotation": 2.2,
+            "scale": 1,
+            "type": "supply_cart",
+            "x": 214,
+            "z": 194
+        },
+        {
+            "rotation": 0.9,
+            "scale": 1,
+            "type": "weapon_rack",
+            "x": 202,
+            "z": 212
+        },
+        {
+            "rotation": 1,
+            "scale": 1.2,
+            "type": "ruins",
+            "x": 136,
+            "z": 138
+        },
+        {
+            "rotation": 2.8000000000000003,
+            "scale": 1.1,
+            "type": "ruins",
+            "x": 145,
+            "z": 142
+        },
+        {
+            "rotation": 4.6000000000000005,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 140,
+            "z": 148
+        },
+        {
+            "rotation": 2.5,
+            "scale": 0.9,
+            "type": "supply_cart",
+            "x": 132,
+            "z": 146
+        },
+        {
+            "rotation": 0.8,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 70,
+            "z": 118
+        },
+        {
+            "rotation": 3,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 80,
+            "z": 112
+        },
+        {
+            "rotation": 4.2,
+            "scale": 1,
+            "type": "dead_tree",
+            "x": 210,
+            "z": 162
+        },
+        {
+            "rotation": 5.7,
+            "scale": 0.9,
+            "type": "dead_tree",
+            "x": 200,
+            "z": 168
+        },
+        {
+            "rotation": 1.8,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 80,
+            "z": 190
+        },
+        {
+            "rotation": 4.8,
+            "scale": 0.9,
+            "type": "ruins",
+            "x": 200,
+            "z": 90
+        },
+        {
+            "intensity": 1.05,
+            "persistent": true,
+            "radius": 3.2,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 58,
+            "z": 78
+        },
+        {
+            "intensity": 1.1,
+            "persistent": true,
+            "radius": 3,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 76,
+            "z": 64
+        },
+        {
+            "intensity": 1.05,
+            "persistent": true,
+            "radius": 3.1,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 222,
+            "z": 202
+        },
+        {
+            "intensity": 0.9500000000000001,
+            "persistent": true,
+            "radius": 2.9,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 204,
+            "z": 216
+        },
+        {
+            "intensity": 1.1,
+            "persistent": true,
+            "radius": 3.4,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 135,
+            "z": 145
+        },
+        {
+            "intensity": 1.1,
+            "persistent": true,
+            "radius": 3.4,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 145,
+            "z": 135
+        },
+        {
+            "intensity": 0.8200000000000001,
+            "persistent": true,
+            "radius": 2.6,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 82,
+            "z": 194
+        },
+        {
+            "intensity": 0.8200000000000001,
+            "persistent": true,
+            "radius": 2.6,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 198,
+            "z": 86
+        },
+        {
+            "intensity": 0.75,
+            "persistent": true,
+            "radius": 2.4,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 140,
+            "z": 62
+        },
+        {
+            "intensity": 0.75,
+            "persistent": true,
+            "radius": 2.4,
+            "scale": 1,
+            "type": "firecamp",
+            "x": 140,
+            "z": 218
+        }
     ]
-  },
-  "starting_resources": {
-    "gold": 200,
-    "food": 200,
-    "wood": 150,
-    "stone": 100,
-    "iron": 100
-  },
-  "structures": [
-    {
-      "type": "barracks",
-      "x": 64,
-      "z": 72,
-      "player_id": 1,
-      "max_population": 240,
-      "nation": "carthage",
-      "description": "Player 1 Carthaginian barracks"
-    },
-    {
-      "type": "barracks",
-      "x": 216,
-      "z": 208,
-      "player_id": 2,
-      "max_population": 240,
-      "nation": "roman_republic",
-      "description": "Player 2 Roman barracks"
-    }
-  ],
-  "rain": {
-    "enabled": false
-  }
 }

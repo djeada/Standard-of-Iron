@@ -322,6 +322,7 @@ void MapData::clear() {
   m_undead_zones.clear();
   m_fog_zones.clear();
   m_wildlife_areas.clear();
+  m_forests.clear();
 
   m_biome = QJsonObject();
   m_camera = QJsonObject();
@@ -501,7 +502,7 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
                                        MapJsonKeys::bridges,
                                        MapJsonKeys::undead_zones,
                                        MapJsonKeys::fog_zones,
-                                       MapJsonKeys::groves,
+                                       MapJsonKeys::forests,
                                        MapJsonKeys::wildlife};
   m_extra_root_fields = copyExtraFields(root, known_root_keys);
 
@@ -586,7 +587,7 @@ bool MapData::load_from_json(const QString& file_path, QString* out_error) {
   if (root.contains(MapJsonKeys::fog_zones)) {
     parse_fog_zones_array(root[MapJsonKeys::fog_zones].toArray());
   }
-  parse_groves_array(root[MapJsonKeys::groves].toArray());
+  parse_forests_array(root[MapJsonKeys::forests].toArray());
   parse_wildlife_object(root[MapJsonKeys::wildlife].toObject());
 
   m_undo_stack.clear();
@@ -698,11 +699,11 @@ QJsonObject MapData::build_root_json() const {
     root[MapJsonKeys::fog_zones] = fog_zones_arr;
   }
 
-  QJsonArray const groves_arr = groves_to_json();
-  if (!groves_arr.isEmpty()) {
-    root[MapJsonKeys::groves] = groves_arr;
+  QJsonArray const forests_arr = forests_to_json();
+  if (!forests_arr.isEmpty()) {
+    root[MapJsonKeys::forests] = forests_arr;
   } else {
-    root.remove(MapJsonKeys::groves);
+    root.remove(MapJsonKeys::forests);
   }
 
   QJsonObject const wildlife_obj = wildlife_to_json();
@@ -951,10 +952,12 @@ void MapData::parse_structures_array(const QJsonArray& arr) {
     elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
     elem.player_id = obj[MapJsonKeys::player_id].toInt(0);
     elem.max_population = obj[MapJsonKeys::max_population].toInt(100);
+    elem.rotation = static_cast<float>(obj[MapJsonKeys::rotation].toDouble(0.0));
     elem.nation = obj[MapJsonKeys::nation].toString();
     const QStringList known_keys = {MapJsonKeys::type,
                                     MapJsonKeys::x,
                                     MapJsonKeys::z,
+                                    MapJsonKeys::rotation,
                                     MapJsonKeys::player_id,
                                     MapJsonKeys::max_population,
                                     MapJsonKeys::nation};
@@ -1131,6 +1134,9 @@ QJsonArray MapData::structures_to_json() const {
     obj[MapJsonKeys::type] = elem.type;
     obj[MapJsonKeys::x] = static_cast<double>(elem.x);
     obj[MapJsonKeys::z] = static_cast<double>(elem.z);
+    if (elem.rotation != 0.0F || elem.type == QStringLiteral("wall_gate")) {
+      obj[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
+    }
     if (elem.player_id > 0) {
       obj[MapJsonKeys::player_id] = elem.player_id;
     }
@@ -1588,22 +1594,22 @@ auto wildlife_species_label(const QString& species) -> QString {
   return QStringLiteral("sheep pasture");
 }
 
-void MapData::parse_groves_array(const QJsonArray& arr) {
-  m_groves.clear();
+void MapData::parse_forests_array(const QJsonArray& arr) {
+  m_forests.clear();
   for (const auto& val : arr) {
     const QJsonObject obj = val.toObject();
-    GroveElement elem;
+    ForestElement elem;
     elem.id = obj["id"].toString();
     elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
     elem.z = static_cast<float>(obj[MapJsonKeys::z].toDouble());
     elem.radius = static_cast<float>(obj[MapJsonKeys::radius].toDouble(12.0));
-    m_groves.append(elem);
+    m_forests.append(elem);
   }
 }
 
-QJsonArray MapData::groves_to_json() const {
+QJsonArray MapData::forests_to_json() const {
   QJsonArray arr;
-  for (const auto& elem : m_groves) {
+  for (const auto& elem : m_forests) {
     QJsonObject obj;
     if (!elem.id.isEmpty()) {
       obj["id"] = elem.id;
@@ -1616,32 +1622,32 @@ QJsonArray MapData::groves_to_json() const {
   return arr;
 }
 
-void MapData::add_grove(const GroveElement& element) {
-  m_groves.append(element);
+void MapData::add_forest(const ForestElement& element) {
+  m_forests.append(element);
   set_modified(true);
   emit data_changed();
 }
 
-void MapData::insert_grove(int index, const GroveElement& element) {
-  if (index < 0 || index > m_groves.size()) {
-    index = m_groves.size();
+void MapData::insert_forest(int index, const ForestElement& element) {
+  if (index < 0 || index > m_forests.size()) {
+    index = m_forests.size();
   }
-  m_groves.insert(index, element);
+  m_forests.insert(index, element);
   set_modified(true);
   emit data_changed();
 }
 
-void MapData::update_grove(int index, const GroveElement& element) {
-  if (index >= 0 && index < m_groves.size()) {
-    m_groves[index] = element;
+void MapData::update_forest(int index, const ForestElement& element) {
+  if (index >= 0 && index < m_forests.size()) {
+    m_forests[index] = element;
     set_modified(true);
     emit data_changed();
   }
 }
 
-void MapData::remove_grove(int index) {
-  if (index >= 0 && index < m_groves.size()) {
-    m_groves.removeAt(index);
+void MapData::remove_forest(int index) {
+  if (index >= 0 && index < m_forests.size()) {
+    m_forests.removeAt(index);
     set_modified(true);
     emit data_changed();
   }
