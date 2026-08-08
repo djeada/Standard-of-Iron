@@ -986,7 +986,7 @@ auto TerrainHeightMap::calculateFeatureHeight(const TerrainFeature& feature,
   }
 
   float const t = dist / feature.radius;
-  float const height_factor = (std::cos(t * M_PI) + 1.0F) * 0.5F;
+  float const height_factor = (std::cos(t * std::numbers::pi) + 1.0F) * 0.5F;
 
   return feature.height * height_factor;
 }

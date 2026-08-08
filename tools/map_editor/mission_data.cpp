@@ -280,7 +280,9 @@ QStringList MissionData::validate() const {
       errors.append(context + QStringLiteral(" has an unsupported difficulty."));
     }
     const QJsonObject personality = ai.value("personality").toObject();
-    for (const QString& field : {"aggression", "defense", "harassment"}) {
+    for (const QString& field : {QStringLiteral("aggression"),
+                                 QStringLiteral("defense"),
+                                 QStringLiteral("harassment")}) {
       const double score = personality.value(field).toDouble(0.5);
       if (score < 0.0 || score > 1.0) {
         errors.append(context +

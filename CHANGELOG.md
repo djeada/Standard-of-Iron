@@ -69,9 +69,38 @@ than as something you compile yourself.
 - The renderer now asserts at startup that the driver actually granted an OpenGL
   3.3 Core context, rather than assuming the one it asked for. All three release
   workflows fail if it did not.
+- The macOS and Windows toolchains are now exercised from Linux, where the
+  project is actually developed: every translation unit is reparsed with Clang
+  and libc++, every shader is compiled by a spec-literal GLSL front end, and
+  the sources are scanned for what MSVC and NTFS reject. `make portability`
+  runs it locally; CI runs it on every pull request and every build. The
+  entries under **Fixed** below are what it found on its first run.
 
 ### Fixed
 
+- **Optimised builds had deleted every NaN and infinity check in the game.**
+  `-ffast-math` (and MSVC's `/fp:fast`) licenses the compiler to assume no
+  operand is ever NaN or infinite, so `std::isfinite` folds to `true` and the
+  clamp behind it disappears — verified on the project's own release flags.
+  Around forty guards were affected, on volumes read back from the settings
+  file, camera angles and impact geometry, and so was every use of
+  `infinity()` as a sentinel in pathfinding, AI target selection and bounding
+  boxes. Debug builds were unaffected, which is why it never showed in
+  development, and the three shipped platforms did not agree on the outcome.
+  Linux and macOS now build with `-fno-finite-math-only` and Windows with
+  `/fp:precise`.
+- Two places computed a value from a variable and incremented it in the same
+  function call, where the order is unspecified and compilers differ: the
+  Roman market stall's produce, and the balance simulator's spawn jitter — the
+  latter meaning a seeded simulation did not have to produce the same
+  battle on Windows as on Linux.
+- `stone_instanced.frag` declared a function named `noise3`, which is a GLSL
+  built-in with a different return type. Mesa does not declare the built-in so
+  it compiled here; a spec-literal front end rejects the shader, and a shader
+  that fails to compile is a silently missing object rather than a crash.
+- Eight files used `M_PI`, which MSVC's `<cmath>` does not define. They
+  compiled on Windows only because Qt's `qmath.h` defines it as a fallback and
+  happened to be included first; they now use `std::numbers`.
 - **A crash on drivers that advertise compute shaders on a context below 4.3.**
   The GPU crowd-culling path is guarded by a capability probe that accepted an
   extension string, but its shaders are `#version 430` and need OpenGL 4.3 to
