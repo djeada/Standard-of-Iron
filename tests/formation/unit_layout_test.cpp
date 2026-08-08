@@ -2,6 +2,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
+#include <numbers>
 #include <vector>
 
 #include "formation/unit_layout.h"
