@@ -42,6 +42,20 @@ struct DirtyRegion {
       , max_z(z2) {}
 };
 
+struct CellRange {
+  int min_x{0};
+  int max_x{0};
+  int min_z{0};
+  int max_z{0};
+};
+
+struct WorldRect {
+  float min_x{0.0F};
+  float max_x{0.0F};
+  float min_z{0.0F};
+  float max_z{0.0F};
+};
+
 class Pathfinding {
 public:
   enum class CellValue : std::uint8_t {
@@ -86,6 +100,12 @@ public:
 
   auto world_to_grid(float world_x, float world_z) const -> Point;
   auto grid_to_world(const Point& grid_pos) const -> QVector3D;
+
+  [[nodiscard]] auto cells_covering(float center_x,
+                                    float center_z,
+                                    float half_x,
+                                    float half_z) const -> CellRange;
+  [[nodiscard]] auto cell_range_world_bounds(const CellRange& range) const -> WorldRect;
 
   void set_obstacle(int x, int y, bool is_obstacle);
   auto
@@ -146,6 +166,18 @@ private:
   void force_navigation_passages_walkable(int min_x, int max_x, int min_z, int max_z);
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
+
+  [[nodiscard]] auto clearance_penalty(int x, int y) const -> int;
+  void rebuild_clearance(int min_x, int max_x, int min_z, int max_z);
+
+  static constexpr int k_straight_step_cost = 10;
+  static constexpr int k_diagonal_step_cost = 14;
+
+  static constexpr int k_edge_step_penalty = 1;
+  static constexpr int k_turn_penalty = 1;
+
+  static constexpr int k_heuristic_weight_numerator = 12;
+  static constexpr int k_heuristic_weight_denominator = 10;
 
   struct SearchBuffers;
   static auto search_buffers_for(const Pathfinding* pathfinding) -> SearchBuffers&;
@@ -243,6 +275,7 @@ private:
   std::atomic<std::uint64_t> m_applied_terrain_topology_revision{0};
   std::unordered_map<int, CellValue> m_world_prop_cells;
   std::vector<bool> m_forest_cells;
+  std::vector<std::uint8_t> m_clearance_penalty;
   std::atomic<std::uint64_t> m_navigation_revision{1};
   std::uint64_t m_path_cache_revision{0};
   std::unordered_map<PathCacheKey, std::vector<Point>, PathCacheKeyHash> m_path_cache;

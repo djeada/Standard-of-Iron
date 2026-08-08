@@ -358,4 +358,44 @@ TEST_F(MissionWaveAssaultTest, WoundedWaveUnitsPressOnInsteadOfRunningHome) {
       << "the wave retreated toward its own base";
 }
 
+TEST_F(MissionWaveAssaultTest, WaveCannotWalkThroughAnIntactRampart) {
+  auto& session = make_match();
+
+  build_camp_ring(session);
+
+  const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
+  spawn(session, Game::Units::SpawnType::Barracks, k_player, camp);
+
+  make_defensive(session);
+  const auto wave = spawn_wave(session, 6);
+  ASSERT_EQ(wave.size(), 6U);
+
+  std::unordered_set<EntityID> rampart;
+  for (auto* entity :
+       session.world().get_entities_with<Engine::Core::WallSegmentComponent>()) {
+    rampart.insert(entity->get_id());
+  }
+  ASSERT_FALSE(rampart.empty());
+
+  const auto rampart_is_intact = [&]() {
+    return std::all_of(rampart.begin(), rampart.end(), [&](EntityID id) {
+      return session.world().get_entity(id) != nullptr;
+    });
+  };
+
+  for (int second = 1; second <= 240 && rampart_is_intact(); ++second) {
+    run_for(session, 1.0);
+    for (const auto id : wave) {
+      if (session.world().get_entity(id) == nullptr) {
+        continue;
+      }
+      const QVector3D position = position_of(session, id);
+      ASSERT_FALSE(is_inside_ring(position))
+          << "a wave unit stood inside the camp at t=" << second
+          << "s without a single rampart section coming down: (" << position.x() << ", "
+          << position.z() << ")";
+    }
+  }
+}
+
 } // namespace

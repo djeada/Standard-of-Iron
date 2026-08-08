@@ -619,6 +619,29 @@ build/bin/arena_app --batch --scenario rpg_escort_crowd \
   group-destroyed trigger, then requires the attackers to traverse the navigable
   opening while both intact flanks survive.
 
+The next five are the pinch points a grid pathfinder is usually caught out by.
+Every one of them turns on the same rule: the navigation grid is the only
+authority on where a unit may stand, and a cell it calls open is open to every
+unit regardless of how large that unit is drawn.
+
+- `path_narrow_gap_column` orders twelve swordsmen through the single opening in
+  a palisade. They have to queue and every one of them has to come out the far
+  side -- not shoulder each other into the wall, and not stall because the
+  doorway is narrower than the formation.
+- `path_building_alley` puts a slot between two barracks. A pathfinder that
+  reserves room for a unit's radius calls it impassable and walks the long way
+  round; this one threads it.
+- `path_diagonal_wall_seal` lays a palisade corner to corner across the whole
+  field. Every pair of open cells across it meets at a corner with a blocked
+  cell on each flank, so the wall holds only for as long as nothing is willing
+  to squeeze between two corners. The probers must still be on their own side
+  when the scene ends.
+- `path_bridge_column` funnels a line wider than the deck onto one narrow
+  bridge and requires the whole column across.
+- `path_hill_entrance_column` gives a hill one cut ramp and requires measured
+  elevation gain and crown arrival, so the column has to find the ramp rather
+  than scale the flank.
+
 The path scenes suppress incidental scatter and use a fixed feature-centered
 camera so the route, obstacle, and formation motion remain readable in batch
 captures.
