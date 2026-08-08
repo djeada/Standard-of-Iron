@@ -48,6 +48,7 @@ struct NavigationPassage {
   float center_z{0.0F};
   float width{2.0F};
   float depth{2.0F};
+  Engine::Core::EntityID source_entity_id{0};
 };
 
 class BuildingCollisionRegistry {
@@ -152,6 +153,13 @@ public:
 
   [[nodiscard]] auto is_point_in_blocking_building(float x, float z) const -> bool;
 
+  [[nodiscard]] auto is_rect_overlapping_blocking_building(
+      float min_x,
+      float max_x,
+      float min_z,
+      float max_z,
+      Engine::Core::EntityID ignore_entity_id = 0) const -> bool;
+
   [[nodiscard]] auto blocking_penetration_depth(float x, float z) const -> float;
 
   [[nodiscard]] auto segment_crosses_blocking_building(float start_x,
@@ -164,18 +172,6 @@ public:
       float z,
       float radius,
       Engine::Core::EntityID ignore_entity_id = 0) const -> bool;
-
-  [[nodiscard]] static auto get_occupied_grid_cells(const BuildingFootprint& footprint,
-                                                    float grid_cell_size = 1.0F)
-      -> std::vector<std::pair<int, int>>;
-
-  [[nodiscard]] static auto
-  get_rect_grid_cells(float center_x,
-                      float center_z,
-                      float width,
-                      float depth,
-                      float padding,
-                      float grid_cell_size = 1.0F) -> std::vector<std::pair<int, int>>;
 
   void set_navigation_passages(std::vector<NavigationPassage> passages);
 

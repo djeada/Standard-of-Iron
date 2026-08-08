@@ -4,6 +4,7 @@
 #include <QFileInfo>
 
 #include <gtest/gtest.h>
+#include <set>
 
 #include "tools/balance_sim/balance_fixture.h"
 #include "tools/balance_sim/balance_report.h"
@@ -83,10 +84,14 @@ TEST_F(BalanceSimTest, SameSeedProducesTheSameBattle) {
 }
 
 TEST_F(BalanceSimTest, DifferentSeedsProduceDifferentBattles) {
+
   const auto fixture = load(QStringLiteral("faction_line_rome_vs_carthage"));
-  const auto first = Balance::run_battle(fixture, 1U, false);
-  const auto second = Balance::run_battle(fixture, 999U, false);
-  EXPECT_NE(first.elapsed_seconds, second.elapsed_seconds);
+  std::set<float> durations;
+  for (const std::uint32_t seed : {1U, 7U, 999U, 4242U, 65537U}) {
+    durations.insert(Balance::run_battle(fixture, seed, false).elapsed_seconds);
+  }
+  EXPECT_GT(durations.size(), 1U)
+      << "every seed produced an identical battle; the seed no longer varies anything";
 }
 
 TEST_F(BalanceSimTest, EvenInfantryFightResolvesInsteadOfStalling) {

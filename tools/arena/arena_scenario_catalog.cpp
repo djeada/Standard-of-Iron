@@ -4310,7 +4310,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         QStringLiteral("Swordsmen destroy a designated weak wall section, then "
                        "path through the opened gap without crossing intact "
                        "neighbouring segments."),
-        16.0F,
+
+        26.0F,
         {30.0F, 53.0F, 18.0F});
     s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
     s.suppress_terrain_scatter = true;
@@ -4376,6 +4377,265 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                3.0F);
     reached.position = pass.destination;
     s.expectations.push_back(reached);
+    result.push_back(std::move(s));
+  }
+
+  {
+
+    auto s = definition(
+        QString::fromLatin1(k_path_narrow_gap_column_id),
+        QStringLiteral("Pathfinding: Narrow Gap Column"),
+        QStringLiteral("A dozen swordsmen ordered through the single opening in a "
+                       "long palisade file through it and reform beyond."),
+        26.0F,
+        {34.0F, 58.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        group(QStringLiteral("column"),
+              Troop::Swordsman,
+              1,
+              2,
+              {0.0F, 0.0F, -10.0F},
+              12,
+              {3.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("west_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 6,
+                 {-7.0F, 0.0F, 0.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("east_wall"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 6,
+                 {7.0F, 0.0F, 0.0F},
+                 {2.0F, 0.0F, 0.0F}),
+    };
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("column"));
+    move.destination = {0.0F, 0.0F, 10.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("column")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("column")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("west_wall")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("east_wall")));
+    auto through = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("column"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               6.0F);
+    through.position = move.destination;
+    s.expectations.push_back(through);
+    result.push_back(std::move(s));
+  }
+
+  {
+
+    auto s = definition(
+        QString::fromLatin1(k_path_building_alley_id),
+        QStringLiteral("Pathfinding: Building Alley"),
+        QStringLiteral("Infantry thread the alley between two barracks rather than "
+                       "walking the long way round the block."),
+        22.0F,
+        {30.0F, 54.0F, 18.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.groups = {
+        group(QStringLiteral("threaders"),
+              Troop::Swordsman,
+              1,
+              2,
+              {-1.5F, 0.0F, -11.0F},
+              6,
+              {3.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("west_block"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {-5.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("east_block"),
+                 Game::Units::SpawnType::Barracks,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {5.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("west_wing"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 5,
+                 {-18.0F, 0.0F, 0.0F},
+                 {2.0F, 0.0F, 0.0F}),
+        building(QStringLiteral("east_wing"),
+                 Game::Units::SpawnType::WallSegment,
+                 Nation::Carthage,
+                 2,
+                 5,
+                 {10.0F, 0.0F, 0.0F},
+                 {2.0F, 0.0F, 0.0F}),
+    };
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("threaders"));
+    move.destination = {0.0F, 0.0F, 11.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("threaders")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("threaders")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("west_block")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("east_block")));
+    auto through = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("threaders"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               5.0F);
+    through.position = move.destination;
+    s.expectations.push_back(through);
+    result.push_back(std::move(s));
+  }
+
+  {
+
+    auto s = definition(
+        QString::fromLatin1(k_path_diagonal_wall_seal_id),
+        QStringLiteral("Pathfinding: Diagonal Wall Seals"),
+        QStringLiteral("A palisade set on the diagonal holds: nobody slips between "
+                       "two segments that only touch at their corners."),
+        20.0F,
+        {32.0F, 56.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+
+    s.groups = {group(QStringLiteral("probers"),
+                      Troop::Swordsman,
+                      1,
+                      2,
+                      {-9.0F, 0.0F, -7.0F},
+                      6,
+                      {2.4F, 0.0F, 0.0F})};
+
+    for (int index = 0; index < 25; ++index) {
+      const float offset = static_cast<float>(index) * 2.0F;
+      s.groups.push_back(building(QStringLiteral("diagonal_wall_%1").arg(index),
+                                  Game::Units::SpawnType::WallSegment,
+                                  Nation::Carthage,
+                                  2,
+                                  1,
+                                  {-24.0F + offset, 0.0F, 24.0F - offset}));
+    }
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("probers"));
+    move.destination = {10.0F, 0.0F, 10.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("probers")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("probers")));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("diagonal_wall_12")));
+    auto held = expectation(Expect::GroupHeldOutsideDestination,
+                            QStringLiteral("probers"),
+                            {},
+                            0.0F,
+                            0.0F,
+                            6.0F);
+    held.position = move.destination;
+    s.expectations.push_back(held);
+    result.push_back(std::move(s));
+  }
+
+  {
+
+    auto s = definition(
+        QString::fromLatin1(k_path_bridge_column_id),
+        QStringLiteral("Pathfinding: Bridge Column"),
+        QStringLiteral("A wide line of infantry funnels onto one narrow bridge, "
+                       "crosses on the deck, and reforms on the far bank."),
+        26.0F,
+        {34.0F, 58.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.rivers.push_back(
+        Game::Map::RiverSegment{{-28.0F, 0.0F, 0.0F}, {28.0F, 0.0F, 0.0F}, 6.5F});
+    s.bridges.push_back(
+        Game::Map::Bridge{{0.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 6.0F}, 3.5F, 0.45F});
+    s.groups = {group(QStringLiteral("column"),
+                      Troop::Swordsman,
+                      1,
+                      2,
+                      {-12.0F, 0.0F, -12.0F},
+                      12,
+                      {2.4F, 0.0F, 0.0F})};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("column"));
+    move.destination = {0.0F, 0.0F, 12.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("column")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("column")));
+    s.expectations.push_back(
+        expectation(Expect::BridgeTraversalObserved, QStringLiteral("column")));
+    auto crossed = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("column"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               6.0F);
+    crossed.position = move.destination;
+    s.expectations.push_back(crossed);
+    result.push_back(std::move(s));
+  }
+
+  {
+
+    auto s = definition(
+        QString::fromLatin1(k_path_hill_entrance_column_id),
+        QStringLiteral("Pathfinding: Hill Entrance Column"),
+        QStringLiteral("Spearmen ordered onto a crown they cannot scale directly "
+                       "find the cut ramp and climb it in column."),
+        24.0F,
+        {32.0F, 56.0F, 20.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    s.suppress_terrain_scatter = true;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.elevation_patches.push_back({{0.0F, 0.0F, 0.0F}, 9.0F, 4.0F});
+    s.groups = {group(QStringLiteral("climbers"),
+                      Troop::Spearman,
+                      1,
+                      2,
+                      {-6.0F, 0.0F, -14.0F},
+                      8,
+                      {2.4F, 0.0F, 0.0F})};
+    auto move = at(0.5F, Command::FormationMove, QStringLiteral("climbers"));
+    move.destination = {0.0F, 0.0F, 0.0F};
+    s.steps = {move};
+    add_visual_stability(s, {QStringLiteral("climbers")});
+    s.expectations.push_back(
+        expectation(Expect::MovementAnimationObserved, QStringLiteral("climbers")));
+    s.expectations.push_back(
+        expectation(Expect::ElevationGainObserved, QStringLiteral("climbers")));
+    auto crowned = expectation(Expect::GroupReachedDestination,
+                               QStringLiteral("climbers"),
+                               {},
+                               0.0F,
+                               0.0F,
+                               6.0F);
+    crowned.position = move.destination;
+    s.expectations.push_back(crowned);
     result.push_back(std::move(s));
   }
 
@@ -4686,7 +4946,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
           QStringLiteral("Gate: Destroyed Breach"),
           QStringLiteral("Attackers break a gate that will not open for them and "
                          "pour through the breach it leaves in the wall."),
-          20.0F,
+
+          30.0F,
           {30.0F, 52.0F, 18.0F});
       s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
       s.suppress_terrain_scatter = true;

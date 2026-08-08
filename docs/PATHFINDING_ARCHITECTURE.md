@@ -70,12 +70,51 @@ Every full rebuild starts with an all-free grid, then layers blockers in a fixed
 ```text
 1. Start all cells as Walkable
 2. Apply static terrain from TerrainService
-3. Apply completed/loaded building footprints
-4. Apply harvestable resource props
-5. Force mandatory traversal cells back to Walkable
+3. Apply harvestable resource props
+4. Apply completed/loaded building footprints
+5. Open doorways: gates, and the gaps a wall network leaves
+6. Open map crossings: bridge decks and hill entrances
 ```
 
-The order is important. Terrain decides where the map is physically traversable. Buildings and resources then override terrain by occupying cells. Mandatory traversal cells are applied last so bridge crossings and hill entrances cannot be accidentally blocked by broad terrain/resource/building masks.
+`Pathfinding::update_region` is the only place that composes a cell, and a full
+rebuild is just that function over the whole map. The order is the whole ruling:
+each layer may overrule the ones above it, and two rules keep a later layer from
+quietly deleting an earlier one.
+
+- A **doorway** may reopen the structure it belongs to and no other. A gate's
+  opening never punches through the wall segment beside it, however the two
+  overlap. The passage carries the entity id of the gate that owns it, and any
+  other blocking footprint on the cell wins.
+- A **map crossing** outranks the terrain underneath it — that is the point of a
+  bridge deck — but not a building standing on it. Reopening that cell would
+  route units into something the grid itself calls solid.
+
+A doorway is centred on the gate's own transform, the same position its footprint
+and its `GateService` movement blocker are placed from. The wall-network cell a
+gate snaps to for its connection mask is up to half the segment pitch away, and a
+doorway carved there leaves the real approach blocked while opening ground beside
+it.
+
+### One rasterisation rule
+
+Anything that has to agree with the grid about where a rectangle _is_ goes
+through `Pathfinding::cells_covering`: building footprints, doorways, map
+crossings, and the gate blocker that refuses movement at runtime. It returns the
+cells a rectangle covers **with area**, not the cells it merely touches — a
+two-by-two footprint centred on a cell centre has its edges exactly on cell
+boundaries, and counting those as coverage would make it three cells wide and
+swallow the gap its neighbour was leaving open.
+
+A second rasterisation rule is not a rounding detail; it is a hole. Two
+descriptions of the same doorway that disagree by half a cell leave a strip that
+is walkable on the grid and covered by no blocker, and units file through the
+solid part of the wall.
+
+A shut gate widens its blocker to the snapped cell range **along the wall line**
+only. Across the wall it stays the structure's own thickness, because a unit
+already inside the rectangle is free to move — that is how anyone gets back out
+of a doorway — and a rectangle reaching further out would hand that freedom to
+whoever is standing in front of it.
 
 Dirty regions are merged before rebuilding. Building candidates come from the
 collision registry's spatial buckets rather than a scan of every registered
@@ -404,6 +443,47 @@ X = blocked
 ```
 
 Diagonal movement is allowed only when it does not cut through blocked corners. A* does not expand cells by unit radius. This is deliberate: a single-cell bridge, hill entrance, or tight building gap is passable if the cell itself is walkable. Unit radius is used for final arrival tolerance and visual footprint concerns, not for deciding whether a route exists.
+
+A wall laid on the diagonal, one segment thick, is the shape that tests this: every
+pair of open cells across it meets corner to corner with a blocked cell on each
+flank, so the wall holds only for as long as nothing is willing to squeeze through
+a corner. `path_diagonal_wall_seal` in the arena is that wall.
+
+### What a step costs
+
+```text
+straight step        10
+diagonal step        14      (a diagonal really is longer)
++1  entering a cell that touches anything blocked
++1  turning instead of carrying straight on
+```
+
+Octile costs, and the heuristic is octile distance — the exact cost of the
+cheapest unobstructed route, so the search stays admissible. Charging a diagonal
+the same as a straight step makes every sideways detour free; the search then
+wanders across a plateau of equal-cost routes and returns whichever one the heap
+happened to pop. Manhattan distance has the opposite failure: it double-counts
+every diagonal, overestimates by up to a factor of two, and quietly turns A* into
+a greedy walk.
+
+The two `+1`s are tie-breakers, worth a tenth of a step each:
+
+- **Clearance is priced, never required.** A cell that touches something blocked
+  costs a little more, so a route takes the middle of a corridor, a gate, a
+  bridge or an alley instead of scraping along its edge. Every cell stays
+  passable to every unit — in a one-cell gap both sides are priced the same and
+  the gap is still a road.
+- **Straightness** breaks the remaining ties, so a staircase between two points
+  becomes the straight line a player expects rather than an arbitrary zigzag.
+
+### Is this straight line clear?
+
+`is_world_segment_walkable` answers the question movement asks before taking a
+shortcut, and it answers it with the grid: it walks every cell the segment
+actually touches and refuses a diagonal that squeezes between two blocked
+corners — the same rule the search applies to its own neighbours. Sampling the
+line at fixed intervals is a second, weaker rule that steps over the thin corner
+of an obstacle and hands out a shortcut through a wall that has no gap in it.
 
 ## Formations And Group Movement
 
