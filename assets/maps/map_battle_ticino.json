@@ -3083,6 +3083,22 @@
       "player_id": 2,
       "behavior": "guard",
       "landmark": "ticino_ridge_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 250.0,
+      "z": 56.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "ticino_north_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 254.0,
+      "z": 56.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "ticino_north_sanctuary"
     }
   ],
   "world_props": [
@@ -4616,7 +4632,11 @@
             "grave_priest": 1
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 130,
+        "wood": 90
+      }
     },
     {
       "id": "bridge_watch",
@@ -4637,7 +4657,11 @@
             "skeleton_archer": 3
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 110,
+        "iron": 70
+      }
     }
   ],
   "lakes": [],
@@ -5923,5 +5947,60 @@
       "z": 440,
       "radius": 30
     }
-  ]
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 90.0,
+      "spawn_areas": [
+        {
+          "x": 330,
+          "z": 300,
+          "radius": 26
+        }
+      ]
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 2,
+      "group_size_max": 4,
+      "roam_radius": 22.0,
+      "aggression": 0.6,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 560,
+          "z": 440,
+          "radius": 28
+        }
+      ],
+      "waves": [
+        {
+          "timing": 240.0,
+          "pack_size": 4,
+          "x": 250,
+          "z": 380,
+          "radius": 24,
+          "label": "A pack is working the ford screen."
+        }
+      ]
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 9,
+      "flight_height": 14.0,
+      "flyover_interval_min": 45.0,
+      "flyover_interval_max": 120.0
+    }
+  }
 }

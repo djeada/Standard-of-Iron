@@ -380,6 +380,11 @@ auto undead_zone_schema() -> JsonSchema {
           "2}}]",
           QJsonArray{QJsonObject{{"trigger", "initial"},
                                  {"units", QJsonObject{{"skeleton_swordsman", 2}}}}}),
+      optional_field("clear_reward",
+                     "object",
+                     "none",
+                     "Resources paid out when the zone's garrison is broken.",
+                     QJsonObject{{"gold", 100}}),
   };
 
   return schema;
@@ -394,6 +399,32 @@ auto JsonSchema::find(const QString& key) const -> const JsonFieldSpec* {
     }
   }
   return nullptr;
+}
+
+auto grove_schema() -> JsonSchema {
+  JsonSchema schema;
+  schema.title = QStringLiteral("Wood");
+  schema.summary = QStringLiteral(
+      "A standalone wood. Its ground is closed to cavalry, siege and elephants; "
+      "commanders, archers, swordsmen, healers, builders, civilians and wildlife "
+      "thread it freely. A road driven through a wood stays open to everyone, so "
+      "lay one across a wood you still want a column to be able to cross.");
+
+  schema.fields = {
+      optional_field("id",
+                     "string",
+                     "auto",
+                     "Name used in the editor and in map notes.",
+                     QStringLiteral("wood_1")),
+      grid_x_field(),
+      grid_z_field(),
+      optional_field("radius",
+                     "number",
+                     "12",
+                     "How far the wood reaches from its centre, in cells.",
+                     12.0),
+  };
+  return schema;
 }
 
 auto schema_for_element(int element_kind, const QString& sub_type) -> JsonSchema {
@@ -413,6 +444,8 @@ auto schema_for_element(int element_kind, const QString& sub_type) -> JsonSchema
     return undead_zone_schema();
   case ElementKind::WildlifeArea:
     return wildlife_area_schema();
+  case ElementKind::Grove:
+    return grove_schema();
   }
   return {};
 }
@@ -563,6 +596,22 @@ auto schema_for_biome() -> JsonSchema {
                      "preset",
                      "Enables the irregular ground edge.",
                      true),
+      optional_field("procedural_boulders_enabled",
+                     "bool",
+                     "preset",
+                     "Scatters boulders procedurally. Disable to hand-place stone.",
+                     true),
+      optional_field("procedural_iron_ore_enabled",
+                     "bool",
+                     "preset",
+                     "Scatters iron ore procedurally. Disable to hand-place iron.",
+                     true),
+      optional_field(
+          "procedural_trees_enabled",
+          "bool",
+          "preset",
+          "Scatters pines and olives procedurally. Disable to hand-place wood.",
+          true),
       optional_field("irregularity_scale",
                      "number",
                      "preset",

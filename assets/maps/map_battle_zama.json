@@ -2712,6 +2712,38 @@
       "player_id": 3,
       "behavior": "guard",
       "landmark": "zama_numidian_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 98.0,
+      "z": 472.0,
+      "player_id": 5,
+      "behavior": "guard",
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 102.0,
+      "z": 472.0,
+      "player_id": 5,
+      "behavior": "guard",
+      "landmark": "zama_west_sanctuary"
+    },
+    {
+      "type": "spearman",
+      "x": 83.16,
+      "z": 316.11,
+      "player_id": 5,
+      "behavior": "guard",
+      "landmark": "zama_plateau_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 87.16,
+      "z": 316.11,
+      "player_id": 5,
+      "behavior": "guard",
+      "landmark": "zama_plateau_sanctuary"
     }
   ],
   "world_props": [
@@ -4542,7 +4574,11 @@
             "skeleton_archer": 2
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 220,
+        "iron": 120
+      }
     },
     {
       "id": "sepulcher_vanguard",
@@ -4573,7 +4609,12 @@
             "grave_priest": 2
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 260,
+        "stone": 140,
+        "iron": 140
+      }
     }
   ],
   "lakes": [],
@@ -6751,5 +6792,68 @@
       "z": 120,
       "radius": 28
     }
-  ]
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 0,
+    "sheep": {
+      "enabled": true,
+      "groups": 3,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 90.0,
+      "spawn_areas": [
+        {
+          "x": 300,
+          "z": 120,
+          "radius": 26
+        }
+      ]
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 2,
+      "group_size_max": 4,
+      "roam_radius": 22.0,
+      "aggression": 0.6,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 400,
+          "z": 340,
+          "radius": 30
+        }
+      ],
+      "waves": [
+        {
+          "timing": 300.0,
+          "pack_size": 5,
+          "x": 620,
+          "z": 540,
+          "radius": 26,
+          "label": "Wolves are on the east screen."
+        },
+        {
+          "timing": 540.0,
+          "pack_size": 6,
+          "x": 400,
+          "z": 340,
+          "radius": 28,
+          "label": "The centre wood has emptied itself at you."
+        }
+      ]
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 9,
+      "flight_height": 14.0,
+      "flyover_interval_min": 45.0,
+      "flyover_interval_max": 120.0
+    }
+  }
 }

@@ -2,7 +2,7 @@
   "id": "battle_of_zama",
   "title": "Battle of Zama",
   "summary": "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.",
-  "teaching_goal": "Full-spectrum command. Teaches managing elephants and flank pressure while transitioning into a decisive camp assault.",
+  "teaching_goal": "The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.",
   "narrative_intent": "The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield's neglected flank.",
   "historical_context": "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history.",
   "terrain_type": "north_african_plain",
@@ -240,20 +240,24 @@
         "barracks"
       ],
       "min_count": 4,
-      "description": "Seize all four Roman camps — the consular line, Masinissa's Numidians, the rear guard, and the northern camp — before the cavalry closes your rear."
+      "description": "Seize all four Roman camps \u2014 the consular line, Masinissa's Numidians, the rear guard, and the northern camp \u2014 before the cavalry closes your rear."
     },
     {
       "type": "survive_undead_wave",
       "zone_id": "sepulcher_vanguard",
       "wave_count": 2,
       "description": "Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Your command falls — and the wings fold inward."
+      "description": "Your command falls \u2014 and the wings fold inward."
     },
     {
       "type": "lose_all_units",
@@ -261,7 +265,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",

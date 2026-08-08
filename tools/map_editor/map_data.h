@@ -101,6 +101,14 @@ struct UndeadZoneElement {
   int team_id = 99;
   QJsonArray awaken_on;
   QJsonArray waves;
+  QJsonObject clear_reward;
+};
+
+struct GroveElement {
+  QString id;
+  float x = 0.0F;
+  float z = 0.0F;
+  float radius = 12.0F;
 };
 
 struct WildlifeAreaElement {
@@ -211,6 +219,12 @@ public:
   void update_undead_zone(int index, const UndeadZoneElement& element);
   void remove_undead_zone(int index);
 
+  [[nodiscard]] const QVector<GroveElement>& groves() const { return m_groves; }
+  void add_grove(const GroveElement& element);
+  void insert_grove(int index, const GroveElement& element);
+  void update_grove(int index, const GroveElement& element);
+  void remove_grove(int index);
+
   [[nodiscard]] const QVector<WildlifeAreaElement>& wildlife_areas() const {
     return m_wildlife_areas;
   }
@@ -254,6 +268,7 @@ private:
   QVector<UndeadZoneElement> m_undead_zones;
   QVector<FogZoneElement> m_fog_zones;
   QVector<WildlifeAreaElement> m_wildlife_areas;
+  QVector<GroveElement> m_groves;
 
   QJsonObject m_biome;
   QJsonObject m_camera;
@@ -288,6 +303,7 @@ private:
   void parse_spawns_array(const QJsonArray& arr);
   void parse_undead_zones_array(const QJsonArray& arr);
   void parse_fog_zones_array(const QJsonArray& arr);
+  void parse_groves_array(const QJsonArray& arr);
   void parse_wildlife_object(const QJsonObject& obj);
   void parse_structures_array(const QJsonArray& arr);
 
@@ -302,6 +318,7 @@ private:
   [[nodiscard]] QJsonObject troop_to_spawn_json(const TroopSpawnElement& elem) const;
   [[nodiscard]] QJsonArray undead_zones_to_json() const;
   [[nodiscard]] QJsonArray fog_zones_to_json() const;
+  [[nodiscard]] QJsonArray groves_to_json() const;
   [[nodiscard]] QJsonObject wildlife_to_json() const;
 };
 
@@ -720,6 +737,64 @@ private:
   int m_index;
   WildlifeAreaElement m_before;
   WildlifeAreaElement m_after;
+  QString m_desc;
+};
+
+class AddGroveCmd : public Command {
+public:
+  AddGroveCmd(MapData* data, GroveElement elem)
+      : m_data(data)
+      , m_elem(std::move(elem)) {}
+  void execute() override {
+    m_index = m_data->groves().size();
+    m_data->add_grove(m_elem);
+  }
+  void undo() override { m_data->remove_grove(m_index); }
+  [[nodiscard]] QString description() const override { return "Plant wood"; }
+
+private:
+  MapData* m_data;
+  GroveElement m_elem;
+  int m_index = -1;
+};
+
+class RemoveGroveCmd : public Command {
+public:
+  RemoveGroveCmd(MapData* data, int index, GroveElement elem)
+      : m_data(data)
+      , m_index(index)
+      , m_elem(std::move(elem)) {}
+  void execute() override { m_data->remove_grove(m_index); }
+  void undo() override { m_data->insert_grove(m_index, m_elem); }
+  [[nodiscard]] QString description() const override { return "Fell wood"; }
+
+private:
+  MapData* m_data;
+  int m_index;
+  GroveElement m_elem;
+};
+
+class UpdateGroveCmd : public Command {
+public:
+  UpdateGroveCmd(MapData* data,
+                 int index,
+                 GroveElement before,
+                 GroveElement after,
+                 QString desc = "Edit wood")
+      : m_data(data)
+      , m_index(index)
+      , m_before(std::move(before))
+      , m_after(std::move(after))
+      , m_desc(std::move(desc)) {}
+  void execute() override { m_data->update_grove(m_index, m_after); }
+  void undo() override { m_data->update_grove(m_index, m_before); }
+  [[nodiscard]] QString description() const override { return m_desc; }
+
+private:
+  MapData* m_data;
+  int m_index;
+  GroveElement m_before;
+  GroveElement m_after;
   QString m_desc;
 };
 

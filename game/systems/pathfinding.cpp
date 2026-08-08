@@ -152,11 +152,22 @@ void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
   m_navigation_revision.fetch_add(1, std::memory_order_release);
 }
 
-auto Pathfinding::is_walkable(int x, int y) const -> bool {
+auto Pathfinding::is_walkable(int x, int y, Passability passability) const -> bool {
   if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
     return false;
   }
-  return cell_value(x, y) == CellValue::Walkable;
+  auto const value = cell_value(x, y);
+  if (value == CellValue::Walkable) {
+    return true;
+  }
+  return value == CellValue::Forest && passability == Passability::Light;
+}
+
+auto Pathfinding::is_forest(int x, int y) const -> bool {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+    return false;
+  }
+  return cell_value(x, y) == CellValue::Forest;
 }
 
 auto Pathfinding::is_tree(int x, int y) const -> bool {
@@ -196,16 +207,17 @@ auto Pathfinding::is_terrain_walkable(int x, int y) const -> bool {
          CellValue::Walkable;
 }
 
-auto Pathfinding::is_world_position_walkable(const QVector3D& world_position) const
-    -> bool {
+auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
+                                             Passability passability) const -> bool {
   Point const grid = world_to_grid(world_position.x(), world_position.z());
-  return is_walkable(grid.x, grid.y);
+  return is_walkable(grid.x, grid.y, passability);
 }
 
 auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
-                                            const QVector3D& to) const -> bool {
-  auto segment_point_walkable = [this](const QVector3D& point) -> bool {
-    return is_world_position_walkable(point);
+                                            const QVector3D& to,
+                                            Passability passability) const -> bool {
+  auto segment_point_walkable = [this, passability](const QVector3D& point) -> bool {
+    return is_world_position_walkable(point, passability);
   };
 
   if (!segment_point_walkable(to)) {
@@ -319,6 +331,7 @@ void Pathfinding::process_dirty_regions() {
       }
 
       force_navigation_passages_walkable(0, m_width - 1, 0, m_height - 1);
+      apply_forest_cells(0, m_width - 1, 0, m_height - 1);
       apply_resource_prop_cells(0, m_width - 1, 0, m_height - 1);
       force_map_passage_cells_walkable(0, m_width - 1, 0, m_height - 1);
 
@@ -369,6 +382,7 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
       });
 
   force_navigation_passages_walkable(min_x, max_x, min_z, max_z);
+  apply_forest_cells(min_x, max_x, min_z, max_z);
   apply_resource_prop_cells(min_x, max_x, min_z, max_z);
   force_map_passage_cells_walkable(min_x, max_x, min_z, max_z);
 }
@@ -467,6 +481,75 @@ void Pathfinding::apply_resource_prop_cells(int min_x,
   }
 }
 
+void Pathfinding::rebuild_forest_index() {
+  m_forest_cells.assign(
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height), false);
+
+  auto& terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized() || terrain_service.groves().empty()) {
+    return;
+  }
+
+  const auto* height_map = terrain_service.get_height_map();
+  float const tile_size =
+      height_map != nullptr ? std::max(height_map->get_tile_size(), 0.0001F) : 1.0F;
+  bool const world_space =
+      terrain_service.coord_system() == Game::Map::CoordSystem::World;
+
+  for (auto const& grove : terrain_service.groves()) {
+    float center_x = grove.x;
+    float center_z = grove.z;
+    float radius = grove.radius;
+    if (world_space) {
+      center_x = grove.x / tile_size - m_grid_offset_x;
+      center_z = grove.z / tile_size - m_grid_offset_z;
+      radius = grove.radius / tile_size;
+    }
+
+    int const min_x = std::max(0, static_cast<int>(std::floor(center_x - radius)));
+    int const max_x =
+        std::min(m_width - 1, static_cast<int>(std::ceil(center_x + radius)));
+    int const min_z = std::max(0, static_cast<int>(std::floor(center_z - radius)));
+    int const max_z =
+        std::min(m_height - 1, static_cast<int>(std::ceil(center_z + radius)));
+    float const radius_sq = radius * radius;
+
+    for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
+      for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
+        float const dx = static_cast<float>(grid_x) - center_x;
+        float const dz = static_cast<float>(grid_z) - center_z;
+        if (dx * dx + dz * dz > radius_sq) {
+          continue;
+        }
+
+        QVector3D const world = grid_to_world({grid_x, grid_z});
+        if (terrain_service.is_point_on_road(world.x(), world.z())) {
+          continue;
+        }
+        m_forest_cells[static_cast<std::size_t>(to_index(grid_x, grid_z))] = true;
+      }
+    }
+  }
+}
+
+void Pathfinding::apply_forest_cells(int min_x, int max_x, int min_z, int max_z) {
+  if (m_forest_cells.empty()) {
+    return;
+  }
+  for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
+    for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
+      auto const index = static_cast<std::size_t>(to_index(grid_x, grid_z));
+      if (index >= m_forest_cells.size() || !m_forest_cells[index]) {
+        continue;
+      }
+
+      if (m_navigation_grid.get(grid_x, grid_z) == CellValue::Walkable) {
+        m_navigation_grid.set(grid_x, grid_z, CellValue::Forest);
+      }
+    }
+  }
+}
+
 void Pathfinding::rebuild_world_prop_index() {
   auto& terrain_service = Game::Map::TerrainService::instance();
   const auto* height_map = terrain_service.get_height_map();
@@ -547,6 +630,7 @@ void Pathfinding::update_navigation_grid() {
 
   if (terrain_topology_revision !=
       m_applied_terrain_topology_revision.load(std::memory_order_acquire)) {
+    rebuild_forest_index();
     std::lock_guard<std::mutex> const dirty_lock(m_dirty_mutex);
     m_full_update_required = true;
   }
@@ -564,14 +648,15 @@ void Pathfinding::update_navigation_grid() {
 }
 
 auto Pathfinding::find_path(const Point& start,
-                            const Point& end) -> std::vector<Point> {
+                            const Point& end,
+                            Passability passability) -> std::vector<Point> {
 
   if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
     update_navigation_grid();
   }
 
   std::uint64_t const revision = navigation_revision();
-  PathCacheKey const key{start.x, start.y, end.x, end.y};
+  PathCacheKey const key{start.x, start.y, end.x, end.y, passability};
   {
     std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
     if (m_path_cache_revision != revision) {
@@ -584,7 +669,7 @@ auto Pathfinding::find_path(const Point& start,
   }
 
   std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
-  auto path = find_path_internal(start, end);
+  auto path = find_path_internal(start, end, passability);
   std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
   if (m_path_cache_revision != revision || navigation_revision() != revision) {
     return path;
@@ -606,25 +691,27 @@ auto Pathfinding::PathCacheKeyHash::operator()(const PathCacheKey& key) const no
   combine(key.start_y);
   combine(key.end_x);
   combine(key.end_y);
+  combine(static_cast<int>(key.passability));
   return result;
 }
 
 auto Pathfinding::find_path_internal(const Point& start,
-                                     const Point& end) -> std::vector<Point> {
+                                     const Point& end,
+                                     Passability passability) -> std::vector<Point> {
   SearchBuffers& buffers = search_buffers_for(this);
   ensure_working_buffers(buffers);
 
-  auto const is_walkableFunc = [this](int x, int y) -> bool {
-    return is_walkable(x, y);
+  auto const is_walkableFunc = [this, passability](int x, int y) -> bool {
+    return is_walkable(x, y, passability);
   };
 
   if (!is_walkableFunc(start.x, start.y) || !is_walkableFunc(end.x, end.y)) {
     Point resolved_start = start;
     Point resolved_end = end;
     if ((!is_walkableFunc(start.x, start.y) &&
-         !resolve_walkable_endpoint(start, resolved_start)) ||
+         !resolve_walkable_endpoint(start, resolved_start, passability)) ||
         (!is_walkableFunc(end.x, end.y) &&
-         !resolve_walkable_endpoint(end, resolved_end))) {
+         !resolve_walkable_endpoint(end, resolved_end, passability))) {
       return {};
     }
 
@@ -632,7 +719,7 @@ auto Pathfinding::find_path_internal(const Point& start,
       return {};
     }
 
-    return find_path_internal(resolved_start, resolved_end);
+    return find_path_internal(resolved_start, resolved_end, passability);
   }
 
   const int start_idx = to_index(start);
@@ -688,7 +775,8 @@ auto Pathfinding::find_path_internal(const Point& start,
     }
 
     std::array<Point, 8> neighbors{};
-    const std::size_t neighbor_count = collect_neighbors(current_point, neighbors);
+    const std::size_t neighbor_count =
+        collect_neighbors(current_point, neighbors, passability);
 
     for (std::size_t i = 0; i < neighbor_count; ++i) {
       const Point& neighbor = neighbors[i];
@@ -737,9 +825,10 @@ auto Pathfinding::find_path_internal(const Point& start,
 }
 
 auto Pathfinding::resolve_walkable_endpoint(const Point& requested,
-                                            Point& resolved) const -> bool {
-  auto const is_walkable_func = [this](int x, int y) -> bool {
-    return is_walkable(x, y);
+                                            Point& resolved,
+                                            Passability passability) const -> bool {
+  auto const is_walkable_func = [this, passability](int x, int y) -> bool {
+    return is_walkable(x, y, passability);
   };
 
   if (is_walkable_func(requested.x, requested.y)) {
@@ -921,7 +1010,8 @@ void Pathfinding::set_parent(SearchBuffers& buffers,
 }
 
 auto Pathfinding::collect_neighbors(const Point& point,
-                                    std::array<Point, 8>& buffer) const -> std::size_t {
+                                    std::array<Point, 8>& buffer,
+                                    Passability passability) const -> std::size_t {
   std::size_t count = 0;
   for (int dx = -1; dx <= 1; ++dx) {
     for (int dy = -1; dy <= 1; ++dy) {
@@ -937,8 +1027,8 @@ auto Pathfinding::collect_neighbors(const Point& point,
       }
 
       if (dx != 0 && dy != 0) {
-        if (!is_walkable(point.x + dx, point.y) ||
-            !is_walkable(point.x, point.y + dy)) {
+        if (!is_walkable(point.x + dx, point.y, passability) ||
+            !is_walkable(point.x, point.y + dy, passability)) {
           continue;
         }
       }
@@ -1037,9 +1127,10 @@ auto Pathfinding::pop_open_node(SearchBuffers& buffers) -> Pathfinding::QueueNod
 
 auto Pathfinding::find_nearest_walkable_point(const Point& point,
                                               int max_search_radius,
-                                              const Pathfinding& pathfinder) -> Point {
-  auto const is_walkableFunc = [&pathfinder](int x, int y) -> bool {
-    return pathfinder.is_walkable(x, y);
+                                              const Pathfinding& pathfinder,
+                                              Passability passability) -> Point {
+  auto const is_walkableFunc = [&pathfinder, passability](int x, int y) -> bool {
+    return pathfinder.is_walkable(x, y, passability);
   };
 
   if (is_walkableFunc(point.x, point.y)) {

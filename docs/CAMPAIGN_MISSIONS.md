@@ -31,23 +31,29 @@ the first opens with a barracks.
 
 ## Objectives and timers
 
-| #   | Mission                  | Victory                                           | Defeat                                                              | Optional             | Hard timer |
-| --- | ------------------------ | ------------------------------------------------- | ------------------------------------------------------------------- | -------------------- | ---------- |
-| 1   | Crossing the Rhône       | Capture 2 barracks                                | units / commander / commander-alone                                 | Finish inside 10 min | —          |
-| 2   | Crossing the Alps        | Gather 600 wood, 350 stone, 300 iron              | structures / units / commander / commander-alone                    | Survive 15 min       | —          |
-| 3   | Battle of Ticino         | Capture 2 barracks                                | structures / units / commander / commander-alone                    | Wave count           | —          |
-| 4   | Battle of Trebia         | Survive 3 wave phases                             | structures / units / commander / commander-alone                    | Wave count           | —          |
-| 5   | Battle of Lake Trasimene | Capture 2 barracks                                | **20 min limit** + structures / units / commander / commander-alone | Wave count           | 20 min     |
-| 6   | Battle of Cannae         | Capture 3 barracks                                | structures / units / commander / commander-alone                    | Control structures   | —          |
-| 7   | The Campanian Vigil      | Survive 3 wave phases                             | structures / units / commander / commander-alone                    | Control + capture    | —          |
-| 8   | Battle of Zama           | Capture 4 barracks **and** survive 2 undead waves | structures / units / commander / commander-alone                    | Capture structures   | —          |
+| #   | Mission                  | Victory                                                          | Defeat                                                              | Optional             | Hard timer |
+| --- | ------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------- | ---------- |
+| 1   | Crossing the Rhône       | Capture 2 barracks + kill every commander                        | units / commander / commander-alone                                 | Finish inside 10 min | —          |
+| 2   | Crossing the Alps        | Gather 600 wood, 350 stone, 300 iron + kill every commander      | structures / units / commander / commander-alone                    | Survive 15 min       | —          |
+| 3   | Battle of Ticino         | Capture 2 barracks + kill every commander                        | structures / units / commander / commander-alone                    | Wave count           | —          |
+| 4   | Battle of Trebia         | Survive 3 wave phases + kill every commander                     | structures / units / commander / commander-alone                    | Wave count           | —          |
+| 5   | Battle of Lake Trasimene | Capture 2 barracks + kill every commander                        | **20 min limit** + structures / units / commander / commander-alone | Wave count           | 20 min     |
+| 6   | Battle of Cannae         | Capture 3 barracks + kill every commander                        | structures / units / commander / commander-alone                    | Control structures   | —          |
+| 7   | The Campanian Vigil      | Survive 3 wave phases + kill every commander                     | structures / units / commander / commander-alone                    | Control + capture    | —          |
+| 8   | Battle of Zama           | Capture 4 barracks, survive 2 undead waves, kill every commander | structures / units / commander / commander-alone                    | Capture structures   | —          |
 
 Trasimene is the only mission that can be lost to the clock. Every other timer
 is either an optional objective or a wave schedule.
 
-Zama is the only mission with `victory_mode: "all"` — it ships two victory
-conditions and needs both. Every other mission has a single condition, so the
-mode is irrelevant there.
+Every mission now runs `victory_mode: "all"` and every mission carries
+`eliminate_commanders`. A nation dies with the man who leads it: on a commander's
+death its barracks fall to the neutral owner, its other works come down and its
+troops leave the field. That makes decapitation the shortest route to a capture
+objective rather than a way around one — a neutral camp is still a camp you have
+to walk into. `MissionAssetRulesTest.DecapitationObjectivesHaveCommandersToKill`
+fails the build if any AI setup ships without a `commander_troop`, because the
+rule only arms once an enemy commander has been seen and an unarmed rule would
+make the mission unwinnable.
 
 ## Economy
 
@@ -99,6 +105,39 @@ phase-driven schedule are the same design.
 
 The modifier rises monotonically. The star column is what the campaign list
 draws: `ceil((modifier - 1.0) / 0.15)`, clamped to 1–5.
+
+"Enemy troops on the map" counts line troops only: spawns owned by player 2 or
+above, minus builders and civilians, and **minus anything tagged with a
+`landmark`**. Sanctuary wardens and watch pickets are deliberately outside the
+number because they are not part of the army the mission is balanced against.
+
+## Ground worth walking to
+
+Every mission ships at least one dead zone, and every dead zone pays a
+`clear_reward` when its garrison breaks — spendable resources, never counted as
+harvested, so a hoard funds the next push without shortcutting the Alps gather
+objective. See [IRON_SEPULCHER.md](IRON_SEPULCHER.md).
+
+Every standalone sanctuary now has one or two wardens on it. Two men do not make
+a battle; they make the shrine cost something, which is the point.
+
+Every map authors its wildlife rather than inheriting the derived default: a
+sheep pasture somewhere worth the detour, a wolf range denned in a wood, and —
+from the Alps onward — wolf packs on a schedule. Wolves are forest-passable and
+cavalry is not, so a pack in a grove is a threat a mounted column cannot chase.
+See [AMBIENT_WILDLIFE.md](AMBIENT_WILDLIFE.md) and
+[RTS_MAP_DESIGN.md](../scripts/RTS_MAP_DESIGN.md).
+
+| #   | Mission                  | Dead zones | Wolf packs |
+| --- | ------------------------ | ---------: | ---------: |
+| 1   | Crossing the Rhône       |          1 |          0 |
+| 2   | Crossing the Alps        |          1 |          1 |
+| 3   | Battle of Ticino         |          2 |          1 |
+| 4   | Battle of Trebia         |          1 |          2 |
+| 5   | Battle of Lake Trasimene |          1 |          1 |
+| 6   | Battle of Cannae         |          1 |          2 |
+| 7   | The Campanian Vigil      |          1 |          3 |
+| 8   | Battle of Zama           |          2 |          2 |
 
 ## Notes for anyone tuning this
 

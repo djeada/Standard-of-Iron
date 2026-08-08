@@ -2,7 +2,7 @@
   "id": "battle_of_cannae",
   "title": "Battle of Cannae",
   "summary": "Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.",
-  "teaching_goal": "Large-scale offense with multi-front awareness. Teaches maintaining the pocket while rotating into camp assaults.",
+  "teaching_goal": "Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number.",
   "narrative_intent": "Hannibal's masterpiece becomes a prolonged operational battle, not a single frontal collision.",
   "historical_context": "216 BC: beside the Aufidus, Hannibal's deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.",
   "terrain_type": "apulian_river_plain",
@@ -200,13 +200,17 @@
       ],
       "min_count": 3,
       "description": "Crush all three Roman camps and seal the iron tomb shut. No escape."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
     {
       "type": "lose_structure",
       "structure_type": "barracks",
-      "description": "Your command falls — and the wings fold inward."
+      "description": "Your command falls \u2014 and the wings fold inward."
     },
     {
       "type": "lose_all_units",
@@ -214,7 +218,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -270,5 +274,6 @@
     }
   ],
   "include_ambient_undead": false,
-  "theme": "The battlefield becomes a closing iron tomb."
+  "theme": "The battlefield becomes a closing iron tomb.",
+  "victory_mode": "all"
 }

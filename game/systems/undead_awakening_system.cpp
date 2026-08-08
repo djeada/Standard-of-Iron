@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QJsonObject>
+#include <QStringList>
 #include <QVector3D>
 #include <qjsonarray.h>
 #include <qjsonobject.h>
@@ -14,12 +15,14 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/event_manager.h"
+#include "core/ownership_constants.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/map/undead_shrine_placement.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 #include "units/factory.h"
 #include "units/unit.h"
 
@@ -459,6 +462,49 @@ void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
     Engine::Core::EventManager::instance().publish(
         Engine::Core::AudioCueEvent("alert.objective_complete"));
   }
+
+  pay_clear_reward(world, zone, captured);
+}
+
+void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
+                                             const RuntimeZone& zone,
+                                             bool captured) const {
+  if (zone.definition.clear_reward.empty()) {
+    return;
+  }
+
+  int beneficiary = OwnerRegistry::instance().get_local_player_id();
+  if (captured && zone.anchor_entity_id != 0) {
+    auto* anchor = world.get_entity(zone.anchor_entity_id);
+    auto* unit = anchor != nullptr
+                     ? anchor->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if (unit != nullptr && !Game::Core::is_neutral_owner(unit->owner_id)) {
+      beneficiary = unit->owner_id;
+    }
+  }
+
+  auto& resources = PlayerResourceRegistry::instance();
+  QStringList spoils;
+  for (ResourceType const type : k_all_resource_types) {
+    int const amount = zone.definition.clear_reward.get(type);
+    if (amount <= 0) {
+      continue;
+    }
+    resources.add(beneficiary, type, amount);
+    spoils.append(QStringLiteral("%1 %2").arg(amount).arg(
+        QString::fromLatin1(resource_type_key(type))));
+  }
+
+  if (spoils.isEmpty() ||
+      beneficiary != OwnerRegistry::instance().get_local_player_id()) {
+    return;
+  }
+
+  Engine::Core::EventManager::instance().publish(Engine::Core::MissionAnnouncementEvent(
+      QCoreApplication::translate("UndeadAwakeningSystem",
+                                  "The barrow gives up its hoard: %1.")
+          .arg(spoils.join(QStringLiteral(", ")))));
 }
 
 void UndeadAwakeningSystem::refresh_capture_lock(Engine::Core::World& world,

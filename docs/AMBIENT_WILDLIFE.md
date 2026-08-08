@@ -199,6 +199,42 @@ Setting `respawn` to false lets a hunted-out herd stay gone. Bird `spawn_areas` 
 matter when flyovers are turned off, because a flyover enters from the map edge rather
 than from an anchor.
 
+### Wolf packs on a schedule
+
+`spawn_areas` put wolves on the map from the first frame. A `waves` list on the wolves
+block instead releases packs partway through a mission, which turns ambient wildlife into
+a threat a designer can time:
+
+```json
+"wolves": {
+  "enabled": true,
+  "groups": 1,
+  "spawn_areas": [{ "x": 470, "z": 250, "radius": 26 }],
+  "waves": [
+    { "timing": 200.0, "pack_size": 4, "x": 470, "z": 250, "radius": 24,
+      "label": "Wolves are down off the bank." },
+    { "timing": 400.0, "pack_size": 5, "x": 200, "z": 560, "radius": 26 }
+  ]
+}
+```
+
+| Field       | Required | Meaning                                                   |
+| ----------- | -------- | --------------------------------------------------------- |
+| `timing`    | Yes      | Seconds from mission start                                |
+| `pack_size` | No       | Wolves in the pack (default 4, clamped to 64)             |
+| `x` / `z`   | No       | Where the pack dens, in the map's coordinate system       |
+| `radius`    | No       | How far from that point a wolf may be anchored            |
+| `label`     | No       | Announcement text; a wave without one gets a generic line |
+
+Waves are sorted by `timing` on load and each releases exactly once. Which have fired is
+written into the save alongside the elapsed clock, so reloading a mission does not send a
+spent pack in again. A wave pack is a normal group once it lands — it hunts, it can be
+killed, and `respawn: false` keeps it dead.
+
+Woods are the natural place to den a pack. Wolves count as forest-passable, so a pack in a
+grove can come at a column that has no way to follow it in; see
+[the grove rules](../scripts/RTS_MAP_DESIGN.md).
+
 ### Derived placement
 
 `game/wildlife/wildlife_placement.cpp` fills in what an author left out, using only what

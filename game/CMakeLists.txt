@@ -64,6 +64,7 @@ add_library(
     systems/battlefield_capture.cpp
     systems/order_service.cpp
     systems/movement_system.cpp
+    systems/nation_collapse_service.cpp
     systems/combat_system.cpp
     systems/combat_system/combat_utils.cpp
     systems/combat_system/structure_combat.cpp

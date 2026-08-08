@@ -251,6 +251,9 @@ public:
 
   [[nodiscard]] auto get_stuck_time() const -> float { return stuck_timer; }
 
+  [[nodiscard]] auto get_can_enter_forest() const -> bool { return can_enter_forest; }
+  void set_can_enter_forest(bool allowed) { can_enter_forest = allowed; }
+
 private:
   friend class Game::Systems::MovementSystem;
   friend class Serialization;
@@ -275,6 +278,7 @@ private:
 
   bool precise_arrival{false};
   EntityID structure_approach_target_id{0};
+  bool can_enter_forest{true};
 };
 
 enum class PlayerOrderIntentKind : std::uint8_t {

@@ -36,6 +36,16 @@ void sanitize_species(SpeciesConfig& config) noexcept {
   for (auto& area : config.spawn_areas) {
     area.radius = std::clamp(area.radius, 1.0F, k_max_roam_radius);
   }
+  for (auto& wave : config.waves) {
+    wave.timing = std::max(0.0F, wave.timing);
+    wave.pack_size = std::clamp(wave.pack_size, 1, k_max_group_size);
+    wave.area.radius = std::clamp(wave.area.radius, 1.0F, k_max_roam_radius);
+  }
+  std::stable_sort(config.waves.begin(),
+                   config.waves.end(),
+                   [](const WildlifeWave& lhs, const WildlifeWave& rhs) {
+                     return lhs.timing < rhs.timing;
+                   });
 }
 
 } // namespace

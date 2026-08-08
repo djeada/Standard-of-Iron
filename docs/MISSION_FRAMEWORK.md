@@ -413,6 +413,7 @@ Supported victory condition types:
 - **accumulate_resources**: Harvest the specified resource totals
 - **control_structures**: Control the specified structure types
 - **capture_structures**: Capture the specified structure types from another nation
+- **eliminate_commanders**: Kill every enemy commander
 
 By default victory conditions are evaluated as **OR** conditions: if any configured victory
 condition is satisfied, the mission ends in victory. Set `"victory_mode": "all"` on the mission
@@ -454,6 +455,32 @@ unwinnable; the validator rejects that.
     "description": "Break all three Roman assault phases"
 }
 ```
+
+#### eliminate_commanders
+
+A nation stands on its commander. When the last commander of an owner dies,
+`Game::Systems::NationCollapse` hands that owner's barracks to the neutral owner, takes
+down its other structures and clears its troops from the field. `eliminate_commanders` is
+satisfied once no enemy commander is left alive.
+
+The rule **arms** only after an enemy commander has been seen. At mission start the
+roster has not spawned and the count is legitimately zero; without arming, the mission
+would be won on its first evaluated frame. The consequence for authors is that every AI
+setup in a mission carrying this condition needs a `commander_troop` — an AI without one
+can never arm the rule, which makes the mission unwinnable.
+`MissionAssetRulesTest.DecapitationObjectivesHaveCommandersToKill` fails the build if that
+happens. Iron Sepulcher units are excluded from the count: the dead have no commander, so
+a Sepulcher zone can never block the objective.
+
+```json
+{
+    "type": "eliminate_commanders",
+    "description": "Kill every enemy commander"
+}
+```
+
+Pair it with `"victory_mode": "all"`. Under the default `"any"` it becomes an independent
+shortcut past whatever else the mission asks for.
 
 #### accumulate_resources
 

@@ -4619,7 +4619,12 @@
             "grave_priest": 1
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 200,
+        "wood": 150,
+        "stone": 100
+      }
     }
   ],
   "lakes": [],
@@ -6846,5 +6851,76 @@
       "z": 400,
       "radius": 30
     }
-  ]
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 0,
+    "sheep": {
+      "enabled": true,
+      "groups": 3,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 90.0,
+      "spawn_areas": [
+        {
+          "x": 300,
+          "z": 100,
+          "radius": 26
+        }
+      ]
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 2,
+      "group_size_max": 4,
+      "roam_radius": 22.0,
+      "aggression": 0.6,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 520,
+          "z": 400,
+          "radius": 28
+        }
+      ],
+      "waves": [
+        {
+          "timing": 240.0,
+          "pack_size": 4,
+          "x": 520,
+          "z": 400,
+          "radius": 26,
+          "label": "Wolves are in the east screen."
+        },
+        {
+          "timing": 420.0,
+          "pack_size": 5,
+          "x": 300,
+          "z": 100,
+          "radius": 26,
+          "label": "A pack has come down on the pastures."
+        },
+        {
+          "timing": 600.0,
+          "pack_size": 6,
+          "x": 128,
+          "z": 256,
+          "radius": 24,
+          "label": "Something is hunting around the tomb."
+        }
+      ]
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 9,
+      "flight_height": 14.0,
+      "flyover_interval_min": 45.0,
+      "flyover_interval_max": 120.0
+    }
+  }
 }
