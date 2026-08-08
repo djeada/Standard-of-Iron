@@ -54,7 +54,8 @@ jobs:
         with:
           version: "6.8.2"
           host: linux
-          arch: gcc_64
+          # aqt 3.3 uses the fully qualified Linux desktop architecture name.
+          arch: linux_gcc_64
           cache: true
           modules: qt5compat qtmultimedia
 

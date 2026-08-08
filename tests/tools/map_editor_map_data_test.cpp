@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <gtest/gtest.h>
+#include <numbers>
 
 #include "game/map/terrain_footprint.h"
 #include "tools/map_editor/map_data.h"
