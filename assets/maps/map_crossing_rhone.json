@@ -7618,7 +7618,11 @@
                 }
             ],
             "x": 37.59,
-            "z": 360.56
+            "z": 360.56,
+            "clear_reward": {
+                "gold": 120,
+                "food": 80
+            }
         }
     ],
     "victory": {
@@ -9020,5 +9024,50 @@
             "x": 134.0,
             "z": 240.0
         }
-    ]
+    ],
+    "wildlife": {
+        "enabled": true,
+        "seed": 0,
+        "sheep": {
+            "enabled": true,
+            "groups": 2,
+            "group_size_min": 4,
+            "group_size_max": 7,
+            "roam_radius": 16.0,
+            "respawn": true,
+            "respawn_delay": 90.0,
+            "spawn_areas": [
+                {
+                    "x": 250,
+                    "z": 470,
+                    "radius": 26
+                }
+            ]
+        },
+        "wolves": {
+            "enabled": true,
+            "groups": 1,
+            "group_size_min": 2,
+            "group_size_max": 4,
+            "roam_radius": 22.0,
+            "aggression": 0.6,
+            "respawn": false,
+            "spawn_areas": [
+                {
+                    "x": 150,
+                    "z": 300,
+                    "radius": 26
+                }
+            ]
+        },
+        "birds": {
+            "enabled": true,
+            "groups": 2,
+            "group_size_min": 5,
+            "group_size_max": 9,
+            "flight_height": 14.0,
+            "flyover_interval_min": 45.0,
+            "flyover_interval_max": 120.0
+        }
+    }
 }

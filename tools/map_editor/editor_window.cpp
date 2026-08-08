@@ -1329,6 +1329,9 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     if (!elem.waves.isEmpty()) {
       json["waves"] = elem.waves;
     }
+    if (!elem.clear_reward.isEmpty()) {
+      json["clear_reward"] = elem.clear_reward;
+    }
 
     title = "Edit Undead Zone: " + elem.id;
   } else if (element_type == static_cast<int>(ElementKind::WildlifeArea)) {
@@ -1344,6 +1347,19 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
     json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
 
     title = "Edit Wildlife Range: " + wildlife_species_label(elem.species);
+  } else if (element_type == static_cast<int>(ElementKind::Grove)) {
+    const auto& groves = m_map_data->groves();
+    if (index < 0 || index >= groves.size()) {
+      return;
+    }
+    const auto& elem = groves[index];
+
+    json["id"] = elem.id;
+    json[MapJsonKeys::x] = static_cast<double>(elem.x);
+    json[MapJsonKeys::z] = static_cast<double>(elem.z);
+    json[MapJsonKeys::radius] = static_cast<double>(elem.radius);
+
+    title = "Edit Wood: " + (elem.id.isEmpty() ? QStringLiteral("wood") : elem.id);
   } else {
     return;
   }
@@ -1590,6 +1606,7 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
       elem.team_id = new_json["team_id"].toInt(99);
       elem.awaken_on = new_json["awaken_on"].toArray();
       elem.waves = new_json["waves"].toArray();
+      elem.clear_reward = new_json["clear_reward"].toObject();
 
       m_map_data->execute_command(
           std::make_unique<UpdateUndeadZoneCmd>(m_map_data,
@@ -1610,6 +1627,15 @@ void EditorWindow::on_element_double_clicked(int element_type, int index) {
                                                   m_map_data->wildlife_areas()[index],
                                                   elem,
                                                   "Edit wildlife range"));
+    } else if (element_type == static_cast<int>(ElementKind::Grove)) {
+      GroveElement elem;
+      elem.id = new_json["id"].toString();
+      elem.x = static_cast<float>(new_json[MapJsonKeys::x].toDouble());
+      elem.z = static_cast<float>(new_json[MapJsonKeys::z].toDouble());
+      elem.radius = static_cast<float>(new_json[MapJsonKeys::radius].toDouble(12.0));
+
+      m_map_data->execute_command(std::make_unique<UpdateGroveCmd>(
+          m_map_data, index, m_map_data->groves()[index], elem, "Edit wood"));
     }
   }
 }
@@ -2119,6 +2145,16 @@ void EditorWindow::on_selection_changed(int element_type, int index) {
     if (index < areas.size()) {
       const auto& e = areas[index];
       type_name = wildlife_species_label(e.species);
+      coords = QString("(%1, %2) r=%3")
+                   .arg(static_cast<int>(e.x))
+                   .arg(static_cast<int>(e.z))
+                   .arg(static_cast<int>(e.radius));
+    }
+  } else if (element_type == static_cast<int>(ElementKind::Grove)) {
+    const auto& groves = m_map_data->groves();
+    if (index < groves.size()) {
+      const auto& e = groves[index];
+      type_name = QStringLiteral("wood");
       coords = QString("(%1, %2) r=%3")
                    .arg(static_cast<int>(e.x))
                    .arg(static_cast<int>(e.z))

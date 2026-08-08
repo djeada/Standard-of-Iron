@@ -1,12 +1,17 @@
 #include "commander_system.h"
 
+#include <QCoreApplication>
+
 #include <algorithm>
 #include <cmath>
 #include <optional>
 
 #include "../core/component.h"
+#include "../core/event_manager.h"
 #include "../core/world.h"
 #include "command_service.h"
+#include "nation_collapse_service.h"
+#include "owner_registry.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 
@@ -246,6 +251,27 @@ void reset_commander_modified_stats(Engine::Core::World* world) {
   }
 }
 
+void collapse_nation_if_leaderless(Engine::Core::World& world, int owner_id) {
+  if (NationCollapse::has_living_commander(world, owner_id)) {
+    return;
+  }
+  if (!NationCollapse::collapse_owner(world, owner_id)) {
+    return;
+  }
+
+  const auto& owners = OwnerRegistry::instance();
+  const QString name = QString::fromStdString(owners.get_owner_name(owner_id));
+  Engine::Core::EventManager::instance().publish(Engine::Core::MissionAnnouncementEvent(
+      name.isEmpty()
+          ? QCoreApplication::translate(
+                "CommanderSystem",
+                "Their commander is dead. The host breaks and its camps stand empty.")
+          : QCoreApplication::translate(
+                "CommanderSystem",
+                "%1 has lost its commander. The host breaks and its camps stand empty.")
+                .arg(name)));
+}
+
 void apply_commander_death_shock(Engine::Core::World* world,
                                  Engine::Core::Entity* commander_entity,
                                  Engine::Core::CommanderComponent& commander,
@@ -345,6 +371,7 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
         commander->aura_ability_remaining = 0.0F;
         apply_commander_death_shock(
             world, commander_entity, *commander, *unit, *transform);
+        collapse_nation_if_leaderless(*world, unit->owner_id);
       }
       if (commander->flag_rally_in_progress || commander->flag_rally_flag_active ||
           commander->flag_rally_issue_commands) {

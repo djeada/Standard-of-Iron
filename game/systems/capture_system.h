@@ -13,6 +13,10 @@ class CaptureSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
 
+  static void transfer_barrack_ownership(Engine::Core::World* world,
+                                         Engine::Core::Entity* barrack,
+                                         int new_owner_id);
+
 private:
   static void process_barrack_capture(Engine::Core::World* world, float delta_time);
   static auto count_nearby_troops(Engine::Core::World* world,
@@ -20,9 +24,6 @@ private:
                                   float barrack_z,
                                   int owner_id,
                                   float radius) -> int;
-  static void transfer_barrack_ownership(Engine::Core::World* world,
-                                         Engine::Core::Entity* barrack,
-                                         int new_owner_id);
 };
 
 } // namespace Game::Systems

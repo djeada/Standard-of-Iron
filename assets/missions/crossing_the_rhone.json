@@ -1,10 +1,10 @@
 {
   "id": "crossing_the_rhone",
-  "title": "Crossing the Rhône",
-  "summary": "Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.",
-  "teaching_goal": "Introduce maze navigation, multiple river crossings, and dealing with scattered enemy patrols plus fortified positions.",
+  "title": "Crossing the Rh\u00f4ne",
+  "summary": "Cross the Rh\u00f4ne by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.",
+  "teaching_goal": "A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.",
   "narrative_intent": "A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.",
-  "historical_context": "218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.",
+  "historical_context": "218 BC: Hannibal crossed the Rh\u00f4ne upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.",
   "terrain_type": "river_valley",
   "map_path": ":/assets/maps/map_crossing_rhone.json",
   "player_setup": {
@@ -80,6 +80,10 @@
       ],
       "min_count": 2,
       "description": "Seize the two river forts. Leave no crossing for Scipio's army to inherit."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
@@ -89,7 +93,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -124,7 +128,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Two bridges cross the Rhône. Choose your path wisely - you may need both routes!"
+          "text": "Two bridges cross the Rh\u00f4ne. Choose your path wisely - you may need both routes!"
         }
       ]
     },
@@ -142,5 +146,6 @@
     }
   ],
   "include_ambient_undead": false,
-  "theme": "The river is wide, the far bank is guarded, and every minute standing still costs blood."
+  "theme": "The river is wide, the far bank is guarded, and every minute standing still costs blood.",
+  "victory_mode": "all"
 }

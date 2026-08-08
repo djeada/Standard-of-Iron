@@ -84,4 +84,25 @@ wildlife_topology() noexcept -> const Render::Creature::SkeletonTopology&;
 
 void evaluate_wildlife_skeleton(const RigPose& pose, BonePalette& out) noexcept;
 
+struct DeathMotion {
+
+  float buckle{0.0F};
+
+  float fall{0.0F};
+
+  float roll{0.0F};
+
+  float head{0.0F};
+
+  float settle{0.0F};
+
+  float thrash{0.0F};
+};
+
+[[nodiscard]] auto death_motion(float phase) noexcept -> DeathMotion;
+
+[[nodiscard]] auto roll_about_spine(const QVector3D& point,
+                                    const QVector3D& pivot,
+                                    float radians) noexcept -> QVector3D;
+
 } // namespace Render::Wildlife

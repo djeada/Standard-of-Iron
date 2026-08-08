@@ -176,44 +176,67 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
 }
 
 void apply_collapse(RigPose& pose, const SheepDrive& drive) {
-  float const fall = std::clamp(drive.collapse, 0.0F, 1.0F);
-  if (fall <= 0.0F) {
+  float const phase = std::clamp(drive.collapse, 0.0F, 1.0F);
+  if (phase <= 0.0F) {
     return;
   }
 
-  float const ease = fall * fall * (3.0F - (2.0F * fall));
-  float const roll = 0.125F * ease;
+  DeathMotion const m = death_motion(phase);
 
-  auto settle = [&](QVector3D& p, float keep, float side) {
-    p.setY(0.058F + ((p.y() - 0.058F) * keep));
-    p.setX(p.x() + side);
+  constexpr float k_lying_y = 0.175F;
+  constexpr float k_rest_body_y = 0.439F;
+  constexpr float k_roll_radians = -1.62F;
+
+  float const descent = (k_rest_body_y - k_lying_y) * m.fall;
+  QVector3D const spine(0.0F, k_lying_y, 0.0F);
+  float const roll = k_roll_radians * m.roll;
+  float const head_descent = (k_rest_body_y - k_lying_y) * m.head;
+
+  auto place = [&](QVector3D& p, float descent_amount, float bounce_weight) {
+    p.setY(p.y() - descent_amount + (m.settle * 0.019F * bounce_weight));
+    p = roll_about_spine(p, spine, roll);
+    p.setY(std::max(p.y(), 0.020F));
   };
 
-  settle(pose.root, 1.0F - (0.55F * ease), roll * 0.4F);
-  settle(pose.body_rear, 1.0F - (0.74F * ease), roll);
-  settle(pose.body_front, 1.0F - (0.72F * ease), roll);
-  settle(pose.withers, 1.0F - (0.76F * ease), roll);
+  place(pose.root, descent * 0.92F, 0.5F);
+  place(pose.body_rear, descent, 1.0F);
+  place(pose.body_front, descent, 0.9F);
+  place(pose.withers, descent, 0.8F);
 
   for (std::size_t i = 0; i < k_leg_count; ++i) {
     float const out = (i % 2U == 0U) ? -1.0F : 1.0F;
-    settle(pose.legs[i].shoulder, 1.0F - (0.72F * ease), roll);
-    settle(pose.legs[i].knee, 1.0F - (0.88F * ease), roll + (out * 0.070F * ease));
-    settle(pose.legs[i].foot, 1.0F - (0.94F * ease), roll + (out * 0.120F * ease));
-    settle(pose.legs[i].toe, 1.0F - (0.96F * ease), roll + (out * 0.145F * ease));
+
+    float const fold = m.buckle * 0.62F;
+    float const kick = m.thrash * 0.042F * out;
+
+    pose.legs[i].knee += QVector3D(0.0F, -0.030F * fold, 0.018F * fold * out);
+    pose.legs[i].foot += QVector3D(0.0F, -0.048F * fold, 0.034F * fold * out + kick);
+    pose.legs[i].toe += QVector3D(0.0F, -0.054F * fold, 0.042F * fold * out + kick);
+
+    place(pose.legs[i].shoulder, descent, 0.9F);
+    place(pose.legs[i].knee, descent, 0.7F);
+    place(pose.legs[i].foot, descent, 0.5F);
+    place(pose.legs[i].toe, descent, 0.4F);
   }
 
-  settle(pose.poll, 1.0F - (0.84F * ease), roll * 1.2F);
-  settle(pose.muzzle, 1.0F - (0.94F * ease), roll * 1.5F);
-  settle(pose.jaw_hinge, 1.0F - (0.90F * ease), roll * 1.3F);
-  settle(pose.jaw_tip, 1.0F - (0.95F * ease), roll * 1.5F);
-  settle(pose.ear_base_l, 1.0F - (0.84F * ease), roll * 1.2F);
-  settle(pose.ear_base_r, 1.0F - (0.84F * ease), roll * 1.2F);
-  settle(pose.ear_tip_l, 1.0F - (0.88F * ease), roll * 1.4F);
-  settle(pose.ear_tip_r, 1.0F - (0.88F * ease), roll * 1.4F);
+  pose.poll += QVector3D(0.0F, 0.0F, -0.030F * m.head);
+  pose.muzzle += QVector3D(0.0F, 0.0F, -0.052F * m.head);
 
-  settle(pose.tail_base, 1.0F - (0.76F * ease), roll);
-  settle(pose.tail_mid, 1.0F - (0.88F * ease), roll * 1.3F);
-  settle(pose.tail_tip, 1.0F - (0.94F * ease), roll * 1.5F);
+  place(pose.poll, head_descent, 0.7F);
+  place(pose.muzzle, head_descent, 0.6F);
+  place(pose.jaw_hinge, head_descent, 0.6F);
+  place(pose.jaw_tip, head_descent, 0.5F);
+  pose.jaw_tip += QVector3D(0.0F, -0.016F * m.head, 0.010F * m.head);
+
+  place(pose.ear_base_l, head_descent, 0.5F);
+  place(pose.ear_base_r, head_descent, 0.5F);
+  place(pose.ear_tip_l, head_descent, 0.4F);
+  place(pose.ear_tip_r, head_descent, 0.4F);
+
+  float const tail_lag = std::clamp(m.head * 1.05F, 0.0F, 1.0F);
+  place(pose.tail_base, descent, 0.8F);
+  place(pose.tail_mid, (k_rest_body_y - k_lying_y) * tail_lag, 0.6F);
+  place(pose.tail_tip, (k_rest_body_y - k_lying_y) * tail_lag, 0.5F);
 }
 
 auto make_pose(const SheepDrive& drive) -> RigPose {

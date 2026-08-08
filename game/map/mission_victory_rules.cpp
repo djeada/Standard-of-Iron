@@ -132,6 +132,11 @@ auto build_victory_rules(const MissionDefinition& mission)
       continue;
     }
 
+    if (type == "eliminate_commanders") {
+      rules.victory_rules.emplace_back(Game::Systems::EliminateCommandersVictoryRule{});
+      continue;
+    }
+
     qWarning() << "Unsupported mission victory condition type" << condition.type;
   }
 

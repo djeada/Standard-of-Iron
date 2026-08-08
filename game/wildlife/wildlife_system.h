@@ -122,6 +122,7 @@ private:
 
   void ensure_factory_registry();
   void spawn_initial_population(Engine::Core::World& world);
+  void release_due_packs(Engine::Core::World& world, float delta_time);
   void plan_groups();
   auto spawn_member(Engine::Core::World& world,
                     GroupState& group,
@@ -181,6 +182,8 @@ private:
   bool m_enabled{false};
   bool m_spawn_pending{false};
   bool m_restored{false};
+  float m_elapsed{0.0F};
+  std::vector<bool> m_released_waves;
 };
 
 } // namespace Game::Wildlife

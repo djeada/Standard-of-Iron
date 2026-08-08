@@ -95,6 +95,63 @@ TEST(MapLoaderTest, ParsesUndeadZonesAndWaveSpawns) {
   EXPECT_EQ(zone.waves[1].units[0].count, 3);
 }
 
+TEST(MapLoaderTest, ParsesUndeadZoneClearReward) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Undead Reward Test"},
+      {"grid", QJsonObject{{"width", 32}, {"height", 32}, {"tile_size", 1.0}}},
+      {"undead_zones",
+       QJsonArray{
+           QJsonObject{{"id", "hoard"},
+                       {"x", 16},
+                       {"z", 16},
+                       {"clear_reward",
+                        QJsonObject{{"gold", 150}, {"stone", 80}, {"iron", 40}}}},
+           QJsonObject{{"id", "no_hoard"}, {"x", 8}, {"z", 8}}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      temp_file.fileName(), map_definition, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(map_definition.undead_zones.size(), 2);
+  const auto& rewarded = map_definition.undead_zones[0];
+  EXPECT_EQ(rewarded.clear_reward.get(Game::Systems::ResourceType::Gold), 150);
+  EXPECT_EQ(rewarded.clear_reward.get(Game::Systems::ResourceType::Stone), 80);
+  EXPECT_EQ(rewarded.clear_reward.get(Game::Systems::ResourceType::Iron), 40);
+  EXPECT_EQ(rewarded.clear_reward.get(Game::Systems::ResourceType::Wood), 0);
+  EXPECT_TRUE(map_definition.undead_zones[1].clear_reward.empty());
+}
+
+TEST(MapLoaderTest, ParsesProceduralScatterOptOuts) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject root{
+      {"name", "Scatter Opt Out Test"},
+      {"grid", QJsonObject{{"width", 64}, {"height", 64}, {"tile_size", 1.0}}},
+      {"biome",
+       QJsonObject{{"procedural_boulders_enabled", false},
+                   {"procedural_iron_ore_enabled", false}}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      temp_file.fileName(), map_definition, &error))
+      << error.toStdString();
+
+  EXPECT_FALSE(map_definition.biome.procedural_boulders_enabled);
+  EXPECT_FALSE(map_definition.biome.procedural_iron_ore_enabled);
+  EXPECT_TRUE(map_definition.biome.procedural_trees_enabled);
+}
+
 TEST(MapLoaderTest, ParsesUndeadVictoryObjectives) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

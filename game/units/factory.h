@@ -24,7 +24,10 @@ public:
     if (it == m_factories.end()) {
       return nullptr;
     }
-    return it->second(world, params);
+    auto unit = it->second(world, params);
+
+    apply_forest_passability(world, unit.get(), type);
+    return unit;
   }
 
   auto create(TroopType type,
@@ -35,6 +38,9 @@ public:
   }
 
 private:
+  static void
+  apply_forest_passability(Engine::Core::World& world, Unit* unit, SpawnType type);
+
   std::unordered_map<SpawnType, Factory> m_factories;
 };
 

@@ -194,6 +194,8 @@ void VictoryService::reset() {
   m_requires_captured_structure_tracking = false;
   m_has_only_commander_defeat_rule = false;
   m_only_commander_defeat_armed = false;
+  m_has_eliminate_commanders_rule = false;
+  m_eliminate_commanders_armed = false;
   m_world_state_dirty = false;
   m_last_world_summary = {};
   m_has_world_summary = false;
@@ -231,8 +233,9 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
 
   m_world_ptr = &world;
 
-  if (m_has_only_commander_defeat_rule && !m_only_commander_defeat_armed) {
-    update_only_commander_defeat_arming(summarize_world(world));
+  if ((m_has_only_commander_defeat_rule && !m_only_commander_defeat_armed) ||
+      (m_has_eliminate_commanders_rule && !m_eliminate_commanders_armed)) {
+    update_rule_arming(summarize_world(world));
   }
 
   if (m_startup_delay > 0.0F) {
@@ -298,6 +301,7 @@ void VictoryService::refresh_rule_metadata() {
   m_has_time_limit_defeat = false;
   m_requires_captured_structure_tracking = false;
   m_has_only_commander_defeat_rule = false;
+  m_has_eliminate_commanders_rule = false;
   m_only_commander_structure_types.clear();
 
   for (const auto& rule : m_rule_set.victory_rules) {
@@ -333,6 +337,10 @@ void VictoryService::refresh_rule_metadata() {
             [this](const SurviveWavesVictoryRule&) { m_has_wave_victory = true; },
             [this](const AccumulateResourcesVictoryRule&) {
               m_has_resource_victory = true;
+            },
+            [this](const EliminateCommandersVictoryRule&) {
+              m_has_world_based_rules = true;
+              m_has_eliminate_commanders_rule = true;
             }},
         rule);
   }
@@ -368,15 +376,17 @@ void VictoryService::refresh_rule_metadata() {
   }
 }
 
-void VictoryService::update_only_commander_defeat_arming(const WorldSummary& summary) {
-  if (m_only_commander_defeat_armed || !m_has_only_commander_defeat_rule) {
-    return;
+void VictoryService::update_rule_arming(const WorldSummary& summary) {
+  if (m_has_only_commander_defeat_rule && !m_only_commander_defeat_armed &&
+      (summary.local_non_commander_troop_count > 0 ||
+       count_matching_structures(summary.local_owned_structure_counts,
+                                 m_only_commander_structure_types) > 0)) {
+    m_only_commander_defeat_armed = true;
   }
 
-  if (summary.local_non_commander_troop_count > 0 ||
-      count_matching_structures(summary.local_owned_structure_counts,
-                                m_only_commander_structure_types) > 0) {
-    m_only_commander_defeat_armed = true;
+  if (m_has_eliminate_commanders_rule && !m_eliminate_commanders_armed &&
+      summary.enemy_commander_count > 0) {
+    m_eliminate_commanders_armed = true;
   }
 }
 
@@ -387,7 +397,7 @@ void VictoryService::evaluate_polled_rules() {
 void VictoryService::evaluate_world_state(Engine::Core::World& world) {
   m_last_world_summary = summarize_world(world);
   m_has_world_summary = true;
-  update_only_commander_defeat_arming(m_last_world_summary);
+  update_rule_arming(m_last_world_summary);
   m_world_state_dirty = false;
   evaluate_rules(m_last_world_summary);
 }
@@ -479,6 +489,12 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
       } else if (Game::Units::is_troop_spawn(unit->spawn_type)) {
         summary.local_non_commander_troop_count += 1;
       }
+    } else if (entity->get_component<Engine::Core::CommanderComponent>() != nullptr &&
+               m_owner_registry.are_enemies(m_local_owner_id, unit->owner_id)) {
+      if (m_rule_set.include_ambient_undead ||
+          unit->nation_id != Game::Systems::NationID::IronSepulcher) {
+        summary.enemy_commander_count += 1;
+      }
     }
 
     if (!track_structures) {
@@ -555,6 +571,9 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
           [this](const AccumulateResourcesVictoryRule& resource_rule) {
             return PlayerResourceRegistry::instance().has_harvested_at_least(
                 m_local_owner_id, resource_rule.required);
+          },
+          [this, &summary](const EliminateCommandersVictoryRule&) {
+            return m_eliminate_commanders_armed && summary.enemy_commander_count == 0;
           }},
       rule);
 }

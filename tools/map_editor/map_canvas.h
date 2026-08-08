@@ -121,6 +121,7 @@ private:
   [[nodiscard]] QPolygonF linear_polyline_px(const LinearElement& elem) const;
   void draw_undead_zone_element(QPainter& painter, int index);
   void draw_wildlife_area_element(QPainter& painter, int index);
+  void draw_grove_element(QPainter& painter, int index);
   void draw_linear_preview(QPainter& painter);
   void draw_mission_overlays(QPainter& painter);
   void draw_derived_commanders(QPainter& painter);

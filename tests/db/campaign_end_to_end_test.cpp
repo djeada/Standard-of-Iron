@@ -135,6 +135,26 @@ protected:
     ASSERT_NE(entity->add_component<Engine::Core::CommanderComponent>(), nullptr);
   }
 
+  static auto add_enemy_commander(Engine::Core::World& world) -> Engine::Core::Entity* {
+    auto* entity = world.create_entity();
+    if (entity == nullptr) {
+      return nullptr;
+    }
+    auto* unit = entity->add_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      return nullptr;
+    }
+    unit->owner_id = 2;
+    unit->nation_id = NationID::RomanRepublic;
+    unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+    unit->health = 100;
+    unit->max_health = 100;
+    if (entity->add_component<Engine::Core::CommanderComponent>() == nullptr) {
+      return nullptr;
+    }
+    return entity;
+  }
+
   static auto add_enemy_barracks(Engine::Core::World& world) -> Engine::Core::Entity* {
     auto* entity = world.create_entity();
     if (entity == nullptr) {
@@ -193,6 +213,8 @@ TEST_F(CampaignEndToEndTest, TheOpeningMissionCanBeWonAndAdvancesTheCampaign) {
   add_captured_barracks(world);
   auto* enemy_camp = add_enemy_barracks(world);
   ASSERT_NE(enemy_camp, nullptr);
+  auto* enemy_commander = add_enemy_commander(world);
+  ASSERT_NE(enemy_commander, nullptr);
   service.update(world, 0.4F);
   ASSERT_FALSE(service.is_game_over())
       << "the mission ended before its objective was met";
@@ -204,6 +226,14 @@ TEST_F(CampaignEndToEndTest, TheOpeningMissionCanBeWonAndAdvancesTheCampaign) {
   enemy_camp->get_component<Engine::Core::UnitComponent>()->owner_id = 1;
   Engine::Core::EventManager::instance().publish(
       Engine::Core::BarrackCapturedEvent(enemy_camp->get_id(), 2, 1));
+
+  ASSERT_FALSE(service.is_game_over())
+      << "taking the camps is only half of it while the consul still lives";
+
+  enemy_commander->get_component<Engine::Core::UnitComponent>()->health = 0;
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
+      enemy_commander->get_id(), 2, Game::Units::SpawnType::RomanFieldCommander));
+  service.update(world, 0.4F);
 
   ASSERT_TRUE(service.is_game_over())
       << "meeting the objective did not end the mission";

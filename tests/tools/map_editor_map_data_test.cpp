@@ -852,3 +852,83 @@ TEST(MapEditorMapDataTest, RadiusOnlyTerrainKeepsExtentsUnauthored) {
   EXPECT_NEAR(saved_hill.value(MapJsonKeys::width).toDouble(), 60.0, 1e-6);
   EXPECT_NEAR(saved_hill.value(MapJsonKeys::depth).toDouble(), 60.0, 1e-6);
 }
+
+TEST(MapEditorMapDataTest, GrovesAndUndeadClearRewardsSurviveARoundTrip) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+
+  const QString input_path = temp_dir.filePath("input.json");
+  const QString output_path = temp_dir.filePath("output.json");
+
+  QJsonObject const input{
+      {"name", "Woods And Hoards"},
+      {MapJsonKeys::grid,
+       QJsonObject{{MapJsonKeys::width, 64},
+                   {MapJsonKeys::height, 64},
+                   {MapJsonKeys::tile_size, 1.0}}},
+      {MapJsonKeys::biome,
+       QJsonObject{{"procedural_boulders_enabled", false},
+                   {"procedural_iron_ore_enabled", false}}},
+      {"groves",
+       QJsonArray{QJsonObject{{"id", "north_screen"},
+                              {MapJsonKeys::x, 20},
+                              {MapJsonKeys::z, 30},
+                              {MapJsonKeys::radius, 14.5}}}},
+      {MapJsonKeys::undead_zones,
+       QJsonArray{
+           QJsonObject{{"id", "barrow"},
+                       {MapJsonKeys::x, 40},
+                       {MapJsonKeys::z, 40},
+                       {"clear_reward", QJsonObject{{"gold", 120}, {"iron", 60}}}}}},
+      {MapJsonKeys::wildlife,
+       QJsonObject{{"enabled", true},
+                   {"wolves",
+                    QJsonObject{{"enabled", true},
+                                {"groups", 0},
+                                {"waves",
+                                 QJsonArray{QJsonObject{{"timing", 240.0},
+                                                        {"pack_size", 5},
+                                                        {MapJsonKeys::x, 12},
+                                                        {MapJsonKeys::z, 50},
+                                                        {"label", "The pack"}}}}}}}}};
+  write_json(input_path, input);
+
+  MapEditor::MapData data;
+  ASSERT_TRUE(data.load_from_json(input_path));
+
+  ASSERT_EQ(data.groves().size(), 1);
+  EXPECT_EQ(data.groves().first().id, "north_screen");
+  EXPECT_FLOAT_EQ(data.groves().first().radius, 14.5F);
+  ASSERT_EQ(data.undead_zones().size(), 1);
+  EXPECT_EQ(data.undead_zones().first().clear_reward.value("gold").toInt(), 120);
+
+  ASSERT_TRUE(data.save_to_json(output_path));
+  const QJsonObject output = read_json(output_path);
+
+  ASSERT_TRUE(output.value("groves").isArray());
+  const QJsonObject saved_grove = output.value("groves").toArray().first().toObject();
+  EXPECT_EQ(saved_grove.value("id").toString(), "north_screen");
+  EXPECT_DOUBLE_EQ(saved_grove.value(MapJsonKeys::radius).toDouble(), 14.5);
+
+  const QJsonObject saved_zone =
+      output.value(MapJsonKeys::undead_zones).toArray().first().toObject();
+  ASSERT_TRUE(saved_zone.value("clear_reward").isObject());
+  EXPECT_EQ(saved_zone.value("clear_reward").toObject().value("iron").toInt(), 60);
+
+  ASSERT_TRUE(output.value(MapJsonKeys::biome).isObject());
+  EXPECT_FALSE(output.value(MapJsonKeys::biome)
+                   .toObject()
+                   .value("procedural_boulders_enabled")
+                   .toBool(true));
+
+  const QJsonArray saved_wolf_waves = output.value(MapJsonKeys::wildlife)
+                                          .toObject()
+                                          .value("wolves")
+                                          .toObject()
+                                          .value("waves")
+                                          .toArray();
+  ASSERT_EQ(saved_wolf_waves.size(), 1);
+  EXPECT_DOUBLE_EQ(saved_wolf_waves.first().toObject().value("timing").toDouble(),
+                   240.0);
+  EXPECT_EQ(saved_wolf_waves.first().toObject().value("pack_size").toInt(), 5);
+}

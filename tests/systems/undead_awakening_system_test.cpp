@@ -13,6 +13,7 @@
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/undead_awakening_system.h"
 
 namespace {
@@ -558,6 +559,70 @@ TEST_F(UndeadAwakeningSystemTest, LosingTheShrineBreaksTheGarrisonAndClearsTheZo
   EXPECT_EQ(count_owner_units(world, 99), 0);
   EXPECT_TRUE(system.is_zone_cleared(k_shrine_zone_id));
   EXPECT_TRUE(system.is_shrine_purified(k_shrine_zone_id));
+}
+
+TEST_F(UndeadAwakeningSystemTest, BreakingTheGarrisonPaysTheAuthoredClearReward) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system;
+
+  Game::Map::MapDefinition map_definition = make_shrine_map();
+  ASSERT_FALSE(map_definition.undead_zones.empty());
+  auto& reward = map_definition.undead_zones.front().clear_reward;
+  reward.set(Game::Systems::ResourceType::Stone, 120);
+  reward.set(Game::Systems::ResourceType::Iron, 60);
+
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  const int stone_before = resources.get(1, Game::Systems::ResourceType::Stone);
+  const int iron_before = resources.get(1, Game::Systems::ResourceType::Iron);
+  const int gold_before = resources.get(1, Game::Systems::ResourceType::Gold);
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+  ASSERT_FALSE(system.is_zone_cleared(k_shrine_zone_id));
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Stone), stone_before)
+      << "an unbroken garrison must not pay out";
+
+  world.get_entity(system.anchor_entity(k_shrine_zone_id))
+      ->get_component<Engine::Core::UnitComponent>()
+      ->health = 0;
+  system.update(&world, 0.1F);
+  ASSERT_TRUE(system.is_zone_cleared(k_shrine_zone_id));
+
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Stone), stone_before + 120);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Iron), iron_before + 60);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), gold_before)
+      << "unlisted resources must not be granted";
+
+  system.update(&world, 0.1F);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Stone), stone_before + 120)
+      << "the hoard must only be paid once";
+}
+
+TEST_F(UndeadAwakeningSystemTest, ZoneWithoutAClearRewardPaysNothing) {
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system;
+
+  const Game::Map::MapDefinition map_definition = make_shrine_map();
+  ASSERT_TRUE(map_definition.undead_zones.front().clear_reward.empty());
+
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  const int gold_before = resources.get(1, Game::Systems::ResourceType::Gold);
+
+  add_intruder(world, {0.5F, 0.0F, 0.5F});
+  system.update(&world, 0.1F);
+  world.get_entity(system.anchor_entity(k_shrine_zone_id))
+      ->get_component<Engine::Core::UnitComponent>()
+      ->health = 0;
+  system.update(&world, 0.1F);
+  ASSERT_TRUE(system.is_zone_cleared(k_shrine_zone_id));
+
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), gold_before);
 }
 
 TEST_F(UndeadAwakeningSystemTest, BrokenGarrisonSurvivesASaveLoadRoundTrip) {

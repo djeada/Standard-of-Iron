@@ -54,6 +54,7 @@ enum class ToolType {
   TroopCivilian,
   TroopBuilder,
   UndeadZone,
+  Grove,
   WildlifeSheep,
   WildlifeWolves,
   WildlifeBirds,

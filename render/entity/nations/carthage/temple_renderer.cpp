@@ -34,6 +34,7 @@ struct CarthageTemplePalette {
   QVector3D saffron{0.76F, 0.36F, 0.035F};
   QVector3D ember{0.76F, 0.19F, 0.025F};
   QVector3D soot{0.15F, 0.13F, 0.12F};
+  QVector3D verdigris{0.26F, 0.44F, 0.39F};
 };
 
 constexpr std::uint8_t k_temple_team_slot = 1;
@@ -227,16 +228,18 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   desc.set_full_lod_max_distance(84.0F);
 
   desc.add_box(
-      QVector3D(0.0F, 0.050F, 0.0F), QVector3D(1.38F, 0.050F, 1.16F), c.basalt);
+      QVector3D(0.0F, 0.055F, 0.0F), QVector3D(1.38F, 0.055F, 1.16F), c.basalt);
   desc.add_box(
-      QVector3D(0.0F, 0.155F, 0.0F), QVector3D(1.31F, 0.055F, 1.09F), c.sandstone_dark);
+      QVector3D(0.0F, 0.195F, 0.0F), QVector3D(1.33F, 0.085F, 1.11F), c.sandstone_dark);
   desc.add_box(
-      QVector3D(0.0F, 0.245F, 0.0F), QVector3D(1.25F, 0.035F, 1.03F), c.sandstone);
-  desc.add_box(QVector3D(0.0F, 0.290F, 0.0F),
+      QVector3D(0.0F, 0.345F, 0.0F), QVector3D(1.29F, 0.065F, 1.07F), c.sandstone_dark);
+  desc.add_box(
+      QVector3D(0.0F, 0.435F, 0.0F), QVector3D(1.25F, 0.035F, 1.03F), c.sandstone);
+  desc.add_box(QVector3D(0.0F, 0.475F, 0.0F),
                QVector3D(1.27F, 0.010F, 1.05F),
                c.sandstone_light);
 
-  float const podium_y = 0.300F;
+  float const podium_y = 0.485F;
 
   for (float const joint_x : {-0.84F, -0.24F, 0.36F, 0.96F}) {
     desc.add_box(QVector3D(joint_x, 0.165F, 0.0F),
@@ -251,17 +254,17 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                k_building_state_mask_intact,
                BuildingLODMask::Full);
 
-  for (int step = 0; step < 4; ++step) {
+  for (int step = 0; step < 6; ++step) {
     float const step_index = static_cast<float>(step);
-    float const top = 0.074F * (step_index + 1.0F);
-    desc.add_box(QVector3D(-1.600F + 0.086F * step_index, top * 0.5F, 0.0F),
-                 QVector3D(0.045F, top * 0.5F, 0.62F),
+    float const top = 0.081F * (step_index + 1.0F);
+    desc.add_box(QVector3D(-1.700F + 0.078F * step_index, top * 0.5F, 0.0F),
+                 QVector3D(0.041F, top * 0.5F, 0.62F),
                  (step % 2 == 0) ? c.sandstone_dark : c.sandstone,
                  k_building_state_mask_intact);
   }
   for (float const cheek : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(-1.47F, 0.15F, cheek * 0.675F),
-                 QVector3D(0.19F, 0.15F, 0.055F),
+    desc.add_box(QVector3D(-1.50F, 0.24F, cheek * 0.675F),
+                 QVector3D(0.25F, 0.24F, 0.055F),
                  c.basalt,
                  k_building_state_mask_intact);
   }
@@ -469,36 +472,34 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                c.sandstone,
                k_building_state_mask_intact);
 
-  constexpr float k_merlon_half_h = 0.098F;
-  float const merlon_y = cornice_y + 0.140F + k_merlon_half_h;
-  auto add_merlon =
-      [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
-        desc.add_box(center, size, color, k_building_state_mask_intact);
-        desc.add_box(center + QVector3D(0.0F, size.y() + 0.015F, 0.0F),
-                     QVector3D(size.x() * 1.20F, 0.015F, size.z() * 1.20F),
-                     c.basalt,
-                     k_building_state_mask_intact,
-                     BuildingLODMask::Full);
-      };
-
-  add_merlon_strip_z(add_merlon,
-                     1.245F,
-                     merlon_y,
-                     -0.84F,
-                     0.28F,
-                     7,
-                     QVector3D(0.050F, k_merlon_half_h, 0.078F),
-                     c.sandstone_light);
-  for (float const side : {-1.0F, 1.0F}) {
-    add_merlon_strip_x(add_merlon,
-                       merlon_y,
-                       side * 0.925F,
-                       -0.24F,
-                       0.29F,
-                       6,
-                       QVector3D(0.078F, k_merlon_half_h, 0.050F),
-                       c.sandstone_light);
+  for (int course = 0; course < 3; ++course) {
+    float const t = static_cast<float>(course);
+    desc.add_box(QVector3D(0.47F, cornice_y + 0.156F + 0.042F * t, 0.0F),
+                 QVector3D(0.86F + 0.035F * t, 0.021F, 1.01F + 0.035F * t),
+                 (course % 2 == 0) ? c.sandstone_light : c.sandstone,
+                 k_building_state_mask_intact);
   }
+  desc.add_box(QVector3D(0.47F, cornice_y + 0.290F, 0.0F),
+               QVector3D(0.94F, 0.020F, 1.09F),
+               c.verdigris,
+               k_building_state_mask_intact);
+
+  desc.add_box(QVector3D(0.47F, cornice_y + 0.312F, 0.0F),
+               QVector3D(0.88F, 0.014F, 1.03F),
+               c.sandstone_light,
+               k_building_state_mask_intact);
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(0.47F, cornice_y + 0.326F, side * 1.015F),
+                 QVector3D(0.88F, 0.010F, 0.020F),
+                 c.gold,
+                 BuildingStateMask::Normal,
+                 BuildingLODMask::Full);
+  }
+  desc.add_box(QVector3D(1.335F, cornice_y + 0.326F, 0.0F),
+               QVector3D(0.020F, 0.010F, 1.03F),
+               c.gold,
+               BuildingStateMask::Normal,
+               BuildingLODMask::Full);
 
   desc.add_box(QVector3D(0.62F, cornice_y + 0.230F, 0.0F),
                QVector3D(0.44F, 0.108F, 0.48F),
@@ -522,7 +523,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                BuildingStateMask::Normal,
                BuildingLODMask::Full);
 
-  float const pillar_height = 1.34F * height_multiplier;
+  float const pillar_height = 1.86F * height_multiplier;
   add_votive_pillar(desc, c, -1.16F, 0.62F, podium_y, pillar_height);
   add_votive_pillar(desc, c, -1.16F, -0.62F, podium_y, pillar_height);
 

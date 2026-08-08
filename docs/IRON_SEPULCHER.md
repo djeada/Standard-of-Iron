@@ -21,6 +21,7 @@ Everything below is driven by `undead_zones` in a map file and implemented by
     "team_id": 99,
     "awaken_on": ["unit_enters_radius"],
     "fog_density": 0.28,
+    "clear_reward": { "gold": 150, "stone": 80 },
     "waves": [
       { "trigger": "initial", "units": { "skeleton_swordsman": 2 } },
       { "trigger": "after_clear", "units": { "skeleton_archer": 3 } }
@@ -29,15 +30,28 @@ Everything below is driven by `undead_zones` in a map file and implemented by
 ]
 ```
 
-| Field         | Meaning                                                                                    |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| `awaken_on`   | `unit_enters_radius` (default) or `mission_start`.                                         |
-| `waves`       | Optional. Omit it to get the default garrison (see below).                                 |
-| `anchor_type` | The decorative prop the guardians rise around. It does not decide whether a shrine exists. |
-| `fog_density` | Optional. `0` disables the zone haze.                                                      |
+| Field          | Meaning                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------ |
+| `awaken_on`    | `unit_enters_radius` (default) or `mission_start`.                                         |
+| `waves`        | Optional. Omit it to get the default garrison (see below).                                 |
+| `anchor_type`  | The decorative prop the guardians rise around. It does not decide whether a shrine exists. |
+| `fog_density`  | Optional. `0` disables the zone haze.                                                      |
+| `clear_reward` | Optional. Resources paid out once the garrison is broken.                                  |
 
 `owner_id` is a real owner: it is registered as an AI owner of nation
 `iron_sepulcher`, which resolves to the `sepulcher_defense` AI profile.
+
+### Clearing a zone for profit
+
+`clear_reward` is paid once, when the garrison breaks — whether the anchor was
+destroyed or captured. A capture pays the new owner of the anchor; a kill pays
+the local player. The amounts are added to the balance as spendable resources
+and are deliberately **not** counted as harvested, so a hoard can fund a push
+without shortcutting an `accumulate_resources` objective.
+
+This is what turns a dead zone from an obstacle into a decision: the barrow is
+optional, it costs troops, and it pays for the assault it delays. Every mission
+in the Second Punic War campaign ships at least one.
 
 ## The default garrison
 

@@ -687,4 +687,65 @@ TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
   }
 }
 
+TEST_F(WildlifeSystemTest, WolfPacksArriveOnScheduleRatherThanAtMissionStart) {
+  World world;
+  WildlifeSystem system;
+
+  WildlifeSettings settings = make_settings();
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 0;
+  settings.wolves.roam_radius = 10.0F;
+  settings.wolves.waves = {
+      {.timing = 5.0F,
+       .pack_size = 3,
+       .area = {14.0F, 0.0F, 3.0F},
+       .label = "First pack"},
+      {.timing = 12.0F, .pack_size = 2, .area = {-14.0F, 0.0F, 3.0F}, .label = ""},
+  };
+  Game::Wildlife::sanitize(settings);
+  system.configure(settings, 7U);
+
+  advance(system, world, 1.0F);
+  EXPECT_EQ(count_species(world, Species::Wolf), 0)
+      << "a scheduled pack must not be on the field at mission start";
+
+  advance(system, world, 6.0F);
+  EXPECT_EQ(count_species(world, Species::Wolf), 3);
+
+  advance(system, world, 7.0F);
+  EXPECT_EQ(count_species(world, Species::Wolf), 5)
+      << "the second pack joins the first";
+
+  const float long_ago = 30.0F;
+  advance(system, world, long_ago);
+  EXPECT_EQ(count_species(world, Species::Wolf), 5)
+      << "each wave releases exactly once";
+}
+
+TEST_F(WildlifeSystemTest, ReleasedWolfWavesSurviveASaveLoadRoundTrip) {
+  World world;
+  WildlifeSystem system;
+
+  WildlifeSettings settings = make_settings();
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 0;
+  settings.wolves.waves = {
+      {.timing = 2.0F, .pack_size = 3, .area = {14.0F, 0.0F, 3.0F}, .label = ""}};
+  Game::Wildlife::sanitize(settings);
+  system.configure(settings, 7U);
+
+  advance(system, world, 4.0F);
+  ASSERT_EQ(count_species(world, Species::Wolf), 3);
+
+  const auto state = system.serialize_state();
+
+  WildlifeSystem restored;
+  restored.configure(settings, 7U);
+  restored.restore_state(state);
+  advance(restored, world, 10.0F);
+
+  EXPECT_EQ(count_species(world, Species::Wolf), 3)
+      << "a restored mission must not release an already-spent pack again";
+}
+
 } // namespace

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include "wildlife_species.h"
@@ -11,6 +12,13 @@ struct SpawnArea {
   float x{0.0F};
   float z{0.0F};
   float radius{18.0F};
+};
+
+struct WildlifeWave {
+  float timing{0.0F};
+  int pack_size{4};
+  SpawnArea area;
+  std::string label;
 };
 
 struct SpeciesConfig {
@@ -31,6 +39,7 @@ struct SpeciesConfig {
   float flyover_interval_max{0.0F};
 
   std::vector<SpawnArea> spawn_areas;
+  std::vector<WildlifeWave> waves;
 
   [[nodiscard]] auto clamped_group_size(std::uint32_t roll) const noexcept -> int;
 
