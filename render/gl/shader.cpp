@@ -19,10 +19,10 @@
 #include <qvector3d.h>
 #include <qvector4d.h>
 
-#include <GL/gl.h>
 #include <algorithm>
 #include <mutex>
 
+#include "platform_gl.h"
 #include "render_constants.h"
 #include "ubo_bindings.h"
 #include "utils/resource_utils.h"

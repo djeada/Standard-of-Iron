@@ -8,7 +8,6 @@
 #include <qstringliteral.h>
 #include <qvectornd.h>
 
-#include <GL/gl.h>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -54,6 +53,7 @@
 #include "gl/resources.h"
 #include "gl_debug_log.h"
 #include "mesh.h"
+#include "platform_gl.h"
 #include "render_constants.h"
 #include "scene/camera.h"
 #include "shader.h"
@@ -369,7 +369,7 @@ void Backend::begin_frame() {
   glDepthFunc(GL_LESS);
   glDepthMask(GL_TRUE);
   glDisable(GL_BLEND);
-  glBlendEquation(GL_FUNC_ADD);
+  Platform::set_blend_equation(GL_FUNC_ADD);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   if (m_cylinder_pipeline) {

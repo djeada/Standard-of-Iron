@@ -4,7 +4,17 @@
 #include <QOpenGLContext>
 #include <QOpenGLExtraFunctions>
 
+#if defined(Q_OS_MACOS)
+#include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
+
 namespace Render::GL::Platform {
+
+inline void set_blend_equation(GLenum equation) {
+  QOpenGLContext::currentContext()->extraFunctions()->glBlendEquation(equation);
+}
 
 inline auto supports_persistent_mapping() -> bool {
   auto* ctx = QOpenGLContext::currentContext();

@@ -5,12 +5,12 @@
 #include <qopenglext.h>
 #include <qstringliteral.h>
 
-#include <GL/gl.h>
 #include <algorithm>
 #include <cstddef>
 
 #include "../backend.h"
 #include "../mesh.h"
+#include "../platform_gl.h"
 #include "../primitives.h"
 #include "../render_constants.h"
 #include "gl/shader_cache.h"

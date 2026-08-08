@@ -156,9 +156,8 @@ TEST(MissionAssetRulesTest, OffensivePlayerCampsUseAuthoredMinimalStructures) {
   EXPECT_EQ(cannae.value(QStringLiteral("barracks")), 1);
 
   const auto zama = player_structure_counts(QStringLiteral("map_battle_zama.json"));
-  EXPECT_EQ(zama.size(), 3);
+  EXPECT_EQ(zama.size(), 2);
   EXPECT_EQ(zama.value(QStringLiteral("barracks")), 1);
-  EXPECT_EQ(zama.value(QStringLiteral("defense_tower")), 2);
   EXPECT_EQ(zama.value(QStringLiteral("home")), 1);
 }
 

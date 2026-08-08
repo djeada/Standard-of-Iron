@@ -5,7 +5,6 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <qopenglext.h>
 
-#include <GL/gl.h>
 #include <algorithm>
 #include <cstddef>
 #include <limits>
@@ -14,6 +13,7 @@
 
 #include "gl/buffer.h"
 #include "gl_lifetime.h"
+#include "platform_gl.h"
 #include "render_constants.h"
 #include "vertex_attrib_layout.h"
 
