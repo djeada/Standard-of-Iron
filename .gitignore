@@ -87,10 +87,26 @@ assets/creatures/*.bpat
 assets/creatures/*.bpsm
 assets/creatures/*.bprm
 
-# Ambience beds are rendered from tools/audio_synth/ambience.py by the build.
-# The recipes are the source; the .ogg files are output.
+# Most ambience beds are rendered from tools/audio_synth/ambience.py by the
+# build. For those the recipe is the source and the .ogg is output.
 assets/audio/ambience/*.ogg
 assets/audio/ambience/*.wav
+
+# The beds below are cut from public-domain field recordings instead, so there
+# is no recipe to render them from and they have to be committed. They are
+# rebuilt from their sources by tools/audio_field/build_beds.py, which needs a
+# network. Keep this list and tools/audio_field/sources.py in step.
+!assets/audio/ambience/alpine_mountain_pass.ogg
+!assets/audio/ambience/battlefield_dry_wind_distant_march_01.ogg
+!assets/audio/ambience/battlefield_dry_wind_distant_march_02.ogg
+!assets/audio/ambience/desert_army_march.ogg
+!assets/audio/ambience/forest_ambush.ogg
+!assets/audio/ambience/mediterranean_plains.ogg
+!assets/audio/ambience/mountain_camp_night.ogg
+!assets/audio/ambience/river_crossing.ogg
+!assets/audio/ambience/roman_road.ogg
+!assets/audio/ambience/weather_rain.ogg
+!assets/audio/ambience/weather_snow.ogg
 
 # Local virtualenvs
 venv/

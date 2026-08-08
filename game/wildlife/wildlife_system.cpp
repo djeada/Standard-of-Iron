@@ -8,8 +8,10 @@
 #include <cmath>
 #include <memory>
 
+#include "../audio/audio_cues.h"
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../map/map_definition.h"
@@ -579,9 +581,13 @@ public:
       break;
     case NatureEvent::Hunt:
       m_owner.m_stats.hunt_events += 1U;
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::AudioCueEvent(Game::Audio::Cue::k_wildlife_wolf_hunt));
       break;
     case NatureEvent::Bite:
       m_owner.m_stats.bites += 1U;
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::AudioCueEvent(Game::Audio::Cue::k_wildlife_wolf_bite));
       break;
     }
   }

@@ -1,12 +1,15 @@
 #include <QJsonObject>
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <string>
 #include <vector>
 
 #include "core/component.h"
 #include "core/entity.h"
+#include "core/event_manager.h"
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
@@ -274,6 +277,12 @@ TEST_F(WildlifeSystemTest, WolvesHuntNearbySheep) {
   const auto sheep_before = count_species(world, Species::Sheep);
   ASSERT_GT(sheep_before, 0);
 
+  std::vector<std::string> cues;
+  Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent> const listener(
+      [&cues](const Engine::Core::AudioCueEvent& event) {
+        cues.push_back(event.cue_id);
+      });
+
   advance(system, world, 2.0F);
 
   auto wolves = collect_species(world, Species::Wolf);
@@ -282,6 +291,9 @@ TEST_F(WildlifeSystemTest, WolvesHuntNearbySheep) {
   ASSERT_NE(wolf, nullptr);
   EXPECT_EQ(wolf->behavior, Behavior::Stalk);
   EXPECT_GT(system.stats().hunt_events, 0U);
+  EXPECT_NE(std::find(cues.begin(), cues.end(), std::string("wildlife.wolf_hunt")),
+            cues.end())
+      << "the pack started a hunt without asking for a sound";
 }
 
 TEST_F(WildlifeSystemTest, WolvesBackOffFromLargeFormations) {
