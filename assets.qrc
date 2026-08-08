@@ -181,8 +181,14 @@
         <file>assets/audio/sfx/combat/aftermath_battlefield.ogg</file>
         <file>assets/audio/sfx/combat/archer_volley_many.ogg</file>
         <file>assets/audio/sfx/combat/archers_shooting_close.ogg</file>
+        <file>assets/audio/sfx/combat/armour_hit_01.ogg</file>
+        <file>assets/audio/sfx/combat/armour_hit_02.ogg</file>
+        <file>assets/audio/sfx/combat/armour_hit_03.ogg</file>
         <file>assets/audio/sfx/combat/army_march_dirt_mass.ogg</file>
         <file>assets/audio/sfx/combat/army_retreat_panic.ogg</file>
+        <file>assets/audio/sfx/combat/arrow_impact_01.ogg</file>
+        <file>assets/audio/sfx/combat/arrow_impact_02.ogg</file>
+        <file>assets/audio/sfx/combat/arrow_impact_03.ogg</file>
         <file>assets/audio/sfx/combat/arrows_fast_flybys_lr.ogg</file>
         <file>assets/audio/sfx/combat/arrows_impact_shields_dirt.ogg</file>
         <file>assets/audio/sfx/combat/arrows_many_overhead.ogg</file>
@@ -192,6 +198,10 @@
         <file>assets/audio/sfx/combat/battlefield_crowd_chaos.ogg</file>
         <file>assets/audio/sfx/combat/battlefield_distant_mass_01.ogg</file>
         <file>assets/audio/sfx/combat/battlefield_distant_mass_02.ogg</file>
+        <file>assets/audio/sfx/combat/blade_clash_01.ogg</file>
+        <file>assets/audio/sfx/combat/blade_clash_02.ogg</file>
+        <file>assets/audio/sfx/combat/blade_clash_03.ogg</file>
+        <file>assets/audio/sfx/combat/blade_clash_04.ogg</file>
         <file>assets/audio/sfx/combat/bow_draw_creak.ogg</file>
         <file>assets/audio/sfx/combat/bow_draw_creak_v2.ogg</file>
         <file>assets/audio/sfx/combat/bow_full_draw_seat.ogg</file>
@@ -217,6 +227,7 @@
         <file>assets/audio/sfx/combat/guard_raise_v2.ogg</file>
         <file>assets/audio/sfx/combat/heal_bind_wound.ogg</file>
         <file>assets/audio/sfx/combat/horse_gallop_close_pass.ogg</file>
+        <file>assets/audio/sfx/combat/human_death_cry.ogg</file>
         <file>assets/audio/sfx/combat/javelin_throw_whoosh.ogg</file>
         <file>assets/audio/sfx/combat/jump_effort.ogg</file>
         <file>assets/audio/sfx/combat/jump_effort_v2.ogg</file>
@@ -240,9 +251,35 @@
         <file>assets/audio/sfx/combat/siege_impact.ogg</file>
         <file>assets/audio/sfx/combat/siege_launch.ogg</file>
         <file>assets/audio/sfx/combat/soldiers_victory_cheer.ogg</file>
+        <file>assets/audio/sfx/combat/spear_impact_01.ogg</file>
+        <file>assets/audio/sfx/combat/spear_impact_02.ogg</file>
         <file>assets/audio/sfx/combat/spearmen_formation_advance.ogg</file>
-        <file>assets/audio/sfx/combat/troops_death_scream.ogg</file>
+        <file>assets/audio/sfx/combat/stone_impact_01.ogg</file>
+        <file>assets/audio/sfx/combat/stone_impact_02.ogg</file>
+        <file>assets/audio/sfx/combat/stone_impact_03.ogg</file>
+        <file>assets/audio/sfx/combat/sword_hit_01.ogg</file>
+        <file>assets/audio/sfx/combat/sword_hit_02.ogg</file>
+        <file>assets/audio/sfx/combat/sword_hit_03.ogg</file>
+        <file>assets/audio/sfx/combat/sword_hit_04.ogg</file>
         <file>assets/audio/sfx/combat/vanguard_rush.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_grass_01.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_grass_02.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_grass_03.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_grass_04.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_run_01.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_run_02.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_run_03.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_run_04.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_01.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_02.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_03.ogg</file>
+        <file>assets/audio/sfx/movement/footstep_stone_04.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_bite_snap.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_growl_low.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_howl_distant.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_howl_near.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_pack_attack.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_snarl_bark.ogg</file>
         <file>assets/audio/sfx/orders/attack_horn_stab.ogg</file>
         <file>assets/audio/sfx/orders/formation_pole_shift.ogg</file>
         <file>assets/audio/sfx/orders/formation_pole_shift_v2.ogg</file>

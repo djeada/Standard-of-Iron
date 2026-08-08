@@ -64,6 +64,7 @@ class Findings:
     silent_cues: list[dict] = field(default_factory=list)
     placeholder_cues: list[dict] = field(default_factory=list)
     unwired_cues: list[str] = field(default_factory=list)
+    cue_call_sites: dict[str, list[str]] = field(default_factory=dict)
     orphan_resources: list[str] = field(default_factory=list)
 
     def structural_problems(self) -> list[str]:
@@ -95,8 +96,8 @@ def header_cue_ids() -> dict[str, str]:
     return {cue_id: name for name, cue_id in CONSTANT_RE.findall(text)}
 
 
-def call_site_text() -> str:
-    chunks = []
+def call_site_files() -> list[tuple[Path, str]]:
+    files = []
     for root in CALL_SITE_ROOTS:
         target = REPO / root
         sources = [target] if target.is_file() else sorted(target.rglob("*"))
@@ -105,8 +106,29 @@ def call_site_text() -> str:
                 continue
             if source in NOT_A_CALL_SITE:
                 continue
-            chunks.append(source.read_text(encoding="utf-8", errors="ignore"))
-    return "\n".join(chunks)
+            files.append((source, source.read_text(encoding="utf-8", errors="ignore")))
+    return files
+
+
+def call_site_text() -> str:
+    return "\n".join(text for _path, text in call_site_files())
+
+
+def where_fired(
+    cue_id: str, constant: str | None, files: list[tuple[Path, str]]
+) -> list[str]:
+    """Files that fire this cue, so "is it wired" is answerable per cue.
+
+    A cue can be bound to a perfectly good asset and still never play, which
+    from the player's side is the same as having no sound at all. Listing the
+    call site makes that visible instead of leaving it to a grep.
+    """
+    patterns = [re.escape(f'"{cue_id}"')]
+    if constant:
+
+        patterns.append(rf"\b{re.escape(constant)}\b")
+    needle = re.compile("|".join(patterns))
+    return [str(path.relative_to(REPO)) for path, text in files if needle.search(text)]
 
 
 def collect() -> tuple[Findings, list[dict], list[dict]]:
@@ -130,7 +152,7 @@ def collect() -> tuple[Findings, list[dict], list[dict]]:
     found.header_only_cues = sorted(set(header) - catalog_ids)
     found.catalog_only_cues = sorted(catalog_ids - set(header))
 
-    sources = call_site_text()
+    source_files = call_site_files()
     referenced_resources: set[str] = set()
 
     for cue in cues:
@@ -150,10 +172,9 @@ def collect() -> tuple[Findings, list[dict], list[dict]]:
             found.placeholder_cues.append(cue)
 
         constant = header.get(cue_id)
-        wired = f'"{cue_id}"' in sources or (
-            constant is not None and constant in sources
-        )
-        if not wired:
+        sites = where_fired(cue_id, constant, source_files)
+        found.cue_call_sites[cue_id] = sites
+        if not sites:
             found.unwired_cues.append(cue_id)
 
     for entry in manifest:
@@ -245,6 +266,22 @@ def render(found: Findings, manifest: list[dict], cues: list[dict]) -> str:
     add("## Files not in the manifest")
     add("")
     bullet(lines, found.unmanifested_files, "None.")
+    add("")
+
+    add("## Where each cue is fired")
+    add("")
+    add(
+        "A cue can be bound to a good asset and still never play, which sounds "
+        "exactly like having no asset at all. This is the audit trail from the "
+        "catalogue back to the code."
+    )
+    add("")
+    add("| Cue | Fired from |")
+    add("| --- | ---------- |")
+    for cue in cues:
+        sites = found.cue_call_sites.get(cue["id"], [])
+        where = ", ".join(f"`{site}`" for site in sites) if sites else "**nothing**"
+        add(f"| `{cue['id']}` | {where} |")
     add("")
 
     problems = found.structural_problems()

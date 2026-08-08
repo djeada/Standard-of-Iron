@@ -60,27 +60,6 @@ def wind(
     return dsp.mix(dsp.gain_of(air, 1.0), dsp.gain_of(rumble, 0.7))
 
 
-def rain(
-    seed: int, density: int, drop_hz: tuple[float, float], sheet_hz: float
-) -> list[float]:
-    """A sheet of water plus individual drops, both kept out of the hiss band."""
-    n = _n()
-    sheet = dsp.lowpass(dsp.noise(n, seed), sheet_hz, 0.7)
-    sheet = dsp.highpass(sheet, 180.0, 0.7)
-    sheet = dsp.apply(sheet, _slow_shape(n, seed + 1, 0.06, 0.35))
-    drops = dsp.grains(
-        n,
-        seed + 2,
-        count=density,
-        spread=1.0,
-        grain_ms=(3.0, 11.0),
-        freq=drop_hz,
-        decay_curve=1.0,
-    )
-    drops = dsp.lowpass(drops, 2600.0, 0.7)
-    return dsp.mix(dsp.gain_of(sheet, 0.85), dsp.gain_of(drops, 0.5))
-
-
 def water(seed: int, centre: float) -> list[float]:
     """Moving water: a burbling band that wanders rather than sits still."""
     n = _n()
@@ -91,14 +70,6 @@ def water(seed: int, centre: float) -> list[float]:
     )
     burble = dsp.apply(burble, _slow_shape(n, seed + 2, 0.5, 0.6))
     return dsp.mix(dsp.gain_of(flow, 0.7), dsp.gain_of(burble, 0.35))
-
-
-def leaves(seed: int, rate_hz: float) -> list[float]:
-    """Foliage rustle: a mid band that breathes with the gusts."""
-    n = _n()
-    rustle = dsp.bandpass(dsp.noise(n, seed), 1500.0, 0.8)
-    rustle = dsp.lowpass(rustle, 2800.0, 0.7)
-    return dsp.apply(rustle, _slow_shape(n, seed + 1, rate_hz, 0.75))
 
 
 def murmur(seed: int, centre: float, depth: float = 0.5) -> list[float]:
@@ -189,25 +160,6 @@ def gulls(seed: int, count: int) -> list[float]:
     return out
 
 
-def snowfall(seed: int, density: int) -> list[float]:
-    """Snow is nearly silent: a soft granular whisper over muffled air."""
-    n = _n()
-    whisper = dsp.bandpass(dsp.noise(n, seed), 1100.0, 0.5)
-    whisper = dsp.lowpass(whisper, 1800.0, 0.7)
-    whisper = dsp.apply(whisper, _slow_shape(n, seed + 1, 0.09, 0.55))
-    flakes = dsp.grains(
-        n,
-        seed + 2,
-        count=density,
-        spread=1.0,
-        grain_ms=(9.0, 26.0),
-        freq=(500.0, 1300.0),
-        decay_curve=1.0,
-    )
-    flakes = dsp.lowpass(flakes, 1500.0, 0.7)
-    return dsp.mix(dsp.gain_of(whisper, 0.6), dsp.gain_of(flakes, 0.22))
-
-
 def seal_loop(buf: list[float], fade_seconds: float = 1.2) -> list[float]:
     """Fold the tail into the head so the file itself loops without a step."""
     fade = min(dsp.seconds(fade_seconds), len(buf) // 4)
@@ -229,44 +181,6 @@ def _shape(buf: list[float]) -> list[float]:
 
 
 BEDS: dict[str, callable] = {
-    "alpine_mountain_pass": lambda: dsp.mix(
-        wind(101, body_hz=190.0, gust_hz=0.05, depth=0.75, brightness=0.85),
-        dsp.gain_of(knocks(103, 14, (300.0, 900.0), 0.2), 0.5),
-    ),
-    "mediterranean_plains": lambda: dsp.mix(
-        wind(111, body_hz=150.0, gust_hz=0.07, depth=0.6, brightness=0.8),
-        dsp.gain_of(leaves(113, 0.12), 0.35),
-    ),
-    "forest_ambush": lambda: dsp.mix(
-        wind(121, body_hz=130.0, gust_hz=0.06, depth=0.7, brightness=0.7),
-        dsp.gain_of(leaves(123, 0.18), 0.7),
-        dsp.gain_of(gulls(125, 3), 0.35),
-    ),
-    "river_crossing": lambda: dsp.mix(
-        dsp.gain_of(water(131, 700.0), 0.9),
-        dsp.gain_of(
-            wind(133, body_hz=140.0, gust_hz=0.06, depth=0.5, brightness=0.7), 0.5
-        ),
-    ),
-    "battlefield_dry_wind_distant_march_01": lambda: dsp.mix(
-        wind(151, body_hz=160.0, gust_hz=0.06, depth=0.7, brightness=0.75),
-        dsp.gain_of(march(153, 96.0, 0.4), 1.0),
-    ),
-    "battlefield_dry_wind_distant_march_02": lambda: dsp.mix(
-        wind(161, body_hz=175.0, gust_hz=0.045, depth=0.65, brightness=0.7),
-        dsp.gain_of(march(163, 108.0, 0.32), 1.0),
-    ),
-    "desert_army_march": lambda: dsp.mix(
-        wind(171, body_hz=185.0, gust_hz=0.05, depth=0.8, brightness=0.9),
-        dsp.gain_of(march(173, 88.0, 0.35), 1.0),
-    ),
-    "mountain_camp_night": lambda: dsp.mix(
-        dsp.gain_of(
-            wind(181, body_hz=150.0, gust_hz=0.04, depth=0.6, brightness=0.6), 0.8
-        ),
-        dsp.gain_of(fire(183, 0.5), 0.55),
-        dsp.gain_of(knocks(185, 10, (250.0, 700.0), 0.18), 0.6),
-    ),
     "roman_army_camp_01": lambda: dsp.mix(
         dsp.gain_of(
             wind(191, body_hz=145.0, gust_hz=0.05, depth=0.45, brightness=0.65), 0.6
@@ -323,23 +237,6 @@ BEDS: dict[str, callable] = {
         dsp.gain_of(
             wind(265, body_hz=140.0, gust_hz=0.07, depth=0.35, brightness=0.6), 0.35
         ),
-    ),
-    "weather_rain": lambda: dsp.mix(
-        rain(301, density=760, drop_hz=(500.0, 2000.0), sheet_hz=2200.0),
-        dsp.gain_of(
-            wind(303, body_hz=150.0, gust_hz=0.05, depth=0.45, brightness=0.55), 0.3
-        ),
-    ),
-    "weather_snow": lambda: dsp.mix(
-        snowfall(311, density=240),
-        dsp.gain_of(
-            wind(313, body_hz=130.0, gust_hz=0.035, depth=0.7, brightness=0.4), 0.7
-        ),
-    ),
-    "roman_road": lambda: dsp.mix(
-        wind(271, body_hz=155.0, gust_hz=0.06, depth=0.6, brightness=0.75),
-        dsp.gain_of(march(273, 100.0, 0.3), 1.0),
-        dsp.gain_of(leaves(275, 0.1), 0.25),
     ),
 }
 

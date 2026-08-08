@@ -191,6 +191,10 @@ constexpr float k_fov_aim = 48.0F;
 constexpr float k_strike_step_reach = 1.45F;
 constexpr float k_strike_acquisition_bonus = 0.55F;
 
+constexpr float k_footstep_min_bob_amplitude = 0.25F;
+
+constexpr float k_footstep_bob_offset = 1.5F * std::numbers::pi_v<float>;
+
 constexpr float k_fpv_backpedal_speed_scale = 0.72F;
 
 constexpr float k_fpv_strafe_speed_scale = 0.86F;
@@ -2005,6 +2009,32 @@ auto CommanderControlController::update(Engine::Core::World& world,
   return true;
 }
 
+void CommanderControlController::play_footstep_if_stride_landed(
+    const Engine::Core::Entity& commander, float previous_bob_phase) {
+  if (m_bob_amplitude < k_footstep_min_bob_amplitude) {
+    return;
+  }
+
+  const auto stride_index = [](float phase) {
+    return static_cast<long long>(std::floor((phase - k_footstep_bob_offset) /
+                                             (2.0F * std::numbers::pi_v<float>)));
+  };
+  if (stride_index(m_bob_phase) == stride_index(previous_bob_phase)) {
+    return;
+  }
+
+  if (m_move_running) {
+    Game::Audio::play_cue(Game::Audio::Cue::k_move_footstep_run);
+    return;
+  }
+
+  const auto* terrain =
+      commander.get_component<Engine::Core::TerrainContextComponent>();
+  const bool hard_ground = terrain != nullptr && terrain->is_on_bridge;
+  Game::Audio::play_cue(hard_ground ? Game::Audio::Cue::k_move_footstep_hard
+                                    : Game::Audio::Cue::k_move_footstep);
+}
+
 void CommanderControlController::update_camera(Engine::Core::World& world,
                                                Engine::Core::Entity& commander,
                                                Render::GL::Camera& camera,
@@ -2078,12 +2108,14 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   const float bob_amp_target = (m_move_speed > 0.05F) ? motion_scale : 0.0F;
   m_bob_amplitude += (bob_amp_target - m_bob_amplitude) *
                      (1.0F - std::exp(-k_bob_decay * std::max(dt, 0.0F)));
+  const float previous_bob_phase = m_bob_phase;
   if (m_move_speed > 0.05F) {
     m_bob_phase += m_move_speed * k_bob_freq * dt;
   } else if (m_bob_amplitude < 0.01F) {
 
     m_bob_phase = 0.0F;
   }
+  play_footstep_if_stride_landed(commander, previous_bob_phase);
   const float bob_run_factor = m_move_running ? k_bob_run_mult : 1.0F;
   const float bob_v = std::sin(m_bob_phase) * k_bob_vert_amp * bob_run_factor *
                       m_bob_amplitude * sway_scale;

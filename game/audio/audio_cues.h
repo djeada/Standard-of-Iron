@@ -93,6 +93,13 @@ inline constexpr const char* k_combat_second_wind = "combat.second_wind";
 inline constexpr const char* k_combat_ability_refused = "combat.ability_refused";
 inline constexpr const char* k_combat_lock_on = "combat.lock_on";
 
+inline constexpr const char* k_move_footstep = "move.footstep";
+inline constexpr const char* k_move_footstep_hard = "move.footstep_hard";
+inline constexpr const char* k_move_footstep_run = "move.footstep_run";
+
+inline constexpr const char* k_wildlife_wolf_hunt = "wildlife.wolf_hunt";
+inline constexpr const char* k_wildlife_wolf_bite = "wildlife.wolf_bite";
+
 inline constexpr const char* k_state_victory = "state.victory";
 inline constexpr const char* k_state_defeat = "state.defeat";
 inline constexpr const char* k_state_pause = "state.pause";
@@ -103,7 +110,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 81> k_all = {
+inline constexpr std::array<const char*, 86> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -176,6 +183,11 @@ inline constexpr std::array<const char*, 81> k_all = {
     k_combat_second_wind,
     k_combat_ability_refused,
     k_combat_lock_on,
+    k_move_footstep,
+    k_move_footstep_hard,
+    k_move_footstep_run,
+    k_wildlife_wolf_hunt,
+    k_wildlife_wolf_bite,
     k_state_victory,
     k_state_defeat,
     k_state_pause,
