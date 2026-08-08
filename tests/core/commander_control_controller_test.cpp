@@ -5,6 +5,7 @@
 
 #include "app/core/commander_control_controller.h"
 #include "app/core/commander_mode_coordinator.h"
+#include "game/audio/audio_cues.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
@@ -110,6 +111,31 @@ TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
   ASSERT_NE(commander_data, nullptr);
   EXPECT_TRUE(commander_data->jump_active);
+}
+
+TEST_F(CommanderControlControllerTest, WalkingAsksForAFootstepOnEveryStride) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+
+  auto& registry = Game::Audio::CueRegistry::instance();
+  registry.clear();
+
+  CommanderControlController controller;
+  controller.input().forward = true;
+
+  Render::GL::Camera camera;
+  for (int frame = 0; frame < 90; ++frame) {
+    controller.input().forward = true;
+    controller.update(world, commander->get_id(), 1, camera, 1.0F / 30.0F);
+  }
+
+  const std::vector<std::string> asked = registry.silent_cues();
+  EXPECT_NE(std::find(asked.begin(), asked.end(), Game::Audio::Cue::k_move_footstep),
+            asked.end())
+      << "three seconds of walking never asked for a footstep";
+
+  registry.clear();
 }
 
 TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection) {

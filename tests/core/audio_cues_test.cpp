@@ -103,6 +103,7 @@ protected:
     audio.set_sound_volume(1.0F);
 
     AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Startup);
+    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
     AudioResourceLoader::load_audio_cues();
   }
 
@@ -119,31 +120,56 @@ private:
   float m_saved_sound{1.0F};
 };
 
+namespace {
+
+auto plays_audibly(const char* cue_id) -> bool {
+  for (int attempt = 0; attempt < 60; ++attempt) {
+    if (!Game::Audio::play_cue(cue_id)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      continue;
+    }
+    for (int settle = 0; settle < 50; ++settle) {
+      if (AudioSystem::get_instance().get_active_channel_count() > 0) {
+        return true;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
+  return false;
+}
+
+} // namespace
+
 TEST_F(ShippedAudioTest, TheCommandersBowCuesReachTheMixer) {
   auto& audio = AudioSystem::get_instance();
   audio.set_master_volume(1.0F);
   audio.set_sound_volume(1.0F);
 
-  auto plays_audibly = [](const char* cue_id) {
-    for (int attempt = 0; attempt < 60; ++attempt) {
-      if (!Game::Audio::play_cue(cue_id)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        continue;
-      }
-      for (int settle = 0; settle < 50; ++settle) {
-        if (AudioSystem::get_instance().get_active_channel_count() > 0) {
-          return true;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      }
-    }
-    return false;
-  };
-
   for (const char* cue_id : {Game::Audio::Cue::k_combat_bow_draw,
                              Game::Audio::Cue::k_combat_bow_full_draw,
                              Game::Audio::Cue::k_combat_bow_strain,
                              Game::Audio::Cue::k_combat_bow_loose_heavy}) {
+    EXPECT_TRUE(plays_audibly(cue_id))
+        << cue_id << " never opened a channel: it is bound but not audible";
+  }
+}
+
+TEST_F(ShippedAudioTest, TheCuesFiredHardestReachTheMixer) {
+  auto& audio = AudioSystem::get_instance();
+  audio.set_master_volume(1.0F);
+  audio.set_sound_volume(1.0F);
+
+  for (const char* cue_id : {Game::Audio::Cue::k_combat_hit_sword,
+                             Game::Audio::Cue::k_combat_hit_spear,
+                             Game::Audio::Cue::k_combat_hit_arrow,
+                             Game::Audio::Cue::k_combat_hit_siege,
+                             Game::Audio::Cue::k_combat_hit_generic,
+                             Game::Audio::Cue::k_combat_death,
+                             Game::Audio::Cue::k_move_footstep,
+                             Game::Audio::Cue::k_move_footstep_hard,
+                             Game::Audio::Cue::k_move_footstep_run,
+                             Game::Audio::Cue::k_wildlife_wolf_hunt,
+                             Game::Audio::Cue::k_wildlife_wolf_bite}) {
     EXPECT_TRUE(plays_audibly(cue_id))
         << cue_id << " never opened a channel: it is bound but not audible";
   }

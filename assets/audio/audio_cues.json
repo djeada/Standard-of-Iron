@@ -519,8 +519,10 @@
       "priority": 3,
       "cooldown_ms": 90,
       "resources": [
-        "sfx.combat.gladius_shield_impacts_close",
-        "sfx.combat.roman_shield_wall_impact"
+        "sfx.combat.sword_hit_01",
+        "sfx.combat.sword_hit_02",
+        "sfx.combat.sword_hit_03",
+        "sfx.combat.sword_hit_04"
       ]
     },
     {
@@ -531,8 +533,12 @@
       "priority": 3,
       "cooldown_ms": 100,
       "resources": [
-        "sfx.combat.javelin_throw_whoosh",
-        "sfx.combat.spearmen_formation_advance"
+        "sfx.combat.spear_impact_01",
+        "sfx.combat.spear_impact_02",
+        "sfx.combat.blade_clash_01",
+        "sfx.combat.blade_clash_02",
+        "sfx.combat.blade_clash_03",
+        "sfx.combat.blade_clash_04"
       ]
     },
     {
@@ -543,10 +549,9 @@
       "priority": 3,
       "cooldown_ms": 120,
       "resources": [
-        "sfx.combat.arrows_impact_shields_dirt",
-        "sfx.combat.archer_volley_many",
-        "sfx.combat.archers_shooting_close",
-        "sfx.combat.arrows_whistle_snap_impact"
+        "sfx.combat.arrow_impact_01",
+        "sfx.combat.arrow_impact_02",
+        "sfx.combat.arrow_impact_03"
       ]
     },
     {
@@ -582,9 +587,10 @@
       "priority": 3,
       "cooldown_ms": 250,
       "resources": [
-        "sfx.combat.battlefield_crowd_chaos"
-      ],
-      "wanted": "A dedicated stone-on-wood siege impact would replace this crowd bed."
+        "sfx.combat.stone_impact_01",
+        "sfx.combat.stone_impact_02",
+        "sfx.combat.stone_impact_03"
+      ]
     },
     {
       "id": "combat.hit.generic",
@@ -594,8 +600,9 @@
       "priority": 3,
       "cooldown_ms": 140,
       "resources": [
-        "sfx.combat.battlefield_distant_mass_02",
-        "sfx.combat.battlefield_distant_mass_01"
+        "sfx.combat.armour_hit_01",
+        "sfx.combat.armour_hit_02",
+        "sfx.combat.armour_hit_03"
       ]
     },
     {
@@ -606,8 +613,7 @@
       "priority": 6,
       "cooldown_ms": 160,
       "resources": [
-        "sfx.combat.troops_death_scream",
-        "sfx.combat.aftermath_battlefield"
+        "sfx.combat.human_death_cry"
       ]
     },
     {
@@ -685,7 +691,9 @@
       "priority": 2,
       "cooldown_ms": 900,
       "resources": [
-        "sfx.combat.arrows_fast_flybys_lr"
+        "sfx.combat.arrows_fast_flybys_lr",
+        "sfx.combat.arrows_many_overhead",
+        "sfx.combat.arrows_overhead_ambience"
       ]
     },
     {
@@ -696,9 +704,11 @@
       "priority": 4,
       "cooldown_ms": 2500,
       "resources": [
-        "sfx.combat.arrows_many_overhead",
-        "sfx.combat.arrows_overhead_ambience",
-        "sfx.combat.arrows_overhead_dark"
+        "sfx.combat.arrows_overhead_dark",
+        "sfx.combat.archer_volley_many",
+        "sfx.combat.archers_shooting_close",
+        "sfx.combat.arrows_impact_shields_dirt",
+        "sfx.combat.arrows_whistle_snap_impact"
       ]
     },
     {
@@ -733,7 +743,10 @@
       "priority": 6,
       "cooldown_ms": 4000,
       "resources": [
-        "sfx.combat.charge"
+        "sfx.combat.charge",
+        "sfx.combat.spearmen_formation_advance",
+        "sfx.combat.roman_shield_wall_impact",
+        "sfx.combat.gladius_shield_impacts_close"
       ],
       "wanted": "A dedicated charge roar layered with running feet, faction-neutral."
     },
@@ -904,6 +917,74 @@
         "sfx.combat.lock_on_v2"
       ],
       "wanted": "Tight focus tick: a single dry wood-block hit with a hint of pitch rise."
+    },
+    {
+      "id": "move.footstep",
+      "description": "The controlled commander plants a foot on open ground.",
+      "category": "sfx",
+      "volume": 0.42,
+      "priority": 2,
+      "cooldown_ms": 90,
+      "resources": [
+        "sfx.movement.footstep_grass_01",
+        "sfx.movement.footstep_grass_02",
+        "sfx.movement.footstep_grass_03",
+        "sfx.movement.footstep_grass_04"
+      ]
+    },
+    {
+      "id": "move.footstep_hard",
+      "description": "The same step on a bridge or other hard surface.",
+      "category": "sfx",
+      "volume": 0.42,
+      "priority": 2,
+      "cooldown_ms": 90,
+      "resources": [
+        "sfx.movement.footstep_stone_01",
+        "sfx.movement.footstep_stone_02",
+        "sfx.movement.footstep_stone_03",
+        "sfx.movement.footstep_stone_04"
+      ]
+    },
+    {
+      "id": "move.footstep_run",
+      "description": "The controlled commander plants a foot at a run.",
+      "category": "sfx",
+      "volume": 0.5,
+      "priority": 2,
+      "cooldown_ms": 70,
+      "resources": [
+        "sfx.movement.footstep_run_01",
+        "sfx.movement.footstep_run_02",
+        "sfx.movement.footstep_run_03",
+        "sfx.movement.footstep_run_04"
+      ]
+    },
+    {
+      "id": "wildlife.wolf_hunt",
+      "description": "A wolf pack picks up a scent and moves onto prey.",
+      "category": "sfx",
+      "volume": 0.55,
+      "priority": 3,
+      "cooldown_ms": 3500,
+      "resources": [
+        "sfx.wildlife.wolf_howl_distant",
+        "sfx.wildlife.wolf_howl_near",
+        "sfx.wildlife.wolf_growl_low",
+        "sfx.wildlife.wolf_snarl_bark"
+      ]
+    },
+    {
+      "id": "wildlife.wolf_bite",
+      "description": "A wolf closes and bites.",
+      "category": "sfx",
+      "volume": 0.6,
+      "priority": 3,
+      "cooldown_ms": 700,
+      "resources": [
+        "sfx.wildlife.wolf_bite_snap",
+        "sfx.wildlife.wolf_pack_attack"
+      ]
     },
     {
       "id": "state.victory",

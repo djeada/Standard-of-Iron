@@ -1,11 +1,16 @@
 # Audio mastering
 
-Every sample the game plays is generated: the music and ambience beds come out
-of a model, the voices out of a text-to-speech model, and the interface and
-combat cues out of `tools/audio_synth`. Generated masters arrive with problems
-that recorded material does not have, and the game used to make them worse
-rather than better. This document explains what was wrong, what the fix does,
-and where the remaining costs are.
+Almost every sample the game plays is generated: the music comes out of a model,
+the voices out of a text-to-speech model, and the interface and combat cues out
+of `tools/audio_synth`. Generated masters arrive with problems that recorded
+material does not have, and the game used to make them worse rather than better.
+This document explains what was wrong, what the fix does, and where the
+remaining costs are.
+
+The exceptions are the seven nature ambience beds, which are cut from
+public-domain field recordings by `tools/audio_field` — see
+[that directory's README](../tools/audio_field/README.md) for why, and for the
+levelling they need that a generated bed does not.
 
 ## What was wrong
 
@@ -326,15 +331,22 @@ their own 100-800 Hz body — `alpine_mountain_pass` by +2.0 dB. Several decoded
 above full scale (`mediterranean_plains` clipped 1132 samples) and every one of
 them had a step discontinuity at its loop point.
 
-`tools/audio_synth/ambience.py` replaces all eighteen with generated beds, for
+`tools/audio_synth/ambience.py` replaced all eighteen with generated beds, for
 the reasons the cue sounds are generated: nothing sampled or licensed, a bed is
 retuned by editing a recipe, and they can be produced at the rate the mixer runs
 at. `make audio-ambience` renders them.
 
-Each bed is layers of noise, a filter and a slow contour — wind, rain, water,
+Each bed is layers of noise, a filter and a slow contour — wind, water,
 foliage, murmur, work sounds, a distant tread, fire — mixed per recipe, shaped
 by a house curve that removes the rumble below 45 Hz and the hiss above 3.2 kHz,
 then folded tail-into-head so the file loops without a seam.
+
+That generalised further than it should have. Camps, roads and markets survive
+being generated because a crowd really is a filtered murmur, but the outdoor
+beds did not: filtered noise makes a hillside that reads as hiss with events in
+it. The seven nature beds are now cut from public-domain field recordings by
+`tools/audio_field` instead, holding the same two invariants and the same
+loudness target. The remaining twelve are still generated here.
 
 |                          | before                         | after                             |
 | ------------------------ | ------------------------------ | --------------------------------- |
