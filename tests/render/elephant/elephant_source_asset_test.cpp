@@ -226,8 +226,8 @@ TEST(ElephantSourceAssetTest, SynthesisedGaitKeepsTheLegsUnderTheBody) {
       ASSERT_TRUE(Render::Elephant::elephant_source_sample_clip(clip, phase, pose))
           << clip;
 
-      for (auto const pair : {std::pair{k_foot_front_left, k_foot_front_right},
-                              std::pair{k_foot_rear_left, k_foot_rear_right}}) {
+      for (auto const& pair : {std::pair{k_foot_front_left, k_foot_front_right},
+                               std::pair{k_foot_rear_left, k_foot_rear_right}}) {
         float const spread = std::abs(pose[pair.first].column(3).toVector3D().z() -
                                       pose[pair.second].column(3).toVector3D().z());
         widest_pair = std::max(widest_pair, spread);

@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <numbers>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -2256,8 +2257,8 @@ void main() {
     if (hovered) {
       const qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
       const float pulse_cycle = 1400.0F;
-      pulse = 0.5F + 0.5F * std::sin(static_cast<float>(elapsed) * 2.0F * float(M_PI) /
-                                     pulse_cycle);
+      pulse = 0.5F + 0.5F * std::sin(static_cast<float>(elapsed) * 2.0F *
+                                     std::numbers::pi_v<float> / pulse_cycle);
       wash(0.72F, 0.44F + 0.08F * pulse);
     } else {
       wash(0.38F, 0.30F);
@@ -2295,7 +2296,7 @@ void main() {
 
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     for (int i = 0; i < k_outline_steps; ++i) {
-      const float angle = 2.0F * float(M_PI) * static_cast<float>(i) /
+      const float angle = 2.0F * std::numbers::pi_v<float> * static_cast<float>(i) /
                           static_cast<float>(k_outline_steps);
       const QVector2D offset(2.0F * radius_px * std::cos(angle) / width_px,
                              2.0F * radius_px * std::sin(angle) / height_px);

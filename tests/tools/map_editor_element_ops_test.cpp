@@ -72,7 +72,8 @@ TEST(MapEditorElementOpsTest, LinearElementAnchorIsItsCentre) {
 TEST(MapEditorElementOpsTest, SnapToGridRoundsEveryCoordinate) {
   const ElementSnapshot snap =
       ElementSnapshot{make_linear(QVector2D(1.4F, 2.6F), QVector2D(8.5F, 3.2F))};
-  const auto& snapped = std::get<MapEditor::LinearElement>(Ops::snapped_to_grid(snap));
+  const ElementSnapshot snapped_snapshot = Ops::snapped_to_grid(snap);
+  const auto& snapped = std::get<MapEditor::LinearElement>(snapped_snapshot);
 
   EXPECT_FLOAT_EQ(snapped.start.x(), 1.0F);
   EXPECT_FLOAT_EQ(snapped.start.y(), 3.0F);
