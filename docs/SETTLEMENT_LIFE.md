@@ -181,7 +181,7 @@ task target, no queued wall sites, **not carrying a load**, no attack target, an
 walking anywhere. It finds the nearest unreserved node of the right kind within
 `k_search_radius` (22) **of the anchor**, reserves it, and assigns the same job the
 player would have. Searching from the anchor rather than from the worker is deliberate:
-the worker returns to the grove it was working, instead of taking whatever happens to
+the worker returns to the stand of trees it was working, instead of taking whatever happens to
 grow next to the barracks.
 
 The worker is sent to a point `k_work_standoff` (1.8) short of the node, on the side it

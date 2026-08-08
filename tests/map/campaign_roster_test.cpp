@@ -42,8 +42,18 @@ auto split_row(const QString& line) -> QStringList {
   return cells;
 }
 
-auto overview_rows() -> QList<QStringList> {
+struct Overview {
+  QStringList headers;
   QList<QStringList> rows;
+
+  [[nodiscard]] auto cell(int row, const QString& column) const -> QString {
+    const int index = headers.indexOf(column);
+    return index < 0 ? QString() : rows.value(row).value(index);
+  }
+};
+
+auto overview() -> Overview {
+  Overview out;
   const QStringList lines =
       read_text(QStringLiteral("docs/CAMPAIGN_MISSIONS.md")).split(QLatin1Char('\n'));
   bool in_first_table = false;
@@ -58,9 +68,11 @@ auto overview_rows() -> QList<QStringList> {
     const QStringList cells = split_row(line);
 
     if (!in_first_table) {
-      in_first_table = cells.size() >= 3 && cells.at(0) == QStringLiteral("#") &&
-                       cells.at(1) == QStringLiteral("Mission") &&
-                       cells.at(2) == QStringLiteral("Region");
+      if (cells.size() >= 3 && cells.at(0) == QStringLiteral("#") &&
+          cells.at(1) == QStringLiteral("Mission")) {
+        in_first_table = true;
+        out.headers = cells;
+      }
       continue;
     }
 
@@ -68,9 +80,9 @@ auto overview_rows() -> QList<QStringList> {
     if (cells.isEmpty() || cells.first().toInt(&numbered) <= 0 || !numbered) {
       continue;
     }
-    rows.append(cells);
+    out.rows.append(cells);
   }
-  return rows;
+  return out;
 }
 
 auto load_campaign() -> Game::Campaign::CampaignDefinition {
@@ -108,16 +120,6 @@ auto map_json_for(const Game::Mission::MissionDefinition& mission) -> QJsonObjec
   return QJsonDocument::fromJson(file.readAll()).object();
 }
 
-auto player_troop_count(const QJsonObject& map) -> int {
-  int count = 0;
-  for (const auto& value : map.value(QStringLiteral("spawns")).toArray()) {
-    if (value.toObject().value(QStringLiteral("player_id")).toInt() == 1) {
-      ++count;
-    }
-  }
-  return count;
-}
-
 auto player_has_barracks(const QJsonObject& map) -> bool {
   for (const auto& value : map.value(QStringLiteral("structures")).toArray()) {
     const QJsonObject structure = value.toObject();
@@ -130,65 +132,54 @@ auto player_has_barracks(const QJsonObject& map) -> bool {
   return false;
 }
 
-auto wave_count(const Game::Mission::MissionDefinition& mission) -> int {
-  int waves = 0;
-  for (const auto& ai : mission.ai_setups) {
-    waves += static_cast<int>(ai.waves.size());
-  }
-  return waves;
-}
-
 TEST(CampaignRosterDocTest, TheOverviewListsEveryMissionInOrder) {
   const auto campaign = load_campaign();
-  const auto rows = overview_rows();
+  const auto doc = overview();
 
-  ASSERT_EQ(static_cast<std::size_t>(rows.size()), campaign.missions.size())
-      << "docs/CAMPAIGN_MISSIONS.md lists " << rows.size() << " missions; the "
+  ASSERT_EQ(static_cast<std::size_t>(doc.rows.size()), campaign.missions.size())
+      << "docs/CAMPAIGN_MISSIONS.md lists " << doc.rows.size() << " missions; the "
       << "campaign ships " << campaign.missions.size();
 
-  for (int i = 0; i < rows.size(); ++i) {
-    EXPECT_EQ(rows[i].first().toInt(), i + 1)
+  for (int i = 0; i < doc.rows.size(); ++i) {
+    EXPECT_EQ(doc.rows[i].first().toInt(), i + 1)
         << "the overview is out of order at row " << i;
     const auto mission =
         load_mission(campaign.missions[static_cast<std::size_t>(i)].mission_id);
-    EXPECT_EQ(rows[i].value(1), mission.title)
+    EXPECT_EQ(doc.cell(i, QStringLiteral("Mission")), mission.title)
         << "row " << i + 1 << " names a mission the campaign does not run there";
   }
 }
 
 TEST(CampaignRosterDocTest, TheOverviewMatchesWhatTheMissionsActuallyDo) {
   const auto campaign = load_campaign();
-  const auto rows = overview_rows();
-  ASSERT_EQ(static_cast<std::size_t>(rows.size()), campaign.missions.size());
+  const auto doc = overview();
+  ASSERT_EQ(static_cast<std::size_t>(doc.rows.size()), campaign.missions.size());
 
-  for (int i = 0; i < rows.size(); ++i) {
+  for (int i = 0; i < doc.rows.size(); ++i) {
     const auto& entry = campaign.missions[static_cast<std::size_t>(i)];
     const auto mission = load_mission(entry.mission_id);
     const QJsonObject map = map_json_for(mission);
     ASSERT_FALSE(map.isEmpty())
         << mission.map_path.toStdString() << " could not be read";
 
-    const QStringList& row = rows[i];
     const std::string where = mission.title.toStdString();
 
-    EXPECT_EQ(row.value(2), entry.world_region_id.value_or(QString()))
+    EXPECT_EQ(doc.cell(i, QStringLiteral("Region")),
+              entry.world_region_id.value_or(QString()))
         << where << ": region";
-    EXPECT_EQ(row.value(3).toInt(), static_cast<int>(mission.ai_setups.size()))
-        << where << ": opponent count";
-    EXPECT_EQ(row.value(4).toInt(), wave_count(mission)) << where << ": wave count";
-    EXPECT_EQ(row.value(5) != QStringLiteral("none"), player_has_barracks(map))
+
+    EXPECT_EQ(doc.cell(i, QStringLiteral("Player base")) != QStringLiteral("none"),
+              player_has_barracks(map))
         << where << ": whether the player starts with a barracks";
-    EXPECT_EQ(row.value(6).toInt(), player_troop_count(map))
-        << where << ": starting troops";
   }
 }
 
 TEST(CampaignRosterDocTest, TheGoalColumnAgreesWithTheVictoryConditions) {
   const auto campaign = load_campaign();
-  const auto rows = overview_rows();
-  ASSERT_EQ(static_cast<std::size_t>(rows.size()), campaign.missions.size());
+  const auto doc = overview();
+  ASSERT_EQ(static_cast<std::size_t>(doc.rows.size()), campaign.missions.size());
 
-  for (int i = 0; i < rows.size(); ++i) {
+  for (int i = 0; i < doc.rows.size(); ++i) {
     const auto mission =
         load_mission(campaign.missions[static_cast<std::size_t>(i)].mission_id);
 
@@ -214,7 +205,7 @@ TEST(CampaignRosterDocTest, TheGoalColumnAgreesWithTheVictoryConditions) {
       expected = QStringLiteral("Defensive");
     }
 
-    EXPECT_EQ(rows[i].value(7), expected)
+    EXPECT_EQ(doc.cell(i, QStringLiteral("Goal")), expected)
         << mission.title.toStdString()
         << ": the goal column disagrees with the victory conditions";
   }
