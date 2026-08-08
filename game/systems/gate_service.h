@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../core/component.h"
+#include "pathfinding.h"
 
 namespace Engine::Core {
 class Entity;
@@ -40,6 +41,9 @@ public:
   [[nodiscard]] static auto structure_extent(float rotation_y) -> GateExtent;
 
   [[nodiscard]] static auto passage_extent(float rotation_y) -> GateExtent;
+
+  [[nodiscard]] static auto
+  passage_blocker_bounds(float center_x, float center_z, float rotation_y) -> WorldRect;
 
   static void mark_gate_footprint_navigable(Engine::Core::EntityID entity_id);
 

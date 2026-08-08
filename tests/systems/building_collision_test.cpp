@@ -1,16 +1,21 @@
 #include <gtest/gtest.h>
 
 #include "systems/building_collision_registry.h"
+#include "systems/command_service.h"
+#include "systems/pathfinding.h"
 
 using namespace Game::Systems;
 
 namespace {
-constexpr float k_default_grid_cell_size = 1.0F;
+constexpr int k_grid_size = 32;
 }
 
 class BuildingCollisionRegistryTest : public ::testing::Test {
 protected:
-  void SetUp() override { BuildingCollisionRegistry::instance().clear(); }
+  void SetUp() override {
+    BuildingCollisionRegistry::instance().clear();
+    CommandService::initialize(k_grid_size, k_grid_size);
+  }
 
   void TearDown() override { BuildingCollisionRegistry::instance().clear(); }
 };
@@ -118,21 +123,14 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
   const auto& buildings = registry.get_all_buildings();
   ASSERT_EQ(buildings.size(), 1);
 
-  auto cells = BuildingCollisionRegistry::get_occupied_grid_cells(
-      buildings[0], k_default_grid_cell_size);
+  auto* pathfinder = CommandService::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
 
-  bool has_min_x = false;
-  bool has_max_x = false;
-  for (const auto& cell : cells) {
-    if (cell.first <= -2) {
-      has_min_x = true;
-    }
-    if (cell.first >= 2) {
-      has_max_x = true;
-    }
-  }
-  EXPECT_TRUE(has_min_x);
-  EXPECT_TRUE(has_max_x);
+  const auto west = CommandService::world_to_grid(-2.5F, 0.0F);
+  const auto east = CommandService::world_to_grid(2.5F, 0.0F);
+  EXPECT_FALSE(pathfinder->is_walkable(west.x, west.y));
+  EXPECT_FALSE(pathfinder->is_walkable(east.x, east.y));
 }
 
 TEST_F(BuildingCollisionRegistryTest, UnitWithLargeRadiusCloseToBuilding) {

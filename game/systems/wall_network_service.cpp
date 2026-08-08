@@ -756,12 +756,12 @@ auto collect_navigation_passages(
     }
     const bool spans_x = GateComponent::spans_x_axis(transform->rotation.y);
     const float opening = GateComponent::k_passage_half_width * 2.0F;
-    const auto center =
-        CommandService::grid_to_world(Point{wall->grid_x, wall->grid_z});
-    passages.push_back(NavigationPassage{.center_x = center.x(),
-                                         .center_z = center.z(),
+
+    passages.push_back(NavigationPassage{.center_x = transform->position.x,
+                                         .center_z = transform->position.z,
                                          .width = spans_x ? opening : crossing_depth,
-                                         .depth = spans_x ? crossing_depth : opening});
+                                         .depth = spans_x ? crossing_depth : opening,
+                                         .source_entity_id = entity->get_id()});
   }
 
   constexpr int k_spacing = WallNetworkService::k_segment_spacing;

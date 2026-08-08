@@ -323,6 +323,19 @@ footprint_penetration(const BuildingFootprint& footprint, float x, float z) -> f
                   half_depth - std::abs(z - footprint.center_z));
 }
 
+[[nodiscard]] auto footprint_overlaps_rect(const BuildingFootprint& footprint,
+                                           float min_x,
+                                           float max_x,
+                                           float min_z,
+                                           float max_z) -> bool {
+  float const half_width = footprint.width / 2.0F;
+  float const half_depth = footprint.depth / 2.0F;
+  return footprint.center_x - half_width < max_x &&
+         footprint.center_x + half_width > min_x &&
+         footprint.center_z - half_depth < max_z &&
+         footprint.center_z + half_depth > min_z;
+}
+
 [[nodiscard]] auto slab_overlap(float start,
                                 float delta,
                                 float min_bound,
@@ -386,6 +399,33 @@ auto BuildingCollisionRegistry::is_point_in_blocking_building(float x,
                      m_authored_obstacles.end(),
                      [x, z](const BuildingFootprint& obstacle) {
                        return point_inside_footprint(obstacle, x, z);
+                     });
+}
+
+auto BuildingCollisionRegistry::is_rect_overlapping_blocking_building(
+    float min_x,
+    float max_x,
+    float min_z,
+    float max_z,
+    Engine::Core::EntityID ignore_entity_id) const -> bool {
+  bool overlapping = false;
+  for_each_building_in_region(
+      min_x, max_x, min_z, max_z, [&](const BuildingFootprint& footprint) {
+        if (overlapping || !footprint.blocks_navigation ||
+            (ignore_entity_id != 0 && footprint.entity_id == ignore_entity_id)) {
+          return;
+        }
+        overlapping = footprint_overlaps_rect(footprint, min_x, max_x, min_z, max_z);
+      });
+  if (overlapping) {
+    return true;
+  }
+
+  return std::any_of(m_authored_obstacles.begin(),
+                     m_authored_obstacles.end(),
+                     [&](const BuildingFootprint& obstacle) {
+                       return footprint_overlaps_rect(
+                           obstacle, min_x, max_x, min_z, max_z);
                      });
 }
 
@@ -491,47 +531,6 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
   return false;
 }
 
-auto BuildingCollisionRegistry::get_rect_grid_cells(float center_x,
-                                                    float center_z,
-                                                    float width,
-                                                    float depth,
-                                                    float padding,
-                                                    float grid_cell_size)
-    -> std::vector<std::pair<int, int>> {
-  std::vector<std::pair<int, int>> cells;
-
-  float const half_width = width / 2.0F;
-  float const half_depth = depth / 2.0F;
-
-  int const min_grid_x =
-      static_cast<int>(std::floor((center_x - half_width - padding) / grid_cell_size));
-  int const max_grid_x =
-      static_cast<int>(std::ceil((center_x + half_width + padding) / grid_cell_size));
-  int const min_grid_z =
-      static_cast<int>(std::floor((center_z - half_depth - padding) / grid_cell_size));
-  int const max_grid_z =
-      static_cast<int>(std::ceil((center_z + half_depth + padding) / grid_cell_size));
-
-  for (int gx = min_grid_x; gx < max_grid_x; ++gx) {
-    for (int gz = min_grid_z; gz < max_grid_z; ++gz) {
-      cells.emplace_back(gx, gz);
-    }
-  }
-
-  return cells;
-}
-
-auto BuildingCollisionRegistry::get_occupied_grid_cells(
-    const BuildingFootprint& footprint,
-    float grid_cell_size) -> std::vector<std::pair<int, int>> {
-  return get_rect_grid_cells(footprint.center_x,
-                             footprint.center_z,
-                             footprint.width,
-                             footprint.depth,
-                             footprint.grid_padding,
-                             grid_cell_size);
-}
-
 void BuildingCollisionRegistry::set_navigation_passages(
     std::vector<NavigationPassage> passages) {
   auto same_rect = [](const NavigationPassage& lhs, const NavigationPassage& rhs) {
@@ -539,7 +538,8 @@ void BuildingCollisionRegistry::set_navigation_passages(
     return std::fabs(lhs.center_x - rhs.center_x) < k_epsilon &&
            std::fabs(lhs.center_z - rhs.center_z) < k_epsilon &&
            std::fabs(lhs.width - rhs.width) < k_epsilon &&
-           std::fabs(lhs.depth - rhs.depth) < k_epsilon;
+           std::fabs(lhs.depth - rhs.depth) < k_epsilon &&
+           lhs.source_entity_id == rhs.source_entity_id;
   };
 
   if (m_navigation_passages.size() == passages.size() &&
