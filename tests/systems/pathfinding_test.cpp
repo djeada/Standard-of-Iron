@@ -588,4 +588,74 @@ TEST_F(PathfindingTest, FindPathReturnsClosestReachableRouteWhenGoalIsSealedOff)
   EXPECT_TRUE(pathfinding.is_walkable(path.back().x, path.back().y));
 }
 
+TEST_F(PathfindingTest, GroveGroundIsForestThatOnlyLightUnitsMayEnter) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 32;
+  map_def.grid.height = 32;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.procedural_trees_enabled = false;
+  map_def.groves.push_back({.id = "wood", .x = 16.0F, .z = 16.0F, .radius = 4.0F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(32, 32);
+  pathfinding.update_navigation_grid();
+
+  using Passability = Game::Systems::Pathfinding::Passability;
+
+  EXPECT_EQ(pathfinding.cell_value(16, 16),
+            Game::Systems::Pathfinding::CellValue::Forest);
+  EXPECT_TRUE(pathfinding.is_forest(16, 16));
+  EXPECT_TRUE(pathfinding.is_walkable(16, 16, Passability::Light));
+  EXPECT_FALSE(pathfinding.is_walkable(16, 16, Passability::Heavy));
+
+  EXPECT_FALSE(pathfinding.is_forest(2, 2)) << "ground outside the radius stays open";
+  EXPECT_TRUE(pathfinding.is_walkable(2, 2, Passability::Heavy));
+}
+
+TEST_F(PathfindingTest, HeavyUnitsRouteAroundAWoodThatLightUnitsWalkThrough) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 41;
+  map_def.grid.height = 41;
+  map_def.grid.tile_size = 1.0F;
+  map_def.biome.procedural_trees_enabled = false;
+  map_def.groves.push_back({.id = "screen", .x = 20.0F, .z = 20.0F, .radius = 6.0F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(41, 41);
+  pathfinding.update_navigation_grid();
+
+  using Passability = Game::Systems::Pathfinding::Passability;
+  const Game::Systems::Point start{20, 8};
+  const Game::Systems::Point goal{20, 32};
+
+  auto const light_path = pathfinding.find_path(start, goal, Passability::Light);
+  auto const heavy_path = pathfinding.find_path(start, goal, Passability::Heavy);
+
+  ASSERT_FALSE(light_path.empty());
+  ASSERT_FALSE(heavy_path.empty());
+  EXPECT_EQ(light_path.back(), goal);
+  EXPECT_EQ(heavy_path.back(), goal) << "the wood must be skirted, not a dead end";
+
+  auto crosses_forest = [&pathfinding](const std::vector<Game::Systems::Point>& path) {
+    return std::any_of(
+        path.begin(), path.end(), [&pathfinding](const Game::Systems::Point& cell) {
+          return pathfinding.is_forest(cell.x, cell.y);
+        });
+  };
+
+  EXPECT_TRUE(crosses_forest(light_path)) << "the straight line runs through the wood";
+  EXPECT_FALSE(crosses_forest(heavy_path));
+
+  auto widest_deviation = [](const std::vector<Game::Systems::Point>& path) {
+    int widest = 0;
+    for (const auto& cell : path) {
+      widest = std::max(widest, std::abs(cell.x - 20));
+    }
+    return widest;
+  };
+  EXPECT_GT(widest_deviation(heavy_path), widest_deviation(light_path));
+}
+
 } // namespace

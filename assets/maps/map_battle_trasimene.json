@@ -2401,6 +2401,22 @@
       "player_id": 2,
       "behavior": "guard",
       "landmark": "trasimene_basin_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 498.0,
+      "z": 482.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_ridge_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 502.0,
+      "z": 482.0,
+      "player_id": 3,
+      "behavior": "guard",
+      "landmark": "trasimene_ridge_sanctuary"
     }
   ],
   "world_props": [
@@ -3893,7 +3909,11 @@
             "grave_priest": 1
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "gold": 160,
+        "iron": 60
+      }
     }
   ],
   "structures": [
@@ -5464,5 +5484,60 @@
       "z": 140,
       "radius": 26
     }
-  ]
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 90.0,
+      "spawn_areas": [
+        {
+          "x": 420,
+          "z": 140,
+          "radius": 24
+        }
+      ]
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 2,
+      "group_size_max": 4,
+      "roam_radius": 22.0,
+      "aggression": 0.6,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 230,
+          "z": 520,
+          "radius": 28
+        }
+      ],
+      "waves": [
+        {
+          "timing": 180.0,
+          "pack_size": 4,
+          "x": 230,
+          "z": 520,
+          "radius": 26,
+          "label": "The ambush wood has wolves in it already."
+        }
+      ]
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 9,
+      "flight_height": 14.0,
+      "flyover_interval_min": 45.0,
+      "flyover_interval_max": 120.0
+    }
+  }
 }

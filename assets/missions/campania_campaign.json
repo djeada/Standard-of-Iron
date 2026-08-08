@@ -3,7 +3,7 @@
   "title": "The Campanian Vigil",
   "summary": "Defend Hannibal's fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.",
   "map_path": ":/assets/maps/map_campania_campaign.json",
-  "teaching_goal": "Build a durable economy, keep the camp gates supplied, rotate reserves between roads, and survive three clearly timed assault phases.",
+  "teaching_goal": "Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.",
   "narrative_intent": "After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.",
   "historical_context": "215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.",
   "terrain_type": "campanian_plain",
@@ -470,6 +470,10 @@
       "type": "survive_waves",
       "wave_count": 3,
       "description": "Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
@@ -584,5 +588,6 @@
       ]
     }
   ],
-  "include_ambient_undead": false
+  "include_ambient_undead": false,
+  "victory_mode": "all"
 }

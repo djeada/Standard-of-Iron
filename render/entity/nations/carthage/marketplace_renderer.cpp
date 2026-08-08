@@ -121,6 +121,51 @@ void add_spice_basket(BuildingArchetypeDesc& desc,
                 BuildingLODMask::Full);
 }
 
+void add_stall_canopy(BuildingArchetypeDesc& desc,
+                      const CarthageMarketPalette& c,
+                      const QVector3D& center,
+                      float half_x,
+                      float half_z,
+                      float post_h,
+                      const QVector3D& cloth,
+                      const QVector3D& cloth_shade) {
+  constexpr float post_r = 0.016F;
+  float const top = center.y() + post_h;
+
+  for (float const sx : {-1.0F, 1.0F}) {
+    for (float const sz : {-1.0F, 1.0F}) {
+      desc.add_cylinder(
+          QVector3D(center.x() + sx * half_x, center.y(), center.z() + sz * half_z),
+          QVector3D(center.x() + sx * half_x, top, center.z() + sz * half_z),
+          post_r,
+          c.wood_dark,
+          k_building_state_mask_intact,
+          BuildingLODMask::Full);
+    }
+  }
+
+  desc.add_cylinder(QVector3D(center.x(), top + 0.055F, center.z() - half_z),
+                    QVector3D(center.x(), top + 0.055F, center.z() + half_z),
+                    0.010F,
+                    c.wood_medium,
+                    k_building_state_mask_intact,
+                    BuildingLODMask::Full);
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_rotated_box(
+        QVector3D(center.x() + side * half_x * 0.52F, top + 0.028F, center.z()),
+        QVector3D(half_x * 0.60F, 0.011F, half_z * 1.04F),
+        QVector3D(0.0F, 0.0F, side * 15.0F),
+        side < 0.0F ? cloth : cloth_shade,
+        BuildingStateMask::Normal | BuildingStateMask::Damaged);
+  }
+
+  desc.add_box(QVector3D(center.x() - half_x * 0.98F, top + 0.006F, center.z()),
+               QVector3D(0.012F, 0.026F, half_z * 1.02F),
+               c.cloth_gold,
+               BuildingStateMask::Normal | BuildingStateMask::Damaged,
+               BuildingLODMask::Full);
+}
+
 auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   CarthageMarketPalette const c;
   float height_multiplier = 1.0F;
@@ -152,7 +197,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
   }
 
-  float const wall_h = 0.72F * height_multiplier;
+  float const wall_h = 0.44F * height_multiplier;
   desc.add_box(QVector3D(0.92F, wall_h * 0.5F + 0.14F, 0.0F),
                QVector3D(0.14F, wall_h * 0.5F, 1.10F),
                c.sandstone);
@@ -182,22 +227,10 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
   }
 
-  if (state != BuildingState::Destroyed) {
-    float const merlon_y = wall_h + 0.18F;
-    auto add_merlon =
-        [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
-          desc.add_box(
-              center, size, color, k_building_state_mask_intact, BuildingLODMask::Full);
-        };
-    add_merlon_strip_z(add_merlon,
-                       0.92F,
-                       merlon_y,
-                       -0.90F,
-                       0.36F,
-                       6,
-                       QVector3D(0.10F, 0.10F, 0.12F),
-                       c.brick);
-  }
+  desc.add_box(QVector3D(0.92F, wall_h + 0.17F, 0.0F),
+               QVector3D(0.17F, 0.035F, 1.14F),
+               c.sandstone_dark,
+               k_building_state_mask_intact);
 
   float const side_wall_h = 0.44F * height_multiplier;
   desc.add_box(QVector3D(0.20F, side_wall_h * 0.5F + 0.14F, -1.08F),
@@ -242,38 +275,18 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   }
 
   float const post_h = 0.88F * height_multiplier;
-  desc.add_box(QVector3D(-0.82F, post_h * 0.5F, -0.72F),
-               QVector3D(0.05F, post_h * 0.5F, 0.05F),
-               c.wood_dark);
-  desc.add_box(QVector3D(-0.82F, post_h * 0.5F, 0.72F),
-               QVector3D(0.05F, post_h * 0.5F, 0.05F),
-               c.wood_dark);
-  desc.add_box(QVector3D(0.18F, post_h * 0.5F, -0.72F),
-               QVector3D(0.05F, post_h * 0.5F, 0.05F),
-               c.wood_dark);
-  desc.add_box(QVector3D(0.18F, post_h * 0.5F, 0.72F),
-               QVector3D(0.05F, post_h * 0.5F, 0.05F),
-               c.wood_dark);
-
   float const awning_y = post_h + 0.04F;
-  for (int panel = 0; panel < 8; ++panel) {
-    float const z = -0.715F + static_cast<float>(panel) * 0.205F;
-    float const sag = (panel == 3 || panel == 4) ? 0.025F : 0.0F;
-    desc.add_rotated_box(QVector3D(-0.32F, awning_y - sag, z),
-                         QVector3D(0.60F, 0.012F, 0.098F),
-                         QVector3D(0.0F, 0.0F, -5.5F),
-                         (panel % 2 == 0) ? c.cloth_oxblood : c.cloth_oxblood_faded,
-                         BuildingStateMask::Normal | BuildingStateMask::Damaged);
+  for (float const z : {-0.56F, 0.0F, 0.56F}) {
+    add_stall_canopy(desc,
+                     c,
+                     QVector3D(-0.32F, counter_h + 0.06F, z),
+                     0.27F,
+                     0.18F,
+                     0.30F * height_multiplier,
+                     c.cloth_oxblood,
+                     c.cloth_oxblood_faded);
   }
 
-  desc.add_box(QVector3D(-0.32F, awning_y - 0.03F, 0.80F),
-               QVector3D(0.58F, 0.02F, 0.04F),
-               c.cloth_gold,
-               BuildingStateMask::Normal | BuildingStateMask::Damaged);
-  desc.add_box(QVector3D(-0.32F, awning_y - 0.03F, -0.80F),
-               QVector3D(0.58F, 0.02F, 0.04F),
-               c.cloth_gold,
-               BuildingStateMask::Normal | BuildingStateMask::Damaged);
   for (float const z : {-0.80F, 0.80F}) {
     desc.add_cylinder(QVector3D(-0.88F, awning_y - 0.02F, z),
                       QVector3D(-0.82F, 0.16F, z),
@@ -346,15 +359,25 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                  BuildingLODMask::Full);
   }
 
-  float const rear_awning_y = (post_h * 0.85F) + 0.04F;
-  for (int panel = 0; panel < 6; ++panel) {
-    float const z = -0.575F + static_cast<float>(panel) * 0.23F;
-    desc.add_rotated_box(QVector3D(0.52F, rear_awning_y, z),
-                         QVector3D(0.30F, 0.010F, 0.108F),
-                         QVector3D(0.0F, 0.0F, 4.0F),
-                         (panel % 2 == 0) ? c.indigo : c.cloth_oxblood,
-                         BuildingStateMask::Normal,
-                         BuildingLODMask::Full);
+  for (float const z : {-0.62F, 0.0F, 0.62F}) {
+    desc.add_box(QVector3D(0.46F, 0.14F + 0.19F, z),
+                 QVector3D(0.24F, 0.035F, 0.26F),
+                 c.wood_medium);
+    for (float const sz : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(0.46F, 0.14F + 0.095F, z + sz * 0.22F),
+                   QVector3D(0.030F, 0.095F, 0.030F),
+                   c.wood_dark,
+                   k_building_state_mask_intact,
+                   BuildingLODMask::Full);
+    }
+    add_stall_canopy(desc,
+                     c,
+                     QVector3D(0.46F, 0.14F, z),
+                     0.24F,
+                     0.20F,
+                     0.56F * height_multiplier,
+                     c.indigo,
+                     c.cloth_oxblood);
   }
 
   add_spice_basket(desc, QVector3D(-0.53F, counter_h + 0.06F, -0.36F), c.saffron, c);

@@ -364,6 +364,30 @@ inline auto is_wall_network_spawn(SpawnType type) -> bool {
          type == SpawnType::HorseSpearman;
 }
 
+[[nodiscard]] inline auto can_enter_forest(SpawnType type) noexcept -> bool {
+  switch (type) {
+  case SpawnType::Archer:
+  case SpawnType::Knight:
+  case SpawnType::Healer:
+  case SpawnType::Builder:
+  case SpawnType::Civilian:
+  case SpawnType::SkeletonSwordsman:
+  case SpawnType::SkeletonArcher:
+  case SpawnType::GravePriest:
+  case SpawnType::RomanLegionOrganizer:
+  case SpawnType::RomanVeteranConsul:
+  case SpawnType::RomanFieldCommander:
+  case SpawnType::CarthageSpearCommander:
+  case SpawnType::CarthageBowCommander:
+  case SpawnType::CarthageSwordCommander:
+  case SpawnType::Sheep:
+  case SpawnType::Wolf:
+    return true;
+  default:
+    return false;
+  }
+}
+
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Builder &&
          !is_building_spawn(type) && !is_wildlife_spawn(type);

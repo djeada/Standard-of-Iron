@@ -50,6 +50,13 @@ public:
     Tree = 2,
     Boulder = 3,
     IronOre = 4,
+
+    Forest = 5,
+  };
+
+  enum class Passability : std::uint8_t {
+    Light = 0,
+    Heavy = 1,
   };
 
   class NavigationGrid {
@@ -81,16 +88,22 @@ public:
   auto grid_to_world(const Point& grid_pos) const -> QVector3D;
 
   void set_obstacle(int x, int y, bool is_obstacle);
-  auto is_walkable(int x, int y) const -> bool;
+  auto
+  is_walkable(int x, int y, Passability passability = Passability::Light) const -> bool;
   auto is_tree(int x, int y) const -> bool;
+  auto is_forest(int x, int y) const -> bool;
   auto is_boulder(int x, int y) const -> bool;
   auto is_iron_ore(int x, int y) const -> bool;
   auto cell_value(int x, int y) const -> CellValue;
 
   [[nodiscard]] auto is_terrain_walkable(int x, int y) const -> bool;
-  auto is_world_position_walkable(const QVector3D& world_position) const -> bool;
-  auto is_world_segment_walkable(const QVector3D& from,
-                                 const QVector3D& to) const -> bool;
+  auto is_world_position_walkable(const QVector3D& world_position,
+                                  Passability passability = Passability::Light) const
+      -> bool;
+  auto
+  is_world_segment_walkable(const QVector3D& from,
+                            const QVector3D& to,
+                            Passability passability = Passability::Light) const -> bool;
   auto path_waypoint_world_position(const Point& path_cell) const -> QVector3D;
 
   void update_navigation_grid();
@@ -106,19 +119,29 @@ public:
 
   [[nodiscard]] auto obstruction_revision() const -> std::uint64_t;
 
-  auto find_path(const Point& start, const Point& end) -> std::vector<Point>;
+  auto find_path(const Point& start,
+                 const Point& end,
+                 Passability passability = Passability::Light) -> std::vector<Point>;
 
   [[nodiscard]] auto navigation_revision() const -> std::uint64_t {
     return m_navigation_revision.load(std::memory_order_acquire);
   }
 
-  static auto find_nearest_walkable_point(const Point& point,
-                                          int max_search_radius,
-                                          const Pathfinding& pathfinder) -> Point;
+  static auto
+  find_nearest_walkable_point(const Point& point,
+                              int max_search_radius,
+                              const Pathfinding& pathfinder,
+                              Passability passability = Passability::Light) -> Point;
 
 private:
-  auto find_path_internal(const Point& start, const Point& end) -> std::vector<Point>;
-  auto resolve_walkable_endpoint(const Point& requested, Point& resolved) const -> bool;
+  auto find_path_internal(const Point& start,
+                          const Point& end,
+                          Passability passability) -> std::vector<Point>;
+  auto resolve_walkable_endpoint(const Point& requested,
+                                 Point& resolved,
+                                 Passability passability) const -> bool;
+  void apply_forest_cells(int min_x, int max_x, int min_z, int max_z);
+  void rebuild_forest_index();
   void force_map_passage_cells_walkable(int min_x, int max_x, int min_z, int max_z);
   void force_navigation_passages_walkable(int min_x, int max_x, int min_z, int max_z);
 
@@ -153,7 +176,8 @@ private:
                          int parent_index);
 
   auto collect_neighbors(const Point& point,
-                         std::array<Point, 8>& buffer) const -> std::size_t;
+                         std::array<Point, 8>& buffer,
+                         Passability passability) const -> std::size_t;
   void build_path(int start_index,
                   int end_index,
                   std::uint32_t generation,
@@ -182,6 +206,7 @@ private:
     int start_y;
     int end_x;
     int end_y;
+    Passability passability;
 
     auto operator==(const PathCacheKey&) const -> bool = default;
   };
@@ -217,6 +242,7 @@ private:
   std::atomic<std::uint64_t> m_obstruction_revision{0};
   std::atomic<std::uint64_t> m_applied_terrain_topology_revision{0};
   std::unordered_map<int, CellValue> m_world_prop_cells;
+  std::vector<bool> m_forest_cells;
   std::atomic<std::uint64_t> m_navigation_revision{1};
   std::uint64_t m_path_cache_revision{0};
   std::unordered_map<PathCacheKey, std::vector<Point>, PathCacheKeyHash> m_path_cache;

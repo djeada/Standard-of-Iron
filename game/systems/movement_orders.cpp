@@ -23,11 +23,19 @@ constexpr float same_target_threshold_sq = 0.01F;
 
 constexpr int k_recovery_search_radius = 16;
 
-auto is_direct_path_walkable(const QVector3D& from, const QVector3D& to) -> bool {
+auto passability_for(const Engine::Core::MovementComponent& movement)
+    -> Pathfinding::Passability {
+  return movement.get_can_enter_forest() ? Pathfinding::Passability::Light
+                                         : Pathfinding::Passability::Heavy;
+}
+
+auto is_direct_path_walkable(const QVector3D& from,
+                             const QVector3D& to,
+                             Pathfinding::Passability passability) -> bool {
   auto* pathfinder = CommandService::get_pathfinder();
   if (pathfinder != nullptr) {
     pathfinder->update_navigation_grid();
-    return pathfinder->is_world_segment_walkable(from, to);
+    return pathfinder->is_world_segment_walkable(from, to, passability);
   }
 
   return CommandService::is_world_position_walkable(to);
@@ -289,13 +297,14 @@ void MovementSystem::assign_navigation_target(
   QVector3D const current_pos(transform.position.x, 0.0F, transform.position.z);
 
   bool const bridge_route = segment_traverses_bridge(current_pos, requested_target);
-  if (start == end ||
-      (is_direct_path_walkable(current_pos, requested_target) && !bridge_route)) {
+  if (start == end || (is_direct_path_walkable(
+                           current_pos, requested_target, passability_for(movement)) &&
+                       !bridge_route)) {
     assign_direct_target(movement, resolve_walkable_direct_target(requested_target));
     return;
   }
 
-  auto const path = pathfinder->find_path(start, end);
+  auto const path = pathfinder->find_path(start, end, passability_for(movement));
   bool const include_first_waypoint = should_include_resolved_start_waypoint(start);
   if (!assign_path_to_movement(
           *pathfinder, path, transform, movement, include_first_waypoint)) {
@@ -348,7 +357,8 @@ auto MovementSystem::assign_local_recovery_move(
   QVector3D resolved_goal = safe_pos;
   if (had_active_target) {
     Point const desired_goal = CommandService::world_to_grid(goal.x(), goal.z());
-    auto const route = pathfinder->find_path(recovery_cell, desired_goal);
+    auto const route =
+        pathfinder->find_path(recovery_cell, desired_goal, passability_for(*movement));
     if (route.size() > 1) {
       recovery_waypoints.reserve(route.size());
       for (std::size_t idx = 1; idx < route.size(); ++idx) {
@@ -480,12 +490,23 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       CommandService::world_to_grid(leader_start.x(), leader_start.z());
   Point const leader_target_cell =
       CommandService::world_to_grid(leader_target.x(), leader_target.z());
-  bool const leader_direct = leader_start_cell == leader_target_cell ||
-                             (is_direct_path_walkable(leader_start, leader_target) &&
-                              !segment_traverses_bridge(leader_start, leader_target));
+
+  auto group_passability = Pathfinding::Passability::Light;
+  for (auto const& move : prepared) {
+    if (move.movement != nullptr && !move.movement->get_can_enter_forest()) {
+      group_passability = Pathfinding::Passability::Heavy;
+      break;
+    }
+  }
+
+  bool const leader_direct =
+      leader_start_cell == leader_target_cell ||
+      (is_direct_path_walkable(leader_start, leader_target, group_passability) &&
+       !segment_traverses_bridge(leader_start, leader_target));
   std::vector<Point> corridor;
   if (!leader_direct) {
-    corridor = pathfinder->find_path(leader_start_cell, leader_target_cell);
+    corridor =
+        pathfinder->find_path(leader_start_cell, leader_target_cell, group_passability);
   }
 
   constexpr int k_shared_corridor_region_radius = 16;
@@ -542,9 +563,10 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       Point const start = CommandService::world_to_grid(current.x(), current.z());
       Point const target =
           CommandService::world_to_grid(targets[i].x(), targets[i].z());
-      bool const direct =
-          start == target || (is_direct_path_walkable(current, targets[i]) &&
-                              !segment_traverses_bridge(current, targets[i]));
+      bool const direct = start == target ||
+                          (is_direct_path_walkable(
+                               current, targets[i], passability_for(*move.movement)) &&
+                           !segment_traverses_bridge(current, targets[i]));
       if (direct || movement_system == nullptr ||
           synchronous_fallbacks < k_path_requests_per_tick) {
         assign_navigation_target(

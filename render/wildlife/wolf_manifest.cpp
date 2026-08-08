@@ -56,7 +56,7 @@ constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
      false,
      WolfGait::Walk},
     {{"run", 14U, 26.0F, true}, 1.0F, 0.0F, 0.25F, false, false, false, WolfGait::Run},
-    {{"bite", 18U, 24.0F, false},
+    {{"bite", 28U, 26.0F, false},
      0.0F,
      0.55F,
      1.0F,
@@ -64,7 +64,7 @@ constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
      false,
      false,
      WolfGait::Stand},
-    {{"die", 20U, 20.0F, false}, 0.0F, 0.0F, 1.0F, false, true, false, WolfGait::Stand},
+    {{"die", 30U, 22.0F, false}, 0.0F, 0.0F, 1.0F, false, true, false, WolfGait::Stand},
     {{"dead", 1U, 1.0F, true}, 0.0F, 0.0F, 1.0F, false, true, true, WolfGait::Stand},
 }};
 
@@ -98,17 +98,43 @@ void bake_wolf_clip_frame(std::size_t clip_index,
   drive.ear_pin = clip.ear_pin;
   drive.gait = clip.gait;
   if (clip.bites) {
-    constexpr float k_contact_phase = 0.34F;
+
+    constexpr float k_gather_end = 0.26F;
+    constexpr float k_contact = 0.34F;
+    constexpr float k_worry_end = 0.74F;
+
     auto smoothstep = [](float value) {
       float const t = std::clamp(value, 0.0F, 1.0F);
       return t * t * (3.0F - (2.0F * t));
     };
-    float const windup = smoothstep(phase / k_contact_phase);
-    float const recovery =
-        1.0F - smoothstep((phase - k_contact_phase) / (1.0F - k_contact_phase));
-    drive.lunge = windup * recovery;
-    drive.jaw_open = std::sin(std::numbers::pi_v<float> *
-                              std::clamp(phase / k_contact_phase, 0.0F, 1.0F));
+
+    if (phase < k_gather_end) {
+
+      float const t = phase / k_gather_end;
+      drive.lunge = -0.22F * smoothstep(t);
+      drive.jaw_open = smoothstep(t) * 0.85F;
+      drive.crouch = 0.55F + (0.35F * smoothstep(t));
+    } else if (phase < k_contact) {
+
+      float const t = (phase - k_gather_end) / (k_contact - k_gather_end);
+      drive.lunge = -0.22F + (1.22F * t);
+      drive.jaw_open = 0.85F * (1.0F - (t * t));
+      drive.crouch = 0.90F - (0.62F * t);
+    } else if (phase < k_worry_end) {
+
+      float const t = (phase - k_contact) / (k_worry_end - k_contact);
+      drive.lunge = 1.0F - (0.18F * t);
+      drive.jaw_open = 0.0F;
+      drive.crouch = 0.28F + (0.14F * t);
+      drive.head_shake = std::sin(t * std::numbers::pi_v<float> * 3.0F) *
+                         (1.0F - smoothstep(t)) * 1.0F;
+    } else {
+
+      float const t = (phase - k_worry_end) / (1.0F - k_worry_end);
+      drive.lunge = 0.82F * (1.0F - smoothstep(t));
+      drive.jaw_open = 0.0F;
+      drive.crouch = 0.42F * (1.0F - smoothstep(t));
+    }
     drive.stride_phase = 0.0F;
   }
   if (clip.collapses) {

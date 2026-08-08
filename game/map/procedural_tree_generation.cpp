@@ -602,14 +602,20 @@ auto generate_procedural_world_props(const TerrainHeightMap& height_map,
   std::vector<WorldProp> generated;
   generated.reserve(
       static_cast<size_t>(height_map.get_width() * height_map.get_height() / 8));
-  append_generated_boulders(
-      generated, height_map, biome_settings, coord_system, anchor_world_props);
-  append_generated_iron_ore(
-      generated, height_map, biome_settings, coord_system, anchor_world_props);
-  append_generated_pines(
-      generated, height_map, biome_settings, coord_system, anchor_world_props);
-  append_generated_olives(
-      generated, height_map, biome_settings, coord_system, anchor_world_props);
+  if (biome_settings.procedural_boulders_enabled) {
+    append_generated_boulders(
+        generated, height_map, biome_settings, coord_system, anchor_world_props);
+  }
+  if (biome_settings.procedural_iron_ore_enabled) {
+    append_generated_iron_ore(
+        generated, height_map, biome_settings, coord_system, anchor_world_props);
+  }
+  if (biome_settings.procedural_trees_enabled) {
+    append_generated_pines(
+        generated, height_map, biome_settings, coord_system, anchor_world_props);
+    append_generated_olives(
+        generated, height_map, biome_settings, coord_system, anchor_world_props);
+  }
   return generated;
 }
 

@@ -6,8 +6,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 
+#include "game/map/campaign_definition.h"
+#include "game/map/campaign_loader.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
 #include "game/map/mission_definition.h"
@@ -313,6 +316,46 @@ TEST(MissionAssetRulesTest, CaptureObjectivesMatchEnemyOwnedBarracks) {
     EXPECT_EQ(capture_target, expectation.capture_target) << expectation.mission_id;
     EXPECT_LE(capture_target, enemy_barracks)
         << expectation.mission_id << " cannot be won";
+  }
+}
+
+TEST(MissionAssetRulesTest, DecapitationObjectivesHaveCommandersToKill) {
+  Game::Campaign::CampaignDefinition campaign;
+  QString campaign_error;
+  ASSERT_TRUE(Game::Campaign::CampaignLoader::load_from_json_file(
+      asset_dir_path(QStringLiteral("campaigns/second_punic_war.json")),
+      campaign,
+      &campaign_error))
+      << campaign_error.toStdString();
+
+  for (const auto& entry : campaign.missions) {
+    Game::Mission::MissionDefinition mission;
+    QString mission_error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        asset_dir_path(QStringLiteral("missions/%1.json").arg(entry.mission_id)),
+        mission,
+        &mission_error))
+        << mission_error.toStdString();
+
+    const bool wants_decapitation =
+        std::any_of(mission.victory_conditions.begin(),
+                    mission.victory_conditions.end(),
+                    [](const Game::Mission::Condition& condition) {
+                      return condition.type == QStringLiteral("eliminate_commanders");
+                    });
+    if (!wants_decapitation) {
+      continue;
+    }
+
+    ASSERT_FALSE(mission.ai_setups.empty())
+        << entry.mission_id.toStdString()
+        << " asks the player to kill commanders but ships no opponents";
+    for (const auto& ai_setup : mission.ai_setups) {
+      EXPECT_TRUE(ai_setup.commander_troop.has_value() &&
+                  !ai_setup.commander_troop->trimmed().isEmpty())
+          << entry.mission_id.toStdString() << " AI " << ai_setup.id.toStdString()
+          << " has no commander to kill, so eliminate_commanders can never arm";
+    }
   }
 }
 

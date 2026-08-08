@@ -252,6 +252,18 @@ void read_biome(const QJsonObject& obj, BiomeSettings& out) {
     out.ground_irregularity_enabled =
         obj.value(GROUND_IRREGULARITY_ENABLED).toBool(out.ground_irregularity_enabled);
   }
+  if (obj.contains(PROCEDURAL_BOULDERS_ENABLED)) {
+    out.procedural_boulders_enabled =
+        obj.value(PROCEDURAL_BOULDERS_ENABLED).toBool(out.procedural_boulders_enabled);
+  }
+  if (obj.contains(PROCEDURAL_IRON_ORE_ENABLED)) {
+    out.procedural_iron_ore_enabled =
+        obj.value(PROCEDURAL_IRON_ORE_ENABLED).toBool(out.procedural_iron_ore_enabled);
+  }
+  if (obj.contains(PROCEDURAL_TREES_ENABLED)) {
+    out.procedural_trees_enabled =
+        obj.value(PROCEDURAL_TREES_ENABLED).toBool(out.procedural_trees_enabled);
+  }
   if (obj.contains(IRREGULARITY_SCALE)) {
     out.irregularity_scale =
         float(obj.value(IRREGULARITY_SCALE).toDouble(out.irregularity_scale));
@@ -408,11 +420,36 @@ void read_wildlife_species(const QJsonObject& obj,
   out.flyover_interval_max = float(
       obj.value(WILDLIFE_FLYOVER_INTERVAL_MAX).toDouble(out.flyover_interval_max));
 
+  const float tile =
+      coord_sys == CoordSystem::Grid ? std::max(0.0001F, grid.tile_size) : 1.0F;
+
+  if (obj.value(WILDLIFE_WAVES).isArray()) {
+    out.waves.clear();
+    for (const auto& value : obj.value(WILDLIFE_WAVES).toArray()) {
+      if (!value.isObject()) {
+        continue;
+      }
+      const QJsonObject wave_obj = value.toObject();
+      Game::Wildlife::WildlifeWave wave;
+      wave.timing = float(wave_obj.value(WILDLIFE_WAVE_TIMING).toDouble(0.0));
+      wave.pack_size = wave_obj.value(WILDLIFE_WAVE_PACK_SIZE).toInt(wave.pack_size);
+      wave.label = wave_obj.value(WILDLIFE_WAVE_LABEL).toString().toStdString();
+      const QVector3D center = authored_position(float(wave_obj.value(X).toDouble(0.0)),
+                                                 float(wave_obj.value(Z).toDouble(0.0)),
+                                                 grid,
+                                                 coord_sys);
+      wave.area.x = center.x();
+      wave.area.z = center.z();
+      wave.area.radius =
+          float(wave_obj.value(WILDLIFE_RADIUS).toDouble(double(out.roam_radius))) *
+          tile;
+      out.waves.push_back(wave);
+    }
+  }
+
   if (!obj.value(WILDLIFE_SPAWN_AREAS).isArray()) {
     return;
   }
-  const float tile =
-      coord_sys == CoordSystem::Grid ? std::max(0.0001F, grid.tile_size) : 1.0F;
   out.spawn_areas.clear();
   for (const auto& value : obj.value(WILDLIFE_SPAWN_AREAS).toArray()) {
     if (!value.isObject()) {
@@ -572,6 +609,30 @@ void append_undead_wave_units_from_object(const QJsonObject& obj, UndeadWave& ou
   }
 }
 
+void read_starting_resources(const QJsonObject& obj,
+                             Game::Systems::ResourceAmounts& out);
+
+void read_groves(const QJsonArray& arr, std::vector<Grove>& out) {
+  out.clear();
+  out.reserve(arr.size());
+  int next_grove_index = 1;
+  for (const auto& val : arr) {
+    auto obj = val.toObject();
+    Grove grove;
+    grove.id = obj.value(ID).toString().trimmed();
+    if (grove.id.isEmpty()) {
+      grove.id = QStringLiteral("grove_%1").arg(next_grove_index++);
+    }
+    grove.x = float(obj.value(X).toDouble(0.0));
+    grove.z = float(obj.value(Z).toDouble(0.0));
+    grove.radius = float(obj.value(RADIUS).toDouble(grove.radius));
+    if (grove.radius <= 0.0F) {
+      continue;
+    }
+    out.push_back(grove);
+  }
+}
+
 void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
   out.clear();
   out.reserve(arr.size());
@@ -612,6 +673,10 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
 
     if (zone.awaken_on.empty()) {
       zone.awaken_on.push_back(QStringLiteral("unit_enters_radius"));
+    }
+
+    if (obj.contains(CLEAR_REWARD) && obj.value(CLEAR_REWARD).isObject()) {
+      read_starting_resources(obj.value(CLEAR_REWARD).toObject(), zone.clear_reward);
     }
 
     if (obj.contains(WAVES) && obj.value(WAVES).isArray()) {
@@ -1352,6 +1417,12 @@ auto MapLoader::load_from_json_file(const QString& path,
     read_undead_zones(root.value(UNDEAD_ZONES).toArray(), out_map.undead_zones);
   } else {
     out_map.undead_zones.clear();
+  }
+
+  if (root.contains(GROVES) && root.value(GROVES).isArray()) {
+    read_groves(root.value(GROVES).toArray(), out_map.groves);
+  } else {
+    out_map.groves.clear();
   }
 
   out_map.lakes.clear();

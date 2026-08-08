@@ -134,12 +134,29 @@ in either order, and hand-placed scatter survives both.
 
 ### Groves
 
-A map's `groves` array places standalone woods. A forest does not block
-movement - it marks its ground as forest, which thickens the tree scatter and
-gives cover - so place one for what it screens: the approach to a wall with no
-gate on it, the flank of a road a column has to march down, the timber a gather
-objective is measured against. A wood inside 22 units of a settlement wall grows
-through the streets and is rejected.
+A map's `groves` array places standalone woods, and the engine reads it: every
+open cell inside a grove's radius becomes a **forest** cell in the navigation
+grid. Forest is passable to commanders, archers, swordsmen, healers, builders,
+civilians, the Sepulcher's dead and wildlife. It is closed to spearmen, all
+cavalry, catapults, ballistae and elephants - they path around it.
+
+So a wood is a filter, not just a screen. Place one for what it lets through:
+the approach to a wall with no gate on it, the flank of a road a column has to
+march down, the timber a gather objective is measured against, the den a wolf
+pack comes out of. A wood across the only route to a camp makes that camp an
+infantry problem.
+
+Two rules keep this from stranding an army:
+
+- **A road driven through a wood stays open to everyone.** Forest is only
+  applied to cells that are not on a road, so laying a road across a wood is how
+  you leave a lane for the siege train.
+- **Trunks, boulders and buildings keep their own cell value.** Forest only
+  claims ground that was already walkable, so a wood never turns a blocked cell
+  passable.
+
+A wood inside 22 units of a settlement wall grows through the streets and is
+rejected. Woods are editable in the map editor under Terrain → Wood.
 
 After moving settlements or resizing hills, re-run the road generator: approach
 roads and bridges are routed around terrain and must be repaired.

@@ -51,7 +51,10 @@
       0.08
     ],
     "sway_speed": 0.7,
-    "sway_strength": 0.1
+    "sway_strength": 0.1,
+    "procedural_boulders_enabled": false,
+    "procedural_iron_ore_enabled": false,
+    "procedural_trees_enabled": false
   },
   "camera": {
     "center": [
@@ -2230,6 +2233,22 @@
       "player_id": 3,
       "behavior": "guard",
       "landmark": "alps_switchback_watch"
+    },
+    {
+      "type": "spearman",
+      "x": 58.0,
+      "z": 226.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "alps_ascent_sanctuary"
+    },
+    {
+      "type": "archer",
+      "x": 62.0,
+      "z": 226.0,
+      "player_id": 2,
+      "behavior": "guard",
+      "landmark": "alps_ascent_sanctuary"
     }
   ],
   "world_props": [
@@ -3746,7 +3765,11 @@
             "grave_priest": 1
           }
         }
-      ]
+      ],
+      "clear_reward": {
+        "stone": 140,
+        "iron": 100
+      }
     }
   ],
   "lakes": [],
@@ -5050,5 +5073,60 @@
       "z": 600,
       "radius": 30
     }
-  ]
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 90.0,
+      "spawn_areas": [
+        {
+          "x": 240,
+          "z": 260,
+          "radius": 24
+        }
+      ]
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 2,
+      "group_size_max": 4,
+      "roam_radius": 22.0,
+      "aggression": 0.6,
+      "respawn": false,
+      "spawn_areas": [
+        {
+          "x": 150,
+          "z": 470,
+          "radius": 28
+        }
+      ],
+      "waves": [
+        {
+          "timing": 300.0,
+          "pack_size": 4,
+          "x": 470,
+          "z": 600,
+          "radius": 24,
+          "label": "Wolves have the scent of the column on the descent."
+        }
+      ]
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 9,
+      "flight_height": 14.0,
+      "flyover_interval_min": 45.0,
+      "flyover_interval_max": 120.0
+    }
+  }
 }

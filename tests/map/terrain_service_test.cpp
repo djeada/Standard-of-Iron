@@ -7,6 +7,7 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
+#include "game/map/procedural_tree_generation.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/nation_registry.h"
@@ -917,6 +918,76 @@ TEST_F(TerrainServiceTest, SkirmishLoaderKeepsRuntimeHarvestScatterAvailable) {
                             return !prop.persistent &&
                                    Game::Map::is_harvestable_world_prop_type(prop.type);
                           }));
+}
+
+TEST_F(TerrainServiceTest, ProceduralScatterOptOutsSuppressTheirSpecies) {
+  const auto count_type = [](const std::vector<Game::Map::WorldProp>& props,
+                             Game::Map::WorldProp::Type type) {
+    return std::count_if(
+        props.begin(), props.end(), [type](const Game::Map::WorldProp& prop) {
+          return prop.type == type;
+        });
+  };
+
+  const auto count_trees =
+      [&count_type](const std::vector<Game::Map::WorldProp>& props) {
+        return count_type(props, Game::Map::WorldProp::Type::PineTree) +
+               count_type(props, Game::Map::WorldProp::Type::OliveTree);
+      };
+
+  const auto build_height_map = [](Game::Map::GroundType ground_type,
+                                   Game::Map::BiomeSettings& out_biome) {
+    Game::Map::MapDefinition map_def;
+    map_def.grid.width = 96;
+    map_def.grid.height = 96;
+    map_def.grid.tile_size = 1.0F;
+    Game::Map::apply_ground_type_defaults(map_def.biome, ground_type);
+    map_def.biome.seed = 4242U;
+    map_def.biome.ground_irregularity_enabled = true;
+    map_def.biome.irregularity_amplitude =
+        std::max(0.65F, map_def.biome.irregularity_amplitude);
+
+    auto& terrain = Game::Map::TerrainService::instance();
+    terrain.initialize(map_def);
+    out_biome = map_def.biome;
+    return terrain.get_height_map();
+  };
+
+  Game::Map::BiomeSettings rocky_biome;
+  const auto* rocky_height_map =
+      build_height_map(Game::Map::GroundType::SoilRocky, rocky_biome);
+  ASSERT_NE(rocky_height_map, nullptr);
+
+  const auto minerals_baseline = Game::Map::generate_procedural_world_props(
+      *rocky_height_map, rocky_biome, Game::Map::CoordSystem::World, {});
+  ASSERT_GT(count_type(minerals_baseline, Game::Map::WorldProp::Type::Boulder), 0);
+  ASSERT_GT(count_type(minerals_baseline, Game::Map::WorldProp::Type::IronOre), 0);
+
+  auto no_minerals = rocky_biome;
+  no_minerals.procedural_boulders_enabled = false;
+  no_minerals.procedural_iron_ore_enabled = false;
+  const auto without_minerals = Game::Map::generate_procedural_world_props(
+      *rocky_height_map, no_minerals, Game::Map::CoordSystem::World, {});
+  EXPECT_EQ(count_type(without_minerals, Game::Map::WorldProp::Type::Boulder), 0);
+  EXPECT_EQ(count_type(without_minerals, Game::Map::WorldProp::Type::IronOre), 0);
+  EXPECT_EQ(count_trees(without_minerals), count_trees(minerals_baseline));
+
+  Game::Map::BiomeSettings forest_biome;
+  const auto* forest_height_map =
+      build_height_map(Game::Map::GroundType::ForestMud, forest_biome);
+  ASSERT_NE(forest_height_map, nullptr);
+
+  const auto trees_baseline = Game::Map::generate_procedural_world_props(
+      *forest_height_map, forest_biome, Game::Map::CoordSystem::World, {});
+  ASSERT_GT(count_trees(trees_baseline), 0);
+
+  auto no_trees = forest_biome;
+  no_trees.procedural_trees_enabled = false;
+  const auto without_trees = Game::Map::generate_procedural_world_props(
+      *forest_height_map, no_trees, Game::Map::CoordSystem::World, {});
+  EXPECT_EQ(count_trees(without_trees), 0);
+  EXPECT_EQ(count_type(without_trees, Game::Map::WorldProp::Type::Boulder),
+            count_type(trees_baseline, Game::Map::WorldProp::Type::Boulder));
 }
 
 } // namespace

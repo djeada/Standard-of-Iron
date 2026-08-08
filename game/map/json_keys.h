@@ -13,6 +13,7 @@ inline constexpr const char* CAMERA = "camera";
 inline constexpr const char* SPAWNS = "spawns";
 inline constexpr const char* STRUCTURES = "structures";
 inline constexpr const char* UNDEAD_ZONES = "undead_zones";
+inline constexpr const char* GROVES = "groves";
 inline constexpr const char* FIRECAMPS = "firecamps";
 inline constexpr const char* TERRAIN = "terrain";
 inline constexpr const char* RIVERS = "rivers";
@@ -71,6 +72,11 @@ inline constexpr const char* SOIL_ROUGHNESS = "soil_roughness";
 inline constexpr const char* SNOW_COLOR = "snow_color";
 inline constexpr const char* GROUND_IRREGULARITY_ENABLED =
     "ground_irregularity_enabled";
+inline constexpr const char* PROCEDURAL_BOULDERS_ENABLED =
+    "procedural_boulders_enabled";
+inline constexpr const char* PROCEDURAL_IRON_ORE_ENABLED =
+    "procedural_iron_ore_enabled";
+inline constexpr const char* PROCEDURAL_TREES_ENABLED = "procedural_trees_enabled";
 inline constexpr const char* IRREGULARITY_SCALE = "irregularity_scale";
 inline constexpr const char* IRREGULARITY_AMPLITUDE = "irregularity_amplitude";
 
@@ -86,6 +92,7 @@ inline constexpr const char* ID = "id";
 inline constexpr const char* ANCHOR_TYPE = "anchor_type";
 inline constexpr const char* FOG_DENSITY = "fog_density";
 inline constexpr const char* WAVE_TIMEOUT = "wave_timeout";
+inline constexpr const char* CLEAR_REWARD = "clear_reward";
 inline constexpr const char* LEASH_RADIUS = "leash_radius";
 inline constexpr const char* AWAKEN_ON = "awaken_on";
 inline constexpr const char* WAVES = "waves";
@@ -149,6 +156,10 @@ inline constexpr const char* WILDLIFE_FLYOVER_INTERVAL_MIN = "flyover_interval_m
 inline constexpr const char* WILDLIFE_FLYOVER_INTERVAL_MAX = "flyover_interval_max";
 inline constexpr const char* WILDLIFE_SPAWN_AREAS = "spawn_areas";
 inline constexpr const char* WILDLIFE_RADIUS = "radius";
+inline constexpr const char* WILDLIFE_WAVES = "waves";
+inline constexpr const char* WILDLIFE_WAVE_TIMING = "timing";
+inline constexpr const char* WILDLIFE_WAVE_PACK_SIZE = "pack_size";
+inline constexpr const char* WILDLIFE_WAVE_LABEL = "label";
 
 inline constexpr const char* WORLD_PROPS = "world_props";
 inline constexpr const char* FOG_ZONES = "fog_zones";

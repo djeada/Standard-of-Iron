@@ -353,6 +353,7 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_coord_system = map_def.coordSystem;
 
   m_road_segments = map_def.roads;
+  m_groves = map_def.groves;
   rebuild_road_spatial_index();
   m_authored_world_props = map_def.world_props;
   normalize_world_props(m_authored_world_props);
@@ -375,6 +376,7 @@ void TerrainService::clear() {
   m_authored_world_props.clear();
   m_world_props.clear();
   m_road_segments.clear();
+  m_groves.clear();
   m_road_query_segments.clear();
   m_road_index_offsets.clear();
   m_road_index_segment_ids.clear();

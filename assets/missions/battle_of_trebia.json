@@ -2,7 +2,7 @@
   "id": "battle_of_trebia",
   "title": "Battle of Trebia",
   "summary": "Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.",
-  "teaching_goal": "Defense-to-offense transition. Teaches when to absorb the crossing, then commit the hidden strike force.",
+  "teaching_goal": "An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.",
   "narrative_intent": "The Romans are baited into the winter river and punished by Mago's concealed force, then the defense becomes an assault on a complete winter camp.",
   "historical_context": "December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago's hidden detachment struck the exhausted Roman army from front, flanks, and rear.",
   "terrain_type": "winter_river_plain",
@@ -57,7 +57,7 @@
             "z": 262
           },
           "phase": 1,
-          "label": "Sempronius’ first crossing",
+          "label": "Sempronius\u2019 first crossing",
           "warning_seconds": 18.0
         },
         {
@@ -230,6 +230,10 @@
       "type": "survive_waves",
       "wave_count": 3,
       "description": "Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing."
+    },
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field."
     }
   ],
   "defeat_conditions": [
@@ -244,7 +248,7 @@
     },
     {
       "type": "lose_commander",
-      "description": "The commander falls — and every line collapses behind him."
+      "description": "The commander falls \u2014 and every line collapses behind him."
     },
     {
       "type": "only_commander_remaining",
@@ -297,5 +301,6 @@
     }
   ],
   "include_ambient_undead": false,
-  "theme": "Freezing water, fog, and exhaustion turn the Roman advance into a ritual slaughter."
+  "theme": "Freezing water, fog, and exhaustion turn the Roman advance into a ritual slaughter.",
+  "victory_mode": "all"
 }

@@ -184,6 +184,10 @@ struct BiomeSettings {
   float irregularity_scale = 0.15F;
   float irregularity_amplitude = 0.08F;
 
+  bool procedural_boulders_enabled = true;
+  bool procedural_iron_ore_enabled = true;
+  bool procedural_trees_enabled = true;
+
   float snow_coverage = 0.0F;
   float moisture_level = 0.5F;
   float crack_intensity = 0.0F;

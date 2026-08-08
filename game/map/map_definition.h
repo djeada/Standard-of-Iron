@@ -112,6 +112,13 @@ struct UndeadWave {
   std::vector<UndeadWaveUnitSpawn> units;
 };
 
+struct Grove {
+  QString id;
+  float x = 0.0F;
+  float z = 0.0F;
+  float radius = 8.0F;
+};
+
 inline constexpr float k_undead_zone_default_fog_density = 0.28F;
 inline constexpr float k_undead_zone_default_wave_timeout = 45.0F;
 
@@ -130,6 +137,8 @@ struct UndeadZone {
   float wave_timeout_seconds = k_undead_zone_default_wave_timeout;
   std::vector<QString> awaken_on;
   std::vector<UndeadWave> waves;
+
+  Game::Systems::ResourceAmounts clear_reward;
 };
 
 [[nodiscard]] inline auto default_undead_waves() -> std::vector<UndeadWave> {
@@ -435,6 +444,7 @@ struct MapDefinition {
   std::vector<StructureEntry> structures;
   std::vector<WorldProp> world_props;
   std::vector<UndeadZone> undead_zones;
+  std::vector<Grove> groves;
   std::vector<FogZone> fog_zones;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
