@@ -16,8 +16,7 @@
     "starting_resources": {
       "gold": 550,
       "food": 450
-    },
-    "commander_troop": "carthage_sword_commander"
+    }
   },
   "ai_setups": [
     {
@@ -78,8 +77,7 @@
             "z": 330
           }
         }
-      ],
-      "commander_troop": "roman_veteran_consul"
+      ]
     },
     {
       "id": "roman_reserve",
@@ -139,8 +137,7 @@
             "z": 232
           }
         }
-      ],
-      "commander_troop": "roman_field_commander"
+      ]
     }
   ],
   "victory_conditions": [

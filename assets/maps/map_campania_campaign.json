@@ -2195,6 +2195,38 @@
             "type": "spearman",
             "x": 154,
             "z": 404
+        },
+        {
+            "max_population": -1,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "carthage_sword_commander",
+            "x": 322.0,
+            "z": 238.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_legion_organizer",
+            "x": 120.0,
+            "z": 78.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_veteran_consul",
+            "x": 392.0,
+            "z": 546.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "type": "roman_field_commander",
+            "x": 582.0,
+            "z": 284.0
         }
     ],
     "starting_resources": {

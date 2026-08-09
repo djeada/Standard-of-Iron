@@ -16,8 +16,7 @@
     "starting_resources": {
       "gold": 500,
       "food": 380
-    },
-    "commander_troop": "carthage_sword_commander"
+    }
   },
   "ai_setups": [
     {
@@ -136,8 +135,7 @@
             }
           ]
         }
-      ],
-      "commander_troop": "roman_field_commander"
+      ]
     },
     {
       "id": "roman_west_reserve",
@@ -221,8 +219,7 @@
           "grace_seconds": 40.0,
           "warning_seconds": 18.0
         }
-      ],
-      "commander_troop": "roman_legion_organizer"
+      ]
     }
   ],
   "victory_conditions": [

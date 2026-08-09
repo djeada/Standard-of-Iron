@@ -57,9 +57,10 @@ death its barracks fall to the neutral owner, its other works come down and its
 troops leave the field. That makes decapitation the shortest route to a capture
 objective rather than a way around one — a neutral camp is still a camp you have
 to walk into. `MissionAssetRulesTest.DecapitationObjectivesHaveCommandersToKill`
-fails the build if any AI setup ships without a `commander_troop`, because the
-rule only arms once an enemy commander has been seen and an unarmed rule would
-make the mission unwinnable.
+fails the build if any AI force ships without a commander spawn in its map, because
+the rule only arms once an enemy commander has been seen and an unarmed rule would
+make the mission unwinnable. Commanders are authored in the map's `spawns[]`; see
+[MISSION_FRAMEWORK.md](MISSION_FRAMEWORK.md).
 
 _Trasimene is the only mission that can be lost to the clock._ Every other timer
 is an optional objective or a wave schedule.

@@ -1546,6 +1546,38 @@
             "type": "archer",
             "x": 62,
             "z": 226
+        },
+        {
+            "max_population": -1,
+            "nation": "carthage",
+            "player_id": 1,
+            "type": "carthage_sword_commander",
+            "x": 44.0,
+            "z": 58.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_field_commander",
+            "x": 60.0,
+            "z": 226.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_legion_organizer",
+            "x": 286.0,
+            "z": 520.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "type": "roman_veteran_consul",
+            "x": 417.34,
+            "z": 564.48
         }
     ],
     "starting_resources": {

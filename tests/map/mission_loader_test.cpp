@@ -1,5 +1,9 @@
 #include <QCoreApplication>
 #include <QDir>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTemporaryFile>
 
 #include <algorithm>
@@ -34,7 +38,6 @@ protected:
         "nation": "roman_republic",
         "faction": "roman",
         "color": "red",
-        "commander_troop": "roman_veteran_consul",
         "starting_units": [
           {
             "type": "spearman",
@@ -63,7 +66,6 @@ protected:
           "nation": "carthage",
           "faction": "carthaginian",
           "color": "blue",
-          "commander_troop": "carthage_sword_commander",
           "difficulty": "medium",
           "personality": {
             "aggression": 0.7,
@@ -139,8 +141,6 @@ TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
   EXPECT_EQ(mission.player_setup.nation, "roman_republic");
   EXPECT_EQ(mission.player_setup.faction, "roman");
   EXPECT_EQ(mission.player_setup.color, "red");
-  ASSERT_TRUE(mission.player_setup.commander_troop.has_value());
-  EXPECT_EQ(*mission.player_setup.commander_troop, "roman_veteran_consul");
   EXPECT_EQ(mission.player_setup.starting_units.size(), 1);
   EXPECT_EQ(mission.player_setup.starting_buildings.size(), 1);
   EXPECT_EQ(
@@ -169,8 +169,6 @@ TEST_F(MissionLoaderTest, ParsesAISetups) {
   ASSERT_EQ(mission.ai_setups.size(), 1);
   EXPECT_EQ(mission.ai_setups[0].id, "enemy_1");
   EXPECT_EQ(mission.ai_setups[0].nation, "carthage");
-  ASSERT_TRUE(mission.ai_setups[0].commander_troop.has_value());
-  EXPECT_EQ(*mission.ai_setups[0].commander_troop, "carthage_sword_commander");
   EXPECT_EQ(mission.ai_setups[0].difficulty, "medium");
   EXPECT_FLOAT_EQ(mission.ai_setups[0].personality.aggression, 0.7F);
   EXPECT_EQ(mission.ai_setups[0].waves.size(), 1);
@@ -343,7 +341,6 @@ TEST_F(MissionLoaderTest, ParsesAuthoredUnitPatrolBehavior) {
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
-      "commander_troop": "roman_veteran_consul",
       "starting_units": [],
       "starting_buildings": []
     },
@@ -353,7 +350,6 @@ TEST_F(MissionLoaderTest, ParsesAuthoredUnitPatrolBehavior) {
         "nation": "carthage",
         "faction": "carthaginian",
         "color": "blue",
-        "commander_troop": "carthage_sword_commander",
         "difficulty": "medium",
         "starting_units": [
           {
@@ -390,29 +386,26 @@ TEST_F(MissionLoaderTest, ParsesAuthoredUnitPatrolBehavior) {
   EXPECT_FLOAT_EQ(unit.patrol_waypoints[1].z, 48.0F);
 }
 
-TEST_F(MissionLoaderTest, ShippedMissionsAuthorCommandersForPlayerAndAiSetups) {
+TEST_F(MissionLoaderTest, ShippedMissionsDoNotAuthorCommanders) {
   const QDir mission_dir = assetMissionDirectory();
   const QStringList mission_files =
       mission_dir.entryList(QStringList() << QStringLiteral("*.json"), QDir::Files);
   ASSERT_FALSE(mission_files.isEmpty());
 
   for (const QString& file_name : mission_files) {
-    MissionDefinition mission;
-    QString error;
-    ASSERT_TRUE(MissionLoader::load_from_json_file(
-        mission_dir.absoluteFilePath(file_name), mission, &error))
-        << file_name.toStdString() << ": " << error.toStdString();
+    QFile file(mission_dir.absoluteFilePath(file_name));
+    ASSERT_TRUE(file.open(QIODevice::ReadOnly)) << file_name.toStdString();
+    const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
 
-    ASSERT_TRUE(mission.player_setup.commander_troop.has_value())
-        << file_name.toStdString();
-    EXPECT_FALSE(mission.player_setup.commander_troop->trimmed().isEmpty())
-        << file_name.toStdString();
+    EXPECT_FALSE(root.value("player_setup").toObject().contains("commander_troop"))
+        << file_name.toStdString()
+        << ": player_setup must not author a commander; use the map's spawns[]";
 
-    for (std::size_t index = 0; index < mission.ai_setups.size(); ++index) {
-      ASSERT_TRUE(mission.ai_setups[index].commander_troop.has_value())
-          << file_name.toStdString() << " ai index " << index;
-      EXPECT_FALSE(mission.ai_setups[index].commander_troop->trimmed().isEmpty())
-          << file_name.toStdString() << " ai index " << index;
+    const QJsonArray ai_setups = root.value("ai_setups").toArray();
+    for (qsizetype index = 0; index < ai_setups.size(); ++index) {
+      EXPECT_FALSE(ai_setups[index].toObject().contains("commander_troop"))
+          << file_name.toStdString() << " ai index " << index
+          << ": must not author a commander; use the map's spawns[]";
     }
   }
 }

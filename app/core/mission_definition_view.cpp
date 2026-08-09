@@ -13,6 +13,9 @@
 
 namespace {
 
+constexpr int k_local_owner_id = 1;
+constexpr int k_first_ai_owner_id = 2;
+
 auto resolve_mission_file_path(const QString& mission_id) -> QString {
   const QStringList search_paths = {QStringLiteral("assets/missions/%1.json"),
                                     QStringLiteral("../assets/missions/%1.json"),
@@ -208,18 +211,26 @@ auto build_commander_map(const QString& commander_troop) -> QVariantMap {
   return map;
 }
 
-auto build_player_setup_map(const Game::Mission::PlayerSetup& setup) -> QVariantMap {
+void apply_map_commander(QVariantMap& map,
+                         const std::map<int, QString>& map_commanders,
+                         int owner_id) {
+  const auto it = map_commanders.find(owner_id);
+  if (it == map_commanders.end() || it->second.isEmpty()) {
+    return;
+  }
+  map["commander_troop"] = it->second;
+  map["commander"] = build_commander_map(it->second);
+}
+
+auto build_player_setup_map(const Game::Mission::PlayerSetup& setup,
+                            const std::map<int, QString>& map_commanders)
+    -> QVariantMap {
   QVariantMap map;
   map["nation"] = setup.nation;
   map["faction"] = setup.faction;
   map["color"] = setup.color;
 
-  const QString commander_troop =
-      App::Core::resolve_commander_troop(setup.nation, setup.commander_troop);
-  if (!commander_troop.isEmpty()) {
-    map["commander_troop"] = commander_troop;
-    map["commander"] = build_commander_map(commander_troop);
-  }
+  apply_map_commander(map, map_commanders, k_local_owner_id);
 
   map["starting_units"] = build_unit_setup_list(setup.starting_units);
   map["starting_buildings"] = build_building_setup_list(setup.starting_buildings);
@@ -234,7 +245,9 @@ auto build_player_setup_map(const Game::Mission::PlayerSetup& setup) -> QVariant
   return map;
 }
 
-auto build_ai_setup_map(const Game::Mission::AISetup& setup) -> QVariantMap {
+auto build_ai_setup_map(const Game::Mission::AISetup& setup,
+                        const std::map<int, QString>& map_commanders,
+                        int owner_id) -> QVariantMap {
   QVariantMap map;
   map["id"] = setup.id;
   map["nation"] = setup.nation;
@@ -242,12 +255,7 @@ auto build_ai_setup_map(const Game::Mission::AISetup& setup) -> QVariantMap {
   map["color"] = setup.color;
   map["difficulty"] = setup.difficulty;
 
-  const QString commander_troop =
-      App::Core::resolve_commander_troop(setup.nation, setup.commander_troop);
-  if (!commander_troop.isEmpty()) {
-    map["commander_troop"] = commander_troop;
-    map["commander"] = build_commander_map(commander_troop);
-  }
+  apply_map_commander(map, map_commanders, owner_id);
   if (setup.team_id.has_value()) {
     map["team_id"] = setup.team_id.value();
   }
@@ -264,7 +272,6 @@ auto build_ai_setup_map(const Game::Mission::AISetup& setup) -> QVariantMap {
 }
 
 auto build_campaign_player_config(const QString& nation,
-                                  const std::optional<QString>& commander_troop,
                                   int player_id,
                                   int color_index,
                                   int team_id,
@@ -275,8 +282,6 @@ auto build_campaign_player_config(const QString& nation,
   player["colorIndex"] = color_index;
   player["team_id"] = team_id;
   player["nationId"] = nation;
-  player["commanderTroop"] =
-      App::Core::resolve_commander_troop(nation, commander_troop);
   player["isHuman"] = is_human;
   return player;
 }
@@ -307,11 +312,14 @@ auto build_mission_definition_map(const Game::Mission::MissionDefinition& missio
     result["terrain_type"] = mission.terrain_type.value();
   }
 
-  result["player_setup"] = build_player_setup_map(mission.player_setup);
+  const auto map_commanders = App::Core::commander_troops_for_map(mission.map_path);
+  result["player_setup"] = build_player_setup_map(mission.player_setup, map_commanders);
 
   QVariantList ai_setups;
+  int owner_id = k_first_ai_owner_id;
   for (const auto& ai_setup : mission.ai_setups) {
-    ai_setups.append(build_ai_setup_map(ai_setup));
+    ai_setups.append(build_ai_setup_map(ai_setup, map_commanders, owner_id));
+    ++owner_id;
   }
   result["ai_setups"] = ai_setups;
 
@@ -339,25 +347,16 @@ auto build_mission_objectives_map(const Game::Mission::MissionDefinition& missio
 auto build_campaign_player_configs(const Game::Mission::MissionDefinition& mission)
     -> QVariantList {
   QVariantList player_configs;
-  player_configs.append(
-      build_campaign_player_config(mission.player_setup.nation,
-                                   mission.player_setup.commander_troop,
-                                   1,
-                                   0,
-                                   0,
-                                   true));
+  player_configs.append(build_campaign_player_config(
+      mission.player_setup.nation, k_local_owner_id, 0, 0, true));
 
-  int player_id = 2;
+  int player_id = k_first_ai_owner_id;
   int default_team_id = 1;
   for (const auto& ai_setup : mission.ai_setups) {
     const int team_id =
         ai_setup.team_id.has_value() ? ai_setup.team_id.value() : default_team_id++;
-    player_configs.append(build_campaign_player_config(ai_setup.nation,
-                                                       ai_setup.commander_troop,
-                                                       player_id,
-                                                       player_id - 1,
-                                                       team_id,
-                                                       false));
+    player_configs.append(build_campaign_player_config(
+        ai_setup.nation, player_id, player_id - 1, team_id, false));
     ++player_id;
   }
 
