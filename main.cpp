@@ -1146,35 +1146,48 @@ auto main(int argc, char* argv[]) -> int {
   if (release_self_test) {
     auto mission_ready = std::make_shared<bool>(false);
     auto presented_frames = std::make_shared<int>(0);
+    auto polls = std::make_shared<int>(0);
     auto* readiness_poll = new QTimer(&app);
     readiness_poll->setInterval(250);
-    QObject::connect(
-        readiness_poll,
-        &QTimer::timeout,
-        &app,
-        [game_engine_ptr = game_engine.get(), mission_ready, window, readiness_poll]() {
-          if (!game_engine_ptr->last_error().isEmpty()) {
-            qCritical() << "SOI_MISSION_SELF_TEST: FAIL -"
-                        << game_engine_ptr->last_error();
-            readiness_poll->stop();
-            QGuiApplication::exit(17);
-            return;
-          }
-          // Loading is not considered complete until the gameplay renderer has
-          // presented enough frames to retire the first-frame overlay.  A
-          // static scene does not continuously schedule frames on macOS, so
-          // drive that handshake while polling instead of waiting for loading
-          // to finish before requesting the first update.
-          window->update();
-          if (!game_engine_ptr->release_self_test_mission_ready()) {
-            return;
-          }
-          if (!*mission_ready) {
-            *mission_ready = true;
-            qInfo() << "SOI_MISSION_SELF_TEST: mission loaded; verifying "
-                       "presented gameplay frames";
-          }
-        });
+    QObject::connect(readiness_poll,
+                     &QTimer::timeout,
+                     &app,
+                     [game_engine_ptr = game_engine.get(),
+                      mission_ready,
+                      polls,
+                      window,
+                      readiness_poll]() {
+                       if (!game_engine_ptr->last_error().isEmpty()) {
+                         qCritical() << "SOI_MISSION_SELF_TEST: FAIL -"
+                                     << game_engine_ptr->last_error();
+                         readiness_poll->stop();
+                         QGuiApplication::exit(17);
+                         return;
+                       }
+                       // Loading is not considered complete until the gameplay renderer
+                       // has presented enough frames to retire the first-frame overlay.
+                       // A static scene does not continuously schedule frames on macOS,
+                       // so drive that handshake while polling instead of waiting for
+                       // loading to finish before requesting the first update.
+                       window->update();
+                       if (!game_engine_ptr->release_self_test_mission_ready()) {
+                         // Every 10s: a runner we cannot attach to otherwise logs
+                         // nothing at all between the last asset line and the timeout,
+                         // which makes a stalled handshake indistinguishable from a
+                         // slow one.
+                         if (++*polls % 40 == 0) {
+                           qInfo().noquote()
+                               << "SOI_MISSION_SELF_TEST: waiting -"
+                               << game_engine_ptr->release_self_test_pending_reason();
+                         }
+                         return;
+                       }
+                       if (!*mission_ready) {
+                         *mission_ready = true;
+                         qInfo() << "SOI_MISSION_SELF_TEST: mission loaded; verifying "
+                                    "presented gameplay frames";
+                       }
+                     });
     readiness_poll->start();
 
     QObject::connect(window,
@@ -1189,6 +1202,12 @@ auto main(int argc, char* argv[]) -> int {
                          window->update();
                          return;
                        }
+                       // exit() only asks the loop to unwind; frames keep
+                       // swapping until it does, and each one would report the
+                       // verdict again.
+                       if (*presented_frames > 3) {
+                         return;
+                       }
                        qInfo() << "SOI_MISSION_SELF_TEST: PASS - authored packaged "
                                   "mission loaded with entities";
                        qInfo()
@@ -1197,11 +1216,26 @@ auto main(int argc, char* argv[]) -> int {
                        QGuiApplication::exit(0);
                      });
 
-    QTimer::singleShot(180000, &app, []() {
-      qCritical() << "SOI_MISSION_SELF_TEST: FAIL - mission did not load and present "
-                     "frames within 180 seconds";
-      QGuiApplication::exit(17);
-    });
+    // The macOS runner is headless and reports "Apple Software Renderer", so
+    // every gameplay frame is rasterized on the CPU and costs ~90s there
+    // against ~25ms under llvmpipe here. This test needs five of them to retire
+    // the loading overlay and three more afterwards, so 180s expired with the
+    // load still progressing rather than stuck. The budget is a ceiling on a
+    // hang, sized for the slowest renderer any job runs on; SOI_LOADING_OVERLAY
+    // reports the real per-frame cost.
+    QTimer::singleShot(
+        1500000,
+        &app,
+        [game_engine_ptr = game_engine.get(), mission_ready, presented_frames]() {
+          qCritical().noquote()
+              << "SOI_MISSION_SELF_TEST: FAIL - mission did not load and present "
+                 "frames within 1500 seconds; pending:"
+              << (*mission_ready
+                      ? QStringLiteral("mission ready, only %1 of 3 frames presented")
+                            .arg(*presented_frames)
+                      : game_engine_ptr->release_self_test_pending_reason());
+          QGuiApplication::exit(17);
+        });
   }
 
   if (!screenshot_path.isEmpty()) {

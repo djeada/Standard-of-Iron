@@ -136,7 +136,7 @@ jobs:
           export QT_OPENGL=desktop
           export QT_LOGGING_RULES="qt.rhi.*=false"
 
-          timeout 210s xvfb-run --auto-servernum -- \
+          timeout 1560s xvfb-run --auto-servernum -- \
             "$appimage_path" --release-self-test \
             2>&1 | tee renderer_self_test.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
