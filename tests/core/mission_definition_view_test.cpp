@@ -9,10 +9,11 @@
 #include "app/core/mission_definition_view.h"
 #include "game/map/campaign_loader.h"
 
-TEST(MissionDefinitionViewTest, ResolvesFallbackPlayerCommanderForCarthage) {
+TEST(MissionDefinitionViewTest, ReadsPlayerCommanderFromTheMissionMap) {
   Game::Mission::MissionDefinition mission;
   mission.id = "campania_campaign";
   mission.title = "Campania Campaign";
+  mission.map_path = ":/assets/maps/map_campania_campaign.json";
   mission.player_setup.nation = "carthage";
   mission.player_setup.faction = "carthaginian";
   mission.player_setup.color = "brown";
@@ -32,6 +33,7 @@ TEST(MissionDefinitionViewTest, ResolvesFallbackPlayerCommanderForCarthage) {
 
 TEST(MissionDefinitionViewTest, IncludesEveryEnemySetupAndCommanderDetails) {
   Game::Mission::MissionDefinition mission;
+  mission.map_path = ":/assets/maps/map_campania_campaign.json";
   mission.player_setup.nation = "roman_republic";
   mission.player_setup.faction = "roman";
   mission.player_setup.color = "red";
@@ -42,7 +44,6 @@ TEST(MissionDefinitionViewTest, IncludesEveryEnemySetupAndCommanderDetails) {
   northern_force.faction = "roman";
   northern_force.color = "red";
   northern_force.difficulty = "hard";
-  northern_force.commander_troop = QStringLiteral("roman_legion_organizer");
 
   Game::Mission::AISetup southern_force;
   southern_force.id = "south";
@@ -50,7 +51,6 @@ TEST(MissionDefinitionViewTest, IncludesEveryEnemySetupAndCommanderDetails) {
   southern_force.faction = "roman";
   southern_force.color = "orange";
   southern_force.difficulty = "hard";
-  southern_force.commander_troop = QStringLiteral("roman_veteran_consul");
 
   mission.ai_setups = {northern_force, southern_force};
 

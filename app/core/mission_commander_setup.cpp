@@ -1,12 +1,17 @@
 #include "mission_commander_setup.h"
 
+#include <QDebug>
+
 #include <algorithm>
 #include <limits>
 
+#include "game/map/map_loader.h"
 #include "game/map/spawn_cluster.h"
 #include "game/systems/nation_id.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_type.h"
+#include "utils/resource_utils.h"
 
 namespace App::Core {
 namespace {
@@ -85,6 +90,35 @@ auto resolve_commander_troop(const QString& nation,
   return Game::Units::troop_typeToQString(
       Game::Units::default_commander_troop_for_nation(
           parsed_nation ? nation_id : Game::Systems::NationID::RomanRepublic));
+}
+
+auto commander_troops_by_owner(const Game::Map::MapDefinition& map)
+    -> std::map<int, QString> {
+  std::map<int, QString> by_owner;
+  for (const auto& spawn : map.spawns) {
+    const auto troop_type = Game::Units::spawn_typeToTroopType(spawn.type);
+    if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
+      continue;
+    }
+    const QString troop = Game::Units::troop_typeToQString(*troop_type);
+    const auto [it, inserted] = by_owner.emplace(spawn.player_id, troop);
+    if (!inserted) {
+      qWarning() << "Map authors more than one commander for owner" << spawn.player_id
+                 << "- keeping" << it->second << "and ignoring" << troop;
+    }
+  }
+  return by_owner;
+}
+
+auto commander_troops_for_map(const QString& map_path) -> std::map<int, QString> {
+  Game::Map::MapDefinition map;
+  QString error;
+  const QString resolved = Utils::Resources::resolve_resource_path(map_path);
+  if (!Game::Map::MapLoader::load_from_json_file(resolved, map, &error)) {
+    qWarning() << "Commander lookup: failed to load map" << map_path << "-" << error;
+    return {};
+  }
+  return commander_troops_by_owner(map);
 }
 
 auto resolve_commander_position(

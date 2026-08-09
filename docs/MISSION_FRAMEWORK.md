@@ -74,6 +74,57 @@ Defines the human player's starting configuration:
 }
 ```
 
+### Commanders
+
+**Commanders are authored in the map, never in the mission.** A commander reaches
+the field as an ordinary entry in the map's `spawns[]` whose `type` is a commander
+troop, carrying the owning `player_id` and that force's `nation`:
+
+```json
+{
+    "type": "carthage_sword_commander",
+    "player_id": 1,
+    "nation": "carthage",
+    "x": 283.85,
+    "z": 434.14,
+    "max_population": -1
+}
+```
+
+Every force a mission declares — the player as owner 1, then each entry of
+`ai_setups` as owners 2, 3, … in order — needs exactly one such spawn. Mission
+setup no longer invents a commander for a force that lacks one; it warns and that
+force starts headless, which will lose it the mission to `no_commander`.
+
+This used to be a `commander_troop` field on `player_setup` and each AI setup, which
+made two sources of truth: a map that authored a commander silently won, because the
+map's units are already in the world when mission setup runs. The field is gone.
+`MissionLoader` warns if it finds one and `MissionLoaderTest.ShippedMissionsDoNotAuthorCommanders`
+fails the build, so the dead field cannot creep back in.
+
+The map is also what fixes the commander's **position**. Before, position was derived
+from the densest cluster of a force's units, and a force with no authored units landed
+on a hardcoded fallback far from its camp — `battle_of_ticino`'s reserve, `campania_campaign`'s
+siege column and `battle_of_zama`'s rear guard all did. Authoring the spawn puts each
+commander exactly where the author wants it.
+
+Two rules are pinned by tests over the shipped campaign:
+
+- **Coverage** — every force has exactly one commander, of its own nation.
+  `MissionCommanderSetupTest.EveryCampaignForceHasExactlyOneMapCommander` and
+  `CampaignCommandersMatchTheirForcesNation` check the data;
+  `CampaignWaveAssaultTest.EveryCampaignForceLoadsWithExactlyOneCommander` loads every
+  mission for real and counts the live commanders per owner.
+- **Distinctness** — no two forces in one mission share a commander, until a nation
+  fields more forces than it has commanders. Each nation has three, so
+  `battle_of_zama`'s four Roman forces must repeat exactly one; every other mission
+  must be fully distinct.
+  `MissionCommanderSetupTest.CampaignCommandersAreUniqueUntilThePoolRunsOut` enforces
+  the `min(forces, pool)` rule.
+
+In the map editor, a force whose commander the map has forgotten draws as a red crossed
+ring naming the nation-appropriate commander to place — never as a phantom commander badge.
+
 ### AI Setup
 
 Defines AI opponents with personality and behavior:
@@ -88,7 +139,6 @@ Defines AI opponents with personality and behavior:
     "difficulty": "hard",
     "strategy": "aggressive",
     "team_id": 1,
-    "commander_troop": "carthage_war_leader",
     "personality": {
       "aggression": 0.7,
       "defense": 0.3,
@@ -138,7 +188,6 @@ Defines AI opponents with personality and behavior:
 | `difficulty`         | No       | Execution tuning, and a wave-size multiplier; omitted means normal  |
 | `strategy`           | No       | Base strategic preset; omitted falls back to `balanced`             |
 | `team_id`            | No       | Allies AIs with the same team and prevents them fighting each other |
-| `commander_troop`    | No       | Explicit commander troop override                                   |
 | `personality`        | No       | Fine-tunes aggression / defense / harassment on top of the strategy |
 | `starting_units`     | No       | Spawns the AI with units at mission start                           |
 | `starting_buildings` | No       | Spawns the AI with structures at mission start                      |
@@ -466,8 +515,8 @@ satisfied once no enemy commander is left alive.
 The rule **arms** only after an enemy commander has been seen. At mission start the
 roster has not spawned and the count is legitimately zero; without arming, the mission
 would be won on its first evaluated frame. The consequence for authors is that every AI
-setup in a mission carrying this condition needs a `commander_troop` — an AI without one
-can never arm the rule, which makes the mission unwinnable.
+force in a mission carrying this condition needs a commander spawn in the map — an AI
+without one can never arm the rule, which makes the mission unwinnable.
 `MissionAssetRulesTest.DecapitationObjectivesHaveCommandersToKill` fails the build if that
 happens. Iron Sepulcher units are excluded from the count: the dead have no commander, so
 a Sepulcher zone can never block the objective.

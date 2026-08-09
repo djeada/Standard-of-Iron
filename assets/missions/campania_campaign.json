@@ -11,7 +11,6 @@
     "nation": "carthage",
     "faction": "carthaginian",
     "color": "brown",
-    "commander_troop": "carthage_sword_commander",
     "starting_units": [],
     "starting_buildings": [
       {
@@ -216,7 +215,6 @@
           ]
         }
       ],
-      "commander_troop": "roman_legion_organizer",
       "wave_escalation": 0.12
     },
     {
@@ -345,7 +343,6 @@
           "label": "The allied wing"
         }
       ],
-      "commander_troop": "roman_veteran_consul",
       "wave_escalation": 0.12
     },
     {
@@ -461,7 +458,6 @@
           "label": "The siege column"
         }
       ],
-      "commander_troop": "roman_field_commander",
       "wave_escalation": 0.12
     }
   ],

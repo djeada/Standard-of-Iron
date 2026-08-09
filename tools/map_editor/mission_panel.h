@@ -66,7 +66,6 @@ private:
   QComboBox* m_player_nation = nullptr;
   QComboBox* m_player_faction = nullptr;
   QComboBox* m_player_color = nullptr;
-  QComboBox* m_player_commander = nullptr;
   QSpinBox* m_player_gold = nullptr;
   QSpinBox* m_player_food = nullptr;
   QCheckBox* m_ambient_undead = nullptr;

@@ -16,8 +16,7 @@
     "starting_resources": {
       "gold": 650,
       "food": 520
-    },
-    "commander_troop": "carthage_sword_commander"
+    }
   },
   "ai_setups": [
     {
@@ -74,8 +73,7 @@
             "z": 420
           }
         }
-      ],
-      "commander_troop": "roman_veteran_consul"
+      ]
     },
     {
       "id": "roman_numidian_allies",
@@ -131,8 +129,7 @@
             "z": 252
           }
         }
-      ],
-      "commander_troop": "roman_field_commander"
+      ]
     },
     {
       "id": "roman_rear_guard",
@@ -175,8 +172,7 @@
             "z": 596
           }
         }
-      ],
-      "commander_troop": "roman_legion_organizer"
+      ]
     },
     {
       "id": "roman_northern_camp",
@@ -228,8 +224,7 @@
             "z": 240
           }
         }
-      ],
-      "commander_troop": "roman_field_commander"
+      ]
     }
   ],
   "victory_mode": "all",

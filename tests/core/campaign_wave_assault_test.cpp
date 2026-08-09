@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <cstddef>
 #include <gtest/gtest.h>
 #include <limits>
+#include <map>
 #include <vector>
 
 #include "app/core/campaign_manager.h"
@@ -19,6 +21,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/units/spawn_type.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 
@@ -176,6 +179,28 @@ public:
     return m_spawned;
   }
 
+  [[nodiscard]] auto
+  living_commanders_by_owner() -> std::map<int, std::vector<QString>> {
+    std::map<int, std::vector<QString>> by_owner;
+    for (auto* entity : m_world.get_entities_with<Engine::Core::CommanderComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto* unit = entity->get_component<UnitComponent>();
+      if (unit == nullptr || unit->health <= 0) {
+        continue;
+      }
+      by_owner[unit->owner_id].push_back(
+          Game::Units::spawn_typeToQString(unit->spawn_type));
+    }
+    return by_owner;
+  }
+
+  [[nodiscard]] auto force_count() const -> std::size_t {
+    const auto& mission = m_campaign.current_mission_definition();
+    return mission.has_value() ? 1 + mission->ai_setups.size() : 0;
+  }
+
 private:
   struct Engagement {
 
@@ -292,5 +317,33 @@ TEST_F(CampaignWaveAssaultTest, EveryCampaignMissionWaveClosesOnThePlayerCamp) {
         << march.closest_approach;
     EXPECT_LT(march.furthest_from_camp, march.spawn_distance + 10.0F)
         << "the wave drifted away from the camp instead of marching on it";
+  }
+}
+
+TEST_F(CampaignWaveAssaultTest, EveryCampaignForceLoadsWithExactlyOneCommander) {
+  const auto ids = campaign_mission_ids();
+  ASSERT_FALSE(ids.empty()) << "the campaign must list its missions";
+
+  for (const auto& mission_id : ids) {
+    SCOPED_TRACE(mission_id.toStdString());
+
+    MissionUnderTest mission;
+    ASSERT_TRUE(mission.load(mission_id)) << mission.error().toStdString();
+
+    const auto commanders = mission.living_commanders_by_owner();
+    const std::size_t forces = mission.force_count();
+    ASSERT_GT(forces, 0U);
+
+    for (std::size_t index = 0; index < forces; ++index) {
+      const int owner_id = static_cast<int>(index) + 1;
+      const auto it = commanders.find(owner_id);
+      ASSERT_NE(it, commanders.end())
+          << "owner " << owner_id << " went into battle with no commander";
+      EXPECT_EQ(it->second.size(), 1U) << "owner " << owner_id << " fielded "
+                                       << it->second.size() << " commanders at once";
+    }
+
+    EXPECT_EQ(commanders.size(), forces)
+        << "the world holds commanders for owners the mission never declared";
   }
 }
