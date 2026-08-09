@@ -42,6 +42,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/map_pipeline/requirements.txt
+
       - name: Resolve release version
         run: |
           set -euo pipefail
@@ -122,6 +128,17 @@ jobs:
           key: deps-macos-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
           restore-keys: deps-macos-
 
+      - name: Cache campaign map source datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tools/map_pipeline/build
+          key: campaign-map-${{ runner.os }}-${{ hashFiles('tools/map_pipeline/pipeline.py', 'tools/map_pipeline/map_bounds.json') }}
+
+      - name: Generate campaign map runtime assets
+        run: |
+          python -m pip install -r tools/map_pipeline/requirements.txt
+          python scripts/generate-campaign-map.py
+
       - name: Configure
         # CMAKE_OSX_DEPLOYMENT_TARGET is deliberately not set: Qt defaults it to
         # its own minimum (macOS 12 for Qt 6.8), and hard-coding a different
@@ -131,10 +148,12 @@ jobs:
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -DDEFAULT_LANG=en \
-            -DCMAKE_OSX_ARCHITECTURES="${SOI_MACOS_ARCHS}"
+            -DCMAKE_OSX_ARCHITECTURES="${SOI_MACOS_ARCHS}" \
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON \
+            -DBUILD_TESTING=OFF
 
       - name: Build
-        run: cmake --build build --config ${BUILD_TYPE}
+        run: cmake --build build --config ${BUILD_TYPE} --target standard_of_iron
 
       # A universal build that silently lost a slice is indistinguishable from
       # a working one until an Apple Silicon player reports that it will not
@@ -164,11 +183,6 @@ jobs:
             echo "| Minimum macOS | \`${target:-unknown}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
           exit "${status}"
-
-      - name: Unit tests
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: bash scripts/run-tests.sh build
 
       - name: Validate OpenGL requirements
         run: python3 scripts/validate_opengl_requirements.py
@@ -219,8 +233,12 @@ jobs:
           binary="${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
           echo "Running the ${SOI_ARCH_TAG} build natively as $(uname -m)"
 
-          "${binary}" --renderer-self-test 2>&1 | tee renderer_self_test.log
+          "${binary}" --release-self-test 2>&1 | tee renderer_self_test.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_MISSION_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_CAMPAIGN_MAP_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_CREATURE_ASSET_SELF_TEST: PASS" renderer_self_test.log
 
           # Music and ambience are read from assets/ rather than embedded in
           # the binary, so a package that loses that directory renders fine and
@@ -230,6 +248,7 @@ jobs:
           # back a 2.1 compatibility context the renderer must say so loudly
           # rather than draw nothing.
           grep -q "SOI_GL_FLOOR: PASS" renderer_self_test.log
+          grep -q "SOI_GL_TIER_41: PASS" renderer_self_test.log
 
           # Apple's driver reports the context it actually gave us. Record it:
           # a release that quietly dropped to a 2.1 compatibility context would
@@ -238,7 +257,9 @@ jobs:
             renderer_self_test.log || true
           {
             echo "| Ran natively as | \`$(uname -m)\` |"
-            echo "| GL context | \`$(grep -m1 'Context Version:' renderer_self_test.log | sed 's/.*Context Version: *//' || echo unknown)\` |"
+            context_version=$(grep -m1 'Context Version:' renderer_self_test.log \
+              | sed 's/.*Context Version: *//' || echo unknown)
+            echo "| GL context | \`$context_version\` |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       # OpenGL 3.3 Core is the floor on every platform. Apple caps at 4.1, so

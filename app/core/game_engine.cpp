@@ -998,6 +998,12 @@ bool GameEngine::is_campaign_mission() const {
   return m_campaign_manager->current_mission_context().is_campaign();
 }
 
+bool GameEngine::release_self_test_mission_ready() const {
+  return m_runtime.initialized && !is_loading() && is_campaign_mission() &&
+         m_world != nullptr && m_world->entity_count() > 0U &&
+         m_runtime.last_error.isEmpty();
+}
+
 bool GameEngine::campaign_completed() const {
   if (!m_campaign_manager) {
     return false;

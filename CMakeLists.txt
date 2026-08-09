@@ -239,6 +239,7 @@ endif()
 
 # ---- Qt ----
 # Try Qt6 first, fall back to Qt5 if not available
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(
     Qt6
     QUIET
@@ -292,25 +293,16 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-if(DEFINED ENV{CI} AND NOT "$ENV{CI}" STREQUAL "")
-    set(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT OFF)
-else()
-    set(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT ON)
-endif()
-
 option(
     ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS
-    "Embed generated campaign map assets produced by tools/map_pipeline"
-    ${ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS_DEFAULT}
+    "Embed the campaign map assets required by the shipped campaign UI"
+    ON
 )
 
-# Pipeline outputs from tools/map_pipeline. These are .gitignored and are not
-# produced on CI (scripts/run-map-pipeline.sh skips itself there), so they must
-# never be listed in a checked-in .qrc: AUTORCC would turn them into hard build
-# dependencies and fail the configure-time-clean CI build. They are instead
-# embedded through a .qrc generated below, only when the option is enabled.
-# hannibal_path.json is deliberately absent -- it is tracked in git and stays in
-# assets.qrc so it is always embedded.
+# Runtime outputs from tools/map_pipeline. These remain generated and ignored;
+# release workflows run scripts/generate-campaign-map.py before CMake configures.
+# The configure-time checks below prevent any build from silently shipping the
+# campaign UI without them. hannibal_path.json is authored separately.
 set(GENERATED_CAMPAIGN_MAP_RESOURCES
     assets/campaign_map/campaign_base_color.png
     assets/campaign_map/campaign_water.png
@@ -318,6 +310,7 @@ set(GENERATED_CAMPAIGN_MAP_RESOURCES
     assets/campaign_map/rivers_uv.json
     assets/campaign_map/land_mesh.bin
     assets/campaign_map/provinces.json
+    assets/campaign_map/terrain_height.png
 )
 
 set(GENERATED_CAMPAIGN_MAP_QRC)
@@ -328,6 +321,12 @@ if(ENABLE_GENERATED_CAMPAIGN_MAP_ASSETS)
     # ":/assets/campaign_map/..." even though the .qrc lives in the build tree.
     set(_campaign_map_qrc_entries "")
     foreach(_campaign_map_resource IN LISTS GENERATED_CAMPAIGN_MAP_RESOURCES)
+        if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_campaign_map_resource}")
+            message(
+                FATAL_ERROR
+                "Required campaign map runtime asset is missing: ${_campaign_map_resource}"
+            )
+        endif()
         string(
             APPEND _campaign_map_qrc_entries
             "        <file alias=\"${_campaign_map_resource}\">${CMAKE_CURRENT_SOURCE_DIR}/${_campaign_map_resource}</file>\n"
@@ -343,22 +342,23 @@ else()
 endif()
 
 # ---- Google Test Setup ----
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG v1.14.0
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# GoogleTest installs its headers and static libraries by default, which would
-# otherwise land in the shipped package: a player build has no use for
-# include/gtest or libgtest.a.
-set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
-# Enable testing
-enable_testing()
+option(BUILD_TESTING "Build and register the test suite" ON)
+if(BUILD_TESTING)
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+    )
+    # For Windows: Prevent overriding the parent project's compiler/linker settings
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    # GoogleTest installs its headers and static libraries by default, which would
+    # otherwise land in the shipped package: a player build has no use for
+    # include/gtest or libgtest.a.
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+    enable_testing()
+endif()
 
 # engine core moved under game; no separate engine subdir target
 # Layering guard.  render/ reads game state to draw it; the simulation must not
@@ -481,7 +481,9 @@ target_link_libraries(render_gl PUBLIC game_systems)
 
 add_subdirectory(ui)
 add_subdirectory(tools)
-add_subdirectory(tests)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
 
 # ---- Icon resources ----
 # The whole tracked icon directory is embedded rather than a hand-kept list: a
@@ -767,6 +769,12 @@ set_target_properties(
     standard_of_iron
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
+if(APPLE)
+    # The macOS release workflow deploys, signs, and packages the application
+    # as a bundle. Without this property CMake emits only a bare executable,
+    # so macdeployqt cannot find the expected .app directory.
+    set_target_properties(standard_of_iron PROPERTIES MACOSX_BUNDLE TRUE)
+endif()
 if(WIN32)
     set_target_properties(standard_of_iron PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
@@ -774,7 +782,7 @@ endif()
 # What a player receives. `cmake --install` with no component argument
 # produces exactly the game and the content it loads at runtime -- notably the
 # music and ambience, which are deliberately not embedded in the executable.
-install(TARGETS standard_of_iron RUNTIME DESTINATION . COMPONENT runtime)
+install(TARGETS standard_of_iron RUNTIME DESTINATION . BUNDLE DESTINATION . COMPONENT runtime)
 install(DIRECTORY assets/ DESTINATION assets COMPONENT runtime)
 
 if(TARGET bake_creature_assets)

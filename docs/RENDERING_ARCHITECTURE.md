@@ -88,7 +88,7 @@ Here's how a single frame flows through the system:
 #
                            ┌─────────────────────────────────────┐
                            │           Qt Render Thread          │
-                           │  (creates OpenGL 3.3 Core context)  │
+                           │ (prefers GL 4.5; requires 3.3 Core) │
                            └──────────────┬──────────────────────┘
                                           │
                                           ▼
@@ -187,7 +187,11 @@ The relationship between Qt and our rendering code looks like this:
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-When Qt's render thread starts up, it creates an OpenGL 3.3 Core context for us. Our GLView class notices this and creates a GLRenderer that holds a pointer to the GameEngine. From then on, every frame Qt calls our render method, which calls into GameEngine, which kicks off the whole pipeline.
+When Qt's render thread starts up, it requests OpenGL 4.5 Core on Linux and
+Windows and 4.1 Core on macOS. The renderer still has a strict 3.3 Core portable
+floor. `GLView` notices the current context and creates a `GLRenderer` that holds
+a pointer to the `GameEngine`. From then on, every frame Qt calls our render
+method, which calls into `GameEngine` and kicks off the whole pipeline.
 
 The actual creation happens in [gl_view.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/ui/gl_view.cpp) around line 30:
 
@@ -202,7 +206,11 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
 }
 ```
 
-We picked OpenGL 3.3 Core as a balance between running on older hardware and having modern features like instancing. The Core profile means we don't have any of the legacy fixed-function baggage—everything goes through shaders.
+We keep OpenGL 3.3 Core as the baseline so older hardware and Apple's driver can
+render the complete game. A 4.3 context enables compute/SSBO/indirect GPU crowd
+culling, 4.4 (or `ARB_buffer_storage`) enables persistent mapped streaming, and
+4.5 is the preferred release tier. The Core profile means there is no legacy
+fixed-function path—everything goes through shaders.
 
 If you're ever debugging why nothing renders, the first place to check is whether the OpenGL context is actually valid. The code logs a warning if there's no context available, which usually means you're running in software mode where 3D won't work. Look for "No valid OpenGL context" in your logs.
 
@@ -510,18 +518,23 @@ class Shader : protected QOpenGLFunctions_3_3_Core {
 
 The rest of the rendering code doesn't call OpenGL directly. It talks through these abstractions, which means we could theoretically swap backends someday (though OpenGL is deeply baked in, so this is more of an architectural nicety than a real possibility).
 
-We use a fairly conservative subset of OpenGL 3.3:
+The renderer is split into explicit capability tiers:
 
-| What we use         | Why                          |
-| ------------------- | ---------------------------- |
-| Vertex arrays (VAO) | Group vertex attribute state |
-| Instanced rendering | Draw 1000 trees in 1 call    |
-| Depth testing       | Hidden surface removal       |
-| Alpha blending      | Transparent effects          |
-| Polygon offset      | Fix z-fighting on terrain    |
-| GLSL 330 shaders    | All visual computation       |
+| What we use                   | Why                                                             |
+| ----------------------------- | --------------------------------------------------------------- |
+| Vertex arrays (VAO)           | Group vertex attribute state                                    |
+| Instanced rendering           | Draw 1000 trees in 1 call                                       |
+| Depth testing                 | Hidden surface removal                                          |
+| Alpha blending                | Transparent effects                                             |
+| Polygon offset                | Fix z-fighting on terrain                                       |
+| GLSL 330 shaders              | All visual computation                                          |
+| GLSL 430 compute/SSBO shaders | GPU crowd culling on OpenGL 4.3+                                |
+| Persistent buffer storage     | Lower-overhead streaming on OpenGL 4.4+ or `ARB_buffer_storage` |
 
-What we don't use: geometry shaders (compatibility issues on some drivers), compute shaders (require OpenGL 4.3), tessellation (not needed for our art style), multi-draw indirect (instancing is enough).
+The 4.3 crowd path dispatches compute shaders and submits an indirect indexed
+draw. It is capability-gated and falls back to the 3.3 instanced path. We do not
+use geometry or tessellation shaders, and no draw path currently depends on a
+4.5-only API.
 
 ## How buildings rot
 

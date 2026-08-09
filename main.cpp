@@ -14,7 +14,9 @@
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QSGRendererInterface>
+#include <QSettings>
 #include <QSurfaceFormat>
+#include <QTemporaryDir>
 #include <QTextStream>
 #include <QTimer>
 #include <QUrl>
@@ -30,11 +32,14 @@
 #include <qsurfaceformat.h>
 #include <qurl.h>
 
+#include <array>
 #include <cstdio>
 #include <cstring>
 #include <memory>
 #include <optional>
 #include <string_view>
+
+#include "render/gl/context_requirements.h"
 
 #ifdef Q_OS_WIN
 #include <gl/gl.h>
@@ -63,13 +68,15 @@ using PFNWGLCREATECONTEXTATTRIBSARBPROC = HGLRC(WINAPI*)(HDC hDC,
 
 namespace {
 
-constexpr int k_required_gl_major = 3;
-constexpr int k_required_gl_minor = 3;
+constexpr int k_required_gl_major = Render::GL::ContextRequirements::required.major;
+constexpr int k_required_gl_minor = Render::GL::ContextRequirements::required.minor;
 
 struct NativeOpenGLProbeResult {
   bool supported = false;
   bool generic_software = false;
   bool used_core_context = false;
+  int requested_major = 0;
+  int requested_minor = 0;
   int major = 0;
   int minor = 0;
   QString vendor = QStringLiteral("<unknown>");
@@ -136,6 +143,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/models/map_preview_image_provider.h"
 #include "app/models/minimap_image_provider.h"
 #include "render/graphics_settings.h"
+#include "render/horse/horse_source_asset.h"
 #include "render/i_render_backend.h"
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "render/profiling/profiling_hud.h"
@@ -148,6 +156,29 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "ui/theme.h"
 
 namespace {
+
+auto validate_release_campaign_map_resources() -> bool {
+  constexpr std::array<const char*, 7> resources{
+      ":/assets/campaign_map/campaign_base_color.png",
+      ":/assets/campaign_map/campaign_water.png",
+      ":/assets/campaign_map/coastlines_uv.json",
+      ":/assets/campaign_map/rivers_uv.json",
+      ":/assets/campaign_map/land_mesh.bin",
+      ":/assets/campaign_map/provinces.json",
+      ":/assets/campaign_map/terrain_height.png",
+  };
+
+  for (const char* path : resources) {
+    QFile file(QString::fromLatin1(path));
+    if (!file.open(QIODevice::ReadOnly) || file.size() < 32) {
+      qCritical() << "SOI_CAMPAIGN_MAP_SELF_TEST: FAIL - missing or empty" << path;
+      return false;
+    }
+  }
+  qInfo() << "SOI_CAMPAIGN_MAP_SELF_TEST: PASS - all campaign map resources are "
+             "embedded";
+  return true;
+}
 
 void capture_screenshot_and_exit(QQuickWindow* window,
                                  const QString& path,
@@ -286,23 +317,38 @@ static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
         auto* create_core_context = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
             wglGetProcAddress("wglCreateContextAttribsARB"));
         if (create_core_context != nullptr) {
-          const int attribs[] = {WGL_CONTEXT_MAJOR_VERSION_ARB,
-                                 k_required_gl_major,
-                                 WGL_CONTEXT_MINOR_VERSION_ARB,
-                                 k_required_gl_minor,
-                                 WGL_CONTEXT_PROFILE_MASK_ARB,
-                                 WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-                                 0};
-          HGLRC core_ctx = create_core_context(hdc, nullptr, attribs);
-          if (core_ctx != nullptr) {
+          constexpr std::array probe_versions{
+              Render::GL::ContextRequirements::preferred,
+              Render::GL::ContextRequirements::Version{4, 4},
+              Render::GL::ContextRequirements::Version{4, 3},
+              Render::GL::ContextRequirements::apple_maximum,
+              Render::GL::ContextRequirements::required,
+          };
+          for (const auto candidate : probe_versions) {
+            const int attribs[] = {WGL_CONTEXT_MAJOR_VERSION_ARB,
+                                   candidate.major,
+                                   WGL_CONTEXT_MINOR_VERSION_ARB,
+                                   candidate.minor,
+                                   WGL_CONTEXT_PROFILE_MASK_ARB,
+                                   WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+                                   0};
+            HGLRC core_ctx = create_core_context(hdc, nullptr, attribs);
+            if (core_ctx == nullptr) {
+              continue;
+            }
             wglMakeCurrent(nullptr, nullptr);
             if (wglMakeCurrent(hdc, core_ctx)) {
               result.used_core_context = true;
+              result.requested_major = candidate.major;
+              result.requested_minor = candidate.minor;
               capture_current_gl_info(result);
             }
             wglMakeCurrent(nullptr, nullptr);
             wglDeleteContext(core_ctx);
             (void)wglMakeCurrent(hdc, hglrc);
+            if (result.used_core_context) {
+              break;
+            }
           }
         }
 
@@ -313,9 +359,14 @@ static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
         fprintf(stderr, "[OpenGL Test] Vendor: %s\n", vendor_bytes.constData());
         fprintf(stderr, "[OpenGL Test] Renderer: %s\n", renderer_bytes.constData());
         fprintf(stderr, "[OpenGL Test] Version: %s\n", version_bytes.constData());
-        fprintf(stderr,
-                "[OpenGL Test] Probe context: %s\n",
-                result.used_core_context ? "3.3 core" : "legacy");
+        if (result.used_core_context) {
+          fprintf(stderr,
+                  "[OpenGL Test] Probe context: %d.%d core\n",
+                  result.requested_major,
+                  result.requested_minor);
+        } else {
+          fprintf(stderr, "[OpenGL Test] Probe context: legacy\n");
+        }
         if (result.generic_software) {
           fprintf(stderr, "[OpenGL Test] Pixel format is generic software rendering\n");
         }
@@ -323,15 +374,18 @@ static auto testNativeOpenGL() -> NativeOpenGLProbeResult {
         const bool microsoft_gdi =
             result.vendor.contains("Microsoft", Qt::CaseInsensitive) ||
             result.renderer.contains("GDI Generic", Qt::CaseInsensitive);
-        const bool version_ok = opengl_version_supported(result.major, result.minor);
+        const bool version_ok = result.used_core_context &&
+                                opengl_version_supported(result.major, result.minor);
         result.supported = version_ok && !result.generic_software && !microsoft_gdi;
         if (!version_ok) {
           fprintf(stderr,
-                  "[OpenGL Test] Rejected: requires OpenGL %d.%d Core, found %d.%d\n",
+                  "[OpenGL Test] Rejected: requires OpenGL %d.%d Core, found %d.%d "
+                  "%s\n",
                   k_required_gl_major,
                   k_required_gl_minor,
                   result.major,
-                  result.minor);
+                  result.minor,
+                  result.used_core_context ? "Core" : "without a Core profile");
         }
         if (microsoft_gdi) {
           fprintf(
@@ -382,6 +436,12 @@ static LONG WINAPI crashHandler(EXCEPTION_POINTERS* exceptionInfo) {
 
 auto main(int argc, char* argv[]) -> int {
 
+#if defined(Q_OS_MACOS)
+  auto surface_gl_version = Render::GL::ContextRequirements::apple_maximum;
+#else
+  auto surface_gl_version = Render::GL::ContextRequirements::preferred;
+#endif
+
   if (qEnvironmentVariable("QT_QUICK_BACKEND")
           .compare("software", Qt::CaseInsensitive) == 0) {
     fprintf(stderr,
@@ -418,6 +478,7 @@ auto main(int argc, char* argv[]) -> int {
       qputenv("QT_OPENGL", "software");
     } else {
       fprintf(stderr, "[Pre-Init] OpenGL test passed\n");
+      surface_gl_version = {probe.requested_major, probe.requested_minor};
     }
   } else {
     fprintf(stderr,
@@ -426,7 +487,13 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   if (qEnvironmentVariable("QT_OPENGL").compare("software", Qt::CaseInsensitive) == 0) {
+    if (!qEnvironmentVariableIsSet("GALLIUM_DRIVER")) {
+      qputenv("GALLIUM_DRIVER", "llvmpipe");
+    }
     fprintf(stderr, "[Pre-Init] Software OpenGL fallback enabled\n");
+    fprintf(stderr,
+            "[Pre-Init] Mesa Gallium driver: %s\n",
+            qEnvironmentVariable("GALLIUM_DRIVER").toLocal8Bit().constData());
   }
 #endif
 
@@ -519,7 +586,7 @@ auto main(int argc, char* argv[]) -> int {
   qInfo() << "Configuring OpenGL surface format...";
   QSurfaceFormat fmt;
   fmt.setRenderableType(QSurfaceFormat::OpenGL);
-  fmt.setVersion(3, 3);
+  fmt.setVersion(surface_gl_version.major, surface_gl_version.minor);
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setRedBufferSize(8);
   fmt.setGreenBufferSize(8);
@@ -535,18 +602,33 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   QSurfaceFormat::setDefaultFormat(fmt);
-  qInfo() << "Surface format configured: OpenGL" << fmt.majorVersion() << "."
-          << fmt.minorVersion();
+  qInfo() << "Surface format configured: preferred OpenGL" << fmt.majorVersion() << "."
+          << fmt.minorVersion() << "Core (portable floor 3.3 Core)";
 
   qInfo() << "Creating QGuiApplication...";
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
 
   app.setApplicationVersion(QStringLiteral(SOI_VERSION));
+  qInfo() << "Game version:" << app.applicationVersion();
   const bool renderer_self_test =
       QCoreApplication::arguments().contains(QStringLiteral("--renderer-self-test"));
+  const bool release_self_test =
+      QCoreApplication::arguments().contains(QStringLiteral("--release-self-test"));
 
-  if (renderer_self_test) {
+  std::unique_ptr<QTemporaryDir> release_settings_dir;
+  if (release_self_test) {
+    release_settings_dir = std::make_unique<QTemporaryDir>();
+    if (!release_settings_dir->isValid()) {
+      qCritical() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: FAIL - could not create a "
+                     "fresh settings profile";
+      return 14;
+    }
+    QSettings::setPath(
+        QSettings::IniFormat, QSettings::UserScope, release_settings_dir->path());
+  }
+
+  if (renderer_self_test || release_self_test) {
     const QStringList missing_audio = AudioResourceLoader::missing_asset_ids();
     if (!missing_audio.isEmpty()) {
       qCritical() << "SOI_AUDIO_SELF_TEST: FAIL -" << missing_audio.size()
@@ -558,6 +640,26 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   App::Core::UserSettings::apply_saved_graphics_quality();
+
+  if (release_self_test) {
+    if (Render::GraphicsSettings::instance().quality() !=
+        Render::GraphicsQuality::Ultra) {
+      qCritical() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: FAIL - fresh profile is not "
+                     "Ultra";
+      return 14;
+    }
+    qInfo() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS - fresh profile uses Ultra";
+    if (!validate_release_campaign_map_resources()) {
+      return 15;
+    }
+    const auto& horse_status = Render::Horse::horse_source_asset_status();
+    if (!horse_status.loaded) {
+      qCritical() << "SOI_CREATURE_ASSET_SELF_TEST: FAIL - horse asset:"
+                  << horse_status.error.c_str();
+      return 16;
+    }
+    qInfo() << "SOI_CREATURE_ASSET_SELF_TEST: PASS - packaged horse asset loaded";
+  }
 
   QString direct_campaign_mission;
   QString direct_mission_file;
@@ -584,6 +686,10 @@ auto main(int argc, char* argv[]) -> int {
     QCommandLineOption const renderer_self_test_opt(
         "renderer-self-test",
         "Show the gameplay view, render and present one frame, then exit.");
+    QCommandLineOption const release_self_test_opt(
+        "release-self-test",
+        "Validate a fresh profile and campaign assets, start a real campaign "
+        "mission, present frames, then exit.");
     QCommandLineOption const graphics_preset_opt(
         "graphics-preset",
         "Override the complete graphics preset: low | medium | high | ultra.",
@@ -625,6 +731,7 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
     parser.addOption(renderer_self_test_opt);
+    parser.addOption(release_self_test_opt);
     parser.addOption(graphics_preset_opt);
     parser.addOption(campaign_mission_opt);
     parser.addOption(mission_file_opt);
@@ -665,6 +772,10 @@ auto main(int argc, char* argv[]) -> int {
 
     direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
     direct_mission_file = parser.value(mission_file_opt).trimmed();
+    if (release_self_test) {
+      direct_campaign_mission = QStringLiteral("second_punic_war/crossing_the_rhone");
+      direct_mission_file.clear();
+    }
 #if defined(SOI_ENABLE_RUNTIME_TRACING)
     bool benchmark_seconds_valid = false;
     runtime_benchmark_seconds =
@@ -918,7 +1029,7 @@ auto main(int argc, char* argv[]) -> int {
   QObject::connect(window,
                    &QQuickWindow::sceneGraphInitialized,
                    window,
-                   [window, renderer_self_test, &app]() {
+                   [window, renderer_self_test, release_self_test, &app]() {
                      qInfo() << "Scene graph initialized!";
                      if (auto* renderer_interface = window->rendererInterface()) {
                        const auto api = renderer_interface->graphicsApi();
@@ -949,7 +1060,7 @@ auto main(int argc, char* argv[]) -> int {
                        if (api != QSGRendererInterface::OpenGLRhi) {
                          qCritical() << "The Qt Quick scene graph is not using OpenGL; "
                                         "the gameplay framebuffer cannot be displayed.";
-                         if (renderer_self_test) {
+                         if (renderer_self_test || release_self_test) {
                            QGuiApplication::exit(10);
                          }
                        }
@@ -999,6 +1110,62 @@ auto main(int argc, char* argv[]) -> int {
       qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - no gameplay frame was "
                      "presented within 30 seconds";
       QGuiApplication::exit(10);
+    });
+  }
+
+  if (release_self_test) {
+    auto mission_ready = std::make_shared<bool>(false);
+    auto presented_frames = std::make_shared<int>(0);
+    auto* readiness_poll = new QTimer(&app);
+    readiness_poll->setInterval(250);
+    QObject::connect(
+        readiness_poll,
+        &QTimer::timeout,
+        &app,
+        [game_engine_ptr = game_engine.get(), mission_ready, window, readiness_poll]() {
+          if (!game_engine_ptr->last_error().isEmpty()) {
+            qCritical() << "SOI_MISSION_SELF_TEST: FAIL -"
+                        << game_engine_ptr->last_error();
+            readiness_poll->stop();
+            QGuiApplication::exit(17);
+            return;
+          }
+          if (!game_engine_ptr->release_self_test_mission_ready()) {
+            return;
+          }
+          if (!*mission_ready) {
+            *mission_ready = true;
+            qInfo() << "SOI_MISSION_SELF_TEST: mission loaded; verifying "
+                       "presented gameplay frames";
+          }
+          window->update();
+        });
+    readiness_poll->start();
+
+    QObject::connect(window,
+                     &QQuickWindow::frameSwapped,
+                     &app,
+                     [mission_ready, presented_frames, window]() {
+                       if (!*mission_ready) {
+                         return;
+                       }
+                       ++*presented_frames;
+                       if (*presented_frames < 3) {
+                         window->update();
+                         return;
+                       }
+                       qInfo() << "SOI_MISSION_SELF_TEST: PASS - real campaign mission "
+                                  "loaded with entities";
+                       qInfo()
+                           << "SOI_RENDERER_SELF_TEST: PASS - three gameplay frames "
+                              "rendered and presented after mission load";
+                       QGuiApplication::exit(0);
+                     });
+
+    QTimer::singleShot(180000, &app, []() {
+      qCritical() << "SOI_MISSION_SELF_TEST: FAIL - mission did not load and present "
+                     "frames within 180 seconds";
+      QGuiApplication::exit(17);
     });
   }
 

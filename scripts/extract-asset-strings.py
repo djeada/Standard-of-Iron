@@ -2,10 +2,11 @@
 """Extract player-visible strings from assets/ into a stub lupdate can read.
 
 Mission briefings, objective text, map names, unit names and campaign narration
-all live in JSON, so lupdate never sees them -- it only parses source. This
-script walks the asset tree and emits a generated translation unit full of
-QT_TRANSLATE_NOOP entries, which gives lupdate exactly the source strings the
-runtime will look up via Game::Util::tr_asset.
+mostly live in JSON, so lupdate never sees them -- it only parses source. This
+script walks the tracked asset sources (and the committed campaign-map Python
+definitions) and emits a generated translation unit full of QT_TRANSLATE_NOOP
+entries, which gives lupdate exactly the source strings the runtime will look
+up via Game::Util::tr_asset.
 
 The generated file is compiled into the build so a malformed extraction fails
 loudly at build time rather than silently producing an empty catalogue.
@@ -19,6 +20,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import sys
 from pathlib import Path
@@ -77,12 +79,9 @@ ASSET_CONTEXTS: list[dict] = [
             "intents{}/requirement_hint",
         ],
     },
-    {
-        "context": "CampaignMap",
-        "glob": "campaign_map/provinces.json",
-        "paths": ["provinces[]/name", "provinces[]/cities[]/name"],
-    },
 ]
+
+CAMPAIGN_MAP_SOURCE = Path("tools/map_pipeline/provinces.py")
 
 HEADER = """// GENERATED FILE -- DO NOT EDIT.
 //
@@ -138,6 +137,67 @@ def resolve(node, path: str):
     yield from resolve(node[head], rest)
 
 
+def collect_campaign_map_strings(source: Path) -> list[str]:
+    """Read province and city names from the committed generator source.
+
+    ``assets/campaign_map/provinces.json`` is intentionally ignored because it
+    is a build product. Reading it made the generated translation stub depend
+    on whether a developer happened to have run the map pipeline, while a clean
+    CI checkout necessarily produced a different result.
+    """
+    try:
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+    except (OSError, SyntaxError) as exc:
+        raise SystemExit(f"error: cannot read campaign map definitions: {exc}") from exc
+
+    literal = None
+    for node in tree.body:
+        if not isinstance(node, ast.FunctionDef) or node.name != "build_provinces":
+            continue
+        for statement in node.body:
+            if not isinstance(statement, ast.Assign):
+                continue
+            if any(
+                isinstance(target, ast.Name) and target.id == "provinces"
+                for target in statement.targets
+            ):
+                literal = statement.value
+                break
+        break
+
+    if literal is None:
+        raise SystemExit(f"error: no provinces literal found in {source}")
+
+    try:
+        provinces = ast.literal_eval(literal)
+    except (ValueError, TypeError, SyntaxError) as exc:
+        raise SystemExit(
+            f"error: provinces in {source} are not literal data: {exc}"
+        ) from exc
+
+    if not isinstance(provinces, list):
+        raise SystemExit(f"error: provinces in {source} must be a list")
+
+    found: set[str] = set()
+    for province in provinces:
+        if not isinstance(province, dict):
+            raise SystemExit(f"error: malformed province entry in {source}")
+        name = province.get("name")
+        if isinstance(name, str) and name.strip():
+            found.add(name.strip())
+        cities = province.get("cities", [])
+        if not isinstance(cities, list):
+            raise SystemExit(f"error: malformed cities list in {source}")
+        for city in cities:
+            if not isinstance(city, dict):
+                raise SystemExit(f"error: malformed city entry in {source}")
+            city_name = city.get("name")
+            if isinstance(city_name, str) and city_name.strip():
+                found.add(city_name.strip())
+
+    return sorted(found)
+
+
 def collect(assets_dir: Path) -> list[tuple[str, list[str]]]:
     """Return [(context, sorted unique strings)] for every configured family."""
     out: list[tuple[str, list[str]]] = []
@@ -164,6 +224,8 @@ def collect(assets_dir: Path) -> list[tuple[str, list[str]]]:
                     if text:
                         found.add(text)
         out.append((spec["context"], sorted(found)))
+    campaign_source = assets_dir.resolve().parent / CAMPAIGN_MAP_SOURCE
+    out.append(("CampaignMap", collect_campaign_map_strings(campaign_source)))
     return out
 
 

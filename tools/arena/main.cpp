@@ -27,6 +27,7 @@
 #include "game/map/terrain_topology_audit.h"
 #include "promo_runner.h"
 #include "promo_spec.h"
+#include "render/gl/context_requirements.h"
 #include "render/graphics_settings.h"
 #include "ui/theme.h"
 #include "ui/widget_shell.h"
@@ -182,7 +183,12 @@ auto write_terrain_review_report(const QString& directory,
 
 auto main(int argc, char** argv) -> int {
   QSurfaceFormat fmt;
-  fmt.setVersion(3, 3);
+#if defined(Q_OS_MACOS)
+  constexpr auto gl_version = Render::GL::ContextRequirements::apple_maximum;
+#else
+  constexpr auto gl_version = Render::GL::ContextRequirements::preferred;
+#endif
+  fmt.setVersion(gl_version.major, gl_version.minor);
   fmt.setProfile(QSurfaceFormat::CoreProfile);
   fmt.setDepthBufferSize(24);
   fmt.setStencilBufferSize(8);

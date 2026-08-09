@@ -353,7 +353,7 @@ Item {
 
                                 Layout.fillWidth: true
                                 model: typeof graphics_settings !== 'undefined' ? graphics_settings.quality_options : ["Low", "Medium", "High", "Ultra"]
-                                currentIndex: typeof graphics_settings !== 'undefined' ? graphics_settings.quality_level : 1
+                                currentIndex: typeof graphics_settings !== 'undefined' ? graphics_settings.quality_level : 3
                                 onActivated: function (index) {
                                     if (typeof graphics_settings !== 'undefined')
                                         graphics_settings.quality_level = index;
