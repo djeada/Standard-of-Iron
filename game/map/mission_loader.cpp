@@ -1,5 +1,6 @@
 #include "mission_loader.h"
 
+#include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -59,14 +60,23 @@ auto MissionLoader::parse_resources(const QJsonObject& obj) -> Resources {
   return res;
 }
 
+namespace {
+
+void warn_on_authored_commander(const QJsonObject& obj, const QString& force_label) {
+  if (obj.contains("commander_troop")) {
+    qWarning() << "MissionLoader: ignoring 'commander_troop' on" << force_label
+               << "- commanders are authored in the map's spawns[]";
+  }
+}
+
+} // namespace
+
 auto MissionLoader::parse_player_setup(const QJsonObject& obj) -> PlayerSetup {
   PlayerSetup setup;
   setup.nation = obj["nation"].toString();
   setup.faction = obj["faction"].toString();
   setup.color = obj["color"].toString();
-  if (obj.contains("commander_troop")) {
-    setup.commander_troop = obj["commander_troop"].toString();
-  }
+  warn_on_authored_commander(obj, QStringLiteral("player_setup"));
 
   const QJsonArray units = obj["starting_units"].toArray();
   for (const auto& unit_val : units) {
@@ -151,9 +161,7 @@ auto MissionLoader::parse_ai_setup(const QJsonObject& obj) -> AISetup {
   setup.faction = obj["faction"].toString();
   setup.color = obj["color"].toString();
   setup.difficulty = obj["difficulty"].toString();
-  if (obj.contains("commander_troop")) {
-    setup.commander_troop = obj["commander_troop"].toString();
-  }
+  warn_on_authored_commander(obj, setup.id);
 
   if (obj.contains("team_id")) {
     setup.team_id = obj["team_id"].toInt();

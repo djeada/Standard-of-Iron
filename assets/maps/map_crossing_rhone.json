@@ -4925,6 +4925,22 @@
             "type": "spearman",
             "x": 306,
             "z": 176
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "type": "roman_legion_organizer",
+            "x": 282.25,
+            "z": 87.0
+        },
+        {
+            "max_population": -1,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "type": "roman_veteran_consul",
+            "x": 416.55,
+            "z": 601.0
         }
     ],
     "starting_resources": {
