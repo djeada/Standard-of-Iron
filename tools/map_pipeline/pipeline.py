@@ -14,8 +14,10 @@ Outputs go to assets/campaign_map/.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import shutil
 import struct
 import sys
 import zipfile
@@ -66,7 +68,12 @@ ELEVATION_DATASET = {
     "archive": "ETOPO_2022_v1_60s_N90W180_bed.tif",
     "geotiff": "ETOPO_2022_v1_60s_N90W180_bed.tif",
     "extract_dir": "",
+    "sha256": "a2cc72f8a4292dee928f439069457cdefc1fba319876807c626edce40258ba7a",
 }
+
+DOWNLOAD_ATTEMPTS = 3
+DOWNLOAD_TIMEOUT_SECONDS = 120
+DOWNLOAD_CHUNK_BYTES = 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -95,54 +102,118 @@ class MapBounds:
         return box(self.lon_min, self.lat_min, self.lon_max, self.lat_max)
 
 
+def validate_zip(path: Path, expected_file: str) -> None:
+    if not zipfile.is_zipfile(path):
+        raise ValueError(f"{path.name} is not a ZIP archive")
+    with zipfile.ZipFile(path, "r") as archive:
+        corrupt_member = archive.testzip()
+        if corrupt_member is not None:
+            raise ValueError(f"{path.name} has a corrupt member: {corrupt_member}")
+        if expected_file not in {Path(name).name for name in archive.namelist()}:
+            raise ValueError(f"{path.name} does not contain {expected_file}")
+
+
+def validate_sha256(path: Path, expected: str) -> None:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(DOWNLOAD_CHUNK_BYTES), b""):
+            digest.update(chunk)
+    actual = digest.hexdigest()
+    if actual != expected:
+        raise ValueError(f"{path.name} has SHA-256 {actual}, expected {expected}")
+
+
+def ensure_download(label: str, urls: list[str], path: Path, validator) -> None:
+    if path.exists():
+        try:
+            validator(path)
+            return
+        except Exception as exc:
+            logging.warning("Discarding invalid cached %s: %s", label, exc)
+            path.unlink()
+
+    partial_path = path.with_name(f".{path.name}.part")
+    last_error: Exception | None = None
+    for url in urls:
+        for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
+            partial_path.unlink(missing_ok=True)
+            try:
+                logging.info(
+                    "Downloading %s (attempt %d/%d): %s",
+                    label,
+                    attempt,
+                    DOWNLOAD_ATTEMPTS,
+                    url,
+                )
+                request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                with (
+                    urlopen(request, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response,
+                    partial_path.open("wb") as output,
+                ):
+                    shutil.copyfileobj(response, output, length=DOWNLOAD_CHUNK_BYTES)
+                validator(partial_path)
+                partial_path.replace(path)
+                return
+            except Exception as exc:
+                last_error = exc
+                logging.warning("  download failed validation: %s", exc)
+            finally:
+                partial_path.unlink(missing_ok=True)
+    if last_error is not None:
+        raise last_error
+    raise RuntimeError(f"No download URLs configured for {label}")
+
+
+def shapefile_is_complete(path: Path) -> bool:
+    return all(
+        path.with_suffix(extension).is_file()
+        for extension in (".shp", ".shx", ".dbf", ".prj")
+    )
+
+
 def ensure_dataset(dataset: str, work_dir: Path) -> Path:
     meta = NE_DATASETS[dataset]
     work_dir.mkdir(parents=True, exist_ok=True)
-    archive_path = work_dir / meta["archive"]
-    if not archive_path.exists():
-        logging.info("Downloading %s to %s", dataset, archive_path)
-        last_error: Exception | None = None
-        for url in meta["urls"]:
-            try:
-                logging.info("  trying %s", url)
-                req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
-                with urlopen(req) as resp, open(archive_path, "wb") as out:
-                    out.write(resp.read())
-                last_error = None
-                break
-            except Exception as exc:
-                last_error = exc
-                logging.warning("  download failed: %s", exc)
-        if last_error:
-            raise last_error
     extract_dir = work_dir / meta["extract_dir"]
     shapefile_path = extract_dir / meta["shapefile"]
-    if not shapefile_path.exists():
-        logging.info("Extracting %s", archive_path)
-        with zipfile.ZipFile(archive_path, "r") as zf:
-            zf.extractall(extract_dir)
+    if shapefile_is_complete(shapefile_path):
+        return shapefile_path
+
+    archive_path = work_dir / meta["archive"]
+    ensure_download(
+        dataset,
+        meta["urls"],
+        archive_path,
+        lambda path: validate_zip(path, meta["shapefile"]),
+    )
+
+    partial_extract_dir = work_dir / f".{meta['extract_dir']}.part"
+    shutil.rmtree(partial_extract_dir, ignore_errors=True)
+    logging.info("Extracting %s", archive_path)
+    try:
+        with zipfile.ZipFile(archive_path, "r") as archive:
+            archive.extractall(partial_extract_dir)
+        partial_shapefile = partial_extract_dir / meta["shapefile"]
+        if not shapefile_is_complete(partial_shapefile):
+            raise RuntimeError(
+                f"{archive_path.name} did not provide a complete shapefile"
+            )
+        shutil.rmtree(extract_dir, ignore_errors=True)
+        partial_extract_dir.replace(extract_dir)
+    finally:
+        shutil.rmtree(partial_extract_dir, ignore_errors=True)
     return shapefile_path
 
 
 def ensure_elevation_dataset(work_dir: Path) -> Path:
     work_dir.mkdir(parents=True, exist_ok=True)
     archive_path = work_dir / ELEVATION_DATASET["archive"]
-    if not archive_path.exists():
-        logging.info("Downloading elevation dataset to %s", archive_path)
-        last_error: Exception | None = None
-        for url in ELEVATION_DATASET["urls"]:
-            try:
-                logging.info("  trying %s", url)
-                req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
-                with urlopen(req) as resp, open(archive_path, "wb") as out:
-                    out.write(resp.read())
-                last_error = None
-                break
-            except Exception as exc:
-                last_error = exc
-                logging.warning("  download failed: %s", exc)
-        if last_error:
-            raise last_error
+    ensure_download(
+        "elevation dataset",
+        ELEVATION_DATASET["urls"],
+        archive_path,
+        lambda path: validate_sha256(path, ELEVATION_DATASET["sha256"]),
+    )
 
     if archive_path.suffix.lower() != ".zip":
         return archive_path

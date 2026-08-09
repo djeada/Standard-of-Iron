@@ -299,10 +299,12 @@ option(
     ON
 )
 
-# Runtime outputs from tools/map_pipeline. These remain generated and ignored;
-# release workflows run scripts/generate-campaign-map.py before CMake configures.
-# The configure-time checks below prevent any build from silently shipping the
-# campaign UI without them. hannibal_path.json is authored separately.
+# Runtime outputs from tools/map_pipeline. They are committed so that a build
+# never depends on the Natural Earth or NOAA hosts; release workflows still run
+# scripts/generate-campaign-map.py first to refresh them where the sources are
+# reachable. The configure-time checks below prevent any build from silently
+# shipping the campaign UI without them. hannibal_path.json is authored
+# separately.
 set(GENERATED_CAMPAIGN_MAP_RESOURCES
     assets/campaign_map/campaign_base_color.png
     assets/campaign_map/campaign_water.png
@@ -311,6 +313,7 @@ set(GENERATED_CAMPAIGN_MAP_RESOURCES
     assets/campaign_map/land_mesh.bin
     assets/campaign_map/provinces.json
     assets/campaign_map/terrain_height.png
+    assets/campaign_map/terrain_height.json
 )
 
 set(GENERATED_CAMPAIGN_MAP_QRC)

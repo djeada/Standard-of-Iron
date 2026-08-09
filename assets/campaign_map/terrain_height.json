@@ -1,0 +1,8 @@
+{
+  "dataset": "ETOPO2022_60s_bed",
+  "units": "meters",
+  "min_m": -4997.6904296875,
+  "max_m": 4002.029296875,
+  "width": 1024,
+  "height": 1024
+}

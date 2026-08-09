@@ -9,7 +9,7 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
-## [0.1.0] — unreleased
+## [0.1.0] — 2026-08-09
 
 The first tagged release, and the first build published as a download rather
 than as something you compile yourself.
