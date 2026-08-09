@@ -210,19 +210,18 @@ meant parameterising real visual differences rather than removing duplication.
 
 ## OpenGL floor
 
-OpenGL 3.3 Core is still the hardware floor and both entry points still request
-it. The crowd-culling path is reached through extension probes
-(`GL_ARB_compute_shader`, `GL_ARB_draw_indirect`,
-`GL_ARB_shader_storage_buffer_object`), which NVIDIA advertises on a 3.3 context;
-where they are absent, or where the driver refuses GLSL 4.30 on a 3.3 context,
-pipeline construction fails and the renderer keeps the instanced path. macOS caps
-desktop GL at 4.1 and will always take the fallback.
+OpenGL 3.3 Core is still the portable hardware floor. Linux and Windows request
+the preferred 4.5 Core context; macOS requests Apple's maximum 4.1. The
+crowd-culling path is enabled only on a real 4.3+ Core context because its four
+shaders declare GLSL 4.30. Older contexts keep the instanced path. Persistent
+mapped streaming is a separate 4.4/`ARB_buffer_storage` capability and falls
+back to ordinary mapped buffers when unavailable.
 
 `scripts/validate_opengl_requirements.py` enforces this: baseline shaders must
 declare `#version 330 core`, the four 4.30 shaders must be listed in
 `OPTIONAL_GL43_SHADERS` and referenced from a pipeline that calls both capability
-probes, compute shaders must be embedded in `assets.qrc`, and no entry point may
-request a context above 3.3. The Linux release workflow runs the packaged
+probes, compute shaders must be embedded in `assets.qrc`, and both entry points
+must use the central 3.3-required/4.5-preferred policy. The Linux release workflow runs the packaged
 renderer self-test twice, once with `SOI_RENDER_DISABLE_GPU_CROWD_CULL=1`, so the
 fallback is exercised on every release.
 

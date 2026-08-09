@@ -49,6 +49,15 @@ TEST_F(SettingsPersistenceTest, GraphicsQualitySelectionIsSavedAndRestored) {
             Render::GraphicsQuality::Medium);
 }
 
+TEST_F(SettingsPersistenceTest, FreshProfileDefaultsToUltraGraphics) {
+  Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::High);
+
+  App::Core::UserSettings::apply_saved_graphics_quality();
+
+  EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
+            Render::GraphicsQuality::Ultra);
+}
+
 TEST_F(SettingsPersistenceTest, LanguageSelectionIsLoadedFromSavedPreferences) {
   App::Core::UserSettings::save_language(QStringLiteral("de"));
 

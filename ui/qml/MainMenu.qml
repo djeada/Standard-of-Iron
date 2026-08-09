@@ -1166,4 +1166,19 @@ Item {
             }
         }
     }
+
+    Text {
+        objectName: "mainMenuVersionLabel"
+
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 14
+        anchors.bottomMargin: 8
+        text: "v" + Qt.application.version
+        color: Theme.textDim
+        font.pixelSize: 10
+        font.letterSpacing: 0.8
+        opacity: 0.8
+        z: 12
+    }
 }

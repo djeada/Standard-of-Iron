@@ -5,6 +5,8 @@
 #include <QOpenGLExtraFunctions>
 #include <QString>
 
+#include "context_requirements.h"
+
 namespace Render::GL {
 
 class GLCapabilities {
@@ -67,6 +69,8 @@ public:
     qInfo() << "Indirect Draw + SSBO:"
             << (has_indirect_draw() ? "Supported" : "Not Supported");
 
+    report_feature_tiers();
+
     qInfo() << "==================================";
   }
 
@@ -79,18 +83,23 @@ public:
     return ctx->hasExtension(QByteArray(extension));
   }
 
-  static constexpr int k_required_major = 3;
-  static constexpr int k_required_minor = 3;
+  static constexpr int k_required_major = ContextRequirements::required.major;
+  static constexpr int k_required_minor = ContextRequirements::required.minor;
 
-  [[nodiscard]] static auto meets_minimum_version() -> bool {
+  [[nodiscard]] static auto
+  has_core_version(ContextRequirements::Version version) -> bool {
     auto* ctx = QOpenGLContext::currentContext();
     if (ctx == nullptr) {
       return false;
     }
     const auto format = ctx->format();
-    return format.majorVersion() > k_required_major ||
-           (format.majorVersion() == k_required_major &&
-            format.minorVersion() >= k_required_minor);
+    return format.profile() == QSurfaceFormat::CoreProfile &&
+           ContextRequirements::at_least(
+               format.majorVersion(), format.minorVersion(), version);
+  }
+
+  [[nodiscard]] static auto meets_minimum_version() -> bool {
+    return has_core_version(ContextRequirements::required);
   }
 
   static void report_minimum_version() {
@@ -116,27 +125,35 @@ public:
       return;
     }
 
-    if (format.profile() == QSurfaceFormat::CompatibilityProfile) {
-      qWarning() << "SOI_GL_FLOOR: WARN - compatibility profile:" << found;
-      return;
-    }
-
     qInfo() << "SOI_GL_FLOOR: PASS -" << found;
   }
 
-  [[nodiscard]] static auto has_core_4_3() -> bool {
-    auto* ctx = QOpenGLContext::currentContext();
-    if (ctx == nullptr) {
-      return false;
-    }
-    const auto format = ctx->format();
-    return format.majorVersion() > 4 ||
-           (format.majorVersion() == 4 && format.minorVersion() >= 3);
+  [[nodiscard]] static auto has_core_4_1() -> bool {
+    return has_core_version(ContextRequirements::apple_maximum);
+  }
+
+  [[nodiscard]] static auto has_core_4_3() -> bool { return has_core_version({4, 3}); }
+
+  [[nodiscard]] static auto has_core_4_4() -> bool { return has_core_version({4, 4}); }
+
+  [[nodiscard]] static auto has_core_4_5() -> bool {
+    return has_core_version(ContextRequirements::preferred);
   }
 
   [[nodiscard]] static auto has_compute_shaders() -> bool { return has_core_4_3(); }
 
   [[nodiscard]] static auto has_indirect_draw() -> bool { return has_core_4_3(); }
+
+  static void report_feature_tiers() {
+    qInfo() << (has_core_4_1() ? "SOI_GL_TIER_41: PASS"
+                               : "SOI_GL_TIER_41: UNAVAILABLE");
+    qInfo() << (has_core_4_3() ? "SOI_GL_TIER_43: PASS"
+                               : "SOI_GL_TIER_43: UNAVAILABLE");
+    qInfo() << (has_core_4_4() ? "SOI_GL_TIER_44: PASS"
+                               : "SOI_GL_TIER_44: UNAVAILABLE");
+    qInfo() << (has_core_4_5() ? "SOI_GL_TIER_45: PASS"
+                               : "SOI_GL_TIER_45: UNAVAILABLE");
+  }
 };
 
 } // namespace Render::GL

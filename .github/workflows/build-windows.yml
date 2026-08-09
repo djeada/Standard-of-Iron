@@ -39,6 +39,8 @@ jobs:
       QT_VERSION: 6.8.2
       QT_ARCH: win64_msvc2022_64
       QT_ROOT: D:\a\Standard-of-Iron\Qt
+      MESA_DIST_VERSION: 26.1.6
+      MESA_DIST_SHA256: 86b506ad38b8dae9d37bdade656a9003518d717bf4ff5475ff3f746e4ee768eb
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -48,6 +50,8 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/map_pipeline/requirements.txt
 
       - name: Resolve release version
         shell: bash
@@ -153,24 +157,30 @@ jobs:
           key: deps-windows-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
           restore-keys: deps-windows-
 
+      - name: Cache campaign map source datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tools/map_pipeline/build
+          key: campaign-map-${{ runner.os }}-${{ hashFiles('tools/map_pipeline/pipeline.py', 'tools/map_pipeline/map_bounds.json') }}
+
+      - name: Generate campaign map runtime assets
+        shell: pwsh
+        run: |
+          python -m pip install -r tools/map_pipeline/requirements.txt
+          python scripts/generate-campaign-map.py
+
       - name: Configure (CMake + Ninja)
         shell: pwsh
         run: |
           cmake -S . -B build -G "Ninja" `
             -DCMAKE_BUILD_TYPE=${{ inputs.build-type }} `
             -DDEFAULT_LANG=en `
-            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON `
+            -DBUILD_TESTING=OFF
 
       - name: Build
-        run: cmake --build build
-
-      # bash rather than pwsh so this runs the same suite list as every other
-      # platform; the runner ships Git bash.
-      - name: Unit tests
-        shell: bash
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: bash scripts/run-tests.sh build
+        run: cmake --build build --target standard_of_iron
 
       # Code signing (optional: signs .exe with Authenticode)
       - name: Sign executable
@@ -304,12 +314,12 @@ jobs:
             'Double-click standard_of_iron.exe or LAUNCH.bat.'
             ''
             'GRAPHICS REQUIREMENT'
-            'The game requires desktop OpenGL 3.3 Core Profile.'
+            'The game requires desktop OpenGL 3.3 Core Profile and prefers 4.5.'
             'Drivers that also expose compute shaders, shader storage buffers'
             'and indirect draw get faster large-battle rendering automatically;'
             'this is detected at runtime and is never required.'
-            'The package includes Qt software OpenGL for systems whose GPU driver'
-            'cannot provide a compatible context.'
+            'The package includes Mesa llvmpipe 26.1.6 for systems whose GPU'
+            'driver cannot provide a compatible context.'
             ''
             'TROUBLESHOOTING'
             '1. Run run_debug.cmd and attach runlog.txt to an issue report.'
@@ -326,31 +336,50 @@ jobs:
       - name: Add software OpenGL fallback (mandatory)
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $qtbin = Join-Path $env:Qt6_DIR "bin"
-          # The renderer uses desktop GLSL 3.3 Core. ANGLE's OpenGL ES DLLs
-          # cannot run those shaders; Qt's opengl32sw.dll is the compatible
-          # fallback for machines whose native OpenGL driver is insufficient.
-          $required = @("d3dcompiler_47.dll", "opengl32sw.dll")
-          $missing = @()
+          $d3dCompiler = Join-Path $qtbin "d3dcompiler_47.dll"
+          if (!(Test-Path $d3dCompiler)) {
+            Write-Error "Missing required Qt runtime DLL: d3dcompiler_47.dll"
+          }
+          Copy-Item $d3dCompiler "$env:APP_DIR" -Force
 
-          foreach ($f in $required) {
-            $src = Join-Path $qtbin $f
-            if (Test-Path $src) {
-              Copy-Item $src "$env:APP_DIR" -Force
-              Write-Host "Copied $f"
-            } else {
-              Write-Error "Missing required fallback DLL: $f"
-              $missing += $f
-            }
+          # Qt 6.8 still ships Mesa 11.2.2 as opengl32sw.dll. It only exposes
+          # OpenGL 3.0 on the hosted runner, below both the GLSL 3.30 renderer
+          # floor and the preferred 4.5 feature tier. Replace it with a pinned,
+          # checksum-verified mesa-dist-win llvmpipe runtime. Mesa's WGL loader
+          # depends on the adjacent Gallium megadriver, so both DLLs are part of
+          # the payload.
+          $archiveName = "mesa3d-$env:MESA_DIST_VERSION-release-msvc.7z"
+          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$env:MESA_DIST_VERSION/$archiveName"
+          $mesaRoot = Join-Path $env:RUNNER_TEMP ("soi-mesa-" + [guid]::NewGuid())
+          $archive = Join-Path $mesaRoot $archiveName
+          New-Item -ItemType Directory -Path $mesaRoot | Out-Null
+
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $actualHash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $env:MESA_DIST_SHA256) {
+            Write-Error "Mesa archive SHA256 mismatch: expected $env:MESA_DIST_SHA256, got $actualHash"
           }
 
-          if ($missing.Count -gt 0) {
-            Write-Error "CRITICAL: Missing graphics fallback DLLs: $($missing -join ', ')"
-            Write-Error "Without them, the app will fail silently on many user machines."
-            exit 1
+          & 7z.exe x $archive "-o$mesaRoot" "x64/opengl32.dll" `
+            "x64/libgallium_wgl.dll" -y
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to extract Mesa software OpenGL runtime"
           }
 
-          Write-Host "All graphics fallback DLLs successfully deployed."
+          Copy-Item "$mesaRoot\x64\opengl32.dll" `
+            "$env:APP_DIR\opengl32sw.dll" -Force
+          Copy-Item "$mesaRoot\x64\libgallium_wgl.dll" $env:APP_DIR -Force
+
+          @(
+            "Mesa $env:MESA_DIST_VERSION Windows software OpenGL runtime"
+            "Source: $url"
+            "SHA256: $actualHash"
+            "Driver: llvmpipe"
+          ) | Set-Content -Encoding ASCII "$env:APP_DIR\MESA3D_VERSION.txt"
+
+          Write-Host "Mesa $env:MESA_DIST_VERSION software OpenGL deployed."
 
       - name: Copy assets
         shell: pwsh
@@ -375,7 +404,9 @@ jobs:
 
           $graphics_fallbacks = @(
             "$env:APP_DIR\d3dcompiler_47.dll",
-            "$env:APP_DIR\opengl32sw.dll"
+            "$env:APP_DIR\opengl32sw.dll",
+            "$env:APP_DIR\libgallium_wgl.dll",
+            "$env:APP_DIR\MESA3D_VERSION.txt"
           )
 
           $missing = @()
@@ -500,16 +531,17 @@ jobs:
           $env:QT_OPENGL = 'software'
           $env:QT_QPA_PLATFORM = 'windows'
           $env:QT_LOGGING_RULES = 'qt.rhi.*=false'
+          $env:GALLIUM_DRIVER = 'llvmpipe'
 
           Push-Location "$env:APP_DIR"
           try {
             $process = Start-Process -FilePath ".\$env:APP_NAME.exe" `
-              -ArgumentList "--renderer-self-test" `
+              -ArgumentList "--release-self-test" `
               -RedirectStandardOutput "renderer_self_test_out.log" `
               -RedirectStandardError "renderer_self_test_err.log" `
               -PassThru -NoNewWindow
 
-            if (-not $process.WaitForExit(90000)) {
+            if (-not $process.WaitForExit(210000)) {
               $process.Kill()
               $process.WaitForExit()
               Write-Error "Gameplay renderer self-test timed out"
@@ -532,18 +564,30 @@ jobs:
             if (($output -join "`n") -notmatch "SOI_RENDERER_SELF_TEST: PASS") {
               Write-Error "The executable exited without presenting a gameplay OpenGL frame"
             }
+            foreach ($marker in @(
+              'SOI_MISSION_SELF_TEST: PASS',
+              'SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS',
+              'SOI_CAMPAIGN_MAP_SELF_TEST: PASS',
+              'SOI_CREATURE_ASSET_SELF_TEST: PASS'
+            )) {
+              if (($output -join "`n") -notmatch [regex]::Escape($marker)) {
+                Write-Error "Packaged release contract failed: missing $marker"
+              }
+            }
             # Music and ambience are read from assets\ rather than embedded in the
             # binary, so a package that loses that directory renders fine and is
             # simply mute. The self-test reports on it; fail the release here.
             if (($output -join "`n") -notmatch "SOI_AUDIO_SELF_TEST: PASS") {
               Write-Error "The packaged game cannot reach all of its audio assets"
             }
-            # opengl32sw.dll is Mesa llvmpipe and gives a 3.3+ Core context. If a
-            # future Qt ships a build that only reaches 3.1, or ANGLE gets
-            # substituted, the shaders stop compiling -- catch it here rather
-            # than on the machine of the one player without a GPU driver.
+            # The pinned Mesa llvmpipe must satisfy both the portable 3.3 floor
+            # and the preferred 4.5 tier. This catches a stale Qt software DLL,
+            # an incomplete Mesa deployment, or an accidental ANGLE substitution.
             if (($output -join "`n") -notmatch "SOI_GL_FLOOR: PASS") {
               Write-Error "The bundled software renderer is below the OpenGL 3.3 Core floor"
+            }
+            if (($output -join "`n") -notmatch "SOI_GL_TIER_45: PASS") {
+              Write-Error "The bundled software renderer did not grant OpenGL 4.5 Core"
             }
             $context = ($output | Select-String 'Context Version:' | Select-Object -First 1)
             $renderer = ($output | Select-String 'Renderer:' | Select-Object -First 1)
@@ -571,6 +615,8 @@ jobs:
             "$env:APP_DIR\run_debug.cmd",
             "$env:APP_DIR\run_debug_softwaregl.cmd",
             "$env:APP_DIR\opengl32sw.dll",
+            "$env:APP_DIR\libgallium_wgl.dll",
+            "$env:APP_DIR\MESA3D_VERSION.txt",
             "$env:APP_DIR\d3dcompiler_47.dll"
           )
 

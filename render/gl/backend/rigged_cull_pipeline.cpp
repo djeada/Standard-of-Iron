@@ -16,6 +16,7 @@
 #include "../../rigged_mesh.h"
 #include "../buffer.h"
 #include "../gl_capabilities.h"
+#include "../platform_gl.h"
 #include "../shader_cache.h"
 #include "utils/resource_utils.h"
 

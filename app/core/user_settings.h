@@ -90,6 +90,8 @@ inline auto load_graphics_quality_level() -> std::optional<int> {
 inline void apply_saved_graphics_quality() {
   const auto level = load_graphics_quality_level();
   if (!level.has_value()) {
+    Render::GraphicsSettings::instance().set_quality(
+        Render::k_default_graphics_quality);
     return;
   }
 

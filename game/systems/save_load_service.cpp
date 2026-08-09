@@ -625,7 +625,7 @@ auto SaveLoadService::complete_campaign_mission(const QString& campaign_id,
     -> std::optional<CampaignAdvance> {
   if (!m_storage) {
     if (out_error != nullptr) {
-      *out_error = tr("Save storage unavailable");
+      *out_error = SaveLoadService::tr("Save storage unavailable");
     }
     return std::nullopt;
   }

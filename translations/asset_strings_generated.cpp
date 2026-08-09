@@ -146,7 +146,7 @@ namespace {
 
     // ---- Maps (18) ----
     QT_TRANSLATE_NOOP("Maps", "A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination."),
-    QT_TRANSLATE_NOOP("Maps", "A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them."),
+    QT_TRANSLATE_NOOP("Maps", "A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them."),
     QT_TRANSLATE_NOOP("Maps", "A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination."),
     QT_TRANSLATE_NOOP("Maps", "A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings."),
     QT_TRANSLATE_NOOP("Maps", "Battle of Cannae"),

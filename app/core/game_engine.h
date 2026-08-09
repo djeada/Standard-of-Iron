@@ -377,6 +377,7 @@ public:
   [[nodiscard]] QString loading_stage_text() const;
 
   [[nodiscard]] bool is_campaign_mission() const;
+  [[nodiscard]] bool release_self_test_mission_ready() const;
   [[nodiscard]] bool campaign_completed() const;
   [[nodiscard]] bool civilian_delivery_available() const {
     return m_civilian_delivery_available;

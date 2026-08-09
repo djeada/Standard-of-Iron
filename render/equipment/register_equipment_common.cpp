@@ -2,6 +2,21 @@
 
 namespace Render::GL::EquipmentRegistration {
 
+namespace {
+
+auto horse_bind_matrix(Render::Horse::HorseBone bone) -> QMatrix4x4 {
+  const auto palette = Render::Horse::horse_bind_palette();
+  const auto index = static_cast<std::size_t>(bone);
+  if (index >= palette.size()) {
+    qCritical() << "Horse bind palette is unavailable; compiled horse asset status:"
+                << Render::Horse::horse_source_asset_status().error.c_str();
+    return {};
+  }
+  return palette[index];
+}
+
+} // namespace
+
 auto humanoid_head_bone() -> std::uint16_t {
   return static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
 }
@@ -104,30 +119,23 @@ auto horse_neck_top_bone() -> std::uint16_t {
 }
 
 auto horse_root_bind_matrix() -> const QMatrix4x4& {
-  static const QMatrix4x4 matrix =
-      Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
-          Render::Horse::HorseBone::Root)];
+  static const QMatrix4x4 matrix = horse_bind_matrix(Render::Horse::HorseBone::Root);
   return matrix;
 }
 
 auto horse_back_bind_matrix() -> const QMatrix4x4& {
   static const QMatrix4x4 matrix =
-      Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
-          Render::Horse::HorseBone::SourceBack)];
+      horse_bind_matrix(Render::Horse::HorseBone::SourceBack);
   return matrix;
 }
 
 auto horse_head_bind_matrix() -> const QMatrix4x4& {
-  static const QMatrix4x4 matrix =
-      Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
-          Render::Horse::HorseBone::Head)];
+  static const QMatrix4x4 matrix = horse_bind_matrix(Render::Horse::HorseBone::Head);
   return matrix;
 }
 
 auto horse_neck_top_bind_matrix() -> const QMatrix4x4& {
-  static const QMatrix4x4 matrix =
-      Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
-          Render::Horse::HorseBone::NeckTop)];
+  static const QMatrix4x4 matrix = horse_bind_matrix(Render::Horse::HorseBone::NeckTop);
   return matrix;
 }
 
