@@ -1160,6 +1160,12 @@ auto main(int argc, char* argv[]) -> int {
             QGuiApplication::exit(17);
             return;
           }
+          // Loading is not considered complete until the gameplay renderer has
+          // presented enough frames to retire the first-frame overlay.  A
+          // static scene does not continuously schedule frames on macOS, so
+          // drive that handshake while polling instead of waiting for loading
+          // to finish before requesting the first update.
+          window->update();
           if (!game_engine_ptr->release_self_test_mission_ready()) {
             return;
           }
@@ -1168,7 +1174,6 @@ auto main(int argc, char* argv[]) -> int {
             qInfo() << "SOI_MISSION_SELF_TEST: mission loaded; verifying "
                        "presented gameplay frames";
           }
-          window->update();
         });
     readiness_poll->start();
 

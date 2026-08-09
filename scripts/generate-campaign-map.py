@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate and validate every runtime asset used by the campaign map."""
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -22,18 +23,55 @@ REQUIRED_OUTPUTS = (
     OUTPUT / "land_mesh.bin",
     OUTPUT / "provinces.json",
     OUTPUT / "terrain_height.png",
+    OUTPUT / "terrain_height.json",
 )
 
 
-def main() -> int:
-    for generator in GENERATORS:
-        subprocess.run([sys.executable, str(generator)], cwd=ROOT, check=True)
-
-    missing = [
+def missing_outputs() -> list[Path]:
+    return [
         path
         for path in REQUIRED_OUTPUTS
         if not path.is_file() or path.stat().st_size < 32
     ]
+
+
+def main() -> int:
+    # The generated assets are committed, so a build never depends on the
+    # upstream Natural Earth and NOAA hosts being reachable. Regeneration is
+    # still the source of truth: it runs first, and only an upstream failure
+    # with every asset already in place is allowed to fall back to them.
+    # Set CAMPAIGN_MAP_REQUIRE_REGENERATION=1 to turn that fallback off.
+    require_regeneration = os.environ.get("CAMPAIGN_MAP_REQUIRE_REGENERATION") == "1"
+    for generator in GENERATORS:
+        result = subprocess.run([sys.executable, str(generator)], cwd=ROOT, check=False)
+        if result.returncode == 0:
+            continue
+        if require_regeneration:
+            print(
+                f"{generator.relative_to(ROOT)} failed with exit status "
+                f"{result.returncode}.",
+                file=sys.stderr,
+            )
+            return result.returncode
+        stale = missing_outputs()
+        if stale:
+            print(
+                f"{generator.relative_to(ROOT)} failed with exit status "
+                f"{result.returncode} and the committed assets cannot stand in:",
+                file=sys.stderr,
+            )
+            for path in stale:
+                print(f"  - {path.relative_to(ROOT)}", file=sys.stderr)
+            return result.returncode
+        print(
+            f"WARNING: {generator.relative_to(ROOT)} failed with exit status "
+            f"{result.returncode}; falling back to the committed campaign map "
+            "assets. Set CAMPAIGN_MAP_REQUIRE_REGENERATION=1 to make this fatal.",
+            file=sys.stderr,
+        )
+        break
+
+    missing = missing_outputs()
     if missing:
         print(
             "Campaign map generation did not produce required runtime assets:",
