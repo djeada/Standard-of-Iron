@@ -14,6 +14,8 @@ enum class GraphicsQuality : uint8_t {
   Ultra = 3
 };
 
+inline constexpr GraphicsQuality k_default_graphics_quality = GraphicsQuality::Ultra;
+
 struct LODMultipliers {
   float humanoid_full;
   float humanoid_minimal;
@@ -196,7 +198,7 @@ public:
   }
 
 private:
-  GraphicsSettings() { set_quality(GraphicsQuality::High); }
+  GraphicsSettings() { set_quality(k_default_graphics_quality); }
 
   void apply_preset(GraphicsQuality q) noexcept {
     switch (q) {
@@ -371,7 +373,7 @@ private:
   static constexpr float k_base_elephant_minimal = 150.0F;
   static constexpr float k_base_elephant_billboard = 140.0F;
 
-  GraphicsQuality m_quality{GraphicsQuality::High};
+  GraphicsQuality m_quality{k_default_graphics_quality};
   LODMultipliers m_lod_multipliers{};
   GraphicsFeatures m_features{};
   BatchingConfig m_batching_config{};

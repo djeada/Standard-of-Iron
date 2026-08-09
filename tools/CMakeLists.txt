@@ -23,8 +23,13 @@ set_target_properties(
     battlefield_gameplay_verifier
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
-add_test(NAME battlefield_gameplay_quality COMMAND battlefield_gameplay_verifier --all --seconds 15)
-set_tests_properties(
-    battlefield_gameplay_quality
-    PROPERTIES LABELS "gameplay;soak" TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
+if(BUILD_TESTING)
+    add_test(
+        NAME battlefield_gameplay_quality
+        COMMAND battlefield_gameplay_verifier --all --seconds 15
+    )
+    set_tests_properties(
+        battlefield_gameplay_quality
+        PROPERTIES LABELS "gameplay;soak" TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+endif()

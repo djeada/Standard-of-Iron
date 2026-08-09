@@ -1,6 +1,8 @@
 #include <QByteArray>
+#include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -18,6 +20,12 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#if defined(Q_OS_MACOS)
+#include <mach-o/dyld.h>
+#elif defined(Q_OS_WIN)
+#include <qt_windows.h>
+#endif
 
 #include "../elephant/attachment_frames.h"
 #include "../elephant/elephant_source_asset.h"
@@ -246,18 +254,46 @@ struct SourceAsset {
   HorseSourceAssetStatus status;
 };
 
+auto executable_directory() -> QString {
+  if (QCoreApplication::instance() != nullptr) {
+    return QCoreApplication::applicationDirPath();
+  }
+
+#if defined(Q_OS_LINUX)
+  return QFileInfo(QFile::symLinkTarget(QStringLiteral("/proc/self/exe")))
+      .absolutePath();
+#elif defined(Q_OS_MACOS)
+  std::uint32_t required_size = 0U;
+  _NSGetExecutablePath(nullptr, &required_size);
+  std::vector<char> path(required_size);
+  if (_NSGetExecutablePath(path.data(), &required_size) == 0) {
+    return QFileInfo(QFile::decodeName(path.data())).absolutePath();
+  }
+#elif defined(Q_OS_WIN)
+  std::array<wchar_t, 32768> path{};
+  DWORD const length =
+      GetModuleFileNameW(nullptr, path.data(), static_cast<DWORD>(path.size()));
+  if (length > 0U && length < path.size()) {
+    return QFileInfo(
+               QString::fromWCharArray(path.data(), static_cast<qsizetype>(length)))
+        .absolutePath();
+  }
+#endif
+  return {};
+}
+
 auto read_compiled_asset(SourceConfig const& config) -> QByteArray {
-  std::array<QString, 4> const candidates{
+  const QString app_dir = executable_directory();
+  const QString relative_path = QString::fromUtf8(
+      config.relative_path.data(), static_cast<qsizetype>(config.relative_path.size()));
+  std::array<QString, 6> const candidates{
       QString::fromUtf8(config.resource_path.data(),
                         static_cast<qsizetype>(config.resource_path.size())),
-      QString::fromUtf8(config.relative_path.data(),
-                        static_cast<qsizetype>(config.relative_path.size())),
-      QStringLiteral("../") +
-          QString::fromUtf8(config.relative_path.data(),
-                            static_cast<qsizetype>(config.relative_path.size())),
-      QStringLiteral("../../") +
-          QString::fromUtf8(config.relative_path.data(),
-                            static_cast<qsizetype>(config.relative_path.size())),
+      app_dir + QLatin1Char('/') + relative_path,
+      app_dir + QStringLiteral("/../") + relative_path,
+      relative_path,
+      QStringLiteral("../") + relative_path,
+      QStringLiteral("../../") + relative_path,
   };
   for (QString const& path : candidates) {
     QFile file(path);

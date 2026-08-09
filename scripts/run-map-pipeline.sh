@@ -36,7 +36,7 @@ required_outputs=(
   "$map_output_dir/rivers_uv.json"
   "$map_output_dir/land_mesh.bin"
   "$map_output_dir/provinces.json"
-  "$map_output_dir/hannibal_path.json"
+  "$map_output_dir/terrain_height.png"
 )
 
 missing_outputs=()

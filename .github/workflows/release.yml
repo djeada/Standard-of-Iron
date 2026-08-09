@@ -1,9 +1,9 @@
 ---
 name: Release
 
-# Gated release pipeline. This is the thorough tier: pull requests stay cheap,
-# so a release tag is the point at which every supported platform must build,
-# self-test, package, and be proven deliverable.
+# Gated release pipeline. A release tag runs the complete compiled test suite,
+# then every supported platform must build, self-test, package, and be proven
+# deliverable.
 #
 #   preflight -> build (linux | macos | windows) -> verify -> publish
 #
@@ -26,16 +26,16 @@ permissions:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   # ---------------------------------------------------------------------
-  # Cheap gate first: never spend three platform builds on a tag that
-  # cannot pass the same checks its pull requests had to.
+  # Run the same quality and compiled-test lanes as a pull request before
+  # spending three platform builds on a tag.
   # ---------------------------------------------------------------------
   preflight:
     name: Preflight
-    uses: ./.github/workflows/quality.yml
+    uses: ./.github/workflows/pr.yml
 
   build-linux:
     name: Build Linux
@@ -153,12 +153,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          path: packages
-          pattern: release-*
-          merge-multiple: true
-
       # The notes come from CHANGELOG.md rather than from generate_release_notes.
       # Auto-generation walks back to the previous tag, and on a first release
       # that means every merged pull request since the repository began -- a wall
@@ -166,6 +160,26 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
+
+      # Checkout cleans untracked workspace files. Download release artifacts
+      # afterwards so packages/ survives until the upload action runs.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: packages
+          pattern: release-*
+          merge-multiple: true
+
+      - name: Confirm release assets are staged for publishing
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          assets=(packages/*.AppImage packages/*.dmg packages/*.zip packages/*.sha256)
+          if [ "${#assets[@]}" -ne 6 ]; then
+            printf '::error::expected three packages and three checksums, found %d\n' "${#assets[@]}"
+            printf '  %s\n' "${assets[@]}"
+            exit 1
+          fi
+          printf 'Publishing %s\n' "${assets[@]}"
 
       - name: Extract release notes for this tag
         run: |
@@ -190,8 +204,19 @@ jobs:
           fi
           cat release_notes.md
 
+      - name: Remove the superseded release object
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release delete "${GITHUB_REF_NAME}" \
+              --repo "${GITHUB_REPOSITORY}" --yes
+          fi
+
       - name: Publish
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           files: |
             packages/*.AppImage

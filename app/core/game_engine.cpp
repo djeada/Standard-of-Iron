@@ -998,6 +998,12 @@ bool GameEngine::is_campaign_mission() const {
   return m_campaign_manager->current_mission_context().is_campaign();
 }
 
+bool GameEngine::release_self_test_mission_ready() const {
+  return m_runtime.initialized && !is_loading() && is_campaign_mission() &&
+         m_world != nullptr && m_world->entity_count() > 0U &&
+         m_runtime.last_error.isEmpty();
+}
+
 bool GameEngine::campaign_completed() const {
   if (!m_campaign_manager) {
     return false;
@@ -1746,6 +1752,7 @@ void GameEngine::select_selected_units_by_type(const QString& unit_type) {
 }
 
 void GameEngine::ensure_initialized() {
+  const bool was_initialized = m_runtime.initialized;
   QString error;
   App::Core::WorldBootstrap::ensure_initialized(m_runtime.initialized,
                                                 *m_renderer,
@@ -1755,6 +1762,9 @@ void GameEngine::ensure_initialized() {
                                                 &error);
   if (!error.isEmpty()) {
     set_error(error);
+  }
+  if (!was_initialized && m_runtime.initialized) {
+    emit renderer_initialized_changed();
   }
 }
 
@@ -3042,7 +3052,16 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   }
 
   QCoreApplication::processEvents(QEventLoop::AllEvents);
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  if (m_release_self_test_mode) {
+    // The release contract already checked that every manifest entry resolves.
+    // Decoding, resampling, and mastering the complete mission catalogue is a
+    // runtime warm-up workload, not a package-integrity or renderer check, and
+    // can consume minutes on virtualized CI CPUs before the first frame.
+    qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
+               "validation";
+  } else {
+    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  }
   QTimer::singleShot(50, this, [this, map_path, player_configs]() {
     if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {
       set_error(tr("Cannot start skirmish: renderer not initialized"));

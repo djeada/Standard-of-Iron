@@ -63,6 +63,42 @@ otool -L standard_of_iron | grep Qt
 
 All commands should show Qt libraries as external dependencies, confirming dynamic linking.
 
+## Mesa 3D Windows software renderer
+
+The Windows package includes the 64-bit `opengl32.dll` WGL loader (renamed to
+`opengl32sw.dll` for Qt) and `libgallium_wgl.dll` from
+[mesa-dist-win 26.1.6](https://github.com/pal1000/mesa-dist-win/releases/tag/26.1.6).
+The release workflow records and verifies the upstream archive's SHA-256 before
+copying either binary. `GALLIUM_DRIVER=llvmpipe` selects Mesa's CPU renderer.
+
+Mesa's core library and llvmpipe are predominantly MIT licensed; individual
+source files retain their own SPDX notices. See the
+[Mesa licence index](https://docs.mesa3d.org/license.html) and
+[Mesa source](https://gitlab.freedesktop.org/mesa/mesa). The Windows build and
+deployment project is also MIT licensed:
+
+> MIT License
+>
+> Copyright (c) 2017-2020 pal1000
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
+
 ## Audio Assets
 
 ### Synthesised cue sounds
