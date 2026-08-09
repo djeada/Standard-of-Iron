@@ -1004,6 +1004,57 @@ bool GameEngine::release_self_test_mission_ready() const {
          m_runtime.last_error.isEmpty();
 }
 
+QString GameEngine::release_self_test_pending_reason() const {
+  QStringList pending;
+  if (!m_runtime.initialized) {
+    pending << QStringLiteral("engine not initialized");
+  }
+  // The two halves of is_loading() fail for different reasons and are worth
+  // separating: the tracker is the asset/world load, the overlay only retires
+  // from inside the render path once it has seen enough presented frames.
+  if (m_runtime.loading) {
+    pending << QStringLiteral("still loading (stage: %1, progress %2%)")
+                   .arg(loading_stage_text())
+                   .arg(static_cast<int>(loading_progress() * 100.0F));
+  }
+  if (m_loading_overlay_active) {
+    // The overlay only retires from inside the render path, and its "GPU is not
+    // up yet" branch restarts its own deadline -- so a renderer whose resources
+    // never arrive resets the clock forever. Report both, or a stuck overlay is
+    // indistinguishable from a slow one.
+    pending << QStringLiteral(
+                   "loading overlay still up (frames remaining %1, elapsed %2ms, "
+                   "renderer %3, gpu resources %4, waiting for first frame %5)")
+                   .arg(m_loading_overlay_frames_remaining)
+                   .arg(m_loading_overlay_timer.isValid()
+                            ? m_loading_overlay_timer.elapsed()
+                            : -1)
+                   .arg(m_renderer ? QStringLiteral("up") : QStringLiteral("null"))
+                   .arg((m_renderer && m_renderer->resources() != nullptr)
+                            ? QStringLiteral("up")
+                            : QStringLiteral("null"))
+                   .arg(m_loading_overlay_wait_for_first_frame.load(
+                            std::memory_order_acquire)
+                            ? QStringLiteral("yes")
+                            : QStringLiteral("no"));
+  }
+  if (!is_campaign_mission()) {
+    pending << QStringLiteral("mission context is not a campaign mission");
+  }
+  if (m_world == nullptr) {
+    pending << QStringLiteral("no world");
+  } else if (m_world->entity_count() == 0U) {
+    pending << QStringLiteral("world has no entities");
+  }
+  if (!m_runtime.last_error.isEmpty()) {
+    pending << QStringLiteral("error: %1").arg(m_runtime.last_error);
+  }
+  if (pending.isEmpty()) {
+    return QStringLiteral("nothing pending");
+  }
+  return pending.join(QStringLiteral("; "));
+}
+
 bool GameEngine::campaign_completed() const {
   if (!m_campaign_manager) {
     return false;
@@ -2066,12 +2117,25 @@ void GameEngine::update_loading_overlay() {
 
   if (!m_renderer || (m_renderer->resources() == nullptr)) {
     m_loading_overlay_frames_remaining = 5;
+    m_loading_overlay_last_frame_ms = 0;
     m_loading_overlay_timer.restart();
     return;
   }
 
   if (m_loading_overlay_frames_remaining > 0) {
     m_loading_overlay_frames_remaining--;
+    // At most five lines, and only while the overlay is up. The gap between
+    // them is the cost of one gameplay frame during loading, which is the
+    // number that decides whether a slow platform is progressing or stuck.
+    const qint64 now_ms =
+        m_loading_overlay_timer.isValid() ? m_loading_overlay_timer.elapsed() : 0;
+    qInfo().noquote() << QStringLiteral(
+                             "SOI_LOADING_OVERLAY: frame %1 of 5 presented at %2ms "
+                             "(+%3ms since the previous one)")
+                             .arg(5 - m_loading_overlay_frames_remaining)
+                             .arg(now_ms)
+                             .arg(now_ms - m_loading_overlay_last_frame_ms);
+    m_loading_overlay_last_frame_ms = now_ms;
   }
 
   constexpr qint64 k_loading_overlay_max_wait_ms = 15000;
@@ -3708,6 +3772,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
+  m_loading_overlay_last_frame_ms = 0;
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;

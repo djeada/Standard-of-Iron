@@ -378,6 +378,11 @@ public:
 
   [[nodiscard]] bool is_campaign_mission() const;
   [[nodiscard]] bool release_self_test_mission_ready() const;
+  // Names every condition release_self_test_mission_ready() is still waiting
+  // on. A release self-test that times out on a runner we cannot attach to
+  // otherwise reports only that 180 seconds elapsed, which does not say which
+  // half of the loading handshake stalled.
+  [[nodiscard]] QString release_self_test_pending_reason() const;
   [[nodiscard]] bool campaign_completed() const;
   [[nodiscard]] bool civilian_delivery_available() const {
     return m_civilian_delivery_available;
@@ -638,6 +643,7 @@ private:
   bool m_loading_overlay_active = false;
   std::atomic_bool m_loading_overlay_wait_for_first_frame{false};
   int m_loading_overlay_frames_remaining = 0;
+  qint64 m_loading_overlay_last_frame_ms = 0;
   qint64 m_loading_overlay_min_duration_ms = 0;
   QElapsedTimer m_loading_overlay_timer;
   bool m_finalize_progress_after_overlay = false;
