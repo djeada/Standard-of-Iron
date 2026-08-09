@@ -25,8 +25,7 @@
     "starting_resources": {
       "gold": 450,
       "food": 650
-    },
-    "commander_troop": "carthage_sword_commander"
+    }
   },
   "ai_setups": [
     {
@@ -79,8 +78,7 @@
             "z": 216
           }
         }
-      ],
-      "commander_troop": "roman_field_commander"
+      ]
     },
     {
       "id": "mountain_tribes_pass_two",
@@ -132,8 +130,7 @@
             "z": 336
           }
         }
-      ],
-      "commander_troop": "roman_legion_organizer"
+      ]
     },
     {
       "id": "mountain_tribes_final_pass",
@@ -193,8 +190,7 @@
             "z": 536
           }
         }
-      ],
-      "commander_troop": "roman_veteran_consul"
+      ]
     }
   ],
   "victory_conditions": [

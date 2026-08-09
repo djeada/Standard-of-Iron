@@ -17,6 +17,9 @@
 #include "game/map/mission_loader.h"
 #include "game/map/terrain.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_type.h"
+#include "utils/resource_utils.h"
 
 namespace {
 
@@ -349,10 +352,27 @@ TEST(MissionAssetRulesTest, DecapitationObjectivesHaveCommandersToKill) {
     ASSERT_FALSE(mission.ai_setups.empty())
         << entry.mission_id.toStdString()
         << " asks the player to kill commanders but ships no opponents";
-    for (const auto& ai_setup : mission.ai_setups) {
-      EXPECT_TRUE(ai_setup.commander_troop.has_value() &&
-                  !ai_setup.commander_troop->trimmed().isEmpty())
-          << entry.mission_id.toStdString() << " AI " << ai_setup.id.toStdString()
+    Game::Map::MapDefinition map;
+    QString map_error;
+    ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+        Utils::Resources::resolve_resource_path(mission.map_path), map, &map_error))
+        << mission.map_path.toStdString() << ": " << map_error.toStdString();
+
+    for (std::size_t index = 0; index < mission.ai_setups.size(); ++index) {
+      const int owner_id = static_cast<int>(index) + 2;
+      const bool has_commander = std::any_of(
+          map.spawns.begin(),
+          map.spawns.end(),
+          [owner_id](const Game::Map::UnitSpawn& spawn) {
+            if (spawn.player_id != owner_id) {
+              return false;
+            }
+            const auto troop = Game::Units::spawn_typeToTroopType(spawn.type);
+            return troop.has_value() && Game::Units::is_commander_troop(*troop);
+          });
+      EXPECT_TRUE(has_commander)
+          << entry.mission_id.toStdString() << " AI "
+          << mission.ai_setups[index].id.toStdString()
           << " has no commander to kill, so eliminate_commanders can never arm";
     }
   }

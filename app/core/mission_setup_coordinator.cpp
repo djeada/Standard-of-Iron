@@ -548,77 +548,27 @@ auto MissionSetupCoordinator::apply_mission_setup(
     }
   };
 
-  auto spawn_commander_for_owner =
-      [&](int owner_id,
-          const Game::Systems::NationID nation_id,
-          const QString& commander_troop,
-          const App::Core::ResolvedCommanderPosition& position) {
-        if (commander_troop.trimmed().isEmpty()) {
-          return;
-        }
-        const auto spawn_type =
-            Game::Units::spawn_typeFromString(commander_troop.trimmed().toStdString());
-        if (!spawn_type.has_value()) {
-          qWarning() << "Mission setup: unknown commander troop" << commander_troop;
-          return;
-        }
-        const auto troop_type = Game::Units::spawn_typeToTroopType(*spawn_type);
-        if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
-          qWarning() << "Mission setup: non-commander troop configured as commander"
-                     << commander_troop;
-          return;
-        }
-        for (auto* entity :
-             ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
-          if (entity == nullptr) {
-            continue;
-          }
-          const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-          if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
-            return;
-          }
-        }
-        Game::Units::SpawnParams sp;
-        if (position.space == App::Core::CommanderPositionSpace::World) {
-          sp.position = QVector3D(position.position.x, 0.0F, position.position.z);
-        } else {
-          sp.position = mission_position_to_world(position.position);
-        }
-        sp.player_id = owner_id;
-        sp.spawn_type = *spawn_type;
-        sp.ai_controlled = owner_registry.is_ai(owner_id);
-        sp.nation_id = nation_id;
-        auto unit = reg->create(sp.spawn_type, ctx.world, sp);
-        if (!unit) {
-          qWarning() << "Mission setup: failed to spawn commander" << commander_troop
-                     << "for owner" << owner_id;
-          return;
-        }
-        apply_team_color(ctx.world.get_entity(unit->id()), owner_id);
-      };
+  const auto map_commanders = App::Core::commander_troops_by_owner(map_def);
 
-  auto existing_owner_spawn_anchors = [&](int owner_id) {
-    std::vector<App::Core::ExistingOwnerSpawnAnchor> anchors;
-    auto entities = ctx.world.get_entities_with<Engine::Core::UnitComponent>();
-    anchors.reserve(entities.size());
-    for (auto* entity : entities) {
+  auto verify_owner_commander = [&](int owner_id, const QString& force_label) {
+    for (auto* entity :
+         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
       if (entity == nullptr) {
         continue;
       }
-
       const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-      if (unit == nullptr || transform == nullptr || unit->owner_id != owner_id ||
-          unit->health <= 0) {
-        continue;
+      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+        return;
       }
-
-      App::Core::ExistingOwnerSpawnAnchor anchor;
-      anchor.position = {transform->position.x, transform->position.z};
-      anchor.is_building = Game::Units::is_building_spawn(unit->spawn_type);
-      anchors.push_back(anchor);
     }
-    return anchors;
+    if (map_commanders.find(owner_id) == map_commanders.end()) {
+      qWarning() << "Mission setup:" << ctx.level.map_path << "authors no commander for"
+                 << force_label << "(owner" << owner_id
+                 << ") - that force starts headless";
+      return;
+    }
+    qWarning() << "Mission setup: map commander for" << force_label << "(owner"
+               << owner_id << ") failed to spawn";
   };
 
   auto spawn_buildings_for_owner =
@@ -670,15 +620,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
   nation_registry.set_player_nation(local_owner_id, player_nation_id);
   apply_owner_color(local_owner_id, mission.player_setup.color);
 
-  const QString player_commander_troop = App::Core::resolve_commander_troop(
-      mission.player_setup.nation, mission.player_setup.commander_troop);
-  const auto player_commander_pos = App::Core::resolve_commander_position(
-      mission.player_setup.starting_units,
-      mission.player_setup.starting_buildings,
-      existing_owner_spawn_anchors(local_owner_id),
-      {68.0F, 70.0F});
-  spawn_commander_for_owner(
-      local_owner_id, player_nation_id, player_commander_troop, player_commander_pos);
+  verify_owner_commander(local_owner_id, QStringLiteral("the player"));
   spawn_units_for_owner(
       local_owner_id, player_nation_id, mission.player_setup.starting_units);
   spawn_buildings_for_owner(
@@ -713,15 +655,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
     nation_registry.set_player_nation(ai_owner_id, ai_nation_id);
     apply_owner_color(ai_owner_id, ai_setup.color);
 
-    const QString ai_commander_troop =
-        App::Core::resolve_commander_troop(ai_setup.nation, ai_setup.commander_troop);
-    const auto ai_commander_pos =
-        App::Core::resolve_commander_position(ai_setup.starting_units,
-                                              ai_setup.starting_buildings,
-                                              existing_owner_spawn_anchors(ai_owner_id),
-                                              {132.0F, 80.0F});
-    spawn_commander_for_owner(
-        ai_owner_id, ai_nation_id, ai_commander_troop, ai_commander_pos);
+    verify_owner_commander(ai_owner_id, ai_setup.id);
     spawn_units_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_units);
     spawn_buildings_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_buildings);
 

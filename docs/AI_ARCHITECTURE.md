@@ -418,8 +418,7 @@ Mission files are the current authoring surface for AI setup. The loader reads `
             "count": 2,
             "position": { "x": 134, "z": 82 }
         }
-    ],
-    "commander_troop": "roman_field_commander"
+    ]
 }
 ```
 

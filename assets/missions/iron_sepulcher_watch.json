@@ -7,7 +7,6 @@
     "nation": "roman_republic",
     "faction": "roman",
     "color": "red",
-    "commander_troop": "roman_field_commander",
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {

@@ -2,9 +2,11 @@
 
 #include <QString>
 
+#include <map>
 #include <optional>
 #include <vector>
 
+#include "game/map/map_definition.h"
 #include "game/map/mission_definition.h"
 
 namespace App::Core {
@@ -27,6 +29,12 @@ struct ResolvedCommanderPosition {
 [[nodiscard]] auto
 resolve_commander_troop(const QString& nation,
                         const std::optional<QString>& configured_commander) -> QString;
+
+[[nodiscard]] auto commander_troops_by_owner(const Game::Map::MapDefinition& map)
+    -> std::map<int, QString>;
+
+[[nodiscard]] auto
+commander_troops_for_map(const QString& map_path) -> std::map<int, QString>;
 
 [[nodiscard]] auto resolve_commander_position(
     const std::vector<Game::Mission::UnitSetup>& units,

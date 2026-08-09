@@ -1679,20 +1679,20 @@ void MapCanvas::draw_derived_commanders(QPainter& painter) {
 
     const QPoint pos = grid_to_widget(static_cast<float>(commander.position.x()),
                                       static_cast<float>(commander.position.y()));
-    draw_troop_marker(
-        painter, pos, commander.troop_type, commander.owner_id, badge_size);
 
     painter.setBrush(Qt::NoBrush);
-    painter.setPen(QPen(QColor(255, 214, 120, 220), 2, Qt::DashLine));
+    painter.setPen(QPen(QColor(255, 96, 96, 230), 2, Qt::DashLine));
     const int ring = static_cast<int>(badge_size * 0.5F) + 5;
     painter.drawEllipse(pos, ring, ring);
+    painter.drawLine(pos.x() - ring, pos.y() - ring, pos.x() + ring, pos.y() + ring);
+    painter.drawLine(pos.x() - ring, pos.y() + ring, pos.x() + ring, pos.y() - ring);
 
     if (labels_visible()) {
-      painter.setPen(QColor(255, 226, 168));
-      painter.drawText(QRect(pos.x() - 80, pos.y() + ring + 2, 160, 16),
+      painter.setPen(QColor(255, 150, 150));
+      painter.drawText(QRect(pos.x() - 90, pos.y() + ring + 2, 180, 16),
                        Qt::AlignHCenter | Qt::AlignTop,
-                       QStringLiteral("%1 commander (auto): %2")
-                           .arg(commander.label, commander.troop_type));
+                       QStringLiteral("%1 has no commander - place %2")
+                           .arg(commander.label, commander.suggested_troop_type));
     }
   }
   painter.restore();
