@@ -95,6 +95,9 @@ void log_mastering(const QString& id, const Game::Audio::Mastering::Report& repo
 #pragma pop_macro("TRUE")
 #define STB_VORBIS_INCLUDE_STB_VORBIS_H
 #include <miniaudio.h>
+#ifdef PlaySound
+#undef PlaySound
+#endif
 
 struct DeviceWrapper {
   MiniaudioBackend* self;

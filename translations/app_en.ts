@@ -1609,13 +1609,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
-    <name>Game::Systems</name>
-    <message>
-        <source>Save storage unavailable</source>
-        <translation>Save storage unavailable</translation>
-    </message>
-</context>
-<context>
     <name>Game::Systems::SaveLoadService</name>
     <message>
         <source>Cannot save: empty slot name</source>
@@ -3155,10 +3148,6 @@ to see preview</translation>
         <translation>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</translation>
     </message>
     <message>
-        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
-        <translation>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</translation>
-    </message>
-    <message>
         <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
         <translation>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</translation>
     </message>
@@ -3221,6 +3210,10 @@ to see preview</translation>
     <message>
         <source>Spanish Olive Grove</source>
         <translation>Spanish Olive Grove</translation>
+    </message>
+    <message>
+        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
+        <translation>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</translation>
     </message>
 </context>
 <context>

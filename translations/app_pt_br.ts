@@ -1609,13 +1609,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
 </context>
 <context>
-    <name>Game::Systems</name>
-    <message>
-        <source>Save storage unavailable</source>
-        <translation>Armazenamento de jogos salvos indisponível</translation>
-    </message>
-</context>
-<context>
     <name>Game::Systems::SaveLoadService</name>
     <message>
         <source>Cannot save: empty slot name</source>
@@ -3155,10 +3148,6 @@ para ver a prévia</translation>
         <translation>Um mapa de escaramuça mediterrâneo equilibrado, entre olivais, uádis secos, colinas em terraços e estradas rurais poeirentas. Controlar o centro e as cristas laterais ajuda, mas a vitória se dá pela eliminação padrão dos quartéis.</translation>
     </message>
     <message>
-        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
-        <translation>Um campo de batalha florestal denso e simétrico para dois jogadores ativos, construído em torno da leitura das estradas, bosques de emboscada, controle das colinas, objetivos secundários e dois quartéis neutros. Não há rios, pontes ou montanhas. As estradas contornam as colinas de propósito, em vez de atravessá-las.</translation>
-    </message>
-    <message>
         <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
         <translation>Um grande mapa de escaramuça montanhosa equilibrado, com duas bases fortificadas, uma crista central disputada, passagens altas e estreitas, trilhas de flanco, riachos alpinos e boas posições para arqueiros. A vitória se dá pela eliminação padrão dos quartéis.</translation>
     </message>
@@ -3221,6 +3210,10 @@ para ver a prévia</translation>
     <message>
         <source>Spanish Olive Grove</source>
         <translation>Olival Espanhol</translation>
+    </message>
+    <message>
+        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
+        <translation>Um campo de batalha florestal denso e simétrico para dois jogadores ativos, construído em torno da leitura das estradas, bosques de emboscada, controle das colinas, objetivos secundários e dois quartéis neutros. Não há rios, pontes ou montanhas. As estradas contornam as colinas de propósito, em vez de atravessá-las.</translation>
     </message>
 </context>
 <context>

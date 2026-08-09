@@ -346,6 +346,8 @@ private:
   bool m_allow_loading = true;
 };
 
+} // namespace
+
 class CampaignMapRenderer : public QQuickFramebufferObject::Renderer,
                             protected QOpenGLFunctions_3_3_Core {
 public:
@@ -2453,8 +2455,6 @@ void main() {
     m_water_texture = nullptr;
   }
 };
-
-} // namespace
 
 CampaignMapView::CampaignMapView() {
   setMirrorVertically(true);

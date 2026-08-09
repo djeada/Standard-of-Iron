@@ -377,6 +377,7 @@ public:
   [[nodiscard]] QString loading_stage_text() const;
 
   [[nodiscard]] bool is_campaign_mission() const;
+  [[nodiscard]] bool release_self_test_mission_ready() const;
   [[nodiscard]] bool campaign_completed() const;
   [[nodiscard]] bool civilian_delivery_available() const {
     return m_civilian_delivery_available;
@@ -395,6 +396,9 @@ public:
 
   void ensure_initialized() override;
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
+  void set_release_self_test_mode(bool enabled) noexcept {
+    m_release_self_test_mode = enabled;
+  }
   void update(float dt);
   void render(int pixel_width, int pixel_height);
   void set_input_viewport_size(qreal width, qreal height);
@@ -612,6 +616,7 @@ private:
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
+  bool m_release_self_test_mode = false;
   bool m_follow_selection_enabled = false;
   PlayerControlMode m_control_mode = PlayerControlMode::Rts;
   GameMode m_game_mode = GameMode::Rts;
@@ -676,6 +681,7 @@ private:
   std::optional<QVector3D> m_commander_rally_preview_pos;
 
 signals:
+  void renderer_initialized_changed();
   void selected_units_changed();
   void selected_units_data_changed();
   void enemy_troops_defeated_changed();
