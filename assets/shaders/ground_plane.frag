@@ -240,6 +240,16 @@ void main() {
       (moisture_var - 0.5) * 0.09 + patch_brightness * (1.0 - puddle_mask * 0.45);
   vec3 col = base_col * (1.0 + jitter + brightness_var);
   col *= 1.0 + (speckle - 0.35) * 0.035 * (1.0 - puddle_mask);
+
+  float turf_fine = soi_noise21_cdf702(wuv * 34.0 + vec2(11.0, 3.0));
+  float turf_micro = soi_noise21_cdf702(wuv * 76.0 + vec2(-7.0, 23.0));
+  float turf_weight = (1.0 - soil_mix * 0.8) * (1.0 - gravel_mask) *
+                      (1.0 - puddle_mask) * (1.0 - tactical);
+  col *= 1.0 + ((turf_fine - 0.5) * 0.11 + (turf_micro - 0.5) * 0.06) * turf_weight;
+  col = mix(col,
+            col * vec3(0.93, 1.06, 0.89),
+            smoothstep(0.60, 0.92, turf_fine * 0.72 + turf_micro * 0.28) * turf_weight *
+                0.40);
   col *= u_tint;
   vec3 L = environment_primary_direction();
   float ndl = max(dot(n_micro, L), 0.0);

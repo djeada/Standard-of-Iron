@@ -55,11 +55,11 @@ void main() {
   float canopy_edge = smoothstep(0.10, 0.32, canopy_radius);
   float canopy_core = 1.0 - smoothstep(0.14, 0.40, canopy_radius);
 
-  vec3 leaf_dark_green = vec3(0.085, 0.155, 0.108);
-  vec3 leaf_mid_green = vec3(0.250, 0.330, 0.180);
-  vec3 leaf_light_green = vec3(0.470, 0.560, 0.270);
-  vec3 leaf_silver = vec3(0.520, 0.555, 0.470);
-  vec3 leaf_sun = vec3(0.560, 0.640, 0.360);
+  vec3 leaf_dark_green = vec3(0.072, 0.128, 0.092);
+  vec3 leaf_mid_green = vec3(0.208, 0.278, 0.162);
+  vec3 leaf_light_green = vec3(0.388, 0.462, 0.248);
+  vec3 leaf_silver = vec3(0.545, 0.575, 0.500);
+  vec3 leaf_sun = vec3(0.500, 0.565, 0.330);
 
   float color_choice =
       clamp(leaf_clump * 0.90 + (leaf_fine - 0.5) * 0.26 + 0.10, 0.0, 1.0);
@@ -67,7 +67,7 @@ void main() {
   leaf_color =
       mix(leaf_color, leaf_light_green, smoothstep(0.40, 0.90, leaf_mass) * 0.62);
 
-  leaf_color = mix(leaf_color, v_color, 0.50);
+  leaf_color = mix(leaf_color, v_color, 0.40);
 
   vec3 n = geometric_normal;
   vec3 shading_normal =
@@ -86,9 +86,10 @@ void main() {
       sun * mix(diffuse * 0.72, wrap, v_foliage_mask);
 
   float silver_show =
-      smoothstep(0.30, 0.80, 1.0 - diffuse) * smoothstep(0.35, 0.85, leaf_clump);
+      smoothstep(0.22, 0.75, 1.0 - diffuse) * smoothstep(0.30, 0.80, leaf_clump);
+  silver_show = max(silver_show, smoothstep(0.62, 0.95, leaf_fine) * 0.55);
   leaf_color =
-      mix(leaf_color, leaf_silver, silver_show * mix(0.08, 0.16, canopy_height));
+      mix(leaf_color, leaf_silver, silver_show * mix(0.16, 0.30, canopy_height));
 
   float sun_catch = smoothstep(0.43, 1.00, wrap) * mix(0.20, 0.62, leaf_clump);
   leaf_color = mix(leaf_color, leaf_sun, sun_catch * v_foliage_mask);
