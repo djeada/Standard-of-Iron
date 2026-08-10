@@ -103,10 +103,12 @@ TEST(CivilianDeliverySystemTest, CivilianEnteringBarracksTransfersManpower) {
   civilian_unit->owner_id = 1;
   delivery->target_barracks_id = barracks->get_id();
 
+  const auto civilian_id = civilian->get_id();
+
   Game::Systems::CivilianDeliverySystem system;
   system.update(&world, 0.016F);
 
-  EXPECT_EQ(world.get_entity(civilian->get_id()), nullptr);
+  EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(barracks_prod->manpower_available,
             Game::Systems::k_civilian_delivery_population_grant);
 }
@@ -164,10 +166,12 @@ TEST(CivilianDeliverySystemTest, DeliveryTargetOutsideBarracksStillTransfersManp
   civilian_unit->owner_id = 1;
   delivery->target_barracks_id = barracks->get_id();
 
+  const auto civilian_id = civilian->get_id();
+
   Game::Systems::CivilianDeliverySystem system;
   system.update(&world, 0.016F);
 
-  EXPECT_EQ(world.get_entity(civilian->get_id()), nullptr);
+  EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(barracks_prod->manpower_available,
             Game::Systems::k_civilian_delivery_population_grant);
 
@@ -228,10 +232,12 @@ TEST(CivilianDeliverySystemTest,
   civilian_unit->owner_id = 1;
   delivery->target_barracks_id = barracks->get_id();
 
+  const auto civilian_id = civilian->get_id();
+
   Game::Systems::CivilianDeliverySystem system;
   system.update(&world, 0.016F);
 
-  EXPECT_EQ(world.get_entity(civilian->get_id()), nullptr);
+  EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(barracks_prod->manpower_available,
             Game::Systems::k_civilian_delivery_population_grant);
 

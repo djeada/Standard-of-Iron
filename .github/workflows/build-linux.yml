@@ -1,7 +1,7 @@
 ---
 name: Build (Linux)
 
-# Reusable: called by nightly.yml (packaging dry run) and by release.yml
+# Reusable: called by weekly.yml (packaging dry run) and by release.yml
 # (gated release build). It never publishes anything itself - publication is
 # the release pipeline's single, gated responsibility.
 on:

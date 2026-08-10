@@ -37,7 +37,20 @@ function(soi_register_test_binary target)
         PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" AUTOMOC ON
     )
     target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/game)
-    gtest_discover_tests(${target} DISCOVERY_MODE PRE_TEST WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    # DISCOVERY_TIMEOUT defaults to 5 seconds, which is the time budget for
+    # running the binary once with --gtest_list_tests. That is ample for an
+    # optimised build and nowhere near enough for an instrumented one: under
+    # AddressSanitizer this suite takes about 23 seconds just to reach main and
+    # print its test names. The weekly sanitizer lanes therefore failed during
+    # discovery on every run -- "Process terminated due to timeout", before a
+    # single test executed. The value is a ceiling, not a delay, so raising it
+    # costs a fast build nothing.
+    gtest_discover_tests(
+        ${target}
+        DISCOVERY_MODE PRE_TEST
+        DISCOVERY_TIMEOUT 300
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
 endfunction()
 
 include(GoogleTest)

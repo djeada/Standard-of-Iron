@@ -25,7 +25,7 @@ else()
     message(STATUS "clang-tidy disabled (ENABLE_CLANG_TIDY=OFF)")
 endif()
 
-# ---- Sanitizer and coverage lanes (used by the nightly CI workflow) ----
+# ---- Sanitizer and coverage lanes (used by the weekly CI workflow) ----
 # ENABLE_SANITIZER accepts a comma-separated -fsanitize list, e.g.
 #   cmake -DENABLE_SANITIZER=address,undefined ..
 set(ENABLE_SANITIZER
@@ -47,6 +47,7 @@ if(ENABLE_SANITIZER)
             -g
         )
         add_link_options(-fsanitize=${ENABLE_SANITIZER})
+        set(SOI_INSTRUMENTED_BUILD ON)
     endif()
 endif()
 
@@ -57,7 +58,18 @@ if(ENABLE_COVERAGE)
         message(STATUS "Coverage instrumentation enabled")
         add_compile_options(--coverage -g -O0 -fprofile-update=atomic)
         add_link_options(--coverage)
+        set(SOI_INSTRUMENTED_BUILD ON)
     endif()
+endif()
+
+# A sanitized or coverage-instrumented build runs several times slower than the
+# one players get. Assertions about wall-clock behaviour measure the
+# instrumentation in that configuration rather than the game, so the few places
+# that make them ask for this first. It is not a feature toggle: nothing
+# changes about what the code does, only about which timing claims are
+# meaningful to check.
+if(SOI_INSTRUMENTED_BUILD)
+    add_compile_definitions(SOI_INSTRUMENTED_BUILD=1)
 endif()
 
 # Prefer Qt6 if both Qt5/Qt6 are installed

@@ -659,9 +659,12 @@ auto verify(const CaptureResult& result) -> VerificationReport {
       result.quality.first_combat_seconds < 0.0) {
     add_issue(report, "no_engagement", "opposed forces never reached visible combat");
   }
+#if !defined(SOI_INSTRUMENTED_BUILD)
+
   if (result.performance.slowest_tick_ms > 33.0) {
     add_issue(report, "simulation_hitch", "a simulation tick exceeded 33 ms");
   }
+#endif
   if (result.config.scenario == ScenarioId::BotSkirmish &&
       (result.performance.ai_decisions == 0U || result.performance.ai_commands == 0U)) {
     add_issue(report, "idle_bot", "AI produced no gameplay command during the soak");
