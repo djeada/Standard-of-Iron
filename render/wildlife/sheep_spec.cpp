@@ -141,8 +141,8 @@ void fill_legs(RigPose& pose,
 }
 
 void fill_head(RigPose& pose, const SheepDrive& drive) {
-  float const nibble = std::sin(drive.stride_phase * k_two_pi * 6.0F) *
-                       0.010F * std::clamp(drive.graze, 0.0F, 1.0F);
+  float const nibble = std::sin(drive.stride_phase * k_two_pi * 6.0F) * 0.010F *
+                       std::clamp(drive.graze, 0.0F, 1.0F);
   float const neck_length = (k_poll_up - k_withers).length();
   QVector3D const poll_graze = k_withers + (k_graze_dir.normalized() * neck_length);
   QVector3D const control_up(0.0F, 0.590F, 0.292F);
@@ -413,8 +413,8 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
     const BodyRing& ring = k_body_rings[i];
     float const fi = static_cast<float>(i);
 
-    float const clump_w = 1.0F + (0.040F * std::sin(fi * 2.1F)) +
-                          (0.024F * std::sin((fi * 3.7F) + 1.3F));
+    float const clump_w =
+        1.0F + (0.040F * std::sin(fi * 2.1F)) + (0.024F * std::sin((fi * 3.7F) + 1.3F));
     float const clump_t = 1.0F + (0.045F * std::sin((fi * 2.6F) + 0.7F)) +
                           (0.022F * std::sin((fi * 4.3F) + 2.1F));
     body_rings.push_back({ring.z,

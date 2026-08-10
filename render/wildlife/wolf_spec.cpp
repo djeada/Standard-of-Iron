@@ -468,8 +468,8 @@ auto make_pose(const WolfDrive& drive) -> RigPose {
   pose.tail_base = QVector3D(0.0F, 0.556F + bob + pitch, -0.412F);
   pose.tail_mid =
       QVector3D(sway * 0.5F, 0.512F + (lift * 0.140F) + bob + tail_bounce, -0.606F);
-  pose.tail_tip = QVector3D(
-      sway, 0.392F + (lift * 0.320F) + bob + (tail_bounce * 1.8F), -0.782F);
+  pose.tail_tip =
+      QVector3D(sway, 0.392F + (lift * 0.320F) + bob + (tail_bounce * 1.8F), -0.782F);
 
   apply_lunge(pose, drive);
   apply_collapse(pose, drive);

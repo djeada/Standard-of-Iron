@@ -60,8 +60,8 @@ void main() {
     float ang = atan(model_pos.z, model_pos.x);
     float lump_base = sin(ang * 2.6 + silhouette_seed * TWO_PI) * 0.07;
     float lump_fine = sin(ang * 5.4 + leaf_seed * TWO_PI * 1.9) * 0.035;
-    float lump_ragged = sin(ang * 5.0 + a_pos.y * 16.0 + leaf_seed * TWO_PI * 3.1) *
-                        0.034;
+    float lump_ragged =
+        sin(ang * 5.0 + a_pos.y * 16.0 + leaf_seed * TWO_PI * 3.1) * 0.034;
     float lump_tuft =
         sin(ang * 3.0 - a_pos.y * 23.0 + silhouette_seed * TWO_PI * 2.3) * 0.024;
     float lump_mag = (lump_base + lump_fine + lump_ragged + lump_tuft) * foliage_mask;
