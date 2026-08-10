@@ -65,6 +65,9 @@ void submit_wildlife(const Render::GL::DrawContext& ctx,
   body_state.variant = inputs.variant;
   body_state.animation_state = inputs.state;
   body_state.phase = inputs.phase;
+  body_state.outgoing_state = inputs.outgoing_state;
+  body_state.outgoing_phase = inputs.outgoing_phase;
+  body_state.outgoing_weight = inputs.outgoing_weight;
 
   RCP::CreaturePreparationResult prep;
   prep.bodies.add_quadruped(body_state);

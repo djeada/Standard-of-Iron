@@ -33,6 +33,11 @@ void apply_hit_feedback(Engine::Core::Entity* target,
                         Engine::Core::EntityID attacker_id,
                         Engine::Core::World* world);
 
+void spawn_blood_stain(Engine::Core::World* world,
+                       const Engine::Core::Entity* target,
+                       float spread = 0.0F,
+                       std::uint32_t variation = 0U);
+
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration);
 
 void add_or_extend_stagger(Engine::Core::Entity* entity,

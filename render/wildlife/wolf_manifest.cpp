@@ -31,7 +31,7 @@ struct WolfClipSpec {
 };
 
 constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
-    {{"idle", 20U, 20.0F, true},
+    {{"idle", 24U, 24.0F, true},
      0.0F,
      0.0F,
      0.0F,
@@ -39,7 +39,7 @@ constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
      false,
      false,
      WolfGait::Stand},
-    {{"stalk", 28U, 20.0F, true},
+    {{"stalk", 32U, 22.0F, true},
      0.30F,
      1.0F,
      0.85F,
@@ -47,7 +47,7 @@ constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
      false,
      false,
      WolfGait::Stalk},
-    {{"walk", 24U, 24.0F, true},
+    {{"walk", 28U, 28.0F, true},
      0.45F,
      0.0F,
      0.0F,
@@ -55,8 +55,8 @@ constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
      false,
      false,
      WolfGait::Walk},
-    {{"run", 14U, 26.0F, true}, 1.0F, 0.0F, 0.25F, false, false, false, WolfGait::Run},
-    {{"bite", 28U, 26.0F, false},
+    {{"run", 24U, 44.0F, true}, 1.0F, 0.0F, 0.25F, false, false, false, WolfGait::Run},
+    {{"bite", 32U, 30.0F, false},
      0.0F,
      0.55F,
      1.0F,
@@ -64,7 +64,7 @@ constexpr std::array<WolfClipSpec, 7> k_wolf_clips{{
      false,
      false,
      WolfGait::Stand},
-    {{"die", 30U, 22.0F, false}, 0.0F, 0.0F, 1.0F, false, true, false, WolfGait::Stand},
+    {{"die", 32U, 26.0F, false}, 0.0F, 0.0F, 1.0F, false, true, false, WolfGait::Stand},
     {{"dead", 1U, 1.0F, true}, 0.0F, 0.0F, 1.0F, false, true, true, WolfGait::Stand},
 }};
 
@@ -99,9 +99,9 @@ void bake_wolf_clip_frame(std::size_t clip_index,
   drive.gait = clip.gait;
   if (clip.bites) {
 
-    constexpr float k_gather_end = 0.26F;
-    constexpr float k_contact = 0.34F;
-    constexpr float k_worry_end = 0.74F;
+    constexpr float k_gather_end = 0.20F;
+    constexpr float k_contact = 0.27F;
+    constexpr float k_worry_end = 0.84F;
 
     auto smoothstep = [](float value) {
       float const t = std::clamp(value, 0.0F, 1.0F);
@@ -111,27 +111,27 @@ void bake_wolf_clip_frame(std::size_t clip_index,
     if (phase < k_gather_end) {
 
       float const t = phase / k_gather_end;
-      drive.lunge = -0.22F * smoothstep(t);
-      drive.jaw_open = smoothstep(t) * 0.85F;
-      drive.crouch = 0.55F + (0.35F * smoothstep(t));
+      drive.lunge = -0.30F * smoothstep(t);
+      drive.jaw_open = smoothstep(t);
+      drive.crouch = 0.55F + (0.42F * smoothstep(t));
     } else if (phase < k_contact) {
 
       float const t = (phase - k_gather_end) / (k_contact - k_gather_end);
-      drive.lunge = -0.22F + (1.22F * t);
-      drive.jaw_open = 0.85F * (1.0F - (t * t));
-      drive.crouch = 0.90F - (0.62F * t);
+      drive.lunge = -0.30F + (1.30F * (t * t));
+      drive.jaw_open = 1.0F - (t * t);
+      drive.crouch = 0.97F - (0.72F * t);
     } else if (phase < k_worry_end) {
 
       float const t = (phase - k_contact) / (k_worry_end - k_contact);
-      drive.lunge = 1.0F - (0.18F * t);
+      float const thrash = std::sin(t * std::numbers::pi_v<float> * 5.0F);
+      drive.lunge = 1.0F - (0.24F * t);
       drive.jaw_open = 0.0F;
-      drive.crouch = 0.28F + (0.14F * t);
-      drive.head_shake = std::sin(t * std::numbers::pi_v<float> * 3.0F) *
-                         (1.0F - smoothstep(t)) * 1.0F;
+      drive.crouch = 0.25F + (0.30F * std::fabs(thrash));
+      drive.head_shake = thrash * (1.0F - (0.42F * t)) * 1.45F;
     } else {
 
       float const t = (phase - k_worry_end) / (1.0F - k_worry_end);
-      drive.lunge = 0.82F * (1.0F - smoothstep(t));
+      drive.lunge = 0.76F * (1.0F - smoothstep(t));
       drive.jaw_open = 0.0F;
       drive.crouch = 0.42F * (1.0F - smoothstep(t));
     }

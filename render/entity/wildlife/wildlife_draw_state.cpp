@@ -15,13 +15,39 @@ struct GaitCursor {
   float distance{0.0F};
   float cycles{0.0F};
   float stamp{0.0F};
+  float speed{0.0F};
+  float elapsed{0.0F};
+  float ambient{0.0F};
+  float action{0.0F};
+  bool sampled{false};
 };
+
+constexpr float k_action_restart_drop = 0.25F;
+
+constexpr float k_gait_speed_smoothing = 0.18F;
+constexpr float k_gait_max_step_seconds = 0.25F;
 
 constexpr std::size_t k_cursor_prune_threshold = 512U;
 constexpr float k_cursor_max_age = 30.0F;
 
 auto gait_cursors() -> std::unordered_map<std::uint32_t, GaitCursor>& {
   static std::unordered_map<std::uint32_t, GaitCursor> cursors;
+  return cursors;
+}
+
+constexpr float k_clip_blend_seconds = 0.22F;
+
+struct ClipCursor {
+  Render::Creature::AnimationStateId state{Render::Creature::AnimationStateId::Idle};
+  Render::Creature::AnimationStateId outgoing{Render::Creature::AnimationStateId::Idle};
+  float last_phase{0.0F};
+  float outgoing_phase{0.0F};
+  float blend_remaining{0.0F};
+  float stamp{0.0F};
+};
+
+auto clip_cursors() -> std::unordered_map<std::uint32_t, ClipCursor>& {
+  static std::unordered_map<std::uint32_t, ClipCursor> cursors;
   return cursors;
 }
 
@@ -117,26 +143,121 @@ auto resolve_draw_state(const DrawContext& ctx, float top_speed) -> DrawState {
   return state;
 }
 
-auto gait_phase(const DrawState& state, float advance) -> float {
-  float const offset = hash_unit_float(state.seed, 11U);
-
+auto gait_speed(const DrawState& state) -> float {
   auto& cursors = gait_cursors();
   auto [entry, inserted] = cursors.try_emplace(state.seed);
   GaitCursor& cursor = entry->second;
   if (inserted) {
-    cursor.distance = state.distance;
-    cursor.cycles = offset;
+    cursor.cycles = hash_unit_float(state.seed, 11U);
+    cursor.ambient = hash_unit_float(state.seed, 23U);
     prune_gait_cursors(state.time);
   }
-  cursor.stamp = state.time;
 
-  float const stepped = state.distance - cursor.distance;
-  cursor.distance = state.distance;
-  if (advance > 1.0e-4F && stepped > 0.0F) {
-    cursor.cycles += stepped / advance;
+  bool const restarted =
+      inserted || state.distance < cursor.distance || state.time < cursor.stamp;
+  if (restarted) {
+    cursor.distance = state.distance;
+    cursor.stamp = state.time;
+    cursor.speed = 0.0F;
   }
 
+  cursor.elapsed = std::clamp(state.time - cursor.stamp, 0.0F, k_gait_max_step_seconds);
+  cursor.stamp = state.time;
+
+  float const stepped = std::max(0.0F, state.distance - cursor.distance);
+  cursor.distance = state.distance;
+
+  if (cursor.elapsed > 1.0e-5F) {
+    float const measured = stepped / cursor.elapsed;
+    float const blend = std::clamp(
+        cursor.elapsed / (k_gait_speed_smoothing + cursor.elapsed), 0.0F, 1.0F);
+    cursor.speed += (measured - cursor.speed) * blend;
+  }
+  cursor.sampled = true;
+  return cursor.speed;
+}
+
+auto gait_phase(const DrawState& state, float advance) -> float {
+  auto& cursors = gait_cursors();
+  auto const entry = cursors.find(state.seed);
+  if (entry == cursors.end()) {
+    return hash_unit_float(state.seed, 11U);
+  }
+  GaitCursor& cursor = entry->second;
+
+  if (advance > 1.0e-4F) {
+    cursor.cycles += (cursor.speed * cursor.elapsed) / advance;
+  }
   return cursor.cycles - std::floor(cursor.cycles);
+}
+
+auto ambient_phase(const DrawState& state, float period_seconds) -> float {
+  auto& cursors = gait_cursors();
+  auto const entry = cursors.find(state.seed);
+  if (entry == cursors.end() || period_seconds <= 1.0e-3F) {
+    return 0.0F;
+  }
+  GaitCursor& cursor = entry->second;
+  cursor.ambient += cursor.elapsed / period_seconds;
+  return cursor.ambient - std::floor(cursor.ambient);
+}
+
+auto action_phase(const DrawState& state, float raw) -> float {
+  auto& cursors = gait_cursors();
+  auto const entry = cursors.find(state.seed);
+  if (entry == cursors.end()) {
+    return raw;
+  }
+  GaitCursor& cursor = entry->second;
+  if (raw + k_action_restart_drop < cursor.action) {
+    cursor.action = raw;
+  } else {
+    cursor.action = std::max(cursor.action, raw);
+  }
+  return cursor.action;
+}
+
+auto resolve_clip_transition(const DrawState& state,
+                             Render::Creature::AnimationStateId incoming,
+                             float incoming_phase) -> ClipTransition {
+  auto& cursors = clip_cursors();
+  auto [entry, inserted] = cursors.try_emplace(state.seed);
+  ClipCursor& cursor = entry->second;
+  if (inserted) {
+    cursor.state = incoming;
+    cursor.outgoing = incoming;
+    cursor.last_phase = incoming_phase;
+    cursor.stamp = state.time;
+    if (cursors.size() >= k_cursor_prune_threshold) {
+      std::erase_if(cursors, [now = state.time](const auto& item) {
+        return now - item.second.stamp > k_cursor_max_age;
+      });
+    }
+    return {};
+  }
+
+  float const elapsed = std::clamp(state.time - cursor.stamp, 0.0F, k_cursor_max_age);
+  cursor.stamp = state.time;
+
+  if (incoming != cursor.state) {
+    cursor.outgoing = cursor.state;
+    cursor.outgoing_phase = cursor.last_phase;
+    cursor.blend_remaining = k_clip_blend_seconds;
+    cursor.state = incoming;
+  } else {
+    cursor.blend_remaining = std::max(0.0F, cursor.blend_remaining - elapsed);
+  }
+  cursor.last_phase = incoming_phase;
+
+  if (cursor.blend_remaining <= 0.0F) {
+    return {};
+  }
+
+  ClipTransition transition;
+  transition.outgoing = cursor.outgoing;
+  transition.phase = cursor.outgoing_phase;
+  transition.weight = cursor.blend_remaining / k_clip_blend_seconds;
+  return transition;
 }
 
 } // namespace Render::GL::Wildlife

@@ -48,6 +48,10 @@ void render_combat_dust(Renderer* renderer,
                         ResourceManager* resources,
                         Engine::Core::World* world);
 
+void render_blood_stains(Renderer* renderer,
+                         ResourceManager* resources,
+                         Engine::Core::World* world);
+
 struct TelegraphEntry {
   float last_pos_x{0.0F};
   float last_pos_z{0.0F};
