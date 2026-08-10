@@ -43,6 +43,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/map_pipeline/requirements.txt
+
       - name: Resolve release version
         run: |
           set -euo pipefail
@@ -78,17 +84,25 @@ jobs:
           key: deps-ubuntu-22.04-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt') }}
           restore-keys: deps-ubuntu-22.04-
 
+      - name: Cache campaign map source datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tools/map_pipeline/build
+          key: campaign-map-${{ runner.os }}-${{ hashFiles('tools/map_pipeline/pipeline.py', 'tools/map_pipeline/map_bounds.json') }}
+
+      - name: Generate campaign map runtime assets
+        run: |
+          python -m pip install -r tools/map_pipeline/requirements.txt
+          python scripts/generate-campaign-map.py
+
       - name: Build
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DDEFAULT_LANG=en
-          cmake --build build --config ${BUILD_TYPE}
-
-      - name: Unit tests
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: bash scripts/run-tests.sh build
+            -DDEFAULT_LANG=en \
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=ON \
+            -DBUILD_TESTING=OFF
+          cmake --build build --config ${BUILD_TYPE} --target standard_of_iron
 
       - name: Validate OpenGL requirements
         run: python3 scripts/validate_opengl_requirements.py
@@ -112,7 +126,8 @@ jobs:
           APPIMAGE: ${{ steps.package.outputs.name }}
         run: |
           set -o pipefail
-          chmod +x "$APPIMAGE"
+          appimage_path="./${APPIMAGE}"
+          chmod +x "$appimage_path"
 
           # LIBGL_ALWAYS_SOFTWARE=1 forces Mesa's llvmpipe, which supports
           # OpenGL 4.5 Core Profile -- a superset of the 3.3 Core the game
@@ -121,10 +136,16 @@ jobs:
           export QT_OPENGL=desktop
           export QT_LOGGING_RULES="qt.rhi.*=false"
 
-          xvfb-run --auto-servernum -- "$APPIMAGE" --renderer-self-test \
+          timeout 1560s xvfb-run --auto-servernum -- \
+            "$appimage_path" --release-self-test \
             2>&1 | tee renderer_self_test.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_MISSION_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_CAMPAIGN_MAP_SELF_TEST: PASS" renderer_self_test.log
+          grep -q "SOI_CREATURE_ASSET_SELF_TEST: PASS" renderer_self_test.log
           grep -q "SOI_GL_FLOOR: PASS" renderer_self_test.log
+          grep -q "SOI_GL_TIER_45: PASS" renderer_self_test.log
 
           # GPU crowd culling needs compute shaders, SSBOs and indirect draw.
           # OpenGL 3.3 Core stays the floor, so the renderer must present the
@@ -133,7 +154,7 @@ jobs:
           # context down to 3.3 exercises the same fallback the pipeline takes
           # when RiggedCullPipeline reports itself unavailable.
           MESA_GL_VERSION_OVERRIDE=3.3 xvfb-run --auto-servernum -- \
-            "$APPIMAGE" --renderer-self-test 2>&1 | tee renderer_fallback.log
+            "$appimage_path" --renderer-self-test 2>&1 | tee renderer_fallback.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_fallback.log
           # Music and ambience are read from assets/ rather than embedded in
           # the binary, so a package that loses that directory renders fine and

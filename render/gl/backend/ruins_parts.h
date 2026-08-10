@@ -6,9 +6,6 @@
 
 namespace Render::GL::BackendPipelines::RuinsParts {
 
-// The fallen walls and scattered blocks of a ruined building. Every piece is
-// hand-placed, so the numbers live here rather than inside the pipeline.
-
 inline constexpr std::array<PropBoxPart, 25> k_ruins_boxes{{
     {{-0.92F, -0.02F, -0.70F}, {0.90F, 0.06F, 0.68F}},
     {{-0.76F, 0.06F, -0.56F}, {0.76F, 0.12F, 0.54F}},

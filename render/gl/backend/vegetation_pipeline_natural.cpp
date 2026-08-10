@@ -31,19 +31,12 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 using namespace Render::GL::Geometry;
 
-// The foliage shaders do not follow VertexAttrib's position/normal/tex_coord
-// order: pine_instanced.vert, olive_instanced.vert and plant_instanced.vert all
-// declare `a_tex_coord` at location 1 and `a_normal` at location 2. These names
-// track the shaders, so the layout below cannot silently drift from them.
 constexpr GLuint k_foliage_position_location = 0;
 constexpr GLuint k_foliage_tex_coord_location = 1;
 constexpr GLuint k_foliage_normal_location = 2;
 
-// a_pos_scale, a_color_sway, a_rotation.
 constexpr std::array<GLuint, 3> k_foliage_instance_locations{3, 4, 5};
 
-// stone_instanced.vert carries no texcoord, so its instance data starts one
-// slot earlier: a_pos_scale at 2, a_color_rot at 3.
 constexpr std::array<GLuint, 2> k_stone_instance_locations{2, 3};
 
 void VegetationPipeline::initialize_stone_pipeline() {
@@ -258,8 +251,6 @@ void VegetationPipeline::initialize_pine_pipeline() {
   initializeOpenGLFunctions();
   release_mesh_buffers(*this, m_pine_mesh);
 
-  // The pine shader reads the sway amount out of the third texcoord channel,
-  // so the ring weight carries it.
   struct PineVertex {
     QVector3D position;
     QVector3D tex_coord;

@@ -81,6 +81,17 @@ assets/campaign_map/*
 !assets/campaign_map/README.md
 !assets/campaign_map/hannibal_path.json
 !assets/campaign_map/campaign_state.json
+# ...and the pipeline outputs the build embeds. Natural Earth and NOAA are the
+# source of truth for these, but neither host is dependable enough to sit in
+# the path of a release build, so the generated results are committed.
+!assets/campaign_map/campaign_base_color.png
+!assets/campaign_map/campaign_water.png
+!assets/campaign_map/coastlines_uv.json
+!assets/campaign_map/rivers_uv.json
+!assets/campaign_map/land_mesh.bin
+!assets/campaign_map/provinces.json
+!assets/campaign_map/terrain_height.png
+!assets/campaign_map/terrain_height.json
 
 # Generated creature animation and snapshot assets
 assets/creatures/*.bpat

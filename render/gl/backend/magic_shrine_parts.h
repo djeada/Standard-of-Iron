@@ -6,9 +6,6 @@
 
 namespace Render::GL::BackendPipelines::MagicShrineParts {
 
-// The placed stonework of the shrine. The rune ring and the obelisk pair are
-// generated in the pipeline; the base, steps and altar are placed by hand.
-
 inline constexpr std::array<PropBoxPart, 16> k_magic_shrine_boxes{{
     {{-0.86F, -0.02F, -0.86F}, {0.86F, 0.08F, 0.86F}},
     {{-0.68F, 0.08F, -0.68F}, {0.68F, 0.16F, 0.68F}},

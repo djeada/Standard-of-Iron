@@ -15,6 +15,7 @@ inline constexpr int k_first_ai_owner_id = 2;
 struct DerivedCommander {
   int owner_id = k_local_owner_id;
   QString troop_type;
+  QString suggested_troop_type;
   QString label;
   QPointF position;
   bool authored_in_map = false;

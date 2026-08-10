@@ -6,6 +6,7 @@ name: Pull Request
 # platform builds run nightly and are gated again on every release tag,
 # which is where a break must be caught before shipping.
 on:
+  workflow_call:
   pull_request:
     branches: [main, develop]
   merge_group:
@@ -84,7 +85,8 @@ jobs:
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DDEFAULT_LANG=en
+            -DDEFAULT_LANG=en \
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
 
       - name: Build test targets
         run: |

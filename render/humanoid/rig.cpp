@@ -65,8 +65,6 @@ auto torso_mesh_without_bottom_cap() -> Mesh* {
             });
       });
 
-  // Filtering only ever removes triangles, so an empty result means the base
-  // torso already had no bottom cap and can be drawn as-is.
   return filtered != nullptr ? filtered : base;
 }
 

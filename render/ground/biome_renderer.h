@@ -45,9 +45,6 @@ public:
   }
 
 private:
-  // The shared state the two grass scatter passes both read. `add_grass_blade`
-  // and `quad_section` stay callables so the passes keep using the same blade
-  // placement and terrain-priority rules as before the split.
   struct GrassScatterContext {
     const Game::Map::TerrainScatterProfile& scatter_profile;
     const Render::Ground::SpawnTerrainCache& terrain_cache;
@@ -63,10 +60,9 @@ private:
   };
 
   void generate_grass_instances();
-  // Dense clusters placed per terrain chunk, weighted by the chunk's dominant
-  // terrain type.
+
   void scatter_grass_clusters(const GrassScatterContext& ctx);
-  // The sparse blades that fill the ground between clusters.
+
   void scatter_background_grass(const GrassScatterContext& ctx);
 
   int m_width = 0;

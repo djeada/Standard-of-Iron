@@ -15,6 +15,7 @@
 #include "render/draw_commands.h"
 #include "render/gl/buffer.h"
 #include "render/gl/gl_capabilities.h"
+#include "render/gl/platform_gl.h"
 #include "render/gl/shader_cache.h"
 #include "render/rigged_mesh.h"
 #include "utils/resource_utils.h"

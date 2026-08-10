@@ -6,9 +6,6 @@
 
 namespace Render::GL::BackendPipelines::WeaponRackParts {
 
-// The frame and shelves of the weapon rack. The blades themselves are built by
-// the sword and spear helpers in the pipeline.
-
 inline constexpr std::array<PropBoxPart, 15> k_weapon_rack_boxes{{
     {{-0.78F, 0.00F, -0.13F}, {-0.64F, 1.42F, 0.03F}},
     {{0.64F, 0.00F, -0.13F}, {0.78F, 1.42F, 0.03F}},

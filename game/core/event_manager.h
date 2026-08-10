@@ -35,8 +35,9 @@ struct EventStats {
 class EventManager {
 public:
   static auto instance() -> EventManager& {
-    static EventManager inst;
-    return inst;
+
+    static auto* inst = new EventManager();
+    return *inst;
   }
 
   template <typename T>

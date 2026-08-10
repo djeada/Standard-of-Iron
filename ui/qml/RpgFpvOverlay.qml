@@ -284,7 +284,7 @@ Item {
     Item {
         id: combatFrame
         anchors.fill: parent
-        visible: root.status_value("focus_marker_locked", false) === true || root.status_value("is_attacking", false) === true
+        visible: root.status_value("focus_marker_locked", false) === true
         opacity: visible ? (0.22 + Math.min(0.16, Number(root.status_value("combo_step", 0)) * 0.04)) : 0.0
 
         Rectangle {

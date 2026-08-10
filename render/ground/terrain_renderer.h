@@ -42,17 +42,12 @@ public:
 private:
   void build_meshes();
 
-  // Phases of build_meshes, split out so each one can be read on its own.
-  // How close every hill tile is to an entrance, smoothed into a 0..1 ramp the
-  // shader uses to flatten the approach. Empty when the map has no entrances.
   [[nodiscard]] auto compute_hill_entry_weights(
       const std::vector<float>& height_data) const -> std::vector<float>;
-  // How close every tile is to the foot of a hill or mountain, weighted by the
-  // local height change, so the skirt around a feature can be shaded apart.
+
   [[nodiscard]] auto compute_feature_foot_weights(
       const std::vector<float>& height_data) const -> std::vector<float>;
-  // Edge-aware normal blur: flat ground is smoothed hard, ridges keep their
-  // original face normals so they stay crisp.
+
   void smooth_terrain_normals(const std::vector<float>& height_data,
                               const std::vector<QVector3D>& face_normals,
                               std::vector<QVector3D>& normals,
@@ -64,9 +59,6 @@ private:
                     Game::Map::TerrainType chunk_type,
                     float tint) const -> TerrainChunkParams;
 
-  // One terrain-section's worth of geometry inside a chunk, accumulated while
-  // the chunk's quads are walked. `remap` keeps the section's vertices shared
-  // between the quads that touch them.
   struct SectionData {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
@@ -93,8 +85,6 @@ private:
                          std::numeric_limits<float>::lowest()};
   };
 
-  // Everything the per-chunk mesh emitter reads: the resolved vertex fields and
-  // the samplers that interpolate them between grid points.
   struct TerrainMeshBuild {
     const std::vector<QVector3D>& positions;
     const std::vector<QVector3D>& normals;
@@ -118,16 +108,13 @@ private:
     float height_range;
   };
 
-  // Builds the meshes for one chunk of the terrain grid, one per terrain
-  // section, and appends them to m_chunks.
   void emit_terrain_chunk(const TerrainMeshBuild& build,
                           int chunk_x,
                           int chunk_z,
                           int chunk_max_x,
                           int chunk_max_z,
                           std::size_t& total_triangles);
-  // Turns one finished section into a ChunkMesh: averaged colour, shader
-  // parameters and bounds.
+
   void finish_chunk_section(const TerrainMeshBuild& build,
                             const SectionData& section,
                             int section_index,

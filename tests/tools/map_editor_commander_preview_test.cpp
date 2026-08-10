@@ -38,7 +38,7 @@ auto commander_for_owner(const QVector<MapEditor::DerivedCommander>& commanders,
 
 } // namespace
 
-TEST(MapEditorCommanderPreviewTest, ConfiguredCommandersWinOverNationDefaults) {
+TEST(MapEditorCommanderPreviewTest, SuggestsNationAppropriateCommanders) {
   EXPECT_EQ(MapEditor::resolve_commander_troop("carthage", ""),
             QStringLiteral("carthage_sword_commander"));
   EXPECT_EQ(MapEditor::resolve_commander_troop("roman_republic", ""),
@@ -53,7 +53,7 @@ TEST(MapEditorCommanderPreviewTest, ConfiguredCommandersWinOverNationDefaults) {
       QStringLiteral("roman_veteran_consul"));
 }
 
-TEST(MapEditorCommanderPreviewTest, RhoneMissionExposesOneCommanderPerOwner) {
+TEST(MapEditorCommanderPreviewTest, RhoneMapAuthorsOneCommanderPerOwner) {
   const QString root = repo_root();
   MapEditor::MapData map;
   QString error;
@@ -75,32 +75,42 @@ TEST(MapEditorCommanderPreviewTest, RhoneMissionExposesOneCommanderPerOwner) {
   const auto* first_ai = commander_for_owner(commanders, 2);
   ASSERT_NE(first_ai, nullptr);
   EXPECT_EQ(first_ai->troop_type, QStringLiteral("roman_legion_organizer"));
-  EXPECT_FALSE(first_ai->authored_in_map);
+  EXPECT_TRUE(first_ai->authored_in_map);
 
   const auto* second_ai = commander_for_owner(commanders, 3);
   ASSERT_NE(second_ai, nullptr);
   EXPECT_EQ(second_ai->troop_type, QStringLiteral("roman_veteran_consul"));
-  EXPECT_FALSE(second_ai->authored_in_map);
+  EXPECT_TRUE(second_ai->authored_in_map);
+}
+
+TEST(MapEditorCommanderPreviewTest, ForcesWithoutAMapCommanderReadBackAsMissing) {
+  MapEditor::MapData map;
+  MapEditor::TroopSpawnElement archer;
+  archer.type = QStringLiteral("archer");
+  archer.player_id = 2;
+  archer.x = 40.0F;
+  archer.z = 40.0F;
+  map.add_troop_spawn(archer);
+
+  const QJsonObject mission = QJsonDocument::fromJson(R"({
+    "player_setup": {"nation": "carthage"},
+    "ai_setups": [{"id": "roman_screen", "nation": "roman_republic"}]
+  })")
+                                  .object();
+
+  const QVector<MapEditor::DerivedCommander> commanders =
+      MapEditor::derive_mission_commanders(map, mission);
+  ASSERT_EQ(commanders.size(), 2);
 
   for (const auto& commander : commanders) {
-    if (commander.authored_in_map) {
-      continue;
-    }
-    bool near_owner_spawn = false;
-    for (const auto& spawn : map.troop_spawns()) {
-      if (spawn.player_id != commander.owner_id) {
-        continue;
-      }
-      const double dx = spawn.x - commander.position.x();
-      const double dz = spawn.z - commander.position.y();
-      if ((dx * dx) + (dz * dz) <= 12.0 * 12.0) {
-        near_owner_spawn = true;
-        break;
-      }
-    }
-    EXPECT_TRUE(near_owner_spawn)
-        << "owner " << commander.owner_id << " commander is placed away from its army";
+    EXPECT_FALSE(commander.authored_in_map) << "owner " << commander.owner_id;
+    EXPECT_TRUE(commander.troop_type.isEmpty()) << "owner " << commander.owner_id;
   }
+
+  EXPECT_EQ(commander_for_owner(commanders, 1)->suggested_troop_type,
+            QStringLiteral("carthage_sword_commander"));
+  EXPECT_EQ(commander_for_owner(commanders, 2)->suggested_troop_type,
+            QStringLiteral("roman_veteran_consul"));
 }
 
 TEST(MapEditorCommanderPreviewTest, OnlyOneCommanderPerOwnerIsTracked) {

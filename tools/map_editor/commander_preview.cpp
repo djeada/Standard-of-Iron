@@ -86,9 +86,6 @@ auto append_commander(const MapData& map,
   DerivedCommander commander;
   commander.owner_id = owner_id;
   commander.label = label;
-  commander.troop_type = resolve_commander_troop(
-      setup.value(QStringLiteral("nation")).toString(),
-      setup.value(QStringLiteral("commander_troop")).toString());
 
   const int authored_index = map.commander_spawn_index_for_player(owner_id);
   if (authored_index >= 0) {
@@ -97,6 +94,8 @@ auto append_commander(const MapData& map,
     commander.troop_type = spawn.type;
     commander.position = QPointF(spawn.x, spawn.z);
   } else {
+    commander.suggested_troop_type =
+        resolve_commander_troop(setup.value(QStringLiteral("nation")).toString(), {});
     commander.position = resolve_position(map, setup, owner_id);
   }
 

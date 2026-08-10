@@ -26,8 +26,8 @@ Checks:
      Shaders in OPTIONAL_GL43_SHADERS may declare '#version 430 core'.
   2. Every optional 4.30 shader must be gated behind a capability probe, and
      its owning pipeline must degrade instead of hard-failing.
-  3. main.cpp must not set QSurfaceFormat::CompatibilityProfile, and must not
-     request a context above 3.3 — raising the request raises the floor.
+  3. Entry points must request the preferred 4.5 Core context (4.1 on macOS)
+     while keeping the portable renderer floor explicitly at 3.3 Core.
   4. Every shader, including compute shaders, must be compiled into assets.qrc.
   5. Every release workflow must execute the packaged renderer self-test, and
      must assert the driver actually granted the 3.3 Core floor.  Requesting a
@@ -108,8 +108,20 @@ def check_optional_path_is_gated(root: Path) -> list[str]:
     return errors
 
 
-def check_no_compat_profile(root: Path) -> list[str]:
+def check_context_policy(root: Path) -> list[str]:
     errors: list[str] = []
+    requirements = root / "render/gl/context_requirements.h"
+    if not requirements.exists():
+        return ["render/gl/context_requirements.h not found"]
+    policy = requirements.read_text(encoding="utf-8")
+    for declaration in (
+        "required{3, 3}",
+        "preferred{4, 5}",
+        "apple_maximum{4, 1}",
+    ):
+        if declaration not in policy:
+            errors.append("render/gl/context_requirements.h: missing " + declaration)
+
     for relative in ("main.cpp", "tools/arena/main.cpp"):
         source = root / relative
         if not source.exists():
@@ -122,11 +134,19 @@ def check_no_compat_profile(root: Path) -> list[str]:
                 " All render classes derive from QOpenGLFunctions_3_3_Core and"
                 " require Core Profile — do not override to CompatibilityProfile."
             )
-        if "setVersion(3, 3)" not in content:
+        for requirement in (
+            "ContextRequirements::preferred",
+            "ContextRequirements::apple_maximum",
+        ):
+            if requirement not in content:
+                errors.append(f"{relative}: missing {requirement}")
+        if (
+            ".setVersion(" not in content
+            or ".major" not in content
+            or ".minor" not in content
+        ):
             errors.append(
-                f"{relative}: does not request OpenGL 3.3."
-                " Requesting a higher context raises the hardware floor;"
-                " optional features must be probed at runtime instead."
+                f"{relative}: does not apply the selected OpenGL context version"
             )
     return errors
 
@@ -157,9 +177,9 @@ def check_release_renderer_self_tests(root: Path) -> list[str]:
             errors.append(f"{workflow.relative_to(root)} not found")
             continue
         content = workflow.read_text(encoding="utf-8")
-        if "--renderer-self-test" not in content:
+        if "--release-self-test" not in content:
             errors.append(
-                f"{workflow.relative_to(root)}: packaged renderer test missing"
+                f"{workflow.relative_to(root)}: packaged release self-test missing"
             )
         if "SOI_RENDERER_SELF_TEST: PASS" not in content:
             errors.append(
@@ -170,6 +190,32 @@ def check_release_renderer_self_tests(root: Path) -> list[str]:
                 f"{workflow.relative_to(root)}: does not assert the OpenGL 3.3"
                 " Core floor was actually granted"
             )
+        tier_marker = (
+            "SOI_GL_TIER_41: PASS" if platform == "macos" else "SOI_GL_TIER_45: PASS"
+        )
+        if tier_marker not in content:
+            errors.append(
+                f"{workflow.relative_to(root)}: missing preferred context check "
+                f"{tier_marker!r}"
+            )
+
+        if platform == "windows":
+            for marker in (
+                "MESA_DIST_VERSION",
+                "MESA_DIST_SHA256",
+                "mesa-dist-win/releases/download",
+                "libgallium_wgl.dll",
+                "GALLIUM_DRIVER",
+            ):
+                if marker not in content:
+                    errors.append(
+                        f"{workflow.relative_to(root)}: modern Mesa fallback is "
+                        f"missing {marker!r}"
+                    )
+
+    for marker in ("GALLIUM_DRIVER", "llvmpipe"):
+        if marker not in main_content:
+            errors.append(f"main.cpp: software fallback is missing {marker!r}")
     return errors
 
 
@@ -208,13 +254,13 @@ def main() -> int:
         print("  OK   every 4.30 shader sits behind a runtime capability probe")
 
     print("\n[3/5] Surface format profile  (entry points)")
-    errs = check_no_compat_profile(root)
+    errs = check_context_policy(root)
     if errs:
         total_errors.extend(errs)
         for e in errs:
             print(f"  FAIL {e}")
     else:
-        print("  OK   Core Profile, OpenGL 3.3 requested by every entry point")
+        print("  OK   Core Profile, OpenGL 4.5 preferred with Apple's 4.1 ceiling")
 
     print("\n[4/5] Embedded shader resources  (assets.qrc)")
     errs = check_embedded_shaders(root, shader_dir)

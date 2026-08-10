@@ -109,8 +109,7 @@ Backend::~Backend() {
       glDeleteBuffers(1, &m_directional_shadow_ubo);
       m_directional_shadow_ubo = 0;
     }
-    // The shared meshes hold GL objects, and this is the last point at which a
-    // context is still current, so they are dropped here rather than at exit.
+
     SharedGeometryCache::instance().release_all();
     m_cylinder_pipeline.reset();
     m_vegetation_pipeline.reset();

@@ -19,8 +19,12 @@ public:
   [[nodiscard]] auto createRenderer() const -> Renderer* override;
 
   Q_PROPERTY(QObject* engine READ engine WRITE set_engine NOTIFY engine_changed)
+  Q_PROPERTY(bool rendererReady READ is_renderer_ready NOTIFY renderer_ready)
   [[nodiscard]] auto engine() const -> QObject*;
   void set_engine(QObject* eng);
+  [[nodiscard]] auto is_renderer_ready() const noexcept -> bool {
+    return m_renderer_ready;
+  }
 
 signals:
   void engine_changed();

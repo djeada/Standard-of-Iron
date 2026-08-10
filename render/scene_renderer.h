@@ -71,8 +71,6 @@ struct UnitSubmitContext;
 
 class Renderer : public ISubmitter {
 public:
-  // Kept as a member alias so existing Renderer::WorldRenderMode call sites
-  // keep reading naturally; the type itself belongs to the view state.
   using WorldRenderMode = Render::GL::WorldRenderMode;
 
   explicit Renderer(ShaderQuality quality = ShaderQuality::Full);
@@ -96,8 +94,7 @@ public:
   auto resources() const -> ResourceManager* {
     return m_backend ? m_backend->resources() : nullptr;
   }
-  // Presentation choices live in the view state; these forward to it so the
-  // existing call sites read the same.
+
   [[nodiscard]] auto view() noexcept -> RenderViewState& { return m_view; }
   [[nodiscard]] auto view() const noexcept -> const RenderViewState& { return m_view; }
 
@@ -419,8 +416,6 @@ private:
                                 bool visibility_enabled,
                                 std::vector<RenderEntry>& out);
 
-  // Draws one building or prop entry: the entity renderer if it has one, the
-  // archetype fallback otherwise. Shared by the building and the misc pass.
   void submit_non_unit_entry(const RenderEntry& entry,
                              Engine::Core::World* world,
                              ResourceManager* res);
@@ -478,8 +473,7 @@ private:
   std::atomic<bool> m_paused{false};
   RenderViewState m_view;
   float m_alpha_override = 1.0F;
-  // Resolved once the backend is up; the shared geometry cache owns it and
-  // drops it on shutdown, so this is cleared there rather than cached forever.
+
   Mesh* m_unit_cylinder_mesh = nullptr;
   std::shared_ptr<Engine::Core::World> m_render_world_snapshot;
 

@@ -71,8 +71,6 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
   append_plane(1.0F);
   append_plane(2.0F);
 
-  // firecamp.vert declares a_tex_coord at location 1 and its instance data
-  // (i_pos_intensity, i_radius_phase) at 3 and 4.
   constexpr std::array<VertexAttributeLayout, 2> k_firecamp_attributes{{
       {0, vec3, offsetof(FireCampVertex, position)},
       {1, vec2, offsetof(FireCampVertex, tex_coord)},

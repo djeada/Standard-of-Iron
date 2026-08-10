@@ -16,8 +16,7 @@
     "starting_resources": {
       "gold": 300,
       "food": 200
-    },
-    "commander_troop": "carthage_sword_commander"
+    }
   },
   "ai_setups": [
     {
@@ -34,8 +33,7 @@
         "harassment": 0.2
       },
       "starting_units": [],
-      "starting_buildings": [],
-      "commander_troop": "roman_legion_organizer"
+      "starting_buildings": []
     },
     {
       "id": "roman_patrol_forces",
@@ -52,7 +50,6 @@
       },
       "starting_units": [],
       "starting_buildings": [],
-      "commander_troop": "roman_veteran_consul",
       "waves": [
         {
           "timing": 15.0,

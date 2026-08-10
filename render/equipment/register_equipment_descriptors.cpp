@@ -52,7 +52,6 @@ void register_horse_descriptor(EquipmentCategory category,
   register_horse_equipment_contribution(handle, contribution);
 }
 
-// Descriptors for horse tack, barding and decoration.
 void register_horse_descriptors() {
   register_horse_descriptor(
       EquipmentCategory::HorseTack,
@@ -124,7 +123,6 @@ void register_horse_descriptors() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_saddle_bag_role_count)});
 }
 
-// Descriptors for helmets and headwear.
 void register_helmet_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Helmet,
@@ -242,7 +240,6 @@ void register_helmet_descriptors() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_headwrap_role_count)});
 }
 
-// Descriptors for body armour and shoulder cover.
 void register_body_armor_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
@@ -340,7 +337,6 @@ void register_body_armor_descriptors() {
            Render::GL::k_carthage_shoulder_cover_role_count)});
 }
 
-// Descriptors for weapons, shields and quivers.
 void register_weapon_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
@@ -462,7 +458,6 @@ void register_weapon_descriptors() {
        .role_count = static_cast<std::uint8_t>(Render::GL::k_quiver_role_count)});
 }
 
-// Descriptors for cloaks.
 void register_cloak_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Armor,

@@ -14,10 +14,6 @@ enum CommanderHelmetPaletteSlot : std::uint8_t {
   k_plume_slot = 3U,
 };
 
-// The authored shells and crests of the six commander helmets. Each table is
-// read straight onto the primitive list by its add_* function; anything
-// generated in a loop (plume strands, lobed masses) stays there as code.
-
 inline constexpr std::array<GeneratedPrimitiveSpec, 11> k_base_helmet_primitives{{
     {GeneratedPrimitiveSpec::Shape::Ellipsoid,
      {0.0F, 0.30F, -0.06F},

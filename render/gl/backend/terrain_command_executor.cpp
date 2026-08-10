@@ -8,8 +8,6 @@ using namespace Render::GL::ComponentCount;
 
 namespace {
 
-// Distance fog is wired identically for both terrain shaders; only the
-// uniform block differs.
 template <typename Uniforms>
 void set_fog_uniforms(Shader& shader,
                       const Uniforms& uniforms,

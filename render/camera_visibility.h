@@ -9,10 +9,6 @@ namespace Render::GL {
 
 class Camera;
 
-// Frustum queries against the render camera, used by effect renderers to skip
-// work for things off screen. This wraps a Render::GL::Camera and has no
-// gameplay meaning, so it belongs to the render layer; it used to sit in
-// game/systems, which made the simulation appear to depend on the camera.
 class CameraVisibility {
 public:
   static auto instance() -> CameraVisibility&;

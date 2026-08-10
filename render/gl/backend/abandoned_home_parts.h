@@ -6,9 +6,6 @@
 
 namespace Render::GL::BackendPipelines::AbandonedHomeParts {
 
-// A house left to collapse: standing wall stubs, a caved-in roof line and the
-// rubble around the footings.
-
 inline constexpr std::array<PropBoxPart, 32> k_abandoned_home_boxes{{
     {{-0.98F, -0.02F, -0.82F}, {0.98F, 0.07F, 0.82F}},
     {{-0.90F, 0.07F, -0.74F}, {0.90F, 0.14F, 0.74F}},

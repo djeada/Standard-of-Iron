@@ -6,9 +6,6 @@
 
 namespace Render::GL::BackendPipelines::SupplyCartParts {
 
-// The bed, frame and shafts of the supply cart. Wheels, barrels and the plank
-// courses are generated in loops in the pipeline.
-
 inline constexpr std::array<PropBoxPart, 21> k_supply_cart_boxes{{
     {{-0.58F, 0.36F, -0.60F}, {-0.44F, 0.45F, 0.56F}},
     {{0.44F, 0.36F, -0.60F}, {0.58F, 0.45F, 0.56F}},

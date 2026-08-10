@@ -9,7 +9,7 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
-## [0.1.0] — unreleased
+## [0.1.0] — 2026-08-09
 
 The first tagged release, and the first build published as a download rather
 than as something you compile yourself.
@@ -69,6 +69,9 @@ than as something you compile yourself.
 - The renderer now asserts at startup that the driver actually granted an OpenGL
   3.3 Core context, rather than assuming the one it asked for. All three release
   workflows fail if it did not.
+- Linux and Windows now prefer OpenGL 4.5 Core, exposing the existing 4.3 GPU
+  crowd path and 4.4 persistent-buffer path when available; macOS explicitly
+  requests Apple's 4.1 ceiling and keeps the complete 3.3 fallback.
 - The macOS and Windows toolchains are now exercised from Linux, where the
   project is actually developed: every translation unit is reparsed with Clang
   and libc++, every shader is compiled by a spec-literal GLSL front end, and
@@ -77,6 +80,11 @@ than as something you compile yourself.
   entries under **Fixed** below are what it found on its first run.
 
 ### Fixed
+
+- The Windows package no longer copies Qt 6.8's Mesa 11.2 software renderer,
+  which exposes only OpenGL 3.0 on the hosted runner. It bundles a pinned,
+  checksum-verified Mesa 26.1.6 llvmpipe runtime and verifies a real 4.5 Core
+  gameplay frame before publishing.
 
 - **Optimised builds had deleted every NaN and infinity check in the game.**
   `-ffast-math` (and MSVC's `/fp:fast`) licenses the compiler to assume no

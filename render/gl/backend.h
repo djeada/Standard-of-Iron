@@ -206,14 +206,10 @@ private:
     bool& polygon_offset_enabled;
   };
 
-  // Refreshes the per-frame UBOs: view-projection, environment lighting, and
-  // the local-light set selected from this frame's effect commands.
   void upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
                                     const DrawQueue& queue,
                                     const Camera& cam);
 
-  // Uniform setup for the two terrain shaders, split out of the draw loop:
-  // between them they set well over a hundred uniforms.
   void set_ground_plane_uniforms(Shader& shader,
                                  const TerrainSurfaceCmd& single,
                                  const QMatrix4x4& mvp,

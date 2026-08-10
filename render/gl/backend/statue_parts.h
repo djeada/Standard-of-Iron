@@ -6,14 +6,6 @@
 
 namespace Render::GL::BackendPipelines::StatueParts {
 
-// The hand-placed primitives that make up the village statue: a stepped
-// plinth, then a standing figure. These were a wall of float literals inside
-// initialize_statue_pipeline(); as tables the numbers can be read and nudged
-// without picking them out of five hundred lines of builder calls.
-//
-// The wreath, the drapery folds and the robe hem are generated in loops and
-// stay in the pipeline; only the placed parts live here.
-
 inline constexpr float k_plinth_top = 1.175F;
 inline constexpr int k_limb_segs = 9;
 inline constexpr int k_body_segs = 12;

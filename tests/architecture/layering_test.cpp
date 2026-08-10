@@ -119,15 +119,6 @@ auto is_view_layer(const std::string& relative) -> bool {
          relative.rfind("game/map/minimap/", 0) == 0;
 }
 
-// The renderer legitimately reads simulation *data*: components, terrain,
-// authored unit and nation catalogues. What it should not grow is a habit of
-// calling into gameplay *systems* to ask questions mid-frame, because that
-// turns a draw pass into a second, hidden simulation step and makes the render
-// layer impossible to exercise without booting the whole game.
-//
-// This list is the render files that include anything from game/systems today.
-// It is allowed to shrink. Adding to it means a renderer started asking the
-// simulation a question; prefer putting the answer on the render snapshot.
 const std::set<std::string>& render_files_using_game_systems() {
   static const std::set<std::string> entries{
       "render/entity/ballista_renderer.cpp",

@@ -123,9 +123,6 @@ auto edit_ai_dialog(const QJsonObject& initial,
   auto* strategy = combo(MissionData::supported_strategies(), &dialog);
   auto* team = int_box(-1, 32, initial.value("team_id").toInt(-1), &dialog);
   team->setSpecialValueText(QStringLiteral("Independent"));
-  auto* commander =
-      combo(QStringList{QStringLiteral("(default)")} + MissionData::supported_troops(),
-            &dialog);
   const QJsonObject personality = initial.value("personality").toObject();
   auto* aggression =
       double_box(0.0, 1.0, personality.value("aggression").toDouble(0.5), &dialog);
@@ -139,7 +136,6 @@ auto edit_ai_dialog(const QJsonObject& initial,
   select_value(color, initial.value("color").toString("blue"));
   select_value(difficulty, initial.value("difficulty").toString("normal"));
   select_value(strategy, initial.value("strategy").toString("balanced"));
-  select_value(commander, initial.value("commander_troop").toString("(default)"));
 
   form->addRow(QStringLiteral("ID"), id);
   form->addRow(QStringLiteral("Nation"), nation);
@@ -148,7 +144,6 @@ auto edit_ai_dialog(const QJsonObject& initial,
   form->addRow(QStringLiteral("Difficulty"), difficulty);
   form->addRow(QStringLiteral("Strategy"), strategy);
   form->addRow(QStringLiteral("Team"), team);
-  form->addRow(QStringLiteral("Commander"), commander);
   form->addRow(QStringLiteral("Aggression"), aggression);
   form->addRow(QStringLiteral("Defense"), defense);
   form->addRow(QStringLiteral("Harassment"), harassment);
@@ -169,11 +164,7 @@ auto edit_ai_dialog(const QJsonObject& initial,
   } else {
     result.remove("team_id");
   }
-  if (commander->currentIndex() > 0) {
-    result["commander_troop"] = commander->currentText();
-  } else {
-    result.remove("commander_troop");
-  }
+  result.remove("commander_troop");
   result["personality"] = QJsonObject{{"aggression", aggression->value()},
                                       {"defense", defense->value()},
                                       {"harassment", harassment->value()}};
@@ -590,9 +581,6 @@ void MissionPanel::setup_ui() {
   m_player_nation = combo(MissionData::supported_nations(), player_group);
   m_player_faction = combo({"roman", "carthaginian", "iron_sepulcher"}, player_group);
   m_player_color = combo(MissionData::supported_colors(), player_group);
-  m_player_commander =
-      combo(QStringList{QStringLiteral("(default)")} + MissionData::supported_troops(),
-            player_group);
   m_player_gold = int_box(0, 1000000, 500, player_group);
   m_player_food = int_box(0, 1000000, 500, player_group);
   m_ambient_undead =
@@ -600,7 +588,6 @@ void MissionPanel::setup_ui() {
   player_form->addRow(QStringLiteral("Nation"), m_player_nation);
   player_form->addRow(QStringLiteral("Faction"), m_player_faction);
   player_form->addRow(QStringLiteral("Color"), m_player_color);
-  player_form->addRow(QStringLiteral("Commander"), m_player_commander);
   player_form->addRow(QStringLiteral("Gold"), m_player_gold);
   player_form->addRow(QStringLiteral("Food"), m_player_food);
   player_layout->addLayout(player_form);
@@ -616,10 +603,6 @@ void MissionPanel::setup_ui() {
           &MissionPanel::sync_player);
   connect(
       m_player_color, &QComboBox::currentTextChanged, this, &MissionPanel::sync_player);
-  connect(m_player_commander,
-          &QComboBox::currentTextChanged,
-          this,
-          &MissionPanel::sync_player);
   connect(m_player_gold, &QSpinBox::valueChanged, this, [this](int) { sync_player(); });
   connect(m_player_food, &QSpinBox::valueChanged, this, [this](int) { sync_player(); });
   connect(m_ambient_undead, &QCheckBox::toggled, this, [this](bool checked) {
@@ -817,8 +800,6 @@ void MissionPanel::refresh() {
   select_value(m_player_nation, player.value("nation").toString());
   select_value(m_player_faction, player.value("faction").toString());
   select_value(m_player_color, player.value("color").toString());
-  select_value(m_player_commander,
-               player.value("commander_troop").toString("(default)"));
   const QJsonObject resources = player.value("starting_resources").toObject();
   m_player_gold->setValue(resources.value("gold").toInt());
   m_player_food->setValue(resources.value("food").toInt());
@@ -861,11 +842,7 @@ void MissionPanel::sync_player() {
   player["nation"] = m_player_nation->currentText();
   player["faction"] = m_player_faction->currentText();
   player["color"] = m_player_color->currentText();
-  if (m_player_commander->currentIndex() > 0) {
-    player["commander_troop"] = m_player_commander->currentText();
-  } else {
-    player.remove("commander_troop");
-  }
+  player.remove("commander_troop");
   QJsonObject resources = player.value("starting_resources").toObject();
   resources["gold"] = m_player_gold->value();
   resources["food"] = m_player_food->value();

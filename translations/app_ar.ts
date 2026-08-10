@@ -1609,13 +1609,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
-    <name>Game::Systems</name>
-    <message>
-        <source>Save storage unavailable</source>
-        <translation>مخزن الحفظ غير متاح</translation>
-    </message>
-</context>
-<context>
     <name>Game::Systems::SaveLoadService</name>
     <message>
         <source>Cannot save: empty slot name</source>
@@ -3155,10 +3148,6 @@ to see preview</source>
         <translation>خريطة مناوشة متوسطية متوازنة بين بساتين الزيتون والأودية الجافة والتلال المدرَّجة ودروب المزارع المغبرّة. السيطرة على الوسط والحواف الجانبية تفيد، لكن النصر هو إبادة الثكنات المعتادة.</translation>
     </message>
     <message>
-        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush woods, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
-        <translation>ميدان غابات كثيف ومتناظر للاعبَين نشطين، مبني على قراءة الطرق، وأحراش الكمائن، والسيطرة على التلال، وأهداف جانبية، وثكنتين محايدتين. لا أنهار ولا جسور ولا جبال. وتلتف الطرق عمداً حول التلال بدل عبورها.</translation>
-    </message>
-    <message>
         <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
         <translation>خريطة مناوشة جبلية واسعة ومتوازنة، بقاعدتين محصّنتين، وحافة وسطى متنازع عليها، وممرات عالية ضيقة، ودروب جانبية، وجداول ألبية، ومواضع رماية قوية. النصر هو إبادة الثكنات المعتادة.</translation>
     </message>
@@ -3221,6 +3210,10 @@ to see preview</source>
     <message>
         <source>Spanish Olive Grove</source>
         <translation>بستان الزيتون الإسباني</translation>
+    </message>
+    <message>
+        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
+        <translation>ميدان غابات كثيف ومتناظر للاعبَين نشطين، مبني على قراءة الطرق، وأحراش الكمائن، والسيطرة على التلال، وأهداف جانبية، وثكنتين محايدتين. لا أنهار ولا جسور ولا جبال. وتلتف الطرق عمداً حول التلال بدل عبورها.</translation>
     </message>
 </context>
 <context>

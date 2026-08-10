@@ -972,6 +972,58 @@ bool GameEngine::is_campaign_mission() const {
   return m_campaign_manager->current_mission_context().is_campaign();
 }
 
+bool GameEngine::release_self_test_mission_ready() const {
+  return m_runtime.initialized && !is_loading() && is_campaign_mission() &&
+         m_world != nullptr && m_world->entity_count() > 0U &&
+         m_runtime.last_error.isEmpty();
+}
+
+QString GameEngine::release_self_test_pending_reason() const {
+  QStringList pending;
+  if (!m_runtime.initialized) {
+    pending << QStringLiteral("engine not initialized");
+  }
+
+  if (m_runtime.loading) {
+    pending << QStringLiteral("still loading (stage: %1, progress %2%)")
+                   .arg(loading_stage_text())
+                   .arg(static_cast<int>(loading_progress() * 100.0F));
+  }
+  if (m_loading_overlay_active) {
+
+    pending << QStringLiteral(
+                   "loading overlay still up (frames remaining %1, elapsed %2ms, "
+                   "renderer %3, gpu resources %4, waiting for first frame %5)")
+                   .arg(m_loading_overlay_frames_remaining)
+                   .arg(m_loading_overlay_timer.isValid()
+                            ? m_loading_overlay_timer.elapsed()
+                            : -1)
+                   .arg(m_renderer ? QStringLiteral("up") : QStringLiteral("null"))
+                   .arg((m_renderer && m_renderer->resources() != nullptr)
+                            ? QStringLiteral("up")
+                            : QStringLiteral("null"))
+                   .arg(m_loading_overlay_wait_for_first_frame.load(
+                            std::memory_order_acquire)
+                            ? QStringLiteral("yes")
+                            : QStringLiteral("no"));
+  }
+  if (!is_campaign_mission()) {
+    pending << QStringLiteral("mission context is not a campaign mission");
+  }
+  if (m_world == nullptr) {
+    pending << QStringLiteral("no world");
+  } else if (m_world->entity_count() == 0U) {
+    pending << QStringLiteral("world has no entities");
+  }
+  if (!m_runtime.last_error.isEmpty()) {
+    pending << QStringLiteral("error: %1").arg(m_runtime.last_error);
+  }
+  if (pending.isEmpty()) {
+    return QStringLiteral("nothing pending");
+  }
+  return pending.join(QStringLiteral("; "));
+}
+
 bool GameEngine::campaign_completed() const {
   if (!m_campaign_manager) {
     return false;
@@ -1720,6 +1772,7 @@ void GameEngine::select_selected_units_by_type(const QString& unit_type) {
 }
 
 void GameEngine::ensure_initialized() {
+  const bool was_initialized = m_runtime.initialized;
   QString error;
   App::Core::WorldBootstrap::ensure_initialized(m_runtime.initialized,
                                                 *m_renderer,
@@ -1729,6 +1782,9 @@ void GameEngine::ensure_initialized() {
                                                 &error);
   if (!error.isEmpty()) {
     set_error(error);
+  }
+  if (!was_initialized && m_runtime.initialized) {
+    emit renderer_initialized_changed();
   }
 }
 
@@ -2014,12 +2070,23 @@ void GameEngine::update_loading_overlay() {
 
   if (!m_renderer || (m_renderer->resources() == nullptr)) {
     m_loading_overlay_frames_remaining = 5;
+    m_loading_overlay_last_frame_ms = 0;
     m_loading_overlay_timer.restart();
     return;
   }
 
   if (m_loading_overlay_frames_remaining > 0) {
     m_loading_overlay_frames_remaining--;
+
+    const qint64 now_ms =
+        m_loading_overlay_timer.isValid() ? m_loading_overlay_timer.elapsed() : 0;
+    qInfo().noquote() << QStringLiteral(
+                             "SOI_LOADING_OVERLAY: frame %1 of 5 presented at %2ms "
+                             "(+%3ms since the previous one)")
+                             .arg(5 - m_loading_overlay_frames_remaining)
+                             .arg(now_ms)
+                             .arg(now_ms - m_loading_overlay_last_frame_ms);
+    m_loading_overlay_last_frame_ms = now_ms;
   }
 
   constexpr qint64 k_loading_overlay_max_wait_ms = 15000;
@@ -3000,7 +3067,13 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   }
 
   QCoreApplication::processEvents(QEventLoop::AllEvents);
-  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  if (m_release_self_test_mode) {
+
+    qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
+               "validation";
+  } else {
+    AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  }
   QTimer::singleShot(50, this, [this, map_path, player_configs]() {
     if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {
       set_error(tr("Cannot start skirmish: renderer not initialized"));
@@ -3647,6 +3720,7 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
+  m_loading_overlay_last_frame_ms = 0;
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;

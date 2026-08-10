@@ -2,10 +2,6 @@
 
 #include "render/render_view_state.h"
 
-// These rules used to live on Renderer, which meant exercising them needed a
-// backend and a GL context. They are presentation policy, not drawing, so they
-// are now a plain value type and testable on their own.
-
 namespace {
 
 using Render::GL::RenderViewState;

@@ -135,6 +135,7 @@ add_executable(
     headless/tight_gap_navigation_test.cpp
     architecture/layering_test.cpp
     architecture/qml_surface_test.cpp
+    architecture/release_contract_test.cpp
     architecture/documentation_accuracy_test.cpp
     simulation_main.cpp
 )
@@ -362,6 +363,7 @@ target_link_libraries(
 )
 set_target_properties(app_tests PROPERTIES AUTORCC ON)
 soi_register_test_binary(app_tests)
+add_dependencies(app_tests translations_qm)
 if(TARGET bake_creature_assets)
     add_dependencies(app_tests bake_creature_assets)
 endif()
@@ -492,6 +494,7 @@ add_custom_target(
     soi_test_binaries
     DEPENDS simulation_tests persistence_tests render_tests app_tests tools_tests
 )
+add_dependencies(soi_test_binaries translations_qm)
 if(TARGET design_system_qml_tests)
     add_dependencies(soi_test_binaries design_system_qml_tests)
 endif()
