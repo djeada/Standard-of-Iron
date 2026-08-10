@@ -226,7 +226,7 @@ def luma_jumps(video: Path, fps: float) -> list[float]:
     raw = result.stdout
     frames = [raw[i * size : (i + 1) * size] for i in range(len(raw) // size)]
     means = [sum(frame) / size for frame in frames]
-    return [abs(b - a) for a, b in zip(means, means[1:])]
+    return [abs(b - a) for a, b in zip(means, means[1:], strict=False)]
 
 
 def photosensitivity_offence(jumps: list[float], fps: float) -> str | None:

@@ -121,7 +121,7 @@ muzzle. Committing to a person, rather than to a sheep, is what marks the wolf h
 
 **Biting is not on the think tick.** `try_contact_bite` runs every frame for every wolf
 that has a `focus_id` within reach, and starts the bite on the animal's own attack
-cooldown; the brain only decides *who* to bite and where to stand. When the bite was
+cooldown; the brain only decides _who_ to bite and where to stand. When the bite was
 gated on the half-second think tick instead, a wolf standing on top of its prey only
 landed a bite when its tick happened to line up with both timers, which made the pack's
 damage output depend on the frame rate — the same seed dealt 205 damage at 30 fps and
@@ -344,7 +344,7 @@ second, with the lift raised to match.
 
 **A chain rotates about a pivot only after that pivot has moved.** The bite's worry phase
 shakes the head one way and counter-rotates the shoulders the other, and the counter is
-applied to `withers` — the head's own parent. Rotating the head about the *old* withers
+applied to `withers` — the head's own parent. Rotating the head about the _old_ withers
 and then swinging the withers away leaves the head behind by the whole counter angle: with
 the shake at full amplitude the neck measured 0.162 to 0.281 units long over the clip, a
 **74% stretch**, and the head and ears visibly tore off. The counter now moves the head
@@ -363,7 +363,7 @@ which is what makes the bounce read as weight instead of as a floating body.
 
 **Clips cross-fade into one another.** Each baked clip loops cleanly on its own — the
 distance-driven `gait_phase` cursor wraps continuously and the bake samples `i/frame_count`
-so no frame is duplicated — but the *swap* between clips used to be instantaneous, and a
+so no frame is duplicated — but the _swap_ between clips used to be instantaneous, and a
 hunting wolf swaps constantly: run, stand, bite, run. Every swap snapped the whole
 skeleton, which reads as the gait stuttering rather than as a clip change.
 `resolve_clip_transition` keeps a per-entity cursor of the state it drew last and the
@@ -384,14 +384,14 @@ starting; the same run now has one backwards step, which is a genuine restart.
 
 **A pack can only bite from inside bite reach.** `pack_ring_radius` sizes the ring by the
 arc the pack needs to stand abreast, and that was clamped to the bite reach itself — so at
-eight wolves the ring landed *exactly* on the reach boundary and most of the pack sat a
+eight wolves the ring landed _exactly_ on the reach boundary and most of the pack sat a
 hair outside it, unable to land anything. The per-wolf arc is 0.95 now rather than 1.35,
 and the ring is capped at `reach * k_pack_ring_reach_margin` so the whole pack stands
 inside the range it needs. Distinct wolves biting a victim went from five to seven.
 
 **One speed picks the clip and drives its phase.** `gait_speed` low-passes the animal's
-speed once per draw; the gait is chosen from *that* number and the phase is advanced with
-*that* number. They used to disagree — the gait came from the instantaneous speed while
+speed once per draw; the gait is chosen from _that_ number and the phase is advanced with
+_that_ number. They used to disagree — the gait came from the instantaneous speed while
 the cursor advanced on the smoothed one — and since each gait carries its own `advance`,
 a decelerating animal could be handed the short walk or stalk stride while still moving at
 run speed, which cycles its legs several times faster than anything it can do. Two speeds
