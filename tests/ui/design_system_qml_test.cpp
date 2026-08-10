@@ -46,9 +46,10 @@ public:
   static GlyphProbe* create(QQmlEngine* engine, QJSEngine* scriptEngine) {
     Q_UNUSED(engine)
     Q_UNUSED(scriptEngine)
-    auto* probe = new GlyphProbe();
-    QQmlEngine::setObjectOwnership(probe, QQmlEngine::CppOwnership);
-    return probe;
+
+    static GlyphProbe probe;
+    QQmlEngine::setObjectOwnership(&probe, QQmlEngine::CppOwnership);
+    return &probe;
   }
 };
 

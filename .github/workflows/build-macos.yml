@@ -1,7 +1,7 @@
 ---
 name: Build (macOS)
 
-# Reusable: called by nightly.yml and release.yml. Never publishes.
+# Reusable: called by weekly.yml and release.yml. Never publishes.
 on:
   workflow_call:
     inputs:

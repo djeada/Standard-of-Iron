@@ -3,8 +3,8 @@ name: Pull Request
 
 # Pull requests are deliberately cheap: quality gates plus a Linux
 # test build. Packaging, the renderer self-test and the Windows/macOS
-# platform builds run nightly and are gated again on every release tag,
-# which is where a break must be caught before shipping.
+# platform builds run in the weekly workflow and are gated again on every
+# release tag, which is where a break must be caught before shipping.
 on:
   workflow_call:
   pull_request:
@@ -36,7 +36,7 @@ jobs:
   # Lane 2: compile and run the tests. Only the targets the tests and the
   # content validator need are built - the game binary, map editor, arena
   # and preview tools are not, which is the bulk of the link time. The
-  # full application build happens nightly and on every release tag.
+  # full application build happens weekly and on every release tag.
   # ---------------------------------------------------------------------
   test:
     name: Build and test (ubuntu-24.04)
