@@ -29,11 +29,11 @@ struct SheepClipSpec {
 };
 
 constexpr std::array<SheepClipSpec, 6> k_sheep_clips{{
-    {{"idle", 20U, 20.0F, true}, 0.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
+    {{"idle", 24U, 24.0F, true}, 0.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
     {{"graze", 120U, 24.0F, true}, 1.0F, 0.0F, 0.0F, false, false, SheepGait::Stand},
-    {{"walk", 24U, 24.0F, true}, 0.0F, 0.42F, 0.0F, false, false, SheepGait::Walk},
-    {{"run", 16U, 24.0F, true}, 0.0F, 1.0F, 1.0F, false, false, SheepGait::Run},
-    {{"die", 30U, 22.0F, false}, 0.0F, 0.0F, 1.0F, true, false, SheepGait::Stand},
+    {{"walk", 28U, 28.0F, true}, 0.0F, 0.42F, 0.0F, false, false, SheepGait::Walk},
+    {{"run", 24U, 40.0F, true}, 0.0F, 1.0F, 1.0F, false, false, SheepGait::Run},
+    {{"die", 32U, 26.0F, false}, 0.0F, 0.0F, 1.0F, true, false, SheepGait::Stand},
     {{"dead", 1U, 1.0F, true}, 0.0F, 0.0F, 1.0F, true, true, SheepGait::Stand},
 }};
 

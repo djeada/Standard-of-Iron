@@ -1841,8 +1841,8 @@ public:
   float alarm_timer{0.0F};
   float hostile_timer{0.0F};
 
-  static constexpr float k_bite_animation_seconds = 0.55F;
-  static constexpr float k_bite_impact_phase = 0.34F;
+  static constexpr float k_bite_animation_seconds = 1.08F;
+  static constexpr float k_bite_impact_phase = 0.27F;
   float bite_timer{0.0F};
   EntityID bite_target_id{0};
   bool bite_impact_pending{false};

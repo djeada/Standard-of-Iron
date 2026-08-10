@@ -15,8 +15,11 @@ namespace Render::GL::Wildlife {
 
 namespace {
 
-constexpr float k_top_speed = 1.5F;
-constexpr float k_run_threshold = 0.45F;
+constexpr float k_top_speed = 3.4F;
+constexpr float k_walk_threshold = 0.02F;
+constexpr float k_idle_period_seconds = 24.0F / 24.0F;
+constexpr float k_graze_period_seconds = 120.0F / 24.0F;
+constexpr float k_run_threshold = 0.42F;
 
 auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   QVector3D wool = state.coat;
@@ -57,14 +60,15 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   return variant;
 }
 
-auto resolve_gait(const DrawState& state) -> Render::Wildlife::SheepGait {
+auto resolve_gait(const DrawState& state,
+                  float gait_ratio) -> Render::Wildlife::SheepGait {
   if (state.grazing) {
     return Render::Wildlife::SheepGait::Stand;
   }
-  if (state.speed_ratio > k_run_threshold) {
+  if (gait_ratio > k_run_threshold) {
     return Render::Wildlife::SheepGait::Run;
   }
-  if (state.speed_ratio > 0.02F) {
+  if (gait_ratio > k_walk_threshold) {
     return Render::Wildlife::SheepGait::Walk;
   }
   return Render::Wildlife::SheepGait::Stand;
@@ -86,25 +90,39 @@ auto state_for_gait(const DrawState& state, Render::Wildlife::SheepGait gait)
 
 void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
   const DrawState state = resolve_draw_state(ctx, k_top_speed);
-  const Render::Wildlife::SheepGait gait = resolve_gait(state);
+
+  float const speed = gait_speed(state);
+  float const gait_ratio = std::clamp(speed / k_top_speed, 0.0F, 1.0F);
+  const Render::Wildlife::SheepGait gait = resolve_gait(state, gait_ratio);
 
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Sheep;
   inputs.variant = resolve_variant(state);
-
-  float const walk_phase =
-      gait_phase(state, Render::Wildlife::sheep_gait_advance(gait));
 
   if (state.dead) {
     inputs.state = Render::Creature::AnimationStateId::Dead;
     inputs.phase = 1.0F;
   } else if (state.death_progress >= 0.0F) {
     inputs.state = Render::Creature::AnimationStateId::Die;
-    inputs.phase = state.death_progress;
+    inputs.phase = action_phase(state, state.death_progress);
   } else {
-    inputs.phase = walk_phase;
     inputs.state = state_for_gait(state, gait);
+    if (gait == Render::Wildlife::SheepGait::Stand) {
+      inputs.phase =
+          ambient_phase(state,
+                        inputs.state == Render::Creature::AnimationStateId::Hold
+                            ? k_graze_period_seconds
+                            : k_idle_period_seconds);
+    } else {
+      inputs.phase = gait_phase(state, Render::Wildlife::sheep_gait_advance(gait));
+    }
   }
+
+  const ClipTransition transition =
+      resolve_clip_transition(state, inputs.state, inputs.phase);
+  inputs.outgoing_state = transition.outgoing;
+  inputs.outgoing_phase = transition.phase;
+  inputs.outgoing_weight = transition.weight;
 
   Render::Wildlife::submit_wildlife(ctx, inputs, out);
 }

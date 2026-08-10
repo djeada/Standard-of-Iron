@@ -136,6 +136,65 @@ void StoneImpactTracker::update(float current_time) {
                   m_impacts.end());
 }
 
+void render_blood_stains(Renderer* renderer,
+                         ResourceManager*,
+                         Engine::Core::World* world) {
+  if (renderer == nullptr || world == nullptr) {
+    return;
+  }
+
+  float const animation_time = renderer->get_animation_time();
+  auto& visibility = Render::GL::CameraVisibility::instance();
+  auto& fog_of_war = Game::Map::VisibilityService::instance();
+  auto fog_snapshot = fog_of_war.is_initialized() ? fog_of_war.snapshot_ptr() : nullptr;
+  auto is_fog_visible = [&fog_snapshot](float world_x, float world_z) -> bool {
+    return fog_snapshot == nullptr ||
+           Game::Map::should_render_combat_effect(*fog_snapshot, world_x, world_z);
+  };
+
+  auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
+  for (auto* blood_entity : blood_stains) {
+    if (blood_entity == nullptr ||
+        blood_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto* transform = blood_entity->get_component<Engine::Core::TransformComponent>();
+    auto* blood_stain =
+        blood_entity->get_component<Engine::Core::BloodStainComponent>();
+    if (transform == nullptr || blood_stain == nullptr) {
+      continue;
+    }
+
+    float const alpha_scale =
+        blood_alpha_scale(blood_stain->elapsed_time, blood_stain->lifetime);
+    if (alpha_scale <= 0.0F) {
+      continue;
+    }
+
+    if (!is_fog_visible(transform->position.x, transform->position.z)) {
+      continue;
+    }
+
+    float const visibility_radius =
+        std::max(k_visibility_check_radius, blood_stain->radius);
+    if (!visibility.is_entity_visible(
+            transform->position.x, transform->position.z, visibility_radius)) {
+      continue;
+    }
+
+    QVector3D const position(transform->position.x,
+                             transform->position.y + k_blood_y_offset,
+                             transform->position.z);
+    renderer->blood_pool(position,
+                         blood_stain->radius,
+                         alpha_scale,
+                         blood_stain->rotation,
+                         blood_stain->aspect_ratio,
+                         blood_stain->seed);
+  }
+}
+
 void render_combat_dust(Renderer* renderer,
                         ResourceManager*,
                         Engine::Core::World* world) {
@@ -383,48 +442,6 @@ void render_combat_dust(Renderer* renderer,
                             contact.intensity,
                             contact.age);
     }
-  }
-
-  auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
-  for (auto* blood_entity : blood_stains) {
-    if (blood_entity == nullptr ||
-        blood_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto* transform = blood_entity->get_component<Engine::Core::TransformComponent>();
-    auto* blood_stain =
-        blood_entity->get_component<Engine::Core::BloodStainComponent>();
-    if (transform == nullptr || blood_stain == nullptr) {
-      continue;
-    }
-
-    float const alpha_scale =
-        blood_alpha_scale(blood_stain->elapsed_time, blood_stain->lifetime);
-    if (alpha_scale <= 0.0F) {
-      continue;
-    }
-
-    if (!is_fog_visible(transform->position.x, transform->position.z)) {
-      continue;
-    }
-
-    float const visibility_radius =
-        std::max(k_visibility_check_radius, blood_stain->radius);
-    if (!visibility.is_entity_visible(
-            transform->position.x, transform->position.z, visibility_radius)) {
-      continue;
-    }
-
-    QVector3D const position(transform->position.x,
-                             transform->position.y + k_blood_y_offset,
-                             transform->position.z);
-    renderer->blood_pool(position,
-                         blood_stain->radius,
-                         alpha_scale,
-                         blood_stain->rotation,
-                         blood_stain->aspect_ratio,
-                         blood_stain->seed);
   }
 
   auto casters =

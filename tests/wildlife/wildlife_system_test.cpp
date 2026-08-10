@@ -372,9 +372,13 @@ TEST_F(WildlifeSystemTest, WolfBiteDamageLandsAtTheAnimatedContactFrame) {
   EXPECT_EQ(victim_unit->health, starting_health)
       << "damage must wait for the BPAT bite contact pose";
 
-  system.update(&world, 0.10F);
+  constexpr float k_elapsed_to_contact =
+      Engine::Core::WildlifeComponent::k_bite_animation_seconds *
+      Engine::Core::WildlifeComponent::k_bite_impact_phase;
+
+  system.update(&world, k_elapsed_to_contact * 0.5F);
   EXPECT_EQ(victim_unit->health, starting_health);
-  system.update(&world, 0.10F);
+  system.update(&world, (k_elapsed_to_contact * 0.5F) + 0.02F);
 
   EXPECT_LT(victim_unit->health, starting_health);
   EXPECT_FALSE(wolf->bite_impact_pending);

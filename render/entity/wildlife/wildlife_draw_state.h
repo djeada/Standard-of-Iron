@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "game/wildlife/wildlife_species.h"
+#include "render/creature/animation_state_components.h"
 #include "render/entity/registry.h"
 
 namespace Render::GL::Wildlife {
@@ -26,10 +27,26 @@ struct DrawState {
   bool dead{false};
 };
 
+struct ClipTransition {
+  Render::Creature::AnimationStateId outgoing{Render::Creature::AnimationStateId::Idle};
+  float phase{0.0F};
+  float weight{0.0F};
+};
+
 [[nodiscard]] auto resolve_draw_state(const DrawContext& ctx,
                                       float top_speed) -> DrawState;
 
+[[nodiscard]] auto gait_speed(const DrawState& state) -> float;
+
 [[nodiscard]] auto gait_phase(const DrawState& state, float advance) -> float;
+
+[[nodiscard]] auto ambient_phase(const DrawState& state, float period_seconds) -> float;
+
+[[nodiscard]] auto action_phase(const DrawState& state, float raw) -> float;
+
+[[nodiscard]] auto resolve_clip_transition(const DrawState& state,
+                                           Render::Creature::AnimationStateId incoming,
+                                           float incoming_phase) -> ClipTransition;
 
 [[nodiscard]] auto tinted(const QVector3D& color, float factor) -> QVector3D;
 

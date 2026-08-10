@@ -138,6 +138,13 @@ private:
              const SpeciesConfig& config,
              Species species);
 
+  auto begin_bite(Engine::Core::Entity& entity,
+                  Engine::Core::WildlifeComponent& wildlife,
+                  const PreyRef& prey) -> bool;
+  void try_contact_bite(Engine::Core::World& world,
+                        const AnimalRef& animal,
+                        Engine::Core::WildlifeComponent& wildlife);
+
   void alert_group(std::uint16_t group_id, float duration);
   void
   rally_pack(std::uint16_t group_id, Engine::Core::EntityID foe_id, float duration);
@@ -159,9 +166,19 @@ private:
                                      float& out_x,
                                      float& out_z) const -> bool;
   [[nodiscard]] auto
-  nearest_prey(float world_x, float world_z, float radius) const -> const AnimalRef*;
+  nearest_prey(float world_x,
+               float world_z,
+               float radius,
+               Engine::Core::EntityID hunter_id) const -> const AnimalRef*;
   [[nodiscard]] auto
-  nearest_quarry(float world_x, float world_z, float radius) const -> const QuarryRef*;
+  nearest_quarry(float world_x,
+                 float world_z,
+                 float radius,
+                 Engine::Core::EntityID hunter_id) const -> const QuarryRef*;
+  [[nodiscard]] auto attackers_on(Engine::Core::EntityID prey_id,
+                                  Engine::Core::EntityID exclude_id) const -> int;
+  [[nodiscard]] auto pack_slot_for(Engine::Core::EntityID prey_id,
+                                   Engine::Core::EntityID hunter_id) const -> PackSlot;
 
   WildlifeSettings m_settings{};
   std::vector<GroupState> m_groups;

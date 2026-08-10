@@ -211,7 +211,7 @@ TEST_F(SceneRendererEffects, BloodStainUsesTerrainAlignedHeight) {
   blood_entity->add_component<Engine::Core::BloodStainComponent>(
       0.8F, 8.0F, 0.2F, 1.1F, 0.4F);
 
-  Render::GL::render_combat_dust(&renderer, nullptr, &world);
+  Render::GL::render_blood_stains(&renderer, nullptr, &world);
 
   ASSERT_NE(renderer.m_active_queue, nullptr);
   auto const& items = renderer.m_active_queue->items();

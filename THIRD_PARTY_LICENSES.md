@@ -114,8 +114,9 @@ alert and commander-combat cues. See `tools/audio_synth/README.md`.
 
 ### Wildlife effects (`assets/audio/sfx/wildlife/`)
 
-Five of the six files here are cut from the recordings below; the sixth,
-`wolf_bite_snap.ogg`, is CC0 and listed under the composed cues. Synthesised
+Four of the six files here are cut from the recordings below; the other two,
+`wolf_bite_snap.ogg` and `wolf_snarl_bark.ogg`, are CC0 and listed under the
+composed cues. Synthesised
 versions were tried first and abandoned: measured against this repository's own
 `combat/elephant_charge_carthage.ogg`, the generated growl scored **0.994
 cosine similarity on its band profile** — it was, spectrally, an elephant, and
@@ -127,16 +128,19 @@ their energy below 160 Hz) and score 0.71-0.87 against the same reference.
 | `wolf_howl_distant.ogg` | Wikimedia Commons, [`File:Wolf howls.ogg`](https://commons.wikimedia.org/wiki/File:Wolf_howls.ogg), seconds 13.35-17.55 | Public domain |
 | `wolf_howl_near.ogg`    | the same recording, seconds 20.05-23.65                                                                                 | Public domain |
 | `wolf_growl_low.ogg`    | PLOS ONE study audio S3, large-dog growl (see below)                                                                    | CC BY 2.5     |
-| `wolf_snarl_bark.ogg`   | the same recording, a 0.56 s burst                                                                                      | CC BY 2.5     |
 | `wolf_pack_attack.ogg`  | the same recording layered with study audio S2, small-dog growl                                                         | CC BY 2.5     |
 
-**Required attribution** for the three growl-derived cues:
+**Required attribution** for the two growl-derived cues:
 
 > Growl recordings from Faragó T, Pongrácz P, Miklósi Á, Huber L, Virányi Z,
 > Range F (2010), "Dogs' Expectation about Signalers' Body Size by Virtue of
 > Their Growls", PLOS ONE, DOI 10.1371/journal.pone.0015175, supporting audio
 > S2 and S3, used under [CC BY 2.5](https://creativecommons.org/licenses/by/2.5).
 > Pitched down, trimmed, layered and loudness-normalised for this project.
+
+`wolf_snarl_bark.ogg` used to be a third cue from this recording. It is now
+composed from a CC0 dog bark instead, so two files rather than three carry the
+attribution above.
 
 A dog is _Canis lupus familiaris_ — the same species as the wolf — so its growl
 is the correct sound rather than an approximation. Note that supporting audio S1
@@ -304,15 +308,28 @@ what shaping — and `tools/audio_field/build_battle.py` renders it.
 | `army_march_dirt_mass`, `spearmen_formation_advance`                                                                                                    | FOOTSTEPS, `FEETHmn-…Running, Rocky Road` and `…On Grass`, summed against themselves at offsets sharing no common factor; MUSICAL, `MUSCPerc-…Drum, Snare, Military Marching Band` |
 | the eight arrow and volley cues                                                                                                                         | SWOOSHES, `SWSH-…Swishes, Big, Low`, `…Medium Low`, `…Stick, Small, Swishes, X4`, `…Cloth, Swoosh`, `WHSH-…Fly By, Short`                                                          |
 | `roman_shield_wall_impact`, `gladius_shield_impacts_close`, `arrows_impact_shields_dirt`                                                                | FIGHT, `FGHTImpt-…Boxing Glove Hits`, `…Smacks, Rapid`, `FGHTBf-…Bodyfall, On Grass`; METAL, `METLImpt-…Metal, Clang, Thin 01` and `…Clang, Dull, Quiet`                           |
-| `roman_cavalry_charge`, `numidian_cavalry_chase`, `horse_gallop_close_pass`                                                                             | FOOTSTEPS, `FEETHors-…Horse Galloping, Coconut Shells, Looped 01`/`02`/`03` — three separate performances, so a charge is three horses rather than one horse three times           |
+| `roman_cavalry_charge`, `numidian_cavalry_chase`, `horse_gallop_close_pass`                                                                             | Wikimedia Commons, [`File:Six Horses Galloping By.ogg`](https://commons.wikimedia.org/wiki/File:Six_Horses_Galloping_By.ogg) — three windows of one real pass: the approach, the moment level, and the far side (see below) |
 | `elephant_charge_carthage`, `elephant_panic`                                                                                                            | ANIMALS, `ANMLWild-CU_Elephant Trumpet`                                                                                                                                            |
-| `wolf_bite_snap`                                                                                                                                        | ANIMALS, `ANMLDog-…Aggessive Dog Barks, Snarls` — the same species reasoning the other five wildlife cues use                                                                      |
+| `wolf_bite_snap`                                                                                                                                        | FIGHT, `FGHTImpt-…Smacks, Rapid` for the wet impact, under ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes` for the animal on top of it                    |
+| `wolf_snarl_bark`                                                                                                                                       | ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes`, one isolated bark — the same species reasoning the other wildlife cues use                               |
 | `low_resources_click`                                                                                                                                   | METAL, `METLImpt-…Metal, Clang, Dull, Quiet`                                                                                                                                       |
 
-Every source above is from **The Designer's Choice UCS Collection**, original
-recordings by Nicholas A. Judy, released **CC0 1.0** and explicitly cleared for
-commercial use — the same collection the sword hits and footsteps already come
-from. CC0 requires no attribution; it is recorded here because the provenance of
+Every source above except the horses is from **The Designer's Choice UCS
+Collection**, original recordings by Nicholas A. Judy, released **CC0 1.0** and
+explicitly cleared for commercial use — the same collection the sword hits and
+footsteps already come from.
+
+The three cavalry cues come from **Wikimedia Commons,
+[`File:Six Horses Galloping By.ogg`](https://commons.wikimedia.org/wiki/File:Six_Horses_Galloping_By.ogg)**,
+by the Freesound Community via Pixabay, released **CC0 1.0**. That collection has
+no real horse in it: its `FOOTSTEPS/HORSE` folder is coconut shells and a
+simulated wood floor, which is what these three cues were built from and why they
+sounded like a pantomime rather than cavalry. The recording is one pass — six
+horses closing, drawing level and running on — so the charge takes the approach,
+the close pass takes the moment they are level, and the chase takes the far side,
+with the real Doppler already in the material.
+
+CC0 requires no attribution; all of it is recorded here because the provenance of
 every shipped file should be answerable.
 
 Two things were fixed in passing, because the replacements had to be measured

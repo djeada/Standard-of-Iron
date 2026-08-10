@@ -85,8 +85,12 @@ Two exclusions matter, and both are load-bearing:
 
 A villager who keeps hammering a stall while a raider walks up to him is worse than a
 villager who stands still. Every `k_alarm_interval` (0.3 s) the system builds one list of
-**armed units** — everything that `can_use_attack_mode`, minus civilians — and each
-resident checks it.
+**dangers** — everything that `can_use_attack_mode`, minus civilians, plus wolves — and
+each resident checks it.
+
+Wolves have to be named explicitly because `can_use_attack_mode` excludes every wildlife
+spawn: without that clause a pack walked into a hamlet and the residents kept running
+errands around it while it ate them.
 
 An enemy (by `OwnerRegistry::are_enemies`) inside `k_alarm_radius` (11) puts the resident
 into the `Fleeing` errand: it drops its work, drops any attack target it had picked up,
@@ -107,7 +111,10 @@ Two rules keep this from becoming a bug factory:
   combat system. Residents scatter as raiders _approach_; once one is actually engaged,
   combat owns it. Pulling a live attack target out from under the engagement,
   melee-lock and formation-contact bookkeeping mid-tick is not a supported move, so the
-  alarm does not try.
+  alarm does not try. This is why civilians are excluded from retaliation
+  (`can_retaliate`): a wounded villager used to be handed an attack target, which made the
+  alarm skip it from then on, so the whole hamlet turned round and walked back into the
+  pack it had just run from. A civilian that is _locked_ in melee still fights.
 - **A player order still beats fleeing.** The claim check (`CivilianDeliveryComponent`,
   `PlayerOrderIntentComponent`) runs before the alarm.
 

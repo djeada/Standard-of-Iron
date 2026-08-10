@@ -78,8 +78,13 @@ constexpr std::array<LegPlan, k_leg_count> k_leg_plans{{
     {0.114F, k_hind_hip_z, 0.0F, -0.056F, 0.006F},
 }};
 
-constexpr GaitPlan k_gait_walk{0.185F, 0.64F, 0.024F, 0.060F};
-constexpr GaitPlan k_gait_run{0.230F, 0.44F, 0.058F, 0.100F};
+constexpr float k_bob_base = 0.011F;
+constexpr float k_bob_gain = 0.030F;
+constexpr float k_pitch_lag = 0.85F;
+constexpr float k_pitch_gain = 0.020F;
+
+constexpr GaitPlan k_gait_walk{0.320F, 0.64F, 0.042F, 0.092F};
+constexpr GaitPlan k_gait_run{0.530F, 0.44F, 0.115F, 0.145F};
 
 auto gait_plan(SheepGait gait) noexcept -> GaitPlan {
   switch (gait) {
@@ -121,11 +126,16 @@ auto bezier(const QVector3D& p0,
   return (p0 * (inv * inv)) + (p1 * (2.0F * inv * t)) + (p2 * (t * t));
 }
 
-void fill_legs(RigPose& pose, const SheepDrive& drive) {
+void fill_legs(RigPose& pose,
+               const SheepDrive& drive,
+               float fore_lift,
+               float hind_lift) {
   const GaitPlan plan = gait_plan(drive.gait);
   float const weight = drive.gait == SheepGait::Stand ? 0.0F : 1.0F;
   for (std::size_t i = 0; i < k_leg_count; ++i) {
-    const LegRest& rest = leg_rests()[i];
+    LegRest rest = leg_rests()[i];
+    bool const hind = k_leg_plans[i].z < 0.0F;
+    rest.hip.setY(rest.hip.y() + (hind ? hind_lift : fore_lift));
     solve_leg(rest, plan, drive.stride_phase + rest.phase_offset, weight, pose.legs[i]);
   }
 }
@@ -241,14 +251,17 @@ void apply_collapse(RigPose& pose, const SheepDrive& drive) {
 
 auto make_pose(const SheepDrive& drive) -> RigPose {
   RigPose pose;
+  float const cadence = drive.stride_phase * k_two_pi * 2.0F;
+  float const gait = std::clamp(drive.speed_ratio, 0.0F, 1.0F);
   float const bob =
-      (std::sin(drive.stride_phase * k_two_pi * 2.0F) * 0.012F * drive.speed_ratio) -
-      (drive.graze * 0.030F);
-  pose.root = QVector3D(0.0F, bob, 0.0F);
-  pose.body_rear = QVector3D(0.0F, 0.430F + bob, -0.300F);
-  pose.body_front = QVector3D(0.0F, 0.448F + bob, 0.280F);
+      (std::sin(cadence) * (k_bob_base + (k_bob_gain * gait))) - (drive.graze * 0.030F);
+  float const pitch = std::sin(cadence - k_pitch_lag) * k_pitch_gain * gait;
 
-  fill_legs(pose, drive);
+  pose.root = QVector3D(0.0F, bob, 0.0F);
+  pose.body_rear = QVector3D(0.0F, 0.430F + bob + pitch, -0.300F);
+  pose.body_front = QVector3D(0.0F, 0.448F + bob - pitch, 0.280F);
+
+  fill_legs(pose, drive, bob - pitch, bob + pitch);
   fill_head(pose, drive);
 
   float const wag =

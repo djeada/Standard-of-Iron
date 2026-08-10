@@ -201,6 +201,86 @@ scripts/promo-edit.py --spec tools/arena/promos/commander_duel.json \
   --clips artifacts/promo/commander_duel
 ```
 
+## The wolf attack reel
+
+`wolf_attack.json` over `promo_wolf_attack` is the village reel: a pack comes out of the
+east at villagers working the ground, catches the straggler, and the mounted watch rides
+down the street to break it. Four things about it generalise to any reel shot over
+gameplay systems rather than over a scripted battle:
+
+- **The scene has to be true before the camera can help.** The first cut of this reel was
+  eight wolves standing in one another inside a ring smaller than a wolf, on villagers who
+  strolled back into the pack after being bitten. No camera move rescues that. The pack
+  ring (`close_and_bite`), the civilian flight (`endangers_residents`) and the civilian
+  retaliation exclusion (`can_retaliate`) were all fixed for this reel and all of them are
+  gameplay fixes, not capture ones.
+- **Stage the fight where the scenery is.** The villagers used to work 25 m east of their
+  own village, so every close shot was a green field. Moving their work area next to the
+  street put houses, carts and the temple in the background of half the reel, and the
+  fleeing villagers now run through their own settlement.
+- **Cut to the trace, captured at the reel's own frame rate.** `--batch` the scenario and
+  read `trace.jsonl` for the frames that matter — the first bite, the health that reaches
+  zero, the frame a rider's `melee_lock` goes true — then author `start` from those
+  numbers. **The simulation is not frame-rate independent**, so a trace taken at
+  `--fps 30` does not describe a reel the arena renders at 60. Measured on this scenario,
+  the same seed produced 28 bites and a dead villager at 30 fps and 20 bites and no death
+  at all at 60. Every shot was aimed at events that never happened in the footage, which
+  is why the first cut showed wolves attacking and nobody dying. Pass the spec's own
+  `fps` to the batch run.
+- **Wildlife is in the trace too.** Each frame carries an `animals` array — id, species,
+  position, health, behaviour, `focus_id`, `biting`, `dying` — because wolves belong to no
+  scenario group and were invisible to the `units` array. Without it there is no way to
+  aim a camera at a pack or to know when one dies, and the shots get authored on guesses.
+- **Then re-place the audio.** `scripts/place-promo-cues.py` reads the same trace and
+  rewrites the spec's `sfx` list onto the finished timeline. Run it after every retime.
+
+`suppress_combat_dust` used to take the blood with it. Blood stains were drawn inside
+`render_combat_dust`, so a scene that turned the dust dome off also lost every stain, and
+a villager could be bitten seventeen times without marking the grass. `render_blood_stains`
+is its own entry point now and always runs. (Stains themselves only ever spawned when a
+body dropped — a lone civilian being torn apart produced none until the wolf bite path
+started asking for them directly.)
+
+A pack's `alert_radius` decides whether the rescue is a clash or a chase. At 18 the wolves
+read five approaching riders as overwhelming while they were still four seconds out, broke
+before contact, and were cut down one at a time over sixteen seconds and twenty-five
+metres — on screen the riders arrive, nothing happens, and later the wolves are simply
+dead. At 9 the pack holds its kill until the horses are on top of it, and three wolves die
+within two metres of the body inside two seconds. Stage the radius against the distance
+the rescue covers, not against realism.
+
+**Flash transitions are a photosensitivity hazard, not a punctuation mark.** A `flash`
+join drives the whole frame to white in about five frames; measured on the finished cut,
+the two flashes in this reel produced single-frame mean-luminance jumps of 123 out of 255,
+and nine frames in the short jumped more than 25. Cutting them for dissolves took the
+worst jump to 24 and the count over 25 to zero. If you want the beat, use `dip` — it goes
+through black rather than white and lands around 20.
+
+`promo-edit.py` now refuses to publish a cut that trips a miniature WCAG 2.3.1 — any
+single-frame jump over 60/255, or more than three jumps over 25/255 inside one second —
+and prints the worst jump on every successful run, so this cannot regress quietly.
+`--allow-flashes` is the deliberate override.
+
+**Let the camera settle into the cut.** A key's `ease` describes the blend *into* it, so
+the last camera key of a shot decides whether the move is still at full speed when the
+join lands. `linear` there means the frame is still travelling when the next shot starts
+underneath it, and two moving frames dissolving through each other is most of what reads
+as a "harsh" cut. `smooth` on the final key eases both ends and is the calm default.
+
+Two framing numbers are worth copying. The ground scatter is authored for the RTS camera,
+so a lens at `pitch` 8-13 with `height` around 1 m films the field through a wall of grass
+and plant billboards; **`pitch` 16-25 with `height` 1.5-2.6** looks over the cover and
+still holds the animals large in frame. And when you change the locked hour, **measure the
+result rather than looking at it**: moving this reel from 13.0 to 16.9 cost 35% of the
+scene's light (mean frame grey fell from ~110 to ~70) and read as murk. It sits at 15.2
+with `exposure_override` 1.5, which puts the poster frames back in the 95-107 band.
+
+```sh
+python3 -c "import subprocess;raw=subprocess.run(['ffmpeg','-v','error','-i','01_village.png',
+  '-vf','scale=192:108,format=gray','-f','rawvideo','-'],capture_output=True).stdout;
+  print(sum(raw)/len(raw))"
+```
+
 ## The humanoid showcase reel
 
 `humanoid_showcase.json` over the `promo_humanoid_showcase` scenario is the

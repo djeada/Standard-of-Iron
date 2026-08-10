@@ -25,7 +25,11 @@ constexpr float k_wolf_detect_multiplier = 1.4F;
 constexpr float k_wolf_bite_range = 1.35F;
 constexpr float k_wolf_defend_leash_multiplier = 2.2F;
 constexpr float k_livestock_preference = 0.7F;
-constexpr float k_pack_approach_spacing = 1.1F;
+constexpr float k_pack_slot_arc = 0.95F;
+constexpr float k_pack_ring_reach_fraction = 0.82F;
+constexpr float k_pack_ring_min = 0.9F;
+constexpr float k_pack_ring_reach_margin = 0.92F;
+constexpr float k_pack_slot_jitter = 0.35F;
 constexpr float k_wolf_avoid_base_strength = 2.5F;
 constexpr float k_civilian_standoff = 3.0F;
 constexpr float k_sheep_flee_strength_threshold = 0.5F;
@@ -98,6 +102,25 @@ auto guarded(const NatureContext& ctx, const PreyRef& prey) -> bool {
          wolf_avoid_threshold(*ctx.config);
 }
 
+auto pack_ring_radius(const PreyRef& prey, int attackers) -> float {
+  float const reach = bite_reach(prey);
+  float const abreast =
+      (static_cast<float>(std::max(attackers, 1)) * k_pack_slot_arc) / k_two_pi;
+  return std::clamp(std::max(abreast, reach * k_pack_ring_reach_fraction),
+                    k_pack_ring_min,
+                    reach * k_pack_ring_reach_margin);
+}
+
+auto pack_slot_angle(const NatureContext& ctx, const PackSlot& slot) -> float {
+  int const count = std::max(slot.count, 1);
+  int const index = std::clamp(slot.index, 0, count - 1);
+  float const share = k_two_pi / static_cast<float>(count);
+  float const jitter =
+      (static_cast<float>((ctx.wildlife->rng_state >> 12U) & 0xFFU) / 255.0F - 0.5F) *
+      share * k_pack_slot_jitter;
+  return (share * static_cast<float>(index)) + jitter;
+}
+
 void close_and_bite(const NatureContext& ctx,
                     NatureActions& actions,
                     const PreyRef& prey) {
@@ -108,15 +131,14 @@ void close_and_bite(const NatureContext& ctx,
 
   if (distance_to(ctx, prey) <= bite_reach(prey)) {
     actions.halt(ctx);
-    if (actions.bite(ctx, prey)) {
-      actions.note(NatureEvent::Bite);
-    }
+    actions.face_toward(ctx, prey.x, prey.z);
+    actions.bite(ctx, prey);
     return;
   }
 
-  float const approach_angle =
-      static_cast<float>((wildlife.rng_state >> 8U) & 0xFFFFU) * (k_two_pi / 65536.0F);
-  float const spacing = k_pack_approach_spacing + prey.radius;
+  PackSlot const slot = actions.claim_pack_slot(ctx, prey);
+  float const approach_angle = pack_slot_angle(ctx, slot);
+  float const spacing = pack_ring_radius(prey, slot.count);
   float const approach_x = prey.x + (std::cos(approach_angle) * spacing);
   float const approach_z = prey.z + (std::sin(approach_angle) * spacing);
   wildlife.target_x = approach_x;
@@ -410,8 +432,8 @@ private:
   static auto pick_prey(const NatureContext& ctx,
                         NatureActions& actions,
                         float detect_radius) -> PreyRef {
-    PreyRef const livestock = actions.nearest_prey(ctx.x, ctx.z, detect_radius);
-    PreyRef const quarry = actions.nearest_quarry(ctx.x, ctx.z, detect_radius);
+    PreyRef const livestock = actions.nearest_prey(ctx, detect_radius);
+    PreyRef const quarry = actions.nearest_quarry(ctx, detect_radius);
     bool const prefer_livestock =
         livestock.valid() &&
         (!quarry.valid() || (distance_to(ctx, livestock) * k_livestock_preference) <=

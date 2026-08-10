@@ -41,7 +41,9 @@ guarantees:
 Neutrality decides who may be shot at, not what an animal _is_ to the combat code. An
 animal is an ordinary enemy of every owner (`is_valid_enemy_unit`), which is what makes an
 ordered hunt land, lets a wolf's bite provoke the retaliation every other hit provokes, and
-lets a soldier's swing connect with the wolf that is chewing on him. What neutrality buys
+lets a soldier's swing connect with the wolf that is chewing on him. Civilians are the one
+exception: they never take a retaliation target, so a bitten villager runs instead of
+turning to fight — see [SETTLEMENT_LIFE.md](SETTLEMENT_LIFE.md). What neutrality buys
 is the second predicate, `is_auto_acquirable_enemy`: **passive** wildlife — every sheep, and
 any wolf that is not currently in a fight — is skipped by everything that picks a target on
 its own, so troops march past a herd, guard mode ignores it, towers do not waste bolts on
@@ -104,10 +106,33 @@ lone hunter and scatters from a column. `wolf.stalk` weighs the nearest sheep ag
 nearest person inside the detection radius, preferring livestock at equal distance and
 civilians over soldiers, and declines a quarry that is standing behind enough strength to
 hurt the pack — which, since a person counts toward the strength around themself, is what
-reduces to "wolves take the isolated and leave the escorted alone". It approaches on a
-per-wolf angle so the pack surrounds the target instead of stacking, and inside bite range
-applies melee damage on the attack cooldown. Committing to a person, rather than to a
-sheep, is what marks the wolf hostile. With aggression at or above 0.5, `wolf.menace`
+reduces to "wolves take the isolated and leave the escorted alone". It also weighs how many
+wolves are already committed to a quarry, so a pack splits across a group of victims rather
+than putting eight animals on the nearest one.
+
+Each wolf then claims a **slot** on a ring around its quarry: the pack members already
+focused on that prey are ordered by entity id, and the wolf takes the share of the circle
+its index buys. The ring is sized to the larger of bite reach and the arc the pack needs to
+stand abreast, so eight wolves land eight abreast instead of inside one another. A random
+per-wolf angle at a fixed radius — which is what this used to be — puts several wolves on
+the same point, and a pack that reads as one clipping blob is the result. Inside bite range
+the wolf halts and turns to face the prey through `desired_yaw` so the bite lands along the
+muzzle. Committing to a person, rather than to a sheep, is what marks the wolf hostile.
+
+**Biting is not on the think tick.** `try_contact_bite` runs every frame for every wolf
+that has a `focus_id` within reach, and starts the bite on the animal's own attack
+cooldown; the brain only decides *who* to bite and where to stand. When the bite was
+gated on the half-second think tick instead, a wolf standing on top of its prey only
+landed a bite when its tick happened to line up with both timers, which made the pack's
+damage output depend on the frame rate — the same seed dealt 205 damage at 30 fps and
+147 at 60 — and made a mauling look like a group of animals loitering around a villager.
+`begin_bite` is the one place that arms the timers, counts the bite, fires the cue and
+turns the head, so the contact path and the brain path cannot drift apart.
+
+A landed bite also applies hit feedback, and staggers the victim with a `LightFlinch` —
+but **only if the victim is a civilian**. Flinching anything else lets a pack stun-lock
+armed troops out of their own swings, which is what happened the first time this was
+wired up: a soldier being bitten could never enter a melee lock to answer back. With aggression at or above 0.5, `wolf.menace`
 closes on civilians it declined to hunt and holds a standoff distance — menacing, never
 damaging. `wolf.prowl` roams the pack anchor.
 
@@ -292,6 +317,110 @@ graphs, so they keep the low-poly look the rest of the game uses:
 
 Both ground species keep their fine detail — eyes, inner ears, extra fleece tufts, limb
 masses — in the full LOD only, so a dense map pays for silhouettes rather than eyes.
+
+**The gait thresholds are read against the species' own speeds.** `resolve_gait` scales
+the smoothed speed by a `k_top_speed` and compares it to a fraction — so if that constant
+is below the animal's own walk speed, the walk clip is unreachable and the animal runs
+everywhere. Both species shipped that way: the wolf scaled 1.6 m/s of prowling against a
+3.1 top speed and cleared a 0.30 run threshold, and the sheep scaled 0.85 against 1.5.
+Each `k_top_speed` is now the species' flee speed and the run threshold sits between its
+walk and its flee, so prowling and grazing finally use the walk cycle.
+
+**Footfalls are per gait, not per leg.** The leg phase offsets used to live on the leg and
+apply to every gait, which made the run a trot — diagonal pairs, wrong for a canid at
+speed. `leg_phase_offset` supplies a four-beat lateral sequence for the walk and stalk and
+a transverse gallop for the run, where the fore pair lands nearly together and the hind
+pair follows.
+
+**The stride sets the cadence, and the cadence is not a free parameter.** `gait_advance`
+is `stride / stance_duty`, which is exactly the distance the body must cover for the
+stance foot to stay planted — so the world metres per cycle and the foot's sweep are one
+number, not two. That means a gait's cadence can only be slowed by **lengthening the
+stride**; scaling the advance on its own buys the slower cycle at the price of feet that
+slide. The wolf shipped with a 0.29 stride, which at its 3.9 m/s hunt speed is 5.1 leg
+cycles a second — nearly twice a real wolf's gallop, fast enough to strobe at 60 fps, and
+with so little reach that the animal reads as gliding. It is 0.52 now, for 2.9 cycles a
+second, with the lift raised to match.
+
+**A chain rotates about a pivot only after that pivot has moved.** The bite's worry phase
+shakes the head one way and counter-rotates the shoulders the other, and the counter is
+applied to `withers` — the head's own parent. Rotating the head about the *old* withers
+and then swinging the withers away leaves the head behind by the whole counter angle: with
+the shake at full amplitude the neck measured 0.162 to 0.281 units long over the clip, a
+**74% stretch**, and the head and ears visibly tore off. The counter now moves the head
+chain along with the spine, and the head's own yaw is applied afterwards about the withers
+it is actually attached to; the same measurement is 13%, which is the authored head-lower.
+When touching this rig, measure a bone length across the clip rather than looking at it —
+`(pose.poll - pose.withers).length()` should only vary by what the pose deliberately
+changes.
+
+**The body bounces, and the hips bounce with it.** A run drives a vertical bob at twice
+the stride frequency plus a spine pitch that drops the chest as the forelegs load. The
+legs are IK-solved from the hip down to a toe placed in ground space, so the bob has to be
+added to the leg hips as well as to the torso — move the torso alone and the shoulders
+tear away from it. Feet stay where they were placed, and the solver takes up the slack,
+which is what makes the bounce read as weight instead of as a floating body.
+
+**Clips cross-fade into one another.** Each baked clip loops cleanly on its own — the
+distance-driven `gait_phase` cursor wraps continuously and the bake samples `i/frame_count`
+so no frame is duplicated — but the *swap* between clips used to be instantaneous, and a
+hunting wolf swaps constantly: run, stand, bite, run. Every swap snapped the whole
+skeleton, which reads as the gait stuttering rather than as a clip change.
+`resolve_clip_transition` keeps a per-entity cursor of the state it drew last and the
+phase it left it at, and for `k_clip_blend_seconds` afterwards the renderer hands the
+outgoing clip to `full_body_blend` with a decaying weight. That layer already existed for
+humanoids; wildlife simply never filled it in. The blend is the reason a wolf breaking
+from a run into a bite no longer pops.
+
+**A one-shot clip's phase is latched, because a simulation timer is not a render
+clock.** The bite and the death read their progress from `bite_timer` and the death
+sequence, which the simulation decrements on its own step — and a creature is drawn more
+than once per frame (the main pass and the shadow pass), at different points relative to
+that step. The bite phase therefore stepped forward and back by exactly one frame's worth,
+every frame, for the whole bite: measured over eighteen seconds, 252 of 261 backwards
+phase steps across the pack were in `AttackMelee`. `action_phase` keeps a per-entity latch
+that never moves a one-shot clip backwards and treats a large drop as the next bite
+starting; the same run now has one backwards step, which is a genuine restart.
+
+**A pack can only bite from inside bite reach.** `pack_ring_radius` sizes the ring by the
+arc the pack needs to stand abreast, and that was clamped to the bite reach itself — so at
+eight wolves the ring landed *exactly* on the reach boundary and most of the pack sat a
+hair outside it, unable to land anything. The per-wolf arc is 0.95 now rather than 1.35,
+and the ring is capped at `reach * k_pack_ring_reach_margin` so the whole pack stands
+inside the range it needs. Distinct wolves biting a victim went from five to seven.
+
+**One speed picks the clip and drives its phase.** `gait_speed` low-passes the animal's
+speed once per draw; the gait is chosen from *that* number and the phase is advanced with
+*that* number. They used to disagree — the gait came from the instantaneous speed while
+the cursor advanced on the smoothed one — and since each gait carries its own `advance`,
+a decelerating animal could be handed the short walk or stalk stride while still moving at
+run speed, which cycles its legs several times faster than anything it can do. Two speeds
+is two sources of truth; there is one now, and `resolve_gait` takes it as an argument.
+
+**A standing animal is on the clock, not on the odometer.** Idle and the standing stalk
+pose are looped by `ambient_phase` against wall time with a per-entity offset. They used
+to be fed the locomotion phase, which is distance-driven — so a wolf that stopped had its
+idle frozen on a single frame, and `wolf_gait_advance(Stand)` is zero anyway, so the
+cursor could not have advanced even if it had wanted to.
+
+**A clip's authored length is its playback length.** The bite is baked as 32 frames at
+30 fps and the game plays it over `k_bite_animation_seconds`; when those two disagreed the
+clip simply ran at the ratio between them — 1.08 s of animation crammed into 0.55 s, which
+is what "the bite plays at double speed" was. `k_bite_impact_phase` is likewise the same
+number as the bake's contact phase, so damage lands on the frame the jaws shut. Wildlife
+deaths resolve to the quadruped `Horse` death profile rather than the humanoid one for the
+same reason: a wolf was collapsing on an infantryman's 1.0 s timing over a 1.2 s clip. The
+standing periods are written as the clip's own `frames / fps` — `24.0F / 24.0F` for idle,
+`120.0F / 24.0F` for the sheep's graze — so the number that loops the clip is visibly the
+number that baked it.
+
+**The cycle advances on smoothed speed, not on raw distance.** `gait_phase` used to add
+`(distance travelled this frame) / advance` straight into the cursor, which tied the legs
+to every hitch in translation — and the mover scales translation down while a unit turns,
+so a wolf steering around its packmates stalled its own legs for a frame roughly twice a
+second. The cursor now low-passes the measured speed over `k_gait_speed_smoothing` and
+advances by `speed * dt`, so a turn no longer freezes the stride and a wolf that halts to
+bite eases its legs down instead of stopping mid-step.
 
 ## Baked species assets
 

@@ -121,6 +121,7 @@ void render_effects(const RenderEffectsContext& context,
   Render::GL::render_healer_auras(context.renderer, res, context.world);
   Render::GL::render_commander_auras(context.renderer, res, context.world);
   Render::GL::render_combat_dust(context.renderer, res, context.world);
+  Render::GL::render_blood_stains(context.renderer, res, context.world);
 
   if (render_runtime_mode_effects) {
     render_runtime_mode_effects();
