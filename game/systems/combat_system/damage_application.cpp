@@ -54,6 +54,9 @@ auto resolve_death_profile(const Engine::Core::UnitComponent* unit)
   if (is_mounted_spawn(unit->spawn_type)) {
     return DeathSequenceProfile::MountedRider;
   }
+  if (Game::Units::is_wildlife_spawn(unit->spawn_type)) {
+    return DeathSequenceProfile::Horse;
+  }
   return DeathSequenceProfile::Infantry;
 }
 
@@ -591,6 +594,9 @@ auto can_retaliate(Engine::Core::Entity* entity,
   if (entity->has_component<Engine::Core::BuildingComponent>()) {
     return false;
   }
+  if (unit->spawn_type == Game::Units::SpawnType::Civilian) {
+    return false;
+  }
   if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
     return false;
   }
@@ -699,47 +705,6 @@ void assign_retaliation_target_if_needed(Engine::Core::World* world,
   alert_nearby_allies(world, target, attacker);
 }
 
-void spawn_blood_stain(Engine::Core::World* world, const Engine::Core::Entity* target) {
-  if (world == nullptr || target == nullptr) {
-    return;
-  }
-
-  auto const* transform = target->get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return;
-  }
-
-  prune_oldest_blood_stain(world);
-
-  auto* blood_stain = world->create_entity();
-  if (blood_stain == nullptr) {
-    return;
-  }
-
-  auto const* unit = target->get_component<Engine::Core::UnitComponent>();
-  auto const id_seed = static_cast<std::uint32_t>(target->get_id());
-  auto const position_seed =
-      static_cast<std::uint32_t>(std::abs(transform->position.x) * 31.0F +
-                                 std::abs(transform->position.z) * 131.0F);
-  float const scale = blood_stain_scale(unit);
-  float const radius = Engine::Core::Defaults::k_blood_stain_default_radius * scale *
-                       (0.85F + hash01(id_seed * 17U + position_seed) * 0.45F);
-  float const rotation =
-      hash01(id_seed * 97U + position_seed * 3U) * std::numbers::pi_v<float> * 2.0F;
-  float const aspect_ratio =
-      0.72F + hash01(id_seed * 53U + position_seed * 11U) * 0.62F;
-  float const seed = hash01(id_seed * 193U + position_seed * 29U);
-
-  blood_stain->add_component<Engine::Core::TransformComponent>(
-      transform->position.x, transform->position.y, transform->position.z);
-  blood_stain->add_component<Engine::Core::BloodStainComponent>(
-      radius,
-      Engine::Core::Defaults::k_blood_stain_default_lifetime,
-      rotation,
-      aspect_ratio,
-      seed);
-}
-
 void queue_structure_impact(Engine::Core::Entity& target,
                             const Engine::Core::Entity* attacker,
                             const std::optional<QVector3D>& contact_point) {
@@ -824,6 +789,58 @@ void queue_structure_impact(Engine::Core::Entity& target,
 }
 
 } // namespace
+
+void spawn_blood_stain(Engine::Core::World* world,
+                       const Engine::Core::Entity* target,
+                       float spread,
+                       std::uint32_t variation) {
+  if (world == nullptr || target == nullptr) {
+    return;
+  }
+
+  auto const* transform = target->get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return;
+  }
+
+  prune_oldest_blood_stain(world);
+
+  auto* blood_stain = world->create_entity();
+  if (blood_stain == nullptr) {
+    return;
+  }
+
+  auto const* unit = target->get_component<Engine::Core::UnitComponent>();
+  auto const id_seed =
+      static_cast<std::uint32_t>(target->get_id()) + (variation * 2654435761U);
+  auto const position_seed =
+      static_cast<std::uint32_t>(std::abs(transform->position.x) * 31.0F +
+                                 std::abs(transform->position.z) * 131.0F);
+  float const scale = blood_stain_scale(unit);
+  float const radius = Engine::Core::Defaults::k_blood_stain_default_radius * scale *
+                       (0.85F + hash01(id_seed * 17U + position_seed) * 0.45F);
+  float const rotation =
+      hash01(id_seed * 97U + position_seed * 3U) * std::numbers::pi_v<float> * 2.0F;
+  float const aspect_ratio =
+      0.72F + hash01(id_seed * 53U + position_seed * 11U) * 0.62F;
+  float const seed = hash01(id_seed * 193U + position_seed * 29U);
+
+  float const offset_angle =
+      hash01(id_seed * 311U + position_seed * 7U) * std::numbers::pi_v<float> * 2.0F;
+  float const offset_reach =
+      spread * std::sqrt(hash01(id_seed * 419U + position_seed * 13U));
+
+  blood_stain->add_component<Engine::Core::TransformComponent>(
+      transform->position.x + (std::cos(offset_angle) * offset_reach),
+      transform->position.y,
+      transform->position.z + (std::sin(offset_angle) * offset_reach));
+  blood_stain->add_component<Engine::Core::BloodStainComponent>(
+      radius,
+      Engine::Core::Defaults::k_blood_stain_default_lifetime,
+      rotation,
+      aspect_ratio,
+      seed);
+}
 
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
   if (entity == nullptr || duration <= 0.0F) {

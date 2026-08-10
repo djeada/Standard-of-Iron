@@ -15,8 +15,10 @@ namespace Render::GL::Wildlife {
 
 namespace {
 
-constexpr float k_top_speed = 3.1F;
-constexpr float k_run_threshold = 0.30F;
+constexpr float k_top_speed = 4.6F;
+constexpr float k_run_threshold = 0.55F;
+constexpr float k_walk_threshold = 0.02F;
+constexpr float k_idle_period_seconds = 24.0F / 24.0F;
 
 auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   float const morph = hash_unit_float(state.seed, 31U);
@@ -47,18 +49,16 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   return variant;
 }
 
-auto resolve_gait(const DrawState& state) -> Render::Wildlife::WolfGait {
+auto resolve_gait(const DrawState& state,
+                  float gait_ratio) -> Render::Wildlife::WolfGait {
   bool const stalking = state.behavior == Game::Wildlife::Behavior::Stalk;
-  if (state.speed_ratio > k_run_threshold) {
+  if (gait_ratio > k_run_threshold) {
     return Render::Wildlife::WolfGait::Run;
-  }
-  if (stalking && state.speed_ratio <= 0.02F) {
-    return Render::Wildlife::WolfGait::Stand;
   }
   if (stalking) {
     return Render::Wildlife::WolfGait::Stalk;
   }
-  if (state.speed_ratio > 0.02F) {
+  if (gait_ratio > k_walk_threshold) {
     return Render::Wildlife::WolfGait::Walk;
   }
   return Render::Wildlife::WolfGait::Stand;
@@ -84,27 +84,36 @@ auto state_for_gait(const DrawState& state, Render::Wildlife::WolfGait gait)
 
 void draw_wolf(const DrawContext& ctx, ISubmitter& out) {
   const DrawState state = resolve_draw_state(ctx, k_top_speed);
-  const Render::Wildlife::WolfGait gait = resolve_gait(state);
+
+  float const speed = gait_speed(state);
+  float const gait_ratio = std::clamp(speed / k_top_speed, 0.0F, 1.0F);
+  const Render::Wildlife::WolfGait gait = resolve_gait(state, gait_ratio);
 
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Wolf;
   inputs.variant = resolve_variant(state);
-
-  float const walk_phase = gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
 
   if (state.dead) {
     inputs.state = Render::Creature::AnimationStateId::Dead;
     inputs.phase = 1.0F;
   } else if (state.death_progress >= 0.0F) {
     inputs.state = Render::Creature::AnimationStateId::Die;
-    inputs.phase = state.death_progress;
+    inputs.phase = action_phase(state, state.death_progress);
   } else if (state.bite_progress >= 0.0F) {
     inputs.state = Render::Creature::AnimationStateId::AttackMelee;
-    inputs.phase = state.bite_progress;
+    inputs.phase = action_phase(state, state.bite_progress);
   } else {
-    inputs.phase = walk_phase;
     inputs.state = state_for_gait(state, gait);
+    inputs.phase = inputs.state == Render::Creature::AnimationStateId::Idle
+                       ? ambient_phase(state, k_idle_period_seconds)
+                       : gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
   }
+
+  const ClipTransition transition =
+      resolve_clip_transition(state, inputs.state, inputs.phase);
+  inputs.outgoing_state = transition.outgoing;
+  inputs.outgoing_phase = transition.phase;
+  inputs.outgoing_weight = transition.weight;
 
   Render::Wildlife::submit_wildlife(ctx, inputs, out);
 }

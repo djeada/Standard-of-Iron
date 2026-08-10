@@ -30,7 +30,6 @@ enum class NaturePriority : std::uint8_t {
 enum class NatureEvent : std::uint8_t {
   Flee = 0,
   Hunt = 1,
-  Bite = 2,
 };
 
 struct HerdRuntime {
@@ -49,6 +48,11 @@ struct PreyRef {
   bool livestock{false};
 
   [[nodiscard]] auto valid() const noexcept -> bool { return entity != nullptr; }
+};
+
+struct PackSlot {
+  int index{0};
+  int count{1};
 };
 
 struct NatureContext {
@@ -74,6 +78,7 @@ public:
 
   virtual void move_to(const NatureContext& ctx, float world_x, float world_z) = 0;
   virtual void halt(const NatureContext& ctx) = 0;
+  virtual void face_toward(const NatureContext& ctx, float world_x, float world_z) = 0;
   virtual void set_travel_speed(const NatureContext& ctx, bool urgent) = 0;
   virtual void alert_herd(std::uint16_t group_id, float duration) = 0;
   virtual void mark_hostile(const NatureContext& ctx,
@@ -88,11 +93,13 @@ public:
                                              float max_radius,
                                              float& out_x,
                                              float& out_z) -> bool = 0;
-  [[nodiscard]] virtual auto
-  nearest_prey(float world_x, float world_z, float radius) -> PreyRef = 0;
-  [[nodiscard]] virtual auto
-  nearest_quarry(float world_x, float world_z, float radius) -> PreyRef = 0;
+  [[nodiscard]] virtual auto nearest_prey(const NatureContext& ctx,
+                                          float radius) -> PreyRef = 0;
+  [[nodiscard]] virtual auto nearest_quarry(const NatureContext& ctx,
+                                            float radius) -> PreyRef = 0;
   [[nodiscard]] virtual auto locate(Engine::Core::EntityID entity_id) -> PreyRef = 0;
+  [[nodiscard]] virtual auto claim_pack_slot(const NatureContext& ctx,
+                                             const PreyRef& prey) -> PackSlot = 0;
   [[nodiscard]] virtual auto
   nearest_pack_hunter(float world_x, float world_z, float radius) -> ThreatQuery = 0;
   [[nodiscard]] virtual auto bite(const NatureContext& ctx,

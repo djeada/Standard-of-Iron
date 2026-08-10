@@ -94,8 +94,8 @@ def add(f, at, gain):
 
 
 add(WILD + "wolf_howl_distant.ogg", 0.35, 1.30)
-add(WILD + "wolf_growl_low.ogg", to_fin(5.2), 1.95)
-add(WILD + "wolf_pack_attack.ogg", to_fin(6.05), 1.45)
+add(WILD + "wolf_growl_low.ogg", to_fin(5.9), 1.95)
+add(WILD + "wolf_pack_attack.ogg", to_fin(8.6), 1.45)
 
 last = -9.0
 for i, b in enumerate(thin):
@@ -110,7 +110,7 @@ for i, b in enumerate(thin):
         1.85 if snap else 1.50,
     )
 
-for scn in (6.5, 7.6):
+for scn in (6.9, 7.9):
     add(ORDERS + "run_kit_rattle.ogg", to_fin(scn), 1.35)
 
 

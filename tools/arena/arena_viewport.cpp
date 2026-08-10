@@ -601,6 +601,7 @@ void ArenaViewport::paintGL() {
         !m_scenario_runner->definition().suppress_combat_dust) {
       Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
     }
+    Render::GL::render_blood_stains(m_renderer.get(), res, m_world.get());
     render_attack_range_rings(res);
     if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr) {
       Engine::Core::EntityID locked_target_id = 0;

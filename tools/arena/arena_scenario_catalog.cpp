@@ -9201,10 +9201,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       }
     }
 
-    s.environment.start_time = 13.0F;
+    s.environment.start_time = 15.2F;
     s.environment.time_mode = Game::Map::TimeMode::Locked;
     s.environment.fog_density_override = 0.016F;
-    s.environment.exposure_override = 1.34F;
+    s.environment.exposure_override = 1.5F;
 
     Game::Wildlife::WildlifeSettings wildlife = Game::Wildlife::default_settings();
     wildlife.enabled = true;
@@ -9218,7 +9218,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     wildlife.wolves.group_size_min = 8;
     wildlife.wolves.group_size_max = 8;
     wildlife.wolves.aggression = 1.0F;
-    wildlife.wolves.alert_radius = 18.0F;
+    wildlife.wolves.alert_radius = 9.0F;
     wildlife.wolves.roam_radius = 30.0F;
     wildlife.wolves.respawn = false;
     wildlife.wolves.spawn_areas = {{34.0F, 0.0F, 7.0F}};
@@ -9243,11 +9243,11 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                Nation::RomanRepublic,
                                1,
                                6,
-                               {4.0F, 0.0F, 4.0F},
+                               {0.0F, 0.0F, 5.0F},
                                {2.8F, 0.0F, 0.0F},
                                3.0F);
 
-    villagers.health_override = villagers.max_health_override = 205;
+    villagers.health_override = villagers.max_health_override = 120;
 
     auto riders = group(QStringLiteral("riders"),
                         Troop::MountedKnight,
@@ -9285,14 +9285,24 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         riders,
     };
 
-    auto rescue = at(10.5F, Command::Run, QStringLiteral("riders"));
-    rescue.destination = {2.0F, 0.0F, 4.0F};
+    auto rescue = at(8.8F, Command::Run, QStringLiteral("riders"));
+    rescue.destination = {-0.5F, 0.0F, 9.8F};
+
+    auto sweep = at(20.0F, Command::Run, QStringLiteral("riders"));
+    sweep.destination = {8.0F, 0.0F, 8.0F};
+
+    auto picket = at(28.0F, Command::Run, QStringLiteral("riders"));
+    picket.destination = {-1.0F, 0.0F, 6.0F};
 
     s.steps = {
         at(0.2F, Command::Hold, QStringLiteral("riders")),
-        at(10.1F, Command::Stop, QStringLiteral("riders")),
+        at(8.4F, Command::Stop, QStringLiteral("riders")),
         rescue,
-        at(18.0F, Command::Hold, QStringLiteral("riders")),
+        at(19.6F, Command::Stop, QStringLiteral("riders")),
+        sweep,
+        at(27.6F, Command::Stop, QStringLiteral("riders")),
+        picket,
+        at(34.0F, Command::Guard, QStringLiteral("riders")),
     };
 
     s.expectations = {
@@ -9300,7 +9310,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         expectation(Expect::GroupIsRendered, QStringLiteral("villagers")),
         expectation(Expect::MovementAnimationObserved, QStringLiteral("villagers")),
         expectation(Expect::GroupIsRendered, QStringLiteral("riders")),
-        expectation(Expect::AttackAnimationObserved, QStringLiteral("villagers")),
+        expectation(Expect::DeathAnimationObserved, QStringLiteral("villagers")),
         expectation(Expect::WildlifeHuntObserved),
         expectation(Expect::GroupHealthReduced, QStringLiteral("villagers")),
         expectation(Expect::WildlifeCasualtyObserved),

@@ -17,6 +17,11 @@ struct WildlifeRenderInputs {
   Render::GL::WildlifeVariant variant{};
   Render::Creature::AnimationStateId state{Render::Creature::AnimationStateId::Idle};
   float phase{0.0F};
+
+  Render::Creature::AnimationStateId outgoing_state{
+      Render::Creature::AnimationStateId::Idle};
+  float outgoing_phase{0.0F};
+  float outgoing_weight{0.0F};
 };
 
 void submit_wildlife(const Render::GL::DrawContext& ctx,
