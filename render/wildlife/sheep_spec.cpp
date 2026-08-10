@@ -141,6 +141,8 @@ void fill_legs(RigPose& pose,
 }
 
 void fill_head(RigPose& pose, const SheepDrive& drive) {
+  float const nibble = std::sin(drive.stride_phase * k_two_pi * 6.0F) *
+                       0.010F * std::clamp(drive.graze, 0.0F, 1.0F);
   float const neck_length = (k_poll_up - k_withers).length();
   QVector3D const poll_graze = k_withers + (k_graze_dir.normalized() * neck_length);
   QVector3D const control_up(0.0F, 0.590F, 0.292F);
@@ -163,7 +165,7 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
 
   pose.muzzle = poll + (muzzle_dir * k_head_length);
   pose.jaw_hinge = poll + (facing * 0.060F) - (head_up * 0.018F);
-  pose.jaw_tip = pose.muzzle - (head_up * 0.014F);
+  pose.jaw_tip = pose.muzzle - (head_up * 0.014F) + QVector3D(0.0F, nibble, 0.0F);
 
   for (int sign_index = 0; sign_index < 2; ++sign_index) {
     float const sign = sign_index == 0 ? -1.0F : 1.0F;
@@ -263,6 +265,19 @@ auto make_pose(const SheepDrive& drive) -> RigPose {
 
   fill_legs(pose, drive, bob - pitch, bob + pitch);
   fill_head(pose, drive);
+
+  float const nod =
+      std::sin(cadence - 1.35F) * (k_bob_base + (k_bob_gain * gait)) * 0.62F;
+  QVector3D const head_ride(0.0F, (bob * 0.55F) + nod, 0.0F);
+  pose.withers += QVector3D(0.0F, bob * 0.85F - pitch * 0.6F, 0.0F);
+  pose.poll += head_ride;
+  pose.muzzle += head_ride;
+  pose.jaw_hinge += head_ride;
+  pose.jaw_tip += head_ride;
+  pose.ear_base_l += head_ride;
+  pose.ear_base_r += head_ride;
+  pose.ear_tip_l += head_ride;
+  pose.ear_tip_r += head_ride;
 
   float const wag =
       std::sin(drive.stride_phase * k_two_pi) * 0.022F * drive.speed_ratio;
@@ -394,8 +409,19 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
 
   std::vector<Render::Creature::Quadruped::BarrelRing> body_rings;
   body_rings.reserve(k_body_rings.size());
-  for (const BodyRing& ring : k_body_rings) {
-    body_rings.push_back({ring.z, ring.y, ring.half_width, ring.top, ring.bottom});
+  for (std::size_t i = 0; i < k_body_rings.size(); ++i) {
+    const BodyRing& ring = k_body_rings[i];
+    float const fi = static_cast<float>(i);
+
+    float const clump_w = 1.0F + (0.040F * std::sin(fi * 2.1F)) +
+                          (0.024F * std::sin((fi * 3.7F) + 1.3F));
+    float const clump_t = 1.0F + (0.045F * std::sin((fi * 2.6F) + 0.7F)) +
+                          (0.022F * std::sin((fi * 4.3F) + 2.1F));
+    body_rings.push_back({ring.z,
+                          ring.y,
+                          ring.half_width * clump_w,
+                          ring.top * clump_t,
+                          ring.bottom * clump_w});
   }
   nodes.push_back(
       barrel("sheep.fleece", Bone::Body, k_sheep_role_wool, std::move(body_rings)));

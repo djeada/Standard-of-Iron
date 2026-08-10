@@ -61,7 +61,7 @@ void main() {
   float scallop =
       tier_wave * 0.035 * foliage_mask * smoothstep(0.18, 0.52, source_radius);
 
-  float spoke = floor(a_tex_coord.x * 16.0 + 0.5);
+  float spoke = floor(a_tex_coord.x * 20.0 + 0.5);
   float spoke_jitter = hash11(spoke * 1.7 + silhouette_seed * 13.0) - 0.5;
   float spoke_reach =
       foliage_mask * smoothstep(0.14, 0.42, source_radius) * (1.0 - tip_mask * 0.5);
@@ -76,7 +76,7 @@ void main() {
   float droop = skirt_mask * mix(0.10, 0.04, clamp(a_tex_coord.y, 0.0, 1.0));
   model_pos.y -= droop;
 
-  float lean_norm = clamp(a_pos.y / 1.13, 0.0, 1.0);
+  float lean_norm = clamp(a_pos.y / 1.30, 0.0, 1.0);
   float lean_angle = (silhouette_seed - 0.5) * 0.18;
   float lean_yaw = bark_seed * TWO_PI;
   model_pos.x += cos(lean_yaw) * lean_angle * lean_norm;
