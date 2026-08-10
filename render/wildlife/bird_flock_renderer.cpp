@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../game/wildlife/bird_flock.h"
-#include "../gl/primitives.h"
-#include "../submission_visibility.h"
-#include "../submitter.h"
+#include "game/wildlife/bird_flock.h"
+#include "render/gl/primitives.h"
+#include "render/submission_visibility.h"
+#include "render/submitter.h"
 #include "scene/camera.h"
 
 namespace Render::GL::Wildlife {

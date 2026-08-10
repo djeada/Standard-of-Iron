@@ -8,14 +8,14 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "../../gl/humanoid/humanoid_types.h"
-#include "../../humanoid/facial_hair_catalog.h"
-#include "../../humanoid/skeleton.h"
-#include "../archetype_registry.h"
-#include "../runtime_bake_guard.h"
 #include "animation/selection_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
+#include "render/creature/archetype_registry.h"
+#include "render/creature/runtime_bake_guard.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/humanoid/facial_hair_catalog.h"
+#include "render/humanoid/skeleton.h"
 
 namespace Render::Creature::Pipeline {
 

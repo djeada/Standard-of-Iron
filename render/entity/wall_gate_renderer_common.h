@@ -2,9 +2,9 @@
 
 #include <string_view>
 
-#include "../render_archetype.h"
-#include "../submitter.h"
 #include "building_archetype_desc.h"
+#include "render/render_archetype.h"
+#include "render/submitter.h"
 #include "wall_renderer_common.h"
 
 namespace Render::GL {

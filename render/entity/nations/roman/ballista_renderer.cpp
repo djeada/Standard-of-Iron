@@ -2,9 +2,9 @@
 
 #include <QVector3D>
 
-#include "../../ballista_geometry.h"
-#include "../../registry.h"
-#include "../../siege_renderer_common.h"
+#include "render/entity/ballista_geometry.h"
+#include "render/entity/registry.h"
+#include "render/entity/siege_renderer_common.h"
 
 namespace Render::GL::Roman {
 namespace {

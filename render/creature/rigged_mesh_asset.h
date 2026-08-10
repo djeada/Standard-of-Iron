@@ -9,8 +9,8 @@
 #include <string_view>
 #include <vector>
 
-#include "../rigged_mesh.h"
 #include "animation/bpat/bpat_format.h"
+#include "render/rigged_mesh.h"
 #include "render_request.h"
 
 namespace Render::Creature::Rigged {

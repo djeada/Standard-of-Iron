@@ -27,12 +27,12 @@
 #include <qt_windows.h>
 #endif
 
-#include "../elephant/attachment_frames.h"
-#include "../elephant/elephant_source_asset.h"
-#include "../elephant/elephant_spec.h"
-#include "../horse/horse_source_asset.h"
-#include "../horse/horse_spec.h"
 #include "animation/rig/horse_attachment_frames.h"
+#include "render/elephant/attachment_frames.h"
+#include "render/elephant/elephant_source_asset.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/horse/horse_source_asset.h"
+#include "render/horse/horse_spec.h"
 
 namespace Render::Horse {
 

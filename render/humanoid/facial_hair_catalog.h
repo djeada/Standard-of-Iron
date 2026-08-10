@@ -5,8 +5,8 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "../creature/archetype_registry.h"
-#include "../gl/humanoid/humanoid_types.h"
+#include "render/creature/archetype_registry.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::Humanoid {
 

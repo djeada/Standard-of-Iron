@@ -9,18 +9,19 @@
 #include <memory>
 #include <vector>
 
-#include "../../geom/transforms.h"
-#include "../../gl/mesh.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/skeleton.h"
-#include "../../humanoid/style_palette.h"
-#include "../../render_archetype.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
 #include "animation/rig/humanoid_proportions.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/geom/transforms.h"
+#include "render/gl/mesh.h"
+#include "render/gl/primitives.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/humanoid/humanoid_math.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
+#include "render/humanoid/style_palette.h"
+#include "render/render_archetype.h"
 #include "shield_anchor.h"
 
 namespace Render::GL {
@@ -231,18 +232,20 @@ auto create_scutum_edge_mesh() -> std::unique_ptr<Mesh> {
 }
 
 auto roman_scutum_front_mesh() -> Mesh* {
-  static std::unique_ptr<Mesh> const mesh = create_scutum_face_mesh(false);
-  return mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("equipment/roman_scutum/front"),
+      [] { return create_scutum_face_mesh(false); });
 }
 
 auto roman_scutum_back_mesh() -> Mesh* {
-  static std::unique_ptr<Mesh> const mesh = create_scutum_face_mesh(true);
-  return mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("equipment/roman_scutum/back"),
+      [] { return create_scutum_face_mesh(true); });
 }
 
 auto roman_scutum_edge_mesh() -> Mesh* {
-  static std::unique_ptr<Mesh> const mesh = create_scutum_edge_mesh();
-  return mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("equipment/roman_scutum/edge"), create_scutum_edge_mesh);
 }
 
 } // namespace

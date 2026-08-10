@@ -1,9 +1,9 @@
 #include "horse_swordsman_renderer.h"
 
-#include "../../../../render/creature/pipeline/creature_asset.h"
-#include "../../../submitter.h"
-#include "../../mounted_knight_renderer_base.h"
-#include "../equipment_loadout_catalog.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/entity/mounted_knight_renderer_base.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
+#include "render/submitter.h"
 
 namespace Render::GL::Roman {
 namespace {

@@ -5,10 +5,10 @@
 #include <cstdint>
 #include <string>
 
-#include "../../creature/animation_state_components.h"
-#include "../../wildlife/wildlife_prepare.h"
-#include "../../wildlife/wolf_spec.h"
-#include "../registry.h"
+#include "render/creature/animation_state_components.h"
+#include "render/entity/registry.h"
+#include "render/wildlife/wildlife_prepare.h"
+#include "render/wildlife/wolf_spec.h"
 #include "wildlife_draw_state.h"
 
 namespace Render::GL::Wildlife {

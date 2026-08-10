@@ -1,9 +1,9 @@
 #include "barracks_renderer_common.h"
 
-#include "../../game/core/component.h"
-#include "../gl/backend.h"
-#include "../gl/primitives.h"
-#include "../gl/resources.h"
+#include "game/core/component.h"
+#include "render/gl/backend.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
 
 namespace Render::GL {
 

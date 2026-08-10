@@ -6,17 +6,17 @@
 #include <cmath>
 #include <numbers>
 
-#include "../../game/core/component.h"
-#include "../../game/visuals/team_colors.h"
-#include "../geom/arrow.h"
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
-#include "../submitter.h"
+#include "game/core/component.h"
+#include "game/visuals/team_colors.h"
 #include "math/math_utils.h"
 #include "nations/siege_anim_types.h"
 #include "registry.h"
+#include "render/geom/arrow.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
+#include "render/submitter.h"
 #include "siege_renderer_common.h"
 
 namespace Render::GL {

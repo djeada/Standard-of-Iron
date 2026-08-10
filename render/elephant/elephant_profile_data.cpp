@@ -12,20 +12,20 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../game/core/component.h"
-#include "../creature/pipeline/creature_visual_definition.h"
-#include "../creature/pipeline/prepared_submit.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../entity/registry.h"
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../humanoid/humanoid_renderer_base.h"
-#include "../submitter.h"
 #include "elephant_renderer_base.h"
 #include "elephant_spec.h"
+#include "game/core/component.h"
 #include "math/creature_math_utils.h"
 #include "math/math_utils.h"
 #include "prepare.h"
+#include "render/creature/pipeline/creature_visual_definition.h"
+#include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/registry.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/submitter.h"
 
 namespace Render::GL {
 

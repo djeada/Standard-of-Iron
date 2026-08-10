@@ -2,7 +2,7 @@
 
 #include <QOpenGLFunctions_3_3_Core>
 
-#include "../shader.h"
+#include "render/gl/shader.h"
 
 namespace Render::GL::BackendPipelines {
 

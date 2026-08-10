@@ -11,23 +11,23 @@
 #include <deque>
 #include <string>
 
-#include "../../entity/registry.h"
-#include "../../entity/renderer_constants.h"
-#include "../../geom/transforms.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/skeleton.h"
-#include "../../static_attachment_spec.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
-#include "../generated_equipment.h"
-#include "../oriented_archetype_utils.h"
-#include "../primitive_archetype_utils.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "arrow_archetype_utils.h"
 #include "math/math_utils.h"
+#include "render/entity/registry.h"
+#include "render/entity/renderer_constants.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/equipment/generated_equipment.h"
+#include "render/equipment/oriented_archetype_utils.h"
+#include "render/equipment/primitive_archetype_utils.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/humanoid/humanoid_math.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

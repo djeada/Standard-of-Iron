@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "../../registry.h"
-#include "../../swordsman_renderer_common.h"
+#include "render/entity/registry.h"
+#include "render/entity/swordsman_renderer_common.h"
 
 namespace Render::GL::Roman {
 

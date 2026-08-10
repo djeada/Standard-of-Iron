@@ -7,8 +7,8 @@
 #include <string>
 #include <string_view>
 
-#include "../creature/quadruped/mesh_graph.h"
-#include "../creature/skeleton.h"
+#include "render/creature/quadruped/mesh_graph.h"
+#include "render/creature/skeleton.h"
 
 namespace Render::Elephant {
 

@@ -2,11 +2,11 @@
 
 #include <optional>
 
-#include "../../../creature/pipeline/creature_asset.h"
-#include "../../../humanoid/style_palette.h"
-#include "../../../submitter.h"
-#include "../../mounted_knight_renderer_base.h"
-#include "../equipment_loadout_catalog.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/entity/mounted_knight_renderer_base.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
+#include "render/humanoid/style_palette.h"
+#include "render/submitter.h"
 #include "swordsman_style.h"
 
 namespace Render::GL::Carthage {

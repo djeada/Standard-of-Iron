@@ -70,11 +70,8 @@ Particles live in one fixed pool owned by `RainPipeline` and are recycled in the
 1. `GameEngine::update(dt)` advances simulation systems before rendering. `World::update(dt)` runs here, so combat query rebuilds, target searches, attack state updates, hit feedback, target direction, and mode flags are simulation costs even when a profiler groups them under `QSGRenderThread`.
 2. `GameEngine::render(width, height)` records and plays back rendering work from state that already exists. `Renderer::render_world(world)` requests and consumes the latest detached render-world snapshot. After the first handoff, culling, sorting, cache updates, and entity renderer callbacks no longer hold the mutable simulation world's mutex. Renderer-owned animation and layout state is transferred from the previous snapshot before submission. The renderer must not rebuild combat query state or search for targets. `Renderer::end_frame()` sorts the `DrawQueue`, then `Backend::execute(...)` performs OpenGL playback.
 
-When a capture needs stage markers, set `SOI_RENDER_STAGE_LOG=1`. The extra logs are first-use only and remain disabled during normal gameplay. They identify the simulation update, render submit, renderer setup/cache attachment, creature asset registry load, and first backend playback so one-time setup can be separated from steady-frame costs.
-
-Rally and patrol markers are restricted to the local human player. Set
-`SOI_RENDER_DEBUG_ORDER_MARKERS=1` to reveal non-local markers explicitly,
-including while spectating.
+Rally and patrol markers are restricted to the local human player, and are
+hidden entirely while spectating.
 
 ## The two-phase dance
 
@@ -956,12 +953,10 @@ run per item rather than one draw per unit. And the meshes are built lazily, so 
 match that never sees a dismantle order never uploads that item.
 
 `arena_app --batch --scenario unit_activity_showcase` drives every gathering,
-building and repair state in one scene. Two flags matter there: the scenario
-spawns its units under a non-local owner, so pass
-`SOI_RENDER_DEBUG_ORDER_MARKERS=1` -- the same environment variable the game
-honours -- or the indicators correctly stay hidden; and its camera sits far
-enough out that world-sized items are only a few pixels tall, so pass
-`--scenario-distance 0.34` to review them at gameplay zoom.
+building and repair state in one scene. Note that the scenario spawns its units
+under a non-local owner, so the order-marker indicators correctly stay hidden;
+and its camera sits far enough out that world-sized items are only a few pixels
+tall, so pass `--scenario-distance 0.34` to review them at gameplay zoom.
 
 ## Common problems and how to fix them
 
@@ -998,7 +993,7 @@ A `SIGSEGV` whose backtrace bottoms out in `libnvidia-glcore` (or any driver `.s
 - An instanced draw asking for more instances than its instance buffer holds. The GPU fetches past the end of the buffer, and the driver faults while walking its own bookkeeping. Every instanced pipeline therefore records how many instances it actually uploaded and routes its draw count through `InstanceDrawGuard` ([instance_draw_guard.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend/instance_draw_guard.h)), which clamps the draw to what is resident and logs the first overflow per buffer. Growing the buffer is capped (`k_max_instances_per_batch`), so `MeshInstancingPipeline::flush` splits an oversized batch into capacity-sized chunks rather than drawing past the cap.
 - Deleting a GL object with no current context. `glDeleteBuffers` through `QOpenGLFunctions` with no context is undefined; on NVIDIA it corrupts driver state and the crash lands in an unrelated later frame. `Buffer` and `VertexArray` now check `QOpenGLContext::currentContext()` and leak the name with a warning instead. Leaking at teardown is free — the driver reclaims everything when the context dies.
 
-Release builds compile out every `glGetError` check in the render layer, so misuse is silent in the build people actually run. Set `SOI_GL_DEBUG=1` to request a debug context and install a synchronous `QOpenGLDebugLogger`; the driver then names the offending call at the moment it is made, in any build type. It costs nothing when the variable is unset.
+Release builds compile out every `glGetError` check in the render layer, so misuse is silent in the build people actually run. To locate one, build with `-DCMAKE_BUILD_TYPE=Debug`, which keeps the checks in and names the offending call at the point it is made.
 
 ## Battle render optimizations
 
@@ -1073,10 +1068,11 @@ if one drifts.
 
 ### Profiling stage timings
 
-`FrameProfile` is compiled out unless `SOI_RUNTIME_TRACING` is on, so a default Release
-build reports 0.000 ms for `animation_sampling`, `humanoid_preparation`, `bpat_playback`
-and `layout_generation` in the Arena trace. Configure a second build directory with
-`-DSOI_RUNTIME_TRACING=ON` before drawing any conclusion from those numbers.
+`FrameProfile` is compiled into every build and gated at runtime by
+`FrameProfile::enabled`, which the profiling HUD toggles. While it is off the
+phase scopes take no clock samples, so `animation_sampling`,
+`humanoid_preparation`, `bpat_playback` and `layout_generation` read 0.000 ms.
+Turn the HUD on before drawing any conclusion from those numbers.
 
 The Arena's `render_execute` bucket is sampled straight after `Renderer::end_frame()`, so
 it covers queue sort plus backend execution — it is not animation playback. It was called

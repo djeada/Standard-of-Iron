@@ -5,13 +5,13 @@
 #include <deque>
 #include <string>
 
-#include "../../entity/registry.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/style_palette.h"
-#include "../../render_archetype.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
 #include "animation/rig/humanoid_proportions.h"
+#include "render/entity/registry.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/gl/primitives.h"
+#include "render/humanoid/style_palette.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL {
 

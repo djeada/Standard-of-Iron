@@ -2,10 +2,10 @@
 
 #include <array>
 
-#include "../../../creature/pipeline/creature_asset.h"
-#include "../../../humanoid/humanoid_proportion_profiles.h"
-#include "../../../humanoid/humanoid_spec.h"
 #include "archer_style.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/humanoid/humanoid_proportion_profiles.h"
+#include "render/humanoid/humanoid_spec.h"
 
 namespace Render::GL::Carthage {
 namespace {

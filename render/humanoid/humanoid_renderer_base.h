@@ -5,10 +5,10 @@
 
 #include <cstdint>
 
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../entity/registry.h"
-#include "../gl/humanoid/humanoid_types.h"
 #include "animation/rig/humanoid_proportions.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/registry.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Engine::Core {
 class Entity;

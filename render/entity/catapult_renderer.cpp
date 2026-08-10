@@ -1,7 +1,7 @@
 #include "catapult_renderer.h"
 
-#include "../../game/core/component.h"
-#include "../../game/systems/nation_id.h"
+#include "game/core/component.h"
+#include "game/systems/nation_id.h"
 #include "nations/carthage/catapult_renderer.h"
 #include "nations/roman/catapult_renderer.h"
 #include "registry.h"

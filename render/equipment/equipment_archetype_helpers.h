@@ -9,8 +9,8 @@
 #include <deque>
 #include <string>
 
-#include "../static_attachment_spec.h"
 #include "generated_equipment.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

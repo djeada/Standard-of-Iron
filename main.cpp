@@ -145,9 +145,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "render/graphics_settings.h"
 #include "render/horse/horse_source_asset.h"
 #include "render/i_render_backend.h"
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "render/profiling/profiling_hud.h"
-#endif
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
 #include "ui/icon_art.h"
@@ -596,10 +594,6 @@ auto main(int argc, char* argv[]) -> int {
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
   fmt.setSamples(0);
   fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-  if (qEnvironmentVariableIsSet("SOI_GL_DEBUG")) {
-    fmt.setOption(QSurfaceFormat::DebugContext);
-    qInfo() << "SOI_GL_DEBUG set: requesting a debug OpenGL context";
-  }
 
   QSurfaceFormat::setDefaultFormat(fmt);
   qInfo() << "Surface format configured: preferred OpenGL" << fmt.majorVersion() << "."
@@ -667,10 +661,8 @@ auto main(int argc, char* argv[]) -> int {
   QString screenshot_path;
   QString screenshot_view;
   int screenshot_delay_ms = 0;
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   double runtime_benchmark_seconds = 0.0;
   QString runtime_benchmark_output;
-#endif
 
   {
     QCommandLineParser parser;
@@ -718,7 +710,6 @@ auto main(int argc, char* argv[]) -> int {
         "Milliseconds to let the surface settle before capturing.",
         "ms",
         "1200");
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     QCommandLineOption const benchmark_seconds_opt(
         "benchmark-seconds",
         "Measure the directly started mission after a two-second warm-up, then exit.",
@@ -727,7 +718,6 @@ auto main(int argc, char* argv[]) -> int {
         "benchmark-output",
         "Write the runtime benchmark JSON report to this path.",
         "path");
-#endif
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
     parser.addOption(renderer_self_test_opt);
@@ -739,10 +729,8 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(screenshot_opt);
     parser.addOption(screenshot_view_opt);
     parser.addOption(screenshot_delay_opt);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     parser.addOption(benchmark_seconds_opt);
     parser.addOption(benchmark_output_opt);
-#endif
     parser.process(app);
 
     component_gallery_requested = parser.isSet(component_gallery_opt);
@@ -773,17 +761,12 @@ auto main(int argc, char* argv[]) -> int {
     direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
     direct_mission_file = parser.value(mission_file_opt).trimmed();
     if (release_self_test) {
-      // Keep the packaged renderer check representative but bounded.  The
-      // full 650x650 campaign maps are gameplay/stress workloads and can take
-      // several minutes to load on virtualized macOS OpenGL runners.  This
-      // authored mission still exercises resource lookup, mission loading,
-      // world/entity creation, weather, structures, and presented gameplay
-      // frames without making a release smoke test depend on runner speed.
+
       direct_campaign_mission.clear();
       direct_mission_file =
           QStringLiteral(":/assets/missions/iron_sepulcher_watch.json");
     }
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
+
     bool benchmark_seconds_valid = false;
     runtime_benchmark_seconds =
         parser.value(benchmark_seconds_opt).toDouble(&benchmark_seconds_valid);
@@ -798,7 +781,6 @@ auto main(int argc, char* argv[]) -> int {
         qputenv("SOI_RUNTIME_BENCHMARK_OUTPUT", runtime_benchmark_output.toUtf8());
       }
     }
-#endif
 
     std::optional<Render::ShaderQuality> requested;
     if (parser.isSet(quality_opt)) {
@@ -883,10 +865,8 @@ auto main(int argc, char* argv[]) -> int {
   engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
   engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
-#endif
 
   QObject::connect(
       game_engine.get(),
@@ -1024,11 +1004,7 @@ auto main(int argc, char* argv[]) -> int {
               game_engine_ptr->start_campaign_mission(direct_campaign_mission);
             }
           };
-          // Connect before exposing GameView.  On fast render threads (notably
-          // macOS CI), changing visibility can initialize the renderer before
-          // this GUI-thread callback reaches its next statement.  The engine
-          // signal is emitted at the actual successful initialization point;
-          // GLView readiness remains an additional first-frame trigger.
+
           QObject::connect(game_engine_ptr,
                            &GameEngine::renderer_initialized_changed,
                            &app,
@@ -1164,17 +1140,10 @@ auto main(int argc, char* argv[]) -> int {
                          QGuiApplication::exit(17);
                          return;
                        }
-                       // Loading is not considered complete until the gameplay renderer
-                       // has presented enough frames to retire the first-frame overlay.
-                       // A static scene does not continuously schedule frames on macOS,
-                       // so drive that handshake while polling instead of waiting for
-                       // loading to finish before requesting the first update.
+
                        window->update();
                        if (!game_engine_ptr->release_self_test_mission_ready()) {
-                         // Every 10s: a runner we cannot attach to otherwise logs
-                         // nothing at all between the last asset line and the timeout,
-                         // which makes a stalled handshake indistinguishable from a
-                         // slow one.
+
                          if (++*polls % 40 == 0) {
                            qInfo().noquote()
                                << "SOI_MISSION_SELF_TEST: waiting -"
@@ -1202,9 +1171,7 @@ auto main(int argc, char* argv[]) -> int {
                          window->update();
                          return;
                        }
-                       // exit() only asks the loop to unwind; frames keep
-                       // swapping until it does, and each one would report the
-                       // verdict again.
+
                        if (*presented_frames > 3) {
                          return;
                        }
@@ -1216,13 +1183,6 @@ auto main(int argc, char* argv[]) -> int {
                        QGuiApplication::exit(0);
                      });
 
-    // The macOS runner is headless and reports "Apple Software Renderer", so
-    // every gameplay frame is rasterized on the CPU and costs ~90s there
-    // against ~25ms under llvmpipe here. This test needs five of them to retire
-    // the loading overlay and three more afterwards, so 180s expired with the
-    // load still progressing rather than stuck. The budget is a ceiling on a
-    // hang, sized for the slowest renderer any job runs on; SOI_LOADING_OVERLAY
-    // reports the real per-frame cost.
     QTimer::singleShot(
         1500000,
         &app,

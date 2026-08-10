@@ -4,8 +4,8 @@
 
 #include <memory>
 
-#include "../geom/arrow.h"
 #include "mesh.h"
+#include "render/geom/arrow.h"
 #include "texture.h"
 
 namespace Render::GL {

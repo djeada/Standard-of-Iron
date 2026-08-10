@@ -1,22 +1,20 @@
 #include "gl_view.h"
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QStringList>
-#endif
-#include <QImage>
 #include <QMetaObject>
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLFunctions>
 #include <QQuickWindow>
+#include <QStringList>
 #include <QSurfaceFormat>
 #include <qglobal.h>
 #include <qobject.h>
@@ -26,25 +24,20 @@
 #include <qquickframebufferobject.h>
 #include <qtmetamacros.h>
 
-#include <exception>
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include <algorithm>
 #include <deque>
+#include <exception>
 #include <numeric>
 #include <unordered_map>
-#endif
 #include <utility>
 
 #include "../app/core/game_engine.h"
 #include "../render/graphics_settings.h"
 #include "../render/i_render_backend.h"
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "../render/profiling/combat_animation_diagnostics.h"
 #include "../render/profiling/frame_continuity_analyzer.h"
 #include "../render/profiling/frame_profile.h"
-#endif
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 namespace {
 constexpr double k_runtime_benchmark_warmup_seconds = 2.0;
 constexpr std::uint64_t k_visibility_churn_window_frames = 120U;
@@ -70,9 +63,7 @@ auto average_ms(const std::vector<double>& samples) -> double {
          static_cast<double>(samples.size());
 }
 } // namespace
-#endif
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 struct GLView::GLRenderer::RuntimeContinuityProbe {
   struct CapturedFrame {
     std::uint64_t index{0U};
@@ -97,7 +88,6 @@ struct GLView::GLRenderer::RuntimeContinuityProbe {
   std::uint64_t soldier_visibility_churn{0U};
   std::uint64_t ultra_lod_culls{0U};
 };
-#endif
 
 GLView::GLView() {
   setMirrorVertically(true);
@@ -156,7 +146,6 @@ void GLView::notify_renderer_ready() {
 GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engine)
     : m_view(std::move(view))
     , m_engine(std::move(engine)) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   bool valid = false;
   m_benchmark_seconds =
       qEnvironmentVariable("SOI_RUNTIME_BENCHMARK_SECONDS").toDouble(&valid);
@@ -168,15 +157,12 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
     m_continuity_probe = std::make_unique<RuntimeContinuityProbe>();
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(true);
   }
-#endif
 }
 
 GLView::GLRenderer::~GLRenderer() {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   if (m_continuity_probe != nullptr) {
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(false);
   }
-#endif
 }
 
 void GLView::GLRenderer::render() {
@@ -206,7 +192,6 @@ void GLView::GLRenderer::render() {
     }
     m_last_frame_time = now;
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto const frame_work_start = std::chrono::steady_clock::now();
     m_engine->update(dt);
     auto const update_end = std::chrono::steady_clock::now();
@@ -219,10 +204,6 @@ void GLView::GLRenderer::render() {
         std::chrono::duration<double, std::milli>(update_end - frame_work_start)
             .count(),
         std::chrono::duration<double, std::milli>(render_end - update_end).count());
-#else
-    m_engine->update(dt);
-    m_engine->render(m_size.width(), m_size.height());
-#endif
 
     if (m_engine->consume_screenshot_request()) {
       if (auto* fbo = framebufferObject()) {
@@ -245,7 +226,6 @@ void GLView::GLRenderer::render() {
   update();
 }
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 void GLView::GLRenderer::observe_runtime_continuity() {
   if (m_continuity_probe == nullptr || m_engine == nullptr || m_engine->is_loading() ||
       !m_engine->is_campaign_mission() || m_size.isEmpty()) {
@@ -455,7 +435,6 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
   }
   QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 }
-#endif
 
 auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
     -> QOpenGLFramebufferObject* {

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <optional>
 
-#include "../part_graph.h"
+#include "render/creature/part_graph.h"
 
 namespace Render::Creature::Pipeline {
 

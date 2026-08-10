@@ -5,10 +5,10 @@
 #include <cstdint>
 #include <vector>
 
-#include "../creature/pipeline/creature_render_state.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../gl/humanoid/humanoid_types.h"
-#include "../horse/horse_spec.h"
+#include "render/creature/pipeline/creature_render_state.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/horse/horse_spec.h"
 
 namespace Render::GL {
 struct DrawContext;

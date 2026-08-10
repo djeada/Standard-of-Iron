@@ -9,9 +9,9 @@
 #include <cstdint>
 #include <span>
 
-#include "../creature/spec.h"
 #include "horse_renderer_base.h"
 #include "horse_source_asset.h"
+#include "render/creature/spec.h"
 
 namespace Render::GL {
 class ISubmitter;

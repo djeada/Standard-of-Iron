@@ -1,8 +1,8 @@
 #include "primitive_flush_pass.h"
 
-#include "../draw_queue.h"
-#include "../primitive_batch.h"
 #include "frame_context.h"
+#include "render/draw_queue.h"
+#include "render/primitive_batch.h"
 
 namespace Render::Pass {
 

@@ -2,12 +2,12 @@
 
 #include <array>
 
-#include "../../humanoid/style_palette.h"
-#include "../attachment_builder.h"
-#include "../equipment_archetype_helpers.h"
-#include "../generated_equipment.h"
-#include "../humanoid_attachment_archetype.h"
 #include "helmet_alignment.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_archetype_helpers.h"
+#include "render/equipment/generated_equipment.h"
+#include "render/equipment/humanoid_attachment_archetype.h"
+#include "render/humanoid/style_palette.h"
 
 namespace Render::GL {
 

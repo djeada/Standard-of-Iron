@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "../sepulcher/palette.h"
+#include "render/entity/nations/sepulcher/palette.h"
 
 namespace Render::GL::Carthage {
 

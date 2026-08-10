@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <span>
 
-#include "../static_attachment_spec.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::Creature {
 struct StaticAttachmentSpec;

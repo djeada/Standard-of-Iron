@@ -2,10 +2,10 @@
 
 #include <QVector3D>
 
-#include "../gl/humanoid/humanoid_types.h"
 #include "animation/attack_pose_manifest.h"
 #include "animation/pose_manifest.h"
 #include "pose_primitives.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL {
 

@@ -2,6 +2,9 @@
 
 namespace Render::GL {
 
-void install_gl_debug_logger();
+enum class WorldRenderMode {
+  Rts,
+  Rpg,
+};
 
 } // namespace Render::GL

@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "../game/map/terrain.h"
+#include "game/map/terrain.h"
 #include "ground/scatter_runtime.h"
 #include "i_render_pass.h"
 

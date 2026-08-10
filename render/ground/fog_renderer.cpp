@@ -11,8 +11,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "../../game/map/visibility_service.h"
-#include "../scene_renderer.h"
+#include "game/map/visibility_service.h"
+#include "render/scene_renderer.h"
 #include "visibility_mask_encoder.h"
 
 namespace Render::GL {

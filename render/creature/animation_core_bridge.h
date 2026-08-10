@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../game/core/component.h"
 #include "animation/combat_manifest.h"
+#include "game/core/component.h"
 
 namespace Render::Creature {
 

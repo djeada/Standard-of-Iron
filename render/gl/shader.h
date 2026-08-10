@@ -85,16 +85,4 @@ private:
   auto is_uniform_dirty(GLint location, const T& value) -> bool;
 };
 
-struct ShaderBindAuditEntry {
-  QString name;
-  std::uint64_t bind_count = 0;
-};
-
-void set_shader_bind_audit_enabled(bool enabled);
-[[nodiscard]] auto shader_bind_audit_enabled() -> bool;
-void reset_shader_bind_audit();
-[[nodiscard]] auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry>;
-[[nodiscard]] auto classify_shader_for_audit(const QString& name) -> QString;
-[[nodiscard]] auto format_shader_bind_audit() -> QStringList;
-
 } // namespace Render::GL

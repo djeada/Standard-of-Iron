@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../../../utils/resource_utils.h"
+#include "utils/resource_utils.h"
 
 namespace Render::GL::Nation {
 namespace {

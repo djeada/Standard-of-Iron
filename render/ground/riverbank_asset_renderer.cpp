@@ -11,12 +11,12 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/visibility_service.h"
-#include "../gl/buffer.h"
-#include "../scene_renderer.h"
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/visibility_service.h"
 #include "gl/resources.h"
 #include "map/terrain.h"
+#include "render/gl/buffer.h"
+#include "render/scene_renderer.h"
 #include "riverbank_asset_gpu.h"
 #include "scatter_runtime.h"
 
@@ -234,10 +234,6 @@ void RiverbankAssetRenderer::generate_asset_instances() {
   asset_instance_count = asset_instances.size();
   asset_instances_dirty = true;
   m_asset_state.visibility_dirty = true;
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  qDebug() << "Generated" << asset_instance_count << "riverbank assets";
-#endif
 }
 
 } // namespace Render::GL

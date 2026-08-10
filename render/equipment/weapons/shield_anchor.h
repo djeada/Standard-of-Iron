@@ -3,8 +3,8 @@
 #include <QMatrix4x4>
 #include <QVector4D>
 
-#include "../../gl/humanoid/humanoid_types.h"
-#include "../../humanoid/skeleton.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/humanoid/skeleton.h"
 
 namespace Render::GL {
 

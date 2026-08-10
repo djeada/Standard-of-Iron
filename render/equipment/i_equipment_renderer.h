@@ -3,8 +3,8 @@
 #include <atomic>
 #include <cstdint>
 
-#include "../humanoid/humanoid_renderer_base.h"
-#include "../palette.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/palette.h"
 
 namespace Render::GL {
 

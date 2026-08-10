@@ -3,12 +3,14 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../decoration_gpu.h"
+#include "game/map/scatter/spawn_validator.h"
+#include "game/map/terrain.h"
 #include "i_scatter_pass.h"
+#include "render/decoration_gpu.h"
 
 namespace Render::GL {
 class Buffer;
@@ -43,7 +45,25 @@ public:
   }
 
 private:
+  struct GrassScatterContext {
+    const Game::Map::TerrainScatterProfile& scatter_profile;
+    const Render::Ground::SpawnTerrainCache& terrain_cache;
+    float tile_safe;
+    int chunk_size;
+    std::size_t cluster_count_per_chunk;
+    std::size_t background_blades_per_cell;
+    const std::function<bool(float, float, std::uint32_t&)>& add_grass_blade;
+    const std::function<int(Game::Map::TerrainType,
+                            Game::Map::TerrainType,
+                            Game::Map::TerrainType,
+                            Game::Map::TerrainType)>& quad_section;
+  };
+
   void generate_grass_instances();
+
+  void scatter_grass_clusters(const GrassScatterContext& ctx);
+
+  void scatter_background_grass(const GrassScatterContext& ctx);
 
   int m_width = 0;
   int m_height = 0;

@@ -7,9 +7,9 @@
 #include <cstddef>
 #include <vector>
 
-#include "../shader_cache.h"
 #include "mesh_buffers.h"
 #include "pipeline_interface.h"
+#include "render/gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 

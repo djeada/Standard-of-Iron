@@ -2,16 +2,12 @@
 
 #include <QPointer>
 #include <QQuickFramebufferObject>
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include <QString>
-#endif
 
 #include <chrono>
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include <cstdint>
 #include <memory>
 #include <vector>
-#endif
 
 class GameEngine;
 
@@ -56,7 +52,6 @@ private:
     bool m_ready_reported = false;
     QSize m_size;
     std::chrono::steady_clock::time_point m_last_frame_time{};
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     struct RuntimeContinuityProbe;
     std::chrono::steady_clock::time_point m_benchmark_ready_time{};
     std::chrono::steady_clock::time_point m_benchmark_previous_frame_time{};
@@ -76,6 +71,5 @@ private:
                                    double update_ms,
                                    double render_ms);
     void finish_runtime_benchmark();
-#endif
   };
 };

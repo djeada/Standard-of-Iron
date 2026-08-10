@@ -7,9 +7,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../creature/movement_state.h"
-#include "../creature/pose_intent.h"
-#include "../gl/humanoid/humanoid_types.h"
+#include "render/creature/movement_state.h"
+#include "render/creature/pose_intent.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::Profiling {
 

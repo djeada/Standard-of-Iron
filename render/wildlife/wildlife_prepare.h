@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../creature/animation_state_components.h"
-#include "../creature/pipeline/unit_visual_spec.h"
+#include "render/creature/animation_state_components.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
 #include "wildlife_variant.h"
 
 namespace Render::GL {

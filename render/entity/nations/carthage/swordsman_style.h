@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../swordsman_renderer_common.h"
+#include "render/entity/swordsman_renderer_common.h"
 
 namespace Render::GL::Carthage {
 

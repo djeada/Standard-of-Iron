@@ -6,10 +6,10 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../gl/texture.h"
-#include "../i_render_pass.h"
-#include "../terrain_scene_types.h"
+#include "game/map/terrain.h"
+#include "render/gl/texture.h"
+#include "render/i_render_pass.h"
+#include "render/terrain_scene_types.h"
 
 namespace Render::GL {
 class Mesh;

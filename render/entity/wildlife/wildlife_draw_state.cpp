@@ -4,8 +4,8 @@
 #include <cmath>
 #include <unordered_map>
 
-#include "../../../game/core/component.h"
-#include "../../../game/core/entity.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
 
 namespace Render::GL::Wildlife {
 

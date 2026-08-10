@@ -7,15 +7,15 @@
 #include <cmath>
 #include <cstdint>
 
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
-#include "../../game/systems/resource_stockpile.h"
-#include "../geom/stone.h"
-#include "../gl/primitives.h"
-#include "../submitter.h"
 #include "building_decay.h"
 #include "building_render_common.h"
 #include "building_state.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/systems/resource_stockpile.h"
+#include "render/geom/stone.h"
+#include "render/gl/primitives.h"
+#include "render/submitter.h"
 
 namespace Render::GL {
 namespace {

@@ -8,8 +8,8 @@
 #include <array>
 #include <span>
 
-#include "../creature/part_graph.h"
 #include "humanoid_full_builder.h"
+#include "render/creature/part_graph.h"
 #include "skeleton.h"
 
 namespace Render::GL {

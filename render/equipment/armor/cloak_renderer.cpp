@@ -15,11 +15,12 @@
 #include <string>
 #include <vector>
 
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../static_attachment_spec.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/gl/primitives.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/static_attachment_spec.h"
 #include "torso_local_archetype_utils.h"
 
 namespace Render::GL {
@@ -209,11 +210,13 @@ auto make_cloak_shoulder_surface() -> ClothSurface {
 }
 
 auto shared_cloak_meshes_impl() -> CloakMeshes {
-  static std::unique_ptr<Mesh> const back_mesh =
-      make_double_sided_cloth_mesh(make_cloak_back_surface());
-  static std::unique_ptr<Mesh> const shoulder_mesh =
-      make_double_sided_cloth_mesh(make_cloak_shoulder_surface());
-  return {back_mesh.get(), shoulder_mesh.get()};
+  auto& cache = SharedGeometryCache::instance();
+  return {cache.get_or_build(
+              geometry_key("equipment/cloak/back"),
+              [] { return make_double_sided_cloth_mesh(make_cloak_back_surface()); }),
+          cache.get_or_build(geometry_key("equipment/cloak/shoulder"), [] {
+            return make_double_sided_cloth_mesh(make_cloak_shoulder_surface());
+          })};
 }
 
 auto make_cloak_placement(const CloakConfig& config,

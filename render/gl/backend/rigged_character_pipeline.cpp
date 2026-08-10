@@ -14,15 +14,15 @@
 #include <cstring>
 #include <vector>
 
-#include "../../bone_palette_arena.h"
-#include "../../draw_queue.h"
-#include "../../rigged_mesh.h"
-#include "../backend.h"
-#include "../buffer.h"
-#include "../platform_gl.h"
-#include "../shader_cache.h"
-#include "../texture.h"
-#include "../ubo_bindings.h"
+#include "render/bone_palette_arena.h"
+#include "render/draw_commands.h"
+#include "render/gl/backend.h"
+#include "render/gl/buffer.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/shader_cache.h"
+#include "render/gl/texture.h"
+#include "render/gl/ubo_bindings.h"
+#include "render/rigged_mesh.h"
 #include "utils/resource_utils.h"
 
 namespace Render::GL::BackendPipelines {

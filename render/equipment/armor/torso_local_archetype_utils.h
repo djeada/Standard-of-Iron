@@ -7,7 +7,7 @@
 #include <cmath>
 #include <string>
 
-#include "../../humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 
 namespace Render::GL {
 

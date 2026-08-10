@@ -9,10 +9,10 @@
 #include <span>
 #include <string_view>
 
-#include "../archetype_variant_table.h"
-#include "../part_graph.h"
-#include "../render_request.h"
-#include "../skeleton.h"
+#include "render/creature/archetype_variant_table.h"
+#include "render/creature/part_graph.h"
+#include "render/creature/render_request.h"
+#include "render/creature/skeleton.h"
 
 namespace Render::GL {
 struct DrawContext;

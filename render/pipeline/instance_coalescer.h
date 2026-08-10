@@ -9,7 +9,7 @@
 #include <span>
 #include <vector>
 
-#include "../draw_part.h"
+#include "render/draw_part.h"
 
 namespace Render::GL {
 struct DrawPartCmd;

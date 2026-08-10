@@ -13,9 +13,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../creature/spec.h"
-#include "../../static_attachment_spec.h"
-#include "../render_request.h"
+#include "render/creature/render_request.h"
+#include "render/creature/spec.h"
+#include "render/static_attachment_spec.h"
 #include "unit_visual_spec.h"
 
 namespace Render::Creature {

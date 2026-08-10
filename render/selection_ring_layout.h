@@ -8,8 +8,8 @@
 #include <span>
 #include <vector>
 
-#include "../game/core/component.h"
-#include "../game/units/spawn_type.h"
+#include "game/core/component.h"
+#include "game/units/spawn_type.h"
 #include "humanoid/unit_layout_spacing.h"
 
 namespace Render::GL {

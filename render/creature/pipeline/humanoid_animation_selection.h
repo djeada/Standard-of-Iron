@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <optional>
 
-#include "../pose_intent.h"
+#include "render/creature/pose_intent.h"
 #include "unit_visual_spec.h"
 
 namespace Render::GL {

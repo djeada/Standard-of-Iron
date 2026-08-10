@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../gl/humanoid/humanoid_constants.h"
 #include "animation/rig/humanoid_proportions.h"
+#include "render/gl/humanoid/humanoid_constants.h"
 #include "skeleton.h"
 
 namespace Render::Humanoid {

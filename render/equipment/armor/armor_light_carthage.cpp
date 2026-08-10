@@ -11,17 +11,17 @@
 #include <numbers>
 #include <string>
 
-#include "../../geom/parts.h"
-#include "../../geom/transforms.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/mesh_helpers.h"
-#include "../../humanoid/style_palette.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
 #include "animation/rig/humanoid_proportions.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/geom/parts.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/humanoid/humanoid_math.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/mesh_helpers.h"
+#include "render/humanoid/style_palette.h"
 #include "torso_local_archetype_utils.h"
 
 namespace Render::GL {

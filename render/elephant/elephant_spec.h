@@ -8,10 +8,10 @@
 #include <array>
 #include <cstdint>
 
-#include "../creature/spec.h"
-#include "../gl/humanoid/humanoid_types.h"
 #include "elephant_renderer_base.h"
 #include "elephant_source_asset.h"
+#include "render/creature/spec.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL {
 class ISubmitter;

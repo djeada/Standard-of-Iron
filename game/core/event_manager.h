@@ -35,11 +35,7 @@ struct EventStats {
 class EventManager {
 public:
   static auto instance() -> EventManager& {
-    // Registries keep scoped subscriptions until their own static/session
-    // teardown.  Keep the bus alive for the lifetime of the process so those
-    // late unsubscribe calls never try to lock a destroyed mutex (notably on
-    // libc++/macOS, which reports that as `mutex lock failed: Invalid
-    // argument`).  The operating system reclaims this small singleton at exit.
+
     static auto* inst = new EventManager();
     return *inst;
   }

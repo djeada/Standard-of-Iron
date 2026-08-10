@@ -3,9 +3,9 @@
 #include <span>
 #include <string_view>
 
-#include "../creature/archetype_registry.h"
 #include "equipment_archetype_resolver.h"
 #include "equipment_registry.h"
+#include "render/creature/archetype_registry.h"
 
 namespace Render::GL {
 
