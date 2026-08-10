@@ -19,11 +19,7 @@
       "duration": 3.4,
       "focus": {
         "mode": "point",
-        "point": [
-          -14,
-          0.0,
-          0
-        ],
+        "point": [-14, 0.0, 0],
         "smoothing": 0.6
       },
       "camera": [
@@ -91,11 +87,7 @@
       "duration": 2.4,
       "focus": {
         "mode": "point",
-        "point": [
-          14.0,
-          0.0,
-          3.6
-        ],
+        "point": [14.0, 0.0, 3.6],
         "smoothing": 0.4
       },
       "camera": [
@@ -169,11 +161,7 @@
       "shake": 0.012,
       "focus": {
         "mode": "point",
-        "point": [
-          2.6,
-          0.0,
-          8.2
-        ],
+        "point": [2.6, 0.0, 8.2],
         "smoothing": 0.15
       },
       "camera": [
@@ -247,11 +235,7 @@
       "duration": 3.2,
       "focus": {
         "mode": "point",
-        "point": [
-          -0.5,
-          0.0,
-          9.6
-        ],
+        "point": [-0.5, 0.0, 9.6],
         "smoothing": 0.2
       },
       "camera": [
@@ -325,11 +309,7 @@
       "shake": 0.012,
       "focus": {
         "mode": "point",
-        "point": [
-          -1.5,
-          0.0,
-          10.1
-        ],
+        "point": [-1.5, 0.0, 10.1],
         "smoothing": 0.15
       },
       "camera": [
@@ -367,11 +347,7 @@
       "shake": 0.02,
       "focus": {
         "mode": "point",
-        "point": [
-          -2.5,
-          0.0,
-          9.0
-        ],
+        "point": [-2.5, 0.0, 9.0],
         "smoothing": 0.15
       },
       "camera": [
@@ -408,11 +384,7 @@
       "duration": 3.8,
       "focus": {
         "mode": "point",
-        "point": [
-          -1.0,
-          0.0,
-          6.0
-        ],
+        "point": [-1.0, 0.0, 6.0],
         "smoothing": 0.3
       },
       "camera": [
@@ -448,11 +420,7 @@
       "duration": 4.6,
       "focus": {
         "mode": "point",
-        "point": [
-          -0.5,
-          0.0,
-          6.0
-        ],
+        "point": [-0.5, 0.0, 6.0],
         "smoothing": 0.6
       },
       "camera": [

@@ -261,7 +261,7 @@ single-frame jump over 60/255, or more than three jumps over 25/255 inside one s
 and prints the worst jump on every successful run, so this cannot regress quietly.
 `--allow-flashes` is the deliberate override.
 
-**Let the camera settle into the cut.** A key's `ease` describes the blend *into* it, so
+**Let the camera settle into the cut.** A key's `ease` describes the blend _into_ it, so
 the last camera key of a shot decides whether the move is still at full speed when the
 join lands. `linear` there means the frame is still travelling when the next shot starts
 underneath it, and two moving frames dissolving through each other is most of what reads

@@ -4377,8 +4377,8 @@
             "player_id": 1,
             "tier": "marching_camp",
             "walls_only": true,
-            "x": 36.0,
-            "z": 174.0
+            "x": 36,
+            "z": 174
         },
         {
             "authored": true,
@@ -4390,8 +4390,8 @@
             "on_hill": false,
             "player_id": 2,
             "tier": "marching_camp",
-            "x": 376.0,
-            "z": 44.0
+            "x": 376,
+            "z": 44
         },
         {
             "authored": true,
@@ -4932,7 +4932,7 @@
             "player_id": 2,
             "type": "roman_legion_organizer",
             "x": 282.25,
-            "z": 87.0
+            "z": 87
         },
         {
             "max_population": -1,
@@ -4940,7 +4940,7 @@
             "player_id": 3,
             "type": "roman_veteran_consul",
             "x": 416.55,
-            "z": 601.0
+            "z": 601
         }
     ],
     "starting_resources": {
@@ -5078,37 +5078,37 @@
             "authored": true,
             "nation": "carthage",
             "player_id": 1,
-            "rotation": 90.0,
+            "rotation": 90,
             "type": "wall_gate",
-            "x": 58.0,
-            "z": 174.0
+            "x": 58,
+            "z": 174
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0.0,
+            "rotation": 0,
             "type": "wall_gate",
-            "x": 392.0,
-            "z": 22.0
+            "x": 392,
+            "z": 22
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0.0,
+            "rotation": 0,
             "type": "wall_gate",
-            "x": 358.0,
-            "z": 66.0
+            "x": 358,
+            "z": 66
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 90.0,
+            "rotation": 90,
             "type": "wall_gate",
-            "x": 350.0,
-            "z": 56.0
+            "x": 350,
+            "z": 56
         },
         {
             "authored": true,
@@ -5116,23 +5116,23 @@
             "player_id": 2,
             "type": "defense_tower",
             "x": 358.66,
-            "z": 27.0
+            "z": 27
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "defense_tower",
-            "x": 402.0,
-            "z": 22.0
+            "x": 402,
+            "z": 22
         },
         {
             "authored": true,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "defense_tower",
-            "x": 402.0,
-            "z": 66.0
+            "x": 402,
+            "z": 66
         },
         {
             "authored": true,
@@ -5140,7 +5140,7 @@
             "player_id": 2,
             "type": "defense_tower",
             "x": 360.39,
-            "z": 60.0
+            "z": 60
         },
         {
             "authored": true,
@@ -5148,7 +5148,7 @@
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
-            "x": 375.0,
+            "x": 375,
             "z": 35.83
         },
         {
@@ -5165,7 +5165,7 @@
             "player_id": 2,
             "type": "home",
             "x": 361.7,
-            "z": 58.3
+            "z": 58.300000000000004
         },
         {
             "authored": true,
@@ -5181,7 +5181,7 @@
             "player_id": 2,
             "type": "home",
             "x": 390.3,
-            "z": 58.3
+            "z": 58.300000000000004
         },
         {
             "authored": true,
@@ -5351,152 +5351,204 @@
         {
             "authored": true,
             "end": [
-                58.0,
-                156.0
+                58,
+                156
             ],
             "nation": "carthage",
             "player_id": 1,
             "start": [
-                14.0,
-                156.0
+                14,
+                156
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                58.0,
-                170.0
+                58,
+                170
             ],
             "nation": "carthage",
             "player_id": 1,
             "start": [
-                58.0,
-                156.0
+                58,
+                156
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                58.0,
-                192.0
+                58,
+                192
             ],
             "nation": "carthage",
             "player_id": 1,
             "start": [
-                58.0,
-                178.0
+                58,
+                178
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                388.0,
-                22.0
+                388,
+                22
             ],
             "nation": "roman_republic",
             "player_id": 2,
             "start": [
-                350.0,
-                22.0
+                350,
+                22
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                402.0,
-                22.0
+                402,
+                22
             ],
             "nation": "roman_republic",
             "player_id": 2,
             "start": [
-                396.0,
-                22.0
+                396,
+                22
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                402.0,
-                66.0
+                402,
+                66
             ],
             "nation": "roman_republic",
             "player_id": 2,
             "start": [
-                402.0,
-                22.0
+                402,
+                22
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                354.0,
-                66.0
+                354,
+                66
             ],
             "nation": "roman_republic",
             "player_id": 2,
             "start": [
-                350.0,
-                66.0
+                350,
+                66
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                402.0,
-                66.0
+                402,
+                66
             ],
             "nation": "roman_republic",
             "player_id": 2,
             "start": [
-                362.0,
-                66.0
+                362,
+                66
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                350.0,
-                52.0
+                350,
+                52
             ],
             "nation": "roman_republic",
             "player_id": 2,
             "start": [
-                350.0,
-                22.0
+                350,
+                22
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
         },
         {
             "authored": true,
             "end": [
-                350.0,
-                66.0
+                350,
+                66
             ],
             "nation": "roman_republic",
             "player_id": 2,
             "start": [
-                350.0,
-                60.0
+                350,
+                60
             ],
             "type": "wall_segment",
-            "width": 2.0
+            "width": 2
+        },
+        {
+            "end": [
+                14,
+                152
+            ],
+            "player_id": 1,
+            "start": [
+                14,
+                156
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "end": [
+                0,
+                152
+            ],
+            "player_id": 1,
+            "start": [
+                14,
+                152
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "end": [
+                58,
+                198
+            ],
+            "player_id": 1,
+            "start": [
+                58,
+                192
+            ],
+            "type": "wall_segment",
+            "width": 2
+        },
+        {
+            "end": [
+                0,
+                198
+            ],
+            "player_id": 1,
+            "start": [
+                58,
+                198
+            ],
+            "type": "wall_segment",
+            "width": 2
         }
     ],
     "terrain": [
@@ -7251,32 +7303,28 @@
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
-            "scale": 1.0,
+            "scale": 1,
             "type": "tent",
-            "x": 25.0,
+            "x": 25,
             "z": 182.1
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
-            "scale": 1.0,
+            "scale": 1,
             "type": "tent",
             "x": 33.8,
             "z": 184.8
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
-            "scale": 1.0,
+            "scale": 1,
             "type": "tent",
             "x": 42.6,
-            "z": 183.0
+            "z": 183
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
-            "scale": 1.0,
+            "scale": 1,
             "type": "tent",
             "x": 49.64,
             "z": 178.5
@@ -7285,70 +7333,73 @@
             "authored_camp": true,
             "intensity": 1.2,
             "persistent": true,
-            "radius": 3.8,
+            "radius": 3.8000000000000003,
+            "scale": 1,
             "type": "firecamp",
-            "x": 36.0,
-            "z": 176.7
+            "x": 36,
+            "z": 176.70000000000002
         },
         {
             "authored_camp": true,
-            "intensity": 0.95,
+            "intensity": 0.9500000000000001,
             "persistent": true,
-            "radius": 3.0,
+            "radius": 3,
+            "scale": 1,
             "type": "firecamp",
-            "x": 23.9,
+            "x": 23.900000000000002,
             "z": 171.3
         },
         {
             "authored_camp": true,
+            "scale": 1,
             "type": "supply_cart",
             "x": 40.4,
             "z": 165.9
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
+            "scale": 1,
             "type": "weapon_rack",
             "x": 30.5,
-            "z": 165.0
+            "z": 165
         },
         {
             "authored_camp": true,
             "intensity": 1.1,
             "persistent": true,
             "radius": 3.4,
+            "scale": 1,
             "type": "firecamp",
-            "x": 376.0,
-            "z": 44.0
+            "x": 376,
+            "z": 44
         },
         {
             "authored_camp": true,
             "intensity": 0.9,
             "persistent": true,
             "radius": 3.4,
+            "scale": 1,
             "type": "firecamp",
             "x": 368.2,
             "z": 48.4
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
+            "scale": 1,
             "type": "weapon_rack",
             "x": 383.8,
             "z": 48.4
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
-            "scale": 1.0,
+            "scale": 1,
             "type": "tent",
             "x": 356.5,
             "z": 39.6
         },
         {
             "authored_camp": true,
-            "rotation": 0.0,
-            "scale": 1.0,
+            "scale": 1,
             "type": "tent",
             "x": 395.5,
             "z": 39.6
