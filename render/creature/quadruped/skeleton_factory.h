@@ -5,7 +5,7 @@
 #include <string_view>
 #include <vector>
 
-#include "../skeleton.h"
+#include "render/creature/skeleton.h"
 
 namespace Render::Creature::Quadruped {
 

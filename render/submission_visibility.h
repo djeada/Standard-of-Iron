@@ -6,7 +6,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "../game/map/render_visibility_rules.h"
+#include "game/map/render_visibility_rules.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

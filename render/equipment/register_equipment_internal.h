@@ -11,14 +11,14 @@
 #include <cstdint>
 #include <vector>
 
-#include "../horse/dimensions.h"
-#include "../horse/horse_spec.h"
-#include "../humanoid/humanoid_spec.h"
-#include "../humanoid/skeleton.h"
 #include "armor/shoulder_cover_archetype.h"
 #include "equipment_registry.h"
 #include "horse_equipment_archetype.h"
 #include "humanoid_equipment_archetype.h"
+#include "render/horse/dimensions.h"
+#include "render/horse/horse_spec.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
 
 namespace Render::GL::EquipmentRegistration {
 

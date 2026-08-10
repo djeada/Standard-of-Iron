@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <mutex>
 
-#include "../game/core/component.h"
+#include "game/core/component.h"
 
 namespace Render {
 

@@ -12,11 +12,11 @@
 #include <array>
 #include <cstring>
 
-#include "../../draw_queue.h"
-#include "../../rigged_mesh.h"
-#include "../buffer.h"
-#include "../gl_capabilities.h"
-#include "../shader_cache.h"
+#include "render/draw_commands.h"
+#include "render/gl/buffer.h"
+#include "render/gl/gl_capabilities.h"
+#include "render/gl/shader_cache.h"
+#include "render/rigged_mesh.h"
 #include "utils/resource_utils.h"
 
 namespace Render::GL::BackendPipelines {
@@ -515,31 +515,6 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
 
   m_stats.dispatched_instances = static_cast<std::uint32_t>(count);
   m_stats.candidate_triangles = static_cast<std::uint32_t>(candidate_triangles);
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-
-  ++m_readback_counter;
-  if (qEnvironmentVariableIsSet("SOI_CULL_STATS") && m_readback_counter % 120U == 1U) {
-    std::array<GLuint, k_command_words> readback{};
-    auto* core = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(
-        QOpenGLContext::currentContext());
-    if (core != nullptr) {
-      glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_command_buffer);
-      core->glGetBufferSubData(
-          GL_SHADER_STORAGE_BUFFER,
-          0,
-          static_cast<GLsizeiptr>(readback.size() * sizeof(GLuint)),
-          readback.data());
-      glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
-    m_stats.submitted_triangles = readback[0] / 3U;
-    m_stats.overflowed = readback[6] != 0U;
-    if (m_stats.overflowed) {
-      qWarning() << "RiggedCullPipeline: compacted index buffer overflowed;"
-                 << readback[5] << "survivors vs capacity" << m_out_capacity_triangles;
-    }
-  }
-#endif
 
   GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {

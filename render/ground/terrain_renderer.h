@@ -5,15 +5,18 @@
 
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../draw_queue.h"
-#include "../gl/texture.h"
-#include "../i_render_pass.h"
-#include "../world_chunk.h"
+#include "game/map/terrain.h"
+#include "render/draw_commands.h"
+#include "render/gl/mesh.h"
+#include "render/gl/texture.h"
+#include "render/i_render_pass.h"
+#include "render/world_chunk.h"
 
 namespace Render::GL {
 class Buffer;
@@ -38,6 +41,102 @@ public:
 
 private:
   void build_meshes();
+
+  // Phases of build_meshes, split out so each one can be read on its own.
+  // How close every hill tile is to an entrance, smoothed into a 0..1 ramp the
+  // shader uses to flatten the approach. Empty when the map has no entrances.
+  [[nodiscard]] auto compute_hill_entry_weights(
+      const std::vector<float>& height_data) const -> std::vector<float>;
+  // How close every tile is to the foot of a hill or mountain, weighted by the
+  // local height change, so the skirt around a feature can be shaded apart.
+  [[nodiscard]] auto compute_feature_foot_weights(
+      const std::vector<float>& height_data) const -> std::vector<float>;
+  // Edge-aware normal blur: flat ground is smoothed hard, ridges keep their
+  // original face normals so they stay crisp.
+  void smooth_terrain_normals(const std::vector<float>& height_data,
+                              const std::vector<QVector3D>& face_normals,
+                              std::vector<QVector3D>& normals,
+                              float min_height,
+                              float height_range) const;
+  [[nodiscard]] auto
+  make_chunk_params(const Game::Map::TerrainSurfaceProfile& surface_profile,
+                    const Game::Map::ClimateProfile& climate_profile,
+                    Game::Map::TerrainType chunk_type,
+                    float tint) const -> TerrainChunkParams;
+
+  // One terrain-section's worth of geometry inside a chunk, accumulated while
+  // the chunk's quads are walked. `remap` keeps the section's vertices shared
+  // between the quads that touch them.
+  struct SectionData {
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::unordered_map<int, unsigned int> remap;
+    float height_sum = 0.0F;
+    int height_count = 0;
+    QVector3D normal_sum = QVector3D(0, 0, 0);
+    float slope_sum = 0.0F;
+    float height_var_sum = 0.0F;
+    int stat_count = 0;
+
+    float ao_sum = 0.0F;
+    int ao_count = 0;
+    float curvature_sum = 0.0F;
+    int curvature_count = 0;
+    float entry_sum = 0.0F;
+    float entry_peak = 0.0F;
+    int entry_count = 0;
+    QVector3D bounds_min{std::numeric_limits<float>::max(),
+                         std::numeric_limits<float>::max(),
+                         std::numeric_limits<float>::max()};
+    QVector3D bounds_max{std::numeric_limits<float>::lowest(),
+                         std::numeric_limits<float>::lowest(),
+                         std::numeric_limits<float>::lowest()};
+  };
+
+  // Everything the per-chunk mesh emitter reads: the resolved vertex fields and
+  // the samplers that interpolate them between grid points.
+  struct TerrainMeshBuild {
+    const std::vector<QVector3D>& positions;
+    const std::vector<QVector3D>& normals;
+    const std::vector<float>& height_data;
+    const std::vector<float>& feature_foot_weight;
+    const std::vector<float>& entry_weight;
+    const Game::Map::TerrainSurfaceProfile& surface_profile;
+    const Game::Map::ClimateProfile& climate_profile;
+    const std::function<float(float, float)>& sample_height_at;
+    const std::function<float(float, float)>& sample_entry_at;
+    const std::function<float(float, float)>& sample_feature_foot_at;
+    const std::function<float(int, int)>& sample_curvature_magnitude_at;
+    const std::function<QVector3D(float, float)>& normal_from_heights_at;
+    const std::function<int(Game::Map::TerrainType,
+                            Game::Map::TerrainType,
+                            Game::Map::TerrainType,
+                            Game::Map::TerrainType)>& quad_section;
+    float half_width;
+    float half_height;
+    float min_h;
+    float height_range;
+  };
+
+  // Builds the meshes for one chunk of the terrain grid, one per terrain
+  // section, and appends them to m_chunks.
+  void emit_terrain_chunk(const TerrainMeshBuild& build,
+                          int chunk_x,
+                          int chunk_z,
+                          int chunk_max_x,
+                          int chunk_max_z,
+                          std::size_t& total_triangles);
+  // Turns one finished section into a ChunkMesh: averaged colour, shader
+  // parameters and bounds.
+  void finish_chunk_section(const TerrainMeshBuild& build,
+                            const SectionData& section,
+                            int section_index,
+                            int chunk_x,
+                            int chunk_z,
+                            int chunk_max_x,
+                            int chunk_max_z,
+                            std::size_t& total_triangles);
+
   auto update_height_texture() -> TerrainSurfaceCmd::HeightResources;
   [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
 

@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "../gl/buffer.h"
+#include "render/gl/buffer.h"
 
 namespace Render::Ground::Scatter {
 

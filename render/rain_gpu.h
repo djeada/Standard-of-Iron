@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "../game/map/map_definition.h"
+#include "game/map/map_definition.h"
 
 namespace Render::GL {
 

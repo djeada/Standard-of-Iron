@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../game/map/terrain_service.h"
+#include "game/map/terrain_service.h"
 #include "ground/ambient_fog_renderer.h"
 #include "ground/biome_renderer.h"
 #include "ground/bridge_renderer.h"

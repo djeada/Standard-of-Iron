@@ -2,7 +2,7 @@
 
 #include <QVector3D>
 
-#include "../../scene_renderer.h"
+#include "render/scene_renderer.h"
 
 namespace Render::Creature::Pipeline {
 

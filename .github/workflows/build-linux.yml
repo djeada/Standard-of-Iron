@@ -128,9 +128,11 @@ jobs:
 
           # GPU crowd culling needs compute shaders, SSBOs and indirect draw.
           # OpenGL 3.3 Core stays the floor, so the renderer must present the
-          # same frame with that path forced off -- this is the configuration
-          # every driver below 4.3 lands on, including Apple's 4.1 cap.
-          SOI_RENDER_DISABLE_GPU_CROWD_CULL=1 xvfb-run --auto-servernum -- \
+          # same frame without that path -- this is the configuration every
+          # driver below 4.3 lands on, including Apple's 4.1 cap. Forcing the
+          # context down to 3.3 exercises the same fallback the pipeline takes
+          # when RiggedCullPipeline reports itself unavailable.
+          MESA_GL_VERSION_OVERRIDE=3.3 xvfb-run --auto-servernum -- \
             "$APPIMAGE" --renderer-self-test 2>&1 | tee renderer_fallback.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_fallback.log
           # Music and ambience are read from assets/ rather than embedded in

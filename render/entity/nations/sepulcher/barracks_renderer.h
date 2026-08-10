@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../registry.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL::Sepulcher {
 

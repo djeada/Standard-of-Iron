@@ -5,15 +5,15 @@
 #include <string>
 #include <unordered_map>
 
-#include "../creature/archetype_registry.h"
-#include "../creature/humanoid_clip_ids.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../equipment/equipment_registry.h"
-#include "../equipment/humanoid_equipment_archetype.h"
-#include "../humanoid/humanoid_renderer_base.h"
-#include "../humanoid/style_palette.h"
-#include "../palette.h"
 #include "nations/equipment_loadout_catalog.h"
+#include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid_clip_ids.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/equipment/equipment_registry.h"
+#include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/style_palette.h"
+#include "render/palette.h"
 
 namespace Render::GL {
 namespace {

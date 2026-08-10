@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "../render_archetype.h"
-#include "../template_cache.h"
 #include "building_state.h"
+#include "render/render_archetype.h"
+#include "render/template_cache.h"
 
 namespace Render::GL {
 

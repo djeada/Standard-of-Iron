@@ -10,10 +10,10 @@
 #include <cstdint>
 #include <span>
 
-#include "../creature/spec.h"
 #include "animation/bpat/bpat_playback.h"
 #include "animation/clip_manifest.h"
 #include "pipeline/render_pass_intent.h"
+#include "render/creature/spec.h"
 
 namespace Render::Creature {
 

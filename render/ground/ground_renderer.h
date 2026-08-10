@@ -6,10 +6,10 @@
 #include <cstdint>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../../game/map/terrain_service.h"
-#include "../i_render_pass.h"
-#include "../world_chunk.h"
+#include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
+#include "render/i_render_pass.h"
+#include "render/world_chunk.h"
 
 namespace Render::GL {
 class Renderer;

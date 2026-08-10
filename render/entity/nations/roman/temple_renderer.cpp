@@ -6,14 +6,14 @@
 #include <cmath>
 #include <cstdint>
 
-#include "../../../render_archetype.h"
-#include "../../building_archetype_desc.h"
-#include "../../building_decay.h"
-#include "../../building_ornaments.h"
-#include "../../building_render_common.h"
-#include "../../building_state.h"
-#include "../../registry.h"
-#include "../../temple_renderer_common.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/building_ornaments.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/building_state.h"
+#include "render/entity/registry.h"
+#include "render/entity/temple_renderer_common.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL::Roman {
 namespace {

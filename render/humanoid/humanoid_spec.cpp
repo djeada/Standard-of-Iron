@@ -8,15 +8,15 @@
 #include <span>
 #include <vector>
 
-#include "../bone_palette_arena.h"
-#include "../creature/spec.h"
-#include "../gl/humanoid/humanoid_types.h"
-#include "../rigged_mesh_cache.h"
-#include "../scene_renderer.h"
-#include "../submitter.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "humanoid_full_builder.h"
 #include "humanoid_renderer_base.h"
+#include "render/bone_palette_arena.h"
+#include "render/creature/spec.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/rigged_mesh_cache.h"
+#include "render/scene_renderer.h"
+#include "render/submitter.h"
 #include "skeleton.h"
 
 namespace Render::Humanoid {

@@ -7,8 +7,8 @@
 #include <cstdint>
 #include <span>
 
-#include "../creature/quadruped/mesh_graph.h"
-#include "../creature/spec.h"
+#include "render/creature/quadruped/mesh_graph.h"
+#include "render/creature/spec.h"
 #include "wildlife_rig.h"
 
 namespace Render::Wildlife {

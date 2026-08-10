@@ -4,10 +4,10 @@
 #include <span>
 #include <vector>
 
-#include "../../entity/registry.h"
 #include "creature_pipeline.h"
 #include "creature_render_graph.h"
 #include "creature_render_state.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 class ISubmitter;

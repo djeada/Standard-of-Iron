@@ -14,17 +14,20 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../game/systems/unit_activity.h"
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
 #include "frame_budget.h"
+#include "game/systems/unit_activity.h"
 #include "gl/backend.h"
 #include "gl/mesh.h"
 #include "gl/resources.h"
 #include "gl/texture.h"
 #include "i_render_backend.h"
 #include "persistent_render_registry.h"
+#include "render/async_template_prewarm.h"
+#include "render/render_view_state.h"
+#include "render/world_render_mode.h"
 #include "rigged_mesh_cache.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
@@ -68,10 +71,9 @@ struct UnitSubmitContext;
 
 class Renderer : public ISubmitter {
 public:
-  enum class WorldRenderMode {
-    Rts,
-    Rpg,
-  };
+  // Kept as a member alias so existing Renderer::WorldRenderMode call sites
+  // keep reading naturally; the type itself belongs to the view state.
+  using WorldRenderMode = Render::GL::WorldRenderMode;
 
   explicit Renderer(ShaderQuality quality = ShaderQuality::Full);
   ~Renderer() override;
@@ -94,40 +96,40 @@ public:
   auto resources() const -> ResourceManager* {
     return m_backend ? m_backend->resources() : nullptr;
   }
-  void set_hovered_entity_id(Engine::Core::EntityID id) { m_hovered_entity_id = id; }
-  void set_local_owner_id(int owner_id) { m_local_owner_id = owner_id; }
-  void set_order_marker_spectator_mode(bool enabled) {
-    m_order_marker_spectator_mode = enabled;
+  // Presentation choices live in the view state; these forward to it so the
+  // existing call sites read the same.
+  [[nodiscard]] auto view() noexcept -> RenderViewState& { return m_view; }
+  [[nodiscard]] auto view() const noexcept -> const RenderViewState& { return m_view; }
+
+  void set_hovered_entity_id(Engine::Core::EntityID id) {
+    m_view.set_hovered_entity_id(id);
   }
-  void set_debug_reveal_non_local_order_markers(bool enabled) {
-    m_debug_reveal_non_local_order_markers = enabled;
+  void set_local_owner_id(int owner_id) { m_view.set_local_owner_id(owner_id); }
+  void set_order_marker_spectator_mode(bool enabled) {
+    m_view.set_order_marker_spectator_mode(enabled);
   }
   [[nodiscard]] auto
   order_markers_visible_for_owner(int owner_id) const noexcept -> bool {
-    if (m_cinematic_mode) {
-      return false;
-    }
-    return m_debug_reveal_non_local_order_markers ||
-           (!m_order_marker_spectator_mode && owner_id == m_local_owner_id);
+    return m_view.order_markers_visible_for_owner(owner_id);
   }
   void set_force_full_creature_lod(bool enabled) {
-    m_force_full_creature_lod = enabled;
+    m_view.set_force_full_creature_lod(enabled);
   }
 
-  void set_cinematic_mode(bool enabled) { m_cinematic_mode = enabled; }
+  void set_cinematic_mode(bool enabled) { m_view.set_cinematic_mode(enabled); }
   [[nodiscard]] auto cinematic_mode() const noexcept -> bool {
-    return m_cinematic_mode;
+    return m_view.cinematic_mode();
   }
   void set_world_render_mode(WorldRenderMode mode);
   [[nodiscard]] auto world_render_mode() const -> WorldRenderMode {
-    return m_world_render_mode;
+    return m_view.world_render_mode();
   }
 
   void set_rpg_camera_focus(Engine::Core::EntityID entity_id) {
-    m_rpg_camera_focus_id = entity_id;
+    m_view.set_rpg_camera_focus(entity_id);
   }
   [[nodiscard]] auto rpg_camera_focus() const -> Engine::Core::EntityID {
-    return m_rpg_camera_focus_id;
+    return m_view.rpg_camera_focus();
   }
   [[nodiscard]] auto non_local_unit_visibility_filter_enabled() const -> bool;
   [[nodiscard]] auto static_world_visibility_filter_enabled() const -> bool;
@@ -417,6 +419,12 @@ private:
                                 bool visibility_enabled,
                                 std::vector<RenderEntry>& out);
 
+  // Draws one building or prop entry: the entity renderer if it has one, the
+  // archetype fallback otherwise. Shared by the building and the misc pass.
+  void submit_non_unit_entry(const RenderEntry& entry,
+                             Engine::Core::World* world,
+                             ResourceManager* res);
+
   void submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext& ctx);
 
   void enqueue_selection_ring(Engine::Core::Entity* entity,
@@ -446,8 +454,6 @@ private:
   void process_async_template_prewarm();
   void cancel_async_template_prewarm();
 
-  struct AsyncTemplatePrewarmState;
-
   void run_template_prewarm_item(const PrewarmProfile& profile,
                                  const PrewarmWorkItem& item);
 
@@ -462,7 +468,6 @@ private:
 
   std::unique_ptr<EntityRendererRegistry> m_entity_registry;
   std::unique_ptr<EffectsSubmitter> m_effects_submitter;
-  unsigned int m_hovered_entity_id = 0;
   TerrainSurfaceCmd::HeightResources m_terrain_height_resources{};
   std::unordered_set<Engine::Core::EntityID> m_selected_ids;
 
@@ -471,17 +476,14 @@ private:
   GridParams m_grid_params;
   float m_accumulated_time = 0.0F;
   std::atomic<bool> m_paused{false};
+  RenderViewState m_view;
   float m_alpha_override = 1.0F;
-  WorldRenderMode m_world_render_mode = WorldRenderMode::Rts;
-  Engine::Core::EntityID m_rpg_camera_focus_id = 0;
+  // Resolved once the backend is up; the shared geometry cache owns it and
+  // drops it on shutdown, so this is cleared there rather than cached forever.
+  Mesh* m_unit_cylinder_mesh = nullptr;
   std::shared_ptr<Engine::Core::World> m_render_world_snapshot;
 
   std::mutex m_world_mutex;
-  int m_local_owner_id = 1;
-  bool m_order_marker_spectator_mode = false;
-  bool m_debug_reveal_non_local_order_markers = false;
-  bool m_force_full_creature_lod = false;
-  bool m_cinematic_mode = false;
 
   QMatrix4x4 m_view_proj;
   QVector3D m_billboard_right{1.0F, 0.0F, 0.0F};
@@ -507,9 +509,7 @@ private:
   Render::PersistentRenderRegistry m_render_registry;
   Engine::Core::World* m_cached_world{nullptr};
 
-  std::mutex m_async_prewarm_mutex;
-  std::shared_ptr<AsyncTemplatePrewarmState> m_async_prewarm_state;
-  bool m_forbid_runtime_bake_when_async_prewarm_done{false};
+  AsyncTemplatePrewarm m_async_prewarm;
 };
 
 struct FrameScope {

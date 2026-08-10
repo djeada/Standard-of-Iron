@@ -1,6 +1,7 @@
 # Equipment renderers (Phase 3 owner). Edit ONLY this file for render/equipment/* sources.
 set(RENDER_EQUIPMENT_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_registry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/equipment/generated_primitive_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/equipment_archetype_resolver.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/humanoid_equipment_archetype.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/equipment/horse_equipment_archetype.cpp

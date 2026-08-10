@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "../gl/primitives.h"
 #include "building_decay.h"
+#include "render/gl/primitives.h"
 
 namespace Render::GL {
 namespace {

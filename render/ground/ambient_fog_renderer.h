@@ -6,10 +6,10 @@
 #include <memory>
 #include <vector>
 
-#include "../draw_queue.h"
-#include "../gl/buffer.h"
-#include "../i_render_pass.h"
 #include "game/map/map_definition.h"
+#include "render/draw_commands.h"
+#include "render/gl/buffer.h"
+#include "render/i_render_pass.h"
 
 namespace Render::GL {
 class Renderer;

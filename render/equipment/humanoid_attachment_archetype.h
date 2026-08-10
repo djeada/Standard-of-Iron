@@ -3,10 +3,10 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "../gl/humanoid/humanoid_types.h"
-#include "../static_attachment_spec.h"
 #include "animation/rig/instance_transform.h"
 #include "equipment_submit.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

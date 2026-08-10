@@ -6,12 +6,12 @@
 
 #include <cstdint>
 
-#include "../../elephant/dimensions.h"
-#include "../../gl/humanoid/humanoid_types.h"
-#include "../../horse/dimensions.h"
-#include "../../wildlife/wildlife_variant.h"
-#include "../render_request.h"
 #include "creature_render_graph.h"
+#include "render/creature/render_request.h"
+#include "render/elephant/dimensions.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/horse/dimensions.h"
+#include "render/wildlife/wildlife_variant.h"
 
 namespace Engine::Core {
 class UnitComponent;

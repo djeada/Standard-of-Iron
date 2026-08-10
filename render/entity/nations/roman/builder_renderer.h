@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../../registry.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL::Roman {
 

@@ -6,10 +6,10 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../palette.h"
-#include "../../static_attachment_spec.h"
-#include "../i_equipment_renderer.h"
+#include "render/equipment/i_equipment_renderer.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/palette.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

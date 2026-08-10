@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <span>
 
-#include "../../game/systems/attack_range.h"
+#include "game/systems/attack_range.h"
 
 namespace Render::GL {
 class Renderer;

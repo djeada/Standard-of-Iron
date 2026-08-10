@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../archer_renderer_common.h"
+#include "render/entity/archer_renderer_common.h"
 
 namespace Render::GL::Roman {
 

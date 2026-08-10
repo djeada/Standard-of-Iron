@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../material.h"
-#include "../submitter.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/material.h"
+#include "render/submitter.h"
 
 namespace Render::RigDSL {
 

@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "../../game/core/component.h"
 #include "animation/combat_manifest.h"
+#include "game/core/component.h"
 #include "movement_state.h"
 
 namespace Render::Creature {

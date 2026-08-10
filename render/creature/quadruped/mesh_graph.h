@@ -11,8 +11,8 @@
 #include <variant>
 #include <vector>
 
-#include "../../gl/mesh.h"
-#include "../part_graph.h"
+#include "render/creature/part_graph.h"
+#include "render/gl/mesh.h"
 
 namespace Render::Creature::Quadruped {
 

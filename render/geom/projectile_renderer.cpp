@@ -4,13 +4,13 @@
 #include <cmath>
 #include <numbers>
 
-#include "../game/systems/arrow_projectile.h"
-#include "../game/systems/projectile_system.h"
-#include "../game/systems/stone_projectile.h"
-#include "../gl/primitives.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
 #include "arrow.h"
+#include "game/systems/arrow_projectile.h"
+#include "game/systems/projectile_system.h"
+#include "game/systems/stone_projectile.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
 #include "stone.h"
 
 namespace Render::GL {

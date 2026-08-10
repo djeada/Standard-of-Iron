@@ -7,7 +7,7 @@
 #include <limits>
 #include <ostream>
 
-#include "../../animation/bpat/bpat_format.h"
+#include "animation/bpat/bpat_format.h"
 #include "part_graph.h"
 
 namespace Render::Creature::MeshAssetIo {

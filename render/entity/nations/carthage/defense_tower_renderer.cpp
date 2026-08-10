@@ -7,18 +7,18 @@
 #include <cmath>
 #include <numbers>
 
-#include "../../../../game/core/component.h"
-#include "../../../gl/backend.h"
-#include "../../../gl/primitives.h"
-#include "../../../submitter.h"
-#include "../../barracks_flag_renderer.h"
-#include "../../building_archetype_desc.h"
-#include "../../building_decay.h"
-#include "../../building_ornaments.h"
-#include "../../building_render_common.h"
-#include "../../defense_tower_renderer_common.h"
-#include "../../registry.h"
+#include "game/core/component.h"
 #include "math/math_utils.h"
+#include "render/entity/barracks_flag_renderer.h"
+#include "render/entity/building_archetype_desc.h"
+#include "render/entity/building_decay.h"
+#include "render/entity/building_ornaments.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/defense_tower_renderer_common.h"
+#include "render/entity/registry.h"
+#include "render/gl/backend.h"
+#include "render/gl/primitives.h"
+#include "render/submitter.h"
 
 namespace Render::GL::Carthage {
 namespace {

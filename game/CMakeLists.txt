@@ -291,7 +291,6 @@ add_library(
     systems/camera_controller.cpp
     systems/camera_follow_system.cpp
     systems/camera_service.cpp
-    systems/camera_visibility_service.cpp
     systems/picking_service.cpp
     systems/game_state_serializer.cpp
     map/minimap/minimap_generator.cpp

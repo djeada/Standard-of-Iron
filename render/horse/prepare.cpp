@@ -8,19 +8,19 @@
 #include <cstdint>
 #include <optional>
 
-#include "../../game/core/component.h"
-#include "../creature/animation_state_components.h"
-#include "../creature/pipeline/creature_prepared_state.h"
-#include "../creature/pipeline/preparation_common.h"
-#include "../creature/pipeline/prepared_submit.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../creature/quadruped/clip_set.h"
-#include "../creature/quadruped/render_stats.h"
-#include "../gl/humanoid/animation/animation_inputs.h"
-#include "../submitter.h"
+#include "game/core/component.h"
 #include "horse_motion.h"
 #include "horse_renderer_base.h"
+#include "render/creature/animation_state_components.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
+#include "render/creature/pipeline/preparation_common.h"
+#include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/quadruped/clip_set.h"
+#include "render/creature/quadruped/render_stats.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/math/creature_math_utils.h"
+#include "render/submitter.h"
 #include "scene/camera.h"
 
 namespace Render::Horse {

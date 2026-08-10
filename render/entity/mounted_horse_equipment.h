@@ -3,7 +3,7 @@
 #include <array>
 #include <string>
 
-#include "../equipment/equipment_registry.h"
+#include "render/equipment/equipment_registry.h"
 
 namespace Render::GL {
 

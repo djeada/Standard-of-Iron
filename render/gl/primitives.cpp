@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "gl/mesh.h"
+#include "render/gl/shared_geometry_cache.h"
 
 namespace Render::GL {
 
@@ -690,18 +691,6 @@ auto create_unit_torso_mesh(int radial_segments,
 } // namespace
 
 namespace {
-const std::unique_ptr<Mesh> k_unit_cube_mesh = create_cube_mesh();
-const std::unique_ptr<Mesh> k_unit_sphere_mesh =
-    create_unit_sphere_mesh(k_default_latitude_segments, k_default_radial_segments);
-const std::unique_ptr<Mesh> k_unit_cone_mesh =
-    create_unit_cone_mesh(k_default_radial_segments);
-const std::unique_ptr<Mesh> k_unit_capsule_mesh =
-    create_capsule_mesh(k_default_radial_segments, k_default_capsule_height_segments);
-const std::unique_ptr<Mesh> k_unit_torso_mesh =
-    create_unit_torso_mesh(k_default_radial_segments, k_default_torso_height_segments);
-} // namespace
-
-namespace {
 
 auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
   constexpr float sw = 0.075F;
@@ -815,29 +804,11 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
 
 } // namespace
 
-namespace {
-const std::unique_ptr<Mesh> k_orientation_arrow_mesh = create_orientation_arrow_mesh();
-}
-
 auto get_unit_cylinder(int radial_segments) -> Mesh* {
   radial_segments = std::max(radial_segments, 3);
-
-  static std::mutex cache_mutex;
-  static auto cylinder_meshes = [] {
-    std::unordered_map<int, std::unique_ptr<Mesh>> meshes;
-    meshes.emplace(k_default_radial_segments,
-                   create_unit_cylinder_mesh(k_default_radial_segments));
-    return meshes;
-  }();
-
-  std::lock_guard<std::mutex> lock(cache_mutex);
-  auto it = cylinder_meshes.find(radial_segments);
-  if (it == cylinder_meshes.end()) {
-    it = cylinder_meshes
-             .emplace(radial_segments, create_unit_cylinder_mesh(radial_segments))
-             .first;
-  }
-  return it->second.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("gl/unit_cylinder", static_cast<std::uint64_t>(radial_segments)),
+      [radial_segments] { return create_unit_cylinder_mesh(radial_segments); });
 }
 
 auto get_unit_tapered_cylinder(float anchor_radius_scale,
@@ -850,54 +821,63 @@ auto get_unit_tapered_cylinder(float anchor_radius_scale,
   auto const quantize = [](float value) -> std::uint64_t {
     return static_cast<std::uint64_t>(std::lround(value * 1000.0F));
   };
-  std::uint64_t const key = (quantize(anchor_radius_scale) << 32) |
-                            (quantize(tail_radius_scale) << 16) |
-                            static_cast<std::uint64_t>(radial_segments);
+  std::uint64_t const variant = (quantize(anchor_radius_scale) << 32) |
+                                (quantize(tail_radius_scale) << 16) |
+                                static_cast<std::uint64_t>(radial_segments);
 
-  static std::mutex cache_mutex;
-  static std::unordered_map<std::uint64_t, std::unique_ptr<Mesh>> tapered_meshes;
-
-  std::lock_guard<std::mutex> lock(cache_mutex);
-  auto it = tapered_meshes.find(key);
-  if (it == tapered_meshes.end()) {
-    it = tapered_meshes
-             .emplace(key,
-                      create_unit_tapered_cylinder_mesh(
-                          anchor_radius_scale, tail_radius_scale, radial_segments))
-             .first;
-  }
-  return it->second.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("gl/unit_tapered_cylinder", variant),
+      [anchor_radius_scale, tail_radius_scale, radial_segments] {
+        return create_unit_tapered_cylinder_mesh(
+            anchor_radius_scale, tail_radius_scale, radial_segments);
+      });
 }
 
 auto get_unit_cube() -> Mesh* {
-  return k_unit_cube_mesh.get();
+  return SharedGeometryCache::instance().get_or_build(geometry_key("gl/unit_cube"),
+                                                      create_cube_mesh);
 }
 
 auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh* {
   (void)lat_segments;
   (void)lon_segments;
-  return k_unit_sphere_mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("gl/unit_sphere"), [] {
+        return create_unit_sphere_mesh(k_default_latitude_segments,
+                                       k_default_radial_segments);
+      });
 }
 
 auto get_unit_cone(int radial_segments) -> Mesh* {
   (void)radial_segments;
-  return k_unit_cone_mesh.get();
+  return SharedGeometryCache::instance().get_or_build(geometry_key("gl/unit_cone"), [] {
+    return create_unit_cone_mesh(k_default_radial_segments);
+  });
 }
 
 auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh* {
   (void)radial_segments;
   (void)height_segments;
-  return k_unit_capsule_mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("gl/unit_capsule"), [] {
+        return create_capsule_mesh(k_default_radial_segments,
+                                   k_default_capsule_height_segments);
+      });
 }
 
 auto get_unit_torso(int radial_segments, int height_segments) -> Mesh* {
   (void)radial_segments;
   (void)height_segments;
-  return k_unit_torso_mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("gl/unit_torso"), [] {
+        return create_unit_torso_mesh(k_default_radial_segments,
+                                      k_default_torso_height_segments);
+      });
 }
 
 auto get_orientation_arrow() -> Mesh* {
-  return k_orientation_arrow_mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("gl/orientation_arrow"), create_orientation_arrow_mesh);
 }
 
 } // namespace Render::GL

@@ -137,9 +137,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/models/minimap_image_provider.h"
 #include "render/graphics_settings.h"
 #include "render/i_render_backend.h"
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "render/profiling/profiling_hud.h"
-#endif
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
 #include "ui/icon_art.h"
@@ -529,10 +527,6 @@ auto main(int argc, char* argv[]) -> int {
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
   fmt.setSamples(0);
   fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-  if (qEnvironmentVariableIsSet("SOI_GL_DEBUG")) {
-    fmt.setOption(QSurfaceFormat::DebugContext);
-    qInfo() << "SOI_GL_DEBUG set: requesting a debug OpenGL context";
-  }
 
   QSurfaceFormat::setDefaultFormat(fmt);
   qInfo() << "Surface format configured: OpenGL" << fmt.majorVersion() << "."
@@ -565,10 +559,8 @@ auto main(int argc, char* argv[]) -> int {
   QString screenshot_path;
   QString screenshot_view;
   int screenshot_delay_ms = 0;
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   double runtime_benchmark_seconds = 0.0;
   QString runtime_benchmark_output;
-#endif
 
   {
     QCommandLineParser parser;
@@ -612,7 +604,6 @@ auto main(int argc, char* argv[]) -> int {
         "Milliseconds to let the surface settle before capturing.",
         "ms",
         "1200");
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     QCommandLineOption const benchmark_seconds_opt(
         "benchmark-seconds",
         "Measure the directly started mission after a two-second warm-up, then exit.",
@@ -621,7 +612,6 @@ auto main(int argc, char* argv[]) -> int {
         "benchmark-output",
         "Write the runtime benchmark JSON report to this path.",
         "path");
-#endif
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);
     parser.addOption(renderer_self_test_opt);
@@ -632,10 +622,8 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(screenshot_opt);
     parser.addOption(screenshot_view_opt);
     parser.addOption(screenshot_delay_opt);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     parser.addOption(benchmark_seconds_opt);
     parser.addOption(benchmark_output_opt);
-#endif
     parser.process(app);
 
     component_gallery_requested = parser.isSet(component_gallery_opt);
@@ -665,7 +653,6 @@ auto main(int argc, char* argv[]) -> int {
 
     direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
     direct_mission_file = parser.value(mission_file_opt).trimmed();
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     bool benchmark_seconds_valid = false;
     runtime_benchmark_seconds =
         parser.value(benchmark_seconds_opt).toDouble(&benchmark_seconds_valid);
@@ -680,7 +667,6 @@ auto main(int argc, char* argv[]) -> int {
         qputenv("SOI_RUNTIME_BENCHMARK_OUTPUT", runtime_benchmark_output.toUtf8());
       }
     }
-#endif
 
     std::optional<Render::ShaderQuality> requested;
     if (parser.isSet(quality_opt)) {
@@ -764,10 +750,8 @@ auto main(int argc, char* argv[]) -> int {
   engine->rootContext()->setContextProperty("graphics_settings",
                                             graphics_settings.get());
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
   engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
-#endif
 
   QObject::connect(
       game_engine.get(),

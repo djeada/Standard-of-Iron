@@ -11,14 +11,14 @@
 #include <utility>
 #include <vector>
 
-#include "../decoration_gpu.h"
-#include "../draw_queue.h"
-#include "../frame_budget.h"
-#include "../i_render_backend.h"
-#include "../local_lighting.h"
-#include "../world_chunk.h"
 #include "directional_shadow_block.h"
 #include "persistent_buffer.h"
+#include "render/decoration_gpu.h"
+#include "render/draw_queue.h"
+#include "render/frame_budget.h"
+#include "render/i_render_backend.h"
+#include "render/local_lighting.h"
+#include "render/world_chunk.h"
 #include "resources.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
@@ -204,16 +204,28 @@ private:
     const QMatrix4x4& view_proj;
     float banner_wind_strength;
     bool& polygon_offset_enabled;
-    bool rigged_instancing_enabled;
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-    std::size_t& debug_rigged_batches;
-    std::size_t& debug_rigged_cmds;
-    std::size_t& debug_rigged_instanced_attempts;
-    std::size_t& debug_rigged_instanced_successes;
-    std::size_t& debug_rigged_instanced_failures;
-    std::size_t& debug_rigged_single_draws;
-#endif
   };
+
+  // Refreshes the per-frame UBOs: view-projection, environment lighting, and
+  // the local-light set selected from this frame's effect commands.
+  void upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
+                                    const DrawQueue& queue,
+                                    const Camera& cam);
+
+  // Uniform setup for the two terrain shaders, split out of the draw loop:
+  // between them they set well over a hundred uniforms.
+  void set_ground_plane_uniforms(Shader& shader,
+                                 const TerrainSurfaceCmd& single,
+                                 const QMatrix4x4& mvp,
+                                 const QVector3D& camera_position,
+                                 float fog_start,
+                                 float fog_end);
+  void set_terrain_chunk_uniforms(Shader& shader,
+                                  const TerrainSurfaceCmd& single,
+                                  const QMatrix4x4& mvp,
+                                  const QVector3D& camera_position,
+                                  float fog_start,
+                                  float fog_end);
 
   void execute_cylinder_commands(const PreparedBatch& prepared,
                                  CommandExecutionContext& context);

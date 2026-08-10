@@ -8,9 +8,9 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "../../game/map/terrain_noise.h"
-#include "../../game/map/terrain_service.h"
-#include "../scene_renderer.h"
+#include "game/map/terrain_noise.h"
+#include "game/map/terrain_service.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 

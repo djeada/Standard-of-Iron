@@ -6,18 +6,18 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../../game/core/component.h"
-#include "../../../game/core/entity.h"
-#include "../../../game/map/terrain_service.h"
-#include "../../../game/units/spawn_type.h"
-#include "../../contact_shadow.h"
-#include "../../entity/registry.h"
-#include "../../gl/backend.h"
-#include "../../gl/humanoid/animation/animation_inputs.h"
-#include "../../gl/resources.h"
-#include "../../graphics_settings.h"
-#include "../../profiling/combat_animation_diagnostics.h"
-#include "../../visibility_budget.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/map/terrain_service.h"
+#include "game/units/spawn_type.h"
+#include "render/contact_shadow.h"
+#include "render/entity/registry.h"
+#include "render/gl/backend.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/gl/resources.h"
+#include "render/graphics_settings.h"
+#include "render/profiling/combat_animation_diagnostics.h"
+#include "render/visibility_budget.h"
 #include "scene/camera.h"
 
 namespace Render::Creature::Pipeline {

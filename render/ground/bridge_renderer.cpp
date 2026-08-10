@@ -12,14 +12,14 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/visibility_service.h"
-#include "../gl/mesh.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
+#include "game/map/visibility_service.h"
 #include "linear_feature_geometry.h"
 #include "linear_feature_submission.h"
 #include "linear_feature_visibility.h"
 #include "map/terrain.h"
+#include "render/gl/mesh.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 

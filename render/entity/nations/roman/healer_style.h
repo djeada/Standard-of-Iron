@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../healer_renderer_common.h"
+#include "render/entity/healer_renderer_common.h"
 
 namespace Render::GL::Roman {
 

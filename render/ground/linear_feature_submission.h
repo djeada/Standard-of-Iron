@@ -7,11 +7,11 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/visibility_service.h"
-#include "../gl/mesh.h"
-#include "../scene_renderer.h"
-#include "../terrain_scene_types.h"
+#include "game/map/visibility_service.h"
 #include "linear_feature_visibility.h"
+#include "render/gl/mesh.h"
+#include "render/scene_renderer.h"
+#include "render/terrain_scene_types.h"
 
 namespace Render::Ground {
 

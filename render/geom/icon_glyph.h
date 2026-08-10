@@ -9,7 +9,7 @@
 #include <span>
 #include <vector>
 
-#include "../gl/mesh.h"
+#include "render/gl/mesh.h"
 
 namespace Render::Geom {
 

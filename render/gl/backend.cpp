@@ -21,15 +21,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../draw_queue.h"
-#include "../geom/mode_indicator.h"
-#include "../geom/selection_disc.h"
-#include "../graphics_settings.h"
-#include "../local_lighting.h"
-#include "../material.h"
-#include "../primitive_batch.h"
-#include "../rain_gpu.h"
-#include "../rigged_mesh.h"
 #include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
 #include "backend/combat_dust_pipeline.h"
@@ -51,9 +42,18 @@
 #include "decoration_gpu.h"
 #include "directional_shadow_block.h"
 #include "gl/resources.h"
-#include "gl_debug_log.h"
 #include "mesh.h"
 #include "platform_gl.h"
+#include "render/draw_queue.h"
+#include "render/geom/mode_indicator.h"
+#include "render/geom/selection_disc.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/graphics_settings.h"
+#include "render/local_lighting.h"
+#include "render/material.h"
+#include "render/primitive_batch.h"
+#include "render/rain_gpu.h"
+#include "render/rigged_mesh.h"
 #include "render_constants.h"
 #include "scene/camera.h"
 #include "shader.h"
@@ -71,31 +71,6 @@ namespace {
 
 const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-auto render_stage_logging_enabled() -> bool {
-  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
-}
-#endif
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-void log_render_first_use_once(const char* stage, const QString& detail) {
-  if (!render_stage_logging_enabled()) {
-    return;
-  }
-
-  static std::mutex mutex;
-  static std::unordered_set<std::string> emitted_stages;
-
-  std::lock_guard<std::mutex> const lock(mutex);
-  if (!emitted_stages.emplace(stage).second) {
-    return;
-  }
-
-  qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
-                           .arg(QString::fromLatin1(stage), detail);
-}
-#endif
-
 } // namespace
 
 Backend::Backend() = default;
@@ -104,14 +79,6 @@ Backend::Backend(ShaderQuality quality)
 }
 
 Backend::~Backend() {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  if (shader_bind_audit_enabled()) {
-    qInfo() << "Shader bind audit:";
-    for (const QString& line : format_shader_bind_audit()) {
-      qInfo().noquote() << line;
-    }
-  }
-#endif
 
   if (QOpenGLContext::currentContext() == nullptr) {
 
@@ -142,6 +109,9 @@ Backend::~Backend() {
       glDeleteBuffers(1, &m_directional_shadow_ubo);
       m_directional_shadow_ubo = 0;
     }
+    // The shared meshes hold GL objects, and this is the last point at which a
+    // context is still current, so they are dropped here rather than at exit.
+    SharedGeometryCache::instance().release_all();
     m_cylinder_pipeline.reset();
     m_vegetation_pipeline.reset();
     m_terrain_pipeline.reset();
@@ -164,7 +134,6 @@ auto Backend::initialize() -> bool {
                    " and that the application window has a valid Core Profile context.";
     return false;
   }
-  install_gl_debug_logger();
   glGenBuffers(1, &m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
   glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
@@ -668,8 +637,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       if (m_rigged_cull_pipeline != nullptr &&
           m_rigged_cull_pipeline->has_shadow_path() &&
           visible_rigged.size() >=
-              BackendPipelines::RiggedCullPipeline::minimum_instances() &&
-          !qEnvironmentVariableIsSet("SOI_RENDER_DISABLE_GPU_CROWD_CULL")) {
+              BackendPipelines::RiggedCullPipeline::minimum_instances()) {
         auto const extent = static_cast<float>(m_directional_shadow_resolution);
         if (m_rigged_cull_pipeline->draw_shadow(visible_rigged.data(),
                                                 visible_rigged.size(),
@@ -707,32 +675,13 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     }
 
     bool shadow_polygon_offset_enabled = true;
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-    std::size_t shadow_debug_batches = 0;
-    std::size_t shadow_debug_cmds = 0;
-    std::size_t shadow_debug_attempts = 0;
-    std::size_t shadow_debug_successes = 0;
-    std::size_t shadow_debug_failures = 0;
-    std::size_t shadow_debug_single_draws = 0;
-#endif
     CommandExecutionContext shadow_context{queue,
                                            cam,
                                            light_view,
                                            light_projection,
                                            light_vp,
                                            0.0F,
-                                           shadow_polygon_offset_enabled,
-                                           false
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-                                           ,
-                                           shadow_debug_batches,
-                                           shadow_debug_cmds,
-                                           shadow_debug_attempts,
-                                           shadow_debug_successes,
-                                           shadow_debug_failures,
-                                           shadow_debug_single_draws
-#endif
-    };
+                                           shadow_polygon_offset_enabled};
     m_last_bound_shader = nullptr;
     m_last_bound_texture = nullptr;
     for (const PreparedBatch& prepared : queue.prepared_batches()) {
@@ -801,21 +750,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   glActiveTexture(GL_TEXTURE0);
 }
 
-void Backend::execute(const DrawQueue& queue, const Camera& cam) {
-  m_last_playback_stats = {};
-  m_last_playback_stats.submitted_commands = queue.size();
-  m_last_playback_stats.prepared_batches = queue.prepared_batches().size();
-  m_frame_tracker.begin_frame();
-
-  if (m_basic_shader == nullptr) {
-    m_frame_tracker.mark_complete();
-    m_frame_tracker.end_frame();
-    return;
-  }
-
-  const QMatrix4x4 view = cam.get_view_matrix();
-  const QMatrix4x4 projection = cam.get_projection_matrix();
-  const QMatrix4x4 view_proj = projection * view;
+void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
+                                           const DrawQueue& queue,
+                                           const Camera& cam) {
   if (m_frame_ubo != 0) {
     glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, view_proj.constData());
@@ -870,6 +807,24 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
         GL_UNIFORM_BUFFER, k_local_lighting_binding_point, m_local_lighting_ubo);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
   }
+}
+
+void Backend::execute(const DrawQueue& queue, const Camera& cam) {
+  m_last_playback_stats = {};
+  m_last_playback_stats.submitted_commands = queue.size();
+  m_last_playback_stats.prepared_batches = queue.prepared_batches().size();
+  m_frame_tracker.begin_frame();
+
+  if (m_basic_shader == nullptr) {
+    m_frame_tracker.mark_complete();
+    m_frame_tracker.end_frame();
+    return;
+  }
+
+  const QMatrix4x4 view = cam.get_view_matrix();
+  const QMatrix4x4 projection = cam.get_projection_matrix();
+  const QMatrix4x4 view_proj = projection * view;
+  upload_frame_uniform_buffers(view_proj, queue, cam);
   render_directional_shadows(queue, cam);
   const float banner_wind_strength = 0.8F + 0.2F * std::sin(m_animation_time * 0.5F);
 
@@ -879,180 +834,13 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   bool polygon_offset_enabled = (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U);
 
   const auto& prepared_batches = queue.prepared_batches();
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  log_render_first_use_once(
-      "backend-execute",
-      QStringLiteral("first playback has %1 commands and %2 prepared batches")
-          .arg(queue.size())
-          .arg(prepared_batches.size()));
-#endif
-  const bool rigged_instancing_enabled =
-      !qEnvironmentVariableIsSet("SOI_RENDER_DISABLE_RIGGED_INSTANCING");
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  const bool debug_rigged = qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_RIGGED");
-  std::size_t debug_rigged_batches = 0;
-  std::size_t debug_rigged_cmds = 0;
-  std::size_t debug_rigged_instanced_attempts = 0;
-  std::size_t debug_rigged_instanced_successes = 0;
-  std::size_t debug_rigged_instanced_failures = 0;
-  std::size_t debug_rigged_single_draws = 0;
-#endif
   CommandExecutionContext context{queue,
                                   cam,
                                   view,
                                   projection,
                                   view_proj,
                                   banner_wind_strength,
-                                  polygon_offset_enabled,
-                                  rigged_instancing_enabled
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-                                  ,
-                                  debug_rigged_batches,
-                                  debug_rigged_cmds,
-                                  debug_rigged_instanced_attempts,
-                                  debug_rigged_instanced_successes,
-                                  debug_rigged_instanced_failures,
-                                  debug_rigged_single_draws
-#endif
-  };
-
-  if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
-    static std::chrono::steady_clock::time_point last_report{};
-    const auto now = std::chrono::steady_clock::now();
-    if (now - last_report >= std::chrono::seconds(1)) {
-      last_report = now;
-      std::array<std::size_t, k_draw_cmd_type_count> per_type{};
-      std::size_t scatter_instances = 0;
-      std::size_t rig_gpu_palette = 0;
-      std::size_t rig_cpu_palette = 0;
-      std::size_t rig_no_palette = 0;
-      std::size_t rig_zero_bones = 0;
-      std::size_t rig_zero_scale = 0;
-      std::size_t rig_low_alpha = 0;
-      std::size_t rig_no_mesh = 0;
-      std::size_t rig_empty_mesh = 0;
-      float rig_pos_min_y = std::numeric_limits<float>::max();
-      float rig_pos_max_y = std::numeric_limits<float>::lowest();
-      QVector3D rig_centroid;
-      std::size_t rig_pos_count = 0;
-      std::size_t rig_nonfinite_pos = 0;
-      std::size_t rig_degenerate_world = 0;
-      for (const auto& item : queue.items()) {
-        const std::size_t type = item.index();
-        if (type < per_type.size()) {
-          ++per_type[type];
-        }
-        if (const auto* scatter = std::get_if<TerrainScatterCmd>(&item)) {
-          scatter_instances += scatter->instance_count;
-        }
-        if (const auto* rig = std::get_if<RiggedCreatureCmd>(&item)) {
-
-          if (rig->bone_palette == nullptr) {
-            ++rig_no_palette;
-            if (rig->palette_ubo != 0U) {
-              ++rig_gpu_palette;
-            }
-          } else {
-            ++rig_cpu_palette;
-          }
-          if (rig->bone_count == 0U) {
-            ++rig_zero_bones;
-          }
-          if (rig->variation_scale.lengthSquared() < 1.0e-6F) {
-            ++rig_zero_scale;
-          }
-          if (rig->alpha < 0.01F) {
-            ++rig_low_alpha;
-          }
-          if (rig->mesh == nullptr) {
-            ++rig_no_mesh;
-          } else if (rig->mesh->index_count() == 0U) {
-
-            ++rig_empty_mesh;
-          }
-          {
-
-            const QVector3D t = rig->world.column(3).toVector3D();
-            rig_pos_min_y = std::min(rig_pos_min_y, t.y());
-            rig_pos_max_y = std::max(rig_pos_max_y, t.y());
-            rig_centroid += t;
-            ++rig_pos_count;
-            if (!std::isfinite(t.x()) || !std::isfinite(t.y()) ||
-                !std::isfinite(t.z())) {
-              ++rig_nonfinite_pos;
-            }
-            const float scale_x = rig->world.column(0).toVector3D().length();
-            if (scale_x < 1.0e-4F) {
-              ++rig_degenerate_world;
-            }
-          }
-        }
-      }
-
-      GLuint stone_vao = 0;
-      GLuint tent_vao = 0;
-      bool stone_shader = false;
-      bool tent_shader = false;
-      if (m_vegetation_pipeline) {
-        stone_vao = m_vegetation_pipeline->m_stone_mesh.vao;
-        tent_vao = m_vegetation_pipeline->m_tent_mesh.vao;
-        stone_shader = m_vegetation_pipeline->stone_shader() != nullptr;
-        tent_shader = m_vegetation_pipeline->tent_shader() != nullptr;
-      }
-      const bool context_current = QOpenGLContext::currentContext() != nullptr;
-
-      qInfo().noquote()
-          << QStringLiteral(
-                 "SOI submission: batches=%1 scatter_cmds=%2 scatter_instances=%3 "
-                 "mesh=%4 draw_part=%5 terrain_surface=%6 rigged=%7 | "
-                 "stone_vao=%8 tent_vao=%9 stone_sh=%10 tent_sh=%11 "
-                 "mesh_pipe=%12 ctx=%13 gl_err=%14")
-                 .arg(prepared_batches.size())
-                 .arg(per_type[TerrainScatterCmdIndex])
-                 .arg(scatter_instances)
-                 .arg(per_type[MeshCmdIndex])
-                 .arg(per_type[DrawPartCmdIndex])
-                 .arg(per_type[TerrainSurfaceCmdIndex])
-                 .arg(per_type[RiggedCreatureCmdIndex])
-                 .arg(stone_vao)
-                 .arg(tent_vao)
-                 .arg(stone_shader ? 1 : 0)
-                 .arg(tent_shader ? 1 : 0)
-                 .arg(m_mesh_instancing_pipeline ? 1 : 0)
-                 .arg(context_current ? 1 : 0)
-                 .arg(glGetError());
-      if (rig_pos_count > 0) {
-        const QVector3D c = rig_centroid / static_cast<float>(rig_pos_count);
-        qInfo().noquote()
-            << QStringLiteral("SOI rigged world: n=%1 y=[%2 .. %3] centroid=(%4 %5 %6)"
-                              " nonfinite=%7 degenerate=%8")
-                   .arg(rig_pos_count)
-                   .arg(static_cast<double>(rig_pos_min_y), 0, 'f', 3)
-                   .arg(static_cast<double>(rig_pos_max_y), 0, 'f', 3)
-                   .arg(static_cast<double>(c.x()), 0, 'f', 2)
-                   .arg(static_cast<double>(c.y()), 0, 'f', 2)
-                   .arg(static_cast<double>(c.z()), 0, 'f', 2)
-                   .arg(rig_nonfinite_pos)
-                   .arg(rig_degenerate_world);
-      }
-      if (per_type[RiggedCreatureCmdIndex] > 0) {
-        qInfo().noquote()
-            << QStringLiteral(
-                   "SOI rigged detail: gpu_palette=%1 cpu_palette=%2 "
-                   "no_cpu_palette=%3 (arena=%8) zero_bones=%4 zero_scale=%5 "
-                   "low_alpha=%6 no_mesh=%7 EMPTY_MESH=%9")
-                   .arg(rig_gpu_palette)
-                   .arg(rig_cpu_palette)
-                   .arg(rig_no_palette)
-                   .arg(rig_zero_bones)
-                   .arg(rig_zero_scale)
-                   .arg(rig_low_alpha)
-                   .arg(rig_no_mesh)
-                   .arg(rig_gpu_palette)
-                   .arg(rig_empty_mesh);
-      }
-    }
-  }
+                                  polygon_offset_enabled};
 
   std::size_t frame_rigged_commands = 0;
   m_rigged_drawn_this_frame = 0;
@@ -1137,59 +925,9 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 
     ++batch_index;
   }
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  if (debug_rigged && debug_rigged_cmds > 0U) {
-    qInfo() << "Rigged playback: batches" << debug_rigged_batches << "cmds"
-            << debug_rigged_cmds << "single_draws" << debug_rigged_single_draws
-            << "instanced_enabled" << rigged_instancing_enabled << "instanced_attempts"
-            << debug_rigged_instanced_attempts << "instanced_successes"
-            << debug_rigged_instanced_successes << "instanced_failures"
-            << debug_rigged_instanced_failures;
-  }
-#endif
   if (m_last_bound_shader != nullptr) {
     m_last_bound_shader->release();
     m_last_bound_shader = nullptr;
-  }
-
-  if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
-    static std::size_t rigged_min = std::numeric_limits<std::size_t>::max();
-    static std::size_t rigged_max = 0;
-    static std::chrono::steady_clock::time_point last_rigged_report{};
-    static std::size_t rigged_prev = 0;
-    static std::size_t rigged_recoveries = 0;
-
-    if (frame_rigged_commands > rigged_prev && rigged_prev != 0) {
-      ++rigged_recoveries;
-    }
-    rigged_prev = frame_rigged_commands;
-    rigged_min = std::min(rigged_min, frame_rigged_commands);
-    rigged_max = std::max(rigged_max, frame_rigged_commands);
-    const auto now = std::chrono::steady_clock::now();
-    if (now - last_rigged_report >= std::chrono::seconds(1)) {
-      last_rigged_report = now;
-
-      qInfo().noquote()
-          << QStringLiteral("SOI rigged/frame: min=%1 max=%2 last=%3 drawn=%5 %4"
-                            "%6")
-                 .arg(rigged_min == std::numeric_limits<std::size_t>::max()
-                          ? 0
-                          : rigged_min)
-                 .arg(rigged_max)
-                 .arg(frame_rigged_commands)
-                 .arg(rigged_recoveries > 0
-                          ? QStringLiteral("<-- FLICKER: %1 soldier(s) came back")
-                                .arg(rigged_recoveries)
-                          : (rigged_min != rigged_max ? QStringLiteral("(attrition)")
-                                                      : QStringLiteral("(stable)")))
-                 .arg(m_rigged_drawn_this_frame)
-                 .arg(m_rigged_drawn_this_frame < frame_rigged_commands
-                          ? QStringLiteral(" <-- LOST AT PLAYBACK")
-                          : QString());
-      rigged_recoveries = 0;
-      rigged_min = std::numeric_limits<std::size_t>::max();
-      rigged_max = 0;
-    }
   }
 
   if (m_rigged_character_pipeline) {

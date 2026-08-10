@@ -1,0 +1,95 @@
+#pragma once
+
+#include <array>
+
+#include "render/gl/backend/prop_parts.h"
+
+namespace Render::GL::BackendPipelines::StatueParts {
+
+// The hand-placed primitives that make up the village statue: a stepped
+// plinth, then a standing figure. These were a wall of float literals inside
+// initialize_statue_pipeline(); as tables the numbers can be read and nudged
+// without picking them out of five hundred lines of builder calls.
+//
+// The wreath, the drapery folds and the robe hem are generated in loops and
+// stay in the pipeline; only the placed parts live here.
+
+inline constexpr float k_plinth_top = 1.175F;
+inline constexpr int k_limb_segs = 9;
+inline constexpr int k_body_segs = 12;
+
+inline constexpr std::array<PropSlabPart, 13> k_statue_slabs{{
+    {-0.030F, 0.070F, 0.545F, 0.536F},
+    {0.070F, 0.140F, 0.478F, 0.470F},
+    {0.140F, 0.208F, 0.412F, 0.404F},
+    {0.208F, 0.266F, 0.362F, 0.358F},
+    {0.266F, 0.316F, 0.358F, 0.320F},
+    {0.316F, 0.348F, 0.320F, 0.306F},
+    {0.348F, 0.920F, 0.304F, 0.290F},
+    {0.920F, 0.954F, 0.290F, 0.320F},
+    {0.954F, 0.998F, 0.320F, 0.362F},
+    {0.998F, 1.030F, 0.362F, 0.356F},
+    {1.030F, 1.066F, 0.356F, 0.312F},
+    {1.066F, 1.122F, 0.292F, 0.286F},
+    {1.122F, k_plinth_top, 0.266F, 0.260F},
+}};
+
+inline constexpr std::array<PropBeamPart, 5> k_statue_beams{{
+    {{-0.055F, 1.202F, 0.086F}, {0.128F, 1.202F, 0.100F}, 0.050F, 0.027F},
+    {{-0.140F, 1.200F, -0.088F}, {0.030F, 1.200F, -0.160F}, 0.048F, 0.025F},
+    {{0.150F, 2.376F, -0.321F}, {0.172F, 2.452F, -0.324F}, 0.036F, 0.014F},
+    {{-0.128F, 2.180F, 0.030F}, {-0.176F, 1.520F, 0.010F}, 0.150F, 0.030F},
+    {{-0.176F, 1.700F, 0.140F}, {-0.128F, 1.436F, 0.226F}, 0.075F, 0.026F},
+}};
+
+inline constexpr std::array<PropLimbPart, 26> k_statue_limbs{{
+    {{0.014F, 1.229F, 0.092F}, {0.010F, 1.370F, 0.096F}, 0.044F, 0.068F, k_limb_segs},
+    {{0.010F, 1.370F, 0.096F}, {0.016F, 1.545F, 0.086F}, 0.068F, 0.057F, k_limb_segs},
+    {{0.016F, 1.512F, 0.086F}, {0.016F, 1.578F, 0.086F}, 0.062F, 0.060F, k_limb_segs},
+    {{0.016F, 1.545F, 0.086F}, {0.004F, 1.850F, 0.098F}, 0.062F, 0.098F, k_limb_segs},
+    {{-0.056F, 1.226F, -0.124F},
+     {-0.020F, 1.372F, -0.110F},
+     0.042F,
+     0.064F,
+     k_limb_segs},
+    {{-0.020F, 1.372F, -0.110F},
+     {0.046F, 1.522F, -0.096F},
+     0.064F,
+     0.054F,
+     k_limb_segs},
+    {{0.044F, 1.492F, -0.096F}, {0.048F, 1.556F, -0.095F}, 0.058F, 0.056F, k_limb_segs},
+    {{0.046F, 1.522F, -0.096F}, {0.002F, 1.846F, -0.100F}, 0.058F, 0.094F, k_limb_segs},
+    {{0.086F, 2.108F, 0.062F}, {0.104F, 2.176F, 0.055F}, 0.058F, 0.044F, 8},
+    {{0.086F, 2.108F, -0.062F}, {0.104F, 2.176F, -0.055F}, 0.058F, 0.044F, 8},
+    {{0.004F, 2.150F, 0.148F}, {0.000F, 2.226F, 0.140F}, 0.072F, 0.062F, k_limb_segs},
+    {{0.004F, 2.150F, -0.148F}, {0.000F, 2.226F, -0.140F}, 0.072F, 0.062F, k_limb_segs},
+    {{0.068F, 2.374F, 0.0F}, {0.092F, 2.352F, 0.0F}, 0.020F, 0.012F, 6},
+    {{0.000F, 2.196F, -0.150F}, {0.052F, 2.108F, -0.286F}, 0.062F, 0.048F, k_limb_segs},
+    {{0.052F, 2.108F, -0.286F}, {0.128F, 2.318F, -0.318F}, 0.050F, 0.034F, k_limb_segs},
+    {{0.128F, 2.318F, -0.318F}, {0.156F, 2.392F, -0.322F}, 0.036F, 0.030F, 8},
+    {{0.000F, 2.196F, 0.152F}, {-0.022F, 1.972F, 0.196F}, 0.062F, 0.046F, k_limb_segs},
+    {{-0.022F, 1.972F, 0.196F}, {0.038F, 1.812F, 0.206F}, 0.046F, 0.034F, k_limb_segs},
+    {{0.038F, 1.812F, 0.206F}, {0.062F, 1.766F, 0.210F}, 0.036F, 0.028F, 8},
+    {{0.052F, k_plinth_top, 0.216F}, {0.046F, 2.482F, 0.212F}, 0.026F, 0.022F, 8},
+    {{0.046F, 2.482F, 0.212F}, {0.045F, 2.516F, 0.212F}, 0.032F, 0.026F, 8},
+    {{0.045F, 2.512F, 0.212F}, {0.044F, 2.616F, 0.212F}, 0.036F, 0.003F, 8},
+    {{-0.030F, 2.246F, 0.118F}, {-0.086F, 2.062F, 0.186F}, 0.078F, 0.086F, k_limb_segs},
+    {{-0.070F, 2.090F, 0.180F}, {0.060F, 1.928F, 0.020F}, 0.068F, 0.058F, 8},
+    {{0.060F, 1.928F, 0.020F}, {0.020F, 1.876F, -0.150F}, 0.058F, 0.062F, 8},
+    {{0.020F, 1.876F, -0.150F}, {-0.120F, 1.860F, -0.060F}, 0.062F, 0.070F, 8},
+}};
+
+inline constexpr std::array<PropFrustumPart, 10> k_statue_frustums{{
+    {0.0F, 1.796F, 0.0F, 0.108F, 0.150F, 0.100F, 0.138F, 0.154F, k_body_segs},
+    {0.002F, 1.828F, 0.0F, 0.128F, 0.168F, 0.116F, 0.154F, 0.078F, k_body_segs},
+    {0.004F, 1.902F, 0.0F, 0.126F, 0.164F, 0.100F, 0.130F, 0.052F, k_body_segs},
+    {0.004F, 1.938F, 0.0F, 0.100F, 0.130F, 0.120F, 0.158F, 0.150F, k_body_segs},
+    {0.004F, 2.088F, 0.0F, 0.120F, 0.158F, 0.110F, 0.170F, 0.126F, k_body_segs},
+    {0.012F, 2.196F, 0.0F, 0.054F, 0.060F, 0.048F, 0.052F, 0.078F, 10},
+    {0.014F, 2.274F, 0.0F, 0.050F, 0.052F, 0.068F, 0.070F, 0.062F, k_body_segs},
+    {0.012F, 2.336F, 0.0F, 0.068F, 0.070F, 0.070F, 0.072F, 0.058F, k_body_segs},
+    {0.006F, 2.394F, 0.0F, 0.070F, 0.072F, 0.030F, 0.032F, 0.068F, k_body_segs},
+    {-0.020F, 2.372F, 0.0F, 0.070F, 0.074F, 0.040F, 0.044F, 0.078F, 10},
+}};
+
+} // namespace Render::GL::BackendPipelines::StatueParts

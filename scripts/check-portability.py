@@ -125,14 +125,19 @@ def clang_major(clang):
 
 
 def tracked_files():
-    """Every file git knows about, as repo-relative POSIX paths."""
+    """Every file git knows about, as repo-relative POSIX paths.
+
+    Paths deleted in the working tree but still in the index are dropped: a
+    refactor that removes a file should not make the gate crash before the
+    deletion is staged.
+    """
     out = subprocess.run(
         ["git", "-C", str(ROOT), "ls-files", "-z"],
         capture_output=True,
         text=True,
         check=True,
     ).stdout
-    return [p for p in out.split("\0") if p]
+    return [p for p in out.split("\0") if p and (ROOT / p).exists()]
 
 
 def find_libcxx(clang):

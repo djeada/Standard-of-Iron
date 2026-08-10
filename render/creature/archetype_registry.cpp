@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <mutex>
 
-#include "../elephant/elephant_spec.h"
-#include "../humanoid/humanoid_spec.h"
-#include "../wildlife/sheep_spec.h"
-#include "../wildlife/wolf_spec.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/wildlife/sheep_spec.h"
+#include "render/wildlife/wolf_spec.h"
 
 namespace Render::Creature {
 

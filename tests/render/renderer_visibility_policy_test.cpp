@@ -31,17 +31,13 @@ TEST(RendererVisibilityPolicyTest, OrderMarkersBelongOnlyToTheLocalHumanViewer) 
   EXPECT_TRUE(renderer.order_markers_visible_for_owner(4));
 }
 
-TEST(RendererVisibilityPolicyTest, SpectatorsNeedAnExplicitDebugReveal) {
+TEST(RendererVisibilityPolicyTest, SpectatorModeHidesEveryOrderMarker) {
   Render::GL::Renderer renderer;
   renderer.set_local_owner_id(3);
   renderer.set_order_marker_spectator_mode(true);
 
   EXPECT_FALSE(renderer.order_markers_visible_for_owner(3));
   EXPECT_FALSE(renderer.order_markers_visible_for_owner(4));
-
-  renderer.set_debug_reveal_non_local_order_markers(true);
-  EXPECT_TRUE(renderer.order_markers_visible_for_owner(3));
-  EXPECT_TRUE(renderer.order_markers_visible_for_owner(4));
 }
 
 TEST(CameraFrustumCacheTest, CameraChangesInvalidateCachedPlanes) {

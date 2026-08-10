@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "../creature/species_manifest.h"
+#include "render/creature/species_manifest.h"
 #include "sheep_manifest.h"
 #include "wildlife_gait.h"
 

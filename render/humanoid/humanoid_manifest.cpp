@@ -13,14 +13,6 @@
 #include <string_view>
 #include <vector>
 
-#include "../creature/humanoid_clip_ids.h"
-#include "../creature/movement_state.h"
-#include "../entity/mounted_knight_pose.h"
-#include "../equipment/weapons/spear_renderer.h"
-#include "../equipment/weapons/sword_renderer.h"
-#include "../gl/humanoid/humanoid_types.h"
-#include "../horse/dimensions.h"
-#include "../horse/horse_motion.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
 #include "animation/death_pose_manifest.h"
@@ -31,6 +23,14 @@
 #include "humanoid_spec.h"
 #include "mounted_pose_controller.h"
 #include "pose_controller.h"
+#include "render/creature/humanoid_clip_ids.h"
+#include "render/creature/movement_state.h"
+#include "render/entity/mounted_knight_pose.h"
+#include "render/equipment/weapons/spear_renderer.h"
+#include "render/equipment/weapons/sword_renderer.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/horse/dimensions.h"
+#include "render/horse/horse_motion.h"
 #include "skeleton.h"
 #include "spear_pose_utils.h"
 

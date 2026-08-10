@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "../../geom/ground_marker_pattern.h"
-#include "../mesh.h"
-#include "../render_constants.h"
+#include "render/geom/ground_marker_pattern.h"
+#include "render/gl/mesh.h"
+#include "render/gl/render_constants.h"
 
 namespace Render::GL::BackendPipelines {
 

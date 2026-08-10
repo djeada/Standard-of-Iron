@@ -6,12 +6,12 @@
 #include <optional>
 #include <unordered_set>
 
-#include "../../game/core/component.h"
-#include "../../game/core/world.h"
-#include "../../game/visuals/team_colors.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
 #include "flag.h"
+#include "game/core/component.h"
+#include "game/core/world.h"
+#include "game/visuals/team_colors.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
 #include "transforms.h"
 
 namespace Render::GL {

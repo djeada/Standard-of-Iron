@@ -8,9 +8,9 @@
 #include <string>
 #include <string_view>
 
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../render_archetype.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL {
 

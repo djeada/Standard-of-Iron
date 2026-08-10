@@ -7,9 +7,9 @@
 #include <cstdint>
 #include <memory>
 
-#include "../../game/systems/unit_activity.h"
-#include "../gl/mesh.h"
+#include "game/systems/unit_activity.h"
 #include "icon_glyph.h"
+#include "render/gl/mesh.h"
 
 namespace Render::Geom {
 
@@ -75,12 +75,6 @@ indicator_distance_fade(float distance_sq) noexcept -> float {
 class ModeIndicator {
 public:
   static auto mesh_for(IndicatorKind kind) -> Render::GL::Mesh*;
-  static void release_meshes();
-
-private:
-  using MeshCache =
-      std::array<std::unique_ptr<Render::GL::Mesh>, k_indicator_kind_count>;
-  static auto meshes() -> MeshCache&;
 };
 
 } // namespace Render::Geom

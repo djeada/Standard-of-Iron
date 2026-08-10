@@ -6,18 +6,18 @@
 #include <cmath>
 #include <numbers>
 
-#include "../../game/core/component.h"
-#include "../../game/core/world.h"
-#include "../../game/map/render_visibility_rules.h"
-#include "../../game/map/visibility_service.h"
-#include "../../game/systems/camera_visibility_service.h"
-#include "../../game/systems/combat_rules.h"
-#include "../../game/systems/combat_system/structure_combat.h"
-#include "../../game/systems/combat_system/structure_fire.h"
-#include "../../game/systems/formation_combat_geometry.h"
-#include "../../game/systems/rpg_combat_system/rpg_targeting.h"
-#include "../combat_dust_defaults.h"
-#include "../scene_renderer.h"
+#include "game/core/component.h"
+#include "game/core/world.h"
+#include "game/map/render_visibility_rules.h"
+#include "game/map/visibility_service.h"
+#include "game/systems/combat_rules.h"
+#include "game/systems/combat_system/structure_combat.h"
+#include "game/systems/combat_system/structure_fire.h"
+#include "game/systems/formation_combat_geometry.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
+#include "render/camera_visibility.h"
+#include "render/combat_dust_defaults.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 
@@ -144,7 +144,7 @@ void render_combat_dust(Renderer* renderer,
   }
 
   float const animation_time = renderer->get_animation_time();
-  auto& visibility = Game::Systems::CameraVisibilityService::instance();
+  auto& visibility = Render::GL::CameraVisibility::instance();
   auto& fog_of_war = Game::Map::VisibilityService::instance();
   auto fog_snapshot = fog_of_war.is_initialized() ? fog_of_war.snapshot_ptr() : nullptr;
   auto is_fog_visible = [&fog_snapshot](float world_x, float world_z) -> bool {

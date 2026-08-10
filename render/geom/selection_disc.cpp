@@ -7,13 +7,9 @@
 #include <vector>
 
 #include "gl/mesh.h"
+#include "render/gl/shared_geometry_cache.h"
 
 namespace Render::Geom {
-
-auto SelectionDisc::mesh() -> std::unique_ptr<Render::GL::Mesh>& {
-  static auto* storage = new std::unique_ptr<Render::GL::Mesh>{};
-  return *storage;
-}
 
 static auto create_disc_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   using namespace Render::GL;
@@ -38,10 +34,8 @@ static auto create_disc_mesh() -> std::unique_ptr<Render::GL::Mesh> {
 }
 
 auto SelectionDisc::get() -> Render::GL::Mesh* {
-  if (!mesh()) {
-    mesh() = create_disc_mesh();
-  }
-  return mesh().get();
+  return Render::GL::SharedGeometryCache::instance().get_or_build(
+      Render::GL::geometry_key("geom/selection_disc"), create_disc_mesh);
 }
 
 } // namespace Render::Geom

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 
-#include "../creature/species_manifest.h"
+#include "render/creature/species_manifest.h"
 #include "wildlife_gait.h"
 #include "wolf_manifest.h"
 

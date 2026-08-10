@@ -4,8 +4,8 @@
 #include <cstddef>
 #include <gtest/gtest.h>
 
+#include "render/draw_commands.h"
 #include "render/draw_part.h"
-#include "render/draw_queue.h"
 #include "render/material.h"
 #include "render/pipeline/instance_coalescer.h"
 

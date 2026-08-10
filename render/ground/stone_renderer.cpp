@@ -11,8 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "../gl/buffer.h"
-#include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/scatter_composition.h"
@@ -21,6 +19,8 @@
 #include "gl/resources.h"
 #include "map/terrain.h"
 #include "map/terrain_service.h"
+#include "render/gl/buffer.h"
+#include "render/scene_renderer.h"
 #include "scatter_runtime.h"
 
 namespace {

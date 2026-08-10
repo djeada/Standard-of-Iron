@@ -243,14 +243,14 @@ jobs:
 
       # OpenGL 3.3 Core is the floor on every platform. Apple caps at 4.1, so
       # anything the renderer gains from 4.3+ (compute, SSBO, indirect draw)
-      # must stay optional -- the same fallback the Linux job forces on. If this
-      # ever fails, the GPU crowd path has stopped being optional.
+      # must stay optional. Apple's own cap already denies the GPU crowd path
+      # here, so a plain self-test run is the fallback check. If this ever
+      # fails, the GPU crowd path has stopped being optional.
       - name: Verify the OpenGL 3.3 fallback path
         run: |
           set -o pipefail
           binary="${APP_DIR}/${APP_NAME}.app/Contents/MacOS/${APP_NAME}"
-          SOI_RENDER_DISABLE_GPU_CROWD_CULL=1 "${binary}" \
-            --renderer-self-test 2>&1 | tee renderer_fallback.log
+          "${binary}" --renderer-self-test 2>&1 | tee renderer_fallback.log
           grep -q "SOI_RENDERER_SELF_TEST: PASS" renderer_fallback.log
 
       - name: Create DMG

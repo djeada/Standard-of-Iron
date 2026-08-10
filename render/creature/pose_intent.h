@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../gl/humanoid/humanoid_types.h"
 #include "pose_intent_enum.h"
+#include "render/gl/humanoid/humanoid_types.h"
 #include "render_request.h"
 
 namespace Render::Humanoid {

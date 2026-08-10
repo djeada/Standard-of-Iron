@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../gl/humanoid/humanoid_types.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "humanoid_math.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::Humanoid::PosePrimitives {
 

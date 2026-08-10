@@ -6,8 +6,8 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../gl/mesh.h"
+#include "game/map/terrain.h"
+#include "render/gl/mesh.h"
 
 namespace Render::Ground {
 

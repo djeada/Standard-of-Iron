@@ -15,14 +15,12 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
   const QMatrix4x4& view_proj = context.view_proj;
   const float banner_wind_strength = context.banner_wind_strength;
   bool& polygon_offset_enabled = context.polygon_offset_enabled;
-  const bool rigged_instancing_enabled = context.rigged_instancing_enabled;
   (void)cam;
   (void)view;
   (void)projection;
   (void)view_proj;
   (void)banner_wind_strength;
   (void)polygon_offset_enabled;
-  (void)rigged_instancing_enabled;
 
   const std::size_t i = prepared.start;
   const std::size_t batch_end = prepared.end();

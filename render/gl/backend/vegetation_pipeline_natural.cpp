@@ -15,12 +15,14 @@
 #include <utility>
 #include <vector>
 
-#include "../platform_gl.h"
-#include "../render_constants.h"
 #include "dead_tree_mesh.h"
 #include "gl/shader_cache.h"
 #include "mesh_buffers.h"
 #include "prop_mesh_builder.h"
+#include "render/gl/backend/ring_loft_builder.h"
+#include "render/gl/backend/static_mesh_upload.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/render_constants.h"
 #include "vegetation_pipeline.h"
 
 namespace Render::GL::BackendPipelines {
@@ -28,6 +30,21 @@ namespace Render::GL::BackendPipelines {
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 using namespace Render::GL::Geometry;
+
+// The foliage shaders do not follow VertexAttrib's position/normal/tex_coord
+// order: pine_instanced.vert, olive_instanced.vert and plant_instanced.vert all
+// declare `a_tex_coord` at location 1 and `a_normal` at location 2. These names
+// track the shaders, so the layout below cannot silently drift from them.
+constexpr GLuint k_foliage_position_location = 0;
+constexpr GLuint k_foliage_tex_coord_location = 1;
+constexpr GLuint k_foliage_normal_location = 2;
+
+// a_pos_scale, a_color_sway, a_rotation.
+constexpr std::array<GLuint, 3> k_foliage_instance_locations{3, 4, 5};
+
+// stone_instanced.vert carries no texcoord, so its instance data starts one
+// slot earlier: a_pos_scale at 2, a_color_rot at 3.
+constexpr std::array<GLuint, 2> k_stone_instance_locations{2, 3};
 
 void VegetationPipeline::initialize_stone_pipeline() {
   initializeOpenGLFunctions();
@@ -159,48 +176,19 @@ void VegetationPipeline::initialize_stone_pipeline() {
     emit_tri(ring_pts[0][next], ring_pts[0][i], bot_center);
   }
 
-  glGenVertexArrays(1, &m_stone_mesh.vao);
-  glBindVertexArray(m_stone_mesh.vao);
-
-  glGenBuffers(1, &m_stone_mesh.vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_stone_mesh.vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(verts.size() * sizeof(StoneVertex)),
-               verts.data(),
-               GL_STATIC_DRAW);
-  m_stone_mesh.vertex_count = static_cast<GLsizei>(verts.size());
-
-  glGenBuffers(1, &m_stone_mesh.index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_stone_mesh.index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(idx.size() * sizeof(uint16_t)),
-               idx.data(),
-               GL_STATIC_DRAW);
-  m_stone_mesh.index_count = static_cast<GLsizei>(idx.size());
-
-  glEnableVertexAttribArray(position);
-  glVertexAttribPointer(position,
-                        vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(StoneVertex),
-                        reinterpret_cast<void*>(offsetof(StoneVertex, position)));
-  glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(normal,
-                        vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(StoneVertex),
-                        reinterpret_cast<void*>(offsetof(StoneVertex, normal)));
-
-  glEnableVertexAttribArray(tex_coord);
-  glVertexAttribDivisor(tex_coord, 1);
-  glEnableVertexAttribArray(instance_position);
-  glVertexAttribDivisor(instance_position, 1);
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  constexpr std::array<VertexAttributeLayout, 2> k_stone_attributes{{
+      {k_foliage_position_location, vec3, offsetof(StoneVertex, position)},
+      {1, vec3, offsetof(StoneVertex, normal)},
+  }};
+  upload_static_instanced_mesh(*this,
+                               m_stone_mesh,
+                               verts.data(),
+                               verts.size(),
+                               sizeof(StoneVertex),
+                               k_stone_attributes,
+                               idx.data(),
+                               idx.size(),
+                               k_stone_instance_locations);
 }
 
 void VegetationPipeline::initialize_plant_pipeline() {
@@ -250,241 +238,98 @@ void VegetationPipeline::initialize_plant_pipeline() {
       12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23,
   };
 
-  glGenVertexArrays(1, &m_plant_mesh.vao);
-  glBindVertexArray(m_plant_mesh.vao);
-
-  glGenBuffers(1, &m_plant_mesh.vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_plant_mesh.vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(plant_vertices), plant_vertices, GL_STATIC_DRAW);
-  m_plant_mesh.vertex_count = plant_cross_quad_vertex_count;
-
-  glEnableVertexAttribArray(position);
-  glVertexAttribPointer(position,
-                        vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(PlantVertex),
-                        reinterpret_cast<void*>(offsetof(PlantVertex, position)));
-
-  glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(normal,
-                        vec2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(PlantVertex),
-                        reinterpret_cast<void*>(offsetof(PlantVertex, tex_coord)));
-
-  glEnableVertexAttribArray(tex_coord);
-  glVertexAttribPointer(tex_coord,
-                        vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(PlantVertex),
-                        reinterpret_cast<void*>(offsetof(PlantVertex, normal)));
-
-  glGenBuffers(1, &m_plant_mesh.index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_plant_mesh.index_buffer);
-  glBufferData(
-      GL_ELEMENT_ARRAY_BUFFER, sizeof(plant_indices), plant_indices, GL_STATIC_DRAW);
-  m_plant_mesh.index_count = plant_cross_quad_index_count;
-
-  glEnableVertexAttribArray(instance_position);
-  glVertexAttribDivisor(instance_position, 1);
-  glEnableVertexAttribArray(instance_scale);
-  glVertexAttribDivisor(instance_scale, 1);
-  glEnableVertexAttribArray(instance_color);
-  glVertexAttribDivisor(instance_color, 1);
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  constexpr std::array<VertexAttributeLayout, 3> k_plant_attributes{{
+      {k_foliage_position_location, vec3, offsetof(PlantVertex, position)},
+      {k_foliage_tex_coord_location, vec2, offsetof(PlantVertex, tex_coord)},
+      {k_foliage_normal_location, vec3, offsetof(PlantVertex, normal)},
+  }};
+  upload_static_instanced_mesh(*this,
+                               m_plant_mesh,
+                               static_cast<const void*>(plant_vertices),
+                               plant_cross_quad_vertex_count,
+                               sizeof(PlantVertex),
+                               k_plant_attributes,
+                               static_cast<const void*>(plant_indices),
+                               plant_cross_quad_index_count,
+                               k_foliage_instance_locations);
 }
 
 void VegetationPipeline::initialize_pine_pipeline() {
   initializeOpenGLFunctions();
   release_mesh_buffers(*this, m_pine_mesh);
 
+  // The pine shader reads the sway amount out of the third texcoord channel,
+  // so the ring weight carries it.
   struct PineVertex {
     QVector3D position;
-
     QVector3D tex_coord;
     QVector3D normal;
   };
 
   constexpr int k_segments = 16;
-  constexpr float k_two_pi = 6.28318530718F;
+  RingLoftBuilder loft(k_segments);
+  loft.reserve(22);
 
-  std::vector<PineVertex> vertices;
-  vertices.reserve(22 * k_segments + 2);
-
-  std::vector<unsigned short> indices;
-  indices.reserve(22 * k_segments * 6);
-
-  auto add_ring = [&](float radius,
-                      float y,
-                      float normal_up,
-                      float v_coord,
-                      float bough,
-                      const QVector2D& center_offset = QVector2D(0.0F, 0.0F)) -> int {
-    const int start = static_cast<int>(vertices.size());
-    for (int i = 0; i < k_segments; ++i) {
-      const float t = static_cast<float>(i) / static_cast<float>(k_segments);
-      const float angle = t * k_two_pi;
-      const float nx = std::cos(angle);
-      const float nz = std::sin(angle);
-      QVector3D normal(nx, normal_up, nz);
-      normal.normalize();
-      QVector3D const position(
-          radius * nx + center_offset.x(), y, radius * nz + center_offset.y());
-      QVector3D const tex_coord(t, v_coord, bough);
-      vertices.push_back({position, tex_coord, normal});
-    }
-    return start;
-  };
-
-  auto connect_rings = [&](int lower_start, int upper_start) {
-    for (int i = 0; i < k_segments; ++i) {
-      const int next = (i + 1) % k_segments;
-      const auto lower0 = static_cast<unsigned short>(lower_start + i);
-      const auto lower1 = static_cast<unsigned short>(lower_start + next);
-      const auto upper0 = static_cast<unsigned short>(upper_start + i);
-      const auto upper1 = static_cast<unsigned short>(upper_start + next);
-
-      indices.push_back(lower0);
-      indices.push_back(lower1);
-      indices.push_back(upper1);
-      indices.push_back(lower0);
-      indices.push_back(upper1);
-      indices.push_back(upper0);
-    }
-  };
-
-  const int trunk_bottom = add_ring(0.088F, -0.01F, -0.08F, 0.00F, 0.0F);
+  using Ring = RingLoftBuilder::Ring;
+  const int trunk_bottom = loft.add_ring({0.088F, -0.01F, -0.08F, 0.00F, 0.0F});
   const int trunk_kink =
-      add_ring(0.068F, 0.18F, 0.00F, 0.08F, 0.0F, QVector2D(0.010F, 0.006F));
+      loft.add_ring({0.068F, 0.18F, 0.00F, 0.08F, 0.0F, QVector2D(0.010F, 0.006F)});
   const int trunk_mid =
-      add_ring(0.056F, 0.36F, 0.03F, 0.16F, 0.0F, QVector2D(0.022F, 0.012F));
+      loft.add_ring({0.056F, 0.36F, 0.03F, 0.16F, 0.0F, QVector2D(0.022F, 0.012F)});
   const int trunk_top =
-      add_ring(0.050F, 0.56F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F));
+      loft.add_ring({0.050F, 0.56F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F)});
 
   const QVector2D t1o(-0.032F, 0.050F);
-  const int c1_inner = add_ring(0.135F, 0.62F, 0.12F, 0.34F, 0.00F, t1o * 0.15F);
-  const int c1_base = add_ring(0.245F, 0.67F, 0.24F, 0.42F, 0.60F, t1o * 0.40F);
-  const int c1_outer = add_ring(0.355F, 0.72F, 0.34F, 0.50F, 1.00F, t1o);
-  const int c1_mid = add_ring(0.315F, 0.79F, 0.56F, 0.58F, 0.74F, t1o * 0.55F);
-  const int c1_top = add_ring(0.205F, 0.85F, 0.72F, 0.64F, 0.30F, t1o * 0.22F);
+  const int c1_inner = loft.add_ring({0.135F, 0.62F, 0.12F, 0.34F, 0.00F, t1o * 0.15F});
+  const int c1_base = loft.add_ring({0.245F, 0.67F, 0.24F, 0.42F, 0.60F, t1o * 0.40F});
+  const int c1_outer = loft.add_ring({0.355F, 0.72F, 0.34F, 0.50F, 1.00F, t1o});
+  const int c1_mid = loft.add_ring({0.315F, 0.79F, 0.56F, 0.58F, 0.74F, t1o * 0.55F});
+  const int c1_top = loft.add_ring({0.205F, 0.85F, 0.72F, 0.64F, 0.30F, t1o * 0.22F});
 
   const QVector2D t2o(0.040F, -0.026F);
-  const int c2_inner = add_ring(0.120F, 0.87F, 0.16F, 0.66F, 0.00F, t2o * 0.12F);
-  const int c2_base = add_ring(0.220F, 0.92F, 0.30F, 0.73F, 0.60F, t2o * 0.38F);
-  const int c2_outer = add_ring(0.295F, 0.97F, 0.42F, 0.80F, 1.00F, t2o);
-  const int c2_mid = add_ring(0.240F, 1.03F, 0.64F, 0.86F, 0.74F, t2o * 0.52F);
-  const int c2_top = add_ring(0.145F, 1.08F, 0.78F, 0.90F, 0.30F, t2o * 0.20F);
+  const int c2_inner = loft.add_ring({0.120F, 0.87F, 0.16F, 0.66F, 0.00F, t2o * 0.12F});
+  const int c2_base = loft.add_ring({0.220F, 0.92F, 0.30F, 0.73F, 0.60F, t2o * 0.38F});
+  const int c2_outer = loft.add_ring({0.295F, 0.97F, 0.42F, 0.80F, 1.00F, t2o});
+  const int c2_mid = loft.add_ring({0.240F, 1.03F, 0.64F, 0.86F, 0.74F, t2o * 0.52F});
+  const int c2_top = loft.add_ring({0.145F, 1.08F, 0.78F, 0.90F, 0.30F, t2o * 0.20F});
 
   const QVector2D t3o(-0.022F, -0.032F);
-  const int c3_inner = add_ring(0.085F, 1.10F, 0.20F, 0.91F, 0.00F, t3o * 0.10F);
-  const int c3_base = add_ring(0.150F, 1.15F, 0.38F, 0.95F, 0.60F, t3o * 0.35F);
-  const int c3_outer = add_ring(0.205F, 1.19F, 0.52F, 0.98F, 1.00F, t3o);
-  const int c3_mid = add_ring(0.150F, 1.25F, 0.74F, 1.02F, 0.74F, t3o * 0.48F);
-  const int c3_top = add_ring(0.075F, 1.30F, 0.86F, 1.06F, 0.30F, t3o * 0.15F);
+  const int c3_inner = loft.add_ring({0.085F, 1.10F, 0.20F, 0.91F, 0.00F, t3o * 0.10F});
+  const int c3_base = loft.add_ring({0.150F, 1.15F, 0.38F, 0.95F, 0.60F, t3o * 0.35F});
+  const int c3_outer = loft.add_ring({0.205F, 1.19F, 0.52F, 0.98F, 1.00F, t3o});
+  const int c3_mid = loft.add_ring({0.150F, 1.25F, 0.74F, 1.02F, 0.74F, t3o * 0.48F});
+  const int c3_top = loft.add_ring({0.075F, 1.30F, 0.86F, 1.06F, 0.30F, t3o * 0.15F});
 
-  const int tip_ring = add_ring(0.028F, 1.36F, 0.95F, 1.12F, 0.20F);
+  const int tip_ring = loft.add_ring({0.028F, 1.36F, 0.95F, 1.12F, 0.20F});
 
-  connect_rings(trunk_bottom, trunk_kink);
-  connect_rings(trunk_kink, trunk_mid);
-  connect_rings(trunk_mid, trunk_top);
-  connect_rings(trunk_top, c1_inner);
-  connect_rings(c1_inner, c1_base);
-  connect_rings(c1_base, c1_outer);
-  connect_rings(c1_outer, c1_mid);
-  connect_rings(c1_mid, c1_top);
-  connect_rings(c1_top, c2_inner);
-  connect_rings(c2_inner, c2_base);
-  connect_rings(c2_base, c2_outer);
-  connect_rings(c2_outer, c2_mid);
-  connect_rings(c2_mid, c2_top);
-  connect_rings(c2_top, c3_inner);
-  connect_rings(c3_inner, c3_base);
-  connect_rings(c3_base, c3_outer);
-  connect_rings(c3_outer, c3_mid);
-  connect_rings(c3_mid, c3_top);
-  connect_rings(c3_top, tip_ring);
+  loft.connect_chain({trunk_bottom, trunk_kink, trunk_mid, trunk_top, c1_inner,
+                      c1_base,      c1_outer,   c1_mid,    c1_top,    c2_inner,
+                      c2_base,      c2_outer,   c2_mid,    c2_top,    c3_inner,
+                      c3_base,      c3_outer,   c3_mid,    c3_top,    tip_ring});
 
-  const auto trunk_cap_index = static_cast<unsigned short>(vertices.size());
-  vertices.push_back({QVector3D(0.0F, 0.0F, 0.0F),
-                      QVector3D(0.5F, 0.0F, 0.0F),
-                      QVector3D(0.0F, -1.0F, 0.0F)});
-  for (int i = 0; i < k_segments; ++i) {
-    const int next = (i + 1) % k_segments;
-    indices.push_back(static_cast<unsigned short>(trunk_bottom + next));
-    indices.push_back(static_cast<unsigned short>(trunk_bottom + i));
-    indices.push_back(trunk_cap_index);
+  loft.cap(trunk_bottom, 0.0F, QVector2D(0.0F, 0.0F), 0.0F, 0.0F, false);
+  loft.cap(tip_ring, 1.44F, QVector2D(0.0F, 0.0F), 1.18F, 0.30F, true);
+
+  std::vector<PineVertex> vertices;
+  vertices.reserve(loft.vertices().size());
+  for (const auto& v : loft.vertices()) {
+    vertices.push_back({v.position, QVector3D(v.u, v.v, v.weight), v.normal});
   }
 
-  const auto apex_index = static_cast<unsigned short>(vertices.size());
-  vertices.push_back({QVector3D(0.0F, 1.44F, 0.0F),
-                      QVector3D(0.5F, 1.18F, 0.30F),
-                      QVector3D(0.0F, 1.0F, 0.0F)});
-  for (int i = 0; i < k_segments; ++i) {
-    const int next = (i + 1) % k_segments;
-    indices.push_back(static_cast<unsigned short>(tip_ring + i));
-    indices.push_back(static_cast<unsigned short>(tip_ring + next));
-    indices.push_back(apex_index);
-  }
-
-  glGenVertexArrays(1, &m_pine_mesh.vao);
-  glBindVertexArray(m_pine_mesh.vao);
-
-  glGenBuffers(1, &m_pine_mesh.vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_pine_mesh.vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(PineVertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-  m_pine_mesh.vertex_count = static_cast<GLsizei>(vertices.size());
-
-  glEnableVertexAttribArray(position);
-  glVertexAttribPointer(position,
-                        vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(PineVertex),
-                        reinterpret_cast<void*>(offsetof(PineVertex, position)));
-
-  glEnableVertexAttribArray(normal);
-  glVertexAttribPointer(normal,
-                        vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(PineVertex),
-                        reinterpret_cast<void*>(offsetof(PineVertex, tex_coord)));
-
-  glEnableVertexAttribArray(tex_coord);
-  glVertexAttribPointer(tex_coord,
-                        vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(PineVertex),
-                        reinterpret_cast<void*>(offsetof(PineVertex, normal)));
-
-  glGenBuffers(1, &m_pine_mesh.index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_pine_mesh.index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
-               indices.data(),
-               GL_STATIC_DRAW);
-  m_pine_mesh.index_count = static_cast<GLsizei>(indices.size());
-
-  glEnableVertexAttribArray(instance_position);
-  glVertexAttribDivisor(instance_position, 1);
-  glEnableVertexAttribArray(instance_scale);
-  glVertexAttribDivisor(instance_scale, 1);
-  glEnableVertexAttribArray(instance_color);
-  glVertexAttribDivisor(instance_color, 1);
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  constexpr std::array<VertexAttributeLayout, 3> k_pine_attributes{{
+      {k_foliage_position_location, vec3, offsetof(PineVertex, position)},
+      {k_foliage_tex_coord_location, vec3, offsetof(PineVertex, tex_coord)},
+      {k_foliage_normal_location, vec3, offsetof(PineVertex, normal)},
+  }};
+  upload_static_instanced_mesh(*this,
+                               m_pine_mesh,
+                               vertices.data(),
+                               vertices.size(),
+                               sizeof(PineVertex),
+                               k_pine_attributes,
+                               loft.indices().data(),
+                               loft.indices().size(),
+                               k_foliage_instance_locations);
 }
 
 void VegetationPipeline::initialize_olive_pipeline() {
@@ -497,56 +342,21 @@ void VegetationPipeline::initialize_olive_pipeline() {
     QVector3D normal;
   };
 
-  constexpr int k_segments = olive_tree_segments;
-  constexpr float k_two_pi = 6.28318530718F;
-
-  std::vector<OliveVertex> vertices;
-  vertices.reserve(k_segments * 96);
-  std::vector<unsigned short> indices;
-  indices.reserve(k_segments * 6 * 96);
+  RingLoftBuilder loft(olive_tree_segments);
+  loft.reserve(96);
 
   auto add_ring = [&](float radius,
                       float y,
                       float normal_up,
                       float v_coord,
                       const QVector2D& offset = QVector2D(0.0F, 0.0F)) -> int {
-    const int start = static_cast<int>(vertices.size());
-    for (int i = 0; i < k_segments; ++i) {
-      const float t = static_cast<float>(i) / static_cast<float>(k_segments);
-      const float angle = t * k_two_pi;
-      const float nx = std::cos(angle);
-      const float nz = std::sin(angle);
-      QVector3D normal(nx, normal_up, nz);
-      normal.normalize();
-      QVector3D const position(radius * nx + offset.x(), y, radius * nz + offset.y());
-      vertices.push_back({position, QVector2D(t, v_coord), normal});
-    }
-    return start;
+    return loft.add_ring({radius, y, normal_up, v_coord, 0.0F, offset});
   };
-
   auto connect_rings = [&](int lower, int upper) {
-    for (int i = 0; i < k_segments; ++i) {
-      const int next = (i + 1) % k_segments;
-      indices.push_back(static_cast<unsigned short>(lower + i));
-      indices.push_back(static_cast<unsigned short>(lower + next));
-      indices.push_back(static_cast<unsigned short>(upper + next));
-      indices.push_back(static_cast<unsigned short>(lower + i));
-      indices.push_back(static_cast<unsigned short>(upper + next));
-      indices.push_back(static_cast<unsigned short>(upper + i));
-    }
+    loft.connect(lower, upper);
   };
-
   auto add_cap = [&](int ring, float cap_y, const QVector2D& offset, float v) {
-    const int top_idx = static_cast<int>(vertices.size());
-    vertices.push_back({QVector3D(offset.x(), cap_y, offset.y()),
-                        QVector2D(0.5F, v),
-                        QVector3D(0.0F, 1.0F, 0.0F)});
-    for (int i = 0; i < k_segments; ++i) {
-      const int next = (i + 1) % k_segments;
-      indices.push_back(static_cast<unsigned short>(ring + i));
-      indices.push_back(static_cast<unsigned short>(ring + next));
-      indices.push_back(static_cast<unsigned short>(top_idx));
-    }
+    loft.cap(ring, cap_y, offset, v);
   };
 
   int const t0 = add_ring(0.19F, -0.015F, -0.30F, 0.00F, QVector2D(-0.018F, 0.004F));
@@ -715,60 +525,26 @@ void VegetationPipeline::initialize_olive_pipeline() {
              0.44F,
              0.18F);
 
-  m_olive_mesh.vertex_count = static_cast<GLsizei>(vertices.size());
-  m_olive_mesh.index_count = static_cast<GLsizei>(indices.size());
+  std::vector<OliveVertex> vertices;
+  vertices.reserve(loft.vertices().size());
+  for (const auto& v : loft.vertices()) {
+    vertices.push_back({v.position, QVector2D(v.u, v.v), v.normal});
+  }
 
-  glGenVertexArrays(1, &m_olive_mesh.vao);
-  glBindVertexArray(m_olive_mesh.vao);
-
-  glGenBuffers(1, &m_olive_mesh.vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_olive_mesh.vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(OliveVertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-
-  glGenBuffers(1, &m_olive_mesh.index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_olive_mesh.index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned short)),
-               indices.data(),
-               GL_STATIC_DRAW);
-
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0,
-                        3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(OliveVertex),
-                        reinterpret_cast<void*>(offsetof(OliveVertex, position)));
-
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1,
-                        2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(OliveVertex),
-                        reinterpret_cast<void*>(offsetof(OliveVertex, tex_coord)));
-
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2,
-                        3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(OliveVertex),
-                        reinterpret_cast<void*>(offsetof(OliveVertex, normal)));
-
-  glEnableVertexAttribArray(instance_position);
-  glVertexAttribDivisor(instance_position, 1);
-  glEnableVertexAttribArray(instance_scale);
-  glVertexAttribDivisor(instance_scale, 1);
-  glEnableVertexAttribArray(instance_color);
-  glVertexAttribDivisor(instance_color, 1);
-
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  constexpr std::array<VertexAttributeLayout, 3> k_olive_attributes{{
+      {k_foliage_position_location, vec3, offsetof(OliveVertex, position)},
+      {k_foliage_tex_coord_location, vec2, offsetof(OliveVertex, tex_coord)},
+      {k_foliage_normal_location, vec3, offsetof(OliveVertex, normal)},
+  }};
+  upload_static_instanced_mesh(*this,
+                               m_olive_mesh,
+                               vertices.data(),
+                               vertices.size(),
+                               sizeof(OliveVertex),
+                               k_olive_attributes,
+                               loft.indices().data(),
+                               loft.indices().size(),
+                               k_foliage_instance_locations);
 }
 
 void VegetationPipeline::initialize_dead_tree_pipeline() {

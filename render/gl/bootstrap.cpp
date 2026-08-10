@@ -4,8 +4,8 @@
 #include <QOpenGLContext>
 #include <qglobal.h>
 
-#include "../scene_renderer.h"
 #include "gl_capabilities.h"
+#include "render/scene_renderer.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

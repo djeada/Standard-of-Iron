@@ -1,6 +1,6 @@
 #include "instance_coalescer.h"
 
-#include "../draw_queue.h"
+#include "render/draw_commands.h"
 
 namespace Render::Pipeline {
 

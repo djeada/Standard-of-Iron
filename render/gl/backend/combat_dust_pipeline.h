@@ -6,9 +6,9 @@
 
 #include <vector>
 
-#include "../shader.h"
 #include "mesh_buffers.h"
 #include "pipeline_interface.h"
+#include "render/gl/shader.h"
 
 namespace Engine::Core {
 class World;

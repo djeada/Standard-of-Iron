@@ -110,8 +110,6 @@ auto is_view_layer(const std::string& relative) -> bool {
       "game/systems/camera_follow_system.h",
       "game/systems/camera_service.cpp",
       "game/systems/camera_service.h",
-      "game/systems/camera_visibility_service.cpp",
-      "game/systems/camera_visibility_service.h",
       "game/systems/picking_service.cpp",
       "game/systems/picking_service.h",
       "game/systems/game_state_serializer.cpp",
@@ -119,6 +117,67 @@ auto is_view_layer(const std::string& relative) -> bool {
   };
   return files.contains(relative) || relative.rfind("game/view/", 0) == 0 ||
          relative.rfind("game/map/minimap/", 0) == 0;
+}
+
+// The renderer legitimately reads simulation *data*: components, terrain,
+// authored unit and nation catalogues. What it should not grow is a habit of
+// calling into gameplay *systems* to ask questions mid-frame, because that
+// turns a draw pass into a second, hidden simulation step and makes the render
+// layer impossible to exercise without booting the whole game.
+//
+// This list is the render files that include anything from game/systems today.
+// It is allowed to shrink. Adding to it means a renderer started asking the
+// simulation a question; prefer putting the answer on the render snapshot.
+const std::set<std::string>& render_files_using_game_systems() {
+  static const std::set<std::string> entries{
+      "render/entity/ballista_renderer.cpp",
+      "render/entity/barracks_stockpile.cpp",
+      "render/entity/building_render_common.cpp",
+      "render/entity/building_render_common.h",
+      "render/entity/carried_load_renderer.cpp",
+      "render/entity/catapult_renderer.cpp",
+      "render/entity/combat_dust_renderer.cpp",
+      "render/entity/commander_aura_renderer.cpp",
+      "render/entity/elephant_renderer.cpp",
+      "render/entity/healer_aura_renderer.cpp",
+      "render/entity/healer_renderer_common.cpp",
+      "render/entity/healing_beam_renderer.cpp",
+      "render/entity/healing_waves_renderer.cpp",
+      "render/entity/nations/carthage/builder_renderer.cpp",
+      "render/entity/nations/carthage/catapult_renderer.cpp",
+      "render/entity/nations/carthage/healer_renderer.cpp",
+      "render/entity/nations/roman/builder_renderer.cpp",
+      "render/entity/nations/roman/catapult_renderer.cpp",
+      "render/entity/nations/roman/healer_renderer.cpp",
+      "render/entity/spearman_renderer_common.cpp",
+      "render/entity/swordsman_renderer_common.cpp",
+      "render/geom/arrow.cpp",
+      "render/geom/mode_indicator.h",
+      "render/geom/projectile_renderer.cpp",
+      "render/geom/range_rings.h",
+      "render/gl/backend/combat_dust_pipeline.cpp",
+      "render/gl/backend/healer_aura_pipeline.cpp",
+      "render/gl/backend/healing_beam_pipeline.cpp",
+      "render/gl/humanoid/animation/animation_inputs.cpp",
+      "render/humanoid/prepare_internal.h",
+      "render/scene_renderer.cpp",
+      "render/scene_renderer.h",
+      "render/scene_walk.cpp",
+      "render/template_prewarm_catalog.h",
+      "render/template_prewarm_runner.cpp",
+      "render/unit_render_cache.cpp",
+      "render/unit_render_cache.h",
+  };
+  return entries;
+}
+
+auto includes_game_systems(const fs::path& file) -> bool {
+  for (const auto& include : quoted_includes(file)) {
+    if (include.rfind("game/systems/", 0) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 } // namespace
@@ -243,6 +302,57 @@ TEST(ArchitectureLayering, GameDoesNotDependOnTheApplicationLayer) {
       << "game/ included app/. Move the shared code down into game/util/:\n  " << [&] {
            std::string joined;
            for (const auto& entry : offenders) {
+             joined += entry + "\n  ";
+           }
+           return joined;
+         }();
+}
+
+TEST(ArchitectureLayering, RenderDoesNotGrowNewGameSystemDependencies) {
+  const auto root = find_repo_root();
+  ASSERT_TRUE(fs::exists(root / "render"));
+
+  std::vector<std::string> unexpected;
+  for (const auto& file : sources_under(root / "render")) {
+    if (!includes_game_systems(file)) {
+      continue;
+    }
+    const auto relative = fs::relative(file, root).generic_string();
+    if (!render_files_using_game_systems().contains(relative)) {
+      unexpected.push_back(relative);
+    }
+  }
+
+  EXPECT_TRUE(unexpected.empty())
+      << "render/ started depending on a gameplay system. Put the answer on the "
+         "render snapshot instead of querying the simulation while drawing:\n  "
+      << [&] {
+           std::string joined;
+           for (const auto& entry : unexpected) {
+             joined += entry + "\n  ";
+           }
+           return joined;
+         }();
+}
+
+TEST(ArchitectureLayering, RenderGameSystemListStaysHonest) {
+  const auto root = find_repo_root();
+  ASSERT_TRUE(fs::exists(root / "render"));
+
+  std::vector<std::string> stale;
+  for (const auto& entry : render_files_using_game_systems()) {
+    const fs::path file = root / entry;
+    if (!fs::exists(file) || !includes_game_systems(file)) {
+      stale.push_back(entry);
+    }
+  }
+
+  EXPECT_TRUE(stale.empty())
+      << "these no longer depend on game/systems; remove them from "
+         "render_files_using_game_systems():\n  "
+      << [&] {
+           std::string joined;
+           for (const auto& entry : stale) {
              joined += entry + "\n  ";
            }
            return joined;
