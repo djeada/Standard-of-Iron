@@ -2,9 +2,9 @@
 
 #include <QDebug>
 
-#include "../backend.h"
-#include "../mesh.h"
-#include "../shader_cache.h"
+#include "render/gl/backend.h"
+#include "render/gl/mesh.h"
+#include "render/gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {
 

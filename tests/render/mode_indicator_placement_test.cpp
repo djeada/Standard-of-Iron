@@ -7,14 +7,12 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/visibility_service.h"
-#include "game/systems/camera_visibility_service.h"
+#include "render/camera_visibility.h"
 #include "render/combat_dust_defaults.h"
-#include "render/draw_queue.h"
+#include "render/draw_commands.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/geom/mode_indicator.h"
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include "render/profiling/combat_animation_diagnostics.h"
-#endif
 
 namespace {
 
@@ -24,7 +22,7 @@ protected:
     auto& fog = Game::Map::VisibilityService::instance();
     fog.initialize(256, 256, 1.0F);
     fog.reveal_all();
-    Game::Systems::CameraVisibilityService::instance().clear_camera();
+    Render::GL::CameraVisibility::instance().clear_camera();
   }
 };
 
@@ -40,11 +38,9 @@ auto activity_of(
 
 TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
   Render::GL::Renderer renderer;
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
   diagnostics.set_enabled(true);
   diagnostics.begin_frame(1U);
-#endif
 
   Engine::Core::TransformComponent transform{};
   transform.position = {1.0F, 2.0F, 3.0F};
@@ -66,10 +62,8 @@ TEST(ModeIndicatorPlacement, IgnoresTransformScaleForWorldHeight) {
                   transform.position.y + Render::Geom::k_indicator_height_base);
   EXPECT_FLOAT_EQ(translation.z(), transform.position.z);
   EXPECT_EQ(cmd.mode_type, static_cast<int>(Game::Systems::ActivityKind::Guard));
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   EXPECT_TRUE(diagnostics.mode_indicator_submitted(1U));
   diagnostics.set_enabled(false);
-#endif
 }
 
 TEST(ModeIndicatorPlacement, UsesThePerUnitAnchorHeightWhenOneIsCached) {

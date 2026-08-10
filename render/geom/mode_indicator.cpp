@@ -5,6 +5,8 @@
 #include <cmath>
 #include <numbers>
 
+#include "render/gl/shared_geometry_cache.h"
+
 namespace Render::Geom {
 
 namespace {
@@ -357,11 +359,6 @@ void build_idle(GlyphBuilder& builder) {
 
 } // namespace
 
-auto ModeIndicator::meshes() -> MeshCache& {
-  static auto* storage = new MeshCache{};
-  return *storage;
-}
-
 auto indicator_has_glyph(IndicatorKind kind) noexcept -> bool {
   return style_for(kind).has_glyph;
 }
@@ -469,19 +466,12 @@ auto build_indicator_glyph(IndicatorKind kind) -> GlyphBuilder {
 
 auto ModeIndicator::mesh_for(IndicatorKind kind) -> Render::GL::Mesh* {
   auto const index = static_cast<std::size_t>(kind);
-  if (index >= meshes().size()) {
+  if (index >= k_indicator_kind_count) {
     return nullptr;
   }
-  if (!meshes()[index]) {
-    meshes()[index] = build_indicator_glyph(kind).build();
-  }
-  return meshes()[index].get();
-}
-
-void ModeIndicator::release_meshes() {
-  for (auto& mesh : meshes()) {
-    mesh.reset();
-  }
+  return Render::GL::SharedGeometryCache::instance().get_or_build(
+      Render::GL::geometry_key("geom/mode_indicator", index),
+      [kind] { return build_indicator_glyph(kind).build(); });
 }
 
 } // namespace Render::Geom

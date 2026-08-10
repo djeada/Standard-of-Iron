@@ -7,8 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../game/systems/nation_id.h"
-#include "../game/units/spawn_type.h"
+#include "game/systems/nation_id.h"
+#include "game/units/spawn_type.h"
 
 namespace Engine::Core {
 class Entity;

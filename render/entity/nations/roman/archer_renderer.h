@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "../../archer_renderer_common.h"
-#include "../../registry.h"
+#include "render/entity/archer_renderer_common.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL::Roman {
 

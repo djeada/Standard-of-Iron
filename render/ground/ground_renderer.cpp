@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../draw_queue.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
+#include "render/draw_commands.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
 #include "world_chunk.h"
 
 namespace Render::GL {

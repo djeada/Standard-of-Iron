@@ -36,11 +36,7 @@ def missing_outputs() -> list[Path]:
 
 
 def main() -> int:
-    # The generated assets are committed, so a build never depends on the
-    # upstream Natural Earth and NOAA hosts being reachable. Regeneration is
-    # still the source of truth: it runs first, and only an upstream failure
-    # with every asset already in place is allowed to fall back to them.
-    # Set CAMPAIGN_MAP_REQUIRE_REGENERATION=1 to turn that fallback off.
+
     require_regeneration = os.environ.get("CAMPAIGN_MAP_REQUIRE_REGENERATION") == "1"
     for generator in GENERATORS:
         result = subprocess.run([sys.executable, str(generator)], cwd=ROOT, check=False)

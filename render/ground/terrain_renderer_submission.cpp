@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "../../game/map/render_visibility_rules.h"
-#include "../../game/map/visibility_service.h"
-#include "../gl/texture.h"
-#include "../scene_renderer.h"
+#include "game/map/render_visibility_rules.h"
+#include "game/map/visibility_service.h"
+#include "render/gl/texture.h"
+#include "render/scene_renderer.h"
 #include "terrain_renderer.h"
 
 namespace {

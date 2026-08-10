@@ -52,9 +52,7 @@ void register_horse_descriptor(EquipmentCategory category,
   register_horse_equipment_contribution(handle, contribution);
 }
 
-} // namespace
-
-void register_equipment_descriptors() {
+void register_horse_descriptors() {
   register_horse_descriptor(
       EquipmentCategory::HorseTack,
       "roman_horse_saddle",
@@ -123,7 +121,9 @@ void register_equipment_descriptors() {
       {.build_attachments = &build_saddle_bag_attachment,
        .append_role_colors = &saddle_bag_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_saddle_bag_role_count)});
+}
 
+void register_helmet_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Helmet,
       "carthage_light",
@@ -238,6 +238,9 @@ void register_equipment_descriptors() {
              max_count);
        },
        .role_count = static_cast<std::uint8_t>(Render::GL::k_headwrap_role_count)});
+}
+
+void register_body_armor_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
       "roman_light_armor",
@@ -332,6 +335,9 @@ void register_equipment_descriptors() {
        .append_role_colors = &carthage_shoulder_role_colors,
        .role_count = static_cast<std::uint8_t>(
            Render::GL::k_carthage_shoulder_cover_role_count)});
+}
+
+void register_weapon_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Weapon,
       "spear",
@@ -450,6 +456,9 @@ void register_equipment_descriptors() {
       {.build_attachments = &build_hasdrubal_quiver_attachments,
        .append_role_colors = &hasdrubal_quiver_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_quiver_role_count)});
+}
+
+void register_cloak_descriptors() {
   register_humanoid_descriptor(
       EquipmentCategory::Armor,
       "cloak_carthage",
@@ -552,6 +561,16 @@ void register_equipment_descriptors() {
       {.build_attachments = &build_arm_guards_attachments,
        .append_role_colors = &carthage_arm_guards_role_colors,
        .role_count = static_cast<std::uint8_t>(Render::GL::k_arm_guards_role_count)});
+}
+
+} // namespace
+
+void register_equipment_descriptors() {
+  register_horse_descriptors();
+  register_helmet_descriptors();
+  register_body_armor_descriptors();
+  register_weapon_descriptors();
+  register_cloak_descriptors();
 }
 
 } // namespace Render::GL::EquipmentRegistration

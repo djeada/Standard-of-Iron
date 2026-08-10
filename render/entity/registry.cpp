@@ -3,7 +3,6 @@
 #include <string>
 #include <utility>
 
-#include "../scene_renderer.h"
 #include "ballista_renderer.h"
 #include "barracks_renderer.h"
 #include "catapult_renderer.h"
@@ -32,6 +31,7 @@
 #include "nations/roman/horse_swordsman_renderer.h"
 #include "nations/roman/spearman_renderer.h"
 #include "nations/roman/swordsman_renderer.h"
+#include "render/scene_renderer.h"
 #include "temple_renderer.h"
 #include "wall_renderer.h"
 #include "wildlife/sheep_renderer.h"

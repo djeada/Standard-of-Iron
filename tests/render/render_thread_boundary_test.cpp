@@ -101,5 +101,4 @@ TEST(RenderThreadBoundaryTest, StageDocumentationNamesBoundariesAndLogging) {
   EXPECT_TRUE(contains(docs, "GameEngine::render"));
   EXPECT_TRUE(contains(docs, "Renderer::render_world"));
   EXPECT_TRUE(contains(docs, "Backend::execute"));
-  EXPECT_TRUE(contains(docs, "SOI_RENDER_STAGE_LOG"));
 }

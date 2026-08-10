@@ -6,16 +6,14 @@
 #include <mutex>
 
 namespace Render::GL {
+
 class Camera;
-}
 
-namespace Game::Systems {
-
-class CameraVisibilityService {
+class CameraVisibility {
 public:
-  static auto instance() -> CameraVisibilityService&;
+  static auto instance() -> CameraVisibility&;
 
-  void set_camera(const Render::GL::Camera* camera);
+  void set_camera(const Camera* camera);
   void clear_camera();
 
   [[nodiscard]] auto is_position_visible(float world_x,
@@ -40,13 +38,13 @@ public:
   [[nodiscard]] auto has_camera() const -> bool;
 
 private:
-  CameraVisibilityService() = default;
-  ~CameraVisibilityService() = default;
-  CameraVisibilityService(const CameraVisibilityService&) = delete;
-  auto operator=(const CameraVisibilityService&) -> CameraVisibilityService& = delete;
+  CameraVisibility() = default;
+  ~CameraVisibility() = default;
+  CameraVisibility(const CameraVisibility&) = delete;
+  auto operator=(const CameraVisibility&) -> CameraVisibility& = delete;
 
-  const Render::GL::Camera* m_camera{nullptr};
+  const Camera* m_camera{nullptr};
   mutable std::mutex m_mutex;
 };
 
-} // namespace Game::Systems
+} // namespace Render::GL

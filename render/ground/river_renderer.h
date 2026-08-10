@@ -5,9 +5,9 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../i_render_pass.h"
-#include "../terrain_scene_types.h"
+#include "game/map/terrain.h"
+#include "render/i_render_pass.h"
+#include "render/terrain_scene_types.h"
 
 namespace Render::GL {
 class Mesh;

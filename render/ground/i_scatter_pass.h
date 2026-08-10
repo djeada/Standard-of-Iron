@@ -4,7 +4,7 @@
 
 #include <cstddef>
 
-#include "../i_render_pass.h"
+#include "render/i_render_pass.h"
 #include "scatter_renderer_state.h"
 
 namespace Render::GL {

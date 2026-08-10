@@ -2,9 +2,9 @@
 
 #include <QVector3D>
 
-#include "../../horse/dimensions.h"
-#include "../../horse/horse_layout.h"
-#include "../../horse/horse_motion.h"
+#include "render/horse/dimensions.h"
+#include "render/horse/horse_layout.h"
+#include "render/horse/horse_motion.h"
 
 namespace Render::GL {
 

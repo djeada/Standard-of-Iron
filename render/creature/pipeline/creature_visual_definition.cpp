@@ -2,11 +2,11 @@
 
 #include <initializer_list>
 
-#include "../../elephant/elephant_spec.h"
-#include "../../horse/horse_spec.h"
-#include "../../wildlife/sheep_spec.h"
-#include "../../wildlife/wildlife_rig.h"
-#include "../../wildlife/wolf_spec.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/horse/horse_spec.h"
+#include "render/wildlife/sheep_spec.h"
+#include "render/wildlife/wildlife_rig.h"
+#include "render/wildlife/wolf_spec.h"
 
 namespace Render::Creature::Pipeline {
 

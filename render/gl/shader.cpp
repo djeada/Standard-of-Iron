@@ -47,33 +47,6 @@ auto Shader::is_uniform_dirty(GLint location, const T& value) -> bool {
 }
 
 namespace {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-std::mutex& shader_audit_mutex() {
-  static std::mutex mutex;
-  return mutex;
-}
-
-auto shader_audit_counts() -> std::unordered_map<QString, ShaderBindAuditEntry>& {
-  static std::unordered_map<QString, ShaderBindAuditEntry> counts;
-  return counts;
-}
-
-auto shader_audit_flag() -> bool& {
-  static bool enabled = qEnvironmentVariableIsSet("SOI_RENDER_SHADER_AUDIT");
-  return enabled;
-}
-
-void record_shader_bind(const QString& name) {
-  if (!shader_bind_audit_enabled()) {
-    return;
-  }
-  QString key = name.isEmpty() ? QStringLiteral("<unnamed>") : name;
-  std::scoped_lock const lock(shader_audit_mutex());
-  auto& entry = shader_audit_counts()[key];
-  entry.name = std::move(key);
-  ++entry.bind_count;
-}
-#endif
 
 auto resolve_shader_includes(const QString& source,
                              const QString& base_dir,
@@ -252,9 +225,6 @@ auto Shader::preprocess_source(const QString& source) -> QString {
 }
 
 void Shader::use() {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  record_shader_bind(m_debug_name);
-#endif
   glUseProgram(m_program);
 }
 
@@ -499,120 +469,6 @@ auto Shader::optional_bind_uniform_block(const char* block_name,
   }
   glUniformBlockBinding(m_program, idx, binding_point);
   return true;
-}
-
-void set_shader_bind_audit_enabled(bool enabled) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  shader_audit_flag() = enabled;
-#else
-  (void)enabled;
-#endif
-}
-
-auto shader_bind_audit_enabled() -> bool {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  return shader_audit_flag();
-#else
-  return false;
-#endif
-}
-
-void reset_shader_bind_audit() {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  std::scoped_lock const lock(shader_audit_mutex());
-  shader_audit_counts().clear();
-#endif
-}
-
-auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry> {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  std::scoped_lock const lock(shader_audit_mutex());
-  std::vector<ShaderBindAuditEntry> out;
-  out.reserve(shader_audit_counts().size());
-  for (const auto& [_, entry] : shader_audit_counts()) {
-    out.push_back(entry);
-  }
-  std::sort(out.begin(),
-            out.end(),
-            [](const ShaderBindAuditEntry& a, const ShaderBindAuditEntry& b) {
-              if (a.bind_count != b.bind_count) {
-                return a.bind_count > b.bind_count;
-              }
-              return a.name < b.name;
-            });
-  return out;
-#else
-  return {};
-#endif
-}
-
-auto classify_shader_for_audit(const QString& name) -> QString {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  static const QStringList pipeline_owned = {
-      QStringLiteral("basic"),
-      QStringLiteral("basic_instanced"),
-      QStringLiteral("catapult"),
-      QStringLiteral("catapult_instanced"),
-      QStringLiteral("grid"),
-      QStringLiteral("character_skinned"),
-      QStringLiteral("character_skinned_instanced"),
-      QStringLiteral("cylinder_instanced"),
-      QStringLiteral("primitive_instanced"),
-      QStringLiteral("fog_instanced"),
-      QStringLiteral("grass_instanced"),
-      QStringLiteral("stone_instanced"),
-      QStringLiteral("plant_instanced"),
-      QStringLiteral("pine_instanced"),
-      QStringLiteral("olive_instanced"),
-      QStringLiteral("firecamp"),
-      QStringLiteral("ground_plane"),
-      QStringLiteral("terrain_chunk"),
-      QStringLiteral("river"),
-      QStringLiteral("riverbank"),
-      QStringLiteral("road"),
-      QStringLiteral("bridge"),
-      QStringLiteral("troop_shadow"),
-      QStringLiteral("banner"),
-      QStringLiteral("healing_beam"),
-      QStringLiteral("healing_aura"),
-      QStringLiteral("combat_dust"),
-      QStringLiteral("mode_indicator"),
-      QStringLiteral("rain"),
-      QStringLiteral("tent_instanced"),
-      QStringLiteral("supply_cart_instanced"),
-      QStringLiteral("weapon_rack_instanced"),
-      QStringLiteral("ruins_instanced"),
-      QStringLiteral("dead_tree_instanced"),
-      QStringLiteral("iron_ore_instanced"),
-      QStringLiteral("magic_shrine_instanced"),
-      QStringLiteral("statue_instanced")};
-
-  if (pipeline_owned.contains(name)) {
-    return QStringLiteral("pipeline-owned");
-  }
-  if (name.startsWith(QStringLiteral("material/"))) {
-    return QStringLiteral("material/data-driven");
-  }
-  return QStringLiteral("unused/dead-or-dynamic");
-#else
-  (void)name;
-  return {};
-#endif
-}
-
-auto format_shader_bind_audit() -> QStringList {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  QStringList lines;
-  for (const ShaderBindAuditEntry& entry : shader_bind_audit_snapshot()) {
-    lines.push_back(QStringLiteral("%1\t%2\t%3")
-                        .arg(entry.name)
-                        .arg(entry.bind_count)
-                        .arg(classify_shader_for_audit(entry.name)));
-  }
-  return lines;
-#else
-  return {};
-#endif
 }
 
 } // namespace Render::GL

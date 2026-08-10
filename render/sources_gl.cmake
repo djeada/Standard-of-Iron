@@ -1,6 +1,7 @@
 # GL backend layer (Phase 1 owner). Edit ONLY this file for render/gl/* sources.
 set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/shader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/shared_geometry_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/buffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_lifetime.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/mesh.cpp
@@ -8,13 +9,15 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/primitives.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/resources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/bootstrap.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/gl_debug_log.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/instance_draw_guard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_buffers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/cylinder_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/dead_tree_mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_mesh_builder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/prop_parts.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ring_loft_builder.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/static_mesh_upload.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_natural.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_settlement.cpp

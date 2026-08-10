@@ -6,12 +6,12 @@
 #include <memory>
 #include <vector>
 
-#include "../../primitive_batch.h"
-#include "../persistent_buffer.h"
-#include "../shader_cache.h"
 #include "instance_draw_guard.h"
 #include "mesh_buffers.h"
 #include "pipeline_interface.h"
+#include "render/gl/persistent_buffer.h"
+#include "render/gl/shader_cache.h"
+#include "render/primitive_batch.h"
 
 namespace Render::GL::BackendPipelines {
 

@@ -2,8 +2,8 @@
 
 #include <algorithm>
 
-#include "../graphics_settings.h"
-#include "../scene_renderer.h"
+#include "render/graphics_settings.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 

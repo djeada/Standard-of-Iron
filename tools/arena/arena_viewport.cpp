@@ -51,7 +51,6 @@
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/camera_service.h"
-#include "game/systems/camera_visibility_service.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
@@ -74,6 +73,7 @@
 #include "game/units/unit.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_system.h"
+#include "render/camera_visibility.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/commander_aura_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
@@ -391,7 +391,7 @@ ArenaViewport::ArenaViewport(QWidget* parent)
 ArenaViewport::~ArenaViewport() {
   m_frame_timer.stop();
   m_units.clear();
-  Game::Systems::CameraVisibilityService::instance().clear_camera();
+  Render::GL::CameraVisibility::instance().clear_camera();
   Game::Map::TerrainService::instance().clear();
 
   if (context() != nullptr) {
@@ -546,15 +546,13 @@ void ArenaViewport::paintGL() {
   } else if (width() > 0 && height() > 0) {
     m_renderer->set_viewport(width(), height());
   }
-  Game::Systems::CameraVisibilityService::instance().set_camera(m_camera.get());
+  Render::GL::CameraVisibility::instance().set_camera(m_camera.get());
 
   update_selected_entities();
   sync_selection_summary();
   apply_attack_scrub_override();
   m_renderer->set_hovered_entity_id(m_hovered_entity_id);
   m_renderer->set_local_owner_id(k_local_owner_id);
-  m_renderer->set_debug_reveal_non_local_order_markers(
-      qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_ORDER_MARKERS"));
   m_renderer->update_animation_time(simulation_dt);
 
   m_renderer->set_cinematic_mode(

@@ -68,14 +68,9 @@ struct FrameProfile {
 
   std::uint64_t frame_index{0};
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  bool enabled{true};
-#else
   bool enabled{false};
-#endif
 
   void reset() {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     for (auto& v : phase_us) {
       v = 0;
     }
@@ -94,35 +89,27 @@ struct FrameProfile {
     triangles = 0;
     instances = 0;
     budget_headroom_ms = 16.67;
-#endif
   }
 
   void add_phase_us(Phase p, std::uint64_t us) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (!enabled) {
       return;
     }
     phase_us[static_cast<std::size_t>(p)] += us;
-#else
-    (void)p;
-    (void)us;
-#endif
   }
 
   [[nodiscard]] auto total_us() const noexcept -> std::uint64_t {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     std::uint64_t total = 0;
     for (auto v : phase_us) {
       total += v;
     }
     return total;
-#else
-    return 0;
-#endif
   }
 
   void finish_frame_sample() {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
+    if (!enabled) {
+      return;
+    }
     constexpr std::size_t k_history_size = 120U;
     recent_total_us[recent_cursor] = total_us();
     recent_cursor = (recent_cursor + 1U) % k_history_size;
@@ -147,7 +134,6 @@ struct FrameProfile {
     std::size_t const p95_index = std::min<std::size_t>(
         recent_count - 1U, ((recent_count * 95U) + 99U) / 100U - 1U);
     p95_frame_ms = static_cast<double>(sorted[p95_index]) / 1000.0;
-#endif
   }
 
 private:
@@ -156,7 +142,8 @@ private:
   std::size_t recent_count{0U};
 };
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
+[[nodiscard]] auto global_profile() -> FrameProfile&;
+
 class PhaseScope {
 public:
   PhaseScope(FrameProfile* profile, Phase phase)
@@ -190,9 +177,9 @@ private:
 class AccumulatorScope {
 public:
   explicit AccumulatorScope(std::uint64_t* accumulator)
-      : m_accumulator(accumulator)
-      , m_start(accumulator != nullptr ? std::chrono::steady_clock::now()
-                                       : std::chrono::steady_clock::time_point{}) {}
+      : m_accumulator(global_profile().enabled ? accumulator : nullptr)
+      , m_start(m_accumulator != nullptr ? std::chrono::steady_clock::now()
+                                         : std::chrono::steady_clock::time_point{}) {}
 
   AccumulatorScope(const AccumulatorScope&) = delete;
   auto operator=(const AccumulatorScope&) -> AccumulatorScope& = delete;
@@ -213,20 +200,7 @@ private:
   std::uint64_t* m_accumulator;
   std::chrono::steady_clock::time_point m_start;
 };
-#else
-class PhaseScope {
-public:
-  PhaseScope(FrameProfile*, Phase) noexcept {}
-};
-
-class AccumulatorScope {
-public:
-  explicit AccumulatorScope(std::uint64_t*) noexcept {}
-};
-#endif
 
 [[nodiscard]] auto format_overlay(const FrameProfile& profile) -> std::string;
-
-[[nodiscard]] auto global_profile() -> FrameProfile&;
 
 } // namespace Render::Profiling

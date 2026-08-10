@@ -3,9 +3,9 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "../gl/mesh.h"
-#include "../submitter.h"
 #include "primitive_geometry.h"
+#include "render/gl/mesh.h"
+#include "render/submitter.h"
 
 namespace Render::Creature {
 

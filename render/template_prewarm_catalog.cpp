@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <unordered_set>
 
-#include "../game/core/component.h"
 #include "creature/archetype_registry.h"
 #include "creature/pose_intent.h"
+#include "game/core/component.h"
 
 namespace Render::GL {
 

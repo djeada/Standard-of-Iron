@@ -3,7 +3,7 @@
 #include <string_view>
 #include <vector>
 
-#include "../../submitter.h"
+#include "render/submitter.h"
 #include "shadow_batch.h"
 
 namespace Render::Creature::Pipeline {

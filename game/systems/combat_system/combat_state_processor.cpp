@@ -254,10 +254,8 @@ void reset_action_events_if_present(Engine::Core::Entity& unit) {
 } // namespace
 
 void process_combat_state(Engine::Core::World* world, float delta_time) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   Engine::Core::Timing::ScopedAccumulator const scope(
       Engine::Core::Timing::combat_state_update());
-#endif
   process_spear_brace_state(world, delta_time);
   process_mounted_charge_intents(world, delta_time);
   auto units = world->get_entities_with<Engine::Core::CombatStateComponent>();

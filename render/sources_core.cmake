@@ -47,6 +47,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/snapshot_mesh_bake.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/static_attachment_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/bone_palette_arena.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/camera_visibility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/unit_render_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/software/software_rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/software_backend.cpp

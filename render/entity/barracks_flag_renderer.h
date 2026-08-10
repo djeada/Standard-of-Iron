@@ -5,14 +5,14 @@
 
 #include <algorithm>
 
-#include "../../game/core/component.h"
-#include "../../game/visuals/team_colors.h"
-#include "../geom/banner_cloth.h"
-#include "../geom/flag.h"
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../gl/shader.h"
-#include "../scene_renderer.h"
+#include "game/core/component.h"
+#include "game/visuals/team_colors.h"
+#include "render/geom/banner_cloth.h"
+#include "render/geom/flag.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/gl/shader.h"
+#include "render/scene_renderer.h"
 #include "renderer_constants.h"
 #include "submitter.h"
 

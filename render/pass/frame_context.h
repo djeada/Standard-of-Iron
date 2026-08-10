@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "../primitive_batch.h"
+#include "render/primitive_batch.h"
 
 namespace Engine::Core {
 class World;

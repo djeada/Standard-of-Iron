@@ -1,14 +1,11 @@
 #include "runtime_bake_guard.h"
 
-#include <atomic>
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 #include <QDebug>
 
+#include <atomic>
 #include <mutex>
 #include <string>
 #include <unordered_set>
-#endif
 
 namespace Render::Creature {
 
@@ -55,7 +52,6 @@ auto runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_
 
 void report_runtime_bake_violation(RuntimeBakeOperation operation,
                                    std::string_view detail) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   static std::mutex mutex;
   static std::unordered_set<std::string> reported;
   const std::string key =
@@ -65,10 +61,6 @@ void report_runtime_bake_violation(RuntimeBakeOperation operation,
     qCritical().noquote() << "Forbidden render-time bake:"
                           << QString::fromStdString(key);
   }
-#else
-  (void)operation;
-  (void)detail;
-#endif
 }
 
 } // namespace Render::Creature

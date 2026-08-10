@@ -9,8 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../creature/archetype_registry.h"
 #include "equipment_registry.h"
+#include "render/creature/archetype_registry.h"
 
 namespace Render::GL::EquipmentArchetype {
 

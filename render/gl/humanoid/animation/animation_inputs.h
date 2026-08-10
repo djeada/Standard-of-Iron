@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../humanoid_types.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL {
 

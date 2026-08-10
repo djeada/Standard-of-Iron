@@ -58,10 +58,6 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
   }
 
   if (!m_minimap_base_image.isNull()) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-    qDebug() << "MinimapManager: Generated minimap of size"
-             << m_minimap_base_image.width() << "x" << m_minimap_base_image.height();
-#endif
 
     m_world_width = static_cast<float>(map_def.grid.width);
     m_world_height = static_cast<float>(map_def.grid.height);
@@ -78,10 +74,6 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
                        m_world_width,
                        m_world_height,
                        m_tile_size);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-    qDebug() << "MinimapManager: Initialized unit layer for world" << m_world_width
-             << "x" << m_world_height;
-#endif
 
     m_camera_viewport_layer =
         std::make_unique<Game::Map::Minimap::CameraViewportLayer>();

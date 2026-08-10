@@ -15,14 +15,14 @@
 #include <random>
 #include <vector>
 
-#include "../gl/buffer.h"
-#include "../gl/render_constants.h"
-#include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "gl/resources.h"
 #include "map/terrain.h"
+#include "render/gl/buffer.h"
+#include "render/gl/render_constants.h"
+#include "render/scene_renderer.h"
 #include "scatter_runtime.h"
 #include "scatter_submission.h"
 
@@ -155,6 +155,202 @@ void BiomeRenderer::refresh_grass() {
   generate_grass_instances();
 }
 
+void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
+  const auto& scatter_profile = ctx.scatter_profile;
+  const auto& terrain_cache = ctx.terrain_cache;
+  const float tile_safe = ctx.tile_safe;
+  const int chunk_size = ctx.chunk_size;
+  const std::size_t cluster_count_per_chunk = ctx.cluster_count_per_chunk;
+  const auto& add_grass_blade = ctx.add_grass_blade;
+  const auto& quad_section = ctx.quad_section;
+
+  for (int chunk_z = 0; chunk_z < m_height - 1; chunk_z += chunk_size) {
+    int const chunk_max_z = std::min(chunk_z + chunk_size, m_height - 1);
+    for (int chunk_x = 0; chunk_x < m_width - 1; chunk_x += chunk_size) {
+      int const chunk_max_x = std::min(chunk_x + chunk_size, m_width - 1);
+
+      int flat_count = 0;
+      int hill_count = 0;
+      int mountain_count = 0;
+      float chunk_height_sum = 0.0F;
+      float chunk_slope_sum = 0.0F;
+      int sample_count = 0;
+
+      for (int z = chunk_z; z < chunk_max_z && z < m_height - 1; ++z) {
+        for (int x = chunk_x; x < chunk_max_x && x < m_width - 1; ++x) {
+          Game::Map::TerrainType const t0 = terrain_cache.get_terrain_type_at(x, z);
+          Game::Map::TerrainType const t1 = terrain_cache.get_terrain_type_at(x + 1, z);
+          Game::Map::TerrainType const t2 = terrain_cache.get_terrain_type_at(x, z + 1);
+          Game::Map::TerrainType const t3 =
+              terrain_cache.get_terrain_type_at(x + 1, z + 1);
+
+          if (t0 == Game::Map::TerrainType::Mountain ||
+              t1 == Game::Map::TerrainType::Mountain ||
+              t2 == Game::Map::TerrainType::Mountain ||
+              t3 == Game::Map::TerrainType::Mountain ||
+              Game::Map::is_water_terrain(t0) || Game::Map::is_water_terrain(t1) ||
+              Game::Map::is_water_terrain(t2) || Game::Map::is_water_terrain(t3)) {
+            mountain_count++;
+          } else if (t0 == Game::Map::TerrainType::Hill ||
+                     t1 == Game::Map::TerrainType::Hill ||
+                     t2 == Game::Map::TerrainType::Hill ||
+                     t3 == Game::Map::TerrainType::Hill) {
+            hill_count++;
+          } else {
+            flat_count++;
+          }
+
+          int const idx0 = z * m_width + x;
+          int const idx1 = idx0 + 1;
+          int const idx2 = (z + 1) * m_width + x;
+          int const idx3 = idx2 + 1;
+
+          float const quad_height = (m_height_data[static_cast<size_t>(idx0)] +
+                                     m_height_data[static_cast<size_t>(idx1)] +
+                                     m_height_data[static_cast<size_t>(idx2)] +
+                                     m_height_data[static_cast<size_t>(idx3)]) *
+                                    0.25F;
+          chunk_height_sum += quad_height;
+
+          float const slope0 = terrain_cache.get_slope_at(x, z);
+          float const slope1 = terrain_cache.get_slope_at(x + 1, z);
+          float const slope2 = terrain_cache.get_slope_at(x, z + 1);
+          float const slope3 = terrain_cache.get_slope_at(x + 1, z + 1);
+          float const avg_slope = (slope0 + slope1 + slope2 + slope3) * 0.25F;
+          chunk_slope_sum += avg_slope;
+          sample_count++;
+        }
+      }
+
+      if (sample_count == 0) {
+        continue;
+      }
+
+      const float usable_coverage =
+          sample_count > 0 ? float(flat_count + hill_count) / float(sample_count)
+                           : 0.0F;
+      if (usable_coverage < 0.05F) {
+        continue;
+      }
+
+      float const avg_slope = chunk_slope_sum / float(sample_count);
+
+      uint32_t state = hash_coords(chunk_x, chunk_z, m_noise_seed ^ 0xC915872BU);
+      float const slope_penalty = 1.0F - std::clamp(avg_slope * 1.35F, 0.0F, 0.75F);
+
+      float const type_bias = 1.0F;
+      constexpr float k_cluster_boost = 1.35F;
+      float const expected_clusters =
+          std::max(0.0F,
+                   scatter_profile.patch_density * k_cluster_boost * slope_penalty *
+                       type_bias * usable_coverage);
+      int cluster_count = static_cast<int>(std::floor(expected_clusters));
+      float const frac = expected_clusters - float(cluster_count);
+      if (rand_01(state) < frac) {
+        cluster_count += 1;
+      }
+
+      if (cluster_count > 0) {
+        auto chunk_span_x = float(chunk_max_x - chunk_x + 1);
+        auto chunk_span_z = float(chunk_max_z - chunk_z + 1);
+        float const scatter_base = std::max(0.25F, scatter_profile.patch_jitter);
+
+        auto pick_cluster_center = [&](uint32_t& rng) -> std::optional<QVector2D> {
+          constexpr int k_max_attempts = 8;
+          for (int attempt = 0; attempt < k_max_attempts; ++attempt) {
+            float const candidate_gx = float(chunk_x) + rand_01(rng) * chunk_span_x;
+            float const candidate_gz = float(chunk_z) + rand_01(rng) * chunk_span_z;
+
+            int const cx = std::clamp(int(std::round(candidate_gx)), 0, m_width - 1);
+            int const cz = std::clamp(int(std::round(candidate_gz)), 0, m_height - 1);
+            Game::Map::TerrainType const center_terrain_type =
+                terrain_cache.get_terrain_type_at(cx, cz);
+            if (center_terrain_type == Game::Map::TerrainType::Mountain ||
+                Game::Map::is_water_terrain(center_terrain_type)) {
+              continue;
+            }
+
+            float const center_slope = terrain_cache.get_slope_at(cx, cz);
+            if (center_slope > 0.92F) {
+              continue;
+            }
+
+            return QVector2D(candidate_gx, candidate_gz);
+          }
+          return std::nullopt;
+        };
+
+        for (int cluster = 0; cluster < cluster_count; ++cluster) {
+          auto center = pick_cluster_center(state);
+          if (!center) {
+            continue;
+          }
+
+          float const center_gx = center->x();
+          float const center_gz = center->y();
+
+          int blades = 6 + static_cast<int>(rand_01(state) * 6.0F);
+          blades =
+              std::max(4, int(std::round(blades * (0.85F + 0.3F * rand_01(state)))));
+          float const scatter_radius =
+              (0.45F + 0.55F * rand_01(state)) * scatter_base * tile_safe;
+
+          for (int blade = 0; blade < blades; ++blade) {
+            float const angle = rand_01(state) * MathConstants::k_two_pi;
+            float const radius = scatter_radius * std::sqrt(rand_01(state));
+            float const gx = center_gx + std::cos(angle) * radius / tile_safe;
+            float const gz = center_gz + std::sin(angle) * radius / tile_safe;
+            add_grass_blade(gx, gz, state);
+          }
+        }
+      }
+    }
+  }
+}
+
+void BiomeRenderer::scatter_background_grass(const GrassScatterContext& ctx) {
+  const auto& scatter_profile = ctx.scatter_profile;
+  const auto& terrain_cache = ctx.terrain_cache;
+  const float tile_safe = ctx.tile_safe;
+  const std::size_t background_blades_per_cell = ctx.background_blades_per_cell;
+  const auto& add_grass_blade = ctx.add_grass_blade;
+
+  const float background_density =
+      std::max(0.0F, scatter_profile.background_blade_density);
+  if (background_density > 0.0F) {
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        Game::Map::TerrainType const terrain_type =
+            terrain_cache.get_terrain_type_at(x, z);
+        if (terrain_type == Game::Map::TerrainType::Mountain ||
+            terrain_type == Game::Map::TerrainType::Hill ||
+            Game::Map::is_water_terrain(terrain_type)) {
+          continue;
+        }
+
+        float const slope = terrain_cache.get_slope_at(x, z);
+        if (slope > 0.95F) {
+          continue;
+        }
+
+        int const idx = z * m_width + x;
+        uint32_t state =
+            hash_coords(x, z, m_noise_seed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
+        int base_count = static_cast<int>(std::floor(background_density));
+        float const frac = background_density - float(base_count);
+        if (rand_01(state) < frac) {
+          base_count += 1;
+        }
+
+        for (int i = 0; i < base_count; ++i) {
+          float const gx = float(x) + rand_01(state);
+          float const gz = float(z) + rand_01(state);
+          add_grass_blade(gx, gz, state);
+        }
+      }
+    }
+  }
+}
 void BiomeRenderer::generate_grass_instances() {
   auto& grass_instances = m_grass_state.instances;
   auto& grass_instance_count = m_grass_state.instance_count;
@@ -310,184 +506,18 @@ void BiomeRenderer::generate_grass_instances() {
     return result;
   };
 
-  for (int chunk_z = 0; chunk_z < m_height - 1; chunk_z += chunk_size) {
-    int const chunk_max_z = std::min(chunk_z + chunk_size, m_height - 1);
-    for (int chunk_x = 0; chunk_x < m_width - 1; chunk_x += chunk_size) {
-      int const chunk_max_x = std::min(chunk_x + chunk_size, m_width - 1);
+  const GrassScatterContext ctx{.scatter_profile = scatter_profile,
+                                .terrain_cache = terrain_cache,
+                                .tile_safe = tile_safe,
+                                .chunk_size = chunk_size,
+                                .cluster_count_per_chunk = cluster_count_per_chunk,
+                                .background_blades_per_cell =
+                                    background_blades_per_cell,
+                                .add_grass_blade = add_grass_blade,
+                                .quad_section = quad_section};
 
-      int flat_count = 0;
-      int hill_count = 0;
-      int mountain_count = 0;
-      float chunk_height_sum = 0.0F;
-      float chunk_slope_sum = 0.0F;
-      int sample_count = 0;
-
-      for (int z = chunk_z; z < chunk_max_z && z < m_height - 1; ++z) {
-        for (int x = chunk_x; x < chunk_max_x && x < m_width - 1; ++x) {
-          Game::Map::TerrainType const t0 = terrain_cache.get_terrain_type_at(x, z);
-          Game::Map::TerrainType const t1 = terrain_cache.get_terrain_type_at(x + 1, z);
-          Game::Map::TerrainType const t2 = terrain_cache.get_terrain_type_at(x, z + 1);
-          Game::Map::TerrainType const t3 =
-              terrain_cache.get_terrain_type_at(x + 1, z + 1);
-
-          if (t0 == Game::Map::TerrainType::Mountain ||
-              t1 == Game::Map::TerrainType::Mountain ||
-              t2 == Game::Map::TerrainType::Mountain ||
-              t3 == Game::Map::TerrainType::Mountain ||
-              Game::Map::is_water_terrain(t0) || Game::Map::is_water_terrain(t1) ||
-              Game::Map::is_water_terrain(t2) || Game::Map::is_water_terrain(t3)) {
-            mountain_count++;
-          } else if (t0 == Game::Map::TerrainType::Hill ||
-                     t1 == Game::Map::TerrainType::Hill ||
-                     t2 == Game::Map::TerrainType::Hill ||
-                     t3 == Game::Map::TerrainType::Hill) {
-            hill_count++;
-          } else {
-            flat_count++;
-          }
-
-          int const idx0 = z * m_width + x;
-          int const idx1 = idx0 + 1;
-          int const idx2 = (z + 1) * m_width + x;
-          int const idx3 = idx2 + 1;
-
-          float const quad_height = (m_height_data[static_cast<size_t>(idx0)] +
-                                     m_height_data[static_cast<size_t>(idx1)] +
-                                     m_height_data[static_cast<size_t>(idx2)] +
-                                     m_height_data[static_cast<size_t>(idx3)]) *
-                                    0.25F;
-          chunk_height_sum += quad_height;
-
-          float const slope0 = terrain_cache.get_slope_at(x, z);
-          float const slope1 = terrain_cache.get_slope_at(x + 1, z);
-          float const slope2 = terrain_cache.get_slope_at(x, z + 1);
-          float const slope3 = terrain_cache.get_slope_at(x + 1, z + 1);
-          float const avg_slope = (slope0 + slope1 + slope2 + slope3) * 0.25F;
-          chunk_slope_sum += avg_slope;
-          sample_count++;
-        }
-      }
-
-      if (sample_count == 0) {
-        continue;
-      }
-
-      const float usable_coverage =
-          sample_count > 0 ? float(flat_count + hill_count) / float(sample_count)
-                           : 0.0F;
-      if (usable_coverage < 0.05F) {
-        continue;
-      }
-
-      float const avg_slope = chunk_slope_sum / float(sample_count);
-
-      uint32_t state = hash_coords(chunk_x, chunk_z, m_noise_seed ^ 0xC915872BU);
-      float const slope_penalty = 1.0F - std::clamp(avg_slope * 1.35F, 0.0F, 0.75F);
-
-      float const type_bias = 1.0F;
-      constexpr float k_cluster_boost = 1.35F;
-      float const expected_clusters =
-          std::max(0.0F,
-                   scatter_profile.patch_density * k_cluster_boost * slope_penalty *
-                       type_bias * usable_coverage);
-      int cluster_count = static_cast<int>(std::floor(expected_clusters));
-      float const frac = expected_clusters - float(cluster_count);
-      if (rand_01(state) < frac) {
-        cluster_count += 1;
-      }
-
-      if (cluster_count > 0) {
-        auto chunk_span_x = float(chunk_max_x - chunk_x + 1);
-        auto chunk_span_z = float(chunk_max_z - chunk_z + 1);
-        float const scatter_base = std::max(0.25F, scatter_profile.patch_jitter);
-
-        auto pick_cluster_center = [&](uint32_t& rng) -> std::optional<QVector2D> {
-          constexpr int k_max_attempts = 8;
-          for (int attempt = 0; attempt < k_max_attempts; ++attempt) {
-            float const candidate_gx = float(chunk_x) + rand_01(rng) * chunk_span_x;
-            float const candidate_gz = float(chunk_z) + rand_01(rng) * chunk_span_z;
-
-            int const cx = std::clamp(int(std::round(candidate_gx)), 0, m_width - 1);
-            int const cz = std::clamp(int(std::round(candidate_gz)), 0, m_height - 1);
-            Game::Map::TerrainType const center_terrain_type =
-                terrain_cache.get_terrain_type_at(cx, cz);
-            if (center_terrain_type == Game::Map::TerrainType::Mountain ||
-                Game::Map::is_water_terrain(center_terrain_type)) {
-              continue;
-            }
-
-            float const center_slope = terrain_cache.get_slope_at(cx, cz);
-            if (center_slope > 0.92F) {
-              continue;
-            }
-
-            return QVector2D(candidate_gx, candidate_gz);
-          }
-          return std::nullopt;
-        };
-
-        for (int cluster = 0; cluster < cluster_count; ++cluster) {
-          auto center = pick_cluster_center(state);
-          if (!center) {
-            continue;
-          }
-
-          float const center_gx = center->x();
-          float const center_gz = center->y();
-
-          int blades = 6 + static_cast<int>(rand_01(state) * 6.0F);
-          blades =
-              std::max(4, int(std::round(blades * (0.85F + 0.3F * rand_01(state)))));
-          float const scatter_radius =
-              (0.45F + 0.55F * rand_01(state)) * scatter_base * tile_safe;
-
-          for (int blade = 0; blade < blades; ++blade) {
-            float const angle = rand_01(state) * MathConstants::k_two_pi;
-            float const radius = scatter_radius * std::sqrt(rand_01(state));
-            float const gx = center_gx + std::cos(angle) * radius / tile_safe;
-            float const gz = center_gz + std::sin(angle) * radius / tile_safe;
-            add_grass_blade(gx, gz, state);
-          }
-        }
-      }
-    }
-  }
-
-  const float background_density =
-      std::max(0.0F, scatter_profile.background_blade_density);
-  if (background_density > 0.0F) {
-    for (int z = 0; z < m_height; ++z) {
-      for (int x = 0; x < m_width; ++x) {
-        Game::Map::TerrainType const terrain_type =
-            terrain_cache.get_terrain_type_at(x, z);
-        if (terrain_type == Game::Map::TerrainType::Mountain ||
-            terrain_type == Game::Map::TerrainType::Hill ||
-            Game::Map::is_water_terrain(terrain_type)) {
-          continue;
-        }
-
-        float const slope = terrain_cache.get_slope_at(x, z);
-        if (slope > 0.95F) {
-          continue;
-        }
-
-        int const idx = z * m_width + x;
-        uint32_t state =
-            hash_coords(x, z, m_noise_seed ^ 0x51bda7U ^ static_cast<uint32_t>(idx));
-        int base_count = static_cast<int>(std::floor(background_density));
-        float const frac = background_density - float(base_count);
-        if (rand_01(state) < frac) {
-          base_count += 1;
-        }
-
-        for (int i = 0; i < base_count; ++i) {
-          float const gx = float(x) + rand_01(state);
-          float const gz = float(z) + rand_01(state);
-          add_grass_blade(gx, gz, state);
-        }
-      }
-    }
-  }
+  scatter_grass_clusters(ctx);
+  scatter_background_grass(ctx);
 
   std::mt19937 shuffle_rng(m_noise_seed ^ 0x5f3aC71dU);
   std::shuffle(grass_instances.begin(), grass_instances.end(), shuffle_rng);

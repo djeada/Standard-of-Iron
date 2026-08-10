@@ -101,7 +101,6 @@
 #include "game/systems/attack_targeting.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
-#include "game/systems/camera_visibility_service.h"
 #include "game/systems/capture_system.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_rules.h"
@@ -149,6 +148,7 @@
 #include "mission_definition_view.h"
 #include "mission_setup_coordinator.h"
 #include "production_manager.h"
+#include "render/camera_visibility.h"
 #include "render/geom/stone.h"
 #include "render/gl/bootstrap.h"
 #include "render/ground/ambient_fog_renderer.h"
@@ -206,32 +206,6 @@ auto marketplace_trade_resource_label(QStringView key) -> QString {
   }
   return key.toString();
 }
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-auto render_stage_logging_enabled() -> bool {
-  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
-}
-#endif
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-void log_render_stage_once(const char* stage, const QString& detail) {
-  if (!render_stage_logging_enabled()) {
-    return;
-  }
-
-  static std::mutex mutex;
-  static std::unordered_set<std::string> emitted_stages;
-
-  std::lock_guard<std::mutex> const lock(mutex);
-  if (!emitted_stages.emplace(stage).second) {
-    return;
-  }
-
-  qInfo().noquote() << QStringLiteral("SOI render stage [%1]: %2")
-                           .arg(QString::fromLatin1(stage), detail)
-                    << "thread" << QThread::currentThread();
-}
-#endif
 
 auto build_available_commander_entry(const Game::Units::CommanderDefinition& definition,
                                      bool is_default) -> QVariantMap {
@@ -1009,19 +983,14 @@ QString GameEngine::release_self_test_pending_reason() const {
   if (!m_runtime.initialized) {
     pending << QStringLiteral("engine not initialized");
   }
-  // The two halves of is_loading() fail for different reasons and are worth
-  // separating: the tracker is the asset/world load, the overlay only retires
-  // from inside the render path once it has seen enough presented frames.
+
   if (m_runtime.loading) {
     pending << QStringLiteral("still loading (stage: %1, progress %2%)")
                    .arg(loading_stage_text())
                    .arg(static_cast<int>(loading_progress() * 100.0F));
   }
   if (m_loading_overlay_active) {
-    // The overlay only retires from inside the render path, and its "GPU is not
-    // up yet" branch restarts its own deadline -- so a renderer whose resources
-    // never arrive resets the clock forever. Report both, or a stuck overlay is
-    // indistinguishable from a slow one.
+
     pending << QStringLiteral(
                    "loading overlay still up (frames remaining %1, elapsed %2ms, "
                    "renderer %3, gpu resources %4, waiting for first frame %5)")
@@ -1182,7 +1151,7 @@ void GameEngine::set_active_camera(Render::GL::Camera* camera) {
       m_renderer->set_viewport(m_viewport.width, m_viewport.height);
     }
   }
-  Game::Systems::CameraVisibilityService::instance().set_camera(m_camera);
+  Render::GL::CameraVisibility::instance().set_camera(m_camera);
 }
 
 void GameEngine::request_enter_commander_control_mode() {
@@ -2015,15 +1984,7 @@ void GameEngine::update(float dt) {
       m_runtime.victory_state,
       dt,
       callbacks,
-      [this](float step_dt) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-        log_render_stage_once(
-            "simulation-update",
-            QStringLiteral(
-                "world systems run before render; combat queries rebuild here"));
-#endif
-        update_active_runtime_simulation(step_dt);
-      });
+      [this](float step_dt) { update_active_runtime_simulation(step_dt); });
   m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
   m_runtime.minimap_unit_update_accumulator =
       frame_state.minimap_unit_update_accumulator;
@@ -2038,13 +1999,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     return;
   }
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  log_render_stage_once("render-submit",
-                        QStringLiteral("records draw commands from existing "
-                                       "visual state; no combat queries"));
-#endif
-
-  Game::Systems::CameraVisibilityService::instance().set_camera(m_camera);
+  Render::GL::CameraVisibility::instance().set_camera(m_camera);
 
   if (pixel_width > 0 && pixel_height > 0) {
     m_viewport.width = pixel_width;
@@ -2077,8 +2032,6 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   if (m_renderer) {
     m_renderer->set_local_owner_id(m_runtime.local_owner_id);
     m_renderer->set_order_marker_spectator_mode(m_level.is_spectator_mode);
-    m_renderer->set_debug_reveal_non_local_order_markers(
-        qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_ORDER_MARKERS"));
   }
 
   m_renderer->render_world(m_world);
@@ -2124,9 +2077,7 @@ void GameEngine::update_loading_overlay() {
 
   if (m_loading_overlay_frames_remaining > 0) {
     m_loading_overlay_frames_remaining--;
-    // At most five lines, and only while the overlay is up. The gap between
-    // them is the cost of one gameplay frame during loading, which is the
-    // number that decides whether a slow platform is progressing or stuck.
+
     const qint64 now_ms =
         m_loading_overlay_timer.isValid() ? m_loading_overlay_timer.elapsed() : 0;
     qInfo().noquote() << QStringLiteral(
@@ -3117,10 +3068,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
 
   QCoreApplication::processEvents(QEventLoop::AllEvents);
   if (m_release_self_test_mode) {
-    // The release contract already checked that every manifest entry resolves.
-    // Decoding, resampling, and mastering the complete mission catalogue is a
-    // runtime warm-up workload, not a package-integrity or renderer check, and
-    // can consume minutes on virtualized CI CPUs before the first frame.
+
     qInfo() << "SOI_AUDIO_SELF_TEST: mission preload skipped after manifest "
                "validation";
   } else {

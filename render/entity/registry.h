@@ -12,10 +12,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../creature/part_graph.h"
-#include "../gl/humanoid/humanoid_types.h"
-#include "../submission_visibility.h"
-#include "../submitter.h"
+#include "render/creature/part_graph.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/submission_visibility.h"
+#include "render/submitter.h"
 
 namespace Engine::Core {
 class Entity;

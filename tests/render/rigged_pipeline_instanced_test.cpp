@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "render/bone_palette_arena.h"
-#include "render/draw_queue.h"
+#include "render/draw_commands.h"
 #include "render/gl/backend/rigged_character_pipeline.h"
 #include "render/material.h"
 

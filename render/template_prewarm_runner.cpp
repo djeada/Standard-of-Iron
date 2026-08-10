@@ -18,17 +18,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include "../game/map/render_visibility_rules.h"
-#include "../game/map/terrain_service.h"
-#include "../game/map/visibility_service.h"
-#include "../game/systems/combat_rules.h"
-#include "../game/systems/nation_registry.h"
-#include "../game/systems/owner_registry.h"
-#include "../game/systems/troop_profile_service.h"
-#include "../game/units/spawn_type.h"
-#include "../game/units/troop_catalog.h"
-#include "../game/units/troop_config.h"
-#include "../game/visuals/team_colors.h"
 #include "animation/bpat/bpat_registry.h"
 #include "battle_render_optimizer.h"
 #include "creature/archetype_registry.h"
@@ -46,6 +35,17 @@
 #include "equipment/render_archetype_registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/render_visibility_rules.h"
+#include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
+#include "game/systems/combat_rules.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
+#include "game/systems/troop_profile_service.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_catalog.h"
+#include "game/units/troop_config.h"
+#include "game/visuals/team_colors.h"
 #include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
@@ -78,13 +78,6 @@
 #include "world_chunk.h"
 
 namespace Render::GL {
-
-struct Renderer::AsyncTemplatePrewarmState {
-  std::vector<PrewarmProfile> profiles;
-  std::vector<PrewarmWorkItem> work_items;
-  std::atomic<std::size_t> next_index{0};
-  std::atomic<bool> cancel_requested{false};
-};
 
 namespace {
 auto prewarm_seed_for_variant(int owner_id,
@@ -279,13 +272,8 @@ void execute_template_prewarm_item(Renderer& renderer,
 } // namespace
 
 void Renderer::cancel_async_template_prewarm() {
-  std::shared_ptr<AsyncTemplatePrewarmState> state;
-  {
-    std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
-    state = std::move(m_async_prewarm_state);
-  }
-  if (state) {
-    state->cancel_requested.store(true, std::memory_order_relaxed);
+  if (auto work = m_async_prewarm.take()) {
+    work->cancel_requested.store(true, std::memory_order_relaxed);
   }
 }
 
@@ -308,11 +296,7 @@ void Renderer::run_template_prewarm_item(const PrewarmProfile& profile,
 }
 
 void Renderer::process_async_template_prewarm() {
-  std::shared_ptr<AsyncTemplatePrewarmState> state;
-  {
-    std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
-    state = m_async_prewarm_state;
-  }
+  const auto state = m_async_prewarm.current();
   if (!state || state->cancel_requested.load(std::memory_order_relaxed)) {
     return;
   }
@@ -379,13 +363,8 @@ void Renderer::process_async_template_prewarm() {
 
   if (state->cancel_requested.load(std::memory_order_relaxed) ||
       (state->next_index.load(std::memory_order_relaxed) >= state->work_items.size())) {
-    std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
-    if (m_async_prewarm_state == state) {
-      m_async_prewarm_state.reset();
-      if (m_forbid_runtime_bake_when_async_prewarm_done) {
-        Render::Creature::set_runtime_bake_forbidden(true);
-        m_forbid_runtime_bake_when_async_prewarm_done = false;
-      }
+    if (m_async_prewarm.finish(state)) {
+      Render::Creature::set_runtime_bake_forbidden(true);
     }
   }
 }
@@ -394,7 +373,7 @@ void Renderer::prewarm_unit_templates(
     Engine::Core::World* world, TemplatePrewarmProgressCallback progress_callback) {
   cancel_async_template_prewarm();
   Render::Creature::set_runtime_bake_forbidden(false);
-  m_forbid_runtime_bake_when_async_prewarm_done = false;
+  m_async_prewarm.clear_forbid_runtime_bake();
   if (!m_entity_registry) {
     return;
   }
@@ -888,15 +867,10 @@ void Renderer::prewarm_unit_templates(
       return;
     }
 
-    auto async_state = std::make_shared<AsyncTemplatePrewarmState>();
+    auto async_state = std::make_shared<AsyncTemplatePrewarm::Work>();
     async_state->profiles = profiles;
     async_state->work_items = extended_work_items;
-
-    {
-      std::lock_guard<std::mutex> const lock(m_async_prewarm_mutex);
-      m_async_prewarm_state = std::move(async_state);
-      m_forbid_runtime_bake_when_async_prewarm_done = true;
-    }
+    m_async_prewarm.start(std::move(async_state), true);
   } else {
     Render::Creature::set_runtime_bake_forbidden(true);
   }

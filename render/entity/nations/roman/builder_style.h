@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../../builder_renderer_common.h"
+#include "render/entity/builder_renderer_common.h"
 
 namespace Render::GL::Roman {
 

@@ -1,9 +1,9 @@
 #include "terrain_feature_manager.h"
 
-#include "../ground/bridge_renderer.h"
-#include "../ground/river_renderer.h"
-#include "../ground/riverbank_renderer.h"
-#include "../ground/road_renderer.h"
+#include "render/ground/bridge_renderer.h"
+#include "render/ground/river_renderer.h"
+#include "render/ground/riverbank_renderer.h"
+#include "render/ground/road_renderer.h"
 
 namespace Render::GL {
 

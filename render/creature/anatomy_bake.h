@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "../../game/core/entity.h"
 #include "animation_state_components.h"
+#include "game/core/entity.h"
 
 namespace Render::Creature {
 

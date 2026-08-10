@@ -8,12 +8,12 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "../backend.h"
-#include "../mesh.h"
-#include "../platform_gl.h"
-#include "../primitives.h"
-#include "../render_constants.h"
 #include "gl/shader_cache.h"
+#include "render/gl/backend.h"
+#include "render/gl/mesh.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/primitives.h"
+#include "render/gl/render_constants.h"
 
 namespace Render::GL::BackendPipelines {
 

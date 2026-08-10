@@ -1,9 +1,9 @@
 #include "healing_beam_renderer.h"
 
-#include "../../game/systems/healing_beam.h"
-#include "../../game/systems/healing_beam_system.h"
-#include "../../game/systems/healing_colors.h"
-#include "../scene_renderer.h"
+#include "game/systems/healing_beam.h"
+#include "game/systems/healing_beam_system.h"
+#include "game/systems/healing_colors.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 

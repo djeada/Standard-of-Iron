@@ -4,8 +4,8 @@
 
 #include <QVector3D>
 
-#include "../creature/part_graph.h"
-#include "../gl/humanoid/humanoid_types.h"
+#include "render/creature/part_graph.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::Humanoid {
 

@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../render_archetype.h"
-#include "../static_attachment_spec.h"
+#include "render/render_archetype.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::Equipment {
 

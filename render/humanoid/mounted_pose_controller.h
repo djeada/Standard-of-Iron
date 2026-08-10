@@ -4,8 +4,8 @@
 
 #include <string_view>
 
-#include "../horse/horse_renderer_base.h"
 #include "humanoid_renderer_base.h"
+#include "render/horse/horse_renderer_base.h"
 
 namespace Animation {
 struct MountedHandPoseTarget;

@@ -1,6 +1,6 @@
 #include "defense_tower_renderer_common.h"
 
-#include "../../game/core/component.h"
+#include "game/core/component.h"
 
 namespace Render::GL {
 

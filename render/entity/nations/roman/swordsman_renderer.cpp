@@ -2,8 +2,8 @@
 
 #include <array>
 
-#include "../../../creature/pipeline/creature_asset.h"
-#include "../../../humanoid/humanoid_proportion_profiles.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/humanoid/humanoid_proportion_profiles.h"
 #include "swordsman_style.h"
 
 namespace Render::GL::Roman {

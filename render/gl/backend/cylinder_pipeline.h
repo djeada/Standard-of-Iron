@@ -5,11 +5,11 @@
 #include <memory>
 #include <vector>
 
-#include "../persistent_buffer.h"
-#include "../shader_cache.h"
 #include "instance_draw_guard.h"
 #include "mesh_buffers.h"
 #include "pipeline_interface.h"
+#include "render/gl/persistent_buffer.h"
+#include "render/gl/shader_cache.h"
 
 namespace Render::GL {
 class Buffer;

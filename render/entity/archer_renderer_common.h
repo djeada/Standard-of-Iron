@@ -10,11 +10,11 @@
 #include <string>
 #include <string_view>
 
-#include "../creature/pipeline/creature_asset.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../humanoid/humanoid_proportion_profiles.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "registry.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/humanoid/humanoid_proportion_profiles.h"
 
 namespace Render::GL {
 

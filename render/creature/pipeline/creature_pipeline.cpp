@@ -14,32 +14,32 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../../game/map/terrain_service.h"
-#include "../../bone_palette_arena.h"
-#include "../../elephant/elephant_spec.h"
-#include "../../entity/registry.h"
-#include "../../horse/horse_spec.h"
-#include "../../humanoid/cache_control.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/skeleton.h"
-#include "../../profiling/combat_animation_diagnostics.h"
-#include "../../profiling/frame_profile.h"
-#include "../../rigged_mesh_cache.h"
-#include "../../scene_renderer.h"
-#include "../../snapshot_mesh_cache.h"
-#include "../../submitter.h"
-#include "../../wildlife/wildlife_rig.h"
-#include "../archetype_registry.h"
-#include "../runtime_bake_guard.h"
-#include "../skeleton.h"
-#include "../snapshot_mesh_registry.h"
-#include "../spec.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_reader.h"
 #include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "creature_asset.h"
+#include "game/map/terrain_service.h"
 #include "preparation_common.h"
+#include "render/bone_palette_arena.h"
+#include "render/creature/archetype_registry.h"
+#include "render/creature/runtime_bake_guard.h"
+#include "render/creature/skeleton.h"
+#include "render/creature/snapshot_mesh_registry.h"
+#include "render/creature/spec.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/entity/registry.h"
+#include "render/horse/horse_spec.h"
+#include "render/humanoid/cache_control.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
+#include "render/profiling/combat_animation_diagnostics.h"
+#include "render/profiling/frame_profile.h"
+#include "render/rigged_mesh_cache.h"
+#include "render/scene_renderer.h"
+#include "render/snapshot_mesh_cache.h"
+#include "render/submitter.h"
+#include "render/wildlife/wildlife_rig.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -657,19 +657,6 @@ auto contact_y_for_playback(CreatureKind species_kind,
     return 0.0F;
   }
   if (!clip_supplies_ground_contact(playback.blob, playback.clip_id)) {
-    if (qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
-      static std::uint64_t hits = 0;
-      if (++hits % 50U == 1U) {
-        qInfo().noquote()
-            << QStringLiteral("SOI rejected mount-posed clip as ground contact "
-                              "#%1: clip_id=%2 name=%3")
-                   .arg(hits)
-                   .arg(playback.clip_id)
-                   .arg(QString::fromUtf8(
-                       std::string(playback.blob->clip(playback.clip_id).name)
-                           .c_str()));
-      }
-    }
     return 0.0F;
   }
   float const current = palette_contact_y(
@@ -830,16 +817,6 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       cmd.bone_palette_next =
           frame_palette_for_global_frame(*entry, primary_playback.next_global_frame);
     }
-  } else if (entry->skin_palette_ubo != 0U &&
-             qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_SUBMISSION")) {
-    static std::uint64_t hits = 0;
-    if (++hits % 60U == 1U) {
-      qInfo().noquote() << QStringLiteral("SOI skin UBO frame out of range: %1 hit(s) "
-                                          "(frame=%2 total=%3)")
-                               .arg(hits)
-                               .arg(global_frame)
-                               .arg(entry->skinned_frame_total);
-    }
   }
   if (primary_interpolated_palette) {
     attach_owned_palette(
@@ -888,7 +865,6 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                            cmd.bone_count);
     }
   }
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   if (handle.archetype->species == CreatureKind::Humanoid &&
       cmd.bone_palette != nullptr &&
       cmd.bone_count >
@@ -931,7 +907,6 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
         .record_submitted_body_pose(
             entity_id, instance_index, body_up_y, max_arm_reach);
   }
-#endif
   out.rigged(cmd);
 }
 
@@ -961,7 +936,6 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
     return false;
   }
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   if (handle.archetype->species == CreatureKind::Humanoid) {
     auto const palette = blob.frame_palette_view(global_frame);
     auto const pelvis_index =
@@ -997,7 +971,6 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
               entity_id, instance_index, body_up_y, max_arm_reach);
     }
   }
-#endif
 
   if (renderer == nullptr) {
     return false;
@@ -1188,9 +1161,7 @@ auto CreaturePipeline::submit_requests(
   }
 
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest& req) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
-#endif
     ++stats.entities_submitted;
     bump_lod_counters(req.lod, stats);
 
@@ -1222,10 +1193,8 @@ auto CreaturePipeline::submit_requests(
     ResolvedRequestPlayback full_body{};
     ResolvedRequestPlayback overlay{};
     {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
       Render::Profiling::AccumulatorScope const playback_scope(
           &profile.bpat_playback_us);
-#endif
       if (req.full_body_blend.active()) {
         full_body = resolve_request_playback(*handle,
                                              req.creature_asset_id,

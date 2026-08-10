@@ -3,9 +3,9 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "../creature/movement_state.h"
 #include "animation/rig/instance_transform.h"
 #include "elephant_gait.h"
+#include "render/creature/movement_state.h"
 
 namespace Render::GL {
 

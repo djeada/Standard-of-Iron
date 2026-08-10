@@ -1,5 +1,5 @@
-#include "../submission_visibility.h"
 #include "prepare_internal.h"
+#include "render/submission_visibility.h"
 
 namespace Render::Humanoid {
 
@@ -51,11 +51,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     Engine::Core::publish_creature_presentation(ctx.entity, nullptr);
   }
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto& profile = Render::Profiling::global_profile();
   Render::Profiling::AccumulatorScope const prepare_scope(
       ctx.template_prewarm ? nullptr : &profile.humanoid_preparation_us);
-#endif
 
   FormationParams const formation = HumanoidRendererBase::resolve_formation(owner, ctx);
 
@@ -245,10 +243,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   bool preserve_soldier_state_prefix = false;
   bool loaded_cached_layouts = false;
   {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     Render::Profiling::AccumulatorScope const layout_scope(
         ctx.template_prewarm ? nullptr : &profile.soldier_layout_generation_us);
-#endif
 
     if (layout_cache_comp != nullptr && layout_cache_comp->valid) {
       auto& entry = *layout_cache_comp;
@@ -419,7 +415,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                   float root_scale_y,
                                   float root_tilt_degrees,
                                   float hit_reaction_tilt_degrees) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (ctx.template_prewarm || ctx.entity == nullptr) {
       return;
     }
@@ -446,20 +441,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     sample.hit_reaction_tilt_degrees = hit_reaction_tilt_degrees;
     Render::Profiling::CombatAnimationDiagnostics::instance().record_soldier_sample(
         ctx.entity->get_id(), sample);
-#else
-    (void)idx;
-    (void)resolved_anim;
-    (void)attack_phase;
-    (void)animation_state;
-    (void)lod;
-    (void)cull_reason;
-    (void)transient_recovery_override;
-    (void)root_position;
-    (void)root_up_y;
-    (void)root_scale_y;
-    (void)root_tilt_degrees;
-    (void)hit_reaction_tilt_degrees;
-#endif
   };
 
   bool const formation_fight_active = has_shared_formation_layout &&
@@ -608,7 +589,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       } else {
         ++s_render_stats.soldiers_skipped_lens_gap;
       }
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
       record_soldier_debug(
           idx,
           soldier_render_anim,
@@ -625,7 +605,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
           1.0F,
           0.0F,
           0.0F);
-#endif
       return;
     }
 

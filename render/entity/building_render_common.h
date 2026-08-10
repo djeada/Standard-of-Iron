@@ -5,10 +5,10 @@
 #include <string>
 #include <string_view>
 
-#include "../../game/systems/nation_id.h"
-#include "../render_archetype.h"
 #include "building_state.h"
+#include "game/systems/nation_id.h"
 #include "registry.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL {
 

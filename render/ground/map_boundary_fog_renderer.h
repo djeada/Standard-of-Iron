@@ -7,8 +7,8 @@
 #include <memory>
 #include <vector>
 
-#include "../gl/mesh.h"
-#include "../i_render_pass.h"
+#include "render/gl/mesh.h"
+#include "render/i_render_pass.h"
 
 namespace Render::GL {
 class Renderer;

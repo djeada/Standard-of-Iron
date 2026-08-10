@@ -2,8 +2,8 @@
 
 #include <unordered_map>
 
-#include "../shader.h"
 #include "pipeline_interface.h"
+#include "render/gl/shader.h"
 
 namespace Render::GL {
 class ShaderCache;

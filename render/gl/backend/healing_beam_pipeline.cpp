@@ -7,14 +7,14 @@
 #include <cmath>
 #include <numbers>
 
-#include "../../../game/systems/healing_beam.h"
-#include "../../../game/systems/healing_beam_system.h"
-#include "../backend.h"
-#include "../mesh.h"
-#include "../render_constants.h"
-#include "../shader_cache.h"
-#include "../state_scopes.h"
+#include "game/systems/healing_beam.h"
+#include "game/systems/healing_beam_system.h"
 #include "gl_error_check.h"
+#include "render/gl/backend.h"
+#include "render/gl/mesh.h"
+#include "render/gl/render_constants.h"
+#include "render/gl/shader_cache.h"
+#include "render/gl/state_scopes.h"
 #include "scene/camera.h"
 
 namespace Render::GL::BackendPipelines {

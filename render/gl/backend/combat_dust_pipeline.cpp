@@ -9,14 +9,14 @@
 #include <string>
 #include <vector>
 
-#include "../../../game/core/component.h"
-#include "../../../game/core/world.h"
-#include "../../../game/systems/combat_rules.h"
-#include "../../combat_dust_defaults.h"
-#include "../backend.h"
-#include "../render_constants.h"
-#include "../shader_cache.h"
+#include "game/core/component.h"
+#include "game/core/world.h"
+#include "game/systems/combat_rules.h"
 #include "gl_error_check.h"
+#include "render/combat_dust_defaults.h"
+#include "render/gl/backend.h"
+#include "render/gl/render_constants.h"
+#include "render/gl/shader_cache.h"
 #include "scene/camera.h"
 #include "spark_orientation.h"
 

@@ -7,10 +7,10 @@
 #include <memory>
 #include <vector>
 
-#include "../shader.h"
-#include "../shader_cache.h"
 #include "instance_draw_guard.h"
 #include "pipeline_interface.h"
+#include "render/gl/shader.h"
+#include "render/gl/shader_cache.h"
 
 namespace Render::GL {
 class Backend;

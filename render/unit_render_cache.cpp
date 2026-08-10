@@ -4,12 +4,12 @@
 
 #include <string_view>
 
-#include "../game/core/component.h"
-#include "../game/core/entity.h"
-#include "../game/systems/troop_profile_service.h"
-#include "../game/units/spawn_type.h"
-#include "../game/units/troop_config.h"
 #include "entity/building_render_common.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/systems/troop_profile_service.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_config.h"
 #include "geom/mode_indicator.h"
 
 namespace Render {

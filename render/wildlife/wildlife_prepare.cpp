@@ -4,15 +4,15 @@
 
 #include <cmath>
 
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
-#include "../creature/archetype_registry.h"
-#include "../creature/pipeline/creature_prepared_state.h"
-#include "../creature/pipeline/creature_render_graph.h"
-#include "../creature/pipeline/creature_visual_definition.h"
-#include "../creature/pipeline/prepared_submit.h"
-#include "../entity/registry.h"
-#include "../gl/humanoid/humanoid_types.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
+#include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/pipeline/creature_visual_definition.h"
+#include "render/creature/pipeline/prepared_submit.h"
+#include "render/entity/registry.h"
+#include "render/gl/humanoid/humanoid_types.h"
 #include "scene/camera.h"
 
 namespace Render::Wildlife {

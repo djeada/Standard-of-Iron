@@ -2,10 +2,10 @@
 
 #include <QVector3D>
 
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../entity/registry.h"
 #include "attachment_frames.h"
 #include "dimensions.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL {
 

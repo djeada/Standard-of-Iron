@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../game/map/render_visibility_rules.h"
+#include "game/map/render_visibility_rules.h"
 
 namespace Render::Ground {
 

@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <typeindex>
 
-#include "../game/core/component.h"
-#include "../game/core/entity.h"
-#include "../game/core/world.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/core/world.h"
 
 namespace Render {
 

@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <cstring>
 
-#include "../backend.h"
-#include "../mesh.h"
-#include "../texture.h"
+#include "render/gl/backend.h"
+#include "render/gl/mesh.h"
+#include "render/gl/texture.h"
 
 namespace Render::GL::BackendPipelines {
 

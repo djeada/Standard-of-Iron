@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "../creature/skeleton.h"
+#include "render/creature/skeleton.h"
 
 namespace Render::Wildlife {
 

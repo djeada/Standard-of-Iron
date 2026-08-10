@@ -7,9 +7,9 @@
 #include <cstdint>
 #include <string_view>
 
-#include "../../../creature/archetype_registry.h"
-#include "../../../static_attachment_spec.h"
 #include "animation/rig/horse_attachment_frames.h"
+#include "render/creature/archetype_registry.h"
+#include "render/static_attachment_spec.h"
 
 namespace Render::GL {
 

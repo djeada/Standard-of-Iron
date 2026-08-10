@@ -1,9 +1,9 @@
 #include "siege_renderer_common.h"
 
-#include "../../game/core/component.h"
-#include "../gl/primitives.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
+#include "game/core/component.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
 
 namespace Render::GL {
 

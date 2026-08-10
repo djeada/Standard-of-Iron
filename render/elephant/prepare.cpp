@@ -6,19 +6,19 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "../../game/core/component.h"
-#include "../creature/animation_state_components.h"
-#include "../creature/movement_animation.h"
-#include "../creature/pipeline/creature_prepared_state.h"
-#include "../creature/pipeline/preparation_common.h"
-#include "../creature/pipeline/prepared_submit.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../creature/quadruped/render_stats.h"
-#include "../gl/humanoid/animation/animation_inputs.h"
-#include "../horse/horse_motion.h"
-#include "../submitter.h"
 #include "elephant_motion.h"
 #include "elephant_renderer_base.h"
+#include "game/core/component.h"
+#include "render/creature/animation_state_components.h"
+#include "render/creature/movement_animation.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
+#include "render/creature/pipeline/preparation_common.h"
+#include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/quadruped/render_stats.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/horse/horse_motion.h"
+#include "render/submitter.h"
 #include "scene/camera.h"
 
 namespace Render::Elephant {

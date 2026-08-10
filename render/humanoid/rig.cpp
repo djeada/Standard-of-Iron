@@ -5,67 +5,67 @@
 #include <algorithm>
 #include <memory>
 
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
-#include "../../game/units/spawn_type.h"
-#include "../../game/units/troop_config.h"
-#include "../../game/visuals/team_colors.h"
-#include "../creature/pipeline/prepared_submit.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../entity/registry.h"
-#include "../geom/parts.h"
-#include "../gl/humanoid/animation/animation_inputs.h"
-#include "../palette.h"
 #include "cache_control.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_config.h"
+#include "game/visuals/team_colors.h"
 #include "humanoid_renderer_base.h"
 #include "mesh_helpers.h"
 #include "prepare.h"
+#include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/registry.h"
+#include "render/geom/parts.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/palette.h"
 
 namespace Render::GL {
 
 auto torso_mesh_without_bottom_cap() -> Mesh* {
-  static std::unique_ptr<Mesh> s_mesh;
-  if (s_mesh != nullptr) {
-    return s_mesh.get();
-  }
-
   Mesh* base = get_unit_torso();
   if (base == nullptr) {
     return nullptr;
   }
 
-  auto filtered =
-      base->clone_with_filtered_indices([](unsigned int a,
-                                           unsigned int b,
-                                           unsigned int c,
-                                           const std::vector<Vertex>& verts) -> bool {
-        auto sample = [&](unsigned int idx) -> QVector3D {
-          return {
-              verts[idx].position[0], verts[idx].position[1], verts[idx].position[2]};
-        };
-        QVector3D const pa = sample(a);
-        QVector3D const pb = sample(b);
-        QVector3D const pc = sample(c);
-        float const min_y = std::min({pa.y(), pb.y(), pc.y()});
-        float const max_y = std::max({pa.y(), pb.y(), pc.y()});
+  Mesh* filtered = SharedGeometryCache::instance().get_or_build(
+      geometry_key("humanoid/torso_without_bottom_cap"),
+      [base]() -> std::unique_ptr<Mesh> {
+        return base->clone_with_filtered_indices(
+            [](unsigned int a,
+               unsigned int b,
+               unsigned int c,
+               const std::vector<Vertex>& verts) -> bool {
+              auto sample = [&](unsigned int idx) -> QVector3D {
+                return {verts[idx].position[0],
+                        verts[idx].position[1],
+                        verts[idx].position[2]};
+              };
+              QVector3D const pa = sample(a);
+              QVector3D const pb = sample(b);
+              QVector3D const pc = sample(c);
+              float const min_y = std::min({pa.y(), pb.y(), pc.y()});
+              float const max_y = std::max({pa.y(), pb.y(), pc.y()});
 
-        QVector3D n(verts[a].normal[0] + verts[b].normal[0] + verts[c].normal[0],
-                    verts[a].normal[1] + verts[b].normal[1] + verts[c].normal[1],
-                    verts[a].normal[2] + verts[b].normal[2] + verts[c].normal[2]);
-        if (n.lengthSquared() > 0.0F) {
-          n.normalize();
-        }
+              QVector3D n(verts[a].normal[0] + verts[b].normal[0] + verts[c].normal[0],
+                          verts[a].normal[1] + verts[b].normal[1] + verts[c].normal[1],
+                          verts[a].normal[2] + verts[b].normal[2] + verts[c].normal[2]);
+              if (n.lengthSquared() > 0.0F) {
+                n.normalize();
+              }
 
-        constexpr float k_band_height = 0.02F;
-        constexpr float k_bottom_threshold = 0.45F;
-        bool const is_flat = (max_y - min_y) < k_band_height;
-        bool const is_at_bottom = min_y > k_bottom_threshold;
-        bool const facing_down = (n.y() > 0.35F);
-        return is_flat && is_at_bottom && facing_down;
+              constexpr float k_band_height = 0.02F;
+              constexpr float k_bottom_threshold = 0.45F;
+              bool const is_flat = (max_y - min_y) < k_band_height;
+              bool const is_at_bottom = min_y > k_bottom_threshold;
+              bool const facing_down = (n.y() > 0.35F);
+              return is_flat && is_at_bottom && facing_down;
+            });
       });
 
-  s_mesh = (filtered != nullptr) ? std::move(filtered) : std::unique_ptr<Mesh>(base);
-  return s_mesh.get();
+  return filtered != nullptr ? filtered : base;
 }
 
 void align_torso_mesh_forward(QMatrix4x4& model) noexcept {

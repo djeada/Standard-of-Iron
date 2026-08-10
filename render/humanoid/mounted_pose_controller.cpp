@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../horse/horse_motion.h"
-#include "../horse/horse_renderer_base.h"
 #include "animation/attack_pose_manifest.h"
 #include "animation/mounted_pose_manifest.h"
 #include "animation/posture_pose_manifest.h"
@@ -15,6 +13,8 @@
 #include "humanoid_math.h"
 #include "pose_controller.h"
 #include "pose_primitives.h"
+#include "render/horse/horse_motion.h"
+#include "render/horse/horse_renderer_base.h"
 
 namespace Render::GL {
 

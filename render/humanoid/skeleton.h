@@ -10,8 +10,8 @@
 #include <cstdint>
 #include <string_view>
 
-#include "../creature/skeleton.h"
-#include "../gl/humanoid/humanoid_types.h"
+#include "render/creature/skeleton.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::Humanoid {
 

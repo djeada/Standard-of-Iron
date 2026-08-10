@@ -7,9 +7,9 @@
 #include <cmath>
 #include <numbers>
 
-#include "../gl/primitives.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
 #include "selection_disc.h"
 
 namespace Render::GL {

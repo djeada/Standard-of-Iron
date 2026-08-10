@@ -12,14 +12,14 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../../game/map/visibility_service.h"
-#include "../draw_queue.h"
-#include "../gl/mesh.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/terrain.h"
+#include "game/map/visibility_service.h"
 #include "linear_feature_visibility.h"
+#include "render/draw_commands.h"
+#include "render/gl/mesh.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
 #include "road_network_geometry.h"
 
 namespace Render::GL {

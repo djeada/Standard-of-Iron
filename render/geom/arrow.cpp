@@ -10,11 +10,12 @@
 #include <numbers>
 #include <vector>
 
-#include "../../game/systems/arrow_system.h"
-#include "../entity/registry.h"
-#include "../gl/mesh.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
+#include "game/systems/arrow_system.h"
+#include "render/entity/registry.h"
+#include "render/gl/mesh.h"
+#include "render/gl/resources.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/scene_renderer.h"
 
 namespace Render {
 namespace Geom {
@@ -295,18 +296,18 @@ static auto create_arrow_fletching_mesh() -> std::unique_ptr<GL::Mesh> {
 }
 
 auto Arrow::get_shaft() -> GL::Mesh* {
-  static std::unique_ptr<GL::Mesh> const mesh = create_arrow_shaft_mesh();
-  return mesh.get();
+  return GL::SharedGeometryCache::instance().get_or_build(
+      GL::geometry_key("geom/arrow/shaft"), create_arrow_shaft_mesh);
 }
 
 auto Arrow::get_tip() -> GL::Mesh* {
-  static std::unique_ptr<GL::Mesh> const mesh = create_arrow_tip_mesh();
-  return mesh.get();
+  return GL::SharedGeometryCache::instance().get_or_build(
+      GL::geometry_key("geom/arrow/tip"), create_arrow_tip_mesh);
 }
 
 auto Arrow::get_fletching() -> GL::Mesh* {
-  static std::unique_ptr<GL::Mesh> const mesh = create_arrow_fletching_mesh();
-  return mesh.get();
+  return GL::SharedGeometryCache::instance().get_or_build(
+      GL::geometry_key("geom/arrow/fletching"), create_arrow_fletching_mesh);
 }
 
 } // namespace Geom

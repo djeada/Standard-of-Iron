@@ -7,8 +7,6 @@
 #include <cstdint>
 #include <numbers>
 
-#include "../creature/animation_state_components.h"
-#include "../gl/humanoid/humanoid_types.h"
 #include "animation/horse_gait_manifest.h"
 #include "animation/quadruped_gait_manifest.h"
 #include "animation/rig/quadruped_gait.h"
@@ -19,6 +17,8 @@
 #include "horse_layout.h"
 #include "horse_source_asset.h"
 #include "math/creature_math_utils.h"
+#include "render/creature/animation_state_components.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL {
 
