@@ -663,6 +663,13 @@ void CreatureRenderBatch::add_quadruped(const PreparedWildlifeBodyState& state) 
   req.render_asset_handle = CreatureRenderAssetHandleRegistry::instance().get_or_create(
       asset->id, archetype_id, &created_handle);
   req.clip_variant = static_cast<std::uint8_t>(state.clip_variant);
+  if (state.outgoing_weight > 0.0F) {
+    req.full_body_blend.archetype = archetype_id;
+    req.full_body_blend.state = state.outgoing_state;
+    req.full_body_blend.phase = state.outgoing_phase;
+    req.full_body_blend.weight = state.outgoing_weight;
+    req.full_body_blend.mode = Render::Creature::PlaybackLayerMode::FullBodyBlend;
+  }
   populate_role_colors(req, state.variant);
   requests_.push_back(req);
 }

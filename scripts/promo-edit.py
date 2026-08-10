@@ -44,13 +44,21 @@ Typical use::
     scripts/promo-edit.py --spec tools/arena/promos/last_stand.json \\
       --clips artifacts/promo/last_stand
 
-Two delivery rules this script enforces, because both are invisible until the
-short is already published:
+Three delivery rules this script enforces, because all three are invisible until
+the short is already published:
 
 * **Frame zero is never black.** Platforms use it as the thumbnail, so the cut
   opens hard rather than fading up from black; ``--opening-fade`` restores a
   fade deliberately. The finished file is read back and the run fails if frame
   zero is black anyway.
+* **The cut does not flash.** The finished file is measured for mean-luminance
+  jumps between frames and refused if it trips a miniature WCAG 2.3.1: any jump
+  over ``FLASH_HARD_DELTA``, or more than ``FLASHES_PER_SECOND`` jumps over
+  ``FLASH_DELTA`` inside a one-second window. A ``flash`` join drives the whole
+  frame to white and measured 102-123/255 in a single frame on this reel, which
+  is a seizure risk rather than a stylistic choice; ``dip`` goes through black
+  and lands around 20. ``--allow-flashes`` publishes anyway when content really
+  needs it.
 * **The score is mastered.** The music runs through ``audio_master_preview``,
   which links the same chain the game applies at decode, so the short is scored
   with the audio a player hears. Delivery then only adds headroom for the AAC
@@ -79,6 +87,10 @@ CAPTION_FADE = 0.25
 END_CARD_SECONDS = 2.2
 OPENING_FADE = 0.0
 FIRST_FRAME_MIN_PEAK = 8
+
+FLASH_DELTA = 25
+FLASH_HARD_DELTA = 60
+FLASHES_PER_SECOND = 3
 MASTER_TOOL_CANDIDATES = (
     "build/bin/audio_master_preview",
     "build-release/bin/audio_master_preview",
@@ -186,6 +198,56 @@ def master_music(track: Path, workdir: Path) -> Path | None:
         return None
     print(f"promo-edit: scored with the mastered render of {track.name}")
     return rendered
+
+
+def luma_jumps(video: Path, fps: float) -> list[float]:
+    """Mean-luminance change per frame, 0-255, over the finished cut."""
+    width, height = 64, 36
+    result = subprocess.run(
+        [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            str(video),
+            "-vf",
+            f"scale={width}:{height},format=gray",
+            "-f",
+            "rawvideo",
+            "-",
+        ],
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout:
+        return []
+    size = width * height
+    raw = result.stdout
+    frames = [raw[i * size : (i + 1) * size] for i in range(len(raw) // size)]
+    means = [sum(frame) / size for frame in frames]
+    return [abs(b - a) for a, b in zip(means, means[1:])]
+
+
+def photosensitivity_offence(jumps: list[float], fps: float) -> str | None:
+    """WCAG 2.3.1 in miniature: no more than three big luminance jumps a second."""
+    if not jumps:
+        return None
+    window = max(1, int(round(fps)))
+    for index, jump in enumerate(jumps):
+        if jump > FLASH_HARD_DELTA:
+            return (
+                f"a {jump:.0f}/255 luminance jump at {index / fps:.2f}s "
+                f"(limit {FLASH_HARD_DELTA})"
+            )
+    for start in range(0, max(1, len(jumps) - window + 1)):
+        flashes = sum(1 for j in jumps[start : start + window] if j > FLASH_DELTA)
+        if flashes > FLASHES_PER_SECOND:
+            return (
+                f"{flashes} luminance jumps over {FLASH_DELTA}/255 within one second "
+                f"at {start / fps:.2f}s (limit {FLASHES_PER_SECOND})"
+            )
+    return None
 
 
 def first_frame_peak(video: Path) -> int:
@@ -519,6 +581,11 @@ def main() -> int:
         type=float,
         help="override every transition's length in seconds",
     )
+    parser.add_argument(
+        "--allow-flashes",
+        action="store_true",
+        help="publish even when the cut trips the photosensitivity check",
+    )
     args = parser.parse_args()
 
     if shutil.which("ffmpeg") is None:
@@ -767,7 +834,26 @@ def main() -> int:
             "first shot's framing."
         )
 
-    print(f"promo-edit: wrote {output} (first frame peak luma {peak})")
+    fps = float(manifest.get("fps", 60))
+    jumps = luma_jumps(output, fps)
+    offence = photosensitivity_offence(jumps, fps)
+    if not jumps:
+        print("promo-edit: warning: could not measure the cut for flashing")
+    elif offence is not None and not args.allow_flashes:
+        fail(
+            f"{output} flashes: {offence}. A full-frame flash is a seizure risk, so "
+            "this is refused by default. Replace `flash` joins with `dip` (through "
+            "black) or `dissolve`, lengthen the join, or pass --allow-flashes if the "
+            "content genuinely needs it."
+        )
+    elif offence is not None:
+        print(f"promo-edit: warning: --allow-flashes set; {offence}")
+
+    worst = max(jumps) if jumps else 0.0
+    print(
+        f"promo-edit: wrote {output} (first frame peak luma {peak}, "
+        f"worst luminance jump {worst:.0f}/255)"
+    )
     return 0
 
 

@@ -35,7 +35,7 @@ TDC_AUTHOR = "by Nicholas A. Judy"
 
 def tdc(volume: str, path: str) -> tuple[str, str]:
     """A URL and its provenance, for one file inside a CC0 UCS volume."""
-    quoted = path.replace("/", "%2F").replace(" ", "%20").replace(",", "%2C")
+    quoted = path.replace(" ", "%20").replace(",", "%2C")
     quoted = quoted.replace("'", "%27")
     url = f"{ARCHIVE}/Designers-Choice-Collection-{volume}/{quoted}"
     leaf = path.rsplit("/", 1)[-1]
@@ -162,6 +162,33 @@ CLANG_DULL = tdc(
     "Metal, Clang, Dull, Quiet_Nicholas Judy_TDC.wav",
 )
 
+COMMONS = "https://upload.wikimedia.org/wikipedia/commons"
+
+
+def commons(path: str, title: str, author: str) -> tuple[str, str]:
+    """A URL and its provenance, for one CC0 file on Wikimedia Commons."""
+    return f"{COMMONS}/{path}", f"Wikimedia Commons, '{title}', {author}"
+
+
+HORSES_PASS = commons(
+    "9/96/Six_Horses_Galloping_By.ogg",
+    "Six Horses Galloping By",
+    "Freesound Community via Pixabay",
+)
+"""Six horses approaching, passing and receding, recorded outdoors. The UCS
+collection has no real horse in it -- its FOOTSTEPS/HORSE folder is coconut
+shells and a simulated wood floor, which is what the three cavalry cues used to
+be built from and what made them sound like a pantomime rather than cavalry."""
+
+DOG_BARK_CLOSE = tdc(
+    "Animals",
+    "ANIMALS/DOG/ANMLDog-Samsung Galaxy Smartphone, CU_Aggresive Dog Barks and "
+    "Snarls, Distant Wind Chimes_The Designer's Choice_GNRL1.wav",
+)
+"""The other dog recording in the collection, and the one with actual
+transients: its sharpest bark onset rises by a factor of 446 against a factor of
+4.4 for anything in DOG_SNARL, which was recorded through a window."""
+
 DOG_SNARL = tdc(
     "Animals",
     "ANIMALS/DOG/ANMLDog-Samsung Galaxy Smartphone, CU_Aggessive Dog Barks, "
@@ -210,6 +237,7 @@ TARGET_RMS_DB: dict[str, float] = {
     "elephant_charge_carthage": -15.1,
     "elephant_panic": -10.3,
     "wolf_bite_snap": -14.0,
+    "wolf_snarl_bark": -16.9,
 }
 """Measured RMS of the AudioCraft file each cue replaces, in dBFS.
 
@@ -851,96 +879,64 @@ CUES: dict[str, Cue] = {
         seconds=5.0,
         layers=[
             Layer(
-                url=GALLOP_01[0],
-                origin=GALLOP_01[1],
+                url=HORSES_PASS[0],
+                origin=HORSES_PASS[1],
                 licence=CC0,
-                start=0.2,
+                start=4.0,
                 gain=1.0,
-                lowpass=5000.0,
-                loop_source=True,
+                lowpass=5200.0,
                 ranks=(0.23, 0.61),
                 rank_falloff=0.8,
-            ),
-            Layer(
-                url=GALLOP_02[0],
-                origin=GALLOP_02[1],
-                licence=CC0,
-                start=0.5,
-                gain=0.8,
-                lowpass=3800.0,
-                loop_source=True,
-                ranks=(0.37,),
-                rank_falloff=0.8,
-            ),
-            Layer(
-                url=GALLOP_03[0],
-                origin=GALLOP_03[1],
-                licence=CC0,
-                start=0.9,
-                gain=0.62,
-                lowpass=2800.0,
-                loop_source=True,
             ),
         ],
         attack=0.25,
         release=0.9,
-        notes="Three different gallop performances rather than one at three "
-        "offsets: horses that are actually out of step with each other.",
+        notes="The five seconds where the six horses close on the microphone, "
+        "so the cue builds and arrives the way a charge does rather than "
+        "looping at a constant distance. The ranks put more horses behind the "
+        "six that are there.",
     ),
     "numidian_cavalry_chase": Cue(
         path="sfx/combat/numidian_cavalry_chase",
         seconds=5.5,
         layers=[
             Layer(
-                url=GALLOP_02[0],
-                origin=GALLOP_02[1],
+                url=HORSES_PASS[0],
+                origin=HORSES_PASS[1],
                 licence=CC0,
-                start=0.3,
+                start=8.6,
                 gain=1.0,
                 highpass=90.0,
                 lowpass=6000.0,
-                loop_source=True,
                 ranks=(0.19, 0.44, 0.79),
                 rank_falloff=0.84,
-            ),
-            Layer(
-                url=GALLOP_03[0],
-                origin=GALLOP_03[1],
-                licence=CC0,
-                start=1.1,
-                gain=0.7,
-                lowpass=4200.0,
-                loop_source=True,
-                ranks=(0.31,),
-                rank_falloff=0.8,
             ),
         ],
         attack=0.2,
         release=1.0,
-        notes="Numidian horse was light and fast, so this is denser and "
-        "brighter than the Roman charge and keeps its top end.",
+        notes="The far side of the same pass: horses already gone by and "
+        "running on. Numidian horse was light and fast, so this keeps its top "
+        "end where the Roman charge is rolled off.",
     ),
     "horse_gallop_close_pass": Cue(
         path="sfx/combat/horse_gallop_close_pass",
         seconds=3.0,
         layers=[
             Layer(
-                url=GALLOP_01[0],
-                origin=GALLOP_01[1],
+                url=HORSES_PASS[0],
+                origin=HORSES_PASS[1],
                 licence=CC0,
-                start=0.2,
-                gain=1.1,
+                start=7.3,
+                gain=1.0,
                 highpass=70.0,
-                loop_source=True,
-                ranks=(0.07, 0.17, 0.29, 0.41, 0.55, 0.71, 0.89, 1.09),
-                rank_falloff=0.94,
-                rank_lowpass=1.0,
             ),
         ],
-        attack=0.35,
-        release=0.8,
-        notes="One horse, undimmed and unlayered. The long attack and release "
-        "are the pass: it arrives and it leaves.",
+        attack=0.2,
+        release=0.6,
+        notes="The pass itself, unlayered: the recording peaks at 8.25 s as "
+        "the horses draw level, so this window is the arrival and the leaving "
+        "with the real Doppler on it. Nothing here is ranked -- there are six "
+        "horses in the recording already.",
     ),
     "roman_shield_wall_impact": Cue(
         path="sfx/combat/roman_shield_wall_impact",
@@ -1137,22 +1133,54 @@ CUES: dict[str, Cue] = {
     ),
     "wolf_bite_snap": Cue(
         path="sfx/wildlife/wolf_bite_snap",
-        seconds=1.0,
+        seconds=0.34,
         layers=[
             Layer(
-                url=DOG_SNARL[0],
-                origin=DOG_SNARL[1],
+                url=SMACKS_RAPID[0],
+                origin=SMACKS_RAPID[1],
                 licence=CC0,
-                start=1.4,
+                start=1.320,
                 gain=1.0,
-                highpass=110.0,
-                lowpass=6500.0,
+                highpass=140.0,
+                lowpass=7000.0,
+            ),
+            Layer(
+                url=DOG_BARK_CLOSE[0],
+                origin=DOG_BARK_CLOSE[1],
+                licence=CC0,
+                start=22.720,
+                gain=0.55,
+                highpass=150.0,
+                lowpass=6000.0,
             ),
         ],
-        attack=0.003,
-        release=0.25,
-        notes="The sixth wildlife cue, joining the five already cut from real "
-        "canid recordings. Pitched material from a dog for the same reason "
-        "those are: it is the same species.",
+        attack=0.002,
+        release=0.16,
+        notes="Jaws closing on flesh, which is a wet impact and an animal on "
+        "top of it, not a bark. The old cue took a flat one-second window out "
+        "of a dog recorded through a window and landed on the breath between "
+        "two barks: it stayed above a quarter of its peak for 0.68 s with no "
+        "attack at all, and read as breathing.",
+    ),
+    "wolf_snarl_bark": Cue(
+        path="sfx/wildlife/wolf_snarl_bark",
+        seconds=0.56,
+        layers=[
+            Layer(
+                url=DOG_BARK_CLOSE[0],
+                origin=DOG_BARK_CLOSE[1],
+                licence=CC0,
+                start=22.735,
+                gain=1.0,
+                highpass=120.0,
+                lowpass=7500.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.30,
+        notes="One isolated bark: full level on the first frame and back to "
+        "silence within 0.14 s, with nothing either side of it to drag in. "
+        "Replaces a hand cut from a CC BY 2.5 study recording, so the wildlife "
+        "set carries one less attribution.",
     ),
 }

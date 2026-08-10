@@ -627,12 +627,24 @@ struct ArenaScenarioRunner::Impl {
     QString cull_reason;
   };
 
+  struct TraceAnimal {
+    Engine::Core::EntityID entity_id{0};
+    QVector3D position;
+    int health{0};
+    QString species;
+    QString behavior;
+    Engine::Core::EntityID focus_id{0};
+    bool biting{false};
+    bool dying{false};
+  };
+
   struct TraceFrame {
     float time_seconds{0.0F};
     double frame_time_ms{0.0};
     ArenaRenderedFrameTimings timings;
     std::vector<TraceUnit> units;
     std::vector<TraceSoldier> soldiers;
+    std::vector<TraceAnimal> animals;
   };
 
   struct TravelObservation {
@@ -1712,6 +1724,57 @@ struct ArenaScenarioRunner::Impl {
   };
 
   WildlifeObservation wildlife_observation;
+
+  static void record_animal(Engine::Core::Entity& entity,
+                            const Engine::Core::UnitComponent& unit,
+                            const Engine::Core::WildlifeComponent& wildlife,
+                            TraceFrame& frame) {
+    auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+    if (transform == nullptr) {
+      return;
+    }
+    auto const behavior_name = [&]() -> QString {
+      switch (wildlife.behavior) {
+      case Game::Wildlife::Behavior::Graze:
+        return QStringLiteral("graze");
+      case Game::Wildlife::Behavior::Flee:
+        return QStringLiteral("flee");
+      case Game::Wildlife::Behavior::Stalk:
+        return QStringLiteral("stalk");
+      case Game::Wildlife::Behavior::Roam:
+        return QStringLiteral("roam");
+      default:
+        return QStringLiteral("other");
+      }
+    }();
+
+    TraceAnimal animal;
+    animal.entity_id = entity.get_id();
+    animal.position = vector_from_transform(*transform);
+    animal.health = unit.health;
+    animal.species = wildlife.species == Game::Wildlife::Species::Wolf
+                         ? QStringLiteral("wolf")
+                         : QStringLiteral("sheep");
+    animal.behavior = behavior_name;
+    animal.focus_id = wildlife.focus_id;
+    animal.biting = wildlife.bite_timer > 0.0F;
+    animal.dying = entity.has_component<Engine::Core::DeathAnimationComponent>();
+    frame.animals.push_back(std::move(animal));
+  }
+
+  void record_animals(TraceFrame& frame) {
+    for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+      auto const* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
+      if (unit == nullptr || wildlife == nullptr) {
+        continue;
+      }
+      record_animal(*entity, *unit, *wildlife, frame);
+    }
+  }
 
   void observe_wildlife() {
     int population = 0;
@@ -4238,6 +4301,7 @@ void ArenaScenarioRunner::observe_rendered_frame(
   frame.time_seconds = m_impl->elapsed;
   frame.frame_time_ms = timings.total_ms;
   frame.timings = timings;
+  m_impl->record_animals(frame);
   for (auto* entity :
        m_impl->world.get_entities_with<Engine::Core::BuildingComponent>()) {
     if (entity == nullptr || m_impl->initial_building_ids.contains(entity->get_id()) ||
@@ -4497,6 +4561,19 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("rpg_action_phase"), unit.rpg_action_phase},
           {QStringLiteral("rpg_action_time"), unit.rpg_action_normalized_time}});
     }
+    QJsonArray animals;
+    for (auto const& animal : frame.animals) {
+      animals.append(QJsonObject{
+          {QStringLiteral("entity_id"), static_cast<qint64>(animal.entity_id)},
+          {QStringLiteral("species"), animal.species},
+          {QStringLiteral("position"), json_vector(animal.position)},
+          {QStringLiteral("health"), animal.health},
+          {QStringLiteral("behavior"), animal.behavior},
+          {QStringLiteral("focus_id"), static_cast<qint64>(animal.focus_id)},
+          {QStringLiteral("biting"), animal.biting},
+          {QStringLiteral("dying"), animal.dying}});
+    }
+
     QJsonArray soldiers;
     for (auto const& soldier : frame.soldiers) {
       soldiers.append(QJsonObject{
@@ -4553,6 +4630,7 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
              {QStringLiteral("shadow_single_draws"),
               static_cast<qint64>(frame.timings.shadow_rigged_single_draws)}}},
         {QStringLiteral("units"), units},
+        {QStringLiteral("animals"), animals},
         {QStringLiteral("soldiers"), soldiers}};
     trace_file.write(QJsonDocument(line).toJson(QJsonDocument::Compact));
     trace_file.write("\n");

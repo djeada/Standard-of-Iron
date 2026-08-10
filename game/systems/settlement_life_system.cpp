@@ -241,7 +241,10 @@ auto is_unclaimed_by_the_player(const Engine::Core::Entity& entity) -> bool {
   return movement != nullptr && !movement->get_has_target();
 }
 
-auto is_armed(Game::Units::SpawnType type) -> bool {
+auto endangers_residents(Game::Units::SpawnType type) -> bool {
+  if (type == Game::Units::SpawnType::Wolf) {
+    return true;
+  }
   return Game::Units::can_use_attack_mode(type) &&
          type != Game::Units::SpawnType::Civilian;
 }
@@ -251,7 +254,8 @@ void collect_armed_units(Engine::Core::World& world,
   out.clear();
   for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->health <= 0 || !is_armed(unit->spawn_type)) {
+    if ((unit == nullptr) || unit->health <= 0 ||
+        !endangers_residents(unit->spawn_type)) {
       continue;
     }
     auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
