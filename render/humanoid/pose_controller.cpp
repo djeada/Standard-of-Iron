@@ -4,8 +4,6 @@
 
 #include <algorithm>
 
-#include "../creature/movement_state.h"
-#include "../equipment/weapons/sword_renderer.h"
 #include "animation/ambient_pose_manifest.h"
 #include "animation/attack_pose_manifest.h"
 #include "animation/hold_pose_manifest.h"
@@ -14,6 +12,8 @@
 #include "grip_axis.h"
 #include "humanoid_math.h"
 #include "pose_primitives.h"
+#include "render/creature/movement_state.h"
+#include "render/equipment/weapons/sword_renderer.h"
 #include "spear_pose_utils.h"
 
 namespace Render::GL {

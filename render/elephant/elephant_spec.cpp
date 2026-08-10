@@ -10,10 +10,10 @@
 #include <numbers>
 #include <span>
 
-#include "../creature/part_graph.h"
-#include "../creature/skeleton.h"
-#include "../submitter.h"
 #include "elephant_manifest.h"
+#include "render/creature/part_graph.h"
+#include "render/creature/skeleton.h"
+#include "render/submitter.h"
 
 namespace Render::Elephant {
 
@@ -456,9 +456,9 @@ void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims
 
 } // namespace Render::Elephant
 
-#include "../bone_palette_arena.h"
-#include "../rigged_mesh_cache.h"
-#include "../scene_renderer.h"
+#include "render/bone_palette_arena.h"
+#include "render/rigged_mesh_cache.h"
+#include "render/scene_renderer.h"
 
 namespace Render::Elephant {
 

@@ -6,9 +6,9 @@
 #include <cstdint>
 #include <optional>
 
-#include "../pose_intent_enum.h"
-#include "../render_request.h"
 #include "creature_render_state.h"
+#include "render/creature/pose_intent_enum.h"
+#include "render/creature/render_request.h"
 
 namespace Engine::Core {
 class UnitComponent;

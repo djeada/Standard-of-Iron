@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <array>
 
-#include "../geom/parts.h"
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
+#include "render/geom/parts.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
 
 namespace Render::Creature {
 

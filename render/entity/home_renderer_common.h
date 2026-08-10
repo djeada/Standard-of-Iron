@@ -5,10 +5,10 @@
 #include <array>
 #include <string_view>
 
-#include "../render_archetype.h"
 #include "building_render_common.h"
 #include "building_state.h"
 #include "registry.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL {
 

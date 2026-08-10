@@ -6,9 +6,9 @@
 #include <mutex>
 #include <vector>
 
-#include "../../game/map/map_definition.h"
-#include "../terrain_scene_types.h"
+#include "game/map/map_definition.h"
 #include "i_scatter_pass.h"
+#include "render/terrain_scene_types.h"
 
 namespace Render::GL {
 

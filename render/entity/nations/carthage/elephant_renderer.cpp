@@ -5,21 +5,21 @@
 
 #include <cmath>
 
-#include "../../../../game/core/component.h"
-#include "../../../../game/core/entity.h"
-#include "../../../../game/visuals/team_colors.h"
-#include "../../../creature/anatomy_bake.h"
-#include "../../../creature/pipeline/creature_prepared_state.h"
-#include "../../../elephant/elephant_renderer_base.h"
-#include "../../../geom/transforms.h"
-#include "../../../gl/humanoid/animation/animation_inputs.h"
-#include "../../../gl/humanoid/humanoid_types.h"
-#include "../../../gl/primitives.h"
-#include "../../../gl/resources.h"
-#include "../../../scene_renderer.h"
-#include "../../../submitter.h"
-#include "../../registry.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/visuals/team_colors.h"
 #include "math/math_utils.h"
+#include "render/creature/anatomy_bake.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
+#include "render/elephant/elephant_renderer_base.h"
+#include "render/entity/registry.h"
+#include "render/geom/transforms.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
+#include "render/scene_renderer.h"
+#include "render/submitter.h"
 
 namespace Render::GL::Carthage {
 namespace {

@@ -378,10 +378,7 @@ public:
 
   [[nodiscard]] bool is_campaign_mission() const;
   [[nodiscard]] bool release_self_test_mission_ready() const;
-  // Names every condition release_self_test_mission_ready() is still waiting
-  // on. A release self-test that times out on a runner we cannot attach to
-  // otherwise reports only that 180 seconds elapsed, which does not say which
-  // half of the loading handshake stalled.
+
   [[nodiscard]] QString release_self_test_pending_reason() const;
   [[nodiscard]] bool campaign_completed() const;
   [[nodiscard]] bool civilian_delivery_available() const {

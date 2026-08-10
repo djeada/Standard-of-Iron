@@ -8,10 +8,11 @@
 #include <numbers>
 #include <vector>
 
-#include "../entity/registry.h"
-#include "../gl/mesh.h"
-#include "../gl/resources.h"
-#include "../scene_renderer.h"
+#include "render/entity/registry.h"
+#include "render/gl/mesh.h"
+#include "render/gl/resources.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/scene_renderer.h"
 
 namespace Render {
 namespace Geom {
@@ -101,8 +102,8 @@ static auto create_stone_mesh() -> std::unique_ptr<GL::Mesh> {
 }
 
 auto Stone::get() -> GL::Mesh* {
-  static std::unique_ptr<GL::Mesh> const mesh = create_stone_mesh();
-  return mesh.get();
+  return GL::SharedGeometryCache::instance().get_or_build(
+      GL::geometry_key("geom/stone"), create_stone_mesh);
 }
 
 } // namespace Geom

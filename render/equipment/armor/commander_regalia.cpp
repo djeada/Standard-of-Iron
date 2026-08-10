@@ -3,10 +3,10 @@
 #include <string_view>
 #include <vector>
 
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../attachment_builder.h"
-#include "../generated_equipment.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/generated_equipment.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
 #include "torso_local_archetype_utils.h"
 
 namespace Render::GL {

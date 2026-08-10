@@ -72,21 +72,12 @@ if(WIN32)
     add_compile_definitions(NOMINMAX) # Prevent min/max macros from windows.h
 endif()
 
-# Per-soldier submission diagnostics and shader-bind auditing.  Implied by Debug;
-# available in Release so the Arena regression scenarios can verify rendering
-# without paying for an unoptimised build.
-option(SOI_RUNTIME_TRACING "Enable runtime rendering diagnostics" OFF)
-if(SOI_RUNTIME_TRACING AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_definitions(SOI_ENABLE_RUNTIME_TRACING=1)
-endif()
-
 # Optimised builds are stripped so shipped artifacts carry no debug info. A
 # sampling profiler needs the symbol table, so let a profiling build opt out.
 option(SOI_KEEP_SYMBOLS "Keep the symbol table in optimised builds" OFF)
 
 # ---- Compiler Optimization Flags ----
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_definitions(SOI_ENABLE_RUNTIME_TRACING=1)
     if(MSVC)
         # MSVC Debug flags
         set(CMAKE_CXX_FLAGS_DEBUG "/Od /Zi /DDEBUG")

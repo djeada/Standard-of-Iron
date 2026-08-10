@@ -6,10 +6,10 @@
 #include <numbers>
 #include <string>
 
-#include "../../humanoid/humanoid_spec.h"
-#include "../attachment_builder.h"
-#include "../generated_equipment.h"
-#include "../humanoid_attachment_archetype.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/generated_equipment.h"
+#include "render/equipment/humanoid_attachment_archetype.h"
+#include "render/humanoid/humanoid_spec.h"
 
 namespace Render::GL {
 

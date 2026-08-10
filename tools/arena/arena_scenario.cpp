@@ -347,46 +347,6 @@ auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
 
 } // namespace
 
-namespace {
-
-[[nodiscard]] constexpr auto soldier_diagnostics_available() noexcept -> bool {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  return true;
-#else
-  return false;
-#endif
-}
-
-[[nodiscard]] constexpr auto
-expectation_needs_soldier_diagnostics(ArenaExpectationKind kind) noexcept -> bool {
-  switch (kind) {
-  case ArenaExpectationKind::NoPoseOscillation:
-  case ArenaExpectationKind::NoRootTeleport:
-  case ArenaExpectationKind::NoUnexpectedFallPose:
-  case ArenaExpectationKind::NoLimbOverextension:
-  case ArenaExpectationKind::NoRenderVisibilityChurn:
-  case ArenaExpectationKind::FullCreatureDetailOnly:
-  case ArenaExpectationKind::MovementIsContinuous:
-  case ArenaExpectationKind::FormationBodyOverlapObserved:
-  case ArenaExpectationKind::AllLivingSoldiersFight:
-  case ArenaExpectationKind::MovementAnimationObserved:
-  case ArenaExpectationKind::AttackAnimationObserved:
-  case ArenaExpectationKind::HoldPoseMaintained:
-  case ArenaExpectationKind::RepeatedAttackAnimationObserved:
-  case ArenaExpectationKind::AttackHasVisibleContact:
-  case ArenaExpectationKind::AttackRecoveryObserved:
-  case ArenaExpectationKind::HitReactionObserved:
-  case ArenaExpectationKind::DeathAnimationObserved:
-  case ArenaExpectationKind::GroupIsRendered:
-  case ArenaExpectationKind::RpgFormationSurvivesLensGap:
-    return true;
-  default:
-    return false;
-  }
-}
-
-} // namespace
-
 auto validate_scenario(const ArenaScenarioDefinition& definition)
     -> std::vector<ArenaScenarioValidationError> {
   std::vector<ArenaScenarioValidationError> errors;
@@ -3227,11 +3187,6 @@ struct ArenaScenarioRunner::Impl {
     }
     end_expectations_checked = true;
     for (auto const& expectation : scenario.expectations) {
-      if (!soldier_diagnostics_available() &&
-          expectation_needs_soldier_diagnostics(expectation.kind)) {
-
-        continue;
-      }
       switch (expectation.kind) {
       case ArenaExpectationKind::AttackAnimationObserved:
         if (!visible_attacks.value(expectation.group, false)) {

@@ -2,8 +2,8 @@
 
 #include <algorithm>
 
-#include "../../game/units/troop_config.h"
-#include "../horse/dimensions.h"
+#include "game/units/troop_config.h"
+#include "render/horse/dimensions.h"
 
 namespace Render::GL {
 

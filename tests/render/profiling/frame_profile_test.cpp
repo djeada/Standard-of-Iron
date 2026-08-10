@@ -10,9 +10,9 @@ using Render::Profiling::FrameProfile;
 using Render::Profiling::Phase;
 using Render::Profiling::PhaseScope;
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
 TEST(FrameProfileTest, ResetZeroes) {
   FrameProfile p;
+  p.enabled = true;
   p.add_phase_us(Phase::Sort, 123);
   p.draw_calls = 10;
   p.triangles = 5000;
@@ -31,6 +31,7 @@ TEST(FrameProfileTest, DisabledProfileIgnoresWrites) {
 
 TEST(FrameProfileTest, PhaseScopeRecordsElapsed) {
   FrameProfile p;
+  p.enabled = true;
   {
     PhaseScope const scope(&p, Phase::Submit);
     std::this_thread::sleep_for(std::chrono::milliseconds(2));
@@ -52,6 +53,7 @@ TEST(FrameProfileTest, PhaseScopeSkipsWhenDisabled) {
 
 TEST(FrameProfileTest, TotalSumsAllPhases) {
   FrameProfile p;
+  p.enabled = true;
   p.add_phase_us(Phase::Collection, 100);
   p.add_phase_us(Phase::Sort, 200);
   p.add_phase_us(Phase::Playback, 300);
@@ -60,6 +62,7 @@ TEST(FrameProfileTest, TotalSumsAllPhases) {
 
 TEST(FrameProfileTest, FormatOverlayIncludesAllPhases) {
   FrameProfile p;
+  p.enabled = true;
   p.frame_index = 42;
   p.add_phase_us(Phase::Collection, 1000);
   p.add_phase_us(Phase::Sort, 500);
@@ -105,14 +108,23 @@ TEST(FrameProfileTest, GlobalProfileIsSingleton) {
   auto& a = Render::Profiling::global_profile();
   auto& b = Render::Profiling::global_profile();
   EXPECT_EQ(&a, &b);
+  bool const was_enabled = a.enabled;
+  a.enabled = true;
   a.reset();
   a.add_phase_us(Phase::Sort, 10);
   EXPECT_EQ(b.phase_us[static_cast<std::size_t>(Phase::Sort)], 10U);
   a.reset();
+  a.enabled = was_enabled;
+}
+
+TEST(FrameProfileTest, ProfilingIsOffUntilSomethingAsksForIt) {
+  FrameProfile const p;
+  EXPECT_FALSE(p.enabled);
 }
 
 TEST(FrameProfileTest, FinishFrameSampleComputesRollingAverageAndP95) {
   FrameProfile p;
+  p.enabled = true;
   p.add_phase_us(Phase::Collection, 1000);
   p.finish_frame_sample();
   p.reset();
@@ -125,26 +137,6 @@ TEST(FrameProfileTest, FinishFrameSampleComputesRollingAverageAndP95) {
   EXPECT_NEAR(p.average_frame_ms, 3.0, 0.01);
   EXPECT_NEAR(p.p95_frame_ms, 5.0, 0.01);
 }
-#else
-TEST(FrameProfileTest, ReleaseBuildCompilesOutRuntimeTracing) {
-  FrameProfile p;
-  EXPECT_FALSE(p.enabled);
-
-  p.enabled = true;
-  p.add_phase_us(Phase::Collection, 1000);
-  {
-    PhaseScope const scope(&p, Phase::Playback);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  }
-  p.finish_frame_sample();
-
-  EXPECT_EQ(p.total_us(), 0U);
-  EXPECT_EQ(p.phase_us[static_cast<std::size_t>(Phase::Collection)], 0U);
-  EXPECT_EQ(p.phase_us[static_cast<std::size_t>(Phase::Playback)], 0U);
-  EXPECT_EQ(p.average_frame_ms, 0.0);
-  EXPECT_EQ(p.p95_frame_ms, 0.0);
-}
-#endif
 
 TEST(FrameProfileTest, PhaseNameMatchesEnum) {
   EXPECT_STREQ(Render::Profiling::phase_name(Phase::Collection), "collect");

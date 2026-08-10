@@ -4,11 +4,11 @@
 
 #include <string>
 
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../creature/render_request.h"
-#include "../equipment/equipment_registry.h"
 #include "mounted_horse_equipment.h"
 #include "mounted_humanoid_renderer_base.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/render_request.h"
+#include "render/equipment/equipment_registry.h"
 
 namespace Render::GL {
 

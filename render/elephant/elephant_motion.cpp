@@ -8,15 +8,15 @@
 #include <cstddef>
 #include <numbers>
 
-#include "../creature/animation_state_components.h"
-#include "../creature/movement_animation.h"
-#include "../gl/humanoid/animation/animation_inputs.h"
 #include "animation/elephant_gait_manifest.h"
 #include "animation/quadruped_gait_manifest.h"
 #include "animation/rig/quadruped_gait.h"
 #include "dimensions.h"
 #include "elephant_source_asset.h"
 #include "elephant_spec.h"
+#include "render/creature/animation_state_components.h"
+#include "render/creature/movement_animation.h"
+#include "render/gl/humanoid/animation/animation_inputs.h"
 
 namespace Render::GL {
 

@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../../game/core/component.h"
-#include "../../game/core/world.h"
-#include "../../game/systems/nation_id.h"
-#include "../scene_renderer.h"
-#include "../selection_ring_layout.h"
+#include "game/core/component.h"
+#include "game/core/world.h"
+#include "game/systems/nation_id.h"
+#include "render/scene_renderer.h"
+#include "render/selection_ring_layout.h"
 
 namespace Render::GL {
 

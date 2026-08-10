@@ -7,10 +7,10 @@
 #include <memory>
 #include <vector>
 
-#include "../draw_queue.h"
-#include "../gl/buffer.h"
-#include "../gl/texture.h"
-#include "../i_render_pass.h"
+#include "render/draw_commands.h"
+#include "render/gl/buffer.h"
+#include "render/gl/texture.h"
+#include "render/i_render_pass.h"
 #include "visibility_mask_encoder.h"
 
 namespace Render::GL {

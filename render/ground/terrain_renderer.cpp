@@ -1,6 +1,6 @@
 #include "terrain_renderer.h"
 
-#include "../gl/mesh.h"
+#include "render/gl/mesh.h"
 
 namespace Render::GL {
 

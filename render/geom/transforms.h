@@ -3,7 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "../math/pod_math.h"
+#include "render/math/pod_math.h"
 
 namespace Render::Geom {
 

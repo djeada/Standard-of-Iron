@@ -5,16 +5,16 @@
 #include <deque>
 #include <string>
 
-#include "../../entity/registry.h"
-#include "../../gl/render_constants.h"
-#include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
-#include "../generated_equipment.h"
-#include "../oriented_archetype_utils.h"
 #include "arrow_archetype_utils.h"
 #include "math/math_utils.h"
+#include "render/entity/registry.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/equipment/generated_equipment.h"
+#include "render/equipment/oriented_archetype_utils.h"
+#include "render/gl/render_constants.h"
+#include "render/humanoid/humanoid_math.h"
+#include "render/humanoid/humanoid_spec.h"
 #include "render/math/creature_math_utils.h"
 
 namespace Render::GL {

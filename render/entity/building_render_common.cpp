@@ -11,13 +11,13 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../../game/core/component.h"
-#include "../../game/systems/nation_id.h"
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../gl/resources.h"
+#include "game/core/component.h"
+#include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
 #include "math/math_utils.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/gl/resources.h"
 
 namespace Render::GL {
 namespace {

@@ -3,17 +3,17 @@
 #include <algorithm>
 #include <limits>
 
-#include "../../elephant/elephant_spec.h"
-#include "../../horse/horse_spec.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../static_attachment_spec.h"
-#include "../../wildlife/sheep_spec.h"
-#include "../../wildlife/wildlife_variant.h"
-#include "../../wildlife/wolf_spec.h"
-#include "../archetype_registry.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
 #include "creature_visual_definition.h"
+#include "render/creature/archetype_registry.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/horse/horse_spec.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/static_attachment_spec.h"
+#include "render/wildlife/sheep_spec.h"
+#include "render/wildlife/wildlife_variant.h"
+#include "render/wildlife/wolf_spec.h"
 
 namespace Render::Creature::Pipeline {
 

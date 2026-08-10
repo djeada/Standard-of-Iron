@@ -19,18 +19,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include "../game/accessibility/team_identity.h"
-#include "../game/map/render_visibility_rules.h"
-#include "../game/map/terrain_service.h"
-#include "../game/map/visibility_service.h"
-#include "../game/systems/formation_combat_geometry.h"
-#include "../game/systems/nation_registry.h"
-#include "../game/systems/owner_registry.h"
-#include "../game/systems/troop_profile_service.h"
-#include "../game/units/spawn_type.h"
-#include "../game/units/troop_catalog.h"
-#include "../game/units/troop_config.h"
-#include "../game/visuals/team_colors.h"
 #include "animation/bpat/bpat_registry.h"
 #include "battle_render_optimizer.h"
 #include "creature/animation_state_components.h"
@@ -48,8 +36,20 @@
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
 #include "equipment/render_archetype_registry.h"
+#include "game/accessibility/team_identity.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/render_visibility_rules.h"
+#include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
+#include "game/systems/formation_combat_geometry.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
+#include "game/systems/troop_profile_service.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_catalog.h"
+#include "game/units/troop_config.h"
+#include "game/visuals/team_colors.h"
 #include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
@@ -121,12 +121,6 @@ void transfer_render_runtime_state(Engine::Core::World& previous,
   }
 }
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-auto render_stage_logging_enabled() -> bool {
-  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
-}
-#endif
-
 auto unit_should_emit_rigged_body(Game::Units::SpawnType spawn_type) noexcept -> bool {
   switch (spawn_type) {
   case Game::Units::SpawnType::Catapult:
@@ -162,25 +156,6 @@ public:
 private:
   std::uint32_t m_rigged_body_count{0U};
 };
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-void log_render_first_use_once(const char* stage, const QString& detail) {
-  if (!render_stage_logging_enabled()) {
-    return;
-  }
-
-  static std::mutex mutex;
-  static std::unordered_set<std::string> emitted_stages;
-
-  std::lock_guard<std::mutex> const lock(mutex);
-  if (!emitted_stages.emplace(stage).second) {
-    return;
-  }
-
-  qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
-                           .arg(QString::fromLatin1(stage), detail);
-}
-#endif
 
 float get_unit_base_cull_radius(Game::Units::SpawnType spawn_type) {
   switch (spawn_type) {
@@ -371,7 +346,7 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
                                       Engine::Core::UnitComponent* unit_comp,
                                       bool selected,
                                       bool hovered) {
-  if ((!selected && !hovered) || (transform == nullptr) || m_cinematic_mode) {
+  if ((!selected && !hovered) || (transform == nullptr) || m_view.cinematic_mode()) {
     return;
   }
 
@@ -527,12 +502,8 @@ void Renderer::enqueue_activity_indicator(Engine::Core::EntityID entity_id,
                  static_cast<int>(activity.kind),
                  Render::Geom::indicator_color(activity.kind, activity.state),
                  Render::Geom::indicator_state_alpha(activity.state) * distance_fade);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   Render::Profiling::CombatAnimationDiagnostics::instance().record_mode_indicator(
       entity_id);
-#else
-  (void)entity_id;
-#endif
 }
 
 auto Renderer::compute_rpg_lens_gap(Engine::Core::World& world) const
@@ -541,12 +512,12 @@ auto Renderer::compute_rpg_lens_gap(Engine::Core::World& world) const
   constexpr float k_rpg_lens_gap_focus_radius = 0.45F;
 
   LensGapExclusion rpg_lens_gap;
-  if (m_world_render_mode != WorldRenderMode::Rpg || m_rpg_camera_focus_id == 0 ||
-      m_camera == nullptr) {
+  if (m_view.world_render_mode() != WorldRenderMode::Rpg ||
+      m_view.rpg_camera_focus() == 0 || m_camera == nullptr) {
     return rpg_lens_gap;
   }
 
-  auto* focus = world.get_entity(m_rpg_camera_focus_id);
+  auto* focus = world.get_entity(m_view.rpg_camera_focus());
   if (focus == nullptr) {
     return rpg_lens_gap;
   }
@@ -566,7 +537,7 @@ auto Renderer::compute_rpg_lens_gap(Engine::Core::World& world) const
   }
 
   rpg_lens_gap.enabled = true;
-  rpg_lens_gap.focus_entity_id = m_rpg_camera_focus_id;
+  rpg_lens_gap.focus_entity_id = m_view.rpg_camera_focus();
   rpg_lens_gap.eye_x = eye.x();
   rpg_lens_gap.eye_z = eye.z();
   rpg_lens_gap.axis_x = to_focus_x / focus_distance;
@@ -623,7 +594,7 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
       entry.entity_id = entity_id;
 
       bool const is_selected = (m_selected_ids.find(entity_id) != m_selected_ids.end());
-      bool const is_hovered = (entity_id == m_hovered_entity_id);
+      bool const is_hovered = (entity_id == m_view.hovered_entity_id());
       entry.selected = is_selected;
       entry.hovered = is_hovered;
       if (m_entity_registry != nullptr && !cached.has_renderer_handle &&
@@ -646,7 +617,7 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
                                cached.transform->position.y,
                                cached.transform->position.z);
       float const cull_radius = get_unit_cull_radius(*unit_comp);
-      const bool filter_enemy = unit_comp->owner_id != m_local_owner_id &&
+      const bool filter_enemy = unit_comp->owner_id != m_view.local_owner_id() &&
                                 visibility_enabled &&
                                 non_local_unit_visibility_filter_enabled();
       const auto visibility_result = m_submission_visibility.evaluate_sphere(
@@ -665,12 +636,10 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
       }
 
       if (!entry.in_frustum || !entry.fog_visible) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
         Render::Profiling::CombatAnimationDiagnostics::instance().record_unit_cull(
             entity_id,
             entry.in_frustum ? Render::Profiling::SoldierCullReason::Fog
                              : Render::Profiling::SoldierCullReason::Frustum);
-#endif
         continue;
       }
 
@@ -738,7 +707,7 @@ void Renderer::collect_non_unit_entries(
     entry.unit = nullptr;
     entry.entity_id = entity_id;
     entry.selected = (m_selected_ids.find(entity_id) != m_selected_ids.end());
-    entry.hovered = (entity_id == m_hovered_entity_id);
+    entry.hovered = (entity_id == m_view.hovered_entity_id());
     entry.distance_sq = distance_sq;
     if (!renderable->renderer_id.empty()) {
       std::string_view const canonical =
@@ -821,7 +790,7 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
           order_markers_visible_for_owner(entry.unit->owner_id);
       draw_ctx.submission_visibility = &m_submission_visibility;
       draw_ctx.submission_fog_mode =
-          entry.unit != nullptr && entry.unit->owner_id != m_local_owner_id &&
+          entry.unit != nullptr && entry.unit->owner_id != m_view.local_owner_id() &&
                   ctx.visibility_enabled && non_local_unit_visibility_filter_enabled()
               ? SubmissionFogMode::VisibleOnly
               : SubmissionFogMode::Ignore;
@@ -874,7 +843,6 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
                        : static_cast<ISubmitter&>(*this));
       (*fn)(draw_ctx, probe);
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
       auto const* animation_debug =
           Render::Profiling::CombatAnimationDiagnostics::instance().find_unit(
               entry.entity_id);
@@ -886,10 +854,6 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
                         return soldier.cull_reason !=
                                Render::Profiling::SoldierCullReason::None;
                       });
-#else
-      constexpr bool all_published_soldiers_culled = false;
-#endif
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
       if (entry.unit != nullptr && probe.rigged_body_count() == 0U &&
           unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal &&
           !all_published_soldiers_culled) {
@@ -919,7 +883,6 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
                      .arg(static_cast<int>(tier));
         }
       }
-#endif
 
       drawn_by_registry = true;
     }
@@ -962,6 +925,56 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
        1.0F);
 }
 
+void Renderer::submit_non_unit_entry(const RenderEntry& entry,
+                                     Engine::Core::World* world,
+                                     ResourceManager* res) {
+  const QMatrix4x4& model_matrix = m_model_matrix_cache.get_or_create(
+      entry.entity_id, entry.transform, m_frame_counter);
+
+  bool drawn_by_registry = false;
+  if (m_entity_registry &&
+      entry.renderer_handle != Render::GL::k_invalid_renderer_handle) {
+    auto const* fn = m_entity_registry->get(entry.renderer_handle);
+    if (fn != nullptr) {
+      DrawContext ctx{resources(), entry.entity, world, model_matrix};
+      ctx.selected = entry.selected;
+      ctx.hovered = entry.hovered;
+      ctx.animation_time = m_accumulated_time;
+      ctx.distance_sq = entry.distance_sq;
+      ctx.renderer_id = entry.renderer_key;
+      ctx.renderer_handle = entry.renderer_handle;
+      ctx.backend = m_gl_backend;
+      ctx.camera = m_camera;
+      ctx.order_markers_visible = entry.unit != nullptr &&
+                                  order_markers_visible_for_owner(entry.unit->owner_id);
+      ctx.animation_throttled = false;
+      (*fn)(ctx, *this);
+      drawn_by_registry = true;
+    }
+  }
+  if (drawn_by_registry) {
+    if (entry.selected || entry.hovered) {
+      enqueue_selection_ring(
+          entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
+    }
+    return;
+  }
+
+  Mesh* mesh_to_draw = resolve_fallback_mesh(res, entry.renderable);
+  QVector3D const color = QVector3D(entry.renderable->color[0],
+                                    entry.renderable->color[1],
+                                    entry.renderable->color[2]);
+
+  if (entry.selected || entry.hovered) {
+    enqueue_selection_ring(
+        entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
+  }
+  mesh(mesh_to_draw,
+       model_matrix,
+       color,
+       (res != nullptr) ? res->white() : nullptr,
+       1.0F);
+}
 void Renderer::render_world(Engine::Core::World* world) {
   if (m_paused.load()) {
     return;
@@ -991,11 +1004,6 @@ void Renderer::render_world(Engine::Core::World* world) {
   if (!m_render_registry.is_attached_to(simulation_world)) {
     m_cached_world = simulation_world;
     m_render_registry.attach(simulation_world);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-    log_render_first_use_once(
-        "render-registry-attach",
-        QStringLiteral("attached persistent render registry to world"));
-#endif
   }
 
   auto& vis = Game::Map::VisibilityService::instance();
@@ -1016,7 +1024,7 @@ void Renderer::render_world(Engine::Core::World* world) {
   const auto& gfx_settings = Render::GraphicsSettings::instance();
   const auto& batch_config = gfx_settings.batching_config();
   const bool full_creature_detail =
-      m_force_full_creature_lod || !gfx_settings.creature_lod_enabled();
+      m_view.force_full_creature_lod() || !gfx_settings.creature_lod_enabled();
 
   float camera_height = 0.0F;
   if (m_camera != nullptr) {
@@ -1058,9 +1066,7 @@ void Renderer::render_world(Engine::Core::World* world) {
   m_model_matrix_cache.prune(m_frame_counter);
   auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   battle_optimizer.set_visible_unit_count(visible_unit_count);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto& frame_profile = Render::Profiling::global_profile();
-#endif
   uint32_t const optimizer_frame = battle_optimizer.frame_counter();
 
   float batching_ratio =
@@ -1101,66 +1107,14 @@ void Renderer::render_world(Engine::Core::World* world) {
     submit_unit_entry(entry, submit_ctx);
   }
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;
-#endif
-
-  auto render_non_unit_entry = [&](const RenderEntry& entry) {
-    const QMatrix4x4& model_matrix = m_model_matrix_cache.get_or_create(
-        entry.entity_id, entry.transform, m_frame_counter);
-
-    bool drawn_by_registry = false;
-    if (m_entity_registry &&
-        entry.renderer_handle != Render::GL::k_invalid_renderer_handle) {
-      auto const* fn = m_entity_registry->get(entry.renderer_handle);
-      if (fn != nullptr) {
-        DrawContext ctx{resources(), entry.entity, world, model_matrix};
-        ctx.selected = entry.selected;
-        ctx.hovered = entry.hovered;
-        ctx.animation_time = m_accumulated_time;
-        ctx.distance_sq = entry.distance_sq;
-        ctx.renderer_id = entry.renderer_key;
-        ctx.renderer_handle = entry.renderer_handle;
-        ctx.backend = m_gl_backend;
-        ctx.camera = m_camera;
-        ctx.order_markers_visible =
-            entry.unit != nullptr &&
-            order_markers_visible_for_owner(entry.unit->owner_id);
-        ctx.animation_throttled = false;
-        (*fn)(ctx, *this);
-        drawn_by_registry = true;
-      }
-    }
-    if (drawn_by_registry) {
-      if (entry.selected || entry.hovered) {
-        enqueue_selection_ring(
-            entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
-      }
-      return;
-    }
-
-    Mesh* mesh_to_draw = resolve_fallback_mesh(res, entry.renderable);
-    QVector3D const color = QVector3D(entry.renderable->color[0],
-                                      entry.renderable->color[1],
-                                      entry.renderable->color[2]);
-
-    if (entry.selected || entry.hovered) {
-      enqueue_selection_ring(
-          entry.entity, entry.transform, entry.unit, entry.selected, entry.hovered);
-    }
-    mesh(mesh_to_draw,
-         model_matrix,
-         color,
-         (res != nullptr) ? res->white() : nullptr,
-         1.0F);
-  };
 
   for (const auto& entry : building_entries) {
-    render_non_unit_entry(entry);
+    submit_non_unit_entry(entry, world, res);
   }
 
   for (const auto& entry : other_entries) {
-    render_non_unit_entry(entry);
+    submit_non_unit_entry(entry, world, res);
   }
 
   Render::GL::submit_carried_loads(
@@ -1216,7 +1170,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     const float preview_x = transform->position.x;
     const float preview_z = transform->position.z;
 
-    int preview_owner = m_local_owner_id;
+    int preview_owner = m_view.local_owner_id();
     if (const auto* preview =
             entity->get_component<Engine::Core::ConstructionPreviewComponent>()) {
       preview_owner = preview->owner_id;
@@ -1226,7 +1180,8 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
       preview_owner = site->owner_id;
     }
 
-    const bool filter_preview = preview_owner != m_local_owner_id && visibility_enabled;
+    const bool filter_preview =
+        preview_owner != m_view.local_owner_id() && visibility_enabled;
     const QVector3D preview_position(preview_x, transform->position.y, preview_z);
     if (!m_submission_visibility.accepts_sphere(
             preview_position,

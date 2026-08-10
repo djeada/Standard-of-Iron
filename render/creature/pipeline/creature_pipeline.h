@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <span>
 
-#include "../render_request.h"
 #include "creature_render_state.h"
+#include "render/creature/render_request.h"
 #include "unit_visual_spec.h"
 
 namespace Render::GL {

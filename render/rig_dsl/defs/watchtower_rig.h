@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../rig_def.h"
+#include "render/rig_dsl/rig_def.h"
 
 namespace Render::RigDSL::Watchtower {
 

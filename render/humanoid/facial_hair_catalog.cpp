@@ -8,10 +8,10 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "../creature/runtime_bake_guard.h"
-#include "../equipment/attachment_builder.h"
-#include "../equipment/generated_equipment.h"
 #include "humanoid_spec.h"
+#include "render/creature/runtime_bake_guard.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/generated_equipment.h"
 
 namespace Render::Humanoid {
 

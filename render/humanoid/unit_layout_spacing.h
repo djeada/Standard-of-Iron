@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../game/units/spawn_type.h"
+#include "game/units/spawn_type.h"
 
 namespace Render::GL {
 

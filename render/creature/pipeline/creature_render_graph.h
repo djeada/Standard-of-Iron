@@ -9,11 +9,11 @@
 #include <utility>
 #include <vector>
 
-#include "../render_request.h"
 #include "animation/bpat/bpat_playback.h"
 #include "creature_render_state.h"
 #include "humanoid_animation_selection.h"
 #include "lod_decision.h"
+#include "render/creature/render_request.h"
 #include "shadow_batch.h"
 #include "unit_visual_spec.h"
 

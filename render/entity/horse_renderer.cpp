@@ -1,6 +1,6 @@
 #include "horse_renderer.h"
 
-#include "../creature/pipeline/unit_visual_spec.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
 namespace Render::GL {
 
 HorseRenderer::HorseRenderer() = default;

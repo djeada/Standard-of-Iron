@@ -6,9 +6,9 @@
 #include <optional>
 #include <vector>
 
-#include "../creature/pipeline/creature_render_graph.h"
-#include "../creature/pipeline/unit_visual_spec.h"
 #include "horse_spec.h"
+#include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
 
 namespace Render::GL {
 struct DrawContext;

@@ -157,7 +157,8 @@ The second was self-inflicted. The stats readback in `RiggedCullPipeline` used
 the pipeline, so the frames around it absorbed all the queued GPU work in one
 120 ms spike while every other frame measured 8 ms. Median frame time looked six
 times better than the truth; only wall clock over a fixed frame count exposed it.
-The readback is now behind `SOI_CULL_STATS` so it never runs unless asked for.
+The readback has been removed, so the compacted-index survivor count is no
+longer stalled back to the CPU.
 
 The rule that survives: on this box, believe wall clock over a fixed frame
 count, interleave the variants, and repeat. Frame timers inside `paintGL` can
@@ -221,9 +222,10 @@ back to ordinary mapped buffers when unavailable.
 declare `#version 330 core`, the four 4.30 shaders must be listed in
 `OPTIONAL_GL43_SHADERS` and referenced from a pipeline that calls both capability
 probes, compute shaders must be embedded in `assets.qrc`, and both entry points
-must use the central 3.3-required/4.5-preferred policy. The Linux release workflow runs the packaged
-renderer self-test twice, once with `SOI_RENDER_DISABLE_GPU_CROWD_CULL=1`, so the
-fallback is exercised on every release.
+must use the central 3.3-required/4.5-preferred policy. The Linux release
+workflow runs the packaged renderer self-test twice, once with the context
+forced down to OpenGL 3.3 via `MESA_GL_VERSION_OVERRIDE`, so the fallback is
+exercised on every release.
 
 ## What is left
 

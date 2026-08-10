@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <vector>
 
-#include "../../game/core/entity.h"
-#include "../../game/formation/unit_layout.h"
-#include "../creature/animation_state_components.h"
-#include "../creature/combat_visual_state.h"
-#include "../gl/humanoid/humanoid_types.h"
+#include "game/core/entity.h"
+#include "game/formation/unit_layout.h"
 #include "prepare.h"
+#include "render/creature/animation_state_components.h"
+#include "render/creature/combat_visual_state.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::Humanoid {
 

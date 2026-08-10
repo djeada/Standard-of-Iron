@@ -10,9 +10,9 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/visibility_service.h"
-#include "../draw_queue.h"
-#include "../gl/texture.h"
+#include "game/map/visibility_service.h"
+#include "render/draw_commands.h"
+#include "render/gl/texture.h"
 #include "visibility_mask_encoder.h"
 
 namespace Render::Ground {

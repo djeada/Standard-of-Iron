@@ -5,7 +5,7 @@
 #include <deque>
 #include <string>
 
-#include "../generated_equipment.h"
+#include "render/equipment/generated_equipment.h"
 
 namespace Render::GL {
 

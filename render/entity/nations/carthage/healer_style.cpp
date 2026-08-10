@@ -2,8 +2,8 @@
 
 #include <QVector3D>
 
-#include "../../healer_renderer_common.h"
-#include "../sepulcher/palette.h"
+#include "render/entity/healer_renderer_common.h"
+#include "render/entity/nations/sepulcher/palette.h"
 
 namespace {
 

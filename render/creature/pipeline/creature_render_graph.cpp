@@ -5,20 +5,20 @@
 #include <limits>
 #include <unordered_map>
 
-#include "../../../game/core/component.h"
-#include "../../../game/core/entity.h"
-#include "../../entity/registry.h"
-#include "../../gl/humanoid/humanoid_types.h"
-#include "../../graphics_settings.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../profiling/frame_profile.h"
-#include "../archetype_registry.h"
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
 #include "creature_asset.h"
 #include "creature_prepared_state.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
 #include "humanoid_animation_selection.h"
 #include "preparation_common.h"
+#include "render/creature/archetype_registry.h"
+#include "render/entity/registry.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/graphics_settings.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/profiling/frame_profile.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -479,17 +479,14 @@ void CreatureRenderBatch::add_humanoid(
   req.creature_asset_id = asset->id;
   bool created_handle = false;
   {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
     Render::Profiling::AccumulatorScope const scope(
         output.pass_intent == RenderPassIntent::Main
             ? &profile.render_asset_cache_lookup_us
             : nullptr);
-#endif
     req.render_asset_handle =
         CreatureRenderAssetHandleRegistry::instance().get_or_create(
             asset->id, selection.resolved_archetype, &created_handle);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (output.pass_intent == RenderPassIntent::Main) {
       if (created_handle) {
         ++profile.render_asset_cache_misses;
@@ -497,7 +494,6 @@ void CreatureRenderBatch::add_humanoid(
         ++profile.render_asset_cache_hits;
       }
     }
-#endif
   }
   req.clip_variant = selection.clip_variant;
   req.clip_id = selection.clip_id.value_or(Animation::k_unmapped_clip);
@@ -558,17 +554,14 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
   req.creature_asset_id = asset->id;
   bool created_handle = false;
   {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
     Render::Profiling::AccumulatorScope const scope(
         output.pass_intent == RenderPassIntent::Main
             ? &profile.render_asset_cache_lookup_us
             : nullptr);
-#endif
     req.render_asset_handle =
         CreatureRenderAssetHandleRegistry::instance().get_or_create(
             asset->id, archetype_id, &created_handle);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (output.pass_intent == RenderPassIntent::Main) {
       if (created_handle) {
         ++profile.render_asset_cache_misses;
@@ -576,7 +569,6 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
         ++profile.render_asset_cache_hits;
       }
     }
-#endif
   }
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
@@ -622,17 +614,14 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
   req.creature_asset_id = asset->id;
   bool created_handle = false;
   {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
     Render::Profiling::AccumulatorScope const scope(
         output.pass_intent == RenderPassIntent::Main
             ? &profile.render_asset_cache_lookup_us
             : nullptr);
-#endif
     req.render_asset_handle =
         CreatureRenderAssetHandleRegistry::instance().get_or_create(
             asset->id, archetype_id, &created_handle);
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     if (output.pass_intent == RenderPassIntent::Main) {
       if (created_handle) {
         ++profile.render_asset_cache_misses;
@@ -640,7 +629,6 @@ void CreatureRenderBatch::add_quadruped(const CreatureGraphOutput& output,
         ++profile.render_asset_cache_hits;
       }
     }
-#endif
   }
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);

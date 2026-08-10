@@ -6,19 +6,19 @@
 #include <string>
 #include <unordered_map>
 
-#include "../../game/core/component.h"
-#include "../../game/systems/nation_id.h"
-#include "../creature/archetype_registry.h"
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../equipment/equipment_registry.h"
-#include "../equipment/humanoid_equipment_archetype.h"
-#include "../humanoid/humanoid_renderer_base.h"
-#include "../humanoid/humanoid_spec.h"
-#include "../humanoid/pose_controller.h"
-#include "../humanoid/skeleton.h"
-#include "../humanoid/style_palette.h"
-#include "../palette.h"
+#include "game/core/component.h"
+#include "game/systems/nation_id.h"
 #include "nations/equipment_loadout_catalog.h"
+#include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/equipment/equipment_registry.h"
+#include "render/equipment/humanoid_equipment_archetype.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/pose_controller.h"
+#include "render/humanoid/skeleton.h"
+#include "render/humanoid/style_palette.h"
+#include "render/palette.h"
 
 namespace Render::GL {
 namespace {

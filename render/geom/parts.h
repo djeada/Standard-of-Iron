@@ -3,7 +3,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
-#include "../math/bone_frame.h"
+#include "render/math/bone_frame.h"
 
 namespace Render::Geom {
 

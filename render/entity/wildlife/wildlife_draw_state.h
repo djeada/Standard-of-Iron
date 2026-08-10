@@ -5,8 +5,8 @@
 
 #include <cstdint>
 
-#include "../../../game/wildlife/wildlife_species.h"
-#include "../registry.h"
+#include "game/wildlife/wildlife_species.h"
+#include "render/entity/registry.h"
 
 namespace Render::GL::Wildlife {
 

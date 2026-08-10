@@ -11,14 +11,14 @@
 #include <numbers>
 #include <string>
 
-#include "../../geom/transforms.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/skeleton.h"
-#include "../../render_archetype.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
+#include "render/render_archetype.h"
 #include "shield_anchor.h"
 
 namespace Render::GL {

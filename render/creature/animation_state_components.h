@@ -4,15 +4,15 @@
 
 #include <cstdint>
 
-#include "../../game/core/entity.h"
-#include "../elephant/attachment_frames.h"
-#include "../elephant/dimensions.h"
-#include "../gl/humanoid/humanoid_types.h"
-#include "../horse/dimensions.h"
 #include "animation/ambient_pose_manifest.h"
 #include "animation/rig/horse_attachment_frames.h"
 #include "animation/rig/horse_gait.h"
 #include "combat_visual_state.h"
+#include "game/core/entity.h"
+#include "render/elephant/attachment_frames.h"
+#include "render/elephant/dimensions.h"
+#include "render/gl/humanoid/humanoid_types.h"
+#include "render/horse/dimensions.h"
 #include "render_request.h"
 
 namespace Render::Creature {

@@ -20,17 +20,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include "../game/map/render_visibility_rules.h"
-#include "../game/map/terrain_service.h"
-#include "../game/map/visibility_service.h"
-#include "../game/systems/combat_rules.h"
-#include "../game/systems/nation_registry.h"
-#include "../game/systems/owner_registry.h"
-#include "../game/systems/troop_profile_service.h"
-#include "../game/units/spawn_type.h"
-#include "../game/units/troop_catalog.h"
-#include "../game/units/troop_config.h"
-#include "../game/visuals/team_colors.h"
 #include "animation/bpat/bpat_registry.h"
 #include "battle_render_optimizer.h"
 #include "creature/archetype_registry.h"
@@ -50,6 +39,17 @@
 #include "equipment/render_archetype_registry.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/render_visibility_rules.h"
+#include "game/map/terrain_service.h"
+#include "game/map/visibility_service.h"
+#include "game/systems/combat_rules.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
+#include "game/systems/troop_profile_service.h"
+#include "game/units/spawn_type.h"
+#include "game/units/troop_catalog.h"
+#include "game/units/troop_config.h"
+#include "game/visuals/team_colors.h"
 #include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
@@ -87,30 +87,6 @@ namespace {
 constexpr uint32_t k_animation_cache_cleanup_mask = 0x3F;
 constexpr uint32_t k_animation_cache_max_age = 240;
 
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-auto render_stage_logging_enabled() -> bool {
-  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
-}
-#endif
-
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-void log_render_first_use_once(const char* stage, const QString& detail) {
-  if (!render_stage_logging_enabled()) {
-    return;
-  }
-
-  static std::mutex mutex;
-  static std::unordered_set<std::string> emitted_stages;
-
-  std::lock_guard<std::mutex> const lock(mutex);
-  if (!emitted_stages.emplace(stage).second) {
-    return;
-  }
-
-  qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
-                           .arg(QString::fromLatin1(stage), detail);
-}
-#endif
 } // namespace
 
 Renderer::Renderer(ShaderQuality quality)
@@ -124,14 +100,14 @@ Renderer::~Renderer() {
 }
 
 void Renderer::set_world_render_mode(WorldRenderMode mode) {
-  if (m_world_render_mode == mode) {
+  if (m_view.world_render_mode() == mode) {
     return;
   }
-  m_world_render_mode = mode;
+  m_view.set_world_render_mode(mode);
 }
 
 auto Renderer::visibility_mode_config() const -> VisibilityModeConfig {
-  switch (m_world_render_mode) {
+  switch (m_view.world_render_mode()) {
   case WorldRenderMode::Rts:
     return {.filter_non_local_units = true, .filter_static_world = true};
   case WorldRenderMode::Rpg:
@@ -169,11 +145,6 @@ auto Renderer::initialize() -> bool {
   if (!m_backend) {
     m_backend = RenderBackendFactory::create(m_shader_quality);
     m_gl_backend = dynamic_cast<Backend*>(m_backend.get());
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-    log_render_first_use_once(
-        "backend-create",
-        QStringLiteral("created render backend for QSG/FBO render thread"));
-#endif
   }
   if (!m_backend->initialize()) {
     qCritical() << "Renderer::initialize() - backend initialization failed;"
@@ -183,16 +154,7 @@ auto Renderer::initialize() -> bool {
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
-  const auto warmed_archetypes = RenderArchetypeRegistry::instance().warm_all();
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  log_render_first_use_once(
-      "renderer-registries",
-      QStringLiteral("registered entity renderers and equipment renderers; "
-                     "warmed %1 render archetypes")
-          .arg(static_cast<qulonglong>(warmed_archetypes)));
-#else
-  (void)warmed_archetypes;
-#endif
+  (void)RenderArchetypeRegistry::instance().warm_all();
 
   const std::size_t loaded_bpat =
       Render::Creature::Bpat::BpatRegistry::instance().load_all("assets/creatures");
@@ -206,23 +168,19 @@ auto Renderer::initialize() -> bool {
       "assets/creatures");
   (void)Render::Creature::Rigged::RiggedMeshRegistry::instance().load_all(
       "assets/creatures");
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
-  log_render_first_use_once(
-      "creature-assets",
-      QStringLiteral("loaded BPAT and snapshot creature asset registries"));
-#endif
+  m_unit_cylinder_mesh = get_unit_cylinder();
   return true;
 }
 
 void Renderer::shutdown() {
   cancel_async_template_prewarm();
   Render::Creature::set_runtime_bake_forbidden(false);
+  m_unit_cylinder_mesh = nullptr;
   m_gl_backend = nullptr;
   m_backend.reset();
 }
 
 void Renderer::begin_frame() {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
   auto& profile = Render::Profiling::global_profile();
   profile.reset();
   profile.frame_index += 1;
@@ -230,7 +188,6 @@ void Renderer::begin_frame() {
       profile.frame_index);
   Render::Profiling::PhaseScope const collect_scope(
       &profile, Render::Profiling::Phase::Collection);
-#endif
 
   advance_pose_cache_frame();
 
@@ -269,36 +226,26 @@ void Renderer::end_frame() {
     return;
   }
   if (m_backend && (m_camera != nullptr)) {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     auto& profile = Render::Profiling::global_profile();
-#endif
     std::swap(m_fill_queue_index, m_render_queue_index);
     DrawQueue& render_queue = m_queues[m_render_queue_index];
     {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
       Render::Profiling::PhaseScope const sort_scope(&profile,
                                                      Render::Profiling::Phase::Sort);
-#endif
       render_queue.sort_for_batching();
     }
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     profile.draw_calls = static_cast<std::uint64_t>(render_queue.size());
-#endif
     m_backend->set_animation_time(m_accumulated_time);
     {
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
       Render::Profiling::PhaseScope const play_scope(
           &profile, Render::Profiling::Phase::Playback);
-#endif
 
       m_backend->execute(render_queue, *m_camera);
     }
-#if defined(SOI_ENABLE_RUNTIME_TRACING)
     constexpr double k_frame_budget_ms = 16.67;
     profile.budget_headroom_ms =
         k_frame_budget_ms - static_cast<double>(profile.total_us()) / 1000.0;
     profile.finish_frame_sample();
-#endif
   }
 }
 
@@ -383,8 +330,7 @@ void Renderer::mesh(Mesh* mesh,
 
   float const effective_alpha = alpha * m_alpha_override;
 
-  static Mesh* const unit_cylinder_mesh = get_unit_cylinder();
-  if (mesh == unit_cylinder_mesh && (texture == nullptr) &&
+  if (mesh == m_unit_cylinder_mesh && (texture == nullptr) &&
       (m_current_shader == nullptr)) {
     QVector3D start;
     QVector3D end;

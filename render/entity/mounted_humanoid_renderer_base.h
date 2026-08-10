@@ -3,9 +3,9 @@
 #include <string>
 #include <string_view>
 
-#include "../creature/pipeline/unit_visual_spec.h"
-#include "../humanoid/humanoid_renderer_base.h"
 #include "horse_renderer.h"
+#include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 
 namespace Render::GL {
 

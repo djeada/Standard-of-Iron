@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "../../spearman_renderer_common.h"
+#include "render/entity/spearman_renderer_common.h"
 #include "spearman_style.h"
 
 namespace Render::GL::Roman {

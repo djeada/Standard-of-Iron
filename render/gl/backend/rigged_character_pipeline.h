@@ -9,9 +9,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../persistent_buffer.h"
-#include "../shader.h"
 #include "pipeline_interface.h"
+#include "render/gl/persistent_buffer.h"
+#include "render/gl/shader.h"
 
 namespace Render::GL {
 class ShaderCache;

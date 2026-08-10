@@ -7,8 +7,8 @@
 #include <numbers>
 #include <vector>
 
-#include "../gl/render_constants.h"
 #include "game/map/scatter/ground_utils.h"
+#include "render/gl/render_constants.h"
 
 namespace {
 

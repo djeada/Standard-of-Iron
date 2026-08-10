@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-#include "../../equipment/equipment_registry.h"
+#include "render/equipment/equipment_registry.h"
 
 namespace Render::GL::Nation {
 

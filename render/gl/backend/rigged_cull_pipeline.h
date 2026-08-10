@@ -10,7 +10,7 @@
 #include <memory>
 #include <vector>
 
-#include "../shader.h"
+#include "render/gl/shader.h"
 
 namespace Render::GL {
 class ShaderCache;

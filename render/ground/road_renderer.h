@@ -5,8 +5,8 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../i_render_pass.h"
+#include "game/map/terrain.h"
+#include "render/i_render_pass.h"
 #include "road_network_geometry.h"
 
 namespace Render::GL {

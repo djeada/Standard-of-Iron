@@ -11,10 +11,10 @@
 #include <numbers>
 #include <random>
 
-#include "../../rain_gpu.h"
-#include "../backend.h"
-#include "../shader_cache.h"
 #include "gl_error_check.h"
+#include "render/gl/backend.h"
+#include "render/gl/shader_cache.h"
+#include "render/rain_gpu.h"
 #include "scene/camera.h"
 
 namespace Render::GL::BackendPipelines {

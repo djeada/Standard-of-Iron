@@ -7,11 +7,11 @@
 #include <functional>
 #include <vector>
 
-#include "../../game/formation/unit_layout.h"
-#include "../creature/pipeline/creature_render_graph.h"
-#include "../creature/pipeline/creature_render_state.h"
-#include "../creature/pipeline/prepared_submit.h"
-#include "../gl/humanoid/humanoid_types.h"
+#include "game/formation/unit_layout.h"
+#include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/pipeline/creature_render_state.h"
+#include "render/creature/pipeline/prepared_submit.h"
+#include "render/gl/humanoid/humanoid_types.h"
 
 namespace Render::GL {
 struct DrawContext;

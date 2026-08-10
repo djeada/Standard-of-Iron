@@ -8,15 +8,15 @@
 #include <cmath>
 #include <cstdint>
 
-#include "../../game/core/component.h"
-#include "../../game/core/entity.h"
-#include "../../game/core/world.h"
-#include "../../game/systems/resource_types.h"
-#include "../geom/stone.h"
-#include "../geom/transforms.h"
-#include "../gl/primitives.h"
-#include "../submission_visibility.h"
-#include "../submitter.h"
+#include "game/core/component.h"
+#include "game/core/entity.h"
+#include "game/core/world.h"
+#include "game/systems/resource_types.h"
+#include "render/geom/stone.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/submission_visibility.h"
+#include "render/submitter.h"
 #include "scene/camera.h"
 
 namespace Render::GL {

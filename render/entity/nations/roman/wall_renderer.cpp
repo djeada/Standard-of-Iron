@@ -1,9 +1,9 @@
 #include "wall_renderer.h"
 
-#include "../../building_render_common.h"
-#include "../../registry.h"
-#include "../../wall_gate_renderer_common.h"
-#include "../../wall_renderer_common.h"
+#include "render/entity/building_render_common.h"
+#include "render/entity/registry.h"
+#include "render/entity/wall_gate_renderer_common.h"
+#include "render/entity/wall_renderer_common.h"
 
 namespace Render::GL::Roman {
 namespace {

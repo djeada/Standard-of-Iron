@@ -8,21 +8,17 @@
 #include <string_view>
 #include <vector>
 
-#include "../attachment_builder.h"
-#include "../equipment_archetype_helpers.h"
-#include "../generated_equipment.h"
-#include "../humanoid_attachment_archetype.h"
 #include "helmet_alignment.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_archetype_helpers.h"
+#include "render/equipment/generated_equipment.h"
+#include "render/equipment/helmets/commander_helmet_parts.h"
+#include "render/equipment/humanoid_attachment_archetype.h"
 
 namespace Render::GL {
 namespace {
 
-enum CommanderHelmetPaletteSlot : std::uint8_t {
-  k_metal_slot = 0U,
-  k_dark_slot = 1U,
-  k_accent_slot = 2U,
-  k_plume_slot = 3U,
-};
+using namespace Render::GL::CommanderHelmetParts;
 
 using Primitive = GeneratedEquipmentPrimitive;
 
@@ -72,41 +68,8 @@ void add_lobed_mass(std::vector<Primitive>& primitives,
 }
 
 void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
+  append_specs(primitives, std::span{k_base_helmet_primitives});
 
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.30F, -0.06F),
-                                           QVector3D(1.46F, 1.16F, 1.56F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.86F, -0.08F),
-                                           QVector3D(1.18F, 0.98F, 1.26F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.42F, -0.10F),
-                                           QVector3D(0.82F, 0.74F, 0.88F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.90F, -0.12F),
-                                           QVector3D(0.46F, 0.48F, 0.50F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(
-      generated_sphere(QVector3D(0.0F, 2.24F, -0.14F), 0.22F, k_accent_slot, 1.0F, 2));
-
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.22F, 1.16F),
-                                           QVector3D(1.10F, 0.12F, 0.36F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_cylinder(QVector3D(-0.52F, -0.24F, 1.22F),
-                                          QVector3D(0.52F, -0.24F, 1.22F),
-                                          0.12F,
-                                          k_accent_slot,
-                                          1.0F,
-                                          2));
   for (int side = 0; side < 2; ++side) {
     float const s = (side == 0) ? -1.0F : 1.0F;
     primitives.push_back(generated_cylinder(QVector3D(s * 0.52F, -0.24F, 1.22F),
@@ -123,27 +86,6 @@ void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
                                           k_accent_slot,
                                           1.0F,
                                           2));
-
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.40F, -1.30F),
-                                           QVector3D(1.26F, 0.24F, 0.48F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.70F, -1.58F),
-                                           QVector3D(1.30F, 0.22F, 0.46F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.98F, -1.78F),
-                                           QVector3D(1.20F, 0.20F, 0.42F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -1.16F, -1.84F),
-                                           QVector3D(1.06F, 0.12F, 0.28F),
-                                           k_accent_slot,
-                                           1.0F,
-                                           2));
 
   for (int side = 0; side < 2; ++side) {
     float const s = (side == 0) ? -1.0F : 1.0F;
@@ -173,22 +115,8 @@ void add_base_helmet(std::vector<Primitive>& primitives, bool face_guard) {
 }
 
 void add_roman_base_helmet(std::vector<Primitive>& primitives) {
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.40F, -0.06F),
-                                           QVector3D(1.48F, 1.34F, 1.60F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.88F, -0.08F),
-                                           QVector3D(1.14F, 0.90F, 1.24F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
+  append_specs(primitives, std::span{k_roman_base_helmet_primitives});
 
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.26F, 1.14F),
-                                           QVector3D(1.14F, 0.13F, 0.38F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
   for (int side = 0; side < 2; ++side) {
     float const s = (side == 0) ? -1.0F : 1.0F;
     primitives.push_back(generated_ellipsoid(QVector3D(s * 0.72F, -0.28F, 1.28F),
@@ -213,34 +141,6 @@ void add_roman_base_helmet(std::vector<Primitive>& primitives) {
                                              1.0F,
                                              2));
   }
-
-  primitives.push_back(generated_cylinder(QVector3D(0.0F, -0.10F, 1.62F),
-                                          QVector3D(0.0F, -0.74F, 1.46F),
-                                          0.13F,
-                                          k_accent_slot,
-                                          1.0F,
-                                          2));
-
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.42F, -1.32F),
-                                           QVector3D(1.24F, 0.23F, 0.46F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.70F, -1.58F),
-                                           QVector3D(1.26F, 0.21F, 0.44F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -0.96F, -1.76F),
-                                           QVector3D(1.16F, 0.19F, 0.40F),
-                                           k_metal_slot,
-                                           1.0F,
-                                           2));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, -1.12F, -1.82F),
-                                           QVector3D(1.02F, 0.12F, 0.28F),
-                                           k_accent_slot,
-                                           1.0F,
-                                           2));
 
   for (int side = 0; side < 2; ++side) {
     float const s = (side == 0) ? -1.0F : 1.0F;
@@ -270,133 +170,12 @@ void add_roman_base_helmet(std::vector<Primitive>& primitives) {
 }
 
 void add_fabius_crest(std::vector<Primitive>& primitives) {
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.52F, -0.05F),
-                                     QVector3D(0.15F, 0.30F, 1.15F),
-                                     k_accent_slot,
-                                     1.0F,
-                                     2));
-
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.386F, 1.35F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.832F, 1.00F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.082F, 0.65F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.217F, 0.30F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.260F, -0.05F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.215F, -0.40F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 2.077F, -0.75F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.828F, -1.10F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.391F, -1.45F),
-                                           QVector3D(0.20F, 0.62F, 0.52F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 1.06F, 1.64F),
-                                           QVector3D(0.19F, 0.52F, 0.36F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.86F, -1.86F),
-                                           QVector3D(0.18F, 0.58F, 0.40F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_cone(QVector3D(-0.94F, 0.96F, -0.18F),
-                                      QVector3D(-1.54F, 1.36F, -0.42F),
-                                      0.16F,
-                                      k_dark_slot,
-                                      1.0F,
-                                      2));
-  primitives.push_back(generated_cone(QVector3D(0.94F, 0.96F, -0.18F),
-                                      QVector3D(1.54F, 1.36F, -0.42F),
-                                      0.16F,
-                                      k_dark_slot,
-                                      1.0F,
-                                      2));
+  append_specs(primitives, std::span{k_fabius_crest_primitives});
 }
 
 void add_scipio_crest(std::vector<Primitive>& primitives) {
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.50F, -0.04F),
-                                     QVector3D(1.30F, 0.28F, 0.13F),
-                                     k_accent_slot,
-                                     1.0F,
-                                     2));
+  append_specs(primitives, std::span{k_scipio_crest_primitives});
 
-  primitives.push_back(generated_ellipsoid(QVector3D(-1.40F, 1.163F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(-1.05F, 1.757F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(-0.70F, 2.053F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(-0.35F, 2.210F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.00F, 2.260F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.35F, 2.210F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(0.70F, 2.053F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(1.05F, 1.757F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
-  primitives.push_back(generated_ellipsoid(QVector3D(1.40F, 1.163F, -0.04F),
-                                           QVector3D(0.44F, 0.62F, 0.19F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           0));
   for (int side : {-1, 1}) {
     float const s = static_cast<float>(side);
     primitives.push_back(generated_cylinder(QVector3D(s * 0.22F, 0.92F, 1.02F),
@@ -415,12 +194,8 @@ void add_scipio_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_marcellus_crest(std::vector<Primitive>& primitives) {
+  append_specs(primitives, std::span{k_marcellus_crest_primitives});
 
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.48F, -0.10F),
-                                     QVector3D(0.76F, 0.26F, 0.34F),
-                                     k_accent_slot,
-                                     1.0F,
-                                     2));
   for (int side = 0; side < 2; ++side) {
     float const s = (side == 0) ? -1.0F : 1.0F;
     std::array<QVector3D, 6> const plume{{
@@ -451,12 +226,8 @@ void add_marcellus_crest(std::vector<Primitive>& primitives) {
 }
 
 void add_hanno_crest(std::vector<Primitive>& primitives) {
+  append_specs(primitives, std::span{k_hanno_crest_primitives});
 
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.62F, -0.08F),
-                                     QVector3D(0.82F, 0.26F, 0.30F),
-                                     k_accent_slot,
-                                     1.0F,
-                                     2));
   std::array<QVector3D, 7> const centre{{
       {0.0F, 1.42F, -0.06F},
       {0.0F, 1.78F, -0.09F},
@@ -490,20 +261,11 @@ void add_hanno_crest(std::vector<Primitive>& primitives) {
                                              1.0F,
                                              2));
   }
-  primitives.push_back(generated_ellipsoid(QVector3D(0.0F, 0.36F, 1.42F),
-                                           QVector3D(0.42F, 0.14F, 0.20F),
-                                           k_plume_slot,
-                                           1.0F,
-                                           2));
 }
 
 void add_hasdrubal_crest(std::vector<Primitive>& primitives) {
+  append_specs(primitives, std::span{k_hasdrubal_crest_primitives});
 
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.52F, 0.10F),
-                                     QVector3D(0.24F, 0.28F, 0.62F),
-                                     k_accent_slot,
-                                     1.0F,
-                                     2));
   std::array<QVector3D, 7> const tail{{
       {0.0F, 1.50F, 0.40F},
       {0.0F, 1.86F, 0.02F},
@@ -514,27 +276,11 @@ void add_hasdrubal_crest(std::vector<Primitive>& primitives) {
       {0.0F, 1.12F, -2.20F},
   }};
   add_lobed_mass(primitives, tail, 0.52F, 0.24F, k_plume_slot, 0.45F);
-  primitives.push_back(generated_cone(QVector3D(-1.06F, 0.90F, -0.12F),
-                                      QVector3D(-1.84F, 1.48F, -0.76F),
-                                      0.18F,
-                                      k_accent_slot,
-                                      1.0F,
-                                      2));
-  primitives.push_back(generated_cone(QVector3D(1.06F, 0.90F, -0.12F),
-                                      QVector3D(1.84F, 1.48F, -0.76F),
-                                      0.18F,
-                                      k_accent_slot,
-                                      1.0F,
-                                      2));
 }
 
 void add_hannibal_crest(std::vector<Primitive>& primitives) {
+  append_specs(primitives, std::span{k_hannibal_crest_primitives});
 
-  primitives.push_back(generated_box(QVector3D(0.0F, 1.64F, -0.08F),
-                                     QVector3D(0.30F, 0.26F, 1.24F),
-                                     k_accent_slot,
-                                     1.0F,
-                                     2));
   for (int side = 0; side < 2; ++side) {
     float const s = (side == 0) ? -1.0F : 1.0F;
     std::array<QVector3D, 7> const ridge{{
@@ -548,18 +294,6 @@ void add_hannibal_crest(std::vector<Primitive>& primitives) {
     }};
     add_lobed_mass(primitives, ridge, 0.46F, 0.24F, k_plume_slot, 0.46F);
   }
-  primitives.push_back(generated_cone(QVector3D(-1.04F, 0.96F, -0.08F),
-                                      QVector3D(-1.86F, 1.72F, -0.60F),
-                                      0.24F,
-                                      k_dark_slot,
-                                      1.0F,
-                                      2));
-  primitives.push_back(generated_cone(QVector3D(1.04F, 0.96F, -0.08F),
-                                      QVector3D(1.86F, 1.72F, -0.60F),
-                                      0.24F,
-                                      k_dark_slot,
-                                      1.0F,
-                                      2));
 }
 
 auto build_commander_helmet(CommanderHelmetStyle style,

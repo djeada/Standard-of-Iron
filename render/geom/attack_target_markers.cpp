@@ -5,11 +5,11 @@
 
 #include <cmath>
 
-#include "../../game/accessibility/team_identity.h"
-#include "../../game/map/terrain_service.h"
-#include "../../scene/camera.h"
-#include "../scene_renderer.h"
+#include "game/accessibility/team_identity.h"
+#include "game/map/terrain_service.h"
 #include "mode_indicator.h"
+#include "render/scene_renderer.h"
+#include "scene/camera.h"
 
 namespace Render::GL {
 

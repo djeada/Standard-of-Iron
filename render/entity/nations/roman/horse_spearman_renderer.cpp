@@ -1,9 +1,9 @@
 #include "horse_spearman_renderer.h"
 
-#include "../../../submitter.h"
-#include "../../horse_spearman_renderer_base.h"
-#include "../equipment_loadout_catalog.h"
-#include "../mounted_loadout.h"
+#include "render/entity/horse_spearman_renderer_base.h"
+#include "render/entity/nations/equipment_loadout_catalog.h"
+#include "render/entity/nations/mounted_loadout.h"
+#include "render/submitter.h"
 
 namespace Render::GL::Roman {
 namespace {

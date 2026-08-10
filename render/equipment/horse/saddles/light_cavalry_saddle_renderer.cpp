@@ -2,9 +2,9 @@
 
 #include <array>
 
-#include "../../../render_archetype.h"
-#include "../../equipment_submit.h"
-#include "../horse_attachment_archetype.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/equipment/horse/horse_attachment_archetype.h"
+#include "render/render_archetype.h"
 
 namespace Render::GL {
 

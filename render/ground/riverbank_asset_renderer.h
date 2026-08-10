@@ -6,8 +6,8 @@
 #include <memory>
 #include <vector>
 
-#include "../../game/map/terrain.h"
-#include "../i_render_pass.h"
+#include "game/map/terrain.h"
+#include "render/i_render_pass.h"
 #include "riverbank_asset_gpu.h"
 #include "scatter_renderer_state.h"
 

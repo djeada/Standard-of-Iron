@@ -7,9 +7,9 @@
 #include <array>
 #include <cmath>
 
-#include "../creature/skeleton.h"
 #include "animation/rig/side.h"
 #include "humanoid_spec.h"
+#include "render/creature/skeleton.h"
 
 namespace Render::Humanoid {
 

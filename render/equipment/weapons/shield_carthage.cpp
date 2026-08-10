@@ -8,15 +8,16 @@
 #include <string>
 #include <vector>
 
-#include "../../geom/transforms.h"
-#include "../../gl/mesh.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/skeleton.h"
-#include "../../render_archetype.h"
-#include "../attachment_builder.h"
-#include "../equipment_submit.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/geom/transforms.h"
+#include "render/gl/mesh.h"
+#include "render/gl/primitives.h"
+#include "render/gl/shared_geometry_cache.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
+#include "render/render_archetype.h"
 #include "shield_anchor.h"
 
 namespace Render::GL {
@@ -79,8 +80,9 @@ auto create_unit_hemisphere_mesh(int lat_segments = 12,
 }
 
 auto get_unit_hemisphere_mesh() -> Mesh* {
-  static std::unique_ptr<Mesh> const mesh = create_unit_hemisphere_mesh();
-  return mesh.get();
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("equipment/carthage_shield/hemisphere"),
+      [] { return create_unit_hemisphere_mesh(); });
 }
 
 constexpr float k_base_shield_diameter = 1.08F;

@@ -8,18 +8,18 @@
 #include <span>
 #include <string>
 
-#include "../../entity/renderer_constants.h"
-#include "../../geom/transforms.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_renderer_base.h"
-#include "../../humanoid/humanoid_spec.h"
-#include "../../humanoid/skeleton.h"
-#include "../../humanoid/spear_pose_utils.h"
-#include "../attachment_builder.h"
-#include "../equipment_archetype_helpers.h"
-#include "../equipment_submit.h"
-#include "../generated_equipment.h"
-#include "../oriented_archetype_utils.h"
+#include "render/entity/renderer_constants.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/equipment_archetype_helpers.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/equipment/generated_equipment.h"
+#include "render/equipment/oriented_archetype_utils.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
+#include "render/humanoid/spear_pose_utils.h"
 
 namespace Render::GL {
 

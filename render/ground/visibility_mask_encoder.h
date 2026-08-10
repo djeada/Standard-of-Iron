@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "../../game/map/visibility_service.h"
+#include "game/map/visibility_service.h"
 
 namespace Render::Ground {
 

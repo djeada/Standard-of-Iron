@@ -17,11 +17,11 @@
 #include <utility>
 #include <vector>
 
-#include "../platform_gl.h"
-#include "../render_constants.h"
 #include "gl/shader_cache.h"
 #include "mesh_buffers.h"
 #include "prop_mesh_builder.h"
+#include "render/gl/platform_gl.h"
+#include "render/gl/render_constants.h"
 
 namespace Render::GL::BackendPipelines {
 

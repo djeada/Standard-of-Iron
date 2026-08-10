@@ -195,6 +195,7 @@ add_executable(
     render/shader_source_test.cpp
     render/visibility_mask_encoder_test.cpp
     render/fog_renderer_test.cpp
+    render/render_view_state_test.cpp
     render/renderer_visibility_policy_test.cpp
     render/unit_render_cache_test.cpp
     render/persistent_render_registry_test.cpp

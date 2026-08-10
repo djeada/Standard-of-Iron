@@ -3,7 +3,7 @@
 #include <array>
 #include <cstddef>
 
-#include "../../game/accessibility/team_identity.h"
+#include "game/accessibility/team_identity.h"
 
 namespace Render::Geom {
 

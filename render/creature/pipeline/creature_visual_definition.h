@@ -8,7 +8,7 @@
 #include <span>
 #include <string_view>
 
-#include "../spec.h"
+#include "render/creature/spec.h"
 #include "unit_visual_spec.h"
 
 namespace Render::Creature::Pipeline {
