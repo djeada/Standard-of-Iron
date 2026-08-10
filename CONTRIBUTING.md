@@ -80,20 +80,23 @@ python scripts/format.py --all --lint --deep      # includes whole-tree clang-ti
 
 ### Coverage
 
-| Language                         | Formatter                               | Linter                                               |
-| -------------------------------- | --------------------------------------- | ---------------------------------------------------- |
-| C/C++                            | clang-format                            | clang-tidy (changed files on PRs, full tree nightly) |
-| GLSL (`.frag`, `.vert`, `.glsl`) | clang-format                            | -                                                    |
-| QML                              | qmlformat                               | qmllint (advisory)                                   |
-| Python                           | black                                   | Ruff                                                 |
-| Shell                            | shfmt (optional)                        | ShellCheck                                           |
-| CMake                            | gersemi                                 | -                                                    |
-| YAML                             | prettier (optional)                     | yamllint                                             |
-| Markdown                         | prettier (optional)                     | markdownlint (advisory, optional)                    |
-| JSON                             | prettier (optional, excludes `assets/`) | built-in syntax check                                |
+| Language                         | Formatter                               | Linter                                              |
+| -------------------------------- | --------------------------------------- | --------------------------------------------------- |
+| C/C++                            | clang-format                            | clang-tidy (changed files on PRs, full tree weekly) |
+| GLSL (`.frag`, `.vert`, `.glsl`) | clang-format                            | -                                                   |
+| QML                              | qmlformat                               | qmllint (advisory)                                  |
+| Python                           | black                                   | Ruff                                                |
+| Shell                            | shfmt (optional)                        | ShellCheck                                          |
+| CMake                            | gersemi                                 | -                                                   |
+| YAML                             | prettier (optional)                     | yamllint                                            |
+| Markdown                         | prettier (optional)                     | markdownlint (advisory, optional)                   |
+| JSON                             | prettier (optional, excludes `assets/`) | built-in syntax check                               |
 
-Advisory linters report findings without failing the build; the nightly
-workflow runs them with `--fail-on-advisory`. Generated game data under
+Advisory linters report findings without failing the build. The weekly workflow
+reruns clang-tidy over the whole tree and publishes what it finds to the run
+summary. It does not fail on those findings yet: the tree carries about 120 of
+them, and a gate that is red before anyone has touched it teaches people to
+ignore it. Clear the backlog and the run can add `--fail-on-advisory`. Generated game data under
 `assets/` is never reformatted, only syntax-checked.
 
 ### Installing qmlformat and qmllint
@@ -169,11 +172,12 @@ the point at which every supported platform must actually ship.
   the changed files. The game binary, map editor, arena and preview tools are
   not built here.
 
-**Nightly** (`.github/workflows/nightly.yml`) runs the whole-project
-clang-tidy/qmllint pass, AddressSanitizer and UndefinedBehaviorSanitizer
+**Weekly** (`.github/workflows/weekly.yml`, Mondays at 01:00 UTC) runs the
+whole-project clang-tidy pass, AddressSanitizer and UndefinedBehaviorSanitizer
 lanes, a coverage report, and a full build, renderer self-test and packaging
 dry run on Linux, macOS and Windows. This is what catches platform-specific
-breakage between releases.
+breakage between releases. Run the same clang-tidy pass locally with
+`make lint-deep`.
 
 **Releases** (`.github/workflows/release.yml`) are fully gated:
 

@@ -1,0 +1,31 @@
+# LeakSanitizer suppressions for the weekly sanitizer lane.
+#
+# Everything here is a one-time allocation inside a library the project does
+# not own, made on a path the project cannot avoid taking. A suppression is
+# only correct when the allocation is genuinely outside our control: if a leak
+# has one of our own frames in it, fix the leak instead of adding a line here.
+#
+# Point LeakSanitizer at this file with:
+#   LSAN_OPTIONS=suppressions=tools/lsan-suppressions.txt
+#
+# Verify a suppression still earns its place by running with
+# print_suppressions=1 and checking it is still being hit.
+
+# D-Bus registers a connection the first time Qt touches the session bus, and
+# keeps its message loader buffers for the life of the process. Seen from
+# QOffscreenSurface and platform theme setup in the app suite.
+leak:libdbus-1.so
+
+# GPU drivers allocate per-process state when a context is first created and
+# free it, if at all, at driver teardown after main has returned. This is the
+# vendor's memory, on a path taken by any test that touches GL.
+leak:libnvidia-glcore.so
+leak:libGLX_nvidia.so
+leak:swrast_dri.so
+leak:libGLX_mesa.so
+
+# The QML engine caches compiled lookups and singleton wrappers for the life of
+# the engine and does not unwind them all at destruction. These frames are
+# entirely inside libQt6Qml with no project frame beneath them; project-owned
+# QML singletons are not covered by this and must manage their own lifetime.
+leak:libQt6Qml.so

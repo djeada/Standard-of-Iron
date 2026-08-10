@@ -1,0 +1,318 @@
+---
+# The slow gates: whole-project linting, the sanitizer lanes, coverage, and a
+# packaging dry run on all three platforms. Pull requests deliberately skip
+# these, so this is the only thing that runs them between release tags.
+#
+# It was called Nightly and ran every night until the cron moved to Mondays;
+# the name, the identifiers and the prose kept saying nightly for months after
+# the schedule stopped being one. It is weekly, and now says so.
+name: Weekly
+
+on:
+  schedule:
+    # Mondays at 01:00 UTC.
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  QT_VERSION: "6.8.2"
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Whole-project clang-tidy. Pull requests only tidy the files they touch and
+  # defer the full tree here, and CONTRIBUTING.md has described this job for
+  # months -- but it was never actually in this workflow, so nothing ran it and
+  # the deferral went nowhere. `make lint-deep` is the same pass a developer
+  # runs locally. It reports rather than gates; see the run step for why.
+  #
+  # clang-tidy needs a compile database, so the build is configured and the
+  # test targets are compiled to generate the moc/ui/version headers it parses.
+  # ---------------------------------------------------------------------
+  lint:
+    name: Whole-project lint
+    runs-on: ubuntu-24.04
+    # clang-tidy over ~1800 translation units on a four-core runner. Nothing
+    # waits on this job, so the budget is generous rather than tight.
+    timeout-minutes: 180
+    env:
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      # Only clang-tidy is installed here. The quality gate already lints QML,
+      # Python, shell and the rest on every pull request; pulling the distro's
+      # Qt in for qmllint would put a second Qt beside the one this job builds
+      # against, which is a good way to break the build in a job nobody is
+      # watching. The version comes from tools/versions.env so a local
+      # `make lint-deep` and this job run the same binary.
+      - name: Install pinned lint toolchain
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source tools/versions.env
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build libgl1-mesa-dev libegl1 ffmpeg \
+            "clang-tidy-${CLANG_TIDY_VERSION%%.*}"
+          echo "CLANG_TIDY=clang-tidy-${CLANG_TIDY_VERSION%%.*}" >> "$GITHUB_ENV"
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: weekly-lint
+          max-size: 1G
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDEFAULT_LANG=en \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
+
+      # clang-tidy reads compile_commands.json, which configure has already
+      # written, but it needs the generated headers (moc, ui, version) to
+      # exist before it can parse anything that includes them.
+      - name: Build the compile database's targets
+        run: cmake --build build --parallel --target soi_test_binaries
+
+      # --strict turns "clang-tidy is not installed" from a warning into an
+      # error, so this job cannot be green having linted nothing -- the same
+      # way its absence was green for months.
+      #
+      # It deliberately does not pass --fail-on-advisory yet. The tree carries
+      # about 120 pre-existing findings (implicit bool conversions, public
+      # member variables, const-correctness), and a gate that is red from its
+      # first run is one everybody learns to scroll past, which is how this job
+      # came to be missing in the first place. It reports them into the run
+      # summary; turn on the gate once the backlog is cleared.
+      - name: Whole-project clang-tidy
+        run: |
+          set -o pipefail
+          python scripts/format.py --all --lint --deep --languages cxx \
+            --strict --build-dir build 2>&1 | tee clang-tidy.log
+
+      - name: Publish findings
+        if: always()
+        run: |
+          {
+            echo "## clang-tidy"
+            echo
+            echo "\`$(grep -c 'warning:' clang-tidy.log || echo 0)\` findings over the whole tree."
+            echo
+            echo '```'
+            grep -E 'warning:' clang-tidy.log | sed 's|.*Standard-of-Iron/||' | sort | uniq -c | sort -rn | head -40
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: clang-tidy-log
+          path: clang-tidy.log
+          retention-days: 30
+
+  # ---------------------------------------------------------------------
+  # Sanitizer lanes. Tests only - the renderer needs a GPU context that a
+  # sanitized headless run cannot reliably provide.
+  # ---------------------------------------------------------------------
+  sanitizers:
+    name: Sanitizers (${{ matrix.sanitizer }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined]
+    env:
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build libgl1-mesa-dev libegl1 mesa-utils ffmpeg
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          key: weekly-san-${{ matrix.sanitizer }}
+          max-size: 500M
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDEFAULT_LANG=en \
+            -DENABLE_SANITIZER=${{ matrix.sanitizer }}
+
+      # Only what run-tests.sh runs. soi_test_binaries already pulls in the
+      # gameplay verifier and the QML suite, so this covers everything the next
+      # step executes; the game binary, map editor, arena and preview tools are
+      # not tested here and are the bulk of a sanitized Debug link.
+      - name: Build the test binaries
+        run: cmake --build build --parallel --target soi_test_binaries
+
+      # scripts/run-tests.sh is the single answer to "what does running the
+      # tests mean"; the Makefile, the pull request lane and the release lane
+      # all call it. This job used to call ctest directly, which spawns one
+      # process per test case: 3400 sanitized startups against a two-hour
+      # budget. The script runs each suite once instead, and treats a suite
+      # missing from the build as an error rather than -- as --no-tests=ignore
+      # did -- a reason to report success.
+      - name: Run tests under ${{ matrix.sanitizer }}Sanitizer
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=0:strict_string_checks=1
+          # D-Bus, the GL driver and the QML engine each keep process-lifetime
+          # allocations that LeakSanitizer counts. tools/lsan-suppressions.txt
+          # lists them and says why; anything with a project frame in it is a
+          # real leak and is not suppressed.
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/tools/lsan-suppressions.txt
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+          QT_QPA_PLATFORM: offscreen
+        run: bash scripts/run-tests.sh build --gtest_brief=1
+
+  # ---------------------------------------------------------------------
+  # Coverage report over the unit test suite.
+  # ---------------------------------------------------------------------
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          cache: true
+          modules: qt5compat qtmultimedia
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build libgl1-mesa-dev libegl1 gcovr ffmpeg
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DDEFAULT_LANG=en \
+            -DENABLE_COVERAGE=ON
+
+      # Coverage is measured over what the tests execute, so the untested
+      # tools do not need building; gcovr reports on the instrumented sources
+      # that ran either way.
+      - name: Build the test binaries
+        run: cmake --build build --parallel --target soi_test_binaries
+
+      - name: Run tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: bash scripts/run-tests.sh build --gtest_brief=1
+
+      # Steps run under `bash -e` but not `-o pipefail`, so without this a
+      # gcovr that dies still exits 0 through tee and the job publishes an
+      # empty summary as if it had worked.
+      - name: Generate report
+        run: |
+          set -o pipefail
+          gcovr --root . \
+            --exclude 'build/' \
+            --exclude 'third_party/' \
+            --exclude 'tests/' \
+            --html-details coverage.html \
+            --xml coverage.xml \
+            --print-summary | tee coverage-summary.txt
+
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo '```'
+            cat coverage-summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            coverage*.html
+            coverage.xml
+            coverage-summary.txt
+          retention-days: 30
+
+  # ---------------------------------------------------------------------
+  # Full build, renderer self-test and packaging dry run on every supported
+  # platform. Pull requests only compile and test on Linux, so this is what
+  # catches Windows/macOS breakage between releases - within a week rather
+  # than at tag time.
+  # ---------------------------------------------------------------------
+  package-linux:
+    name: Package (Linux)
+    uses: ./.github/workflows/build-linux.yml
+    with:
+      build-type: Release
+      upload-artifacts: false
+
+  package-macos:
+    name: Package (macOS)
+    uses: ./.github/workflows/build-macos.yml
+    with:
+      build-type: Release
+      upload-artifacts: false
+    secrets: inherit
+
+  package-windows:
+    name: Package (Windows)
+    uses: ./.github/workflows/build-windows.yml
+    with:
+      build-type: Release
+      upload-artifacts: false
+    secrets: inherit

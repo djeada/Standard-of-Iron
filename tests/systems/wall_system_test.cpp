@@ -436,6 +436,9 @@ TEST_F(WallMechanicsTest, BuilderConstructionQueueConsumesMultipleWallSites) {
   auto* first_site = make_construction_site(world, 2.0F, 0.0F, 1);
   auto* second_site = make_construction_site(world, 4.0F, 0.0F, 1);
 
+  const auto first_site_id = first_site->get_id();
+  const auto second_site_id = second_site->get_id();
+
   auto* builder = world.create_entity();
   builder->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
   builder->add_component<MovementComponent>();
@@ -449,24 +452,24 @@ TEST_F(WallMechanicsTest, BuilderConstructionQueueConsumesMultipleWallSites) {
   production->build_time = 1.0F;
   production->time_remaining = 0.0F;
   production->has_construction_site = true;
-  production->construction_site_entity_id = first_site->get_id();
+  production->construction_site_entity_id = first_site_id;
   production->construction_site_x = 2.0F;
   production->construction_site_z = 0.0F;
   production->at_construction_site = true;
   production->in_progress = true;
-  production->queued_construction_site_ids.push_back(second_site->get_id());
+  production->queued_construction_site_ids.push_back(second_site_id);
 
   Game::Systems::ProductionSystem system;
   system.update(&world, 0.1F);
 
-  EXPECT_EQ(world.get_entity(first_site->get_id()), nullptr);
+  EXPECT_EQ(world.get_entity(first_site_id), nullptr);
   EXPECT_FALSE(production->has_construction_site);
   EXPECT_EQ(production->queued_construction_site_ids.size(), 1U);
 
   system.update(&world, 0.1F);
 
   EXPECT_TRUE(production->has_construction_site);
-  EXPECT_EQ(production->construction_site_entity_id, second_site->get_id());
+  EXPECT_EQ(production->construction_site_entity_id, second_site_id);
   EXPECT_FLOAT_EQ(production->construction_site_x, 4.0F);
 }
 
@@ -478,6 +481,9 @@ TEST_F(WallMechanicsTest, InvalidatedWallSiteRefundsWoodAndAdvancesQueue) {
 
   auto* first_site = make_construction_site(world, 2.0F, 0.0F, 1);
   auto* second_site = make_construction_site(world, 4.0F, 0.0F, 1);
+
+  const auto first_site_id = first_site->get_id();
+  const auto second_site_id = second_site->get_id();
   make_wall(world, 2.0F, 0.0F, 0.0F, 3);
 
   auto* builder = world.create_entity();
@@ -493,22 +499,22 @@ TEST_F(WallMechanicsTest, InvalidatedWallSiteRefundsWoodAndAdvancesQueue) {
   production->build_time = 1.0F;
   production->time_remaining = 0.0F;
   production->has_construction_site = true;
-  production->construction_site_entity_id = first_site->get_id();
+  production->construction_site_entity_id = first_site_id;
   production->construction_site_x = 2.0F;
   production->construction_site_z = 0.0F;
   production->at_construction_site = true;
   production->in_progress = true;
-  production->queued_construction_site_ids.push_back(second_site->get_id());
+  production->queued_construction_site_ids.push_back(second_site_id);
 
   Game::Systems::ProductionSystem system;
   system.update(&world, 0.1F);
 
-  EXPECT_EQ(world.get_entity(first_site->get_id()), nullptr);
+  EXPECT_EQ(world.get_entity(first_site_id), nullptr);
   EXPECT_EQ(PlayerResourceRegistry::instance().get(1, ResourceType::Wood),
             WallNetworkService::k_wall_segment_wood_cost);
   EXPECT_EQ(PlayerResourceRegistry::instance().get(2, ResourceType::Wood), 0);
   EXPECT_TRUE(production->has_construction_site);
-  EXPECT_EQ(production->construction_site_entity_id, second_site->get_id());
+  EXPECT_EQ(production->construction_site_entity_id, second_site_id);
   EXPECT_FALSE(production->in_progress);
   EXPECT_FALSE(production->construction_complete);
   EXPECT_TRUE(production->queued_construction_site_ids.empty());
