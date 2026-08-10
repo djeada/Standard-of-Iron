@@ -8,7 +8,7 @@
 #   1. a v* tag being built  -> that tag, minus the leading v
 #   2. otherwise             -> the project() version in CMakeLists.txt
 #
-# The second case is what a nightly or a workflow_dispatch build gets. It is
+# The second case is what a weekly or a workflow_dispatch build gets. It is
 # deliberately the same number the binary reports through
 # QCoreApplication::applicationVersion(), because a package whose file name
 # disagrees with the About panel inside it is worse than no version at all.

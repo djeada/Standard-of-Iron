@@ -9,6 +9,59 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The sanitizer lanes had never run a test.** CTest discovers the test names
+  by running each binary once with `--gtest_list_tests`, under a five-second
+  budget. An AddressSanitizer build of the render suite needs about twenty-three
+  seconds just to reach `main`, so discovery was killed on every scheduled run
+  and the lane failed before executing a single test. Discovery now allows five
+  minutes. Both lanes also go through `scripts/run-tests.sh` instead of calling
+  CTest directly, which runs each suite as one process rather than spawning one
+  per test case — the difference between minutes and hours under a sanitizer —
+  and drops `--no-tests=ignore`, which would have reported success had discovery
+  ever come back empty instead of erroring.
+- The whole-project clang-tidy pass that `CONTRIBUTING.md` describes, and that
+  pull requests explicitly defer to by tidying only the files they touch, was
+  missing from the scheduled workflow entirely. It runs now and publishes its
+  findings, with a missing clang-tidy treated as a failure rather than as files
+  silently left unchecked. It does not gate on the findings themselves yet —
+  there are about 120 of them on the tree already, and a gate that starts red
+  is one nobody reads.
+- The coverage report piped `gcovr` into `tee` without `pipefail`, so a failed
+  report still published an empty summary and passed.
+- The defects the sanitizer lanes found once they could run:
+    - **Use after free in four tests.** They read an entity through a raw pointer
+      after the system under test had destroyed it — the wall builder queue and
+      the civilian delivery — which is a heap-use-after-free. They hold the entity
+      id across the update now. `world.get_entity(p->get_id()) == nullptr` is a
+      dangling read by construction, so all four instances of that shape went.
+    - **Leaked QML singletons.** `IconArtLibrary` and the test-side `GlyphProbe`
+      hold no state and expose only static methods; the instance exists so QML has
+      something to call them through. Each registration allocated a fresh one that
+      nothing freed. This alone failed the QML suite while all 233 of its tests
+      passed. One shared instance each now.
+    - **A leaked `QTemporaryFile` per mission written** in the wave archetype
+      tests. `setAutoRemove(false)` is what keeps the file on disk after the
+      helper returns, so the object never needed to be heap-allocated.
+    - Process-lifetime allocations inside D-Bus, the GL driver and the QML engine
+      are listed in `tools/lsan-suppressions.txt` with the reason for each. A leak
+      with one of our own frames in it is not suppressed.
+    - **The gameplay verifier asserted a wall-clock tick budget.** Its 33 ms
+      hitch check was the only thing still failing it under AddressSanitizer,
+      where a tick measured 106 to 135 ms on a busy machine and 7 to 22 ms on an
+      idle one — the instrumentation and the load, not the game. Sanitizer and
+      coverage builds define `SOI_INSTRUMENTED_BUILD` and skip that one timing
+      claim; every behavioural check the verifier makes still runs everywhere.
+
+### Changed
+
+- The scheduled workflow is called **Weekly** and its jobs, cache keys and
+  documentation say so. The cron moved to Mondays some time ago; only the name
+  had gone on claiming otherwise.
+- The sanitizer and coverage lanes build only the test binaries instead of the
+  whole application, which is what they then run.
+
 ## [0.1.0] — 2026-08-09
 
 The first tagged release, and the first build published as a download rather

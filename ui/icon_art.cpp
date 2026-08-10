@@ -548,7 +548,8 @@ auto IconArtLibrary::create(QQmlEngine* engine,
                             QJSEngine* script_engine) -> IconArtLibrary* {
   Q_UNUSED(engine)
   Q_UNUSED(script_engine)
-  auto* library = new IconArtLibrary();
-  QQmlEngine::setObjectOwnership(library, QQmlEngine::CppOwnership);
-  return library;
+
+  static IconArtLibrary library;
+  QQmlEngine::setObjectOwnership(&library, QQmlEngine::CppOwnership);
+  return &library;
 }

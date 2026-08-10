@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <optional>
 #include <random>
 #include <vector>
@@ -59,12 +60,12 @@ constexpr QColor TEAM_RED_DARK{130, 16, 12};
 } // namespace Palette
 
 auto hash_coords(int x, int y, int seed = 0) -> float {
-  const int n = x + y * 57 + seed * 131;
-  const int shifted = (n << 13) ^ n;
-  return 1.0F - static_cast<float>(
-                    (shifted * (shifted * shifted * 15731 + 789221) + 1376312589) &
-                    0x7fffffff) /
-                    1073741824.0F;
+  const auto n = static_cast<std::uint32_t>(x) + static_cast<std::uint32_t>(y) * 57U +
+                 static_cast<std::uint32_t>(seed) * 131U;
+  const std::uint32_t shifted = (n << 13U) ^ n;
+  const std::uint32_t mixed =
+      (shifted * (shifted * shifted * 15731U + 789221U) + 1376312589U) & 0x7fffffffU;
+  return 1.0F - static_cast<float>(mixed) / 1073741824.0F;
 }
 
 struct RiverStroke {

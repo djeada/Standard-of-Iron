@@ -21,14 +21,15 @@ auto total_units(const std::vector<WaveComposition>& composition) -> int {
 }
 
 auto write_mission(const QString& body) -> QString {
-  auto* file = new QTemporaryFile(QDir::temp().filePath("soi_wave_XXXXXX.json"));
-  file->setAutoRemove(false);
-  if (!file->open()) {
+
+  QTemporaryFile file(QDir::temp().filePath("soi_wave_XXXXXX.json"));
+  file.setAutoRemove(false);
+  if (!file.open()) {
     return {};
   }
-  file->write(body.toUtf8());
-  file->close();
-  return file->fileName();
+  file.write(body.toUtf8());
+  file.close();
+  return file.fileName();
 }
 
 } // namespace
