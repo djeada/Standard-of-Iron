@@ -63,7 +63,7 @@ constexpr std::array<float, k_body_rings.size()> k_saddle_reach{{0.62F,
                                                                  0.52F,
                                                                  0.70F}};
 
-constexpr float k_saddle_relief = 0.005F;
+constexpr float k_saddle_relief = 0.012F;
 
 struct LegPlan {
   float x;
@@ -447,13 +447,29 @@ auto make_pose(const WolfDrive& drive) -> RigPose {
   fill_legs(pose, drive, bob - pitch, bob + pitch);
   fill_head(pose, drive);
 
+  float const nod =
+      std::sin(cadence - 1.25F) * (k_bob_base + (k_bob_gain * gallop)) * 0.58F;
+  QVector3D const head_ride(0.0F, (bob * 0.55F) + nod, 0.0F);
+  pose.withers += QVector3D(0.0F, (bob * 0.85F) - (pitch * 0.6F), 0.0F);
+  pose.poll += head_ride;
+  pose.muzzle += head_ride;
+  pose.jaw_hinge += head_ride;
+  pose.jaw_tip += head_ride;
+  pose.ear_base_l += head_ride;
+  pose.ear_base_r += head_ride;
+  pose.ear_tip_l += head_ride;
+  pose.ear_tip_r += head_ride;
+
   float const sway = std::sin(drive.stride_phase * k_two_pi) * 0.040F *
                      (0.35F + (drive.speed_ratio * 0.65F));
   float const lift = drive.crouch;
 
-  pose.tail_base = QVector3D(0.0F, 0.556F, -0.412F);
-  pose.tail_mid = QVector3D(sway * 0.5F, 0.512F + (lift * 0.140F), -0.606F);
-  pose.tail_tip = QVector3D(sway, 0.392F + (lift * 0.320F), -0.782F);
+  float const tail_bounce = std::sin(cadence - 2.1F) * 0.030F * gallop;
+  pose.tail_base = QVector3D(0.0F, 0.556F + bob + pitch, -0.412F);
+  pose.tail_mid =
+      QVector3D(sway * 0.5F, 0.512F + (lift * 0.140F) + bob + tail_bounce, -0.606F);
+  pose.tail_tip =
+      QVector3D(sway, 0.392F + (lift * 0.320F) + bob + (tail_bounce * 1.8F), -0.782F);
 
   apply_lunge(pose, drive);
   apply_collapse(pose, drive);

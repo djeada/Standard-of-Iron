@@ -257,49 +257,58 @@ void VegetationPipeline::initialize_pine_pipeline() {
     QVector3D normal;
   };
 
-  constexpr int k_segments = 16;
+  constexpr int k_segments = 20;
   RingLoftBuilder loft(k_segments);
-  loft.reserve(22);
+  loft.reserve(32);
 
-  using Ring = RingLoftBuilder::Ring;
   const int trunk_bottom = loft.add_ring({0.088F, -0.01F, -0.08F, 0.00F, 0.0F});
   const int trunk_kink =
-      loft.add_ring({0.068F, 0.18F, 0.00F, 0.08F, 0.0F, QVector2D(0.010F, 0.006F)});
+      loft.add_ring({0.066F, 0.16F, 0.00F, 0.08F, 0.0F, QVector2D(0.010F, 0.006F)});
   const int trunk_mid =
-      loft.add_ring({0.056F, 0.36F, 0.03F, 0.16F, 0.0F, QVector2D(0.022F, 0.012F)});
+      loft.add_ring({0.054F, 0.32F, 0.03F, 0.16F, 0.0F, QVector2D(0.022F, 0.012F)});
   const int trunk_top =
-      loft.add_ring({0.050F, 0.56F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F)});
+      loft.add_ring({0.046F, 0.48F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F)});
 
-  const QVector2D t1o(-0.032F, 0.050F);
-  const int c1_inner = loft.add_ring({0.135F, 0.62F, 0.12F, 0.34F, 0.00F, t1o * 0.15F});
-  const int c1_base = loft.add_ring({0.245F, 0.67F, 0.24F, 0.42F, 0.60F, t1o * 0.40F});
-  const int c1_outer = loft.add_ring({0.355F, 0.72F, 0.34F, 0.50F, 1.00F, t1o});
-  const int c1_mid = loft.add_ring({0.315F, 0.79F, 0.56F, 0.58F, 0.74F, t1o * 0.55F});
-  const int c1_top = loft.add_ring({0.205F, 0.85F, 0.72F, 0.64F, 0.30F, t1o * 0.22F});
+  struct TierPlan {
+    float base_y;
+    float outer_r;
+    QVector2D offset;
+  };
+  constexpr std::array<TierPlan, 5> k_tiers{{
+      {0.52F, 0.330F, QVector2D(-0.030F, 0.044F)},
+      {0.70F, 0.280F, QVector2D(0.036F, -0.024F)},
+      {0.86F, 0.230F, QVector2D(-0.020F, -0.030F)},
+      {1.00F, 0.180F, QVector2D(0.024F, 0.018F)},
+      {1.12F, 0.132F, QVector2D(-0.014F, 0.022F)},
+  }};
 
-  const QVector2D t2o(0.040F, -0.026F);
-  const int c2_inner = loft.add_ring({0.120F, 0.87F, 0.16F, 0.66F, 0.00F, t2o * 0.12F});
-  const int c2_base = loft.add_ring({0.220F, 0.92F, 0.30F, 0.73F, 0.60F, t2o * 0.38F});
-  const int c2_outer = loft.add_ring({0.295F, 0.97F, 0.42F, 0.80F, 1.00F, t2o});
-  const int c2_mid = loft.add_ring({0.240F, 1.03F, 0.64F, 0.86F, 0.74F, t2o * 0.52F});
-  const int c2_top = loft.add_ring({0.145F, 1.08F, 0.78F, 0.90F, 0.30F, t2o * 0.20F});
+  std::vector<int> chain{trunk_bottom, trunk_kink, trunk_mid, trunk_top};
+  for (std::size_t t = 0; t < k_tiers.size(); ++t) {
+    const TierPlan& tier = k_tiers[t];
+    float const r = tier.outer_r;
+    float const y = tier.base_y;
+    float const v0 = 0.34F + (0.145F * static_cast<float>(t));
+    const QVector2D& o = tier.offset;
 
-  const QVector2D t3o(-0.022F, -0.032F);
-  const int c3_inner = loft.add_ring({0.085F, 1.10F, 0.20F, 0.91F, 0.00F, t3o * 0.10F});
-  const int c3_base = loft.add_ring({0.150F, 1.15F, 0.38F, 0.95F, 0.60F, t3o * 0.35F});
-  const int c3_outer = loft.add_ring({0.205F, 1.19F, 0.52F, 0.98F, 1.00F, t3o});
-  const int c3_mid = loft.add_ring({0.150F, 1.25F, 0.74F, 1.02F, 0.74F, t3o * 0.48F});
-  const int c3_top = loft.add_ring({0.075F, 1.30F, 0.86F, 1.06F, 0.30F, t3o * 0.15F});
+    chain.push_back(loft.add_ring({r * 0.36F, y, 0.14F, v0, 0.00F, o * 0.12F}));
+    chain.push_back(
+        loft.add_ring({r * 0.76F, y + 0.028F, 0.28F, v0 + 0.035F, 0.60F, o * 0.42F}));
+    chain.push_back(loft.add_ring({r, y + 0.050F, 0.42F, v0 + 0.062F, 1.00F, o}));
+    chain.push_back(
+        loft.add_ring({r * 0.78F, y + 0.096F, 0.62F, v0 + 0.092F, 0.74F, o * 0.55F}));
+    chain.push_back(
+        loft.add_ring({r * 0.44F, y + 0.138F, 0.80F, v0 + 0.118F, 0.30F, o * 0.22F}));
+  }
 
-  const int tip_ring = loft.add_ring({0.028F, 1.36F, 0.95F, 1.12F, 0.20F});
+  const int tip_ring = loft.add_ring({0.024F, 1.32F, 0.95F, 1.10F, 0.20F});
+  chain.push_back(tip_ring);
 
-  loft.connect_chain({trunk_bottom, trunk_kink, trunk_mid, trunk_top, c1_inner,
-                      c1_base,      c1_outer,   c1_mid,    c1_top,    c2_inner,
-                      c2_base,      c2_outer,   c2_mid,    c2_top,    c3_inner,
-                      c3_base,      c3_outer,   c3_mid,    c3_top,    tip_ring});
+  for (std::size_t i = 1; i < chain.size(); ++i) {
+    loft.connect(chain[i - 1U], chain[i]);
+  }
 
   loft.cap(trunk_bottom, 0.0F, QVector2D(0.0F, 0.0F), 0.0F, 0.0F, false);
-  loft.cap(tip_ring, 1.44F, QVector2D(0.0F, 0.0F), 1.18F, 0.30F, true);
+  loft.cap(tip_ring, 1.42F, QVector2D(0.0F, 0.0F), 1.16F, 0.30F, true);
 
   std::vector<PineVertex> vertices;
   vertices.reserve(loft.vertices().size());

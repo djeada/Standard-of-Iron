@@ -54,8 +54,12 @@ void solve_leg(const LegRest& rest,
     travel = (0.5F - (t / duty)) * plan.stride;
   } else {
     float const u = (t - duty) / (1.0F - duty);
-    travel = (u - 0.5F) * plan.stride;
-    lift = plan.lift * std::sin(u * k_pi);
+
+    float const eased = u * u * (3.0F - (2.0F * u));
+    travel = (eased - 0.5F) * plan.stride;
+
+    float const bell = std::sin(u * k_pi);
+    lift = plan.lift * bell * bell;
   }
 
   float const w = std::clamp(weight, 0.0F, 1.0F);
