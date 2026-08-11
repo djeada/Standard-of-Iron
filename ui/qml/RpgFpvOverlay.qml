@@ -7,6 +7,7 @@ Item {
     anchors.fill: parent
 
     property real bottomInset: 0
+    property real topInset: 0
     property var status: ({})
     property var engine: null
 
@@ -429,6 +430,62 @@ Item {
         }
     }
 
+    readonly property bool skirmishContext: String(status_value("fight_context", "none")) === "skirmish"
+
+    Item {
+        id: leftThreatPip
+        objectName: "rpgLeftThreatPip"
+        anchors.left: parent.left
+        anchors.leftMargin: root.scaled(22)
+        anchors.verticalCenter: parent.verticalCenter
+        width: root.scaled(14)
+        height: root.scaled(46)
+        visible: root.skirmishContext && root.status_value("threat_left", false) === true
+        opacity: visible ? 0.55 + 0.35 * root.slowPulse : 0.0
+
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                ctx.beginPath();
+                ctx.moveTo(width, 0);
+                ctx.lineTo(0, height / 2);
+                ctx.lineTo(width, height);
+                ctx.closePath();
+                ctx.fillStyle = "#e08a3c";
+                ctx.fill();
+            }
+        }
+    }
+
+    Item {
+        id: rightThreatPip
+        objectName: "rpgRightThreatPip"
+        anchors.right: parent.right
+        anchors.rightMargin: root.scaled(22)
+        anchors.verticalCenter: parent.verticalCenter
+        width: root.scaled(14)
+        height: root.scaled(46)
+        visible: root.skirmishContext && root.status_value("threat_right", false) === true
+        opacity: visible ? 0.55 + 0.35 * root.slowPulse : 0.0
+
+        Canvas {
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(width, height / 2);
+                ctx.lineTo(0, height);
+                ctx.closePath();
+                ctx.fillStyle = "#e08a3c";
+                ctx.fill();
+            }
+        }
+    }
+
     Item {
         id: lockBrackets
 
@@ -663,7 +720,7 @@ Item {
         width: barWidth
         height: root.scaled(30)
         x: Math.max(root.scaled(4), Math.min(root.width - width - root.scaled(4), root.focusScreenX - width / 2))
-        y: Math.max(root.scaled(4), root.focusScreenY - Math.max(root.scaled(34), root.focusScreenHeight * 0.62) - height)
+        y: Math.max(root.topInset + root.scaled(4), Math.min(root.height - root.bottomInset - height, root.focusScreenY - Math.max(root.scaled(34), root.focusScreenHeight * 0.62) - height))
         visible: root.focusProjected && Number(root.status_value("focus_target_max_hp", 0)) > 0
         opacity: visible ? 1.0 : 0.0
 
@@ -713,7 +770,7 @@ Item {
                 anchors.margins: 1
                 width: Math.max(0, (parent.width - 2) * focusPlate.hpRatio)
                 height: parent.height - 2
-                color: root.status_value("focus_target_staggered", false) === true ? "#ffb347" : "#c0281c"
+                color: root.status_value("focus_target_guard_broken", false) === true ? "#ffe07a" : (root.status_value("focus_target_staggered", false) === true ? "#ffb347" : "#c0281c")
 
                 Behavior on width  {
                     NumberAnimation {

@@ -217,25 +217,25 @@ TEST(CommanderControlRegressionTest, CommanderAuraKeyIsWiredThroughAdapter) {
 
 TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   const auto root = find_repo_root();
-  const auto source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto source = read_text(root / "app" / "core" / "commander_camera_rig.cpp");
   ASSERT_FALSE(source.empty());
 
-  EXPECT_TRUE(contains(source, "constexpr float k_camera_back_offset = 3.10F;"));
-  EXPECT_TRUE(contains(source, "constexpr float k_close_camera_back_offset = 2.25F;"));
+  EXPECT_TRUE(contains(source, "Framing{3.10F, 1.15F, 0.90F, 6.0F, 68.0F, 0.0F}"));
+  EXPECT_TRUE(contains(source, "Framing{2.25F, 1.05F, 0.72F, 5.2F, 64.0F, 0.0F}"));
   EXPECT_TRUE(contains(source, "constexpr float k_commander_near_plane = 0.05F;"));
-  EXPECT_TRUE(contains(source, "const QVector3D flat_forward("));
-  EXPECT_TRUE(contains(source, "pivot - flat_forward * back_offset"));
+  EXPECT_TRUE(contains(source, "QVector3D const flat_forward("));
+  EXPECT_TRUE(contains(source, "pivot - flat_forward * m_framing_current.back"));
 
-  EXPECT_TRUE(contains(source, "constexpr float k_camera_side_offset = 0.90F;"));
+  EXPECT_TRUE(
+      contains(source,
+               "QVector3D const free_look_target =\n"
+               "      eye_desired + forward_vec * m_framing_current.distance -"));
 
-  EXPECT_TRUE(contains(source,
-                       "const QVector3D free_look_target = eye_desired + forward_vec * "
-                       "target_distance;"));
+  EXPECT_TRUE(contains(source, "m_framing_current.look_drop * (1.0F - aim_blend)"));
   EXPECT_FALSE(contains(source, "target_desired = pivot + forward_vec"));
 
-  EXPECT_TRUE(contains(
-      source, "camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);"));
+  EXPECT_TRUE(
+      contains(source, "camera.look_at(m_eye_smooth, m_target_smooth, up_final);"));
   EXPECT_FALSE(contains(source, "shake_offset"));
 
   EXPECT_TRUE(contains(source, "bob_v + breath_v"));
@@ -578,21 +578,18 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
 
 TEST(CommanderControlRegressionTest, FpvCombatCameraHasNoSyntheticHitShakeOrPunch) {
   const auto root = find_repo_root();
-  const auto controller_src =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
-  const auto controller_hdr =
-      read_text(root / "app" / "core" / "commander_control_controller.h");
-  ASSERT_FALSE(controller_src.empty());
-  ASSERT_FALSE(controller_hdr.empty());
+  const auto rig_src = read_text(root / "app" / "core" / "commander_camera_rig.cpp");
+  const auto rig_hdr = read_text(root / "app" / "core" / "commander_camera_rig.h");
+  ASSERT_FALSE(rig_src.empty());
+  ASSERT_FALSE(rig_hdr.empty());
 
-  EXPECT_FALSE(contains(controller_hdr, "m_hit_trauma"));
-  EXPECT_FALSE(contains(controller_hdr, "m_hit_shake_phase"));
-  EXPECT_FALSE(contains(controller_hdr, "m_strike_camera_punch"));
-  EXPECT_FALSE(contains(controller_hdr, "m_impact_shake"));
-  EXPECT_FALSE(contains(controller_src, "shake_offset"));
+  EXPECT_FALSE(contains(rig_hdr, "m_hit_trauma"));
+  EXPECT_FALSE(contains(rig_hdr, "m_hit_shake_phase"));
+  EXPECT_FALSE(contains(rig_hdr, "m_strike_camera_punch"));
+  EXPECT_FALSE(contains(rig_hdr, "m_impact_shake"));
+  EXPECT_FALSE(contains(rig_src, "shake_offset"));
   EXPECT_TRUE(
-      contains(controller_src,
-               "camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);"));
+      contains(rig_src, "camera.look_at(m_eye_smooth, m_target_smooth, up_final);"));
 }
 
 TEST(CommanderControlRegressionTest, CommanderJumpKeyIsWiredThroughAdapter) {

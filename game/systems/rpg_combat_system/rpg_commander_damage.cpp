@@ -146,6 +146,22 @@ auto resolve_commander_guard(Engine::Core::World* world,
     return result;
   }
 
+  if (profile.unblockable) {
+
+    apply_posture_pressure(target, std::max(0.0F, profile.guard_pressure));
+    if (commander != nullptr && commander->posture >= commander->posture_max) {
+      guard->guard_break_remaining = std::max(guard->guard_break_remaining, 1.0F);
+      guard->rearm_requires_release = true;
+      guard->active = false;
+      guard->perfect_guard_remaining = 0.0F;
+      commander->punish_window_remaining =
+          std::max(commander->punish_window_remaining, 1.0F);
+      commander->posture = commander->posture_max;
+      result.guard_broken = true;
+    }
+    return result;
+  }
+
   result.blocked = true;
   result.damage = std::max(
       0,
@@ -296,7 +312,7 @@ CommanderDamageResult deal_damage_to_rpg_commander(Engine::Core::World* world,
     return result;
   }
 
-  if (resolve_perfect_guard(world, commander, attacker_id)) {
+  if (!profile.unblockable && resolve_perfect_guard(world, commander, attacker_id)) {
     result.perfect_guarded = true;
     result.blocked = true;
     play_guard_cue(commander, "combat.perfect_guard");

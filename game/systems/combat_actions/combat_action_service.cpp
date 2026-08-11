@@ -51,7 +51,10 @@ select_rpg_sword_action_id(const Engine::Core::CommanderComponent* commander,
 [[nodiscard]] auto select_rpg_spear_action_id(int move_right_axis,
                                               int move_forward_axis,
                                               bool finisher_attack) -> CombatActionId {
-  if (finisher_attack || move_forward_axis < 0 || move_right_axis != 0) {
+  if (finisher_attack) {
+    return CombatActionId::RpgSpearFinisher;
+  }
+  if (move_forward_axis < 0 || move_right_axis != 0) {
     return CombatActionId::RpgSpearSweep;
   }
   return CombatActionId::RpgSpearThrust;

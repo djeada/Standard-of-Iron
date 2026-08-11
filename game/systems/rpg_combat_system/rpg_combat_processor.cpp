@@ -11,6 +11,7 @@
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
 #include "../command_service.h"
+#include "../formation_combat_geometry.h"
 #include "../owner_registry.h"
 
 namespace Game::Systems::RpgCombat {
@@ -103,11 +104,16 @@ void refresh_commander_engagement(Engine::Core::World* world,
     return;
   }
 
+  Engine::Core::EntityID const previous_front = engagement->front_attacker_id;
+  Engine::Core::EntityID const previous_left = engagement->left_threat_id;
+  Engine::Core::EntityID const previous_right = engagement->right_threat_id;
+
   engagement->engagement_slots.clear();
   engagement->front_attacker_id = 0;
   engagement->left_threat_id = 0;
   engagement->right_threat_id = 0;
   engagement->active_attackers = 0;
+  engagement->fight_context = Engine::Core::FightContext::None;
 
   float const yaw_radians = commander_transform->rotation.y * (k_pi / 180.0F);
   float const forward_x = std::sin(yaw_radians);
@@ -115,6 +121,7 @@ void refresh_commander_engagement(Engine::Core::World* world,
   float const radius_sq = engagement->ring_radius * engagement->ring_radius;
   auto& owners = Game::Systems::OwnerRegistry::instance();
 
+  bool has_formation_opponent = false;
   for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr || candidate->get_id() == commander_id) {
       continue;
@@ -139,6 +146,16 @@ void refresh_commander_engagement(Engine::Core::World* world,
     slot.distance = std::sqrt(dist_sq);
     slot.signed_angle_degrees = signed_angle_degrees(forward_x, forward_z, dx, dz);
     engagement->engagement_slots.push_back(slot);
+
+    if (!has_formation_opponent && FormationCombat::has_formation_slots(*candidate)) {
+      has_formation_opponent = true;
+    }
+  }
+
+  if (!engagement->engagement_slots.empty()) {
+    engagement->fight_context = has_formation_opponent
+                                    ? Engine::Core::FightContext::Skirmish
+                                    : Engine::Core::FightContext::Duel;
   }
 
   std::sort(
@@ -162,6 +179,19 @@ void refresh_commander_engagement(Engine::Core::World* world,
     return best_id;
   };
 
+  auto keep_incumbent = [&](Engine::Core::EntityID incumbent,
+                            auto still_in_sector) -> Engine::Core::EntityID {
+    if (incumbent == 0) {
+      return 0;
+    }
+    for (auto const& slot : engagement->engagement_slots) {
+      if (slot.entity_id == incumbent) {
+        return !slot_is_active(slot) && still_in_sector(slot) ? incumbent : 0;
+      }
+    }
+    return 0;
+  };
+
   auto assign_role = [&](Engine::Core::EntityID id,
                          Engine::Core::RpgEngagementRole role) {
     if (id == 0) {
@@ -176,19 +206,34 @@ void refresh_commander_engagement(Engine::Core::World* world,
     }
   };
 
-  engagement->front_attacker_id = choose_best(
-      [](const auto& slot) { return std::abs(slot.signed_angle_degrees) <= 65.0F; });
+  engagement->front_attacker_id = keep_incumbent(previous_front, [](const auto& slot) {
+    return std::abs(slot.signed_angle_degrees) <= 80.0F;
+  });
+  if (engagement->front_attacker_id == 0) {
+    engagement->front_attacker_id = choose_best(
+        [](const auto& slot) { return std::abs(slot.signed_angle_degrees) <= 65.0F; });
+  }
   assign_role(engagement->front_attacker_id,
               Engine::Core::RpgEngagementRole::FrontAttacker);
 
-  engagement->left_threat_id = choose_best([](const auto& slot) {
-    return slot.signed_angle_degrees < -30.0F && slot.signed_angle_degrees >= -135.0F;
+  engagement->left_threat_id = keep_incumbent(previous_left, [](const auto& slot) {
+    return slot.signed_angle_degrees < -20.0F && slot.signed_angle_degrees >= -145.0F;
   });
+  if (engagement->left_threat_id == 0) {
+    engagement->left_threat_id = choose_best([](const auto& slot) {
+      return slot.signed_angle_degrees < -30.0F && slot.signed_angle_degrees >= -135.0F;
+    });
+  }
   assign_role(engagement->left_threat_id, Engine::Core::RpgEngagementRole::LeftThreat);
 
-  engagement->right_threat_id = choose_best([](const auto& slot) {
-    return slot.signed_angle_degrees > 30.0F && slot.signed_angle_degrees <= 135.0F;
+  engagement->right_threat_id = keep_incumbent(previous_right, [](const auto& slot) {
+    return slot.signed_angle_degrees > 20.0F && slot.signed_angle_degrees <= 145.0F;
   });
+  if (engagement->right_threat_id == 0) {
+    engagement->right_threat_id = choose_best([](const auto& slot) {
+      return slot.signed_angle_degrees > 30.0F && slot.signed_angle_degrees <= 135.0F;
+    });
+  }
   assign_role(engagement->right_threat_id,
               Engine::Core::RpgEngagementRole::RightThreat);
 }
@@ -319,6 +364,10 @@ void tick_rpg_combat(Engine::Core::World* world,
       continue;
     }
 
+    if (FormationCombat::has_formation_slots(*enemy)) {
+      continue;
+    }
+
     float dx = enemy_tf->position.x - cmd_x;
     float const dz = enemy_tf->position.z - cmd_z;
     float dist = std::sqrt(dx * dx + dz * dz);
@@ -330,6 +379,7 @@ void tick_rpg_combat(Engine::Core::World* world,
     float const nx = dx / dist;
     float const nz = dz / dist;
     bool const is_active_attacker = slot_is_active(slot);
+    float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
 
     if (is_active_attacker) {
       float const engage_distance = ideal_engage_distance(*enemy, *entity);
@@ -340,8 +390,6 @@ void tick_rpg_combat(Engine::Core::World* world,
                                                0.0F,
                                                cmd_z + nz * engage_distance));
       }
-      float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
-      enemy_tf->rotation.y = face_angle;
     } else {
       constexpr float k_support_ring = 4.5F;
       float const circle_dir = (slot.signed_angle_degrees >= 0.0F) ? 1.0F : -1.0F;
@@ -351,9 +399,10 @@ void tick_rpg_combat(Engine::Core::World* world,
                                    QVector3D(cmd_x + std::cos(angle) * k_support_ring,
                                              0.0F,
                                              cmd_z + std::sin(angle) * k_support_ring));
-      float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
-      enemy_tf->rotation.y = face_angle;
     }
+
+    enemy_tf->desired_yaw = face_angle;
+    enemy_tf->has_desired_yaw = true;
   }
 }
 

@@ -1126,6 +1126,12 @@ enum class RpgEngagementRole : std::uint8_t {
   RightThreat
 };
 
+enum class FightContext : std::uint8_t {
+  None,
+  Duel,
+  Skirmish
+};
+
 class RpgEngagementComponent : public Component {
 public:
   struct Slot {
@@ -1141,6 +1147,7 @@ public:
   EntityID right_threat_id{0};
   int active_attackers{0};
   float ring_radius{5.0F};
+  FightContext fight_context{FightContext::None};
 };
 
 class AIControlledComponent : public Component {

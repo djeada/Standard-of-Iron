@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <limits>
 
+#include "commander_camera_rig.h"
+
 class QQuickWindow;
 
 namespace Engine::Core {
@@ -150,22 +152,11 @@ private:
   bool m_mouse_warp_supported = false;
   bool m_mouse_recentering = false;
 
-  float m_bob_phase = 0.0F;
-  float m_bob_amplitude = 0.0F;
-  float m_breath_phase = 0.0F;
-  float m_strafe_lean = 0.0F;
-  float m_fov_current = 75.0F;
-  QVector3D m_cam_eye_smooth{};
-  QVector3D m_cam_target_smooth{};
-  bool m_cam_smooth_valid = false;
-
-  QVector3D m_cam_forward{0.0F, 0.0F, 1.0F};
-  bool m_cam_forward_valid = false;
-
-  float m_cam_ground_y = 0.0F;
-  bool m_cam_ground_valid = false;
+  App::Core::CommanderCameraRig m_camera_rig;
 
   float m_move_speed = 0.0F;
+  float m_planar_speed_smooth = 0.0F;
+  QVector3D m_last_move_direction{0.0F, 0.0F, 1.0F};
   int m_move_right_axis = 0;
   int m_move_forward_axis = 0;
   bool m_move_running = false;
@@ -177,8 +168,6 @@ private:
   bool m_has_requested_dodge_direction = false;
   float m_dodge_fov_kick = 0.0F;
 
-  float m_aim_camera_blend = 0.0F;
-  float m_hit_impact_kick = 0.0F;
   std::uint32_t m_observed_hit_confirm_sequence = 0;
   std::uint8_t m_observed_action_hit_count = 0;
   float m_jump_timer = 0.0F;

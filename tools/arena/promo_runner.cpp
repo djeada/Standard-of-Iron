@@ -168,23 +168,25 @@ void paint_rpg_bow_hud(QImage& frame, const ArenaViewport::RpgBowHudState& state
               QColor(74, 138, 82, 235),
               QStringLiteral("STAMINA"));
 
-  const double nock_width = 190.0 * ui;
-  const double nock_height = 12.0 * ui;
-  const QRectF nock(width - margin - nock_width,
-                    height - margin - nock_height,
-                    nock_width,
-                    nock_height);
-  const bool ready = state.recovery_ratio <= 0.001F;
-  paint_meter(painter,
-              nock,
-              ready ? 1.0F : (1.0F - state.recovery_ratio),
-              ready ? QColor(214, 186, 116, 235) : QColor(122, 92, 58, 220),
-              QString());
-  painter.setPen(ready ? QColor(240, 224, 178, 235) : QColor(168, 150, 122, 215));
-  painter.drawText(
-      QRectF(nock.left(), nock.top() - (24.0 * ui), nock.width(), 20.0 * ui),
-      Qt::AlignRight | Qt::AlignVCenter,
-      ready ? QStringLiteral("ARROW READY") : QStringLiteral("RENOCKING"));
+  if (state.bow_stance) {
+    const double nock_width = 190.0 * ui;
+    const double nock_height = 12.0 * ui;
+    const QRectF nock(width - margin - nock_width,
+                      height - margin - nock_height,
+                      nock_width,
+                      nock_height);
+    const bool ready = state.recovery_ratio <= 0.001F;
+    paint_meter(painter,
+                nock,
+                ready ? 1.0F : (1.0F - state.recovery_ratio),
+                ready ? QColor(214, 186, 116, 235) : QColor(122, 92, 58, 220),
+                QString());
+    painter.setPen(ready ? QColor(240, 224, 178, 235) : QColor(168, 150, 122, 215));
+    painter.drawText(
+        QRectF(nock.left(), nock.top() - (24.0 * ui), nock.width(), 20.0 * ui),
+        Qt::AlignRight | Qt::AlignVCenter,
+        ready ? QStringLiteral("ARROW READY") : QStringLiteral("NOCKING"));
+  }
 
   QFont count_font = painter.font();
   count_font.setPixelSize(static_cast<int>(std::round(21.0 * ui)));

@@ -111,7 +111,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: hud.commander_rpg_mode ? Math.max(132, Math.min(158, parent.height * 0.16)) : Math.max(216, parent.height * 0.24)
+        height: hud.commander_rpg_mode ? Math.max(96, Math.min(120, parent.height * 0.12)) : Math.max(216, parent.height * 0.24)
         clip: true
 
         Loader {
@@ -155,6 +155,7 @@ Item {
         anchors.left: parent.left
         anchors.topMargin: Design.Metrics.space8
         anchors.leftMargin: Design.Metrics.hudZoneMargin
+        visible: has_waves && !hud.commander_rpg_mode
     }
 
     FormationPanel {
@@ -167,6 +168,7 @@ Item {
 
         max_height: Math.max(0, bottomPanel.y - (waveTracker.y + waveTracker.height) - Design.Metrics.space16)
         placing: typeof game !== 'undefined' && game.placement !== undefined && game.placement.is_placing_formation
+        visible: placing && !hud.commander_rpg_mode
     }
 
     FormationStatusBadge {
@@ -176,31 +178,14 @@ Item {
         anchors.bottomMargin: 12
         anchors.left: parent.left
         anchors.leftMargin: 16
-        visible: has_formation && !formationPanel.placing
-    }
-
-    RpgTargetBar {
-        id: rpgTargetBar
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: topPanel.bottom
-        anchors.topMargin: 8
-        visible: hud.commander_rpg_mode && target_max_hp > 0
-
-        readonly property var _status: hud.commander_status
-
-        target_name: _status ? (_status["locked_target_name"] || "") : ""
-        target_hp: _status ? (_status["locked_target_hp"] || 0) : 0
-        target_max_hp: _status ? (_status["locked_target_max_hp"] || 0) : 0
-        target_hp_ratio: _status ? (_status["locked_target_hp_ratio"] || 0.0) : 0.0
-        target_staggered: _status ? !!_status["locked_target_staggered"] : false
-        target_guard_broken: _status ? !!_status["locked_target_guard_broken"] : false
+        visible: has_formation && !formationPanel.placing && !hud.commander_rpg_mode
     }
 
     RpgFpvOverlay {
         id: rpgFpvOverlay
         anchors.fill: parent
         bottomInset: bottomPanel.height
+        topInset: topPanel.height
         status: hud.commander_status
         engine: typeof game !== 'undefined' ? game : null
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked

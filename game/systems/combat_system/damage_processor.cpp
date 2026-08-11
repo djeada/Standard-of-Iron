@@ -3,6 +3,8 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
+#include "../combat_rules.h"
+#include "../rpg_combat_system/rpg_commander_damage.h"
 #include "combat_hit_resolver.h"
 #include "damage_application.h"
 
@@ -12,6 +14,11 @@ void deal_damage(Engine::Core::World* world,
                  Engine::Core::Entity* target,
                  int damage,
                  Engine::Core::EntityID attacker_id) {
+  if (Game::Systems::CombatRules::uses_rpg_combat_rules(target)) {
+    Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
+        world, target, damage, attacker_id, {});
+    return;
+  }
   auto const application = apply_unit_damage(world, target, damage, attacker_id);
   if (world == nullptr || target == nullptr || attacker_id == 0 ||
       application.queued_soldier_casualties <= 0) {

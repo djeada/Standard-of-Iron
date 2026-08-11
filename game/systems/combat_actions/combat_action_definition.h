@@ -17,6 +17,7 @@ enum class CombatActionId : std::uint8_t {
   RpgSwordFinisher,
   RpgSpearThrust,
   RpgSpearSweep,
+  RpgSpearFinisher,
   RpgBowShot,
   MountedSwordSlash,
   MountedSpearThrust,
@@ -29,6 +30,8 @@ enum class CombatActionId : std::uint8_t {
   RtsCommanderThrust,
   RtsCommanderCut,
   RtsCommanderShot,
+
+  RtsHeavyOverhead,
 };
 
 enum class WeaponFamily : std::uint8_t {
@@ -57,6 +60,8 @@ struct DamageProfile {
   float base_multiplier{1.0F};
   float posture_damage{0.0F};
   float guard_pressure{0.0F};
+
+  bool unblockable{false};
 };
 
 struct HitShapeProfile {
