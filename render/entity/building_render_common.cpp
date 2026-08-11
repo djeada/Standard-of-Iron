@@ -194,8 +194,10 @@ void submit_building_instance(ISubmitter& out,
                               const RenderArchetype& archetype,
                               std::span<const QVector3D> palette) {
   Texture* default_texture = building_white_texture(ctx);
-  RenderArchetypeLod const lod =
-      select_render_archetype_lod(archetype, std::sqrt(ctx.distance_sq));
+  RenderArchetypeLod const lod = select_render_archetype_lod_stable(
+      archetype,
+      std::sqrt(ctx.distance_sq),
+      ctx.entity != nullptr ? static_cast<std::uint64_t>(ctx.entity->get_id()) : 0U);
 
   int damage_id = 0;
   if (ctx.entity != nullptr) {

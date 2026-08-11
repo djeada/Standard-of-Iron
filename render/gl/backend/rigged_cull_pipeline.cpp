@@ -41,6 +41,14 @@ constexpr std::size_t k_max_out_triangles = 12u * 1024u * 1024u;
 
 constexpr std::size_t k_min_instances_for_gpu_path = 24;
 
+[[nodiscard]] constexpr auto
+output_capacity_for(std::size_t candidate_triangles) noexcept -> std::size_t {
+  return candidate_triangles <= k_max_out_triangles ? candidate_triangles : 0U;
+}
+
+static_assert(output_capacity_for(k_max_out_triangles) == k_max_out_triangles);
+static_assert(output_capacity_for(k_max_out_triangles + 1U) == 0U);
+
 auto load_shader_text(const QString& resource_path) -> QString {
   QString const resolved = Utils::Resources::resolve_resource_path(resource_path);
   QFile file(resolved);
@@ -211,9 +219,10 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
     m_instance_capacity_bytes = capacity;
   }
 
-  std::size_t wanted = std::min(candidate_triangles, k_max_out_triangles);
-  wanted = std::max<std::size_t>(wanted / 4,
-                                 std::min<std::size_t>(candidate_triangles, 1u << 18u));
+  const std::size_t wanted = output_capacity_for(candidate_triangles);
+  if (wanted == 0U) {
+    return false;
+  }
   if (wanted > m_out_capacity_triangles || m_out_index_buffer == 0) {
     if (m_out_index_buffer == 0) {
       glGenBuffers(1, &m_out_index_buffer);

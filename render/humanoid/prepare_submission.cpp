@@ -1,3 +1,8 @@
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <unordered_map>
+
 #include "prepare_internal.h"
 #include "render/submission_visibility.h"
 
@@ -35,6 +40,57 @@ auto resolve_casualty_launch(
           entry.launch_velocity_z * flight_time,
           entry.launch_pitch_speed * flight_time,
           entry.launch_roll_speed * flight_time};
+}
+
+struct SoldierVisibilityKey {
+  std::uint32_t entity_id;
+  std::uint32_t slot;
+
+  auto operator==(const SoldierVisibilityKey& other) const noexcept -> bool {
+    return entity_id == other.entity_id && slot == other.slot;
+  }
+};
+
+struct SoldierVisibilityKeyHash {
+  auto operator()(const SoldierVisibilityKey& key) const noexcept -> std::size_t {
+    return (static_cast<std::size_t>(key.entity_id) << 8U) ^
+           static_cast<std::size_t>(key.slot);
+  }
+};
+
+constexpr float k_soldier_cull_enter_band = 1.5F;
+constexpr float k_soldier_cull_keep_band = 5.0F;
+constexpr std::uint32_t k_soldier_visibility_memory_frames = 12U;
+constexpr std::size_t k_soldier_visibility_capacity = 8192U;
+
+auto soldier_visibility_memory() -> std::unordered_map<SoldierVisibilityKey,
+                                                       std::uint32_t,
+                                                       SoldierVisibilityKeyHash>& {
+  static thread_local std::
+      unordered_map<SoldierVisibilityKey, std::uint32_t, SoldierVisibilityKeyHash>
+          drawn_frames;
+  return drawn_frames;
+}
+
+[[nodiscard]] auto soldier_was_recently_drawn(const SoldierVisibilityKey& key,
+                                              std::uint32_t frame_index) -> bool {
+  auto& memory = soldier_visibility_memory();
+  auto const found = memory.find(key);
+  if (found == memory.end()) {
+    return false;
+  }
+  return (frame_index - found->second) <= k_soldier_visibility_memory_frames;
+}
+
+void remember_soldier_drawn(const SoldierVisibilityKey& key,
+                            std::uint32_t frame_index) {
+  auto& memory = soldier_visibility_memory();
+  if (memory.size() > k_soldier_visibility_capacity) {
+    std::erase_if(memory, [frame_index](const auto& entry) {
+      return (frame_index - entry.second) > k_soldier_visibility_memory_frames;
+    });
+  }
+  memory[key] = frame_index;
 }
 
 } // namespace
@@ -567,13 +623,21 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     constexpr float k_soldier_cull_radius = 1.4F;
     const QVector3D cull_center =
         inst_model.map(QVector3D(0.0F, k_soldier_cull_center_y, 0.0F));
+
+    const SoldierVisibilityKey visibility_key{ctx_entity_id,
+                                              static_cast<std::uint32_t>(idx)};
+    const bool recently_drawn = soldier_was_recently_drawn(visibility_key, frame_index);
+    const float cull_radius =
+        k_soldier_cull_radius +
+        (recently_drawn ? k_soldier_cull_keep_band : k_soldier_cull_enter_band);
+
     const auto visibility_result =
         ctx.submission_visibility != nullptr
-            ? ctx.submission_visibility->evaluate_sphere(
-                  cull_center, k_soldier_cull_radius, SubmissionFogMode::Ignore)
+            ? ctx.submission_visibility->evaluate_sphere_with_margin(
+                  cull_center, cull_radius, SubmissionFogMode::Ignore)
             : SubmissionVisibilityResult{
                   ctx.camera == nullptr ||
-                      ctx.camera->is_in_frustum(cull_center, k_soldier_cull_radius),
+                      ctx.camera->is_in_frustum(cull_center, cull_radius),
                   true};
     const bool outside_frustum = !visibility_result.in_frustum;
     const bool hidden_by_fog = !unit_fog_visible;
@@ -1038,6 +1102,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         (soldier_render_anim.combat_phase != anim_ctx.inputs.combat_phase) ||
         (std::abs(soldier_render_anim.combat_phase_progress -
                   anim_ctx.inputs.combat_phase_progress) > 1.0e-4F);
+    remember_soldier_drawn(visibility_key, frame_index);
     record_soldier_debug(idx,
                          soldier_render_anim,
                          anim_ctx.inputs,
