@@ -182,6 +182,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   NoUnexpectedFallPose,
   NoLimbOverextension,
   NoRenderVisibilityChurn,
+  UnitsClearOfBuildings,
   FullCreatureDetailOnly,
   NoFullscreenFlash,
   MovementIsContinuous,

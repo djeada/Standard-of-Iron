@@ -97,10 +97,22 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
-    if (!renderer.submission_visibility().accepts_sphere(
-            chunk.cull_center, chunk.cull_radius, SubmissionFogMode::Ignore)) {
+    constexpr float k_chunk_enter_margin = 2.0F;
+    constexpr float k_chunk_keep_margin = 24.0F;
+    if (m_chunk_visibility_cache.size() != m_chunks.size()) {
+      m_chunk_visibility_cache.assign(m_chunks.size(), {});
+    }
+    auto& submission_cache = m_chunk_visibility_cache[chunk_index];
+    const float cull_margin =
+        submission_cache.was_submitted ? k_chunk_keep_margin : k_chunk_enter_margin;
+    if (!renderer.submission_visibility().accepts_sphere(chunk.cull_center,
+                                                         chunk.cull_radius +
+                                                             cull_margin,
+                                                         SubmissionFogMode::Ignore)) {
+      submission_cache.was_submitted = false;
       continue;
     }
+    submission_cache.was_submitted = true;
 
     if (visibility_snapshot != nullptr) {
       auto& cache = m_chunk_visibility_cache[chunk_index];

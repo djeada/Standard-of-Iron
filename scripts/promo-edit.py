@@ -298,6 +298,9 @@ DEFAULT_TRANSITION = "dissolve"
 DEFAULT_TRANSITION_SECONDS = 0.35
 
 FONT_CANDIDATES = (
+    "/usr/share/fonts/truetype/adf/AccanthisADFStd-Bold.otf",
+    "/usr/share/fonts/opentype/linux-libertine/LinLibertine_RB.otf",
+    "/usr/share/fonts/truetype/noto/NotoSerifDisplay-Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf",
@@ -336,6 +339,25 @@ def fit_font_size(text: str, font: str, size: int, max_width: int) -> int:
         if face.getbbox(text)[2] <= max_width:
             return candidate
     return 18
+
+
+THIN_SPACE = "\u2009"
+
+
+def tracked(text: str, spaces: int = 1) -> str:
+    """Insert tracking between characters.
+
+    Roman display lettering is set wide: inscriptional capitals are cut with a
+    lot of air between them, and a title set solid reads like body copy blown
+    up rather than like something carved. ffmpeg's drawtext has no
+    letter-spacing control, so the spacing goes into the string itself.
+
+    The separator is a thin space rather than a word space. A word space is
+    about a quarter of an em, which pulls the letters so far apart that the
+    words stop reading as words; a thin space is nearer a fifth and lands where
+    a typographer would set display capitals.
+    """
+    return (THIN_SPACE * spaces).join(text)
 
 
 def escape_text(text: str) -> str:
@@ -479,6 +501,13 @@ def build_join_graph(
 
     xfade has no zero-length form, so runs of hard cuts are concatenated into a
     single segment first and only the blended joins become xfades.
+
+    Every input is stamped onto one timebase on the way in. ``concat`` hands its
+    output back on the timebase of its first input while an untouched decoded
+    stream keeps the demuxer's, and ``xfade`` refuses a pair that disagrees:
+    mixing hard cuts and dissolves in the same reel produced ``First input link
+    main timebase (1/15360) do not match ... (1/1000000)`` and wrote no file at
+    all. Normalising up front costs nothing and cannot drift.
     """
     segments: list[list[int]] = [[0]]
     for index in range(1, len(lengths)):
@@ -488,12 +517,15 @@ def build_join_graph(
             segments[-1].append(index)
 
     chain: list[str] = []
+    for index in range(len(lengths)):
+        chain.append(f"[{index}:v]settb=AVTB,setpts=PTS-STARTPTS[n{index}]")
+
     labels: list[str] = []
     for position, members in enumerate(segments):
         if len(members) == 1:
-            labels.append(f"{members[0]}:v")
+            labels.append(f"n{members[0]}")
             continue
-        sources = "".join(f"[{index}:v]" for index in members)
+        sources = "".join(f"[n{index}]" for index in members)
         chain.append(f"{sources}concat=n={len(members)}:v=1:a=0[seg{position}]")
         labels.append(f"seg{position}")
 
@@ -661,7 +693,11 @@ def main() -> int:
         subtitle_size = max(30, int(type_base * 0.040))
         caption_y = f"h*{CAPTION_Y_FRACTION}"
         safe_width = int(width * 0.88)
-        card_start = max(0.0, total - END_CARD_SECONDS)
+
+        title_safe_width = int(width * 0.80)
+
+        card_seconds = float(spec.get("end_card_seconds", END_CARD_SECONDS))
+        card_start = max(0.0, total - card_seconds)
         has_card = bool(spec.get("title") or spec.get("subtitle"))
         step = 0
         for index, (name, start, end) in enumerate(timeline):
@@ -681,9 +717,11 @@ def main() -> int:
             chain.append(
                 f"[{stage}]"
                 + drawtext(
-                    text=caption,
+                    text=tracked(caption),
                     font=font,
-                    size=fit_font_size(caption, font, caption_size, safe_width),
+                    size=fit_font_size(
+                        tracked(caption), font, caption_size, safe_width
+                    ),
                     y_expr=caption_y,
                     start=visible_start,
                     end=visible_end,
@@ -693,14 +731,62 @@ def main() -> int:
             stage = f"cap{step}"
             step += 1
 
+        for index, (name, start, end) in enumerate(timeline):
+            act_title = authored.get(name, {}).get("act_title")
+            if not act_title:
+                continue
+            leading = max(0.15, joins[index].seconds)
+            trailing = 0.15
+            if index + 1 < len(joins):
+                trailing = max(trailing, joins[index + 1].seconds)
+            visible_start = start + leading
+            visible_end = max(visible_start + 0.6, end - trailing)
+            act_text = tracked(act_title)
+            act_size = fit_font_size(act_text, font, title_size, title_safe_width)
+            chain.append(
+                f"[{stage}]"
+                + drawtext(
+                    text=act_text,
+                    font=font,
+                    size=act_size,
+                    y_expr="(h-text_h)/2",
+                    start=visible_start,
+                    end=visible_end,
+                )
+                + f"[act{step}]"
+            )
+            stage = f"act{step}"
+            step += 1
+            kicker = authored.get(name, {}).get("act_kicker")
+            if kicker:
+                chain.append(
+                    f"[{stage}]"
+                    + drawtext(
+                        text=tracked(kicker),
+                        font=font,
+                        size=fit_font_size(
+                            tracked(kicker), font, subtitle_size, safe_width
+                        ),
+                        y_expr=f"(h-text_h)/2-{int(act_size * 0.95)}",
+                        start=visible_start + 0.2,
+                        end=visible_end,
+                        color="#e6c98a",
+                    )
+                    + f"[act{step}]"
+                )
+                stage = f"act{step}"
+                step += 1
+
         title = spec.get("title")
         if title:
             chain.append(
                 f"[{stage}]"
                 + drawtext(
-                    text=title,
+                    text=tracked(title),
                     font=font,
-                    size=fit_font_size(title, font, title_size, safe_width),
+                    size=fit_font_size(
+                        tracked(title), font, title_size, title_safe_width
+                    ),
                     y_expr=f"h*{TITLE_Y_FRACTION}",
                     start=card_start,
                     end=total,
@@ -713,9 +799,11 @@ def main() -> int:
             chain.append(
                 f"[{stage}]"
                 + drawtext(
-                    text=subtitle,
+                    text=tracked(subtitle),
                     font=font,
-                    size=fit_font_size(subtitle, font, subtitle_size, safe_width),
+                    size=fit_font_size(
+                        tracked(subtitle), font, subtitle_size, safe_width
+                    ),
                     y_expr=f"h*{TITLE_Y_FRACTION}+{int(title_size * 1.35)}",
                     start=card_start + 0.35,
                     end=total,

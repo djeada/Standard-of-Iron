@@ -186,6 +186,8 @@ add_executable(
     render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp
     render/wildlife_action_pose_test.cpp
+    render/sheep_rig_integrity_test.cpp
+    render/wolf_rig_integrity_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
     render/body_frames_test.cpp
@@ -398,6 +400,7 @@ add_executable(
     tools/hill_projection_model_test.cpp
     tools/map_editor_commander_preview_test.cpp
     tools/arena_scenarios_test.cpp
+    tools/settlement_layout_test.cpp
     tools/arena_promo_spec_test.cpp
     # The promo spec ships only inside arena_app, which needs a GL context to
     # link. Compiling the translation unit here keeps the camera and capture

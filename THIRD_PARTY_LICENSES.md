@@ -103,14 +103,19 @@ deployment project is also MIT licensed:
 
 ### Synthesised cue sounds
 
-The 106 sound effects listed with `"source": "synth"` in
+The 66 sound effects listed with `"source": "synth"` in
 `assets/audio/audio_manifest.json` are generated from the recipes in
 `tools/audio_synth/` by `make audio-assets`. They are original work produced by
 this repository's own code: nothing is sampled, and no third-party recording or
 library is involved. No attribution or licence obligation attaches to them.
 
-Covers the `ui.*`, `order.*`, `state.*` families in full, plus the build,
-alert and commander-combat cues. See `tools/audio_synth/README.md`.
+Covers the `ui.*`, `order.*`, `state.*` families in full, plus the build and
+alert cues. See `tools/audio_synth/README.md`.
+
+Nothing under `sfx/combat/` is synthesised any more. The twenty-one cues that
+were — the shield and guard set, the commander's bow, the movement cues, the
+siege pair and the charge — are now cut from CC0 recordings like the rest of
+the combat audio, and are listed under the composed battle cues below.
 
 ### Wildlife effects (`assets/audio/sfx/wildlife/`)
 
@@ -289,9 +294,10 @@ place no limit on commercial distribution.
 
 ### Composed battle cues (`assets/audio/sfx/`)
 
-Thirty-two cues — the alerts, the mass-battle beds, the arrow and volley
-layers, the unit stingers and `wolf_bite_snap` — were **generated with
-AudioCraft and have been replaced with CC0 material**. They were the second half
+Fifty-nine cues — the alerts, the mass-battle beds, the arrow and volley
+layers, the unit stingers, the shield, guard, bow, movement and siege sets, and
+`wolf_bite_snap` — were **generated with AudioCraft and have been replaced with
+CC0 material**. They were the second half
 of the non-commercial restriction; rebuilding them leaves the music as the only
 part of the game carrying one.
 
@@ -301,18 +307,24 @@ recordings summed together, offset, filtered and enveloped.
 `tools/audio_field/battle.py` is the recipe — which recordings, which windows,
 what shaping — and `tools/audio_field/build_battle.py` renders it.
 
-| Cues                                                                                                                                                    | Built from                                                                                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| the five `alerts/`, `roman_war_horns_orders`                                                                                                            | HORNS, `HORNTrad-…CU_Viking War` — the one period-plausible horn in the collection; ranked copies make one horn into a relayed order                                                                                        |
-| `battlefield_crowd_chaos`, `_distant_mass_01`/`_02`, `aftermath_battlefield`, `army_retreat_panic`, `soldiers_victory_cheer`, `carthage_prepare_battle` | CROWDS, `CRWDApls-…Crowd Applause, Cheering, Yelling, Whooping`, high-passed off the applause and lowpassed for distance                                                                                                    |
-| `army_march_dirt_mass`, `spearmen_formation_advance`                                                                                                    | FOOTSTEPS, `FEETHmn-…Running, Rocky Road` and `…On Grass`, summed against themselves at offsets sharing no common factor; MUSICAL, `MUSCPerc-…Drum, Snare, Military Marching Band`                                          |
-| the eight arrow and volley cues                                                                                                                         | SWOOSHES, `SWSH-…Swishes, Big, Low`, `…Medium Low`, `…Stick, Small, Swishes, X4`, `…Cloth, Swoosh`, `WHSH-…Fly By, Short`                                                                                                   |
-| `roman_shield_wall_impact`, `gladius_shield_impacts_close`, `arrows_impact_shields_dirt`                                                                | FIGHT, `FGHTImpt-…Boxing Glove Hits`, `…Smacks, Rapid`, `FGHTBf-…Bodyfall, On Grass`; METAL, `METLImpt-…Metal, Clang, Thin 01` and `…Clang, Dull, Quiet`                                                                    |
-| `roman_cavalry_charge`, `numidian_cavalry_chase`, `horse_gallop_close_pass`                                                                             | Wikimedia Commons, [`File:Six Horses Galloping By.ogg`](https://commons.wikimedia.org/wiki/File:Six_Horses_Galloping_By.ogg) — three windows of one real pass: the approach, the moment level, and the far side (see below) |
-| `elephant_charge_carthage`, `elephant_panic`                                                                                                            | ANIMALS, `ANMLWild-CU_Elephant Trumpet`                                                                                                                                                                                     |
-| `wolf_bite_snap`                                                                                                                                        | FIGHT, `FGHTImpt-…Smacks, Rapid` for the wet impact, under ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes` for the animal on top of it                                                              |
-| `wolf_snarl_bark`                                                                                                                                       | ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes`, one isolated bark — the same species reasoning the other wildlife cues use                                                                         |
-| `low_resources_click`                                                                                                                                   | METAL, `METLImpt-…Metal, Clang, Dull, Quiet`                                                                                                                                                                                |
+| Cues                                                                                                                                                    | Built from                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| the five `alerts/`, `roman_war_horns_orders`                                                                                                            | HORNS, `HORNTrad-…CU_Viking War` — the one period-plausible horn in the collection; ranked copies make one horn into a relayed order                                                                                                           |
+| `battlefield_crowd_chaos`, `_distant_mass_01`/`_02`, `aftermath_battlefield`, `army_retreat_panic`, `soldiers_victory_cheer`, `carthage_prepare_battle` | CROWDS, `CRWDApls-…Crowd Applause, Cheering, Yelling, Whooping`, high-passed off the applause and lowpassed for distance                                                                                                                       |
+| `army_march_dirt_mass`, `spearmen_formation_advance`                                                                                                    | FOOTSTEPS, `FEETHmn-…Running, Rocky Road` and `…On Grass`, summed against themselves at offsets sharing no common factor; MUSICAL, `MUSCPerc-…Drum, Snare, Military Marching Band`                                                             |
+| the eight arrow and volley cues                                                                                                                         | SWOOSHES, `SWSH-…Swishes, Big, Low`, `…Medium Low`, `…Stick, Small, Swishes, X4`, `…Cloth, Swoosh`, `WHSH-…Fly By, Short`                                                                                                                      |
+| `roman_shield_wall_impact`, `gladius_shield_impacts_close`, `arrows_impact_shields_dirt`                                                                | FIGHT, `FGHTImpt-…Boxing Glove Hits`, `…Smacks, Rapid`, `FGHTBf-…Bodyfall, On Grass`; METAL, `METLImpt-…Metal, Clang, Thin 01` and `…Clang, Dull, Quiet`                                                                                       |
+| `roman_cavalry_charge`, `numidian_cavalry_chase`, `horse_gallop_close_pass`                                                                             | Wikimedia Commons, [`File:Six Horses Galloping By.ogg`](https://commons.wikimedia.org/wiki/File:Six_Horses_Galloping_By.ogg) — three windows of one real pass: the approach, the moment level, and the far side (see below)                    |
+| `elephant_charge_carthage`, `elephant_panic`                                                                                                            | ANIMALS, `ANMLWild-CU_Elephant Trumpet`                                                                                                                                                                                                        |
+| `wolf_bite_snap`                                                                                                                                        | FIGHT, `FGHTImpt-…Smacks, Rapid` for the wet impact, under ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes` for the animal on top of it                                                                                 |
+| `wolf_snarl_bark`                                                                                                                                       | ANIMALS, `ANMLDog-…Aggresive Dog Barks and Snarls, Distant Wind Chimes`, one isolated bark — the same species reasoning the other wildlife cues use                                                                                            |
+| `low_resources_click`                                                                                                                                   | METAL, `METLImpt-…Metal, Clang, Dull, Quiet`                                                                                                                                                                                                   |
+| `charge_roar`, `vanguard_rush`                                                                                                                          | CROWDS, the same applause recording high-passed off its claps, over FOOTSTEPS, `FEETHmn-…Running, Rocky Road` ranked at incommensurate offsets so a shout has a column behind it                                                               |
+| `siege_impact`, `siege_launch`                                                                                                                          | METAL, `METLImpt-…Bucket, Drop` for the mass; WOOD, `WOODBrk-…Branch, Snaps, Crackles` and `…Stick, Small, Breaks`; ROCKS, `ROCKCrsh-…Small Stones, Kicked`; WOOD, `WOODFric-…Ship, Creaking` and SWOOSHES, `SWSH-…Rope, Twirling` for the arm |
+| `shield_bash`, `shield_block`, `guard_break`, `guard_raise`, `perfect_guard`                                                                            | METAL, `METLImpt-…Metal, Clang 01` and `…Clang, Thin 01`; CLOTH, `CLOTHImpt-…Glove Slap` and `…Swish, Impact, Fight`; WOOD, `WOODBrk-…Stick, Small, Breaks` for the guard failing; FIGHT, `FGHTImpt-…Boxing Glove Hits`                        |
+| the five `bow_` cues                                                                                                                                    | WOOD, `WOODFric-…Floorboard, Creak` and `…Ship, Creaking` for a limb under load; SWOOSHES, `SWSH-…Stick, Small, Swishes` and `WHSH-…Fly By, Short`; METAL, `METLImpt-…Bolt, Drop` for the nock                                                 |
+| `dodge_roll`, `jump_effort`, `land_thud`                                                                                                                | CLOTH, `CLOTHImpt-…Swish, Impact, Fight`; FIGHT, `FGHTBf-…Bodyfall, On Grass`; FOOTSTEPS, `FEETHmn-…Running, Rocky Road`                                                                                                                       |
+| `second_wind`, `heal_bind_wound`, `lock_on_tick`, `ability_refused`                                                                                     | CLOTH, `CLOTHRip-…Baseball Mitt, Velcro, Slow` for linen being bound; METAL, `METLImpt-…Small, Tin, Drop` and `…Metal, Clang, Dull, Quiet`                                                                                                     |
 
 Every source above except the horses is from **The Designer's Choice UCS
 Collection**, original recordings by Nicholas A. Judy, released **CC0 1.0** and

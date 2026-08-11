@@ -362,6 +362,41 @@ void apply_lunge(RigPose& pose, const WolfDrive& drive) {
   pose.tail_tip = rotate_about_x(pose.tail_tip, pose.tail_base, tail_swing);
 }
 
+struct HeadAttachment {
+  float neck_length{0.0F};
+  float muzzle{0.0F};
+  float jaw_hinge{0.0F};
+  float jaw{0.0F};
+  float ear_base_l{0.0F};
+  float ear_l{0.0F};
+  float ear_base_r{0.0F};
+  float ear_r{0.0F};
+};
+
+auto capture_head_attachment(const RigPose& pose) -> HeadAttachment {
+  HeadAttachment held;
+  held.neck_length = (pose.poll - pose.withers).length();
+  held.muzzle = (pose.muzzle - pose.poll).length();
+  held.jaw_hinge = (pose.jaw_hinge - pose.poll).length();
+  held.jaw = (pose.jaw_tip - pose.jaw_hinge).length();
+  held.ear_base_l = (pose.ear_base_l - pose.poll).length();
+  held.ear_l = (pose.ear_tip_l - pose.ear_base_l).length();
+  held.ear_base_r = (pose.ear_base_r - pose.poll).length();
+  held.ear_r = (pose.ear_tip_r - pose.ear_base_r).length();
+  return held;
+}
+
+void reattach_head(RigPose& pose, const HeadAttachment& held) {
+  hold_bone(pose.withers, pose.poll, held.neck_length);
+  hold_bone(pose.poll, pose.muzzle, held.muzzle);
+  hold_bone(pose.poll, pose.jaw_hinge, held.jaw_hinge);
+  hold_bone(pose.jaw_hinge, pose.jaw_tip, held.jaw);
+  hold_bone(pose.poll, pose.ear_base_l, held.ear_base_l);
+  hold_bone(pose.ear_base_l, pose.ear_tip_l, held.ear_l);
+  hold_bone(pose.poll, pose.ear_base_r, held.ear_base_r);
+  hold_bone(pose.ear_base_r, pose.ear_tip_r, held.ear_r);
+}
+
 void apply_collapse(RigPose& pose, const WolfDrive& drive) {
   float const phase = std::clamp(drive.collapse, 0.0F, 1.0F);
   if (phase <= 0.0F) {
@@ -446,6 +481,7 @@ auto make_pose(const WolfDrive& drive) -> RigPose {
 
   fill_legs(pose, drive, bob - pitch, bob + pitch);
   fill_head(pose, drive);
+  HeadAttachment const head_attachment = capture_head_attachment(pose);
 
   float const nod =
       std::sin(cadence - 1.25F) * (k_bob_base + (k_bob_gain * gallop)) * 0.58F;
@@ -466,13 +502,16 @@ auto make_pose(const WolfDrive& drive) -> RigPose {
 
   float const tail_bounce = std::sin(cadence - 2.1F) * 0.030F * gallop;
   pose.tail_base = QVector3D(0.0F, 0.556F + bob + pitch, -0.412F);
-  pose.tail_mid =
-      QVector3D(sway * 0.5F, 0.512F + (lift * 0.140F) + bob + tail_bounce, -0.606F);
-  pose.tail_tip =
-      QVector3D(sway, 0.392F + (lift * 0.320F) + bob + (tail_bounce * 1.8F), -0.782F);
+  pose.tail_mid = QVector3D(0.0F, 0.512F + bob + pitch, -0.606F);
+  pose.tail_tip = QVector3D(0.0F, 0.392F + bob + pitch, -0.782F);
+  SkeletonLengths const skeleton = capture_skeleton_lengths(pose);
+  pose.tail_mid += QVector3D(sway * 0.5F, (lift * 0.140F) + tail_bounce, 0.0F);
+  pose.tail_tip += QVector3D(sway, (lift * 0.320F) + (tail_bounce * 1.8F), 0.0F);
 
   apply_lunge(pose, drive);
   apply_collapse(pose, drive);
+  reattach_head(pose, head_attachment);
+  enforce_skeleton_lengths(pose, skeleton);
   return pose;
 }
 

@@ -151,6 +151,35 @@ captures `failure_frame.png` at the first detected failure. The scenario does no
 use Arena's force-full override, so it also proves that Ultra itself disables
 formation-count reduction, minimal meshes, billboards, and temporal LOD shedding.
 
+Any scenario can opt into the same per-soldier check with a
+`NoRenderVisibilityChurn` expectation, but it reads
+`Render::Profiling::CombatAnimationDiagnostics`, so the scenario **must** also
+set `collect_animation_diagnostics = true`. Without it no samples are recorded,
+the expectation finds nothing, and the scenario reports PASS while proving
+nothing. Once it is live, remember that a unit leaving a fixed batch camera is a
+legitimate `Frustum` cull: either give the expectation a
+`start_seconds`/`end_seconds` window, or widen the scenario's batch camera so it
+holds the group. The batch camera is a verification instrument and is
+independent of the promo shot cameras, which each carry their own.
+
+## Units may not walk through buildings
+
+`UnitsClearOfBuildings` fails a scenario when a living, non-building unit in the
+named group stands with its body circle inside a registered building footprint.
+It samples every unit on every rendered frame and reports the first offender
+with its position and the time it happened, which is enough to find the building
+without re-running.
+
+Standing in a gateway is legal, so the check skips any position that falls
+inside a registered `NavigationPassage` -- otherwise every column that marches
+through a town gate trips it. This distinction is the whole contract: walking
+the road through a wall is correct, walking through the house beside it is not.
+
+The check depends on the building collision registry being populated, which the
+arena viewport does when it spawns scenario buildings. It found real overlaps in
+the trailer chapters on its first run, so treat a PASS as meaningful only after
+you have seen it go red at least once.
+
 ## Cinematic promo capture
 
 Arena can record finished video instead of stills. A **promo spec** is a JSON
@@ -228,6 +257,89 @@ record for duel footage and the scene to check after touching commander
 signatures or the melee lock. See
 [docs/PROMO_CAPTURE.md](../../docs/PROMO_CAPTURE.md) for how its shots are
 aimed.
+
+## Trailer chapters
+
+`trailer_*` are the master trailer's chapters, and unlike the single-scene
+reels they all play on one authored stage. `dress_valley` in
+`arena_trailer_scenarios.cpp` lays the same river valley for every one of them
+-- village on the north bank, timber fort on the eastern rise, one bridge, open
+ground to the south -- so the finished cut reads as one place across one day
+rather than as a sampler of unrelated fixtures.
+
+```bash
+build/bin/arena_app --scenario trailer_dawn           # economy, ambient life, wolves
+build/bin/arena_app --scenario trailer_muster         # gate, march, bridge, deploy
+build/bin/arena_app --scenario trailer_clash          # the pitched battle
+build/bin/arena_app --scenario trailer_pov            # the same fight in RPG mode
+build/bin/arena_app --scenario trailer_barrow_night   # the undead ambush
+build/bin/arena_app --scenario trailer_flame_card     # the act-card stage
+```
+
+`trailer_flame_card` is deliberately empty: a shot marked `"flame_card": true`
+in the promo spec replaces the frame with `ArenaViewport::render_flame_card`, a
+procedural fire wall drawn as one fullscreen triangle, so the scenario exists
+only to give the runner a cheap pass to hang the card shots on.
+
+Settlements come in four scales -- camp, hamlet, village, town -- and a walled
+one adds a rampart with corner and mid-wall towers, a gate at each end of its
+main street, watch fires inside the gates, a statue on the forum, and, with
+`acropolis`, a temple raised on its own mound behind the town with statues
+flanking the approach. The rampart is derived from how far the plots actually
+reach, so it always encloses the settlement with the houses standing _against_
+the wall rather than inside it -- which is its own contract
+(`NoBuildingIsBuiltIntoAWall`), because the first walled version grew the
+neighbouring hamlet's houses straight out of the fort's palisade.
+
+Settlements are **laid out, not hand-placed**. `add_settlement` derives every
+building position from the settlement's own street grid, so a house cannot land
+on a road, in the river, or on top of its neighbour. That is not a tidiness
+concern: the first valley had the bridge approach running straight through a
+house, and a column ordered across the river then had no legal ground to walk
+on, which on screen looked exactly like troops walking through walls.
+`tests/tools/settlement_layout_test.cpp` holds those four geometric contracts
+over the whole trailer catalog.
+
+The arena also has to **register spawned buildings with
+`BuildingCollisionRegistry`** — it did not before, so no arena scenario has ever
+had buildings in its navigation grid.
+
+Two catalog contracts catch a hand-built fort, and both caught this one:
+
+- **A group's `origin` is the row's centre, not its first member.** A run is
+  laid out as `origin + spacing * (index - (count - 1) / 2)`, so passing the
+  west end of a wall as the origin builds it centred on that point and half of
+  it ends up outside the fort. `add_rampart` in the catalog takes `first`/`last`
+  and derives the centre; copy that shape rather than inventing another.
+- **Wall segments and gates must land on the 2 m navigation lattice.**
+  `WallGroupsSitOnTheWallNetworkLattice` fails any member whose world position
+  is not an even integer, which means the fort's half-extent, its centre and its
+  gate clearance all have to be even, and a wall run either side of a gate has
+  to be long enough that its own centre stays on the lattice too.
+
+A settlement that spawns `settlement_resident` civilians must also assert
+`MovementAnimationObserved` on one of those groups, or
+`InhabitedSettlementsProveTheirDailyLife` fails it: a town that quietly stops
+living should be a test failure rather than something someone notices in a
+screenshot.
+
+**That assertion needs `collect_animation_diagnostics`.** Every
+`*AnimationObserved` expectation is decided from per-soldier visual states that
+`CombatAnimationDiagnostics` records, and a scenario that sets
+`collect_animation_diagnostics = false` -- which capture scenes routinely do,
+for speed -- switches that recorder off. The expectation is then unpassable no
+matter what the residents do on screen, and the failure reads as "never produced
+a visible movement animation" rather than as a disabled recorder. The trailer's
+dawn and muster chapters turn diagnostics back on for exactly this reason; it
+costs CPU but changes no pixels, so footage captured either way is identical.
+
+Otherwise these chapters are staged for filming rather than for acceptance, and
+their expectations are correspondingly loose -- `GroupExists` and the gate and zone
+contracts, not the full visual-stability battery. What they are strict about is
+lasting long enough to be filmed: the clash and night chapters set explicit
+`health_override` values so the melee is still running when the camera arrives.
+See [docs/PROMO_CAPTURE.md](../../docs/PROMO_CAPTURE.md) for the shot list, the
+score, and the staging rules these scenes were built from.
 
 ## RPG commander scenarios
 

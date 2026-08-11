@@ -5,6 +5,7 @@ add_library(
     arena_scenario_catalog.cpp
     arena_formation_scenarios.cpp
     arena_showcase_scenarios.cpp
+    arena_trailer_scenarios.cpp
     arena_wildlife_scenarios.cpp
     terrain_alignment.cpp
 )
@@ -37,6 +38,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         prop_panel.cpp
         arena_formation_scenarios.cpp
         arena_showcase_scenarios.cpp
+    arena_trailer_scenarios.cpp
     arena_wildlife_scenarios.cpp
         promo_spec.cpp
         promo_runner.cpp
@@ -58,6 +60,7 @@ else()
         prop_panel.cpp
         arena_formation_scenarios.cpp
         arena_showcase_scenarios.cpp
+        arena_trailer_scenarios.cpp
         arena_wildlife_scenarios.cpp
         promo_spec.cpp
         promo_runner.cpp
