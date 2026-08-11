@@ -162,6 +162,26 @@ void queue_rpg_contact_presentation(
   if (presentation == nullptr) {
     return;
   }
+
+  QVector3D point = contact_point;
+  if (auto const* target_transform =
+          target.get_component<Engine::Core::TransformComponent>()) {
+    constexpr float k_max_contact_offset = 4.0F;
+    constexpr float k_chest_height = 1.05F;
+    constexpr float k_min_impact_height = 0.35F;
+    constexpr float k_max_impact_height = 1.55F;
+    QVector3D const body(target_transform->position.x,
+                         target_transform->position.y,
+                         target_transform->position.z);
+
+    QVector3D const planar_offset(point.x() - body.x(), 0.0F, point.z() - body.z());
+    if (planar_offset.lengthSquared() > k_max_contact_offset * k_max_contact_offset) {
+      point = body + QVector3D(0.0F, k_chest_height, 0.0F);
+    }
+
+    point.setY(std::clamp(
+        point.y(), body.y() + k_min_impact_height, body.y() + k_max_impact_height));
+  }
   if (presentation->entries.size() >=
       Engine::Core::RpgContactPresentationComponent::k_max_entries) {
     presentation->entries.erase(presentation->entries.begin());
@@ -170,9 +190,9 @@ void queue_rpg_contact_presentation(
                               ? 1.35F
                               : (*outcome == RpgContactOutcome::Damage ? 1.0F : 0.85F);
   presentation->entries.push_back({
-      .x = contact_point.x(),
-      .y = contact_point.y(),
-      .z = contact_point.z(),
+      .x = point.x(),
+      .y = point.y(),
+      .z = point.z(),
       .age = 0.0F,
       .lifetime = *outcome == RpgContactOutcome::Dodge ? 0.16F : 0.24F,
       .intensity = intensity,
@@ -184,7 +204,8 @@ void queue_rpg_contact_presentation(
     const Game::Systems::CombatActions::DamageProfile& damage_profile)
     -> Game::Systems::RpgCombat::CommanderDamageProfile {
   return {.posture_damage = damage_profile.posture_damage,
-          .guard_pressure = damage_profile.guard_pressure};
+          .guard_pressure = damage_profile.guard_pressure,
+          .unblockable = damage_profile.unblockable};
 }
 
 [[nodiscard]] auto

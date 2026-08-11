@@ -26,7 +26,6 @@
 #include "game/systems/pathfinding.h"
 #include "game/systems/rpg_combat_system/rpg_bow_aim.h"
 #include "game/systems/rpg_combat_system/rpg_bow_draw.h"
-#include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/systems/stamina_system.h"
@@ -358,17 +357,11 @@ void CommanderControlController::reset() {
   m_last_mouse_valid = false;
   m_mouse_warp_supported = false;
   m_mouse_recentering = false;
-  m_bob_phase = 0.0F;
-  m_bob_amplitude = 0.0F;
-  m_breath_phase = 0.0F;
-  m_strafe_lean = 0.0F;
-  m_fov_current = 75.0F;
-  m_cam_smooth_valid = false;
-  m_cam_ground_valid = false;
-  m_aim_camera_blend = 0.0F;
-  m_hit_impact_kick = 0.0F;
+  m_camera_rig.reset();
   m_observed_action_hit_count = 0;
   m_move_speed = 0.0F;
+  m_planar_speed_smooth = 0.0F;
+  m_last_move_direction = QVector3D(0.0F, 0.0F, 1.0F);
   m_move_right_axis = 0;
   m_move_forward_axis = 0;
   m_move_running = false;
@@ -496,13 +489,13 @@ auto CommanderControlController::look_sensitivity_scale() const -> float {
 
   constexpr float k_half_degrees_to_radians = 0.008726646259971648F;
   const float hip = std::tan(k_fov_hip * k_half_degrees_to_radians);
-  const float current =
-      std::tan(std::clamp(m_fov_current, 20.0F, 110.0F) * k_half_degrees_to_radians);
+  const float current = std::tan(std::clamp(m_camera_rig.fov(), 20.0F, 110.0F) *
+                                 k_half_degrees_to_radians);
   const float zoom = std::clamp(current / std::max(hip, 1.0e-4F), 0.35F, 1.0F);
 
   constexpr float k_aim_steadiness = 0.20F;
   return zoom *
-         (1.0F - (k_aim_steadiness * std::clamp(m_aim_camera_blend, 0.0F, 1.0F)));
+         (1.0F - (k_aim_steadiness * std::clamp(m_camera_rig.aim_blend(), 0.0F, 1.0F)));
 }
 
 void CommanderControlController::mouse_move(qreal dx, qreal dy) {
@@ -1081,7 +1074,6 @@ auto CommanderControlController::find_primary_target(
     }
   }
 
-  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander_id);
   if (auto* engagement =
           commander->get_component<Engine::Core::RpgEngagementComponent>()) {
     std::array<Engine::Core::EntityID, 3> const ring_targets = {
@@ -1764,13 +1756,16 @@ auto CommanderControlController::update(Engine::Core::World& world,
     }
   } else {
 
+    float target_speed = 0.0F;
+    bool running = false;
     if (move.lengthSquared() > 0.0001F) {
       move.normalize();
+      m_last_move_direction = move;
       float speed = std::max(0.1F, unit->speed) * k_fpv_walk_speed_scale;
 
       auto const* stamina = Game::Systems::ensure_run_stamina(*commander);
-      bool const running = m_input.run && !drawing_bow && stamina != nullptr &&
-                           (stamina->is_running || stamina->can_start_running());
+      running = m_input.run && !drawing_bow && stamina != nullptr &&
+                (stamina->is_running || stamina->can_start_running());
       if (running) {
         speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
       }
@@ -1780,8 +1775,26 @@ auto CommanderControlController::update(Engine::Core::World& world,
         speed *= k_drawn_bow_move_scale;
       }
       speed *= directional_speed_scale(forward_axis, right_axis);
-      const float nx = transform->position.x + move.x() * speed * dt;
-      const float nz = transform->position.z + move.z() * speed * dt;
+      target_speed = speed;
+    }
+
+    constexpr float k_move_accel_rate = 12.0F;
+    constexpr float k_move_decel_rate = 16.0F;
+    float const approach_rate =
+        target_speed > m_planar_speed_smooth ? k_move_accel_rate : k_move_decel_rate;
+    m_planar_speed_smooth += (target_speed - m_planar_speed_smooth) *
+                             (1.0F - std::exp(-approach_rate * std::max(dt, 0.0F)));
+    if (target_speed <= 0.0F && m_planar_speed_smooth < 0.05F) {
+      m_planar_speed_smooth = 0.0F;
+    }
+
+    if (m_planar_speed_smooth > 0.01F) {
+      QVector3D const direction =
+          move.lengthSquared() > 0.0001F ? move : m_last_move_direction;
+      const float nx =
+          transform->position.x + direction.x() * m_planar_speed_smooth * dt;
+      const float nz =
+          transform->position.z + direction.z() * m_planar_speed_smooth * dt;
       auto const step = jump_active
                             ? airborne_step(nx, nz)
                             : resolve_ground_step(
@@ -1797,8 +1810,11 @@ auto CommanderControlController::update(Engine::Core::World& world,
         }
         actual_speed_for_bob = std::hypot(step_vx, step_vz);
         run_for_bob = running;
-      } else if (movement != nullptr) {
-        movement->set_manual_velocity(0.0F, 0.0F);
+      } else {
+        m_planar_speed_smooth = 0.0F;
+        if (movement != nullptr) {
+          movement->set_manual_velocity(0.0F, 0.0F);
+        }
       }
     } else if (movement != nullptr) {
       movement->set_manual_velocity(0.0F, 0.0F);
@@ -1836,11 +1852,11 @@ auto CommanderControlController::update(Engine::Core::World& world,
        .move_speed = m_move_speed,
        .running = m_move_running,
        .primary_held = m_input.primary_action,
-       .camera_origin = m_cam_eye_smooth,
-       .camera_origin_valid = m_cam_smooth_valid,
-       .camera_forward = m_cam_forward,
-       .camera_forward_valid = m_cam_forward_valid,
-       .camera_fov_degrees = m_fov_current});
+       .camera_origin = m_camera_rig.eye(),
+       .camera_origin_valid = m_camera_rig.eye_valid(),
+       .camera_forward = m_camera_rig.forward(),
+       .camera_forward_valid = m_camera_rig.forward_valid(),
+       .camera_fov_degrees = m_camera_rig.fov()});
   if (cmd_comp != nullptr) {
     cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->get_vx() : 0.0F;
     cmd_comp->fpv_motion_vz = (movement != nullptr) ? movement->get_vz() : 0.0F;
@@ -1940,7 +1956,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
       m_observed_action_hit_count = 0;
     } else if (struck->hit_target_count > m_observed_action_hit_count) {
       m_observed_action_hit_count = struck->hit_target_count;
-      m_hit_impact_kick = 1.0F;
+      m_camera_rig.add_impact_kick(1.0F);
     } else if (struck->hit_target_count < m_observed_action_hit_count) {
       m_observed_action_hit_count = struck->hit_target_count;
     }
@@ -1997,7 +2013,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
     if (rpg_targets->hit_confirm_sequence != m_observed_hit_confirm_sequence) {
       m_observed_hit_confirm_sequence = rpg_targets->hit_confirm_sequence;
-      m_hit_impact_kick = rpg_targets->recent_hit_killed ? 1.0F : 0.7F;
+      m_camera_rig.add_impact_kick(rpg_targets->recent_hit_killed ? 1.0F : 0.7F);
     }
     rpg_targets->recent_hit_timer = std::max(0.0F, rpg_targets->recent_hit_timer - dt);
     if (rpg_targets->recent_hit_timer <= 0.0F) {
@@ -2011,7 +2027,7 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
 void CommanderControlController::play_footstep_if_stride_landed(
     const Engine::Core::Entity& commander, float previous_bob_phase) {
-  if (m_bob_amplitude < k_footstep_min_bob_amplitude) {
+  if (m_camera_rig.bob_amplitude() < k_footstep_min_bob_amplitude) {
     return;
   }
 
@@ -2019,7 +2035,7 @@ void CommanderControlController::play_footstep_if_stride_landed(
     return static_cast<long long>(std::floor((phase - k_footstep_bob_offset) /
                                              (2.0F * std::numbers::pi_v<float>)));
   };
-  if (stride_index(m_bob_phase) == stride_index(previous_bob_phase)) {
+  if (stride_index(m_camera_rig.bob_phase()) == stride_index(previous_bob_phase)) {
     return;
   }
 
@@ -2044,48 +2060,10 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
     return;
   }
 
-  constexpr float k_pi = std::numbers::pi_v<float>;
-  constexpr float k_deg2rad = 0.017453292519943295F;
-
-  constexpr float k_focus_height = 1.45F;
-
-  constexpr float k_camera_back_offset = 3.10F;
-  constexpr float k_camera_up_offset = 1.15F;
-  constexpr float k_camera_side_offset = 0.90F;
-  constexpr float k_target_distance = 6.0F;
-  constexpr float k_close_camera_back_offset = 2.25F;
-  constexpr float k_close_camera_up_offset = 1.05F;
-  constexpr float k_close_camera_side_offset = 0.72F;
-  constexpr float k_close_target_distance = 5.2F;
-
-  constexpr float k_bob_freq = 3.5F;
-  constexpr float k_bob_vert_amp = 0.020F;
-  constexpr float k_bob_run_mult = 1.35F;
-  constexpr float k_bob_lat_amp = 0.013F;
-  constexpr float k_bob_decay = 5.5F;
-
-  constexpr float k_ground_follow_rate = 8.0F;
-  constexpr float k_ground_follow_max_lag = 0.35F;
-
-  constexpr float k_breath_freq = 0.2F;
-  constexpr float k_breath_vert_amp = 0.008F;
-
-  constexpr float k_cam_spring = 14.0F;
-
-  constexpr float k_lean_max_deg = 2.2F;
-  constexpr float k_lean_follow = 6.5F;
-
-  constexpr float k_fov_walk = k_fov_hip;
-  constexpr float k_fov_run_boost = 7.0F;
-  constexpr float k_fov_lerp = 5.0F;
-
   set_view_pitch(m_view_pitch);
-
-  const float motion_scale = Game::Accessibility::MotionSettings::camera_motion_scale();
 
   auto const* aim_state =
       commander.get_component<Engine::Core::RpgCommanderAimComponent>();
-
   auto const* bow_action =
       commander.get_component<Engine::Core::RpgCommanderActionComponent>();
   bool const bow_stance =
@@ -2094,44 +2072,6 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
       aim_state != nullptr &&
       (aim_state->is_drawing() ||
        (bow_stance && bow_action != nullptr && bow_action->action_running));
-  constexpr float k_aim_blend_rate = 9.0F;
-  m_aim_camera_blend += ((aiming_bow ? 1.0F : 0.0F) - m_aim_camera_blend) *
-                        (1.0F - std::exp(-k_aim_blend_rate * std::max(dt, 0.0F)));
-  float const aim_blend = std::clamp(m_aim_camera_blend, 0.0F, 1.0F);
-  auto const aim_mix = [aim_blend](float base, float aimed) {
-    return base + ((aimed - base) * aim_blend);
-  };
-
-  constexpr float k_aim_sway_damping = 0.72F;
-  const float sway_scale = 1.0F - (k_aim_sway_damping * aim_blend);
-
-  const float bob_amp_target = (m_move_speed > 0.05F) ? motion_scale : 0.0F;
-  m_bob_amplitude += (bob_amp_target - m_bob_amplitude) *
-                     (1.0F - std::exp(-k_bob_decay * std::max(dt, 0.0F)));
-  const float previous_bob_phase = m_bob_phase;
-  if (m_move_speed > 0.05F) {
-    m_bob_phase += m_move_speed * k_bob_freq * dt;
-  } else if (m_bob_amplitude < 0.01F) {
-
-    m_bob_phase = 0.0F;
-  }
-  play_footstep_if_stride_landed(commander, previous_bob_phase);
-  const float bob_run_factor = m_move_running ? k_bob_run_mult : 1.0F;
-  const float bob_v = std::sin(m_bob_phase) * k_bob_vert_amp * bob_run_factor *
-                      m_bob_amplitude * sway_scale;
-
-  const float bob_l = std::sin(m_bob_phase * 0.5F) * k_bob_lat_amp * bob_run_factor *
-                      m_bob_amplitude * sway_scale;
-
-  m_breath_phase += k_breath_freq * 2.0F * k_pi * std::max(dt, 0.0F);
-  const float breath_idle = motion_scale - m_bob_amplitude;
-  const float breath_v =
-      std::sin(m_breath_phase) * k_breath_vert_amp * breath_idle * sway_scale;
-
-  const float lean_target = -static_cast<float>(m_move_right_axis) * k_lean_max_deg *
-                            motion_scale * sway_scale;
-  m_strafe_lean += (lean_target - m_strafe_lean) *
-                   (1.0F - std::exp(-k_lean_follow * std::max(dt, 0.0F)));
 
   bool close_camera_mode = false;
   float jump_height_offset = 0.0F;
@@ -2140,74 +2080,23 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
     close_camera_mode = cmd->close_camera_mode;
   }
 
-  constexpr float k_hit_kick_decay = 9.0F;
-  constexpr float k_hit_kick_dolly = 0.14F;
-  constexpr float k_hit_kick_fov = 2.6F;
-  m_hit_impact_kick *= std::exp(-k_hit_kick_decay * std::max(dt, 0.0F));
-  if (m_hit_impact_kick < 0.001F) {
-    m_hit_impact_kick = 0.0F;
-  }
-  const float hit_kick = m_hit_impact_kick * motion_scale;
-
-  const float fov_target =
-      aim_mix(close_camera_mode ? 64.0F : k_fov_walk, k_fov_aim) +
-      ((m_move_running && m_move_speed > 0.05F) ? k_fov_run_boost : 0.0F) +
-      m_dodge_fov_kick + (k_hit_kick_fov * hit_kick);
-  m_fov_current += (fov_target - m_fov_current) *
-                   (1.0F - std::exp(-k_fov_lerp * std::max(dt, 0.0F)));
-  constexpr float k_commander_near_plane = 0.05F;
-  camera.set_perspective(
-      m_fov_current, camera.get_aspect(), k_commander_near_plane, camera.get_far());
-
-  const float yaw_rad = m_view_yaw * k_deg2rad;
-  const float pitch_rad = m_view_pitch * k_deg2rad;
-  const float pitch_cos = std::cos(pitch_rad);
-  const QVector3D forward_vec(std::sin(yaw_rad) * pitch_cos,
-                              std::sin(pitch_rad),
-                              std::cos(yaw_rad) * pitch_cos);
-  const QVector3D flat_forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
-  const QVector3D flat_right(-flat_forward.z(), 0.0F, flat_forward.x());
-
-  const float ground_y = transform->position.y;
-  if (!m_cam_ground_valid) {
-    m_cam_ground_y = ground_y;
-    m_cam_ground_valid = true;
-  } else {
-    m_cam_ground_y += (ground_y - m_cam_ground_y) *
-                      (1.0F - std::exp(-k_ground_follow_rate * std::max(dt, 0.0F)));
-    m_cam_ground_y = std::clamp(m_cam_ground_y,
-                                ground_y - k_ground_follow_max_lag,
-                                ground_y + k_ground_follow_max_lag);
+  auto fight_context = Engine::Core::FightContext::None;
+  float threat_side_bias = 0.0F;
+  Engine::Core::EntityID front_attacker_id = 0;
+  if (auto const* engagement =
+          commander.get_component<Engine::Core::RpgEngagementComponent>()) {
+    fight_context = engagement->fight_context;
+    front_attacker_id = engagement->front_attacker_id;
+    if (fight_context == Engine::Core::FightContext::Skirmish) {
+      bool const left = engagement->left_threat_id != 0;
+      bool const right = engagement->right_threat_id != 0;
+      if (left != right) {
+        threat_side_bias = left ? 1.0F : -1.0F;
+      }
+    }
   }
 
-  const QVector3D pivot(transform->position.x,
-                        m_cam_ground_y + jump_height_offset + k_focus_height,
-                        transform->position.z);
-  constexpr float k_aim_camera_back_offset = 2.10F;
-  constexpr float k_aim_camera_up_offset = 0.58F;
-
-  constexpr float k_aim_camera_side_offset = 0.70F;
-  constexpr float k_aim_target_distance = 14.0F;
-  const float back_offset =
-      aim_mix(close_camera_mode ? k_close_camera_back_offset : k_camera_back_offset,
-              k_aim_camera_back_offset);
-  const float up_offset =
-      aim_mix(close_camera_mode ? k_close_camera_up_offset : k_camera_up_offset,
-              k_aim_camera_up_offset);
-  const float target_distance =
-      aim_mix(close_camera_mode ? k_close_target_distance : k_target_distance,
-              k_aim_target_distance);
-  const float side_offset =
-      aim_mix(close_camera_mode ? k_close_camera_side_offset : k_camera_side_offset,
-              k_aim_camera_side_offset);
-  QVector3D eye_desired = pivot - flat_forward * back_offset +
-                          QVector3D(0.0F, up_offset + bob_v + breath_v, 0.0F) +
-                          flat_right * (side_offset + bob_l);
-  eye_desired -= flat_forward * (k_hit_kick_dolly * hit_kick);
-
-  const QVector3D free_look_target = eye_desired + forward_vec * target_distance;
-  QVector3D target_desired = free_look_target;
-
+  std::optional<QVector3D> lock_target_position;
   const Engine::Core::EntityID focus_id = locked_target_id();
   if (focus_id != 0) {
     auto* target = world.get_entity(focus_id);
@@ -2220,82 +2109,43 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
                                    : std::nullopt;
     if (target_sample.has_value() && target_unit != nullptr &&
         target_unit->health > 0) {
-      const QVector3D enemy_focus =
-          target_sample->position + QVector3D(0.0F, 1.1F, 0.0F);
-      QVector3D to_enemy = enemy_focus - pivot;
-      if (to_enemy.lengthSquared() > 0.0001F) {
-        const float enemy_distance = std::sqrt(to_enemy.lengthSquared());
-        to_enemy /= enemy_distance;
+      lock_target_position = target_sample->position;
+    }
+  }
 
-        const float lock_weight = 0.60F * (1.0F - aim_blend);
-        target_desired =
-            free_look_target * (1.0F - lock_weight) +
-            (enemy_focus + to_enemy * std::min(1.2F, enemy_distance * 0.15F)) *
-                lock_weight;
-        eye_desired +=
-            flat_right * ((close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend));
+  std::optional<QVector3D> soft_focus_position;
+  if (!lock_target_position.has_value() && front_attacker_id != 0) {
+    if (auto* front = world.get_entity(front_attacker_id)) {
+      if (auto const sample = Game::Systems::RpgCombat::resolve_soldier_target(
+              *front, Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
+          sample.has_value()) {
+        soft_focus_position = sample->position;
       }
     }
   }
 
-  const float blocked_fraction =
-      Game::Systems::first_building_intersection_fraction(pivot, eye_desired);
-  const bool camera_blocked = blocked_fraction < 1.0F;
-  if (camera_blocked) {
-    const float safe_fraction =
-        std::clamp(blocked_fraction - 0.06F, close_camera_mode ? 0.12F : 0.22F, 1.0F);
-    eye_desired = pivot + (eye_desired - pivot) * safe_fraction;
-  }
+  App::Core::CommanderCameraInputs inputs;
+  inputs.dt = dt;
+  inputs.view_yaw_degrees = m_view_yaw;
+  inputs.view_pitch_degrees = m_view_pitch;
+  inputs.move_speed = m_move_speed;
+  inputs.move_right_axis = m_move_right_axis;
+  inputs.move_running = m_move_running;
+  inputs.aiming_bow = aiming_bow;
+  inputs.close_camera_mode = close_camera_mode;
+  inputs.lock_target_active = lock_target_position.has_value();
+  inputs.jump_height_offset = jump_height_offset;
+  inputs.dodge_fov_kick = m_dodge_fov_kick;
+  inputs.dodge_rolling = m_dodge_state == DodgeState::Rolling;
+  inputs.dodge_tilt_progress = 1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
+  inputs.dodge_direction = m_dodge_direction;
+  inputs.commander_position =
+      QVector3D(transform->position.x, transform->position.y, transform->position.z);
+  inputs.lock_target_position = lock_target_position;
+  inputs.soft_focus_position = soft_focus_position;
+  inputs.fight_context = fight_context;
+  inputs.threat_side_bias = threat_side_bias;
 
-  constexpr float k_camera_terrain_clearance = 0.55F;
-  auto const& terrain = Game::Map::TerrainService::instance();
-  if (terrain.is_initialized()) {
-    const float eye_ground_y = terrain.resolve_surface_world_y(
-        eye_desired.x(), eye_desired.z(), 0.0F, eye_desired.y());
-    eye_desired.setY(
-        std::max(eye_desired.y(), eye_ground_y + k_camera_terrain_clearance));
-  }
-
-  if (!m_cam_smooth_valid) {
-    m_cam_eye_smooth = eye_desired;
-    m_cam_target_smooth = target_desired;
-    m_cam_smooth_valid = true;
-  } else {
-    constexpr float k_aim_cam_spring_boost = 22.0F;
-    const float spring = k_cam_spring + (k_aim_cam_spring_boost * aim_blend);
-    const float alpha = 1.0F - std::exp(-spring * std::max(dt, 0.0F));
-    if (camera_blocked) {
-      m_cam_eye_smooth = eye_desired;
-    } else {
-      m_cam_eye_smooth += (eye_desired - m_cam_eye_smooth) * alpha;
-    }
-    m_cam_target_smooth += (target_desired - m_cam_target_smooth) * alpha;
-  }
-
-  const float lean_rad = m_strafe_lean * k_deg2rad;
-  const QVector3D world_up(0.0F, 1.0F, 0.0F);
-
-  const QVector3D right_world =
-      QVector3D::crossProduct(forward_vec.normalized(), world_up).normalized();
-  const QVector3D up_leaned =
-      (world_up + right_world * std::sin(lean_rad)).normalized();
-
-  float dodge_tilt_rad = 0.0F;
-  if (m_dodge_state == DodgeState::Rolling) {
-    const float dodge_progress = 1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
-    const float tilt_curve = std::sin(dodge_progress * k_pi) * 0.12F;
-    const float dot_right =
-        m_dodge_direction.x() * flat_right.x() + m_dodge_direction.z() * flat_right.z();
-    dodge_tilt_rad = tilt_curve * (dot_right > 0.0F ? 1.0F : -1.0F);
-  }
-
-  const QVector3D up_final = (up_leaned + right_world * dodge_tilt_rad).normalized();
-
-  camera.look_at(m_cam_eye_smooth, m_cam_target_smooth, up_final);
-
-  const QVector3D view_axis = m_cam_target_smooth - m_cam_eye_smooth;
-  if (view_axis.lengthSquared() > 1.0e-6F) {
-    m_cam_forward = view_axis.normalized();
-    m_cam_forward_valid = true;
-  }
+  float const previous_bob_phase = m_camera_rig.update(camera, inputs);
+  play_footstep_if_stride_landed(commander, previous_bob_phase);
 }

@@ -299,6 +299,47 @@ TEST(ArchitectureLayering, GameDoesNotDependOnTheApplicationLayer) {
          }();
 }
 
+TEST(ArchitectureLayering, RpgDamagePoolHasABoundedSetOfEntryPoints) {
+
+  const auto root = find_repo_root();
+  ASSERT_TRUE(fs::exists(root / "game"));
+
+  static const std::set<std::string> allowed{
+      "game/systems/combat_system/damage_processor.cpp",
+      "game/systems/combat_system/combat_hit_resolver.cpp",
+      "game/systems/combat_system/attack_processor.cpp",
+      "game/systems/combat_system/combat_state_processor.cpp",
+  };
+
+  std::vector<std::string> offenders;
+  for (const auto& file : sources_under(root / "game")) {
+    const auto relative = fs::relative(file, root).generic_string();
+    if (relative.rfind("game/systems/rpg_combat_system/", 0) == 0 ||
+        allowed.contains(relative)) {
+      continue;
+    }
+    std::ifstream stream(file);
+    std::string line;
+    while (std::getline(stream, line)) {
+      if (line.find("deal_damage_to_rpg_commander") != std::string::npos) {
+        offenders.push_back(relative);
+        break;
+      }
+    }
+  }
+
+  EXPECT_TRUE(offenders.empty())
+      << "A new caller reached into the RPG damage pool directly. Route plain "
+         "damage through Combat::deal_damage, which resolves the pool itself:\n  "
+      << [&] {
+           std::string joined;
+           for (const auto& entry : offenders) {
+             joined += entry + "\n  ";
+           }
+           return joined;
+         }();
+}
+
 TEST(ArchitectureLayering, RenderDoesNotGrowNewGameSystemDependencies) {
   const auto root = find_repo_root();
   ASSERT_TRUE(fs::exists(root / "render"));

@@ -55,6 +55,14 @@ constexpr std::array<CombatActionEvent, 5> k_rpg_spear_sweep_events{{
     {CombatActionEventType::ExitSafe, 0.94F},
 }};
 
+constexpr std::array<CombatActionEvent, 5> k_rpg_spear_finisher_events{{
+    {CombatActionEventType::WindupStart, 0.08F},
+    {CombatActionEventType::WeaponTraceStart, 0.48F},
+    {CombatActionEventType::WeaponTraceEnd, 0.66F},
+    {CombatActionEventType::RecoveryStart, 0.82F},
+    {CombatActionEventType::ExitSafe, 0.96F},
+}};
+
 constexpr std::array<CombatActionEvent, 5> k_rpg_bow_shot_events{{
     {CombatActionEventType::WindupStart, 0.08F},
     {CombatActionEventType::ActiveStart, 0.30F},
@@ -95,6 +103,15 @@ constexpr std::array<CombatActionEvent, 6> k_rts_melee_events{{
     {CombatActionEventType::ExitSafe, 0.92F},
 }};
 
+constexpr std::array<CombatActionEvent, 6> k_rts_heavy_overhead_events{{
+    {CombatActionEventType::WindupStart, 0.05F},
+    {CombatActionEventType::ActiveStart, 0.56F},
+    {CombatActionEventType::WeaponTraceStart, 0.56F},
+    {CombatActionEventType::WeaponTraceEnd, 0.70F},
+    {CombatActionEventType::RecoveryStart, 0.82F},
+    {CombatActionEventType::ExitSafe, 0.96F},
+}};
+
 constexpr std::array<CombatActionEvent, 5> k_rts_bow_events{{
     {CombatActionEventType::WindupStart, 0.08F},
     {CombatActionEventType::ActiveStart, 0.30F},
@@ -111,7 +128,7 @@ constexpr std::array<CombatActionEvent, 5> k_rts_elephant_stomp_events{{
     {CombatActionEventType::ExitSafe, 0.92F},
 }};
 
-constexpr std::array<CombatActionDefinition, 18> k_definitions{{
+constexpr std::array<CombatActionDefinition, 20> k_definitions{{
     {
         .id = CombatActionId::RpgSwordSlashLeft,
         .weapon_family = WeaponFamily::Sword,
@@ -204,6 +221,19 @@ constexpr std::array<CombatActionDefinition, 18> k_definitions{{
         .max_targets = 2,
     },
     {
+        .id = CombatActionId::RpgSpearFinisher,
+        .weapon_family = WeaponFamily::Spear,
+        .attack_family = Engine::Core::CombatAttackFamily::Spear,
+        .attack_direction = Engine::Core::AttackDirection::Thrust,
+        .damage = {.base_multiplier = 1.5F,
+                   .posture_damage = 18.0F,
+                   .guard_pressure = 28.0F},
+        .hit_shape = {.reach = 3.05F, .radius = 0.22F},
+        .duration_seconds = 1.05F,
+        .events = k_rpg_spear_finisher_events,
+        .max_targets = 2,
+    },
+    {
         .id = CombatActionId::RpgBowShot,
         .weapon_family = WeaponFamily::Bow,
         .attack_family = Engine::Core::CombatAttackFamily::Bow,
@@ -268,6 +298,20 @@ constexpr std::array<CombatActionDefinition, 18> k_definitions{{
         .hit_shape = {.reach = 1.8F, .radius = 0.35F},
         .duration_seconds = 1.0F,
         .events = k_rts_melee_events,
+    },
+    {
+        .id = CombatActionId::RtsHeavyOverhead,
+        .weapon_family = WeaponFamily::Sword,
+        .sword_clip = Animation::SwordAttackAnimation::RpgOverhead,
+        .attack_family = Engine::Core::CombatAttackFamily::Sword,
+        .attack_direction = Engine::Core::AttackDirection::HeavyOverhead,
+        .damage = {.base_multiplier = 1.6F,
+                   .posture_damage = 26.0F,
+                   .guard_pressure = 34.0F,
+                   .unblockable = true},
+        .hit_shape = {.reach = 2.0F, .radius = 0.44F},
+        .duration_seconds = 1.55F,
+        .events = k_rts_heavy_overhead_events,
     },
     {
         .id = CombatActionId::RtsSpearThrust,

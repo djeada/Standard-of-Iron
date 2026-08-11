@@ -25,6 +25,8 @@ struct CommanderDamageResult {
 struct CommanderDamageProfile {
   float posture_damage{0.0F};
   float guard_pressure{0.0F};
+
+  bool unblockable{false};
 };
 
 CommanderDamageResult deal_commander_attack_damage(

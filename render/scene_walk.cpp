@@ -350,6 +350,12 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
     return;
   }
 
+  if (m_view.world_render_mode() == WorldRenderMode::Rpg && entity != nullptr &&
+      entity->get_id() == m_view.rpg_camera_focus()) {
+
+    return;
+  }
+
   float ring_size = 0.5F;
   float const ring_offset = 0.05F;
   float ground_offset = 0.0F;
