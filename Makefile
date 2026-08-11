@@ -604,6 +604,7 @@ quality:
 	@echo "$(BOLD)$(BLUE)Checking quality markers...$(RESET)"
 	@git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
 		| xargs -0 -r $(PYTHON) scripts/check-quality-markers.py
+	@$(PYTHON) scripts/validate_qrc_resources.py
 	@echo "$(GREEN)✓ Quality checks passed$(RESET)"
 
 ## Full local pre-push gate: quality + build + tests + content validation.
