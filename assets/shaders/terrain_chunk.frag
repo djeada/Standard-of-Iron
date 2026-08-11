@@ -438,8 +438,8 @@ void main() {
 
   grass_color *= 0.95 + regional_field * 0.045 + material_patch * 0.045 +
                  grass_clumps * 0.020 + surface_detail * 0.050 + grass_weave * 0.012 +
-                 surface_grain * 0.070 + tussock * 0.040 + granular * 0.026 +
-                 speckle * 0.012;
+                 surface_grain * 0.105 + tussock * 0.062 + granular * 0.042 +
+                 speckle * 0.022;
 
   vec3 cropped_sward = mix(u_grass_dry, u_grass_primary, 0.45);
   vec3 deep_sward = mix(u_grass_secondary, u_grass_primary, 0.30) * 0.88;
@@ -452,7 +452,7 @@ void main() {
   grass_color *= 1.0 + sward_drift * 0.012 + graze_drift * 0.010;
 
   vec3 blade_shade = mix(u_grass_secondary, u_grass_dry, 0.35);
-  grass_color = mix(grass_color, blade_shade, clamp(tussock, 0.0, 1.0) * 0.07);
+  grass_color = mix(grass_color, blade_shade, clamp(tussock, 0.0, 1.0) * 0.11);
   grass_color = mix(grass_color, deep_sward, rill_interfluve * 0.10);
 
   grass_color = mix(grass_color, u_grass_dry, mosaic_dry * 0.44);

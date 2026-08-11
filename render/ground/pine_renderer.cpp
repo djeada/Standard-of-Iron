@@ -115,8 +115,8 @@ void PineRenderer::append_world_prop_pines() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0x4A7F2C9EU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.115F, 0.245F, 0.150F);
-      const QVector3D var_color(0.330F, 0.520F, 0.270F);
+      const QVector3D base_color(0.092F, 0.198F, 0.122F);
+      const QVector3D var_color(0.262F, 0.428F, 0.222F);
       QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
 
       tint *= remap(rand_01(var_state), 0.80F, 1.22F);
@@ -205,9 +205,9 @@ void PineRenderer::generate_procedural_pines(std::vector<TreeInstanceGpu>& out) 
     QVector3D const base_color(0.095F + scene.shelter * 0.03F,
                                0.200F + scene.shelter * 0.08F,
                                0.150F + scene.shelter * 0.04F);
-    QVector3D const var_color(0.345F + scene.cluster_bias * 0.05F,
-                              0.545F + scene.shelter * 0.08F,
-                              0.285F + scene.cluster_bias * 0.04F);
+    QVector3D const var_color(0.278F + scene.cluster_bias * 0.05F,
+                              0.452F + scene.shelter * 0.08F,
+                              0.232F + scene.cluster_bias * 0.04F);
     QVector3D tint_color = base_color * (1.0F - color_var) + var_color * color_var;
 
     float const brown_mix = remap(

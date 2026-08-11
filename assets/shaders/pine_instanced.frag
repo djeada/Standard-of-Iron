@@ -50,10 +50,10 @@ void main() {
   needle_fine = mix(0.5, needle_fine, fine_detail);
   needle_clump = mix(0.5, needle_clump, mid_detail);
 
-  vec3 needle_deep = vec3(0.050, 0.128, 0.080);
-  vec3 needle_mid = vec3(0.150, 0.300, 0.165);
-  vec3 needle_light = vec3(0.330, 0.520, 0.240);
-  vec3 needle_sun = vec3(0.430, 0.630, 0.330);
+  vec3 needle_deep = vec3(0.038, 0.096, 0.058);
+  vec3 needle_mid = vec3(0.112, 0.226, 0.122);
+  vec3 needle_light = vec3(0.252, 0.398, 0.190);
+  vec3 needle_sun = vec3(0.345, 0.505, 0.252);
 
   float grain =
       clamp(needle_clump * 0.80 + (needle_fine - 0.5) * 0.20 + 0.10, 0.0, 1.0);
@@ -61,7 +61,7 @@ void main() {
   needle_color =
       mix(needle_color, needle_light, smoothstep(0.48, 0.92, needle_tuft) * 0.45);
 
-  needle_color = mix(needle_color, v_color, 0.55);
+  needle_color = mix(needle_color, v_color, 0.42);
 
   float bump_height = needle_clump + needle_tuft * 0.55;
   vec3 n = mix(geometric_normal,
@@ -93,12 +93,12 @@ void main() {
   float bough_edge = smoothstep(0.30, 0.95, v_bough) * (1.0 - underside);
   float canopy_height = clamp(v_tex_coord.y, 0.0, 1.12);
 
-  float shelf = mix(1.0, 0.55, clamp(shelf_ao, 0.0, 1.0));
-  float core = mix(1.0, 0.80, canopy_core * 0.85);
-  float tier = mix(0.88, 1.10, smoothstep(0.34, 1.06, canopy_height));
-  float bough_lift = mix(1.0, 1.10, bough_edge);
+  float shelf = mix(1.0, 0.46, clamp(shelf_ao, 0.0, 1.0));
+  float core = mix(1.0, 0.74, canopy_core * 0.85);
+  float tier = mix(0.84, 1.12, smoothstep(0.34, 1.06, canopy_height));
+  float bough_lift = mix(1.0, 1.12, bough_edge);
   float hemi = clamp(geometric_normal.y * 0.5 + 0.5, 0.0, 1.0);
-  float canopy_occlusion = clamp(shelf * core * tier * bough_lift, 0.42, 1.12);
+  float canopy_occlusion = clamp(shelf * core * tier * bough_lift, 0.36, 1.12);
   float ao = mix(1.0, canopy_occlusion, v_foliage_mask) * mix(0.72, 1.0, hemi);
 
   float old_needles = (1.0 - smoothstep(0.42, 0.70, v_tex_coord.y)) *
