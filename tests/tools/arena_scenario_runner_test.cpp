@@ -419,8 +419,15 @@ TEST(ArenaScenarioDefinitionTest, EntireLocalCatalogIsValidAndUniquelyAddressabl
   QSet<QString> ids;
   ASSERT_GE(Arena::Scenarios::definitions().size(), 20U);
   for (auto const& scenario : Arena::Scenarios::definitions()) {
-    EXPECT_TRUE(Arena::validate_scenario(scenario).empty())
-        << scenario.id.toStdString();
+    {
+      auto const problems = Arena::validate_scenario(scenario);
+      std::string detail;
+      for (auto const& problem : problems) {
+        detail += " [" + problem.field.toStdString() + ": " +
+                  problem.message.toStdString() + "]";
+      }
+      EXPECT_TRUE(problems.empty()) << scenario.id.toStdString() << detail;
+    }
     EXPECT_FALSE(ids.contains(scenario.id)) << scenario.id.toStdString();
     ids.insert(scenario.id);
     EXPECT_EQ(Arena::Scenarios::find_definition(scenario.id), &scenario);

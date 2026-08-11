@@ -125,15 +125,9 @@ auto unit_should_emit_rigged_body(Game::Units::SpawnType spawn_type) noexcept ->
   switch (spawn_type) {
   case Game::Units::SpawnType::Catapult:
   case Game::Units::SpawnType::Ballista:
-  case Game::Units::SpawnType::Barracks:
-  case Game::Units::SpawnType::DefenseTower:
-  case Game::Units::SpawnType::Home:
-  case Game::Units::SpawnType::WallSegment:
-  case Game::Units::SpawnType::Sheep:
-  case Game::Units::SpawnType::Wolf:
     return false;
   default:
-    return true;
+    return Game::Units::is_troop_spawn(spawn_type);
   }
 }
 
@@ -860,7 +854,8 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
                         return soldier.cull_reason !=
                                Render::Profiling::SoldierCullReason::None;
                       });
-      if (entry.unit != nullptr && probe.rigged_body_count() == 0U &&
+      if (entry.unit != nullptr && entry.unit->health > 0 &&
+          probe.rigged_body_count() == 0U &&
           unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal &&
           !all_published_soldiers_culled) {
         static std::mutex warning_mutex;

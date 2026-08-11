@@ -1761,7 +1761,7 @@
       "cooldown_ms": 110,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1772,7 +1772,7 @@
       "cooldown_ms": 4000,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1783,7 +1783,7 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1794,7 +1794,7 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1805,7 +1805,7 @@
       "cooldown_ms": 500,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1816,7 +1816,7 @@
       "cooldown_ms": 180,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1827,7 +1827,7 @@
       "cooldown_ms": 90,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1838,7 +1838,7 @@
       "cooldown_ms": 120,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1849,7 +1849,7 @@
       "cooldown_ms": 400,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1860,7 +1860,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1871,7 +1871,7 @@
       "cooldown_ms": 250,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1882,7 +1882,7 @@
       "cooldown_ms": 250,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1893,7 +1893,7 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1904,7 +1904,7 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1915,7 +1915,7 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1926,7 +1926,7 @@
       "cooldown_ms": 350,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -1937,7 +1937,7 @@
       "cooldown_ms": 150,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2278,29 +2278,7 @@
       "cooldown_ms": 110,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.arrow_launch_v3",
-      "path": "sfx/combat/bow_release_single_v3.ogg",
-      "category": "sfx",
-      "priority": 2,
-      "cooldown_ms": 110,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.guard_raise_v2",
-      "path": "sfx/combat/guard_raise_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 180,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2311,29 +2289,7 @@
       "cooldown_ms": 90,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.block_v3",
-      "path": "sfx/combat/shield_block_v3.ogg",
-      "category": "sfx",
-      "priority": 6,
-      "cooldown_ms": 90,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.perfect_guard_v2",
-      "path": "sfx/combat/perfect_guard_v2.ogg",
-      "category": "sfx",
-      "priority": 7,
-      "cooldown_ms": 120,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2344,29 +2300,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.dodge_v3",
-      "path": "sfx/combat/dodge_roll_v3.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.jump_v2",
-      "path": "sfx/combat/jump_effort_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 250,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2377,18 +2311,7 @@
       "cooldown_ms": 250,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.land_v3",
-      "path": "sfx/combat/land_thud_v3.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 250,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2399,29 +2322,7 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.ability_refused_v2",
-      "path": "sfx/combat/ability_refused_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 350,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.lock_on_v2",
-      "path": "sfx/combat/lock_on_tick_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 150,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2432,18 +2333,7 @@
       "cooldown_ms": 240,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.bow_draw_v2",
-      "path": "sfx/combat/bow_draw_creak_v2.ogg",
-      "category": "sfx",
-      "priority": 3,
-      "cooldown_ms": 240,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2454,18 +2344,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.bow_full_draw_v2",
-      "path": "sfx/combat/bow_full_draw_seat_v2.ogg",
-      "category": "sfx",
-      "priority": 3,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2476,18 +2355,7 @@
       "cooldown_ms": 900,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.bow_strain_v2",
-      "path": "sfx/combat/bow_hold_strain_v2.ogg",
-      "category": "sfx",
-      "priority": 3,
-      "cooldown_ms": 900,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2498,7 +2366,7 @@
       "cooldown_ms": 90,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {
@@ -2509,18 +2377,7 @@
       "cooldown_ms": 90,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.combat.bow_loose_heavy_v3",
-      "path": "sfx/combat/bow_loose_heavy_v3.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 90,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "field"
       }
     },
     {

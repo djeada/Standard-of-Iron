@@ -304,3 +304,222 @@ formation reels and the differences are deliberate:
   so the routine walks the performer roughly 2.6 m left and 1.6 m forward per
   loop. Shots are authored inside the first loop (scenario time 1-13 s) where
   his position is known.
+
+## The master trailer
+
+`tools/arena/promos/trailer.json` is the two-minute trailer, and it differs
+from every other reel in the directory in one structural way: **it cuts across
+scenarios**. A reel films one scene; the trailer films five chapters of one
+place plus five act cards, so a shot's `scenario` field changes down the list
+and the runner plans one deterministic pass per scenario.
+
+The chapters live in `tools/arena/arena_trailer_scenarios.cpp` and all share
+`dress_valley` -- one river valley with a village on the north bank, a timber
+fort on the eastern rise, one bridge, and open ground to the south. Re-dressing
+the same geography per chapter is what makes the finished cut read as one place
+over one day rather than as a sampler of unrelated fixtures:
+
+- `trailer_dawn` -- the economy and the ambient life: residents on errands,
+  woodcutters and quarriers, the flock, birds, and a wolf pack released as a
+  timed wildlife wave.
+- `trailer_muster` -- the fort turns out, the column crosses the bridge, and
+  the army deploys from column into line.
+- `trailer_clash` -- the pitched battle, elephants and cavalry included.
+- `trailer_pov` -- the same fight from behind the commander's shoulders under
+  `rpg_mode`.
+- `trailer_barrow_night` -- the night ambush, driven by a real `undead_zone`.
+
+Five things about it are worth copying and were all learned the hard way here.
+
+**Author distance, not choreography.** An army walks at about 0.68 m/s and
+files across a 4.5 m bridge deck one formation at a time. The first cut of the
+muster marched the legion the length of the valley with `FormArmy` column
+moves; ninety seconds later it had not reached the water, and the formation had
+drifted rather than marched. Stage each chapter where its shots are, and keep
+travel to the metres the camera actually watches.
+
+**Scenes need enough health to survive their own shot list.** Every shot is
+authored after the beat it films, so a line that is wiped twenty seconds in
+takes half the reel with it. The clash and night chapters set explicit
+`health_override` values for exactly this reason -- not for balance, but so the
+melee is still running when the camera arrives.
+
+**Light is measured, not eyeballed.** The dawn chapter first sat at hour 7.6
+and captured at a mean 42/255 against the 95-107 band the other reels hold. It
+is at 9.8 with `exposure_override` 1.5 now, and the muster at 11.4 with 1.25.
+Sweep the hour with `--time` and measure the frame rather than looking at it.
+
+**Yaw picks the light and the background, so compute it.** The camera offset is
+`(sin yaw, _, cos yaw) * distance` from the aim point, so yaw decides which side
+of the subject the lens sits on. Get it wrong and you lose the shot twice over.
+The first capture of this trailer aimed most of the battle south-west at hour
+18.1, which is straight into a low western sun _and_ straight at the edge of the
+arena floor: the subjects came back as silhouettes and the boundary terrain
+filled the top third of frame with a grey wall. `hosts_face` measured 32/255.
+Re-aimed west-looking-east -- lit side toward the lens, the valley behind the
+action -- the same shot measures 56 and has the river, the bridge and the fort
+in the background. Evening acts want yaw 240-300; the morning act wants the
+opposite, 60-120.
+
+**A commander's facing is a camera decision.** `facing_degrees` 0 points at +z
+and 180 at -z, `RpgMove` axes are read in the commander's view frame, and the
+enemy therefore has to stand in front of whichever way he faces or he walks away
+from the fight he was given. But the chase camera cannot be aimed independently
+-- it sits behind him -- so his facing is also the only control over what is in
+the background. `trailer_pov` faces 180 and puts its enemies at lower z purely
+so the shot looks back down the valley at the bridge and the village instead of
+at the boundary.
+
+### Act cards are rendered, not filmed
+
+A shot with `"flame_card": true` replaces the frame with a procedural wall of
+fire drawn by `ArenaViewport::render_flame_card` -- a domain-warped fbm scrolled
+upward, plus sparks and a smoke haze, as one fullscreen triangle. It takes
+`flame_speed` and `flame_intensity`, needs neither `focus` nor `camera`, and is
+a pure function of a frame counter, so re-recording a card reproduces it
+exactly.
+
+This exists because the engine's own fire is authored at prop scale. A camp
+fire or a burning roof reads as a small bright object; an act card wants a
+field the whole frame can sit in. Several earlier attempts to build the card
+out of shipped fire are recorded here so nobody repeats them: a structure's
+simulation fire only lights when incendiary damage passes five percent of its
+max health -- so giving a house 30000 hit points puts ignition out of reach --
+a catapult more than about twenty metres from its target never fires at all,
+and `suppress_terrain_features` puts out every world prop, fire camps included,
+because props ride the same `include_features` flag as the rest of the terrain
+decoration.
+
+`promo-edit.py` sets a shot's `act_title` (with an optional smaller
+`act_kicker` above it) large and centred for the whole shot, which is the
+Praetorians-style interstitial the cards are modelled on. The spec-level
+`end_card_seconds` lengthens the closing title hold beyond the two seconds a
+short reel uses.
+
+### The score
+
+Every shipped track is exactly 90 s, so a 120 s trailer cannot be scored from
+one of them. `scripts/make-trailer-score.sh` assembles six windows into one
+piece whose section boundaries land on the act cards and writes it to
+`artifacts/promo/trailer_score.ogg`. It is derived, so it is not checked in;
+`promo-edit.py` still runs it through the game's own audio mastering.
+
+### Sound
+
+`scripts/place-trailer-cues.py` writes the `sfx` list. It does not read a trace
+-- there is no single trace for a reel cut from five scenarios -- so its cues
+are authored against **shot names and offsets within a shot** and resolved onto
+the blended timeline. Retiming or reordering a shot therefore moves its cues
+with it, which is the failure mode hand-typed absolute times always hit. Re-run
+it after any change to the picture and before the edit.
+
+### Running it
+
+The spec records at `supersample: 2`, so the arena renders 3840x2160 and
+downsamples. The art is low-poly and full of hard silhouette edges that alias
+badly at 1080p; the extra pixels are the cheapest quality the reel gets.
+
+```sh
+scripts/make-trailer-score.sh
+build/bin/arena_app --promo-spec tools/arena/promos/trailer.json \
+  --promo-out artifacts/promo
+scripts/place-trailer-cues.py
+scripts/promo-edit.py --spec tools/arena/promos/trailer.json \
+  --clips artifacts/promo/trailer
+```
+
+### Fixing one act without re-recording the reel
+
+At `supersample: 2` a full capture is most of an hour, and a shot that needs a
+tighter lens or a retimed beat should not cost the other twenty-seven.
+`scripts/reshoot-promo-scenario.py <scenario>` records only the shots that name
+one scenario and copies each result back over the clip with the matching
+_name_ -- the clip index, the posters and `shots.json` are left alone, so
+`promo-edit.py` picks the new footage up with nothing else changed.
+
+```sh
+scripts/reshoot-promo-scenario.py trailer_muster
+scripts/promo-edit.py --spec tools/arena/promos/trailer.json \
+  --clips artifacts/promo/trailer
+```
+
+Re-run `place-trailer-cues.py` as well if the re-shoot changed a shot's
+`duration` or `slow_motion`, because that moves everything after it.
+
+`reshoot-promo-scenario.py` will also _fill in_ a shot the reel does not have
+yet, naming it by its index in the full spec, so a reel can be built one
+scenario at a time. The arena only writes `shots.json` when a whole run
+finishes, though, so a reel assembled that way has footage and no manifest;
+`scripts/make-promo-manifest.py` writes one by measuring the clips that are
+actually on disk. Measuring rather than trusting the spec is deliberate -- a
+clip that came out short should show up as short rather than be assumed
+correct.
+
+At `supersample: 2` the battle chapter is the expensive one: each pass
+re-simulates the whole window at 3840x2160 with four hundred-odd soldiers, and
+overlapping shot windows force _additional_ passes over the same scenario.
+Watch for that when authoring -- moving one shot out of an overlap took this
+reel's battle from three passes to two.
+
+**Do not rebuild while a capture or a batch loop is running.** Relinking
+`arena_app` mid-run makes the next invocation fail to launch, and because it
+never reaches a PASS/FAIL line the run just looks like it stopped early.
+
+### Judge the light by measuring it
+
+Every shot in the first cut of this trailer was framed by eye and half of them
+came out unusable. Two numbers catch it before a capture is wasted:
+
+```sh
+# mean luminance of a finished clip, 0-255
+ffmpeg -v error -i 15_hosts_face.mp4 -vf fps=4,scale=96:54,format=gray -f rawvideo - \
+  | python3 -c "import sys;d=sys.stdin.buffer.read();print(sum(d)/len(d))"
+```
+
+Daylight acts want 70-100. The battle sits around 55-70 by design and the night
+act lower still, but 10 is not a mood, it is a black frame -- that is where the
+night chapter started before its exposure and its fires were added. Measure the
+whole clip rather than the poster: the poster is the shot's _last_ frame, after
+the camera has finished moving, and routinely reads ten to twenty points darker
+than the shot it represents.
+
+## Render defects this reel exposed
+
+A trailer holds a shot for four seconds at 1080p, which is a far harsher test
+than play. Four engine defects only became visible that way, and all four are
+fixed in the renderer rather than worked around in the shot list.
+
+**Soldiers popped in and out at the frame edge.** The per-soldier frustum test
+had no hysteresis, so a body sitting within centimetres of a plane flipped as
+the camera moved -- measured on the commander's chase camera, sixty-six
+soldiers flipped eighty-seven times in sixteen seconds, some twice inside two
+frames. `prepare_submission.cpp` now remembers which soldiers it drew recently
+and requires a wider margin to drop one than to pick it up, which took the same
+run to twenty flips with nothing oscillating. It costs nothing measurable: the
+`performance_30v30` contract still runs at a p95 of 1.4 ms.
+
+**Buildings appeared to blink.** They were not blinking; birds were flying
+between the lens and them. A bird is only half a metre across, but the flocks
+cruised at camera height, and one passing a metre from the lens fills a third
+of the frame for two frames. The bird renderer now drops any bird closer than
+three metres to the camera, and the trailer's flocks cruise at fourteen to
+fifteen metres. Eighty-four one-frame reversals in an eight-second dolly became
+zero. `select_render_archetype_lod_stable` additionally gives building LOD the
+same hysteresis, so a structure sitting near its detail threshold cannot thrash
+between its full and minimal mesh.
+
+**Sheep came apart when attacked.** Each joint of the head chain was displaced
+on its own -- the withers by the body's bob, the poll and muzzle by a separate
+head nod, and during the death collapse by two different descents with
+different bounce weights -- so the neck bone stretched by the difference and the
+head tore off the body, worst at a flee gait, which is exactly when a wolf is
+on them. The head group is now reattached rigidly to the poll and the poll held
+one neck length from the withers.
+`tests/render/sheep_rig_integrity_test.cpp` asserts the bone lengths hold
+across the gait, the graze and the whole death collapse.
+
+**Troops walked through walls.** The arena never registered spawned buildings
+with `BuildingCollisionRegistry`, so no arena scenario has ever had buildings in
+its navigation grid. That is fixed, but it was only half the story: the valley's
+bridge approach ran straight through a house, so the column had no legal ground
+either way. See the settlement layout notes in `tools/arena/README.md`.

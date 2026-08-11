@@ -99,6 +99,11 @@ auto cylinder_local_model(const QVector3D& start,
                           float radius) -> QMatrix4x4;
 auto select_render_archetype_lod(const RenderArchetype& archetype,
                                  float distance) -> RenderArchetypeLod;
+
+auto select_render_archetype_lod_stable(const RenderArchetype& archetype,
+                                        float distance,
+                                        std::uint64_t instance_id)
+    -> RenderArchetypeLod;
 void submit_render_instance(ISubmitter& out, const RenderInstance& instance);
 
 class RenderArchetypeBuilder {

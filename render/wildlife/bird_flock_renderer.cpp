@@ -23,6 +23,8 @@ constexpr float k_cull_radius = 0.6F;
 constexpr float k_far_distance_sq = 100.0F * 100.0F;
 constexpr float k_detail_distance_sq = 30.0F * 30.0F;
 
+constexpr float k_near_cutoff_distance_sq = 3.0F * 3.0F;
+
 constexpr float k_bird_scale = 1.65F;
 
 constexpr float k_body_radius_x = 0.024F;
@@ -136,6 +138,9 @@ auto submit_bird_flocks(ISubmitter& out,
       float const dz = position.z() - camera_position.z();
       distance_sq = (dx * dx) + (dy * dy) + (dz * dz);
       if (distance_sq > k_far_distance_sq) {
+        continue;
+      }
+      if (distance_sq < k_near_cutoff_distance_sq) {
         continue;
       }
     }

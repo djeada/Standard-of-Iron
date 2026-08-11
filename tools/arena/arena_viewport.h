@@ -24,6 +24,9 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 
+class QOpenGLShaderProgram;
+class QOpenGLVertexArrayObject;
+
 namespace Engine::Core {
 class World;
 using EntityID = std::uint64_t;
@@ -195,6 +198,8 @@ public:
   void set_capture_sink(std::function<void(const QImage&)> sink);
   void set_capture_active(bool active);
   void set_frame_hook(std::function<void(float)> hook);
+
+  void set_flame_card(bool enabled, float speed = 1.0F, float intensity = 1.0F);
   void set_cinematic_view(const QVector3D& target,
                           float distance,
                           float pitch_degrees,
@@ -359,6 +364,8 @@ private:
   [[nodiscard]] auto ensure_capture_target() -> bool;
   void apply_cinematic_view();
   void present_capture_preview();
+  [[nodiscard]] auto ensure_flame_card_program() -> bool;
+  void render_flame_card(int width, int height);
 
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
@@ -463,6 +470,12 @@ private:
   float m_cinematic_yaw = 40.0F;
   float m_cinematic_fov = 40.0F;
   float m_cinematic_roll = 0.0F;
+  bool m_flame_card_active = false;
+  float m_flame_card_speed = 1.0F;
+  float m_flame_card_intensity = 1.0F;
+  int m_flame_card_frame = 0;
+  std::unique_ptr<QOpenGLShaderProgram> m_flame_card_program;
+  std::unique_ptr<QOpenGLVertexArrayObject> m_flame_card_vao;
   float m_capture_orbit_speed = 0.0F;
   float m_capture_orbit_yaw = 0.0F;
   bool m_capture_orbit_ready = false;

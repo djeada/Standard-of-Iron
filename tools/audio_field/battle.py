@@ -205,6 +205,33 @@ WIND_TREES = tdc(
 
 
 TARGET_RMS_DB: dict[str, float] = {
+    "ability_refused": -22.0,
+    "bow_draw_creak": -18.0,
+    "bow_full_draw_seat": -21.0,
+    "bow_hold_strain": -18.0,
+    "bow_loose_heavy": -14.0,
+    "bow_loose_heavy_v2": -14.0,
+    "bow_release_single": -16.0,
+    "bow_release_single_v2": -16.0,
+    "charge_roar": -11.0,
+    "dodge_roll": -16.0,
+    "dodge_roll_v2": -16.0,
+    "guard_break": -15.0,
+    "guard_raise": -18.0,
+    "heal_bind_wound": -20.0,
+    "jump_effort": -17.0,
+    "land_thud": -15.0,
+    "land_thud_v2": -15.0,
+    "lock_on_tick": -20.0,
+    "perfect_guard": -12.0,
+    "second_wind": -17.0,
+    "shield_bash": -13.0,
+    "shield_bash_v2": -13.0,
+    "shield_block": -14.0,
+    "shield_block_v2": -14.0,
+    "siege_impact": -12.0,
+    "siege_launch": -11.5,
+    "vanguard_rush": -11.0,
     "enemy_spotted_horn": -12.7,
     "enemy_reinforcements_warning": -12.0,
     "reinforcements_arrived": -11.1,
@@ -335,6 +362,105 @@ def horn(
         release=release,
         notes=notes,
     )
+
+
+CREAK_FLOOR = tdc(
+    "Wood",
+    "WOOD/FRICTION/WOODFric-Samsung Galaxy Smartphone, "
+    "CU_Floorboard, Creak_Nicholas Judy_TDC.wav",
+)
+"""A board taking weight. Timber under load is what a bow limb is."""
+
+CREAK_SHIP = tdc(
+    "Wood",
+    "WOOD/FRICTION/WOODFric-Blue Snowball Microphone, "
+    "CU_Ship, Creaking, Sound Design_Nicholas Judy_TDC.wav",
+)
+"""A longer, deeper groan of loaded timber: rope and frame rather than a board."""
+
+WOOD_BREAK = tdc(
+    "Wood",
+    "WOOD/BREAK/WOODBrk-Blue Snowball Microphone, "
+    "CU_Stick, Small, Breaks, X3_Nicholas Judy_TDC.wav",
+)
+"""Three dry snaps. A shield giving way is wood failing, not metal."""
+
+BRANCH_SNAP = tdc(
+    "Wood",
+    "WOOD/BREAK/WOODBrk-Blue Snowball Microphone, "
+    "CU_Branch, Snaps, Crackles_Nicholas Judy_TDC.wav",
+)
+"""Heavier splintering, for the moment a siege shot lands in timber."""
+
+STONES_KICKED = tdc(
+    "Rocks",
+    "ROCKS/CRASH & DEBRIS/ROCKCrsh-Samsung Galaxy Smartphone, "
+    "CU_Small Stones, Kicked, X4_Nicholas Judy_TDC.wav",
+)
+"""Debris. What a stone shot leaves behind after the impact itself."""
+
+CLANG_BRIGHT = tdc(
+    "Metal",
+    "METAL/IMPACT/METLImpt-Blue Snowball Microphone_"
+    "Metal, Clang 01_Nicholas Judy_TDC.wav",
+)
+"""A full-throated struck-metal clang, for a boss taking a blow head on."""
+
+CLANG_THIN = tdc(
+    "Metal",
+    "METAL/IMPACT/METLImpt-Blue Snowball Microphone_"
+    "Metal, Clang, Thin 01_Nicholas Judy_TDC.wav",
+)
+"""Thinner and shorter than CLANG_BRIGHT: a glancing catch, not a stop."""
+
+TIN_DROP = tdc(
+    "Metal",
+    "METAL/IMPACT/METLImpt-Blue Snowball Microphone, "
+    "CU_Small, Tin, Drop_Nicholas Judy_TDC.wav",
+)
+"""A small tick of metal. Short enough to fire while the player is aiming."""
+
+BOLT_DROP = tdc(
+    "Metal",
+    "METAL/IMPACT/METLImpt-Blue Snowball Microphone, "
+    "CU_Bolt, Drop_Nicholas Judy_TDC.wav",
+)
+"""One small hard metal event, for the cues that must not sound like a hit."""
+
+BUCKET_DROP = tdc(
+    "Metal",
+    "METAL/IMPACT/METLImpt-Blue Snowball Microphone, "
+    "CU_Bucket, Drop_Nicholas Judy_TDC.wav",
+)
+"""The largest metal body in the volume: the low end under a siege impact."""
+
+GLOVE_SLAP = tdc(
+    "Cloth",
+    "CLOTH/IMPACT/CLOTHImpt-Blue Snowball Microphone, "
+    "CU_Glove Slap_Nicholas Judy_TDC.wav",
+)
+"""Leather meeting leather. The hand behind a shield rather than the shield."""
+
+CLOTH_FIGHT = tdc(
+    "Cloth",
+    "CLOTH/IMPACT/CLOTHImpt-Samsung Galaxy Smartphone, "
+    "CU_Swish, Impact, Fight_Nicholas Judy_TDC.wav",
+)
+"""Garment moving fast and stopping: a body committing to a movement."""
+
+VELCRO_SLOW = tdc(
+    "Cloth",
+    "CLOTH/RIP/CLOTHRip-Blue Snowball Microphone, "
+    "CU_Baseball Mitt, Velcro, Slow_Nicholas Judy_TDC.wav",
+)
+"""A slow fibrous tear. Linen being drawn off a roll and bound."""
+
+ROPE_SWISH = tdc(
+    "Swooshes",
+    "SWOOSHES/SWISH/SWSH-Samsung Galaxy Smartphone, "
+    "CU_Rope, Twirling Swishes_Nicholas Judy_TDC.wav",
+)
+"""Rope under speed, for the sling arm of an engine coming round."""
 
 
 CUES: dict[str, Cue] = {
@@ -1182,5 +1308,717 @@ CUES: dict[str, Cue] = {
         "silence within 0.14 s, with nothing either side of it to drag in. "
         "Replaces a hand cut from a CC BY 2.5 study recording, so the wildlife "
         "set carries one less attribution.",
+    ),
+    "charge_roar": Cue(
+        path="sfx/combat/charge_roar",
+        seconds=2.4,
+        layers=[
+            Layer(
+                url=CROWD[0],
+                origin=CROWD[1],
+                licence=CC0,
+                start=8.8,
+                gain=1.0,
+                highpass=220.0,
+                lowpass=5200.0,
+                ranks=(0.31, 0.73, 1.19),
+            ),
+            Layer(
+                url=MARCH_ROCKY[0],
+                origin=MARCH_ROCKY[1],
+                licence=CC0,
+                start=0.6,
+                gain=2.2,
+                highpass=90.0,
+                lowpass=2600.0,
+                ranks=(0.17, 0.41, 0.67),
+            ),
+        ],
+        attack=0.02,
+        release=0.45,
+        notes="Men shouting as they start forward, over the column already running. "
+        "The crowd is high-passed off its applause so it reads as voices, and "
+        "the feet are ranked so there is a body behind the shout.",
+    ),
+    "vanguard_rush": Cue(
+        path="sfx/combat/vanguard_rush",
+        seconds=1.5,
+        layers=[
+            Layer(
+                url=CROWD[0],
+                origin=CROWD[1],
+                licence=CC0,
+                start=35.2,
+                gain=0.85,
+                highpass=260.0,
+                lowpass=4800.0,
+                ranks=(0.19, 0.44),
+            ),
+            Layer(
+                url=MARCH_ROCKY[0],
+                origin=MARCH_ROCKY[1],
+                licence=CC0,
+                start=15.2,
+                gain=1.8,
+                highpass=110.0,
+                lowpass=3000.0,
+                ranks=(0.13, 0.29),
+            ),
+        ],
+        attack=0.015,
+        release=0.32,
+        notes="A shorter, smaller charge_roar: one unit committing, not an army.",
+    ),
+    "siege_impact": Cue(
+        path="sfx/combat/siege_impact",
+        seconds=1.8,
+        layers=[
+            Layer(
+                url=BUCKET_DROP[0],
+                origin=BUCKET_DROP[1],
+                licence=CC0,
+                start=0.0,
+                gain=1.0,
+                lowpass=900.0,
+            ),
+            Layer(
+                url=BRANCH_SNAP[0],
+                origin=BRANCH_SNAP[1],
+                licence=CC0,
+                start=1.0,
+                gain=3.0,
+                highpass=180.0,
+                lowpass=6000.0,
+            ),
+            Layer(
+                url=STONES_KICKED[0],
+                origin=STONES_KICKED[1],
+                licence=CC0,
+                start=0.0,
+                gain=2.4,
+                highpass=300.0,
+                lowpass=7000.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.55,
+        notes="Three strata of one hit: the low metal body for the mass, timber "
+        "splintering for the target, and stone debris for the half second "
+        "after. No single recording holds a shot landing on a wall.",
+    ),
+    "siege_launch": Cue(
+        path="sfx/combat/siege_launch",
+        seconds=1.4,
+        layers=[
+            Layer(
+                url=CREAK_SHIP[0],
+                origin=CREAK_SHIP[1],
+                licence=CC0,
+                start=64.0,
+                gain=1.0,
+                highpass=70.0,
+                lowpass=2400.0,
+            ),
+            Layer(
+                url=ROPE_SWISH[0],
+                origin=ROPE_SWISH[1],
+                licence=CC0,
+                start=16.0,
+                gain=1.1,
+                highpass=260.0,
+                lowpass=6500.0,
+            ),
+            Layer(
+                url=WOOD_BREAK[0],
+                origin=WOOD_BREAK[1],
+                licence=CC0,
+                start=1.0,
+                gain=2.6,
+                highpass=200.0,
+                lowpass=5000.0,
+            ),
+        ],
+        attack=0.01,
+        release=0.4,
+        notes="Timber and rope taking the load, then the arm coming round and the "
+        "frame slamming to its stop.",
+    ),
+    "shield_bash": Cue(
+        path="sfx/combat/shield_bash",
+        seconds=0.9,
+        layers=[
+            Layer(
+                url=CLANG_BRIGHT[0],
+                origin=CLANG_BRIGHT[1],
+                licence=CC0,
+                start=0.0,
+                gain=1.0,
+                highpass=120.0,
+                lowpass=7000.0,
+            ),
+            Layer(
+                url=GLOVE_SLAP[0],
+                origin=GLOVE_SLAP[1],
+                licence=CC0,
+                start=0.0,
+                gain=2.8,
+                highpass=200.0,
+                lowpass=5200.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.34,
+        notes="A boss driven into a man: full metal clang with the leather of the grip "
+        "under it.",
+    ),
+    "shield_bash_v2": Cue(
+        path="sfx/combat/shield_bash_v2",
+        seconds=0.9,
+        layers=[
+            Layer(
+                url=CLANG_BRIGHT[0],
+                origin=CLANG_BRIGHT[1],
+                licence=CC0,
+                start=0.2,
+                gain=0.9,
+                highpass=120.0,
+                lowpass=7000.0,
+            ),
+            Layer(
+                url=GLOVE_SLAP[0],
+                origin=GLOVE_SLAP[1],
+                licence=CC0,
+                start=0.0,
+                gain=2.8,
+                highpass=200.0,
+                lowpass=5200.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.34,
+        notes="The second strike in the same recording, caught a shade duller.",
+    ),
+    "shield_block": Cue(
+        path="sfx/combat/shield_block",
+        seconds=0.7,
+        layers=[
+            Layer(
+                url=CLANG_THIN[0],
+                origin=CLANG_THIN[1],
+                licence=CC0,
+                start=0.0,
+                gain=1.0,
+                highpass=180.0,
+                lowpass=8000.0,
+            ),
+            Layer(
+                url=BOXING[0],
+                origin=BOXING[1],
+                licence=CC0,
+                start=7.8,
+                gain=1.6,
+                highpass=150.0,
+                lowpass=4200.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.28,
+        notes="A blow caught square on the boards. Thinner than shield_bash: the "
+        "shield holding, not the shield being driven.",
+    ),
+    "shield_block_v2": Cue(
+        path="sfx/combat/shield_block_v2",
+        seconds=0.7,
+        layers=[
+            Layer(
+                url=CLANG_THIN[0],
+                origin=CLANG_THIN[1],
+                licence=CC0,
+                start=0.2,
+                gain=1.0,
+                highpass=180.0,
+                lowpass=8000.0,
+            ),
+            Layer(
+                url=BOXING[0],
+                origin=BOXING[1],
+                licence=CC0,
+                start=7.8,
+                gain=1.6,
+                highpass=150.0,
+                lowpass=4200.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.28,
+        notes="The same catch softer, so repeated blocks do not machine-gun.",
+    ),
+    "guard_raise": Cue(
+        path="sfx/combat/guard_raise",
+        seconds=0.6,
+        layers=[
+            Layer(
+                url=CLOTH_FIGHT[0],
+                origin=CLOTH_FIGHT[1],
+                licence=CC0,
+                start=0.2,
+                gain=1.0,
+                highpass=220.0,
+                lowpass=6000.0,
+            ),
+            Layer(
+                url=BOLT_DROP[0],
+                origin=BOLT_DROP[1],
+                licence=CC0,
+                start=6.6,
+                gain=0.5,
+                highpass=300.0,
+                lowpass=6500.0,
+            ),
+        ],
+        attack=0.006,
+        release=0.26,
+        notes="Shield coming up: cloth and arm, with just enough metal to say there is a "
+        "rim on it. Deliberately not an impact -- nothing has been hit yet.",
+    ),
+    "guard_break": Cue(
+        path="sfx/combat/guard_break",
+        seconds=1.1,
+        layers=[
+            Layer(
+                url=WOOD_BREAK[0],
+                origin=WOOD_BREAK[1],
+                licence=CC0,
+                start=1.0,
+                gain=3.2,
+                highpass=150.0,
+                lowpass=6500.0,
+            ),
+            Layer(
+                url=CLANG_THIN[0],
+                origin=CLANG_THIN[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.7,
+                highpass=200.0,
+                lowpass=7500.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.4,
+        notes="The guard failing: boards splitting first, the rim ringing after.",
+    ),
+    "perfect_guard": Cue(
+        path="sfx/combat/perfect_guard",
+        seconds=0.7,
+        layers=[
+            Layer(
+                url=CLANG_THIN[0],
+                origin=CLANG_THIN[1],
+                licence=CC0,
+                start=0.0,
+                gain=1.0,
+                highpass=400.0,
+                lowpass=9000.0,
+            ),
+        ],
+        attack=0.001,
+        release=0.32,
+        notes="A clean bright ring, alone and unmuddied. The reward cue has to be "
+        "legible over a melee, which is why it carries no body layer.",
+    ),
+    "bow_draw_creak": Cue(
+        path="sfx/combat/bow_draw_creak",
+        seconds=1.0,
+        layers=[
+            Layer(
+                url=CREAK_FLOOR[0],
+                origin=CREAK_FLOOR[1],
+                licence=CC0,
+                start=0.0,
+                gain=1.0,
+                highpass=130.0,
+                lowpass=3600.0,
+            ),
+        ],
+        attack=0.02,
+        release=0.3,
+        notes="A limb bending. Loaded timber, taken straight.",
+    ),
+    "bow_hold_strain": Cue(
+        path="sfx/combat/bow_hold_strain",
+        seconds=1.6,
+        layers=[
+            Layer(
+                url=CREAK_SHIP[0],
+                origin=CREAK_SHIP[1],
+                licence=CC0,
+                start=63.8,
+                gain=1.0,
+                highpass=90.0,
+                lowpass=2800.0,
+            ),
+        ],
+        attack=0.05,
+        release=0.45,
+        notes="Held at full draw: the same timber under sustained load, longer and "
+        "lower, so it sits under the mix as a warning rather than an event.",
+    ),
+    "bow_full_draw_seat": Cue(
+        path="sfx/combat/bow_full_draw_seat",
+        seconds=0.5,
+        layers=[
+            Layer(
+                url=BOLT_DROP[0],
+                origin=BOLT_DROP[1],
+                licence=CC0,
+                start=6.6,
+                gain=0.8,
+                highpass=350.0,
+                lowpass=7000.0,
+            ),
+            Layer(
+                url=CREAK_FLOOR[0],
+                origin=CREAK_FLOOR[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.35,
+                highpass=200.0,
+                lowpass=3200.0,
+            ),
+        ],
+        attack=0.003,
+        release=0.22,
+        notes="The string seating in the nock: one small hard click with the limb "
+        "settling behind it.",
+    ),
+    "bow_loose_heavy": Cue(
+        path="sfx/combat/bow_loose_heavy",
+        seconds=1.1,
+        layers=[
+            Layer(
+                url=SWISH_STICK[0],
+                origin=SWISH_STICK[1],
+                licence=CC0,
+                start=1.0,
+                gain=1.0,
+                highpass=180.0,
+                lowpass=5200.0,
+            ),
+            Layer(
+                url=WOOD_BREAK[0],
+                origin=WOOD_BREAK[1],
+                licence=CC0,
+                start=1.0,
+                gain=2.2,
+                highpass=220.0,
+                lowpass=4200.0,
+            ),
+            Layer(
+                url=FLYBY[0],
+                origin=FLYBY[1],
+                licence=CC0,
+                start=0.2,
+                gain=0.8,
+                highpass=400.0,
+                lowpass=8000.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.4,
+        notes="A war bow: string snap, limb thump, and the shaft still audible in the "
+        "air afterwards. One man shooting, not a rank.",
+    ),
+    "bow_loose_heavy_v2": Cue(
+        path="sfx/combat/bow_loose_heavy_v2",
+        seconds=1.1,
+        layers=[
+            Layer(
+                url=SWISH_STICK[0],
+                origin=SWISH_STICK[1],
+                licence=CC0,
+                start=0.8,
+                gain=0.95,
+                highpass=180.0,
+                lowpass=5200.0,
+            ),
+            Layer(
+                url=WOOD_BREAK[0],
+                origin=WOOD_BREAK[1],
+                licence=CC0,
+                start=0.8,
+                gain=2.0,
+                highpass=220.0,
+                lowpass=4200.0,
+            ),
+            Layer(
+                url=FLYBY[0],
+                origin=FLYBY[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.7,
+                highpass=400.0,
+                lowpass=8000.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.4,
+        notes="A second loose, cut from earlier in the same three recordings.",
+    ),
+    "bow_release_single": Cue(
+        path="sfx/combat/bow_release_single",
+        seconds=0.8,
+        layers=[
+            Layer(
+                url=SWISH_STICK[0],
+                origin=SWISH_STICK[1],
+                licence=CC0,
+                start=1.0,
+                gain=1.0,
+                highpass=300.0,
+                lowpass=7500.0,
+            ),
+            Layer(
+                url=BOLT_DROP[0],
+                origin=BOLT_DROP[1],
+                licence=CC0,
+                start=4.4,
+                gain=0.6,
+                highpass=400.0,
+                lowpass=8000.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.3,
+        notes="Lighter than bow_loose_heavy: a hunting bow rather than a war bow.",
+    ),
+    "bow_release_single_v2": Cue(
+        path="sfx/combat/bow_release_single_v2",
+        seconds=0.8,
+        layers=[
+            Layer(
+                url=SWISH_STICK[0],
+                origin=SWISH_STICK[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.95,
+                highpass=300.0,
+                lowpass=7500.0,
+            ),
+            Layer(
+                url=BOLT_DROP[0],
+                origin=BOLT_DROP[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.55,
+                highpass=400.0,
+                lowpass=8000.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.3,
+        notes="The next swish in the same take.",
+    ),
+    "dodge_roll": Cue(
+        path="sfx/combat/dodge_roll",
+        seconds=1.0,
+        layers=[
+            Layer(
+                url=CLOTH_FIGHT[0],
+                origin=CLOTH_FIGHT[1],
+                licence=CC0,
+                start=0.2,
+                gain=1.0,
+                highpass=200.0,
+                lowpass=6000.0,
+            ),
+            Layer(
+                url=BODYFALL_GRASS[0],
+                origin=BODYFALL_GRASS[1],
+                licence=CC0,
+                start=0.0,
+                gain=2.0,
+                highpass=80.0,
+                lowpass=3200.0,
+            ),
+        ],
+        attack=0.004,
+        release=0.35,
+        notes="Cloth committing, then a body meeting the ground and carrying through.",
+    ),
+    "dodge_roll_v2": Cue(
+        path="sfx/combat/dodge_roll_v2",
+        seconds=1.0,
+        layers=[
+            Layer(
+                url=CLOTH_FIGHT[0],
+                origin=CLOTH_FIGHT[1],
+                licence=CC0,
+                start=0.4,
+                gain=0.95,
+                highpass=200.0,
+                lowpass=6000.0,
+            ),
+            Layer(
+                url=BODYFALL_GRASS[0],
+                origin=BODYFALL_GRASS[1],
+                licence=CC0,
+                start=0.2,
+                gain=5.0,
+                highpass=80.0,
+                lowpass=3200.0,
+            ),
+        ],
+        attack=0.004,
+        release=0.35,
+        notes="A second roll, from later in the garment take.",
+    ),
+    "jump_effort": Cue(
+        path="sfx/combat/jump_effort",
+        seconds=0.6,
+        layers=[
+            Layer(
+                url=CLOTH_FIGHT[0],
+                origin=CLOTH_FIGHT[1],
+                licence=CC0,
+                start=0.4,
+                gain=1.0,
+                highpass=250.0,
+                lowpass=6500.0,
+            ),
+            Layer(
+                url=MARCH_ROCKY[0],
+                origin=MARCH_ROCKY[1],
+                licence=CC0,
+                start=0.6,
+                gain=1.2,
+                highpass=120.0,
+                lowpass=3400.0,
+            ),
+        ],
+        attack=0.004,
+        release=0.24,
+        notes="The push-off: garment snapping taut over one hard footfall.",
+    ),
+    "land_thud": Cue(
+        path="sfx/combat/land_thud",
+        seconds=0.9,
+        layers=[
+            Layer(
+                url=BODYFALL_GRASS[0],
+                origin=BODYFALL_GRASS[1],
+                licence=CC0,
+                start=0.0,
+                gain=6.0,
+                highpass=60.0,
+                lowpass=2600.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.35,
+        notes="Weight arriving. Taken flat from the recording -- a landing is one event, "
+        "and layering it only makes it sound like two.",
+    ),
+    "land_thud_v2": Cue(
+        path="sfx/combat/land_thud_v2",
+        seconds=0.9,
+        layers=[
+            Layer(
+                url=BODYFALL_GRASS[0],
+                origin=BODYFALL_GRASS[1],
+                licence=CC0,
+                start=0.2,
+                gain=2.0,
+                highpass=60.0,
+                lowpass=2600.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.35,
+        notes="The softer second fall in the same take.",
+    ),
+    "lock_on_tick": Cue(
+        path="sfx/combat/lock_on_tick",
+        seconds=0.3,
+        layers=[
+            Layer(
+                url=TIN_DROP[0],
+                origin=TIN_DROP[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.8,
+                highpass=600.0,
+                lowpass=9000.0,
+            ),
+        ],
+        attack=0.001,
+        release=0.14,
+        notes="A tick, not a hit. It fires while the player is aiming, so it is short, "
+        "bright and quiet enough to ignore.",
+    ),
+    "ability_refused": Cue(
+        path="sfx/combat/ability_refused",
+        seconds=0.35,
+        layers=[
+            Layer(
+                url=CLANG_DULL[0],
+                origin=CLANG_DULL[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.8,
+                highpass=250.0,
+                lowpass=3400.0,
+            ),
+        ],
+        attack=0.002,
+        release=0.18,
+        notes="Clipped and dull. A refusal, not an announcement.",
+    ),
+    "second_wind": Cue(
+        path="sfx/combat/second_wind",
+        seconds=1.6,
+        layers=[
+            Layer(
+                url=CLOTH_FIGHT[0],
+                origin=CLOTH_FIGHT[1],
+                licence=CC0,
+                start=25.4,
+                gain=0.8,
+                highpass=200.0,
+                lowpass=4200.0,
+            ),
+            Layer(
+                url=CLANG_THIN[0],
+                origin=CLANG_THIN[1],
+                licence=CC0,
+                start=0.0,
+                gain=0.4,
+                highpass=500.0,
+                lowpass=9000.0,
+            ),
+        ],
+        attack=0.06,
+        release=0.6,
+        notes="A breath drawn and the harness settling, with one distant ring over it. "
+        "Recovery reads as tension released, so it swells rather than hits.",
+    ),
+    "heal_bind_wound": Cue(
+        path="sfx/combat/heal_bind_wound",
+        seconds=1.8,
+        layers=[
+            Layer(
+                url=VELCRO_SLOW[0],
+                origin=VELCRO_SLOW[1],
+                licence=CC0,
+                start=0.0,
+                gain=1.0,
+                highpass=300.0,
+                lowpass=6000.0,
+            ),
+        ],
+        attack=0.02,
+        release=0.5,
+        notes="Linen drawn off a roll and pulled tight. A slow fibrous tear is what "
+        "binding a wound actually sounds like.",
     ),
 }

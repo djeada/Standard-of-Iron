@@ -82,6 +82,19 @@ struct RigPose {
 [[nodiscard]] auto
 wildlife_topology() noexcept -> const Render::Creature::SkeletonTopology&;
 
+struct SkeletonLengths {
+  float tail_mid{0.0F};
+  float tail_tip{0.0F};
+  std::array<std::array<float, 3>, k_leg_count> legs{};
+};
+
+[[nodiscard]] auto
+capture_skeleton_lengths(const RigPose& pose) noexcept -> SkeletonLengths;
+
+void hold_bone(const QVector3D& parent, QVector3D& child, float length) noexcept;
+
+void enforce_skeleton_lengths(RigPose& pose, const SkeletonLengths& held) noexcept;
+
 void evaluate_wildlife_skeleton(const RigPose& pose, BonePalette& out) noexcept;
 
 struct DeathMotion {

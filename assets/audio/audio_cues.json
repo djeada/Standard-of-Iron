@@ -620,13 +620,12 @@
       "id": "combat.arrow_launch",
       "description": "An archer looses an arrow.",
       "category": "sfx",
-      "volume": 0.55,
+      "volume": 0.69,
       "priority": 2,
       "cooldown_ms": 110,
       "resources": [
         "sfx.combat.arrow_launch",
-        "sfx.combat.arrow_launch_v2",
-        "sfx.combat.arrow_launch_v3"
+        "sfx.combat.arrow_launch_v2"
       ],
       "wanted": "A single dry bow release, isolated. The current clip is a group recording."
     },
@@ -634,12 +633,11 @@
       "id": "combat.bow_draw",
       "description": "A commander starts drawing his bow.",
       "category": "sfx",
-      "volume": 0.5,
+      "volume": 0.56,
       "priority": 3,
       "cooldown_ms": 240,
       "resources": [
-        "sfx.combat.bow_draw",
-        "sfx.combat.bow_draw_v2"
+        "sfx.combat.bow_draw"
       ],
       "wanted": "Sinew and leather taking load, rising over about half a second. It has to end open rather than resolve, because the loose is a separate cue."
     },
@@ -651,8 +649,7 @@
       "priority": 3,
       "cooldown_ms": 200,
       "resources": [
-        "sfx.combat.bow_full_draw",
-        "sfx.combat.bow_full_draw_v2"
+        "sfx.combat.bow_full_draw"
       ],
       "wanted": "One dry, dark seat: the nock settling on the rest and the creak stopping dead. Woodier and quieter than combat.lock_on, which it used to borrow."
     },
@@ -660,12 +657,11 @@
       "id": "combat.bow_strain",
       "description": "A commander has held full draw long enough that the arm starts to go.",
       "category": "sfx",
-      "volume": 0.5,
+      "volume": 0.63,
       "priority": 3,
       "cooldown_ms": 900,
       "resources": [
-        "sfx.combat.bow_strain",
-        "sfx.combat.bow_strain_v2"
+        "sfx.combat.bow_strain"
       ],
       "wanted": "A labouring creak falling in pitch under air pushed out through the teeth. It is a warning, so it should sit under the mix rather than punch."
     },
@@ -673,13 +669,12 @@
       "id": "combat.bow_loose_heavy",
       "description": "A commander looses an aimed arrow from his war bow.",
       "category": "sfx",
-      "volume": 0.7,
+      "volume": 0.99,
       "priority": 4,
       "cooldown_ms": 90,
       "resources": [
         "sfx.combat.bow_loose_heavy",
-        "sfx.combat.bow_loose_heavy_v2",
-        "sfx.combat.bow_loose_heavy_v3"
+        "sfx.combat.bow_loose_heavy_v2"
       ],
       "wanted": "The heavy cousin of combat.arrow_launch: deeper limb thump, harder string snap, and the shaft audible in the air for longer. It has to read as one man shooting, not a rank of archers."
     },
@@ -715,7 +710,7 @@
       "id": "combat.siege_launch",
       "description": "A catapult or ballista releases.",
       "category": "sfx",
-      "volume": 0.85,
+      "volume": 1.0,
       "priority": 5,
       "cooldown_ms": 300,
       "resources": [
@@ -727,7 +722,7 @@
       "id": "combat.siege_impact",
       "description": "A siege projectile lands.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 1.0,
       "priority": 5,
       "cooldown_ms": 300,
       "resources": [
@@ -739,7 +734,7 @@
       "id": "combat.charge",
       "description": "A selected body of troops is switched into run mode and breaks into a charge.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 1.0,
       "priority": 6,
       "cooldown_ms": 4000,
       "resources": [
@@ -754,7 +749,7 @@
       "id": "combat.heal",
       "description": "A healer restores health to an ally.",
       "category": "sfx",
-      "volume": 0.6,
+      "volume": 0.76,
       "priority": 3,
       "cooldown_ms": 500,
       "resources": [
@@ -766,12 +761,11 @@
       "id": "combat.guard_raise",
       "description": "The controlled commander raises their shield.",
       "category": "sfx",
-      "volume": 0.7,
+      "volume": 0.99,
       "priority": 4,
       "cooldown_ms": 180,
       "resources": [
-        "sfx.combat.guard_raise",
-        "sfx.combat.guard_raise_v2"
+        "sfx.combat.guard_raise"
       ],
       "wanted": "Shield swung up into guard: leather strap creak plus a short arm-brace thump."
     },
@@ -779,13 +773,12 @@
       "id": "combat.block",
       "description": "An incoming attack is stopped on the commander's raised shield.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 1.0,
       "priority": 6,
       "cooldown_ms": 90,
       "resources": [
         "sfx.combat.block",
-        "sfx.combat.block_v2",
-        "sfx.combat.block_v3"
+        "sfx.combat.block_v2"
       ],
       "wanted": "Blade on shield boss, heavy and damped, no ring-out. Distinct from combat.hit.sword, which lands on flesh."
     },
@@ -793,12 +786,11 @@
       "id": "combat.perfect_guard",
       "description": "An attack is parried inside the perfect-guard window.",
       "category": "sfx",
-      "volume": 0.95,
+      "volume": 1.0,
       "priority": 7,
       "cooldown_ms": 120,
       "resources": [
-        "sfx.combat.perfect_guard",
-        "sfx.combat.perfect_guard_v2"
+        "sfx.combat.perfect_guard"
       ],
       "wanted": "Bright metallic parry ting with a fast tail. Must read as clearly better than combat.block within 100 ms."
     },
@@ -806,7 +798,7 @@
       "id": "combat.guard_break",
       "description": "The commander's guard is broken by posture damage.",
       "category": "sfx",
-      "volume": 0.95,
+      "volume": 1.0,
       "priority": 7,
       "cooldown_ms": 400,
       "resources": [
@@ -818,13 +810,12 @@
       "id": "combat.dodge",
       "description": "The commander dodge-rolls.",
       "category": "sfx",
-      "volume": 0.75,
+      "volume": 1.0,
       "priority": 5,
       "cooldown_ms": 200,
       "resources": [
         "sfx.combat.dodge",
-        "sfx.combat.dodge_v2",
-        "sfx.combat.dodge_v3"
+        "sfx.combat.dodge_v2"
       ],
       "wanted": "Body roll on dirt with a fast cloth whoosh and a short exhale, ~500 ms."
     },
@@ -832,12 +823,11 @@
       "id": "combat.jump",
       "description": "The commander jumps.",
       "category": "sfx",
-      "volume": 0.6,
+      "volume": 0.85,
       "priority": 4,
       "cooldown_ms": 250,
       "resources": [
-        "sfx.combat.jump",
-        "sfx.combat.jump_v2"
+        "sfx.combat.jump"
       ],
       "wanted": "Short effort grunt plus a kit rattle on the push off. Under 400 ms."
     },
@@ -845,13 +835,12 @@
       "id": "combat.land",
       "description": "The commander lands after a jump.",
       "category": "sfx",
-      "volume": 0.7,
+      "volume": 1.0,
       "priority": 4,
       "cooldown_ms": 250,
       "resources": [
         "sfx.combat.land",
-        "sfx.combat.land_v2",
-        "sfx.combat.land_v3"
+        "sfx.combat.land_v2"
       ],
       "wanted": "Boots and armour landing on packed earth, one thud with a small gravel tail."
     },
@@ -859,7 +848,7 @@
       "id": "combat.shield_bash",
       "description": "The commander's shield bash ability connects.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 1.0,
       "priority": 6,
       "cooldown_ms": 300,
       "resources": [
@@ -872,7 +861,7 @@
       "id": "combat.vanguard_rush",
       "description": "The commander's vanguard rush ability fires.",
       "category": "sfx",
-      "volume": 0.9,
+      "volume": 1.0,
       "priority": 6,
       "cooldown_ms": 300,
       "resources": [
@@ -884,7 +873,7 @@
       "id": "combat.second_wind",
       "description": "The commander's second wind ability restores posture and stamina.",
       "category": "sfx",
-      "volume": 0.8,
+      "volume": 1.0,
       "priority": 6,
       "cooldown_ms": 300,
       "resources": [
@@ -900,8 +889,7 @@
       "priority": 4,
       "cooldown_ms": 350,
       "resources": [
-        "sfx.combat.ability_refused",
-        "sfx.combat.ability_refused_v2"
+        "sfx.combat.ability_refused"
       ],
       "wanted": "Very short dull click, felt rather than heard. Quieter cousin of ui.error so spamming a key never becomes painful."
     },
@@ -909,12 +897,11 @@
       "id": "combat.lock_on",
       "description": "The commander cycles the lock-on target.",
       "category": "sfx",
-      "volume": 0.6,
+      "volume": 0.76,
       "priority": 4,
       "cooldown_ms": 150,
       "resources": [
-        "sfx.combat.lock_on",
-        "sfx.combat.lock_on_v2"
+        "sfx.combat.lock_on"
       ],
       "wanted": "Tight focus tick: a single dry wood-block hit with a hint of pitch rise."
     },

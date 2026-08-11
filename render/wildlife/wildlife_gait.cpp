@@ -94,4 +94,34 @@ void solve_leg(const LegRest& rest,
   out.toe = toe;
 }
 
+auto capture_skeleton_lengths(const RigPose& pose) noexcept -> SkeletonLengths {
+  SkeletonLengths held;
+  held.tail_mid = (pose.tail_mid - pose.tail_base).length();
+  held.tail_tip = (pose.tail_tip - pose.tail_mid).length();
+  for (std::size_t i = 0; i < k_leg_count; ++i) {
+    held.legs[i][0] = (pose.legs[i].knee - pose.legs[i].shoulder).length();
+    held.legs[i][1] = (pose.legs[i].foot - pose.legs[i].knee).length();
+    held.legs[i][2] = (pose.legs[i].toe - pose.legs[i].foot).length();
+  }
+  return held;
+}
+
+void hold_bone(const QVector3D& parent, QVector3D& child, float length) noexcept {
+  QVector3D const bone = child - parent;
+  float const current = bone.length();
+  if (current > 1.0e-5F && length > 1.0e-5F) {
+    child = parent + ((bone / current) * length);
+  }
+}
+
+void enforce_skeleton_lengths(RigPose& pose, const SkeletonLengths& held) noexcept {
+  hold_bone(pose.tail_base, pose.tail_mid, held.tail_mid);
+  hold_bone(pose.tail_mid, pose.tail_tip, held.tail_tip);
+  for (std::size_t i = 0; i < k_leg_count; ++i) {
+    hold_bone(pose.legs[i].shoulder, pose.legs[i].knee, held.legs[i][0]);
+    hold_bone(pose.legs[i].knee, pose.legs[i].foot, held.legs[i][1]);
+    hold_bone(pose.legs[i].foot, pose.legs[i].toe, held.legs[i][2]);
+  }
+}
+
 } // namespace Render::Wildlife
