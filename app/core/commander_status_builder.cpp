@@ -181,6 +181,26 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
       static_cast<double>(commander->punish_window_remaining);
   result["punish_active"] = commander->punish_window_remaining > 0.0F;
   result["finisher_ready"] = commander->combo_step >= 3;
+  result["fight_context"] = QStringLiteral("none");
+  result["threat_left"] = false;
+  result["threat_right"] = false;
+  if (auto const* engagement =
+          commander_entity != nullptr
+              ? commander_entity->get_component<Engine::Core::RpgEngagementComponent>()
+              : nullptr) {
+    switch (engagement->fight_context) {
+    case Engine::Core::FightContext::Duel:
+      result["fight_context"] = QStringLiteral("duel");
+      break;
+    case Engine::Core::FightContext::Skirmish:
+      result["fight_context"] = QStringLiteral("skirmish");
+      break;
+    case Engine::Core::FightContext::None:
+      break;
+    }
+    result["threat_left"] = engagement->left_threat_id != 0;
+    result["threat_right"] = engagement->right_threat_id != 0;
+  }
   result["camera_mode"] =
       commander->close_camera_mode ? QStringLiteral("Close") : QStringLiteral("Chase");
 
@@ -258,6 +278,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["focus_target_max_hp"] = 0;
   result["focus_target_hp_ratio"] = 0.0;
   result["focus_target_staggered"] = false;
+  result["focus_target_guard_broken"] = false;
 
   result["focus_marker_valid"] = false;
   result["focus_marker_locked"] = false;
@@ -334,6 +355,10 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
           focus_entity->get_component<Engine::Core::StaggerComponent>();
       result["focus_target_staggered"] =
           focus_stagger != nullptr && focus_stagger->remaining > 0.0F;
+      auto const* focus_guard =
+          focus_entity->get_component<Engine::Core::CommanderGuardComponent>();
+      result["focus_target_guard_broken"] =
+          focus_guard != nullptr && focus_guard->guard_break_remaining > 0.0F;
     }
   }
   if (locked_id != 0 && world != nullptr) {

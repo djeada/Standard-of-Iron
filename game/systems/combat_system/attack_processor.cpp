@@ -52,6 +52,28 @@ auto deterministic_attack_delay(Engine::Core::EntityID attacker_id,
   return hash_to_unit(seed) * max_delay;
 }
 
+[[nodiscard]] auto
+throws_telegraphed_heavy(Engine::Core::Entity& attacker,
+                         const Engine::Core::Entity& target,
+                         Engine::Core::CombatAttackFamily family) -> bool {
+
+  if (family != Engine::Core::CombatAttackFamily::Sword ||
+      !Game::Systems::CombatRules::uses_rpg_combat_rules(&target)) {
+    return false;
+  }
+
+  auto* action = attacker.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action == nullptr) {
+    return false;
+  }
+
+  constexpr std::uint32_t k_heavy_every = 4U;
+  std::uint32_t const seed =
+      static_cast<std::uint32_t>(attacker.get_id() * 2654435761U) ^ 0x85EBCA6BU;
+  std::uint32_t const swing = action->melee_attack_sequence + (seed % k_heavy_every);
+  return (swing % k_heavy_every) == 0U;
+}
+
 auto commander_attack_advance_scale(const Engine::Core::Entity* attacker) noexcept
     -> float {
   if (attacker == nullptr) {
@@ -1108,15 +1130,16 @@ void begin_rts_melee_action(Engine::Core::Entity* attacker,
   auto const family = Engine::Core::resolve_combat_attack_family(
       unit->spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
   auto const signature = claim_commander_signature(attacker, damage);
-  auto const id =
-      signature.has_value()
-          ? *signature
-          : (attacker->has_component<Engine::Core::ElephantComponent>()
-                 ? Game::Systems::CombatActions::CombatActionId::RtsElephantStomp
-                 : (family == Engine::Core::CombatAttackFamily::Spear
-                        ? Game::Systems::CombatActions::CombatActionId::RtsSpearThrust
+  auto const routine_id =
+      attacker->has_component<Engine::Core::ElephantComponent>()
+          ? Game::Systems::CombatActions::CombatActionId::RtsElephantStomp
+          : (family == Engine::Core::CombatAttackFamily::Spear
+                 ? Game::Systems::CombatActions::CombatActionId::RtsSpearThrust
+                 : (throws_telegraphed_heavy(*attacker, *target, family)
+                        ? Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead
                         : Game::Systems::CombatActions::CombatActionId::
                               RtsSwordStrike));
+  auto const id = signature.has_value() ? *signature : routine_id;
   action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
   action->combat_action_id = static_cast<std::uint8_t>(id);
   action->active_target_id = target->get_id();
@@ -1124,6 +1147,8 @@ void begin_rts_melee_action(Engine::Core::Entity* attacker,
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   action->requested_damage = damage;
   action->action_duration = std::max(0.001F, duration);
+  action->melee_attack_sequence =
+      static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 250U);
   Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
 }
 

@@ -600,6 +600,94 @@ harder.
 chargers, nine drawn shots, nine bodies, with `GroupDestroyed` asserted for
 every one of them.
 
+## The Engagement Ring
+
+`refresh_commander_engagement` (in `rpg_combat_system/rpg_combat_processor.cpp`)
+builds the ring around a first-person commander each RPG tick: every living enemy
+inside `ring_radius` gets a slot, and three of them get active roles — one front
+attacker plus a left and a right threat. Everyone else is support.
+
+Three rules keep the ring from breaking the picture on screen:
+
+- **Fight context is derived, not guessed.** The refresh classifies the ring
+  onto `RpgEngagementComponent::fight_context`: `Duel` when every opponent in
+  the ring is a single body, `Skirmish` the moment any opponent is a formation
+  unit (`FormationCombat::has_formation_slots`), `None` when the ring is empty.
+  Camera, HUD, and behavior variants key off this one value instead of each
+  deriving their own answer.
+
+- **Roles are sticky.** An incumbent front attacker or side threat keeps its
+  role for as long as it stays inside a slightly widened sector (front ±80°
+  against ±65° for a fresh pick; sides 20°–145° against 30°–135°). Re-picking
+  from scratch every frame made near-tied candidates swap roles on tiny
+  position jitter, which read as enemies teleporting between stances. Because
+  the roles persist on the component, `find_primary_target` in the controller
+  reads last tick's ring instead of forcing a second full refresh per frame.
+
+- **Formation units are pinned.** The ring never issues movement orders to a
+  formation unit and never writes its facing. Dragging the squad anchor around
+  the commander made the formation layer re-resolve every soldier's slot around
+  a moving, rotating origin — soldiers slid sideways, swapped slots, and popped
+  between animation clips. A formation that enters the ring holds where the RTS
+  combat systems put it; only its engaged soldiers step out, which is the
+  formation presentation layer's job. Single-body enemies still approach and
+  orbit, but their facing goes through `desired_yaw` so turning is animated by
+  the movement system rather than snapped.
+
+`RpgEngagementSystemTest` pins all three rules.
+
+### The ring runs as a system, not from the app layer
+
+`RpgEngagementSystem` (registered in `runtime_system_registry.cpp`, just before
+`CombatSystem`) finds the fpv-controlled commander itself and runs the tick.
+It used to be called from `CommanderModeCoordinator::update_commander_control_mode`,
+which meant only `GameEngine` ever ran it: the arena drove `CommanderControlController`
+directly, so every arena capture and promo ran with an empty engagement component —
+no fight context, no camera framing, no threat pips — while the shipped game had them.
+Anything that hosts a first-person commander now gets the ring for free, and the
+duplicate per-frame refresh the controller used to do is gone with it.
+
+### The unblockable heavy
+
+Every enemy swing used to be answerable the same way: raise the guard. `RtsHeavyOverhead`
+is the exception the player has to read. Roughly every fourth swing a swordsman throws at
+a first-person commander is this action instead of `RtsSwordStrike`: a slower wind-up
+(contact at 0.56 of a 1.55 s action against 0.40 of 1.0 s), half again the damage, and
+`DamageProfile::unblockable`.
+
+Unblockable is a property of the damage, not of the action, so it travels the existing
+path — `request.damage_profile` into `commander_damage_profile()` into
+`CommanderDamageProfile` — without a new parameter anywhere. In
+`resolve_commander_guard` an unblockable blow skips the block entirely and spends its
+guard pressure on posture, so holding block against one is actively worse than moving;
+`resolve_perfect_guard` is skipped for the same reason. The dodge is the answer:
+`dodge_invincible` is checked before any of this, so i-frames still work.
+
+The cadence advances on `melee_attack_sequence`, which `begin_rts_melee_action` now
+increments. It previously never moved for RTS attackers, so a cadence keyed on it was
+constant per attacker — a soldier either threw a heavy on every swing or never threw one
+at all. Hashing the attacker id only phases _where_ in the cycle each soldier starts.
+
+The tell is the telegraph ring. An ordinary wind-up warms orange to red as it winds; an
+unblockable is red from the first frame, half again as wide, and pulses faster.
+`AnUnblockableHeavyGoesStraightThroughARaisedGuard`, `ADodgeStillBeatsAnUnblockableHeavy`
+and `AnOrdinaryStrikeIsStillStoppedByTheGuard` pin all three halves of the rule.
+
+### One contact, one spark, on the body
+
+A contact spark is drawn at the contact point, and the contact point is sampled from
+the weapon socket. For an overhead swing that socket is the blade tip, two to three
+metres in the air, so every landed blow threw a starburst that hung above the
+fighters' heads and read as a bug from a low camera. `queue_rpg_contact_presentation`
+now treats the contact as a mark on the body it landed on: the point is snapped to
+the target when it is implausibly far in plan, and its height is clamped into the
+impact band between 0.35 m and 1.55 m above the target's feet.
+
+The strike flash that follows an enemy's wind-up is a single quick ground ring. It
+used to be two concentric expanding rings in the same visual language the aim and
+lock markers use, which put a second highlight under whatever the player was already
+aiming at. Ground rings mean _target state_; impact is carried by the spark.
+
 ## Known Boundaries
 
 ### RPG Commander Combat

@@ -532,6 +532,7 @@ add_library(
     app/core/weather_audio.cpp
     app/core/camera_controller.cpp
     app/core/campaign_manager.cpp
+    app/core/commander_camera_rig.cpp
     app/core/commander_control_controller.cpp
     app/core/commander_input_adapter.cpp
     app/core/commander_mode_coordinator.cpp
@@ -635,7 +636,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/WaveTracker.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDBottomCommander.qml
-            ui/qml/RpgTargetBar.qml
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgDamageNumbers.qml
             ui/qml/FormationPanel.qml

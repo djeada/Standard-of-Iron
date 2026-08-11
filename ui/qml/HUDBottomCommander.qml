@@ -379,48 +379,6 @@ RowLayout {
                 }
             }
 
-            Flow {
-                Layout.fillWidth: true
-                visible: bottomRoot.fpv_mode
-                spacing: 5
-
-                Rectangle {
-                    radius: 12
-                    color: hs.parchmentLight
-                    border.color: hs.bronzeDeep
-                    border.width: 1
-                    height: 24
-                    width: stateChipText.implicitWidth + 20
-
-                    Text {
-                        id: stateChipText
-                        anchors.centerIn: parent
-                        text: bottomRoot.stance_label()
-                        color: Theme.textMain
-                        font.pointSize: 8
-                        font.bold: true
-                    }
-                }
-
-                Rectangle {
-                    radius: 12
-                    color: hs.parchmentLight
-                    border.color: hs.bronzeDeep
-                    border.width: 1
-                    height: 24
-                    width: cameraChipText.implicitWidth + 20
-
-                    Text {
-                        id: cameraChipText
-                        anchors.centerIn: parent
-                        text: qsTr("%1 camera").arg(bottomRoot.status_value("camera_mode", qsTr("Chase")))
-                        color: Theme.textMain
-                        font.pointSize: 8
-                        font.bold: true
-                    }
-                }
-            }
-
             Text {
 
                 visible: !bottomRoot.fpv_mode
@@ -735,6 +693,7 @@ RowLayout {
         Layout.fillWidth: true
         Layout.preferredWidth: Math.max(280, bottomRoot.width * 0.26)
         Layout.fillHeight: true
+        visible: !bottomRoot.fpv_mode
         color: bottomRoot.fpv_mode ? "#a6100b07" : hs.parchmentDark
         border.color: bottomRoot.fpv_mode ? Qt.rgba(0.72, 0.55, 0.30, 0.55) : hs.bronze
         border.width: bottomRoot.fpv_mode ? 1 : 2

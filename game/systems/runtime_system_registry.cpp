@@ -27,6 +27,7 @@
 #include "production_system.h"
 #include "projectile_system.h"
 #include "resource_delivery_system.h"
+#include "rpg_combat_system/rpg_engagement_system.h"
 #include "selection_system.h"
 #include "settlement_life_system.h"
 #include "showcase_routine_system.h"
@@ -52,6 +53,7 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<Game::Formation::UnitLayoutStateSystem>());
 
   world.add_system(std::make_unique<EngagementSlotSystem>());
+  world.add_system(std::make_unique<RpgEngagementSystem>());
   world.add_system(std::make_unique<CombatSystem>());
   world.add_system(std::make_unique<CommanderSystem>());
   world.add_system(std::make_unique<HealingBeamSystem>());

@@ -10,7 +10,6 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/command_service.h"
 #include "game/systems/picking_service.h"
-#include "game/systems/rpg_combat_system/rpg_combat_processor.h"
 #include "game/systems/selection_system.h"
 #include "input_command_handler.h"
 #include "production_manager.h"
@@ -424,8 +423,6 @@ auto CommanderModeCoordinator::update_commander_control_mode(
     }
   }
 
-  Game::Systems::RpgCombat::tick_rpg_combat(
-      context.world, context.controlled_commander_id, context.dt);
   return effects;
 }
 

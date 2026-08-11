@@ -90,6 +90,107 @@ TEST_F(RpgEngagementSystemTest, IgnoresAlliesDeadUnitsAndUnitsOutsideRing) {
   EXPECT_EQ(engagement->active_attackers, 1);
 }
 
+TEST_F(RpgEngagementSystemTest, EmptyRingHasNoFightContext) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  create_unit(world, 0.0F, 20.0F, 2);
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+
+  auto* engagement = commander->get_component<RpgEngagementComponent>();
+  ASSERT_NE(engagement, nullptr);
+  EXPECT_EQ(engagement->fight_context, FightContext::None);
+}
+
+TEST_F(RpgEngagementSystemTest, SingleBodyOpponentsMakeADuel) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  auto* champion = create_unit(world, 0.0F, 2.0F, 2);
+  champion->get_component<UnitComponent>()->render_individuals_per_unit_override = 1;
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+
+  auto* engagement = commander->get_component<RpgEngagementComponent>();
+  ASSERT_NE(engagement, nullptr);
+  EXPECT_EQ(engagement->fight_context, FightContext::Duel);
+}
+
+TEST_F(RpgEngagementSystemTest, FormationOpponentInRingMakesASkirmish) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  create_unit(world, 0.0F, 2.0F, 2);
+  auto* formation = create_unit(world, 1.5F, 2.0F, 2);
+  formation->get_component<UnitComponent>()->render_individuals_per_unit_override = 9;
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+
+  auto* engagement = commander->get_component<RpgEngagementComponent>();
+  ASSERT_NE(engagement, nullptr);
+  EXPECT_EQ(engagement->fight_context, FightContext::Skirmish);
+}
+
+TEST_F(RpgEngagementSystemTest, FrontAttackerRoleIsSticky) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  commander->get_component<TransformComponent>()->rotation.y = 0.0F;
+  auto* incumbent = create_unit(world, 0.0F, 2.0F, 2);
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+  auto* engagement = commander->get_component<RpgEngagementComponent>();
+  ASSERT_NE(engagement, nullptr);
+  ASSERT_EQ(engagement->front_attacker_id, incumbent->get_id());
+
+  create_unit(world, 0.4F, 1.2F, 2);
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+
+  EXPECT_EQ(engagement->front_attacker_id, incumbent->get_id());
+}
+
+TEST_F(RpgEngagementSystemTest, FrontAttackerReassignsWhenIncumbentLeavesSector) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  commander->get_component<TransformComponent>()->rotation.y = 0.0F;
+  auto* incumbent = create_unit(world, 0.0F, 2.0F, 2);
+  auto* challenger = create_unit(world, 0.2F, 1.5F, 2);
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+  auto* engagement = commander->get_component<RpgEngagementComponent>();
+  ASSERT_NE(engagement, nullptr);
+
+  auto* first_front = world.get_entity(engagement->front_attacker_id);
+  ASSERT_NE(first_front, nullptr);
+  auto* moved = first_front->get_component<TransformComponent>();
+  moved->position.x = 0.0F;
+  moved->position.z = -2.5F;
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+  EXPECT_NE(engagement->front_attacker_id, first_front->get_id());
+  EXPECT_NE(engagement->front_attacker_id, 0U);
+  (void)incumbent;
+  (void)challenger;
+}
+
+TEST_F(RpgEngagementSystemTest, FormationOpponentsAreNeverDraggedByTheRing) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  commander->get_component<TransformComponent>()->rotation.y = 0.0F;
+
+  auto* formation = create_unit(world, -2.0F, 1.0F, 2);
+  formation->get_component<UnitComponent>()->render_individuals_per_unit_override = 9;
+  auto* formation_tf = formation->get_component<TransformComponent>();
+  formation_tf->rotation.y = 123.0F;
+
+  auto* single = create_unit(world, 0.0F, 2.0F, 2);
+  single->get_component<UnitComponent>()->render_individuals_per_unit_override = 1;
+  float const engage_distance =
+      Game::Systems::RpgCombat::ideal_engage_distance(*single, *commander);
+  single->get_component<TransformComponent>()->position.z = engage_distance;
+
+  Game::Systems::RpgCombat::tick_rpg_combat(&world, commander->get_id(), 0.016F);
+
+  EXPECT_FLOAT_EQ(formation_tf->rotation.y, 123.0F);
+  EXPECT_FALSE(formation_tf->has_desired_yaw);
+  auto* formation_movement = formation->get_component<MovementComponent>();
+  EXPECT_TRUE(formation_movement == nullptr || !formation_movement->get_has_target());
+
+  auto* single_tf = single->get_component<TransformComponent>();
+  EXPECT_TRUE(single_tf->has_desired_yaw);
+}
+
 TEST_F(RpgEngagementSystemTest, IdealEngageDistanceScalesWithWeaponReach) {
   auto* commander = create_unit(world, 0.0F, 0.0F, 1);
 

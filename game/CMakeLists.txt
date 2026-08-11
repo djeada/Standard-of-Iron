@@ -98,6 +98,7 @@ add_library(
     systems/rpg_combat_system/rpg_commander_damage.cpp
     systems/rpg_combat_system/rpg_damage_resolver.cpp
     systems/rpg_combat_system/rpg_combat_processor.cpp
+    systems/rpg_combat_system/rpg_engagement_system.cpp
     systems/rpg_combat_system/rpg_targeting.cpp
     systems/ai_system.cpp
     systems/ai_system/ai_command_applier.cpp
