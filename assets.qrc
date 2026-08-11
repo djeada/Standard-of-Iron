@@ -177,7 +177,6 @@
         <file>assets/audio/sfx/build/unit_queued_v2.ogg</file>
         <file>assets/audio/sfx/build/unit_ready_bell.ogg</file>
         <file>assets/audio/sfx/combat/ability_refused.ogg</file>
-        <file>assets/audio/sfx/combat/ability_refused_v2.ogg</file>
         <file>assets/audio/sfx/combat/aftermath_battlefield.ogg</file>
         <file>assets/audio/sfx/combat/archer_volley_many.ogg</file>
         <file>assets/audio/sfx/combat/archers_shooting_close.ogg</file>
@@ -203,42 +202,31 @@
         <file>assets/audio/sfx/combat/blade_clash_03.ogg</file>
         <file>assets/audio/sfx/combat/blade_clash_04.ogg</file>
         <file>assets/audio/sfx/combat/bow_draw_creak.ogg</file>
-        <file>assets/audio/sfx/combat/bow_draw_creak_v2.ogg</file>
         <file>assets/audio/sfx/combat/bow_full_draw_seat.ogg</file>
-        <file>assets/audio/sfx/combat/bow_full_draw_seat_v2.ogg</file>
         <file>assets/audio/sfx/combat/bow_hold_strain.ogg</file>
-        <file>assets/audio/sfx/combat/bow_hold_strain_v2.ogg</file>
         <file>assets/audio/sfx/combat/bow_loose_heavy.ogg</file>
         <file>assets/audio/sfx/combat/bow_loose_heavy_v2.ogg</file>
-        <file>assets/audio/sfx/combat/bow_loose_heavy_v3.ogg</file>
         <file>assets/audio/sfx/combat/bow_release_single.ogg</file>
         <file>assets/audio/sfx/combat/bow_release_single_v2.ogg</file>
-        <file>assets/audio/sfx/combat/bow_release_single_v3.ogg</file>
         <file>assets/audio/sfx/combat/carthage_prepare_battle.ogg</file>
         <file>assets/audio/sfx/combat/charge_roar.ogg</file>
         <file>assets/audio/sfx/combat/dodge_roll.ogg</file>
         <file>assets/audio/sfx/combat/dodge_roll_v2.ogg</file>
-        <file>assets/audio/sfx/combat/dodge_roll_v3.ogg</file>
         <file>assets/audio/sfx/combat/elephant_charge_carthage.ogg</file>
         <file>assets/audio/sfx/combat/elephant_panic.ogg</file>
         <file>assets/audio/sfx/combat/gladius_shield_impacts_close.ogg</file>
         <file>assets/audio/sfx/combat/guard_break.ogg</file>
         <file>assets/audio/sfx/combat/guard_raise.ogg</file>
-        <file>assets/audio/sfx/combat/guard_raise_v2.ogg</file>
         <file>assets/audio/sfx/combat/heal_bind_wound.ogg</file>
         <file>assets/audio/sfx/combat/horse_gallop_close_pass.ogg</file>
         <file>assets/audio/sfx/combat/human_death_cry.ogg</file>
         <file>assets/audio/sfx/combat/javelin_throw_whoosh.ogg</file>
         <file>assets/audio/sfx/combat/jump_effort.ogg</file>
-        <file>assets/audio/sfx/combat/jump_effort_v2.ogg</file>
         <file>assets/audio/sfx/combat/land_thud.ogg</file>
         <file>assets/audio/sfx/combat/land_thud_v2.ogg</file>
-        <file>assets/audio/sfx/combat/land_thud_v3.ogg</file>
         <file>assets/audio/sfx/combat/lock_on_tick.ogg</file>
-        <file>assets/audio/sfx/combat/lock_on_tick_v2.ogg</file>
         <file>assets/audio/sfx/combat/numidian_cavalry_chase.ogg</file>
         <file>assets/audio/sfx/combat/perfect_guard.ogg</file>
-        <file>assets/audio/sfx/combat/perfect_guard_v2.ogg</file>
         <file>assets/audio/sfx/combat/roman_cavalry_charge.ogg</file>
         <file>assets/audio/sfx/combat/roman_shield_wall_impact.ogg</file>
         <file>assets/audio/sfx/combat/roman_war_horns_orders.ogg</file>
@@ -247,7 +235,6 @@
         <file>assets/audio/sfx/combat/shield_bash_v2.ogg</file>
         <file>assets/audio/sfx/combat/shield_block.ogg</file>
         <file>assets/audio/sfx/combat/shield_block_v2.ogg</file>
-        <file>assets/audio/sfx/combat/shield_block_v3.ogg</file>
         <file>assets/audio/sfx/combat/siege_impact.ogg</file>
         <file>assets/audio/sfx/combat/siege_launch.ogg</file>
         <file>assets/audio/sfx/combat/soldiers_victory_cheer.ogg</file>
