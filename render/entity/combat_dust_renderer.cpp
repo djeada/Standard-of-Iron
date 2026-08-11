@@ -10,6 +10,7 @@
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
+#include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system/structure_combat.h"
 #include "game/systems/combat_system/structure_fire.h"
@@ -1116,11 +1117,26 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
             ? std::clamp(csc->state_time / csc->state_duration, 0.0F, 1.0F)
             : 0.0F;
 
-    const float ring_r = 0.50F + 0.18F * progress;
-    const float pulse_speed = 4.0F + 6.0F * progress;
-    const float ring_alpha = 0.62F + 0.25F * pulse(anim_time, pulse_speed);
+    bool unblockable = false;
+    if (auto const* action =
+            entity->get_component<Engine::Core::RpgCommanderActionComponent>()) {
+      auto const* definition =
+          Game::Systems::CombatActions::find_combat_action_definition(
+              static_cast<Game::Systems::CombatActions::CombatActionId>(
+                  action->combat_action_id));
+      unblockable = definition != nullptr && definition->damage.unblockable;
+    }
+
+    const float ring_r =
+        (unblockable ? 0.74F : 0.50F) + (unblockable ? 0.30F : 0.18F) * progress;
+    const float pulse_speed =
+        (unblockable ? 7.0F : 4.0F) + (unblockable ? 9.0F : 6.0F) * progress;
+    const float ring_alpha =
+        (unblockable ? 0.78F : 0.62F) +
+        (unblockable ? 0.22F : 0.25F) * pulse(anim_time, pulse_speed);
     QVector3D const ring_color =
-        k_warning_orange * (1.0F - progress) + k_danger_red * progress;
+        unblockable ? k_danger_red
+                    : k_warning_orange * (1.0F - progress) + k_danger_red * progress;
 
     body_rings.add({.entity_id = id,
                     .soldier_slot = entry.soldier_slot,
@@ -1178,8 +1194,8 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     const float elapsed = anim_time - flash.start_time;
     const float t = elapsed / StrikeFlash::k_duration;
 
-    const float flash_r = 0.48F + 0.42F * t;
-    const float flash_alpha = (1.0F - t) * 0.78F;
+    const float flash_r = 0.30F + 0.26F * t;
+    const float flash_alpha = (1.0F - t) * (1.0F - t) * 0.62F;
     submit_marker(renderer,
                   RpgMarkerRole::StrikeFlash,
                   flash.pos.x(),
@@ -1188,17 +1204,6 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                   flash_r,
                   flash_alpha,
                   k_flash_white);
-
-    const float core_r = 0.22F + 0.24F * t;
-    const float core_alpha = (1.0F - t * t) * 0.82F;
-    submit_marker(renderer,
-                  RpgMarkerRole::StrikeFlash,
-                  flash.pos.x(),
-                  flash.pos.y(),
-                  flash.pos.z(),
-                  core_r,
-                  core_alpha,
-                  QVector3D(1.0F, 1.0F, 0.80F));
 
     if (elapsed < 0.08F) {
       QVector3D const spark_pos(flash.pos.x(), flash.pos.y() + 0.4F, flash.pos.z());
@@ -1223,14 +1228,16 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
   std::uint16_t const resolved_lock_slot =
       targets != nullptr ? targets->explicit_lock_soldier_slot
                          : Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
-  bool aim_is_lock = false;
+  bool aim_ring_active = false;
   if (targets != nullptr && targets->aim_candidate_in_range &&
       targets->aim_candidate_id != 0) {
     auto const aim =
         resolve_target(targets->aim_candidate_id, targets->aim_candidate_soldier_slot);
     if (aim.has_value()) {
-      aim_is_lock = targets->aim_candidate_id == resolved_lock_id &&
-                    targets->aim_candidate_soldier_slot == resolved_lock_slot;
+      bool const aim_is_lock =
+          targets->aim_candidate_id == resolved_lock_id &&
+          targets->aim_candidate_soldier_slot == resolved_lock_slot;
+      aim_ring_active = true;
       float const alpha = 0.78F + 0.18F * pulse(anim_time, 4.0F);
       float const radius =
           std::max(0.54F, aim->body_radius * (aim_is_lock ? 1.30F : 1.22F));
@@ -1248,7 +1255,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
     }
   }
 
-  if (resolved_lock_id != 0 && !aim_is_lock) {
+  if (resolved_lock_id != 0 && !aim_ring_active) {
     auto const lock = resolve_target(resolved_lock_id, resolved_lock_slot);
     if (lock.has_value()) {
       float const lock_alpha = 0.72F + 0.22F * pulse(anim_time, 3.0F);

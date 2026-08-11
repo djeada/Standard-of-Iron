@@ -1,0 +1,96 @@
+{
+  "id": "iron_close_quarters",
+  "title": "CLOSE QUARTERS",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dip",
+    "duration": 0.3
+  },
+  "shots": [
+    {
+      "name": "blade_meets_line",
+      "scenario": "rpg_melee_contact",
+      "seed": 1337,
+      "start": 0.15,
+      "duration": 2.5,
+      "gameplay_camera": true,
+      "rpg_hud": true,
+      "caption": "STEEL MEETS THE LINE"
+    },
+    {
+      "name": "hold_the_ring",
+      "scenario": "rpg_melee_contact",
+      "seed": 1337,
+      "start": 2.65,
+      "duration": 2.6,
+      "gameplay_camera": true,
+      "rpg_hud": true,
+      "caption": "THE LINE HOLDS ITS SHAPE"
+    },
+    {
+      "name": "every_swing_chains",
+      "scenario": "rpg_combo_cadence",
+      "seed": 1337,
+      "start": 0.8,
+      "duration": 2.8,
+      "gameplay_camera": true,
+      "rpg_hud": true,
+      "caption": "EVERY SWING CHAINS"
+    },
+    {
+      "name": "finisher",
+      "scenario": "rpg_combo_cadence",
+      "seed": 1337,
+      "start": 4.4,
+      "duration": 2.4,
+      "slow_motion": 1.7,
+      "gameplay_camera": true,
+      "rpg_hud": true,
+      "caption": "BREAK THEM",
+      "transition": {
+        "type": "dip",
+        "duration": 0.22
+      }
+    },
+    {
+      "name": "read_block_answer",
+      "scenario": "rpg_defense_contact",
+      "seed": 1337,
+      "start": 0.3,
+      "duration": 4.0,
+      "gameplay_camera": true,
+      "rpg_hud": true,
+      "caption": "READ. BLOCK. ANSWER."
+    },
+    {
+      "name": "closer",
+      "scenario": "rpg_melee_contact",
+      "seed": 1337,
+      "start": 3.6,
+      "duration": 1.7,
+      "slow_motion": 1.5,
+      "gameplay_camera": true,
+      "rpg_hud": true,
+      "caption": "STANDARD OF IRON",
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.35
+      }
+    }
+  ],
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.12,
+    "brightness": 0.03,
+    "gamma": 1.04,
+    "grain": 2,
+    "vignette": 0.12,
+    "sharpen": 0.7
+  },
+  "music": "assets/audio/music/menu/main_theme_rome_vs_carthage.ogg",
+  "music_start": 0.0
+}

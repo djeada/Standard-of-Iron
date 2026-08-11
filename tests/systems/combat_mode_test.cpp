@@ -16,6 +16,7 @@
 #include "systems/combat_actions/body_impact.h"
 #include "systems/combat_actions/combat_action_definition.h"
 #include "systems/combat_actions/combat_action_events.h"
+#include "systems/combat_actions/combat_action_service.h"
 #include "systems/combat_actions/weapon_trace.h"
 #include "systems/combat_status_effect_system.h"
 #include "systems/combat_system/attack_processor.h"
@@ -3421,6 +3422,229 @@ TEST_F(CombatModeTest, SpearTraceUsesLongNarrowThrustShape) {
   EXPECT_EQ(side_contact.target_id, 0U)
       << "local_forward=" << side_contact.local_forward
       << " local_right=" << side_contact.local_right;
+}
+
+TEST_F(CombatModeTest, AnUnblockableHeavyGoesStraightThroughARaisedGuard) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* guard = commander->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+  rpg->rpg_hp = 100;
+  rpg->rpg_max_hp = 100;
+  rpg->crit_chance = 0.0F;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+
+  auto const* heavy = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead);
+  ASSERT_NE(heavy, nullptr);
+  ASSERT_TRUE(heavy->damage.unblockable);
+
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = enemy->get_id(),
+                   .target_id = commander->get_id(),
+                   .action_id = heavy->id,
+                   .weapon_family = heavy->weapon_family,
+                   .attack_family = heavy->attack_family,
+                   .attack_direction = heavy->attack_direction,
+                   .contact_point = QVector3D(0.0F, 1.0F, 0.7F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = heavy->damage});
+
+  ASSERT_TRUE(result.attempted);
+  EXPECT_FALSE(result.damage.blocked)
+      << "a red-telegraphed heavy has to beat a raised guard, or the tell means "
+         "nothing";
+  EXPECT_LT(rpg->rpg_hp, 100);
+}
+
+TEST_F(CombatModeTest, ADodgeStillBeatsAnUnblockableHeavy) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+  rpg->rpg_hp = 100;
+  rpg->rpg_max_hp = 100;
+  rpg->dodge_invincible = true;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+
+  auto const* heavy = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead);
+  ASSERT_NE(heavy, nullptr);
+
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = enemy->get_id(),
+                   .target_id = commander->get_id(),
+                   .action_id = heavy->id,
+                   .weapon_family = heavy->weapon_family,
+                   .attack_family = heavy->attack_family,
+                   .attack_direction = heavy->attack_direction,
+                   .contact_point = QVector3D(0.0F, 1.0F, 0.7F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = heavy->damage});
+
+  ASSERT_TRUE(result.attempted);
+  EXPECT_TRUE(result.damage.dodged);
+  EXPECT_EQ(rpg->rpg_hp, 100)
+      << "the answer to an unblockable is the dodge; i-frames must still work";
+}
+
+TEST_F(CombatModeTest, AnOrdinaryStrikeIsStillStoppedByTheGuard) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* guard = commander->add_component<CommanderGuardComponent>();
+  guard->active = true;
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+  rpg->rpg_hp = 100;
+  rpg->rpg_max_hp = 100;
+  rpg->crit_chance = 0.0F;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+
+  auto const* light = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RtsSwordStrike);
+  ASSERT_NE(light, nullptr);
+  ASSERT_FALSE(light->damage.unblockable);
+
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = enemy->get_id(),
+                   .target_id = commander->get_id(),
+                   .action_id = light->id,
+                   .weapon_family = light->weapon_family,
+                   .attack_family = light->attack_family,
+                   .attack_direction = light->attack_direction,
+                   .contact_point = QVector3D(0.0F, 1.0F, 0.7F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = light->damage});
+
+  ASSERT_TRUE(result.attempted);
+  EXPECT_TRUE(result.damage.blocked);
+}
+
+TEST_F(CombatModeTest, ContactSparksAreNeverStrandedAwayFromTheBodyTheyLandOn) {
+  auto* commander = make_fpv_commander(*world, 40.0F, 40.0F);
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+  rpg->rpg_hp = 100;
+  rpg->rpg_max_hp = 100;
+  auto* enemy = make_enemy_soldier(*world, 40.0F, 41.4F);
+
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = enemy->get_id(),
+                   .target_id = commander->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RtsSwordStrike,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Sword,
+                   .attack_family = CombatAttackFamily::Sword,
+                   .attack_direction = AttackDirection::LeftSlash,
+                   .contact_point = QVector3D(0.0F, 0.0F, 0.0F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = {}});
+  ASSERT_TRUE(result.attempted);
+
+  auto const* presentation =
+      commander->get_component<RpgContactPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  ASSERT_FALSE(presentation->entries.empty());
+
+  auto const& entry = presentation->entries.back();
+  float const dx = entry.x - 40.0F;
+  float const dz = entry.z - 40.0F;
+  EXPECT_LT(std::hypot(dx, dz), 4.0F)
+      << "an unset contact point must snap to the body, not strand a spark at the "
+         "world origin";
+}
+
+TEST_F(CombatModeTest, ContactSparksStayOnTheBodyNotTheRaisedBlade) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+  rpg->rpg_hp = 100;
+  rpg->rpg_max_hp = 100;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.4F);
+
+  auto const result = Game::Systems::Combat::resolve_commander_action_hit(
+      world.get(),
+      {.contact = {.attacker_id = enemy->get_id(),
+                   .target_id = commander->get_id(),
+                   .action_id =
+                       Game::Systems::CombatActions::CombatActionId::RtsSwordStrike,
+                   .weapon_family = Game::Systems::CombatActions::WeaponFamily::Sword,
+                   .attack_family = CombatAttackFamily::Sword,
+                   .attack_direction = AttackDirection::Overhead,
+
+                   .contact_point = QVector3D(0.0F, 3.2F, 0.7F),
+                   .distance = 1.4F,
+                   .local_forward = 1.4F},
+       .damage_profile = {}});
+  ASSERT_TRUE(result.attempted);
+
+  auto const* presentation =
+      commander->get_component<RpgContactPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  ASSERT_FALSE(presentation->entries.empty());
+
+  auto const* transform = commander->get_component<TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  auto const& entry = presentation->entries.back();
+  EXPECT_LE(entry.y, transform->position.y + 1.55F)
+      << "an overhead swing samples the blade high above the head; the spark has to "
+         "land on the body it struck, not hang in the air";
+  EXPECT_GE(entry.y, transform->position.y + 0.35F);
+}
+
+TEST_F(CombatModeTest, PlainDealDamageRoutesIntoTheRpgPool) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* rpg = commander->add_component<RpgHealthComponent>();
+  rpg->active = true;
+  rpg->rpg_hp = 100;
+  rpg->rpg_max_hp = 100;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.0F);
+
+  Game::Systems::Combat::deal_damage(world.get(), commander, 20, enemy->get_id());
+
+  EXPECT_LT(rpg->rpg_hp, 100);
+  EXPECT_EQ(commander->get_component<UnitComponent>()->health, 100);
+}
+
+TEST_F(CombatModeTest, SpearFinisherIsAHeavierLongerLungeThanTheThrust) {
+  auto const* finisher = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSpearFinisher);
+  auto const* thrust = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSpearThrust);
+  ASSERT_NE(finisher, nullptr);
+  ASSERT_NE(thrust, nullptr);
+
+  EXPECT_EQ(finisher->weapon_family, Game::Systems::CombatActions::WeaponFamily::Spear);
+  EXPECT_EQ(finisher->attack_direction, AttackDirection::Thrust);
+  EXPECT_GT(finisher->damage.base_multiplier, thrust->damage.base_multiplier);
+  EXPECT_GT(finisher->hit_shape.reach, thrust->hit_shape.reach);
+  EXPECT_GT(finisher->duration_seconds, thrust->duration_seconds);
+  EXPECT_EQ(finisher->max_targets, 2);
+}
+
+TEST_F(CombatModeTest, SpearFinisherComboStepSelectsTheSpearFinisher) {
+  auto* commander = make_fpv_spear_commander(*world, 0.0F, 0.0F);
+  auto* commander_data = commander->get_component<CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->combo_step = 3;
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 2.0F);
+
+  auto const result = Game::Systems::CombatActions::CombatActionService::request_attack(
+      *world, {.attacker_id = commander->get_id(), .target_hint_id = enemy->get_id()});
+  ASSERT_TRUE(result.accepted);
+
+  auto const* action = commander->get_component<RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  EXPECT_EQ(static_cast<Game::Systems::CombatActions::CombatActionId>(
+                action->combat_action_id),
+            Game::Systems::CombatActions::CombatActionId::RpgSpearFinisher);
 }
 
 TEST_F(CombatModeTest, TimedWeaponTraceHasNoSegmentOutsideAuthoredWindow) {

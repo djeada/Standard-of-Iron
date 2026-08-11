@@ -13,6 +13,5 @@ FormationOptionRow 1.0 FormationOptionRow.qml
 FormationStatusBadge 1.0 FormationStatusBadge.qml
 ObjectivesPanel 1.0 ObjectivesPanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml
-RpgTargetBar 1.0 RpgTargetBar.qml
 RpgFpvOverlay 1.0 RpgFpvOverlay.qml
 RpgDamageNumbers 1.0 RpgDamageNumbers.qml
