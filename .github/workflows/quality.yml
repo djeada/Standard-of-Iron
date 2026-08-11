@@ -80,10 +80,15 @@ jobs:
       # with styles registered from render/entity/nations/. The script was
       # obsolete rather than the content, so it has been deleted. Anything
       # replacing it should assert on style registration, not on file names.
+      # validate_qrc_resources.py runs here, in the compiler-free gate, on
+      # purpose. A .qrc entry whose file was deleted breaks rcc's dependency
+      # scan, so every target embedding that .qrc fails before any object is
+      # compiled -- a validator that needs a build cannot catch it.
       - name: Static content validation
         run: |
           python scripts/validate_shader_uniforms.py
           python scripts/validate_opengl_requirements.py
+          python scripts/validate_qrc_resources.py
 
   # The two portability passes that need no compiler and no Qt. The third one
   # (Clang + libc++ over every translation unit) needs a configured build tree,
