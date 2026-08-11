@@ -10,6 +10,7 @@
 #include "arena_formation_scenarios.h"
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
+#include "arena_trailer_scenarios.h"
 #include "arena_wildlife_scenarios.h"
 #include "game/wildlife/wildlife_config.h"
 
@@ -9596,6 +9597,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(wildlife.begin()),
                   std::make_move_iterator(wildlife.end()));
+    auto trailer = build_trailer_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(trailer.begin()),
+                  std::make_move_iterator(trailer.end()));
     return values;
   }();
   return catalog;

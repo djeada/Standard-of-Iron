@@ -296,6 +296,13 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         shot_object.value(QStringLiteral("shake")).toDouble(shot.shake));
     shot.gameplay_camera = shot_object.value(QStringLiteral("gameplay_camera"))
                                .toBool(shot.gameplay_camera);
+    shot.flame_card =
+        shot_object.value(QStringLiteral("flame_card")).toBool(shot.flame_card);
+    shot.flame_speed = static_cast<float>(
+        shot_object.value(QStringLiteral("flame_speed")).toDouble(shot.flame_speed));
+    shot.flame_intensity =
+        static_cast<float>(shot_object.value(QStringLiteral("flame_intensity"))
+                               .toDouble(shot.flame_intensity));
     shot.rpg_hud = shot_object.value(QStringLiteral("rpg_hud")).toBool(shot.rpg_hud);
 
     if (shot.scenario.isEmpty()) {
@@ -317,7 +324,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
     }
     shot.slow_motion = std::clamp(shot.slow_motion, 0.05F, 8.0F);
 
-    if (shot.gameplay_camera) {
+    if (shot.gameplay_camera || shot.flame_card) {
 
       spec.shots.push_back(std::move(shot));
       continue;

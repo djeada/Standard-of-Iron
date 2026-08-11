@@ -203,6 +203,13 @@ inline constexpr char k_promo_storm_charge_id[] = "promo_storm_charge";
 inline constexpr char k_promo_commander_duel_id[] = "promo_commander_duel";
 inline constexpr char k_promo_wolf_attack_id[] = "promo_wolf_attack";
 
+inline constexpr char k_trailer_dawn_id[] = "trailer_dawn";
+inline constexpr char k_trailer_muster_id[] = "trailer_muster";
+inline constexpr char k_trailer_clash_id[] = "trailer_clash";
+inline constexpr char k_trailer_pov_id[] = "trailer_pov";
+inline constexpr char k_trailer_night_id[] = "trailer_barrow_night";
+inline constexpr char k_trailer_flame_card_id[] = "trailer_flame_card";
+
 inline constexpr char k_weather_rain_light_id[] = "weather_rain_light";
 inline constexpr char k_weather_rain_medium_id[] = "weather_rain_medium";
 inline constexpr char k_weather_rain_heavy_id[] = "weather_rain_heavy";

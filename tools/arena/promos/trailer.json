@@ -1,0 +1,1023 @@
+{
+  "id": "trailer",
+  "title": "STANDARD OF IRON",
+  "subtitle": "BUILD. MARCH. CONQUER. SURVIVE THE NIGHT.",
+  "end_card_seconds": 5.2,
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 2,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.35
+  },
+  "music": "artifacts/promo/trailer_score.ogg",
+  "music_start": 0.0,
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.14,
+    "brightness": 0.04,
+    "gamma": 1.12,
+    "grain": 4,
+    "vignette": 0.08
+  },
+  "shots": [
+    {
+      "name": "card_open",
+      "scenario": "trailer_flame_card",
+      "start": 0.5,
+      "duration": 3.5,
+      "act_title": "STANDARD OF IRON",
+      "flame_card": true,
+      "flame_speed": 0.85,
+      "flame_intensity": 1.0
+    },
+    {
+      "name": "valley_reveal",
+      "scenario": "trailer_dawn",
+      "start": 2.0,
+      "duration": 4.5,
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      },
+      "caption": "BUILD",
+      "focus": {
+        "mode": "point",
+        "point": [-14.0, 0.0, 0.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 46.0,
+          "pitch": 26,
+          "yaw": 30,
+          "fov": 44,
+          "height": 2.4
+        },
+        {
+          "time": 4.5,
+          "distance": 34.0,
+          "pitch": 23,
+          "yaw": 12,
+          "fov": 44,
+          "height": 2.2,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "village_life",
+      "scenario": "trailer_dawn",
+      "start": 9.5,
+      "duration": 4.0,
+      "focus": {
+        "mode": "group",
+        "group": "roman_town_folk",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15.0,
+          "pitch": 20,
+          "yaw": 70,
+          "fov": 44,
+          "height": 1.9
+        },
+        {
+          "time": 4.0,
+          "distance": 11.0,
+          "pitch": 18,
+          "yaw": 52,
+          "fov": 44,
+          "height": 1.8,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.4
+      }
+    },
+    {
+      "name": "harvest",
+      "scenario": "trailer_dawn",
+      "start": 12.0,
+      "duration": 4.0,
+      "focus": {
+        "mode": "point",
+        "point": [-26.0, 0.0, -14.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 21.0,
+          "pitch": 9,
+          "yaw": 95,
+          "fov": 40,
+          "height": 1.6
+        },
+        {
+          "time": 4.0,
+          "distance": 13.0,
+          "pitch": 10,
+          "yaw": 80,
+          "fov": 40,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.4
+      }
+    },
+    {
+      "name": "flock",
+      "scenario": "trailer_dawn",
+      "start": 14.5,
+      "duration": 4.0,
+      "focus": {
+        "mode": "point",
+        "point": [-13.0, 0.0, 7.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15.0,
+          "pitch": 9,
+          "yaw": 300,
+          "fov": 40,
+          "height": 1.3
+        },
+        {
+          "time": 4.0,
+          "distance": 11.0,
+          "pitch": 11,
+          "yaw": 325,
+          "fov": 40,
+          "height": 1.4,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.4
+      }
+    },
+    {
+      "name": "wolves_watch",
+      "scenario": "trailer_dawn",
+      "start": 26.0,
+      "duration": 3.5,
+      "focus": {
+        "mode": "point",
+        "point": [-25.0, 0.0, 7.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 14.0,
+          "pitch": 9,
+          "yaw": 262,
+          "fov": 40,
+          "height": 1.2
+        },
+        {
+          "time": 3.5,
+          "distance": 11.0,
+          "pitch": 10,
+          "yaw": 276,
+          "fov": 40,
+          "height": 1.3,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.3
+      }
+    },
+    {
+      "name": "wolf_rush",
+      "scenario": "trailer_dawn",
+      "start": 32.0,
+      "duration": 3.2,
+      "slow_motion": 1.5,
+      "shake": 0.04,
+      "caption": "DEFEND",
+      "focus": {
+        "mode": "point",
+        "point": [-16.0, 0.0, 7.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 13.0,
+          "pitch": 9,
+          "yaw": 272,
+          "fov": 44,
+          "height": 1.2
+        },
+        {
+          "time": 3.2,
+          "distance": 9.5,
+          "pitch": 11,
+          "yaw": 292,
+          "fov": 44,
+          "height": 1.3,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "card_legion",
+      "scenario": "trailer_flame_card",
+      "start": 5.0,
+      "duration": 3.0,
+      "transition": {
+        "type": "dip",
+        "duration": 0.45
+      },
+      "act_title": "THE LEGION",
+      "flame_card": true,
+      "flame_speed": 1.0,
+      "flame_intensity": 1.05
+    },
+    {
+      "name": "gate_open",
+      "scenario": "trailer_muster",
+      "start": 6.2,
+      "duration": 5.0,
+      "transition": {
+        "type": "dip",
+        "duration": 0.45
+      },
+      "focus": {
+        "mode": "point",
+        "point": [20.0, 0.0, -16.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15.0,
+          "pitch": 16,
+          "yaw": 250,
+          "fov": 44,
+          "height": 2.2
+        },
+        {
+          "time": 5.0,
+          "distance": 12.0,
+          "pitch": 15,
+          "yaw": 264,
+          "fov": 44,
+          "height": 2.0,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "column_road",
+      "scenario": "trailer_muster",
+      "start": 3.0,
+      "duration": 5.0,
+      "caption": "MARCH",
+      "focus": {
+        "mode": "group",
+        "group": "legion_swords",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15.0,
+          "pitch": 19,
+          "yaw": 300,
+          "fov": 44,
+          "height": 2.0
+        },
+        {
+          "time": 5.0,
+          "distance": 12.0,
+          "pitch": 17,
+          "yaw": 332,
+          "fov": 44,
+          "height": 1.9,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.3
+      }
+    },
+    {
+      "name": "commander_head",
+      "scenario": "trailer_muster",
+      "start": 2.0,
+      "duration": 4.0,
+      "focus": {
+        "mode": "group",
+        "group": "legion_commander",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.0,
+          "pitch": 16,
+          "yaw": 330,
+          "fov": 44,
+          "height": 1.8
+        },
+        {
+          "time": 4.0,
+          "distance": 7.0,
+          "pitch": 15,
+          "yaw": 348,
+          "fov": 44,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "bridge_crossing",
+      "scenario": "trailer_muster",
+      "start": 15.2,
+      "duration": 5.5,
+      "focus": {
+        "mode": "point",
+        "point": [-2.0, 0.0, 15.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 19.0,
+          "pitch": 17,
+          "yaw": 292,
+          "fov": 44,
+          "height": 2.2
+        },
+        {
+          "time": 5.5,
+          "distance": 15.0,
+          "pitch": 16,
+          "yaw": 308,
+          "fov": 44,
+          "height": 2.0,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.3
+      }
+    },
+    {
+      "name": "line_deploy",
+      "scenario": "trailer_clash",
+      "start": 15.0,
+      "duration": 5.5,
+      "caption": "COMMAND",
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_line",
+        "second_group": "punic_line",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 24.0,
+          "pitch": 24,
+          "yaw": 255,
+          "fov": 44,
+          "height": 2.2
+        },
+        {
+          "time": 5.5,
+          "distance": 30.0,
+          "pitch": 28,
+          "yaw": 276,
+          "fov": 44,
+          "height": 2.0,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "card_battle",
+      "scenario": "trailer_flame_card",
+      "start": 9.5,
+      "duration": 3.0,
+      "transition": {
+        "type": "dip",
+        "duration": 0.45
+      },
+      "act_title": "THE BATTLE",
+      "flame_card": true,
+      "flame_speed": 1.25,
+      "flame_intensity": 1.15
+    },
+    {
+      "name": "hosts_face",
+      "scenario": "trailer_clash",
+      "start": 0.6,
+      "duration": 4.0,
+      "transition": {
+        "type": "dip",
+        "duration": 0.45
+      },
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 33.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30.0,
+          "pitch": 13,
+          "yaw": 250,
+          "fov": 42,
+          "height": 1.7
+        },
+        {
+          "time": 4.0,
+          "distance": 23.0,
+          "pitch": 11,
+          "yaw": 268,
+          "fov": 42,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "volley",
+      "scenario": "trailer_clash",
+      "start": 1.6,
+      "duration": 2.6,
+      "slow_motion": 2.0,
+      "focus": {
+        "mode": "group",
+        "group": "roman_archers",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12.0,
+          "pitch": 18,
+          "yaw": 250,
+          "fov": 46,
+          "height": 2.0
+        },
+        {
+          "time": 2.6,
+          "distance": 10.0,
+          "pitch": 20,
+          "yaw": 262,
+          "fov": 46,
+          "height": 2.4,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "elephant_charge",
+      "scenario": "trailer_clash",
+      "start": 8.0,
+      "duration": 3.5,
+      "slow_motion": 1.5,
+      "shake": 0.05,
+      "focus": {
+        "mode": "group",
+        "group": "punic_elephants",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 13.0,
+          "pitch": 20,
+          "yaw": 285,
+          "fov": 48,
+          "height": 2.2
+        },
+        {
+          "time": 3.5,
+          "distance": 10.0,
+          "pitch": 22,
+          "yaw": 270,
+          "fov": 48,
+          "height": 2.4,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "cavalry_meet",
+      "scenario": "trailer_clash",
+      "start": 11.7,
+      "duration": 2.5,
+      "slow_motion": 2.2,
+      "shake": 0.06,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_horse",
+        "second_group": "punic_horse",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12.0,
+          "pitch": 15.0,
+          "yaw": 250,
+          "fov": 50,
+          "height": 1.7
+        },
+        {
+          "time": 3.0,
+          "distance": 9.5,
+          "pitch": 15,
+          "yaw": 265,
+          "fov": 50,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "lines_collide",
+      "scenario": "trailer_clash",
+      "start": 4.8,
+      "duration": 3.0,
+      "slow_motion": 2.5,
+      "shake": 0.06,
+      "caption": "CONQUER",
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_line",
+        "second_group": "punic_line",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10.5,
+          "pitch": 15,
+          "yaw": 255,
+          "fov": 50,
+          "height": 1.7
+        },
+        {
+          "time": 3.0,
+          "distance": 8.5,
+          "pitch": 17,
+          "yaw": 270,
+          "fov": 50,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "consul_fights",
+      "scenario": "trailer_clash",
+      "start": 20.6,
+      "duration": 2.6,
+      "slow_motion": 2.0,
+      "focus": {
+        "mode": "group",
+        "group": "roman_consul",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.0,
+          "pitch": 16,
+          "yaw": 260,
+          "fov": 46,
+          "height": 1.7
+        },
+        {
+          "time": 3.0,
+          "distance": 7.0,
+          "pitch": 18,
+          "yaw": 275,
+          "fov": 46,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "pov_wade",
+      "scenario": "trailer_pov",
+      "start": 3.4,
+      "duration": 6.0,
+      "gameplay_camera": true,
+      "caption": "LEAD FROM THE FRONT",
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "melee_orbit",
+      "scenario": "trailer_clash",
+      "start": 26.0,
+      "duration": 3.5,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_line",
+        "second_group": "punic_line",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 16.0,
+          "pitch": 22,
+          "yaw": 250,
+          "fov": 46,
+          "height": 1.7
+        },
+        {
+          "time": 4.5,
+          "distance": 12.5,
+          "pitch": 19,
+          "yaw": 295,
+          "fov": 46,
+          "height": 1.7,
+          "ease": "linear"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.3
+      }
+    },
+    {
+      "name": "card_night",
+      "scenario": "trailer_flame_card",
+      "start": 14.0,
+      "duration": 3.0,
+      "transition": {
+        "type": "dip",
+        "duration": 0.45
+      },
+      "act_title": "THE NIGHT",
+      "flame_card": true,
+      "flame_speed": 0.7,
+      "flame_intensity": 0.85
+    },
+    {
+      "name": "torch_march",
+      "scenario": "trailer_barrow_night",
+      "start": 3.0,
+      "duration": 4.0,
+      "transition": {
+        "type": "dip",
+        "duration": 0.45
+      },
+      "focus": {
+        "mode": "group",
+        "group": "night_column",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 14.0,
+          "pitch": 17,
+          "yaw": 70,
+          "fov": 44,
+          "height": 1.7
+        },
+        {
+          "time": 4.0,
+          "distance": 11.5,
+          "pitch": 16,
+          "yaw": 88,
+          "fov": 44,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ]
+    },
+    {
+      "name": "grove_looms",
+      "scenario": "trailer_barrow_night",
+      "start": 8.0,
+      "duration": 3.5,
+      "focus": {
+        "mode": "point",
+        "point": [-22.0, 0.0, 35.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 20.0,
+          "pitch": 16,
+          "yaw": 90,
+          "fov": 44,
+          "height": 2.0
+        },
+        {
+          "time": 4.0,
+          "distance": 15.0,
+          "pitch": 15,
+          "yaw": 105,
+          "fov": 44,
+          "height": 1.8,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.4
+      }
+    },
+    {
+      "name": "rising",
+      "scenario": "trailer_barrow_night",
+      "start": 13.0,
+      "duration": 4.0,
+      "slow_motion": 1.6,
+      "caption": "SURVIVE THE NIGHT",
+      "focus": {
+        "mode": "point",
+        "point": [-22.0, 0.0, 35.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 13.0,
+          "pitch": 15.0,
+          "yaw": 120,
+          "fov": 46,
+          "height": 1.7
+        },
+        {
+          "time": 4.0,
+          "distance": 10.5,
+          "pitch": 15,
+          "yaw": 104,
+          "fov": 46,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "cut"
+      }
+    },
+    {
+      "name": "surrounded",
+      "scenario": "trailer_barrow_night",
+      "start": 20.0,
+      "duration": 3.5,
+      "focus": {
+        "mode": "point",
+        "point": [-21.0, 0.0, 34.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 18.0,
+          "pitch": 28,
+          "yaw": 210,
+          "fov": 46,
+          "height": 1.7
+        },
+        {
+          "time": 4.0,
+          "distance": 22.0,
+          "pitch": 34,
+          "yaw": 236,
+          "fov": 46,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "transition": {
+        "type": "dissolve",
+        "duration": 0.3
+      }
+    },
+    {
+      "name": "card_end",
+      "scenario": "trailer_flame_card",
+      "start": 18.5,
+      "duration": 6.5,
+      "transition": {
+        "type": "dip",
+        "duration": 0.6
+      },
+      "flame_card": true,
+      "flame_speed": 0.6,
+      "flame_intensity": 0.95
+    }
+  ],
+  "sfx": [
+    {
+      "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
+      "at": 0.05,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/ambience/mediterranean_plains.ogg",
+      "at": 3.1,
+      "gain": 0.42
+    },
+    {
+      "file": "assets/audio/ambience/mediterranean_city_market.ogg",
+      "at": 7.3,
+      "gain": 0.4
+    },
+    {
+      "file": "assets/audio/sfx/build/construction_started.ogg",
+      "at": 11.0,
+      "gain": 0.55
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_howl_distant.ogg",
+      "at": 14.65,
+      "gain": 0.45
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_growl_low.ogg",
+      "at": 18.2,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_pack_attack.ogg",
+      "at": 21.35,
+      "gain": 0.95
+    },
+    {
+      "file": "assets/audio/sfx/wildlife/wolf_bite_snap.ogg",
+      "at": 22.8,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
+      "at": 25.9,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/ambience/roman_army_camp_01.ogg",
+      "at": 28.65,
+      "gain": 0.45
+    },
+    {
+      "file": "assets/audio/sfx/build/gate_open.ogg",
+      "at": 29.0,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/army_march_dirt_mass.ogg",
+      "at": 33.2,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/ambience/river_crossing.ogg",
+      "at": 41.95,
+      "gain": 0.5
+    },
+    {
+      "file": "assets/audio/sfx/combat/spearmen_formation_advance.ogg",
+      "at": 47.5,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/charge_roar.ogg",
+      "at": 52.4,
+      "gain": 0.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
+      "at": 55.05,
+      "gain": 0.55
+    },
+    {
+      "file": "assets/audio/sfx/combat/archer_volley_many.ogg",
+      "at": 59.25,
+      "gain": 0.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/arrows_many_overhead.ogg",
+      "at": 60.7,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/elephant_charge_carthage.ogg",
+      "at": 64.2,
+      "gain": 0.95
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_cavalry_charge.ogg",
+      "at": 69.15,
+      "gain": 0.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
+      "at": 70.95,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+      "at": 74.65,
+      "gain": 1.0
+    },
+    {
+      "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
+      "at": 76.25,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+      "at": 78.05,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+      "at": 82.65,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_03.ogg",
+      "at": 84.25,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_04.ogg",
+      "at": 87.75,
+      "gain": 0.85
+    },
+    {
+      "file": "assets/audio/sfx/combat/shield_bash.ogg",
+      "at": 89.95,
+      "gain": 0.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 91.65,
+      "gain": 0.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/siege_impact.ogg",
+      "at": 96.35,
+      "gain": 0.55
+    },
+    {
+      "file": "assets/audio/ambience/mountain_camp_night.ogg",
+      "at": 99.05,
+      "gain": 0.55
+    },
+    {
+      "file": "assets/audio/ambience/forest_ambush.ogg",
+      "at": 102.75,
+      "gain": 0.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/guard_break.ogg",
+      "at": 105.75,
+      "gain": 0.75
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+      "at": 112.45,
+      "gain": 0.5
+    }
+  ]
+}

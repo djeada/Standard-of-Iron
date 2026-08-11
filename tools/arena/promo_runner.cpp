@@ -368,6 +368,7 @@ private:
     m_shot_armed = false;
     m_last_frame.reset();
     m_viewport.set_batch_fixed_step(idle_step());
+    m_viewport.set_flame_card(shot.flame_card, shot.flame_speed, shot.flame_intensity);
 
     qInfo().noquote() << QStringLiteral("  shot %1: %2 (%3 frames at %4x%5, from "
                                         "%6 s)")
@@ -388,7 +389,7 @@ private:
     const float shot_time = std::max(0.0F, scenario_time - shot.start_seconds);
 
     QVector3D target;
-    if (shot.gameplay_camera) {
+    if (shot.gameplay_camera || shot.flame_card) {
 
       m_viewport.clear_cinematic_view();
     } else {
@@ -543,6 +544,7 @@ private:
     m_shot_active = false;
     m_viewport.set_capture_active(false);
     m_viewport.set_batch_fixed_step(idle_step());
+    m_viewport.set_flame_card(false);
 
     const std::size_t shot_index = current_shot_index();
     const Shot& shot = m_spec.shots[shot_index];

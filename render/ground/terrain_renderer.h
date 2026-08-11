@@ -155,6 +155,7 @@ private:
   struct ChunkVisibilityCacheEntry {
     std::uint64_t visibility_version = std::numeric_limits<std::uint64_t>::max();
     bool any_revealed = true;
+    bool was_submitted = false;
   };
 
   int m_width = 0;

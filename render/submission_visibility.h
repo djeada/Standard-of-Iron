@@ -103,6 +103,19 @@ public:
     return evaluate_sphere(center, radius, fog_mode, fog_extent).accepted();
   }
 
+  [[nodiscard]] auto evaluate_sphere_with_margin(
+      const QVector3D& center,
+      float radius,
+      SubmissionFogMode fog_mode = SubmissionFogMode::Ignore,
+      FogExtent fog_extent = FogExtent::Footprint) const -> SubmissionVisibilityResult {
+    SubmissionVisibilityResult result;
+    result.in_frustum =
+        m_camera == nullptr || m_camera->is_in_frustum(center, std::max(radius, 0.1F));
+    result.fog_visible = accepts_fog_sphere(
+        center, fog_extent == FogExtent::Anchor ? 0.0F : radius, fog_mode);
+    return result;
+  }
+
   [[nodiscard]] auto evaluate_sphere(
       const QVector3D& center,
       float radius,

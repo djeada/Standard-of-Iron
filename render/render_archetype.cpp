@@ -1,6 +1,7 @@
 #include "render_archetype.h"
 
 #include <array>
+#include <unordered_map>
 #include <utility>
 
 #include "geom/transforms.h"
@@ -75,6 +76,32 @@ auto select_render_archetype_lod(const RenderArchetype& archetype,
   }
 
   return fallback;
+}
+
+auto select_render_archetype_lod_stable(const RenderArchetype& archetype,
+                                        float distance,
+                                        std::uint64_t instance_id)
+    -> RenderArchetypeLod {
+  static thread_local std::unordered_map<std::uint64_t, RenderArchetypeLod> held;
+
+  const RenderArchetypeLod fresh = select_render_archetype_lod(archetype, distance);
+  if (instance_id == 0U) {
+    return fresh;
+  }
+
+  constexpr float k_lod_release_scale = 1.18F;
+  auto const previous = held.find(instance_id);
+  if (previous != held.end() && previous->second == RenderArchetypeLod::Full &&
+      fresh == RenderArchetypeLod::Minimal) {
+    const RenderArchetypeSlice& full =
+        archetype.lods[lod_index(RenderArchetypeLod::Full)];
+    if (!full.draws.empty() && distance <= full.max_distance * k_lod_release_scale) {
+      return RenderArchetypeLod::Full;
+    }
+  }
+
+  held[instance_id] = fresh;
+  return fresh;
 }
 
 void submit_render_instance(ISubmitter& out, const RenderInstance& instance) {

@@ -24,6 +24,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/builder_product_types.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
@@ -169,6 +170,8 @@ auto expectation_name(ArenaExpectationKind kind) -> QString {
     return QStringLiteral("NoLimbOverextension");
   case ArenaExpectationKind::NoRenderVisibilityChurn:
     return QStringLiteral("NoRenderVisibilityChurn");
+  case ArenaExpectationKind::UnitsClearOfBuildings:
+    return QStringLiteral("UnitsClearOfBuildings");
   case ArenaExpectationKind::FullCreatureDetailOnly:
     return QStringLiteral("FullCreatureDetailOnly");
   case ArenaExpectationKind::NoFullscreenFlash:
@@ -685,6 +688,7 @@ struct ArenaScenarioRunner::Impl {
   QHash<Engine::Core::EntityID, float> idle_since;
   QHash<QString, bool> visible_attacks;
   QHash<QString, bool> visible_movement;
+  QHash<QString, QString> building_overlap_report;
   QHash<QString, bool> visible_attack_recoveries;
   QHash<QString, bool> visible_hit_reactions;
   QHash<QString, bool> visible_deaths;
@@ -2029,6 +2033,59 @@ struct ArenaScenarioRunner::Impl {
   [[nodiscard]] auto applies_to(const ArenaExpectation& expectation,
                                 const QString& group) const -> bool {
     return expectation.group.isEmpty() || expectation.group == group;
+  }
+
+  void observe_building_clearance(Engine::Core::EntityID entity_id,
+                                  const QString& group) {
+    if (building_overlap_report.contains(group)) {
+      return;
+    }
+    const bool wanted = std::any_of(
+        scenario.expectations.begin(),
+        scenario.expectations.end(),
+        [&](const ArenaExpectation& expectation) {
+          return expectation.kind == ArenaExpectationKind::UnitsClearOfBuildings &&
+                 expectation_active(expectation) && applies_to(expectation, group);
+        });
+    if (!wanted) {
+      return;
+    }
+    auto* entity = world.get_entity(entity_id);
+    auto const* transform =
+        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+    auto const* unit = entity != nullptr
+                           ? entity->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+    if (transform == nullptr || unit == nullptr || unit->health <= 0) {
+      return;
+    }
+    if (Game::Units::is_building_spawn(unit->spawn_type)) {
+      return;
+    }
+    constexpr float k_body_radius = 0.35F;
+    auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+    const float unit_x = transform->position.x;
+    const float unit_z = transform->position.z;
+    const bool in_gateway =
+        std::any_of(registry.navigation_passages().begin(),
+                    registry.navigation_passages().end(),
+                    [&](const Game::Systems::NavigationPassage& passage) {
+                      return std::abs(unit_x - passage.center_x) <=
+                                 (passage.width * 0.5F) + k_body_radius &&
+                             std::abs(unit_z - passage.center_z) <=
+                                 (passage.depth * 0.5F) + k_body_radius;
+                    });
+    if (!in_gateway &&
+        registry.is_circle_overlapping_building(unit_x, unit_z, k_body_radius)) {
+      building_overlap_report.insert(
+          group,
+          QStringLiteral("entity %1 stood inside a building at (%2, %3) after %4 s")
+              .arg(entity_id)
+              .arg(unit_x, 0, 'f', 1)
+              .arg(unit_z, 0, 'f', 1)
+              .arg(elapsed, 0, 'f', 1));
+    }
   }
 
   void observe_entity(Engine::Core::EntityID entity_id,
@@ -4177,6 +4234,14 @@ struct ArenaScenarioRunner::Impl {
                         .arg(wildlife_observation.peak_population));
         }
         break;
+      case ArenaExpectationKind::UnitsClearOfBuildings:
+        if (building_overlap_report.contains(expectation.group)) {
+          add_issue(QStringLiteral("unit_inside_building"),
+                    QStringLiteral("%1 walked through a building: %2")
+                        .arg(expectation.group,
+                             building_overlap_report.value(expectation.group)));
+        }
+        break;
       case ArenaExpectationKind::NoRenderVisibilityChurn:
       case ArenaExpectationKind::RpgFormationSurvivesLensGap:
       case ArenaExpectationKind::FullCreatureDetailOnly:
@@ -4317,6 +4382,7 @@ void ArenaScenarioRunner::observe_rendered_frame(
   for (auto const& group : m_impl->scenario.groups) {
     for (auto entity_id : m_impl->ids(group.name)) {
       m_impl->observe_entity(entity_id, group.name, frame);
+      m_impl->observe_building_clearance(entity_id, group.name);
       m_impl->observe_soldiers(entity_id, group.name, frame);
     }
     m_impl->observe_bridge_centerline_alignment(group.name);

@@ -165,7 +165,10 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
 
   pose.muzzle = poll + (muzzle_dir * k_head_length);
   pose.jaw_hinge = poll + (facing * 0.060F) - (head_up * 0.018F);
-  pose.jaw_tip = pose.muzzle - (head_up * 0.014F) + QVector3D(0.0F, nibble, 0.0F);
+  QVector3D const jaw_closed = pose.muzzle - (head_up * 0.014F);
+  float const jaw_length = (jaw_closed - pose.jaw_hinge).length();
+  pose.jaw_tip = jaw_closed + QVector3D(0.0F, nibble, 0.0F);
+  hold_bone(pose.jaw_hinge, pose.jaw_tip, jaw_length);
 
   for (int sign_index = 0; sign_index < 2; ++sign_index) {
     float const sign = sign_index == 0 ? -1.0F : 1.0F;
@@ -185,6 +188,45 @@ void fill_head(RigPose& pose, const SheepDrive& drive) {
       pose.ear_tip_r = tip;
     }
   }
+}
+
+struct HeadAttachment {
+  float neck_length{0.0F};
+  QVector3D muzzle{};
+  QVector3D jaw_hinge{};
+  QVector3D jaw_tip{};
+  QVector3D ear_base_l{};
+  QVector3D ear_tip_l{};
+  QVector3D ear_base_r{};
+  QVector3D ear_tip_r{};
+};
+
+auto capture_head_attachment(const RigPose& pose) -> HeadAttachment {
+  HeadAttachment held;
+  held.neck_length = (pose.poll - pose.withers).length();
+  held.muzzle = pose.muzzle - pose.poll;
+  held.jaw_hinge = pose.jaw_hinge - pose.poll;
+  held.jaw_tip = pose.jaw_tip - pose.poll;
+  held.ear_base_l = pose.ear_base_l - pose.poll;
+  held.ear_tip_l = pose.ear_tip_l - pose.poll;
+  held.ear_base_r = pose.ear_base_r - pose.poll;
+  held.ear_tip_r = pose.ear_tip_r - pose.poll;
+  return held;
+}
+
+void reattach_head(RigPose& pose, const HeadAttachment& held) {
+  QVector3D const neck = pose.poll - pose.withers;
+  float const length = neck.length();
+  if (length > 1.0e-5F && held.neck_length > 1.0e-5F) {
+    pose.poll = pose.withers + ((neck / length) * held.neck_length);
+  }
+  pose.muzzle = pose.poll + held.muzzle;
+  pose.jaw_hinge = pose.poll + held.jaw_hinge;
+  pose.jaw_tip = pose.poll + held.jaw_tip;
+  pose.ear_base_l = pose.poll + held.ear_base_l;
+  pose.ear_tip_l = pose.poll + held.ear_tip_l;
+  pose.ear_base_r = pose.poll + held.ear_base_r;
+  pose.ear_tip_r = pose.poll + held.ear_tip_r;
 }
 
 void apply_collapse(RigPose& pose, const SheepDrive& drive) {
@@ -265,6 +307,11 @@ auto make_pose(const SheepDrive& drive) -> RigPose {
 
   fill_legs(pose, drive, bob - pitch, bob + pitch);
   fill_head(pose, drive);
+  pose.tail_base = QVector3D(0.0F, 0.520F, -0.300F);
+  pose.tail_mid = QVector3D(0.0F, 0.446F, -0.330F);
+  pose.tail_tip = QVector3D(0.0F, 0.382F, -0.336F);
+  HeadAttachment const head_attachment = capture_head_attachment(pose);
+  SkeletonLengths const skeleton = capture_skeleton_lengths(pose);
 
   float const nod =
       std::sin(cadence - 1.35F) * (k_bob_base + (k_bob_gain * gait)) * 0.62F;
@@ -281,11 +328,12 @@ auto make_pose(const SheepDrive& drive) -> RigPose {
 
   float const wag =
       std::sin(drive.stride_phase * k_two_pi) * 0.022F * drive.speed_ratio;
-  pose.tail_base = QVector3D(0.0F, 0.520F, -0.300F);
-  pose.tail_mid = QVector3D(wag * 0.5F, 0.446F, -0.330F);
-  pose.tail_tip = QVector3D(wag, 0.382F, -0.336F);
+  pose.tail_mid.setX(wag * 0.5F);
+  pose.tail_tip.setX(wag);
 
   apply_collapse(pose, drive);
+  reattach_head(pose, head_attachment);
+  enforce_skeleton_lengths(pose, skeleton);
   return pose;
 }
 

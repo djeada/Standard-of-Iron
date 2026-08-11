@@ -15,6 +15,8 @@
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
 #include <QPainter>
 #include <QPen>
 #include <QVector2D>
@@ -50,6 +52,7 @@
 #include "game/map/visibility_service.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/command_service.h"
@@ -105,8 +108,8 @@ namespace {
 constexpr int k_local_owner_id = 1;
 constexpr int k_enemy_owner_id = 2;
 constexpr int k_all_owners_filter = 0;
-constexpr int k_terrain_width = 96;
-constexpr int k_terrain_height = 96;
+constexpr int k_terrain_width = 128;
+constexpr int k_terrain_height = 128;
 constexpr float k_terrain_tile_size = 1.0F;
 constexpr float k_default_floor_extent = 18.0F;
 constexpr float k_default_terrain_height_scale = 6.0F;
@@ -546,6 +549,29 @@ void ArenaViewport::paintGL() {
   } else if (width() > 0 && height() > 0) {
     m_renderer->set_viewport(width(), height());
   }
+
+  if (m_flame_card_active) {
+    render_flame_card(capture_frame ? m_capture_width : width(),
+                      capture_frame ? m_capture_height : height());
+    ++m_flame_card_frame;
+    if (capture_frame) {
+      stamp_capture_alpha_opaque();
+      QImage const captured = m_capture_target->toImage();
+      m_capture_target->release();
+      if (context() != nullptr) {
+        context()->functions()->glBindFramebuffer(GL_FRAMEBUFFER,
+                                                  defaultFramebufferObject());
+      }
+      if (!captured.isNull()) {
+        m_capture_sink(captured);
+      }
+      present_capture_preview();
+    }
+    if (m_scenario_runner != nullptr && sampled_frame) {
+      m_scenario_runner->observe_rendered_frame(timings);
+    }
+    return;
+  }
   Render::GL::CameraVisibility::instance().set_camera(m_camera.get());
 
   update_selected_entities();
@@ -603,7 +629,11 @@ void ArenaViewport::paintGL() {
     }
     Render::GL::render_blood_stains(m_renderer.get(), res, m_world.get());
     render_attack_range_rings(res);
-    if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr) {
+    const bool cinematic_capture =
+        m_clean_capture || m_promo_mode ||
+        (m_scenario_runner != nullptr &&
+         m_scenario_runner->definition().suppress_ui_overlays);
+    if (m_rpg_commander_id != 0 && m_rpg_telegraphs != nullptr && !cinematic_capture) {
       Engine::Core::EntityID locked_target_id = 0;
       if (auto* commander = m_world->get_entity(m_rpg_commander_id)) {
         if (auto const* targets =
@@ -2201,6 +2231,14 @@ auto ArenaViewport::spawn_single_building(int owner_id,
   }
 
   Engine::Core::EntityID const entity_id = unit->id();
+
+  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+      entity_id,
+      Game::Units::spawn_typeToQString(building_type).toStdString(),
+      spawn_position.x(),
+      spawn_position.z(),
+      owner_id);
+
   m_units.push_back(std::move(unit));
   return entity_id;
 }
@@ -2227,6 +2265,8 @@ void ArenaViewport::clear_buildings() {
       if (selection != nullptr) {
         selection->deselect_unit((*it)->id());
       }
+      Game::Systems::BuildingCollisionRegistry::instance().unregister_building(
+          (*it)->id());
       m_world->destroy_entity((*it)->id());
       it = m_units.erase(it);
     } else {
@@ -2573,6 +2613,7 @@ void ArenaViewport::clear_world_props_of_type() {
 }
 
 void ArenaViewport::reset_arena() {
+  Game::Systems::BuildingCollisionRegistry::instance().clear();
   m_scenario_runner.reset();
   clear_rpg_scenario_state();
   m_frame_continuity_analyzer.reset();
@@ -2758,6 +2799,34 @@ void ArenaViewport::clear_cinematic_view() {
   m_cinematic_view_valid = false;
 }
 
+namespace {
+
+constexpr float k_cinematic_ground_clearance = 2.2F;
+constexpr float k_cinematic_max_lift = 9.0F;
+constexpr float k_cinematic_clear_fraction = 0.18F;
+constexpr int k_cinematic_ray_samples = 10;
+
+auto lift_camera_over_terrain(QVector3D position,
+                              QVector3D const& target) -> QVector3D {
+  auto& terrain = Game::Map::TerrainService::instance();
+  if (terrain.terrain_field().empty()) {
+    return position;
+  }
+  float required = position.y();
+  for (int sample = 0; sample <= k_cinematic_ray_samples; ++sample) {
+    float const t = k_cinematic_clear_fraction * static_cast<float>(sample) /
+                    static_cast<float>(k_cinematic_ray_samples);
+    QVector3D const at = position * (1.0F - t) + target * t;
+    float const clearance =
+        terrain.get_terrain_height(at.x(), at.z()) + k_cinematic_ground_clearance;
+    required = std::max(required, (clearance - t * target.y()) / (1.0F - t));
+  }
+  position.setY(std::min(required, position.y() + k_cinematic_max_lift));
+  return position;
+}
+
+} // namespace
+
 void ArenaViewport::apply_cinematic_view() {
   if (!m_cinematic_view_valid || m_camera == nullptr) {
     return;
@@ -2768,7 +2837,8 @@ void ArenaViewport::apply_cinematic_view() {
   QVector3D const offset(std::sin(yaw) * horizontal,
                          m_cinematic_distance * std::sin(pitch),
                          std::cos(yaw) * horizontal);
-  QVector3D const position = m_cinematic_target + offset;
+  QVector3D const position =
+      lift_camera_over_terrain(m_cinematic_target + offset, m_cinematic_target);
 
   QVector3D up(0.0F, 1.0F, 0.0F);
   if (std::abs(m_cinematic_roll) > 0.01F) {
@@ -2812,6 +2882,155 @@ auto ArenaViewport::ensure_capture_target() -> bool {
     return false;
   }
   return true;
+}
+
+namespace {
+
+constexpr char k_flame_card_vertex[] = R"(#version 330 core
+out vec2 v_uv;
+void main() {
+    vec2 corner = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+    v_uv = corner;
+    gl_Position = vec4(corner * 2.0 - 1.0, 0.0, 1.0);
+}
+)";
+
+constexpr char k_flame_card_fragment[] = R"(#version 330 core
+in vec2 v_uv;
+out vec4 frag_colour;
+
+uniform float u_time;
+uniform float u_intensity;
+uniform vec2 u_resolution;
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float value_noise(vec2 p) {
+    vec2 cell = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash(cell);
+    float b = hash(cell + vec2(1.0, 0.0));
+    float c = hash(cell + vec2(0.0, 1.0));
+    float d = hash(cell + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p) {
+    float sum = 0.0;
+    float amplitude = 0.5;
+    for (int octave = 0; octave < 4; ++octave) {
+        sum += amplitude * value_noise(p);
+        p *= 2.02;
+        amplitude *= 0.5;
+    }
+    return sum;
+}
+
+void main() {
+    vec2 uv = v_uv;
+    float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+    vec2 p = vec2((uv.x - 0.5) * aspect, uv.y);
+
+    // Tall cells plus an upward scroll: fire rises far faster than it drifts.
+    vec2 rise = vec2(0.0, -u_time * 0.55);
+    vec2 warp = vec2(fbm(p * vec2(2.2, 1.1) + rise * 0.6),
+                     fbm(p * vec2(2.2, 1.1) + rise * 0.6 + 17.3));
+    float body = fbm(p * vec2(3.1, 1.35) + rise + (warp - 0.5) * 0.85);
+
+    // Hotter and denser toward the floor of the frame, thinning as it climbs.
+    float height_falloff = smoothstep(1.05, -0.15, uv.y);
+    float heat = body * height_falloff * 1.9 * u_intensity;
+
+    // Edges fall away so the card is a fire in a dark field, not a flat wash.
+    float sides = smoothstep(0.0, 0.32, uv.x) * smoothstep(1.0, 0.68, uv.x);
+    heat *= mix(0.55, 1.0, sides);
+
+    // Black -> ember red -> orange -> straw, with the core clipping to near
+    // white only where the noise is genuinely hot.
+    vec3 colour = vec3(0.0);
+    colour = mix(colour, vec3(0.34, 0.03, 0.006), smoothstep(0.08, 0.34, heat));
+    colour = mix(colour, vec3(0.86, 0.24, 0.03), smoothstep(0.26, 0.58, heat));
+    colour = mix(colour, vec3(1.0, 0.58, 0.13), smoothstep(0.50, 0.82, heat));
+    colour = mix(colour, vec3(1.0, 0.88, 0.55), smoothstep(0.76, 1.04, heat));
+
+    // Sparks: a sparse, faster layer of the same noise, punched to points.
+    float spark_field = value_noise(p * 26.0 + vec2(0.0, -u_time * 2.4));
+    float sparks = smoothstep(0.93, 1.0, spark_field) * height_falloff;
+    colour += vec3(1.0, 0.62, 0.22) * sparks * 0.85;
+
+    // A little smoke haze above the flame so the title has something to sit on.
+    float smoke = fbm(p * vec2(1.6, 0.9) + vec2(0.0, -u_time * 0.22));
+    colour += vec3(0.06, 0.05, 0.05) * smoke * smoothstep(0.1, 0.9, uv.y);
+
+    frag_colour = vec4(colour, 1.0);
+}
+)";
+
+} // namespace
+
+auto ArenaViewport::ensure_flame_card_program() -> bool {
+  if (m_flame_card_program != nullptr) {
+    return m_flame_card_program->isLinked();
+  }
+  m_flame_card_program = std::make_unique<QOpenGLShaderProgram>();
+  if (!m_flame_card_program->addShaderFromSourceCode(QOpenGLShader::Vertex,
+                                                     k_flame_card_vertex) ||
+      !m_flame_card_program->addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                                     k_flame_card_fragment) ||
+      !m_flame_card_program->link()) {
+    qWarning() << "ArenaViewport: flame card shader failed:"
+               << m_flame_card_program->log();
+    return false;
+  }
+  m_flame_card_vao = std::make_unique<QOpenGLVertexArrayObject>();
+  if (!m_flame_card_vao->create()) {
+    qWarning() << "ArenaViewport: could not create the flame card vertex array";
+    return false;
+  }
+  return true;
+}
+
+void ArenaViewport::render_flame_card(int width, int height) {
+  if (width <= 0 || height <= 0 || !ensure_flame_card_program()) {
+    return;
+  }
+  auto* gl = context() != nullptr ? context()->extraFunctions() : nullptr;
+  if (gl == nullptr) {
+    return;
+  }
+
+  const float seconds =
+      static_cast<float>(m_flame_card_frame) / 60.0F * m_flame_card_speed;
+
+  gl->glViewport(0, 0, width, height);
+  gl->glDisable(GL_DEPTH_TEST);
+  gl->glDisable(GL_BLEND);
+  gl->glDisable(GL_CULL_FACE);
+  gl->glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+  gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  m_flame_card_program->bind();
+  m_flame_card_program->setUniformValue("u_time", seconds);
+  m_flame_card_program->setUniformValue("u_intensity", m_flame_card_intensity);
+  m_flame_card_program->setUniformValue(
+      "u_resolution", QVector2D(static_cast<float>(width), static_cast<float>(height)));
+  m_flame_card_vao->bind();
+  gl->glDrawArrays(GL_TRIANGLES, 0, 3);
+  m_flame_card_vao->release();
+  m_flame_card_program->release();
+  gl->glEnable(GL_DEPTH_TEST);
+}
+
+void ArenaViewport::set_flame_card(bool enabled, float speed, float intensity) {
+  if (enabled && !m_flame_card_active) {
+    m_flame_card_frame = 0;
+  }
+  m_flame_card_active = enabled;
+  m_flame_card_speed = speed;
+  m_flame_card_intensity = intensity;
 }
 
 void ArenaViewport::present_capture_preview() {
