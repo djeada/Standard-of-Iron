@@ -328,6 +328,7 @@ add_executable(
     core/settings_persistence_test.cpp
     core/minimap_manager_test.cpp
     core/commander_control_regression_test.cpp
+    core/commander_camera_rig_test.cpp
     core/commander_control_controller_test.cpp
     core/input_command_handler_test.cpp
     core/campaign_manager_test.cpp

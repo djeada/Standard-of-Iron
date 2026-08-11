@@ -184,6 +184,7 @@ void reset_humanoid_animation_state(
     return Animation::SwordAttackAnimation::RpgSlashRight;
   case Game::Systems::CombatActions::CombatActionId::RpgSpearThrust:
   case Game::Systems::CombatActions::CombatActionId::RpgSpearSweep:
+  case Game::Systems::CombatActions::CombatActionId::RpgSpearFinisher:
   case Game::Systems::CombatActions::CombatActionId::RpgBowShot:
   case Game::Systems::CombatActions::CombatActionId::MountedSpearThrust:
   case Game::Systems::CombatActions::CombatActionId::MountedChargeImpact:
@@ -192,6 +193,8 @@ void reset_humanoid_animation_state(
   case Game::Systems::CombatActions::CombatActionId::RtsElephantStomp:
   case Game::Systems::CombatActions::CombatActionId::None:
     break;
+  case Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead:
+    return Animation::SwordAttackAnimation::RpgOverhead;
   case Game::Systems::CombatActions::CombatActionId::RtsSwordStrike:
     return Animation::SwordAttackAnimation::InfantrySlashA;
   }

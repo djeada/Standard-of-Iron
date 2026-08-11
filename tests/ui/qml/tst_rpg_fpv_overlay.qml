@@ -38,8 +38,29 @@ TestCase {
             "vanguard_rush_cooldown_remaining": 3.9,
             "second_wind_ready": false,
             "second_wind_cooldown": 8.0,
-            "second_wind_cooldown_remaining": 7.1
+            "second_wind_cooldown_remaining": 7.1,
+            "fight_context": "skirmish",
+            "threat_left": true,
+            "threat_right": true
         };
+    }
+
+    function test_threat_pips_only_show_in_skirmish_context() {
+        var host = makeOverlay(1280, 720, loudStatus());
+        var overlay = host.overlay;
+        var left = findChild(overlay, "rpgLeftThreatPip");
+        var right = findChild(overlay, "rpgRightThreatPip");
+        verify(left !== null, "left threat pip is missing");
+        verify(right !== null, "right threat pip is missing");
+        verify(left.visible, "left pip should show for a skirmish flanker");
+        verify(right.visible, "right pip should show for a skirmish flanker");
+        var duel = loudStatus();
+        duel["fight_context"] = "duel";
+        overlay.status = duel;
+        wait(1);
+        verify(!left.visible, "pips must hide outside skirmish context");
+        verify(!right.visible, "pips must hide outside skirmish context");
+        host.destroy();
     }
 
     property var overlayComponent: null
@@ -163,6 +184,35 @@ TestCase {
         verify(!overlaps(barsRect, abilitiesRect), "vitals bars collide with the ability row at " + data.tag);
         verify(!overlaps(rectIn(overlay, posture), abilitiesRect), "posture bar collides with the ability row at " + data.tag);
         verify(!overlaps(rectIn(overlay, combo), abilitiesRect), "combo indicator collides with the ability row at " + data.tag);
+        host.destroy();
+    }
+
+    function test_hud_widgets_respect_insets_data() {
+        return test_overlay_never_overflows_the_viewport_data();
+    }
+
+    function test_hud_widgets_respect_insets(data) {
+        var host = makeOverlay(data.w, data.h, loudStatus());
+        var overlay = host.overlay;
+        overlay.topInset = 50;
+        overlay.bottomInset = 96;
+        wait(1);
+        var names = ["rpgHudBarsRow", "rpgAbilityCooldowns", "rpgPostureBar", "rpgComboIndicator", "rpgFocusPlate", "rpgWeaponStanceChip", "rpgLeftThreatPip", "rpgRightThreatPip"];
+        var tolerance = 1.0;
+        var checked = 0;
+        for (var i = 0; i < names.length; ++i) {
+            var item = findChild(overlay, names[i]);
+            if (item === null || item.visible !== true) {
+                continue;
+            }
+            var r = rectIn(overlay, item);
+            verify(r.top >= overlay.topInset - tolerance, names[i] + " enters the top inset at " + data.tag + " (" + r.top + ")");
+            verify(r.bottom <= overlay.height - overlay.bottomInset + tolerance, names[i] + " enters the bottom inset at " + data.tag + " (" + r.bottom + ")");
+            verify(r.left >= -tolerance, names[i] + " overflows the left edge at " + data.tag);
+            verify(r.right <= overlay.width + tolerance, names[i] + " overflows the right edge at " + data.tag);
+            checked += 1;
+        }
+        verify(checked > 0, "no HUD widgets were visible to check at " + data.tag);
         host.destroy();
     }
 
