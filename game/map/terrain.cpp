@@ -1181,9 +1181,11 @@ void TerrainHeightMap::add_river_segments(
   }
 
   constexpr float river_bed_depth = 0.10F;
-  constexpr float minimum_bank_blend_cells = 2.5F;
+  constexpr float minimum_bank_blend_cells = 4.5F;
   const float campaign_bank_blend_cells =
       std::clamp(std::max(m_width, m_height) * 0.025F, minimum_bank_blend_cells, 16.0F);
+  const std::vector<float> land_before_rivers = m_heights;
+
   for (const auto& river : m_river_segments) {
     const float delta_x = river.end.x() - river.start.x();
     const float delta_z = river.end.z() - river.start.z();
@@ -1210,7 +1212,9 @@ void TerrainHeightMap::add_river_segments(
       float const half_width = river.width * 0.5F / m_tile_size;
       float const bank_blend_width =
           std::max(campaign_bank_blend_cells, half_width * 0.90F);
-      float const channel_extent = half_width + bank_blend_width;
+
+      float const channel_extent =
+          half_width + std::max(bank_blend_width, k_river_bank_max_blend_cells);
 
       int const min_x = std::max(
           0, static_cast<int>(std::floor(grid_center_x - channel_extent - 1.0F)));
@@ -1245,12 +1249,19 @@ void TerrainHeightMap::add_river_segments(
             continue;
           }
 
-          if (m_heights[idx] > bed_height) {
-            float const bank_t = std::clamp(
-                (dist_along_perp - half_width) / bank_blend_width, 0.0F, 1.0F);
-            const float smooth_bank_t = bank_t * bank_t * (3.0F - 2.0F * bank_t);
-            m_heights[idx] = bed_height + (m_heights[idx] - bed_height) * smooth_bank_t;
-          }
+          float const land_height = land_before_rivers[idx];
+          float const drop = std::abs(land_height - bed_height);
+          float const run_for_grade =
+              (drop / k_river_bank_max_grade) / std::max(m_tile_size, 0.01F);
+          float const effective_blend = std::min(
+              std::max(bank_blend_width, run_for_grade), k_river_bank_max_blend_cells);
+          float const bank_t =
+              std::clamp((dist_along_perp - half_width) / effective_blend, 0.0F, 1.0F);
+          const float smooth_bank_t = bank_t * bank_t * (3.0F - 2.0F * bank_t);
+          float const banked = bed_height + (land_height - bed_height) * smooth_bank_t;
+
+          m_heights[idx] = land_height > bed_height ? std::min(m_heights[idx], banked)
+                                                    : std::max(m_heights[idx], banked);
         }
       }
     }

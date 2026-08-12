@@ -199,8 +199,7 @@ void add_stake_bindings(BuildingArchetypeDesc& desc,
     desc.add_box(point_at(dir, along, 0.0F, height),
                  extents_at(dir, radius * 0.95F, 0.042F, lateral_half),
                  binding_color(palette, geometry),
-                 states,
-                 BuildingLODMask::Full);
+                 states);
   }
 }
 
@@ -221,8 +220,7 @@ void add_snapped_stake(BuildingArchetypeDesc& desc,
                 point_at(dir, along, lean, top - 0.02F),
                 radius * 1.04F,
                 palette.wood_dark * 0.75F,
-                states,
-                BuildingLODMask::Full);
+                states);
 }
 
 void add_span_debris(BuildingArchetypeDesc& desc,
@@ -413,15 +411,13 @@ void add_span_braces(BuildingArchetypeDesc& desc,
                       point_at(dir, far_end, offset, geometry.upper_rail_y),
                       radius,
                       palette.wood_dark,
-                      k_mask_intact,
-                      BuildingLODMask::Full);
+                      k_mask_intact);
     if (geometry.cross_braced) {
       desc.add_cylinder(point_at(dir, far_end, offset, 0.32F),
                         point_at(dir, near_end, offset, geometry.upper_rail_y),
                         radius,
                         palette.wood_mid,
-                        BuildingStateMask::Normal,
-                        BuildingLODMask::Full);
+                        BuildingStateMask::Normal);
     }
   }
 }
@@ -452,8 +448,7 @@ void add_junction_post(BuildingArchetypeDesc& desc,
                       QVector3D(0.0F, height + 0.05F, 0.0F),
                       geometry.post_radius * 1.08F,
                       binding_color(palette, geometry),
-                      k_mask_intact,
-                      BuildingLODMask::Full);
+                      k_mask_intact);
   }
 }
 
@@ -494,8 +489,7 @@ void add_earth_berm(BuildingArchetypeDesc& desc,
       desc.add_box(point_at(dir, along, lateral, size * 0.7F),
                    QVector3D(size, size * 0.7F, size),
                    (i % 2 == 0) ? palette.rubble : palette.earth_dark,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
     }
   }
 }
@@ -526,8 +520,7 @@ void add_masonry(BuildingArchetypeDesc& desc,
     desc.add_box(QVector3D(0.0F, coping_y + 0.36F, 0.0F),
                  QVector3D(0.11F, 0.17F, 0.11F),
                  palette.wood_dark,
-                 BuildingStateMask::Normal,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::Normal);
   }
 
   constexpr int k_merlons = 3;
@@ -565,14 +558,12 @@ void add_masonry(BuildingArchetypeDesc& desc,
       desc.add_box(point_at(dir, along, 0.0F, coping_y + 0.19F),
                    extents_at(dir, 0.09F, 0.13F, half_width * 0.86F),
                    (i % 2 == 0) ? palette.masonry_accent : palette.wood_light,
-                   survives_damage ? k_mask_intact : BuildingStateMask::Normal,
-                   BuildingLODMask::Full);
+                   survives_damage ? k_mask_intact : BuildingStateMask::Normal);
       if (!survives_damage) {
         desc.add_box(point_at(dir, along, 0.0F, coping_y + 0.10F),
                      extents_at(dir, 0.085F, 0.04F, half_width * 0.80F),
                      palette.rubble,
-                     BuildingStateMask::Damaged,
-                     BuildingLODMask::Full);
+                     BuildingStateMask::Damaged);
       }
     }
 

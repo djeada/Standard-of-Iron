@@ -1828,6 +1828,7 @@ auto ArenaViewport::lighting_summary() const -> QString {
 
 void ArenaViewport::set_terrain_seed(int seed) {
   m_terrain_settings.seed = std::max(0, seed);
+  m_terrain_seed_baseline = m_terrain_settings.seed;
 }
 
 void ArenaViewport::set_terrain_height_scale(float value) {
@@ -1861,6 +1862,7 @@ void ArenaViewport::set_ground_type(const QString& ground_type) {
     qWarning() << "ArenaViewport: unknown ground type" << ground_type
                << "- defaulting to ForestMud";
   }
+  m_ground_type_baseline = parsed;
   if (m_ground_type == parsed) {
     return;
   }
@@ -2627,6 +2629,8 @@ void ArenaViewport::reset_arena() {
       !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
       m_arena_floor_half_extent != k_default_floor_extent ||
       m_terrain_settings.height_scale != k_default_terrain_height_scale ||
+      m_ground_type != m_ground_type_baseline ||
+      m_terrain_settings.seed != m_terrain_seed_baseline ||
       m_suppress_boundary_mountains;
   m_arena_rivers.clear();
   m_arena_lakes.clear();
@@ -2635,6 +2639,8 @@ void ArenaViewport::reset_arena() {
   m_arena_elevation_patches.clear();
   m_arena_floor_half_extent = k_default_floor_extent;
   m_terrain_settings.height_scale = k_default_terrain_height_scale;
+  m_ground_type = m_ground_type_baseline;
+  m_terrain_settings.seed = m_terrain_seed_baseline;
   m_suppress_boundary_mountains = false;
   clear_world_props();
   if (had_custom_terrain && m_world_props.empty()) {
@@ -3508,11 +3514,25 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   if (definition->terrain_height_scale_override > 0.0F) {
     m_terrain_settings.height_scale = definition->terrain_height_scale_override;
   }
+  if (!definition->ground_type.isEmpty()) {
+    Game::Map::GroundType parsed = Game::Map::GroundType::ForestMud;
+    if (Game::Map::try_parse_ground_type(definition->ground_type, parsed)) {
+      m_ground_type = parsed;
+    } else {
+      qWarning() << "Arena scenario" << definition->id << "names unknown ground type"
+                 << definition->ground_type;
+    }
+  }
+  if (definition->terrain_seed_override > 0) {
+    m_terrain_settings.seed = definition->terrain_seed_override;
+  }
   m_suppress_boundary_mountains = definition->suppress_boundary_mountains;
   if (!m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
       !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
       m_arena_floor_half_extent != k_default_floor_extent ||
       m_terrain_settings.height_scale != k_default_terrain_height_scale ||
+      m_ground_type != m_ground_type_baseline ||
+      m_terrain_settings.seed != m_terrain_seed_baseline ||
       m_suppress_boundary_mountains) {
     reconfigure_terrain_from_state();
   }

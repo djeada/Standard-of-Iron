@@ -37,7 +37,6 @@ struct RubbleField {
   int count{9};
   int seed{0};
   BuildingStateMask states{BuildingStateMask::Destroyed};
-  BuildingLODMask lod{BuildingLODMask::All};
 };
 
 void add_rubble_field(BuildingArchetypeDesc& desc, const RubbleField& field);
@@ -52,7 +51,6 @@ struct CharredBeams {
   int count{4};
   int seed{0};
   BuildingStateMask states{BuildingStateMask::Destroyed};
-  BuildingLODMask lod{BuildingLODMask::Full};
 };
 
 void add_charred_beams(BuildingArchetypeDesc& desc, const CharredBeams& beams);
@@ -65,7 +63,6 @@ struct ScorchPatch {
   int seed{0};
   QVector3D soot{0.11F, 0.10F, 0.09F};
   BuildingStateMask states{BuildingStateMask::Destroyed};
-  BuildingLODMask lod{BuildingLODMask::Full};
 };
 
 void add_scorch_patch(BuildingArchetypeDesc& desc, const ScorchPatch& patch);
@@ -78,7 +75,6 @@ struct CrackVeins {
   int count{4};
   int seed{0};
   BuildingStateMask states{BuildingStateMask::Damaged | BuildingStateMask::Destroyed};
-  BuildingLODMask lod{BuildingLODMask::Full};
 };
 
 void add_crack_veins(BuildingArchetypeDesc& desc, const CrackVeins& veins);
@@ -108,7 +104,6 @@ struct BrokenRim {
   int count{7};
   int seed{0};
   BuildingStateMask states{BuildingStateMask::Destroyed};
-  BuildingLODMask lod{BuildingLODMask::All};
 };
 
 void add_broken_rim(BuildingArchetypeDesc& desc, const BrokenRim& rim);

@@ -991,3 +991,93 @@ TEST_F(TerrainServiceTest, ProceduralScatterOptOutsSuppressTheirSpecies) {
 }
 
 } // namespace
+
+TEST(RiverBank, LandBelowTheBedIsRaisedToMeetIt) {
+
+  Game::Map::TerrainHeightMap map(96, 96, 1.0F);
+  map.build_from_features({});
+
+  std::vector<Game::Map::RiverSegment> rivers{
+      Game::Map::RiverSegment{{-40.0F, 3.0F, 0.0F}, {40.0F, 3.0F, 0.0F}, 6.0F}};
+  rivers.front().elevation_mode = Game::Map::WaterElevationMode::Authored;
+  map.add_river_segments(rivers);
+
+  constexpr float k_step = 0.5F;
+  constexpr float k_max_bank_step = 0.55F;
+
+  float worst = 0.0F;
+  float worst_z = 0.0F;
+  for (float z = -18.0F; z + k_step <= 18.0F; z += k_step) {
+    const float here = map.get_base_height_at(0.0F, z);
+    const float next = map.get_base_height_at(0.0F, z + k_step);
+    const float step = std::abs(next - here);
+    if (step > worst) {
+      worst = step;
+      worst_z = z;
+    }
+  }
+
+  EXPECT_LE(worst, k_max_bank_step)
+      << "the bank steps " << worst << " m over " << k_step << " m at z=" << worst_z
+      << "; a river perched above its land must be embanked, not cliffed";
+}
+
+TEST(BridgeApproach, TheArchLeavesTheBankFlat) {
+
+  const float slope_at_start =
+      (Game::Map::bridge_arch_curve(0.001F) - Game::Map::bridge_arch_curve(0.0F)) /
+      0.001F;
+  const float slope_at_end =
+      (Game::Map::bridge_arch_curve(1.0F) - Game::Map::bridge_arch_curve(0.999F)) /
+      0.001F;
+  EXPECT_NEAR(slope_at_start, 0.0F, 0.02F)
+      << "the deck profile leaves the bank at a slope, which renders as a step";
+  EXPECT_NEAR(slope_at_end, 0.0F, 0.02F);
+  EXPECT_NEAR(Game::Map::bridge_arch_curve(0.5F), 1.0F, 1.0e-3F);
+}
+
+TEST(BridgeApproach, DeckMeetsTheBankAtAWalkableGrade) {
+
+  Game::Map::TerrainHeightMap map(128, 128, 1.0F);
+  map.build_from_features({});
+  std::vector<Game::Map::RiverSegment> rivers{
+      Game::Map::RiverSegment{{-45.0F, 0.0F, 16.0F}, {45.0F, 0.0F, 16.0F}, 6.0F}};
+  map.add_river_segments(rivers);
+  std::vector<Game::Map::Bridge> bridges{
+      Game::Map::Bridge{{-2.0F, 0.0F, 10.5F}, {-2.0F, 0.0F, 21.5F}, 4.5F, 0.45F}};
+  map.add_bridges(bridges);
+
+  const auto& fitted = map.get_bridges();
+  ASSERT_FALSE(fitted.empty());
+  const auto& bridge = fitted.front();
+  const float span = (bridge.end - bridge.start).length();
+  ASSERT_GT(span, 1.0F);
+
+  constexpr float k_entry_run = 1.0F;
+  constexpr float k_max_entry_grade = 0.12F;
+  constexpr float k_max_deck_grade = 0.28F;
+
+  const float step = 0.25F;
+  float worst_entry = 0.0F;
+  float worst_deck = 0.0F;
+  for (float d = 0.0F; d + step <= span; d += step) {
+    const float here = Game::Map::bridge_deck_world_y(bridge, d / span);
+    const float next = Game::Map::bridge_deck_world_y(bridge, (d + step) / span);
+    const float grade = std::abs(next - here) / step;
+    worst_deck = std::max(worst_deck, grade);
+    if (d < k_entry_run || d > span - k_entry_run - step) {
+      worst_entry = std::max(worst_entry, grade);
+    }
+  }
+
+  EXPECT_LE(worst_entry, k_max_entry_grade)
+      << "the first metre of deck climbs at " << worst_entry
+      << ", which reads as a step rather than an approach";
+  EXPECT_LE(worst_deck, k_max_deck_grade)
+      << "the deck's steepest grade is " << worst_deck;
+
+  const float bank = map.get_base_height_at(bridge.start.x(), bridge.start.z());
+  const float entry_deck = Game::Map::bridge_deck_world_y(bridge, 0.0F);
+  EXPECT_LT(entry_deck - bank, 0.35F)
+      << "the deck starts " << (entry_deck - bank) << " m above the bank";
+}

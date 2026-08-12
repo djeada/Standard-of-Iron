@@ -59,39 +59,33 @@ void add_amphora(BuildingArchetypeDesc& desc,
                     base + QVector3D(0.0F, 0.035F, 0.0F),
                     0.035F,
                     dark_clay,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   desc.add_cylinder(base + QVector3D(0.0F, 0.035F, 0.0F),
                     base + QVector3D(0.0F, 0.145F, 0.0F),
                     0.070F,
                     clay,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   desc.add_cone(base + QVector3D(0.0F, 0.135F, 0.0F),
                 base + QVector3D(0.0F, 0.205F, 0.0F),
                 0.072F,
                 clay,
-                BuildingStateMask::Normal,
-                BuildingLODMask::Full);
+                BuildingStateMask::Normal);
   desc.add_cylinder(base + QVector3D(0.0F, 0.19F, 0.0F),
                     base + QVector3D(0.0F, 0.265F, 0.0F),
                     0.025F,
                     dark_clay,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   desc.add_cylinder(base + QVector3D(0.0F, 0.245F, 0.0F),
                     base + QVector3D(0.0F, 0.265F, 0.0F),
                     0.037F,
                     painted_band,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   for (float const side : {-1.0F, 1.0F}) {
     desc.add_cylinder(base + QVector3D(side * 0.027F, 0.205F, 0.0F),
                       base + QVector3D(side * 0.073F, 0.145F, 0.0F),
                       0.010F,
                       dark_clay,
-                      BuildingStateMask::Normal,
-                      BuildingLODMask::Full);
+                      BuildingStateMask::Normal);
   }
 }
 
@@ -104,14 +98,12 @@ void add_produce_basket(BuildingArchetypeDesc& desc,
                     base + QVector3D(0.0F, 0.10F, 0.0F),
                     0.105F,
                     c.cedar_light,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   desc.add_cylinder(base + QVector3D(0.0F, 0.085F, 0.0F),
                     base + QVector3D(0.0F, 0.105F, 0.0F),
                     0.115F,
                     c.cedar_dark,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   int index = 0;
   for (float const x : {-0.055F, 0.0F, 0.055F}) {
     for (float const z : {-0.040F, 0.040F}) {
@@ -120,12 +112,8 @@ void add_produce_basket(BuildingArchetypeDesc& desc,
           fruit_base +
           QVector3D(0.0F, 0.055F + 0.008F * static_cast<float>(index), 0.0F);
       QVector3D const& fruit_colour = (index % 2 == 0) ? produce_a : produce_b;
-      desc.add_cone(fruit_base,
-                    fruit_tip,
-                    0.035F,
-                    fruit_colour,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+      desc.add_cone(
+          fruit_base, fruit_tip, 0.035F, fruit_colour, BuildingStateMask::Normal);
       ++index;
     }
   }
@@ -149,8 +137,7 @@ void add_stall_canopy(BuildingArchetypeDesc& desc,
           QVector3D(center.x() + sx * half_x, top, center.z() + sz * half_z),
           post_r,
           c.cedar_dark,
-          k_building_state_mask_intact,
-          BuildingLODMask::Full);
+          k_building_state_mask_intact);
     }
   }
 
@@ -158,8 +145,7 @@ void add_stall_canopy(BuildingArchetypeDesc& desc,
                     QVector3D(center.x(), top + 0.055F, center.z() + half_z),
                     0.010F,
                     c.cedar,
-                    k_building_state_mask_intact,
-                    BuildingLODMask::Full);
+                    k_building_state_mask_intact);
   for (float const side : {-1.0F, 1.0F}) {
     desc.add_rotated_box(
         QVector3D(center.x() + side * half_x * 0.52F, top + 0.028F, center.z()),
@@ -172,8 +158,7 @@ void add_stall_canopy(BuildingArchetypeDesc& desc,
   desc.add_box(QVector3D(center.x() - half_x * 0.98F, top + 0.006F, center.z()),
                QVector3D(0.012F, 0.026F, half_z * 1.02F),
                c.cloth_gold,
-               BuildingStateMask::Normal | BuildingStateMask::Damaged,
-               BuildingLODMask::Full);
+               BuildingStateMask::Normal | BuildingStateMask::Damaged);
 }
 
 auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
@@ -186,7 +171,6 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   }
 
   BuildingArchetypeDesc desc("roman_marketplace");
-  desc.set_full_lod_max_distance(72.0F);
 
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.40F, 0.04F, 1.40F), c.limestone_dark);
@@ -198,29 +182,24 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(QVector3D(0.0F, 0.165F, 0.0F),
                QVector3D(0.90F, 0.005F, 0.90F),
                c.marble,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(0.0F, 0.168F, 0.0F),
                QVector3D(0.60F, 0.005F, 0.60F),
                c.blue_accent,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(0.0F, 0.170F, 0.0F),
                QVector3D(0.30F, 0.005F, 0.30F),
                c.gold,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   for (float const offset : {-1.08F, -0.72F, 0.72F, 1.08F}) {
     desc.add_box(QVector3D(offset, 0.171F, 0.0F),
                  QVector3D(0.010F, 0.004F, 1.18F),
                  c.limestone_dark,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
     desc.add_box(QVector3D(0.0F, 0.172F, offset),
                  QVector3D(1.18F, 0.004F, 0.010F),
                  c.mortar,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
 
   float const wall_h = 0.46F * height_multiplier;
@@ -237,15 +216,13 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(0.795F, course_y, 0.0F),
                  QVector3D(0.006F, 0.010F, 1.07F),
                  c.mortar,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
   for (float const joint_z : {-0.72F, -0.24F, 0.24F, 0.72F}) {
     desc.add_box(QVector3D(0.794F, 0.16F + wall_h * 0.50F, joint_z),
                  QVector3D(0.006F, wall_h * 0.48F, 0.008F),
                  c.limestone_dark,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
 
   float const col_height = 0.82F * height_multiplier;
@@ -255,8 +232,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(-0.96F, 0.18F, cz),
                  QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F),
                  c.marble,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
 
     desc.add_cylinder(QVector3D(-0.96F, 0.16F, cz),
                       QVector3D(-0.96F, 0.16F + col_height, cz),
@@ -266,8 +242,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(-0.96F, 0.16F + col_height + 0.04F, cz),
                  QVector3D(col_radius * 1.5F, 0.05F, col_radius * 1.5F),
                  c.marble,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
 
   float const entab_y = 0.16F + col_height + 0.10F;
@@ -284,27 +259,23 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(-0.20F, counter_h + 0.055F, z),
                  QVector3D(0.60F, 0.009F, 0.158F),
                  (plank % 2 == 0) ? c.cedar_light : c.cedar,
-                 BuildingStateMask::Normal | BuildingStateMask::Damaged,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::Normal | BuildingStateMask::Damaged);
   }
 
   desc.add_box(QVector3D(-0.20F, counter_h * 0.5F, -0.78F),
                QVector3D(0.04F, counter_h * 0.5F - 0.04F, 0.04F),
                c.cedar_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(-0.20F, counter_h * 0.5F, 0.78F),
                QVector3D(0.04F, counter_h * 0.5F - 0.04F, 0.04F),
                c.cedar_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   for (float const z : {-0.78F, 0.78F}) {
     desc.add_cylinder(QVector3D(-0.76F, 0.18F, z),
                       QVector3D(0.36F, counter_h - 0.04F, z),
                       0.018F,
                       c.cedar_dark,
-                      k_building_state_mask_intact,
-                      BuildingLODMask::Full);
+                      k_building_state_mask_intact);
   }
 
   float const awning_y = col_height + 0.20F;
@@ -324,8 +295,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                       QVector3D(-0.76F, 0.20F, z),
                       0.009F,
                       c.cloth_gold,
-                      k_building_state_mask_intact,
-                      BuildingLODMask::Full);
+                      k_building_state_mask_intact);
   }
 
   for (float const z : {-0.74F, 0.0F, 0.74F}) {
@@ -335,8 +305,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(0.46F, 0.16F + 0.095F, z + sz * 0.24F),
                    QVector3D(0.030F, 0.095F, 0.030F),
                    c.cedar_dark,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
     }
     add_stall_canopy(desc,
                      c,
@@ -357,8 +326,7 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(x, 0.22F, z),
                    QVector3D(0.035F, 0.17F, 0.035F),
                    c.cedar_dark,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
     }
     add_produce_basket(desc,
                        QVector3D(-0.50F, 0.395F, z),
@@ -375,26 +343,22 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                     QVector3D(-0.92F, 0.82F, 0.0F),
                     0.055F,
                     c.gold,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
 
   desc.add_box(QVector3D(0.50F, 0.28F, -0.70F),
                QVector3D(0.14F, 0.10F, 0.14F),
                c.cedar_dark,
-               BuildingStateMask::Normal,
-               BuildingLODMask::Full);
+               BuildingStateMask::Normal);
   for (float const y : {0.22F, 0.28F, 0.34F}) {
     desc.add_box(QVector3D(0.50F, y, -0.845F),
                  QVector3D(0.13F, 0.012F, 0.008F),
                  c.cedar_light,
-                 BuildingStateMask::Normal,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::Normal);
   }
   desc.add_box(QVector3D(0.50F, 0.28F, 0.68F),
                QVector3D(0.12F, 0.10F, 0.12F),
                c.cedar,
-               BuildingStateMask::Normal,
-               BuildingLODMask::Full);
+               BuildingStateMask::Normal);
   add_amphora(desc,
               QVector3D(0.02F, counter_h + 0.06F, -0.46F),
               c.terracotta,
@@ -405,40 +369,34 @@ auto build_marketplace_archetype(BuildingState state) -> RenderArchetype {
                     QVector3D(0.20F, counter_h + 0.32F, 0.28F),
                     0.012F,
                     c.bronze,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   desc.add_cylinder(QVector3D(0.06F, counter_h + 0.29F, 0.28F),
                     QVector3D(0.34F, counter_h + 0.29F, 0.28F),
                     0.010F,
                     c.bronze,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
   for (float const x : {0.07F, 0.33F}) {
     desc.add_cylinder(QVector3D(x, counter_h + 0.29F, 0.28F),
                       QVector3D(x, counter_h + 0.19F, 0.28F),
                       0.004F,
                       c.iron,
-                      BuildingStateMask::Normal,
-                      BuildingLODMask::Full);
+                      BuildingStateMask::Normal);
     desc.add_cone(QVector3D(x, counter_h + 0.20F, 0.28F),
                   QVector3D(x, counter_h + 0.17F, 0.28F),
                   0.060F,
                   c.bronze,
-                  BuildingStateMask::Normal,
-                  BuildingLODMask::Full);
+                  BuildingStateMask::Normal);
   }
 
   desc.add_box(QVector3D(0.92F, wall_h * 0.6F + 0.16F, 0.0F),
                QVector3D(0.005F, 0.03F, 1.06F),
                c.blue_accent,
-               BuildingStateMask::Normal,
-               BuildingLODMask::Full);
+               BuildingStateMask::Normal);
 
   desc.add_box(QVector3D(-0.96F, entab_y + 0.06F, 0.0F),
                QVector3D(0.06F, 0.05F, 0.06F),
                c.gold,
-               BuildingStateMask::Normal,
-               BuildingLODMask::Full);
+               BuildingStateMask::Normal);
 
   desc.add_palette_box(QVector3D(0.96F, 0.56F * height_multiplier, 0.0F),
                        QVector3D(0.02F, 0.22F, 0.14F),

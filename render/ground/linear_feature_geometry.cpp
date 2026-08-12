@@ -527,7 +527,9 @@ auto build_lake_surface_mesh(const Game::Map::Lake& lake,
 }
 
 auto build_bridge_mesh(const Game::Map::Bridge& bridge,
-                       float tile_size) -> std::unique_ptr<Render::GL::Mesh> {
+                       float tile_size,
+                       const Game::Map::TerrainHeightMap& height_map)
+    -> std::unique_ptr<Render::GL::Mesh> {
   QVector3D dir = bridge.end - bridge.start;
   float const length = dir.length();
   if (length < 0.01F) {
@@ -540,8 +542,13 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   float const half_width = bridge_width * 0.5F;
 
   float const abutment_reach = Game::Map::bridge_abutment_reach(bridge_width);
-  const float visual_length = length + abutment_reach * 2.0F;
-  QVector3D const visual_start = bridge.start - dir * abutment_reach;
+
+  float const deck_thickness_estimate = std::clamp(bridge_width * 0.26F, 0.55F, 1.05F);
+  float const landing_run =
+      std::max(abutment_reach,
+               deck_thickness_estimate * 1.35F / Game::Map::k_bridge_landing_grade);
+  const float visual_length = length + landing_run * 2.0F;
+  QVector3D const visual_start = bridge.start - dir * landing_run;
   float const segment_step = std::max(tile_size * 0.28F, 0.16F);
 
   float const end_fade_length =
@@ -589,7 +596,7 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
   for (int i = 0; i <= length_segments; ++i) {
     float const mesh_t = static_cast<float>(i) / static_cast<float>(length_segments);
     float const span_distance = visual_length * mesh_t;
-    const float authored_distance = span_distance - abutment_reach;
+    const float authored_distance = span_distance - landing_run;
     const float authored_t = std::clamp(authored_distance / length, 0.0F, 1.0F);
     QVector3D const center_pos = visual_start + dir * span_distance;
 
@@ -600,7 +607,18 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
     float const profile_blend = start_blend * end_blend;
 
     float const arch_curve = Game::Map::bridge_arch_curve(authored_t);
-    float const deck_height = Game::Map::bridge_deck_world_y(bridge, authored_t);
+
+    float landing = 1.0F;
+    if (span_distance < landing_run) {
+      landing = smoothstep01(span_distance / landing_run);
+    } else if (span_distance > visual_length - landing_run) {
+      landing = smoothstep01((visual_length - span_distance) / landing_run);
+    }
+    float const ground_y =
+        height_map.get_base_height_at(center_pos.x(), center_pos.z());
+    float const deck_height = mixf(ground_y + Game::Map::k_bridge_deck_visual_lift,
+                                   Game::Map::bridge_deck_world_y(bridge, authored_t),
+                                   landing);
 
     float const stone_noise =
         std::sin(center_pos.x() * 3.0F) * std::cos(center_pos.z() * 2.5F) * 0.02F;
@@ -611,9 +629,12 @@ auto build_bridge_mesh(const Game::Map::Bridge& bridge,
                  ring_half_width * 0.68F);
 
     float const ring_thickness =
-        mixf(deck_thickness * 1.35F, deck_thickness * 0.55F, arch_curve);
+        mixf(Game::Map::k_bridge_landing_thickness,
+             mixf(deck_thickness * 1.35F, deck_thickness * 0.55F, arch_curve),
+             landing);
 
-    float const ring_parapet_height = parapet_height * (0.46F + 0.54F * profile_blend);
+    float const ring_parapet_height =
+        parapet_height * (0.46F + 0.54F * profile_blend) * landing;
     float const ring_parapet_offset =
         std::max(ring_half_width - parapet_half_width * 0.45F, ring_half_width * 0.72F);
 

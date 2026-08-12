@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <vector>
@@ -192,59 +193,25 @@ TEST(BuildingArchetypeDesc, RuinDressingOnlyAppearsOnDamagedStates) {
   EXPECT_GT(destroyed.lods[0].draws.size(), damaged.lods[0].draws.size());
 }
 
-TEST(BuildingArchetypeDesc, FiltersBuildingLODMask) {
+TEST(BuildingArchetypeDesc, EveryAuthoredPartSurvivesAtAnyRange) {
   using namespace Render::GL;
 
-  BuildingArchetypeDesc desc("lod_filter_test");
+  BuildingArchetypeDesc desc("lod_purge_test");
   desc.add_box(QVector3D(0.0F, 0.0F, 0.0F),
                QVector3D(1.0F, 1.0F, 1.0F),
                QVector3D(1.0F, 0.0F, 0.0F));
   desc.add_box(QVector3D(1.0F, 0.0F, 0.0F),
                QVector3D(1.0F, 1.0F, 1.0F),
                QVector3D(0.0F, 1.0F, 0.0F),
-               BuildingStateMask::All,
-               BuildingLODMask::Full);
+               BuildingStateMask::All);
 
   const RenderArchetype archetype =
       build_building_archetype(desc, BuildingState::Normal);
 
   EXPECT_EQ(archetype.lods[0].draws.size(), 2U);
-  EXPECT_EQ(archetype.lods[1].draws.size(), 1U);
-}
-
-TEST(BuildingArchetypeDesc, SetFullLodMaxDistanceConfiguresSlice) {
-  using namespace Render::GL;
-
-  BuildingArchetypeDesc desc("distance_test");
-  desc.set_full_lod_max_distance(45.0F);
-  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F),
-               QVector3D(1.0F, 1.0F, 1.0F),
-               QVector3D(1.0F, 1.0F, 1.0F));
-
-  const RenderArchetype archetype =
-      build_building_archetype(desc, BuildingState::Normal);
-
-  EXPECT_FLOAT_EQ(archetype.lods[0].max_distance, 45.0F);
-}
-
-TEST(BuildingArchetypeDesc, RecordedLodsPreserveSeparateFullAndMinimalMeshes) {
-  using namespace Render::GL;
-
-  RecordedMeshCmd const full_cmd{.mesh = fake_mesh(11),
-                                 .local_model = QMatrix4x4{},
-                                 .color = QVector3D(1.0F, 0.0F, 0.0F)};
-  RecordedMeshCmd const minimal_cmd{.mesh = fake_mesh(22),
-                                    .local_model = QMatrix4x4{},
-                                    .color = QVector3D(0.0F, 1.0F, 0.0F)};
-
-  const RenderArchetype archetype = build_building_archetype_from_recorded_lods(
-      "recorded_lods_test", {full_cmd}, {minimal_cmd}, 72.0F);
-
-  ASSERT_EQ(archetype.lods[0].draws.size(), 1U);
-  ASSERT_EQ(archetype.lods[1].draws.size(), 1U);
-  EXPECT_EQ(archetype.lods[0].draws[0].mesh, fake_mesh(11));
-  EXPECT_EQ(archetype.lods[1].draws[0].mesh, fake_mesh(22));
-  EXPECT_FLOAT_EQ(archetype.lods[0].max_distance, 72.0F);
+  EXPECT_TRUE(archetype.lods[1].draws.empty());
+  EXPECT_TRUE(std::isinf(archetype.lods[0].max_distance));
+  EXPECT_EQ(select_render_archetype_lod(archetype, 10000.0F), RenderArchetypeLod::Full);
 }
 
 TEST(BuildingCulturalOrnaments, RomanAndPunicReliefsKeepDistinctProfiles) {
@@ -280,7 +247,7 @@ TEST(BuildingCulturalOrnaments, RomanAndPunicReliefsKeepDistinctProfiles) {
             punic_archetype.lods[0].draws[0].local_model);
 }
 
-TEST(BuildingCulturalOrnaments, RoofSignaturesRemainVisibleAtMinimalLod) {
+TEST(BuildingCulturalOrnaments, RoofSignaturesCarryTheirFullDetail) {
   using namespace Render::GL;
 
   BuildingArchetypeDesc roman("roman_roof_standard_test");
@@ -302,8 +269,8 @@ TEST(BuildingCulturalOrnaments, RoofSignaturesRemainVisibleAtMinimalLod) {
   const RenderArchetype punic_archetype =
       build_building_archetype(punic, BuildingState::Normal);
 
-  EXPECT_GE(roman_archetype.lods[1].draws.size(), 8U);
-  EXPECT_GE(punic_archetype.lods[1].draws.size(), 10U);
+  EXPECT_GE(roman_archetype.lods[0].draws.size(), 8U);
+  EXPECT_GE(punic_archetype.lods[0].draws.size(), 10U);
   EXPECT_NE(roman_archetype.lods[0].draws.size(), punic_archetype.lods[0].draws.size());
   EXPECT_NE(roman_archetype.lods[0].draws.front().local_model,
             punic_archetype.lods[0].draws.front().local_model);

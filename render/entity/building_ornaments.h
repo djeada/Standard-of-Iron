@@ -238,8 +238,7 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
                                  float depth,
                                  const QVector3D& bronze,
                                  const QVector3D& shade,
-                                 BuildingStateMask states,
-                                 BuildingLODMask core_lod = BuildingLODMask::Full) {
+                                 BuildingStateMask states) {
   const auto point = [&](float horizontal, float vertical, float normal) {
     return facade_point(center, plane, horizontal * scale, vertical * scale, normal);
   };
@@ -252,20 +251,17 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
   for (float const side : {-1.0F, 1.0F}) {
     std::size_t feather_index = 0;
     for (auto const& feather : k_eagle_wing) {
-      const BuildingLODMask lod = feather_index < 2 ? core_lod : BuildingLODMask::Full;
       desc.add_rotated_box(point(side * feather.horizontal, feather.vertical, relief),
                            size(feather.half_length, feather.half_thickness, relief),
                            facade_rotation(plane, side * feather.sweep_degrees),
                            shade,
-                           states,
-                           BuildingLODMask::Full);
+                           states);
       desc.add_rotated_box(
           point(side * feather.horizontal, feather.vertical + 0.022F, depth),
           size(feather.half_length * 0.88F, feather.half_thickness * 0.72F, depth),
           facade_rotation(plane, side * feather.sweep_degrees),
           bronze,
-          states,
-          lod);
+          states);
       ++feather_index;
     }
 
@@ -273,8 +269,7 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
                          size(0.085F, 0.050F, depth),
                          facade_rotation(plane, side * 34.0F),
                          bronze,
-                         states,
-                         BuildingLODMask::Full);
+                         states);
   }
 
   for (auto const& feather : k_eagle_tail) {
@@ -286,34 +281,26 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
                            size(feather.half_thickness, feather.half_length, depth),
                            facade_rotation(plane, side * feather.sweep_degrees),
                            bronze,
-                           states,
-                           feather.horizontal == 0.0F ? core_lod
-                                                      : BuildingLODMask::Full);
+                           states);
     }
   }
 
-  desc.add_box(point(0.0F, -0.015F, depth),
-               size(0.072F, 0.155F, depth * 1.25F),
-               bronze,
-               states,
-               core_lod);
+  desc.add_box(
+      point(0.0F, -0.015F, depth), size(0.072F, 0.155F, depth * 1.25F), bronze, states);
   desc.add_box(point(0.0F, 0.075F, depth * 1.15F),
                size(0.055F, 0.070F, depth * 1.35F),
                bronze,
-               states,
-               BuildingLODMask::Full);
+               states);
 
   desc.add_box(point(0.018F, 0.180F, depth * 1.2F),
                size(0.046F, 0.055F, depth * 1.4F),
                bronze,
-               states,
-               core_lod);
+               states);
   desc.add_cone(point(0.048F, 0.184F, depth * 1.2F),
                 point(0.104F, 0.156F, depth * 1.2F),
                 0.020F * scale,
                 bronze,
-                states,
-                core_lod);
+                states);
 }
 
 inline void add_laurel_wreath(BuildingArchetypeDesc& desc,
@@ -339,8 +326,7 @@ inline void add_laurel_wreath(BuildingArchetypeDesc& desc,
         facade_scale(plane, 0.052F * scale, 0.024F * scale, depth * 0.6F),
         facade_rotation(plane, (angle * 180.0F / 3.14159265F) + 90.0F),
         color,
-        states,
-        BuildingLODMask::Full);
+        states);
   }
 }
 
@@ -351,8 +337,7 @@ inline void add_tanit_sign(BuildingArchetypeDesc& desc,
                            float depth,
                            const QVector3D& symbol,
                            const QVector3D& shade,
-                           BuildingStateMask states,
-                           BuildingLODMask core_lod = BuildingLODMask::Full) {
+                           BuildingStateMask states) {
   const auto point = [&](float horizontal, float vertical, float normal) {
     return facade_point(center, plane, horizontal * scale, vertical * scale, normal);
   };
@@ -364,27 +349,20 @@ inline void add_tanit_sign(BuildingArchetypeDesc& desc,
                     point(0.0F, 0.235F, depth * 1.9F),
                     0.098F * scale,
                     symbol,
-                    states,
-                    core_lod);
+                    states);
   desc.add_cylinder(point(0.0F, 0.235F, 0.0F),
                     point(0.0F, 0.235F, depth * 0.35F),
                     0.114F * scale,
                     shade,
-                    states,
-                    BuildingLODMask::Full);
+                    states);
 
-  desc.add_box(point(0.0F, 0.085F, depth),
-               size(0.235F, 0.032F, depth),
-               symbol,
-               states,
-               core_lod);
+  desc.add_box(point(0.0F, 0.085F, depth), size(0.235F, 0.032F, depth), symbol, states);
   for (float const side : {-1.0F, 1.0F}) {
     desc.add_rotated_box(point(side * 0.272F, 0.124F, depth),
                          size(0.075F, 0.030F, depth),
                          facade_rotation(plane, side * -38.0F),
                          symbol,
-                         states,
-                         BuildingLODMask::Full);
+                         states);
   }
 
   constexpr std::array<std::pair<float, float>, 4> k_body{
@@ -393,14 +371,9 @@ inline void add_tanit_sign(BuildingArchetypeDesc& desc,
     desc.add_box(point(0.0F, course.second, depth),
                  size(course.first, 0.042F, depth),
                  symbol,
-                 states,
-                 core_lod);
+                 states);
   }
-  desc.add_box(point(0.0F, -0.262F, depth),
-               size(0.215F, 0.030F, depth),
-               shade,
-               states,
-               BuildingLODMask::Full);
+  desc.add_box(point(0.0F, -0.262F, depth), size(0.215F, 0.030F, depth), shade, states);
 }
 
 } // namespace Detail
@@ -418,8 +391,7 @@ add_roman_aquila_relief(BuildingArchetypeDesc& desc,
   desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
                Detail::facade_scale(plane, 0.58F * scale, 0.54F * scale, depth * 0.5F),
                weathered(shadow, 3, 0.10F),
-               states,
-               BuildingLODMask::Full);
+               states);
 
   Detail::add_laurel_wreath(desc, center, plane, scale, depth, 0.36F, bronze, states);
   Detail::add_eagle_silhouette(
@@ -439,21 +411,18 @@ add_punic_tanit_relief(BuildingArchetypeDesc& desc,
   desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F),
                Detail::facade_scale(plane, 0.58F * scale, 0.74F * scale, depth * 0.7F),
                backing,
-               states,
-               BuildingLODMask::Full);
+               states);
   desc.add_box(Detail::facade_point(center, plane, 0.0F, 0.0F, depth * 0.25F),
                Detail::facade_scale(plane, 0.48F * scale, 0.64F * scale, depth * 0.35F),
                weathered(backing, 7, 0.12F),
-               states,
-               BuildingLODMask::Full);
+               states);
 
   for (float const side : {-1.0F, 1.0F}) {
     desc.add_box(
         Detail::facade_point(center, plane, side * 0.52F * scale, 0.0F, depth * 0.3F),
         Detail::facade_scale(plane, 0.032F * scale, 0.72F * scale, depth * 0.45F),
         symbol,
-        states,
-        BuildingLODMask::Full);
+        states);
   }
 
   Detail::add_tanit_sign(desc, center, plane, scale, depth, symbol, backing, states);
@@ -488,14 +457,12 @@ add_roman_roof_standard(BuildingArchetypeDesc& desc,
   desc.add_box(base + QVector3D(0.0F, 0.330F * scale, 0.033F * scale),
                QVector3D(0.098F, 0.044F, 0.011F) * scale,
                bronze,
-               states,
-               BuildingLODMask::Full);
+               states);
   for (float const side : {-1.0F, 1.0F}) {
     desc.add_box(base + QVector3D(side * 0.135F * scale, 0.238F * scale, 0.0F),
                  QVector3D(0.016F, 0.030F, 0.016F) * scale,
                  bronze,
-                 states,
-                 BuildingLODMask::Full);
+                 states);
   }
 
   desc.add_cylinder(base + QVector3D(0.0F, 0.560F * scale, -0.02F * scale),
@@ -511,8 +478,7 @@ add_roman_roof_standard(BuildingArchetypeDesc& desc,
                                0.030F * scale,
                                bronze,
                                crimson,
-                               states,
-                               BuildingLODMask::All);
+                               states);
 }
 
 inline void
@@ -554,8 +520,7 @@ add_punic_horned_crown(BuildingArchetypeDesc& desc,
   desc.add_box(base + QVector3D(0.0F, 0.690F * scale, 0.0F),
                QVector3D(0.128F, 0.038F, 0.128F) * scale,
                ember,
-               states,
-               BuildingLODMask::Full);
+               states);
 
   constexpr int k_crescent_steps = 9;
   constexpr float k_crescent_span = 0.74F;

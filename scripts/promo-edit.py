@@ -298,13 +298,25 @@ DEFAULT_TRANSITION = "dissolve"
 DEFAULT_TRANSITION_SECONDS = 0.35
 
 FONT_CANDIDATES = (
-    "/usr/share/fonts/truetype/adf/AccanthisADFStd-Bold.otf",
+    "/usr/share/fonts/truetype/ebgaramond/EBGaramond12-Bold.ttf",
+    "/usr/share/texmf/fonts/opentype/public/lm/lmromancaps10-regular.otf",
+    "/usr/share/fonts/opentype/ebgaramond/EBGaramondSC12-Regular.otf",
     "/usr/share/fonts/opentype/linux-libertine/LinLibertine_RB.otf",
+    "/usr/share/fonts/truetype/adf/AccanthisADFStd-Bold.otf",
     "/usr/share/fonts/truetype/noto/NotoSerifDisplay-Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf",
 )
+"""Preferred caption faces, most period-appropriate first.
+
+The order is a compromise between two things the cards have to do at once. An
+ancient-looking card wants inscriptional Roman capitals -- high stroke
+contrast, fine bracketed serifs, the shapes cut on a Trajanic base -- and
+`lmromancaps10` is exactly that. But captions here are drawn over moving
+footage with a 4 px black border, and hairline serifs disappear under it. EB
+Garamond's bold is old-style enough to read as carved rather than typed while
+keeping stem weight the border cannot swallow, so it leads and the pure
+inscriptional face is the fallback."""
 
 
 def fail(message: str) -> None:
@@ -696,6 +708,42 @@ def main() -> int:
 
         title_safe_width = int(width * 0.80)
 
+        advisory = spec.get("advisory")
+        advisory_end = 0.0
+        if advisory:
+
+            advisory_seconds = max(1.2, float(spec.get("advisory_seconds", 3.0)))
+            advisory_end = advisory_seconds
+            hold = advisory_seconds - 0.45
+            advisory_size = max(24, int(type_base * 0.034))
+
+            chain.append(
+                f"[{stage}]"
+                f"drawbox=x=0:y=0:w=iw:h=ih:color=black@1.0:t=fill"
+                f":enable='lt(t,{advisory_seconds:.3f})'"
+                f"[carded]"
+            )
+            stage = "carded"
+
+            for line_index, line in enumerate(advisory.split("|")):
+                offset = int(advisory_size * 1.45 * line_index)
+                chain.append(
+                    f"[{stage}]"
+                    + drawtext(
+                        text=tracked(line.strip()),
+                        font=font,
+                        size=fit_font_size(
+                            tracked(line.strip()), font, advisory_size, safe_width
+                        ),
+                        y_expr=f"h*0.5-{int(advisory_size * 0.6)}+{offset}",
+                        start=0.25,
+                        end=hold,
+                        color="white",
+                    )
+                    + f"[advised{line_index}]"
+                )
+                stage = f"advised{line_index}"
+
         card_seconds = float(spec.get("end_card_seconds", END_CARD_SECONDS))
         card_start = max(0.0, total - card_seconds)
         has_card = bool(spec.get("title") or spec.get("subtitle"))
@@ -709,7 +757,7 @@ def main() -> int:
             trailing = 0.15
             if index + 1 < len(joins):
                 trailing = max(trailing, joins[index + 1].seconds)
-            visible_start = start + leading
+            visible_start = max(start + leading, advisory_end + 0.25)
             visible_end = max(visible_start + 0.6, end - trailing)
 
             if has_card and visible_start < card_start:
@@ -739,8 +787,11 @@ def main() -> int:
             trailing = 0.15
             if index + 1 < len(joins):
                 trailing = max(trailing, joins[index + 1].seconds)
-            visible_start = start + leading
+
+            visible_start = max(start + leading, advisory_end + 0.3)
             visible_end = max(visible_start + 0.6, end - trailing)
+            if visible_end <= visible_start + 0.3:
+                continue
             act_text = tracked(act_title)
             act_size = fit_font_size(act_text, font, title_size, title_safe_width)
             chain.append(
@@ -812,6 +863,30 @@ def main() -> int:
                 + "[sub]"
             )
             stage = "sub"
+
+        credit_lines = list(spec.get("end_card_lines", []))
+        if credit_lines:
+
+            credit_size = max(24, int(type_base * 0.032))
+            credit_top = int(title_size * 1.35) + int(subtitle_size * 2.4)
+            for line_index, line in enumerate(credit_lines):
+                offset = credit_top + int(credit_size * 1.7 * line_index)
+                chain.append(
+                    f"[{stage}]"
+                    + drawtext(
+                        text=tracked(line),
+                        font=font,
+                        size=fit_font_size(
+                            tracked(line), font, credit_size, safe_width
+                        ),
+                        y_expr=f"h*{TITLE_Y_FRACTION}+{offset}",
+                        start=card_start + 0.8 + (0.25 * line_index),
+                        end=total,
+                        color="#cfc6b4",
+                    )
+                    + f"[credit{line_index}]"
+                )
+                stage = f"credit{line_index}"
 
     opening = max(0.0, args.opening_fade)
     fades = []
