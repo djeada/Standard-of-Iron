@@ -2175,10 +2175,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Posture</translation>
     </message>
     <message>
-        <source>%1 camera</source>
-        <translation>%1 camera</translation>
-    </message>
-    <message>
         <source>Chase</source>
         <translation>Chase</translation>
     </message>
@@ -4926,17 +4922,6 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>BLADE  ·  X</source>
         <translation>BLADE  ·  X</translation>
-    </message>
-</context>
-<context>
-    <name>RpgTargetBar</name>
-    <message>
-        <source>BROKEN</source>
-        <translation>BROKEN</translation>
-    </message>
-    <message>
-        <source>STAGGERED</source>
-        <translation>STAGGERED</translation>
     </message>
 </context>
 <context>
