@@ -2175,10 +2175,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>الاتزان</translation>
     </message>
     <message>
-        <source>%1 camera</source>
-        <translation>كاميرا %1</translation>
-    </message>
-    <message>
         <source>Chase</source>
         <translation>مطاردة</translation>
     </message>
@@ -4926,17 +4922,6 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>BLADE  ·  X</source>
         <translation>نصل  ·  X</translation>
-    </message>
-</context>
-<context>
-    <name>RpgTargetBar</name>
-    <message>
-        <source>BROKEN</source>
-        <translation>مكسورة</translation>
-    </message>
-    <message>
-        <source>STAGGERED</source>
-        <translation>مترنّح</translation>
     </message>
 </context>
 <context>
