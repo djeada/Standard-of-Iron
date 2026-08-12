@@ -102,47 +102,39 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(QVector3D(0.0F, cornice_y - 0.06F, -0.88F),
                QVector3D(0.86F, 0.02F, 0.09F),
                c.marble,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(0.0F, cornice_y - 0.06F, 0.88F),
                QVector3D(0.86F, 0.02F, 0.09F),
                c.marble,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
 
   for (float const xw : {-0.92F, 0.92F}) {
     desc.add_box(QVector3D(xw, 0.58F, -0.30F),
                  QVector3D(0.015F, 0.20F, 0.16F),
                  c.cedar_dark,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
     desc.add_box(QVector3D(xw, 0.58F, 0.30F),
                  QVector3D(0.015F, 0.20F, 0.16F),
                  c.cedar_dark,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
 
     desc.add_box(QVector3D(xw, 0.44F, -0.30F),
                  QVector3D(0.015F, 0.03F, 0.19F),
                  c.limestone_shade,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
     desc.add_box(QVector3D(xw, 0.44F, 0.30F),
                  QVector3D(0.015F, 0.03F, 0.19F),
                  c.limestone_shade,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
 
     desc.add_box(QVector3D(xw, 0.80F, -0.30F),
                  QVector3D(0.015F, 0.04F, 0.20F),
                  c.marble,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
     desc.add_box(QVector3D(xw, 0.80F, 0.30F),
                  QVector3D(0.015F, 0.04F, 0.20F),
                  c.marble,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
 
   float const col_height = 0.88F;
@@ -159,8 +151,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(col.x(), 0.18F, col.z()),
                  QVector3D(col_radius * 1.3F, 0.04F, col_radius * 1.3F),
                  c.marble,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
 
     desc.add_cylinder(
         QVector3D(col.x(), 0.16F, col.z()),
@@ -172,8 +163,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
         QVector3D(col.x(), 0.16F + col_height * height_multiplier + 0.04F, col.z()),
         QVector3D(col_radius * 1.6F, 0.07F, col_radius * 1.6F),
         c.marble,
-        k_building_state_mask_intact,
-        BuildingLODMask::Full);
+        k_building_state_mask_intact);
   }
 
   float const entab_y = 0.16F + col_height * height_multiplier + 0.12F;
@@ -185,16 +175,14 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(QVector3D(0.0F, entab_y + 0.06F, 0.92F),
                QVector3D(0.80F, 0.03F, 0.05F),
                c.blue_accent,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
 
   desc.add_box(
       QVector3D(0.0F, 0.48F, 0.92F), QVector3D(0.28F, 0.42F, 0.05F), c.cedar_dark);
   desc.add_box(QVector3D(0.0F, 0.72F, 0.94F),
                QVector3D(0.32F, 0.04F, 0.02F),
                c.blue_accent,
-               BuildingStateMask::All,
-               BuildingLODMask::Full);
+               BuildingStateMask::All);
 
   desc.add_box(
       QVector3D(0.0F, 0.06F, 1.08F), QVector3D(0.60F, 0.04F, 0.16F), c.limestone_dark);
@@ -212,34 +200,28 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(QVector3D(0.0F, 0.155F, 0.0F),
                QVector3D(0.54F, 0.005F, 0.54F),
                c.marble,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(0.0F, 0.158F, 0.34F),
                QVector3D(0.48F, 0.02F, 0.03F),
                c.limestone_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(0.0F, 0.158F, -0.34F),
                QVector3D(0.48F, 0.02F, 0.03F),
                c.limestone_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(0.34F, 0.158F, 0.0F),
                QVector3D(0.03F, 0.02F, 0.40F),
                c.limestone_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(-0.34F, 0.158F, 0.0F),
                QVector3D(0.03F, 0.02F, 0.40F),
                c.limestone_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
 
   desc.add_box(QVector3D(0.0F, 0.153F, 0.0F),
                QVector3D(0.28F, 0.005F, 0.28F),
                c.blue_light,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
 
   auto add_rot = [&](const QVector3D& center,
                      const QVector3D& scale,
@@ -260,13 +242,11 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(QVector3D(0.99F, eave_y, 0.0F),
                QVector3D(0.04F, 0.04F, 1.05F),
                c.terracotta_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_box(QVector3D(-0.99F, eave_y, 0.0F),
                QVector3D(0.04F, 0.04F, 1.05F),
                c.terracotta_dark,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
 
   desc.add_box(QVector3D(0.0F, eave_y + 0.14F, -0.97F),
                QVector3D(0.68F, 0.14F, 0.05F),
@@ -304,27 +284,23 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(0.0F, cornice_y + 0.36F, 0.96F),
                    QVector3D(0.22F, 0.05F, 0.04F),
                    c.blue_accent,
-                   BuildingStateMask::Normal,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::Normal);
 
       desc.add_box(QVector3D(-0.62F, cornice_y + 0.24F, 0.96F),
                    QVector3D(0.05F, 0.07F, 0.05F),
                    c.gold,
-                   BuildingStateMask::Normal,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::Normal);
       desc.add_box(QVector3D(0.62F, cornice_y + 0.24F, 0.96F),
                    QVector3D(0.05F, 0.07F, 0.05F),
                    c.gold,
-                   BuildingStateMask::Normal,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::Normal);
     }
   }
 
   desc.add_palette_box(QVector3D(0.0F, 0.76F, 0.97F),
                        QVector3D(0.28F, 0.12F, 0.02F),
                        k_home_team_slot,
-                       BuildingStateMask::All,
-                       BuildingLODMask::Full);
+                       BuildingStateMask::All);
 
   add_roman_aquila_relief(desc,
                           QVector3D(0.0F, cornice_y - 0.30F, 1.00F),

@@ -260,20 +260,37 @@ aimed.
 
 ## Trailer chapters
 
-`trailer_*` are the master trailer's chapters, and unlike the single-scene
-reels they all play on one authored stage. `dress_valley` in
-`arena_trailer_scenarios.cpp` lays the same river valley for every one of them
--- village on the north bank, timber fort on the eastern rise, one bridge, open
-ground to the south -- so the finished cut reads as one place across one day
-rather than as a sampler of unrelated fixtures.
+`trailer_*` are the master trailer's chapters. Five of them play on one
+authored stage: `dress_valley` in `arena_trailer_scenarios.cpp` lays the same
+river valley -- village on the north bank, timber fort on the eastern rise, one
+bridge, open ground to the south -- so those cuts read as one place across one
+day. The rest are deliberately somewhere else, because a trailer cut entirely on
+one stage reads as one stage however well each shot is framed, and the finished
+film has to show the game's range of ground as well as its range of action.
+
+Range of ground is authored, not inherited. A chapter names its own
+`ground_type` and its own `terrain_seed_override`; `ArenaViewport::load_scenario`
+applies both and `reset_arena` restores whatever the session had before, so the
+surface under a fixture belongs to the fixture rather than to a global every
+scenario shares. Weather is authored the same way through `weather` and
+`precipitation`, which is what puts snow on the pass and rain in the wood.
 
 ```bash
-build/bin/arena_app --scenario trailer_dawn           # economy, ambient life, wolves
-build/bin/arena_app --scenario trailer_muster         # gate, march, bridge, deploy
-build/bin/arena_app --scenario trailer_clash          # the pitched battle
-build/bin/arena_app --scenario trailer_pov            # the same fight in RPG mode
-build/bin/arena_app --scenario trailer_barrow_night   # the undead ambush
-build/bin/arena_app --scenario trailer_flame_card     # the act-card stage
+build/bin/arena_app --scenario trailer_dawn            # valley: economy, flock, wolves
+build/bin/arena_app --scenario trailer_muster          # valley: gate, march, bridge, deploy
+build/bin/arena_app --scenario trailer_clash           # valley: the pitched battle
+build/bin/arena_app --scenario trailer_pov             # valley: the same fight in RPG mode
+build/bin/arena_app --scenario trailer_barrow_night    # valley: the undead ambush
+build/bin/arena_app --scenario trailer_works           # soil_rocky: five crews raising a settlement
+build/bin/arena_app --scenario trailer_sanctuary       # grass_dry: hill temple, the healers' rings
+build/bin/arena_app --scenario trailer_gate_march      # grass_dry: every arm through one gate
+build/bin/arena_app --scenario trailer_highland        # alpine_mix, snow: the column on the pass
+build/bin/arena_app --scenario trailer_forest_ambush   # forest_mud, rain: ambush in the wood
+build/bin/arena_app --scenario trailer_bridge_defense  # soil_fertile: the crossing held
+build/bin/arena_app --scenario trailer_siege_walls     # grass_dry: siege work against a rampart
+build/bin/arena_app --scenario trailer_night_snow      # alpine_mix, snow: the host and the priests
+build/bin/arena_app --scenario trailer_last_breath     # alpine_mix, snow: the consul's last fight
+build/bin/arena_app --scenario trailer_flame_card      # the act-card stage
 ```
 
 `trailer_flame_card` is deliberately empty: a shot marked `"flame_card": true`

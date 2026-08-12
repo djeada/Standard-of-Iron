@@ -27,9 +27,11 @@ BridgeRenderer::BridgeRenderer() = default;
 BridgeRenderer::~BridgeRenderer() = default;
 
 void BridgeRenderer::configure(const std::vector<Game::Map::Bridge>& bridges,
-                               float tile_size) {
+                               float tile_size,
+                               const Game::Map::TerrainHeightMap& height_map) {
   m_bridges = bridges;
   m_tile_size = tile_size;
+  m_height_map = &height_map;
   build_meshes();
 }
 
@@ -40,8 +42,12 @@ void BridgeRenderer::build_meshes() {
     return;
   }
 
+  if (m_height_map == nullptr) {
+    return;
+  }
+
   for (const auto& bridge : m_bridges) {
-    m_meshes.push_back(Ground::build_bridge_mesh(bridge, m_tile_size));
+    m_meshes.push_back(Ground::build_bridge_mesh(bridge, m_tile_size, *m_height_map));
   }
 }
 

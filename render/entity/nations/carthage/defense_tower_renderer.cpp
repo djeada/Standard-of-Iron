@@ -72,25 +72,21 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(x, 0.38F, -0.90F),
                  QVector3D(0.14F, 0.08F, 0.10F),
                  c.brick_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
     desc.add_box(QVector3D(x, 0.38F, 0.90F),
                  QVector3D(0.14F, 0.08F, 0.10F),
                  c.brick_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
   }
   for (float z = -0.84F; z <= 0.84F; z += 0.42F) {
     desc.add_box(QVector3D(-0.90F, 0.38F, z),
                  QVector3D(0.10F, 0.08F, 0.14F),
                  c.brick_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
     desc.add_box(QVector3D(0.90F, 0.38F, z),
                  QVector3D(0.10F, 0.08F, 0.14F),
                  c.brick_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
   }
 
   desc.add_box(
@@ -103,8 +99,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   if (!destroyed) {
     add_embrasures(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
-          desc.add_box(
-              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+          desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         damaged ? 0.90F : 1.02F,
         (destroyed ? 0.68F : 0.78F) * 0.98F,
@@ -114,14 +109,12 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(0.0F, damaged ? 1.04F : 1.22F, 0.0F),
                  QVector3D(damaged ? 0.76F : 0.82F, 0.04F, damaged ? 0.76F : 0.82F),
                  c.stone_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
 
     desc.add_box(QVector3D(0.0F, damaged ? 1.38F : 1.56F, 0.0F),
                  QVector3D(damaged ? 0.72F : 0.80F, 0.03F, damaged ? 0.72F : 0.80F),
                  c.brick_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
   }
 
   const std::array<int, 4> corner_indices =
@@ -141,15 +134,13 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(ox, damaged ? 1.94F : 2.20F, oz),
                  QVector3D(damaged ? 0.18F : 0.22F, 0.08F, damaged ? 0.18F : 0.22F),
                  c.stone_light,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
 
     if (!destroyed && !damaged) {
       desc.add_box(QVector3D(ox, 2.32F, oz),
                    QVector3D(0.10F, 0.08F, 0.10F),
                    c.brick,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
     }
   }
 
@@ -165,14 +156,12 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(ox, damaged ? 0.64F : 0.72F, oz),
                    QVector3D(0.14F, damaged ? 0.22F : 0.30F, 0.14F),
                    c.brick,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
 
       desc.add_box(QVector3D(ox, damaged ? 0.92F : 1.08F, oz),
                    QVector3D(0.10F, damaged ? 0.14F : 0.20F, 0.10F),
                    c.brick_dark,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
     }
 
     desc.add_box(QVector3D(0.0F, upper_drum_y, 0.0F),
@@ -187,26 +176,23 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(sx, upper_drum_y - 0.12F, sz),
                    QVector3D(0.02F, 0.10F, 0.04F),
                    c.wood_dark,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
     }
 
     desc.add_box(QVector3D(0.0F, damaged ? 1.90F : 2.02F, 0.0F),
                  QVector3D(damaged ? 0.94F : 1.04F, 0.04F, damaged ? 0.94F : 1.04F),
                  c.stone_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
     desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
                  QVector3D(damaged ? 0.90F : 1.00F, 0.05F, damaged ? 0.90F : 1.00F),
                  c.wood);
 
     const float parapet_half = damaged ? 0.78F : 0.88F;
     const float merlon_y = damaged ? 2.08F : 2.28F;
-    auto add_part = [&desc](const QVector3D& centre,
-                            const QVector3D& half,
-                            const QVector3D& col) {
-      desc.add_box(centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
-    };
+    auto add_part =
+        [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
+          desc.add_box(centre, half, col, BuildingStateMask::All);
+        };
 
     add_square_parapet(add_part,
                        merlon_y,
@@ -233,8 +219,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         desc.add_box(QVector3D(px, (merlon_y + canopy_y) * 0.5F, pz),
                      QVector3D(0.055F, (canopy_y - merlon_y) * 0.5F, 0.055F),
                      c.wood_dark,
-                     BuildingStateMask::All,
-                     BuildingLODMask::Full);
+                     BuildingStateMask::All);
       }
     }
     desc.add_box(QVector3D(0.0F, canopy_y, 0.0F),
@@ -243,8 +228,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(0.0F, canopy_y + 0.05F, 0.0F),
                  QVector3D(damaged ? 0.48F : 0.56F, 0.03F, damaged ? 0.48F : 0.56F),
                  c.tile_red,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
   }
 
   if (damaged) {

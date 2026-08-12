@@ -127,8 +127,7 @@ void add_rubble_field(BuildingArchetypeDesc& desc, const RubbleField& field) {
                          QVector3D(size, height, size * 0.82F),
                          QVector3D(tilt, yaw, tilt * 0.6F),
                          clamp01(color),
-                         field.states,
-                         field.lod);
+                         field.states);
   }
 }
 
@@ -150,8 +149,7 @@ void add_charred_beams(BuildingArchetypeDesc& desc, const CharredBeams& beams) {
                       QVector3D(x, beams.ground_y + lift, z) + dir,
                       beams.radius * (0.75F + (hash_at(seed, 28) * 0.6F)),
                       color,
-                      beams.states,
-                      beams.lod);
+                      beams.states);
   }
 }
 
@@ -167,8 +165,7 @@ void add_scorch_patch(BuildingArchetypeDesc& desc, const ScorchPatch& patch) {
                          QVector3D(extent, 0.004F, extent * 0.78F),
                          QVector3D(0.0F, hash_at(seed, 35) * 90.0F, 0.0F),
                          clamp01(patch.soot * fade),
-                         patch.states,
-                         patch.lod);
+                         patch.states);
   }
 }
 
@@ -192,8 +189,7 @@ void add_crack_veins(BuildingArchetypeDesc& desc, const CrackVeins& veins) {
                          half_size,
                          QVector3D(0.0F, 0.0F, lean),
                          clamp01(veins.color),
-                         veins.states,
-                         veins.lod);
+                         veins.states);
   }
 }
 
@@ -216,8 +212,7 @@ void add_broken_rim(BuildingArchetypeDesc& desc, const BrokenRim& rim) {
                                    -angle * 57.2957795F,
                                    signed_hash(seed, 66) * 10.0F),
                          clamp01(rim.color * (0.85F + (hash_at(seed, 67) * 0.28F))),
-                         rim.states,
-                         rim.lod);
+                         rim.states);
   }
 }
 
@@ -290,8 +285,7 @@ void add_ruin_dressing(BuildingArchetypeDesc& desc, const RuinDressing& dressing
                                    hash_at(seed, 56) * 90.0F,
                                    signed_hash(seed, 57) * 30.0F),
                          slab,
-                         BuildingStateMask::Destroyed,
-                         BuildingLODMask::Full);
+                         BuildingStateMask::Destroyed);
   }
 }
 

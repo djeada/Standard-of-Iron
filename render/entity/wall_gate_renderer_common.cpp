@@ -74,8 +74,7 @@ void add_jamb(BuildingArchetypeDesc& desc,
                       radius * 1.12F,
                       geometry.metal_bands ? palette.masonry_accent : palette.rope,
                       band > geometry.lower_rail_y ? BuildingStateMask::Normal
-                                                   : k_mask_intact,
-                      BuildingLODMask::Full);
+                                                   : k_mask_intact);
   }
 }
 
@@ -107,8 +106,7 @@ void add_piers(BuildingArchetypeDesc& desc,
                     QVector3D(x, height + geometry.tip_height, 0.0F),
                     stake_radius * 1.02F,
                     palette.wood_dark,
-                    upright,
-                    BuildingLODMask::Full);
+                    upright);
       if (snaps) {
         desc.add_cylinder(QVector3D(x, 0.0F, 0.0F),
                           QVector3D(x, height * (0.35F + (roll * 0.6F)), 0.0F),
@@ -131,8 +129,7 @@ void add_piers(BuildingArchetypeDesc& desc,
                    QVector3D(span * 0.5F, 0.05F, stake_radius * 1.25F),
                    geometry.metal_bands ? palette.masonry_accent : palette.rope,
                    rail > geometry.lower_rail_y ? BuildingStateMask::Normal
-                                                : k_mask_intact,
-                   BuildingLODMask::Full);
+                                                : k_mask_intact);
     }
 
     if (geometry.earthwork_base) {
@@ -184,8 +181,7 @@ auto build_wall_gate_archetype(std::string_view name_prefix,
     desc.add_box(QVector3D(static_cast<float>(i) * 0.74F, lintel_y + 0.40F, 0.0F),
                  QVector3D(0.22F, 0.06F, k_jamb_depth + 0.07F),
                  (i % 2 == 0) ? palette.wood_mid : palette.wood_light,
-                 BuildingStateMask::Normal,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::Normal);
   }
 
   desc.add_rotated_box(QVector3D(0.35F, 0.10F, k_jamb_depth * 1.6F),

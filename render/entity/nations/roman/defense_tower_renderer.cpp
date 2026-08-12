@@ -82,8 +82,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         desc.add_box(QVector3D(x, 0.31F, z),
                      QVector3D(0.18F, 0.01F, 0.18F),
                      c.terracotta,
-                     BuildingStateMask::All,
-                     BuildingLODMask::Full);
+                     BuildingStateMask::All);
       }
     }
   }
@@ -114,8 +113,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
 
     add_embrasures(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
-          desc.add_box(
-              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+          desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         damaged ? 1.02F : 1.14F,
         shaft_radius * 0.94F,
@@ -123,8 +121,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         c.limestone_dark * 0.55F);
     add_embrasures(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
-          desc.add_box(
-              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+          desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         damaged ? 1.64F : 1.94F,
         shaft_radius * 0.90F,
@@ -149,21 +146,18 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(ox, 0.62F, oz),
                  QVector3D(0.14F, 0.10F, 0.14F),
                  c.marble,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
 
     desc.add_box(QVector3D(ox, column_top + 0.06F, oz),
                  QVector3D(0.15F, 0.10F, 0.15F),
                  c.marble,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
 
     if (!damaged) {
       desc.add_box(QVector3D(ox, column_top + 0.14F, oz),
                    QVector3D(0.08F, 0.05F, 0.08F),
                    c.gold,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
     }
   }
 
@@ -177,8 +171,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(ox, damaged ? 1.00F : 1.24F, oz),
                    QVector3D(0.04F, damaged ? 0.18F : 0.24F, 0.04F),
                    c.sandstone_dark,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
     }
 
     desc.add_cylinder(QVector3D(0.0F, shaft_top + 0.02F, 0.0F),
@@ -195,8 +188,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                              std::cos(angle) * (platform_radius - 0.10F)),
                    QVector3D(0.07F, 0.05F, 0.07F),
                    c.limestone_shade,
-                   BuildingStateMask::All,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::All);
     }
 
     desc.add_box(QVector3D(0.0F, deck_y, 0.0F),
@@ -205,8 +197,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
 
     add_square_parapet(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
-          desc.add_box(
-              centre, half, col, BuildingStateMask::All, BuildingLODMask::Full);
+          desc.add_box(centre, half, col, BuildingStateMask::All);
         },
         battlement_y,
         battlement_radius,
@@ -226,16 +217,14 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
           desc.add_box(QVector3D(x, battlement_y + 0.22F, z),
                        QVector3D(0.07F, 0.08F, 0.07F),
                        c.blue_accent,
-                       BuildingStateMask::All,
-                       BuildingLODMask::Full);
+                       BuildingStateMask::All);
         }
       }
 
       desc.add_box(QVector3D(0.0F, battlement_y + 0.24F, 0.0F),
                    QVector3D(0.10F, 0.10F, 0.10F),
                    c.gold,
-                   BuildingStateMask::Normal,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::Normal);
     }
   }
 
@@ -258,8 +247,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(0.0F, 1.60F, 0.0F),
                  QVector3D(0.38F, 0.08F, 0.24F),
                  c.cedar_dark,
-                 BuildingStateMask::All,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::All);
     desc.add_box(
         QVector3D(0.28F, 1.36F, -0.20F), QVector3D(0.14F, 0.10F, 0.12F), c.terracotta);
   }
