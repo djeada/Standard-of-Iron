@@ -2175,10 +2175,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Haltung</translation>
     </message>
     <message>
-        <source>%1 camera</source>
-        <translation>Kamera: %1</translation>
-    </message>
-    <message>
         <source>Chase</source>
         <translation>Verfolgung</translation>
     </message>
@@ -4926,17 +4922,6 @@ Weite Sicht und ein dauerhafter Anker der Siedlung</translation>
     <message>
         <source>BLADE  ·  X</source>
         <translation>KLINGE  ·  X</translation>
-    </message>
-</context>
-<context>
-    <name>RpgTargetBar</name>
-    <message>
-        <source>BROKEN</source>
-        <translation>GEBROCHEN</translation>
-    </message>
-    <message>
-        <source>STAGGERED</source>
-        <translation>TAUMELND</translation>
     </message>
 </context>
 <context>

@@ -2175,10 +2175,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Postura</translation>
     </message>
     <message>
-        <source>%1 camera</source>
-        <translation>Câmera %1</translation>
-    </message>
-    <message>
         <source>Chase</source>
         <translation>Perseguição</translation>
     </message>
@@ -4926,17 +4922,6 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>BLADE  ·  X</source>
         <translation>LÂMINA  ·  X</translation>
-    </message>
-</context>
-<context>
-    <name>RpgTargetBar</name>
-    <message>
-        <source>BROKEN</source>
-        <translation>QUEBRADA</translation>
-    </message>
-    <message>
-        <source>STAGGERED</source>
-        <translation>ATORDOADO</translation>
     </message>
 </context>
 <context>
