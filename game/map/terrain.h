@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <vector>
@@ -911,16 +912,30 @@ inline constexpr float k_road_surface_y_offset = 0.02F;
 }
 
 [[nodiscard]] inline auto bridge_arch_curve(float t) -> float {
+
   float const clamped_t = std::clamp(t, 0.0F, 1.0F);
-  return 4.0F * clamped_t * (1.0F - clamped_t);
+  float const s = std::sin(std::numbers::pi_v<float> * clamped_t);
+  return s * s;
 }
 
 inline constexpr float k_min_bridge_deck_rise = 0.72F;
 
+inline constexpr float k_bridge_rise_per_width = 0.075F;
+
+inline constexpr float k_river_bank_max_grade = 0.35F;
+
+inline constexpr float k_river_bank_max_blend_cells = 26.0F;
+
 inline constexpr float k_bridge_deck_visual_lift = 0.12F;
 
+inline constexpr float k_bridge_landing_grade = 0.28F;
+
+inline constexpr float k_bridge_landing_thickness = 0.06F;
+
 [[nodiscard]] inline auto bridge_effective_height(const Bridge& bridge) -> float {
-  return std::max({bridge.height, k_min_bridge_deck_rise, bridge.width * 0.14F});
+
+  return std::max(
+      {bridge.height, k_min_bridge_deck_rise, bridge.width * k_bridge_rise_per_width});
 }
 
 [[nodiscard]] inline auto bridge_deck_world_y(const Bridge& bridge, float t) -> float {

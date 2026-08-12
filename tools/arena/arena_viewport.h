@@ -371,6 +371,8 @@ private:
   QElapsedTimer m_frame_clock;
   TerrainSettings m_terrain_settings;
   Game::Map::GroundType m_ground_type = Game::Map::GroundType::ForestMud;
+  Game::Map::GroundType m_ground_type_baseline = Game::Map::GroundType::ForestMud;
+  int m_terrain_seed_baseline = 1337;
   Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
   float m_environment_hour = 13.0F;
   std::optional<float> m_environment_hour_override;

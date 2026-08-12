@@ -123,6 +123,33 @@ def main() -> int:
             shutil.copy2(poster, targets[0].with_suffix(".png"))
         print(f"reshoot:   {clip.name} -> {targets[0].name}")
 
+    manifest_path = args.clips / "shots.json"
+    fresh_manifest = args.scratch / "out" / "reshoot" / "shots.json"
+    if manifest_path.is_file() and fresh_manifest.is_file():
+
+        existing = json.loads(manifest_path.read_text())
+        rows = existing if isinstance(existing, list) else existing.get("shots", [])
+        fresh_doc = json.loads(fresh_manifest.read_text())
+        fresh_rows = (
+            fresh_doc if isinstance(fresh_doc, list) else fresh_doc.get("shots", [])
+        )
+        replacement = {
+            row["name"]: row
+            for row in fresh_rows
+            if isinstance(row, dict) and "name" in row
+        }
+        updated = 0
+        for row in rows:
+            fresh = replacement.get(row.get("name"))
+            if fresh is None:
+                continue
+            for key in ("clip_seconds", "scene_seconds", "frames"):
+                if key in fresh:
+                    row[key] = fresh[key]
+            updated += 1
+        manifest_path.write_text(json.dumps(existing, indent=2) + "\n")
+        print(f"reshoot: refreshed {updated} manifest row(s) in {manifest_path.name}")
+
     shutil.rmtree(args.scratch, ignore_errors=True)
     print("reshoot: done; re-run promo-edit.py to cut the reel again")
     return 0

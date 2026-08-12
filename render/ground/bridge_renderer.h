@@ -18,7 +18,9 @@ public:
   BridgeRenderer();
   ~BridgeRenderer() override;
 
-  void configure(const std::vector<Game::Map::Bridge>& bridges, float tile_size);
+  void configure(const std::vector<Game::Map::Bridge>& bridges,
+                 float tile_size,
+                 const Game::Map::TerrainHeightMap& height_map);
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
@@ -27,6 +29,7 @@ private:
 
   std::vector<Game::Map::Bridge> m_bridges;
   float m_tile_size = 1.0F;
+  const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
 };
 

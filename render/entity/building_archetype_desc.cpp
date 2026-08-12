@@ -11,7 +11,6 @@ namespace Render::GL {
 namespace {
 
 using BuildingStateMaskInt = std::underlying_type_t<BuildingStateMask>;
-using BuildingLODMaskInt = std::underlying_type_t<BuildingLODMask>;
 
 auto state_mask_for(BuildingState state) -> BuildingStateMask {
   switch (state) {
@@ -23,17 +22,6 @@ auto state_mask_for(BuildingState state) -> BuildingStateMask {
     return BuildingStateMask::Destroyed;
   }
   return BuildingStateMask::Normal;
-}
-
-auto lod_mask_for(RenderArchetypeLod lod) -> BuildingLODMask {
-  switch (lod) {
-  case RenderArchetypeLod::Full:
-    return BuildingLODMask::Full;
-  case RenderArchetypeLod::Minimal:
-    return BuildingLODMask::Minimal;
-  default:
-    return BuildingLODMask::Full;
-  }
 }
 
 auto state_index(BuildingState state) -> std::size_t {
@@ -50,10 +38,6 @@ auto state_index(BuildingState state) -> std::size_t {
 
 auto supports_state(BuildingStateMask mask, BuildingState state) -> bool {
   return (mask & state_mask_for(state)) != BuildingStateMask::None;
-}
-
-auto supports_lod(BuildingLODMask mask, RenderArchetypeLod lod) -> bool {
-  return (mask & lod_mask_for(lod)) != BuildingLODMask::None;
 }
 
 void add_part_to_builder(RenderArchetypeBuilder& builder,
@@ -150,16 +134,6 @@ auto operator&(BuildingStateMask lhs, BuildingStateMask rhs) -> BuildingStateMas
                                         static_cast<BuildingStateMaskInt>(rhs));
 }
 
-auto operator|(BuildingLODMask lhs, BuildingLODMask rhs) -> BuildingLODMask {
-  return static_cast<BuildingLODMask>(static_cast<BuildingLODMaskInt>(lhs) |
-                                      static_cast<BuildingLODMaskInt>(rhs));
-}
-
-auto operator&(BuildingLODMask lhs, BuildingLODMask rhs) -> BuildingLODMask {
-  return static_cast<BuildingLODMask>(static_cast<BuildingLODMaskInt>(lhs) &
-                                      static_cast<BuildingLODMaskInt>(rhs));
-}
-
 BuildingArchetypeDesc::BuildingArchetypeDesc(std::string name)
     : m_name(std::move(name)) {
 }
@@ -167,30 +141,26 @@ BuildingArchetypeDesc::BuildingArchetypeDesc(std::string name)
 void BuildingArchetypeDesc::add_box(const QVector3D& center,
                                     const QVector3D& scale,
                                     const QVector3D& color,
-                                    BuildingStateMask states,
-                                    BuildingLODMask lod) {
+                                    BuildingStateMask states) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Box;
   part.point_a = center;
   part.point_b = scale;
   part.color = color;
   part.states = states;
-  part.lod = lod;
   m_parts.push_back(std::move(part));
 }
 
 void BuildingArchetypeDesc::add_palette_box(const QVector3D& center,
                                             const QVector3D& scale,
                                             std::uint8_t palette_slot,
-                                            BuildingStateMask states,
-                                            BuildingLODMask lod) {
+                                            BuildingStateMask states) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteBox;
   part.point_a = center;
   part.point_b = scale;
   part.palette_slot = palette_slot;
   part.states = states;
-  part.lod = lod;
   m_parts.push_back(std::move(part));
 }
 
@@ -198,8 +168,7 @@ void BuildingArchetypeDesc::add_rotated_box(const QVector3D& center,
                                             const QVector3D& scale,
                                             const QVector3D& euler_deg,
                                             const QVector3D& color,
-                                            BuildingStateMask states,
-                                            BuildingLODMask lod) {
+                                            BuildingStateMask states) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::RotatedBox;
   part.point_a = center;
@@ -207,7 +176,6 @@ void BuildingArchetypeDesc::add_rotated_box(const QVector3D& center,
   part.euler_deg = euler_deg;
   part.color = color;
   part.states = states;
-  part.lod = lod;
   m_parts.push_back(std::move(part));
 }
 
@@ -215,8 +183,7 @@ void BuildingArchetypeDesc::add_cylinder(const QVector3D& start,
                                          const QVector3D& end,
                                          float radius,
                                          const QVector3D& color,
-                                         BuildingStateMask states,
-                                         BuildingLODMask lod) {
+                                         BuildingStateMask states) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Cylinder;
   part.point_a = start;
@@ -224,7 +191,6 @@ void BuildingArchetypeDesc::add_cylinder(const QVector3D& start,
   part.color = color;
   part.radius = radius;
   part.states = states;
-  part.lod = lod;
   m_parts.push_back(std::move(part));
 }
 
@@ -232,8 +198,7 @@ void BuildingArchetypeDesc::add_cone(const QVector3D& base,
                                      const QVector3D& tip,
                                      float radius,
                                      const QVector3D& color,
-                                     BuildingStateMask states,
-                                     BuildingLODMask lod) {
+                                     BuildingStateMask states) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::Cone;
   part.point_a = base;
@@ -241,7 +206,6 @@ void BuildingArchetypeDesc::add_cone(const QVector3D& base,
   part.color = color;
   part.radius = radius;
   part.states = states;
-  part.lod = lod;
   m_parts.push_back(std::move(part));
 }
 
@@ -249,8 +213,7 @@ void BuildingArchetypeDesc::add_palette_cylinder(const QVector3D& start,
                                                  const QVector3D& end,
                                                  float radius,
                                                  std::uint8_t palette_slot,
-                                                 BuildingStateMask states,
-                                                 BuildingLODMask lod) {
+                                                 BuildingStateMask states) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteCylinder;
   part.point_a = start;
@@ -258,26 +221,18 @@ void BuildingArchetypeDesc::add_palette_cylinder(const QVector3D& start,
   part.radius = radius;
   part.palette_slot = palette_slot;
   part.states = states;
-  part.lod = lod;
   m_parts.push_back(std::move(part));
-}
-
-void BuildingArchetypeDesc::set_full_lod_max_distance(float max_distance) {
-  m_full_lod_max_distance = max_distance;
 }
 
 auto build_building_archetype(const BuildingArchetypeDesc& desc,
                               BuildingState state) -> RenderArchetype {
   RenderArchetypeBuilder builder(desc.name());
 
-  const auto emit_parts = [&](RenderArchetypeLod lod) {
+  const auto emit_parts = [&]() {
     int seed = 0;
     for (const auto& part : desc.parts()) {
       ++seed;
       if (!supports_state(part.states, state)) {
-        continue;
-      }
-      if (!supports_lod(part.lod, lod)) {
         continue;
       }
       add_part_to_builder(builder, part, decayed_color(part.color, state, seed));
@@ -285,12 +240,8 @@ auto build_building_archetype(const BuildingArchetypeDesc& desc,
   };
 
   builder.use_lod(RenderArchetypeLod::Full);
-  builder.set_max_distance(desc.full_lod_max_distance());
-  emit_parts(RenderArchetypeLod::Full);
-
-  builder.use_lod(RenderArchetypeLod::Minimal);
   builder.set_max_distance(std::numeric_limits<float>::infinity());
-  emit_parts(RenderArchetypeLod::Minimal);
+  emit_parts();
 
   return std::move(builder).build();
 }
@@ -304,44 +255,6 @@ auto build_building_archetype_from_recorded(
 
   int seed = 0;
   for (const auto& cmd : commands) {
-    ++seed;
-    builder.add_mesh(cmd.mesh,
-                     cmd.local_model,
-                     decayed_color(cmd.color, state, seed),
-                     cmd.texture,
-                     cmd.alpha,
-                     cmd.material_id,
-                     const_cast<Material*>(cmd.material));
-  }
-
-  return std::move(builder).build();
-}
-
-auto build_building_archetype_from_recorded_lods(
-    std::string name,
-    const std::vector<RecordedMeshCmd>& full_commands,
-    const std::vector<RecordedMeshCmd>& minimal_commands,
-    float full_lod_max_distance,
-    BuildingState state) -> RenderArchetype {
-  RenderArchetypeBuilder builder(std::move(name));
-  builder.set_max_distance(full_lod_max_distance);
-
-  int seed = 0;
-  for (const auto& cmd : full_commands) {
-    ++seed;
-    builder.add_mesh(cmd.mesh,
-                     cmd.local_model,
-                     decayed_color(cmd.color, state, seed),
-                     cmd.texture,
-                     cmd.alpha,
-                     cmd.material_id,
-                     const_cast<Material*>(cmd.material));
-  }
-
-  builder.use_lod(RenderArchetypeLod::Minimal);
-  builder.set_max_distance(std::numeric_limits<float>::infinity());
-  seed = 0;
-  for (const auto& cmd : minimal_commands) {
     ++seed;
     builder.add_mesh(cmd.mesh,
                      cmd.local_model,

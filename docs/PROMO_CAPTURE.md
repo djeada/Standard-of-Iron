@@ -309,15 +309,14 @@ formation reels and the differences are deliberate:
 
 `tools/arena/promos/trailer.json` is the two-minute trailer, and it differs
 from every other reel in the directory in one structural way: **it cuts across
-scenarios**. A reel films one scene; the trailer films five chapters of one
-place plus five act cards, so a shot's `scenario` field changes down the list
-and the runner plans one deterministic pass per scenario.
+scenarios**. A reel films one scene; the trailer cuts nineteen of them, so a
+shot's `scenario` field changes down the list and the runner plans one
+deterministic pass per scenario.
 
-The chapters live in `tools/arena/arena_trailer_scenarios.cpp` and all share
-`dress_valley` -- one river valley with a village on the north bank, a timber
-fort on the eastern rise, one bridge, and open ground to the south. Re-dressing
-the same geography per chapter is what makes the finished cut read as one place
-over one day rather than as a sampler of unrelated fixtures:
+Five of those are the valley chapters in
+`tools/arena/arena_trailer_scenarios.cpp`, which share `dress_valley` -- one
+river valley with a village on the north bank, a timber fort on the eastern
+rise, one bridge, and open ground to the south:
 
 - `trailer_dawn` -- the economy and the ambient life: residents on errands,
   woodcutters and quarriers, the flock, birds, and a wolf pack released as a
@@ -328,6 +327,19 @@ over one day rather than as a sampler of unrelated fixtures:
 - `trailer_pov` -- the same fight from behind the commander's shoulders under
   `rpg_mode`.
 - `trailer_barrow_night` -- the night ambush, driven by a real `undead_zone`.
+
+The valley is the trailer's home ground, not the whole of it. A cut that never
+leaves one stage advertises one stage, so the valley is interleaved with nine
+chapters that are somewhere else and look it -- `trailer_works` on broken stony
+soil, `trailer_sanctuary` and `trailer_gate_march` and `trailer_siege_walls` on
+dry Mediterranean grass, `trailer_bridge_defense` on farmland, `trailer_highland`
+and `trailer_night_snow` and `trailer_last_breath` on alpine rock under snow,
+`trailer_forest_ambush` in the wet pine wood -- plus shots lifted straight from
+the standing catalog (`carthage_trade_town`, `riverside_mill_town`,
+`promo_rome_iron_line`, `promo_carthage_crescent`, `promo_storm_charge`,
+`promo_commander_duel`). Each chapter names its own `ground_type`,
+`terrain_seed_override`, `weather` and `precipitation`, so the ground and the
+sky are part of the shot list rather than a constant behind it.
 
 Five things about it are worth copying and were all learned the hard way here.
 

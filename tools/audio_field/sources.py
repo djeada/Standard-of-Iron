@@ -66,6 +66,18 @@ class Source:
     rank_lowpass: float = 0.8
     """Cutoff multiplier applied per extra rank, so distant ranks lose their top."""
 
+    speed: float = 1.0
+    """Playback-rate multiplier, applied before every filter.
+
+    Pitch and length move together, as they do when a recording is played
+    faster -- there is no time-stretch here and none is wanted. What it is for
+    is transposing a real instrument into the register the cue needs: the only
+    horn in the CC0 libraries with a genuine low body is a didgeridoo sitting
+    an octave and a half under a war horn, and a war horn is a didgeridoo
+    played fast. Because it runs first, `highpass` and `lowpass` are cutoffs in
+    the *output* register rather than the source's.
+    """
+
     loop_source: bool = False
     """Repeat the source to fill the bed instead of running out.
 

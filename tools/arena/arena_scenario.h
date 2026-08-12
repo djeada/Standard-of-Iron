@@ -293,6 +293,10 @@ struct ArenaScenarioDefinition {
 
   float terrain_height_scale_override{0.0F};
 
+  QString ground_type;
+
+  int terrain_seed_override{0};
+
   bool suppress_boundary_mountains{false};
 
   bool suppress_combat_dust{false};

@@ -701,6 +701,102 @@ void dress_valley(ArenaScenarioDefinition& scenario, const ValleyOptions& option
   }
 }
 
+void add_resource_gang(ArenaScenarioDefinition& scenario,
+                       const QString& prefix,
+                       QVector3D trees,
+                       QVector3D rocks,
+                       QVector3D seam,
+                       int owner,
+                       Nation nation) {
+
+  scenario.resource_patches.push_back(
+      patch("olive_tree", 5, trees, {0.0F, 0.0F, 3.8F}, 1.15F));
+  scenario.resource_patches.push_back(
+      patch("boulder", 5, rocks, {3.0F, 0.0F, 1.4F}, 1.1F));
+  scenario.resource_patches.push_back(
+      patch("iron_ore", 4, seam, {2.6F, 0.0F, 0.0F}, 1.0F));
+
+  struct Gang {
+    const char* suffix;
+    QVector3D at;
+    const char* kind;
+    float start;
+  };
+  for (auto const& gang :
+       {Gang{"_fellers", trees + QVector3D(3.4F, 0.0F, 2.0F), "tree", 1.2F},
+        Gang{"_breakers", rocks + QVector3D(-3.2F, 0.0F, 2.4F), "boulder", 1.8F},
+        Gang{"_miners", seam + QVector3D(0.0F, 0.0F, 3.0F), "iron_ore", 2.4F}}) {
+    const QString name = prefix + QString::fromLatin1(gang.suffix);
+    auto crew = group(name, Troop::Builder, owner, 3, gang.at, 1, {2.8F, 0.0F, 0.0F});
+    crew.nation_id = nation;
+    scenario.groups.push_back(crew);
+    scenario.steps.push_back(
+        harvest_at(gang.start, name, QString::fromLatin1(gang.kind)));
+
+    scenario.steps.push_back(
+        harvest_at(gang.start + 22.0F, name, QString::fromLatin1(gang.kind)));
+  }
+}
+
+auto acrobat(QString name,
+             QVector3D origin,
+             float facing,
+             QStringList routine,
+             float start_delay) -> ArenaScenarioGroup {
+  auto result =
+      group(std::move(name), Troop::Civilian, 1, 1, origin, 1, {0.0F, 0.0F, 0.0F});
+  result.facing_degrees = facing;
+  result.showcase_routine = std::move(routine);
+  result.showcase_start_delay = start_delay;
+  result.showcase_loop = true;
+  return result;
+}
+
+void add_tumblers(ArenaScenarioDefinition& scenario,
+                  const QString& prefix,
+                  QVector3D centre,
+                  float facing) {
+
+  struct Turn {
+    const char* suffix;
+    QVector3D offset;
+    QStringList routine;
+    float delay;
+  };
+  const std::vector<Turn> turns{
+      {"_a",
+       {-3.2F, 0.0F, 0.6F},
+       {QStringLiteral("handstand:3.4:0.7"),
+        QStringLiteral("jump:1.6:0.4"),
+        QStringLiteral("front_flip:1.7:0.6")},
+       0.0F},
+      {"_b",
+       {-0.4F, 0.0F, -1.8F},
+       {QStringLiteral("front_flip:1.7:0.5"),
+        QStringLiteral("side_aerial:1.9:0.6"),
+        QStringLiteral("jump:1.6:0.5")},
+       0.9F},
+      {"_c",
+       {2.6F, 0.0F, 1.1F},
+       {QStringLiteral("side_aerial:1.9:0.5"), QStringLiteral("handstand:3.4:1.0")},
+       1.8F},
+      {"_d",
+       {5.4F, 0.0F, -1.2F},
+       {QStringLiteral("jump:1.6:0.4"),
+        QStringLiteral("front_flip:1.7:0.5"),
+        QStringLiteral("side_aerial:1.9:0.8")},
+       2.6F},
+  };
+
+  for (auto const& turn : turns) {
+    scenario.groups.push_back(acrobat(prefix + QString::fromLatin1(turn.suffix),
+                                      centre + turn.offset,
+                                      facing,
+                                      turn.routine,
+                                      turn.delay));
+  }
+}
+
 auto default_wildlife(unsigned seed) -> Game::Wildlife::WildlifeSettings {
   auto settings = Game::Wildlife::default_settings();
   settings.enabled = true;
@@ -740,7 +836,7 @@ auto trailer_dawn() -> ArenaScenarioDefinition {
   s.wildlife.sheep.group_size_min = 7;
   s.wildlife.sheep.group_size_max = 7;
   s.wildlife.sheep.roam_radius = 5.0F;
-  s.wildlife.sheep.spawn_areas = {{-13.0F, 7.0F, 4.0F}};
+  s.wildlife.sheep.spawn_areas = {{0.0F, 26.0F, 4.0F}};
   s.wildlife.birds.enabled = true;
   s.wildlife.birds.group_count = 2;
   s.wildlife.birds.group_size_min = 9;
@@ -758,7 +854,7 @@ auto trailer_dawn() -> ArenaScenarioDefinition {
   s.wildlife.wolves.roam_radius = 20.0F;
   s.wildlife.wolves.alert_radius = 9.0F;
   s.wildlife.wolves.respawn = false;
-  s.wildlife.wolves.waves = {{24.0F, 4, {-27.0F, 7.0F, 2.0F}, "dawn_pack"}};
+  s.wildlife.wolves.waves = {{24.0F, 4, {-16.0F, 26.0F, 2.0F}, "dawn_pack"}};
 
   auto woodcutters = group(QStringLiteral("valley_woodcutters"),
                            Troop::Builder,
@@ -781,9 +877,50 @@ auto trailer_dawn() -> ArenaScenarioDefinition {
                      {6.0F, 0.0F, 6.0F},
                      4,
                      {2.8F, 0.0F, 0.0F});
+  auto masons = group(QStringLiteral("valley_masons"),
+                      Troop::Builder,
+                      1,
+                      4,
+                      {k_roman_town_x + 10.0F, 0.0F, k_valley_street_z - 7.0F},
+                      1,
+                      {2.8F, 0.0F, 0.0F});
+  auto carpenters = group(QStringLiteral("valley_carpenters"),
+                          Troop::Builder,
+                          1,
+                          3,
+                          {k_roman_hamlet_x - 6.0F, 0.0F, k_valley_street_z + 6.0F},
+                          1,
+                          {2.8F, 0.0F, 0.0F});
+  auto lane_folk = group(QStringLiteral("valley_lane_folk"),
+                         Troop::Civilian,
+                         1,
+                         6,
+                         {k_roman_town_x + 16.0F, 0.0F, k_valley_street_z + 2.0F},
+                         1,
+                         {3.0F, 0.0F, 0.0F});
+  auto market_folk = group(QStringLiteral("valley_market_folk"),
+                           Troop::Civilian,
+                           1,
+                           5,
+                           {k_roman_hamlet_x + 2.0F, 0.0F, k_valley_street_z - 4.0F},
+                           1,
+                           {3.0F, 0.0F, 0.0F});
   s.groups.push_back(woodcutters);
   s.groups.push_back(quarriers);
   s.groups.push_back(watch);
+  add_tumblers(s, QStringLiteral("valley_tumblers"), {-8.0F, 0.0F, -10.0F}, 200.0F);
+  add_resource_gang(s,
+                    QStringLiteral("valley_gang"),
+                    {-20.0F, 0.0F, -2.0F},
+                    {-4.0F, 0.0F, 2.0F},
+                    {-17.0F, 0.0F, 8.0F},
+                    1,
+                    Nation::RomanRepublic);
+
+  s.groups.push_back(masons);
+  s.groups.push_back(carpenters);
+  s.groups.push_back(lane_folk);
+  s.groups.push_back(market_folk);
 
   s.steps = {
       harvest_at(1.0F, QStringLiteral("valley_woodcutters"), QStringLiteral("tree")),
@@ -794,16 +931,30 @@ auto trailer_dawn() -> ArenaScenarioDefinition {
       move_to(16.0F,
               QStringLiteral("roman_town_folk"),
               {k_roman_town_x - 6.0F, 0.0F, k_valley_street_z - 3.0F}),
-      move_to(34.0F, QStringLiteral("valley_watch"), {-14.0F, 0.0F, 7.0F}),
+      move_to(34.0F, QStringLiteral("valley_watch"), {-2.0F, 0.0F, 24.0F}),
       move_to(38.0F,
               QStringLiteral("roman_town_folk"),
               {k_roman_town_x + 2.0F, 0.0F, k_valley_street_z + 4.0F}),
+      harvest_at(2.4F, QStringLiteral("valley_masons"), QStringLiteral("boulder")),
+      harvest_at(3.0F, QStringLiteral("valley_carpenters"), QStringLiteral("tree")),
+      move_to(2.6F,
+              QStringLiteral("valley_lane_folk"),
+              {k_roman_hamlet_x - 8.0F, 0.0F, k_valley_street_z + 2.0F}),
+      move_to(4.0F,
+              QStringLiteral("valley_market_folk"),
+              {k_roman_hamlet_x - 4.0F, 0.0F, k_valley_street_z - 2.0F}),
+      move_to(26.0F,
+              QStringLiteral("valley_lane_folk"),
+              {k_roman_town_x + 12.0F, 0.0F, k_valley_street_z + 3.0F}),
   };
 
   s.expectations = {
       expectation(Expect::GroupExists, QStringLiteral("roman_town_market")),
       expectation(Expect::GroupExists, QStringLiteral("valley_woodcutters")),
       expectation(Expect::GroupExists, QStringLiteral("valley_watch")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("valley_tumblers_a")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("valley_gang_fellers")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("valley_gang_miners")),
       expectation(Expect::MovementAnimationObserved, QStringLiteral("roman_town_folk")),
       expectation(Expect::UnitsClearOfBuildings, QStringLiteral("roman_town_folk")),
       expectation(Expect::UnitsClearOfBuildings, QStringLiteral("valley_watch")),
@@ -849,7 +1000,7 @@ auto trailer_muster() -> ArenaScenarioDefinition {
   s.wildlife.sheep.group_size_max = 6;
   s.wildlife.sheep.roam_radius = 4.0F;
   s.wildlife.sheep.alert_radius = 5.0F;
-  s.wildlife.sheep.spawn_areas = {{-13.0F, 7.0F, 4.0F}};
+  s.wildlife.sheep.spawn_areas = {{0.0F, 26.0F, 4.0F}};
 
   auto consul = group(QStringLiteral("legion_commander"),
                       Troop::RomanVeteranConsul,
@@ -1368,6 +1519,1360 @@ auto trailer_flame_card() -> ArenaScenarioDefinition {
   return s;
 }
 
+auto targeted(float time,
+              Command command,
+              QString source,
+              QString target,
+              int value = 0) -> ArenaScenarioStep {
+  auto result = at(time, command, std::move(source), std::move(target));
+  result.value = value;
+  return result;
+}
+
+auto build_site(ArenaScenarioDefinition& scenario,
+                const QString& prefix,
+                Game::Units::SpawnType type,
+                Nation nation,
+                int owner,
+                int count,
+                QVector3D origin,
+                QVector3D spacing,
+                float facing,
+                int crew_size,
+                QVector3D crew_origin,
+                float start_time,
+                int damaged_health) {
+  const QString structure_name = prefix + QStringLiteral("_site");
+  const QString crew_name = prefix + QStringLiteral("_crew");
+  scenario.groups.push_back(
+      building(structure_name, type, nation, owner, count, origin, spacing, facing));
+  auto crew = group(crew_name, Troop::Builder, owner, crew_size, crew_origin, 1);
+  crew.nation_id = nation;
+  scenario.groups.push_back(crew);
+  scenario.steps.push_back(
+      targeted(0.4F, Command::SetHealth, structure_name, {}, damaged_health));
+  scenario.steps.push_back(
+      targeted(start_time, Command::RepairStructure, crew_name, structure_name));
+}
+
+auto trailer_works() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_works_id),
+      QStringLiteral("Trailer I: The Works"),
+      QStringLiteral("A settlement in the middle of being raised on dark farmland "
+                     "soil: five crews at work at once on a temple, a house row, a "
+                     "wall run, a barracks and a market, a siege yard beside them, "
+                     "and the road past the site carrying a supply caravan through "
+                     "the burnt-out shells of the last settlement."),
+      52.0F,
+      {38.0F, 40.0F, 26.0F});
+  s.ground_type = QStringLiteral("soil_rocky");
+  s.terrain_seed_override = 5041;
+  s.collect_animation_diagnostics = true;
+  s.arena_floor_half_extent = 46.0F;
+  s.environment.start_time = 9.4F;
+  s.environment.exposure_override = 1.45F;
+
+  s.roads.push_back(street({-42.0F, 0.0F, 0.0F}, {42.0F, 0.0F, 0.0F}, 3.2F));
+  s.roads.push_back(street({4.0F, 0.0F, 0.0F}, {4.0F, 0.0F, -22.0F}, 2.6F));
+  s.roads.push_back(street({16.0F, 0.0F, 0.0F}, {16.0F, 0.0F, 20.0F}, 2.6F));
+
+  build_site(s,
+             QStringLiteral("works_temple"),
+             Game::Units::SpawnType::Temple,
+             Nation::RomanRepublic,
+             1,
+             1,
+             {-24.0F, 0.0F, -14.0F},
+             {},
+             180.0F,
+             4,
+             {-19.0F, 0.0F, -10.0F},
+             1.2F,
+             260);
+  build_site(s,
+             QStringLiteral("works_homes"),
+             Game::Units::SpawnType::Home,
+             Nation::RomanRepublic,
+             1,
+             3,
+             {-6.0F, 0.0F, -15.0F},
+             {6.4F, 0.0F, 0.0F},
+             180.0F,
+             4,
+             {-3.0F, 0.0F, -10.0F},
+             1.6F,
+             180);
+  build_site(s,
+             QStringLiteral("works_wall"),
+             Game::Units::SpawnType::WallSegment,
+             Nation::RomanRepublic,
+             1,
+             9,
+             {24.0F, 0.0F, -16.0F},
+             {2.0F, 0.0F, 0.0F},
+             0.0F,
+             5,
+             {24.0F, 0.0F, -12.0F},
+             2.0F,
+             150);
+  build_site(s,
+             QStringLiteral("works_barracks"),
+             Game::Units::SpawnType::Barracks,
+             Nation::RomanRepublic,
+             1,
+             1,
+             {26.0F, 0.0F, 12.0F},
+             {},
+             270.0F,
+             4,
+             {21.0F, 0.0F, 12.0F},
+             2.4F,
+             300);
+  build_site(s,
+             QStringLiteral("works_market"),
+             Game::Units::SpawnType::Marketplace,
+             Nation::RomanRepublic,
+             1,
+             1,
+             {-22.0F, 0.0F, 11.0F},
+             {},
+             0.0F,
+             3,
+             {-17.0F, 0.0F, 11.0F},
+             2.8F,
+             240);
+
+  build_site(s,
+             QStringLiteral("works_tower"),
+             Game::Units::SpawnType::DefenseTower,
+             Nation::RomanRepublic,
+             1,
+             1,
+             {-34.0F, 0.0F, -6.0F},
+             {},
+             90.0F,
+             3,
+             {-30.0F, 0.0F, -6.0F},
+             3.2F,
+             220);
+  build_site(s,
+             QStringLiteral("works_east_homes"),
+             Game::Units::SpawnType::Home,
+             Nation::RomanRepublic,
+             1,
+             2,
+             {14.0F, 0.0F, -20.0F},
+             {6.4F, 0.0F, 0.0F},
+             180.0F,
+             4,
+             {14.0F, 0.0F, -15.0F},
+             1.9F,
+             160);
+  build_site(s,
+             QStringLiteral("works_south_wall"),
+             Game::Units::SpawnType::WallSegment,
+             Nation::RomanRepublic,
+             1,
+             7,
+             {-16.0F, 0.0F, 20.0F},
+             {2.0F, 0.0F, 0.0F},
+             0.0F,
+             4,
+             {-16.0F, 0.0F, 16.0F},
+             2.2F,
+             140);
+
+  auto siege_yard = group(QStringLiteral("works_siege_yard"),
+                          Troop::Catapult,
+                          1,
+                          2,
+                          {2.0F, 0.0F, 14.0F},
+                          1,
+                          {7.0F, 0.0F, 0.0F});
+  auto siege_bolts = group(QStringLiteral("works_siege_bolts"),
+                           Troop::Ballista,
+                           1,
+                           2,
+                           {2.0F, 0.0F, 20.0F},
+                           1,
+                           {6.0F, 0.0F, 0.0F});
+  auto siege_crew = group(QStringLiteral("works_siege_crew"),
+                          Troop::Builder,
+                          1,
+                          5,
+                          {6.0F, 0.0F, 17.0F},
+                          1,
+                          {2.6F, 0.0F, 0.0F});
+  s.groups.push_back(siege_yard);
+  s.groups.push_back(siege_bolts);
+  s.groups.push_back(siege_crew);
+
+  add_tumblers(s, QStringLiteral("works_tumblers"), {-16.0F, 0.0F, 7.0F}, 215.0F);
+  add_resource_gang(s,
+                    QStringLiteral("works_gang"),
+                    {-28.0F, 0.0F, 12.0F},
+                    {-10.0F, 0.0F, 13.0F},
+                    {-23.0F, 0.0F, 2.0F},
+                    1,
+                    Nation::RomanRepublic);
+
+  auto carriers = group(QStringLiteral("works_carriers"),
+                        Troop::Civilian,
+                        1,
+                        6,
+                        {-38.0F, 0.0F, 0.0F},
+                        1,
+                        {3.4F, 0.0F, 0.0F});
+  auto road_folk = group(QStringLiteral("works_road_folk"),
+                         Troop::Civilian,
+                         1,
+                         5,
+                         {12.0F, 0.0F, -3.0F},
+                         1,
+                         {3.6F, 0.0F, 0.0F});
+  s.groups.push_back(carriers);
+  s.groups.push_back(road_folk);
+
+  s.resource_patches = {
+      patch("supply_cart", 4, {-30.0F, 0.0F, 5.0F}, {4.4F, 0.0F, 0.0F}, 1.0F),
+      patch("supply_cart", 3, {8.0F, 0.0F, 5.2F}, {4.2F, 0.0F, 0.0F}, 1.0F),
+      patch("supply_cart", 3, {-14.0F, 0.0F, -5.0F}, {4.2F, 0.0F, 0.0F}, 1.0F),
+      patch("weapon_rack", 3, {8.0F, 0.0F, 11.0F}, {3.2F, 0.0F, 0.0F}, 1.0F),
+      patch("weapon_rack", 2, {22.0F, 0.0F, 8.0F}, {3.2F, 0.0F, 0.0F}, 1.0F),
+      patch("abandoned_home", 3, {-34.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 7.0F}, 1.0F),
+      patch("abandoned_home", 2, {34.0F, 0.0F, -8.0F}, {0.0F, 0.0F, 7.5F}, 1.0F),
+      patch("abandoned_home", 2, {20.0F, 0.0F, 30.0F}, {8.0F, 0.0F, 1.5F}, 1.0F),
+      patch("ruins", 3, {-32.0F, 0.0F, 16.0F}, {0.0F, 0.0F, 6.0F}, 1.1F),
+      patch("ruins", 2, {6.0F, 0.0F, -28.0F}, {8.0F, 0.0F, 2.0F}, 1.15F),
+      patch("ruins", 2, {30.0F, 0.0F, 2.0F}, {6.5F, 0.0F, 3.0F}, 1.05F),
+      patch("dead_tree", 4, {-24.0F, 0.0F, 26.0F}, {5.0F, 0.0F, 2.4F}, 1.1F),
+      patch("tent", 5, {12.0F, 0.0F, 20.0F}, {3.8F, 0.0F, 0.0F}, 0.85F),
+      patch("fire_camp", 2, {14.0F, 0.0F, 25.0F}, {9.0F, 0.0F, 0.0F}, 0.9F),
+      patch("statue", 2, {1.5F, 0.0F, -20.0F}, {5.0F, 0.0F, 0.0F}, 1.1F),
+      patch("boulder", 6, {-30.0F, 0.0F, -28.0F}, {3.0F, 0.0F, 1.4F}, 1.1F),
+      patch("iron_ore", 4, {-36.0F, 0.0F, 26.0F}, {2.6F, 0.0F, 0.0F}, 1.0F),
+      patch("olive_tree", 7, {-40.0F, 0.0F, -24.0F}, {0.0F, 0.0F, 4.2F}, 1.15F),
+      patch("pine_tree", 6, {40.0F, 0.0F, 22.0F}, {0.0F, 0.0F, 4.6F}, 1.2F),
+      patch("plant", 8, {-14.0F, 0.0F, 24.0F}, {3.0F, 0.0F, 0.0F}, 0.9F),
+  };
+
+  s.steps.push_back(
+      move_to(1.0F, QStringLiteral("works_carriers"), {34.0F, 0.0F, 0.0F}));
+  s.steps.push_back(
+      move_to(2.0F, QStringLiteral("works_road_folk"), {-26.0F, 0.0F, -3.0F}));
+  s.steps.push_back(targeted(6.0F,
+                             Command::DeliverToStructure,
+                             QStringLiteral("works_road_folk"),
+                             QStringLiteral("works_barracks_site")));
+  s.steps.push_back(
+      move_to(30.0F, QStringLiteral("works_road_folk"), {18.0F, 0.0F, -4.0F}));
+
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("works_temple_site")),
+      expectation(Expect::GroupExists, QStringLiteral("works_siege_yard")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("works_tumblers_a")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("works_gang_breakers")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("works_gang_miners")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("works_wall_crew")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("works_homes_crew")),
+      expectation(Expect::GroupExists, QStringLiteral("works_east_homes_site")),
+      expectation(Expect::GroupExists, QStringLiteral("works_south_wall_site")),
+      expectation(Expect::GroupExists, QStringLiteral("works_tower_site")),
+      expectation(Expect::MovementAnimationObserved, QStringLiteral("works_carriers")),
+      expectation(Expect::UnitsClearOfBuildings, QStringLiteral("works_carriers")),
+      expectation(Expect::UnitsClearOfBuildings, QStringLiteral("works_road_folk")),
+  };
+  return s;
+}
+
+auto trailer_sanctuary() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_sanctuary_id),
+      QStringLiteral("Trailer I: The Sanctuary"),
+      QStringLiteral("A temple crowning a bare dry hill above the plain, with the "
+                     "order of healers gathered in rings on the terrace and a "
+                     "statue-lined processional road climbing to it out of the "
+                     "olive country."),
+      38.0F,
+      {36.0F, 32.0F, 10.0F});
+  s.ground_type = QStringLiteral("grass_dry");
+  s.terrain_seed_override = 8123;
+  s.collect_animation_diagnostics = true;
+  s.arena_floor_half_extent = 40.0F;
+  s.environment.start_time = 8.2F;
+  s.environment.fog_density_override = 0.018F;
+  s.environment.exposure_override = 1.5F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 6.0F);
+
+  s.elevation_patches.push_back({{0.0F, 0.0F, -6.0F}, 22.0F, 7.5F});
+
+  s.roads.push_back(street({0.0F, 0.0F, 34.0F}, {0.0F, 0.0F, 2.0F}, 3.4F));
+
+  s.groups.push_back(building(QStringLiteral("sanctuary_temple"),
+                              Game::Units::SpawnType::Temple,
+                              Nation::RomanRepublic,
+                              1,
+                              1,
+                              {0.0F, 0.0F, -8.0F},
+                              {},
+                              180.0F));
+
+  for (int ring = 0; ring < 3; ++ring) {
+    const float radius = 7.0F + (static_cast<float>(ring) * 4.0F);
+    const float z = -1.0F + (static_cast<float>(ring) * 3.4F);
+    auto order = group(QStringLiteral("sanctuary_order_%1").arg(ring),
+                       Troop::Healer,
+                       1,
+                       8,
+                       {-radius, 0.0F, z},
+                       1,
+                       {radius * 2.0F / 7.0F, 0.0F, 0.0F});
+    order.facing_degrees = 180.0F;
+    s.groups.push_back(order);
+  }
+
+  auto pilgrims = group(QStringLiteral("sanctuary_pilgrims"),
+                        Troop::Civilian,
+                        1,
+                        7,
+                        {-2.0F, 0.0F, 30.0F},
+                        1,
+                        {1.4F, 0.0F, 2.6F});
+  auto attendants = group(QStringLiteral("sanctuary_attendants"),
+                          Troop::Civilian,
+                          1,
+                          5,
+                          {2.0F, 0.0F, 20.0F},
+                          1,
+                          {1.4F, 0.0F, 2.8F});
+  s.groups.push_back(pilgrims);
+  s.groups.push_back(attendants);
+
+  s.resource_patches = {
+      patch("statue", 6, {-4.6F, 0.0F, 6.0F}, {0.0F, 0.0F, 4.6F}, 1.15F),
+      patch("statue", 6, {4.6F, 0.0F, 6.0F}, {0.0F, 0.0F, 4.6F}, 1.15F),
+      patch("fire_camp", 2, {-6.0F, 0.0F, -2.0F}, {12.0F, 0.0F, 0.0F}, 0.9F),
+      patch("olive_tree", 8, {-26.0F, 0.0F, 14.0F}, {0.0F, 0.0F, 4.4F}, 1.15F),
+      patch("olive_tree", 8, {26.0F, 0.0F, 14.0F}, {0.0F, 0.0F, 4.4F}, 1.15F),
+      patch("boulder", 5, {-18.0F, 0.0F, -20.0F}, {3.4F, 0.0F, 1.6F}, 1.15F),
+      patch("plant", 8, {-12.0F, 0.0F, 26.0F}, {3.2F, 0.0F, 0.0F}, 0.9F),
+  };
+
+  s.steps = {
+      move_to(1.0F, QStringLiteral("sanctuary_pilgrims"), {-2.0F, 0.0F, 8.0F}),
+      move_to(2.5F, QStringLiteral("sanctuary_attendants"), {2.0F, 0.0F, 4.0F}),
+      move_to(24.0F, QStringLiteral("sanctuary_pilgrims"), {-6.0F, 0.0F, 2.0F}),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupExists, QStringLiteral("sanctuary_temple")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("sanctuary_order_0")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("sanctuary_order_2")),
+      expectation(Expect::MovementAnimationObserved,
+                  QStringLiteral("sanctuary_pilgrims")),
+      expectation(Expect::UnitsClearOfBuildings, QStringLiteral("sanctuary_pilgrims")),
+  };
+  return s;
+}
+
+auto trailer_gate_march() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_gate_march_id),
+      QStringLiteral("Trailer II: Through The Gate"),
+      QStringLiteral("Every arm of the army files out of one gate on the centre "
+                     "line of the wall: swordsmen, spearmen and archers on foot, "
+                     "the cavalry wing behind them and the siege train last, each "
+                     "column funnelled through the opening rather than the stone."),
+      64.0F,
+      {40.0F, 36.0F, 8.0F});
+  s.ground_type = QStringLiteral("grass_dry");
+  s.terrain_seed_override = 3307;
+  s.arena_floor_half_extent = 44.0F;
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 10.6F;
+  s.environment.exposure_override = 1.45F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+
+  constexpr float k_wall_z = 0.0F;
+  constexpr float k_gate_half = 4.0F;
+  constexpr float k_wall_reach = 22.0F;
+
+  auto wall_run = [&](const char* name, float first, float last) {
+    const int count = static_cast<int>((last - first) / 2.0F) + 1;
+    const float middle = (first + last) * 0.5F;
+    s.groups.push_back(building(QString::fromLatin1(name),
+                                Game::Units::SpawnType::WallSegment,
+                                Nation::RomanRepublic,
+                                1,
+                                count,
+                                {middle, 0.0F, k_wall_z},
+                                {2.0F, 0.0F, 0.0F},
+                                0.0F));
+  };
+  wall_run("gate_wall_west", -k_wall_reach, -k_gate_half);
+  wall_run("gate_wall_east", k_gate_half, k_wall_reach);
+  s.groups.push_back(building(QStringLiteral("gate_wall_gate"),
+                              Game::Units::SpawnType::WallGate,
+                              Nation::RomanRepublic,
+                              1,
+                              1,
+                              {0.0F, 0.0F, k_wall_z},
+                              {},
+                              0.0F));
+  for (float x : {-k_wall_reach, k_wall_reach}) {
+    s.groups.push_back(building(QStringLiteral("gate_tower_%1").arg(x < 0 ? 0 : 1),
+                                Game::Units::SpawnType::DefenseTower,
+                                Nation::RomanRepublic,
+                                1,
+                                1,
+                                {x, 0.0F, k_wall_z}));
+  }
+
+  s.roads.push_back(street({0.0F, 0.0F, 26.0F}, {0.0F, 0.0F, -30.0F}, 3.2F));
+
+  auto swords = group(
+      QStringLiteral("gate_swords"), Troop::Swordsman, 1, 3, {0.0F, 0.0F, 22.0F}, 6);
+  auto spears = group(
+      QStringLiteral("gate_spears"), Troop::Spearman, 1, 2, {0.0F, 0.0F, 27.0F}, 6);
+  auto archers = group(
+      QStringLiteral("gate_archers"), Troop::Archer, 1, 2, {0.0F, 0.0F, 32.0F}, 6);
+  auto horse = group(
+      QStringLiteral("gate_horse"), Troop::MountedKnight, 1, 2, {0.0F, 0.0F, 37.0F}, 4);
+  auto siege = group(
+      QStringLiteral("gate_siege"), Troop::Catapult, 1, 2, {0.0F, 0.0F, 42.0F}, 1);
+  for (auto* column : {&swords, &spears, &archers, &horse, &siege}) {
+    column->facing_degrees = 180.0F;
+    column->spacing = {2.2F, 0.0F, 0.0F};
+  }
+  s.groups.push_back(swords);
+  s.groups.push_back(spears);
+  s.groups.push_back(archers);
+  s.groups.push_back(horse);
+  s.groups.push_back(siege);
+
+  s.resource_patches = {
+      patch("statue", 2, {-5.0F, 0.0F, 8.0F}, {10.0F, 0.0F, 0.0F}, 1.1F),
+      patch("weapon_rack", 2, {-8.0F, 0.0F, 5.0F}, {16.0F, 0.0F, 0.0F}, 1.0F),
+      patch("tent", 4, {-16.0F, 0.0F, 12.0F}, {3.8F, 0.0F, 0.0F}, 0.85F),
+      patch("supply_cart", 3, {14.0F, 0.0F, 12.0F}, {4.2F, 0.0F, 0.0F}, 1.0F),
+      patch("fire_camp", 1, {-16.0F, 0.0F, 17.0F}, {}, 0.9F),
+      patch("olive_tree", 6, {-34.0F, 0.0F, -14.0F}, {0.0F, 0.0F, 4.2F}, 1.15F),
+      patch("boulder", 5, {32.0F, 0.0F, -18.0F}, {3.2F, 0.0F, 1.5F}, 1.1F),
+  };
+
+  auto file_through = [&](float time, const char* name, float exit_z) {
+    auto step = march_step(time,
+                           {QString::fromLatin1(name)},
+                           {0.0F, 0.0F, exit_z},
+                           180.0F,
+                           k_gate_half * 1.4F);
+    step.formation.options.movement_policy =
+        Game::Formation::MovementPolicy::ReformAtDestination;
+    return step;
+  };
+  s.steps = {
+      file_through(1.0F, "gate_swords", -14.0F),
+      file_through(9.0F, "gate_spears", -20.0F),
+      file_through(17.0F, "gate_archers", -26.0F),
+      file_through(25.0F, "gate_horse", -32.0F),
+      file_through(33.0F, "gate_siege", -38.0F),
+      form_step(44.0F,
+                {QStringLiteral("gate_swords"),
+                 QStringLiteral("gate_spears"),
+                 QStringLiteral("gate_archers"),
+                 QStringLiteral("gate_horse")},
+                Intent::Line,
+                {0.0F, 0.0F, -24.0F},
+                180.0F,
+                40.0F),
+  };
+
+  s.expectations = {
+      expectation(Expect::GateOpenedObserved, QStringLiteral("gate_wall_gate")),
+      expectation(Expect::UnitsClearOfBuildings, QStringLiteral("gate_swords")),
+      expectation(Expect::UnitsClearOfBuildings, QStringLiteral("gate_spears")),
+      expectation(Expect::UnitsClearOfBuildings, QStringLiteral("gate_archers")),
+      expectation(Expect::UnitsClearOfBuildings, QStringLiteral("gate_horse")),
+      expectation(Expect::MovementAnimationObserved, QStringLiteral("gate_swords")),
+      no_visibility_churn(QStringLiteral("gate_swords"), 2.0F, 36.0F),
+  };
+  return s;
+}
+
+auto trailer_highland() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_highland_id),
+      QStringLiteral("Trailer II: The High Pass"),
+      QStringLiteral("The same army a hundred miles on: a column working across "
+                     "an alpine saddle in falling snow, the rock showing through "
+                     "the drifts and the pines thinning out above the road."),
+      40.0F,
+      {38.0F, 30.0F, 34.0F});
+  s.ground_type = QStringLiteral("alpine_mix");
+  s.terrain_seed_override = 7712;
+  s.collect_animation_diagnostics = true;
+  s.terrain_height_scale_override = 8.0F;
+  s.arena_floor_half_extent = 48.0F;
+  s.suppress_boundary_mountains = true;
+  s.elevation_patches = {
+      {{-26.0F, 0.0F, 36.0F}, 20.0F, 17.0F},
+      {{6.0F, 0.0F, 38.0F}, 18.0F, 14.0F},
+      {{36.0F, 0.0F, 26.0F}, 16.0F, 12.0F},
+      {{-14.0F, 0.0F, -30.0F}, 22.0F, 15.0F},
+      {{26.0F, 0.0F, -36.0F}, 18.0F, 13.0F},
+      {{-40.0F, 0.0F, -20.0F}, 16.0F, 11.0F},
+      {{-44.0F, 0.0F, 38.0F}, 18.0F, 16.0F},
+      {{44.0F, 0.0F, 40.0F}, 18.0F, 15.0F},
+      {{-44.0F, 0.0F, -40.0F}, 18.0F, 14.0F},
+      {{46.0F, 0.0F, -14.0F}, 16.0F, 12.0F},
+  };
+  s.environment.start_time = 9.0F;
+  s.environment.lighting_profile = QStringLiteral("trebia_winter_camp");
+  s.environment.fog_density_override = 0.05F;
+  s.weather.snow = 0.62F;
+  s.precipitation.enabled = true;
+  s.precipitation.type = Game::Map::WeatherType::Snow;
+  s.precipitation.intensity = 0.62F;
+  s.precipitation.wind_strength = 0.4F;
+  s.precipitation.wind_direction_deg = 70.0F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+
+  auto vanguard = group(QStringLiteral("pass_vanguard"),
+                        Troop::MountedKnight,
+                        1,
+                        2,
+                        {-34.0F, 0.0F, 12.0F},
+                        4);
+  auto column = group(
+      QStringLiteral("pass_column"), Troop::Swordsman, 1, 4, {-40.0F, 0.0F, 14.0F}, 6);
+  auto spears = group(
+      QStringLiteral("pass_spears"), Troop::Spearman, 1, 3, {-44.0F, 0.0F, 15.0F}, 6);
+  auto train = group(
+      QStringLiteral("pass_train"), Troop::Ballista, 1, 2, {-46.0F, 0.0F, 16.0F}, 1);
+  for (auto* file : {&vanguard, &column, &spears, &train}) {
+    file->facing_degrees = 290.0F;
+    file->spacing = {2.2F, 0.0F, 0.0F};
+  }
+  s.groups.push_back(vanguard);
+  s.groups.push_back(column);
+  s.groups.push_back(spears);
+  s.groups.push_back(train);
+
+  s.resource_patches = {
+      patch("pine_tree", 9, {-26.0F, 0.0F, 26.0F}, {4.6F, 0.0F, 1.8F}, 1.2F),
+      patch("pine_tree", 7, {18.0F, 0.0F, 22.0F}, {4.6F, 0.0F, 2.2F}, 1.15F),
+      patch("boulder", 10, {-18.0F, 0.0F, -8.0F}, {4.0F, 0.0F, 2.2F}, 1.25F),
+      patch("boulder", 8, {24.0F, 0.0F, 6.0F}, {3.8F, 0.0F, 2.0F}, 1.2F),
+      patch("tent", 3, {30.0F, 0.0F, -20.0F}, {4.0F, 0.0F, 0.0F}, 0.85F),
+      patch("fire_camp", 1, {33.0F, 0.0F, -16.0F}, {}, 0.95F),
+  };
+
+  const QVector3D pass_exit(36.0F, 0.0F, -10.0F);
+  s.steps = {
+      march_step(1.0F, {QStringLiteral("pass_vanguard")}, pass_exit, 290.0F, 6.0F),
+      march_step(2.0F, {QStringLiteral("pass_column")}, pass_exit, 290.0F, 6.0F),
+      march_step(3.0F, {QStringLiteral("pass_spears")}, pass_exit, 290.0F, 6.0F),
+      march_step(4.0F, {QStringLiteral("pass_train")}, pass_exit, 290.0F, 4.0F),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupIsRendered, QStringLiteral("pass_column")),
+      expectation(Expect::MovementAnimationObserved, QStringLiteral("pass_column")),
+      expectation(Expect::MovementIsContinuous, QStringLiteral("pass_column")),
+  };
+  return s;
+}
+
+auto trailer_forest_ambush() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_forest_ambush_id),
+      QStringLiteral("Trailer II: The Wood"),
+      QStringLiteral("Rain in the deep wood. A Roman column takes the forest road "
+                     "between two stands of pine and the Carthaginian screen that "
+                     "has been walking it comes in from both sides at once."),
+      44.0F,
+      {40.0F, 28.0F, 16.0F});
+  s.ground_type = QStringLiteral("forest_mud");
+  s.terrain_seed_override = 4421;
+  s.arena_floor_half_extent = 42.0F;
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 15.4F;
+  s.environment.fog_density_override = 0.06F;
+  s.environment.exposure_override = 1.35F;
+  s.weather.rain = 0.6F;
+  s.precipitation.enabled = true;
+  s.precipitation.type = Game::Map::WeatherType::Rain;
+  s.precipitation.intensity = 0.6F;
+  s.precipitation.wind_strength = 0.25F;
+  s.precipitation.wind_direction_deg = 250.0F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+
+  s.roads.push_back(street({0.0F, 0.0F, 34.0F}, {0.0F, 0.0F, -34.0F}, 3.0F, "earth"));
+
+  auto column = group(
+      QStringLiteral("wood_column"), Troop::Swordsman, 1, 4, {0.0F, 0.0F, 26.0F}, 6);
+  auto escort = group(
+      QStringLiteral("wood_escort"), Troop::Spearman, 1, 2, {0.0F, 0.0F, 32.0F}, 6);
+  column.facing_degrees = 180.0F;
+  escort.facing_degrees = 180.0F;
+  column.spacing = {2.2F, 0.0F, 0.0F};
+  escort.spacing = {2.2F, 0.0F, 0.0F};
+  s.groups.push_back(column);
+  s.groups.push_back(escort);
+
+  auto ambush_west = group(QStringLiteral("wood_ambush_west"),
+                           Troop::Swordsman,
+                           2,
+                           3,
+                           {-16.0F, 0.0F, 4.0F},
+                           6,
+                           {0.0F, 0.0F, 4.4F});
+  auto ambush_east = group(QStringLiteral("wood_ambush_east"),
+                           Troop::Spearman,
+                           2,
+                           3,
+                           {16.0F, 0.0F, 4.0F},
+                           6,
+                           {0.0F, 0.0F, 4.4F});
+  auto ambush_bows = group(
+      QStringLiteral("wood_ambush_bows"), Troop::Archer, 2, 2, {0.0F, 0.0F, -18.0F}, 6);
+  ambush_west.spawn_at_start = false;
+  ambush_east.spawn_at_start = false;
+  ambush_west.facing_degrees = 90.0F;
+  ambush_east.facing_degrees = 270.0F;
+  s.groups.push_back(ambush_west);
+  s.groups.push_back(ambush_east);
+  s.groups.push_back(ambush_bows);
+
+  s.resource_patches = {
+      patch("pine_tree", 12, {-12.0F, 0.0F, -28.0F}, {3.4F, 0.0F, 4.6F}, 1.25F),
+      patch("pine_tree", 12, {12.0F, 0.0F, -28.0F}, {3.4F, 0.0F, 4.6F}, 1.25F),
+      patch("pine_tree", 10, {-20.0F, 0.0F, 16.0F}, {3.6F, 0.0F, 4.4F}, 1.2F),
+      patch("pine_tree", 10, {20.0F, 0.0F, 16.0F}, {3.6F, 0.0F, 4.4F}, 1.2F),
+      patch("olive_tree", 6, {-30.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 4.2F}, 1.1F),
+      patch("dead_tree", 3, {26.0F, 0.0F, -14.0F}, {4.6F, 0.0F, 2.2F}, 1.15F),
+      patch("boulder", 6, {-26.0F, 0.0F, 26.0F}, {3.4F, 0.0F, 1.8F}, 1.1F),
+      patch("plant", 10, {-8.0F, 0.0F, 12.0F}, {3.2F, 0.0F, 0.0F}, 0.95F),
+  };
+
+  s.steps = {
+      march_step(1.0F,
+                 {QStringLiteral("wood_column"), QStringLiteral("wood_escort")},
+                 {0.0F, 0.0F, -6.0F},
+                 180.0F,
+                 8.0F),
+      at(11.0F,
+         Command::SpawnAmbush,
+         QStringLiteral("wood_ambush_west"),
+         QStringLiteral("wood_column")),
+      at(11.4F,
+         Command::SpawnAmbush,
+         QStringLiteral("wood_ambush_east"),
+         QStringLiteral("wood_column")),
+      at(12.0F,
+         Command::Charge,
+         QStringLiteral("wood_ambush_bows"),
+         QStringLiteral("wood_escort")),
+      at(13.0F,
+         Command::AttackMove,
+         QStringLiteral("wood_column"),
+         QStringLiteral("wood_ambush_west")),
+      at(13.4F,
+         Command::AttackMove,
+         QStringLiteral("wood_escort"),
+         QStringLiteral("wood_ambush_east")),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupIsRendered, QStringLiteral("wood_column")),
+      expectation(Expect::MovementAnimationObserved, QStringLiteral("wood_column")),
+      expectation(Expect::AttackAnimationObserved, QStringLiteral("wood_ambush_west")),
+      expectation(Expect::GroupHealthReduced, QStringLiteral("wood_column")),
+  };
+  return s;
+}
+
+auto trailer_bridge_defense() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_bridge_defense_id),
+      QStringLiteral("Trailer III: The Bridge"),
+      QStringLiteral("One crossing on a wide river and a Roman line braced on the "
+                     "near bank of it, archers shooting over their heads while the "
+                     "Carthaginian column forces the deck."),
+      44.0F,
+      {40.0F, 26.0F, 4.0F});
+  s.ground_type = QStringLiteral("soil_fertile");
+  s.terrain_seed_override = 6605;
+  s.arena_floor_half_extent = 44.0F;
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 16.6F;
+  s.environment.exposure_override = 1.45F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+
+  s.rivers.push_back(
+      Game::Map::RiverSegment{{-42.0F, 0.0F, 0.0F}, {42.0F, 0.0F, 0.0F}, 9.0F});
+  s.bridges.push_back(
+      Game::Map::Bridge{{0.0F, 0.0F, -7.0F}, {0.0F, 0.0F, 7.0F}, 5.0F, 0.5F});
+  s.roads.push_back(street({0.0F, 0.0F, -30.0F}, {0.0F, 0.0F, -7.0F}, 3.0F));
+  s.roads.push_back(street({0.0F, 0.0F, 7.0F}, {0.0F, 0.0F, 30.0F}, 3.0F));
+
+  auto shield_line = group(QStringLiteral("bridge_shields"),
+                           Troop::Spearman,
+                           1,
+                           4,
+                           {0.0F, 0.0F, -11.0F},
+                           6,
+                           {5.4F, 0.0F, 0.0F});
+  auto reserve = group(QStringLiteral("bridge_reserve"),
+                       Troop::Swordsman,
+                       1,
+                       3,
+                       {0.0F, 0.0F, -17.0F},
+                       6,
+                       {5.4F, 0.0F, 0.0F});
+  auto bows = group(QStringLiteral("bridge_bows"),
+                    Troop::Archer,
+                    1,
+                    3,
+                    {0.0F, 0.0F, -23.0F},
+                    6,
+                    {5.4F, 0.0F, 0.0F});
+  for (auto* line : {&shield_line, &reserve, &bows}) {
+    line->facing_degrees = 0.0F;
+  }
+  s.groups.push_back(shield_line);
+  s.groups.push_back(reserve);
+  s.groups.push_back(bows);
+
+  auto storm_column = group(QStringLiteral("bridge_storm"),
+                            Troop::Swordsman,
+                            2,
+                            4,
+                            {0.0F, 0.0F, 13.0F},
+                            6,
+                            {2.2F, 0.0F, 0.0F});
+  auto storm_second = group(QStringLiteral("bridge_storm_second"),
+                            Troop::Spearman,
+                            2,
+                            3,
+                            {0.0F, 0.0F, 20.0F},
+                            6,
+                            {2.2F, 0.0F, 0.0F});
+  auto storm_bows = group(QStringLiteral("bridge_storm_bows"),
+                          Troop::Archer,
+                          2,
+                          2,
+                          {0.0F, 0.0F, 26.0F},
+                          6,
+                          {5.0F, 0.0F, 0.0F});
+  for (auto* line : {&storm_column, &storm_second, &storm_bows}) {
+    line->facing_degrees = 180.0F;
+  }
+  s.groups.push_back(storm_column);
+  s.groups.push_back(storm_second);
+  s.groups.push_back(storm_bows);
+
+  s.resource_patches = {
+      patch("olive_tree", 7, {-26.0F, 0.0F, -20.0F}, {0.0F, 0.0F, 4.2F}, 1.15F),
+      patch("pine_tree", 7, {26.0F, 0.0F, 20.0F}, {0.0F, 0.0F, 4.4F}, 1.2F),
+      patch("boulder", 6, {-20.0F, 0.0F, 12.0F}, {3.4F, 0.0F, 1.8F}, 1.1F),
+      patch("weapon_rack", 2, {-8.0F, 0.0F, -20.0F}, {16.0F, 0.0F, 0.0F}, 1.0F),
+      patch("supply_cart", 3, {-14.0F, 0.0F, -26.0F}, {4.2F, 0.0F, 0.0F}, 1.0F),
+      patch("tent", 4, {14.0F, 0.0F, -26.0F}, {3.8F, 0.0F, 0.0F}, 0.85F),
+      patch("fire_camp", 1, {17.0F, 0.0F, -22.0F}, {}, 0.9F),
+      patch("abandoned_home", 1, {-30.0F, 0.0F, 24.0F}, {}, 1.0F),
+  };
+
+  s.steps = {
+      at(0.5F, Command::Hold, QStringLiteral("bridge_shields")),
+      march_step(
+          1.5F, {QStringLiteral("bridge_storm")}, {0.0F, 0.0F, -10.0F}, 180.0F, 4.5F),
+      march_step(6.0F,
+                 {QStringLiteral("bridge_storm_second")},
+                 {0.0F, 0.0F, -8.0F},
+                 180.0F,
+                 4.5F),
+      at(10.0F,
+         Command::AttackMove,
+         QStringLiteral("bridge_bows"),
+         QStringLiteral("bridge_storm")),
+      at(12.0F,
+         Command::AttackMove,
+         QStringLiteral("bridge_storm_bows"),
+         QStringLiteral("bridge_shields")),
+      at(24.0F,
+         Command::Charge,
+         QStringLiteral("bridge_reserve"),
+         QStringLiteral("bridge_storm")),
+  };
+
+  s.expectations = {
+      expectation(Expect::BridgeTraversalObserved, QStringLiteral("bridge_storm")),
+      expectation(Expect::AttackAnimationObserved, QStringLiteral("bridge_shields")),
+      expectation(Expect::ProjectileFlightObserved,
+                  QStringLiteral("bridge_bows"),
+                  QStringLiteral("bridge_storm")),
+      expectation(Expect::GroupHealthReduced, QStringLiteral("bridge_storm")),
+  };
+  return s;
+}
+
+auto trailer_siege_walls() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_siege_walls_id),
+      QStringLiteral("Trailer III: The Wall Comes Down"),
+      QStringLiteral("Siege work against a walled Punic front: the catapult "
+                     "battery ranges the rampart while the elephants go in at the "
+                     "stone beside the gate and the assault waits behind them."),
+      46.0F,
+      {46.0F, 30.0F, 6.0F});
+  s.ground_type = QStringLiteral("grass_dry");
+  s.terrain_seed_override = 2914;
+  s.arena_floor_half_extent = 44.0F;
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 17.4F;
+  s.environment.fog_density_override = 0.03F;
+  s.environment.exposure_override = 1.45F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, -4.0F);
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 2, .team_id = 2}};
+
+  auto wall_run = [&](const char* name, float first, float last) {
+    const int count = static_cast<int>((last - first) / 2.0F) + 1;
+    const float middle = (first + last) * 0.5F;
+    s.groups.push_back(building(QString::fromLatin1(name),
+                                Game::Units::SpawnType::WallSegment,
+                                Nation::Carthage,
+                                2,
+                                count,
+                                {middle, 0.0F, -14.0F},
+                                {2.0F, 0.0F, 0.0F},
+                                0.0F));
+  };
+  wall_run("siege_wall_west", -24.0F, -6.0F);
+  wall_run("siege_wall_east", 6.0F, 24.0F);
+  s.groups.push_back(building(QStringLiteral("siege_gate"),
+                              Game::Units::SpawnType::WallGate,
+                              Nation::Carthage,
+                              2,
+                              1,
+                              {0.0F, 0.0F, -14.0F},
+                              {},
+                              0.0F));
+  for (float x : {-24.0F, 24.0F}) {
+    s.groups.push_back(building(QStringLiteral("siege_tower_%1").arg(x < 0 ? 0 : 1),
+                                Game::Units::SpawnType::DefenseTower,
+                                Nation::Carthage,
+                                2,
+                                1,
+                                {x, 0.0F, -14.0F}));
+  }
+  s.groups.push_back(building(QStringLiteral("siege_town_homes"),
+                              Game::Units::SpawnType::Home,
+                              Nation::Carthage,
+                              2,
+                              4,
+                              {-9.0F, 0.0F, -22.0F},
+                              {6.4F, 0.0F, 0.0F},
+                              0.0F));
+
+  auto battery = group(
+      QStringLiteral("siege_battery"), Troop::Catapult, 1, 4, {0.0F, 0.0F, 10.0F}, 1);
+  battery.spacing = {9.0F, 0.0F, 0.0F};
+  battery.facing_degrees = 180.0F;
+  auto tuskers = group(
+      QStringLiteral("siege_tuskers"), Troop::Elephant, 1, 3, {0.0F, 0.0F, 8.0F}, 1);
+  tuskers.spacing = {10.0F, 0.0F, 0.0F};
+  tuskers.facing_degrees = 180.0F;
+  auto assault = group(
+      QStringLiteral("siege_assault"), Troop::Swordsman, 1, 4, {0.0F, 0.0F, 18.0F}, 6);
+  assault.spacing = {6.0F, 0.0F, 0.0F};
+  assault.facing_degrees = 180.0F;
+  auto garrison = group(QStringLiteral("siege_garrison"),
+                        Troop::Spearman,
+                        2,
+                        3,
+                        {0.0F, 0.0F, -18.0F},
+                        6,
+                        {6.0F, 0.0F, 0.0F});
+  s.groups.push_back(battery);
+  s.groups.push_back(tuskers);
+  s.groups.push_back(assault);
+  s.groups.push_back(garrison);
+
+  s.resource_patches = {
+      patch("tent", 6, {-20.0F, 0.0F, 26.0F}, {3.8F, 0.0F, 0.0F}, 0.85F),
+      patch("fire_camp", 2, {-18.0F, 0.0F, 31.0F}, {12.0F, 0.0F, 0.0F}, 0.9F),
+      patch("weapon_rack", 3, {12.0F, 0.0F, 26.0F}, {3.2F, 0.0F, 0.0F}, 1.0F),
+      patch("supply_cart", 4, {20.0F, 0.0F, 20.0F}, {4.2F, 0.0F, 0.0F}, 1.0F),
+      patch("ruins", 2, {-32.0F, 0.0F, -20.0F}, {7.0F, 0.0F, 3.0F}, 1.1F),
+      patch("olive_tree", 6, {32.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 4.2F}, 1.15F),
+      patch("boulder", 6, {-34.0F, 0.0F, 8.0F}, {3.4F, 0.0F, 1.8F}, 1.1F),
+  };
+
+  s.steps = {
+      at(1.0F,
+         Command::AttackMove,
+         QStringLiteral("siege_battery"),
+         QStringLiteral("siege_wall_west")),
+      at(4.0F,
+         Command::AttackMove,
+         QStringLiteral("siege_tuskers"),
+         QStringLiteral("siege_wall_east")),
+      at(16.0F,
+         Command::AttackMove,
+         QStringLiteral("siege_battery"),
+         QStringLiteral("siege_gate")),
+      at(20.0F,
+         Command::AttackMove,
+         QStringLiteral("siege_assault"),
+         QStringLiteral("siege_garrison")),
+      at(26.0F,
+         Command::Attack,
+         QStringLiteral("siege_garrison"),
+         QStringLiteral("siege_assault")),
+  };
+
+  s.expectations = {
+      expectation(Expect::ProjectileFlightObserved,
+                  QStringLiteral("siege_battery"),
+                  QStringLiteral("siege_wall_west")),
+      expectation(Expect::ProjectileImpactObserved,
+                  QStringLiteral("siege_battery"),
+                  QStringLiteral("siege_wall_west")),
+      expectation(Expect::StructureDamageCueObserved,
+                  QStringLiteral("siege_wall_west")),
+      expectation(
+          Expect::GroupHealthReduced, QStringLiteral("siege_wall_west"), {}, 1.0F),
+      expectation(Expect::StructureFacadeContactObserved,
+                  QStringLiteral("siege_tuskers"),
+                  QStringLiteral("siege_wall_east")),
+  };
+  return s;
+}
+
+auto trailer_night_snow() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_night_snow_id),
+      QStringLiteral("Trailer IV: The Cold Ground"),
+      QStringLiteral("Night on the high ground under snow. The army goes in at the "
+                     "grave priests keeping the barrow and the risen come at it "
+                     "from every side of the field at once."),
+      50.0F,
+      {46.0F, 34.0F, 20.0F});
+  s.ground_type = QStringLiteral("alpine_mix");
+  s.terrain_seed_override = 9931;
+  s.arena_floor_half_extent = 44.0F;
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 22.4F;
+  s.environment.lighting_profile = QStringLiteral("iron_sepulcher");
+  s.environment.fog_density_override = 0.07F;
+  s.environment.exposure_override = 2.1F;
+  s.weather.snow = 0.55F;
+  s.precipitation.enabled = true;
+  s.precipitation.type = Game::Map::WeatherType::Snow;
+  s.precipitation.intensity = 0.55F;
+  s.precipitation.wind_strength = 0.3F;
+  s.precipitation.wind_direction_deg = 20.0F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 9, .team_id = 9}};
+
+  auto host_swords = group(QStringLiteral("night_host_swords"),
+                           Troop::Swordsman,
+                           1,
+                           5,
+                           {0.0F, 0.0F, 24.0F},
+                           6,
+                           {6.0F, 0.0F, 0.0F});
+  auto host_spears = group(QStringLiteral("night_host_spears"),
+                           Troop::Spearman,
+                           1,
+                           4,
+                           {0.0F, 0.0F, 29.0F},
+                           6,
+                           {6.0F, 0.0F, 0.0F});
+  auto host_bows = group(QStringLiteral("night_host_bows"),
+                         Troop::Archer,
+                         1,
+                         3,
+                         {0.0F, 0.0F, 34.0F},
+                         6,
+                         {6.0F, 0.0F, 0.0F});
+  auto host_consul = group(QStringLiteral("night_host_consul"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 20.0F},
+                           1);
+  s.groups.push_back(host_swords);
+  s.groups.push_back(host_spears);
+  s.groups.push_back(host_bows);
+  s.groups.push_back(host_consul);
+
+  auto priests = group(QStringLiteral("night_priests"),
+                       Troop::GravePriest,
+                       9,
+                       7,
+                       {0.0F, 0.0F, -6.0F},
+                       1,
+                       {5.4F, 0.0F, 0.0F});
+  priests.nation_id = Nation::IronSepulcher;
+  priests.facing_degrees = 0.0F;
+  s.groups.push_back(priests);
+
+  struct Flank {
+    const char* name;
+    QVector3D origin;
+    float facing;
+    Troop troop;
+  };
+  for (auto const& flank :
+       {Flank{
+            "night_risen_north", {0.0F, 0.0F, -26.0F}, 0.0F, Troop::SkeletonSwordsman},
+        Flank{
+            "night_risen_west", {-28.0F, 0.0F, 2.0F}, 90.0F, Troop::SkeletonSwordsman},
+        Flank{
+            "night_risen_east", {28.0F, 0.0F, 2.0F}, 270.0F, Troop::SkeletonSwordsman},
+        Flank{"night_risen_bows",
+              {-20.0F, 0.0F, -20.0F},
+              45.0F,
+              Troop::SkeletonArcher}}) {
+    auto risen = group(QString::fromLatin1(flank.name),
+                       flank.troop,
+                       9,
+                       3,
+                       flank.origin,
+                       6,
+                       {5.0F, 0.0F, 0.0F});
+    risen.nation_id = Nation::IronSepulcher;
+    risen.facing_degrees = flank.facing;
+    s.groups.push_back(risen);
+  }
+
+  s.resource_patches = {
+      patch("magic_shrine", 1, {0.0F, 0.0F, -12.0F}, {}, 1.3F),
+      patch("dead_tree", 8, {-16.0F, 0.0F, -18.0F}, {4.6F, 0.0F, 2.6F}, 1.2F),
+      patch("dead_tree", 6, {18.0F, 0.0F, -16.0F}, {4.6F, 0.0F, 2.4F}, 1.2F),
+      patch("ruins", 3, {-10.0F, 0.0F, -24.0F}, {9.0F, 0.0F, 2.0F}, 1.15F),
+      patch("boulder", 8, {-30.0F, 0.0F, 16.0F}, {3.6F, 0.0F, 2.0F}, 1.15F),
+      patch("pine_tree", 6, {32.0F, 0.0F, 22.0F}, {4.4F, 0.0F, 2.2F}, 1.15F),
+      patch("fire_camp", 2, {-8.0F, 0.0F, 30.0F}, {16.0F, 0.0F, 0.0F}, 0.95F),
+  };
+
+  s.steps = {
+      march_step(
+          1.0F,
+          {QStringLiteral("night_host_swords"), QStringLiteral("night_host_spears")},
+          {0.0F, 0.0F, 6.0F},
+          180.0F,
+          30.0F),
+      at(10.0F,
+         Command::Attack,
+         QStringLiteral("night_host_bows"),
+         QStringLiteral("night_priests")),
+      at(12.0F,
+         Command::AttackMove,
+         QStringLiteral("night_host_swords"),
+         QStringLiteral("night_priests")),
+      at(14.0F,
+         Command::Charge,
+         QStringLiteral("night_risen_west"),
+         QStringLiteral("night_host_swords")),
+      at(14.4F,
+         Command::Charge,
+         QStringLiteral("night_risen_east"),
+         QStringLiteral("night_host_spears")),
+      at(15.0F,
+         Command::Charge,
+         QStringLiteral("night_risen_north"),
+         QStringLiteral("night_host_swords")),
+      at(16.0F,
+         Command::Attack,
+         QStringLiteral("night_risen_bows"),
+         QStringLiteral("night_host_bows")),
+      at(20.0F,
+         Command::AttackMove,
+         QStringLiteral("night_host_spears"),
+         QStringLiteral("night_risen_east")),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupIsRendered, QStringLiteral("night_priests")),
+      expectation(Expect::GroupIsRendered, QStringLiteral("night_risen_west")),
+      expectation(Expect::AttackAnimationObserved, QStringLiteral("night_host_swords")),
+      expectation(Expect::GroupHealthReduced, QStringLiteral("night_host_swords")),
+  };
+  return s;
+}
+
+auto trailer_last_breath() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_last_breath_id),
+      QStringLiteral("Trailer IV: Last Breath"),
+      QStringLiteral("The end of the night from behind the consul's shoulders: "
+                     "alone in the snow with the risen closing from every quarter, "
+                     "cutting until the ring reaches him and he goes down."),
+      34.0F,
+      {12.0F, 14.0F, 0.0F});
+  s.ground_type = QStringLiteral("alpine_mix");
+  s.terrain_seed_override = 9931;
+  s.arena_floor_half_extent = 30.0F;
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 22.6F;
+  s.environment.lighting_profile = QStringLiteral("iron_sepulcher");
+  s.environment.fog_density_override = 0.09F;
+  s.environment.exposure_override = 2.1F;
+  s.weather.snow = 0.6F;
+  s.precipitation.enabled = true;
+  s.precipitation.type = Game::Map::WeatherType::Snow;
+  s.precipitation.intensity = 0.6F;
+  s.precipitation.wind_strength = 0.32F;
+  s.precipitation.wind_direction_deg = 20.0F;
+  s.rpg_mode = true;
+  s.rpg_commander_group = QStringLiteral("rpg_commander");
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+  s.owner_teams = {{.owner_id = 1, .team_id = 1}, {.owner_id = 9, .team_id = 9}};
+
+  auto commander = group(QStringLiteral("rpg_commander"),
+                         Troop::RomanVeteranConsul,
+                         1,
+                         1,
+                         {0.0F, 0.0F, 0.0F},
+                         1);
+  commander.facing_degrees = 0.0F;
+  commander.health_override = commander.max_health_override = 4200;
+  s.groups.push_back(commander);
+
+  struct Ring {
+    const char* name;
+    QVector3D origin;
+    float facing;
+    Troop troop;
+    bool deferred;
+  };
+  for (auto const& ring : {Ring{"last_risen_front",
+                                {0.0F, 0.0F, 7.0F},
+                                180.0F,
+                                Troop::SkeletonSwordsman,
+                                false},
+                           Ring{"last_risen_left",
+                                {-8.0F, 0.0F, 1.0F},
+                                90.0F,
+                                Troop::SkeletonSwordsman,
+                                false},
+                           Ring{"last_risen_right",
+                                {8.0F, 0.0F, 1.0F},
+                                270.0F,
+                                Troop::SkeletonSwordsman,
+                                false},
+                           Ring{"last_risen_rear",
+                                {0.0F, 0.0F, -8.0F},
+                                0.0F,
+                                Troop::SkeletonSwordsman,
+                                true},
+                           Ring{"last_risen_bows",
+                                {-11.0F, 0.0F, -9.0F},
+                                45.0F,
+                                Troop::SkeletonArcher,
+                                true}}) {
+    auto risen = group(QString::fromLatin1(ring.name),
+                       ring.troop,
+                       9,
+                       1,
+                       ring.origin,
+                       5,
+                       {2.4F, 0.0F, 0.0F});
+    risen.nation_id = Nation::IronSepulcher;
+    risen.facing_degrees = ring.facing;
+    risen.spawn_at_start = !ring.deferred;
+    risen.health_override = risen.max_health_override = 260;
+    s.groups.push_back(risen);
+  }
+
+  s.groups.push_back(building(QStringLiteral("last_shrine"),
+                              Game::Units::SpawnType::Temple,
+                              Nation::RomanRepublic,
+                              1,
+                              1,
+                              {0.0F, 0.0F, 22.0F},
+                              {},
+                              180.0F));
+
+  s.resource_patches = {
+      patch("dead_tree", 6, {-14.0F, 0.0F, 10.0F}, {4.4F, 0.0F, 2.4F}, 1.2F),
+      patch("dead_tree", 5, {14.0F, 0.0F, -10.0F}, {4.4F, 0.0F, 2.4F}, 1.2F),
+      patch("ruins", 2, {-18.0F, 0.0F, -6.0F}, {8.0F, 0.0F, 2.0F}, 1.1F),
+      patch("magic_shrine", 1, {16.0F, 0.0F, 14.0F}, {}, 1.2F),
+      patch("boulder", 5, {18.0F, 0.0F, 4.0F}, {3.2F, 0.0F, 1.6F}, 1.1F),
+  };
+
+  s.steps = {
+      at(0.4F,
+         Command::Attack,
+         QStringLiteral("last_risen_front"),
+         QStringLiteral("rpg_commander")),
+      at(0.6F,
+         Command::Attack,
+         QStringLiteral("last_risen_left"),
+         QStringLiteral("rpg_commander")),
+      at(0.8F,
+         Command::Attack,
+         QStringLiteral("last_risen_right"),
+         QStringLiteral("rpg_commander")),
+      at(1.2F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+      at(3.6F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+      at(6.0F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+      at(7.0F,
+         Command::SpawnAmbush,
+         QStringLiteral("last_risen_rear"),
+         QStringLiteral("rpg_commander")),
+      at(8.4F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+      at(9.0F,
+         Command::SpawnAmbush,
+         QStringLiteral("last_risen_bows"),
+         QStringLiteral("rpg_commander")),
+      at(11.0F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+      at(11.5F,
+         Command::Charge,
+         QStringLiteral("last_risen_rear"),
+         QStringLiteral("rpg_commander")),
+      at(12.0F,
+         Command::Charge,
+         QStringLiteral("last_risen_bows"),
+         QStringLiteral("rpg_commander")),
+      targeted(13.0F, Command::SetHealth, QStringLiteral("rpg_commander"), {}, 1900),
+      at(14.0F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+      at(16.0F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+      targeted(17.0F, Command::SetHealth, QStringLiteral("rpg_commander"), {}, 900),
+      at(18.5F, Command::RpgGuard, QStringLiteral("rpg_commander")),
+      targeted(20.0F, Command::SetHealth, QStringLiteral("rpg_commander"), {}, 260),
+      targeted(21.5F,
+               Command::ApplyDamage,
+               QStringLiteral("rpg_commander"),
+               QStringLiteral("last_risen_front"),
+               9000),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupIsRendered, QStringLiteral("rpg_commander")),
+      expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")),
+      expectation(Expect::RpgHealthReduced, QStringLiteral("rpg_commander")),
+      expectation(Expect::DeathAnimationObserved, QStringLiteral("rpg_commander")),
+      expectation(Expect::GroupDestroyed, QStringLiteral("rpg_commander")),
+  };
+  return s;
+}
+
+auto trailer_wolf_rain() -> ArenaScenarioDefinition {
+  auto s = definition(
+      QString::fromLatin1(k_trailer_wolf_rain_id),
+      QStringLiteral("Trailer I: The Fold"),
+      QStringLiteral("Rain over the high pasture. A big flock grazes the wet "
+                     "ground below the steading while the pack comes down out "
+                     "of the trees at it, and the riders of the watch turn out "
+                     "to answer."),
+      44.0F,
+      {30.0F, 26.0F, 14.0F});
+  s.ground_type = QStringLiteral("forest_mud");
+  s.terrain_seed_override = 6142;
+  s.arena_floor_half_extent = 40.0F;
+  s.collect_animation_diagnostics = true;
+  s.environment.start_time = 16.4F;
+  s.environment.fog_density_override = 0.05F;
+  s.environment.exposure_override = 1.4F;
+  s.weather.rain = 0.55F;
+  s.precipitation.enabled = true;
+  s.precipitation.type = Game::Map::WeatherType::Rain;
+  s.precipitation.intensity = 0.55F;
+  s.precipitation.wind_strength = 0.22F;
+  s.precipitation.wind_direction_deg = 240.0F;
+  s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+
+  s.roads.push_back(
+      street({-34.0F, 0.0F, -14.0F}, {30.0F, 0.0F, -14.0F}, 2.8F, "earth"));
+
+  s.groups.push_back(building(QStringLiteral("fold_homes"),
+                              Game::Units::SpawnType::Home,
+                              Nation::RomanRepublic,
+                              1,
+                              3,
+                              {-16.0F, 0.0F, -20.0F},
+                              {6.4F, 0.0F, 0.0F},
+                              180.0F));
+  s.groups.push_back(building(QStringLiteral("fold_market"),
+                              Game::Units::SpawnType::Marketplace,
+                              Nation::RomanRepublic,
+                              1,
+                              1,
+                              {6.0F, 0.0F, -21.0F},
+                              {},
+                              180.0F));
+
+  auto shepherds = group(QStringLiteral("fold_shepherds"),
+                         Troop::Civilian,
+                         1,
+                         4,
+                         {-6.0F, 0.0F, -8.0F},
+                         1,
+                         {3.2F, 0.0F, 0.0F});
+  auto watch = group(QStringLiteral("fold_watch"),
+                     Troop::MountedKnight,
+                     1,
+                     3,
+                     {-26.0F, 0.0F, -14.0F},
+                     4,
+                     {3.0F, 0.0F, 0.0F});
+  s.groups.push_back(shepherds);
+  s.groups.push_back(watch);
+
+  s.resource_patches = {
+      patch("pine_tree", 10, {22.0F, 0.0F, 16.0F}, {3.6F, 0.0F, 3.4F}, 1.2F),
+      patch("pine_tree", 9, {-24.0F, 0.0F, 18.0F}, {3.6F, 0.0F, 3.4F}, 1.2F),
+      patch("olive_tree", 6, {-30.0F, 0.0F, -6.0F}, {0.0F, 0.0F, 4.2F}, 1.1F),
+      patch("boulder", 6, {16.0F, 0.0F, -8.0F}, {3.2F, 0.0F, 1.6F}, 1.1F),
+      patch("supply_cart", 2, {-10.0F, 0.0F, -16.0F}, {4.2F, 0.0F, 0.0F}, 1.0F),
+      patch("fire_camp", 1, {-2.0F, 0.0F, -18.0F}, {}, 0.9F),
+      patch("plant", 10, {2.0F, 0.0F, 6.0F}, {3.0F, 0.0F, 0.0F}, 0.95F),
+  };
+
+  s.wildlife = default_wildlife(20260812U);
+  s.wildlife.sheep.enabled = true;
+  s.wildlife.sheep.group_count = 4;
+  s.wildlife.sheep.group_size_min = 8;
+  s.wildlife.sheep.group_size_max = 9;
+  s.wildlife.sheep.roam_radius = 7.0F;
+  s.wildlife.sheep.spawn_areas = {{-6.0F, 2.0F, 5.0F},
+                                  {6.0F, 6.0F, 5.0F},
+                                  {-2.0F, 12.0F, 5.0F},
+                                  {10.0F, -2.0F, 5.0F}};
+  s.wildlife.wolves.enabled = true;
+  s.wildlife.wolves.group_count = 0;
+  s.wildlife.wolves.group_size_min = 5;
+  s.wildlife.wolves.group_size_max = 5;
+  s.wildlife.wolves.aggression = 1.0F;
+  s.wildlife.wolves.roam_radius = 22.0F;
+  s.wildlife.wolves.alert_radius = 12.0F;
+  s.wildlife.wolves.respawn = false;
+  s.wildlife.wolves.waves = {{6.0F, 5, {18.0F, 14.0F, 2.5F}, "east_pack"},
+                             {8.0F, 5, {-18.0F, 16.0F, 2.5F}, "west_pack"}};
+
+  s.steps = {
+      move_to(2.0F, QStringLiteral("fold_shepherds"), {-2.0F, 0.0F, -4.0F}),
+      move_to(18.0F, QStringLiteral("fold_watch"), {-2.0F, 0.0F, 2.0F}),
+      move_to(30.0F, QStringLiteral("fold_shepherds"), {-8.0F, 0.0F, -12.0F}),
+  };
+
+  s.expectations = {
+      expectation(Expect::GroupIsRendered, QStringLiteral("fold_watch")),
+      expectation(Expect::WildlifeGrazingObserved),
+      expectation(Expect::WildlifeHuntObserved),
+      expectation(Expect::WildlifeCasualtyObserved),
+  };
+  return s;
+}
+
 } // namespace
 
 auto build_trailer_definitions() -> std::vector<ArenaScenarioDefinition> {
@@ -1378,6 +2883,16 @@ auto build_trailer_definitions() -> std::vector<ArenaScenarioDefinition> {
   result.push_back(trailer_pov());
   result.push_back(trailer_barrow_night());
   result.push_back(trailer_flame_card());
+  result.push_back(trailer_works());
+  result.push_back(trailer_sanctuary());
+  result.push_back(trailer_gate_march());
+  result.push_back(trailer_highland());
+  result.push_back(trailer_forest_ambush());
+  result.push_back(trailer_bridge_defense());
+  result.push_back(trailer_siege_walls());
+  result.push_back(trailer_night_snow());
+  result.push_back(trailer_last_breath());
+  result.push_back(trailer_wolf_rain());
   return result;
 }
 

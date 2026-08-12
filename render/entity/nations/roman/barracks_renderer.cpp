@@ -158,14 +158,9 @@ auto build_barracks_archetype(BuildingState state,
   TemplateRecorder full_recorder;
   TemplateRecorder minimal_recorder;
   full_recorder.reset(144);
-  minimal_recorder.reset(72);
   record_variant(full_recorder, true);
-  record_variant(minimal_recorder, false);
-  return build_building_archetype_from_recorded_lods("roman_barracks",
-                                                     full_recorder.take_commands(),
-                                                     minimal_recorder.take_commands(),
-                                                     70.0F,
-                                                     state);
+  return build_building_archetype_from_recorded(
+      "roman_barracks", full_recorder.take_commands(), state);
 }
 
 auto barracks_archetype(BuildingState state,

@@ -82,7 +82,9 @@ build_lake_surface_mesh(const Game::Map::Lake& lake,
                         float tile_size,
                         float y_offset = 0.12F) -> std::unique_ptr<Render::GL::Mesh>;
 
-[[nodiscard]] auto build_bridge_mesh(const Game::Map::Bridge& bridge, float tile_size)
+[[nodiscard]] auto build_bridge_mesh(const Game::Map::Bridge& bridge,
+                                     float tile_size,
+                                     const Game::Map::TerrainHeightMap& height_map)
     -> std::unique_ptr<Render::GL::Mesh>;
 
 [[nodiscard]] auto build_riverbank_mesh(const Game::Map::RiverSegment& segment,
