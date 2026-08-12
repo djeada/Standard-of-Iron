@@ -29,7 +29,7 @@ void TerrainFeatureManager::configure(
   m_water->configure(river_segments, lakes, height_map);
   m_road->configure(road_segments, height_map);
   m_shoreline->configure(river_segments, lakes, height_map, biome_settings);
-  m_bridge->configure(bridges, tile_size);
+  m_bridge->configure(bridges, tile_size, height_map);
 }
 
 void TerrainFeatureManager::submit(Renderer& renderer, ResourceManager* resources) {

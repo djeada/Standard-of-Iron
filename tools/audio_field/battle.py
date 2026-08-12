@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from sources import Source as Layer
 
 ARCHIVE = "https://archive.org/download"
+COMMONS = "https://upload.wikimedia.org/wikipedia/commons"
 
 CC0 = "CC0 1.0"
 
@@ -54,7 +55,27 @@ HORN_VIKING = tdc(
     "HORNS/TRADITIONAL/HORNTrad-Samsung Galaxy Smartphone, "
     "CU_Viking War_Nicholas Judy_TDC.wav",
 )
-"""A blown war horn. The only period-plausible horn in the collection."""
+"""A blown war horn, and the only period-plausible one in the collection.
+
+It is also a phone recording, which is the catch: measured across its twelve
+blasts it carries 25-48 dB more energy at 1.2-3.8 kHz than below 300 Hz, so on
+its own it reads as rattle and breath rather than as a horn, which is why every
+horn cue here is built from HORN_HUNTING instead. Nothing shipped draws on this
+recording any more; it is kept named so the next person looking for a war horn
+in the CC0 libraries finds the measurement rather than repeating the mistake."""
+
+HORN_HUNTING = (
+    f"{COMMONS}/d/df/Hunting_horn_tone.ogg",
+    "Wikimedia Commons, 'File:Hunting horn tone.ogg', by Alon-De-Lon",
+)
+"""A real brass hunting horn, played as a series of notes.
+
+The first note, at 0:00.70, is the usable one: fundamental 185 Hz with the
+harmonic series falling away above it, which is the shape a horn has. Played at
+`speed` 0.70 it lands at 130 Hz -- a cornu register -- and lowpassed at 1.6 kHz
+its band energy runs 40 dB at the fundamental down to 9 dB at 1.6-4 kHz, which
+is the difference between a horn and a horn with a metallic edge. The later
+notes in the recording are at 496-500 Hz and are far too bright to use."""
 
 CROWD = tdc(
     "Crowds",
@@ -340,22 +361,36 @@ def horn(
     release: float = 0.35,
     notes: str = "",
 ) -> Cue:
-    """A single blown horn, optionally answered by more horns behind it."""
+    """A single blown horn, optionally answered by more horns behind it.
+
+    One recorded brass note, transposed down into the cornu register. Two
+    earlier versions of this are worth not repeating: HORN_VIKING alone is a
+    genuine war horn but a phone recording of one, with 25-48 dB more energy
+    above 1.2 kHz than below 300 Hz, so it reads as rattle rather than as a
+    horn; a transposed didgeridoo has the low end but its buzz lands a bright
+    band at 1.6-4 kHz that reads as metallic. A real horn played *down* has
+    neither problem, and needs no second layer to prop it up.
+
+    `start` is kept in the signature because the alert cues pass it, but the
+    usable note in this recording is fixed, so it is not read.
+    """
+    del start
     return Cue(
         path=path,
         seconds=seconds,
         layers=[
             Layer(
-                url=HORN_VIKING[0],
-                origin=HORN_VIKING[1],
+                url=HORN_HUNTING[0],
+                origin=HORN_HUNTING[1],
                 licence=CC0,
-                start=start,
+                start=0.70,
                 gain=gain,
-                highpass=70.0,
-                lowpass=lowpass,
+                speed=0.70,
+                highpass=55.0,
+                lowpass=lowpass or 1600.0,
                 ranks=ranks,
-                rank_falloff=0.6,
-                rank_lowpass=0.75,
+                rank_falloff=0.62,
+                rank_lowpass=0.8,
             ),
         ],
         attack=0.02,
@@ -754,21 +789,25 @@ CUES: dict[str, Cue] = {
                 rank_falloff=0.7,
             ),
             Layer(
-                url=HORN_VIKING[0],
-                origin=HORN_VIKING[1],
+                url=HORN_HUNTING[0],
+                origin=HORN_HUNTING[1],
                 licence=CC0,
-                start=0.30,
+                start=0.70,
                 gain=0.9,
-                highpass=70.0,
-                lowpass=2800.0,
+                speed=0.62,
+                highpass=55.0,
+                lowpass=1600.0,
                 ranks=(1.1,),
                 rank_falloff=0.65,
+                rank_lowpass=0.8,
             ),
         ],
         attack=0.3,
         release=1.0,
         notes="Horns over a held crowd. The army answering its own signal is "
-        "the sound of a line forming rather than one fighting.",
+        "the sound of a line forming rather than one fighting. Pitched to 115 "
+        "Hz rather than the 130 Hz the Roman horns sit at, so the two armies "
+        "do not answer in the same voice.",
     ),
     "archer_volley_many": Cue(
         path="sfx/combat/archer_volley_many",
@@ -1191,21 +1230,26 @@ CUES: dict[str, Cue] = {
         seconds=3.6,
         layers=[
             Layer(
-                url=HORN_VIKING[0],
-                origin=HORN_VIKING[1],
+                url=HORN_HUNTING[0],
+                origin=HORN_HUNTING[1],
                 licence=CC0,
-                start=0.30,
+                start=0.70,
                 gain=1.0,
-                highpass=70.0,
+                speed=0.70,
+                highpass=55.0,
+                lowpass=1600.0,
                 ranks=(0.74, 1.51),
-                rank_falloff=0.62,
-                rank_lowpass=0.7,
+                rank_falloff=0.66,
+                rank_lowpass=0.8,
             ),
         ],
         attack=0.02,
         release=0.7,
         notes="Three blasts, each further off and darker than the last: an "
-        "order being relayed down a line rather than one horn sounding.",
+        "order being relayed down a line rather than one horn sounding. One "
+        "real brass horn pitched down into the cornu register, and nothing "
+        "layered over it -- see the `horn` helper for the two brighter "
+        "constructions this replaced.",
     ),
     "elephant_charge_carthage": Cue(
         path="sfx/combat/elephant_charge_carthage",

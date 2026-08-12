@@ -243,7 +243,9 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
   bridge.width = 2.0F;
   bridge.height = 0.6F;
 
-  auto mesh = Render::Ground::build_bridge_mesh(bridge, 1.0F);
+  Game::Map::TerrainHeightMap ground(64, 64, 1.0F);
+  ground.build_from_features({});
+  auto mesh = Render::Ground::build_bridge_mesh(bridge, 1.0F, ground);
 
   ASSERT_NE(mesh, nullptr);
   EXPECT_FALSE(mesh->get_vertices().empty());
@@ -300,16 +302,31 @@ TEST(LinearFeatureGeometryTest, BuildsBridgeMeshFromSharedHelper) {
     }
   }
 
-  const float abutment = Game::Map::bridge_abutment_reach(
-      std::max(bridge.width, Game::Map::k_min_bridge_width));
-  EXPECT_NEAR(min_x, bridge.start.x() - abutment, 0.0001F);
-  EXPECT_NEAR(max_x, bridge.end.x() + abutment, 0.0001F);
+  const float drawn_width = std::max(bridge.width, Game::Map::k_min_bridge_width);
+  const float abutment = Game::Map::bridge_abutment_reach(drawn_width);
+  const float landing = std::max(abutment,
+                                 std::clamp(drawn_width * 0.26F, 0.55F, 1.05F) * 1.35F /
+                                     Game::Map::k_bridge_landing_grade);
+
+  EXPECT_NEAR(min_x, bridge.start.x() - landing, 0.0001F);
+  EXPECT_NEAR(max_x, bridge.end.x() + landing, 0.0001F);
+  EXPECT_GE(landing, abutment);
   ASSERT_TRUE(found_start_band);
   ASSERT_TRUE(found_mid_band);
   EXPECT_GT(start_width, bridge.width * 0.95F);
-  EXPECT_GE(start_deck_min_y, Game::Map::bridge_deck_world_y(bridge, 0.0F) - 0.021F);
   EXPECT_GT(mid_max_y, start_max_y + 0.05F);
   EXPECT_GT(visible_mid_parapet_top_vertices, 0);
+
+  float lowest_deck_y = std::numeric_limits<float>::max();
+  for (const auto& vertex : mesh->get_vertices()) {
+    if (vertex.normal[1] > 0.99F) {
+      lowest_deck_y = std::min(lowest_deck_y, vertex.position[1]);
+    }
+  }
+  const float ground_y = ground.get_base_height_at(bridge.start.x() - landing, 0.0F);
+  EXPECT_LE(lowest_deck_y - ground_y, 0.2F)
+      << "the deck's lowest point is " << (lowest_deck_y - ground_y)
+      << " m above the ground it lands on, which renders as a step";
 }
 
 TEST(LinearFeatureGeometryTest, BuildsSharedCapsForRiverJunctionsAndEndpoints) {

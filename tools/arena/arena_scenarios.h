@@ -209,6 +209,16 @@ inline constexpr char k_trailer_clash_id[] = "trailer_clash";
 inline constexpr char k_trailer_pov_id[] = "trailer_pov";
 inline constexpr char k_trailer_night_id[] = "trailer_barrow_night";
 inline constexpr char k_trailer_flame_card_id[] = "trailer_flame_card";
+inline constexpr char k_trailer_works_id[] = "trailer_works";
+inline constexpr char k_trailer_sanctuary_id[] = "trailer_sanctuary";
+inline constexpr char k_trailer_gate_march_id[] = "trailer_gate_march";
+inline constexpr char k_trailer_highland_id[] = "trailer_highland";
+inline constexpr char k_trailer_forest_ambush_id[] = "trailer_forest_ambush";
+inline constexpr char k_trailer_bridge_defense_id[] = "trailer_bridge_defense";
+inline constexpr char k_trailer_siege_walls_id[] = "trailer_siege_walls";
+inline constexpr char k_trailer_night_snow_id[] = "trailer_night_snow";
+inline constexpr char k_trailer_last_breath_id[] = "trailer_last_breath";
+inline constexpr char k_trailer_wolf_rain_id[] = "trailer_wolf_rain";
 
 inline constexpr char k_weather_rain_light_id[] = "weather_rain_light";
 inline constexpr char k_weather_rain_medium_id[] = "weather_rain_medium";

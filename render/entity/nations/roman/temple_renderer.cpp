@@ -54,8 +54,7 @@ void add_fluted_column(BuildingArchetypeDesc& desc,
                     QVector3D(x, base_y + 0.070F, z),
                     shaft_radius * 1.22F,
                     c.marble_shade,
-                    BuildingStateMask::All,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::All);
 
   desc.add_cylinder(QVector3D(x, base_y + 0.056F, z),
                     QVector3D(x, base_y + height - 0.06F, z),
@@ -66,21 +65,18 @@ void add_fluted_column(BuildingArchetypeDesc& desc,
     desc.add_box(QVector3D(x + flute * shaft_radius * 0.92F, base_y + height * 0.5F, z),
                  QVector3D(0.006F, height * 0.42F, shaft_radius * 0.55F),
                  c.marble_shade,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
     desc.add_box(QVector3D(x, base_y + height * 0.5F, z + flute * shaft_radius * 0.92F),
                  QVector3D(shaft_radius * 0.55F, height * 0.42F, 0.006F),
                  c.marble_shade,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
 
   desc.add_cylinder(QVector3D(x, base_y + height - 0.07F, z),
                     QVector3D(x, base_y + height - 0.035F, z),
                     shaft_radius * 1.16F,
                     c.marble_shade,
-                    k_building_state_mask_intact,
-                    BuildingLODMask::Full);
+                    k_building_state_mask_intact);
   desc.add_box(QVector3D(x, base_y + height - 0.012F, z),
                QVector3D(shaft_radius * 1.62F, 0.026F, shaft_radius * 1.62F),
                c.marble,
@@ -91,8 +87,7 @@ void add_fluted_column(BuildingArchetypeDesc& desc,
         QVector3D(x + side * shaft_radius * 1.30F, base_y + height - 0.020F, z),
         0.020F,
         c.marble_shade,
-        k_building_state_mask_intact,
-        BuildingLODMask::Full);
+        k_building_state_mask_intact);
   }
 }
 
@@ -114,14 +109,12 @@ void add_votive_altar(BuildingArchetypeDesc& desc,
   desc.add_box(base + QVector3D(0.0F, 0.220F, 0.0F),
                QVector3D(0.085F, 0.012F, 0.070F),
                c.soot,
-               k_building_state_mask_intact,
-               BuildingLODMask::Full);
+               k_building_state_mask_intact);
   desc.add_cone(base + QVector3D(0.0F, 0.228F, 0.0F),
                 base + QVector3D(0.0F, 0.330F, 0.0F),
                 0.052F,
                 c.flame,
-                BuildingStateMask::Normal,
-                BuildingLODMask::Full);
+                BuildingStateMask::Normal);
 }
 
 void add_roman_temple_ruin(BuildingArchetypeDesc& desc,
@@ -232,8 +225,7 @@ void add_roman_temple_ruin(BuildingArchetypeDesc& desc,
     desc.add_box(QVector3D(sx, podium_y + 0.010F, 0.30F),
                  QVector3D(0.26F, 0.008F, 0.22F),
                  ash,
-                 k_ruin,
-                 BuildingLODMask::Full);
+                 k_ruin);
   }
 }
 
@@ -247,7 +239,6 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   }
 
   BuildingArchetypeDesc desc("roman_temple");
-  desc.set_full_lod_max_distance(84.0F);
 
   desc.add_box(
       QVector3D(0.0F, 0.055F, 0.0F), QVector3D(1.38F, 0.055F, 1.10F), c.limestone_dark);
@@ -267,15 +258,13 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(0.0F, course_y, 1.035F),
                  QVector3D(1.29F, 0.006F, 0.006F),
                  c.mortar,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
   for (float const joint_x : {-0.90F, -0.30F, 0.30F, 0.90F}) {
     desc.add_box(QVector3D(joint_x, 0.170F, 0.0F),
                  QVector3D(0.007F, 0.052F, 1.035F),
                  c.mortar,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
 
   for (int step = 0; step < 6; ++step) {
@@ -335,14 +324,12 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(0.52F, course_y, side * 0.605F),
                    QVector3D(0.68F, 0.007F, 0.006F),
                    c.mortar,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
     }
     desc.add_box(QVector3D(1.225F, course_y, 0.0F),
                  QVector3D(0.006F, 0.007F, 0.58F),
                  c.mortar,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
 
   for (float const px : {-0.06F, 0.32F, 0.70F, 1.08F}) {
@@ -354,8 +341,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(px, podium_y + cella_h * 0.965F, side * 0.622F),
                    QVector3D(0.058F, cella_h * 0.030F, 0.024F),
                    c.marble,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
     }
   }
   for (float const pz : {-0.40F, 0.0F, 0.40F}) {
@@ -369,14 +355,12 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(0.52F, podium_y + cella_h * 0.895F, side * 0.612F),
                  QVector3D(0.665F, cella_h * 0.040F, 0.012F),
                  c.cloth_red,
-                 BuildingStateMask::Normal,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::Normal);
   }
   desc.add_box(QVector3D(1.232F, podium_y + cella_h * 0.895F, 0.0F),
                QVector3D(0.012F, cella_h * 0.040F, 0.565F),
                c.cloth_red,
-               BuildingStateMask::Normal,
-               BuildingLODMask::Full);
+               BuildingStateMask::Normal);
 
   desc.add_box(QVector3D(-0.185F, podium_y + cella_h * 0.34F, 0.0F),
                QVector3D(0.032F, cella_h * 0.34F, 0.30F),
@@ -393,8 +377,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(-0.222F, panel_y, leaf * 0.135F),
                    QVector3D(0.008F, 0.052F, 0.086F),
                    c.gold,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
     }
   }
   desc.add_box(QVector3D(-0.185F, podium_y + cella_h * 0.70F, 0.0F),
@@ -421,8 +404,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(-1.245F, entablature_y + 0.082F, z),
                  QVector3D(0.012F, 0.024F, 0.032F),
                  c.gold,
-                 k_building_state_mask_intact,
-                 BuildingLODMask::Full);
+                 k_building_state_mask_intact);
   }
   for (int triglyph = 0; triglyph < 13; ++triglyph) {
     float const x = -1.18F + static_cast<float>(triglyph) * 0.20F;
@@ -430,8 +412,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(x, entablature_y + 0.082F, side * 0.845F),
                    QVector3D(0.034F, 0.024F, 0.012F),
                    c.gold,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
     }
   }
 
@@ -445,8 +426,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                             float half_thick,
                             float base_inset,
                             float z_inset,
-                            const QVector3D& color,
-                            BuildingLODMask lod) {
+                            const QVector3D& color) {
       constexpr int k_bands = 24;
       float const usable_rise = pediment_rise - base_inset * 2.0F;
       for (int band = 0; band < k_bands; ++band) {
@@ -461,19 +441,13 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
         desc.add_box(QVector3D(x, pediment_y + (base + top) * 0.5F, 0.0F),
                      QVector3D(half_thick, (top - base) * 0.5F + 0.002F, half_z),
                      color,
-                     k_building_state_mask_intact,
-                     lod);
+                     k_building_state_mask_intact);
       }
     };
 
-    add_triangle(face_x, 0.034F, 0.0F, 0.0F, c.marble, BuildingLODMask::All);
+    add_triangle(face_x, 0.034F, 0.0F, 0.0F, c.marble);
 
-    add_triangle(face_x + face_dir * 0.028F,
-                 0.008F,
-                 0.105F,
-                 0.325F,
-                 field,
-                 BuildingLODMask::Full);
+    add_triangle(face_x + face_dir * 0.028F, 0.008F, 0.105F, 0.325F, field);
 
     float const rake_theta =
         std::atan2(pediment_rise, pediment_half_z) * 180.0F / 3.14159265F;
@@ -531,8 +505,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                              QVector3D(0.015F, 0.011F, slope_half_len),
                              QVector3D(side * theta_deg, 0.0F, 0.0F),
                              cover_tile,
-                             k_building_state_mask_intact,
-                             BuildingLODMask::Full);
+                             k_building_state_mask_intact);
       }
     }
   }
@@ -548,13 +521,11 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(x, pediment_y + 0.052F, side * 0.905F),
                    QVector3D(0.036F, 0.042F, 0.014F),
                    c.verdigris,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
       desc.add_box(QVector3D(x, pediment_y + 0.084F, side * 0.905F),
                    QVector3D(0.020F, 0.020F, 0.012F),
                    c.gold,
-                   BuildingStateMask::Normal,
-                   BuildingLODMask::Full);
+                   BuildingStateMask::Normal);
     }
   }
 
@@ -563,14 +534,12 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
       desc.add_box(QVector3D(face, pediment_y + 0.022F, corner * 0.86F),
                    QVector3D(0.062F, 0.050F, 0.062F),
                    c.marble,
-                   k_building_state_mask_intact,
-                   BuildingLODMask::Full);
+                   k_building_state_mask_intact);
       desc.add_cone(QVector3D(face, pediment_y + 0.062F, corner * 0.86F),
                     QVector3D(face, pediment_y + 0.205F, corner * 0.86F),
                     0.056F,
                     c.gold,
-                    BuildingStateMask::Normal,
-                    BuildingLODMask::Full);
+                    BuildingStateMask::Normal);
     }
   }
 
@@ -583,8 +552,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
         QVector3D(-1.33F, podium_y + 0.72F * height_multiplier, side * 0.60F),
         0.024F,
         c.bronze,
-        k_building_state_mask_intact,
-        BuildingLODMask::Full);
+        k_building_state_mask_intact);
     desc.add_palette_box(
         QVector3D(-1.33F, podium_y + 0.52F * height_multiplier, side * 0.60F),
         QVector3D(0.012F, 0.17F, 0.12F),
@@ -593,8 +561,7 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
     desc.add_box(QVector3D(-1.33F, podium_y + 0.75F * height_multiplier, side * 0.60F),
                  QVector3D(0.032F, 0.032F, 0.032F),
                  c.gold,
-                 BuildingStateMask::Normal,
-                 BuildingLODMask::Full);
+                 BuildingStateMask::Normal);
   }
 
   desc.add_palette_box(QVector3D(0.52F, podium_y + cella_h * 0.74F, 0.615F),

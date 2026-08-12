@@ -40,9 +40,6 @@ inline void emit_building_ornament(const BuildingArchetypeDesc& desc,
   };
 
   for (const auto& part : desc.parts()) {
-    if (!detailed && (part.lod & BuildingLODMask::Minimal) == BuildingLODMask::None) {
-      continue;
-    }
     if (!part_supports_state(part.states, filter_state)) {
       continue;
     }

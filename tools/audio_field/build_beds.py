@@ -76,6 +76,9 @@ def cut_layer(
 ) -> list[float]:
     """One layer, cut and shaped, as mono float samples at the mixer's rate."""
     chain = [f"aresample={sources.RATE}", "aformat=channel_layouts=mono"]
+    if source.speed != 1.0:
+        chain.append(f"asetrate={sources.RATE * source.speed:g}")
+        chain.append(f"aresample={sources.RATE}")
     if source.highpass:
         chain.append(f"highpass=f={source.highpass:g}:poles=2")
     if source.lowpass:
