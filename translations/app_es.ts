@@ -2175,10 +2175,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Postura</translation>
     </message>
     <message>
-        <source>%1 camera</source>
-        <translation>Cámara %1</translation>
-    </message>
-    <message>
         <source>Chase</source>
         <translation>Persecución</translation>
     </message>
@@ -4926,17 +4922,6 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
     <message>
         <source>BLADE  ·  X</source>
         <translation>HOJA  ·  X</translation>
-    </message>
-</context>
-<context>
-    <name>RpgTargetBar</name>
-    <message>
-        <source>BROKEN</source>
-        <translation>ROTA</translation>
-    </message>
-    <message>
-        <source>STAGGERED</source>
-        <translation>ATURDIDO</translation>
     </message>
 </context>
 <context>
