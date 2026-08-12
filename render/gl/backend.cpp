@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "backend/banner_pipeline.h"
-#include "backend/character_pipeline.h"
 #include "backend/combat_dust_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
@@ -35,6 +34,7 @@
 #include "backend/rain_pipeline.h"
 #include "backend/rigged_character_pipeline.h"
 #include "backend/rigged_cull_pipeline.h"
+#include "backend/shader_uniform_cache.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
@@ -179,24 +179,25 @@ auto Backend::initialize() -> bool {
   m_shader_cache->initialize_defaults();
   qInfo() << "Backend: ShaderCache created";
 
-  if (!create_pipeline(m_cylinder_pipeline, "CylinderPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_cylinder_pipeline, "CylinderPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_vegetation_pipeline, "VegetationPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_terrain_pipeline, "TerrainPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(m_terrain_pipeline, "TerrainPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_character_pipeline, "CharacterPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_shader_uniform_cache, "ShaderUniformCache", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_rigged_character_pipeline,
-                       "RiggedCharacterPipeline",
-                       this,
-                       m_shader_cache.get())) {
+  if (!create_subsystem(m_rigged_character_pipeline,
+                        "RiggedCharacterPipeline",
+                        this,
+                        m_shader_cache.get())) {
     return false;
   }
   m_rigged_cull_pipeline = std::make_unique<BackendPipelines::RiggedCullPipeline>();
@@ -205,43 +206,43 @@ auto Backend::initialize() -> bool {
     m_rigged_cull_pipeline.reset();
   }
 
-  if (!create_pipeline(m_water_pipeline, "WaterPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(m_water_pipeline, "WaterPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_effects_pipeline, "EffectsPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(m_effects_pipeline, "EffectsPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_primitive_batch_pipeline, "PrimitiveBatchPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_banner_pipeline, "BannerPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(m_banner_pipeline, "BannerPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_healing_beam_pipeline, "HealingBeamPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_healer_aura_pipeline, "HealerAuraPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_combat_dust_pipeline, "CombatDustPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_rain_pipeline, "RainPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(m_rain_pipeline, "RainPipeline", this, m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_ground_marker_pipeline, "GroundMarkerPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_mode_indicator_pipeline, "ModeIndicatorPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_mesh_instancing_pipeline, "MeshInstancingPipeline", m_shader_cache.get())) {
     return false;
   }

@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "banner_pipeline.h"
-#include "character_pipeline.h"
 #include "combat_dust_pipeline.h"
 #include "cylinder_pipeline.h"
 #include "effects_pipeline.h"
@@ -38,6 +37,7 @@
 #include "render/primitive_batch.h"
 #include "render/rain_gpu.h"
 #include "rigged_character_pipeline.h"
+#include "shader_uniform_cache.h"
 #include "terrain_pipeline.h"
 #include "vegetation_pipeline.h"
 #include "water_pipeline.h"

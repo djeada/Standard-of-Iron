@@ -30,7 +30,6 @@ namespace Render::GL::BackendPipelines {
 class CylinderPipeline;
 class VegetationPipeline;
 class TerrainPipeline;
-class CharacterPipeline;
 class RiggedCharacterPipeline;
 class RiggedCullPipeline;
 class WaterPipeline;
@@ -47,6 +46,8 @@ class MeshInstancingPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
+
+class ShaderUniformCache;
 
 class Backend : public IRenderBackend,
                 public IFrameEnvironment,
@@ -220,7 +221,6 @@ private:
     visit(m_cylinder_pipeline);
     visit(m_vegetation_pipeline);
     visit(m_terrain_pipeline);
-    visit(m_character_pipeline);
     visit(m_rigged_character_pipeline);
     visit(m_rigged_cull_pipeline);
     visit(m_water_pipeline);
@@ -236,12 +236,12 @@ private:
     visit(m_mesh_instancing_pipeline);
   }
 
-  template <typename Pipeline, typename... Args>
-  auto create_pipeline(std::unique_ptr<Pipeline>& slot,
-                       const char* name,
-                       Args&&... args) -> bool {
+  template <typename Subsystem, typename... Args>
+  auto create_subsystem(std::unique_ptr<Subsystem>& slot,
+                        const char* name,
+                        Args&&... args) -> bool {
     qInfo() << "Backend: Creating" << name << "...";
-    slot = std::make_unique<Pipeline>(std::forward<Args>(args)...);
+    slot = std::make_unique<Subsystem>(std::forward<Args>(args)...);
     if (!slot->initialize()) {
       qCritical() << "Backend::initialize() FAILED:" << name;
       return false;
@@ -259,7 +259,7 @@ private:
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;
   std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetation_pipeline;
   std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrain_pipeline;
-  std::unique_ptr<BackendPipelines::CharacterPipeline> m_character_pipeline;
+  std::unique_ptr<ShaderUniformCache> m_shader_uniform_cache;
   std::unique_ptr<BackendPipelines::RiggedCharacterPipeline>
       m_rigged_character_pipeline;
   std::unique_ptr<BackendPipelines::RiggedCullPipeline> m_rigged_cull_pipeline;
