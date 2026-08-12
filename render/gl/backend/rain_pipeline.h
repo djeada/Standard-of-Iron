@@ -6,11 +6,11 @@
 #include <vector>
 
 #include "pipeline_interface.h"
+#include "render/gl/frame_environment.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
 class ShaderCache;
-class Backend;
 class Camera;
 struct RainBatchParams;
 
@@ -25,8 +25,9 @@ struct WeatherParticleGpu {
 
 class RainPipeline final : public IPipeline {
 public:
-  explicit RainPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
+  explicit RainPipeline(const GL::IFrameEnvironment* frame_environment,
+                        GL::ShaderCache* shader_cache)
+      : m_frame_environment(frame_environment)
       , m_shader_cache(shader_cache) {}
   ~RainPipeline() override { shutdown(); }
 
@@ -44,7 +45,7 @@ private:
   void shutdown_geometry();
   void generate_particles();
 
-  GL::Backend* m_backend = nullptr;
+  const GL::IFrameEnvironment* m_frame_environment = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_rain_shader = nullptr;
 

@@ -5,16 +5,14 @@
 
 namespace Render::GL {
 class ShaderCache;
-class Backend;
 class Mesh;
 
 namespace BackendPipelines {
 
 class BannerPipeline final : public IPipeline {
 public:
-  explicit BannerPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit BannerPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~BannerPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -43,7 +41,6 @@ public:
   BannerUniforms m_banner_uniforms;
 
 private:
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
 
   std::unique_ptr<GL::Mesh> m_banner_mesh16;

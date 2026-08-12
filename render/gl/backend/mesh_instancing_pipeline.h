@@ -13,7 +13,6 @@
 #include "render/gl/shader_cache.h"
 
 namespace Render::GL {
-class Backend;
 class Mesh;
 class Texture;
 } // namespace Render::GL
@@ -29,7 +28,7 @@ struct MeshInstanceGpu {
 
 class MeshInstancingPipeline final : public IPipeline {
 public:
-  explicit MeshInstancingPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache);
+  explicit MeshInstancingPipeline(GL::ShaderCache* shader_cache);
   ~MeshInstancingPipeline() override;
 
   auto initialize() -> bool override;
@@ -59,7 +58,6 @@ private:
   void setup_instance_attributes();
   auto upload_instances(const MeshInstanceGpu* data, std::size_t count) -> std::size_t;
 
-  GL::Backend* m_backend{nullptr};
   GL::ShaderCache* m_shader_cache{nullptr};
   bool m_initialized{false};
 

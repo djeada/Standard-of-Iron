@@ -5,15 +5,13 @@
 
 namespace Render::GL {
 class ShaderCache;
-class Backend;
 
 namespace BackendPipelines {
 
 class EffectsPipeline final : public IPipeline {
 public:
-  explicit EffectsPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit EffectsPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~EffectsPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -55,7 +53,6 @@ public:
   GridUniforms m_grid_uniforms;
 
 private:
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_basic_uniforms();

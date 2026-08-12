@@ -5,15 +5,13 @@
 
 namespace Render::GL {
 class ShaderCache;
-class Backend;
 
 namespace BackendPipelines {
 
 class WaterPipeline final : public IPipeline {
 public:
-  explicit WaterPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit WaterPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~WaterPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -101,7 +99,6 @@ public:
   RoadUniforms m_road_uniforms;
 
 private:
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_water_uniforms();

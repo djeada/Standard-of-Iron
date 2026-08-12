@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cstring>
 
-#include "render/gl/backend.h"
 #include "render/gl/mesh.h"
 #include "render/gl/texture.h"
 
@@ -22,10 +21,8 @@ constexpr GLuint k_instance_model_col2_loc = 5;
 constexpr GLuint k_instance_color_alpha_loc = 6;
 } // namespace
 
-MeshInstancingPipeline::MeshInstancingPipeline(GL::Backend* backend,
-                                               GL::ShaderCache* shader_cache)
-    : m_backend(backend)
-    , m_shader_cache(shader_cache) {
+MeshInstancingPipeline::MeshInstancingPipeline(GL::ShaderCache* shader_cache)
+    : m_shader_cache(shader_cache) {
   m_instances.reserve(k_initial_capacity);
 }
 

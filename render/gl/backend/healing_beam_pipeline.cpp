@@ -7,15 +7,12 @@
 #include <cmath>
 #include <numbers>
 
-#include "game/systems/healing_beam.h"
-#include "game/systems/healing_beam_system.h"
 #include "gl_error_check.h"
-#include "render/gl/backend.h"
 #include "render/gl/mesh.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/state_scopes.h"
-#include "scene/camera.h"
+#include "static_mesh_upload.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -135,128 +132,14 @@ auto HealingBeamPipeline::create_beam_geometry() -> bool {
     }
   }
 
-  glGenVertexArrays(1, &m_mesh.vao);
-  if (!check_gl_error("glGenVertexArrays") || m_mesh.vao == 0) {
-    return false;
-  }
-
-  glBindVertexArray(m_mesh.vao);
-  if (!check_gl_error("glBindVertexArray")) {
-    glDeleteVertexArrays(1, &m_mesh.vao);
-    m_mesh.vao = 0;
-    return false;
-  }
-
-  glGenBuffers(1, &m_mesh.vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_mesh.vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("vertex buffer")) {
-    release_geometry();
-    return false;
-  }
-
-  glGenBuffers(1, &m_mesh.index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mesh.index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("index buffer")) {
-    release_geometry();
-    return false;
-  }
-
-  m_mesh.index_count = static_cast<GLsizei>(indices.size());
-
-  glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(Vertex),
-                        reinterpret_cast<void*>(offsetof(Vertex, position)));
-
-  glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(Vertex),
-                        reinterpret_cast<void*>(offsetof(Vertex, normal)));
-
-  glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord,
-                        ComponentCount::vec2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(Vertex),
-                        reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
-
-  glBindVertexArray(0);
-
-  if (!check_gl_error("vertex attributes")) {
-    release_geometry();
-    return false;
-  }
-
-  return true;
-}
-
-void HealingBeamPipeline::render(const Game::Systems::HealingBeamSystem* beam_system,
-                                 const Camera& cam,
-                                 float animation_time) {
-  if (!is_initialized()) {
-    return;
-  }
-  if (beam_system == nullptr || beam_system->get_beam_count() == 0) {
-    return;
-  }
-
-  clear_gl_errors();
-
-  CullFaceScope const cull(false);
-  DepthTestScope const depth_test(true);
-  DepthMaskScope const depth_mask(false);
-  BlendScope const blend(true);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-  m_beam_shader->use();
-  glBindVertexArray(m_mesh.vao);
-
-  for (const auto& beam : beam_system->get_beams()) {
-    if (beam && beam->is_active()) {
-      render_beam(*beam, cam, animation_time);
-    }
-  }
-
-  glBindVertexArray(0);
-}
-
-void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam& beam,
-                                      const Camera& cam,
-                                      float animation_time) {
-  QMatrix4x4 mvp = cam.get_view_projection_matrix();
-
-  float progress = std::clamp(beam.get_progress(), 0.0F, 1.0F);
-  float alpha = std::clamp(beam.get_intensity(), 0.0F, 1.0F);
-
-  if (alpha < 0.01F) {
-    return;
-  }
-
-  m_beam_shader->set_uniform(m_uniforms.mvp, mvp);
-  m_beam_shader->set_uniform(m_uniforms.time, animation_time);
-  m_beam_shader->set_uniform(m_uniforms.progress, progress);
-  m_beam_shader->set_uniform(m_uniforms.start_pos, beam.get_start());
-  m_beam_shader->set_uniform(m_uniforms.end_pos, beam.get_end());
-  m_beam_shader->set_uniform(m_uniforms.beam_width, beam.get_beam_width());
-  m_beam_shader->set_uniform(m_uniforms.heal_color, beam.get_color());
-  m_beam_shader->set_uniform(m_uniforms.alpha, alpha);
-
-  glDrawElements(GL_TRIANGLES, m_mesh.index_count, GL_UNSIGNED_INT, nullptr);
+  return upload_static_effect_mesh(*this,
+                                   m_mesh,
+                                   "HealingBeamPipeline beam",
+                                   vertices.data(),
+                                   vertices.size(),
+                                   sizeof(Vertex),
+                                   k_position_normal_texcoord_layout,
+                                   indices);
 }
 
 void HealingBeamPipeline::render_single_beam(const QVector3D& start,

@@ -9,7 +9,6 @@
 #include <cstddef>
 
 #include "gl/shader_cache.h"
-#include "render/gl/backend.h"
 #include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/primitives.h"

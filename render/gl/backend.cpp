@@ -79,47 +79,32 @@ Backend::Backend(ShaderQuality quality)
 }
 
 Backend::~Backend() {
-
   if (QOpenGLContext::currentContext() == nullptr) {
 
-    (void)m_cylinder_pipeline.release();
-    (void)m_vegetation_pipeline.release();
-    (void)m_terrain_pipeline.release();
-    (void)m_character_pipeline.release();
-    (void)m_rigged_character_pipeline.release();
-    (void)m_water_pipeline.release();
-    (void)m_effects_pipeline.release();
-    (void)m_mesh_instancing_pipeline.release();
-  } else {
-
-    if (m_frame_ubo != 0) {
-      glDeleteBuffers(1, &m_frame_ubo);
-      m_frame_ubo = 0;
-    }
-    if (m_environment_lighting_ubo != 0) {
-      glDeleteBuffers(1, &m_environment_lighting_ubo);
-      m_environment_lighting_ubo = 0;
-    }
-    if (m_local_lighting_ubo != 0) {
-      glDeleteBuffers(1, &m_local_lighting_ubo);
-      m_local_lighting_ubo = 0;
-    }
-    release_directional_shadow_resources();
-    if (m_directional_shadow_ubo != 0) {
-      glDeleteBuffers(1, &m_directional_shadow_ubo);
-      m_directional_shadow_ubo = 0;
-    }
-
-    SharedGeometryCache::instance().release_all();
-    m_cylinder_pipeline.reset();
-    m_vegetation_pipeline.reset();
-    m_terrain_pipeline.reset();
-    m_character_pipeline.reset();
-    m_rigged_character_pipeline.reset();
-    m_water_pipeline.reset();
-    m_effects_pipeline.reset();
-    m_mesh_instancing_pipeline.reset();
+    for_each_pipeline_slot([](auto& slot) { (void)slot.release(); });
+    return;
   }
+
+  if (m_frame_ubo != 0) {
+    glDeleteBuffers(1, &m_frame_ubo);
+    m_frame_ubo = 0;
+  }
+  if (m_environment_lighting_ubo != 0) {
+    glDeleteBuffers(1, &m_environment_lighting_ubo);
+    m_environment_lighting_ubo = 0;
+  }
+  if (m_local_lighting_ubo != 0) {
+    glDeleteBuffers(1, &m_local_lighting_ubo);
+    m_local_lighting_ubo = 0;
+  }
+  release_directional_shadow_resources();
+  if (m_directional_shadow_ubo != 0) {
+    glDeleteBuffers(1, &m_directional_shadow_ubo);
+    m_directional_shadow_ubo = 0;
+  }
+
+  SharedGeometryCache::instance().release_all();
+  for_each_pipeline_slot([](auto& slot) { slot.reset(); });
 }
 
 auto Backend::initialize() -> bool {
@@ -201,12 +186,11 @@ auto Backend::initialize() -> bool {
           m_vegetation_pipeline, "VegetationPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_terrain_pipeline, "TerrainPipeline", this, m_shader_cache.get())) {
+  if (!create_pipeline(m_terrain_pipeline, "TerrainPipeline", m_shader_cache.get())) {
     return false;
   }
   if (!create_pipeline(
-          m_character_pipeline, "CharacterPipeline", this, m_shader_cache.get())) {
+          m_character_pipeline, "CharacterPipeline", m_shader_cache.get())) {
     return false;
   }
   if (!create_pipeline(m_rigged_character_pipeline,
@@ -221,31 +205,29 @@ auto Backend::initialize() -> bool {
     m_rigged_cull_pipeline.reset();
   }
 
-  if (!create_pipeline(m_water_pipeline, "WaterPipeline", this, m_shader_cache.get())) {
+  if (!create_pipeline(m_water_pipeline, "WaterPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_effects_pipeline, "EffectsPipeline", this, m_shader_cache.get())) {
+  if (!create_pipeline(m_effects_pipeline, "EffectsPipeline", m_shader_cache.get())) {
     return false;
   }
   if (!create_pipeline(
           m_primitive_batch_pipeline, "PrimitiveBatchPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_banner_pipeline, "BannerPipeline", this, m_shader_cache.get())) {
+  if (!create_pipeline(m_banner_pipeline, "BannerPipeline", m_shader_cache.get())) {
     return false;
   }
   if (!create_pipeline(
-          m_healing_beam_pipeline, "HealingBeamPipeline", this, m_shader_cache.get())) {
+          m_healing_beam_pipeline, "HealingBeamPipeline", m_shader_cache.get())) {
     return false;
   }
   if (!create_pipeline(
-          m_healer_aura_pipeline, "HealerAuraPipeline", this, m_shader_cache.get())) {
+          m_healer_aura_pipeline, "HealerAuraPipeline", m_shader_cache.get())) {
     return false;
   }
   if (!create_pipeline(
-          m_combat_dust_pipeline, "CombatDustPipeline", this, m_shader_cache.get())) {
+          m_combat_dust_pipeline, "CombatDustPipeline", m_shader_cache.get())) {
     return false;
   }
   if (!create_pipeline(m_rain_pipeline, "RainPipeline", this, m_shader_cache.get())) {
@@ -255,16 +237,12 @@ auto Backend::initialize() -> bool {
           m_ground_marker_pipeline, "GroundMarkerPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_mode_indicator_pipeline,
-                       "ModeIndicatorPipeline",
-                       this,
-                       m_shader_cache.get())) {
+  if (!create_pipeline(
+          m_mode_indicator_pipeline, "ModeIndicatorPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_mesh_instancing_pipeline,
-                       "MeshInstancingPipeline",
-                       this,
-                       m_shader_cache.get())) {
+  if (!create_pipeline(
+          m_mesh_instancing_pipeline, "MeshInstancingPipeline", m_shader_cache.get())) {
     return false;
   }
 

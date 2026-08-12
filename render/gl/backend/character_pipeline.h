@@ -7,15 +7,13 @@
 
 namespace Render::GL {
 class ShaderCache;
-class Backend;
 
 namespace BackendPipelines {
 
 class CharacterPipeline final : public IPipeline {
 public:
-  explicit CharacterPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit CharacterPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~CharacterPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -51,7 +49,6 @@ public:
   BasicUniforms* resolve_uniforms(GL::Shader* shader);
 
 private:
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   std::unordered_map<GL::Shader*, BasicUniforms> m_uniform_cache;
   GL::Shader* m_last_resolved_shader = nullptr;

@@ -6,7 +6,6 @@
 
 #include <utility>
 
-#include "render/gl/backend.h"
 #include "render/gl/shader_cache.h"
 
 namespace Render::GL::BackendPipelines {

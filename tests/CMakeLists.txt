@@ -216,6 +216,7 @@ add_executable(
     render/persistent_render_registry_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
+    render/effect_batch_dispatch_test.cpp
     render/spark_direction_test.cpp
     render/linear_feature_geometry_test.cpp
     render/road_network_geometry_test.cpp
