@@ -120,14 +120,14 @@ void main() {
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.72;
+  vec3 illumination = soi_surface_lighting_scaled(N, 0.72);
   float ao = mix(0.70, 1.0, hemi);
   float metal_mask = max(blade_mask, brass_mask);
   float spec_power = mix(24.0, 76.0, blade_mask);
   float specular = pow(max(dot(N, H), 0.0), spec_power) * mix(0.035, 0.48, metal_mask);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.05;
 
-  vec3 color = albedo * illumination * ao * environment_exposure();
+  vec3 color = albedo * illumination * ao;
   color += sun * specular;
   color += sky * rim;
   color += color * local_lighting(v_world_pos, normalize(v_normal));

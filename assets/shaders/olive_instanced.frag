@@ -82,8 +82,8 @@ void main() {
   vec3 sun = environment_primary_color() * environment_primary_intensity();
   vec3 sky = environment_sky_color();
   vec3 illumination =
-      environment_ambient_light(geometric_normal) * mix(1.0, 1.30, v_foliage_mask) +
-      sun * mix(diffuse * 0.72, wrap, v_foliage_mask);
+      environment_ambient_light(geometric_normal) * mix(1.0, 1.06, v_foliage_mask) +
+      soi_key_light(geometric_normal) * mix(0.72, 1.0, v_foliage_mask);
 
   float silver_show =
       smoothstep(0.22, 0.75, 1.0 - diffuse) * smoothstep(0.30, 0.80, leaf_clump);

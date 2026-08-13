@@ -30,6 +30,7 @@
 #include "backend/healing_beam_pipeline.h"
 #include "backend/mesh_instancing_pipeline.h"
 #include "backend/mode_indicator_pipeline.h"
+#include "backend/post_process_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/rain_pipeline.h"
 #include "backend/rigged_character_pipeline.h"
@@ -246,6 +247,10 @@ auto Backend::initialize() -> bool {
           m_mesh_instancing_pipeline, "MeshInstancingPipeline", m_shader_cache.get())) {
     return false;
   }
+  if (!create_subsystem(
+          m_post_process_pipeline, "PostProcessPipeline", m_shader_cache.get())) {
+    return false;
+  }
 
   qInfo() << "Backend: Loading basic shaders...";
   m_basic_shader = m_shader_cache->get(QStringLiteral("basic"));
@@ -296,6 +301,9 @@ auto Backend::banner_shader() const -> Shader* {
 void Backend::begin_frame() {
   if (m_viewport_width > 0 && m_viewport_height > 0) {
     glViewport(0, 0, m_viewport_width, m_viewport_height);
+  }
+  if (m_post_process_pipeline != nullptr) {
+    m_post_process_pipeline->begin_scene(m_viewport_width, m_viewport_height);
   }
   glClearColor(m_clear_color[red],
                m_clear_color[green],
@@ -795,7 +803,7 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
   }
 }
 
-void Backend::execute(const DrawQueue& queue, const Camera& cam) {
+void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_last_playback_stats = {};
   m_last_playback_stats.submitted_commands = queue.size();
   m_last_playback_stats.prepared_batches = queue.prepared_batches().size();
@@ -812,6 +820,10 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   const QMatrix4x4 view_proj = projection * view;
   upload_frame_uniform_buffers(view_proj, queue, cam);
   render_directional_shadows(queue, cam);
+  if (m_post_process_pipeline != nullptr && m_post_process_pipeline->is_capturing()) {
+    m_post_process_pipeline->set_depth_range(cam.get_near(), cam.get_far());
+    m_post_process_pipeline->draw_sky(view_proj, cam.get_position());
+  }
   const float banner_wind_strength = 0.8F + 0.2F * std::sin(m_animation_time * 0.5F);
 
   m_last_bound_shader = nullptr;
@@ -922,6 +934,13 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
 
   m_frame_tracker.mark_complete();
   m_frame_tracker.end_frame();
+}
+
+void Backend::execute(const DrawQueue& queue, const Camera& cam) {
+  execute_scene(queue, cam);
+  if (m_post_process_pipeline != nullptr) {
+    m_post_process_pipeline->resolve_scene();
+  }
 }
 
 } // namespace Render::GL

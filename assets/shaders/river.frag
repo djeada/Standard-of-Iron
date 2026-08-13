@@ -164,5 +164,5 @@ void main() {
       atmospheric_fog_amount(view_distance, u_fog_start, u_fog_end, 1.0, 0.0);
   color = mix(color, environment_fog_color(), fog_amount);
 
-  frag_color = vec4(saturate(color), 1.0);
+  frag_color = vec4(color, 1.0);
 }

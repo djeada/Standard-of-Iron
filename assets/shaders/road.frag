@@ -212,5 +212,5 @@ void main() {
 
   lit_color += lit_color * local_lighting(v_world_pos, normalize(v_normal));
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
-  frag_color = vec4(clamp(lit_color, 0.0, 1.0), u_alpha * edge_alpha);
+  frag_color = vec4(lit_color, u_alpha * edge_alpha);
 }

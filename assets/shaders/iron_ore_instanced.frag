@@ -112,7 +112,7 @@ void main() {
   float ao = clamp(N.y * 0.45 + 0.68, 0.28, 1.0);
 
   vec3 ambient = environment_ambient_light(N);
-  vec3 direct = sun_color * ndotl * 0.82;
+  vec3 direct = soi_key_light(N) * 0.82;
 
   float spec_base = max(dot(N, H), 0.0);
   float ore_spec = pow(spec_base, 42.0) * (0.08 + vein_wide * 0.35);

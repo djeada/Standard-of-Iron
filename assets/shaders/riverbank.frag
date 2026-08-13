@@ -354,5 +354,5 @@ void main() {
 
   color += color * local_lighting(world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, world_pos, v_normal);
-  frag_color = vec4(saturate(color), segment_visibility * edge_fade);
+  frag_color = vec4(color, segment_visibility * edge_fade);
 }

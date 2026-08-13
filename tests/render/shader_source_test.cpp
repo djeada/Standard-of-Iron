@@ -264,6 +264,51 @@ TEST(ShaderSource, EveryWorldLightingVariantUsesSharedEnvironmentBlock) {
   }
 }
 
+TEST(ShaderSource, WorldShadersLeaveGradingToThePostProcessPass) {
+  const auto root = find_repo_root();
+  const std::vector<std::string> shaders{
+      "basic.frag",
+      "basic_instanced.frag",
+      "character_skinned.frag",
+      "character_skinned_instanced.frag",
+      "terrain_chunk.frag",
+      "ground_plane.frag",
+      "stone_instanced.frag",
+      "pine_instanced.frag",
+      "olive_instanced.frag",
+      "road.frag",
+      "river.frag",
+      "riverbank.frag",
+      "bridge.frag",
+  };
+
+  for (const auto& name : shaders) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_EQ(source.find("soi_finalize("), std::string::npos)
+        << name << " must write linear radiance; the post pass owns the tone curve";
+  }
+
+  const auto grade =
+      read_text(root / "assets" / "shaders" / "include" / "tonemap.glsl");
+  ASSERT_FALSE(grade.empty());
+  EXPECT_NE(grade.find("vec3 soi_tonemap(vec3 linear_color)"), std::string::npos);
+  EXPECT_NE(grade.find("vec3 soi_grade(vec3 mapped_color)"), std::string::npos);
+  EXPECT_NE(grade.find("vec3 soi_finalize(vec3 linear_color)"), std::string::npos);
+  EXPECT_NE(grade.find("k_soi_grade_shadow_lift"), std::string::npos);
+
+  const auto composite = read_text(root / "assets" / "shaders" / "post_composite.frag");
+  ASSERT_FALSE(composite.empty());
+  EXPECT_NE(composite.find("#include \"tonemap.glsl\""), std::string::npos);
+  EXPECT_NE(composite.find("soi_finalize(combined)"), std::string::npos);
+  EXPECT_NE(composite.find("u_bloom"), std::string::npos);
+  EXPECT_NE(composite.find("u_vignette_strength"), std::string::npos);
+
+  const auto fxaa = read_text(root / "assets" / "shaders" / "post_fxaa.frag");
+  ASSERT_FALSE(fxaa.empty());
+  EXPECT_NE(fxaa.find("u_inverse_resolution"), std::string::npos);
+}
+
 TEST(ShaderSource, GeneralWorldShadersDoNotHardCodeDaylightColors) {
   const auto root = find_repo_root();
   for (const auto* name : {"basic.frag",

@@ -448,8 +448,16 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
 
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
-  fmt.setSamples(0);
-  return new QOpenGLFramebufferObject(size, fmt);
+  int const requested_samples =
+      Render::GraphicsSettings::instance().presentation().msaa_samples;
+  fmt.setSamples(requested_samples);
+  auto* target = new QOpenGLFramebufferObject(size, fmt);
+  if (requested_samples > 0 && !target->isValid()) {
+    delete target;
+    fmt.setSamples(0);
+    target = new QOpenGLFramebufferObject(size, fmt);
+  }
+  return target;
 }
 
 void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {

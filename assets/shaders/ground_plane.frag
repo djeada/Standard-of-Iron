@@ -282,5 +282,5 @@ void main() {
       view_distance, u_fog_start, u_fog_end, 0.75, 0.55 * horizon_fog);
   lit = mix(lit, environment_fog_color(), fog_amount);
 
-  frag_color = vec4(clamp(lit, 0.0, 1.0), 1.0);
+  frag_color = vec4(lit, 1.0);
 }
