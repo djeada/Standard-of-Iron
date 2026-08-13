@@ -169,32 +169,30 @@ auto select_assault_target(const AISnapshot& snapshot,
 
 } // namespace
 
-void AssaultBehavior::forget_advance_progress(float objective_x, float objective_z) {
-  if (m_has_tracked_objective && distance_squared(objective_x,
-                                                  0.0F,
-                                                  objective_z,
-                                                  m_tracked_objective_x,
-                                                  0.0F,
-                                                  m_tracked_objective_z) <=
-                                     k_objective_drift * k_objective_drift) {
-    return;
-  }
-  m_advance_progress.clear();
-  m_tracked_objective_x = objective_x;
-  m_tracked_objective_z = objective_z;
-  m_has_tracked_objective = true;
-}
-
 auto AssaultBehavior::advance_is_stalled(Engine::Core::EntityID unit_id,
+                                         float objective_x,
+                                         float objective_z,
                                          float distance_to_objective,
                                          float game_time) -> bool {
   auto [entry, inserted] = m_advance_progress.try_emplace(
-      unit_id, AdvanceProgress{distance_to_objective, game_time});
+      unit_id,
+      AdvanceProgress{
+          distance_to_objective, game_time, game_time, objective_x, objective_z});
   if (inserted) {
     return false;
   }
 
   auto& progress = entry->second;
+  progress.last_observed_time = game_time;
+  if (distance_squared(objective_x,
+                       0.0F,
+                       objective_z,
+                       progress.objective_x,
+                       0.0F,
+                       progress.objective_z) > k_objective_drift * k_objective_drift) {
+    progress = {distance_to_objective, game_time, game_time, objective_x, objective_z};
+    return false;
+  }
   if (distance_to_objective < progress.best_distance - k_advance_gain_epsilon) {
     progress.best_distance = distance_to_objective;
     progress.last_gain_time = game_time;
@@ -237,6 +235,10 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
   center_z *= scale;
 
   const auto* objective = select_assault_target(snapshot, center_x, center_z, true);
+  const auto marching =
+      std::find_if(assault_units.begin(),
+                   assault_units.end(),
+                   [](const EntitySnapshot* unit) { return unit->has_march_target; });
 
   float objective_x = 0.0F;
   float objective_z = 0.0F;
@@ -244,11 +246,6 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
     objective_x = objective->pos_x;
     objective_z = objective->pos_z;
   } else {
-
-    const auto marching =
-        std::find_if(assault_units.begin(),
-                     assault_units.end(),
-                     [](const EntitySnapshot* unit) { return unit->has_march_target; });
     if (marching != assault_units.end()) {
       objective_x = (*marching)->march_target_x;
       objective_z = (*marching)->march_target_z;
@@ -262,31 +259,34 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
     }
   }
 
-  forget_advance_progress(objective_x, objective_z);
+  const float advance_goal_x =
+      marching != assault_units.end() ? (*marching)->march_target_x : objective_x;
+  const float advance_goal_z =
+      marching != assault_units.end() ? (*marching)->march_target_z : objective_z;
 
   bool advance_stalled = false;
-  std::unordered_set<Engine::Core::EntityID> advancing_ids;
-  advancing_ids.reserve(assault_units.size());
   for (const auto* unit : assault_units) {
     const float distance_to_objective = std::sqrt(distance_squared(
-        unit->pos_x, 0.0F, unit->pos_z, objective_x, 0.0F, objective_z));
-    if (distance_to_objective <= k_engage_radius) {
-      continue;
-    }
-    advancing_ids.insert(unit->id);
-    if (advance_is_stalled(unit->id, distance_to_objective, snapshot.game_time)) {
+        unit->pos_x, 0.0F, unit->pos_z, advance_goal_x, 0.0F, advance_goal_z));
+    if (advance_is_stalled(unit->id,
+                           advance_goal_x,
+                           advance_goal_z,
+                           distance_to_objective,
+                           snapshot.game_time)) {
       advance_stalled = true;
     }
   }
-  std::erase_if(m_advance_progress, [&advancing_ids](const auto& entry) {
-    return !advancing_ids.contains(entry.first);
+  std::erase_if(m_advance_progress, [&snapshot](const auto& entry) {
+    return snapshot.game_time - entry.second.last_observed_time > 30.0F;
   });
 
   const ContactSnapshot* target = objective;
-  const auto* breach =
-      advance_stalled
-          ? select_breach_target(snapshot, center_x, center_z, objective_x, objective_z)
-          : nullptr;
+  const auto* lane_barrier = select_breach_target(
+      snapshot, center_x, center_z, advance_goal_x, advance_goal_z);
+  const bool hostile_gate_ahead =
+      lane_barrier != nullptr &&
+      lane_barrier->spawn_type == Game::Units::SpawnType::WallGate;
+  const auto* breach = hostile_gate_ahead || advance_stalled ? lane_barrier : nullptr;
   if (breach != nullptr) {
     target = breach;
   }
@@ -305,8 +305,8 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
   float lateral_x = 0.0F;
   float lateral_z = 0.0F;
   if (breaching) {
-    float outward_x = center_x - objective_x;
-    float outward_z = center_z - objective_z;
+    float outward_x = center_x - advance_goal_x;
+    float outward_z = center_z - advance_goal_z;
     const float span = std::sqrt((outward_x * outward_x) + (outward_z * outward_z));
     if (span > 1.0e-3F) {
       outward_x /= span;

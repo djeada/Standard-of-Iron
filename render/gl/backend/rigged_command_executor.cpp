@@ -46,7 +46,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
 
     if (prepared.kind == PreparedBatchKind::RiggedCreatureInstanced &&
         m_rigged_cull_pipeline != nullptr && m_rigged_cull_pipeline->is_available() &&
-        prepared.count >= BackendPipelines::RiggedCullPipeline::minimum_instances()) {
+        prepared.count >= 2U) {
       thread_local std::vector<const RiggedCreatureCmd*> cull_refs;
       cull_refs.clear();
       cull_refs.reserve(prepared.count);
@@ -55,7 +55,19 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
       }
       QVector2D const viewport(static_cast<float>(m_viewport_width),
                                static_cast<float>(m_viewport_height));
-      if (viewport.x() > 0.0F && viewport.y() > 0.0F &&
+      if (m_rigged_cull_pipeline->draw_full_mesh(
+              cull_refs.data(), cull_refs.size(), view_proj, cam.get_position())) {
+        m_rigged_drawn_this_frame += cull_refs.size();
+        m_last_playback_stats.rigged_instanced_draws +=
+            m_rigged_cull_pipeline->last_stats().draw_calls;
+        m_last_playback_stats.rigged_instanced_instances += cull_refs.size();
+        m_last_bound_shader = m_rigged_cull_pipeline->full_mesh_shader();
+        m_last_bound_texture = nullptr;
+        break;
+      }
+      if (cull_refs.size() >=
+              BackendPipelines::RiggedCullPipeline::minimum_instances() &&
+          viewport.x() > 0.0F && viewport.y() > 0.0F &&
           m_rigged_cull_pipeline->draw(cull_refs.data(),
                                        cull_refs.size(),
                                        view_proj,

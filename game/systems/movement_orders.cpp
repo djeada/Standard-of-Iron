@@ -98,7 +98,8 @@ auto should_include_resolved_start_waypoint(const Point& start) -> bool {
   return !CommandService::is_grid_walkable(start);
 }
 
-auto segment_traverses_bridge(const QVector3D& from, const QVector3D& to) -> bool {
+auto segment_traverses_navigation_portal(const QVector3D& from,
+                                         const QVector3D& to) -> bool {
   auto& terrain = Game::Map::TerrainService::instance();
   auto const* height_map = terrain.get_height_map();
   if (height_map == nullptr) {
@@ -113,25 +114,30 @@ auto segment_traverses_bridge(const QVector3D& from, const QVector3D& to) -> boo
   for (int sample = 0; sample <= sample_count; ++sample) {
     float const t = static_cast<float>(sample) / static_cast<float>(sample_count);
     QVector3D const point = from + delta * t;
-    if (terrain.is_on_bridge(point.x(), point.z())) {
+    Point const cell = CommandService::world_to_grid(point.x(), point.z());
+    if (terrain.is_on_bridge(point.x(), point.z()) ||
+        terrain.is_hill_entrance(cell.x, cell.y)) {
       return true;
     }
   }
   return false;
 }
 
-auto align_bridge_waypoint(const QVector3D& waypoint,
+auto align_portal_waypoint(const QVector3D& waypoint,
                            bool final_waypoint) -> QVector3D {
   if (final_waypoint) {
     return waypoint;
   }
-  auto const aligned =
-      Game::Map::TerrainService::instance().get_bridge_traversal_position(waypoint.x(),
-                                                                          waypoint.z());
-  if (!aligned.has_value()) {
-    return waypoint;
+  auto& terrain = Game::Map::TerrainService::instance();
+  if (auto const aligned =
+          terrain.get_bridge_traversal_position(waypoint.x(), waypoint.z())) {
+    return {aligned->x(), waypoint.y(), aligned->z()};
   }
-  return {aligned->x(), waypoint.y(), aligned->z()};
+  if (auto const aligned =
+          terrain.get_hill_entrance_traversal_position(waypoint.x(), waypoint.z())) {
+    return {aligned->x(), waypoint.y(), aligned->z()};
+  }
+  return waypoint;
 }
 
 struct PreparedMove {
@@ -228,7 +234,7 @@ auto MovementSystem::assign_path_to_movement(
     QVector3D const raw_waypoint =
         pathfinder.path_waypoint_world_position(path_points[idx]);
     QVector3D const waypoint =
-        align_bridge_waypoint(raw_waypoint, idx + 1U == path_points.size());
+        align_portal_waypoint(raw_waypoint, idx + 1U == path_points.size());
     if (!movement.path.empty()) {
       auto const& previous = movement.path.back();
       float const dx = waypoint.x() - previous.first;
@@ -296,10 +302,11 @@ void MovementSystem::assign_navigation_target(
       CommandService::world_to_grid(requested_target.x(), requested_target.z());
   QVector3D const current_pos(transform.position.x, 0.0F, transform.position.z);
 
-  bool const bridge_route = segment_traverses_bridge(current_pos, requested_target);
+  bool const portal_route =
+      segment_traverses_navigation_portal(current_pos, requested_target);
   if (start == end || (is_direct_path_walkable(
                            current_pos, requested_target, passability_for(movement)) &&
-                       !bridge_route)) {
+                       !portal_route)) {
     assign_direct_target(movement, resolve_walkable_direct_target(requested_target));
     return;
   }
@@ -502,7 +509,7 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
   bool const leader_direct =
       leader_start_cell == leader_target_cell ||
       (is_direct_path_walkable(leader_start, leader_target, group_passability) &&
-       !segment_traverses_bridge(leader_start, leader_target));
+       !segment_traverses_navigation_portal(leader_start, leader_target));
   std::vector<Point> corridor;
   if (!leader_direct) {
     corridor =
@@ -566,7 +573,7 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       bool const direct = start == target ||
                           (is_direct_path_walkable(
                                current, targets[i], passability_for(*move.movement)) &&
-                           !segment_traverses_bridge(current, targets[i]));
+                           !segment_traverses_navigation_portal(current, targets[i]));
       if (direct || movement_system == nullptr ||
           synchronous_fallbacks < k_path_requests_per_tick) {
         assign_navigation_target(

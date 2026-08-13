@@ -520,8 +520,6 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
                                         "creature_prepared_state.cpp");
   const auto combat_dust_renderer =
       read_text(root / "render" / "entity" / "combat_dust_renderer.cpp");
-  const auto combat_dust_pipeline =
-      read_text(root / "render" / "gl" / "backend" / "combat_dust_pipeline.cpp");
 
   const auto command_dispatcher =
       read_text(root / "game" / "command" / "command_dispatcher.cpp");
@@ -539,7 +537,6 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   ASSERT_FALSE(animation_inputs.empty());
   ASSERT_FALSE(prepared_state.empty());
   ASSERT_FALSE(combat_dust_renderer.empty());
-  ASSERT_FALSE(combat_dust_pipeline.empty());
   ASSERT_FALSE(command_dispatcher.empty());
   ASSERT_FALSE(game_engine.empty());
   ASSERT_FALSE(controller.empty());
@@ -564,8 +561,6 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   EXPECT_FALSE(contains(prepared_state, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(
       contains(combat_dust_renderer, "CombatRules::participates_in_rts_melee_lock"));
-  EXPECT_TRUE(
-      contains(combat_dust_pipeline, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(
       contains(command_dispatcher, "CombatRules::clear_rts_melee_lock(&entity);"));
 

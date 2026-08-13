@@ -993,7 +993,8 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
   auto const stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 2U);
-  EXPECT_EQ(sink.rigged_calls, 2);
+  EXPECT_EQ(sink.rigged_calls, 3)
+      << "horse, rider body, and combined rider equipment submit separately";
   EXPECT_EQ(sink.meshes, 0);
 }
 

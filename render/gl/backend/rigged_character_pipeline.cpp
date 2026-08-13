@@ -16,7 +16,6 @@
 
 #include "render/bone_palette_arena.h"
 #include "render/draw_commands.h"
-#include "render/gl/backend.h"
 #include "render/gl/buffer.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/shader_cache.h"
@@ -408,8 +407,9 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
   m_shader->use();
   m_shader->set_uniform(m_uniforms.view_proj, view_proj);
   m_shader->set_uniform(m_uniforms.model, cmd.world);
-  m_shader->set_uniform(m_uniforms.light_dir, m_backend->light_direction());
-  m_shader->set_uniform(m_uniforms.ambient_strength, m_backend->ambient_strength());
+  m_shader->set_uniform(m_uniforms.light_dir, m_frame_environment->light_direction());
+  m_shader->set_uniform(m_uniforms.ambient_strength,
+                        m_frame_environment->ambient_strength());
   m_shader->set_uniform(m_uniforms.camera_position, camera_position);
   if (m_uniforms.variation_scale != GL::Shader::InvalidUniform) {
     m_shader->set_uniform(m_uniforms.variation_scale, cmd.variation_scale);
@@ -713,9 +713,10 @@ auto RiggedCharacterPipeline::draw_instanced(const RiggedCreatureCmd* const* cmd
   if (m_instanced_view_proj != Shader::InvalidUniform) {
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
-  m_instanced_shader->set_uniform(m_instanced_light_dir, m_backend->light_direction());
+  m_instanced_shader->set_uniform(m_instanced_light_dir,
+                                  m_frame_environment->light_direction());
   m_instanced_shader->set_uniform(m_instanced_ambient_strength,
-                                  m_backend->ambient_strength());
+                                  m_frame_environment->ambient_strength());
   m_instanced_shader->set_uniform(m_instanced_camera_position, camera_position);
 
   pack_role_colors_to_scratch(

@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "render/gl/backend.h"
 #include "render/gl/mesh.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/primitives.h"

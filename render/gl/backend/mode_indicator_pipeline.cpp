@@ -4,7 +4,6 @@
 #include <QOpenGLContext>
 
 #include "gl_error_check.h"
-#include "render/gl/backend.h"
 #include "render/gl/mesh.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/state_scopes.h"

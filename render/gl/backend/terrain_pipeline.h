@@ -10,15 +10,13 @@
 
 namespace Render::GL {
 class ShaderCache;
-class Backend;
 
 namespace BackendPipelines {
 
 class TerrainPipeline final : public IPipeline {
 public:
-  explicit TerrainPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit TerrainPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~TerrainPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -150,7 +148,6 @@ public:
   GLsizei m_grass_vertex_count = 0;
 
 private:
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
 
   void cache_grass_uniforms();

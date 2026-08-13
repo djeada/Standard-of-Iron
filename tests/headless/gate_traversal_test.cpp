@@ -2,6 +2,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
+#include <vector>
 
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
@@ -183,6 +184,46 @@ TEST_F(GateTraversalTest, OwnerTroopWalksThroughItsOwnGate) {
   EXPECT_GT(position_z(*session, troop), gate_position.z() + 2.0F);
 
   EXPECT_FLOAT_EQ(gate_component->open_amount, 0.0F);
+}
+
+TEST_F(GateTraversalTest, GroupMembersIndividuallyUseTheGateCenterline) {
+  auto session = make_match();
+  const ScopedSession scope(*session);
+  const EntityID gate = build_gated_wall(*session);
+  const QVector3D gate_position = entity_position(*session, gate);
+
+  std::vector<EntityID> troops;
+  std::vector<QVector3D> targets;
+  for (int index = 0; index < 8; ++index) {
+    const float offset = (static_cast<float>(index) - 3.5F) * 0.6F;
+    troops.push_back(spawn_troop(*session,
+                                 k_defender,
+                                 gate_position.x() + offset,
+                                 gate_position.z() - 8.0F - float(index / 4)));
+    targets.emplace_back(gate_position.x(), 0.0F, gate_position.z() + 8.0F);
+  }
+  Game::Systems::CommandService::move_units(session->world(), troops, targets);
+
+  std::vector<bool> used_centerline(troops.size(), false);
+  const double step = session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 20.0; elapsed += step) {
+    run_for(*session, step);
+    for (std::size_t index = 0; index < troops.size(); ++index) {
+      const QVector3D position = entity_position(*session, troops[index]);
+      if (std::abs(position.z() - gate_position.z()) <= 1.0F) {
+        used_centerline[index] = true;
+        EXPECT_LE(std::abs(position.x() - gate_position.x()), 0.75F)
+            << "unit " << index << " crossed off the gate centerline";
+      }
+    }
+  }
+
+  EXPECT_TRUE(std::all_of(
+      used_centerline.begin(), used_centerline.end(), [](bool used) { return used; }))
+      << "not every group member traversed the gate independently";
+  for (const auto troop : troops) {
+    EXPECT_GT(position_z(*session, troop), gate_position.z() + 2.0F);
+  }
 }
 
 TEST_F(GateTraversalTest, AlliedTroopIsAdmittedOnTheSameTerms) {

@@ -86,17 +86,17 @@ void main() {
   vec3 local_pos = model_pos * scale;
 
   float wind_time = u_time * u_wind_speed;
+  float bend = height_factor * height_factor;
   float gust = 0.62 + 0.38 * sin(wind_time * 0.19 + sway_phase * 0.37);
-  float sway = sin(wind_time * 0.48 + sway_phase) * u_wind_strength * gust *
-               height_factor * height_factor;
-  float secondary = sin(wind_time * 0.73 + sway_phase * 1.71 + 1.4) * u_wind_strength *
-                    0.34 * height_factor * height_factor;
+  float sway = sin(wind_time * 0.48 + sway_phase) * u_wind_strength * gust * bend;
+  float secondary =
+      sin(wind_time * 0.73 + sway_phase * 1.71 + 1.4) * u_wind_strength * 0.34 * bend;
 
-  float sway_influence = mix(0.025, 0.105, foliage_mask);
+  float sway_influence = mix(0.06, 0.20, foliage_mask) * scale;
   vec2 wind_dir = normalize(vec2(0.78, 0.62));
   vec2 cross_dir = vec2(-wind_dir.y, wind_dir.x);
-  local_pos.xz += (wind_dir * sway + cross_dir * secondary) * sway_influence;
-  local_pos.y -= abs(sway) * 0.012 * foliage_mask;
+  vec2 wind_offset = (wind_dir * sway + cross_dir * secondary) * sway_influence;
+  local_pos.y -= abs(sway) * 0.012 * foliage_mask * scale;
 
   vec3 local_normal = a_normal;
   if (foliage_mask > 0.0) {
@@ -111,7 +111,7 @@ void main() {
   float sin_r = sin(rotation);
   mat2 rot = mat2(cos_r, -sin_r, sin_r, cos_r);
 
-  vec2 rotated_xz = rot * local_pos.xz;
+  vec2 rotated_xz = rot * local_pos.xz + wind_offset;
   local_pos = vec3(rotated_xz.x, local_pos.y, rotated_xz.y);
 
   vec2 rotated_normal_xz = rot * local_normal.xz;

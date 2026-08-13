@@ -4,20 +4,14 @@
 #include <QVector3D>
 #include <QtGui/qopengl.h>
 
-#include <vector>
+#include <cstddef>
 
 #include "mesh_buffers.h"
 #include "pipeline_interface.h"
 #include "render/gl/shader.h"
 
-namespace Engine::Core {
-class World;
-}
-
 namespace Render::GL {
 class ShaderCache;
-class Backend;
-class Camera;
 
 namespace BackendPipelines {
 
@@ -30,44 +24,16 @@ enum class EffectType {
   MetalSpark = 5
 };
 
-struct CombatDustData {
-  QVector3D position;
-  float radius;
-  float intensity;
-  QVector3D color;
-  float time;
-  EffectType effect_type{EffectType::Dust};
-};
-
-struct BloodPoolData {
-  QVector3D position;
-  float radius;
-  float alpha_scale{1.0F};
-  float rotation{0.0F};
-  float aspect_ratio{1.0F};
-  float seed{0.0F};
-};
-
 class CombatDustPipeline final : public IPipeline {
 public:
-  explicit CombatDustPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit CombatDustPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~CombatDustPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
   void shutdown() override;
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
-
-  void collect_combat_zones(Engine::Core::World* world, float animation_time);
-
-  void collect_building_flames(Engine::Core::World* world, float animation_time);
-
-  void collect_all_effects(Engine::Core::World* world, float animation_time);
-  void collect_blood_pools(Engine::Core::World* world);
-
-  void render(const Camera& cam, float animation_time);
 
   struct DustInstanceData {
     QVector3D position;
@@ -102,32 +68,13 @@ public:
                                std::size_t count,
                                const QMatrix4x4& view_proj);
 
-  void clear_data() {
-    m_dust_data.clear();
-    m_blood_data.clear();
-  }
-
-  void add_dust_zone(const QVector3D& position,
-                     float radius,
-                     float intensity,
-                     const QVector3D& color,
-                     float time);
-
-  void add_flame_zone(const QVector3D& position,
-                      float radius,
-                      float intensity,
-                      const QVector3D& color,
-                      float time);
-
 private:
   auto create_dust_geometry() -> bool;
   auto create_fireball_geometry() -> bool;
   auto create_metal_spark_geometry() -> bool;
   auto create_blood_geometry() -> bool;
   void release_geometry();
-  void render_blood_pools(const Camera& cam);
 
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_dust_shader = nullptr;
   GL::Shader* m_blood_shader = nullptr;
@@ -136,9 +83,6 @@ private:
   StaticMeshBuffers m_fireball_mesh;
   StaticMeshBuffers m_metal_spark_mesh;
   StaticMeshBuffers m_blood_mesh;
-
-  std::vector<CombatDustData> m_dust_data;
-  std::vector<BloodPoolData> m_blood_data;
 
   struct DustUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

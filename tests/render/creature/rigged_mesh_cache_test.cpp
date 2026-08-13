@@ -54,7 +54,10 @@ TEST(RiggedMeshCache, PerUnitVariantBucketDefaultsToZeroAndDeduplicates) {
 
   const auto* via_default = cache.get_or_bake(spec, CreatureLOD::Full, bind);
   const auto* via_explicit_zero = cache.get_or_bake(spec, CreatureLOD::Full, bind, 0);
+  const auto* via_visual_variant = cache.get_or_bake(spec, CreatureLOD::Full, bind, 7);
   EXPECT_EQ(via_default, via_explicit_zero);
+  EXPECT_EQ(via_default, via_visual_variant)
+      << "draw-time visual variants do not change baked geometry";
   EXPECT_EQ(cache.size(), 1U);
 }
 
@@ -74,6 +77,46 @@ TEST(RiggedMeshCache, FullAndMinimalBakeIndependentlyButOnlyOnceEach) {
   EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Full, bind), full);
   EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Minimal, bind), minimal);
   EXPECT_EQ(cache.size(), 2U);
+}
+
+TEST(RiggedMeshCache, MeshVariantsShareOneSpeciesSkinAtlas) {
+  RiggedMeshCache cache;
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+  constexpr std::uint32_t k_species = 17U;
+
+  const auto* first = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 1U, k_species);
+  const auto* second = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 7U, {}, 0x34U, 2U, k_species);
+  const auto* minimal = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Minimal, bind, 0U, {}, 0x56U, 3U, k_species);
+
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  ASSERT_NE(minimal, nullptr);
+  ASSERT_NE(first->skin_atlas, nullptr);
+  EXPECT_EQ(first->skin_atlas, second->skin_atlas);
+  EXPECT_EQ(first->skin_atlas, minimal->skin_atlas);
+  EXPECT_EQ(first->mesh.get(), second->mesh.get());
+  EXPECT_NE(first->mesh.get(), minimal->mesh.get());
+}
+
+TEST(RiggedMeshCache, DifferentAnimationSpeciesDoNotShareSkinAtlases) {
+  RiggedMeshCache cache;
+  auto const& spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+
+  const auto* first = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 1U, 17U);
+  const auto* second = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 1U, 18U);
+
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  ASSERT_NE(first->skin_atlas, nullptr);
+  ASSERT_NE(second->skin_atlas, nullptr);
+  EXPECT_NE(first->skin_atlas, second->skin_atlas);
 }
 
 TEST(RiggedMeshCache, DifferentSpeciesProduceDistinctEntries) {
@@ -109,6 +152,35 @@ TEST(RiggedMeshCache, DifferentSpeciesProduceDistinctEntries) {
       << "spawning many units of each species must not re-bake meshes";
 }
 
+TEST(RiggedMeshCache, PartitionsExactRigidAndBlendedTriangleRanges) {
+  RiggedMeshCache cache;
+  const auto* humanoid = cache.get_or_bake(Render::Humanoid::humanoid_creature_spec(),
+                                           CreatureLOD::Full,
+                                           Render::Humanoid::humanoid_bind_palette());
+  const auto* horse = cache.get_or_bake(Render::Horse::horse_creature_spec(),
+                                        CreatureLOD::Full,
+                                        Render::Horse::horse_bind_palette());
+
+  ASSERT_NE(humanoid, nullptr);
+  ASSERT_NE(humanoid->mesh, nullptr);
+  ASSERT_NE(horse, nullptr);
+  ASSERT_NE(horse->mesh, nullptr);
+  EXPECT_GT(humanoid->mesh->rigid_index_count(), 0U);
+  EXPECT_LT(humanoid->mesh->rigid_index_count(), humanoid->mesh->index_count());
+  EXPECT_EQ(humanoid->mesh->rigid_index_count() % 3U, 0U);
+  EXPECT_FALSE(humanoid->mesh->rigid_skinning());
+  for (std::size_t i = 0; i < humanoid->mesh->index_count(); ++i) {
+    const auto vertex_index = humanoid->mesh->get_indices()[i];
+    ASSERT_LT(vertex_index, humanoid->mesh->get_vertices().size());
+    const auto& weights = humanoid->mesh->get_vertices()[vertex_index].bone_weights;
+    const bool rigid = weights == std::array<float, 4>{1.0F, 0.0F, 0.0F, 0.0F};
+    if (i < humanoid->mesh->rigid_index_count()) {
+      EXPECT_TRUE(rigid);
+    }
+  }
+  EXPECT_FALSE(horse->mesh->rigid_skinning());
+}
+
 TEST(RiggedMeshCache, BakedVertexFormatCarriesRoleIndexButNoPerUnitColour) {
 
   static_assert(sizeof(RiggedVertex) ==
@@ -141,7 +213,7 @@ TEST(RiggedMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
 
   EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Full, bind), full)
       << "warmed rigged mesh hits must remain usable during gameplay";
-  EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Minimal, bind), nullptr)
+  EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Minimal, bind, 0U, {}, 999U), nullptr)
       << "warmed gameplay must not bake a missing rigged mesh";
   EXPECT_EQ(cache.size(), 1U);
 }
@@ -219,7 +291,7 @@ TEST(RiggedMeshCache, FrameStatsMissOnRuntimeBakeRejection) {
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
   Render::Creature::set_runtime_bake_forbidden(true);
-  EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Full, bind), nullptr);
+  EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Full, bind, 0U, {}, 999U), nullptr);
   EXPECT_EQ(cache.frame_stats().misses, 1U);
   EXPECT_EQ(cache.frame_stats().bakes, 0U);
   EXPECT_EQ(cache.frame_stats().hits, 0U);

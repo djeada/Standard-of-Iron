@@ -82,8 +82,9 @@ auto SnapshotMeshCache::get_or_bake(const Key& key,
     return nullptr;
   }
 
-  if (source.mesh == nullptr || source.skinned_palettes.empty() ||
-      source.skinned_bone_count == 0U || global_frame >= source.skinned_frame_total ||
+  if (source.mesh == nullptr || source.skin_atlas == nullptr ||
+      source.skin_atlas->palettes.empty() || source.skin_atlas->bone_count == 0U ||
+      global_frame >= source.skin_atlas->frame_total ||
       source.mesh->get_vertices().empty() || source.mesh->get_indices().empty()) {
     ++m_frame_stats.misses;
     return nullptr;
@@ -92,12 +93,12 @@ auto SnapshotMeshCache::get_or_bake(const Key& key,
   const auto& src_vertices = source.mesh->get_vertices();
   const auto& src_indices = source.mesh->get_indices();
   const QMatrix4x4* frame_palette =
-      source.skinned_palettes.data() +
+      source.skin_atlas->palettes.data() +
       static_cast<std::size_t>(global_frame) *
-          static_cast<std::size_t>(source.skinned_bone_count);
+          static_cast<std::size_t>(source.skin_atlas->bone_count);
   auto baked = bake_snapshot_vertices(
       src_vertices,
-      {frame_palette, static_cast<std::size_t>(source.skinned_bone_count)});
+      {frame_palette, static_cast<std::size_t>(source.skin_atlas->bone_count)});
 
   SnapshotMeshEntry entry = build_entry(std::move(baked), src_indices);
   auto [it, _ok] = m_entries.emplace(key, std::move(entry));
