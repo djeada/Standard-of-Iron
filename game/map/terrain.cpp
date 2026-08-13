@@ -169,6 +169,7 @@ void TerrainHeightMap::build_from_features(
   std::fill(m_terrain_types.begin(), m_terrain_types.end(), TerrainType::Flat);
   std::fill(m_hill_entrances.begin(), m_hill_entrances.end(), false);
   std::fill(m_hill_walkable.begin(), m_hill_walkable.end(), false);
+  m_hill_entrance_centerlines.clear();
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
@@ -512,6 +513,13 @@ void TerrainHeightMap::build_from_features(
 
         float const ramp_end_x = ramp_origin_x + dir_x * ramp_span;
         float const ramp_end_z = ramp_origin_z + dir_z * ramp_span;
+        m_hill_entrance_centerlines.push_back(
+            {{(ramp_origin_x - grid_half_width) * m_tile_size,
+              0.0F,
+              (ramp_origin_z - grid_half_height) * m_tile_size},
+             {(ramp_end_x - grid_half_width) * m_tile_size,
+              0.0F,
+              (ramp_end_z - grid_half_height) * m_tile_size}});
         int const corridor_min_x = std::max(
             0, int(std::floor(std::min(ramp_origin_x, ramp_end_x) - corridor_reach)));
         int const corridor_max_x = std::min(
@@ -930,6 +938,39 @@ auto TerrainHeightMap::isHillEntrance(int grid_x, int grid_z) const -> bool {
     return false;
   }
   return m_hill_entrances[indexAt(grid_x, grid_z)];
+}
+
+auto TerrainHeightMap::getHillEntranceTraversalPosition(
+    float world_x, float world_z) const -> std::optional<QVector3D> {
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
+  const int grid_x =
+      static_cast<int>(std::round(world_x / m_tile_size + grid_half_width));
+  const int grid_z =
+      static_cast<int>(std::round(world_z / m_tile_size + grid_half_height));
+  if (!isHillEntrance(grid_x, grid_z)) {
+    return std::nullopt;
+  }
+
+  QVector3D const query(world_x, 0.0F, world_z);
+  std::optional<QVector3D> closest;
+  float closest_distance_sq = std::numeric_limits<float>::infinity();
+  for (const auto& centerline : m_hill_entrance_centerlines) {
+    QVector3D const delta = centerline.end - centerline.start;
+    float const length_sq = QVector3D::dotProduct(delta, delta);
+    if (length_sq <= 1.0e-6F) {
+      continue;
+    }
+    float const progress = std::clamp(
+        QVector3D::dotProduct(query - centerline.start, delta) / length_sq, 0.0F, 1.0F);
+    QVector3D const projected = centerline.start + delta * progress;
+    float const distance_sq = (projected - query).lengthSquared();
+    if (distance_sq < closest_distance_sq) {
+      closest_distance_sq = distance_sq;
+      closest = projected;
+    }
+  }
+  return closest;
 }
 
 auto TerrainHeightMap::getTerrainType(int grid_x, int grid_z) const -> TerrainType {
@@ -1481,6 +1522,7 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
   m_hill_entrances.resize(expected_size, false);
   m_hill_walkable.clear();
   m_hill_walkable.resize(expected_size, true);
+  m_hill_entrance_centerlines.clear();
 
   for (size_t i = 0; i < m_terrain_types.size(); ++i) {
     if (m_terrain_types[i] == TerrainType::Hill) {

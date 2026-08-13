@@ -1,3 +1,4 @@
+#include <cmath>
 #include <gtest/gtest.h>
 #include <utility>
 #include <vector>
@@ -27,7 +28,7 @@ protected:
   std::unique_ptr<World> world;
 };
 
-TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
+TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
 
   std::vector<Entity*> units;
   constexpr int k_crowded_unit_count = 256;
@@ -61,6 +62,11 @@ TEST_F(LocalAvoidanceTest, LargeGroupReportsOverlapWithoutMovingUnits) {
     EXPECT_FLOAT_EQ(transform->position.x, original_positions[i].first);
     EXPECT_FLOAT_EQ(transform->position.z, original_positions[i].second);
   }
+  EXPECT_TRUE(std::any_of(units.begin(), units.end(), [](const Entity* entity) {
+    const auto* movement = entity->get_component<MovementComponent>();
+    return movement != nullptr && (std::abs(movement->get_vx() - 1.0F) > 0.001F ||
+                                   std::abs(movement->get_vz()) > 0.001F);
+  }));
   EXPECT_GT(system.diagnostics().overlaps_detected, 0U);
   EXPECT_GT(system.diagnostics().average_neighbors_checked, 200U);
 }

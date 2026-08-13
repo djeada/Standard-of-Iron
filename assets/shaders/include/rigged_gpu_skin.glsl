@@ -74,6 +74,11 @@ uint rg_color_role(uint v) {
   return rg_vertex_words[v * RG_WORDS_PER_VERTEX + 13u] & 0xFFu;
 }
 
+uint rg_primary_bone_index(uint v) {
+  uint bone = rg_vertex_words[v * RG_WORDS_PER_VERTEX + 8u] & 0xFFu;
+  return min(bone, max(u_bone_count, 1u) - 1u);
+}
+
 mat4 rg_bone_matrix(uint instance, uint bone) {
   uvec4 palette_ref = rg_instance[instance].palette_ref;
   if (palette_ref.x == 0u) {
@@ -91,12 +96,25 @@ mat4 rg_bone_matrix(uint instance, uint bone) {
 mat4 rg_skin_matrix(uint v, uint instance) {
   uvec4 bi = rg_bone_indices(v);
   vec4 bw = rg_bone_weights(v);
-  mat4 skin =
-      bw.x * rg_bone_matrix(instance, bi.x) + bw.y * rg_bone_matrix(instance, bi.y) +
-      bw.z * rg_bone_matrix(instance, bi.z) + bw.w * rg_bone_matrix(instance, bi.w);
   float wsum = bw.x + bw.y + bw.z + bw.w;
   if (wsum < 0.001) {
-    skin = mat4(1.0);
+    return mat4(1.0);
+  }
+
+  if (bw.y == 0.0 && bw.z == 0.0 && bw.w == 0.0) {
+    return bw.x == 1.0 ? rg_bone_matrix(instance, bi.x)
+                       : bw.x * rg_bone_matrix(instance, bi.x);
+  }
+
+  mat4 skin = bw.x * rg_bone_matrix(instance, bi.x);
+  if (bw.y != 0.0) {
+    skin += bw.y * rg_bone_matrix(instance, bi.y);
+  }
+  if (bw.z != 0.0) {
+    skin += bw.z * rg_bone_matrix(instance, bi.z);
+  }
+  if (bw.w != 0.0) {
+    skin += bw.w * rg_bone_matrix(instance, bi.w);
   }
   return skin;
 }
@@ -107,6 +125,14 @@ vec4 rg_clip_position(uint v, uint instance) {
   vec4 pos_local = vec4(rg_position(v) * variation_scale, 1.0);
   vec4 skinned_local = skin * pos_local;
   vec4 pos_world = rg_instance[instance].world * skinned_local;
+  return u_view_proj * pos_world;
+}
+
+vec4 rg_clip_position_rigid(uint v, uint instance) {
+  mat4 skin = rg_bone_matrix(instance, rg_primary_bone_index(v));
+  vec3 variation_scale = rg_instance[instance].variation_material.xyz;
+  vec4 pos_local = vec4(rg_position(v) * variation_scale, 1.0);
+  vec4 pos_world = rg_instance[instance].world * (skin * pos_local);
   return u_view_proj * pos_world;
 }
 

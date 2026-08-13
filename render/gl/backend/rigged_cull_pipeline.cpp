@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <limits>
 
 #include "render/draw_commands.h"
 #include "render/gl/buffer.h"
@@ -40,6 +41,7 @@ constexpr std::size_t k_local_size_x = 64;
 constexpr std::size_t k_max_out_triangles = 12u * 1024u * 1024u;
 
 constexpr std::size_t k_min_instances_for_gpu_path = 24;
+constexpr std::size_t k_min_instances_for_full_mesh_path = 2;
 
 [[nodiscard]] constexpr auto
 output_capacity_for(std::size_t candidate_triangles) noexcept -> std::size_t {
@@ -123,6 +125,19 @@ auto RiggedCullPipeline::initialize() -> bool {
   }
   m_draw_shader = m_draw_shader_storage.get();
 
+  QString const full_mesh_vert_src = Shader::preprocess_source(
+      load_shader_text(":/assets/shaders/character_skinned_gpu_instanced.vert"));
+  if (!full_mesh_vert_src.isEmpty()) {
+    m_full_mesh_shader_storage = std::make_unique<Shader>();
+    m_full_mesh_shader_storage->set_debug_name(
+        QStringLiteral("character_skinned_gpu_instanced"));
+    if (m_full_mesh_shader_storage->load_from_source(full_mesh_vert_src, frag_src)) {
+      m_full_mesh_shader = m_full_mesh_shader_storage.get();
+    } else {
+      m_full_mesh_shader_storage.reset();
+    }
+  }
+
   QString const shadow_vert_src = Shader::preprocess_source(
       load_shader_text(":/assets/shaders/directional_shadow_rigged_gpudriven.vert"));
   QString const shadow_frag_src = Shader::preprocess_source(
@@ -135,6 +150,20 @@ auto RiggedCullPipeline::initialize() -> bool {
       m_shadow_shader = m_shadow_shader_storage.get();
     } else {
       m_shadow_shader_storage.reset();
+    }
+  }
+
+  QString const full_mesh_shadow_vert_src = Shader::preprocess_source(load_shader_text(
+      ":/assets/shaders/directional_shadow_rigged_gpu_instanced.vert"));
+  if (!full_mesh_shadow_vert_src.isEmpty() && !shadow_frag_src.isEmpty()) {
+    m_full_mesh_shadow_shader_storage = std::make_unique<Shader>();
+    m_full_mesh_shadow_shader_storage->set_debug_name(
+        QStringLiteral("directional_shadow_rigged_gpu_instanced"));
+    if (m_full_mesh_shadow_shader_storage->load_from_source(full_mesh_shadow_vert_src,
+                                                            shadow_frag_src)) {
+      m_full_mesh_shadow_shader = m_full_mesh_shadow_shader_storage.get();
+    } else {
+      m_full_mesh_shadow_shader_storage.reset();
     }
   }
 
@@ -182,14 +211,17 @@ void RiggedCullPipeline::shutdown() {
   m_finalize_shader_storage.reset();
   m_draw_shader_storage.reset();
   m_shadow_shader_storage.reset();
+  m_full_mesh_shader_storage.reset();
+  m_full_mesh_shadow_shader_storage.reset();
   m_draw_shader = nullptr;
   m_shadow_shader = nullptr;
+  m_full_mesh_shader = nullptr;
+  m_full_mesh_shadow_shader = nullptr;
   m_available = false;
 }
 
-auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
-                                        std::size_t bone_count,
-                                        std::size_t candidate_triangles) -> bool {
+auto RiggedCullPipeline::ensure_instance_buffers(std::size_t instance_count,
+                                                 std::size_t bone_count) -> bool {
   std::size_t const palette_bytes = instance_count * bone_count * 16 * sizeof(float);
   if (palette_bytes > m_palette_capacity_bytes || m_palette_ssbo == 0) {
     if (m_palette_ssbo == 0) {
@@ -219,6 +251,17 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
     m_instance_capacity_bytes = capacity;
   }
 
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+  return m_palette_ssbo != 0 && m_instance_ssbo != 0;
+}
+
+auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
+                                        std::size_t bone_count,
+                                        std::size_t candidate_triangles) -> bool {
+  if (!ensure_instance_buffers(instance_count, bone_count)) {
+    return false;
+  }
+
   const std::size_t wanted = output_capacity_for(candidate_triangles);
   if (wanted == 0U) {
     return false;
@@ -241,7 +284,7 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
   }
 
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-  return m_palette_ssbo != 0 && m_instance_ssbo != 0 && m_out_index_buffer != 0;
+  return m_out_index_buffer != 0;
 }
 
 auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
@@ -375,6 +418,137 @@ auto RiggedCullPipeline::draw_shadow(const RiggedCreatureCmd* const* cmds,
                                      const QVector2D& shadow_extent) -> bool {
   return dispatch(
       cmds, count, light_view_proj, QVector3D{}, shadow_extent, Pass::Depth);
+}
+
+auto RiggedCullPipeline::draw_full_mesh(const RiggedCreatureCmd* const* cmds,
+                                        std::size_t count,
+                                        const QMatrix4x4& view_proj,
+                                        const QVector3D& camera_position) -> bool {
+  return draw_full_mesh_pass(cmds, count, view_proj, camera_position, Pass::Color);
+}
+
+auto RiggedCullPipeline::draw_full_mesh_shadow(const RiggedCreatureCmd* const* cmds,
+                                               std::size_t count,
+                                               const QMatrix4x4& light_view_proj)
+    -> bool {
+  return draw_full_mesh_pass(cmds, count, light_view_proj, QVector3D{}, Pass::Depth);
+}
+
+auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmds,
+                                             std::size_t count,
+                                             const QMatrix4x4& view_proj,
+                                             const QVector3D& camera_position,
+                                             Pass pass) -> bool {
+  m_stats = {};
+  if (!m_available || cmds == nullptr || count < k_min_instances_for_full_mesh_path) {
+    return false;
+  }
+
+  const bool depth_only = pass == Pass::Depth;
+  Shader* draw_shader = depth_only ? m_full_mesh_shadow_shader : m_full_mesh_shader;
+  if (draw_shader == nullptr) {
+    return false;
+  }
+
+  RiggedMesh* mesh = depth_only && cmds[0]->shadow_mesh != nullptr
+                         ? cmds[0]->shadow_mesh
+                         : cmds[0]->mesh;
+  if (mesh == nullptr || cmds[0]->texture != nullptr || cmds[0]->bone_count == 0U ||
+      mesh->index_count() == 0U) {
+    return false;
+  }
+
+  const std::size_t bone_count = cmds[0]->bone_count;
+  GLuint baked_palette_buffer = 0U;
+  for (std::size_t k = 0; k < count; ++k) {
+    if (cmds[k] == nullptr) {
+      return false;
+    }
+    RiggedMesh* cmd_mesh = depth_only && cmds[k]->shadow_mesh != nullptr
+                               ? cmds[k]->shadow_mesh
+                               : cmds[k]->mesh;
+    if (cmd_mesh != mesh || cmds[k]->texture != nullptr ||
+        cmds[k]->bone_count != bone_count) {
+      return false;
+    }
+    if (cmds[k]->palette_frames_resident) {
+      if (baked_palette_buffer == 0U) {
+        baked_palette_buffer = cmds[k]->palette_ubo;
+      } else if (baked_palette_buffer != cmds[k]->palette_ubo) {
+        return false;
+      }
+    } else if (cmds[k]->bone_palette == nullptr) {
+      return false;
+    }
+  }
+
+  if (!mesh->ensure_gl_buffers()) {
+    return false;
+  }
+  Buffer* vertex_buffer = mesh->vertex_buffer();
+  Buffer* index_buffer = mesh->index_buffer();
+  if (vertex_buffer == nullptr || index_buffer == nullptr ||
+      vertex_buffer->id() == 0U || index_buffer->id() == 0U ||
+      !ensure_instance_buffers(count, bone_count) ||
+      !upload_instances(cmds, count, bone_count)) {
+    return false;
+  }
+
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_vertex_binding, vertex_buffer->id());
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_palette_binding, m_palette_ssbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER,
+                   k_baked_palette_binding,
+                   baked_palette_buffer != 0U ? baked_palette_buffer : m_palette_ssbo);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo);
+  if (!depth_only) {
+    bind_role_color_texture(cmds, count);
+  }
+
+  draw_shader->use();
+  draw_shader->set_uniform(draw_shader->uniform_handle("u_view_proj"), view_proj);
+  glUniform1ui(draw_shader->uniform_handle("u_bone_count"),
+               static_cast<GLuint>(bone_count));
+  const auto rigid_uniform = draw_shader->uniform_handle("u_rigid_skinning");
+  if (!depth_only) {
+    draw_shader->set_uniform(draw_shader->uniform_handle("u_camera_position"),
+                             camera_position);
+    const auto role_tbo = draw_shader->optional_uniform_handle("u_role_color_tbo");
+    if (role_tbo != Shader::InvalidUniform) {
+      draw_shader->set_uniform(role_tbo, 0);
+    }
+  }
+
+  glBindVertexArray(m_vao);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer->id());
+  const auto draw_range =
+      [&](std::size_t index_offset, std::size_t index_count, bool rigid) {
+        if (index_count == 0U) {
+          return;
+        }
+        draw_shader->set_uniform(rigid_uniform, rigid ? 1 : 0);
+        glDrawElementsInstanced(
+            GL_TRIANGLES,
+            static_cast<GLsizei>(index_count),
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void*>(index_offset * sizeof(std::uint32_t)),
+            static_cast<GLsizei>(count));
+        ++m_stats.draw_calls;
+      };
+  draw_range(0U, mesh->rigid_index_count(), true);
+  draw_range(mesh->rigid_index_count(),
+             mesh->index_count() - mesh->rigid_index_count(),
+             false);
+  glBindVertexArray(0);
+
+  m_stats.dispatched_instances = static_cast<std::uint32_t>(count);
+  m_stats.candidate_triangles = static_cast<std::uint32_t>(std::min<std::size_t>(
+      mesh->index_count() / 3U * count, std::numeric_limits<std::uint32_t>::max()));
+  const GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "RiggedCullPipeline: full-mesh GL error" << err;
+    return false;
+  }
+  return true;
 }
 
 auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,

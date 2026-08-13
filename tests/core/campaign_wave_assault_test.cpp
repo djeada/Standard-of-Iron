@@ -85,6 +85,8 @@ struct WaveMarch {
   float furthest_from_camp = 0.0F;
   bool met_a_defender = false;
   bool engaged_the_camp = false;
+  bool engaged_a_barrier = false;
+  int first_barrier_engagement_second = 0;
   bool wiped_out = false;
 };
 
@@ -102,9 +104,12 @@ public:
       return false;
     }
     const auto& mission = *m_campaign.current_mission_definition();
+    const QString map_path = mission.map_path.startsWith(QStringLiteral(":/"))
+                                 ? mission.map_path.mid(2)
+                                 : mission.map_path;
 
     App::Core::SkirmishLoader loader(m_world, m_renderer, m_camera);
-    const auto load_result = loader.start(mission.map_path,
+    const auto load_result = loader.start(map_path,
                                           build_campaign_player_configs(mission),
                                           k_local_owner,
                                           false,
@@ -114,7 +119,7 @@ public:
       return false;
     }
 
-    m_level.map_path = mission.map_path;
+    m_level.map_path = map_path;
     m_level.grid_width = load_result.grid_width;
     m_level.grid_height = load_result.grid_height;
     m_level.tile_size = load_result.tile_size;
@@ -170,6 +175,10 @@ public:
       const auto engagement = current_engagement();
       result.met_a_defender = result.met_a_defender || engagement.defender;
       result.engaged_the_camp = result.engaged_the_camp || engagement.anything;
+      if (engagement.barrier && !result.engaged_a_barrier) {
+        result.engaged_a_barrier = true;
+        result.first_barrier_engagement_second = second + 1;
+      }
     }
 
     return result;
@@ -207,6 +216,8 @@ private:
     bool defender = false;
 
     bool anything = false;
+
+    bool barrier = false;
   };
 
   [[nodiscard]] auto current_engagement() -> Engagement {
@@ -229,6 +240,10 @@ private:
       engagement.anything = true;
       engagement.defender = engagement.defender ||
                             !target->has_component<Engine::Core::BuildingComponent>();
+      engagement.barrier =
+          engagement.barrier ||
+          (target_unit->spawn_type == Game::Units::SpawnType::WallSegment ||
+           target_unit->spawn_type == Game::Units::SpawnType::WallGate);
     }
     return engagement;
   }
@@ -289,6 +304,10 @@ TEST_F(CampaignWaveAssaultTest, FirstMissionWaveChargesThePlayerCamp) {
   EXPECT_LT(march.furthest_from_camp, march.spawn_distance + 5.0F)
       << "the wave wandered away from the camp instead of marching on it";
   EXPECT_TRUE(march.engaged_the_camp) << "the wave never reached the camp's defences";
+  EXPECT_TRUE(march.engaged_a_barrier)
+      << "the wave ignored the intact wall between it and the camp";
+  EXPECT_LE(march.first_barrier_engagement_second, 12)
+      << "the wave waited at the wall instead of committing to a breach";
 }
 
 TEST_F(CampaignWaveAssaultTest, EveryCampaignMissionWaveClosesOnThePlayerCamp) {

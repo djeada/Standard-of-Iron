@@ -195,8 +195,10 @@ TEST(StaticAttachmentBake, AttachmentsHashKeysCacheEntries) {
       << "attachment hash must produce a distinct cache entry";
   EXPECT_EQ(no_attach, no_attach_again)
       << "two body-only calls must hit the same cache slot";
-  EXPECT_GT(with_attach->mesh->vertex_count(), no_attach->mesh->vertex_count())
-      << "merged mesh must have more vertices than body-only";
+  EXPECT_EQ(with_attach->mesh, no_attach->mesh)
+      << "full-detail bodies must be shared across equipment combinations";
+  ASSERT_EQ(with_attach->attachment_meshes.size(), 1U);
+  EXPECT_GT(with_attach->attachment_meshes.front()->vertex_count(), 0U);
 
   const auto h0 = Render::Creature::static_attachments_hash(nullptr, 0);
   const auto h1 = Render::Creature::static_attachments_hash(attachments.data(), 1);

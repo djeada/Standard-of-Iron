@@ -158,12 +158,16 @@ auto is_point_allowed(const QVector3D& pos,
   float const facade_distance =
       Game::Systems::Combat::structure_surface_distance(*structure, pos);
   constexpr float k_max_final_approach_depth = 2.25F;
-  constexpr float k_min_physical_clearance = 0.04F;
+  constexpr float k_contact_tolerance = 0.05F;
+  float const physical_clearance = std::max(
+      0.04F,
+      Game::Systems::Combat::structure_attack_profile(&entity).contact_clearance -
+          k_contact_tolerance);
 
-  return facade_distance >= k_min_physical_clearance &&
+  return facade_distance >= physical_clearance &&
          facade_distance <= k_max_final_approach_depth &&
          !BuildingCollisionRegistry::instance().is_circle_overlapping_building(
-             pos.x(), pos.z(), k_min_physical_clearance);
+             pos.x(), pos.z(), physical_clearance, structure->get_id());
 }
 
 } // namespace

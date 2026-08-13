@@ -1,5 +1,7 @@
 #include "local_avoidance_system.h"
 
+#include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -9,7 +11,10 @@
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "../map/terrain_service.h"
+#include "building_collision_registry.h"
 #include "command_service.h"
+#include "pathfinding.h"
 
 namespace Game::Systems {
 
@@ -46,6 +51,17 @@ auto compute_avoidance_priority(const Engine::Core::Entity& entity) -> std::uint
     return 1;
   }
   return 2;
+}
+
+auto point_is_in_navigation_passage(float x, float z) -> bool {
+  for (const auto& passage :
+       BuildingCollisionRegistry::instance().navigation_passages()) {
+    if (std::abs(x - passage.center_x) <= passage.width * 0.5F + 0.5F &&
+        std::abs(z - passage.center_z) <= passage.depth * 0.5F + 0.5F) {
+      return true;
+    }
+  }
+  return false;
 }
 
 } // namespace
@@ -109,7 +125,8 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
                           movement->get_vx(),
                           movement->get_vz(),
                           circle.priority,
-                          movement->get_has_target()};
+                          movement->get_has_target(),
+                          movement->has_waypoints()};
     }
 
     circle.priority = compute_avoidance_priority(*entity);
@@ -200,16 +217,53 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
       sep_z *= inv_n * k_separation_strength;
 
       float const mag_sq = sep_x * sep_x + sep_z * sep_z;
-      float const max_corr = k_max_correction_per_tick;
+      float const max_corr = k_max_steering_speed;
       if (mag_sq > max_corr * max_corr) {
         float const mag = std::sqrt(mag_sq);
         sep_x = sep_x / mag * max_corr;
         sep_z = sep_z / mag * max_corr;
       }
 
-      (void)sep_x;
-      (void)sep_z;
-      (void)delta_time;
+      float const speed = std::hypot(ci.vx, ci.vz);
+      if (speed > 1.0e-4F) {
+        float const forward_x = ci.vx / speed;
+        float const forward_z = ci.vz / speed;
+        float const forward_separation = sep_x * forward_x + sep_z * forward_z;
+        float lateral_x = sep_x - forward_x * forward_separation;
+        float lateral_z = sep_z - forward_z * forward_separation;
+        float const lateral_length = std::hypot(lateral_x, lateral_z);
+        if (lateral_length > 1.0e-4F) {
+          auto& terrain = Game::Map::TerrainService::instance();
+          Point const cell = CommandService::world_to_grid(ci.x, ci.z);
+          bool portal_constrains_lateral = ci.follows_navigation_path ||
+                                           terrain.is_on_bridge(ci.x, ci.z) ||
+                                           terrain.is_hill_entrance(cell.x, cell.y);
+          if (!portal_constrains_lateral) {
+            portal_constrains_lateral = point_is_in_navigation_passage(ci.x, ci.z);
+          }
+          float const probe_distance = std::max(0.75F, ci.radius + 0.25F);
+          QVector3D const lateral_probe(
+              ci.x + lateral_x / lateral_length * probe_distance,
+              0.0F,
+              ci.z + lateral_z / lateral_length * probe_distance);
+          if (portal_constrains_lateral ||
+              !CommandService::is_world_position_walkable(lateral_probe)) {
+            lateral_x = 0.0F;
+            lateral_z = 0.0F;
+          }
+        }
+        sep_x = lateral_x;
+        sep_z = lateral_z;
+      }
+
+      auto* entity = world->get_entity(ci.id);
+      auto* movement = entity != nullptr
+                           ? entity->get_component<Engine::Core::MovementComponent>()
+                           : nullptr;
+      if (movement != nullptr) {
+
+        movement->set_manual_velocity(ci.vx + sep_x, ci.vz + sep_z);
+      }
       ++overlaps_detected;
     }
   }

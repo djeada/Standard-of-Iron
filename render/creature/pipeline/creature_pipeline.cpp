@@ -113,26 +113,30 @@ void report_submit_cache_miss(std::string_view path,
 void ensure_skin_atlas_for_submit(Render::GL::RiggedMeshCache& cache,
                                   const Render::GL::RiggedMeshEntry& entry,
                                   const Render::Creature::Bpat::BpatBlob& blob) {
-  const bool had_atlas = entry.skinned_frame_total == blob.frame_total() &&
-                         entry.skinned_bone_count != 0U &&
-                         !entry.skinned_palettes.empty();
+  const auto* atlas = entry.skin_atlas.get();
+  const bool had_atlas = atlas != nullptr && atlas->frame_total == blob.frame_total() &&
+                         atlas->bone_count != 0U && !atlas->palettes.empty();
   Render::GL::rigged_entry_ensure_skin_atlas_from_blob(entry, blob);
-  if (!had_atlas && entry.skinned_frame_total == blob.frame_total() &&
-      entry.skinned_bone_count != 0U && !entry.skinned_palettes.empty()) {
+  atlas = entry.skin_atlas.get();
+  if (!had_atlas && atlas != nullptr && atlas->frame_total == blob.frame_total() &&
+      atlas->bone_count != 0U && !atlas->palettes.empty()) {
     cache.record_skin_atlas_build();
   }
 }
 
 void ensure_skin_ubo_for_submit(Render::GL::RiggedMeshCache& cache,
                                 const Render::GL::RiggedMeshEntry& entry) {
-  const bool had_ubo = entry.skin_palette_ubo != 0U;
+  const bool had_ubo =
+      entry.skin_atlas != nullptr && entry.skin_atlas->palette_ubo != 0U;
   Render::GL::rigged_entry_ensure_skin_ubo(entry);
-  if (!had_ubo && entry.skin_palette_ubo != 0U) {
-    const auto bytes = static_cast<std::uint64_t>(entry.skinned_frame_total) *
+  if (!had_ubo && entry.skin_atlas != nullptr && entry.skin_atlas->palette_ubo != 0U) {
+    const auto bytes = static_cast<std::uint64_t>(entry.skin_atlas->frame_total) *
                        Render::GL::BonePaletteArena::k_palette_bytes;
     cache.record_skin_ubo_upload(bytes);
-  } else if (entry.skin_palette_ubo == 0U && !entry.skinned_palettes.empty() &&
-             entry.skinned_frame_total != 0U && entry.skinned_bone_count != 0U) {
+  } else if (entry.skin_atlas != nullptr && entry.skin_atlas->palette_ubo == 0U &&
+             !entry.skin_atlas->palettes.empty() &&
+             entry.skin_atlas->frame_total != 0U &&
+             entry.skin_atlas->bone_count != 0U) {
     cache.mark_skin_ubo_upload_pending();
   }
 }
@@ -311,12 +315,13 @@ auto resolve_request_playback(const CreatureRenderAssetHandle& primary_handle,
 auto frame_palette_for_global_frame(const Render::GL::RiggedMeshEntry& entry,
                                     std::uint32_t global_frame) noexcept
     -> const QMatrix4x4* {
-  if (entry.skinned_palettes.empty() || entry.skinned_bone_count == 0 ||
-      global_frame >= entry.skinned_frame_total) {
+  if (entry.skin_atlas == nullptr || entry.skin_atlas->palettes.empty() ||
+      entry.skin_atlas->bone_count == 0 ||
+      global_frame >= entry.skin_atlas->frame_total) {
     return nullptr;
   }
-  return entry.skinned_palettes.data() +
-         static_cast<std::size_t>(global_frame) * entry.skinned_bone_count;
+  return entry.skin_atlas->palettes.data() +
+         static_cast<std::size_t>(global_frame) * entry.skin_atlas->bone_count;
 }
 
 auto affine_inverse(const QMatrix4x4& m) noexcept -> QMatrix4x4 {
@@ -637,7 +642,7 @@ auto interpolated_palette_for_playback(
   }
 
   owned_palette = blend_palette_owned(
-      current, next, entry.skinned_bone_count, bucket_weight, false, species_kind);
+      current, next, entry.skin_atlas->bone_count, bucket_weight, false, species_kind);
   cache.emplace(key, owned_palette);
   return owned_palette ? owned_palette->data() : current;
 }
@@ -754,10 +759,14 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
        full_body_blend_weight > 0.0F) ||
       (upper_body_overlay != nullptr && upper_body_overlay->valid() &&
        upper_body_overlay_weight > 0.0F);
+  const auto* skin_atlas = entry->skin_atlas.get();
+  if (skin_atlas == nullptr) {
+    return;
+  }
   const bool frames_resident =
-      entry->skin_palette_ubo != 0U && entry->skinned_frame_total != 0U &&
-      global_frame < entry->skinned_frame_total &&
-      primary_playback.next_global_frame < entry->skinned_frame_total;
+      skin_atlas->palette_ubo != 0U && skin_atlas->frame_total != 0U &&
+      global_frame < skin_atlas->frame_total &&
+      primary_playback.next_global_frame < skin_atlas->frame_total;
   const bool use_resident_frames = frames_resident && !wants_layered_pose;
 
   std::shared_ptr<
@@ -779,39 +788,23 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
   auto cmd = make_rigged_cmd(entry->mesh.get(),
                              draw_world,
                              frame_palette,
-                             entry->skinned_bone_count,
+                             skin_atlas->bone_count,
                              role_colors,
                              base_color,
                              wear_params,
                              material_id_for_species(handle.archetype->species));
 
-  if (lod == CreatureLOD::Full) {
-    const auto* shadow_entry = cache.get_or_bake_prehashed(*asset->spec,
-                                                           CreatureLOD::Minimal,
-                                                           handle.bind_palette,
-                                                           variant_bucket,
-                                                           {},
-                                                           0U,
-                                                           0U,
-                                                           blob.species_id());
-    if (shadow_entry != nullptr && shadow_entry->mesh != nullptr &&
-        shadow_entry->mesh->index_count() != 0U) {
-      cmd.shadow_mesh = shadow_entry->mesh.get();
-    }
-  }
-
-  const bool skin_ubo_covers_frame = entry->skin_palette_ubo != 0U &&
-                                     entry->skinned_frame_total != 0U &&
-                                     global_frame < entry->skinned_frame_total;
+  const bool skin_ubo_covers_frame = skin_atlas->palette_ubo != 0U &&
+                                     skin_atlas->frame_total != 0U &&
+                                     global_frame < skin_atlas->frame_total;
   if (skin_ubo_covers_frame) {
-    cmd.palette_ubo = entry->skin_palette_ubo;
-    cmd.palette_offset =
-        static_cast<std::uint32_t>(static_cast<std::size_t>(global_frame) *
-                                   entry->skin_palette_frame_stride_bytes);
+    cmd.palette_ubo = skin_atlas->palette_ubo;
+    cmd.palette_offset = static_cast<std::uint32_t>(
+        static_cast<std::size_t>(global_frame) * skin_atlas->frame_stride_bytes);
     if (use_resident_frames) {
       cmd.palette_next_offset = static_cast<std::uint32_t>(
           static_cast<std::size_t>(primary_playback.next_global_frame) *
-          entry->skin_palette_frame_stride_bytes);
+          skin_atlas->frame_stride_bytes);
       cmd.palette_lerp = std::clamp(primary_playback.frame_lerp, 0.0F, 1.0F);
       cmd.palette_frames_resident = true;
       cmd.bone_palette_next =
@@ -820,7 +813,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
   }
   if (primary_interpolated_palette) {
     attach_owned_palette(
-        cmd, std::move(primary_interpolated_palette), entry->skinned_bone_count);
+        cmd, std::move(primary_interpolated_palette), skin_atlas->bone_count);
   }
   if (full_body_blend != nullptr && full_body_blend->valid() &&
       full_body_blend_weight > 0.0F) {
@@ -836,11 +829,11 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       attach_owned_palette(cmd,
                            blend_palette_owned(frame_palette,
                                                secondary_palette,
-                                               entry->skinned_bone_count,
+                                               skin_atlas->bone_count,
                                                full_body_blend_weight,
                                                false,
                                                handle.archetype->species),
-                           entry->skinned_bone_count);
+                           skin_atlas->bone_count);
     }
   }
   if (upper_body_overlay != nullptr && upper_body_overlay->valid() &&
@@ -908,6 +901,15 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
             entity_id, instance_index, body_up_y, max_arm_reach);
   }
   out.rigged(cmd);
+  for (const auto& attachment_mesh : entry->attachment_meshes) {
+    if (attachment_mesh == nullptr || attachment_mesh->index_count() == 0U) {
+      continue;
+    }
+    auto attachment_cmd = cmd;
+    attachment_cmd.mesh = attachment_mesh.get();
+    attachment_cmd.shadow_mesh = nullptr;
+    out.rigged(attachment_cmd);
+  }
 }
 
 auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
@@ -1050,8 +1052,9 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
   }
 
   ensure_skin_atlas_for_submit(rigged_cache, *source, blob);
-  if (source->skinned_palettes.empty() || source->skinned_bone_count == 0 ||
-      global_frame >= source->skinned_frame_total) {
+  if (source->skin_atlas == nullptr || source->skin_atlas->palettes.empty() ||
+      source->skin_atlas->bone_count == 0 ||
+      global_frame >= source->skin_atlas->frame_total) {
     return false;
   }
 
@@ -1244,10 +1247,8 @@ auto CreaturePipeline::submit_requests(
       ++stats.upper_body_overlay_requests;
     }
 
-    bool const full_lod_needs_frame_interpolation =
-        req.lod == CreatureLOD::Full && primary.frame_lerp > 1.0e-4F;
-    if (primary.snapshot && (!has_dynamic_layers || req.lod != CreatureLOD::Full) &&
-        !full_lod_needs_frame_interpolation) {
+    const bool use_snapshot_mesh = req.lod != CreatureLOD::Full && primary.snapshot;
+    if (use_snapshot_mesh) {
       auto snapshot_playback = primary;
       if (req.full_body_blend.active() && full_body.valid() &&
           req.full_body_blend.weight >= 0.5F) {

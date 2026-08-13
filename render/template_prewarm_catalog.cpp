@@ -260,10 +260,12 @@ auto select_template_prewarm_anim_budget(std::size_t domain_count,
 auto build_template_prewarm_work_items(const std::vector<PrewarmProfile>& profiles,
                                        const std::vector<int>& owner_ids,
                                        const std::vector<std::uint8_t>& variant_values,
-                                       const std::vector<AnimKey>& anim_keys)
+                                       const std::vector<AnimKey>& anim_keys,
+                                       bool full_lod_only)
     -> std::vector<PrewarmWorkItem> {
   std::vector<PrewarmWorkItem> items;
-  items.reserve(profiles.size() * owner_ids.size() * 2U * variant_values.size() *
+  const std::size_t lod_count = full_lod_only ? 1U : 2U;
+  items.reserve(profiles.size() * owner_ids.size() * lod_count * variant_values.size() *
                 anim_keys.size());
 
   constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Minimal};
@@ -271,6 +273,9 @@ auto build_template_prewarm_work_items(const std::vector<PrewarmProfile>& profil
     auto const spawn_type = profiles[profile_idx].spawn_type;
     for (int const owner_id : owner_ids) {
       for (HumanoidLOD const lod : lods) {
+        if (full_lod_only && lod != HumanoidLOD::Full) {
+          continue;
+        }
         for (std::uint8_t const variant : variant_values) {
           for (auto const& anim_key : anim_keys) {
             auto const attack_family =

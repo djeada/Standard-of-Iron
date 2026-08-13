@@ -613,11 +613,19 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       }
 
       if (m_rigged_cull_pipeline != nullptr &&
-          m_rigged_cull_pipeline->has_shadow_path() &&
-          visible_rigged.size() >=
-              BackendPipelines::RiggedCullPipeline::minimum_instances()) {
+          m_rigged_cull_pipeline->has_shadow_path() && visible_rigged.size() >= 2U) {
+        if (m_rigged_cull_pipeline->draw_full_mesh_shadow(
+                visible_rigged.data(), visible_rigged.size(), light_vp)) {
+          m_last_playback_stats.shadow_rigged_instanced_instances +=
+              visible_rigged.size();
+          m_last_playback_stats.shadow_rigged_instanced_draws +=
+              m_rigged_cull_pipeline->last_stats().draw_calls;
+          continue;
+        }
         auto const extent = static_cast<float>(m_directional_shadow_resolution);
-        if (m_rigged_cull_pipeline->draw_shadow(visible_rigged.data(),
+        if (visible_rigged.size() >=
+                BackendPipelines::RiggedCullPipeline::minimum_instances() &&
+            m_rigged_cull_pipeline->draw_shadow(visible_rigged.data(),
                                                 visible_rigged.size(),
                                                 light_vp,
                                                 QVector2D(extent, extent))) {

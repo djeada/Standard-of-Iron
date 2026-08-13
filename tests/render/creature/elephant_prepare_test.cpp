@@ -20,6 +20,7 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/creature/snapshot_mesh_registry.h"
 #include "render/elephant/dimensions.h"
@@ -602,7 +603,7 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
   EXPECT_GE(requests[0].phase, 0.0F);
 }
 
-TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
+TEST(ElephantPrepare, FullTemplatePrewarmBypassesSnapshotCache) {
   Render::GL::ElephantRendererBase const renderer;
   Engine::Core::Entity entity(1);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
@@ -620,15 +621,18 @@ TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   Render::GL::DrawContext ctx{};
   ctx.entity = &entity;
   ctx.template_prewarm = true;
+  ctx.force_horse_lod = true;
+  ctx.forced_horse_lod = Render::GL::HorseLOD::Full;
 
   Render::GL::AnimationInputs const anim{};
   auto profile = make_test_elephant_profile();
   Render::GL::TemplateRecorder recorder;
   recorder.snapshot_mesh_cache().clear();
 
+  Render::Creature::RuntimeBakeAllowScope const allow_prewarm_bakes;
   renderer.render(ctx, anim, profile, nullptr, nullptr, recorder);
 
-  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
+  EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_TRUE(recorder.commands().empty());
 }
 

@@ -46,6 +46,7 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/pose_intent.h"
 #include "render/creature/render_request.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/armor_heavy_carthage.h"
@@ -1011,9 +1012,12 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   ctx.entity = &entity;
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Minimal;
 
   Render::GL::TemplateRecorder recorder;
   recorder.snapshot_mesh_cache().clear();
+  Render::Creature::RuntimeBakeAllowScope const allow_prewarm_bakes;
   renderer.render(ctx, recorder);
 
   EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
@@ -8017,8 +8021,8 @@ TEST(HumanoidPrepare, BuiltInRomanSwordsmanRemainsVisibleAfterGuardTransition) {
     ctx.animation_time = animation_time;
     CountingSubmitter sink;
     renderer(ctx, sink);
-    ASSERT_EQ(sink.rigged_calls, 1);
-    ASSERT_EQ(sink.rigged_mesh_min_world_y.size(), 1U);
+    ASSERT_EQ(sink.rigged_calls, 2);
+    ASSERT_EQ(sink.rigged_mesh_min_world_y.size(), 2U);
     EXPECT_TRUE(std::isfinite(sink.rigged_mesh_min_world_y.front()));
   };
 
@@ -8688,8 +8692,8 @@ TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
     CountingSubmitter sink;
     renderer(ctx, sink);
 
-    ASSERT_EQ(sink.rigged_calls, 1);
-    ASSERT_EQ(sink.rigged_world_y.size(), 1U);
+    ASSERT_EQ(sink.rigged_calls, 2);
+    ASSERT_EQ(sink.rigged_world_y.size(), 2U);
     EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
   };
 
@@ -8731,8 +8735,8 @@ TEST(HumanoidPrepare, BuiltInArchersVisibleIdleGeometryTouchesTerrain) {
     CountingSubmitter sink;
     renderer(ctx, sink);
 
-    ASSERT_EQ(sink.rigged_calls, 1);
-    ASSERT_EQ(sink.rigged_world_y.size(), 1U);
+    ASSERT_EQ(sink.rigged_calls, 2);
+    ASSERT_EQ(sink.rigged_world_y.size(), 2U);
     EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
   };
 

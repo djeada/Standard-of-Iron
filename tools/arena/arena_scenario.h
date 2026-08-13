@@ -431,9 +431,12 @@ struct ArenaRenderedFrameTimings {
   double layout_generation_ms{0.0};
   std::uint64_t visible_soldiers{0};
   std::uint64_t draw_calls{0};
+  std::uint64_t prepared_batches{0};
   std::uint64_t rigged_commands{0};
+  std::uint64_t rigged_instanced_draws{0};
   std::uint64_t rigged_instanced_instances{0};
   std::uint64_t rigged_single_draws{0};
+  std::uint64_t shadow_rigged_instanced_draws{0};
   std::uint64_t shadow_rigged_instanced_instances{0};
   std::uint64_t shadow_rigged_single_draws{0};
 };
