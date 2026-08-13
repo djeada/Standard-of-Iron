@@ -35,6 +35,15 @@ struct SheepDrive {
   float speed_ratio{0.0F};
   float alert{0.0F};
   float collapse{0.0F};
+
+  float breath{0.0F};
+  float head_turn{0.0F};
+  float head_dip{0.0F};
+  float ear_flick{0.0F};
+  float tail_flick{0.0F};
+  float weight_shift{0.0F};
+
+  float startle{0.0F};
   SheepGait gait{SheepGait::Stand};
 };
 

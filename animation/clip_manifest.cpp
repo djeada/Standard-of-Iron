@@ -332,6 +332,8 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
   case StateId::RpgSwordOverhead:
   case StateId::RpgSwordThrust:
   case StateId::RpgSwordFinisher:
+  case StateId::WildlifeTense:
+  case StateId::WildlifeStartle:
   case StateId::Count:
     break;
   }

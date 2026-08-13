@@ -1,6 +1,7 @@
 #include "nature_ai.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 #include "../core/component.h"
@@ -30,6 +31,11 @@ constexpr float k_pack_ring_reach_fraction = 0.82F;
 constexpr float k_pack_ring_min = 0.9F;
 constexpr float k_pack_ring_reach_margin = 0.92F;
 constexpr float k_pack_slot_jitter = 0.35F;
+constexpr float k_pack_orbit_step = 0.78F;
+constexpr float k_flee_arc_jitter = 0.55F;
+
+constexpr float k_flee_min_gain = 2.5F;
+constexpr std::array<float, 5> k_flee_veers{{0.0F, 1.05F, -1.05F, 1.95F, -1.95F}};
 constexpr float k_wolf_avoid_base_strength = 2.5F;
 constexpr float k_civilian_standoff = 3.0F;
 constexpr float k_sheep_flee_strength_threshold = 0.5F;
@@ -53,27 +59,61 @@ void bolt_away_from(const NatureContext& ctx,
                     float threat_z,
                     float scatter_radius) {
   auto& wildlife = *ctx.wildlife;
-  float const away_x = ctx.x - threat_x;
-  float const away_z = ctx.z - threat_z;
+
+  float away_x = ctx.x - threat_x;
+  float away_z = ctx.z - threat_z;
+  if (wildlife.stalled) {
+
+    wildlife.stalled = false;
+    away_x = wildlife.home_x - ctx.x;
+    away_z = wildlife.home_z - ctx.z;
+  }
   float const length = std::sqrt((away_x * away_x) + (away_z * away_z));
-  float const dir_x = length > 0.001F ? away_x / length : 1.0F;
-  float const dir_z = length > 0.001F ? away_z / length : 0.0F;
+  float const straight_x = length > 0.001F ? away_x / length : 1.0F;
+  float const straight_z = length > 0.001F ? away_z / length : 0.0F;
+
+  float const arc =
+      random_range(wildlife.rng_state, -k_flee_arc_jitter, k_flee_arc_jitter);
+  float const cos_arc = std::cos(arc);
+  float const sin_arc = std::sin(arc);
+  float const dir_x = (straight_x * cos_arc) - (straight_z * sin_arc);
+  float const dir_z = (straight_x * sin_arc) + (straight_z * cos_arc);
   float const distance =
       random_range(wildlife.rng_state, k_flee_distance_min, k_flee_distance_max);
 
   float target_x = ctx.x + (dir_x * distance);
   float target_z = ctx.z + (dir_z * distance);
-  float open_x = target_x;
-  float open_z = target_z;
-  if (actions.pick_open_point(wildlife.rng_state,
-                              target_x,
-                              target_z,
-                              0.0F,
-                              scatter_radius,
-                              open_x,
-                              open_z)) {
-    target_x = open_x;
-    target_z = open_z;
+
+  for (float const veer : k_flee_veers) {
+    float const cos_veer = std::cos(veer);
+    float const sin_veer = std::sin(veer);
+    float const veer_x = (dir_x * cos_veer) - (dir_z * sin_veer);
+    float const veer_z = (dir_x * sin_veer) + (dir_z * cos_veer);
+    float candidate_x = ctx.x + (veer_x * distance);
+    float candidate_z = ctx.z + (veer_z * distance);
+
+    float open_x = candidate_x;
+    float open_z = candidate_z;
+    if (actions.pick_open_point(wildlife.rng_state,
+                                candidate_x,
+                                candidate_z,
+                                0.0F,
+                                scatter_radius,
+                                open_x,
+                                open_z)) {
+      candidate_x = open_x;
+      candidate_z = open_z;
+    }
+
+    target_x = candidate_x;
+    target_z = candidate_z;
+
+    float const gained_x = candidate_x - ctx.x;
+    float const gained_z = candidate_z - ctx.z;
+    if ((gained_x * gained_x) + (gained_z * gained_z) >
+        k_flee_min_gain * k_flee_min_gain) {
+      break;
+    }
   }
 
   wildlife.target_x = target_x;
@@ -129,15 +169,36 @@ void close_and_bite(const NatureContext& ctx,
   wildlife.focus_id = prey.id;
   actions.set_travel_speed(ctx, true);
 
-  if (distance_to(ctx, prey) <= bite_reach(prey)) {
+  bool const in_reach = distance_to(ctx, prey) <= bite_reach(prey);
+  if (in_reach && wildlife.bite_timer <= 0.0F && wildlife.state_timer <= 0.0F) {
     actions.halt(ctx);
     actions.face_toward(ctx, prey.x, prey.z);
     actions.bite(ctx, prey);
     return;
   }
+  if (wildlife.bite_timer > 0.0F) {
+
+    actions.halt(ctx);
+    actions.face_toward(ctx, prey.x, prey.z);
+    return;
+  }
+
+  if (wildlife.stalled) {
+
+    wildlife.stalled = false;
+    wildlife.orbit += k_two_pi * 0.5F;
+  }
 
   PackSlot const slot = actions.claim_pack_slot(ctx, prey);
-  float const approach_angle = pack_slot_angle(ctx, slot);
+  if (in_reach) {
+
+    wildlife.orbit += k_pack_orbit_step;
+    if (wildlife.orbit > k_two_pi) {
+      wildlife.orbit -= k_two_pi;
+    }
+    actions.face_toward(ctx, prey.x, prey.z);
+  }
+  float const approach_angle = pack_slot_angle(ctx, slot) + wildlife.orbit;
   float const spacing = pack_ring_radius(prey, slot.count);
   float const approach_x = prey.x + (std::cos(approach_angle) * spacing);
   float const approach_z = prey.z + (std::sin(approach_angle) * spacing);
@@ -147,7 +208,14 @@ void close_and_bite(const NatureContext& ctx,
 }
 
 auto wander_anchor(const NatureContext& ctx, float& anchor_x, float& anchor_z) -> void {
-  const auto& wildlife = *ctx.wildlife;
+  auto& wildlife = *ctx.wildlife;
+  if (wildlife.stalled) {
+
+    wildlife.stalled = false;
+    anchor_x = wildlife.home_x;
+    anchor_z = wildlife.home_z;
+    return;
+  }
   anchor_x = ctx.herd.center_x;
   anchor_z = ctx.herd.center_z;
   float const home_dx = anchor_x - wildlife.home_x;

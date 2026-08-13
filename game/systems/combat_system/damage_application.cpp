@@ -533,6 +533,11 @@ auto blood_stain_scale(const Engine::Core::UnitComponent* unit) -> float {
   if (is_mounted_spawn(unit->spawn_type)) {
     return 1.25F;
   }
+  if (unit->spawn_type == Game::Units::SpawnType::Sheep ||
+      unit->spawn_type == Game::Units::SpawnType::Wolf) {
+
+    return 0.42F;
+  }
   return 1.0F;
 }
 

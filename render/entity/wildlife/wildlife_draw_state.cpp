@@ -114,6 +114,12 @@ auto resolve_draw_state(const DrawContext& ctx, float top_speed) -> DrawState {
       state.bite_progress =
           std::clamp(1.0F - (wildlife->bite_timer / k_bite_seconds), 0.0F, 1.0F);
     }
+    if (wildlife->flinch_timer > 0.0F) {
+      constexpr float k_flinch_seconds =
+          Engine::Core::WildlifeComponent::k_flinch_animation_seconds;
+      state.flinch_progress =
+          std::clamp(1.0F - (wildlife->flinch_timer / k_flinch_seconds), 0.0F, 1.0F);
+    }
   }
 
   if (const auto* death =
