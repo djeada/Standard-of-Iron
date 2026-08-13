@@ -200,6 +200,24 @@ public:
          resolve(shader_base + QStringLiteral("ground_marker.vert")),
          resolve(shader_base + QStringLiteral("ground_marker.frag")));
 
+    const QString post_vert =
+        resolve(shader_base + QStringLiteral("post_fullscreen.vert"));
+    load(QStringLiteral("post_bright"),
+         post_vert,
+         resolve(shader_base + QStringLiteral("post_bright.frag")));
+    load(QStringLiteral("post_blur"),
+         post_vert,
+         resolve(shader_base + QStringLiteral("post_blur.frag")));
+    load(QStringLiteral("post_composite"),
+         post_vert,
+         resolve(shader_base + QStringLiteral("post_composite.frag")));
+    load(QStringLiteral("post_fxaa"),
+         post_vert,
+         resolve(shader_base + QStringLiteral("post_fxaa.frag")));
+    load(QStringLiteral("sky"),
+         post_vert,
+         resolve(shader_base + QStringLiteral("sky.frag")));
+
     load(QStringLiteral("mode_indicator"),
          resolve(shader_base + QStringLiteral("mode_indicator.vert")),
          resolve(shader_base + QStringLiteral("mode_indicator.frag")));

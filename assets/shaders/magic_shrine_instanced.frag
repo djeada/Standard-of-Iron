@@ -114,7 +114,7 @@ void main() {
   float ao = clamp(N.y * 0.45 + 0.72, 0.28, 1.0);
 
   vec3 ambient = environment_ambient_light(N);
-  vec3 direct = sun_color * ndotl * 0.78;
+  vec3 direct = soi_key_light(N) * 0.78;
 
   float spec_base = max(dot(N, H), 0.0);
   float specular = pow(spec_base, 36.0) * 0.12;
@@ -125,6 +125,7 @@ void main() {
   vec3 rim_color = sky_color * rim;
 
   vec3 color = stone_color * (ambient + direct) * ao * environment_exposure();
+  color += soi_rim_light(N, V);
   color += sun_color * specular * ao;
   color += rim_color;
 

@@ -31,6 +31,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/healer_aura_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/combat_dust_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/ground_marker_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/post_process_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mode_indicator_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/rain_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/mesh_instancing_pipeline.cpp

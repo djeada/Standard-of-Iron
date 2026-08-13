@@ -48,17 +48,17 @@ auto mediterranean_summer_profile() -> const std::array<LightingKeyframe, 8>& {
   static const std::array<LightingKeyframe, 8> keyframes{
       make_keyframe(0.0F,
                     {-0.28F, 0.42F, 0.50F},
-                    {0.46F, 0.56F, 0.78F},
-                    0.32F,
-                    {0.08F, 0.12F, 0.22F},
-                    {0.10F, 0.12F, 0.18F},
-                    0.12F,
-                    {0.09F, 0.13F, 0.21F},
+                    {0.40F, 0.54F, 0.92F},
+                    0.34F,
+                    {0.14F, 0.23F, 0.48F},
+                    {0.09F, 0.13F, 0.26F},
+                    0.30F,
+                    {0.11F, 0.18F, 0.34F},
                     0.004F,
-                    {0.08F, 0.11F, 0.18F},
-                    0.58F,
-                    0.62F,
-                    0.78F),
+                    {0.24F, 0.30F, 0.50F},
+                    0.42F,
+                    0.72F,
+                    0.90F),
       make_keyframe(5.0F,
                     {0.72F, 0.10F, 0.18F},
                     {0.94F, 0.49F, 0.30F},
@@ -94,23 +94,23 @@ auto mediterranean_summer_profile() -> const std::array<LightingKeyframe, 8>& {
                     0.30F,
                     {0.62F, 0.70F, 0.78F},
                     0.002F,
-                    {0.18F, 0.21F, 0.26F},
-                    0.76F,
-                    0.26F,
+                    {0.28F, 0.32F, 0.40F},
+                    0.66F,
+                    0.34F,
                     1.04F),
       make_keyframe(17.0F,
-                    {0.55F, 0.55F, 0.35F},
-                    {1.00F, 0.77F, 0.50F},
-                    0.88F,
-                    {0.52F, 0.59F, 0.70F},
-                    {0.32F, 0.22F, 0.14F},
-                    0.27F,
-                    {0.65F, 0.64F, 0.62F},
-                    0.004F,
-                    {0.20F, 0.20F, 0.24F},
-                    0.75F,
+                    {0.74F, 0.26F, 0.32F},
+                    {1.00F, 0.76F, 0.48F},
+                    1.18F,
+                    {0.60F, 0.63F, 0.70F},
+                    {0.46F, 0.32F, 0.18F},
                     0.34F,
-                    1.00F),
+                    {0.80F, 0.71F, 0.58F},
+                    0.002F,
+                    {0.34F, 0.30F, 0.36F},
+                    0.72F,
+                    0.30F,
+                    1.10F),
       make_keyframe(20.0F,
                     {-0.58F, 0.16F, 0.30F},
                     {0.92F, 0.44F, 0.29F},
@@ -126,30 +126,30 @@ auto mediterranean_summer_profile() -> const std::array<LightingKeyframe, 8>& {
                     0.86F),
       make_keyframe(22.0F,
                     {-0.20F, 0.35F, 0.50F},
-                    {0.48F, 0.58F, 0.80F},
-                    0.35F,
-                    {0.09F, 0.13F, 0.24F},
-                    {0.11F, 0.13F, 0.19F},
-                    0.12F,
-                    {0.10F, 0.15F, 0.24F},
+                    {0.42F, 0.56F, 0.94F},
+                    0.38F,
+                    {0.15F, 0.24F, 0.50F},
+                    {0.10F, 0.14F, 0.27F},
+                    0.30F,
+                    {0.12F, 0.19F, 0.36F},
                     0.005F,
-                    {0.07F, 0.10F, 0.17F},
-                    0.58F,
-                    0.64F,
-                    0.76F),
+                    {0.25F, 0.31F, 0.52F},
+                    0.42F,
+                    0.74F,
+                    0.90F),
       make_keyframe(24.0F,
                     {-0.28F, 0.42F, 0.50F},
-                    {0.46F, 0.56F, 0.78F},
-                    0.32F,
-                    {0.08F, 0.12F, 0.22F},
-                    {0.10F, 0.12F, 0.18F},
-                    0.12F,
-                    {0.09F, 0.13F, 0.21F},
+                    {0.40F, 0.54F, 0.92F},
+                    0.34F,
+                    {0.14F, 0.23F, 0.48F},
+                    {0.09F, 0.13F, 0.26F},
+                    0.30F,
+                    {0.11F, 0.18F, 0.34F},
                     0.004F,
-                    {0.08F, 0.11F, 0.18F},
-                    0.58F,
-                    0.62F,
-                    0.78F),
+                    {0.24F, 0.30F, 0.50F},
+                    0.42F,
+                    0.72F,
+                    0.90F),
   };
   return keyframes;
 }
@@ -164,6 +164,9 @@ auto iron_sepulcher_profile() -> const std::array<LightingKeyframe, 8>& {
           (keyframe.lighting.fog_color * 0.68F) + QVector3D(0.10F, 0.13F, 0.18F);
       keyframe.lighting.primary_color =
           (keyframe.lighting.primary_color * 0.86F) + QVector3D(0.05F, 0.06F, 0.09F);
+      const QVector3D grave_shadow(0.26F, 0.24F, 0.40F);
+      keyframe.lighting.shadow_tint +=
+          (grave_shadow - keyframe.lighting.shadow_tint) * 0.55F;
       keyframe.lighting.exposure *= 0.92F;
     }
     return result;
@@ -222,8 +225,19 @@ auto apply_weather(EnvironmentLightingState state,
     const QVector3D snow_bounce(0.72F, 0.76F, 0.80F);
     state.ground_bounce_color +=
         (snow_bounce - state.ground_bounce_color) * (snow * 0.55F);
-    state.ambient_intensity *= 1.0F + (snow * 0.18F);
-    state.exposure *= 1.0F + (snow * 0.08F);
+    state.ambient_intensity *= 1.0F + (snow * 0.40F);
+    state.exposure *= 1.0F + (snow * 0.10F);
+
+    const QVector3D snow_haze(0.76F, 0.83F, 0.94F);
+    state.fog_color += (snow_haze - state.fog_color) * (snow * 0.50F);
+    state.sky_color += (snow_haze - state.sky_color) * (snow * 0.30F);
+    state.fog_density += snow * 0.005F;
+
+    const QVector3D snow_shadow(0.48F, 0.57F, 0.76F);
+    state.shadow_tint += (snow_shadow - state.shadow_tint) * (snow * 0.65F);
+    state.shadow_strength *= 1.0F - (snow * 0.34F);
+    state.shadow_softness =
+        std::clamp(state.shadow_softness + (snow * 0.28F), 0.0F, 1.0F);
   }
   return state.sanitized();
 }
