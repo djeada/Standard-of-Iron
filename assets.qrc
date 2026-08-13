@@ -10,6 +10,7 @@
         <file>assets/shaders/include/directional_shadows.glsl</file>
         <file>assets/shaders/include/visibility_mask.glsl</file>
         <file>assets/shaders/include/noise.glsl</file>
+        <file>assets/shaders/include/tonemap.glsl</file>
         <file>assets/shaders/include/rigged_gpu_skin.glsl</file>
         <file>assets/shaders/include/activity_indicator.glsl</file>
         <file>assets/shaders/directional_shadow_depth.vert</file>
@@ -93,6 +94,12 @@
         <file>assets/shaders/healing_beam.frag</file>
         <file>assets/shaders/healing_beam.vert</file>
         <file>assets/shaders/ground_marker.frag</file>
+        <file>assets/shaders/post_fullscreen.vert</file>
+        <file>assets/shaders/post_bright.frag</file>
+        <file>assets/shaders/post_blur.frag</file>
+        <file>assets/shaders/post_composite.frag</file>
+        <file>assets/shaders/post_fxaa.frag</file>
+        <file>assets/shaders/sky.frag</file>
         <file>assets/shaders/ground_marker.vert</file>
         <file>assets/shaders/mode_indicator.frag</file>
         <file>assets/shaders/mode_indicator.vert</file>

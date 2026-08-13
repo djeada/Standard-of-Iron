@@ -85,13 +85,13 @@ void main() {
   cavity *= mix(1.0, 0.95, streaks);
   cavity *= mix(1.0, 0.92, grime);
 
-  vec3 illumination = environment_ambient_light(N) * 1.38 +
-                      sun * mix(lambert, wrapped, 0.55) * 0.86 + subsurface;
+  vec3 illumination = environment_ambient_light(N) * 1.38 * environment_exposure() +
+                      soi_key_light(N) * 0.86 * environment_exposure() + subsurface;
   float gloss = mix(0.020, 0.052, figure) * (1.0 + environment_wetness() * 1.8);
   float specular = pow(max(dot(N, H), 0.0), mix(22.0, 52.0, figure)) * gloss;
   float rim = pow(1.0 - max(dot(N, V), 0.0), 3.2) * mix(0.035, 0.075, figure);
 
-  vec3 color = stone * illumination * cavity * environment_exposure();
+  vec3 color = stone * illumination * cavity;
   color += sun * specular;
   color += sky * rim;
   color += color * local_lighting(v_world_pos, normalize(v_normal));
