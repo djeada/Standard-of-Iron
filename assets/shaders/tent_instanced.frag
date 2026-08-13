@@ -72,12 +72,12 @@ void main() {
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.72;
+  vec3 illumination = soi_surface_lighting_scaled(N, 0.72);
   float ao = mix(0.55, 1.0, hemi) * mix(1.0, 0.78, base_dirt);
   float specular = pow(max(dot(N, H), 0.0), 58.0) * mix(0.025, 0.20, iron_mask);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.045;
 
-  vec3 color = albedo * illumination * ao * environment_exposure();
+  vec3 color = albedo * illumination * ao;
   color += sun * specular;
   color += sky * rim;
   color += color * local_lighting(v_world_pos, normalize(v_normal));

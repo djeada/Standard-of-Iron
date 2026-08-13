@@ -25,6 +25,13 @@ uniform float u_soil_blend_height, u_soil_blend_sharpness;
 uniform float u_height_noise_strength, u_height_noise_frequency;
 uniform float u_ambient_boost, u_rock_detail_strength;
 
+const float k_soi_terrain_detail_damping = 0.45;
+const float k_soi_terrain_relief_damping = 0.55;
+const float k_soi_terrain_hue_scale = 0.022;
+const float k_soi_terrain_hue_amount = 0.085;
+const vec3 k_soi_terrain_hue_warm = vec3(1.075, 1.010, 0.905);
+const vec3 k_soi_terrain_hue_cool = vec3(0.935, 1.005, 1.070);
+
 uniform float u_snow_coverage;
 uniform float u_moisture_level;
 uniform float u_crack_intensity;
@@ -338,6 +345,10 @@ void main() {
   surface_grain *= mix(1.0, 0.62, tactical);
   granular *= mix(1.0, 0.68, tactical);
   speckle *= mix(1.0, 0.58, tactical);
+
+  surface_grain *= k_soi_terrain_detail_damping;
+  granular *= k_soi_terrain_detail_damping;
+  speckle *= k_soi_terrain_detail_damping;
 
   float high_ground = smoothstep(0.8, 4.8, v_world_pos.y);
   float low_ground = 1.0 - smoothstep(0.45, 2.6, v_world_pos.y);
@@ -661,6 +672,13 @@ void main() {
     terrain_color = mix(terrain_color, snow_tinted, snow_mask);
   }
 
+  float hue_field =
+      gradient_fbm(world_coord * k_soi_terrain_hue_scale + vec2(61.0, -37.0));
+  vec3 hue_shift = mix(k_soi_terrain_hue_cool,
+                       k_soi_terrain_hue_warm,
+                       smoothstep(0.35, 0.65, hue_field));
+  terrain_color *= mix(vec3(1.0), hue_shift, k_soi_terrain_hue_amount);
+
   vec3 gray_level = vec3(dot(terrain_color, vec3(0.299, 0.587, 0.114)));
   float grounded_saturation = clamp(u_grass_saturation * 0.96, 0.0, 1.16);
   terrain_color = mix(gray_level, terrain_color, grounded_saturation);
@@ -708,6 +726,7 @@ void main() {
   float relief_amp = 0.055 + (0.055 + 0.060 * u_soil_roughness) * soil_mix +
                      0.07 * rock_mask + 0.025 * exposed_ground + 0.040 * bare_patch;
   relief_amp *= mix(1.0, 0.78, tactical);
+  relief_amp *= k_soi_terrain_relief_damping;
   vec3 relief_offset =
       mix(vec3(relief_gradient.x, 0.0, relief_gradient.y),
           vec3(relief_gradient.x, relief_gradient.y, 0.0) * wall_axis +
@@ -757,5 +776,5 @@ void main() {
       view_distance, u_fog_start, u_fog_end, 0.72, 0.60 * horizon_fog);
   lit_color = mix(lit_color, environment_fog_color(), fog_amount);
 
-  frag_color = vec4(clamp(lit_color, 0.0, 1.0), 1.0);
+  frag_color = vec4(lit_color, 1.0);
 }

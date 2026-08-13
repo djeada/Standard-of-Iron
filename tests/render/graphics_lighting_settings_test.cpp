@@ -30,3 +30,21 @@ TEST(GraphicsLightingSettingsTest, PresetsScaleDirectionalShadowCost) {
 
   graphics.set_quality(Render::GraphicsQuality::High);
 }
+
+TEST(GraphicsLightingSettingsTest, PresetsScaleEdgeAntiAliasing) {
+  auto& graphics = Render::GraphicsSettings::instance();
+
+  graphics.set_quality(Render::GraphicsQuality::Low);
+  EXPECT_EQ(graphics.presentation().msaa_samples, 0);
+
+  graphics.set_quality(Render::GraphicsQuality::Medium);
+  EXPECT_EQ(graphics.presentation().msaa_samples, 2);
+
+  graphics.set_quality(Render::GraphicsQuality::High);
+  EXPECT_EQ(graphics.presentation().msaa_samples, 4);
+
+  graphics.set_quality(Render::GraphicsQuality::Ultra);
+  EXPECT_EQ(graphics.presentation().msaa_samples, 4);
+
+  graphics.set_quality(Render::GraphicsQuality::High);
+}

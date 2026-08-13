@@ -62,14 +62,15 @@ void main() {
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.72;
+  vec3 illumination = soi_surface_lighting_scaled(N, 0.72);
   float crevice_ao = mix(1.0, 0.62, fissures) * mix(0.58, 1.0, hemi);
 
   float wet_spec = ground_damp * pow(max(dot(N, H), 0.0), 34.0) * 0.16;
   float dry_spec = pow(max(dot(N, H), 0.0), 18.0) * 0.025;
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.055;
 
-  vec3 color = stone * illumination * crevice_ao * environment_exposure();
+  vec3 color = stone * illumination * crevice_ao;
+  color += soi_rim_light(N, V);
   color += sun * (dry_spec + wet_spec);
   color += sky * rim;
   color += color * local_lighting(v_world_pos, normalize(v_normal));

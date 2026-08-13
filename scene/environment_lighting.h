@@ -23,8 +23,8 @@ struct EnvironmentLightingState {
   QVector3D fog_color{0.58F, 0.65F, 0.72F};
   float fog_density = 0.0F;
 
-  QVector3D shadow_tint{0.16F, 0.20F, 0.27F};
-  float shadow_strength = 0.72F;
+  QVector3D shadow_tint{0.30F, 0.34F, 0.44F};
+  float shadow_strength = 0.60F;
   float shadow_softness = 0.35F;
 
   float exposure = 1.0F;
