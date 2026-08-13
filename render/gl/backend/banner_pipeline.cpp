@@ -2,7 +2,6 @@
 
 #include <QDebug>
 
-#include "render/gl/backend.h"
 #include "render/gl/mesh.h"
 #include "render/gl/shader_cache.h"
 

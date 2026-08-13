@@ -43,7 +43,9 @@ from pathlib import Path
 
 OPTIONAL_GL43_SHADERS = {
     "character_skinned_gpudriven.vert",
+    "character_skinned_gpu_instanced.vert",
     "directional_shadow_rigged_gpudriven.vert",
+    "directional_shadow_rigged_gpu_instanced.vert",
     "rigged_cull.comp",
     "rigged_cull_finalize.comp",
 }

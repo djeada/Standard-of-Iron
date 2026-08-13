@@ -666,9 +666,12 @@ void ArenaViewport::paintGL() {
   timings.visible_soldiers = Render::GL::get_humanoid_render_stats().soldiers_rendered;
   timings.draw_calls = m_renderer->last_draw_command_count();
   auto const playback_stats = m_renderer->last_playback_stats();
+  timings.prepared_batches = playback_stats.prepared_batches;
   timings.rigged_commands = playback_stats.rigged_commands;
+  timings.rigged_instanced_draws = playback_stats.rigged_instanced_draws;
   timings.rigged_instanced_instances = playback_stats.rigged_instanced_instances;
   timings.rigged_single_draws = playback_stats.rigged_single_draws;
+  timings.shadow_rigged_instanced_draws = playback_stats.shadow_rigged_instanced_draws;
   timings.shadow_rigged_instanced_instances =
       playback_stats.shadow_rigged_instanced_instances;
   timings.shadow_rigged_single_draws = playback_stats.shadow_rigged_single_draws;

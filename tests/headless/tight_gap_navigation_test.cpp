@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -366,11 +367,14 @@ TEST_F(TightGapNavigationTest, AnArmyCrossesARiverOnTheBridgeDeck) {
   CommandService::move_units(m_session->world(), army, targets);
 
   int drowned = 0;
+  std::vector<bool> crossed_centerline(army.size(), false);
+  std::vector<float> max_centerline_offset(army.size(), 0.0F);
   const double step = m_session->clock().tick_seconds();
   for (double elapsed = 0.0; elapsed < 90.0; elapsed += step) {
     run_for(step);
-    for (const auto id : army) {
-      const auto cell = cell_of(position_of(id));
+    for (std::size_t index = 0; index < army.size(); ++index) {
+      const QVector3D position = position_of(army[index]);
+      const auto cell = cell_of(position);
       const bool on_water =
           Game::Map::is_water_terrain(terrain.get_terrain_type(cell.x, cell.y));
       const auto* height_map = terrain.get_height_map();
@@ -380,9 +384,22 @@ TEST_F(TightGapNavigationTest, AnArmyCrossesARiverOnTheBridgeDeck) {
       if (on_water && !on_deck) {
         drowned++;
       }
+      if (on_deck && std::abs(position.x()) < 5.0F) {
+        crossed_centerline[index] = true;
+        max_centerline_offset[index] =
+            std::max(max_centerline_offset[index], std::abs(position.z()));
+      }
     }
   }
   EXPECT_EQ(drowned, 0) << "units stood in the river instead of on the deck";
+  EXPECT_TRUE(std::all_of(crossed_centerline.begin(),
+                          crossed_centerline.end(),
+                          [](bool crossed) { return crossed; }))
+      << "not every unit traversed the bridge centerline independently";
+  for (std::size_t index = 0; index < army.size(); ++index) {
+    EXPECT_LE(max_centerline_offset[index], 0.75F)
+        << "unit " << index << " drifted off the bridge centerline";
+  }
 
   int crossed = 0;
   for (const auto id : army) {
@@ -429,7 +446,40 @@ TEST_F(TightGapNavigationTest, AnArmyClimbsAHillThroughItsEntrance) {
 
   std::vector<QVector3D> targets(army.size(), QVector3D(0.0F, 0.0F, 0.0F));
   CommandService::move_units(m_session->world(), army, targets);
-  run_for(90.0);
+
+  std::vector<bool> used_entrance_centerline(army.size(), false);
+  std::vector<float> closest_entrance_distance(army.size(),
+                                               std::numeric_limits<float>::infinity());
+  std::vector<float> entrance_offset(army.size(), 0.0F);
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 90.0; elapsed += step) {
+    run_for(step);
+    for (std::size_t index = 0; index < army.size(); ++index) {
+      const QVector3D position = position_of(army[index]);
+      const Point cell = cell_of(position);
+
+      if (terrain.is_hill_entrance(cell.x, cell.y)) {
+        used_entrance_centerline[index] = true;
+        float const anchor_distance =
+            std::abs(position.x() - hill.entrances.front().x());
+        if (anchor_distance < closest_entrance_distance[index]) {
+          closest_entrance_distance[index] = anchor_distance;
+          entrance_offset[index] = std::abs(position.z());
+        }
+      }
+    }
+  }
+
+  EXPECT_TRUE(std::all_of(used_entrance_centerline.begin(),
+                          used_entrance_centerline.end(),
+                          [](bool used) { return used; }))
+      << "not every unit traversed the hill entrance independently";
+  for (std::size_t index = 0; index < army.size(); ++index) {
+    EXPECT_LE(closest_entrance_distance[index], 0.25F)
+        << "unit " << index << " never crossed the hill entrance throat";
+    EXPECT_LE(entrance_offset[index], 0.75F)
+        << "unit " << index << " drifted off the hill entrance centerline";
+  }
 
   int on_the_hill = 0;
   for (const auto id : army) {

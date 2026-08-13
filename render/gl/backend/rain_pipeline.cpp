@@ -12,7 +12,6 @@
 #include <random>
 
 #include "gl_error_check.h"
-#include "render/gl/backend.h"
 #include "render/gl/shader_cache.h"
 #include "render/rain_gpu.h"
 #include "scene/camera.h"
@@ -324,7 +323,8 @@ void RainPipeline::render(const Camera& cam, const RainBatchParams& params) {
                  k_field_height_min,
                  k_field_height_max);
 
-  const int viewport_height = m_backend != nullptr ? m_backend->viewport_height() : 0;
+  const int viewport_height =
+      m_frame_environment != nullptr ? m_frame_environment->viewport_height() : 0;
   const float half_fov_tan =
       std::tan(0.5F * cam.get_fov() * std::numbers::pi_v<float> / 180.0F);
   const float pixel_scale =
@@ -336,8 +336,8 @@ void RainPipeline::render(const Camera& cam, const RainBatchParams& params) {
   wind = wind.lengthSquared() > 1e-6F ? wind.normalized() : QVector3D(1.0F, 0.0F, 0.0F);
 
   QVector3D particle_color = look.color;
-  if (m_backend != nullptr) {
-    const auto& lighting = m_backend->environment_lighting();
+  if (m_frame_environment != nullptr) {
+    const auto& lighting = m_frame_environment->environment_lighting();
     const float sky_blend = is_snow ? k_snow_sky_blend : k_rain_sky_blend;
     particle_color += (lighting.sky_color - particle_color) * sky_blend;
     const float brightness =

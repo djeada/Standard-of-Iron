@@ -9,16 +9,11 @@
 #include <string>
 #include <vector>
 
-#include "game/core/component.h"
-#include "game/core/world.h"
-#include "game/systems/combat_rules.h"
 #include "gl_error_check.h"
-#include "render/combat_dust_defaults.h"
-#include "render/gl/backend.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
-#include "scene/camera.h"
 #include "spark_orientation.h"
+#include "static_mesh_upload.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -32,32 +27,6 @@ auto check_gl_error(const char* operation) -> bool {
 }
 
 constexpr float k_min_dust_intensity = 0.01F;
-constexpr float k_dust_color_r = 0.6F;
-constexpr float k_dust_color_g = 0.55F;
-constexpr float k_dust_color_b = 0.45F;
-constexpr float k_dust_y_offset = 0.05F;
-
-constexpr float k_default_flame_radius = 3.0F;
-constexpr float k_default_flame_intensity = 0.8F;
-constexpr float k_flame_color_r = 1.0F;
-constexpr float k_flame_color_g = 0.4F;
-constexpr float k_flame_color_b = 0.1F;
-constexpr float k_flame_y_offset = 0.5F;
-constexpr float k_building_health_threshold = 0.5F;
-constexpr float k_blood_y_offset = 0.02F;
-
-auto blood_alpha_scale(float elapsed_time, float lifetime) -> float {
-  if (lifetime <= 0.0F) {
-    return 0.0F;
-  }
-
-  float const fade_window = std::max(1.0F, lifetime * 0.25F);
-  float const remaining_time = lifetime - elapsed_time;
-  if (remaining_time >= fade_window) {
-    return 1.0F;
-  }
-  return std::clamp(remaining_time / fade_window, 0.0F, 1.0F);
-}
 
 struct EffectRenderState {
   GLboolean cull_enabled{GL_FALSE};
@@ -195,8 +164,6 @@ void CombatDustPipeline::shutdown() {
   release_geometry();
   m_blood_shader = nullptr;
   m_dust_shader = nullptr;
-  m_blood_data.clear();
-  m_dust_data.clear();
 }
 
 void CombatDustPipeline::release_geometry() {
@@ -256,79 +223,14 @@ auto upload_dust_mesh(QOpenGLFunctions_3_3_Core& gl,
                       const char* label,
                       const std::vector<DustVertex>& vertices,
                       const std::vector<unsigned int>& indices) -> bool {
-  auto stage_ok = [label](const char* stage) {
-    const std::string message = std::string(label) + " " + stage;
-    return check_gl_error(message.c_str());
-  };
-
-  gl.glGenVertexArrays(1, &mesh.vao);
-  if (!stage_ok("glGenVertexArrays") || mesh.vao == 0) {
-    return false;
-  }
-
-  gl.glBindVertexArray(mesh.vao);
-  if (!stage_ok("glBindVertexArray")) {
-    gl.glDeleteVertexArrays(1, &mesh.vao);
-    mesh.vao = 0;
-    return false;
-  }
-
-  gl.glGenBuffers(1, &mesh.vertex_buffer);
-  gl.glBindBuffer(GL_ARRAY_BUFFER, mesh.vertex_buffer);
-  gl.glBufferData(GL_ARRAY_BUFFER,
-                  static_cast<GLsizeiptr>(vertices.size() * sizeof(DustVertex)),
-                  vertices.data(),
-                  GL_STATIC_DRAW);
-  if (!stage_ok("vertex buffer")) {
-    release_mesh_buffers(gl, mesh);
-    return false;
-  }
-
-  gl.glGenBuffers(1, &mesh.index_buffer);
-  gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.index_buffer);
-  gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                  static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-                  indices.data(),
-                  GL_STATIC_DRAW);
-  if (!stage_ok("index buffer")) {
-    release_mesh_buffers(gl, mesh);
-    return false;
-  }
-
-  mesh.index_count = static_cast<GLsizei>(indices.size());
-
-  gl.glEnableVertexAttribArray(VertexAttrib::position);
-  gl.glVertexAttribPointer(VertexAttrib::position,
-                           ComponentCount::vec3,
-                           GL_FLOAT,
-                           GL_FALSE,
-                           sizeof(DustVertex),
-                           reinterpret_cast<void*>(offsetof(DustVertex, position)));
-
-  gl.glEnableVertexAttribArray(VertexAttrib::normal);
-  gl.glVertexAttribPointer(VertexAttrib::normal,
-                           ComponentCount::vec3,
-                           GL_FLOAT,
-                           GL_FALSE,
-                           sizeof(DustVertex),
-                           reinterpret_cast<void*>(offsetof(DustVertex, normal)));
-
-  gl.glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  gl.glVertexAttribPointer(VertexAttrib::tex_coord,
-                           ComponentCount::vec2,
-                           GL_FLOAT,
-                           GL_FALSE,
-                           sizeof(DustVertex),
-                           reinterpret_cast<void*>(offsetof(DustVertex, tex_coord)));
-
-  gl.glBindVertexArray(0);
-
-  if (!stage_ok("vertex attributes")) {
-    release_mesh_buffers(gl, mesh);
-    return false;
-  }
-
-  return true;
+  return upload_static_effect_mesh(gl,
+                                   mesh,
+                                   label,
+                                   vertices.data(),
+                                   vertices.size(),
+                                   sizeof(DustVertex),
+                                   k_position_normal_texcoord_layout,
+                                   indices);
 }
 
 } // namespace
@@ -573,249 +475,6 @@ auto CombatDustPipeline::create_blood_geometry() -> bool {
   }
 
   return upload_dust_mesh(*this, m_blood_mesh, "blood", vertices, indices);
-}
-
-void CombatDustPipeline::collect_combat_zones(Engine::Core::World* world,
-                                              float animation_time) {
-  if (world == nullptr) {
-    return;
-  }
-
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
-
-  for (auto* unit : units) {
-    if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto* unit_comp = unit->get_component<Engine::Core::UnitComponent>();
-    auto* transform = unit->get_component<Engine::Core::TransformComponent>();
-    auto* attack = unit->get_component<Engine::Core::AttackComponent>();
-
-    if (transform == nullptr || unit_comp == nullptr) {
-      continue;
-    }
-
-    if (unit_comp->health <= 0) {
-      continue;
-    }
-
-    if (attack == nullptr || !attack->in_melee_lock ||
-        !Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
-      continue;
-    }
-
-    CombatDustData data;
-    data.position =
-        QVector3D(transform->position.x, k_dust_y_offset, transform->position.z);
-    data.radius = CombatDustDefaults::k_radius;
-    data.intensity = CombatDustDefaults::k_intensity;
-    data.color = QVector3D(k_dust_color_r, k_dust_color_g, k_dust_color_b);
-    data.time = animation_time;
-    data.effect_type = EffectType::Dust;
-
-    m_dust_data.push_back(data);
-  }
-}
-
-void CombatDustPipeline::collect_building_flames(Engine::Core::World* world,
-                                                 float animation_time) {
-  if (world == nullptr) {
-    return;
-  }
-
-  auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
-
-  for (auto* building : buildings) {
-    if (building->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto* unit_comp = building->get_component<Engine::Core::UnitComponent>();
-    auto* transform = building->get_component<Engine::Core::TransformComponent>();
-
-    if (transform == nullptr || unit_comp == nullptr) {
-      continue;
-    }
-
-    if (unit_comp->health <= 0) {
-      continue;
-    }
-
-    float const health_ratio = static_cast<float>(unit_comp->health) /
-                               static_cast<float>(unit_comp->max_health);
-
-    if (health_ratio > k_building_health_threshold) {
-      continue;
-    }
-
-    float const base_intensity = k_default_flame_intensity * (1.0F - health_ratio);
-
-    float const cx = transform->position.x;
-    float const cz = transform->position.z;
-
-    constexpr float k_building_half_width = 1.5F;
-    constexpr float k_building_half_depth = 1.2F;
-    constexpr float k_flame_spacing = 0.8F;
-
-    struct FlamePoint {
-      float dx, dz, height_offset, intensity_mult, radius_mult;
-    };
-
-    FlamePoint const flame_points[] = {
-
-        {-k_building_half_width * 0.7F,
-         -k_building_half_depth * 0.7F,
-         0.8F,
-         1.0F,
-         0.9F},
-        {k_building_half_width * 0.7F,
-         -k_building_half_depth * 0.7F,
-         0.7F,
-         0.95F,
-         0.85F},
-        {-k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.6F, 0.9F, 0.8F},
-        {k_building_half_width * 0.7F, k_building_half_depth * 0.7F, 0.75F, 1.0F, 0.9F},
-
-        {0.0F, -k_building_half_depth * 0.8F, 0.9F, 0.85F, 0.7F},
-        {0.0F, k_building_half_depth * 0.8F, 0.7F, 0.8F, 0.65F},
-        {-k_building_half_width * 0.8F, 0.0F, 0.65F, 0.75F, 0.7F},
-        {k_building_half_width * 0.8F, 0.0F, 0.8F, 0.85F, 0.75F},
-
-        {0.0F, 0.0F, 1.0F, 1.1F, 1.0F},
-    };
-
-    for (const auto& fp : flame_points) {
-      CombatDustData data;
-      data.position =
-          QVector3D(cx + fp.dx, k_flame_y_offset + fp.height_offset, cz + fp.dz);
-      data.radius = k_default_flame_radius * fp.radius_mult;
-      data.intensity = base_intensity * fp.intensity_mult;
-      data.color = QVector3D(k_flame_color_r, k_flame_color_g, k_flame_color_b);
-      data.time = animation_time;
-      data.effect_type = EffectType::Flame;
-      m_dust_data.push_back(data);
-    }
-  }
-}
-
-void CombatDustPipeline::collect_blood_pools(Engine::Core::World* world) {
-  if (world == nullptr) {
-    return;
-  }
-
-  auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
-
-  for (auto* entity : blood_stains) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto* blood_stain = entity->get_component<Engine::Core::BloodStainComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (blood_stain == nullptr || transform == nullptr) {
-      continue;
-    }
-
-    BloodPoolData data;
-    data.position = QVector3D(transform->position.x,
-                              transform->position.y + k_blood_y_offset,
-                              transform->position.z);
-    data.radius = blood_stain->radius;
-    data.alpha_scale =
-        blood_alpha_scale(blood_stain->elapsed_time, blood_stain->lifetime);
-    data.rotation = blood_stain->rotation;
-    data.aspect_ratio = blood_stain->aspect_ratio;
-    data.seed = blood_stain->seed;
-    m_blood_data.push_back(data);
-  }
-}
-
-void CombatDustPipeline::collect_all_effects(Engine::Core::World* world,
-                                             float animation_time) {
-  m_dust_data.clear();
-  m_blood_data.clear();
-  collect_combat_zones(world, animation_time);
-  collect_building_flames(world, animation_time);
-  collect_blood_pools(world);
-}
-
-void CombatDustPipeline::add_dust_zone(const QVector3D& position,
-                                       float radius,
-                                       float intensity,
-                                       const QVector3D& color,
-                                       float time) {
-  CombatDustData data;
-  data.position = position;
-  data.radius = radius;
-  data.intensity = intensity;
-  data.color = color;
-  data.time = time;
-  data.effect_type = EffectType::Dust;
-  m_dust_data.push_back(data);
-}
-
-void CombatDustPipeline::add_flame_zone(const QVector3D& position,
-                                        float radius,
-                                        float intensity,
-                                        const QVector3D& color,
-                                        float time) {
-  CombatDustData data;
-  data.position = position;
-  data.radius = radius;
-  data.intensity = intensity;
-  data.color = color;
-  data.time = time;
-  data.effect_type = EffectType::Flame;
-  m_dust_data.push_back(data);
-}
-
-void CombatDustPipeline::render(const Camera& cam, float animation_time) {
-  if (!is_initialized() || (m_dust_data.empty() && m_blood_data.empty())) {
-    return;
-  }
-
-  clear_gl_errors();
-
-  if (!m_dust_data.empty()) {
-    QMatrix4x4 const view_proj = cam.get_view_projection_matrix();
-    std::vector<DustInstanceData> instances;
-    instances.reserve(m_dust_data.size());
-    for (const auto& data : m_dust_data) {
-      instances.push_back({.position = data.position,
-                           .color = data.color,
-                           .radius = data.radius,
-                           .intensity = data.intensity,
-                           .time = animation_time,
-                           .effect_type = data.effect_type});
-    }
-    render_dust_batch(instances.data(), instances.size(), view_proj);
-  }
-
-  if (!m_blood_data.empty()) {
-    render_blood_pools(cam);
-  }
-}
-
-void CombatDustPipeline::render_blood_pools(const Camera& cam) {
-  if (m_blood_shader == nullptr || m_blood_mesh.vao == 0 ||
-      m_blood_mesh.index_count <= 0 || m_blood_data.empty()) {
-    return;
-  }
-
-  QMatrix4x4 const view_proj = cam.get_view_projection_matrix();
-  std::vector<BloodPoolInstanceData> instances;
-  instances.reserve(m_blood_data.size());
-  for (const auto& blood : m_blood_data) {
-    instances.push_back({.position = blood.position,
-                         .radius = blood.radius,
-                         .alpha_scale = blood.alpha_scale,
-                         .rotation = blood.rotation,
-                         .aspect_ratio = blood.aspect_ratio,
-                         .seed = blood.seed});
-  }
-  render_blood_pool_batch(instances.data(), instances.size(), view_proj);
 }
 
 void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,

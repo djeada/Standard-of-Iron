@@ -22,7 +22,7 @@ set(RENDER_GL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_natural.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/vegetation_pipeline_settlement.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/terrain_pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/character_pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/shader_uniform_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/water_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/effects_pipeline.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gl/backend/primitive_batch_pipeline.cpp

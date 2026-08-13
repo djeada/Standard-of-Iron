@@ -13,6 +13,7 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/combat_system/structure_combat.h"
 #include "game/systems/command_service.h"
 #include "game/systems/gate_service.h"
 #include "game/systems/nation_registry.h"
@@ -252,8 +253,12 @@ TEST_F(WallSiegeTest, WallKeepsItsOrientationWhenStruckFromAnAngle) {
   run_for(*session, 15.0);
 
   EXPECT_NEAR(rotation_of(*session, wall), rotation_before, 0.01F);
-  EXPECT_LT(position_of(*session, raider).z(), besieged_face_z())
-      << "the raider ended up on the defended side of the wall";
+  const float contact_clearance = Game::Systems::Combat::structure_attack_profile(
+                                      session->world().get_entity(raider))
+                                      .contact_clearance;
+  EXPECT_LE(position_of(*session, raider).z(),
+            besieged_face_z() - contact_clearance + 0.05F)
+      << "the raider embedded in the wall while trying to strike it";
 }
 
 TEST_F(WallSiegeTest, GateKeepsItsAxisAfterBeingHackedAndLosingANeighbour) {

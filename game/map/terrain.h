@@ -997,6 +997,10 @@ public:
 
   [[nodiscard]] auto isHillEntrance(int grid_x, int grid_z) const -> bool;
 
+  [[nodiscard]] auto
+  getHillEntranceTraversalPosition(float world_x,
+                                   float world_z) const -> std::optional<QVector3D>;
+
   [[nodiscard]] auto getTerrainType(int grid_x, int grid_z) const -> TerrainType;
 
   [[nodiscard]] auto
@@ -1057,6 +1061,11 @@ private:
   std::vector<TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
   std::vector<bool> m_hill_walkable;
+  struct HillEntranceCenterline {
+    QVector3D start;
+    QVector3D end;
+  };
+  std::vector<HillEntranceCenterline> m_hill_entrance_centerlines;
   std::vector<RiverSegment> m_river_segments;
   std::vector<Lake> m_lakes;
   std::vector<Bridge> m_bridges;

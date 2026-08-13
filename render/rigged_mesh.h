@@ -48,6 +48,12 @@ public:
   [[nodiscard]] auto index_count() const noexcept -> std::size_t {
     return m_indices.size();
   }
+  [[nodiscard]] auto rigid_index_count() const noexcept -> std::size_t {
+    return m_rigid_index_count;
+  }
+  [[nodiscard]] auto rigid_skinning() const noexcept -> bool {
+    return !m_indices.empty() && m_rigid_index_count == m_indices.size();
+  }
 
   auto ensure_gl_buffers() -> bool;
   [[nodiscard]] auto vertex_buffer() noexcept -> Buffer* { return m_vbo.get(); }
@@ -59,6 +65,7 @@ private:
 
   std::vector<RiggedVertex> m_vertices;
   std::vector<std::uint32_t> m_indices;
+  std::size_t m_rigid_index_count{0};
 
   std::unique_ptr<VertexArray> m_vao;
   std::unique_ptr<Buffer> m_vbo;

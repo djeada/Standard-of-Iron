@@ -40,7 +40,9 @@
         <file>assets/shaders/character_skinned_instanced.vert</file>
         <file>assets/shaders/character_skinned_instanced.frag</file>
         <file>assets/shaders/character_skinned_gpudriven.vert</file>
+        <file>assets/shaders/character_skinned_gpu_instanced.vert</file>
         <file>assets/shaders/directional_shadow_rigged_gpudriven.vert</file>
+        <file>assets/shaders/directional_shadow_rigged_gpu_instanced.vert</file>
         <file>assets/shaders/rigged_cull.comp</file>
         <file>assets/shaders/rigged_cull_finalize.comp</file>
         <file>assets/shaders/catapult.frag</file>

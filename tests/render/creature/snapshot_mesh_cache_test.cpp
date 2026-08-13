@@ -54,21 +54,23 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
   entry->mesh =
       std::make_unique<Render::GL::RiggedMesh>(std::move(vertices), std::move(indices));
 
-  entry->skinned_bone_count = 2U;
-  entry->skinned_frame_total = 2U;
-  entry->skinned_palettes.assign(static_cast<std::size_t>(entry->skinned_frame_total) *
-                                     entry->skinned_bone_count,
-                                 QMatrix4x4{});
+  entry->skin_atlas = std::make_shared<Render::GL::RiggedSkinAtlas>();
+  entry->skin_atlas->bone_count = 2U;
+  entry->skin_atlas->frame_total = 2U;
+  entry->skin_atlas->palettes.assign(
+      static_cast<std::size_t>(entry->skin_atlas->frame_total) *
+          entry->skin_atlas->bone_count,
+      QMatrix4x4{});
 
   QMatrix4x4 f0_b0;
   f0_b0.translate(0.0F, 2.0F, 0.0F);
-  entry->skinned_palettes[0] = f0_b0;
-  entry->skinned_palettes[1].setToIdentity();
+  entry->skin_atlas->palettes[0] = f0_b0;
+  entry->skin_atlas->palettes[1].setToIdentity();
 
-  entry->skinned_palettes[2].setToIdentity();
+  entry->skin_atlas->palettes[2].setToIdentity();
   QMatrix4x4 f1_b1;
   f1_b1.scale(3.0F);
-  entry->skinned_palettes[3] = f1_b1;
+  entry->skin_atlas->palettes[3] = f1_b1;
 
   return entry;
 }
@@ -165,10 +167,11 @@ TEST(SnapshotMeshCache, OutOfRangeFrameReturnsNull) {
 
 TEST(SnapshotMeshCache, EmptySourceMeshReturnsNull) {
   RiggedMeshEntry empty{};
-  empty.skinned_bone_count = 1U;
-  empty.skinned_frame_total = 1U;
-  empty.skinned_palettes.resize(1);
-  empty.skinned_palettes[0].setToIdentity();
+  empty.skin_atlas = std::make_shared<Render::GL::RiggedSkinAtlas>();
+  empty.skin_atlas->bone_count = 1U;
+  empty.skin_atlas->frame_total = 1U;
+  empty.skin_atlas->palettes.resize(1);
+  empty.skin_atlas->palettes[0].setToIdentity();
 
   SnapshotMeshCache cache;
   SnapshotMeshCache::Key key{};

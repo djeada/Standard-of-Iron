@@ -110,8 +110,8 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       break;
     }
 
-    auto* uniforms = m_character_pipeline
-                         ? m_character_pipeline->resolve_uniforms(active_shader)
+    auto* uniforms = m_shader_uniform_cache
+                         ? m_shader_uniform_cache->resolve_uniforms(active_shader)
                          : nullptr;
     if (uniforms == nullptr) {
       break;
@@ -149,9 +149,10 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
           use_dedicated_variant ? uniforms->instanced_variant : active_shader;
 
       if (use_dedicated_variant) {
-        auto* inst_uniforms = m_character_pipeline
-                                  ? m_character_pipeline->resolve_uniforms(batch_shader)
-                                  : nullptr;
+        auto* inst_uniforms =
+            m_shader_uniform_cache
+                ? m_shader_uniform_cache->resolve_uniforms(batch_shader)
+                : nullptr;
         if (inst_uniforms != nullptr) {
           batch_shader->use();
           if (inst_uniforms->view_proj != Shader::InvalidUniform) {
@@ -279,8 +280,8 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       glDepthFunc(GL_LEQUAL);
     }
 
-    auto* uniforms = m_character_pipeline
-                         ? m_character_pipeline->resolve_uniforms(active_shader)
+    auto* uniforms = m_shader_uniform_cache
+                         ? m_shader_uniform_cache->resolve_uniforms(active_shader)
                          : nullptr;
     if (uniforms == nullptr) {
       if (is_transparent) {
