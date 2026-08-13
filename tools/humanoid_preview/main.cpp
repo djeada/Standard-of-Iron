@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <numbers>
 #include <string>
 #include <string_view>
@@ -196,6 +197,14 @@ void append_ground(std::vector<ColoredTriangle>& out) {
 
 struct FrameMetrics {
   float phase{0.0F};
+  float foot_l_z{0.0F};
+  float foot_r_z{0.0F};
+  float hand_l_z{0.0F};
+  float hand_r_z{0.0F};
+  float pelvis_y{0.0F};
+  float pelvis_x{0.0F};
+  float step_width{0.0F};
+  float shoulder_l_z{0.0F};
   float max_bone_stretch{0.0F};
   const char* worst_bone{"-"};
   float arm_reach_l{0.0F};
@@ -208,6 +217,15 @@ struct FrameMetrics {
 auto measure(std::span<const QMatrix4x4> palette, float phase) -> FrameMetrics {
   FrameMetrics metrics{};
   metrics.phase = phase;
+  metrics.foot_l_z = bone_origin(palette, Bone::FootL).z();
+  metrics.foot_r_z = bone_origin(palette, Bone::FootR).z();
+  metrics.hand_l_z = bone_origin(palette, Bone::HandL).z();
+  metrics.hand_r_z = bone_origin(palette, Bone::HandR).z();
+  metrics.pelvis_y = bone_origin(palette, Bone::Pelvis).y();
+  metrics.pelvis_x = bone_origin(palette, Bone::Pelvis).x();
+  metrics.shoulder_l_z = bone_origin(palette, Bone::ShoulderL).z();
+  metrics.step_width =
+      bone_origin(palette, Bone::FootR).x() - bone_origin(palette, Bone::FootL).x();
   for (auto const& rule : k_length_rules) {
     float const length =
         (bone_origin(palette, rule.to) - bone_origin(palette, rule.from)).length();
@@ -233,6 +251,79 @@ auto measure(std::span<const QMatrix4x4> palette, float phase) -> FrameMetrics {
     metrics.hand_r_axis = palette[hand_index].column(1).toVector3D();
   }
   return metrics;
+}
+
+struct StrideSummary {
+  float foot_travel{0.0F};
+  float planted_travel_per_cycle{0.0F};
+  float hand_swing{0.0F};
+  float pelvis_bob{0.0F};
+  float pelvis_sway{0.0F};
+  float step_width{0.0F};
+  float shoulder_twist{0.0F};
+  float foot_lift{0.0F};
+};
+
+auto summarize_stride(const BpatBlob& blob,
+                      const Render::Creature::Bpat::ClipView& clip) -> StrideSummary {
+  std::vector<FrameMetrics> frames;
+  std::vector<float> foot_l_y;
+  frames.reserve(clip.frame_count);
+  foot_l_y.reserve(clip.frame_count);
+  for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
+    auto const palette = blob.frame_palette_view(clip.frame_offset + f);
+    frames.push_back(
+        measure(palette, static_cast<float>(f) / static_cast<float>(clip.frame_count)));
+    foot_l_y.push_back(bone_origin(palette, Bone::FootL).y());
+  }
+  if (frames.size() < 4U) {
+    return {};
+  }
+
+  auto range = [&](auto&& pick) {
+    float lo = std::numeric_limits<float>::max();
+    float hi = std::numeric_limits<float>::lowest();
+    for (auto const& m : frames) {
+      float const value = pick(m);
+      lo = std::min(lo, value);
+      hi = std::max(hi, value);
+    }
+    return hi - lo;
+  };
+
+  StrideSummary summary{};
+  summary.foot_travel = range([](const FrameMetrics& m) { return m.foot_l_z; });
+  summary.hand_swing = range([](const FrameMetrics& m) { return m.hand_l_z; });
+  summary.pelvis_bob = range([](const FrameMetrics& m) { return m.pelvis_y; });
+  summary.pelvis_sway = range([](const FrameMetrics& m) { return m.pelvis_x; });
+  for (auto const& m : frames) {
+    summary.step_width += m.step_width;
+  }
+  summary.step_width /= static_cast<float>(frames.size());
+  summary.shoulder_twist = range([](const FrameMetrics& m) { return m.shoulder_l_z; });
+
+  float const lowest = *std::min_element(foot_l_y.begin(), foot_l_y.end());
+  float const highest = *std::max_element(foot_l_y.begin(), foot_l_y.end());
+  summary.foot_lift = highest - lowest;
+
+  std::vector<float> slopes;
+  auto const count = static_cast<std::uint32_t>(frames.size());
+  float const d_phase = 1.0F / static_cast<float>(count);
+  for (std::uint32_t f = 0; f < count; ++f) {
+    std::uint32_t const next = (f + 1U) % count;
+    if (foot_l_y[f] > lowest + 0.015F || foot_l_y[next] > lowest + 0.015F) {
+      continue;
+    }
+    float const delta = frames[next].foot_l_z - frames[f].foot_l_z;
+    if (delta < 0.0F) {
+      slopes.push_back(-delta / d_phase);
+    }
+  }
+  if (!slopes.empty()) {
+    std::sort(slopes.begin(), slopes.end());
+    summary.planted_travel_per_cycle = slopes[slopes.size() / 2U];
+  }
+  return summary;
 }
 
 auto view_matrix(std::string_view view, int width, int height) -> QMatrix4x4 {
@@ -495,19 +586,22 @@ auto main(int argc, char** argv) -> int {
             << ")\n";
 
   if (report) {
-    std::cout
-        << "phase\tstretch\tworst\t\treach_l\treach_r\tfoot_y\tup_y\tblade_axis\n";
+    std::cout << "phase\tstretch\tworst\t\treach_l\treach_r\tfoot_y\tfoot_l_z\tfoot_r_"
+                 "z\tup_y\tblade_axis\n";
     float worst_stretch = 0.0F;
     for (auto const& m : metrics) {
       std::cout
           << QString::asprintf(
-                 "%.2f\t%.2f\t%-12s\t%.2f\t%.2f\t%+.3f\t%.2f\t(%+.2f,%+.2f,%+.2f)",
+                 "%.2f\t%.2f\t%-12s\t%.2f\t%.2f\t%+.3f\t%+.3f\t\t%+.3f\t\t%.2f\t(%+."
+                 "2f,%+.2f,%+.2f)",
                  static_cast<double>(m.phase),
                  static_cast<double>(m.max_bone_stretch),
                  m.worst_bone,
                  static_cast<double>(m.arm_reach_l),
                  static_cast<double>(m.arm_reach_r),
                  static_cast<double>(m.lowest_foot_y),
+                 static_cast<double>(m.foot_l_z),
+                 static_cast<double>(m.foot_r_z),
                  static_cast<double>(m.torso_up_y),
                  static_cast<double>(m.hand_r_axis.x()),
                  static_cast<double>(m.hand_r_axis.y()),
@@ -517,6 +611,29 @@ auto main(int argc, char** argv) -> int {
       worst_stretch = std::max(worst_stretch, m.max_bone_stretch);
     }
     std::cout << "worst bone stretch: " << worst_stretch << "x bind length\n";
+
+    auto const stride = summarize_stride(blob, clip);
+    std::cout << QString::asprintf(
+                     "stride: foot travel %.3f m, contact retreat %.3f m/cycle, "
+                     "foot lift %.3f m, hand swing %.3f m, pelvis bob %.3f m, "
+                     "pelvis sway %.3f m, shoulder twist %.3f m, step width %.3f m\n",
+                     static_cast<double>(stride.foot_travel),
+                     static_cast<double>(stride.planted_travel_per_cycle),
+                     static_cast<double>(stride.foot_lift),
+                     static_cast<double>(stride.hand_swing),
+                     static_cast<double>(stride.pelvis_bob),
+                     static_cast<double>(stride.pelvis_sway),
+                     static_cast<double>(stride.shoulder_twist),
+                     static_cast<double>(stride.step_width))
+                     .toStdString();
+    for (float const cycle_time : {0.70F, 0.85F, 1.00F}) {
+      std::cout << QString::asprintf(
+                       "  at cycle_time %.2fs this clip is skate-free at %.2f m/s\n",
+                       static_cast<double>(cycle_time),
+                       static_cast<double>(stride.planted_travel_per_cycle /
+                                           cycle_time))
+                       .toStdString();
+    }
   }
 
   return 0;

@@ -17,8 +17,9 @@ namespace {
 
 constexpr float k_top_speed = 3.4F;
 constexpr float k_walk_threshold = 0.02F;
-constexpr float k_idle_period_seconds = 24.0F / 24.0F;
+constexpr float k_idle_period_seconds = 96.0F / 24.0F;
 constexpr float k_graze_period_seconds = 120.0F / 24.0F;
+constexpr float k_alert_period_seconds = 60.0F / 24.0F;
 constexpr float k_run_threshold = 0.42F;
 
 auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
@@ -84,8 +85,12 @@ auto state_for_gait(const DrawState& state, Render::Wildlife::SheepGait gait)
   case Render::Wildlife::SheepGait::Stand:
     break;
   }
-  return state.grazing ? Render::Creature::AnimationStateId::Hold
-                       : Render::Creature::AnimationStateId::Idle;
+  if (state.grazing) {
+    return Render::Creature::AnimationStateId::Hold;
+  }
+
+  return state.alert ? Render::Creature::AnimationStateId::WildlifeTense
+                     : Render::Creature::AnimationStateId::Idle;
 }
 
 void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
@@ -105,14 +110,19 @@ void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
   } else if (state.death_progress >= 0.0F) {
     inputs.state = Render::Creature::AnimationStateId::Die;
     inputs.phase = action_phase(state, state.death_progress);
+  } else if (state.flinch_progress >= 0.0F) {
+    inputs.state = Render::Creature::AnimationStateId::WildlifeStartle;
+    inputs.phase = action_phase(state, state.flinch_progress);
   } else {
     inputs.state = state_for_gait(state, gait);
     if (gait == Render::Wildlife::SheepGait::Stand) {
-      inputs.phase =
-          ambient_phase(state,
-                        inputs.state == Render::Creature::AnimationStateId::Hold
-                            ? k_graze_period_seconds
-                            : k_idle_period_seconds);
+      float period = k_idle_period_seconds;
+      if (inputs.state == Render::Creature::AnimationStateId::Hold) {
+        period = k_graze_period_seconds;
+      } else if (inputs.state == Render::Creature::AnimationStateId::WildlifeTense) {
+        period = k_alert_period_seconds;
+      }
+      inputs.phase = ambient_phase(state, period);
     } else {
       inputs.phase = gait_phase(state, Render::Wildlife::sheep_gait_advance(gait));
     }
