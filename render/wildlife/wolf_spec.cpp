@@ -271,9 +271,71 @@ auto rotate_about_y(const QVector3D& point,
   return pivot + QVector3D((d.x() * c) + (d.z() * s), d.y(), (d.z() * c) - (d.x() * s));
 }
 
+auto head_chain(RigPose& pose) -> std::array<QVector3D*, 8> {
+  return {&pose.poll,
+          &pose.muzzle,
+          &pose.jaw_hinge,
+          &pose.jaw_tip,
+          &pose.ear_base_l,
+          &pose.ear_base_r,
+          &pose.ear_tip_l,
+          &pose.ear_tip_r};
+}
+
+auto rotate_about_z(const QVector3D& point,
+                    const QVector3D& pivot,
+                    float radians) -> QVector3D {
+  QVector3D const d = point - pivot;
+  float const c = std::cos(radians);
+  float const s = std::sin(radians);
+  return pivot + QVector3D((d.x() * c) - (d.y() * s), (d.x() * s) + (d.y() * c), d.z());
+}
+
+void apply_rear(RigPose& pose, const WolfDrive& drive) {
+  float const rear = std::clamp(drive.rear, 0.0F, 1.0F);
+  if (rear <= 0.0F) {
+    return;
+  }
+
+  QVector3D const lift(0.0F, 0.072F * rear, 0.020F * rear);
+  QVector3D const pivot = pose.body_rear;
+  float const pitch = -0.19F * rear;
+
+  auto raise = [&](QVector3D& point) {
+    point += lift;
+    point = rotate_about_x(point, pivot, pitch);
+  };
+
+  pose.root += lift * 0.45F;
+  pose.root = rotate_about_x(pose.root, pivot, pitch * 0.45F);
+  raise(pose.body_front);
+  raise(pose.withers);
+  for (auto* point : head_chain(pose)) {
+    raise(*point);
+  }
+
+  for (std::size_t i = 0; i < 2U; ++i) {
+
+    pose.legs[i].shoulder += lift * 0.95F;
+    pose.legs[i].knee += lift * 0.80F + QVector3D(0.0F, 0.0F, 0.052F * rear);
+    pose.legs[i].foot += lift * 0.62F + QVector3D(0.0F, 0.0F, 0.070F * rear);
+    pose.legs[i].toe += lift * 0.55F + QVector3D(0.0F, 0.0F, 0.078F * rear);
+  }
+  for (std::size_t i = 2U; i < k_leg_count; ++i) {
+
+    pose.legs[i].shoulder += QVector3D(0.0F, -0.022F * rear, 0.0F);
+    pose.legs[i].knee += QVector3D(0.0F, -0.016F * rear, -0.020F * rear);
+  }
+
+  pose.tail_base += lift * 0.35F;
+  pose.tail_mid += QVector3D(0.0F, 0.030F * rear, -0.024F * rear);
+  pose.tail_tip += QVector3D(0.0F, 0.058F * rear, -0.046F * rear);
+}
+
 void apply_lunge(RigPose& pose, const WolfDrive& drive) {
   float const lunge = std::clamp(drive.lunge, 0.0F, 1.0F);
-  if (lunge <= 0.0F && drive.jaw_open <= 0.0F && drive.head_shake == 0.0F) {
+  if (lunge <= 0.0F && drive.jaw_open <= 0.0F && drive.head_shake == 0.0F &&
+      drive.head_roll == 0.0F && drive.rear == 0.0F) {
     return;
   }
 
@@ -319,26 +381,25 @@ void apply_lunge(RigPose& pose, const WolfDrive& drive) {
   pose.ear_tip_l = rotate_about_x(pose.ear_tip_l, pivot, swing);
   pose.ear_tip_r = rotate_about_x(pose.ear_tip_r, pivot, swing);
 
-  pose.jaw_tip = rotate_about_x(pose.jaw_tip, pose.jaw_hinge, 0.50F * drive.jaw_open);
+  apply_rear(pose, drive);
+
+  pose.jaw_tip = rotate_about_x(pose.jaw_tip, pose.jaw_hinge, 1.05F * drive.jaw_open);
+
+  if (drive.head_roll != 0.0F) {
+
+    float const roll = 0.62F * drive.head_roll;
+    QVector3D const neck = pose.withers;
+    for (auto* point : head_chain(pose)) {
+      *point = rotate_about_z(*point, neck, roll);
+    }
+  }
 
   if (drive.head_shake != 0.0F) {
-
-    auto const head_chain = [&pose]() -> std::array<QVector3D*, 8> {
-      return {&pose.poll,
-              &pose.muzzle,
-              &pose.jaw_hinge,
-              &pose.jaw_tip,
-              &pose.ear_base_l,
-              &pose.ear_base_r,
-              &pose.ear_tip_l,
-              &pose.ear_tip_r};
-    };
-
     float const counter = -0.05F * drive.head_shake;
     QVector3D const spine_pivot = pose.body_rear;
     pose.body_front = rotate_about_y(pose.body_front, spine_pivot, counter);
     pose.withers = rotate_about_y(pose.withers, spine_pivot, counter);
-    for (auto* point : head_chain()) {
+    for (auto* point : head_chain(pose)) {
       *point = rotate_about_y(*point, spine_pivot, counter);
     }
     for (std::size_t i = 0; i < 2U; ++i) {
@@ -349,7 +410,7 @@ void apply_lunge(RigPose& pose, const WolfDrive& drive) {
 
     float const yaw = 0.80F * drive.head_shake;
     QVector3D const neck = pose.withers;
-    for (auto* point : head_chain()) {
+    for (auto* point : head_chain(pose)) {
       *point = rotate_about_y(*point, neck, yaw);
     }
   }
@@ -467,6 +528,52 @@ void apply_collapse(RigPose& pose, const WolfDrive& drive) {
   place(pose.tail_tip, (k_rest_body_y - k_lying_y) * tail_lag, 0.5F);
 }
 
+void apply_idle_motion(RigPose& pose, const WolfDrive& drive) {
+  if (drive.breath == 0.0F && drive.head_turn == 0.0F && drive.head_dip == 0.0F &&
+      drive.ear_swivel == 0.0F && drive.tail_sway == 0.0F &&
+      drive.weight_shift == 0.0F) {
+    return;
+  }
+
+  QVector3D const swell(0.0F, 0.013F * drive.breath, 0.0F);
+  float const shift = 0.019F * drive.weight_shift;
+
+  auto ride = [&](QVector3D& point, float swell_weight, float shift_weight) {
+    point += swell * swell_weight;
+    point.setX(point.x() + (shift * shift_weight));
+  };
+
+  ride(pose.root, 0.35F, 0.55F);
+  ride(pose.body_front, 1.0F, 0.70F);
+  ride(pose.body_rear, 0.62F, 1.0F);
+  ride(pose.withers, 0.90F, 0.70F);
+  for (std::size_t i = 0; i < k_leg_count; ++i) {
+    bool const hind = k_leg_plans[i].hind;
+    ride(pose.legs[i].shoulder, hind ? 0.45F : 0.85F, hind ? 1.0F : 0.65F);
+    ride(pose.legs[i].knee, hind ? 0.18F : 0.34F, hind ? 0.42F : 0.26F);
+  }
+
+  QVector3D const neck = pose.withers;
+  float const yaw = 0.34F * drive.head_turn;
+  float const pitch = 0.20F * drive.head_dip;
+  for (auto* point : head_chain(pose)) {
+    *point += swell * 0.85F;
+    point->setX(point->x() + (shift * 0.72F));
+    *point = rotate_about_y(*point, neck, yaw);
+    *point = rotate_about_x(*point, neck, pitch);
+  }
+
+  float const swivel = 0.62F * drive.ear_swivel;
+  pose.ear_tip_l = rotate_about_y(pose.ear_tip_l, pose.ear_base_l, swivel);
+  pose.ear_tip_r = rotate_about_y(pose.ear_tip_r, pose.ear_base_r, -swivel);
+
+  ride(pose.tail_base, 0.55F, 1.0F);
+  pose.tail_mid += swell * 0.4F;
+  pose.tail_tip += swell * 0.3F;
+  pose.tail_mid.setX(pose.tail_mid.x() + (0.038F * drive.tail_sway) + shift);
+  pose.tail_tip.setX(pose.tail_tip.x() + (0.082F * drive.tail_sway) + shift);
+}
+
 auto make_pose(const WolfDrive& drive) -> RigPose {
   RigPose pose;
   float const crouch = drive.crouch * 0.048F;
@@ -508,6 +615,7 @@ auto make_pose(const WolfDrive& drive) -> RigPose {
   pose.tail_mid += QVector3D(sway * 0.5F, (lift * 0.140F) + tail_bounce, 0.0F);
   pose.tail_tip += QVector3D(sway, (lift * 0.320F) + (tail_bounce * 1.8F), 0.0F);
 
+  apply_idle_motion(pose, drive);
   apply_lunge(pose, drive);
   apply_collapse(pose, drive);
   reattach_head(pose, head_attachment);

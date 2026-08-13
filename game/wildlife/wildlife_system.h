@@ -47,6 +47,7 @@ struct WildlifeStats {
   std::uint64_t hunt_events{0U};
   std::uint64_t bites{0U};
   std::uint64_t respawns{0U};
+  std::uint64_t stall_releases{0U};
 
   void reset() noexcept { *this = WildlifeStats{}; }
 };
@@ -56,6 +57,7 @@ public:
   static constexpr float k_think_interval = 0.5F;
   static constexpr float k_far_think_multiplier = 4.0F;
   static constexpr float k_threat_refresh_interval = 0.35F;
+  static constexpr float k_stall_step_epsilon = 0.004F;
 
   WildlifeSystem();
   ~WildlifeSystem() override;
@@ -145,6 +147,10 @@ private:
                         const AnimalRef& animal,
                         Engine::Core::WildlifeComponent& wildlife);
 
+  void release_if_stalled(const AnimalRef& animal,
+                          Engine::Core::WildlifeComponent& wildlife,
+                          float delta_time);
+
   void alert_group(std::uint16_t group_id, float duration);
   void
   rally_pack(std::uint16_t group_id, Engine::Core::EntityID foe_id, float duration);
@@ -165,16 +171,16 @@ private:
                                      float max_radius,
                                      float& out_x,
                                      float& out_z) const -> bool;
-  [[nodiscard]] auto
-  nearest_prey(float world_x,
-               float world_z,
-               float radius,
-               Engine::Core::EntityID hunter_id) const -> const AnimalRef*;
-  [[nodiscard]] auto
-  nearest_quarry(float world_x,
-                 float world_z,
-                 float radius,
-                 Engine::Core::EntityID hunter_id) const -> const QuarryRef*;
+  [[nodiscard]] auto nearest_prey(float world_x,
+                                  float world_z,
+                                  float radius,
+                                  Engine::Core::EntityID hunter_id,
+                                  float appetite) const -> const AnimalRef*;
+  [[nodiscard]] auto nearest_quarry(float world_x,
+                                    float world_z,
+                                    float radius,
+                                    Engine::Core::EntityID hunter_id,
+                                    float appetite) const -> const QuarryRef*;
   [[nodiscard]] auto attackers_on(Engine::Core::EntityID prey_id,
                                   Engine::Core::EntityID exclude_id) const -> int;
   [[nodiscard]] auto pack_slot_for(Engine::Core::EntityID prey_id,

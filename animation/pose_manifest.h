@@ -180,6 +180,8 @@ is_locomotion_pose_intent(PoseIntent intent) noexcept -> bool {
   case StateId::RidingCharge:
   case StateId::RidingReining:
   case StateId::RidingBowShot:
+  case StateId::WildlifeTense:
+  case StateId::WildlifeStartle:
   case StateId::Count:
     return false;
   }
