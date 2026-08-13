@@ -315,6 +315,22 @@ TEST(TemplatePrewarmRegression, WorkItemsSkipUnsupportedAttackFamiliesPerSpawn) 
   EXPECT_EQ(ranged_attack_items, 2);
 }
 
+TEST(TemplatePrewarmRegression, FullLodWorkItemsNeverQueueLowerDetail) {
+  std::vector<Render::GL::PrewarmProfile> profiles(1);
+  profiles[0].renderer_id = "swordsman";
+  profiles[0].spawn_type = Game::Units::SpawnType::Spearman;
+
+  std::vector<Render::GL::AnimKey> anim_keys(1);
+  anim_keys[0].state = PoseIntent::Idle;
+  auto const items = Render::GL::build_template_prewarm_work_items(
+      profiles, {1, 2}, {0, 1}, anim_keys, true);
+
+  ASSERT_EQ(items.size(), 4U);
+  for (const auto& item : items) {
+    EXPECT_EQ(item.lod, Render::GL::HumanoidLOD::Full);
+  }
+}
+
 TEST(TemplatePrewarmRegression, WorkItemsReserveCastForFireballUsersOnly) {
   std::vector<Render::GL::PrewarmProfile> profiles(2);
   profiles[0].renderer_id = "priest";

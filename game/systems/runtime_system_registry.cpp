@@ -22,6 +22,7 @@
 #include "healing_beam_system.h"
 #include "healing_system.h"
 #include "home_system.h"
+#include "local_avoidance_system.h"
 #include "movement_system.h"
 #include "patrol_system.h"
 #include "production_system.h"
@@ -46,6 +47,7 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<StaminaSystem>());
 
   world.add_system(std::make_unique<GateSystem>());
+  world.add_system(std::make_unique<LocalAvoidanceSystem>());
   world.add_system(std::make_unique<MovementSystem>());
   world.add_system(std::make_unique<PatrolSystem>());
   world.add_system(std::make_unique<GuardSystem>());

@@ -903,6 +903,14 @@ auto TerrainService::is_hill_entrance(int grid_x, int grid_z) const -> bool {
   return m_height_map->isHillEntrance(grid_x, grid_z);
 }
 
+auto TerrainService::get_hill_entrance_traversal_position(
+    float world_x, float world_z) const -> std::optional<QVector3D> {
+  if (!m_height_map) {
+    return std::nullopt;
+  }
+  return m_height_map->getHillEntranceTraversalPosition(world_x, world_z);
+}
+
 auto TerrainService::get_terrain_type(int grid_x, int grid_z) const -> TerrainType {
   if (!m_height_map) {
     return TerrainType::Flat;

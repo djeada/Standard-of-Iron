@@ -7,16 +7,11 @@
 #include <cmath>
 #include <numbers>
 
-#include "game/core/component.h"
-#include "game/core/world.h"
-#include "game/systems/healing_colors.h"
-#include "game/systems/nation_id.h"
 #include "gl_error_check.h"
-#include "render/gl/backend.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader_cache.h"
 #include "render/gl/state_scopes.h"
-#include "scene/camera.h"
+#include "static_mesh_upload.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -146,209 +141,14 @@ auto HealerAuraPipeline::create_dome_geometry() -> bool {
     }
   }
 
-  glGenVertexArrays(1, &m_mesh.vao);
-  if (!check_gl_error("glGenVertexArrays") || m_mesh.vao == 0) {
-    return false;
-  }
-
-  glBindVertexArray(m_mesh.vao);
-  if (!check_gl_error("glBindVertexArray")) {
-    glDeleteVertexArrays(1, &m_mesh.vao);
-    m_mesh.vao = 0;
-    return false;
-  }
-
-  glGenBuffers(1, &m_mesh.vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_mesh.vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(vertices.size() * sizeof(AuraVertex)),
-               vertices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("vertex buffer")) {
-    release_geometry();
-    return false;
-  }
-
-  glGenBuffers(1, &m_mesh.index_buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mesh.index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(indices.size() * sizeof(unsigned int)),
-               indices.data(),
-               GL_STATIC_DRAW);
-  if (!check_gl_error("index buffer")) {
-    release_geometry();
-    return false;
-  }
-
-  m_mesh.index_count = static_cast<GLsizei>(indices.size());
-
-  glEnableVertexAttribArray(VertexAttrib::position);
-  glVertexAttribPointer(VertexAttrib::position,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(AuraVertex),
-                        reinterpret_cast<void*>(offsetof(AuraVertex, position)));
-
-  glEnableVertexAttribArray(VertexAttrib::normal);
-  glVertexAttribPointer(VertexAttrib::normal,
-                        ComponentCount::vec3,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(AuraVertex),
-                        reinterpret_cast<void*>(offsetof(AuraVertex, normal)));
-
-  glEnableVertexAttribArray(VertexAttrib::tex_coord);
-  glVertexAttribPointer(VertexAttrib::tex_coord,
-                        ComponentCount::vec2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        sizeof(AuraVertex),
-                        reinterpret_cast<void*>(offsetof(AuraVertex, tex_coord)));
-
-  glBindVertexArray(0);
-
-  if (!check_gl_error("vertex attributes")) {
-    release_geometry();
-    return false;
-  }
-
-  return true;
-}
-
-void HealerAuraPipeline::collect_healers(Engine::Core::World* world) {
-  m_healer_data.clear();
-
-  if (world == nullptr) {
-    return;
-  }
-
-  auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
-
-  for (auto* healer : healers) {
-    if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto* transform = healer->get_component<Engine::Core::TransformComponent>();
-    auto* healer_comp = healer->get_component<Engine::Core::HealerComponent>();
-    auto* unit_comp = healer->get_component<Engine::Core::UnitComponent>();
-
-    if (transform == nullptr || healer_comp == nullptr) {
-      continue;
-    }
-
-    if (unit_comp != nullptr && unit_comp->health <= 0) {
-      continue;
-    }
-
-    if (unit_comp != nullptr &&
-        unit_comp->nation_id == Game::Systems::NationID::RomanRepublic) {
-      continue;
-    }
-
-    HealerAuraData data;
-    data.position =
-        QVector3D(transform->position.x, transform->position.y, transform->position.z);
-    data.radius = healer_comp->healing_range;
-    data.is_active = healer_comp->is_healing_active;
-
-    data.intensity = data.is_active ? 1.0F : 0.5F;
-
-    data.color = unit_comp != nullptr
-                     ? Game::Systems::get_healing_color(unit_comp->nation_id)
-                     : Game::Systems::get_carthage_healing_color();
-
-    m_healer_data.push_back(data);
-  }
-}
-
-void HealerAuraPipeline::render(const Camera& cam, float animation_time) {
-  if (!is_initialized() || m_healer_data.empty()) {
-    return;
-  }
-
-  clear_gl_errors();
-
-  CullFaceScope const cull(false);
-  DepthTestScope const depth_test(true);
-  DepthMaskScope const depth_mask(false);
-  BlendScope const blend(true);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-  m_aura_shader->use();
-  glBindVertexArray(m_mesh.vao);
-
-  for (const auto& data : m_healer_data) {
-    render_aura(data, cam, animation_time);
-  }
-
-  glBindVertexArray(0);
-}
-
-void HealerAuraPipeline::render_aura(const HealerAuraData& data,
-                                     const Camera& cam,
-                                     float animation_time) {
-
-  QMatrix4x4 model;
-  model.setToIdentity();
-  model.translate(data.position);
-
-  model.scale(data.radius);
-
-  QMatrix4x4 const vp = cam.get_view_projection_matrix();
-  QMatrix4x4 const mvp = vp * model;
-
-  m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
-  m_aura_shader->set_uniform(m_uniforms.model, model);
-  m_aura_shader->set_uniform(m_uniforms.time, animation_time);
-
-  m_aura_shader->set_uniform(m_uniforms.aura_radius, 1.0F);
-  m_aura_shader->set_uniform(m_uniforms.intensity, data.intensity);
-  m_aura_shader->set_uniform(m_uniforms.aura_color, data.color);
-
-  glDrawElements(GL_TRIANGLES, m_mesh.index_count, GL_UNSIGNED_INT, nullptr);
-}
-
-void HealerAuraPipeline::render_single_aura(const QVector3D& position,
-                                            const QVector3D& color,
-                                            float radius,
-                                            float intensity,
-                                            float time,
-                                            const QMatrix4x4& view_proj) {
-  if (!is_initialized()) {
-    return;
-  }
-  if (intensity < 0.01F) {
-    return;
-  }
-
-  CullFaceScope const cull(false);
-  DepthTestScope const depth_test(true);
-  DepthMaskScope const depth_mask(false);
-  BlendScope const blend(true);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-  m_aura_shader->use();
-  glBindVertexArray(m_mesh.vao);
-
-  QMatrix4x4 model;
-  model.setToIdentity();
-  model.translate(position);
-  model.scale(radius);
-
-  QMatrix4x4 const mvp = view_proj * model;
-
-  m_aura_shader->set_uniform(m_uniforms.mvp, mvp);
-  m_aura_shader->set_uniform(m_uniforms.model, model);
-  m_aura_shader->set_uniform(m_uniforms.time, time);
-  m_aura_shader->set_uniform(m_uniforms.aura_radius, 1.0F);
-  m_aura_shader->set_uniform(m_uniforms.intensity, intensity);
-  m_aura_shader->set_uniform(m_uniforms.aura_color, color);
-
-  glDrawElements(GL_TRIANGLES, m_mesh.index_count, GL_UNSIGNED_INT, nullptr);
-
-  glBindVertexArray(0);
+  return upload_static_effect_mesh(*this,
+                                   m_mesh,
+                                   "HealerAuraPipeline dome",
+                                   vertices.data(),
+                                   vertices.size(),
+                                   sizeof(AuraVertex),
+                                   k_position_normal_texcoord_layout,
+                                   indices);
 }
 
 void HealerAuraPipeline::render_aura_batch(const AuraInstanceData* instances,

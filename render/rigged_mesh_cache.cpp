@@ -50,8 +50,12 @@ void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,
                                     const QMatrix4x4* bpat_palettes,
                                     std::uint32_t frame_total,
                                     std::uint32_t bone_count) {
-  if (entry.skinned_frame_total == frame_total &&
-      entry.skinned_bone_count == bone_count && !entry.skinned_palettes.empty()) {
+  if (entry.skin_atlas == nullptr) {
+    return;
+  }
+  auto& atlas = *entry.skin_atlas;
+  if (atlas.frame_total == frame_total && atlas.bone_count == bone_count &&
+      !atlas.palettes.empty()) {
     return;
   }
   if (frame_total == 0 || bone_count == 0 || bpat_palettes == nullptr) {
@@ -67,34 +71,36 @@ void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,
     bone_count = static_cast<std::uint32_t>(entry.inverse_bind.size());
   }
 
-  if (entry.skin_palette_ubo != 0U) {
+  if (atlas.palette_ubo != 0U) {
     if (auto* fn = rigged_cache_gl_funcs(); fn != nullptr) {
-      GLuint stale = entry.skin_palette_ubo;
+      GLuint stale = atlas.palette_ubo;
       fn->glDeleteBuffers(1, &stale);
     }
-    entry.skin_palette_ubo = 0U;
-    entry.skin_palette_frame_stride_bytes = 0;
+    atlas.palette_ubo = 0U;
+    atlas.frame_stride_bytes = 0;
   }
-  entry.skinned_palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
-                                QMatrix4x4{});
+  atlas.palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
+                        QMatrix4x4{});
   for (std::uint32_t f = 0; f < frame_total; ++f) {
     const QMatrix4x4* src = bpat_palettes + static_cast<std::size_t>(f) * bone_count;
-    QMatrix4x4* dst =
-        entry.skinned_palettes.data() + static_cast<std::size_t>(f) * bone_count;
+    QMatrix4x4* dst = atlas.palettes.data() + static_cast<std::size_t>(f) * bone_count;
     for (std::uint32_t b = 0; b < bone_count; ++b) {
       dst[b] = src[b] * entry.inverse_bind[b];
     }
   }
-  entry.skinned_frame_total = frame_total;
-  entry.skinned_bone_count = bone_count;
+  atlas.frame_total = frame_total;
+  atlas.bone_count = bone_count;
 }
 
 void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
-  if (entry.skin_palette_ubo != 0) {
+  if (entry.skin_atlas == nullptr) {
     return;
   }
-  if (entry.skinned_palettes.empty() || entry.skinned_frame_total == 0 ||
-      entry.skinned_bone_count == 0) {
+  auto& atlas = *entry.skin_atlas;
+  if (atlas.palette_ubo != 0) {
+    return;
+  }
+  if (atlas.palettes.empty() || atlas.frame_total == 0 || atlas.bone_count == 0) {
     return;
   }
   if (Render::Creature::runtime_bake_forbidden()) {
@@ -109,24 +115,22 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
   }
 
   const std::size_t stride = BonePaletteArena::k_palette_bytes;
-  std::vector<float> staging(static_cast<std::size_t>(entry.skinned_frame_total) *
+  std::vector<float> staging(static_cast<std::size_t>(atlas.frame_total) *
                                  BonePaletteArena::k_palette_floats,
                              0.0F);
-  for (std::uint32_t f = 0; f < entry.skinned_frame_total; ++f) {
+  for (std::uint32_t f = 0; f < atlas.frame_total; ++f) {
     const QMatrix4x4* frame_src =
-        entry.skinned_palettes.data() +
-        static_cast<std::size_t>(f) * entry.skinned_bone_count;
+        atlas.palettes.data() + static_cast<std::size_t>(f) * atlas.bone_count;
 
     float* frame_dst = staging.data() +
                        static_cast<std::size_t>(f) * BonePaletteArena::k_palette_floats;
-    for (std::uint32_t b = 0; b < entry.skinned_bone_count; ++b) {
+    for (std::uint32_t b = 0; b < atlas.bone_count; ++b) {
       std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
                   frame_src[b].constData(),
                   sizeof(float) * BonePaletteArena::k_matrix_floats);
     }
 
-    for (std::uint32_t b = entry.skinned_bone_count;
-         b < BonePaletteArena::k_palette_width;
+    for (std::uint32_t b = atlas.bone_count; b < BonePaletteArena::k_palette_width;
          ++b) {
       QMatrix4x4 const ident;
       std::memcpy(frame_dst + b * BonePaletteArena::k_matrix_floats,
@@ -145,8 +149,8 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
                    staging.data(),
                    GL_STATIC_DRAW);
   fn->glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  entry.skin_palette_ubo = ubo;
-  entry.skin_palette_frame_stride_bytes = stride;
+  atlas.palette_ubo = ubo;
+  atlas.frame_stride_bytes = stride;
 }
 
 auto RiggedMeshCache::get_or_bake(
@@ -186,8 +190,7 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     std::uint64_t attachments_hash,
     std::uint32_t attachment_set_id,
     std::uint32_t skin_species_id) -> const RiggedMeshEntry* {
-  Key const key{
-      &spec, lod, variant_bucket, skin_species_id, attachment_set_id, attachments_hash};
+  Key const key{&spec, lod, skin_species_id, attachment_set_id, attachments_hash};
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
     return &it->second;
@@ -195,13 +198,19 @@ auto RiggedMeshCache::get_or_bake_prehashed(
   RiggedMeshEntry entry;
 
   const Render::Creature::Rigged::RiggedMeshBlob* prebaked =
-      attachments.empty()
-          ? Render::Creature::Rigged::RiggedMeshRegistry::instance().blob(
-                skin_species_id, lod)
-          : nullptr;
+      Render::Creature::Rigged::RiggedMeshRegistry::instance().blob(skin_species_id,
+                                                                    lod);
 
-  if (prebaked == nullptr && Render::Creature::runtime_bake_forbidden()) {
-
+  const bool split_full_mesh = lod == Render::Creature::CreatureLOD::Full;
+  const BaseMeshKey base_key{&spec, lod, skin_species_id};
+  const AttachmentMeshKey attachment_key{&spec, skin_species_id, attachments_hash};
+  const bool base_is_cached = m_base_meshes.find(base_key) != m_base_meshes.end();
+  const bool attachments_are_cached =
+      attachments.empty() || m_attachment_meshes.contains(attachment_key);
+  if (Render::Creature::runtime_bake_forbidden() &&
+      ((split_full_mesh &&
+        ((!base_is_cached && prebaked == nullptr) || !attachments_are_cached)) ||
+       (!split_full_mesh && (prebaked == nullptr || !attachments.empty())))) {
     ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
@@ -214,10 +223,42 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     return nullptr;
   }
 
-  if (prebaked != nullptr) {
+  if (split_full_mesh) {
+    auto [base_it, inserted] = m_base_meshes.try_emplace(base_key);
+    if (inserted || base_it->second == nullptr) {
+      if (prebaked != nullptr) {
+        auto const vertices = prebaked->vertices_view();
+        auto const indices = prebaked->indices_view();
+        base_it->second = std::make_shared<RiggedMesh>(
+            std::vector<RiggedVertex>(vertices.begin(), vertices.end()),
+            std::vector<std::uint32_t>(indices.begin(), indices.end()));
+      } else {
+        Render::Creature::BakeInput input{};
+        input.graph = &Render::Creature::part_graph_for(spec, lod);
+        input.bind_pose = rest_palette;
+        base_it->second = std::shared_ptr<RiggedMesh>(
+            Render::Creature::bake_rigged_mesh(input).release());
+      }
+    }
+    entry.mesh = base_it->second;
+    if (!attachments.empty()) {
+      auto [attachment_it, inserted] = m_attachment_meshes.try_emplace(attachment_key);
+      if (inserted || attachment_it->second == nullptr) {
+        Render::Creature::BakeInput input{};
+        input.bind_pose = rest_palette;
+        input.attachments = attachments;
+        attachment_it->second = std::shared_ptr<RiggedMesh>(
+            Render::Creature::bake_rigged_mesh(input).release());
+      }
+      if (attachment_it->second != nullptr &&
+          attachment_it->second->index_count() != 0U) {
+        entry.attachment_meshes.push_back(attachment_it->second);
+      }
+    }
+  } else if (prebaked != nullptr && attachments.empty()) {
     auto const vertices = prebaked->vertices_view();
     auto const indices = prebaked->indices_view();
-    entry.mesh = std::make_unique<RiggedMesh>(
+    entry.mesh = std::make_shared<RiggedMesh>(
         std::vector<RiggedVertex>(vertices.begin(), vertices.end()),
         std::vector<std::uint32_t>(indices.begin(), indices.end()));
   } else {
@@ -226,30 +267,41 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     input.bind_pose = rest_palette;
     input.attachments = attachments;
 
-    entry.mesh = Render::Creature::bake_rigged_mesh(input);
+    entry.mesh = std::shared_ptr<RiggedMesh>(
+        Render::Creature::bake_rigged_mesh(input).release());
   }
 
   entry.inverse_bind.reserve(rest_palette.size());
   for (const auto& m : rest_palette) {
     entry.inverse_bind.push_back(m.inverted());
   }
+  const SkinAtlasKey atlas_key{&spec, skin_species_id};
+  auto [atlas_it, atlas_inserted] = m_skin_atlases.try_emplace(atlas_key);
+  if (atlas_inserted || atlas_it->second == nullptr) {
+    atlas_it->second = std::make_shared<RiggedSkinAtlas>();
+  }
+  entry.skin_atlas = atlas_it->second;
 
   ++m_frame_stats.bakes;
   auto [it, _] = m_entries.emplace(key, std::move(entry));
   return &it->second;
 }
 
-RiggedMeshCache::~RiggedMeshCache() {
+void RiggedMeshCache::release_skin_atlases() {
   auto* fn = rigged_cache_gl_funcs();
   if (fn == nullptr) {
     return;
   }
-  for (auto& kv : m_entries) {
-    if (kv.second.skin_palette_ubo != 0) {
-      fn->glDeleteBuffers(1, &kv.second.skin_palette_ubo);
-      kv.second.skin_palette_ubo = 0;
+  for (auto& [_, atlas] : m_skin_atlases) {
+    if (atlas != nullptr && atlas->palette_ubo != 0) {
+      fn->glDeleteBuffers(1, &atlas->palette_ubo);
+      atlas->palette_ubo = 0;
     }
   }
+}
+
+RiggedMeshCache::~RiggedMeshCache() {
+  release_skin_atlases();
 }
 
 void RiggedMeshCache::upload_pending_skin_ubos() {
@@ -260,17 +312,18 @@ void RiggedMeshCache::upload_pending_skin_ubos() {
   Render::Creature::RuntimeBakeAllowScope const initialization_scope;
   m_has_pending_skin_ubo_uploads = false;
   for (auto& [_, entry] : m_entries) {
-    if (entry.skin_palette_ubo != 0U || entry.skinned_palettes.empty() ||
-        entry.skinned_frame_total == 0U || entry.skinned_bone_count == 0U) {
+    if (entry.skin_atlas == nullptr || entry.skin_atlas->palette_ubo != 0U ||
+        entry.skin_atlas->palettes.empty() || entry.skin_atlas->frame_total == 0U ||
+        entry.skin_atlas->bone_count == 0U) {
       continue;
     }
 
     rigged_entry_ensure_skin_ubo(entry);
-    if (entry.skin_palette_ubo == 0U) {
+    if (entry.skin_atlas->palette_ubo == 0U) {
       m_has_pending_skin_ubo_uploads = true;
       continue;
     }
-    record_skin_ubo_upload(static_cast<std::uint64_t>(entry.skinned_frame_total) *
+    record_skin_ubo_upload(static_cast<std::uint64_t>(entry.skin_atlas->frame_total) *
                            BonePaletteArena::k_palette_bytes);
   }
 }
@@ -286,13 +339,14 @@ auto matrix_from_row_major(std::span<const float> row) -> QMatrix4x4 {
 
 void rigged_entry_ensure_skin_atlas_from_blob(
     const RiggedMeshEntry& entry, const Render::Creature::Bpat::BpatBlob& blob) {
-  if (!blob.loaded()) {
+  if (!blob.loaded() || entry.skin_atlas == nullptr) {
     return;
   }
+  auto& atlas = *entry.skin_atlas;
   const std::uint32_t frame_total = blob.frame_total();
   std::uint32_t bone_count = blob.bone_count();
-  if (entry.skinned_frame_total == frame_total &&
-      entry.skinned_bone_count == bone_count && !entry.skinned_palettes.empty()) {
+  if (atlas.frame_total == frame_total && atlas.bone_count == bone_count &&
+      !atlas.palettes.empty()) {
     return;
   }
   if (frame_total == 0 || bone_count == 0) {
@@ -307,19 +361,18 @@ void rigged_entry_ensure_skin_atlas_from_blob(
   if (bone_count > entry.inverse_bind.size()) {
     bone_count = static_cast<std::uint32_t>(entry.inverse_bind.size());
   }
-  entry.skinned_palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
-                                QMatrix4x4{});
+  atlas.palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
+                        QMatrix4x4{});
   for (std::uint32_t f = 0; f < frame_total; ++f) {
-    QMatrix4x4* dst =
-        entry.skinned_palettes.data() + static_cast<std::size_t>(f) * bone_count;
+    QMatrix4x4* dst = atlas.palettes.data() + static_cast<std::size_t>(f) * bone_count;
     for (std::uint32_t b = 0; b < bone_count; ++b) {
       auto row = blob.palette_matrix(f, b);
       const QMatrix4x4 raw = matrix_from_row_major(row);
       dst[b] = raw * entry.inverse_bind[b];
     }
   }
-  entry.skinned_frame_total = frame_total;
-  entry.skinned_bone_count = bone_count;
+  atlas.frame_total = frame_total;
+  atlas.bone_count = bone_count;
 }
 
 } // namespace Render::GL

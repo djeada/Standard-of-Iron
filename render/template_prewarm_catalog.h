@@ -56,7 +56,8 @@ auto select_template_prewarm_anim_budget(std::size_t domain_count,
 auto build_template_prewarm_work_items(const std::vector<PrewarmProfile>& profiles,
                                        const std::vector<int>& owner_ids,
                                        const std::vector<std::uint8_t>& variant_values,
-                                       const std::vector<AnimKey>& anim_keys)
+                                       const std::vector<AnimKey>& anim_keys,
+                                       bool full_lod_only = false)
     -> std::vector<PrewarmWorkItem>;
 
 } // namespace Render::GL

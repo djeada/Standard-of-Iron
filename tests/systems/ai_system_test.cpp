@@ -1480,6 +1480,33 @@ TEST_F(AISystemTest, AssaultBehaviorPicksSoldierOverCloserBuilding) {
   EXPECT_NEAR(commands.front().move_target_z.front(), 35.0F, 8.0F);
 }
 
+TEST_F(AISystemTest, AssaultBehaviorImmediatelyBreachesHostileGateAcrossAttackLane) {
+  Game::Systems::AI::AssaultBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  auto assault_unit = make_unit(1, 0.0F, 0.0F);
+  assault_unit.is_assault = true;
+  snapshot.friendly_units = {assault_unit};
+
+  auto gate = make_enemy_building(101, 10.0F, 0.0F);
+  gate.spawn_type = Game::Units::SpawnType::WallGate;
+  snapshot.visible_enemies = {gate, make_enemy(102, 30.0F, 0.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.assault_unit_ids = {1U};
+  context.assault_unit_count = 1;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
+  ASSERT_EQ(commands.front().move_target_x.size(), 1U);
+  EXPECT_NEAR(commands.front().move_target_x.front(), 8.0F, 0.01F);
+  EXPECT_LT(std::abs(commands.front().move_target_z.front()), 2.5F);
+}
+
 TEST_F(AISystemTest, HarassBehaviorPicksSoldierOverCloserBuilding) {
   Game::Systems::AI::HarassBehavior behavior;
 

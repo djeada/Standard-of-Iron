@@ -9,16 +9,14 @@
 
 namespace Render::GL {
 class ShaderCache;
-class Backend;
 class Mesh;
 
 namespace BackendPipelines {
 
 class ModeIndicatorPipeline final : public IPipeline {
 public:
-  explicit ModeIndicatorPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit ModeIndicatorPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~ModeIndicatorPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -43,7 +41,6 @@ public:
   IndicatorInstancedUniforms m_instanced_uniforms;
 
 private:
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_indicator_shader = nullptr;
 

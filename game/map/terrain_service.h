@@ -72,6 +72,10 @@ public:
 
   [[nodiscard]] auto is_hill_entrance(int grid_x, int grid_z) const -> bool;
 
+  [[nodiscard]] auto
+  get_hill_entrance_traversal_position(float world_x,
+                                       float world_z) const -> std::optional<QVector3D>;
+
   [[nodiscard]] auto is_forbidden(int grid_x, int grid_z) const -> bool;
 
   [[nodiscard]] auto is_forbidden_world(float world_x, float world_z) const -> bool;

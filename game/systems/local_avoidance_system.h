@@ -27,8 +27,8 @@ public:
   }
 
   static constexpr float k_default_cell_size = 4.0F;
-  static constexpr float k_separation_radius = 2.0F;
-  static constexpr float k_max_correction_per_tick = 0.3F;
+  static constexpr float k_separation_radius = 0.15F;
+  static constexpr float k_max_steering_speed = 1.25F;
   static constexpr float k_separation_strength = 1.5F;
 
 private:
@@ -41,6 +41,7 @@ private:
     float vz{0.0F};
     std::uint8_t priority{0};
     bool is_moving{false};
+    bool follows_navigation_path{false};
   };
 
   static auto cell_key(int cell_x, int cell_z) -> std::int64_t;

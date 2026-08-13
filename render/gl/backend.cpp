@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "backend/banner_pipeline.h"
-#include "backend/character_pipeline.h"
 #include "backend/combat_dust_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
@@ -35,6 +34,7 @@
 #include "backend/rain_pipeline.h"
 #include "backend/rigged_character_pipeline.h"
 #include "backend/rigged_cull_pipeline.h"
+#include "backend/shader_uniform_cache.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
@@ -79,47 +79,32 @@ Backend::Backend(ShaderQuality quality)
 }
 
 Backend::~Backend() {
-
   if (QOpenGLContext::currentContext() == nullptr) {
 
-    (void)m_cylinder_pipeline.release();
-    (void)m_vegetation_pipeline.release();
-    (void)m_terrain_pipeline.release();
-    (void)m_character_pipeline.release();
-    (void)m_rigged_character_pipeline.release();
-    (void)m_water_pipeline.release();
-    (void)m_effects_pipeline.release();
-    (void)m_mesh_instancing_pipeline.release();
-  } else {
-
-    if (m_frame_ubo != 0) {
-      glDeleteBuffers(1, &m_frame_ubo);
-      m_frame_ubo = 0;
-    }
-    if (m_environment_lighting_ubo != 0) {
-      glDeleteBuffers(1, &m_environment_lighting_ubo);
-      m_environment_lighting_ubo = 0;
-    }
-    if (m_local_lighting_ubo != 0) {
-      glDeleteBuffers(1, &m_local_lighting_ubo);
-      m_local_lighting_ubo = 0;
-    }
-    release_directional_shadow_resources();
-    if (m_directional_shadow_ubo != 0) {
-      glDeleteBuffers(1, &m_directional_shadow_ubo);
-      m_directional_shadow_ubo = 0;
-    }
-
-    SharedGeometryCache::instance().release_all();
-    m_cylinder_pipeline.reset();
-    m_vegetation_pipeline.reset();
-    m_terrain_pipeline.reset();
-    m_character_pipeline.reset();
-    m_rigged_character_pipeline.reset();
-    m_water_pipeline.reset();
-    m_effects_pipeline.reset();
-    m_mesh_instancing_pipeline.reset();
+    for_each_pipeline_slot([](auto& slot) { (void)slot.release(); });
+    return;
   }
+
+  if (m_frame_ubo != 0) {
+    glDeleteBuffers(1, &m_frame_ubo);
+    m_frame_ubo = 0;
+  }
+  if (m_environment_lighting_ubo != 0) {
+    glDeleteBuffers(1, &m_environment_lighting_ubo);
+    m_environment_lighting_ubo = 0;
+  }
+  if (m_local_lighting_ubo != 0) {
+    glDeleteBuffers(1, &m_local_lighting_ubo);
+    m_local_lighting_ubo = 0;
+  }
+  release_directional_shadow_resources();
+  if (m_directional_shadow_ubo != 0) {
+    glDeleteBuffers(1, &m_directional_shadow_ubo);
+    m_directional_shadow_ubo = 0;
+  }
+
+  SharedGeometryCache::instance().release_all();
+  for_each_pipeline_slot([](auto& slot) { slot.reset(); });
 }
 
 auto Backend::initialize() -> bool {
@@ -194,25 +179,25 @@ auto Backend::initialize() -> bool {
   m_shader_cache->initialize_defaults();
   qInfo() << "Backend: ShaderCache created";
 
-  if (!create_pipeline(m_cylinder_pipeline, "CylinderPipeline", m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_cylinder_pipeline, "CylinderPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_vegetation_pipeline, "VegetationPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_terrain_pipeline, "TerrainPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(m_terrain_pipeline, "TerrainPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_character_pipeline, "CharacterPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_shader_uniform_cache, "ShaderUniformCache", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_rigged_character_pipeline,
-                       "RiggedCharacterPipeline",
-                       this,
-                       m_shader_cache.get())) {
+  if (!create_subsystem(m_rigged_character_pipeline,
+                        "RiggedCharacterPipeline",
+                        this,
+                        m_shader_cache.get())) {
     return false;
   }
   m_rigged_cull_pipeline = std::make_unique<BackendPipelines::RiggedCullPipeline>();
@@ -221,50 +206,44 @@ auto Backend::initialize() -> bool {
     m_rigged_cull_pipeline.reset();
   }
 
-  if (!create_pipeline(m_water_pipeline, "WaterPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(m_water_pipeline, "WaterPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_effects_pipeline, "EffectsPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(m_effects_pipeline, "EffectsPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_primitive_batch_pipeline, "PrimitiveBatchPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_banner_pipeline, "BannerPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(m_banner_pipeline, "BannerPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_healing_beam_pipeline, "HealingBeamPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_healing_beam_pipeline, "HealingBeamPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_healer_aura_pipeline, "HealerAuraPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_healer_aura_pipeline, "HealerAuraPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
-          m_combat_dust_pipeline, "CombatDustPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_combat_dust_pipeline, "CombatDustPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_rain_pipeline, "RainPipeline", this, m_shader_cache.get())) {
+  if (!create_subsystem(m_rain_pipeline, "RainPipeline", this, m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(
+  if (!create_subsystem(
           m_ground_marker_pipeline, "GroundMarkerPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_mode_indicator_pipeline,
-                       "ModeIndicatorPipeline",
-                       this,
-                       m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_mode_indicator_pipeline, "ModeIndicatorPipeline", m_shader_cache.get())) {
     return false;
   }
-  if (!create_pipeline(m_mesh_instancing_pipeline,
-                       "MeshInstancingPipeline",
-                       this,
-                       m_shader_cache.get())) {
+  if (!create_subsystem(
+          m_mesh_instancing_pipeline, "MeshInstancingPipeline", m_shader_cache.get())) {
     return false;
   }
 
@@ -634,11 +613,19 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       }
 
       if (m_rigged_cull_pipeline != nullptr &&
-          m_rigged_cull_pipeline->has_shadow_path() &&
-          visible_rigged.size() >=
-              BackendPipelines::RiggedCullPipeline::minimum_instances()) {
+          m_rigged_cull_pipeline->has_shadow_path() && visible_rigged.size() >= 2U) {
+        if (m_rigged_cull_pipeline->draw_full_mesh_shadow(
+                visible_rigged.data(), visible_rigged.size(), light_vp)) {
+          m_last_playback_stats.shadow_rigged_instanced_instances +=
+              visible_rigged.size();
+          m_last_playback_stats.shadow_rigged_instanced_draws +=
+              m_rigged_cull_pipeline->last_stats().draw_calls;
+          continue;
+        }
         auto const extent = static_cast<float>(m_directional_shadow_resolution);
-        if (m_rigged_cull_pipeline->draw_shadow(visible_rigged.data(),
+        if (visible_rigged.size() >=
+                BackendPipelines::RiggedCullPipeline::minimum_instances() &&
+            m_rigged_cull_pipeline->draw_shadow(visible_rigged.data(),
                                                 visible_rigged.size(),
                                                 light_vp,
                                                 QVector2D(extent, extent))) {

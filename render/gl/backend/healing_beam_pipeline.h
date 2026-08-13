@@ -4,39 +4,25 @@
 #include <QVector3D>
 #include <QtGui/qopengl.h>
 
-#include <vector>
-
 #include "mesh_buffers.h"
 #include "pipeline_interface.h"
 #include "render/gl/shader.h"
 
-namespace Game::Systems {
-class HealingBeamSystem;
-class HealingBeam;
-} // namespace Game::Systems
-
 namespace Render::GL {
 class ShaderCache;
-class Backend;
-class Camera;
 
 namespace BackendPipelines {
 
 class HealingBeamPipeline final : public IPipeline {
 public:
-  explicit HealingBeamPipeline(GL::Backend* backend, GL::ShaderCache* shader_cache)
-      : m_backend(backend)
-      , m_shader_cache(shader_cache) {}
+  explicit HealingBeamPipeline(GL::ShaderCache* shader_cache)
+      : m_shader_cache(shader_cache) {}
   ~HealingBeamPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
   void shutdown() override;
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
-
-  void render(const Game::Systems::HealingBeamSystem* beam_system,
-              const Camera& cam,
-              float animation_time);
 
   void render_single_beam(const QVector3D& start,
                           const QVector3D& end,
@@ -48,13 +34,9 @@ public:
                           const QMatrix4x4& view_proj);
 
 private:
-  void render_beam(const Game::Systems::HealingBeam& beam,
-                   const Camera& cam,
-                   float animation_time);
   auto create_beam_geometry() -> bool;
   void release_geometry();
 
-  GL::Backend* m_backend = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_beam_shader = nullptr;
 

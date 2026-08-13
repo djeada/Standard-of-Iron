@@ -235,131 +235,67 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     break;
   }
   case EffectBatchCmdIndex: {
-    if (prepared.kind == PreparedBatchKind::EffectInstanced) {
-      const auto& first_eff =
-          std::get<EffectBatchCmdIndex>(queue.get_sorted(prepared.start));
-      switch (first_eff.kind) {
-      case EffectBatchCmd::Kind::HealerAura: {
-        if (m_healer_aura_pipeline == nullptr ||
-            !m_healer_aura_pipeline->is_initialized()) {
-          break;
-        }
-        std::vector<BackendPipelines::HealerAuraPipeline::AuraInstanceData>
-            aura_instances;
-        aura_instances.reserve(prepared.count);
-        for (std::size_t idx = prepared.start; idx < prepared.start + prepared.count;
-             ++idx) {
-          const auto& eff = std::get<EffectBatchCmdIndex>(queue.get_sorted(idx));
-          aura_instances.push_back(
-              {eff.position, eff.color, eff.radius, eff.intensity, eff.time});
-        }
-        m_healer_aura_pipeline->render_aura_batch(
-            aura_instances.data(), aura_instances.size(), view_proj);
-        m_last_bound_shader = nullptr;
-        break;
-      }
-      case EffectBatchCmd::Kind::CombatDust:
-      case EffectBatchCmd::Kind::BuildingFlame:
-      case EffectBatchCmd::Kind::BurningFlame:
-      case EffectBatchCmd::Kind::Fireball:
-      case EffectBatchCmd::Kind::BloodPool:
-      case EffectBatchCmd::Kind::StoneImpact:
-      case EffectBatchCmd::Kind::MetalSpark: {
-        if (m_combat_dust_pipeline == nullptr ||
-            !m_combat_dust_pipeline->is_initialized()) {
-          break;
-        }
-        if (first_eff.kind == EffectBatchCmd::Kind::BloodPool) {
-          std::vector<BackendPipelines::CombatDustPipeline::BloodPoolInstanceData>
-              blood_instances;
-          blood_instances.reserve(prepared.count);
-          for (std::size_t idx = prepared.start; idx < prepared.start + prepared.count;
-               ++idx) {
-            const auto& eff = std::get<EffectBatchCmdIndex>(queue.get_sorted(idx));
-            blood_instances.push_back({eff.position,
-                                       eff.radius,
-                                       eff.alpha_scale,
-                                       eff.rotation,
-                                       eff.aspect_ratio,
-                                       eff.seed});
-          }
-          m_combat_dust_pipeline->render_blood_pool_batch(
-              blood_instances.data(), blood_instances.size(), view_proj);
-          m_last_bound_shader = nullptr;
-          break;
-        }
-        std::vector<BackendPipelines::CombatDustPipeline::DustInstanceData>
-            dust_instances;
-        dust_instances.reserve(prepared.count);
-        for (std::size_t idx = prepared.start; idx < prepared.start + prepared.count;
-             ++idx) {
-          const auto& eff = std::get<EffectBatchCmdIndex>(queue.get_sorted(idx));
-          dust_instances.push_back(make_dust_instance(eff));
-        }
-        m_combat_dust_pipeline->render_dust_batch(
-            dust_instances.data(), dust_instances.size(), view_proj);
-        m_last_bound_shader = nullptr;
-        break;
-      }
-      default:
-        break;
-      }
-      break;
-    }
+    const auto& first_eff = std::get<EffectBatchCmdIndex>(cmd);
 
-    const auto& eff_cmd_ = std::get<EffectBatchCmdIndex>(cmd);
-    switch (eff_cmd_.kind) {
+    auto for_each_effect = [&](auto&& visit) {
+      for (std::size_t idx = i; idx < batch_end; ++idx) {
+        visit(std::get<EffectBatchCmdIndex>(queue.get_sorted(idx)));
+      }
+    };
+
+    switch (first_eff.kind) {
     case EffectBatchCmd::Kind::HealingBeam: {
-      struct HealingBeamView {
-        const QVector3D& start_pos;
-        const QVector3D& end_pos;
-        const QVector3D& color;
-        float progress;
-        float beam_width;
-        float intensity;
-        float time;
-      };
-      const HealingBeamView beam{eff_cmd_.position,
-                                 eff_cmd_.end_pos,
-                                 eff_cmd_.color,
-                                 eff_cmd_.progress,
-                                 eff_cmd_.beam_width,
-                                 eff_cmd_.intensity,
-                                 eff_cmd_.time};
       if (m_healing_beam_pipeline == nullptr ||
           !m_healing_beam_pipeline->is_initialized()) {
         break;
       }
-      m_healing_beam_pipeline->render_single_beam(beam.start_pos,
-                                                  beam.end_pos,
-                                                  beam.color,
-                                                  beam.progress,
-                                                  beam.beam_width,
-                                                  beam.intensity,
-                                                  beam.time,
-                                                  view_proj);
+      for_each_effect([&](const EffectBatchCmd& eff) {
+        m_healing_beam_pipeline->render_single_beam(eff.position,
+                                                    eff.end_pos,
+                                                    eff.color,
+                                                    eff.progress,
+                                                    eff.beam_width,
+                                                    eff.intensity,
+                                                    eff.time,
+                                                    view_proj);
+      });
       m_last_bound_shader = nullptr;
       break;
     }
     case EffectBatchCmd::Kind::HealerAura: {
-      struct HealerAuraView {
-        const QVector3D& position;
-        const QVector3D& color;
-        float radius;
-        float intensity;
-        float time;
-      };
-      const HealerAuraView aura{eff_cmd_.position,
-                                eff_cmd_.color,
-                                eff_cmd_.radius,
-                                eff_cmd_.intensity,
-                                eff_cmd_.time};
       if (m_healer_aura_pipeline == nullptr ||
           !m_healer_aura_pipeline->is_initialized()) {
         break;
       }
-      m_healer_aura_pipeline->render_single_aura(
-          aura.position, aura.color, aura.radius, aura.intensity, aura.time, view_proj);
+      std::vector<BackendPipelines::HealerAuraPipeline::AuraInstanceData> instances;
+      instances.reserve(batch_end - i);
+      for_each_effect([&](const EffectBatchCmd& eff) {
+        instances.push_back(
+            {eff.position, eff.color, eff.radius, eff.intensity, eff.time});
+      });
+      m_healer_aura_pipeline->render_aura_batch(
+          instances.data(), instances.size(), view_proj);
+      m_last_bound_shader = nullptr;
+      break;
+    }
+    case EffectBatchCmd::Kind::BloodPool: {
+      if (m_combat_dust_pipeline == nullptr ||
+          !m_combat_dust_pipeline->is_initialized()) {
+        break;
+      }
+      std::vector<BackendPipelines::CombatDustPipeline::BloodPoolInstanceData>
+          instances;
+      instances.reserve(batch_end - i);
+      for_each_effect([&](const EffectBatchCmd& eff) {
+        instances.push_back({.position = eff.position,
+                             .radius = eff.radius,
+                             .alpha_scale = eff.alpha_scale,
+                             .rotation = eff.rotation,
+                             .aspect_ratio = eff.aspect_ratio,
+                             .seed = eff.seed});
+      });
+      m_combat_dust_pipeline->render_blood_pool_batch(
+          instances.data(), instances.size(), view_proj);
       m_last_bound_shader = nullptr;
       break;
     }
@@ -373,24 +309,13 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
           !m_combat_dust_pipeline->is_initialized()) {
         break;
       }
-      const auto instance = make_dust_instance(eff_cmd_);
-      m_combat_dust_pipeline->render_dust_batch(&instance, 1U, view_proj);
-      m_last_bound_shader = nullptr;
-      break;
-    }
-    case EffectBatchCmd::Kind::BloodPool: {
-      if (m_combat_dust_pipeline == nullptr ||
-          !m_combat_dust_pipeline->is_initialized()) {
-        break;
-      }
-      const BackendPipelines::CombatDustPipeline::BloodPoolInstanceData instance{
-          .position = eff_cmd_.position,
-          .radius = eff_cmd_.radius,
-          .alpha_scale = eff_cmd_.alpha_scale,
-          .rotation = eff_cmd_.rotation,
-          .aspect_ratio = eff_cmd_.aspect_ratio,
-          .seed = eff_cmd_.seed};
-      m_combat_dust_pipeline->render_blood_pool_batch(&instance, 1U, view_proj);
+      std::vector<BackendPipelines::CombatDustPipeline::DustInstanceData> instances;
+      instances.reserve(batch_end - i);
+      for_each_effect([&](const EffectBatchCmd& eff) {
+        instances.push_back(make_dust_instance(eff));
+      });
+      m_combat_dust_pipeline->render_dust_batch(
+          instances.data(), instances.size(), view_proj);
       m_last_bound_shader = nullptr;
       break;
     }

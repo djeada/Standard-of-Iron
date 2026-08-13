@@ -16,6 +16,7 @@
 #include "render/decoration_gpu.h"
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
+#include "render/gl/frame_environment.h"
 #include "render/i_render_backend.h"
 #include "render/local_lighting.h"
 #include "render/world_chunk.h"
@@ -29,7 +30,6 @@ namespace Render::GL::BackendPipelines {
 class CylinderPipeline;
 class VegetationPipeline;
 class TerrainPipeline;
-class CharacterPipeline;
 class RiggedCharacterPipeline;
 class RiggedCullPipeline;
 class WaterPipeline;
@@ -47,7 +47,11 @@ class MeshInstancingPipeline;
 
 namespace Render::GL {
 
-class Backend : public IRenderBackend, protected QOpenGLFunctions_3_3_Core {
+class ShaderUniformCache;
+
+class Backend : public IRenderBackend,
+                public IFrameEnvironment,
+                protected QOpenGLFunctions_3_3_Core {
 public:
   struct PlaybackStats {
     std::size_t submitted_commands{0};
@@ -61,9 +65,6 @@ public:
     std::size_t shadow_rigged_instanced_instances{0};
     std::size_t shadow_rigged_single_draws{0};
   };
-
-  friend class BackendPipelines::CylinderPipeline;
-  friend class BackendPipelines::VegetationPipeline;
 
   Backend();
   explicit Backend(ShaderQuality quality);
@@ -87,17 +88,17 @@ public:
     m_ambient_strength = m_environment_lighting.ambient_intensity;
   }
   [[nodiscard]] auto
-  environment_lighting() const noexcept -> const EnvironmentLightingState& {
+  environment_lighting() const noexcept -> const EnvironmentLightingState& override {
     return m_environment_lighting;
   }
   void reset_local_lights() noexcept { m_local_light_fader.reset(); }
-  [[nodiscard]] auto light_direction() const noexcept -> const QVector3D& {
+  [[nodiscard]] auto light_direction() const noexcept -> const QVector3D& override {
     return m_light_dir;
   }
-  [[nodiscard]] auto ambient_strength() const noexcept -> float {
+  [[nodiscard]] auto ambient_strength() const noexcept -> float override {
     return m_ambient_strength;
   }
-  [[nodiscard]] auto viewport_height() const noexcept -> int {
+  [[nodiscard]] auto viewport_height() const noexcept -> int override {
     return m_viewport_height;
   }
   [[nodiscard]] auto last_playback_stats() const noexcept -> const PlaybackStats& {
@@ -132,32 +133,6 @@ public:
 
   [[nodiscard]] auto troop_shadow_shader() const noexcept -> Shader* {
     return m_shadow_shader;
-  }
-
-  [[nodiscard]] auto healing_beam_pipeline() -> BackendPipelines::HealingBeamPipeline* {
-    return m_healing_beam_pipeline.get();
-  }
-
-  [[nodiscard]] auto healer_aura_pipeline() -> BackendPipelines::HealerAuraPipeline* {
-    return m_healer_aura_pipeline.get();
-  }
-
-  [[nodiscard]] auto combat_dust_pipeline() -> BackendPipelines::CombatDustPipeline* {
-    return m_combat_dust_pipeline.get();
-  }
-
-  [[nodiscard]] auto rain_pipeline() -> BackendPipelines::RainPipeline* {
-    return m_rain_pipeline.get();
-  }
-
-  [[nodiscard]] auto
-  mode_indicator_pipeline() -> BackendPipelines::ModeIndicatorPipeline* {
-    return m_mode_indicator_pipeline.get();
-  }
-
-  [[nodiscard]] auto
-  ground_marker_pipeline() -> BackendPipelines::GroundMarkerPipeline* {
-    return m_ground_marker_pipeline.get();
   }
 
   void enable_depth_test(bool enable) {
@@ -241,12 +216,32 @@ private:
   void ensure_directional_shadow_resources(int resolution, int cascades);
   void release_directional_shadow_resources();
 
-  template <typename Pipeline, typename... Args>
-  auto create_pipeline(std::unique_ptr<Pipeline>& slot,
-                       const char* name,
-                       Args&&... args) -> bool {
+  template <typename Visitor>
+  void for_each_pipeline_slot(Visitor&& visit) {
+    visit(m_cylinder_pipeline);
+    visit(m_vegetation_pipeline);
+    visit(m_terrain_pipeline);
+    visit(m_rigged_character_pipeline);
+    visit(m_rigged_cull_pipeline);
+    visit(m_water_pipeline);
+    visit(m_effects_pipeline);
+    visit(m_primitive_batch_pipeline);
+    visit(m_banner_pipeline);
+    visit(m_healing_beam_pipeline);
+    visit(m_healer_aura_pipeline);
+    visit(m_combat_dust_pipeline);
+    visit(m_rain_pipeline);
+    visit(m_mode_indicator_pipeline);
+    visit(m_ground_marker_pipeline);
+    visit(m_mesh_instancing_pipeline);
+  }
+
+  template <typename Subsystem, typename... Args>
+  auto create_subsystem(std::unique_ptr<Subsystem>& slot,
+                        const char* name,
+                        Args&&... args) -> bool {
     qInfo() << "Backend: Creating" << name << "...";
-    slot = std::make_unique<Pipeline>(std::forward<Args>(args)...);
+    slot = std::make_unique<Subsystem>(std::forward<Args>(args)...);
     if (!slot->initialize()) {
       qCritical() << "Backend::initialize() FAILED:" << name;
       return false;
@@ -264,7 +259,7 @@ private:
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinder_pipeline;
   std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetation_pipeline;
   std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrain_pipeline;
-  std::unique_ptr<BackendPipelines::CharacterPipeline> m_character_pipeline;
+  std::unique_ptr<ShaderUniformCache> m_shader_uniform_cache;
   std::unique_ptr<BackendPipelines::RiggedCharacterPipeline>
       m_rigged_character_pipeline;
   std::unique_ptr<BackendPipelines::RiggedCullPipeline> m_rigged_cull_pipeline;

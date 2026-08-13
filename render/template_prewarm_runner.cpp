@@ -377,6 +377,9 @@ void Renderer::prewarm_unit_templates(
   if (!m_entity_registry) {
     return;
   }
+  const bool full_lod_only =
+      m_view.force_full_creature_lod() ||
+      !Render::GraphicsSettings::instance().creature_lod_enabled();
 
   auto report_progress = [&](TemplatePrewarmProgress::Phase phase,
                              std::size_t completed,
@@ -694,6 +697,9 @@ void Renderer::prewarm_unit_templates(
                                       idle_key);
       }
       for (HumanoidLOD const lod : k_preload_lods) {
+        if (full_lod_only && lod != HumanoidLOD::Full) {
+          continue;
+        }
         for (FacialHairStyle const style : k_facial_hair_styles) {
           execute_template_prewarm_item(*this,
                                         profile_idx,
@@ -717,7 +723,9 @@ void Renderer::prewarm_unit_templates(
 
   preload_profile_archetypes();
 
-  const std::size_t domain_count = profiles.size() * owner_ids.size() * 3U;
+  const std::size_t lod_domain_count = full_lod_only ? 1U : 3U;
+  const std::size_t domain_count =
+      profiles.size() * owner_ids.size() * lod_domain_count;
   if (domain_count == 0) {
     Render::Creature::set_runtime_bake_forbidden(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
@@ -743,12 +751,14 @@ void Renderer::prewarm_unit_templates(
       build_template_prewarm_work_items(profiles,
                                         owner_ids,
                                         anim_selection.variant_values,
-                                        anim_selection.selected_core_keys);
+                                        anim_selection.selected_core_keys,
+                                        full_lod_only);
   std::vector<PrewarmWorkItem> const extended_work_items =
       build_template_prewarm_work_items(profiles,
                                         owner_ids,
                                         anim_selection.variant_values,
-                                        anim_selection.selected_extra_keys);
+                                        anim_selection.selected_extra_keys,
+                                        full_lod_only);
 
   const std::size_t total_work_count =
       core_work_items.size() + extended_work_items.size();
