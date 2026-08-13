@@ -12,6 +12,9 @@ enum class HumanoidMotionState {
   Attacking
 };
 
+inline constexpr float k_humanoid_walk_cycle_distance = 1.5833F;
+inline constexpr float k_humanoid_run_cycle_distance = 2.8333F;
+
 struct HumanoidLocomotionTuning {
   float reference_walk_speed{2.2F};
   float reference_run_speed{4.8F};
@@ -176,6 +179,7 @@ struct HumanoidLocomotionPoseInputs {
   PoseVec3 base_foot_l{};
   PoseVec3 base_foot_r{};
 
+  float arm_pendulum_length{0.55F};
   float pelvis_y{0.0F};
   float hip_lateral_offset{0.0F};
   float hip_vertical_offset{0.0F};
@@ -189,6 +193,8 @@ struct HumanoidLocomotionPoseSample {
   float foot_pitch_l{0.0F};
   float foot_pitch_r{0.0F};
   PoseVec3 pelvis_delta{};
+  PoseVec3 hip_l_delta{};
+  PoseVec3 hip_r_delta{};
   PoseVec3 shoulder_l_delta{};
   PoseVec3 shoulder_r_delta{};
   PoseVec3 neck_delta{};
@@ -205,13 +211,9 @@ struct HumanoidLocomotionPoseSample {
     HumanoidMotionState state,
     const HumanoidLocomotionTuning& tuning = {}) noexcept -> float;
 
-[[nodiscard]] auto humanoid_walk_cycle_time_for_speed(
-    float normalized_speed,
-    const HumanoidLocomotionTuning& tuning = {}) noexcept -> float;
+[[nodiscard]] auto humanoid_walk_cycle_time_for_speed(float speed) noexcept -> float;
 
-[[nodiscard]] auto humanoid_run_cycle_time_for_speed(
-    float normalized_speed,
-    const HumanoidLocomotionTuning& tuning = {}) noexcept -> float;
+[[nodiscard]] auto humanoid_run_cycle_time_for_speed(float speed) noexcept -> float;
 
 [[nodiscard]] auto resolve_humanoid_locomotion_sample(
     const HumanoidLocomotionInputs& inputs) noexcept -> HumanoidLocomotionSample;

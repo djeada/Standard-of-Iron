@@ -107,8 +107,14 @@ nearest person inside the detection radius, preferring livestock at equal distan
 civilians over soldiers, and declines a quarry that is standing behind enough strength to
 hurt the pack — which, since a person counts toward the strength around themself, is what
 reduces to "wolves take the isolated and leave the escorted alone". It also weighs how many
-wolves are already committed to a quarry, so a pack splits across a group of victims rather
-than putting eight animals on the nearest one.
+wolves are already committed to a quarry — but as a **pull**, not a push. A quarry one or
+two packmates are on scores _better_ than a free one, scaled by the pack's `aggression`,
+and a third wolf closes it off entirely. Pushing the pack apart (which is what the old
+squared penalty did) meant three wolves each picked their own sheep and a "hunt" was three
+separate one-on-ones; a kill has to look like a pack bringing something down. Three wolves
+share a target for 95% of `wildlife_wolf_hunt` now, against never before, while a lazy pack
+(`aggression` 0.15, as `wildlife_mixed_pasture` sets) keeps the old spread-out behaviour
+because the join bonus scales to nothing.
 
 Each wolf then claims a **slot** on a ring around its quarry: the pack members already
 focused on that prey are ordered by entity id, and the wolf takes the share of the circle
@@ -117,7 +123,23 @@ stand abreast, so eight wolves land eight abreast instead of inside one another.
 per-wolf angle at a fixed radius — which is what this used to be — puts several wolves on
 the same point, and a pack that reads as one clipping blob is the result. Inside bite range
 the wolf halts and turns to face the prey through `desired_yaw` so the bite lands along the
-muzzle. Committing to a person, rather than to a sheep, is what marks the wolf hostile.
+muzzle — but only while the bite itself is playing. **Between** bites it keeps its slot
+angle and adds `k_pack_orbit_step` to a per-wolf `orbit`, so a wolf waiting out its attack
+cooldown circles its prey at bite range instead of standing on the spot; that alone
+removed most of the frozen-wolf frames from a hunt. Committing to a person, rather than to a sheep, is what marks the wolf hostile.
+
+**An animal that is not deliberately holding still must be moving.** Half-second think
+ticks and a `k_move_reissue_epsilon` that suppresses near-identical orders combine badly
+at a map edge: a cornered animal can be handed the same unreachable goal forever and stand
+there. `release_if_stalled` watches every animal that is not grazing, mid-bite or
+mid-flinch, and after `k_stall_release_seconds` without measurable movement it stops the
+mover, clears the think cooldown and sets `stalled`. The behaviours read that flag on the
+next tick and pick a _different_ kind of target — the flee aims back at the home anchor
+instead of further into the corner, the drift re-anchors at home, and a wolf adds half a
+turn to its orbit. Flee headings also carry a per-animal arc jitter and fall back through
+±60° and ±110° veers when the straight-away target gains no ground, so a herd fans out
+rather than stacking on one escape point. Measured over `wildlife_wolf_hunt`, the longest
+run of frames where an active animal did not move fell from 3.9 s to 0.7 s.
 
 **Biting is not on the think tick.** `try_contact_bite` runs every frame for every wolf
 that has a `focus_id` within reach, and starts the bite on the animal's own attack
@@ -403,6 +425,35 @@ to be fed the locomotion phase, which is distance-driven — so a wolf that stop
 idle frozen on a single frame, and `wolf_gait_advance(Stand)` is zero anyway, so the
 cursor could not have advanced even if it had wanted to.
 
+**A stationary stalker needed a clip of its own.** Being on the clock is not enough if the
+clip itself is a stride: `Hold` maps to the wolf's `stalk` **walk cycle**, so a wolf
+holding station between bites either froze or skated. `crouch` is a looping three-second
+clip baked from the same crouched drive with no stride at all — panting breath, a head
+that tracks side to side, ear flicks and a low tail sway — and `resolve_gait` returns
+`Stand` below the walk threshold so a stalking wolf that has stopped selects it
+(`StateId::WildlifeTense`). The sheep maps the same state to `alert`: head up, ears
+forward, quick shallow breathing, weight shifting foot to foot. A frightened sheep that
+has run out of room now stands _tensely_ rather than dropping into the calm idle.
+
+**Every standing clip carries idle motion, so nothing is ever a statue.** `idle` was
+twenty-four frames of a one-centimetre bob. Both species' idles are ninety-six frames
+(four seconds) driven by the new `breath`, `head_turn`, `head_dip`, `ear_*`, `tail_*` and
+`weight_shift` fields, which `apply_idle_motion` turns into a rising ribcage, a head that
+looks around on the neck pivot, independent ear twitches and a lateral weight shift that
+keeps the feet planted. The drives are authored as **integer harmonics of the clip phase**
+plus `pulse()` bumps, because anything else does not loop.
+
+**A bite that no one flinches from reads as a nudge.** Two halves were missing. On the
+render side the jaw articulated 0.5 rad — barely a parted lip — and the lunge was a
+forward slide with the head low; the bite now coils, gapes at 1.05 rad, drives in with a
+`rear` that lifts the forequarters off the ground, clamps, then wrenches with a
+`head_roll` so the worry phase reads from any camera angle rather than only from above.
+On the simulation side nothing told the _victim_ it had been hit: `WildlifeComponent`
+now watches its own health, and any drop arms `flinch_timer`, which the sheep renderer
+plays as the one-shot `startle` clip — a lateral shy, a hop off the ground, the head
+thrown up and a twist away from the bite. It is armed by a health drop rather than by the
+bite itself, so a wolf shot by an archer flinches on the same path.
+
 **A clip's authored length is its playback length.** The bite is baked as 32 frames at
 30 fps and the game plays it over `k_bite_animation_seconds`; when those two disagreed the
 clip simply ran at the ratio between them — 1.08 s of animation crammed into 0.55 s, which
@@ -434,8 +485,8 @@ instead of assembled every frame:
   and the whole-mesh node graphs authored as `Quadruped::MeshNode` shapes.
 - `sheep_manifest.cpp` / `wolf_manifest.cpp` — clip descriptors and the bake callback.
 
-`tools/bpat_baker` walks both manifests and writes `sheep.bpat`/`wolf.bpat` (six and seven
-clips), the `*_full.bprm`/`*_minimal.bprm` bodies and the `*_minimal.bpsm` snapshots into
+`tools/bpat_baker` walks both manifests and writes `sheep.bpat`/`wolf.bpat` (eight clips
+each: the sheep adds `startle` and `alert`, the wolf adds `crouch`), the `*_full.bprm`/`*_minimal.bprm` bodies and the `*_minimal.bpsm` snapshots into
 `assets/creatures`, and `bake_creature_assets` lists them so a normal build regenerates
 them. The full body is 3024 triangles for the sheep and 3612 for the wolf, with minimal
 LODs at 1380 and 1600 — the same order as the horse's 2182. The minimal LODs carry the
@@ -462,7 +513,7 @@ a white fleece is what made a grazing herd read as plastic.
 
 ## Arena fixtures
 
-Ten scenarios cover the feature; run them with
+Eleven scenarios cover the feature; run them with
 `arena_app --batch --scenario <id>`:
 
 | Scenario                     | What it proves                                              |
@@ -472,6 +523,7 @@ Ten scenarios cover the feature; run them with
 | `wildlife_wolf_hunt`         | Pack stalking, bites, herd panic                            |
 | `wildlife_wolf_pack`         | Undisturbed prowl: wolf silhouette, coat and gait           |
 | `wildlife_wolf_ambush`       | A pack rushes a lone patrol; both sides take losses         |
+| `wildlife_pack_takedown`     | Close camera on a pack kill: bite, flinch, circling, death  |
 | `wildlife_bird_scatter`      | Resident flock cruise and burst under a marching column     |
 | `wildlife_bird_flyover`      | Empty sky, then a flock crosses it and leaves               |
 | `wildlife_mixed_pasture`     | Sheep, wolves and a passing flock in one frame              |
@@ -482,6 +534,16 @@ They assert through wildlife-specific expectations (`WildlifeGrazingObserved`,
 `WildlifeFleeObserved`, `WildlifeHuntObserved`, `WildlifeBirdsScattered`,
 `WildlifeBirdFlyoverObserved`, `WildlifePopulationHeld`,
 `WildlifeCasualtyObserved`) rather than by eye.
+
+A fixture answers _whether the fight happens_, not _what a clip looks like_ — an animal is
+a few dozen pixels at the gameplay camera, and a panicking herd leaves the shot within
+seconds. For the clips themselves use
+`wildlife_preview <wolf|sheep> [out_dir] [clip] [samples] [side|quarter|front]`, which
+skins each baked clip through `Render::Software::SoftwareRasterizer` and writes a labelled
+strip of phases. It needs no display and takes about a second, so it is the loop to
+iterate a pose in; the arena is where you then confirm the clip is actually _selected_.
+Sampling at 10% steps hides real motion between frames — take twenty samples before
+concluding a pose is broken.
 
 ## Authoring in the map editor
 

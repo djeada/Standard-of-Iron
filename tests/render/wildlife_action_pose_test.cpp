@@ -248,6 +248,80 @@ TEST(WildlifeActionPose, WolfWorriesWhatItHasHoldOf) {
       << "the shake has to go both ways or it is a lean, not a shake";
 }
 
+TEST(WildlifeActionPose, AStandingWolfStillBreathesAndLooksAround) {
+
+  WolfDrive rest;
+  rest.gait = WolfGait::Stand;
+  const auto still = Render::Wildlife::wolf_pose(rest);
+
+  WolfDrive alive = rest;
+  alive.breath = 1.0F;
+  alive.head_turn = 1.0F;
+  alive.tail_sway = 1.0F;
+  const auto moved = Render::Wildlife::wolf_pose(alive);
+
+  EXPECT_GT(moved.body_front.y() - still.body_front.y(), 0.004F)
+      << "the ribcage has to rise, otherwise a standing wolf is a statue";
+  EXPECT_GT(std::abs(moved.muzzle.x() - still.muzzle.x()), 0.05F);
+  EXPECT_GT(std::abs(moved.tail_tip.x() - still.tail_tip.x()), 0.02F);
+
+  WolfDrive const other_way = [&] {
+    WolfDrive d = rest;
+    d.head_turn = -1.0F;
+    return d;
+  }();
+  const auto turned_other = Render::Wildlife::wolf_pose(other_way);
+  EXPECT_LT((moved.muzzle.x() - still.muzzle.x()) *
+                (turned_other.muzzle.x() - still.muzzle.x()),
+            0.0F);
+}
+
+TEST(WildlifeActionPose, TheWolfGapesBeforeItCloses) {
+
+  WolfDrive shut;
+  shut.gait = WolfGait::Stand;
+  shut.lunge = 0.5F;
+  WolfDrive gaping = shut;
+  gaping.jaw_open = 1.0F;
+
+  const auto closed = Render::Wildlife::wolf_pose(shut);
+  const auto open = Render::Wildlife::wolf_pose(gaping);
+
+  float const closed_gap = (closed.jaw_tip - closed.muzzle).length();
+  float const open_gap = (open.jaw_tip - open.muzzle).length();
+  EXPECT_GT(open_gap, closed_gap * 2.0F)
+      << "a bite whose jaw barely parts reads as a nudge";
+
+  float const hinge = (open.jaw_tip - open.jaw_hinge).length();
+  float const rest_hinge = (closed.jaw_tip - closed.jaw_hinge).length();
+  EXPECT_NEAR(hinge, rest_hinge, rest_hinge * 0.08F)
+      << "the jaw must swing on its hinge, not stretch";
+}
+
+TEST(WildlifeActionPose, ASheepStartleThrowsItOffTheSpotAndBringsItBack) {
+
+  SheepDrive rest;
+  rest.gait = SheepGait::Stand;
+  const auto still = Render::Wildlife::sheep_pose(rest);
+
+  SheepDrive jolt = rest;
+  jolt.startle = 0.22F;
+  const auto thrown = Render::Wildlife::sheep_pose(jolt);
+
+  EXPECT_GT(std::abs(thrown.body_rear.x() - still.body_rear.x()), 0.05F)
+      << "the body has to shy sideways, not just nod";
+  EXPECT_GT(thrown.body_rear.y() - still.body_rear.y(), 0.02F)
+      << "the sheep should come off the ground as it bolts";
+  EXPECT_GT(thrown.poll.y() - still.poll.y(), 0.03F) << "the head should be thrown up";
+
+  SheepDrive settled = rest;
+  settled.startle = 1.0F;
+  const auto recovered = Render::Wildlife::sheep_pose(settled);
+  EXPECT_NEAR(recovered.body_rear.x(), still.body_rear.x(), 0.012F);
+  EXPECT_NEAR(recovered.body_rear.y(), still.body_rear.y(), 0.012F)
+      << "the clip has to end where the gait clips start or it will pop";
+}
+
 TEST(WildlifeActionState, BiteAndDeathProgressComeFromSimulationComponents) {
   Engine::Core::World world;
   auto* entity = world.create_entity();

@@ -18,7 +18,8 @@ namespace {
 constexpr float k_top_speed = 4.6F;
 constexpr float k_run_threshold = 0.55F;
 constexpr float k_walk_threshold = 0.02F;
-constexpr float k_idle_period_seconds = 24.0F / 24.0F;
+constexpr float k_idle_period_seconds = 96.0F / 24.0F;
+constexpr float k_crouch_period_seconds = 72.0F / 24.0F;
 
 auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   float const morph = hash_unit_float(state.seed, 31U);
@@ -55,13 +56,14 @@ auto resolve_gait(const DrawState& state,
   if (gait_ratio > k_run_threshold) {
     return Render::Wildlife::WolfGait::Run;
   }
+  if (gait_ratio <= k_walk_threshold) {
+
+    return Render::Wildlife::WolfGait::Stand;
+  }
   if (stalking) {
     return Render::Wildlife::WolfGait::Stalk;
   }
-  if (gait_ratio > k_walk_threshold) {
-    return Render::Wildlife::WolfGait::Walk;
-  }
-  return Render::Wildlife::WolfGait::Stand;
+  return Render::Wildlife::WolfGait::Walk;
 }
 
 auto state_for_gait(const DrawState& state, Render::Wildlife::WolfGait gait)
@@ -77,8 +79,8 @@ auto state_for_gait(const DrawState& state, Render::Wildlife::WolfGait gait)
     break;
   }
 
-  return state.behavior == Game::Wildlife::Behavior::Stalk
-             ? Render::Creature::AnimationStateId::Hold
+  return state.behavior == Game::Wildlife::Behavior::Stalk || state.alert
+             ? Render::Creature::AnimationStateId::WildlifeTense
              : Render::Creature::AnimationStateId::Idle;
 }
 
@@ -104,9 +106,17 @@ void draw_wolf(const DrawContext& ctx, ISubmitter& out) {
     inputs.phase = action_phase(state, state.bite_progress);
   } else {
     inputs.state = state_for_gait(state, gait);
-    inputs.phase = inputs.state == Render::Creature::AnimationStateId::Idle
-                       ? ambient_phase(state, k_idle_period_seconds)
-                       : gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
+    switch (inputs.state) {
+    case Render::Creature::AnimationStateId::Idle:
+      inputs.phase = ambient_phase(state, k_idle_period_seconds);
+      break;
+    case Render::Creature::AnimationStateId::WildlifeTense:
+      inputs.phase = ambient_phase(state, k_crouch_period_seconds);
+      break;
+    default:
+      inputs.phase = gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
+      break;
+    }
   }
 
   const ClipTransition transition =

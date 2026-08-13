@@ -4126,6 +4126,93 @@ TEST(AnimationCoreLocomotionManifest, WalkCycleClosesOnItself) {
   EXPECT_NEAR(start.foot_pitch_l, wrap.foot_pitch_l, 0.05F);
 }
 
+namespace {
+
+auto stance_retreat_per_cycle(Animation::HumanoidLocomotionPoseInputs inputs,
+                              float early_phase,
+                              float late_phase) -> float {
+  inputs.cycle_phase = early_phase;
+  float const early = Animation::resolve_humanoid_locomotion_pose(inputs).foot_l.z;
+  inputs.cycle_phase = late_phase;
+  float const late = Animation::resolve_humanoid_locomotion_pose(inputs).foot_l.z;
+  return (early - late) / (late_phase - early_phase);
+}
+
+} // namespace
+
+TEST(AnimationCoreLocomotionManifest, WalkCadenceKeepsThePlantedFootStill) {
+  float const retreat = stance_retreat_per_cycle(walk_pose_inputs(), 0.20F, 0.40F);
+  ASSERT_GT(retreat, 0.0F);
+
+  for (float const speed : {1.6F, 2.0F, 2.35F, 2.8F}) {
+    float const cycle_time = Animation::humanoid_walk_cycle_time_for_speed(speed);
+    EXPECT_NEAR(retreat, speed * cycle_time, retreat * 0.05F)
+        << "walking at " << speed << " m/s slides the planted foot";
+  }
+}
+
+TEST(AnimationCoreLocomotionManifest, RunCadenceKeepsThePlantedFootStill) {
+  auto inputs = walk_pose_inputs();
+  inputs.state = Animation::HumanoidMotionState::Run;
+  inputs.run_blend = 1.0F;
+  inputs.stride_distance = 0.0F;
+  float const retreat = stance_retreat_per_cycle(inputs, 0.10F, 0.25F);
+  ASSERT_GT(retreat, 0.0F);
+
+  for (float const speed : {2.8F, 3.3F, 4.0F, 4.8F}) {
+    float const cycle_time = Animation::humanoid_run_cycle_time_for_speed(speed);
+    EXPECT_NEAR(retreat, speed * cycle_time, retreat * 0.05F)
+        << "running at " << speed << " m/s slides the planted foot";
+  }
+}
+
+TEST(AnimationCoreLocomotionManifest, ArmSwingStaysWithinTheArmsReach) {
+  auto inputs = walk_pose_inputs();
+  constexpr float k_arm_length = 0.55F;
+  inputs.arm_pendulum_length = k_arm_length;
+
+  for (int step = 0; step < 64; ++step) {
+    inputs.cycle_phase = static_cast<float>(step) / 64.0F;
+    auto const pose = Animation::resolve_humanoid_locomotion_pose(inputs);
+    for (auto const& hand : {pose.hand_l_delta, pose.hand_r_delta}) {
+      float const shoulder_to_hand_y = -k_arm_length + hand.y;
+      float const reach = std::sqrt((shoulder_to_hand_y * shoulder_to_hand_y) +
+                                    (hand.z * hand.z) + (hand.x * hand.x));
+      EXPECT_LE(reach, k_arm_length)
+          << "the swing straightens the elbow at phase " << inputs.cycle_phase;
+    }
+  }
+}
+
+TEST(AnimationCoreLocomotionManifest, PelvisLeansOverTheSupportingLeg) {
+  auto inputs = walk_pose_inputs();
+
+  inputs.cycle_phase = 0.25F;
+  auto const left_stance = Animation::resolve_humanoid_locomotion_pose(inputs);
+  inputs.cycle_phase = 0.75F;
+  auto const right_stance = Animation::resolve_humanoid_locomotion_pose(inputs);
+
+  EXPECT_LT(left_stance.pelvis_delta.x, -0.01F);
+  EXPECT_GT(right_stance.pelvis_delta.x, 0.01F);
+
+  EXPECT_LT(left_stance.shoulder_l_delta.x, 0.0F);
+  EXPECT_GT(std::abs(left_stance.pelvis_delta.x),
+            std::abs(left_stance.shoulder_l_delta.x));
+}
+
+TEST(AnimationCoreLocomotionManifest, PelvisCounterRotatesAgainstTheShoulders) {
+  auto inputs = walk_pose_inputs();
+
+  for (float const phase : {0.05F, 0.20F, 0.55F, 0.70F}) {
+    inputs.cycle_phase = phase;
+    auto const pose = Animation::resolve_humanoid_locomotion_pose(inputs);
+    float const hip_lead = pose.hip_l_delta.z - pose.hip_r_delta.z;
+    float const shoulder_lead = pose.shoulder_l_delta.z - pose.shoulder_r_delta.z;
+    EXPECT_LT(hip_lead * shoulder_lead, 0.0F)
+        << "hips and shoulders rotate together at phase " << phase;
+  }
+}
+
 TEST(AnimationCoreLocomotionManifest, GaitKeepsCyclingWhileTheStrideBlendsOut) {
   auto const walking =
       step_locomotion(walking_inputs(), 0.0F, 1.0F, 0.0F, 1.0F, 60, 1.0F / 60.0F);
@@ -9141,10 +9228,8 @@ TEST(HumanoidPrepare, TurnSignalIntroducesUpperBodyTwistDuringLocomotion) {
   Render::GL::HumanoidRendererBase::compute_locomotion_pose(
       777U, 0.25F, turning, variation, turning_pose);
 
-  float const neutral_twist =
-      std::abs(neutral_pose.shoulder_l.z() - neutral_pose.shoulder_r.z());
-  float const turning_twist =
-      std::abs(turning_pose.shoulder_l.z() - turning_pose.shoulder_r.z());
+  float const neutral_twist = neutral_pose.shoulder_l.z() - neutral_pose.shoulder_r.z();
+  float const turning_twist = turning_pose.shoulder_l.z() - turning_pose.shoulder_r.z();
   EXPECT_GT(turning_twist, neutral_twist + 0.01F);
   EXPECT_GT(turning_pose.pelvis_pos.x(), neutral_pose.pelvis_pos.x());
 }

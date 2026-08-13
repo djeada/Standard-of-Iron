@@ -1850,11 +1850,21 @@ public:
 
   static constexpr float k_bite_animation_seconds = 1.08F;
   static constexpr float k_bite_impact_phase = 0.27F;
+  static constexpr float k_flinch_animation_seconds = 0.55F;
   float bite_timer{0.0F};
+  float flinch_timer{0.0F};
+  int watched_health{-1};
+
+  static constexpr float k_stall_release_seconds = 1.5F;
+  float stall_timer{0.0F};
+  float last_x{0.0F};
+  float last_z{0.0F};
+  bool stalled{false};
   EntityID bite_target_id{0};
   bool bite_impact_pending{false};
   EntityID focus_id{0};
   EntityID aggressor_id{0};
+  float orbit{0.0F};
   std::uint32_t rng_state{0U};
 
   [[nodiscard]] auto is_hostile() const noexcept -> bool {

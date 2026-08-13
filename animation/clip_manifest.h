@@ -97,6 +97,9 @@ enum class StateId : std::uint8_t {
   RpgSwordThrust = 19,
   RpgSwordFinisher = 20,
 
+  WildlifeTense = 21,
+  WildlifeStartle = 22,
+
   Count
 };
 
@@ -211,6 +214,8 @@ inline constexpr std::uint16_t k_sheep_walk_clip = 2U;
 inline constexpr std::uint16_t k_sheep_run_clip = 3U;
 inline constexpr std::uint16_t k_sheep_die_clip = 4U;
 inline constexpr std::uint16_t k_sheep_dead_clip = 5U;
+inline constexpr std::uint16_t k_sheep_startle_clip = 6U;
+inline constexpr std::uint16_t k_sheep_alert_clip = 7U;
 
 inline constexpr std::uint16_t k_wolf_idle_clip = 0U;
 inline constexpr std::uint16_t k_wolf_stalk_clip = 1U;
@@ -219,6 +224,7 @@ inline constexpr std::uint16_t k_wolf_run_clip = 3U;
 inline constexpr std::uint16_t k_wolf_bite_clip = 4U;
 inline constexpr std::uint16_t k_wolf_die_clip = 5U;
 inline constexpr std::uint16_t k_wolf_dead_clip = 6U;
+inline constexpr std::uint16_t k_wolf_crouch_clip = 7U;
 
 struct ClipManifest {
   std::array<std::uint16_t, state_count()> clips{};
@@ -412,6 +418,8 @@ sheep_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::Run)] = k_sheep_run_clip;
   t[state_index(StateId::Die)] = k_sheep_die_clip;
   t[state_index(StateId::Dead)] = k_sheep_dead_clip;
+  t[state_index(StateId::WildlifeStartle)] = k_sheep_startle_clip;
+  t[state_index(StateId::WildlifeTense)] = k_sheep_alert_clip;
   return t;
 }
 
@@ -432,6 +440,7 @@ wolf_clip_table() noexcept -> std::array<std::uint16_t, state_count()> {
   t[state_index(StateId::AttackMelee)] = k_wolf_bite_clip;
   t[state_index(StateId::Die)] = k_wolf_die_clip;
   t[state_index(StateId::Dead)] = k_wolf_dead_clip;
+  t[state_index(StateId::WildlifeTense)] = k_wolf_crouch_clip;
   return t;
 }
 

@@ -56,6 +56,34 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Changed
 
+- **Infantry no longer skate.** The walk clip drew the planted foot 1.08 m under
+  the body per cycle and was played at a cadence of about 0.9 s whatever the
+  unit's speed, which is a walk for someone travelling 1.2 m/s. Infantry travel
+  2.0–2.5 m/s, so nearly half of every step was the foot sliding across the
+  ground — the single largest reason the walk read as gliding rather than
+  walking. The stride and the cadence are now derived from one number, the
+  distance the body
+  covers in a cycle: the clip takes a 0.79 m step and the cycle time is that
+  distance divided by the actual ground speed, so the foot that is down stays
+  where it was put at any speed a unit is given. The same rule drives the run.
+  Two tests measure the retreat of the planted foot against `speed × cycle_time`
+  and fail if they drift apart.
+- The rest of the walk was rebuilt around the longer stride: the feet track near
+  the midline instead of under the shoulders (0.17 m apart, not 0.40 m), the
+  pelvis leans over the leg that is carrying the weight instead of away from it,
+  the shoulders and pelvis counter-rotate in time with the arms rather than a
+  quarter cycle out of phase, the pelvis drops on the swing side, the heel
+  leaves the ground halfway through the stance instead of in the last third, and
+  the ankle now peaks early in the swing while the knee is folded. The arms
+  swing on an arc around the shoulder: driving the hand fore and aft used to
+  push it past the arm's reach limit, where the clamp locked the elbow straight
+  and ate most of the swing.
+- The first-person camera bob and its footstep cue are derived from the walk
+  clip's stride distance, so the step you hear is the step the legs take.
+- `humanoid_preview --report` measures a gait as well as drawing it: stride
+  travel, the retreat of the planted foot per cycle, foot lift, hand swing,
+  pelvis bob and sway, shoulder twist and step width, plus the ground speed each
+  clip is skate-free at for a given cycle time.
 - The scheduled workflow is called **Weekly** and its jobs, cache keys and
   documentation say so. The cron moved to Mondays some time ago; only the name
   had gone on claiming otherwise.
