@@ -566,7 +566,6 @@ auto make_healer_spec(std::string_view renderer_key,
   out.kind = CreatureKind::Humanoid;
   out.debug_name = renderer_key;
   out.scaling = profile.as_pipeline_scaling();
-  out.owned_legacy_slots = LegacySlotMask::AllHumanoid;
   out.archetype_id = resolve_humanoid_equipment_archetype(
       renderer_key, Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
   out.creature_asset_id = creature_asset_id;
@@ -589,7 +588,6 @@ const Render::Creature::Pipeline::UnitVisualSpec& carthage_healer_visual_spec(
     out.kind = CreatureKind::Humanoid;
     out.debug_name = "troops/carthage/healer";
     out.scaling = profile.as_pipeline_scaling();
-    out.owned_legacy_slots = LegacySlotMask::AllHumanoid;
     out.archetype_id = carthage_dark_mage_archetype();
     out.creature_asset_id = Render::Creature::Pipeline::k_stave_caster_humanoid_asset;
     out.animation_manifest.variant_table = &carthage_healer_variant_table();

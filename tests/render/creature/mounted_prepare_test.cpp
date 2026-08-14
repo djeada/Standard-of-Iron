@@ -416,8 +416,6 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   EXPECT_EQ(rider_requests, 1);
   EXPECT_EQ(horse_requests, 1);
   EXPECT_EQ(prep.bodies.requests().size(), 2U);
-  EXPECT_NE(renderer.visual_spec().owned_legacy_slots & LegacySlotMask::Attachments,
-            LegacySlotMask::None);
 }
 
 TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {

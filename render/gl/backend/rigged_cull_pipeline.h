@@ -8,9 +8,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "render/gl/shader.h"
+#include "render/role_color_palette.h"
 
 namespace Render::GL {
 class ShaderCache;
@@ -39,6 +41,8 @@ public:
 
   auto initialize() -> bool;
   void shutdown();
+  void begin_frame();
+  void end_frame();
 
   [[nodiscard]] auto is_available() const -> bool { return m_available; }
 
@@ -97,8 +101,10 @@ private:
                            Pass pass) -> bool;
   auto upload_instances(const RiggedCreatureCmd* const* cmds,
                         std::size_t count,
-                        std::size_t bone_count) -> bool;
-  void bind_role_color_texture(const RiggedCreatureCmd* const* cmds, std::size_t count);
+                        std::size_t bone_count,
+                        bool depth_only) -> bool;
+  auto bind_role_color_texture() -> bool;
+  auto role_color_palette_index(const RiggedCreatureCmd& cmd) -> std::uint32_t;
 
   ShaderCache* m_shader_cache{nullptr};
   bool m_available{false};
@@ -127,9 +133,15 @@ private:
   std::size_t m_out_capacity_triangles{0};
   std::size_t m_role_color_capacity_bytes{0};
 
+  std::size_t m_palette_stream_cursor_bytes{0};
+  std::size_t m_instance_stream_cursor_bytes{0};
+  std::size_t m_role_color_stream_cursor_bytes{0};
+  std::unordered_map<const Render::RoleColorPalette*, std::uint32_t>
+      m_role_color_palette_indices;
+  std::uint32_t m_instance_base{0};
+
   std::vector<float> m_palette_scratch;
   std::vector<float> m_instance_scratch;
-  std::vector<float> m_role_color_scratch;
 
   Stats m_stats{};
   std::uint32_t m_readback_counter{0};

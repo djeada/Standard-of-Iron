@@ -9,7 +9,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
-#include <memory>
 #include <mutex>
 #include <numbers>
 #include <optional>
@@ -65,7 +64,6 @@
 #include "humanoid/render_stats.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
-#include "pass/frame_pass_runner.h"
 #include "pass/primitive_flush_pass.h"
 #include "pipeline/lod_selector.h"
 #include "primitive_batch.h"
@@ -145,6 +143,13 @@ public:
       ++m_rigged_body_count;
     }
     ForwardingSubmitter::rigged(cmd);
+  }
+
+  void rigged(RiggedCreatureCmd&& cmd) override {
+    if (cmd.mesh != nullptr) {
+      ++m_rigged_body_count;
+    }
+    ForwardingSubmitter::rigged(std::move(cmd));
   }
 
 private:
@@ -1141,10 +1146,10 @@ void Renderer::render_world(Engine::Core::World* world) {
     pass_ctx.light_direction = m_light_dir;
     pass_ctx.ambient_strength = m_ambient_strength;
 
-    Render::Pass::FramePassRunner runner;
-    runner.add(std::make_unique<Render::Pass::PrimitiveFlushPass>());
-    runner.add(std::make_unique<Render::Pass::ConstructionPreviewPass>());
-    runner.execute(pass_ctx);
+    Render::Pass::PrimitiveFlushPass primitive_flush;
+    Render::Pass::ConstructionPreviewPass construction_previews;
+    primitive_flush.execute(pass_ctx);
+    construction_previews.execute(pass_ctx);
   }
 }
 

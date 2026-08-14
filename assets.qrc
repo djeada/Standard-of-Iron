@@ -15,7 +15,6 @@
         <file>assets/shaders/include/activity_indicator.glsl</file>
         <file>assets/shaders/directional_shadow_depth.vert</file>
         <file>assets/shaders/directional_shadow_rigged.vert</file>
-        <file>assets/shaders/directional_shadow_rigged_instanced.vert</file>
         <file>assets/shaders/directional_shadow_depth.frag</file>
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>
@@ -38,8 +37,7 @@
         <file>assets/shaders/campaign_symbol.vert</file>
         <file>assets/shaders/character_skinned.vert</file>
         <file>assets/shaders/character_skinned.frag</file>
-        <file>assets/shaders/character_skinned_instanced.vert</file>
-        <file>assets/shaders/character_skinned_instanced.frag</file>
+        <file>assets/shaders/character_skinned_gpu_instanced.frag</file>
         <file>assets/shaders/character_skinned_gpudriven.vert</file>
         <file>assets/shaders/character_skinned_gpu_instanced.vert</file>
         <file>assets/shaders/directional_shadow_rigged_gpudriven.vert</file>

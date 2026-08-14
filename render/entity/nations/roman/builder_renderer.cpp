@@ -1019,7 +1019,6 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/builder";
       s.scaling = k_builder_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = roman_builder_idle_archetype();
       s.animation_manifest.variant_table = &roman_builder_variant_table();
       return s;
@@ -1055,7 +1054,6 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/civilian";
       s.scaling = k_civilian_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/roman/civilian",
           Render::Creature::ArchetypeRegistry::k_humanoid_base,

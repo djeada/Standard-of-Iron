@@ -197,6 +197,11 @@ auto build_base_graph_output(const CreatureGraphInputs& inputs,
 void CreatureRenderBatch::clear() noexcept {
   rows_.clear();
   requests_.clear();
+  cached_humanoid_variant_ = nullptr;
+  cached_humanoid_asset_ = k_invalid_creature_asset;
+  cached_humanoid_archetype_ = Render::Creature::k_invalid_archetype;
+  cached_humanoid_handle_ = Render::Creature::k_invalid_creature_render_asset_handle;
+  cached_humanoid_role_colors_.reset();
 }
 
 void CreatureRenderBatch::reserve(std::size_t n) {
@@ -374,22 +379,17 @@ struct RoleColorCacheKeyHash {
   }
 };
 
-struct RoleColorCacheValue {
-  std::array<QVector3D, Render::Creature::CreatureRenderRequest::k_role_color_capacity>
-      colors{};
-  std::uint8_t count{0U};
-};
-
 template <typename Variant>
 void populate_role_colors_uncached(Render::Creature::CreatureRenderRequest& req,
                                    const Variant& variant) {
+  auto palette = std::make_shared<Render::RoleColorPalette>();
   const auto* asset = Render::Creature::Pipeline::CreatureAssetRegistry::instance().get(
       req.creature_asset_id);
   std::uint32_t count = 0;
   if (asset != nullptr && asset->fill_role_colors != nullptr) {
     count = asset->fill_role_colors(static_cast<const void*>(&variant),
-                                    req.role_colors.data(),
-                                    req.role_colors.size());
+                                    palette->colors.data(),
+                                    palette->colors.size());
   }
 
   const auto* desc = Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
@@ -402,20 +402,23 @@ void populate_role_colors_uncached(Render::Creature::CreatureRenderRequest& req,
         continue;
       }
       count = fn(static_cast<const void*>(&variant),
-                 req.role_colors.data(),
+                 palette->colors.data(),
                  count,
-                 req.role_colors.size());
+                 palette->colors.size());
     }
   }
-  req.role_color_count = static_cast<std::uint8_t>(std::min<std::uint32_t>(
-      count, static_cast<std::uint32_t>(req.role_colors.size())));
+  palette->count = static_cast<std::uint8_t>(std::min<std::uint32_t>(
+      count, static_cast<std::uint32_t>(palette->colors.size())));
+  req.role_color_count = palette->count;
+  req.role_colors = std::move(palette);
 }
 
 template <typename Variant>
 void populate_role_colors(Render::Creature::CreatureRenderRequest& req,
                           const Variant& variant) {
-  using Cache =
-      std::unordered_map<RoleColorCacheKey, RoleColorCacheValue, RoleColorCacheKeyHash>;
+  using Cache = std::unordered_map<RoleColorCacheKey,
+                                   std::shared_ptr<const Render::RoleColorPalette>,
+                                   RoleColorCacheKeyHash>;
   thread_local Cache cache;
 
   RoleColorCacheKey key{};
@@ -424,8 +427,8 @@ void populate_role_colors(Render::Creature::CreatureRenderRequest& req,
   key.variant_hash = variant_hash(variant);
 
   if (auto it = cache.find(key); it != cache.end()) {
-    req.role_colors = it->second.colors;
-    req.role_color_count = it->second.count;
+    req.role_colors = it->second;
+    req.role_color_count = it->second->count;
     return;
   }
 
@@ -435,10 +438,7 @@ void populate_role_colors(Render::Creature::CreatureRenderRequest& req,
   if (cache.size() >= k_max_role_color_cache_entries) {
     cache.clear();
   }
-  RoleColorCacheValue value;
-  value.colors = req.role_colors;
-  value.count = req.role_color_count;
-  cache.emplace(key, value);
+  cache.emplace(key, req.role_colors);
 }
 
 } // namespace
@@ -477,8 +477,18 @@ void CreatureRenderBatch::add_humanoid(
   auto req = build_request(
       output, selection.resolved_archetype, selection.state, selection.phase);
   req.creature_asset_id = asset->id;
-  bool created_handle = false;
-  {
+  const bool cached_asset =
+      cached_humanoid_asset_ == asset->id &&
+      cached_humanoid_archetype_ == selection.resolved_archetype &&
+      cached_humanoid_handle_ !=
+          Render::Creature::k_invalid_creature_render_asset_handle;
+  if (cached_asset) {
+    req.render_asset_handle = cached_humanoid_handle_;
+    if (output.pass_intent == RenderPassIntent::Main) {
+      ++Render::Profiling::global_profile().render_asset_cache_hits;
+    }
+  } else {
+    bool created_handle = false;
     auto& profile = Render::Profiling::global_profile();
     Render::Profiling::AccumulatorScope const scope(
         output.pass_intent == RenderPassIntent::Main
@@ -494,10 +504,21 @@ void CreatureRenderBatch::add_humanoid(
         ++profile.render_asset_cache_hits;
       }
     }
+    cached_humanoid_asset_ = asset->id;
+    cached_humanoid_archetype_ = selection.resolved_archetype;
+    cached_humanoid_handle_ = req.render_asset_handle;
   }
   req.clip_variant = selection.clip_variant;
   req.clip_id = selection.clip_id.value_or(Animation::k_unmapped_clip);
-  populate_role_colors(req, variant);
+  if (cached_asset && cached_humanoid_variant_ == &variant &&
+      cached_humanoid_role_colors_ != nullptr) {
+    req.role_colors = cached_humanoid_role_colors_;
+    req.role_color_count = cached_humanoid_role_colors_->count;
+  } else {
+    populate_role_colors(req, variant);
+    cached_humanoid_variant_ = &variant;
+    cached_humanoid_role_colors_ = req.role_colors;
+  }
   req.wear_params = QVector4D(
       variant.weathering, variant.grime, variant.bloodiness, variant.pattern_seed);
   req.full_body_blend.archetype = selection.full_body_blend.archetype;

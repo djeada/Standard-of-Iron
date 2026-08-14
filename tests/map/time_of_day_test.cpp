@@ -8,6 +8,18 @@ using namespace Game::Map;
 
 namespace {
 
+auto ambient_radiance(const EnvironmentLightingState& settings) -> float {
+  const QVector3D hemisphere_average =
+      (settings.sky_color + settings.ground_bounce_color) * 0.5F;
+  const float mean_channel =
+      (hemisphere_average.x() + hemisphere_average.y() + hemisphere_average.z()) / 3.0F;
+  return mean_channel * settings.ambient_intensity;
+}
+
+auto ambient_radiance_at(TimeOfDay time_of_day) -> float {
+  return ambient_radiance(lighting_for_time_of_day(time_of_day));
+}
+
 TEST(TimeOfDayTest, LightingForDayReturnsHighSun) {
   const auto settings = lighting_for_time_of_day(TimeOfDay::Day);
   EXPECT_GT(settings.primary_direction.y(), 0.7F);
@@ -22,18 +34,18 @@ TEST(TimeOfDayTest, LightingForMorningReturnsLowSun) {
   EXPECT_NEAR(settings.primary_direction.length(), 1.0F, 1e-5F);
 }
 
-TEST(TimeOfDayTest, LightingForAfternoonIsLowerThanDay) {
+TEST(TimeOfDayTest, LightingForAfternoonSitsLowerInTheSkyThanDay) {
   const auto day = lighting_for_time_of_day(TimeOfDay::Day);
   const auto afternoon = lighting_for_time_of_day(TimeOfDay::Afternoon);
   EXPECT_LT(afternoon.primary_direction.y(), day.primary_direction.y());
-  EXPECT_FLOAT_EQ(afternoon.ambient_intensity, 0.27F);
+  EXPECT_FLOAT_EQ(afternoon.ambient_intensity, 0.34F);
   EXPECT_NEAR(afternoon.primary_direction.length(), 1.0F, 1e-5F);
 }
 
 TEST(TimeOfDayTest, LightingForNightHasLowAmbient) {
   const auto settings = lighting_for_time_of_day(TimeOfDay::Night);
-  EXPECT_LT(settings.ambient_intensity, 0.20F);
-  EXPECT_FLOAT_EQ(settings.ambient_intensity, 0.12F);
+  EXPECT_LT(ambient_radiance(settings), 0.10F);
+  EXPECT_FLOAT_EQ(settings.ambient_intensity, 0.30F);
   EXPECT_NEAR(settings.primary_direction.length(), 1.0F, 1e-5F);
 }
 
@@ -45,18 +57,19 @@ TEST(TimeOfDayTest, AllTimesProduceNormalizedLightDirections) {
   }
 }
 
-TEST(TimeOfDayTest, AmbientStrengthOrderingAcrossTimesOfDay) {
-  const float morning = lighting_for_time_of_day(TimeOfDay::Morning).ambient_intensity;
-  const float day = lighting_for_time_of_day(TimeOfDay::Day).ambient_intensity;
-  const float afternoon =
-      lighting_for_time_of_day(TimeOfDay::Afternoon).ambient_intensity;
-  const float night = lighting_for_time_of_day(TimeOfDay::Night).ambient_intensity;
+TEST(TimeOfDayTest, AmbientRadianceOrderingAcrossTimesOfDay) {
+  const float morning = ambient_radiance_at(TimeOfDay::Morning);
+  const float day = ambient_radiance_at(TimeOfDay::Day);
+  const float afternoon = ambient_radiance_at(TimeOfDay::Afternoon);
+  const float night = ambient_radiance_at(TimeOfDay::Night);
 
   EXPECT_LT(morning, day);
-  EXPECT_LT(afternoon, day);
 
   EXPECT_LT(night, morning);
+  EXPECT_LT(night, day);
   EXPECT_LT(night, afternoon);
+
+  EXPECT_GT(afternoon, day);
 }
 
 TEST(TimeOfDayTest, DefaultMapTimeOfDayIsDay) {
