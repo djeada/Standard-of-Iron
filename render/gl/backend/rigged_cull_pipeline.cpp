@@ -40,8 +40,13 @@ constexpr std::size_t k_local_size_x = 64;
 
 constexpr std::size_t k_max_out_triangles = 12u * 1024u * 1024u;
 
+constexpr std::size_t k_stream_instance_capacity = 128U * 1024U;
+constexpr std::size_t k_stream_role_color_palette_capacity = 8U * 1024U + 1U;
+constexpr std::size_t k_stream_owned_palette_instance_capacity = 4U * 1024U;
+constexpr std::size_t k_max_owned_bones = 64U;
+
 constexpr std::size_t k_min_instances_for_gpu_path = 24;
-constexpr std::size_t k_min_instances_for_full_mesh_path = 2;
+constexpr std::size_t k_min_instances_for_full_mesh_path = 1;
 
 [[nodiscard]] constexpr auto
 output_capacity_for(std::size_t candidate_triangles) noexcept -> std::size_t {
@@ -94,7 +99,7 @@ auto RiggedCullPipeline::initialize() -> bool {
   QString const vert_src = Shader::preprocess_source(
       load_shader_text(":/assets/shaders/character_skinned_gpudriven.vert"));
   QString const frag_src = Shader::preprocess_source(
-      load_shader_text(":/assets/shaders/character_skinned_instanced.frag"));
+      load_shader_text(":/assets/shaders/character_skinned_gpu_instanced.frag"));
   if (cull_src.isEmpty() || finalize_src.isEmpty() || vert_src.isEmpty() ||
       frag_src.isEmpty()) {
     return false;
@@ -220,39 +225,67 @@ void RiggedCullPipeline::shutdown() {
   m_available = false;
 }
 
+void RiggedCullPipeline::begin_frame() {
+  if (!m_available) {
+    return;
+  }
+  m_palette_stream_cursor_bytes = 0U;
+  m_instance_stream_cursor_bytes = 0U;
+  m_role_color_stream_cursor_bytes = 0U;
+  m_role_color_palette_indices.clear();
+
+  const auto orphan_stream =
+      [this](GLenum target, GLuint& buffer, std::size_t& capacity, std::size_t wanted) {
+        if (buffer == 0U) {
+          glGenBuffers(1, &buffer);
+        }
+        glBindBuffer(target, buffer);
+        glBufferData(target, static_cast<GLsizeiptr>(wanted), nullptr, GL_STREAM_DRAW);
+        capacity = wanted;
+      };
+  orphan_stream(GL_SHADER_STORAGE_BUFFER,
+                m_palette_ssbo,
+                m_palette_capacity_bytes,
+                k_stream_owned_palette_instance_capacity * k_max_owned_bones *
+                    k_matrix_floats * sizeof(float));
+  orphan_stream(GL_SHADER_STORAGE_BUFFER,
+                m_instance_ssbo,
+                m_instance_capacity_bytes,
+                k_stream_instance_capacity * k_floats_per_instance * sizeof(float));
+  orphan_stream(GL_TEXTURE_BUFFER,
+                m_role_color_buffer,
+                m_role_color_capacity_bytes,
+                k_stream_role_color_palette_capacity *
+                    RiggedCreatureCmd::k_max_role_colors * 4U * sizeof(float));
+  if (m_role_color_texture == 0U) {
+    glGenTextures(1, &m_role_color_texture);
+  }
+  glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture);
+  glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_role_color_buffer);
+  glBindTexture(GL_TEXTURE_BUFFER, 0);
+  constexpr std::size_t k_empty_palette_bytes =
+      RiggedCreatureCmd::k_max_role_colors * 4U * sizeof(float);
+  const std::array<float, RiggedCreatureCmd::k_max_role_colors * 4U> empty_palette{};
+  glBufferSubData(GL_TEXTURE_BUFFER,
+                  0,
+                  static_cast<GLsizeiptr>(k_empty_palette_bytes),
+                  empty_palette.data());
+  m_role_color_stream_cursor_bytes = k_empty_palette_bytes;
+  glBindBuffer(GL_TEXTURE_BUFFER, 0);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void RiggedCullPipeline::end_frame() {
+}
+
 auto RiggedCullPipeline::ensure_instance_buffers(std::size_t instance_count,
                                                  std::size_t bone_count) -> bool {
-  std::size_t const palette_bytes = instance_count * bone_count * 16 * sizeof(float);
-  if (palette_bytes > m_palette_capacity_bytes || m_palette_ssbo == 0) {
-    if (m_palette_ssbo == 0) {
-      glGenBuffers(1, &m_palette_ssbo);
-    }
-    std::size_t const capacity = palette_bytes + (palette_bytes / 2);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_palette_ssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER,
-                 static_cast<GLsizeiptr>(capacity),
-                 nullptr,
-                 GL_DYNAMIC_DRAW);
-    m_palette_capacity_bytes = capacity;
-  }
-
-  std::size_t const instance_bytes =
+  const std::size_t palette_bytes = instance_count * bone_count * 16 * sizeof(float);
+  const std::size_t instance_bytes =
       instance_count * k_floats_per_instance * sizeof(float);
-  if (instance_bytes > m_instance_capacity_bytes || m_instance_ssbo == 0) {
-    if (m_instance_ssbo == 0) {
-      glGenBuffers(1, &m_instance_ssbo);
-    }
-    std::size_t const capacity = instance_bytes + (instance_bytes / 2);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_instance_ssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER,
-                 static_cast<GLsizeiptr>(capacity),
-                 nullptr,
-                 GL_DYNAMIC_DRAW);
-    m_instance_capacity_bytes = capacity;
-  }
-
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-  return m_palette_ssbo != 0 && m_instance_ssbo != 0;
+  return m_palette_ssbo != 0U && m_instance_ssbo != 0U &&
+         palette_bytes <= m_palette_capacity_bytes &&
+         instance_bytes <= m_instance_capacity_bytes;
 }
 
 auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
@@ -289,20 +322,58 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
 
 auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
                                           std::size_t count,
-                                          std::size_t bone_count) -> bool {
+                                          std::size_t bone_count,
+                                          bool depth_only) -> bool {
   std::size_t owned_instances = 0;
   for (std::size_t k = 0; k < count; ++k) {
     if (!cmds[k]->palette_frames_resident) {
       ++owned_instances;
     }
   }
-  m_palette_scratch.assign(owned_instances * bone_count * k_matrix_floats, 0.0F);
-  m_instance_scratch.assign(count * k_floats_per_instance, 0.0F);
+  m_palette_scratch.resize(owned_instances * bone_count * k_matrix_floats);
+  m_instance_scratch.resize(count * k_floats_per_instance);
   m_stats.resident_instances = static_cast<std::uint32_t>(count - owned_instances);
+
+  std::size_t owned_cursor = 0;
+  for (std::size_t k = 0; k < count; ++k) {
+    const RiggedCreatureCmd& cmd = *cmds[k];
+    if (cmd.palette_frames_resident) {
+      continue;
+    }
+    if (cmd.bone_palette == nullptr) {
+      return false;
+    }
+    float* palette_dst =
+        m_palette_scratch.data() + (owned_cursor * bone_count * k_matrix_floats);
+    for (std::size_t b = 0; b < bone_count; ++b) {
+      std::memcpy(palette_dst + (b * k_matrix_floats),
+                  cmd.bone_palette[b].constData(),
+                  sizeof(float) * k_matrix_floats);
+    }
+    ++owned_cursor;
+  }
+
+  std::size_t palette_matrix_base = 0U;
+  bool streamed_palette = false;
+  if (!m_palette_scratch.empty()) {
+    const std::size_t bytes = m_palette_scratch.size() * sizeof(float);
+    if (m_palette_stream_cursor_bytes + bytes > m_palette_capacity_bytes) {
+      return false;
+    }
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_palette_ssbo);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER,
+                    static_cast<GLintptr>(m_palette_stream_cursor_bytes),
+                    static_cast<GLsizeiptr>(bytes),
+                    m_palette_scratch.data());
+    palette_matrix_base =
+        m_palette_stream_cursor_bytes / (k_matrix_floats * sizeof(float));
+    m_palette_stream_cursor_bytes += bytes;
+    streamed_palette = true;
+  }
 
   constexpr auto k_matrix_bytes =
       static_cast<std::uint32_t>(sizeof(float) * k_matrix_floats);
-  std::size_t owned_cursor = 0;
+  owned_cursor = 0;
   for (std::size_t k = 0; k < count; ++k) {
     const RiggedCreatureCmd& cmd = *cmds[k];
 
@@ -314,17 +385,8 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
       palette_ref[2] = cmd.palette_next_offset / k_matrix_bytes;
       blend = cmd.palette_lerp;
     } else {
-      if (cmd.bone_palette == nullptr) {
-        return false;
-      }
-      palette_ref[1] = static_cast<std::uint32_t>(owned_cursor * bone_count);
-      float* palette_dst =
-          m_palette_scratch.data() + (owned_cursor * bone_count * k_matrix_floats);
-      for (std::size_t b = 0; b < bone_count; ++b) {
-        std::memcpy(palette_dst + (b * k_matrix_floats),
-                    cmd.bone_palette[b].constData(),
-                    sizeof(float) * k_matrix_floats);
-      }
+      palette_ref[1] = static_cast<std::uint32_t>(
+          (streamed_palette ? palette_matrix_base : 0U) + owned_cursor * bone_count);
       ++owned_cursor;
     }
 
@@ -332,76 +394,84 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
     std::memcpy(dst + 32, palette_ref.data(), sizeof(palette_ref));
     dst[36] = blend;
     std::memcpy(dst, cmd.world.constData(), sizeof(float) * 16);
+    dst[20] = cmd.variation_scale.x();
+    dst[21] = cmd.variation_scale.y();
+    dst[22] = cmd.variation_scale.z();
+    if (depth_only) {
+      continue;
+    }
     dst[16] = cmd.color.x();
     dst[17] = cmd.color.y();
     dst[18] = cmd.color.z();
     dst[19] = cmd.alpha;
-    dst[20] = cmd.variation_scale.x();
-    dst[21] = cmd.variation_scale.y();
-    dst[22] = cmd.variation_scale.z();
     dst[23] = static_cast<float>(cmd.material_id);
     dst[24] = cmd.wear_params.x();
     dst[25] = cmd.wear_params.y();
     dst[26] = cmd.wear_params.z();
     dst[27] = cmd.wear_params.w();
     dst[28] = static_cast<float>(cmd.role_color_count);
+    dst[29] = static_cast<float>(role_color_palette_index(cmd));
   }
 
-  if (!m_palette_scratch.empty()) {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_palette_ssbo);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-                    0,
-                    static_cast<GLsizeiptr>(m_palette_scratch.size() * sizeof(float)),
-                    m_palette_scratch.data());
+  m_instance_base = 0U;
+  const std::size_t instance_bytes = m_instance_scratch.size() * sizeof(float);
+  if (m_instance_stream_cursor_bytes + instance_bytes > m_instance_capacity_bytes) {
+    return false;
   }
+  m_instance_base = static_cast<std::uint32_t>(m_instance_stream_cursor_bytes /
+                                               (k_floats_per_instance * sizeof(float)));
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_instance_ssbo);
   glBufferSubData(GL_SHADER_STORAGE_BUFFER,
-                  0,
-                  static_cast<GLsizeiptr>(m_instance_scratch.size() * sizeof(float)),
+                  static_cast<GLintptr>(m_instance_stream_cursor_bytes),
+                  static_cast<GLsizeiptr>(instance_bytes),
                   m_instance_scratch.data());
+  m_instance_stream_cursor_bytes += instance_bytes;
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
   return true;
 }
 
-void RiggedCullPipeline::bind_role_color_texture(const RiggedCreatureCmd* const* cmds,
-                                                 std::size_t count) {
-  constexpr std::size_t k_roles = RiggedCreatureCmd::k_max_role_colors;
-  m_role_color_scratch.assign(count * k_roles * 4, 0.0F);
-  for (std::size_t k = 0; k < count; ++k) {
-    const RiggedCreatureCmd& cmd = *cmds[k];
-    std::size_t const roles =
-        std::min<std::size_t>(cmd.role_color_count, cmd.role_colors.size());
-    float* dst = m_role_color_scratch.data() + k * k_roles * 4;
-    for (std::size_t r = 0; r < roles; ++r) {
-      dst[r * 4 + 0] = cmd.role_colors[r].x();
-      dst[r * 4 + 1] = cmd.role_colors[r].y();
-      dst[r * 4 + 2] = cmd.role_colors[r].z();
-    }
+auto RiggedCullPipeline::role_color_palette_index(const RiggedCreatureCmd& cmd)
+    -> std::uint32_t {
+  if (cmd.role_colors == nullptr || cmd.role_color_count == 0U) {
+    return 0U;
+  }
+  const auto* key = cmd.role_colors.get();
+  if (const auto it = m_role_color_palette_indices.find(key);
+      it != m_role_color_palette_indices.end()) {
+    return it->second;
   }
 
-  std::size_t const bytes = m_role_color_scratch.size() * sizeof(float);
-  if (m_role_color_buffer == 0) {
-    glGenBuffers(1, &m_role_color_buffer);
+  constexpr std::size_t k_roles = RiggedCreatureCmd::k_max_role_colors;
+  constexpr std::size_t k_floats = k_roles * 4U;
+  constexpr std::size_t k_bytes = k_floats * sizeof(float);
+  if (m_role_color_stream_cursor_bytes + k_bytes > m_role_color_capacity_bytes) {
+    return 0U;
   }
+  std::array<float, k_floats> packed{};
+  const auto role_colors = cmd.role_colors->view();
+  const std::size_t roles =
+      std::min<std::size_t>(cmd.role_color_count, role_colors.size());
+  for (std::size_t r = 0; r < roles; ++r) {
+    packed[r * 4U + 0U] = role_colors[r].x();
+    packed[r * 4U + 1U] = role_colors[r].y();
+    packed[r * 4U + 2U] = role_colors[r].z();
+  }
+  const auto palette_index =
+      static_cast<std::uint32_t>(m_role_color_stream_cursor_bytes / k_bytes);
   glBindBuffer(GL_TEXTURE_BUFFER, m_role_color_buffer);
-  if (bytes > m_role_color_capacity_bytes) {
-    std::size_t const capacity = ((bytes + 4095U) / 4096U) * 4096U;
-    glBufferData(
-        GL_TEXTURE_BUFFER, static_cast<GLsizeiptr>(capacity), nullptr, GL_DYNAMIC_DRAW);
-    m_role_color_capacity_bytes = capacity;
-  }
   glBufferSubData(GL_TEXTURE_BUFFER,
-                  0,
-                  static_cast<GLsizeiptr>(bytes),
-                  m_role_color_scratch.data());
-  if (m_role_color_texture == 0) {
-    glGenTextures(1, &m_role_color_texture);
-    glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture);
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, m_role_color_buffer);
-    glBindTexture(GL_TEXTURE_BUFFER, 0);
-  }
+                  static_cast<GLintptr>(m_role_color_stream_cursor_bytes),
+                  static_cast<GLsizeiptr>(k_bytes),
+                  packed.data());
+  m_role_color_stream_cursor_bytes += k_bytes;
+  m_role_color_palette_indices.emplace(key, palette_index);
+  return palette_index;
+}
+
+auto RiggedCullPipeline::bind_role_color_texture() -> bool {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_BUFFER, m_role_color_texture);
+  return m_role_color_buffer != 0U && m_role_color_texture != 0U;
 }
 
 auto RiggedCullPipeline::draw(const RiggedCreatureCmd* const* cmds,
@@ -490,7 +560,7 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
   if (vertex_buffer == nullptr || index_buffer == nullptr ||
       vertex_buffer->id() == 0U || index_buffer->id() == 0U ||
       !ensure_instance_buffers(count, bone_count) ||
-      !upload_instances(cmds, count, bone_count)) {
+      !upload_instances(cmds, count, bone_count, depth_only)) {
     return false;
   }
 
@@ -500,14 +570,15 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
                    k_baked_palette_binding,
                    baked_palette_buffer != 0U ? baked_palette_buffer : m_palette_ssbo);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, k_instance_binding, m_instance_ssbo);
-  if (!depth_only) {
-    bind_role_color_texture(cmds, count);
+  if (!depth_only && !bind_role_color_texture()) {
+    return false;
   }
 
   draw_shader->use();
   draw_shader->set_uniform(draw_shader->uniform_handle("u_view_proj"), view_proj);
   glUniform1ui(draw_shader->uniform_handle("u_bone_count"),
                static_cast<GLuint>(bone_count));
+  glUniform1ui(draw_shader->uniform_handle("u_instance_base"), m_instance_base);
   const auto rigid_uniform = draw_shader->uniform_handle("u_rigid_skinning");
   if (!depth_only) {
     draw_shader->set_uniform(draw_shader->uniform_handle("u_camera_position"),
@@ -515,6 +586,10 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
     const auto role_tbo = draw_shader->optional_uniform_handle("u_role_color_tbo");
     if (role_tbo != Shader::InvalidUniform) {
       draw_shader->set_uniform(role_tbo, 0);
+    }
+    const auto role_base = draw_shader->optional_uniform_handle("u_role_color_base");
+    if (role_base != Shader::InvalidUniform) {
+      draw_shader->set_uniform(role_base, 0);
     }
   }
 
@@ -543,11 +618,13 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
   m_stats.dispatched_instances = static_cast<std::uint32_t>(count);
   m_stats.candidate_triangles = static_cast<std::uint32_t>(std::min<std::size_t>(
       mesh->index_count() / 3U * count, std::numeric_limits<std::uint32_t>::max()));
+#ifndef NDEBUG
   const GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "RiggedCullPipeline: full-mesh GL error" << err;
     return false;
   }
+#endif
   return true;
 }
 
@@ -609,7 +686,7 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   if (!ensure_buffers(count, bone_count, candidate_triangles)) {
     return false;
   }
-  if (!upload_instances(cmds, count, bone_count)) {
+  if (!upload_instances(cmds, count, bone_count, depth_only)) {
     return false;
   }
 
@@ -645,6 +722,7 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   glUniform1ui(cull->uniform_handle("u_vertex_count"),
                static_cast<GLuint>(mesh->vertex_count()));
   glUniform1ui(cull->uniform_handle("u_bone_count"), static_cast<GLuint>(bone_count));
+  glUniform1ui(cull->uniform_handle("u_instance_base"), m_instance_base);
   glUniform1ui(cull->uniform_handle("u_triangle_count"),
                static_cast<GLuint>(triangle_count));
   glUniform1ui(cull->uniform_handle("u_instance_count"), static_cast<GLuint>(count));
@@ -672,8 +750,8 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   if (draw_shader == nullptr) {
     return false;
   }
-  if (!depth_only) {
-    bind_role_color_texture(cmds, count);
+  if (!depth_only && !bind_role_color_texture()) {
+    return false;
   }
 
   draw_shader->use();
@@ -682,12 +760,17 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
                static_cast<GLuint>(mesh->vertex_count()));
   glUniform1ui(draw_shader->uniform_handle("u_bone_count"),
                static_cast<GLuint>(bone_count));
+  glUniform1ui(draw_shader->uniform_handle("u_instance_base"), m_instance_base);
   if (!depth_only) {
     draw_shader->set_uniform(draw_shader->uniform_handle("u_camera_position"),
                              camera_position);
     auto const role_tbo = draw_shader->optional_uniform_handle("u_role_color_tbo");
     if (role_tbo != Shader::InvalidUniform) {
       draw_shader->set_uniform(role_tbo, 0);
+    }
+    const auto role_base = draw_shader->optional_uniform_handle("u_role_color_base");
+    if (role_base != Shader::InvalidUniform) {
+      draw_shader->set_uniform(role_base, 0);
     }
   }
 
@@ -700,11 +783,13 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   m_stats.dispatched_instances = static_cast<std::uint32_t>(count);
   m_stats.candidate_triangles = static_cast<std::uint32_t>(candidate_triangles);
 
+#ifndef NDEBUG
   GLenum const err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "RiggedCullPipeline: GL error" << err;
     return false;
   }
+#endif
   return true;
 }
 

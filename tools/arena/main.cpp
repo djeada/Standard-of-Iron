@@ -29,6 +29,7 @@
 #include "promo_spec.h"
 #include "render/gl/context_requirements.h"
 #include "render/graphics_settings.h"
+#include "render/profiling/frame_profile.h"
 #include "ui/theme.h"
 #include "ui/widget_shell.h"
 #include "utils/resource_utils.h"
@@ -293,6 +294,14 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("prewarm")},
       QStringLiteral("Prewarm unit templates after the scenario loads and then "
                      "forbid render-time baking, matching the campaign path."));
+  QCommandLineOption const profile_option(
+      QStringList{QStringLiteral("profile")},
+      QStringLiteral("Record detailed renderer phase timings in batch traces."));
+  QCommandLineOption const watchdog_multiplier_option(
+      QStringList{QStringLiteral("watchdog-multiplier")},
+      QStringLiteral("Wall-clock watchdog as a multiple of simulated duration."),
+      QStringLiteral("multiplier"),
+      QStringLiteral("3"));
   QCommandLineOption const fog_of_war_option(
       QStringList{QStringLiteral("fog-of-war")},
       QStringLiteral("Run the match's fog of war instead of revealing the whole "
@@ -326,6 +335,8 @@ auto main(int argc, char** argv) -> int {
                      clean_capture_option,
                      capture_orbit_option,
                      prewarm_option,
+                     profile_option,
+                     watchdog_multiplier_option,
                      scenario_distance_option,
                      promo_distance_option,
                      promo_tilt_option,
@@ -478,12 +489,19 @@ auto main(int argc, char** argv) -> int {
   bool capture_interval_ok = false;
   float const capture_interval =
       parser.value(capture_interval_option).toFloat(&capture_interval_ok);
+  bool watchdog_multiplier_ok = false;
+  float const watchdog_multiplier =
+      parser.value(watchdog_multiplier_option).toFloat(&watchdog_multiplier_ok);
   if (!fps_ok || fps < 1 || fps > 240 || !duration_ok || duration < 0.0F || !seed_ok ||
-      !capture_interval_ok || capture_interval < 0.0F) {
+      !capture_interval_ok || capture_interval < 0.0F || !watchdog_multiplier_ok ||
+      watchdog_multiplier < 1.0F) {
     qCritical().noquote() << QStringLiteral(
-        "Invalid --fps, --duration, --seed, or --capture-interval value");
+        "Invalid --fps, --duration, --seed, --capture-interval, or "
+        "--watchdog-multiplier value");
     return 2;
   }
+  bool const detailed_profiling = parser.isSet(profile_option);
+  Render::Profiling::global_profile().enabled = detailed_profiling;
 
   const bool review_single_map = parser.isSet(terrain_map_option);
   const bool review_campaign_maps = parser.isSet(campaign_terrain_option);
@@ -714,6 +732,8 @@ auto main(int argc, char** argv) -> int {
                  seed,
                  duration,
                  capture_interval,
+                 detailed_profiling,
+                 watchdog_multiplier,
                  environment_hour,
                  environment_hour_forced,
                  lighting_profile]() {
@@ -808,6 +828,8 @@ auto main(int argc, char** argv) -> int {
           {QStringLiteral("fixed_fps"), fps},
           {QStringLiteral("duration_override"), duration},
           {QStringLiteral("capture_interval_seconds"), capture_interval},
+          {QStringLiteral("detailed_profiling"), detailed_profiling},
+          {QStringLiteral("watchdog_multiplier"), watchdog_multiplier},
           {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL")}};
       config_file.write(QJsonDocument(config).toJson(QJsonDocument::Indented));
     }
@@ -842,8 +864,8 @@ auto main(int argc, char** argv) -> int {
         duration > 0.0F
             ? duration
             : (definition != nullptr ? definition->duration_seconds : 12.0F);
-    int const watchdog_ms =
-        static_cast<int>(std::max(15.0F, effective_duration * 3.0F) * 1000.0F);
+    int const watchdog_ms = static_cast<int>(
+        std::max(15.0F, effective_duration * watchdog_multiplier) * 1000.0F);
     QTimer::singleShot(watchdog_ms, [state, viewport, start_next, generation]() {
       if (state->generation != generation || state->finishing) {
         return;

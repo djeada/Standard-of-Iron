@@ -141,7 +141,6 @@ struct CreatureVisualDefinition {
   const CreatureAttachmentFrameExtractor* attachment_frame_extractor{nullptr};
   const CreatureLodStrategy* lod_strategy{nullptr};
   std::uint8_t role_color_count{0};
-  LegacySlotMask material_slots{LegacySlotMask::None};
 };
 
 [[nodiscard]] auto

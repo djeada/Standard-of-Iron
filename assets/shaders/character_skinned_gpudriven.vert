@@ -19,7 +19,7 @@ void main() {
   uint instance = gid / u_vertex_count;
   uint v = gid - instance * u_vertex_count;
 
-  RiggedInstanceData data = rg_instance[instance];
+  RiggedInstanceData data = rg_instance[u_instance_base + instance];
 
   mat4 skin = rg_skin_matrix(v, instance);
   vec3 variation_scale = data.variation_material.xyz;
@@ -38,7 +38,7 @@ void main() {
   v_alpha = data.color_alpha.a;
   v_material_id = int(data.variation_material.w);
   v_color_role = int(rg_color_role(v));
-  v_instance_id = int(instance);
+  v_instance_id = int(data.role_meta.y);
   v_role_color_count = int(data.role_meta.x);
   v_wear_params = data.wear_params;
 }

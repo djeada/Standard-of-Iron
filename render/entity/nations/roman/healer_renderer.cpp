@@ -500,7 +500,6 @@ roman_healer_visual_spec(std::string_view,
     out.kind = CreatureKind::Humanoid;
     out.debug_name = "troops/roman/healer";
     out.scaling = profile.as_pipeline_scaling();
-    out.owned_legacy_slots = LegacySlotMask::AllHumanoid;
     out.archetype_id = resolve_humanoid_equipment_archetype(
         "troops/roman/healer", k_healer_base_archetype, handles);
     out.creature_asset_id = Render::Creature::Pipeline::k_caster_humanoid_asset;

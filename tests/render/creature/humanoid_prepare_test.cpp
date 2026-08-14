@@ -888,10 +888,6 @@ public:
       Render::Creature::Pipeline::UnitVisualSpec s{};
       s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
       s.debug_name = "tests/beard_renderer";
-      s.owned_legacy_slots =
-          Render::Creature::Pipeline::LegacySlotMask::ArmorOverlay |
-          Render::Creature::Pipeline::LegacySlotMask::ShoulderDecorations |
-          Render::Creature::Pipeline::LegacySlotMask::Attachments;
       return s;
     }();
     return spec;
@@ -922,7 +918,6 @@ public:
       Render::Creature::Pipeline::UnitVisualSpec s{};
       s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
       s.debug_name = "tests/bow_ready_regression_renderer";
-      s.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
       if (base_desc == nullptr) {
         return s;
       }
@@ -1217,7 +1212,6 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
   spec.debug_name = "troops/roman/swordsman";
-  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
   spec.archetype_id = archetype_id;
   spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   FixedSpecRenderer owner(spec);
@@ -1313,7 +1307,6 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
   spec.debug_name = "troops/roman/swordsman";
-  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
   spec.archetype_id = archetype_id;
   spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   FixedSpecRenderer owner(spec);
@@ -1450,7 +1443,6 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
   spec.debug_name = "troops/roman/swordsman";
-  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
   spec.archetype_id = archetype_id;
   spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   FixedSpecRenderer const owner(spec);
@@ -5694,7 +5686,6 @@ TEST(HumanoidPrepare, ConstructionVariantTableMapsFourRolesToExpectedRequests) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
   spec.debug_name = "tests/construction_variant_role_renderer";
-  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
   spec.archetype_id = archetype_id;
   spec.animation_manifest.variant_table = &k_variant_table;
   FixedSpecRenderer const owner(spec);
@@ -7086,7 +7077,6 @@ TEST(HumanoidPrepare, GuardStanceForSwordAssetKeepsSwordCreatureAsset) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
   spec.debug_name = "tests/guard_sword_asset_switch";
-  spec.owned_legacy_slots = Render::Creature::Pipeline::LegacySlotMask::AllHumanoid;
   spec.archetype_id = archetype_id;
   spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   FixedSpecRenderer const owner(spec);

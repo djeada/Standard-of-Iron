@@ -53,6 +53,7 @@ public:
   }
 
   virtual void rigged(const RiggedCreatureCmd& cmd) { (void)cmd; }
+  virtual void rigged(RiggedCreatureCmd&& cmd) { rigged(cmd); }
   virtual void cylinder(const QVector3D& start,
                         const QVector3D& end,
                         float radius,
@@ -131,6 +132,7 @@ public:
     m_inner.part(mesh, material, model, color, tex, alpha, material_id);
   }
   void rigged(const RiggedCreatureCmd& cmd) override { m_inner.rigged(cmd); }
+  void rigged(RiggedCreatureCmd&& cmd) override { m_inner.rigged(std::move(cmd)); }
   void cylinder(const QVector3D& start,
                 const QVector3D& end,
                 float radius,
@@ -311,6 +313,12 @@ public:
       return;
     }
     m_queue->submit(cmd);
+  }
+  void rigged(RiggedCreatureCmd&& cmd) override {
+    if (m_queue == nullptr || cmd.mesh == nullptr) {
+      return;
+    }
+    m_queue->submit(std::move(cmd));
   }
   void cylinder(const QVector3D& start,
                 const QVector3D& end,
@@ -606,6 +614,11 @@ public:
   void rigged(const RiggedCreatureCmd& cmd) override {
     if (m_fallback != nullptr) {
       m_fallback->rigged(cmd);
+    }
+  }
+  void rigged(RiggedCreatureCmd&& cmd) override {
+    if (m_fallback != nullptr) {
+      m_fallback->rigged(std::move(cmd));
     }
   }
 

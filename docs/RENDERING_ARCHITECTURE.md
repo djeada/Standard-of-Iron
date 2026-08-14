@@ -621,7 +621,7 @@ Each nation has derived classes that override these methods. Looking at the Cart
 
 The entity system stores a unit type string like "spearman_carthage" on each unit. The EntityRendererRegistry in [registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) maps these strings to renderer functions. When it's time to draw, we look up the right renderer and call it. If a unit type isn't registered, it just doesn't render—that's usually the first thing to check when soldiers are mysteriously invisible.
 
-Troop bodies no longer get per-nation shader files. The rigged creature backend owns the shared `character_skinned` and `character_skinned_instanced` programs, while nation, role, and equipment variation is supplied as declarative render data: palette values, material IDs, visual specs, equipment records, and texture slots.
+Troop bodies no longer get per-nation shader files. The rigged creature backend owns the shared singleton `character_skinned` fallback and `character_skinned_gpu_instanced` full-detail program, while nation, role, and equipment variation is supplied as declarative render data: palette values, material IDs, visual specs, equipment records, and texture slots.
 
 ## Centralized pose selection
 

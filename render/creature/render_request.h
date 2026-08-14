@@ -8,12 +8,14 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <span>
 
 #include "animation/bpat/bpat_playback.h"
 #include "animation/clip_manifest.h"
 #include "pipeline/render_pass_intent.h"
 #include "render/creature/spec.h"
+#include "render/role_color_palette.h"
 
 namespace Render::Creature {
 
@@ -76,8 +78,9 @@ struct CreatureRenderRequest {
       Render::Creature::Pipeline::RenderPassIntent::Main};
   bool world_already_grounded{false};
 
-  static constexpr std::size_t k_role_color_capacity = 32;
-  std::array<QVector3D, k_role_color_capacity> role_colors{};
+  static constexpr std::size_t k_role_color_capacity =
+      Render::RoleColorPalette::k_capacity;
+  std::shared_ptr<const Render::RoleColorPalette> role_colors{};
   std::uint8_t clip_variant{0};
   std::uint16_t clip_id{Animation::k_unmapped_clip};
   std::uint8_t role_color_count{0};
@@ -87,7 +90,7 @@ struct CreatureRenderRequest {
   PlaybackLayerRequest upper_body_overlay{};
 
   [[nodiscard]] auto role_colors_view() const noexcept -> std::span<const QVector3D> {
-    return {role_colors.data(), static_cast<std::size_t>(role_color_count)};
+    return role_colors != nullptr ? role_colors->view() : std::span<const QVector3D>{};
   }
 };
 

@@ -16,6 +16,7 @@ struct HumanoidLayoutCacheComponent : public Engine::Core::Component {
   std::vector<SoldierLayout> soldiers;
   std::vector<Render::Creature::HumanoidAnimationStateComponent> animation_states;
   std::vector<Render::Creature::SoldierCombatLaneState> combat_lanes;
+  std::vector<std::uint32_t> visibility_frames;
   Render::GL::FormationParams formation{};
   Game::Formation::UnitLayoutId unit_layout{Game::Formation::k_invalid_layout};
   int rows{0};

@@ -90,6 +90,62 @@ On the benchmark machine, the 2,000-soldier prewarm peak fell from about 4.3 GiB
 to 1.16 GiB and wall time fell from about 14 seconds to 5.2 seconds. A normal
 non-prewarmed run peaks around 650-730 MiB.
 
+### Immutable frame streams and cached role palettes
+
+Rigged instance, owned-palette, and role-color uploads use one orphaned stream
+per frame and append immutable ranges. A shadow or color draw never overwrites
+storage still referenced by an earlier draw. This removes the periodic driver
+serialization caused by repeatedly writing offset zero in shared SSBOs and
+texture buffers.
+
+Visual role colors are immutable for a creature visual variant. They are now
+cached as shared palettes rather than copied as a 32-color array into every
+render request and every body/equipment command. The GPU stream similarly
+uploads each distinct palette once per frame and stores only its palette index
+in each instance. The common main-pass submit path also consumes its prepared
+request span directly instead of copying the entire request vector merely to
+filter absent shadow-only rows.
+
+BPAT frame palettes remain resident and shared. Runtime work is limited to
+selecting baked frame offsets, packing compact changing instance state, and
+submitting exact full-mesh draws; no skeleton solve or geometry bake was moved
+back into gameplay.
+
+### Retained preparation storage and lean submission
+
+Humanoid, wildlife, live-slot, and draw-pass scratch storage now survives frame
+boundaries and is cleared in place. Per-soldier visibility history lives beside
+the formation's other dense soldier state instead of in a separately allocated
+hash table. Formation-invariant visual specs, mode poses, render-asset handles,
+and role palettes are resolved once and reused across the formation.
+
+Rigged commands move through submitter wrappers into the retained draw queue,
+avoiding shared-pointer churn. Shadow stream packing writes only transform,
+variation, and BPAT palette fields; color, wear, material, and role metadata are
+left to the color pass. Diagnostic body-pose matrix work and OpenGL error polling
+are also absent from normal release rendering and remain available when their
+debug facilities are enabled.
+
+In warmed detailed traces, the complete continuation moved 2,000-soldier
+humanoid preparation from about 3.52 ms to 3.27 ms and world submission from
+4.38 ms to 3.96 ms. The seven-AI trace moved from about 2.75 ms to 2.54 ms for
+humanoid preparation and from 3.96 ms to 3.71 ms for world submission. Frame
+timings still move between phases when driver back-pressure lands, so these
+application-side phase measurements are more useful than any single internal
+frame percentile.
+
+### Removed compatibility paths
+
+The old rigged instancing pipeline, its persistent palette ring, its instanced
+vertex shaders, and its dedicated tests have been deleted. Full-detail batches,
+including one-instance batches, use the current GPU full-mesh path. The only
+remaining direct rigged draw is the explicit one-body fallback when the modern
+pipeline is unavailable.
+
+The unused legacy visual-slot ownership mask was also removed from every unit
+visual spec and creature definition. It had no reader and only propagated dead
+compatibility state through renderer construction.
+
 ## Profile result
 
 Linux `perf` on a RelWithDebInfo build found over 60% of sampled CPU time in the
@@ -124,6 +180,25 @@ At 4,000 soldiers, the corresponding median moved from 135.70 ms to 74.39 ms,
 about a 45% reduction. `seven_ai_scale` moved from roughly 59.2/63.3 ms to an
 Arena-reported 33.84/40.55 ms p50/p95 while retaining its seven AI economies and
 full-detail army rendering.
+
+The immutable-stream and shared-palette pass was measured against commit
+`ac57124f` on the same RTX 5060 machine. The 500-2,000 rows use the uncapped-like
+240 Hz fixed step; 4,000 soldiers and seven AI use 30 Hz because their frames
+already exceed the pacer. Values below exclude the first warm-up interval.
+
+| Scenario / rendered soldiers | Baseline avg | Current avg | Baseline p95 | Current p95 |
+| ---------------------------: | -----------: | ----------: | -----------: | ----------: |
+|                          500 |     13.83 ms |    12.87 ms |     17.50 ms |    17.86 ms |
+|                        1,000 |     23.14 ms |    21.85 ms |     29.04 ms |    26.33 ms |
+|                        2,000 |     37.00 ms |    33.94 ms |     43.03 ms |    39.99 ms |
+|                        4,000 |     71.88 ms |    64.34 ms |     82.43 ms |    74.10 ms |
+|        seven AI / ~1,650 vis |     35.15 ms |    26.46 ms |     49.07 ms |    35.24 ms |
+
+The largest benefit in mixed gameplay is tail stability: seven-AI p95 improves
+about 28%, and the massed-battle path no longer exhibits the previous 100-200 ms
+SSBO-overwrite stalls. At 2,000 and 4,000 soldiers sustained averages improve
+about 8% and 10.5%, respectively, without changing LOD, mesh topology,
+attachments, shadows, or BPAT animation.
 
 An older revision of this document quoted faster numbers obtained with a
 minimal body-only shadow mesh. Those measurements are intentionally not used as

@@ -153,16 +153,18 @@ TEST(ShaderSource, CombatDustAvoidsUndefinedSmoothstepEdges) {
   EXPECT_NE(frag.find("float inv_smoothstep("), std::string::npos);
 }
 
-TEST(ShaderSource, InstancedRiggedShaderGuardsRoleColorFetches) {
+TEST(ShaderSource, GpuInstancedRiggedShaderGuardsRoleColorFetches) {
   const auto root = find_repo_root();
   const auto vert =
-      read_text(root / "assets" / "shaders" / "character_skinned_instanced.vert");
+      read_text(root / "assets" / "shaders" / "character_skinned_gpu_instanced.vert");
   const auto frag =
-      read_text(root / "assets" / "shaders" / "character_skinned_instanced.frag");
+      read_text(root / "assets" / "shaders" /
+                "character_skinned_gpu_instanced.frag");
   ASSERT_FALSE(vert.empty());
   ASSERT_FALSE(frag.empty());
 
-  EXPECT_NE(vert.find("layout(location = 13) in vec4 i_role_meta;"), std::string::npos);
+  EXPECT_NE(vert.find("RiggedInstanceData data"), std::string::npos);
+  EXPECT_NE(vert.find("v_instance_id = int(data.role_meta.y);"), std::string::npos);
   EXPECT_NE(vert.find("flat out int v_role_color_count;"), std::string::npos);
   EXPECT_NE(frag.find("flat in int v_role_color_count;"), std::string::npos);
   EXPECT_NE(frag.find("v_color_role > 0 && v_color_role <= v_role_color_count"),
@@ -188,7 +190,8 @@ TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   const auto root = find_repo_root();
   const auto single = read_text(root / "assets" / "shaders" / "character_skinned.frag");
   const auto instanced =
-      read_text(root / "assets" / "shaders" / "character_skinned_instanced.frag");
+      read_text(root / "assets" / "shaders" /
+                "character_skinned_gpu_instanced.frag");
   ASSERT_FALSE(single.empty());
   ASSERT_FALSE(instanced.empty());
 
@@ -214,7 +217,7 @@ TEST(ShaderSource, EveryWorldLightingVariantUsesSharedEnvironmentBlock) {
       "basic.frag",
       "basic_instanced.frag",
       "character_skinned.frag",
-      "character_skinned_instanced.frag",
+      "character_skinned_gpu_instanced.frag",
       "catapult.frag",
       "catapult_instanced.frag",
       "terrain_chunk.frag",
@@ -270,7 +273,7 @@ TEST(ShaderSource, WorldShadersLeaveGradingToThePostProcessPass) {
       "basic.frag",
       "basic_instanced.frag",
       "character_skinned.frag",
-      "character_skinned_instanced.frag",
+      "character_skinned_gpu_instanced.frag",
       "terrain_chunk.frag",
       "ground_plane.frag",
       "stone_instanced.frag",
@@ -314,7 +317,7 @@ TEST(ShaderSource, GeneralWorldShadersDoNotHardCodeDaylightColors) {
   for (const auto* name : {"basic.frag",
                            "basic_instanced.frag",
                            "character_skinned.frag",
-                           "character_skinned_instanced.frag",
+                           "character_skinned_gpu_instanced.frag",
                            "terrain_chunk.frag",
                            "ground_plane.frag"}) {
     const auto source = read_text(root / "assets" / "shaders" / name);
@@ -331,7 +334,7 @@ TEST(ShaderSource, MainWorldReceiversUseDirectionalAndLocalLighting) {
   for (const auto* name : {"basic.frag",
                            "basic_instanced.frag",
                            "character_skinned.frag",
-                           "character_skinned_instanced.frag",
+                           "character_skinned_gpu_instanced.frag",
                            "terrain_chunk.frag",
                            "ground_plane.frag"}) {
     const auto source = read_text(root / "assets" / "shaders" / name);
