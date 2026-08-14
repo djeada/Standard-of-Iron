@@ -158,8 +158,7 @@ TEST(ShaderSource, GpuInstancedRiggedShaderGuardsRoleColorFetches) {
   const auto vert =
       read_text(root / "assets" / "shaders" / "character_skinned_gpu_instanced.vert");
   const auto frag =
-      read_text(root / "assets" / "shaders" /
-                "character_skinned_gpu_instanced.frag");
+      read_text(root / "assets" / "shaders" / "character_skinned_gpu_instanced.frag");
   ASSERT_FALSE(vert.empty());
   ASSERT_FALSE(frag.empty());
 
@@ -190,8 +189,7 @@ TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   const auto root = find_repo_root();
   const auto single = read_text(root / "assets" / "shaders" / "character_skinned.frag");
   const auto instanced =
-      read_text(root / "assets" / "shaders" /
-                "character_skinned_gpu_instanced.frag");
+      read_text(root / "assets" / "shaders" / "character_skinned_gpu_instanced.frag");
   ASSERT_FALSE(single.empty());
   ASSERT_FALSE(instanced.empty());
 
