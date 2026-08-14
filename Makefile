@@ -431,6 +431,12 @@ test-validator: build
 		exit 1; \
 	fi
 
+## Assert a published reel never opens on a black thumbnail frame. Needs ffmpeg, not a build.
+.PHONY: test-promo-first-frame
+test-promo-first-frame:
+	@echo "$(BOLD)$(BLUE)Running promo first-frame tests...$(RESET)"
+	@bash tests/promo_first_frame_test.sh
+
 # ---- Formatting (also strips comments via remove-comments.sh) ----
 .PHONY: format format-check format-changed format-check-changed \
 	format-staged format-doctor format-bootstrap clean-format-trash

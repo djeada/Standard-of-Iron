@@ -49,8 +49,10 @@ the short is already published:
 
 * **Frame zero is never black.** Platforms use it as the thumbnail, so the cut
   opens hard rather than fading up from black; ``--opening-fade`` restores a
-  fade deliberately. The finished file is read back and the run fails if frame
-  zero is black anyway.
+  fade deliberately, and a card at timeline zero carries its text at full
+  opacity on its first frame. The finished file is read back and measured for
+  how much of it is bright enough to see, because a peak alone passes a black
+  frame with grain on it. See ``docs/PROMO_CAPTURE.md``.
 * **The cut does not flash.** The finished file is measured for mean-luminance
   jumps between frames and refused if it trips a miniature WCAG 2.3.1: any jump
   over ``FLASH_HARD_DELTA``, or more than ``FLASHES_PER_SECOND`` jumps over
@@ -66,7 +68,10 @@ the short is already published:
   ``docs/AUDIO_MASTERING.md``.
 
 Exit status is non-zero when the footage is missing or ffmpeg fails, so this
-can be chained straight after a capture run.
+can be chained straight after a capture run. A cut that fails a delivery check
+is never left at the output path -- it is quarantined as ``<name>.rejected.mp4``
+and any earlier publish is removed, so a failed run cannot leave an uploadable
+file behind for a later step to pick up.
 """
 
 from __future__ import annotations
@@ -87,6 +92,8 @@ CAPTION_FADE = 0.25
 END_CARD_SECONDS = 2.2
 OPENING_FADE = 0.0
 FIRST_FRAME_MIN_PEAK = 8
+FIRST_FRAME_VISIBLE_LUMA = 32
+FIRST_FRAME_MIN_VISIBLE = 0.001
 
 FLASH_DELTA = 25
 FLASH_HARD_DELTA = 60
@@ -250,8 +257,35 @@ def photosensitivity_offence(jumps: list[float], fps: float) -> str | None:
     return None
 
 
-def first_frame_peak(video: Path) -> int:
-    """Brightest sample in frame zero, 0-255, or -1 when it cannot be read."""
+class FirstFrame:
+    """What frame zero looks like to a thumbnail crawler.
+
+    ``peak`` alone cannot answer the question. Film grain over a black card puts
+    a handful of samples above any low threshold, and a title card is legible
+    while being 99% black, so a mean would reject it. What separates "an image"
+    from "black with something in it" is how much of the frame is bright enough
+    to see at all, which is what ``visible_fraction`` counts.
+    """
+
+    __slots__ = ("peak", "visible_fraction")
+
+    def __init__(self, peak: int, visible_fraction: float) -> None:
+        self.peak = peak
+        self.visible_fraction = visible_fraction
+
+    @property
+    def readable(self) -> bool:
+        return (
+            self.peak >= FIRST_FRAME_MIN_PEAK
+            and self.visible_fraction >= FIRST_FRAME_MIN_VISIBLE
+        )
+
+    def describe(self) -> str:
+        return f"peak luma {self.peak}, {self.visible_fraction * 100.0:.3f}% visible"
+
+
+def measure_first_frame(video: Path) -> FirstFrame | None:
+    """Read frame zero back off disk, or None when it cannot be decoded."""
     result = subprocess.run(
         [
             "ffmpeg",
@@ -272,8 +306,10 @@ def first_frame_peak(video: Path) -> int:
         capture_output=True,
     )
     if result.returncode != 0 or not result.stdout:
-        return -1
-    return max(array.array("B", result.stdout))
+        return None
+    samples = array.array("B", result.stdout)
+    visible = sum(1 for sample in samples if sample >= FIRST_FRAME_VISIBLE_LUMA)
+    return FirstFrame(max(samples), visible / len(samples))
 
 
 TRANSITIONS = {
@@ -321,6 +357,35 @@ inscriptional face is the fallback."""
 
 def fail(message: str) -> None:
     print(f"promo-edit: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def reject(staged: Path, output: Path, message: str) -> None:
+    """Refuse a finished encode without leaving it where it would be published.
+
+    The delivery checks can only run on a real encode, so by the time one fails
+    the whole file exists. Publishing it anyway and reporting a non-zero status
+    is not enough: a reel is cut at the end of a long capture pipeline, the
+    message scrolls away, and what is left on disk is a plausible-looking .mp4
+    under exactly the name the upload step expects. So the encode lands beside
+    the output and is only moved into place once every check has passed. A
+    rejected cut is kept for inspection under a name nobody will upload.
+    """
+    quarantine = output.with_suffix(f".rejected{output.suffix}")
+    if staged.is_file():
+        staged.replace(quarantine)
+        kept = f"the rejected cut is at {quarantine} for inspection"
+    else:
+        kept = "no encode survived to inspect"
+    removed = ""
+    if output.is_file():
+        output.unlink()
+        removed = f"\npromo-edit: removed the earlier {output.name}, which is stale"
+    print(
+        f"promo-edit: refusing to publish: {message}\n"
+        f"promo-edit: {kept}; {output.name} was not written{removed}",
+        file=sys.stderr,
+    )
     raise SystemExit(1)
 
 
@@ -389,11 +454,21 @@ def drawtext(
     start: float,
     end: float,
     color: str = "white",
+    fade: float = CAPTION_FADE,
 ) -> str:
-    """A centred, fading caption between two absolute timeline seconds."""
-    fade_in = f"min(1,(t-{start:.3f})/{CAPTION_FADE})"
+    """A centred, fading caption between two absolute timeline seconds.
+
+    ``fade`` of zero makes the text land at full opacity on its first frame,
+    which is what a card sitting at timeline zero needs: a fade-in there is a
+    black frame zero, and frame zero is the thumbnail.
+    """
     fade_out = f"min(1,({end:.3f}-t)/{CAPTION_FADE})"
-    alpha = f"if(between(t,{start:.3f},{end:.3f}),min({fade_in},{fade_out}),0)"
+    if fade <= 0.0:
+        visible = fade_out
+    else:
+        fade_in = f"min(1,(t-{start:.3f})/{fade:.3f})"
+        visible = f"min({fade_in},{fade_out})"
+    alpha = f"if(between(t,{start:.3f},{end:.3f}),{visible},0)"
     return (
         f"drawtext=fontfile='{font}':text='{escape_text(text)}'"
         f":fontcolor={color}:fontsize={size}:x=(w-text_w)/2:y={y_expr}"
@@ -653,6 +728,7 @@ def main() -> int:
     font = resolve_font(args.font)
     output = args.out or args.clips.with_suffix(".mp4")
     output.parent.mkdir(parents=True, exist_ok=True)
+    staged = output.with_suffix(f".staging{output.suffix}")
 
     default_kind, default_seconds = read_transition(
         spec.get("transition"), DEFAULT_TRANSITION, DEFAULT_TRANSITION_SECONDS
@@ -736,9 +812,10 @@ def main() -> int:
                             tracked(line.strip()), font, advisory_size, safe_width
                         ),
                         y_expr=f"h*0.5-{int(advisory_size * 0.6)}+{offset}",
-                        start=0.25,
+                        start=0.0,
                         end=hold,
                         color="white",
+                        fade=0.0,
                     )
                     + f"[advised{line_index}]"
                 )
@@ -967,7 +1044,7 @@ def main() -> int:
         str(manifest.get("fps", 60)),
         "-t",
         f"{total:.3f}",
-        str(output),
+        str(staged),
     ]
 
     blended = [join for join in joins[1:] if join.blended]
@@ -985,36 +1062,48 @@ def main() -> int:
     if workdir is not None:
         workdir.cleanup()
     if result.returncode != 0:
-        fail(f"ffmpeg failed with status {result.returncode}")
+        reject(staged, output, f"ffmpeg failed with status {result.returncode}")
 
-    peak = first_frame_peak(output)
-    if peak < 0:
-        print("promo-edit: warning: could not read the first frame back")
-    elif peak < FIRST_FRAME_MIN_PEAK:
-        fail(
-            f"the first frame of {output} is black (peak luma {peak}); social "
-            "platforms use it as the thumbnail. Check --opening-fade and the "
-            "first shot's framing."
+    first = measure_first_frame(staged)
+    if first is None:
+        reject(
+            staged,
+            output,
+            "the first frame could not be read back, so it cannot be shown to be "
+            "anything but black.",
+        )
+    elif not first.readable:
+        reject(
+            staged,
+            output,
+            f"frame zero is black ({first.describe()}); social platforms use it as "
+            "the thumbnail. An opening card must carry its text at full opacity on "
+            "its first frame rather than fading up, and a shot opening the cut must "
+            "already be lit. Check --opening-fade, the advisory card and the first "
+            "shot's framing.",
         )
 
     fps = float(manifest.get("fps", 60))
-    jumps = luma_jumps(output, fps)
+    jumps = luma_jumps(staged, fps)
     offence = photosensitivity_offence(jumps, fps)
     if not jumps:
         print("promo-edit: warning: could not measure the cut for flashing")
     elif offence is not None and not args.allow_flashes:
-        fail(
-            f"{output} flashes: {offence}. A full-frame flash is a seizure risk, so "
+        reject(
+            staged,
+            output,
+            f"the cut flashes: {offence}. A full-frame flash is a seizure risk, so "
             "this is refused by default. Replace `flash` joins with `dip` (through "
             "black) or `dissolve`, lengthen the join, or pass --allow-flashes if the "
-            "content genuinely needs it."
+            "content genuinely needs it.",
         )
     elif offence is not None:
         print(f"promo-edit: warning: --allow-flashes set; {offence}")
 
+    staged.replace(output)
     worst = max(jumps) if jumps else 0.0
     print(
-        f"promo-edit: wrote {output} (first frame peak luma {peak}, "
+        f"promo-edit: wrote {output} (frame zero {first.describe()}, "
         f"worst luminance jump {worst:.0f}/255)"
     )
     return 0

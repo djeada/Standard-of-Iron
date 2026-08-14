@@ -110,3 +110,11 @@ jobs:
 
       - name: Validator integration tests
         run: bash tests/validator_integration_test.sh
+
+      # Frame zero of a published reel is the thumbnail every social platform
+      # picks up, and a black one has shipped three times now -- most recently
+      # because the advisory card faded its text up from an opaque black fill,
+      # which no reviewer sees without stepping the first sixteen frames. This
+      # needs no compiler, only the ffmpeg the job already installs.
+      - name: Promo first-frame tests
+        run: bash tests/promo_first_frame_test.sh
