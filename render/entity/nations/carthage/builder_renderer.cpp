@@ -1111,7 +1111,6 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/builder";
       s.scaling = k_builder_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = carthage_builder_idle_archetype();
       s.animation_manifest.variant_table = &carthage_builder_variant_table();
       return s;
@@ -1151,7 +1150,6 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/civilian";
       s.scaling = k_civilian_profile.as_pipeline_scaling();
-      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = resolve_humanoid_equipment_archetype(
           "troops/carthage/civilian",
           Render::Creature::ArchetypeRegistry::k_humanoid_base,

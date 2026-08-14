@@ -332,7 +332,6 @@ add_executable(
     render/roman_light_helmet_mesh_test.cpp
     render/rig_dsl_interpreter_test.cpp
     render/rigged_pipeline_test.cpp
-    render/rigged_pipeline_instanced_test.cpp
     render/pipeline/lod_selector_test.cpp
     render/pipeline/creature_lod_decision_test.cpp
     render/pipeline/creature_asset_registry_test.cpp

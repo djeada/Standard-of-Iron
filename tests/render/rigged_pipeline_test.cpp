@@ -6,6 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <memory>
 #include <variant>
 
 #include "render/draw_queue.h"
@@ -160,11 +161,17 @@ TEST(RiggedPipeline, DifferentRolePalettesShareRiggedPreparedBatch) {
   first.material = material;
   first.bone_count = 12;
   first.role_color_count = 1;
-  first.role_colors[0] = QVector3D(1.0F, 0.0F, 0.0F);
+  auto first_roles = std::make_shared<Render::RoleColorPalette>();
+  first_roles->count = 1U;
+  first_roles->colors[0] = QVector3D(1.0F, 0.0F, 0.0F);
+  first.role_colors = first_roles;
   queue.submit(first);
 
   RiggedCreatureCmd second = first;
-  second.role_colors[0] = QVector3D(0.0F, 0.0F, 1.0F);
+  auto second_roles = std::make_shared<Render::RoleColorPalette>();
+  second_roles->count = 1U;
+  second_roles->colors[0] = QVector3D(0.0F, 0.0F, 1.0F);
+  second.role_colors = second_roles;
   queue.submit(second);
 
   queue.sort_for_batching();

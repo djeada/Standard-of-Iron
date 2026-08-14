@@ -345,6 +345,7 @@ public:
                       const QVector3D& color,
                       float alpha = 1.0F) override;
   void rigged(const RiggedCreatureCmd& cmd) override;
+  void rigged(RiggedCreatureCmd&& cmd) override;
   void terrain_surface(const TerrainSurfaceCmd& cmd);
   void terrain_feature(const TerrainFeatureCmd& cmd);
   void terrain_scatter(const TerrainScatterCmd& cmd);

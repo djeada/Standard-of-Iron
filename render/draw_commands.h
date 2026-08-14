@@ -18,6 +18,7 @@
 #include "render/local_lighting.h"
 #include "render/primitive_batch.h"
 #include "render/rain_gpu.h"
+#include "render/role_color_palette.h"
 #include "render/terrain_scene_types.h"
 #include "render/world_chunk.h"
 
@@ -258,7 +259,7 @@ struct ModeIndicatorCmd {
 };
 
 struct RiggedCreatureCmd {
-  static constexpr std::size_t k_max_role_colors = 32;
+  static constexpr std::size_t k_max_role_colors = Render::RoleColorPalette::k_capacity;
   static constexpr std::size_t k_max_owned_bones = 64;
 
   RiggedMesh* mesh = nullptr;
@@ -277,7 +278,7 @@ struct RiggedCreatureCmd {
   float palette_lerp = 0.0F;
   bool palette_frames_resident = false;
   std::uint32_t bone_count = 0;
-  std::array<QVector3D, k_max_role_colors> role_colors{};
+  std::shared_ptr<const Render::RoleColorPalette> role_colors{};
   std::uint32_t role_color_count = 0;
   QVector3D color{1.0F, 1.0F, 1.0F};
   QVector4D wear_params{0.0F, 0.0F, 0.0F, 0.0F};

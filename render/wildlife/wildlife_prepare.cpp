@@ -69,7 +69,8 @@ void submit_wildlife(const Render::GL::DrawContext& ctx,
   body_state.outgoing_phase = inputs.outgoing_phase;
   body_state.outgoing_weight = inputs.outgoing_weight;
 
-  RCP::CreaturePreparationResult prep;
+  thread_local RCP::CreaturePreparationResult prep;
+  prep.clear();
   prep.bodies.add_quadruped(body_state);
   RCP::submit_preparation(prep, out);
 }
