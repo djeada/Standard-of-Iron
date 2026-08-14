@@ -102,6 +102,8 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   Render::GL::TerrainSceneProxy const proxy(
       &surface, &features, &scatter, nullptr, nullptr, nullptr);
 
+  proxy.set_world_view(Render::WorldView::of_active_session());
+
   ASSERT_TRUE(proxy.has_field());
   const auto& field = proxy.field();
   EXPECT_EQ(field.width, 8);

@@ -13,6 +13,7 @@
 #include "combat_rules.h"
 #include "command_service.h"
 #include "movement_system.h"
+#include "nav_grid.h"
 #include "order_service.h"
 #include "pathfinding.h"
 
@@ -32,17 +33,17 @@ auto passability_for(const Engine::Core::MovementComponent& movement)
 auto is_direct_path_walkable(const QVector3D& from,
                              const QVector3D& to,
                              Pathfinding::Passability passability) -> bool {
-  auto* pathfinder = CommandService::get_pathfinder();
+  auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder != nullptr) {
     pathfinder->update_navigation_grid();
     return pathfinder->is_world_segment_walkable(from, to, passability);
   }
 
-  return CommandService::is_world_position_walkable(to);
+  return NavGrid::is_world_position_walkable(to);
 }
 
 auto is_walkable_cell(int x, int y) -> bool {
-  return CommandService::is_grid_walkable({x, y});
+  return NavGrid::is_grid_walkable({x, y});
 }
 
 auto find_recovery_cell(const Point& origin, Point& recovery_cell) -> bool {
@@ -82,20 +83,20 @@ auto find_recovery_cell(const Point& origin, Point& recovery_cell) -> bool {
 }
 
 auto resolve_walkable_direct_target(const QVector3D& target) -> QVector3D {
-  if (CommandService::is_world_position_walkable(target)) {
+  if (NavGrid::is_world_position_walkable(target)) {
     return target;
   }
 
-  Point const target_grid = CommandService::world_to_grid(target.x(), target.z());
-  auto const nearest = CommandService::find_nearest_walkable_grid(target_grid, 64);
+  Point const target_grid = NavGrid::world_to_grid(target.x(), target.z());
+  auto const nearest = NavGrid::find_nearest_walkable_grid(target_grid, 64);
   if (!nearest.has_value()) {
     return target;
   }
-  return CommandService::grid_to_world(*nearest);
+  return NavGrid::grid_to_world(*nearest);
 }
 
 auto should_include_resolved_start_waypoint(const Point& start) -> bool {
-  return !CommandService::is_grid_walkable(start);
+  return !NavGrid::is_grid_walkable(start);
 }
 
 auto segment_traverses_navigation_portal(const QVector3D& from,
@@ -114,7 +115,7 @@ auto segment_traverses_navigation_portal(const QVector3D& from,
   for (int sample = 0; sample <= sample_count; ++sample) {
     float const t = static_cast<float>(sample) / static_cast<float>(sample_count);
     QVector3D const point = from + delta * t;
-    Point const cell = CommandService::world_to_grid(point.x(), point.z());
+    Point const cell = NavGrid::world_to_grid(point.x(), point.z());
     if (terrain.is_on_bridge(point.x(), point.z()) ||
         terrain.is_hill_entrance(cell.x, cell.y)) {
       return true;
@@ -297,9 +298,8 @@ void MovementSystem::assign_navigation_target(
   }
 
   Point const start =
-      CommandService::world_to_grid(transform.position.x, transform.position.z);
-  Point const end =
-      CommandService::world_to_grid(requested_target.x(), requested_target.z());
+      NavGrid::world_to_grid(transform.position.x, transform.position.z);
+  Point const end = NavGrid::world_to_grid(requested_target.x(), requested_target.z());
   QVector3D const current_pos(transform.position.x, 0.0F, transform.position.z);
 
   bool const portal_route =
@@ -326,27 +326,27 @@ auto MovementSystem::assign_local_recovery_move(
     const QVector3D& current_position,
     const QVector3D& goal,
     Engine::Core::MovementComponent* movement) -> bool {
-  auto* pathfinder = CommandService::get_pathfinder();
+  auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder == nullptr || movement == nullptr) {
     return false;
   }
 
   Point const current_grid =
-      CommandService::world_to_grid(current_position.x(), current_position.z());
+      NavGrid::world_to_grid(current_position.x(), current_position.z());
 
   Point recovery_cell{};
   if (!find_recovery_cell(current_grid, recovery_cell)) {
 
     constexpr int k_emergency_search_radius = 64;
-    auto const nearest = CommandService::find_nearest_walkable_grid(
-        current_grid, k_emergency_search_radius);
+    auto const nearest =
+        NavGrid::find_nearest_walkable_grid(current_grid, k_emergency_search_radius);
     if (!nearest.has_value()) {
       return false;
     }
     recovery_cell = *nearest;
   }
 
-  QVector3D const safe_pos = CommandService::grid_to_world(recovery_cell);
+  QVector3D const safe_pos = NavGrid::grid_to_world(recovery_cell);
   bool const had_active_target = movement->has_target;
   float const active_target_dx = safe_pos.x() - movement->target_x;
   float const active_target_dz = safe_pos.z() - movement->target_y;
@@ -363,7 +363,7 @@ auto MovementSystem::assign_local_recovery_move(
 
   QVector3D resolved_goal = safe_pos;
   if (had_active_target) {
-    Point const desired_goal = CommandService::world_to_grid(goal.x(), goal.z());
+    Point const desired_goal = NavGrid::world_to_grid(goal.x(), goal.z());
     auto const route =
         pathfinder->find_path(recovery_cell, desired_goal, passability_for(*movement));
     if (route.size() > 1) {
@@ -409,8 +409,7 @@ auto MovementSystem::retarget_unit(Engine::Core::World& world,
     return false;
   }
 
-  assign_navigation_target(
-      CommandService::get_pathfinder(), *transform, *movement, goal);
+  assign_navigation_target(NavGrid::get_pathfinder(), *transform, *movement, goal);
   return true;
 }
 
@@ -432,10 +431,8 @@ void MovementSystem::issue_move(Engine::Core::World& world,
     return;
   }
   prepared.movement->precise_arrival = options.kind == MoveOrderKind::AttackChase;
-  assign_navigation_target(CommandService::get_pathfinder(),
-                           *prepared.transform,
-                           *prepared.movement,
-                           target);
+  assign_navigation_target(
+      NavGrid::get_pathfinder(), *prepared.transform, *prepared.movement, target);
   if (prepared.preserve_velocity && prepared.movement->get_has_target()) {
     prepared.movement->vx = prepared.previous_vx;
     prepared.movement->vz = prepared.previous_vz;
@@ -473,7 +470,7 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     }
   }
 
-  auto* pathfinder = CommandService::get_pathfinder();
+  auto* pathfinder = NavGrid::get_pathfinder();
   auto const leader_it =
       std::find_if(prepared.begin(), prepared.end(), [](PreparedMove const& move) {
         return move.transform != nullptr && move.movement != nullptr;
@@ -494,9 +491,9 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       leader_it->transform->position.x, 0.0F, leader_it->transform->position.z);
   QVector3D const leader_target = targets[leader_index];
   Point const leader_start_cell =
-      CommandService::world_to_grid(leader_start.x(), leader_start.z());
+      NavGrid::world_to_grid(leader_start.x(), leader_start.z());
   Point const leader_target_cell =
-      CommandService::world_to_grid(leader_target.x(), leader_target.z());
+      NavGrid::world_to_grid(leader_target.x(), leader_target.z());
 
   auto group_passability = Pathfinding::Passability::Light;
   for (auto const& move : prepared) {
@@ -526,10 +523,9 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
 
     bool assigned = false;
     if (corridor.size() > 1U) {
-      Point const start = CommandService::world_to_grid(move.transform->position.x,
-                                                        move.transform->position.z);
-      Point const target =
-          CommandService::world_to_grid(targets[i].x(), targets[i].z());
+      Point const start = NavGrid::world_to_grid(move.transform->position.x,
+                                                 move.transform->position.z);
+      Point const target = NavGrid::world_to_grid(targets[i].x(), targets[i].z());
       bool const same_regions =
           std::abs(start.x - leader_start_cell.x) <= k_shared_corridor_region_radius &&
           std::abs(start.y - leader_start_cell.y) <= k_shared_corridor_region_radius &&
@@ -567,9 +563,8 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     if (!assigned) {
       QVector3D const current(
           move.transform->position.x, 0.0F, move.transform->position.z);
-      Point const start = CommandService::world_to_grid(current.x(), current.z());
-      Point const target =
-          CommandService::world_to_grid(targets[i].x(), targets[i].z());
+      Point const start = NavGrid::world_to_grid(current.x(), current.z());
+      Point const target = NavGrid::world_to_grid(targets[i].x(), targets[i].z());
       bool const direct = start == target ||
                           (is_direct_path_walkable(
                                current, targets[i], passability_for(*move.movement)) &&

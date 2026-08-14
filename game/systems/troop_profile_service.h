@@ -28,6 +28,11 @@ public:
 
   auto get_profile(NationID nation_id, Game::Units::TroopType type) -> TroopProfile;
 
+  void prime();
+
+  [[nodiscard]] auto find_profile(NationID nation_id, Game::Units::TroopType type) const
+      -> const TroopProfile*;
+
   void clear();
 
 private:

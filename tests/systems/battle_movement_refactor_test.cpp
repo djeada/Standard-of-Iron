@@ -7,9 +7,9 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/cohort_system.h"
-#include "systems/command_service.h"
 #include "systems/engagement_slot_system.h"
 #include "systems/local_avoidance_system.h"
+#include "systems/nav_grid.h"
 #include "systems/target_commitment_system.h"
 #include "tests/support/movement_test_access.h"
 
@@ -20,7 +20,7 @@ class LocalAvoidanceTest : public ::testing::Test {
 protected:
   void SetUp() override {
     world = std::make_unique<World>();
-    CommandService::initialize(64, 64);
+    NavGrid::initialize(64, 64);
   }
 
   void TearDown() override { world.reset(); }
@@ -116,7 +116,7 @@ class EngagementSlotTest : public ::testing::Test {
 protected:
   void SetUp() override {
     world = std::make_unique<World>();
-    CommandService::initialize(64, 64);
+    NavGrid::initialize(64, 64);
   }
 
   void TearDown() override { world.reset(); }
@@ -189,7 +189,7 @@ class TargetCommitmentTest : public ::testing::Test {
 protected:
   void SetUp() override {
     world = std::make_unique<World>();
-    CommandService::initialize(64, 64);
+    NavGrid::initialize(64, 64);
   }
 
   void TearDown() override { world.reset(); }
@@ -337,7 +337,7 @@ class CohortSystemTest : public ::testing::Test {
 protected:
   void SetUp() override {
     world = std::make_unique<World>();
-    CommandService::initialize(64, 64);
+    NavGrid::initialize(64, 64);
   }
 
   void TearDown() override { world.reset(); }

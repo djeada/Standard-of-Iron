@@ -7,9 +7,9 @@
 
 #include "core/component.h"
 #include "core/entity.h"
-#include "core/serialization.h"
 #include "core/world.h"
 #include "map/terrain_service.h"
+#include "save/serialization.h"
 #include "systems/nation_id.h"
 #include "systems/owner_registry.h"
 #include "tests/support/movement_test_access.h"

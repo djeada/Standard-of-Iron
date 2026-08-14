@@ -5,8 +5,8 @@
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "systems/building_collision_registry.h"
-#include "systems/command_service.h"
 #include "systems/guard_system.h"
+#include "systems/nav_grid.h"
 
 using namespace Engine::Core;
 using namespace Game::Systems;
@@ -16,7 +16,7 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    Game::Systems::CommandService::initialize(64, 64);
+    Game::Systems::NavGrid::initialize(64, 64);
     world = std::make_unique<World>();
   }
 

@@ -20,8 +20,8 @@
 #include "game/systems/combat_system/combat_action_processor.h"
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/combat_system/damage_application.h"
-#include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_config.h"
@@ -165,8 +165,8 @@ protected:
 
     const auto map_definition = make_map();
     Game::Map::TerrainService::instance().initialize(map_definition);
-    Game::Systems::CommandService::initialize(map_definition.grid.width,
-                                              map_definition.grid.height);
+    Game::Systems::NavGrid::initialize(map_definition.grid.width,
+                                       map_definition.grid.height);
   }
 
   void TearDown() override {
@@ -634,8 +634,8 @@ TEST_F(WildlifeSystemTest, AMapThatNeverAuthoredWildlifeStillGetsAPopulation) {
   ASSERT_TRUE(map_definition.wildlife.enabled);
 
   Game::Map::TerrainService::instance().initialize(map_definition);
-  Game::Systems::CommandService::initialize(map_definition.grid.width,
-                                            map_definition.grid.height);
+  Game::Systems::NavGrid::initialize(map_definition.grid.width,
+                                     map_definition.grid.height);
 
   World world;
   WildlifeSystem system;
@@ -664,8 +664,8 @@ TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
   ASSERT_TRUE(map_definition.wildlife.enabled);
 
   Game::Map::TerrainService::instance().initialize(map_definition);
-  Game::Systems::CommandService::initialize(map_definition.grid.width,
-                                            map_definition.grid.height);
+  Game::Systems::NavGrid::initialize(map_definition.grid.width,
+                                     map_definition.grid.height);
 
   World world;
   WildlifeSystem system;

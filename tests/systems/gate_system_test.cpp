@@ -4,13 +4,13 @@
 
 #include "core/component.h"
 #include "core/entity.h"
-#include "core/serialization.h"
 #include "core/world.h"
 #include "map/terrain_service.h"
+#include "save/serialization.h"
 #include "systems/building_collision_registry.h"
-#include "systems/command_service.h"
 #include "systems/gate_service.h"
 #include "systems/gate_system.h"
+#include "systems/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "systems/pathfinding.h"
 #include "systems/wall_network_service.h"
@@ -32,7 +32,7 @@ protected:
   void SetUp() override {
     BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    CommandService::initialize(32, 32);
+    NavGrid::initialize(32, 32);
 
     auto& owners = OwnerRegistry::instance();
     owners.clear();
@@ -316,7 +316,7 @@ TEST_F(GateSystemTest, DestroyedGateLeavesAPassableBreach) {
 
   const auto& passages = BuildingCollisionRegistry::instance().navigation_passages();
   ASSERT_EQ(passages.size(), 1U);
-  const auto expected = CommandService::grid_to_world(cell);
+  const auto expected = NavGrid::grid_to_world(cell);
   EXPECT_FLOAT_EQ(passages.front().center_x, expected.x());
   EXPECT_FLOAT_EQ(passages.front().center_z, expected.z());
 }

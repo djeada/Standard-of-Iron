@@ -23,6 +23,7 @@
 #include "combat_actions/combat_action_definition.h"
 #include "command_service.h"
 #include "nation_registry.h"
+#include "nav_grid.h"
 #include "owner_registry.h"
 #include "runtime_system_registry.h"
 #include "troop_count_registry.h"
@@ -129,8 +130,8 @@ void configure_registries(bool use_ai) {
   nations.set_player_nation(k_player_owner, Game::Systems::NationID::RomanRepublic);
   nations.set_player_nation(k_enemy_owner, Game::Systems::NationID::Carthage);
   Game::Systems::TroopCountRegistry::instance().initialize();
-  Game::Systems::CommandService::initialize(static_cast<int>(k_world_extent),
-                                            static_cast<int>(k_world_extent));
+  Game::Systems::NavGrid::initialize(static_cast<int>(k_world_extent),
+                                     static_cast<int>(k_world_extent));
 }
 
 auto spawn_unit(ScenarioWorld& scenario,

@@ -131,9 +131,6 @@ public:
 
   auto get_units_owned_by(int owner_id) const -> std::vector<Entity*>;
   auto get_units_not_owned_by(int owner_id) const -> std::vector<Entity*>;
-  auto get_allied_units(int owner_id) const -> std::vector<Entity*>;
-  auto get_enemy_units(int owner_id) const -> std::vector<Entity*>;
-  static auto count_troops_for_player(int owner_id) -> int;
 
   [[nodiscard]] auto entity_count() const -> std::size_t;
 
@@ -151,6 +148,9 @@ public:
   void set_next_entity_id(EntityID next_id);
 
   auto get_entity_mutex() -> std::recursive_mutex& { return m_entity_mutex; }
+
+  using EntityDestroyedHook = void (*)(EntityID);
+  static void set_entity_destroyed_hook(EntityDestroyedHook hook);
 
   ObserverHandle add_component_observer(ComponentObserverCallback callback);
   ObserverHandle add_entity_destroyed_observer(EntityDestroyedCallback callback);

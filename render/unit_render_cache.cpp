@@ -17,19 +17,20 @@ namespace Render {
 namespace {
 
 [[nodiscard]] auto
-resolve_indicator_height(const Engine::Core::UnitComponent& unit) -> float {
+resolve_indicator_height(const Render::WorldView& world,
+                         const Engine::Core::UnitComponent& unit) -> float {
   float ring_size = 1.0F;
   float render_scale = 1.0F;
 
   auto const troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
-  if (troop_type.has_value()) {
-    const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-        unit.nation_id, *troop_type);
-    ring_size = profile.visuals.selection_ring_size;
-    render_scale = profile.visuals.render_scale;
+  const auto* profile = troop_type.has_value()
+                            ? world.find_troop_profile(unit.nation_id, *troop_type)
+                            : nullptr;
+  if (profile != nullptr) {
+    ring_size = profile->visuals.selection_ring_size;
+    render_scale = profile->visuals.render_scale;
   } else {
-    ring_size =
-        Game::Units::TroopConfig::instance().get_selection_ring_size(unit.spawn_type);
+    ring_size = world.troop_config()->get_selection_ring_size(unit.spawn_type);
   }
 
   return Render::Geom::indicator_height_for_unit(ring_size, render_scale);
@@ -37,20 +38,20 @@ resolve_indicator_height(const Engine::Core::UnitComponent& unit) -> float {
 
 } // namespace
 
-auto resolve_profile_unit_renderer_key(const Engine::Core::UnitComponent& unit)
-    -> std::string {
+auto resolve_profile_unit_renderer_key(
+    const WorldView& world, const Engine::Core::UnitComponent& unit) -> std::string {
   auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
-  if (troop_type.has_value()) {
-    const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-        unit.nation_id, *troop_type);
-    if (!profile.visuals.renderer_id.empty()) {
-      return profile.visuals.renderer_id;
-    }
+  const auto* profile = troop_type.has_value()
+                            ? world.find_troop_profile(unit.nation_id, *troop_type)
+                            : nullptr;
+  if (profile != nullptr && !profile->visuals.renderer_id.empty()) {
+    return profile->visuals.renderer_id;
   }
   return Game::Units::spawn_typeToString(unit.spawn_type);
 }
 
-auto resolve_unit_renderer_key(const Engine::Core::UnitComponent& unit,
+auto resolve_unit_renderer_key(const WorldView& world,
+                               const Engine::Core::UnitComponent& unit,
                                const Engine::Core::RenderableComponent* renderable)
     -> std::string {
   const std::string spawn_key = Game::Units::spawn_typeToString(unit.spawn_type);
@@ -59,10 +60,11 @@ auto resolve_unit_renderer_key(const Engine::Core::UnitComponent& unit,
     return std::string(
         Render::GL::canonicalize_building_renderer_key(renderable->renderer_id));
   }
-  return resolve_profile_unit_renderer_key(unit);
+  return resolve_profile_unit_renderer_key(world, unit);
 }
 
-auto UnitRenderCache::get_or_create(Engine::Core::EntityID entity_id,
+auto UnitRenderCache::get_or_create(const WorldView& world,
+                                    Engine::Core::EntityID entity_id,
                                     Engine::Core::Entity* entity,
                                     std::uint32_t frame) -> CachedUnitData& {
   auto [it, inserted] = m_cache.emplace(entity_id, CachedUnitData{});
@@ -124,9 +126,10 @@ auto UnitRenderCache::get_or_create(Engine::Core::EntityID entity_id,
             Game::Units::spawn_typeToString(data.unit->spawn_type),
             data.unit->nation_id);
       } else {
-        data.renderer_key = resolve_unit_renderer_key(*data.unit, data.renderable);
+        data.renderer_key =
+            resolve_unit_renderer_key(world, *data.unit, data.renderable);
       }
-      data.indicator_height = resolve_indicator_height(*data.unit);
+      data.indicator_height = resolve_indicator_height(world, *data.unit);
       data.last_spawn_type = data.unit->spawn_type;
       data.last_nation_id = data.unit->nation_id;
     } else if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {

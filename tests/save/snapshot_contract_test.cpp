@@ -47,7 +47,7 @@ auto declared_components() -> std::set<std::string> {
 
 auto serialized_components() -> std::set<std::string> {
   const auto source =
-      read_text(find_repo_root() / "game" / "core" / "serialization.cpp");
+      read_text(find_repo_root() / "game" / "save" / "serialization.cpp");
   const std::regex pattern(R"((?:get_component|add_component)<([A-Za-z0-9_]+)>)");
 
   std::set<std::string> names;

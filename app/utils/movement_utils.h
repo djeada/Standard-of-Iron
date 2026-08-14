@@ -20,6 +20,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
@@ -33,7 +34,7 @@ inline void reset_movement(Engine::Core::Entity* entity) {
 }
 
 inline auto snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D {
-  return Game::Systems::CommandService::snap_to_walkable_ground(world_position);
+  return Game::Systems::NavGrid::snap_to_walkable_ground(world_position);
 }
 
 inline void clear_civilian_delivery_command(Engine::Core::Entity* entity) {

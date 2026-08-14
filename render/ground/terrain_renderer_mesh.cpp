@@ -804,7 +804,7 @@ void TerrainRenderer::build_meshes() {
     gx = std::clamp(gx, 0, m_width - 1);
     gz = std::clamp(gz, 0, m_height - 1);
 
-    auto& terrain_service = Game::Map::TerrainService::instance();
+    const auto& terrain_service = world().terrain_or_empty();
     if (terrain_service.is_initialized()) {
       auto const& field = terrain_service.terrain_field();
       if (field.width == m_width && field.height == m_height &&

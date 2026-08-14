@@ -16,6 +16,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/runtime_system_registry.h"
@@ -30,6 +31,7 @@ using Engine::Core::TransformComponent;
 using Engine::Core::UnitComponent;
 using Game::Session::SessionContext;
 using Game::Systems::CommandService;
+using Game::Systems::NavGrid;
 using Game::Systems::Point;
 
 constexpr int k_owner = 1;
@@ -42,7 +44,7 @@ protected:
   void SetUp() override {
     Game::Systems::NationRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().initialize_defaults();
-    CommandService::initialize(k_map, k_map);
+    NavGrid::initialize(k_map, k_map);
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);
   }
@@ -72,17 +74,17 @@ protected:
     m_session->nations().initialize_defaults();
     Game::Systems::register_runtime_systems(m_session->world());
     m_session->terrain().initialize(map);
-    CommandService::initialize(map.grid.width, map.grid.height);
+    NavGrid::initialize(map.grid.width, map.grid.height);
     m_grid_size = map.grid.width;
     return *m_session;
   }
 
   static auto world_of(int grid_x, int grid_z) -> QVector3D {
-    return CommandService::grid_to_world(Point(grid_x, grid_z));
+    return NavGrid::grid_to_world(Point(grid_x, grid_z));
   }
 
   static auto cell_of(const QVector3D& position) -> Point {
-    return CommandService::world_to_grid(position.x(), position.z());
+    return NavGrid::world_to_grid(position.x(), position.z());
   }
 
   auto spawn(Game::Units::SpawnType type,
@@ -131,7 +133,7 @@ protected:
   }
 
   static auto pathfinder() -> Game::Systems::Pathfinding& {
-    auto* pf = CommandService::get_pathfinder();
+    auto* pf = NavGrid::get_pathfinder();
     EXPECT_NE(pf, nullptr);
     return *pf;
   }
@@ -549,15 +551,15 @@ TEST_F(TightGapNavigationTest, ScratchGateLineHalfCell) {
   std::printf("origin cell (%d,%d) -> world (%.2f,%.2f)\n",
               origin.x,
               origin.y,
-              CommandService::grid_to_world(origin).x(),
-              CommandService::grid_to_world(origin).z());
+              NavGrid::grid_to_world(origin).x(),
+              NavGrid::grid_to_world(origin).z());
   for (int dz = -5; dz <= 4; ++dz) {
     std::string row;
     for (int dx = -8; dx <= 8; ++dx) {
       row += pf.is_walkable(origin.x + dx, origin.y + dz) ? '.' : '#';
     }
     std::printf("z=%6.1f %s\n",
-                CommandService::grid_to_world({origin.x, origin.y + dz}).z(),
+                NavGrid::grid_to_world({origin.x, origin.y + dz}).z(),
                 row.c_str());
   }
   for (float z : {-3.5F, -2.5F, -1.5F}) {

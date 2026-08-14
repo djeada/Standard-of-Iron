@@ -14,10 +14,12 @@ add_subdirectory(building_preview)
 add_subdirectory(humanoid_preview)
 
 add_executable(battlefield_gameplay_verifier battlefield_capture_main.cpp)
-# render_gl currently calls back into map visibility owned by game_systems. Keep
-# game_systems after the renderer as well so static-link builds resolve that
-# dependency instead of depending on executable-specific object order.
-target_link_libraries(battlefield_gameplay_verifier PRIVATE game_systems render_gl game_systems)
+# soi_runtime is what this drives: the production system registry, one tick at a
+# time, asserting on movement, combat, responsiveness and AI. render_gl calls
+# back into map visibility owned by the kernel, so game_sim is repeated after the
+# renderer for static-link builds to resolve that without depending on
+# executable-specific object order.
+target_link_libraries(battlefield_gameplay_verifier PRIVATE soi_runtime render_gl game_sim)
 target_include_directories(battlefield_gameplay_verifier PRIVATE ${CMAKE_SOURCE_DIR}/game)
 set_target_properties(
     battlefield_gameplay_verifier

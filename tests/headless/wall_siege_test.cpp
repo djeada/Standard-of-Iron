@@ -14,9 +14,9 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_system/structure_combat.h"
-#include "game/systems/command_service.h"
 #include "game/systems/gate_service.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/runtime_system_registry.h"
@@ -43,7 +43,7 @@ constexpr float k_wall_half_thickness = 1.0F;
 class WallSiegeTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    Game::Systems::CommandService::initialize(k_map_size, k_map_size);
+    Game::Systems::NavGrid::initialize(k_map_size, k_map_size);
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);
   }
@@ -77,8 +77,7 @@ protected:
   }
 
   static auto world_of(int grid_x, int grid_z) -> QVector3D {
-    return Game::Systems::CommandService::grid_to_world(
-        Game::Systems::Point(grid_x, grid_z));
+    return Game::Systems::NavGrid::grid_to_world(Game::Systems::Point(grid_x, grid_z));
   }
 
   static auto wall_line_z() -> float { return world_of(0, k_wall_grid_z).z(); }

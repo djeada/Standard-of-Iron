@@ -71,6 +71,15 @@ public:
   [[nodiscard]] auto last_sync_stats() const -> Render::Ground::Scatter::SyncStats;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>&;
 
+  void set_world_view(const Render::WorldView& view) noexcept override {
+    IRenderPass::set_world_view(view);
+    for (auto* pass : passes()) {
+      if (pass != nullptr) {
+        pass->set_world_view(view);
+      }
+    }
+  }
+
 private:
   struct ScatterPassEntry {
     ScatterSpeciesId species{ScatterSpeciesId::Grass};

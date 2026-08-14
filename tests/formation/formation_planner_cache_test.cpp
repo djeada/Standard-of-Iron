@@ -12,8 +12,8 @@
 #include "formation/army_formation_planner.h"
 #include "formation/army_formation_registry.h"
 #include "formation/formation_doctrine.h"
-#include "systems/command_service.h"
 #include "systems/nation_registry.h"
+#include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
@@ -28,8 +28,8 @@ using Game::Systems::NationID;
 class FormationPlannerCacheTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    Game::Systems::CommandService::initialize(256, 256);
-    auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+    Game::Systems::NavGrid::initialize(256, 256);
+    auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
     if (pathfinder != nullptr) {
       pathfinder->update_navigation_grid();
     }

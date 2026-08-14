@@ -13,8 +13,8 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/combat_action_events.h"
-#include "game/systems/command_service.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/systems/terrain_alignment_system.h"
@@ -30,7 +30,7 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    Game::Systems::CommandService::initialize(32, 32);
+    Game::Systems::NavGrid::initialize(32, 32);
   }
 
   void TearDown() override {
@@ -95,9 +95,9 @@ TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   auto* transform = commander->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  auto const blocked = Game::Systems::CommandService::world_to_grid(0.0F, 1.0F);
+  auto const blocked = Game::Systems::NavGrid::world_to_grid(0.0F, 1.0F);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
   CommanderControlController controller;
@@ -171,10 +171,10 @@ TEST_F(CommanderControlControllerTest,
   auto* transform = commander->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   for (float const z : {1.0F, 2.0F, 3.0F}) {
-    auto const blocked = Game::Systems::CommandService::world_to_grid(0.0F, z);
+    auto const blocked = Game::Systems::NavGrid::world_to_grid(0.0F, z);
     pathfinder->set_obstacle(blocked.x, blocked.y, true);
   }
 
@@ -204,10 +204,10 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(commander_data, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
-  auto const blocked = Game::Systems::CommandService::world_to_grid(
-      transform->position.x, transform->position.z);
+  auto const blocked = Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                             transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
   MovementTestAccess::set_has_target(*movement, true);

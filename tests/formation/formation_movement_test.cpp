@@ -8,8 +8,8 @@
 #include "core/world.h"
 #include "formation/army_formation_registry.h"
 #include "formation/army_formation_service.h"
-#include "systems/command_service.h"
 #include "systems/nation_registry.h"
+#include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
@@ -52,8 +52,8 @@ auto commit(Engine::Core::World& world,
 class FormationMovementTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    Game::Systems::CommandService::initialize(256, 256);
-    auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+    Game::Systems::NavGrid::initialize(256, 256);
+    auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
     if (pathfinder != nullptr) {
       pathfinder->update_navigation_grid();
     }
@@ -203,8 +203,8 @@ TEST_F(FormationMovementTest, UnitsOutsideAnyGroupAreUnaffected) {
 }
 
 TEST_F(FormationMovementTest, TerrainFittingKeepsSlotsOnWalkableGround) {
-  Game::Systems::CommandService::initialize(64, 64);
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  Game::Systems::NavGrid::initialize(64, 64);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
@@ -212,8 +212,7 @@ TEST_F(FormationMovementTest, TerrainFittingKeepsSlotsOnWalkableGround) {
   auto const units = make_squad(world);
 
   QVector3D const target(24.0F, 0.0F, 24.0F);
-  auto const centre =
-      Game::Systems::CommandService::world_to_grid(target.x(), target.z());
+  auto const centre = Game::Systems::NavGrid::world_to_grid(target.x(), target.z());
   for (int dx = -1; dx <= 1; ++dx) {
     pathfinder->set_obstacle(centre.x + dx, centre.y, true);
   }
@@ -227,16 +226,15 @@ TEST_F(FormationMovementTest, TerrainFittingKeepsSlotsOnWalkableGround) {
       continue;
     }
     ++placed;
-    EXPECT_TRUE(
-        Game::Systems::CommandService::is_world_position_walkable(result.positions[i]))
+    EXPECT_TRUE(Game::Systems::NavGrid::is_world_position_walkable(result.positions[i]))
         << "unit index " << i;
   }
   EXPECT_GT(placed, 0);
 }
 
 TEST_F(FormationMovementTest, NarrowGroundCompressesRatherThanStackingUnits) {
-  Game::Systems::CommandService::initialize(64, 64);
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  Game::Systems::NavGrid::initialize(64, 64);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
@@ -244,8 +242,7 @@ TEST_F(FormationMovementTest, NarrowGroundCompressesRatherThanStackingUnits) {
   auto const units = make_squad(world);
 
   QVector3D const target(32.0F, 0.0F, 32.0F);
-  auto const centre =
-      Game::Systems::CommandService::world_to_grid(target.x(), target.z());
+  auto const centre = Game::Systems::NavGrid::world_to_grid(target.x(), target.z());
   for (int dz = -6; dz <= 6; ++dz) {
     pathfinder->set_obstacle(centre.x - 3, centre.y + dz, true);
     pathfinder->set_obstacle(centre.x + 3, centre.y + dz, true);

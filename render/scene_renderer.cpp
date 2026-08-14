@@ -208,9 +208,9 @@ void Renderer::begin_frame() {
     m_view_proj = m_camera->get_view_projection_matrix();
     refresh_billboard_basis();
   }
-  auto& visibility = Game::Map::VisibilityService::instance();
-  m_frame_visibility_snapshot =
-      visibility.is_initialized() ? visibility.snapshot_ptr() : nullptr;
+  m_frame_visibility_snapshot = m_world_view.has_visibility()
+                                    ? m_world_view.visibility()->snapshot_ptr()
+                                    : nullptr;
   m_submission_visibility.reset(m_camera, m_frame_visibility_snapshot.get());
 
   if (m_backend) {

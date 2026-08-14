@@ -8,9 +8,9 @@
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/wall_network_service.h"
 #include "units/factory.h"
@@ -118,7 +118,7 @@ TEST_F(MapTransformerStructureTest,
        SpawnsWallLinesUsingMapGridEvenWhenCommandGridIsStale) {
   Engine::Core::World world;
 
-  Game::Systems::CommandService::initialize(8, 8);
+  Game::Systems::NavGrid::initialize(8, 8);
 
   Game::Map::MapDefinition def;
   def.grid.width = 16;
@@ -141,7 +141,7 @@ TEST_F(MapTransformerStructureTest,
 
   Game::Map::MapTransformer::apply_to_world(def, world);
 
-  Game::Systems::CommandService::initialize(def.grid.width, def.grid.height);
+  Game::Systems::NavGrid::initialize(def.grid.width, def.grid.height);
   Game::Systems::WallNetworkService::refresh_world(world);
 
   struct WallSnapshot {

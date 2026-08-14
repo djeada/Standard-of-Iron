@@ -14,6 +14,7 @@
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/spear_pose_utils.h"
+#include "render/world_view.h"
 #include "tests/support/movement_test_access.h"
 
 using namespace Render::GL;
@@ -295,6 +296,7 @@ TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
   ASSERT_NE(motion, nullptr);
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
 
   ctx.animation_time = 1.0F;
@@ -330,6 +332,7 @@ TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
   guard->active = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.animation_time = 1.0F;
 
@@ -363,6 +366,7 @@ TEST(HumanoidAnimationInputs, FpvCommanderVelocityTriggersMovementAnimation) {
   motion->has_velocity = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.animation_time = 1.0F;
 

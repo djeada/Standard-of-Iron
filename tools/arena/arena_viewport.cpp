@@ -55,11 +55,11 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/combat_rules.h"
-#include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/player_resource_registry.h"
@@ -419,7 +419,7 @@ ArenaViewport::~ArenaViewport() {
 void ArenaViewport::configure_runtime() {
   Game::Systems::NationRegistry::instance().initialize_defaults();
   Game::Systems::TroopCountRegistry::instance().initialize();
-  Game::Systems::CommandService::initialize(k_terrain_width, k_terrain_height);
+  Game::Systems::NavGrid::initialize(k_terrain_width, k_terrain_height);
 
   m_unit_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*m_unit_factory);
@@ -585,6 +585,8 @@ void ArenaViewport::paintGL() {
       m_clean_capture || m_promo_mode ||
       (m_scenario_runner != nullptr &&
        m_scenario_runner->definition().suppress_ui_overlays));
+
+  m_renderer->set_world_view(Render::WorldView::of_active_session());
   m_renderer->begin_frame();
   if (m_terrain_scene != nullptr) {
     Render::GL::TerrainSceneSubmitOptions terrain_options;
@@ -1636,7 +1638,7 @@ void ArenaViewport::regenerate_terrain() {
                                                                 m_world_props,
                                                                 {},
                                                                 runtime_lakes);
-  Game::Systems::CommandService::initialize(k_terrain_width, k_terrain_height);
+  Game::Systems::NavGrid::initialize(k_terrain_width, k_terrain_height);
 
   align_units_to_terrain();
   if (m_gl_initialized) {
@@ -3219,8 +3221,8 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
       m_terrain_review_definition->grid.tile_size);
   apply_initial_visibility();
   sync_camera_map_bounds(m_camera.get());
-  Game::Systems::CommandService::initialize(m_terrain_review_definition->grid.width,
-                                            m_terrain_review_definition->grid.height);
+  Game::Systems::NavGrid::initialize(m_terrain_review_definition->grid.width,
+                                     m_terrain_review_definition->grid.height);
 
   if (m_terrain_review_content_enabled) {
     spawn_terrain_review_structures();

@@ -20,6 +20,7 @@
 #include "../map/map_definition.h"
 #include "../systems/combat_system/damage_application.h"
 #include "../systems/command_service.h"
+#include "../systems/nav_grid.h"
 #include "../systems/order_service.h"
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
@@ -718,7 +719,7 @@ void WildlifeSystem::issue_move(Engine::Core::World& world,
                                 Engine::Core::EntityID entity_id,
                                 float world_x,
                                 float world_z) {
-  QVector3D const destination = Game::Systems::CommandService::snap_to_walkable_ground(
+  QVector3D const destination = Game::Systems::NavGrid::snap_to_walkable_ground(
       QVector3D(world_x, 0.0F, world_z));
 
   auto* entity = world.get_entity(entity_id);

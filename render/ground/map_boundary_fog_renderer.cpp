@@ -46,8 +46,9 @@ inline auto smoothstep(float edge0, float edge1, float value) -> float {
   return t * t * (3.0F - 2.0F * t);
 }
 
-auto boundary_height_at(float world_x, float world_z) -> float {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+auto boundary_height_at(const Game::Map::TerrainService& terrain_service,
+                        float world_x,
+                        float world_z) -> float {
   const auto* height_map = terrain_service.get_height_map();
   if (!terrain_service.is_initialized() || height_map == nullptr) {
     return 0.0F;
@@ -71,6 +72,8 @@ struct BoundaryMountainConfig {
   float tile_size = 1.0F;
   float max_relief_height = 0.0F;
   Game::Map::MountainNoiseSettings noise_settings{};
+
+  const Game::Map::TerrainService* terrain = nullptr;
 };
 
 struct BoundaryMountainSample {
@@ -79,9 +82,9 @@ struct BoundaryMountainSample {
   float relief = 0.0F;
 };
 
-auto resolve_mountain_noise_settings(int width,
+auto resolve_mountain_noise_settings(const Game::Map::TerrainService& terrain_service,
+                                     int width,
                                      int height) -> Game::Map::MountainNoiseSettings {
-  auto const& terrain_service = Game::Map::TerrainService::instance();
   if (terrain_service.is_initialized()) {
     auto const& biome = terrain_service.biome_settings();
     return {biome.seed == 0U ? 1337U : biome.seed,
@@ -220,8 +223,11 @@ auto sample_boundary_mountain(float world_x,
       1.0F);
 
   const float boundary_blend = std::pow(std::max(0.0F, 1.0F - depth_t), 2.1F);
-  const float base_height = boundary_height_at(world_x, world_z) * boundary_blend +
-                            config.tile_size * k_mountain_base_lift;
+  const float base_height =
+      (config.terrain != nullptr ? boundary_height_at(*config.terrain, world_x, world_z)
+                                 : 0.0F) *
+          boundary_blend +
+      config.tile_size * k_mountain_base_lift;
   const float height_scale = std::clamp(
       0.72F + sparsity * 0.34F + cluster * 0.16F + (crag - 0.5F) * 0.24F, 0.48F, 1.28F);
   const float relief = config.max_relief_height * height_scale * relief_mask;
@@ -239,11 +245,11 @@ inline auto clamp01(const QVector3D& color) -> QVector3D {
           std::clamp(color.z(), 0.0F, 1.0F)};
 }
 
-auto build_boundary_mountain_params(float tile_size,
+auto build_boundary_mountain_params(const Game::Map::TerrainService& terrain_service,
+                                    float tile_size,
                                     int width,
                                     int height) -> TerrainChunkParams {
   TerrainChunkParams params;
-  auto const& terrain_service = Game::Map::TerrainService::instance();
   Game::Map::BiomeSettings biome;
   if (terrain_service.is_initialized()) {
     biome = terrain_service.biome_settings();
@@ -510,7 +516,8 @@ void MapBoundaryFogRenderer::submit(Renderer& renderer, ResourceManager* resourc
       TerrainSurfaceCmd cmd;
       cmd.mesh = m_mountain_mesh.get();
       cmd.model = k_identity_matrix;
-      cmd.params = build_boundary_mountain_params(m_tile_size, m_width, m_height);
+      cmd.params = build_boundary_mountain_params(
+          world().terrain_or_empty(), m_tile_size, m_width, m_height);
       cmd.sort_key = 0x0080U;
       cmd.depth_write = true;
       renderer.terrain_surface(cmd);
@@ -689,7 +696,8 @@ void MapBoundaryFogRenderer::build_mountains() {
       mountain_band,
       m_tile_size,
       max_relief_height,
-      resolve_mountain_noise_settings(m_width, m_height)};
+      resolve_mountain_noise_settings(world().terrain_or_empty(), m_width, m_height),
+      &world().terrain_or_empty()};
 
   append_patch_mesh(m_mountain_vertices,
                     m_mountain_indices,

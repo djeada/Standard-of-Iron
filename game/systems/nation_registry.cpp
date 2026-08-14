@@ -9,7 +9,6 @@
 #include <vector>
 
 #include "../formation/formation_data_loader.h"
-#include "../session/session_context.h"
 #include "systems/nation_loader.h"
 #include "systems/troop_profile_service.h"
 #include "units/troop_catalog.h"
@@ -106,10 +105,6 @@ auto Nation::is_melee_unit(Game::Units::TroopType unit_type) const -> bool {
 auto Nation::is_ranged_unit(Game::Units::TroopType unit_type) const -> bool {
   const auto* troop = get_troop(unit_type);
   return troop != nullptr && !troop->is_melee;
-}
-
-auto NationRegistry::instance() -> NationRegistry& {
-  return Game::Session::SessionContext::active().nations();
 }
 
 void NationRegistry::register_nation(Nation nation) {
@@ -220,6 +215,7 @@ void NationRegistry::initialize_defaults() {
   }
 
   TroopProfileService::instance().clear();
+  TroopProfileService::instance().prime();
   m_initialized = true;
 }
 
