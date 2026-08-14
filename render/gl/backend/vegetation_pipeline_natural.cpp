@@ -109,7 +109,7 @@ void VegetationPipeline::initialize_stone_pipeline() {
                        const QVector3D& b,
                        const QVector3D& c,
                        const QVector3D& d) {
-    QVector3D n = QVector3D::crossProduct(b - a, d - a);
+    QVector3D n = QVector3D::crossProduct(d - a, b - a);
     if (n.lengthSquared() > 1.0e-8F) {
       n.normalize();
     } else {
@@ -121,15 +121,15 @@ void VegetationPipeline::initialize_stone_pipeline() {
     verts.push_back({c, n});
     verts.push_back({d, n});
     idx.push_back(base);
+    idx.push_back(uint16_t(base + 2));
     idx.push_back(uint16_t(base + 1));
-    idx.push_back(uint16_t(base + 2));
     idx.push_back(base);
-    idx.push_back(uint16_t(base + 2));
     idx.push_back(uint16_t(base + 3));
+    idx.push_back(uint16_t(base + 2));
   };
 
   auto emit_tri = [&](const QVector3D& a, const QVector3D& b, const QVector3D& c) {
-    QVector3D n = QVector3D::crossProduct(b - a, c - a);
+    QVector3D n = QVector3D::crossProduct(c - a, b - a);
     if (n.lengthSquared() > 1.0e-8F) {
       n.normalize();
     } else {
@@ -140,8 +140,8 @@ void VegetationPipeline::initialize_stone_pipeline() {
     verts.push_back({b, n});
     verts.push_back({c, n});
     idx.push_back(base);
-    idx.push_back(uint16_t(base + 1));
     idx.push_back(uint16_t(base + 2));
+    idx.push_back(uint16_t(base + 1));
   };
 
   for (int ri = 0; ri < k_rings - 1; ++ri) {

@@ -84,7 +84,7 @@ void main() {
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 illumination = environment_ambient_light(N) + sun * ndotl * 0.74;
+  vec3 illumination = soi_surface_lighting_scaled(N, 0.74);
   float cavity = mix(0.56, 1.0, hemi) * mix(1.0, 0.78, cargo_core);
   float metal_mask = max(tyre_mask, hub_mask);
   float specular = mix(pow(max(dot(N, H), 0.0), 24.0) * 0.035,
@@ -92,7 +92,7 @@ void main() {
                        metal_mask);
   float rim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * 0.045;
 
-  vec3 color = albedo * illumination * cavity * environment_exposure();
+  vec3 color = albedo * illumination * cavity;
   color += sun * specular;
   color += sky * rim;
   color += color * local_lighting(v_world_pos, normalize(v_normal));

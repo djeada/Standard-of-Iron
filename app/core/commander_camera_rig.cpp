@@ -4,6 +4,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "animation/locomotion_manifest.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/core/component.h"
 #include "game/map/terrain_service.h"
@@ -19,7 +20,9 @@ constexpr float k_deg2rad = 0.017453292519943295F;
 
 constexpr float k_focus_height = 1.45F;
 
-constexpr float k_bob_freq = 3.5F;
+constexpr float k_walk_bob_freq =
+    2.0F * k_pi / Animation::k_humanoid_walk_cycle_distance;
+constexpr float k_run_bob_freq = 2.0F * k_pi / Animation::k_humanoid_run_cycle_distance;
 constexpr float k_bob_vert_amp = 0.020F;
 constexpr float k_bob_run_mult = 1.35F;
 constexpr float k_bob_lat_amp = 0.013F;
@@ -150,7 +153,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_bob_amplitude += (bob_amp_target - m_bob_amplitude) * smooth_alpha(k_bob_decay, dt);
   float const previous_bob_phase = m_bob_phase;
   if (inputs.move_speed > 0.05F) {
-    m_bob_phase += inputs.move_speed * k_bob_freq * dt;
+    m_bob_phase += inputs.move_speed *
+                   (inputs.move_running ? k_run_bob_freq : k_walk_bob_freq) * dt;
   } else if (m_bob_amplitude < 0.01F) {
     m_bob_phase = 0.0F;
   }

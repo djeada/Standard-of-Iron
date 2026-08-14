@@ -66,6 +66,10 @@ struct WeatherBudget {
   float particle_scale = 1.0F;
 };
 
+struct PresentationSettings {
+  int msaa_samples = 4;
+};
+
 struct DirectionalShadowSettings {
   bool enabled = true;
   int cascade_count = 3;
@@ -117,6 +121,9 @@ public:
   }
   [[nodiscard]] auto weather_budget() const noexcept -> const WeatherBudget& {
     return m_weather_budget;
+  }
+  [[nodiscard]] auto presentation() const noexcept -> const PresentationSettings& {
+    return m_presentation;
   }
 
   [[nodiscard]] auto creature_lod_enabled() const noexcept -> bool {
@@ -238,6 +245,7 @@ private:
                                .normal_bias = 0.025F,
                                .cascade_blend = 0.0F};
       m_weather_budget = {.particle_scale = 0.35F};
+      m_presentation = {.msaa_samples = 0};
       break;
 
     case GraphicsQuality::Medium:
@@ -277,6 +285,7 @@ private:
                                .normal_bias = 0.022F,
                                .cascade_blend = 0.08F};
       m_weather_budget = {.particle_scale = 0.60F};
+      m_presentation = {.msaa_samples = 2};
       break;
 
     case GraphicsQuality::High:
@@ -316,6 +325,7 @@ private:
                                .normal_bias = 0.018F,
                                .cascade_blend = 0.12F};
       m_weather_budget = {.particle_scale = 0.85F};
+      m_presentation = {.msaa_samples = 4};
       break;
 
     case GraphicsQuality::Ultra:
@@ -355,6 +365,7 @@ private:
                                .normal_bias = 0.014F,
                                .cascade_blend = 0.15F};
       m_weather_budget = {.particle_scale = 1.00F};
+      m_presentation = {.msaa_samples = 4};
       break;
     }
   }
@@ -381,6 +392,7 @@ private:
   ContactShadowBudget m_contact_shadow_budget{};
   DirectionalShadowSettings m_directional_shadows{};
   WeatherBudget m_weather_budget{};
+  PresentationSettings m_presentation{};
 };
 
 } // namespace Render

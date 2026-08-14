@@ -42,6 +42,7 @@ class CombatDustPipeline;
 class RainPipeline;
 class ModeIndicatorPipeline;
 class GroundMarkerPipeline;
+class PostProcessPipeline;
 class MeshInstancingPipeline;
 } // namespace Render::GL::BackendPipelines
 
@@ -81,6 +82,7 @@ public:
   void set_clear_color(float r, float g, float b, float a) override;
   void set_animation_time(float time) noexcept override { m_animation_time = time; }
   void execute(const DrawQueue& queue, const Camera& cam) override;
+  void execute_scene(const DrawQueue& queue, const Camera& cam);
 
   void set_environment_lighting(const EnvironmentLightingState& lighting) noexcept {
     m_environment_lighting = lighting.sanitized();
@@ -234,6 +236,7 @@ private:
     visit(m_mode_indicator_pipeline);
     visit(m_ground_marker_pipeline);
     visit(m_mesh_instancing_pipeline);
+    visit(m_post_process_pipeline);
   }
 
   template <typename Subsystem, typename... Args>
@@ -274,6 +277,7 @@ private:
   std::unique_ptr<BackendPipelines::ModeIndicatorPipeline> m_mode_indicator_pipeline;
   std::unique_ptr<BackendPipelines::GroundMarkerPipeline> m_ground_marker_pipeline;
   std::unique_ptr<BackendPipelines::MeshInstancingPipeline> m_mesh_instancing_pipeline;
+  std::unique_ptr<BackendPipelines::PostProcessPipeline> m_post_process_pipeline;
 
   Shader* m_basic_shader = nullptr;
   Shader* m_grid_shader = nullptr;

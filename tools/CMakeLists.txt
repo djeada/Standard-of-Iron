@@ -12,6 +12,7 @@ add_dependencies(arena_app bake_creature_assets)
 add_subdirectory(mesh_preview)
 add_subdirectory(building_preview)
 add_subdirectory(humanoid_preview)
+add_subdirectory(wildlife_preview)
 
 add_executable(battlefield_gameplay_verifier battlefield_capture_main.cpp)
 # soi_runtime is what this drives: the production system registry, one tick at a

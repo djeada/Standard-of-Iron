@@ -82,7 +82,12 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
   pose.foot_pitch_l = 0.0F;
   pose.foot_pitch_r = 0.0F;
 
+  QVector3D hip_delta_l;
+  QVector3D hip_delta_r;
+
   if (is_moving) {
+    float const rest_arm_length = 0.5F * ((pose.hand_l - pose.shoulder_l).length() +
+                                          (pose.hand_r - pose.shoulder_r).length());
     auto const locomotion_pose = Animation::resolve_humanoid_locomotion_pose({
         .state = static_cast<Animation::HumanoidMotionState>(resolved_gait.state),
         .normalized_speed = resolved_gait.normalized_speed,
@@ -102,6 +107,7 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
         .foot_y_offset = pose.foot_y_offset,
         .base_foot_l = base_pose.foot_l,
         .base_foot_r = base_pose.foot_r,
+        .arm_pendulum_length = rest_arm_length,
         .pelvis_y = pose.pelvis_pos.y(),
         .hip_lateral_offset = HP::HIP_LATERAL_OFFSET,
         .hip_vertical_offset = HP::HIP_VERTICAL_OFFSET,
@@ -119,6 +125,8 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
       pose.head_pos += to_qvec(locomotion_pose.head_delta);
       pose.hand_l += to_qvec(locomotion_pose.hand_l_delta);
       pose.hand_r += to_qvec(locomotion_pose.hand_r_delta);
+      hip_delta_l = to_qvec(locomotion_pose.hip_l_delta);
+      hip_delta_r = to_qvec(locomotion_pose.hip_r_delta);
     }
 
     float const max_reach =
@@ -131,10 +139,10 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
 
   QVector3D const hip_l =
       pose.pelvis_pos +
-      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F) + hip_delta_l;
   QVector3D const hip_r =
       pose.pelvis_pos +
-      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F) + hip_delta_r;
 
   auto solve_leg =
       [&](const QVector3D& hip, const QVector3D& foot, Side side) -> QVector3D {
@@ -156,8 +164,14 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
   if (right_axis.x() < 0.0F) {
     right_axis = -right_axis;
   }
-  QVector3D const outward_l = -right_axis;
-  QVector3D const outward_r = right_axis;
+
+  constexpr float k_walking_elbow_backset = 0.45F;
+  QVector3D const elbow_backset =
+      is_moving ? QVector3D(0.0F, 0.0F, -1.0F) * k_walking_elbow_backset : QVector3D();
+  QVector3D const outward_l =
+      (-right_axis * (1.0F - (is_moving ? 0.35F : 0.0F))) + elbow_backset;
+  QVector3D const outward_r =
+      (right_axis * (1.0F - (is_moving ? 0.35F : 0.0F))) + elbow_backset;
 
   float const elbow_along_bias = (variation.bulk_scale - 1.0F) * 0.05F;
   pose.elbow_l =

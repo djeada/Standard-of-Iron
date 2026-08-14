@@ -48,7 +48,10 @@ constexpr float k_wolf_avoid_base_strength = 2.5F;
 constexpr float k_civilian_standoff = 3.0F;
 constexpr float k_civilian_threat_strength = 0.3F;
 constexpr float k_civilian_quarry_preference = 0.5F;
-constexpr float k_quarry_crowd_penalty = 9.0F;
+constexpr int k_pack_gang_size = 3;
+constexpr float k_pack_join_gain = 30.0F;
+constexpr float k_pack_second_join_gain = 9.0F;
+constexpr float k_quarry_crowd_penalty = 400.0F;
 constexpr float k_wolf_bite_recovery = 0.35F;
 constexpr float k_wolf_bite_flinch_seconds = 0.30F;
 constexpr float k_wolf_bite_blood_chance = 0.34F;
@@ -77,9 +80,20 @@ auto hash_unit_interval(std::uint32_t value) -> float {
   return static_cast<float>(value & 0xFFFFFFU) / 16777216.0F;
 }
 
-auto crowding_penalty(int attackers) -> float {
-  float const committed = static_cast<float>(std::max(attackers, 0));
-  return k_quarry_crowd_penalty * committed * committed;
+auto crowding_penalty(int attackers, float appetite) -> float {
+  int const committed = std::max(attackers, 0);
+  if (committed >= k_pack_gang_size) {
+
+    float const excess = static_cast<float>((committed - k_pack_gang_size) + 1);
+    return k_quarry_crowd_penalty * excess;
+  }
+  if (committed <= 0) {
+    return 0.0F;
+  }
+
+  float const gain =
+      committed == 1 ? k_pack_join_gain : k_pack_join_gain + k_pack_second_join_gain;
+  return -gain * std::clamp(appetite, 0.0F, 1.0F);
 }
 
 auto seed_for(std::uint32_t seed, Species species, int index) -> std::uint32_t {
@@ -587,6 +601,42 @@ void WildlifeSystem::try_contact_bite(Engine::Core::World& world,
   begin_bite(*animal.entity, wildlife, prey);
 }
 
+void WildlifeSystem::release_if_stalled(const AnimalRef& animal,
+                                        Engine::Core::WildlifeComponent& wildlife,
+                                        float delta_time) {
+  auto* movement = animal.entity->get_component<Engine::Core::MovementComponent>();
+  bool const meant_to_hold = wildlife.behavior == Behavior::Graze ||
+                             wildlife.bite_timer > 0.0F || wildlife.flinch_timer > 0.0F;
+  if (movement == nullptr || meant_to_hold) {
+
+    wildlife.stall_timer = 0.0F;
+    wildlife.last_x = animal.x;
+    wildlife.last_z = animal.z;
+    return;
+  }
+
+  float const dx = animal.x - wildlife.last_x;
+  float const dz = animal.z - wildlife.last_z;
+  wildlife.last_x = animal.x;
+  wildlife.last_z = animal.z;
+
+  if ((dx * dx) + (dz * dz) > k_stall_step_epsilon * k_stall_step_epsilon) {
+    wildlife.stall_timer = 0.0F;
+    return;
+  }
+
+  wildlife.stall_timer += delta_time;
+  if (wildlife.stall_timer < Engine::Core::WildlifeComponent::k_stall_release_seconds) {
+    return;
+  }
+
+  wildlife.stall_timer = 0.0F;
+  wildlife.stalled = true;
+  movement->stop();
+  wildlife.think_cooldown = 0.0F;
+  m_stats.stall_releases += 1U;
+}
+
 auto WildlifeSystem::attackers_on(Engine::Core::EntityID prey_id,
                                   Engine::Core::EntityID exclude_id) const -> int {
   if (prey_id == 0) {
@@ -633,8 +683,8 @@ auto WildlifeSystem::pack_slot_for(Engine::Core::EntityID prey_id,
 auto WildlifeSystem::nearest_prey(float world_x,
                                   float world_z,
                                   float radius,
-                                  Engine::Core::EntityID hunter_id) const
-    -> const AnimalRef* {
+                                  Engine::Core::EntityID hunter_id,
+                                  float appetite) const -> const AnimalRef* {
   const AnimalRef* best = nullptr;
   float best_score = 0.0F;
   for (const auto& animal : m_animals) {
@@ -648,7 +698,7 @@ auto WildlifeSystem::nearest_prey(float world_x,
       continue;
     }
     float const score =
-        distance_sq + crowding_penalty(attackers_on(animal.id, hunter_id));
+        distance_sq + crowding_penalty(attackers_on(animal.id, hunter_id), appetite);
     if (best != nullptr && score >= best_score) {
       continue;
     }
@@ -661,8 +711,8 @@ auto WildlifeSystem::nearest_prey(float world_x,
 auto WildlifeSystem::nearest_quarry(float world_x,
                                     float world_z,
                                     float radius,
-                                    Engine::Core::EntityID hunter_id) const
-    -> const QuarryRef* {
+                                    Engine::Core::EntityID hunter_id,
+                                    float appetite) const -> const QuarryRef* {
   const QuarryRef* best = nullptr;
   float best_score = 0.0F;
   for (const auto& quarry : m_quarry) {
@@ -674,7 +724,7 @@ auto WildlifeSystem::nearest_quarry(float world_x,
     }
     float const score =
         (distance_sq * (quarry.civilian ? k_civilian_quarry_preference : 1.0F)) +
-        crowding_penalty(attackers_on(quarry.id, hunter_id));
+        crowding_penalty(attackers_on(quarry.id, hunter_id), appetite);
     if (best != nullptr && score >= best_score) {
       continue;
     }
@@ -824,8 +874,8 @@ public:
   }
 
   auto nearest_prey(const NatureContext& ctx, float radius) -> PreyRef override {
-    const AnimalRef* found =
-        m_owner.nearest_prey(ctx.x, ctx.z, radius, ctx.entity->get_id());
+    const AnimalRef* found = m_owner.nearest_prey(
+        ctx.x, ctx.z, radius, ctx.entity->get_id(), ctx.config->aggression);
     if (found == nullptr) {
       return {};
     }
@@ -833,8 +883,8 @@ public:
   }
 
   auto nearest_quarry(const NatureContext& ctx, float radius) -> PreyRef override {
-    const QuarryRef* found =
-        m_owner.nearest_quarry(ctx.x, ctx.z, radius, ctx.entity->get_id());
+    const QuarryRef* found = m_owner.nearest_quarry(
+        ctx.x, ctx.z, radius, ctx.entity->get_id(), ctx.config->aggression);
     if (found == nullptr) {
       return {};
     }
@@ -979,6 +1029,15 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
 
     wildlife->state_timer = std::max(0.0F, wildlife->state_timer - delta_time);
     wildlife->alarm_timer = std::max(0.0F, wildlife->alarm_timer - delta_time);
+    wildlife->flinch_timer = std::max(0.0F, wildlife->flinch_timer - delta_time);
+    if (const auto* unit =
+            animal.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (wildlife->watched_health >= 0 && unit->health < wildlife->watched_health) {
+        wildlife->flinch_timer =
+            Engine::Core::WildlifeComponent::k_flinch_animation_seconds;
+      }
+      wildlife->watched_health = unit->health;
+    }
     wildlife->hostile_timer = std::max(0.0F, wildlife->hostile_timer - delta_time);
     float const bite_timer_before = wildlife->bite_timer;
     wildlife->bite_timer = std::max(0.0F, wildlife->bite_timer - delta_time);
@@ -1032,6 +1091,8 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
     if (animal.species == Species::Wolf) {
       try_contact_bite(*world, animal, *wildlife);
     }
+
+    release_if_stalled(animal, *wildlife, delta_time);
 
     wildlife->think_cooldown -= delta_time;
     if (wildlife->think_cooldown > 0.0F) {

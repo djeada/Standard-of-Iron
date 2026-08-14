@@ -412,8 +412,13 @@ public:
     fmt.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 
     fmt.setSamples(4);
-    fmt.setSamples(0);
-    return new QOpenGLFramebufferObject(size, fmt);
+    auto* target = new QOpenGLFramebufferObject(size, fmt);
+    if (!target->isValid()) {
+      delete target;
+      fmt.setSamples(0);
+      target = new QOpenGLFramebufferObject(size, fmt);
+    }
+    return target;
   }
 
   void synchronize(QQuickFramebufferObject* item) override {

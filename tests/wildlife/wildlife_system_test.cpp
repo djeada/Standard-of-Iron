@@ -385,6 +385,75 @@ TEST_F(WildlifeSystemTest, WolfBiteDamageLandsAtTheAnimatedContactFrame) {
   EXPECT_EQ(wolf->bite_target_id, 0U);
 }
 
+TEST_F(WildlifeSystemTest, BittenAnimalsFlinchSoTheHitIsVisible) {
+  World world;
+  WildlifeSystem system;
+  WildlifeSettings settings = make_settings();
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 1;
+  settings.wolves.group_size_min = 1;
+  settings.wolves.group_size_max = 1;
+  settings.wolves.aggression = 1.0F;
+  settings.wolves.roam_radius = 12.0F;
+  settings.wolves.spawn_areas = {{0.0F, 0.0F, 1.5F}};
+  system.configure(settings, 1U);
+  system.update(&world, 0.1F);
+
+  bool flinched = false;
+  for (int step = 0; step < 600 && !flinched; ++step) {
+    system.update(&world, 0.05F);
+    for (const auto* animal : collect_species(world, Species::Sheep)) {
+      const auto* wildlife = animal->get_component<Engine::Core::WildlifeComponent>();
+      if (wildlife != nullptr && wildlife->flinch_timer > 0.0F) {
+        flinched = true;
+        break;
+      }
+    }
+  }
+
+  EXPECT_GT(system.stats().bites, 0U) << "the wolf never reached the herd";
+  EXPECT_TRUE(flinched) << "a bitten sheep never reacted to the hit";
+}
+
+TEST_F(WildlifeSystemTest, APackGangsUpOnOneAnimalInsteadOfSpreadingOut) {
+  World world;
+  WildlifeSystem system;
+  WildlifeSettings settings = make_settings();
+  settings.sheep.group_size_min = 6;
+  settings.sheep.group_size_max = 6;
+  settings.wolves.enabled = true;
+  settings.wolves.group_count = 1;
+  settings.wolves.group_size_min = 3;
+  settings.wolves.group_size_max = 3;
+  settings.wolves.aggression = 1.0F;
+  settings.wolves.roam_radius = 14.0F;
+  settings.wolves.spawn_areas = {{5.0F, 0.0F, 1.0F}};
+  system.configure(settings, 7U);
+  system.update(&world, 0.1F);
+
+  ASSERT_EQ(count_species(world, Species::Wolf), 3);
+
+  int most_shared = 0;
+  for (int step = 0; step < 120; ++step) {
+    system.update(&world, 0.1F);
+
+    std::vector<Engine::Core::EntityID> focus;
+    for (const auto* wolf : collect_species(world, Species::Wolf)) {
+      const auto* wildlife = wolf->get_component<Engine::Core::WildlifeComponent>();
+      if (wildlife != nullptr && wildlife->focus_id != 0) {
+        focus.push_back(wildlife->focus_id);
+      }
+    }
+    for (const auto id : focus) {
+      most_shared = std::max(
+          most_shared, static_cast<int>(std::count(focus.begin(), focus.end(), id)));
+    }
+  }
+
+  EXPECT_GE(most_shared, 2)
+      << "wolves each picked their own sheep, so a kill never looks like a pack";
+}
+
 TEST_F(WildlifeSystemTest, WolvesLeaveEscortedPeopleAlone) {
   World world;
   WildlifeSystem system;

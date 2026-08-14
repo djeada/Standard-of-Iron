@@ -40,7 +40,16 @@ struct WolfDrive {
   float jaw_open{0.0F};
 
   float head_shake{0.0F};
+  float head_roll{0.0F};
+  float rear{0.0F};
   float collapse{0.0F};
+
+  float breath{0.0F};
+  float head_turn{0.0F};
+  float head_dip{0.0F};
+  float ear_swivel{0.0F};
+  float tail_sway{0.0F};
+  float weight_shift{0.0F};
   WolfGait gait{WolfGait::Stand};
 };
 

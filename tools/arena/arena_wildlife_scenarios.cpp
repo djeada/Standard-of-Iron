@@ -244,6 +244,36 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_wildlife_pack_takedown_id),
+        QStringLiteral("Wildlife: Pack Takedown"),
+        QStringLiteral("Wolves spawn on top of a small flock and pull one down under "
+                       "a close camera: the bite, the sheep's flinch, the pack "
+                       "circling between bites and the kill all stay in frame."),
+        18.0F,
+        {17.0F, 40.0F, 22.0F});
+    s.wildlife = sheep_only(1, 4, 4.0F);
+    s.wildlife.seed = 4711U;
+    s.wildlife.sheep.spawn_areas = {{0.0F, 0.0F, 1.6F}};
+    s.wildlife.sheep.respawn = false;
+    s.wildlife.wolves.enabled = true;
+    s.wildlife.wolves.group_count = 1;
+    s.wildlife.wolves.group_size_min = 3;
+    s.wildlife.wolves.group_size_max = 3;
+    s.wildlife.wolves.aggression = 1.0F;
+    s.wildlife.wolves.roam_radius = 10.0F;
+    s.wildlife.wolves.respawn = false;
+    s.wildlife.wolves.spawn_areas = {{4.0F, 0.0F, 1.5F}};
+    s.groups = {observer_group({0.0F, 0.0F, -26.0F})};
+    s.expectations = {
+        expectation(Expect::WildlifeHuntObserved),
+        expectation(Expect::WildlifeFleeObserved),
+        expectation(Expect::WildlifeCasualtyObserved),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_wildlife_bird_scatter_id),
         QStringLiteral("Wildlife: Bird Scatter"),
         QStringLiteral("Flocks cruise and perch until a column marches underneath, "

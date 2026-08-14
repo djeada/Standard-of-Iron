@@ -238,6 +238,7 @@ inline constexpr char k_wildlife_herd_flees_troops_id[] = "wildlife_herd_flees_t
 inline constexpr char k_wildlife_wolf_hunt_id[] = "wildlife_wolf_hunt";
 inline constexpr char k_wildlife_wolf_pack_id[] = "wildlife_wolf_pack";
 inline constexpr char k_wildlife_wolf_ambush_id[] = "wildlife_wolf_ambush";
+inline constexpr char k_wildlife_pack_takedown_id[] = "wildlife_pack_takedown";
 inline constexpr char k_wildlife_bird_scatter_id[] = "wildlife_bird_scatter";
 inline constexpr char k_wildlife_bird_flyover_id[] = "wildlife_bird_flyover";
 inline constexpr char k_wildlife_mixed_pasture_id[] = "wildlife_mixed_pasture";

@@ -23,6 +23,7 @@ struct DrawState {
   Game::Wildlife::Behavior behavior{Game::Wildlife::Behavior::Graze};
 
   float bite_progress{-1.0F};
+  float flinch_progress{-1.0F};
   float death_progress{-1.0F};
   bool dead{false};
 };
