@@ -180,13 +180,15 @@ void bake_wolf_clip_frame(std::size_t clip_index,
       float const t = smoothstep(phase / k_coil_end);
       drive.lunge = -0.34F * t;
       drive.jaw_open = t;
+      drive.head_dip = -1.1F * t;
       drive.crouch = 0.55F + (0.45F * t);
       drive.rear = 0.22F * t;
     } else if (phase < k_contact) {
 
       float const t = (phase - k_coil_end) / (k_contact - k_coil_end);
       drive.lunge = -0.34F + (1.34F * (t * t));
-      drive.jaw_open = 1.0F - (0.28F * t * t * t);
+      drive.jaw_open = 1.0F - (0.65F * t * t * t);
+      drive.head_dip = -1.1F * (1.0F - t);
       drive.crouch = 1.0F - (0.72F * t);
       drive.rear = 0.22F + (0.78F * (t * t));
     } else if (phase < k_wrench_end) {
