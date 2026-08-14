@@ -25,6 +25,7 @@
 #include "backend/combat_dust_pipeline.h"
 #include "backend/cylinder_pipeline.h"
 #include "backend/effects_pipeline.h"
+#include "backend/fog_range.h"
 #include "backend/ground_marker_pipeline.h"
 #include "backend/healer_aura_pipeline.h"
 #include "backend/healing_beam_pipeline.h"
@@ -303,7 +304,7 @@ void Backend::begin_frame() {
     glViewport(0, 0, m_viewport_width, m_viewport_height);
   }
   if (m_post_process_pipeline != nullptr) {
-    m_post_process_pipeline->begin_scene(m_viewport_width, m_viewport_height);
+    (void)m_post_process_pipeline->begin_scene(m_viewport_width, m_viewport_height);
   }
   glClearColor(m_clear_color[red],
                m_clear_color[green],
@@ -822,6 +823,13 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   render_directional_shadows(queue, cam);
   if (m_post_process_pipeline != nullptr && m_post_process_pipeline->is_capturing()) {
     m_post_process_pipeline->set_depth_range(cam.get_near(), cam.get_far());
+    const auto [fog_start, fog_end] = fog_range_for_camera(cam);
+    m_post_process_pipeline->set_atmosphere(
+        view_proj.inverted(), cam.get_position(), fog_start, fog_end, m_animation_time);
+    if (m_mist_volumes_dirty) {
+      m_post_process_pipeline->set_mist(m_mist_volumes);
+      m_mist_volumes_dirty = false;
+    }
     m_post_process_pipeline->draw_sky(view_proj, cam.get_position());
   }
   const float banner_wind_strength = 0.8F + 0.2F * std::sin(m_animation_time * 0.5F);

@@ -21,7 +21,7 @@ execute_scene
 resolve_scene
   ├─ bright pass       threshold + knee, third resolution (k_bloom_divisor)
   ├─ blur              separable gaussian, two ping-pong iterations
-  ├─ composite         grounding AO → + bloom → tonemap → grade → vignette → RGBA8
+  ├─ composite         + bloom → grounding AO → depth fog → tonemap → grade → vignette → RGBA8
   └─ FXAA              to the host framebuffer
 ```
 
@@ -73,9 +73,25 @@ _above_ `environment_direct_light` in the include. Do not move them back below i
 
 Directly routed hand-rollers: `stone_instanced`, `tent_instanced`, `ruins_instanced`,
 `weapon_rack_instanced`, `supply_cart_instanced`, `statue_instanced`,
-`pine_instanced`, `olive_instanced`, `magic_shrine_instanced`, `iron_ore_instanced`.
-Still on their own lighting: `dead_tree_instanced` and `bridge`, whose blocks are
-shaped differently enough to need individual attention.
+`pine_instanced`, `olive_instanced`, `magic_shrine_instanced`, `iron_ore_instanced`,
+and now `dead_tree_instanced`, `bridge`, `road`, `ground_plane`, `riverbank` and
+`banner`. `ShaderSource.WorldSurfacesTakeTheirKeyLightFromTheSharedModel` pins the list.
+
+The ground surfaces (`road`, `ground_plane`, `riverbank`) mattered more than they look:
+they were shading off a hard `max(dot(n, l), 0.0)` while every object standing on them
+used the wrapped terminator, so a road crossing a shadow edge broke against the
+buildings beside it. They take `soi_key_light(n) * K` now, keeping each surface's own
+key attenuation.
+
+`dead_tree_instanced` was not merely inconsistent, it was wrong: it built
+`lighting` from `environment_primary_intensity()` and then multiplied by a `light_tint`
+that already carried the same intensity, so dead wood was lit by the square of the sun
+— too hot in the afternoon and too dark at night, on a curve nothing else followed.
+
+Still deliberately on their own lighting: `terrain_chunk`, `character_skinned(_instanced)`,
+`river`, `plant_instanced` and `sky`. The first three are separately art-directed and the
+foliage one carries authored subsurface and sun-catch terms that the shared curve would
+flatten.
 
 Foliage note: pine and olive canopies used to scale ambient by 1.30, which washed the
 form out of them. At 1.06 the key light carries the shape instead.
@@ -111,6 +127,92 @@ world units; `u_ground_ao_strength` scales the tint.
 
 This needs the scene depth as a _texture_, not a renderbuffer — that is why
 `ensure_targets` attaches `GL_DEPTH_COMPONENT24` via `glFramebufferTexture2D`.
+
+The term is sampled as three rings (`k_ao_ring_spread`) rather than one, because a
+single 3px ring is an edge-detect filter, not a contact shadow — it produced a hairline
+and nothing else. Each ring outward also accepts a larger depth step
+(`k_ao_ring_reach`), since a wide contact shadow comes from a taller occluder.
+
+Debugging note, because this is easy to get wrong twice: replace the composite's
+`soi_finalize(combined)` with `vec3(grounding_occlusion())` and render a frame. The
+term should show as a clean halo tracing every silhouette. When it did, its peak was
+only 0.32, and `k_ground_ao_strength` was then 0.62 — a 5% darkening at the very
+darkest pixel, i.e. invisible. The ring count and the acceptance window were both
+red herrings; the strength was the bug. It is 2.40 now, and the composite clamps the
+mix factor so raising it further saturates rather than inverts.
+
+**Known limitation.** Cast shadows disappear at wide cameras. `render_directional_shadows`
+culls a static caster by its distance from the camera, so at High (80) nothing beyond
+80 units casts, while `scene/camera.h` lets the player pull back to
+`k_max_rts_distance` = 85. Raising High to 140 was measured on `riverside_mill_town`:
+frame cost went 1.96 → 12.60 ms p50 (2.35 → 18.58 ms p95) and the frame gained only
+some blurry terrain self-shadow — the caster loop re-binds and re-draws every mesh per
+cascade with no batching, so coverage is priced per caster per cascade. It was reverted.
+Closing this properly is a shadow-pass batching job, not a lighting tweak. What keeps
+objects planted at that range today is the contact-shadow fallback, whose reach
+(`shadow_max_distance`) does cover the full zoom —
+`GraphicsLightingSettingsTest.GroundingReachesTheFullyZoomedOutCamera` pins that.
+
+## Atmospheric fog
+
+Distance fog is a single screen-space term in `post_composite.frag`, not a per-shader
+feature. The composite reconstructs the world position of every pixel from the scene
+depth texture (`u_inverse_view_proj`, set by `Backend::execute_scene` via
+`PostProcessPipeline::set_atmosphere`) and applies `atmospheric_fog_amount` from
+`environment_lighting.glsl` — the composite binds the environment UBO for exactly this,
+so fog colour and weather density follow the same time-of-day keyframes as the world.
+The fog range still comes from `fog_range_for_camera` (`render/gl/backend/fog_range.h`),
+which scales with orbit distance so zooming out does not drown the map.
+
+Before this, `terrain_chunk`, `ground_plane`, `riverbank` and `river` each applied
+their own fog while every building, tree, unit and prop applied none — a distant
+building sat hard-edged and full-contrast on terrain that was hazing out behind it,
+the exact opposite of the reference games' painterly falloff. Fogging in the composite
+covers everything in the depth buffer with one consistent curve, and the per-surface
+fog uniforms (`u_fog_start`/`u_fog_end`) were retired with it.
+
+Two deliberate details:
+
+- **Sky pixels are skipped** (same far-plane test the grounding AO uses). The sky
+  already blends `fog_color` at the horizon; fogging it again would wash the zenith.
+- **`k_fog_desaturation`** pulls hazed pixels toward their own luma before the mix
+  toward fog colour, so mid-distance objects lose chroma slightly before they lose
+  value — that is what makes the falloff read as painted haze rather than grey soup.
+
+Fog runs after the grounding AO (so contact shadows fade with distance like everything
+else) and before the tone curve, in linear radiance like the per-surface fog it
+replaced. Translucent surfaces fog by the opaque depth behind them, which at RTS
+camera angles is indistinguishable from their own distance.
+
+## Ground mist
+
+Local mist — the low white haze on river and lake banks, and the violet miasma over
+undead zones — is the same screen-space mechanism, evaluated per pixel in the
+composite against a small list of analytic **mist volumes** (`render/mist_volume.h`):
+capsules in the XZ plane for rivers, discs for lakes and undead zones, at most
+`k_max_mist_volumes` of them. A pixel's mist is lateral falloff past the volume edge
+(`k_mist_bank_reach`), times a vertical envelope above the volume's base height
+(`k_mist_water_ceiling` / `k_mist_miasma_ceiling`), times two octaves of drifting
+value noise so the blanket breathes. Because it is applied by world position and
+depth, a unit wading a ford is misted at the knees and clear at the helmet with no
+billboards involved.
+
+Both mist colours derive from the environment fog colour so they follow time of day:
+water mist is the fog colour lifted (`k_mist_water_lift`), miasma is the fog colour
+hue-shifted violet (`k_mist_miasma_tint`) — at night it stays a dark cold violet
+rather than glowing.
+
+The volumes are built once per level in `app/core/skirmish_loader.cpp`
+(`build_mist_volumes`): undead zones first (so the cap never drops them), then river
+polylines — chained back together from their authored waypoint segments and
+Douglas-Peucker-simplified so a 40-waypoint river costs a handful of capsules — then
+lakes. Base heights come from the terrain service. They reach the composite through
+`Renderer::set_mist_volumes → Backend → PostProcessPipeline::set_mist`, and the
+uniform upload happens only when the set changes.
+
+This is distinct from the fog-of-war shroud (`fog_instanced.frag` + FogZone patches
+in `AmbientFogRenderer`), which is a visibility-masked gameplay surface, not
+atmosphere; the two coexist.
 
 ## Sky
 
@@ -170,7 +272,10 @@ scenario that selects the profile is a night scene, where shadow strength is alr
 low — so the tint currently has no measurable effect. It is there for daylight sepulcher
 maps that do not exist yet.
 
-Known gap: several scenarios set `exposure_override` (2.3, 2.1, 1.45) tuned against the
-old pipeline. These now stack on `k_soi_grade_exposure` before the tone curve. The
-shoulder absorbs it rather than clipping, but those scenes sit high on the curve where
-contrast compresses, and the overrides deserve a sweep.
+Resolved: several scenarios set `exposure_override` (2.3, 2.1, 1.45) tuned against the
+old pipeline, and these stack on `k_soi_grade_exposure` before the tone curve. Measured
+on the four highest — `trailer_barrow_night` (2.3), `trailer_night_snow` and
+`trailer_last_breath` (2.1), `trailer_clash` (1.7) — every one clips 0.00% of its frame
+above luma 250, and p99 lands between 124 and 187. The extended-Reinhard shoulder at
+`k_soi_grade_white_point` = 2.80 absorbs the whole range, so the values were left alone.
+Re-measure before changing the white point, not before changing an override.

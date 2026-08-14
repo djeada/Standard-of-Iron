@@ -54,8 +54,6 @@ uniform float u_height_tex_to_world;
 uniform float u_screen_toe_mul;
 uniform float u_screen_toe_clamp;
 uniform vec3 u_camera_pos;
-uniform float u_fog_start;
-uniform float u_fog_end;
 
 float noise21(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -771,10 +769,6 @@ void main() {
   lit_color += terrain_color * local_lighting(v_world_pos, detail_normal);
   lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
   lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);
-  float horizon_fog = smoothstep(0.20, 0.88, 1.0 - abs(view_dir.y));
-  float fog_amount = atmospheric_fog_amount(
-      view_distance, u_fog_start, u_fog_end, 0.72, 0.60 * horizon_fog);
-  lit_color = mix(lit_color, environment_fog_color(), fog_amount);
 
   frag_color = vec4(lit_color, 1.0);
 }
