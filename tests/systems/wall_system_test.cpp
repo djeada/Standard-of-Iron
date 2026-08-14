@@ -17,8 +17,8 @@
 #include "systems/ai_system/ai_types.h"
 #include "systems/building_collision_registry.h"
 #include "systems/combat_system/damage_processor.h"
-#include "systems/command_service.h"
 #include "systems/nation_id.h"
+#include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
 #include "systems/player_resource_registry.h"
 #include "systems/production_system.h"
@@ -37,7 +37,7 @@ protected:
     BuildingCollisionRegistry::instance().clear();
     PlayerResourceRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    CommandService::initialize(8, 8);
+    NavGrid::initialize(8, 8);
 
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*registry);
@@ -123,8 +123,8 @@ TEST_F(WallMechanicsTest, WallSegmentUsesDedicatedFootprint) {
 TEST_F(WallMechanicsTest, PlacementAllowsSegmentBetweenAdjacentWalls) {
   Engine::Core::World world;
 
-  const QVector3D left = CommandService::grid_to_world(Game::Systems::Point{2, 4});
-  const QVector3D right = CommandService::grid_to_world(Game::Systems::Point{6, 4});
+  const QVector3D left = NavGrid::grid_to_world(Game::Systems::Point{2, 4});
+  const QVector3D right = NavGrid::grid_to_world(Game::Systems::Point{6, 4});
   make_wall(world, left.x(), 0.0F, left.z(), 1);
   make_wall(world, right.x(), 0.0F, right.z(), 1);
 
@@ -139,7 +139,7 @@ TEST_F(WallMechanicsTest, PlacementAllowsSegmentBetweenAdjacentWalls) {
 TEST_F(WallMechanicsTest, PlacementAllowsWallTouchingTowerSocket) {
   Engine::Core::World world;
 
-  const QVector3D tower = CommandService::grid_to_world(Game::Systems::Point{6, 4});
+  const QVector3D tower = NavGrid::grid_to_world(Game::Systems::Point{6, 4});
   make_tower(world, tower.x(), tower.z(), 1);
 
   const auto snapped = WallGridPosition{4, 4};
@@ -175,7 +175,7 @@ TEST_F(WallMechanicsTest, CombatDamageRemovesWallSegmentThroughBuildingLifecycle
 TEST_F(WallMechanicsTest, BuilderConstructionSpawnsWallSegment) {
   Engine::Core::World world;
 
-  const QVector3D site = CommandService::grid_to_world(Game::Systems::Point{4, 4});
+  const QVector3D site = NavGrid::grid_to_world(Game::Systems::Point{4, 4});
 
   auto* builder = world.create_entity();
   builder->add_component<TransformComponent>(site.x(), 0.0F, site.z());
@@ -404,7 +404,7 @@ TEST_F(WallMechanicsTest, TowerSnapSocketFindsNearestFriendlyWallEndpoint) {
 
   make_wall(world, 0.0F, 0.0F, 0.0F, 1);
   const auto wall_grid = WallNetworkService::snap_world_position(0.0F, 0.0F);
-  const auto endpoint_world = CommandService::grid_to_world(Game::Systems::Point{
+  const auto endpoint_world = NavGrid::grid_to_world(Game::Systems::Point{
       wall_grid.x + WallNetworkService::k_segment_spacing, wall_grid.z});
 
   const auto snapped = WallNetworkService::find_tower_snap_socket(
@@ -421,7 +421,7 @@ TEST_F(WallMechanicsTest, TowerSnapSocketRejectsOccupiedEndpoint) {
   make_wall(world, 0.0F, 0.0F, 0.0F, 1);
   make_tower(world, 2.0F, 0.0F, 1);
   const auto wall_grid = WallNetworkService::snap_world_position(0.0F, 0.0F);
-  const auto endpoint_world = CommandService::grid_to_world(Game::Systems::Point{
+  const auto endpoint_world = NavGrid::grid_to_world(Game::Systems::Point{
       wall_grid.x + WallNetworkService::k_segment_spacing, wall_grid.z});
 
   const auto snapped = WallNetworkService::find_tower_snap_socket(

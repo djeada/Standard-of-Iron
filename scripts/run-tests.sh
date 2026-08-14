@@ -17,7 +17,18 @@ fi
 bin_dir="${build_dir}/bin"
 
 # Keep in step with soi_test_binaries in tests/CMakeLists.txt.
-suites=(simulation_tests persistence_tests render_tests app_tests tools_tests)
+# tests/architecture/module_boundary_test.cpp fails if the two lists drift.
+suites=(
+  simulation_tests
+  combat_balance_tests
+  ai_tests
+  campaign_tests
+  persistence_tests
+  render_tests
+  app_tests
+  arena_tests
+  tools_tests
+)
 
 export QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}
 

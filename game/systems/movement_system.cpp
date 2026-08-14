@@ -19,6 +19,7 @@
 #include "defensive_unit_layout_service.h"
 #include "formation_combat_geometry.h"
 #include "gate_service.h"
+#include "nav_grid.h"
 #include "order_service.h"
 #include "pathfinding.h"
 
@@ -134,15 +135,15 @@ auto is_point_allowed(const QVector3D& pos,
       builder_prod != nullptr && builder_prod->in_progress &&
       builder_prod->at_construction_site && builder_prod->has_task_target &&
       builder_prod->task_target_id != 0) {
-    Point const position_grid = CommandService::world_to_grid(pos.x(), pos.z());
-    Point const target_grid = CommandService::world_to_grid(
-        builder_prod->task_target_x, builder_prod->task_target_z);
+    Point const position_grid = NavGrid::world_to_grid(pos.x(), pos.z());
+    Point const target_grid = NavGrid::world_to_grid(builder_prod->task_target_x,
+                                                     builder_prod->task_target_z);
     if (position_grid.x == target_grid.x && position_grid.y == target_grid.y) {
       return true;
     }
   }
 
-  if (CommandService::is_world_position_walkable(pos)) {
+  if (NavGrid::is_world_position_walkable(pos)) {
     return true;
   }
 
@@ -245,7 +246,7 @@ void MovementSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  if (auto* pathfinder = CommandService::get_pathfinder()) {
+  if (auto* pathfinder = NavGrid::get_pathfinder()) {
     std::uint64_t const revision = pathfinder->obstruction_revision();
     if (revision != m_obstruction_revision) {
       m_obstruction_revision = revision;
@@ -286,7 +287,7 @@ void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
         continue;
       }
       assign_navigation_target(
-          CommandService::get_pathfinder(), *transform, *movement, request.target);
+          NavGrid::get_pathfinder(), *transform, *movement, request.target);
       movement->precise_arrival = request.precise_arrival;
     }
     ++processed;
@@ -595,12 +596,10 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   }
 
   if (movement->has_target && !destination_allowed && current_position_allowed) {
-    Point const requested_goal =
-        CommandService::world_to_grid(final_goal.x(), final_goal.z());
-    auto const nearest_goal =
-        CommandService::find_nearest_walkable_grid(requested_goal, 32);
+    Point const requested_goal = NavGrid::world_to_grid(final_goal.x(), final_goal.z());
+    auto const nearest_goal = NavGrid::find_nearest_walkable_grid(requested_goal, 32);
     if (nearest_goal.has_value()) {
-      QVector3D const resolved_goal = CommandService::grid_to_world(*nearest_goal);
+      QVector3D const resolved_goal = NavGrid::grid_to_world(*nearest_goal);
       movement->goal_x = resolved_goal.x();
       movement->goal_y = resolved_goal.z();
       MovementSystem::retarget_unit(*world, entity->get_id(), resolved_goal);

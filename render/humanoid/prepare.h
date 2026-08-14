@@ -54,6 +54,8 @@ struct SoldierLayoutInputs {
   float animation_time{0.0F};
   Game::Formation::UnitLayoutId unit_layout{Game::Formation::k_invalid_layout};
   float formed_ratio{1.0F};
+
+  const Game::Formation::UnitLayoutSystem* soldier_offsets{nullptr};
 };
 
 [[nodiscard]] auto

@@ -20,6 +20,10 @@ struct HumanoidAnimationContext;
 struct HumanoidPose;
 } // namespace Render::GL
 
+namespace Game::Map {
+class TerrainService;
+} // namespace Game::Map
+
 namespace Render::Creature::Pipeline {
 
 [[nodiscard]] auto
@@ -82,21 +86,26 @@ humanoid_idle_breath_phase_for_lod(float sample_time,
 palette_contact_y(CreatureKind kind,
                   std::span<const QMatrix4x4> palette) noexcept -> float;
 
-[[nodiscard]] auto sample_terrain_height_or_fallback(
-    float world_x, float world_z, float fallback_y) noexcept -> float;
+[[nodiscard]] auto
+sample_terrain_height_or_fallback(const Game::Map::TerrainService& terrain,
+                                  float world_x,
+                                  float world_z,
+                                  float fallback_y) noexcept -> float;
 
 [[nodiscard]] auto model_world_origin(const QMatrix4x4& model) noexcept -> QVector3D;
 
 [[nodiscard]] auto make_runtime_prewarm_ctx(const Render::GL::DrawContext& ctx) noexcept
     -> Render::GL::DrawContext;
 
-auto ground_model_contact_to_surface(QMatrix4x4& model,
+auto ground_model_contact_to_surface(const Game::Map::TerrainService& terrain,
+                                     QMatrix4x4& model,
                                      float local_contact_y,
                                      float y_scale = 1.0F,
                                      float entity_ground_offset = 0.0F) noexcept
     -> float;
 
-auto ground_model_to_terrain(QMatrix4x4& model,
+auto ground_model_to_terrain(const Game::Map::TerrainService& terrain,
+                             QMatrix4x4& model,
                              float world_y_offset = 0.0F) noexcept -> float;
 
 void set_model_world_y(QMatrix4x4& model, float world_y) noexcept;

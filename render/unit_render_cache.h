@@ -9,6 +9,7 @@
 
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
+#include "render/world_view.h"
 
 namespace Engine::Core {
 class Entity;
@@ -25,9 +26,10 @@ using EntityID = std::uint64_t;
 namespace Render {
 
 [[nodiscard]] auto resolve_profile_unit_renderer_key(
-    const Engine::Core::UnitComponent& unit) -> std::string;
+    const WorldView& world, const Engine::Core::UnitComponent& unit) -> std::string;
 
 [[nodiscard]] auto resolve_unit_renderer_key(
+    const WorldView& world,
     const Engine::Core::UnitComponent& unit,
     const Engine::Core::RenderableComponent* renderable) -> std::string;
 
@@ -71,7 +73,8 @@ struct CachedUnitData {
 
 class UnitRenderCache {
 public:
-  auto get_or_create(Engine::Core::EntityID entity_id,
+  auto get_or_create(const WorldView& world,
+                     Engine::Core::EntityID entity_id,
                      Engine::Core::Entity* entity,
                      std::uint32_t frame) -> CachedUnitData&;
 

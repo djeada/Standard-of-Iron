@@ -2,16 +2,11 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
-#include "../session/session_context.h"
 #include "../units/troop_config.h"
 #include "core/event_manager.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
-
-auto TroopCountRegistry::instance() -> TroopCountRegistry& {
-  return Game::Session::SessionContext::active().troop_counts();
-}
 
 void TroopCountRegistry::initialize() {
   m_unit_spawned_subscription =

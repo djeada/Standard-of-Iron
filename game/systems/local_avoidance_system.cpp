@@ -14,6 +14,7 @@
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
+#include "nav_grid.h"
 #include "pathfinding.h"
 
 namespace Game::Systems {
@@ -234,7 +235,7 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
         float const lateral_length = std::hypot(lateral_x, lateral_z);
         if (lateral_length > 1.0e-4F) {
           auto& terrain = Game::Map::TerrainService::instance();
-          Point const cell = CommandService::world_to_grid(ci.x, ci.z);
+          Point const cell = NavGrid::world_to_grid(ci.x, ci.z);
           bool portal_constrains_lateral = ci.follows_navigation_path ||
                                            terrain.is_on_bridge(ci.x, ci.z) ||
                                            terrain.is_hill_entrance(cell.x, cell.y);
@@ -247,7 +248,7 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
               0.0F,
               ci.z + lateral_z / lateral_length * probe_distance);
           if (portal_constrains_lateral ||
-              !CommandService::is_world_position_walkable(lateral_probe)) {
+              !NavGrid::is_world_position_walkable(lateral_probe)) {
             lateral_x = 0.0F;
             lateral_z = 0.0F;
           }

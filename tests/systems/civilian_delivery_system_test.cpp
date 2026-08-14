@@ -8,7 +8,7 @@
 #include "game/core/world.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/civilian_delivery_system.h"
-#include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/production_service.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -115,8 +115,8 @@ TEST(CivilianDeliverySystemTest, CivilianEnteringBarracksTransfersManpower) {
 
 TEST(CivilianDeliverySystemTest, DeliveryTargetOutsideBarracksStillTransfersManpower) {
   Game::Systems::BuildingCollisionRegistry::instance().clear();
-  Game::Systems::CommandService::initialize(64, 64);
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  Game::Systems::NavGrid::initialize(64, 64);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
 
   Engine::Core::World world;
@@ -181,8 +181,8 @@ TEST(CivilianDeliverySystemTest, DeliveryTargetOutsideBarracksStillTransfersManp
 TEST(CivilianDeliverySystemTest,
      DiagonalDeliveryTargetOutsideBarracksStillTransfersManpower) {
   Game::Systems::BuildingCollisionRegistry::instance().clear();
-  Game::Systems::CommandService::initialize(64, 64);
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  Game::Systems::NavGrid::initialize(64, 64);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
 
   Engine::Core::World world;

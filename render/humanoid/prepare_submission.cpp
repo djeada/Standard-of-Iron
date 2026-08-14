@@ -254,9 +254,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
   const QMatrix4x4 k_identity_matrix;
 
-  Game::Formation::UnitLayoutId unit_layout =
-      Game::Formation::UnitLayoutLibrary::instance().resolve(
-          Game::Formation::k_neutral_doctrine, "close_order_infantry");
+  Game::Formation::UnitLayoutId unit_layout = ctx.world_view.unit_layouts()->resolve(
+      Game::Formation::k_neutral_doctrine, "close_order_infantry");
   float formed_ratio = 1.0F;
   if (unit_comp != nullptr) {
     auto const definition =
@@ -267,8 +266,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         unit_comp->spawn_type == Game::Units::SpawnType::Builder &&
         anim.is_constructing;
     if (is_constructing) {
-      unit_layout = Game::Formation::UnitLayoutLibrary::instance().resolve(
-          definition.doctrine, "work_party");
+      unit_layout =
+          ctx.world_view.unit_layouts()->resolve(definition.doctrine, "work_party");
     }
   }
   if (ctx.entity != nullptr) {
@@ -350,6 +349,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         inputs.animation_time = anim.time;
         inputs.unit_layout = unit_layout;
         inputs.formed_ratio = formed_ratio;
+        inputs.soldier_offsets = ctx.world_view.soldier_offsets();
         generated_layouts.push_back(build_soldier_layout(inputs));
       }
 
@@ -1010,14 +1010,19 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       float const grounded_contact_y = RCP::grounded_humanoid_contact_y(
           grounding_archetype, grounding_species, pose, anim_ctx);
       shadow_surface_world_y =
-          RCP::ground_model_contact_to_surface(inst_ctx.model,
+          RCP::ground_model_contact_to_surface(ctx.world_view.terrain_or_empty(),
+                                               inst_ctx.model,
                                                grounded_contact_y,
                                                combined_height_scale,
                                                entity_ground_offset);
       shadow_surface_height_valid = true;
     } else if (!world_already_grounded) {
-      shadow_surface_world_y = RCP::ground_model_contact_to_surface(
-          inst_ctx.model, 0.0F, combined_height_scale, entity_ground_offset);
+      shadow_surface_world_y =
+          RCP::ground_model_contact_to_surface(ctx.world_view.terrain_or_empty(),
+                                               inst_ctx.model,
+                                               0.0F,
+                                               combined_height_scale,
+                                               entity_ground_offset);
       shadow_surface_height_valid = true;
     }
     if (commander_jump.height_offset > 0.0F) {

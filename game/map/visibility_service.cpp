@@ -14,7 +14,6 @@
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
-#include "../session/session_context.h"
 #include "../systems/owner_registry.h"
 
 namespace Game::Map {
@@ -46,10 +45,6 @@ auto rally_flag_visibility_id(std::uint64_t commander_id) -> std::uint64_t {
 }
 
 } // namespace
-
-auto VisibilityService::instance() -> VisibilityService& {
-  return Game::Session::SessionContext::active().visibility();
-}
 
 VisibilityService::~VisibilityService() {
   m_shutdown_requested.store(true, std::memory_order_release);

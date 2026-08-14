@@ -19,6 +19,7 @@
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
+#include "render/world_view.h"
 
 namespace {
 
@@ -188,6 +189,7 @@ TEST(ScatterRuntimeTest, BiomeRendererConfiguresLargeTerrainWithoutReallocationC
   Game::Map::BiomeSettings const biome_settings;
 
   Render::GL::BiomeRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(height_map, biome_settings);
 
   EXPECT_GT(renderer.instance_count(), 0U);
@@ -209,10 +211,12 @@ TEST(ScatterRuntimeTest, LargeRockyMapsGetProceduralBouldersAndLogs) {
   std::vector<Game::Map::WorldProp> const no_authored_props;
 
   Render::GL::BoulderRenderer boulders;
+  boulders.set_world_view(Render::WorldView::of_active_session());
   boulders.configure(height_map, biome_settings, no_authored_props, no_authored_props);
   EXPECT_GT(boulders.instance_count(), 0U);
 
   Render::GL::DeadTreeRenderer dead_trees;
+  dead_trees.set_world_view(Render::WorldView::of_active_session());
   dead_trees.configure(height_map, biome_settings, no_authored_props);
   EXPECT_GT(dead_trees.instance_count(), 0U);
 }
@@ -234,10 +238,13 @@ TEST(ScatterRuntimeTest, CampaniaCampaignMaintainsRichNaturalScatter) {
   ASSERT_NE(height_map, nullptr);
 
   Render::GL::PlantRenderer plants;
+  plants.set_world_view(Render::WorldView::of_active_session());
   plants.configure(*height_map, map_def.biome, map_def.world_props);
   Render::GL::StoneRenderer stones;
+  stones.set_world_view(Render::WorldView::of_active_session());
   stones.configure(*height_map, map_def.biome, map_def.world_props);
   Render::GL::BoulderRenderer boulders;
+  boulders.set_world_view(Render::WorldView::of_active_session());
   boulders.configure(
       *height_map, map_def.biome, map_def.world_props, map_def.world_props);
 
@@ -272,6 +279,7 @@ TEST(ScatterRuntimeTest, RuntimePropRefreshDoesNotRescatterPlantsOrStones) {
   ASSERT_NE(height_map, nullptr);
 
   Render::GL::TerrainScatterManager scatter;
+  scatter.set_world_view(Render::WorldView::of_active_session());
   scatter.configure(*height_map,
                     terrain.biome_settings(),
                     terrain.authored_world_props(),
@@ -328,6 +336,7 @@ TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleR
   ASSERT_NE(height_map, nullptr);
 
   Render::GL::PineRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(*height_map,
                      terrain.biome_settings(),
                      terrain.authored_world_props(),
@@ -357,6 +366,7 @@ TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScale
   ASSERT_NE(height_map, nullptr);
 
   Render::GL::OliveRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(*height_map,
                      terrain.biome_settings(),
                      terrain.authored_world_props(),
@@ -392,6 +402,7 @@ TEST(ScatterRuntimeTest, RuntimePlantedShrineReachesTheScatterPass) {
   ASSERT_NE(height_map, nullptr);
 
   Render::GL::TerrainScatterManager scatter;
+  scatter.set_world_view(Render::WorldView::of_active_session());
   scatter.configure(*height_map,
                     terrain.biome_settings(),
                     terrain.authored_world_props(),
@@ -420,8 +431,11 @@ TEST(ScatterRuntimeTest, WorldPropRefreshReusesTheProceduralBiomeScatter) {
   auto runtime_props = terrain.world_props();
 
   Render::GL::PineRenderer pines;
+  pines.set_world_view(Render::WorldView::of_active_session());
   Render::GL::BoulderRenderer boulders;
+  boulders.set_world_view(Render::WorldView::of_active_session());
   Render::GL::DeadTreeRenderer dead_trees;
+  dead_trees.set_world_view(Render::WorldView::of_active_session());
   pines.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
   boulders.configure(*height_map, terrain.biome_settings(), seed_props, runtime_props);
   dead_trees.configure(

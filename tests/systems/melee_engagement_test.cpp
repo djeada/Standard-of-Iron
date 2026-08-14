@@ -6,9 +6,9 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
-#include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
 #include "units/factory.h"
@@ -41,7 +41,7 @@ protected:
     map_definition.grid.height = 48;
     map_definition.grid.tile_size = 1.0F;
     Game::Map::TerrainService::instance().initialize(map_definition);
-    Game::Systems::CommandService::initialize(48, 48);
+    Game::Systems::NavGrid::initialize(48, 48);
 
     registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*registry);

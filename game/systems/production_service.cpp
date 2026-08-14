@@ -12,6 +12,7 @@
 #include "../units/commander_catalog.h"
 #include "../units/troop_config.h"
 #include "core/entity.h"
+#include "owner_queries.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
 
@@ -123,7 +124,7 @@ auto ProductionService::start_production(Engine::Core::World& world,
     return ProductionResult::InsufficientManpower;
   }
 
-  int const current_troops = Engine::Core::World::count_troops_for_player(owner_id);
+  int const current_troops = Game::Systems::troop_count_for(owner_id);
   int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
   if (current_troops + production_cost > max_troops) {
     return ProductionResult::GlobalTroopLimitReached;

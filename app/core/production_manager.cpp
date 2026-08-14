@@ -16,10 +16,10 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/player_resource_registry.h"
@@ -139,9 +139,8 @@ auto is_construction_position_valid(float pos_x,
     return false;
   }
 
-  Game::Systems::Point const grid =
-      Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
-  return Game::Systems::CommandService::is_grid_walkable(grid);
+  Game::Systems::Point const grid = Game::Systems::NavGrid::world_to_grid(pos_x, pos_z);
+  return Game::Systems::NavGrid::is_grid_walkable(grid);
 }
 
 auto normalize_rotation_degrees(float angle) -> float {
@@ -253,20 +252,20 @@ auto resolve_harvest_work_position(Engine::Core::World* world,
     return std::nullopt;
   }
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return std::nullopt;
   }
 
   Game::Systems::Point const tree_grid =
-      Game::Systems::CommandService::world_to_grid(target.x, target.z);
-  auto const work_grid = Game::Systems::CommandService::find_nearest_walkable_grid(
+      Game::Systems::NavGrid::world_to_grid(target.x, target.z);
+  auto const work_grid = Game::Systems::NavGrid::find_nearest_walkable_grid(
       tree_grid, k_harvest_work_search_radius);
   if (!work_grid.has_value()) {
     return std::nullopt;
   }
 
-  QVector3D work_position = Game::Systems::CommandService::grid_to_world(*work_grid);
+  QVector3D work_position = Game::Systems::NavGrid::grid_to_world(*work_grid);
   auto& terrain_service = Game::Map::TerrainService::instance();
   work_position.setY(terrain_service.resolve_surface_world_y(
       work_position.x(), work_position.z(), 0.0F, transform->position.y));
@@ -582,13 +581,13 @@ auto resolve_harvest_target_at_position(const QString& item_type,
     return preferred_target;
   }
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return std::nullopt;
   }
 
-  auto const hover_grid = Game::Systems::CommandService::world_to_grid(
-      world_position.x(), world_position.z());
+  auto const hover_grid =
+      Game::Systems::NavGrid::world_to_grid(world_position.x(), world_position.z());
   auto const resource_grid =
       find_nearest_resource_cell(pathfinder,
                                  hover_grid,
@@ -753,7 +752,7 @@ auto maybe_snap_tower_to_wall_socket(Engine::Core::World* world,
     return world_position;
   }
 
-  return Game::Systems::CommandService::grid_to_world(
+  return Game::Systems::NavGrid::grid_to_world(
       Game::Systems::Point{snapped->x, snapped->z});
 }
 
@@ -788,7 +787,7 @@ auto maybe_snap_rotated_wall_preview(Engine::Core::World* world,
       return;
     }
 
-    const QVector3D candidate_world = Game::Systems::CommandService::grid_to_world(
+    const QVector3D candidate_world = Game::Systems::NavGrid::grid_to_world(
         Game::Systems::Point{candidate.x, candidate.z});
     const float dx = candidate_world.x() - world_position.x();
     const float dz = candidate_world.z() - world_position.z();
@@ -822,7 +821,7 @@ auto maybe_snap_rotated_wall_preview(Engine::Core::World* world,
     return world_position;
   }
 
-  return Game::Systems::CommandService::grid_to_world(
+  return Game::Systems::NavGrid::grid_to_world(
       Game::Systems::Point{best_position->x, best_position->z});
 }
 
@@ -1737,7 +1736,7 @@ void ProductionManager::rebuild_wall_preview_plan(
   for (const auto& grid_pos : chain) {
     const auto key =
         Game::Systems::WallNetworkService::encode_key(grid_pos.x, grid_pos.z);
-    const QVector3D world_position = Game::Systems::CommandService::grid_to_world(
+    const QVector3D world_position = Game::Systems::NavGrid::grid_to_world(
         Game::Systems::Point{grid_pos.x, grid_pos.z});
 
     WallPlacementSegment segment;

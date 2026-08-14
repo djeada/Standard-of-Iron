@@ -29,10 +29,10 @@ constexpr int k_tree_cell_span = 4;
 constexpr float k_tree_density_area_scale = 16.0F / 36.0F;
 constexpr float k_tree_edge_padding_scale = 0.35F;
 
-auto resolve_tree_surface_position(float world_x,
+auto resolve_tree_surface_position(const Game::Map::TerrainService& terrain_service,
+                                   float world_x,
                                    float world_z,
                                    float fallback_y) -> QVector3D {
-  auto& terrain_service = Game::Map::TerrainService::instance();
   if (terrain_service.is_initialized()) {
     return terrain_service.resolve_surface_world_position(
         world_x, world_z, 0.0F, fallback_y);
@@ -104,7 +104,7 @@ void PineRenderer::append_world_prop_pines() {
   auto& pine_instances = m_state.instances;
 
   {
-    auto& terrain_service = Game::Map::TerrainService::instance();
+    const auto& terrain_service = world().terrain_or_empty();
     for (const auto& prop : m_runtime_world_props) {
       if (prop.type != Game::Map::WorldProp::Type::PineTree) {
         continue;
@@ -193,8 +193,11 @@ void PineRenderer::generate_procedural_pines(std::vector<TreeInstanceGpu>& out) 
     float world_x = 0.0F;
     float world_z = 0.0F;
     validator.grid_to_world(gx, gz, world_x, world_z);
-    QVector3D const world_pos = resolve_tree_surface_position(
-        world_x, world_z, terrain_cache.sample_height_at(gx, gz));
+    QVector3D const world_pos =
+        resolve_tree_surface_position(world().terrain_or_empty(),
+                                      world_x,
+                                      world_z,
+                                      terrain_cache.sample_height_at(gx, gz));
 
     float const scale = remap(rand_01(state),
                               scatter_rules.pine_scale_min,

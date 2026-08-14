@@ -5,7 +5,6 @@
 #include <string>
 
 #include "core/component.h"
-#include "core/serialization.h"
 #include "core/world.h"
 #include "game/command/command.h"
 #include "game/command/command_dispatcher.h"
@@ -14,8 +13,8 @@
 #include "game/map/visibility_service.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/gather_loop_system.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
@@ -24,6 +23,7 @@
 #include "game/systems/resource_types.h"
 #include "game/systems/unit_activity.h"
 #include "game/units/spawn_type.h"
+#include "save/serialization.h"
 
 namespace {
 
@@ -69,8 +69,8 @@ protected:
     Game::Map::VisibilityService::instance().initialize(
         map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
     Game::Map::VisibilityService::instance().reveal_all();
-    Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
-    if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
+    Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+    if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
       pathfinder->update_navigation_grid();
     }
   }
@@ -192,12 +192,12 @@ TEST_F(AutoGatherTest, WhenEverythingIsGoneTheOrderStandsAndTheWorkerReportsIt) 
 TEST_F(AutoGatherTest, AResourceWalledOffFromTheWorkerIsPassedOver) {
   lay_out({{.type = WorldProp::Type::PineTree, .x = 3.0F, .z = 0.0F},
            {.type = WorldProp::Type::PineTree, .x = -6.0F, .z = 0.0F}});
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
 
   (void)pathfinder->find_path({0, 0}, {1, 1});
 
-  auto const walled_in = Game::Systems::CommandService::world_to_grid(3.0F, 0.0F);
+  auto const walled_in = Game::Systems::NavGrid::world_to_grid(3.0F, 0.0F);
   for (int dx = -2; dx <= 2; ++dx) {
     for (int dz = -2; dz <= 2; ++dz) {
       if (std::abs(dx) != 2 && std::abs(dz) != 2) {

@@ -20,6 +20,8 @@
 #include "command_service.h"
 #include "construction_cost_catalog.h"
 #include "nation_registry.h"
+#include "nav_grid.h"
+#include "owner_queries.h"
 #include "pathfinding.h"
 #include "player_resource_registry.h"
 #include "troop_profile_service.h"
@@ -106,21 +108,21 @@ auto compute_builder_exit_position(float center_x,
 auto find_guaranteed_valid_exit(float exit_x,
                                 float exit_z,
                                 float unit_radius) -> QVector3D {
-  Point const exit_grid = CommandService::world_to_grid(exit_x, exit_z);
+  Point const exit_grid = NavGrid::world_to_grid(exit_x, exit_z);
 
   (void)unit_radius;
-  if (CommandService::is_grid_walkable(exit_grid)) {
+  if (NavGrid::is_grid_walkable(exit_grid)) {
     return {exit_x, 0.0F, exit_z};
   }
 
   constexpr int k_max_search_radius = 50;
   auto const safe_grid =
-      CommandService::find_nearest_walkable_grid(exit_grid, k_max_search_radius);
+      NavGrid::find_nearest_walkable_grid(exit_grid, k_max_search_radius);
   if (safe_grid.has_value()) {
-    return CommandService::grid_to_world(*safe_grid);
+    return NavGrid::grid_to_world(*safe_grid);
   }
 
-  return CommandService::grid_to_world(exit_grid);
+  return NavGrid::grid_to_world(exit_grid);
 }
 
 void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
@@ -367,8 +369,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
 
-        int const current_troops =
-            Engine::Core::World::count_troops_for_player(u->owner_id);
+        int const current_troops = Game::Systems::troop_count_for(u->owner_id);
         int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
         if (current_troops + production_cost > max_troops) {
           prod->in_progress = false;
@@ -589,8 +590,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               builder_prod->gather_anchor_x = builder_prod->task_target_x;
               builder_prod->gather_anchor_z = builder_prod->task_target_z;
             }
-            if (auto* pathfinder = CommandService::get_pathfinder()) {
-              Point const tree_grid = CommandService::world_to_grid(
+            if (auto* pathfinder = NavGrid::get_pathfinder()) {
+              Point const tree_grid = NavGrid::world_to_grid(
                   builder_prod->task_target_x, builder_prod->task_target_z);
               pathfinder->mark_region_dirty(
                   tree_grid.x - 1, tree_grid.x + 1, tree_grid.y - 1, tree_grid.y + 1);

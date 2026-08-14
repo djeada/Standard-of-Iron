@@ -53,7 +53,7 @@ struct NavigationPassage {
 
 class BuildingCollisionRegistry {
 public:
-  BuildingCollisionRegistry() = default;
+  BuildingCollisionRegistry();
   ~BuildingCollisionRegistry() = default;
   BuildingCollisionRegistry(const BuildingCollisionRegistry&) = delete;
   BuildingCollisionRegistry(BuildingCollisionRegistry&&) = delete;
@@ -67,6 +67,15 @@ public:
     float width;
     float depth;
   };
+
+  using RegionDirtyHook = void (*)(float center_x,
+                                   float center_z,
+                                   float width,
+                                   float depth);
+  using GridDirtyHook = void (*)();
+  static void set_region_dirty_hook(RegionDirtyHook hook);
+  static void set_grid_dirty_hook(GridDirtyHook hook);
+  static void set_obstruction_released_hook(GridDirtyHook hook);
 
   static auto get_building_size(const std::string& building_type) -> BuildingSize;
 

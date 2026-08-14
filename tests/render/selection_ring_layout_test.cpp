@@ -6,6 +6,7 @@
 #include "game/core/world.h"
 #include "game/systems/combat_system/formation_contact_processor.h"
 #include "game/systems/formation_combat_geometry.h"
+#include "game/units/troop_config.h"
 #include "render/selection_ring_layout.h"
 
 namespace {
@@ -101,14 +102,14 @@ TEST(SelectionRingLayout, MatchesGameplayPublishedFormationSlotPositions) {
 
 TEST(SelectionRingLayout, MultiSoldierRingsUseCompactVisualSize) {
   float const size = Render::GL::Detail::selection_ring_visual_size(
-      Game::Units::SpawnType::Archer, 20, 1.2F);
+      Game::Units::TroopConfig::instance(), Game::Units::SpawnType::Archer, 20, 1.2F);
 
   EXPECT_FLOAT_EQ(size, 0.3F);
 }
 
 TEST(SelectionRingLayout, SingleSoldierRingKeepsConfiguredSize) {
   float const size = Render::GL::Detail::selection_ring_visual_size(
-      Game::Units::SpawnType::Healer, 1, 1.2F);
+      Game::Units::TroopConfig::instance(), Game::Units::SpawnType::Healer, 1, 1.2F);
 
   EXPECT_FLOAT_EQ(size, 1.2F);
 }

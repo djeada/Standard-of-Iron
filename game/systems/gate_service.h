@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "../core/component.h"
-#include "pathfinding.h"
+#include "nav_grid_types.h"
 
 namespace Engine::Core {
 class Entity;

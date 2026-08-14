@@ -307,16 +307,4 @@ auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
   return static_cast<std::uint32_t>(state.instance_count);
 }
 
-template <typename Instance, typename Params, typename PositionAccessor>
-auto sync_filtered_state(FilteredRendererState<Instance, Params>& state,
-                         PositionAccessor position_accessor,
-                         ScatterMemoryMode memory_mode = ScatterMemoryMode::VisibleOnly)
-    -> std::uint32_t {
-  auto& visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility =
-      visibility_filter_enabled_for_current_thread() && visibility.is_initialized();
-  const auto snapshot = use_visibility ? visibility.snapshot_ptr() : nullptr;
-  return sync_filtered_state(state, position_accessor, snapshot.get(), memory_mode);
-}
-
 } // namespace Render::Ground::Scatter

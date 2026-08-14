@@ -7,7 +7,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/settlement_life_system.h"
@@ -34,7 +34,7 @@ protected:
     map_def.grid.height = 96;
     map_def.grid.tile_size = 1.0F;
     Game::Map::TerrainService::instance().initialize(map_def);
-    Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+    Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
   }
 
   void TearDown() override {

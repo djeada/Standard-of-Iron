@@ -28,6 +28,7 @@
 #include "render/async_template_prewarm.h"
 #include "render/render_view_state.h"
 #include "render/world_render_mode.h"
+#include "render/world_view.h"
 #include "rigged_mesh_cache.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
@@ -82,6 +83,11 @@ public:
   void begin_frame();
   void end_frame();
   void set_viewport(int width, int height);
+
+  void set_world_view(const Render::WorldView& view) { m_world_view = view; }
+  [[nodiscard]] auto world_view() const noexcept -> const Render::WorldView& {
+    return m_world_view;
+  }
 
   void set_camera(Camera* camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
@@ -472,6 +478,7 @@ private:
   float m_accumulated_time = 0.0F;
   std::atomic<bool> m_paused{false};
   RenderViewState m_view;
+  Render::WorldView m_world_view;
   float m_alpha_override = 1.0F;
 
   Mesh* m_unit_cylinder_mesh = nullptr;

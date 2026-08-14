@@ -105,7 +105,6 @@
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system.h"
-#include "game/systems/command_service.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/guard_system.h"
@@ -114,6 +113,7 @@
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/patrol_system.h"
@@ -1531,8 +1531,7 @@ void GameEngine::seed_commander_rally_preview_from_view_center() {
           hit)) {
     return;
   }
-  m_commander_rally_preview_pos =
-      Game::Systems::CommandService::snap_to_walkable_ground(hit);
+  m_commander_rally_preview_pos = Game::Systems::NavGrid::snap_to_walkable_ground(hit);
 }
 
 void GameEngine::seed_barracks_rally_preview_from_selection() {
@@ -1715,7 +1714,7 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
       m_picking_service->screen_to_ground(
           QPointF(sx, sy), *m_camera, m_viewport.width, m_viewport.height, hit)) {
     m_commander_rally_preview_pos =
-        Game::Systems::CommandService::snap_to_walkable_ground(hit);
+        Game::Systems::NavGrid::snap_to_walkable_ground(hit);
   } else if (m_cursor_manager->mode() == CursorMode::PlaceBarracksRally &&
              m_picking_service->screen_to_surface(QPointF(sx, sy),
                                                   *m_camera,
@@ -2019,6 +2018,10 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     }
     m_renderer->set_selected_entities(ids);
   }
+
+  m_renderer->set_world_view(m_session != nullptr
+                                 ? Render::WorldView::of(*m_session)
+                                 : Render::WorldView::of_active_session());
 
   m_renderer->begin_frame();
 

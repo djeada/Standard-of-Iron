@@ -48,6 +48,7 @@
 #include "render/humanoid/skeleton.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "render/world_view.h"
 #include "tests/render/test_asset_paths.h"
 
 namespace {
@@ -191,6 +192,7 @@ TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
@@ -213,6 +215,7 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -366,6 +369,7 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
@@ -387,6 +391,7 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -422,6 +427,7 @@ TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {
 
   Render::GL::HorseSpearmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -450,6 +456,7 @@ TEST(MountedPrepare, MountedSwordAttackUsesMountedSwordStateWhileMoving) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -480,6 +487,7 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -589,6 +597,7 @@ TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -608,6 +617,7 @@ TEST(MountedPrepare, MountedRiderRequestUsesAbsoluteSeatWorld) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -645,6 +655,7 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
@@ -706,6 +717,7 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
 
   InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
@@ -795,6 +807,7 @@ TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
 
   InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
@@ -891,6 +904,7 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
 
   InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
@@ -980,6 +994,7 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -1029,6 +1044,7 @@ TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);

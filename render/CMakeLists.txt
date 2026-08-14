@@ -14,6 +14,21 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/sources_creature.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/sources_ground.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/sources_core.cmake)
 
+# The CPU triangle rasteriser, on its own because it has no dependency on
+# anything -- not GL, not the scene, not the game. Three preview tools and the
+# software backend all draw through it.
+#
+# It is a target rather than a source file the tools each list because
+# humanoid_preview did exactly that: it compiled software_rasterizer.cpp into
+# itself to avoid dragging in GL, and so reviewed poses through a second copy of
+# the rasteriser that no shipped binary contains.
+add_library(soi_software_raster STATIC software/software_rasterizer.cpp)
+target_include_directories(soi_software_raster PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_link_libraries(
+    soi_software_raster
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui
+)
+
 add_library(
     render_gl
     STATIC
@@ -36,7 +51,12 @@ target_link_libraries(
         engine_core
         animation_core
         scene_core
+        soi_software_raster
 )
+
+# The name docs/ARCHITECTURE.md gives this layer. See the alias note in
+# game/CMakeLists.txt.
+add_library(soi_render_gl ALIAS render_gl)
 
 # Optimization flags for render hot paths. Distribution builds must not use
 # -march=native: that would make the artifact depend on the CI runner's CPU.

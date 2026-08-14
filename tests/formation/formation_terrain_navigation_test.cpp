@@ -18,6 +18,7 @@
 #include "systems/building_collision_registry.h"
 #include "systems/command_service.h"
 #include "systems/nation_registry.h"
+#include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
@@ -31,12 +32,13 @@ using Game::Formation::ArmyFormationService;
 using Game::Formation::SlotStatus;
 using Game::Systems::CommandService;
 using Game::Systems::NationID;
+using Game::Systems::NavGrid;
 using Game::Systems::Point;
 
 constexpr int k_grid = 61;
 
 auto to_grid(float world_x, float world_z) -> Point {
-  return CommandService::world_to_grid(world_x, world_z);
+  return NavGrid::world_to_grid(world_x, world_z);
 }
 
 auto add_unit(Engine::Core::World& world,
@@ -144,14 +146,14 @@ protected:
 
   static void activate(const Game::Map::MapDefinition& map_def) {
     Game::Map::TerrainService::instance().initialize(map_def);
-    CommandService::initialize(map_def.grid.width, map_def.grid.height);
-    auto* pathfinder = CommandService::get_pathfinder();
+    NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+    auto* pathfinder = NavGrid::get_pathfinder();
     ASSERT_NE(pathfinder, nullptr);
     pathfinder->update_navigation_grid();
   }
 
   static auto pathfinder() -> Game::Systems::Pathfinding* {
-    return CommandService::get_pathfinder();
+    return NavGrid::get_pathfinder();
   }
 };
 
@@ -169,7 +171,7 @@ TEST_F(FormationTerrainTest, EveryPlacedSlotLandsOnWalkableGround) {
   auto const units = squad(world, NationID::RomanRepublic, -14.0F, 0.0F, 8);
 
   auto const anchor = QVector3D(0.0F, 0.0F, 14.0F);
-  ASSERT_FALSE(CommandService::is_world_position_walkable(anchor))
+  ASSERT_FALSE(NavGrid::is_world_position_walkable(anchor))
       << "the fixture must anchor the deployment on unwalkable ground";
 
   auto const result = deploy(world, units, anchor);
@@ -178,7 +180,7 @@ TEST_F(FormationTerrainTest, EveryPlacedSlotLandsOnWalkableGround) {
   auto const placed = placed_positions(result);
   ASSERT_FALSE(placed.empty());
   for (const auto& position : placed) {
-    EXPECT_TRUE(CommandService::is_world_position_walkable(position))
+    EXPECT_TRUE(NavGrid::is_world_position_walkable(position))
         << position.x() << ", " << position.z();
   }
 }
@@ -403,7 +405,7 @@ TEST_F(FormationTerrainTest, DeploymentAcrossABridgeKeepsSlotsOffTheRiverbank) {
   ASSERT_TRUE(result.valid) << result.rejection_reason;
 
   for (const auto& position : placed_positions(result)) {
-    EXPECT_TRUE(CommandService::is_world_position_walkable(position));
+    EXPECT_TRUE(NavGrid::is_world_position_walkable(position));
   }
   expect_no_shared_positions(placed_positions(result), 0.4F);
 }

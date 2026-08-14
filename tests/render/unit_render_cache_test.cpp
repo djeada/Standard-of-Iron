@@ -13,7 +13,11 @@ protected:
     auto& nations = Game::Systems::NationRegistry::instance();
     nations.clear();
     nations.initialize_defaults();
+
+    world_view = Render::WorldView{};
   }
+
+  Render::WorldView world_view;
 };
 
 TEST_F(UnitRenderCacheTest, UsesCanonicalBuildingRendererKeyWhenRenderableIdBlank) {
@@ -29,7 +33,7 @@ TEST_F(UnitRenderCacheTest, UsesCanonicalBuildingRendererKeyWhenRenderableIdBlan
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->nation_id = Game::Systems::NationID::Carthage;
 
-  const auto& cached = cache.get_or_create(1, &entity, 1);
+  const auto& cached = cache.get_or_create(world_view, 1, &entity, 1);
   EXPECT_EQ(cached.renderer_key, "troops/carthage/barracks");
 }
 
@@ -47,7 +51,7 @@ TEST_F(UnitRenderCacheTest, CanonicalizesPublicBuildingRendererKeyUsingBuildingN
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  const auto& cached = cache.get_or_create(2, &entity, 1);
+  const auto& cached = cache.get_or_create(world_view, 2, &entity, 1);
   EXPECT_EQ(cached.renderer_key, "troops/roman/barracks");
 }
 
@@ -63,7 +67,7 @@ TEST_F(UnitRenderCacheTest, UsesTroopProfileRendererForBlankInfantryRendererId) 
   unit->spawn_type = Game::Units::SpawnType::Knight;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  const auto& cached = cache.get_or_create(3, &entity, 1);
+  const auto& cached = cache.get_or_create(world_view, 3, &entity, 1);
   EXPECT_EQ(cached.renderer_key, "troops/roman/swordsman");
 }
 
@@ -80,7 +84,7 @@ TEST_F(UnitRenderCacheTest, ReplacesLegacySpawnTypeRendererIdWithProfileRenderer
   unit->spawn_type = Game::Units::SpawnType::Spearman;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  const auto& cached = cache.get_or_create(4, &entity, 1);
+  const auto& cached = cache.get_or_create(world_view, 4, &entity, 1);
   EXPECT_EQ(cached.renderer_key, "troops/roman/spearman");
 }
 
@@ -97,7 +101,7 @@ TEST_F(UnitRenderCacheTest, RefreshesRendererKeyAndInvalidatesHandleWhenInputsCh
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->nation_id = Game::Systems::NationID::RomanRepublic;
 
-  auto& first = cache.get_or_create(5, &entity, 1);
+  auto& first = cache.get_or_create(world_view, 5, &entity, 1);
   EXPECT_EQ(first.renderer_key, "troops/roman/barracks");
 
   first.renderer_handle = 17;
@@ -105,7 +109,7 @@ TEST_F(UnitRenderCacheTest, RefreshesRendererKeyAndInvalidatesHandleWhenInputsCh
 
   unit->nation_id = Game::Systems::NationID::Carthage;
 
-  const auto& second = cache.get_or_create(5, &entity, 2);
+  const auto& second = cache.get_or_create(world_view, 5, &entity, 2);
   EXPECT_EQ(second.renderer_key, "troops/carthage/barracks");
   EXPECT_FALSE(second.has_renderer_handle);
 }

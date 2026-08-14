@@ -5,6 +5,7 @@
 
 #include "game/map/terrain_service.h"
 #include "render/ground/map_boundary_fog_renderer.h"
+#include "render/world_view.h"
 
 using Render::GL::MapBoundaryFogRenderer;
 
@@ -37,12 +38,14 @@ void restore_flat_terrain(
 
 TEST(MapBoundaryFogRendererTest, DefaultConstructedHasNoInstances) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   EXPECT_EQ(renderer.instance_count(), 0U);
   EXPECT_EQ(renderer.mountain_triangle_count(), 0U);
 }
 
 TEST(MapBoundaryFogRendererTest, ConfigureWithZeroWidthProducesNoInstances) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(0, 50, 1.0F);
   EXPECT_EQ(renderer.instance_count(), 0U);
   EXPECT_EQ(renderer.mountain_triangle_count(), 0U);
@@ -50,6 +53,7 @@ TEST(MapBoundaryFogRendererTest, ConfigureWithZeroWidthProducesNoInstances) {
 
 TEST(MapBoundaryFogRendererTest, ConfigureWithZeroHeightProducesNoInstances) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(50, 0, 1.0F);
   EXPECT_EQ(renderer.instance_count(), 0U);
   EXPECT_EQ(renderer.mountain_triangle_count(), 0U);
@@ -57,6 +61,7 @@ TEST(MapBoundaryFogRendererTest, ConfigureWithZeroHeightProducesNoInstances) {
 
 TEST(MapBoundaryFogRendererTest, ConfigureWithNegativeDimsProducesNoInstances) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(-1, 50, 1.0F);
   EXPECT_EQ(renderer.instance_count(), 0U);
   EXPECT_EQ(renderer.mountain_triangle_count(), 0U);
@@ -67,6 +72,7 @@ TEST(MapBoundaryFogRendererTest, ConfigureWithNegativeDimsProducesNoInstances) {
 
 TEST(MapBoundaryFogRendererTest, ConfigureWithValidDimsProducesInstances) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(20, 20, 1.0F);
   EXPECT_GT(renderer.instance_count(), 0U);
   EXPECT_GT(renderer.mountain_triangle_count(), 0U);
@@ -76,13 +82,16 @@ TEST(MapBoundaryFogRendererTest, ConfigureWithValidDimsProducesInstances) {
 
 TEST(MapBoundaryFogRendererTest, FogIsOnlyOutsideMapBoundary) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(20, 20, 1.0F);
   EXPECT_EQ(renderer.instance_count(), expected_fog_count(20, 20));
 }
 
 TEST(MapBoundaryFogRendererTest, LargerMapKeepsConstantInstanceCount) {
   MapBoundaryFogRenderer small_map;
+  small_map.set_world_view(Render::WorldView::of_active_session());
   MapBoundaryFogRenderer large_map;
+  large_map.set_world_view(Render::WorldView::of_active_session());
   small_map.configure(10, 10, 1.0F);
   large_map.configure(200, 200, 1.0F);
   EXPECT_EQ(large_map.instance_count(), small_map.instance_count());
@@ -90,7 +99,9 @@ TEST(MapBoundaryFogRendererTest, LargerMapKeepsConstantInstanceCount) {
 
 TEST(MapBoundaryFogRendererTest, WideMapKeepsConstantInstanceCount) {
   MapBoundaryFogRenderer wide;
+  wide.set_world_view(Render::WorldView::of_active_session());
   MapBoundaryFogRenderer square;
+  square.set_world_view(Render::WorldView::of_active_session());
   square.configure(20, 20, 1.0F);
   wide.configure(40, 10, 1.0F);
 
@@ -99,7 +110,9 @@ TEST(MapBoundaryFogRendererTest, WideMapKeepsConstantInstanceCount) {
 
 TEST(MapBoundaryFogRendererTest, TileSizeDoesNotAffectInstanceCount) {
   MapBoundaryFogRenderer r1;
+  r1.set_world_view(Render::WorldView::of_active_session());
   MapBoundaryFogRenderer r2;
+  r2.set_world_view(Render::WorldView::of_active_session());
   r1.configure(30, 30, 1.0F);
   r2.configure(30, 30, 2.5F);
   EXPECT_EQ(r1.instance_count(), r2.instance_count());
@@ -107,6 +120,7 @@ TEST(MapBoundaryFogRendererTest, TileSizeDoesNotAffectInstanceCount) {
 
 TEST(MapBoundaryFogRendererTest, ReconfigureWithSmallerMapReducesInstances) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(50, 50, 1.0F);
   const std::size_t large_count = renderer.instance_count();
 
@@ -118,6 +132,7 @@ TEST(MapBoundaryFogRendererTest, ReconfigureWithSmallerMapReducesInstances) {
 
 TEST(MapBoundaryFogRendererTest, ReconfigureToZeroClearsInstances) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(50, 50, 1.0F);
   ASSERT_GT(renderer.instance_count(), 0U);
   ASSERT_GT(renderer.mountain_triangle_count(), 0U);
@@ -129,6 +144,7 @@ TEST(MapBoundaryFogRendererTest, ReconfigureToZeroClearsInstances) {
 
 TEST(MapBoundaryFogRendererTest, LargeMapInstanceCountIsWithinBudget) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(200, 200, 1.0F);
   constexpr std::size_t k_max_budget = 64U;
   EXPECT_LE(renderer.instance_count(), k_max_budget);
@@ -139,12 +155,14 @@ TEST(MapBoundaryFogRendererTest, MountainGeometryTracksBiomeSeed) {
   restore_flat_terrain(20, 20, 1.0F, 1337U, 0.07F);
 
   MapBoundaryFogRenderer first;
+  first.set_world_view(Render::WorldView::of_active_session());
   first.configure(20, 20, 1.0F);
   const auto first_signature = first.mountain_geometry_signature();
 
   restore_flat_terrain(20, 20, 1.0F, 7331U, 0.07F);
 
   MapBoundaryFogRenderer second;
+  second.set_world_view(Render::WorldView::of_active_session());
   second.configure(20, 20, 1.0F);
   EXPECT_NE(first_signature, second.mountain_geometry_signature());
 }
@@ -154,21 +172,25 @@ TEST(MapBoundaryFogRendererTest, MountainGeometryTracksBiomeFrequency) {
   restore_flat_terrain(20, 20, 1.0F, 1337U, 0.03F);
 
   MapBoundaryFogRenderer sparse;
+  sparse.set_world_view(Render::WorldView::of_active_session());
   sparse.configure(20, 20, 1.0F);
   const auto sparse_signature = sparse.mountain_geometry_signature();
 
   restore_flat_terrain(20, 20, 1.0F, 1337U, 0.14F);
 
   MapBoundaryFogRenderer dense;
+  dense.set_world_view(Render::WorldView::of_active_session());
   dense.configure(20, 20, 1.0F);
   EXPECT_NE(sparse_signature, dense.mountain_geometry_signature());
 }
 
 TEST(MapBoundaryFogRendererTest, MountainsScaleWithTileSize) {
   MapBoundaryFogRenderer small_tiles;
+  small_tiles.set_world_view(Render::WorldView::of_active_session());
   small_tiles.configure(40, 40, 1.0F);
 
   MapBoundaryFogRenderer large_tiles;
+  large_tiles.set_world_view(Render::WorldView::of_active_session());
   large_tiles.configure(40, 40, 2.0F);
 
   EXPECT_GT(large_tiles.mountain_height_span(),
@@ -177,17 +199,20 @@ TEST(MapBoundaryFogRendererTest, MountainsScaleWithTileSize) {
 
 TEST(MapBoundaryFogRendererTest, Tiny1x1MapDoesNotCrash) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(1, 1, 1.0F);
 }
 
 TEST(MapBoundaryFogRendererTest, SatisfiesIRenderPassInterface) {
   MapBoundaryFogRenderer concrete;
+  concrete.set_world_view(Render::WorldView::of_active_session());
   Render::GL::IRenderPass* pass = static_cast<Render::GL::IRenderPass*>(&concrete);
   EXPECT_NE(pass, nullptr);
 }
 
 TEST(MapBoundaryFogRendererTest, SubmitWithNoInstancesIsNoOp) {
   MapBoundaryFogRenderer renderer;
+  renderer.set_world_view(Render::WorldView::of_active_session());
 
   EXPECT_EQ(renderer.instance_count(), 0U);
 }
