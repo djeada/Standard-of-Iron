@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
 #include <utility>
@@ -163,6 +164,13 @@ public:
 private:
   std::vector<PreparedCreatureRenderRow> rows_{};
   std::vector<Render::Creature::CreatureRenderRequest> requests_{};
+  const void* cached_humanoid_variant_{nullptr};
+  CreatureAssetId cached_humanoid_asset_{k_invalid_creature_asset};
+  Render::Creature::ArchetypeId cached_humanoid_archetype_{
+      Render::Creature::k_invalid_archetype};
+  Render::Creature::CreatureRenderAssetHandleId cached_humanoid_handle_{
+      Render::Creature::k_invalid_creature_render_asset_handle};
+  std::shared_ptr<const Render::RoleColorPalette> cached_humanoid_role_colors_{};
 };
 
 struct PostBodyDrawRequest {

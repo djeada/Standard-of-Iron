@@ -161,13 +161,6 @@ auto make_snapshot_key(const CreatureRenderAssetHandle& handle,
   return key;
 }
 
-void copy_role_colors(Render::GL::RiggedCreatureCmd& cmd,
-                      std::span<const QVector3D> role_colors) noexcept {
-  const auto count = std::min<std::size_t>(role_colors.size(), cmd.role_colors.size());
-  cmd.role_color_count = static_cast<std::uint32_t>(count);
-  std::copy_n(role_colors.data(), count, cmd.role_colors.data());
-}
-
 auto material_id_for_species(CreatureKind species) noexcept -> std::int32_t {
   switch (species) {
   case CreatureKind::Horse:
@@ -188,7 +181,7 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
                      const QMatrix4x4& world_from_unit,
                      const QMatrix4x4* bone_palette,
                      std::uint32_t bone_count,
-                     std::span<const QVector3D> role_colors,
+                     std::shared_ptr<const Render::RoleColorPalette> role_colors,
                      const QVector3D& base_color,
                      const QVector4D& wear_params,
                      std::int32_t material_id) -> Render::GL::RiggedCreatureCmd {
@@ -197,7 +190,8 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
   cmd.world = world_from_unit;
   cmd.bone_count = bone_count;
   cmd.bone_palette = bone_palette;
-  copy_role_colors(cmd, role_colors);
+  cmd.role_color_count = role_colors != nullptr ? role_colors->count : 0U;
+  cmd.role_colors = std::move(role_colors);
   cmd.color = base_color;
   cmd.wear_params = wear_params;
   cmd.material_id = material_id;
@@ -700,7 +694,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             std::uint16_t clip_id,
                             std::uint8_t clip_variant,
                             std::uint32_t frame_in_clip,
-                            std::span<const QVector3D> role_colors,
+                            std::shared_ptr<const Render::RoleColorPalette> role_colors,
                             std::uint16_t variant_bucket,
                             const QVector3D& base_color,
                             const QVector4D& wear_params,
@@ -789,7 +783,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              draw_world,
                              frame_palette,
                              skin_atlas->bone_count,
-                             role_colors,
+                             std::move(role_colors),
                              base_color,
                              wear_params,
                              material_id_for_species(handle.archetype->species));
@@ -858,7 +852,11 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                            cmd.bone_count);
     }
   }
-  if (handle.archetype->species == CreatureKind::Humanoid &&
+  auto& animation_diagnostics =
+      Render::Profiling::CombatAnimationDiagnostics::instance();
+  const bool record_body_pose =
+      animation_diagnostics.enabled() || animation_diagnostics.logging_enabled();
+  if (record_body_pose && handle.archetype->species == CreatureKind::Humanoid &&
       cmd.bone_palette != nullptr &&
       cmd.bone_count >
           static_cast<std::uint32_t>(Render::Humanoid::HumanoidBone::HandR)) {
@@ -896,11 +894,9 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
             .length(),
         (posed_hand_r.column(3).toVector3D() - posed_shoulder_r.column(3).toVector3D())
             .length());
-    Render::Profiling::CombatAnimationDiagnostics::instance()
-        .record_submitted_body_pose(
-            entity_id, instance_index, body_up_y, max_arm_reach);
+    animation_diagnostics.record_submitted_body_pose(
+        entity_id, instance_index, body_up_y, max_arm_reach);
   }
-  out.rigged(cmd);
   for (const auto& attachment_mesh : entry->attachment_meshes) {
     if (attachment_mesh == nullptr || attachment_mesh->index_count() == 0U) {
       continue;
@@ -908,37 +904,43 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     auto attachment_cmd = cmd;
     attachment_cmd.mesh = attachment_mesh.get();
     attachment_cmd.shadow_mesh = nullptr;
-    out.rigged(attachment_cmd);
+    out.rigged(std::move(attachment_cmd));
   }
+  out.rigged(std::move(cmd));
 }
 
-auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
-                              CreatureLOD lod,
-                              Render::Creature::ArchetypeId archetype,
-                              Render::Creature::VariantId variant,
-                              Render::Creature::AnimationStateId state,
-                              std::uint16_t clip_id,
-                              std::uint8_t clip_variant,
-                              std::span<const QVector3D> role_colors,
-                              std::uint16_t variant_bucket,
-                              const QVector3D& base_color,
-                              const QVector4D& wear_params,
-                              const QMatrix4x4& world_from_unit,
-                              const Render::Creature::Bpat::BpatBlob& blob,
-                              std::uint32_t global_frame,
-                              std::uint32_t frame_in_clip,
-                              std::uint32_t entity_id,
-                              std::uint16_t instance_index,
-                              Render::GL::ISubmitter& out,
-                              Render::GL::Renderer* renderer,
-                              bool allow_bake_fallback = true) -> bool {
+auto submit_snapshot_creature(
+    const CreatureRenderAssetHandle& handle,
+    CreatureLOD lod,
+    Render::Creature::ArchetypeId archetype,
+    Render::Creature::VariantId variant,
+    Render::Creature::AnimationStateId state,
+    std::uint16_t clip_id,
+    std::uint8_t clip_variant,
+    std::shared_ptr<const Render::RoleColorPalette> role_colors,
+    std::uint16_t variant_bucket,
+    const QVector3D& base_color,
+    const QVector4D& wear_params,
+    const QMatrix4x4& world_from_unit,
+    const Render::Creature::Bpat::BpatBlob& blob,
+    std::uint32_t global_frame,
+    std::uint32_t frame_in_clip,
+    std::uint32_t entity_id,
+    std::uint16_t instance_index,
+    Render::GL::ISubmitter& out,
+    Render::GL::Renderer* renderer,
+    bool allow_bake_fallback = true) -> bool {
   const CreatureAsset* asset = handle.asset;
   if (lod == CreatureLOD::Billboard || asset == nullptr || asset->spec == nullptr ||
       handle.bind_palette.empty()) {
     return false;
   }
 
-  if (handle.archetype->species == CreatureKind::Humanoid) {
+  auto& animation_diagnostics =
+      Render::Profiling::CombatAnimationDiagnostics::instance();
+  const bool record_body_pose =
+      animation_diagnostics.enabled() || animation_diagnostics.logging_enabled();
+  if (record_body_pose && handle.archetype->species == CreatureKind::Humanoid) {
     auto const palette = blob.frame_palette_view(global_frame);
     auto const pelvis_index =
         static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Pelvis);
@@ -968,9 +970,8 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
                    (palette[hand_r_index].column(3).toVector3D() -
                     palette[shoulder_r_index].column(3).toVector3D())
                        .length());
-      Render::Profiling::CombatAnimationDiagnostics::instance()
-          .record_submitted_body_pose(
-              entity_id, instance_index, body_up_y, max_arm_reach);
+      animation_diagnostics.record_submitted_body_pose(
+          entity_id, instance_index, body_up_y, max_arm_reach);
     }
   }
 
@@ -1004,7 +1005,7 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
           cmd.palette_ubo = 0U;
           cmd.palette_offset = 0U;
 
-          out.rigged(cmd);
+          out.rigged(std::move(cmd));
           return true;
         }
         report_submit_cache_miss("snapshot_load",
@@ -1079,14 +1080,14 @@ auto submit_snapshot_creature(const CreatureRenderAssetHandle& handle,
                              world_from_unit,
                              Render::GL::SnapshotMeshCache::identity_palette(),
                              1U,
-                             role_colors,
+                             std::move(role_colors),
                              base_color,
                              wear_params,
                              material_id_for_species(handle.archetype->species));
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
 
-  out.rigged(cmd);
+  out.rigged(std::move(cmd));
   return true;
 }
 
@@ -1263,7 +1264,7 @@ auto CreaturePipeline::submit_requests(
                                    snapshot_playback.state,
                                    snapshot_playback.clip_id,
                                    snapshot_playback.clip_variant,
-                                   req.role_colors_view(),
+                                   req.role_colors,
                                    static_cast<std::uint16_t>(req.variant),
                                    req.base_color,
                                    req.wear_params,
@@ -1303,7 +1304,7 @@ auto CreaturePipeline::submit_requests(
                            primary.clip_id,
                            primary.clip_variant,
                            primary.frame_in_clip,
-                           req.role_colors_view(),
+                           req.role_colors,
                            static_cast<std::uint16_t>(req.variant),
                            req.base_color,
                            req.wear_params,

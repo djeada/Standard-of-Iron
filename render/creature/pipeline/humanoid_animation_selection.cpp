@@ -347,8 +347,6 @@ auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
                                     const Render::GL::HumanoidVariant& variant,
                                     const Render::GL::AnimationInputs& anim,
                                     bool has_locomotion) -> UnitVisualSpec {
-  spec.owned_legacy_slots =
-      spec.owned_legacy_slots | Render::Creature::Pipeline::LegacySlotMask::FacialHair;
   if (!spec.skip_default_facial_hair_archetype) {
     spec.archetype_id =
         Render::Humanoid::resolve_facial_hair_archetype(spec.archetype_id, variant);

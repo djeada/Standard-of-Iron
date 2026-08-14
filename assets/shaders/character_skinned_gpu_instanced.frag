@@ -17,6 +17,7 @@ flat in int v_role_color_count;
 flat in vec4 v_wear_params;
 
 uniform samplerBuffer u_role_color_tbo;
+uniform int u_role_color_base;
 uniform vec3 u_camera_position;
 
 out vec4 frag_color;
@@ -273,7 +274,9 @@ vec3 shade_readable_character(
 void main() {
   vec3 base = v_color;
   if (v_color_role > 0 && v_color_role <= v_role_color_count) {
-    base = texelFetch(u_role_color_tbo, v_instance_id * 32 + v_color_role - 1).rgb;
+    base = texelFetch(u_role_color_tbo,
+                      u_role_color_base + v_instance_id * 32 + v_color_role - 1)
+               .rgb;
   }
   float zoom = readable_zoom(v_pos_ws);
 

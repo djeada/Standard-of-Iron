@@ -129,7 +129,6 @@ void HorseArcherRendererBase::build_visual_spec() {
   m_spec.kind = CreatureKind::Humanoid;
   m_spec.debug_name = m_config.rider_debug_name;
   m_spec.scaling = k_profile.as_pipeline_scaling();
-  m_spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
   m_spec.archetype_id = resolve_humanoid_equipment_archetype(
       m_config.rider_debug_name, base_rider_id, handles);
 
