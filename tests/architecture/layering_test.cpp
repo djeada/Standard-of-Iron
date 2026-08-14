@@ -155,6 +155,9 @@ const std::set<std::string>& render_files_using_game_systems() {
       "render/template_prewarm_runner.cpp",
       "render/unit_render_cache.cpp",
       "render/unit_render_cache.h",
+
+      "render/world_view.cpp",
+      "render/world_view.h",
   };
   return entries;
 }

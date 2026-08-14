@@ -87,7 +87,7 @@ void render_attack_target_markers(Renderer* renderer,
   BillboardBasis const basis =
       camera != nullptr ? billboard_basis(*camera) : BillboardBasis{};
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = renderer->world_view().terrain_or_empty();
   for (const auto& marker : markers) {
     GroundMarkerCmd ring;
     ring.center =

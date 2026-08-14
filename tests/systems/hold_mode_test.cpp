@@ -11,6 +11,7 @@
 #include "systems/combat_system/damage_processor.h"
 #include "systems/command_service.h"
 #include "systems/movement_system.h"
+#include "systems/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "units/spawn_type.h"
 
@@ -24,7 +25,7 @@ protected:
   void SetUp() override {
     world = std::make_unique<World>();
     OwnerRegistry::instance().clear();
-    CommandService::initialize(64, 64);
+    NavGrid::initialize(64, 64);
   }
 
   void TearDown() override { world.reset(); }

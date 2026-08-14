@@ -48,7 +48,7 @@ void IronOreRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
     const Game::Map::TerrainHeightMap&) {
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = world().terrain_or_empty();
 
   const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
 

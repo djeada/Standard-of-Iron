@@ -18,6 +18,7 @@
 #include "../../units/troop_config.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
+#include "../owner_queries.h"
 #include "../player_resource_registry.h"
 #include "../production_service.h"
 #include "ai_utils.h"
@@ -120,8 +121,7 @@ void AICommandApplier::apply(Engine::Core::World& world,
         break;
       }
 
-      int const current_troops =
-          Engine::Core::World::count_troops_for_player(ai_owner_id);
+      int const current_troops = Game::Systems::troop_count_for(ai_owner_id);
       int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
       int const production_cost =
           Game::Units::TroopConfig::instance().get_production_cost(

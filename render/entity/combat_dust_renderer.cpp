@@ -146,8 +146,9 @@ void render_blood_stains(Renderer* renderer,
 
   float const animation_time = renderer->get_animation_time();
   auto& visibility = Render::GL::CameraVisibility::instance();
-  auto& fog_of_war = Game::Map::VisibilityService::instance();
-  auto fog_snapshot = fog_of_war.is_initialized() ? fog_of_war.snapshot_ptr() : nullptr;
+  auto const& world_view = renderer->world_view();
+  auto fog_snapshot =
+      world_view.has_visibility() ? world_view.visibility()->snapshot_ptr() : nullptr;
   auto is_fog_visible = [&fog_snapshot](float world_x, float world_z) -> bool {
     return fog_snapshot == nullptr ||
            Game::Map::should_render_combat_effect(*fog_snapshot, world_x, world_z);
@@ -205,8 +206,9 @@ void render_combat_dust(Renderer* renderer,
 
   float const animation_time = renderer->get_animation_time();
   auto& visibility = Render::GL::CameraVisibility::instance();
-  auto& fog_of_war = Game::Map::VisibilityService::instance();
-  auto fog_snapshot = fog_of_war.is_initialized() ? fog_of_war.snapshot_ptr() : nullptr;
+  auto const& world_view = renderer->world_view();
+  auto fog_snapshot =
+      world_view.has_visibility() ? world_view.visibility()->snapshot_ptr() : nullptr;
   auto is_fog_visible = [&fog_snapshot](float world_x, float world_z) -> bool {
     return fog_snapshot == nullptr ||
            Game::Map::should_render_combat_effect(*fog_snapshot, world_x, world_z);

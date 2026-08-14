@@ -1,0 +1,471 @@
+{
+  "_comment": [
+    "The module map for game/, and the dependency direction each module is allowed",
+    "to point in. scripts/check-modules.py enforces it; docs/ARCHITECTURE.md explains it.",
+    "",
+    "Seven of these modules are already separate CMake targets, so the linker enforces",
+    "them and their violation counts are zero and must stay there. The rest are still",
+    "inside libgame_sim.a, where CMake cannot tell them apart -- for those, 'baseline'",
+    "records how many edges currently point the wrong way. The count may go down and",
+    "may not go up. A module whose incoming baseline reaches zero can be lifted into",
+    "its own target the way soi_ai and soi_persistence were.",
+    "",
+    "'modules' is ordered bottom-up: a module may only use modules listed before it,",
+    "and only those named in its 'may_use'."
+  ],
+  "modules": {
+    "domain_types": {
+      "targets": ["engine_core"],
+      "_comment": [
+        "The vocabulary: enumerations and plain value types with no dependencies of",
+        "their own -- what a troop is, what a nation is, what a resource is.",
+        "",
+        "They are scattered across game/systems, game/units and game/wildlife by",
+        "directory, but they belong to no layer in particular because every layer",
+        "names them. component.h stores a SpawnType and a NationID; that is not the",
+        "ECS reaching into gameplay, it is a struct holding a value. Classifying them",
+        "here separates that from the real edges -- world.cpp calling OwnerRegistry is",
+        "a cycle, component.h naming an enum is not."
+      ],
+      "files": [
+        "game/systems/nation_id",
+        "game/systems/projectile_kind",
+        "game/systems/resource_types",
+        "game/systems/builder_product_types",
+        "game/units/spawn_type",
+        "game/units/troop_type",
+        "game/wildlife/wildlife_species",
+        "game/formation/unit_layout_state",
+        "game/systems/nav_grid_types"
+      ],
+      "may_use": []
+    },
+    "components": {
+      "targets": ["engine_core"],
+      "paths": ["game/core/", "game/accessibility/"],
+      "files": [
+        "game/game_config",
+        "game/systems/unit_activity",
+        "game/util/asset_text",
+        "game/util/json_vec_utils"
+      ],
+      "may_use": ["domain_types"]
+    },
+    "unit_catalog": {
+      "targets": ["game_sim"],
+      "_comment": [
+        "What a unit type *is*: the troop, spawn and building enumerations and the",
+        "catalogues loaded from assets/. Pure data. The registries read it, so it has",
+        "to sit below them; the unit classes that behave are in 'units' above.",
+        "",
+        "troop_catalog_loader is deliberately *not* here. It parses the troop file,",
+        "which carries a formation block per troop, and writes both the catalogue and",
+        "the formation role registry -- a loader sits above the things it fills, and",
+        "keeping it here was the only thing stopping unit_catalog from being clean."
+      ],
+      "files": [
+        "game/units/building_type",
+        "game/units/troop_config",
+        "game/units/troop_catalog",
+        "game/units/commander_catalog",
+        "game/visuals/building_asset_key",
+        "game/visuals/visual_catalog"
+      ],
+      "may_use": ["domain_types", "components"]
+    },
+    "registries": {
+      "targets": ["game_sim"],
+      "_comment": [
+        "Cross-cutting lookups and the value types that go with them: who owns a",
+        "unit, which nation it belongs to, what occupies a tile, what a troop",
+        "profile says. Everything above reads these, so they sit as low as they can",
+        "and are allowed to know nothing but components."
+      ],
+      "files": [
+        "game/systems/battlefield_definitions",
+        "game/systems/building_collision_registry",
+        "game/systems/building_line_of_sight",
+        "game/systems/combat_rules",
+        "game/systems/gate_service",
+        "game/systems/global_stats_registry",
+        "game/systems/healing_colors",
+        "game/systems/mission_wave_query",
+        "game/systems/nation_loader",
+        "game/systems/nation_registry",
+        "game/systems/owner_queries",
+        "game/systems/owner_registry",
+        "game/systems/player_resource_registry",
+        "game/systems/projectile",
+        "game/systems/resource_stockpile",
+        "game/systems/spent_projectile",
+        "game/systems/troop_count_registry",
+        "game/systems/troop_profile_service",
+        "game/systems/undead_zone_query",
+        "game/systems/wall_network_service"
+      ],
+      "may_use": ["domain_types", "components", "unit_catalog"]
+    },
+    "world": {
+      "targets": ["game_sim"],
+      "paths": ["game/map/"],
+      "excluded_paths": ["game/map/minimap/"],
+      "excluded_files": [
+        "game/map/mission_loader.cpp",
+        "game/map/mission_loader.h",
+        "game/map/mission_victory_rules.cpp",
+        "game/map/mission_victory_rules.h",
+        "game/map/wave_archetype_catalog.cpp",
+        "game/map/wave_archetype_catalog.h",
+        "game/map/map_catalog.cpp",
+        "game/map/map_catalog.h",
+        "game/map/campaign_loader.cpp",
+        "game/map/campaign_loader.h"
+      ],
+      "may_use": ["domain_types", "components", "unit_catalog", "registries"]
+    },
+    "units": {
+      "targets": ["game_sim"],
+      "paths": ["game/units/", "game/visuals/"],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world"
+      ]
+    },
+    "navigation": {
+      "targets": ["game_sim"],
+      "files": [
+        "game/systems/pathfinding",
+        "game/systems/spatial_grid",
+        "game/systems/local_avoidance_system",
+        "game/systems/movement_system",
+        "game/systems/movement_orders",
+        "game/systems/terrain_alignment_system",
+        "game/systems/nav_grid"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units"
+      ]
+    },
+    "formations": {
+      "targets": ["game_sim"],
+      "paths": ["game/formation/"],
+      "files": [
+        "game/systems/cohort_system",
+        "game/systems/defensive_unit_layout_service",
+        "game/systems/formation_combat_geometry",
+        "game/units/troop_catalog_loader"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation"
+      ]
+    },
+    "economy": {
+      "targets": ["game_sim"],
+      "files": [
+        "game/systems/production_service",
+        "game/systems/production_system",
+        "game/systems/construction_cost_catalog",
+        "game/systems/resource_delivery_system",
+        "game/systems/civilian_delivery_system",
+        "game/systems/gather_loop_system",
+        "game/systems/marketplace_system",
+        "game/systems/capture_system"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations"
+      ]
+    },
+    "combat": {
+      "targets": ["game_sim"],
+      "paths": [
+        "game/systems/combat_system/",
+        "game/systems/combat_actions/",
+        "game/systems/rpg_combat_system/"
+      ],
+      "files": [
+        "game/systems/combat_system",
+        "game/systems/combat_status_effect_system",
+        "game/systems/attack_range",
+        "game/systems/attack_targeting",
+        "game/systems/arrow_system",
+        "game/systems/arrow_projectile",
+        "game/systems/arrow_visual_profile",
+        "game/systems/stone_projectile",
+        "game/systems/projectile_system",
+        "game/systems/engagement_slot_system",
+        "game/systems/target_commitment_system",
+        "game/systems/healing_beam",
+        "game/systems/healing_beam_system",
+        "game/systems/healing_rules",
+        "game/systems/healing_system",
+        "game/systems/order_service",
+        "game/systems/guard_system",
+        "game/systems/patrol_system",
+        "game/systems/commander_system",
+        "game/systems/stamina_system"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy"
+      ]
+    },
+    "wildlife": {
+      "targets": ["game_sim"],
+      "paths": ["game/wildlife/"],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat"
+      ]
+    },
+    "simulation": {
+      "targets": ["game_sim"],
+      "paths": ["game/command/", "game/systems/"],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife"
+      ],
+      "files": [
+        "game/systems/nation_collapse_service",
+        "game/util/selection_utils"
+      ]
+    },
+    "session": {
+      "targets": ["game_sim"],
+      "paths": ["game/session/"],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation"
+      ]
+    },
+    "campaign": {
+      "targets": ["soi_campaign"],
+      "files": ["game/map/campaign_loader"],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation",
+        "session"
+      ]
+    },
+    "missions": {
+      "targets": ["soi_missions"],
+      "files": [
+        "game/map/mission_loader",
+        "game/map/mission_victory_rules",
+        "game/map/wave_archetype_catalog",
+        "game/map/map_catalog"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation",
+        "session",
+        "campaign"
+      ]
+    },
+    "persistence": {
+      "targets": ["soi_persistence"],
+      "paths": ["game/save/"],
+      "files": [
+        "game/systems/save_format",
+        "game/systems/save_load_service",
+        "game/systems/save_storage"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation",
+        "session",
+        "campaign"
+      ]
+    },
+    "ai": {
+      "targets": ["soi_ai"],
+      "paths": ["game/systems/ai_system/"],
+      "files": ["game/systems/ai_system"],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation",
+        "session"
+      ]
+    },
+    "runtime": {
+      "targets": ["soi_runtime"],
+      "files": [
+        "game/systems/runtime_system_registry",
+        "game/systems/battlefield_capture"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation",
+        "session",
+        "ai"
+      ]
+    },
+    "render_bridge": {
+      "targets": ["game_view"],
+      "paths": ["game/view/", "game/map/minimap/"],
+      "files": [
+        "game/systems/camera_controller",
+        "game/systems/camera_follow_system",
+        "game/systems/camera_service",
+        "game/systems/picking_service",
+        "game/systems/game_state_serializer"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "units",
+        "navigation",
+        "formations",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation",
+        "session"
+      ]
+    },
+    "audio": {
+      "targets": ["audio_system", "soi_audio_mastering"],
+      "paths": ["game/audio/"],
+      "may_use": ["domain_types", "components", "unit_catalog", "registries"]
+    }
+  },
+  "_baseline_comment": [
+    "Edges that point the wrong way today, counted per source->destination module",
+    "pair. Each number is a debt, not a permission. The check fails if a count goes",
+    "up, if a new pair appears, or if a count goes down without this file being",
+    "updated to match -- so paying a debt down is recorded rather than reabsorbed.",
+    "",
+    "Every module already backed by its own CMake target is absent from this list,",
+    "and must stay absent: for those the linker is the check and this file is only a",
+    "second opinion."
+  ],
+  "baseline": {
+    "combat -> audio": 1,
+    "combat -> simulation": 8,
+    "economy -> session": 1,
+    "economy -> simulation": 2,
+    "formations -> simulation": 1,
+    "navigation -> combat": 3,
+    "navigation -> formations": 3,
+    "navigation -> simulation": 4,
+    "registries -> formations": 4,
+    "registries -> navigation": 4,
+    "registries -> session": 2,
+    "registries -> world": 1,
+    "simulation -> session": 4,
+    "units -> combat": 1,
+    "units -> economy": 1,
+    "units -> simulation": 1,
+    "wildlife -> audio": 1,
+    "wildlife -> simulation": 1,
+    "world -> units": 2,
+    "world -> wildlife": 2
+  }
+}

@@ -23,6 +23,9 @@
 #include <memory>
 #include <vector>
 
+#include "../core/component.h"
+#include "../core/entity.h"
+#include "../core/world.h"
 #include "../formation/army_formation_registry.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
@@ -30,9 +33,6 @@
 #include "../systems/owner_registry.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
-#include "component.h"
-#include "entity.h"
-#include "world.h"
 
 namespace Engine::Core {
 

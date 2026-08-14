@@ -16,6 +16,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/persistent_render_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/draw_queue.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_archetype.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/world_view.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/world_chunk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/primitive_batch.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/template_cache.cpp
@@ -49,7 +50,6 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/bone_palette_arena.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/camera_visibility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/unit_render_cache.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/software/software_rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/software_backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/combat_animation_diagnostics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_continuity_analyzer.cpp

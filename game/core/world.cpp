@@ -11,16 +11,23 @@
 #include <vector>
 
 #include "../../animation/action_manifest.h"
-#include "../formation/unit_layout.h"
-#include "../systems/building_collision_registry.h"
-#include "../systems/owner_registry.h"
-#include "../systems/troop_count_registry.h"
+#include "../formation/unit_layout_state.h"
 #include "../systems/unit_activity.h"
 #include "component.h"
 #include "core/entity.h"
 #include "core/system.h"
 
 namespace Engine::Core {
+
+namespace {
+
+World::EntityDestroyedHook g_entity_destroyed_hook = nullptr;
+
+} // namespace
+
+void World::set_entity_destroyed_hook(EntityDestroyedHook hook) {
+  g_entity_destroyed_hook = hook;
+}
 
 namespace {
 
@@ -977,10 +984,9 @@ void World::destroy_entity(EntityID entity_id) {
   if (index != 0 && index < m_slots.size()) {
     auto& slot = m_slots[index];
     if (slot.entity != nullptr && slot.generation == Handle::generation_of(entity_id)) {
-      if (!m_is_render_snapshot && slot.entity->has_component<BuildingComponent>()) {
 
-        Game::Systems::BuildingCollisionRegistry::instance().unregister_building(
-            entity_id);
+      if (!m_is_render_snapshot && g_entity_destroyed_hook != nullptr) {
+        g_entity_destroyed_hook(entity_id);
       }
 
       detach_from_all_component_sets(entity_id);
@@ -1160,25 +1166,6 @@ auto World::get_units_not_owned_by(int owner_id) const -> std::vector<Entity*> {
   return collect_units(*this, [owner_id](const UnitComponent& unit) {
     return unit.owner_id != owner_id;
   });
-}
-
-auto World::get_allied_units(int owner_id) const -> std::vector<Entity*> {
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  return collect_units(*this, [owner_id, &owner_registry](const UnitComponent& unit) {
-    return unit.owner_id == owner_id ||
-           owner_registry.are_allies(owner_id, unit.owner_id);
-  });
-}
-
-auto World::get_enemy_units(int owner_id) const -> std::vector<Entity*> {
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  return collect_units(*this, [owner_id, &owner_registry](const UnitComponent& unit) {
-    return owner_registry.are_enemies(owner_id, unit.owner_id);
-  });
-}
-
-auto World::count_troops_for_player(int owner_id) -> int {
-  return Game::Systems::TroopCountRegistry::instance().get_troop_count(owner_id);
 }
 
 auto World::get_next_entity_id() const -> EntityID {

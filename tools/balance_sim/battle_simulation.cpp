@@ -30,6 +30,7 @@
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/stamina_system.h"
@@ -411,7 +412,7 @@ auto run_battle(const Fixture& fixture,
 
   Game::Map::TerrainService::instance().initialize(
       flat_map_definition(fixture.grid_width, fixture.grid_height));
-  Game::Systems::CommandService::initialize(fixture.grid_width, fixture.grid_height);
+  Game::Systems::NavGrid::initialize(fixture.grid_width, fixture.grid_height);
 
   Engine::Core::World world;
   world.set_presentation_enabled(false);

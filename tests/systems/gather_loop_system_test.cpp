@@ -7,8 +7,8 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/builder_product_types.h"
-#include "game/systems/command_service.h"
 #include "game/systems/gather_loop_system.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
 #include "game/units/spawn_type.h"
 
@@ -29,7 +29,7 @@ protected:
                                      .z = 32.0F});
     }
     Game::Map::TerrainService::instance().initialize(map_def);
-    Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+    Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
   }
 
   static auto add_woodcutter(Engine::Core::World& world,

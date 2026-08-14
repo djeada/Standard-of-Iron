@@ -8,12 +8,24 @@ summarises; when the two disagree, this file is wrong and should be fixed.
 
 ```
 animation/  scene/          leaf libraries: plain data, no dependencies on anything below
+accessibility_runtime       team identity and motion settings, shared by both ends
+soi_software_raster         the CPU triangle rasteriser, used by render_gl and three tools
+soi_audio_mastering         the limiter/loudness chain, used by audio_system and the preview tool
      |
-engine_core                 ECS: entities, components, world, serialisation
+engine_core                 ECS: entities, components, world
      |
 game_sim                    the simulation kernel
      |
-game_view                   gameplay services that need a camera
+     +-- soi_campaign       the campaign definition
+     |        |
+     |        +-- soi_missions      mission content, victory rules, the map/mission catalogue
+     |        +-- soi_persistence   the snapshot contract, the save format, the save database
+     |
+     +-- soi_ai             the computer opponent
+     |        |
+     |        +-- soi_runtime      which systems a match owns and in what order they tick
+     |
+     +-- game_view          gameplay services that need a camera
      |
 render_gl                   the renderer, consumes simulation state
      |
@@ -24,6 +36,48 @@ standard_of_iron            executable: main(), QML registration
 
 Dependencies point downwards only. Each arrow is a CMake link edge, so a
 violation is a build failure rather than a review comment.
+
+`game_systems` is an INTERFACE target that pulls in the whole gameplay stack at
+once. It exists for consumers that genuinely want all of it — the renderer, the
+arena. New code should name the domains it uses instead: linking `game_systems`
+puts the AI and the save database into a binary that may need neither, and the
+link line stops being a statement about what that binary depends on.
+
+The names used in this document are the target names. `soi_components`,
+`soi_simulation`, `soi_render_bridge`, `soi_render_gl` and `soi_app` are CMake
+aliases for `engine_core`, `game_sim`, `game_view`, `render_gl` and `app_core`
+respectively; either spelling links the same archive.
+
+### Inside `game_sim`
+
+The kernel is still one archive, so CMake cannot separate combat from movement
+from terrain. `scripts/module_rules.json` declares the module map anyway —
+`domain_types`, `components`, `unit_catalog`, `registries`, `world`, `units`,
+`navigation`, `formations`, `economy`, `combat`, `wildlife`, `simulation`,
+`session` — along with the direction each is allowed to point in, and
+`scripts/check-modules.py` enforces it on every build.
+
+Two of those need a word. `domain_types` is the vocabulary: enumerations with no
+dependencies of their own, scattered across `game/systems`, `game/units` and
+`game/wildlife` by directory but belonging to no layer, because every layer names
+them. `component.h` storing a `SpawnType` is a struct holding a value, not the
+ECS reaching into gameplay, and separating the two is what makes the remaining
+counts mean something.
+
+`session` is at the _top_, not the bottom. `SessionContext` owns the terrain, the
+fog, the registries and the command queue by value, so everything it contains is
+below it — and a registry reaching back up to `SessionContext::active()` to find
+itself is a cycle. That is why those `instance()` definitions were collected into
+`game/session/ambient_registries.cpp`, which is the only file below the session
+that knows the ambient binding exists.
+
+Edges that point the wrong way today are counted per module pair in that file's
+`baseline`. The count may go down and may not go up, and paying one down has to
+be recorded, so the debt is visible rather than ambient. A module whose inbound
+count reaches zero can be lifted into a target of its own — that is exactly how
+`soi_ai`, `soi_missions`, `soi_campaign`, `soi_persistence` and `soi_runtime`
+left the kernel, and the remaining counts say what each of the others would
+cost.
 
 ### `game_sim` — the simulation kernel
 
@@ -51,6 +105,41 @@ and is the only thing the renderer reads, while `ArmyFormationPlanner` and
 `ArmyFormationRegistry` own multi-unit deployment and are the only things
 player commands and AI reach for. See
 [docs/FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md).
+
+### `render_gl` — the renderer draws the match it was handed
+
+The renderer holds no opinion about which match it is drawing. Everything it
+needs from the simulation arrives on a `Render::WorldView` — terrain, fog,
+ownership, nations, the troop catalogues — set once per frame by whoever owns the
+session:
+
+```cpp
+m_renderer->set_world_view(Render::WorldView::of(session));
+```
+
+and read from `renderer.world_view()`, from `world()` on a render pass, or from
+`ctx.world_view` inside an entity renderer.
+
+Before this, `render/` resolved its own inputs: 52 call sites across 31 files
+reached for `TerrainService::instance()`, `VisibilityService::instance()` and
+friends, each of which is `SessionContext::active()` underneath. That is a
+process-wide binding, read on the render thread, with no declared relationship to
+the world snapshot the renderer had been given.
+
+It is the thing standing between here and multiplayer. A client has to render
+state it was **sent**; a spectator and a replay have to render a session nobody
+locally is simulating. Neither is expressible while the renderer picks its own
+session out of a global.
+
+`scripts/check-render-boundary.py` enforces both halves on every build: nothing
+under `render/` may call `Game::…::instance()` or `SessionContext::active()`, and
+nothing under `game/` may include `render/`. `render/world_view.cpp` is the single
+exempt file, because binding the ambient session is its whole job.
+
+The refactor also turned up a real bug. `TroopProfileService::get_profile` builds
+and caches on first ask; the renderer called it per unit per frame from the render
+thread while the simulation did the same on its own. `NationRegistry` primes the
+cache at load now, and the read side is `find_profile`, which is `const`.
 
 ### `game_view` — camera-facing gameplay services
 
@@ -157,15 +246,27 @@ write fails.
 
 ## Test binaries and what they enforce
 
-The suite is five binaries, split by link surface rather than by convenience:
-`simulation_tests` and `persistence_tests` link the kernel alone, `render_tests`
-adds `render_gl`, `app_tests` adds `app_core` and `ui_shell`, and `tools_tests`
-links the editor, arena and balance harnesses. `tests/README.md` has the table.
+The suite is nine binaries, split by link surface rather than by convenience.
+`simulation_tests` links the kernel; `combat_balance_tests` adds
+`soi_runtime`; `ai_tests` adds `soi_ai`; `campaign_tests` adds `soi_missions`;
+`persistence_tests` adds `soi_persistence`; `render_tests` adds `render_gl`;
+`app_tests` adds `app_core` and `ui_shell`; `arena_tests` links the arena
+harness; and `tools_tests` links the editor and balance harnesses with no
+renderer at all. `tests/README.md` has the table.
 
-Two rules make the split load-bearing: a test binary links production targets
-rather than re-compiling production `.cpp` files, and no test is excluded from
-the default run. `scripts/run-tests.sh` owns the suite list; the Makefile and
-all four CI workflows call it.
+Three of those binaries also link `soi_persistence` for a handful of "survives a
+save" assertions. That does not weaken the boundary: `soi_persistence` sits
+_above_ `game_sim`, and a kernel file reaching down into it is a
+`simulation -> persistence` include, which `scripts/check-modules.py` fails the
+build on.
+
+Three rules make the split load-bearing: a test binary links production targets
+rather than re-compiling production `.cpp` files, it links only the domains it
+uses, and no test is excluded from the default run.
+`tests/architecture/module_boundary_test.cpp` checks the first and the third
+against the files that declare them. `scripts/run-tests.sh` owns the suite list;
+the Makefile and all four CI workflows call it, and the same test fails if that
+list and `soi_test_binaries` drift apart.
 
 ## The application layer
 
@@ -201,8 +302,21 @@ These are real and deliberate, not oversights:
   they still derive from a small polymorphic base with a virtual destructor.
   Access is by dense type-id array index, not by RTTI.
 - `GameEngine` remains large. See above.
-- `game_sim` is still one target. Splitting it further (navigation, combat, AI,
-  economy, missions) is blocked on real cycles between those directories, not on
-  the CMake: `systems/_misc`, combat, movement, AI and units all include each
-  other today. Breaking those cycles is the prerequisite, and it is code work
-  rather than build work.
+- `game_sim` is still one target for eleven modules. The AI, the mission and
+  campaign loaders, the save stack and the system composition root have been
+  lifted out into targets of their own, because nothing in the kernel reached
+  into them. The rest — `world`, `units`, `navigation`, `formations`, `economy`,
+  `combat`, `wildlife` — genuinely include each other, so CMake cannot separate
+  them yet. `scripts/module_rules.json` records exactly how many edges stand in
+  the way of each. Extraction is bottom-up: a module can become a target only
+  once everything below it already is one, so the order is `domain_types`,
+  `components`, `unit_catalog`, `registries`, `world`, `units`, `navigation`,
+  `formations`, `economy`, `combat`. The first three are at zero;
+  `scripts/check-modules.py` prints what the rest still cost.
+- `registries` is the next layer to clear, and its twelve remaining edges are
+  three separate problems: `NationRegistry::initialize_defaults()` is a content
+  bootstrap wearing a registry's clothes (it loads formations, troops and
+  nations, then primes the profile cache), `GateService` and
+  `WallNetworkService` are navigation consumers filed as registries, and
+  `NationCollapseService` reaches into the economy. None is large; all three are
+  code work.

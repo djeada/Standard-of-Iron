@@ -35,6 +35,7 @@
 #include "systems/command_service.h"
 #include "systems/healing_system.h"
 #include "systems/movement_system.h"
+#include "systems/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "systems/projectile_system.h"
 #include "systems/rpg_combat_system/rpg_commander_damage.h"
@@ -50,7 +51,7 @@ protected:
   void SetUp() override {
     world = std::make_unique<World>();
     OwnerRegistry::instance().clear();
-    CommandService::initialize(64, 64);
+    NavGrid::initialize(64, 64);
   }
 
   void TearDown() override { world.reset(); }

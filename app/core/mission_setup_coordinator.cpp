@@ -27,6 +27,7 @@
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -226,7 +227,7 @@ void order_wave_advance(Engine::Core::World& world,
     return;
   }
 
-  const QVector3D target = Game::Systems::CommandService::snap_to_walkable_ground(
+  const QVector3D target = Game::Systems::NavGrid::snap_to_walkable_ground(
       from + (offset * k_approach_fraction));
 
   const auto plan =

@@ -16,6 +16,7 @@
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/submission_visibility.h"
 #include "render/submitter.h"
+#include "render/world_view.h"
 
 namespace Engine::Core {
 class Entity;
@@ -43,6 +44,8 @@ struct DrawContext {
   ResourceManager* resources = nullptr;
   Engine::Core::Entity* entity = nullptr;
   Engine::Core::World* world = nullptr;
+
+  Render::WorldView world_view;
   QMatrix4x4 model;
   bool selected = false;
   bool hovered = false;

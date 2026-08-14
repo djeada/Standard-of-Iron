@@ -1,34 +1,44 @@
 # Test suite for Standard of Iron
 # Uses Google Test framework
 #
-# The suite is split by the boundary each binary exercises, not by convenience:
+# The suite is split by the boundary each binary exercises, not by convenience.
+# Each one links the narrowest set of production targets its tests need, so the
+# link line is a statement about what that domain is allowed to depend on:
 #
 #   simulation_tests   the kernel. Links engine_core + game_sim and nothing
 #                      else, so a gameplay file that starts needing a camera,
-#                      the renderer or the application breaks the link step
-#                      rather than slipping in unnoticed.
-#   persistence_tests  the snapshot contract and the save stack. Kernel-only
-#                      link as well.
+#                      the renderer, the AI or the save stack breaks the link
+#                      step rather than slipping in unnoticed.
+#   combat_balance_tests
+#                      combat, formations and the headless battles that drive
+#                      the real system registry. Adds soi_runtime; still no AI.
+#   ai_tests           the computer opponent. Adds soi_ai.
+#   campaign_tests     mission and campaign content. Adds soi_missions, which
+#                      brings soi_campaign with it. No runtime, no AI: loading
+#                      content must not require a running match.
+#   persistence_tests  the snapshot contract and the save stack. Adds
+#                      soi_persistence.
 #   render_tests       the renderer and the creature pipeline.
 #   app_tests          the application layer: view models, controllers, the
 #                      widget shell and the gameplay services that need a
 #                      camera or the app layer to be meaningful.
-#   tools_tests        the map editor, the arena and the balance harness.
+#   arena_tests        the arena harness and its panels.
+#   tools_tests        the map editor document model and the balance harness.
+#                      Links neither render_gl nor game_view.
 #   design_system_qml_tests
 #                      the QML design system, driven by QtQuickTest.
 #
-# Two rules keep this honest:
+# Three rules keep this honest:
 #
 #  - a test binary links production targets; it never re-lists a production
 #    `.cpp` in its own source list. A separately compiled copy can pass while
 #    the object the game ships is broken.
-#  - no test is quarantined out of the default path. If a test cannot build or
-#    cannot pass, it is fixed or it is deleted with an issue, not omitted.
-
-set(_soi_optional_test_sources)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/render/creature/combat_visual_state_test.cpp")
-    list(APPEND _soi_optional_test_sources render/creature/combat_visual_state_test.cpp)
-endif()
+#  - a test binary links the domains it uses and no more. Reaching for
+#    `game_systems` because it is convenient puts the AI and the save database
+#    into a binary that was supposed to prove it did not need them.
+#  - no test is quarantined out of the default path, and no test source is
+#    listed behind an `if(EXISTS)`. If a test cannot build or cannot pass, it is
+#    fixed or it is deleted with an issue, not omitted.
 
 # Registers a binary with CTest and parks it beside the other executables.
 function(soi_register_test_binary target)
@@ -64,62 +74,31 @@ add_executable(
     session/session_context_test.cpp
     command/command_pipeline_test.cpp
     core/entity_handle_test.cpp
-    core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     map/terrain_profiles_test.cpp
     map/map_loader_test.cpp
     map/explored_mask_codec_test.cpp
     map/visibility_restore_test.cpp
-    map/map_catalog_test.cpp
     map/map_bridge_coverage_test.cpp
     map/map_hill_entrance_smoothness_test.cpp
     map/map_weather_coverage_test.cpp
     map/map_wildlife_config_test.cpp
     map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp
-    map/mission_loader_test.cpp
-    map/mission_asset_rules_test.cpp
     map/hill_crown_geometry_test.cpp
     map/terrain_footprint_test.cpp
-    map/mission_victory_rules_test.cpp
     map/undead_shrine_placement_test.cpp
-    map/wave_archetype_catalog_test.cpp
-    map/campaign_loader_test.cpp
-    map/campaign_roster_test.cpp
-    map/campaign_content_integration_test.cpp
-    map/campaign_province_data_test.cpp
     map/time_of_day_test.cpp
     systems/rain_manager_test.cpp
     wildlife/wildlife_system_test.cpp
     wildlife/bird_flock_test.cpp
     systems/patrol_system_test.cpp
-    formation/unit_layout_test.cpp
-    formation/army_formation_planner_test.cpp
-    formation/formation_planner_cache_test.cpp
-    formation/formation_cohesion_test.cpp
-    formation/army_formation_registry_test.cpp
-    formation/formation_data_loader_test.cpp
-    formation/formation_movement_test.cpp
-    formation/formation_terrain_navigation_test.cpp
-    systems/formation_combat_geometry_test.cpp
-    systems/structure_combat_test.cpp
-    systems/structure_fire_test.cpp
-    systems/guard_system_test.cpp
     systems/nation_loader_test.cpp
     systems/troop_catalog_loader_test.cpp
     systems/showcase_routine_system_test.cpp
-    systems/stamina_system_test.cpp
     systems/home_manpower_system_test.cpp
     systems/building_collision_test.cpp
-    systems/attack_range_test.cpp
-    systems/attack_targeting_test.cpp
-    systems/combat_mode_test.cpp
-    systems/hold_mode_test.cpp
-    systems/defensive_unit_layout_test.cpp
-    systems/rpg_bow_test.cpp
-    systems/rpg_engagement_system_test.cpp
-    systems/commander_system_test.cpp
     systems/pathfinding_test.cpp
     systems/production_system_test.cpp
     systems/resource_delivery_system_test.cpp
@@ -129,24 +108,8 @@ add_executable(
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp
     systems/undead_awakening_system_test.cpp
-    systems/melee_engagement_test.cpp
-    systems/commander_duel_test.cpp
-    systems/archer_bonus_test.cpp
-    systems/arrow_system_test.cpp
-    systems/spent_projectile_test.cpp
-    systems/ai_system_test.cpp
-    systems/elephant_special_processor_test.cpp
-    systems/siege_special_processor_test.cpp
-    systems/wall_system_test.cpp
-    systems/gate_system_test.cpp
-    systems/battle_movement_refactor_test.cpp
-    systems/battlefield_capture_test.cpp
-    headless/headless_simulation_test.cpp
-    headless/gate_traversal_test.cpp
-    headless/wall_siege_test.cpp
-    headless/mission_wave_assault_test.cpp
-    headless/tight_gap_navigation_test.cpp
     architecture/layering_test.cpp
+    architecture/module_boundary_test.cpp
     architecture/qml_surface_test.cpp
     architecture/release_contract_test.cpp
     architecture/documentation_accuracy_test.cpp
@@ -154,16 +117,140 @@ add_executable(
 )
 target_link_libraries(
     simulation_tests
-    PRIVATE GTest::gtest GTest::gmock Qt${QT_VERSION_MAJOR}::Core engine_core game_sim
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+        game_sim
+        # One test here round-trips a standing order through a save. That does
+        # not weaken the kernel-only claim: soi_persistence sits *above*
+        # game_sim, and a kernel file reaching down into it is caught by
+        # scripts/check-modules.py, which fails the build on any
+        # simulation -> persistence include.
+        soi_persistence
 )
 soi_register_test_binary(simulation_tests)
 
+# ---- combat_balance_tests ----------------------------------------------
+# What a fight does: damage, ranges, engagement slots, formation geometry, and
+# the headless battles that run the production system registry end to end.
+#
+# soi_runtime is the only addition over the kernel. The AI is deliberately not
+# linked -- every scenario here is scripted, and if one starts needing an
+# opponent to think, that belongs in ai_tests.
+add_executable(
+    combat_balance_tests
+    formation/unit_layout_test.cpp
+    formation/army_formation_planner_test.cpp
+    formation/formation_planner_cache_test.cpp
+    formation/formation_cohesion_test.cpp
+    formation/army_formation_registry_test.cpp
+    formation/formation_data_loader_test.cpp
+    formation/formation_movement_test.cpp
+    formation/formation_terrain_navigation_test.cpp
+    systems/formation_combat_geometry_test.cpp
+    systems/defensive_unit_layout_test.cpp
+    systems/structure_combat_test.cpp
+    systems/structure_fire_test.cpp
+    systems/guard_system_test.cpp
+    systems/stamina_system_test.cpp
+    systems/attack_range_test.cpp
+    systems/attack_targeting_test.cpp
+    systems/combat_mode_test.cpp
+    systems/hold_mode_test.cpp
+    systems/rpg_bow_test.cpp
+    systems/rpg_engagement_system_test.cpp
+    systems/commander_system_test.cpp
+    systems/commander_duel_test.cpp
+    systems/melee_engagement_test.cpp
+    systems/archer_bonus_test.cpp
+    systems/arrow_system_test.cpp
+    systems/spent_projectile_test.cpp
+    systems/elephant_special_processor_test.cpp
+    systems/siege_special_processor_test.cpp
+    systems/gate_system_test.cpp
+    systems/battle_movement_refactor_test.cpp
+    systems/battlefield_capture_test.cpp
+    headless/headless_simulation_test.cpp
+    headless/gate_traversal_test.cpp
+    headless/wall_siege_test.cpp
+    headless/tight_gap_navigation_test.cpp
+    simulation_main.cpp
+)
+target_link_libraries(
+    combat_balance_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+        game_sim
+        soi_runtime
+        # Two tests here assert that gate mode and unit layout survive a save.
+        # That does not weaken the boundary: soi_persistence sits *above*
+        # game_sim, and a kernel file reaching down into it is caught by
+        # scripts/check-modules.py, which fails the build on any
+        # simulation -> persistence include.
+        soi_persistence
+)
+soi_register_test_binary(combat_balance_tests)
+
+# ---- ai_tests ----------------------------------------------------------
+# The computer opponent, and the two scenarios that need one to be meaningful:
+# a wall assault it has to path around, and a mission wave it has to press.
+add_executable(
+    ai_tests
+    systems/ai_system_test.cpp
+    systems/wall_system_test.cpp
+    headless/mission_wave_assault_test.cpp
+    simulation_main.cpp
+)
+target_link_libraries(
+    ai_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+        game_sim
+        soi_ai
+        soi_runtime
+)
+soi_register_test_binary(ai_tests)
+
+# ---- campaign_tests ----------------------------------------------------
+# Mission and campaign content: what the shipped files say, and whether the
+# loaders agree with them.
+#
+# It links no runtime and no AI on purpose. Reading a mission must not require a
+# match to be running, and this link line is what says so.
+add_executable(
+    campaign_tests
+    map/mission_loader_test.cpp
+    map/mission_asset_rules_test.cpp
+    map/mission_victory_rules_test.cpp
+    map/wave_archetype_catalog_test.cpp
+    map/map_catalog_test.cpp
+    map/campaign_loader_test.cpp
+    map/campaign_roster_test.cpp
+    map/campaign_content_integration_test.cpp
+    map/campaign_province_data_test.cpp
+    simulation_main.cpp
+)
+target_link_libraries(
+    campaign_tests
+    PRIVATE GTest::gtest GTest::gmock Qt${QT_VERSION_MAJOR}::Core engine_core game_sim soi_missions
+)
+soi_register_test_binary(campaign_tests)
+
 # ---- persistence_tests -------------------------------------------------
-# What a save is, and whether the thing that writes it agrees. Kernel-only
-# link, because a mission snapshot must be complete without the application.
+# What a save is, and whether the thing that writes it agrees. No runtime and no
+# AI, because a mission snapshot must be complete without either.
 add_executable(
     persistence_tests
     save/snapshot_contract_test.cpp
+    core/serialization_test.cpp
     db/save_storage_test.cpp
     db/save_format_test.cpp
     db/save_load_service_test.cpp
@@ -174,7 +261,14 @@ add_executable(
 )
 target_link_libraries(
     persistence_tests
-    PRIVATE GTest::gtest GTest::gmock Qt${QT_VERSION_MAJOR}::Core engine_core game_sim
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+        game_sim
+        soi_persistence
+        soi_missions
 )
 soi_register_test_binary(persistence_tests)
 
@@ -254,6 +348,7 @@ add_executable(
     render/horse/horse_spec_test.cpp
     render/horse/horse_anatomy_test.cpp
     render/elephant/elephant_spec_test.cpp
+    render/elephant/elephant_source_asset_test.cpp
     render/stateless_weapon_renderers_test.cpp
     render/creature/skeleton_test.cpp
     render/creature/species_manifest_parity_test.cpp
@@ -263,7 +358,7 @@ add_executable(
     render/creature/rigged_mesh_cache_test.cpp
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp
-    ${_soi_optional_test_sources}
+    render/creature/combat_visual_state_test.cpp
     render/creature/humanoid_prepare_test.cpp
     render/creature/death_collapse_test.cpp
     render/creature/horse_prepare_test.cpp
@@ -304,7 +399,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
         render_gl
-        game_systems
+        game_sim
 )
 set_target_properties(render_tests PROPERTIES AUTORCC ON)
 soi_register_test_binary(render_tests)
@@ -385,9 +480,45 @@ if(TARGET bake_creature_assets)
     add_dependencies(app_tests bake_creature_assets)
 endif()
 
+# ---- arena_tests -------------------------------------------------------
+# The arena harness: scenario definitions, the runner, frame continuity, the
+# promo capture schedule and the two panels whose population rules are asserted.
+# All linked from the libraries the arena ships.
+add_executable(
+    arena_tests
+    tools/arena_scenarios_test.cpp
+    tools/arena_scenario_runner_test.cpp
+    tools/arena_frame_continuity_test.cpp
+    tools/arena_panel_population_test.cpp
+    tools/arena_unit_spawn_options_test.cpp
+    tools/arena_terrain_alignment_test.cpp
+    tools/arena_promo_spec_test.cpp
+    tools/settlement_layout_test.cpp
+    test_main.cpp
+)
+target_link_libraries(
+    arena_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        engine_core
+        render_gl
+        game_sim
+        arena_scenario_harness
+        arena_panels
+)
+soi_register_test_binary(arena_tests)
+if(TARGET bake_creature_assets)
+    add_dependencies(arena_tests bake_creature_assets)
+endif()
+
 # ---- tools_tests -------------------------------------------------------
-# The map editor document model, the arena harness and the balance runner --
-# all linked from the libraries those tools ship.
+# The map editor document model and the balance runner. Neither needs a
+# renderer, so this binary links neither render_gl nor game_view -- an editor
+# change that starts reaching for the scene graph fails here.
 add_executable(
     tools_tests
     tools/map_editor_map_data_test.cpp
@@ -398,22 +529,10 @@ add_executable(
     tools/map_editor_element_ops_test.cpp
     tools/map_editor_wildlife_test.cpp
     tools/map_editor_json_schema_test.cpp
-    tools/hill_projection_model_test.cpp
     tools/map_editor_commander_preview_test.cpp
-    tools/arena_scenarios_test.cpp
-    tools/settlement_layout_test.cpp
-    tools/arena_promo_spec_test.cpp
-    # The promo spec ships only inside arena_app, which needs a GL context to
-    # link. Compiling the translation unit here keeps the camera and capture
-    # scheduling rules under test without one.
-    ${CMAKE_SOURCE_DIR}/tools/arena/promo_spec.cpp
-    tools/arena_scenario_runner_test.cpp
-    tools/arena_frame_continuity_test.cpp
-    tools/arena_panel_population_test.cpp
-    tools/arena_unit_spawn_options_test.cpp
-    tools/arena_terrain_alignment_test.cpp
+    tools/hill_projection_model_test.cpp
     tools/balance_sim_test.cpp
-    test_main.cpp
+    widget_main.cpp
 )
 target_link_libraries(
     tools_tests
@@ -424,11 +543,8 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
-        render_gl
-        game_systems
+        game_sim
         map_editor_core
-        arena_scenario_harness
-        arena_panels
         balance_sim_harness
 )
 soi_register_test_binary(tools_tests)
@@ -436,8 +552,11 @@ if(TARGET bake_creature_assets)
     add_dependencies(tools_tests bake_creature_assets)
 endif()
 
-# Focused horse contract binary. It stays runnable when an unrelated test
-# translation unit in the render suite has interface drift.
+# Focused model binaries. They stay runnable when an unrelated test translation
+# unit in the render suite has interface drift. Both test sources are also
+# compiled into render_tests, which is where they run on the default path --
+# these are a debugging convenience, not a second verification route.
+# docs/HORSE_MODEL_ARCHITECTURE.md points at them.
 add_executable(horse_model_tests render/horse/horse_anatomy_test.cpp test_main.cpp)
 target_link_libraries(
     horse_model_tests
@@ -448,7 +567,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
         render_gl
-        game_systems
+        game_sim
 )
 soi_register_test_binary(horse_model_tests)
 if(TARGET bake_creature_assets)
@@ -465,7 +584,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
         render_gl
-        game_systems
+        game_sim
 )
 soi_register_test_binary(elephant_model_tests)
 if(TARGET bake_creature_assets)
@@ -507,10 +626,20 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
     set_tests_properties(design_system_qml PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
 
-# Everything `make test` runs. Keep this list and scripts/run-tests.sh in step.
+# Everything `make test` runs. Keep this list and scripts/run-tests.sh in step;
+# tests/architecture/module_boundary_test.cpp fails if they drift.
 add_custom_target(
     soi_test_binaries
-    DEPENDS simulation_tests persistence_tests render_tests app_tests tools_tests
+    DEPENDS
+        simulation_tests
+        combat_balance_tests
+        ai_tests
+        campaign_tests
+        persistence_tests
+        render_tests
+        app_tests
+        arena_tests
+        tools_tests
 )
 add_dependencies(soi_test_binaries translations_qm)
 if(TARGET design_system_qml_tests)

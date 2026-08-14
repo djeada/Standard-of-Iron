@@ -199,7 +199,7 @@ void GroundRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 }
 
 void GroundRenderer::sync_biome_from_service() {
-  auto& service = Game::Map::TerrainService::instance();
+  const auto& service = world().terrain_or_empty();
   if (!service.is_initialized()) {
     return;
   }

@@ -23,6 +23,14 @@ public:
   [[nodiscard]] auto terrain() const -> TerrainRenderer*;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>&;
 
+  void set_world_view(const Render::WorldView& view) noexcept {
+    for (auto* pass : passes()) {
+      if (pass != nullptr) {
+        pass->set_world_view(view);
+      }
+    }
+  }
+
 private:
   std::unique_ptr<GroundRenderer> m_ground;
   std::unique_ptr<TerrainRenderer> m_terrain;

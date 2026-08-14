@@ -77,7 +77,7 @@ void BoulderRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 }
 
 void BoulderRenderer::append_world_prop_boulders() {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = world().terrain_or_empty();
   const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
 
   for (const auto& prop : m_runtime_world_props) {

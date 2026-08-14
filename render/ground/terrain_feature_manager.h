@@ -35,6 +35,15 @@ public:
          std::size_t bridge_count) const -> std::vector<LinearFeatureChunk>;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass*>&;
 
+  void set_world_view(const Render::WorldView& view) noexcept override {
+    IRenderPass::set_world_view(view);
+    for (auto* pass : passes()) {
+      if (pass != nullptr) {
+        pass->set_world_view(view);
+      }
+    }
+  }
+
 private:
   std::unique_ptr<WaterRenderer> m_water;
   std::unique_ptr<RoadRenderer> m_road;

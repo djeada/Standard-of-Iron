@@ -33,6 +33,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/defensive_unit_layout_service.h"
 #include "game/systems/formation_combat_geometry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
@@ -1501,7 +1502,7 @@ struct ArenaScenarioRunner::Impl {
         }
         approach.normalize();
         const QVector3D work_position =
-            Game::Systems::CommandService::snap_to_walkable_ground(QVector3D(
+            Game::Systems::NavGrid::snap_to_walkable_ground(QVector3D(
                 at.x() + approach.x() * 1.8F, 0.0F, at.z() + approach.z() * 1.8F));
 
         Game::Systems::OrderService::clear_builder_task(entity);

@@ -15,8 +15,8 @@
 #include "../units/spawn_type.h"
 #include "../visuals/building_asset_key.h"
 #include "building_collision_registry.h"
-#include "command_service.h"
 #include "gate_service.h"
+#include "nav_grid.h"
 #include "pathfinding.h"
 
 namespace Game::Systems {
@@ -234,17 +234,16 @@ auto is_buildable_world_position(float pos_x,
     if (auto& terrain_service = Game::Map::TerrainService::instance();
         terrain_service.is_initialized()) {
       Game::Systems::Point const grid =
-          Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
+          Game::Systems::NavGrid::world_to_grid(pos_x, pos_z);
       return terrain_service.is_walkable(grid.x, grid.y);
     }
     return true;
   }
 
-  Game::Systems::Pathfinding* pathfinder =
-      Game::Systems::CommandService::get_pathfinder();
+  Game::Systems::Pathfinding* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   if (pathfinder != nullptr) {
     Game::Systems::Point const grid =
-        Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
+        Game::Systems::NavGrid::world_to_grid(pos_x, pos_z);
     if (!pathfinder->is_walkable(grid.x, grid.y)) {
       return false;
     }
@@ -417,7 +416,7 @@ auto WallNetworkService::snap_grid_coordinate(int grid_value) -> int {
 
 auto WallNetworkService::snap_world_position(float world_x,
                                              float world_z) -> WallGridPosition {
-  const Point grid = CommandService::world_to_grid(world_x, world_z);
+  const Point grid = NavGrid::world_to_grid(world_x, world_z);
   return {.x = snap_grid_coordinate(grid.x), .z = snap_grid_coordinate(grid.y)};
 }
 
@@ -582,8 +581,7 @@ auto WallNetworkService::validate_wall_segment_placement(
                                   .toStdString()};
   }
 
-  const auto world_position =
-      CommandService::grid_to_world(Point{position.x, position.z});
+  const auto world_position = NavGrid::grid_to_world(Point{position.x, position.z});
   if (!is_buildable_world_position(world_position.x(),
                                    world_position.z(),
                                    world,
@@ -640,7 +638,7 @@ auto WallNetworkService::find_tower_snap_socket(Engine::Core::World& world,
     }
 
     const auto candidate_world =
-        CommandService::grid_to_world(Point{candidate.x, candidate.z});
+        NavGrid::grid_to_world(Point{candidate.x, candidate.z});
     if (!is_buildable_world_position(
             candidate_world.x(), candidate_world.z(), world, "defense_tower")) {
       continue;
@@ -732,7 +730,7 @@ auto collect_navigation_passages(
         (mask & (WallNetworkService::k_connection_north |
                  WallNetworkService::k_connection_south)) != 0U;
 
-    const auto center = CommandService::grid_to_world(Point{grid_x, grid_z});
+    const auto center = NavGrid::grid_to_world(Point{grid_x, grid_z});
     passages.push_back(
         NavigationPassage{.center_x = center.x(),
                           .center_z = center.z(),
@@ -793,7 +791,7 @@ auto collect_navigation_passages(
           continue;
         }
 
-        const auto center = CommandService::grid_to_world(Point{gap_x, gap_z});
+        const auto center = NavGrid::grid_to_world(Point{gap_x, gap_z});
         if (blocking_building_covers(center.x(), center.z())) {
           continue;
         }

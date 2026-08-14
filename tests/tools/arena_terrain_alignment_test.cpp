@@ -7,7 +7,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/units/spawn_type.h"
 #include "tools/arena/terrain_alignment.h"
 
@@ -22,7 +22,7 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    Game::Systems::CommandService::initialize(32, 32);
+    Game::Systems::NavGrid::initialize(32, 32);
   }
 
   void TearDown() override {

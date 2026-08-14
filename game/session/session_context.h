@@ -54,6 +54,7 @@ public:
   [[nodiscard]] auto terrain() const -> const Game::Map::TerrainService&;
 
   [[nodiscard]] auto visibility() -> Game::Map::VisibilityService&;
+  [[nodiscard]] auto visibility() const -> const Game::Map::VisibilityService&;
 
   [[nodiscard]] auto owners() -> Game::Systems::OwnerRegistry&;
   [[nodiscard]] auto owners() const -> const Game::Systems::OwnerRegistry&;

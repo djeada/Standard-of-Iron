@@ -6,10 +6,10 @@
 #include "game/core/component.h"
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
-#include "game/systems/command_service.h"
 #include "game/systems/commander_system.h"
 #include "game/systems/nation_loader.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/production_service.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/commander_catalog.h"
@@ -622,7 +622,7 @@ TEST(CommanderSystemTest, ManualRallyModeDoesNotAutoTriggerWithoutRequest) {
 TEST(CommanderFlagRallyTest, FlagRallyCompletesAfterArrivalAndTimerExpires) {
 
   Engine::Core::World world;
-  Game::Systems::CommandService::initialize(64, 64);
+  Game::Systems::NavGrid::initialize(64, 64);
 
   auto* commander = world.create_entity();
   auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();

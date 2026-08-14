@@ -143,7 +143,8 @@ auto make_template_prewarm_draw_context(Renderer& renderer,
                                         bool has_attack_variant_override,
                                         const FacialHairStyle* facial_hair_override)
     -> DrawContext {
-  DrawContext ctx{renderer.resources(), &entity, nullptr, QMatrix4x4()};
+  DrawContext ctx{
+      renderer.resources(), &entity, nullptr, renderer.world_view(), QMatrix4x4()};
   ctx.renderer_id = renderer_id;
   ctx.backend = renderer.backend();
   ctx.camera = nullptr;
@@ -557,8 +558,8 @@ void Renderer::prewarm_unit_templates(
     }
   }
 
-  if (owner_ids.empty()) {
-    const auto& owners = Game::Systems::OwnerRegistry::instance().get_all_owners();
+  if (owner_ids.empty() && world_view().owners() != nullptr) {
+    const auto& owners = world_view().owners()->get_all_owners();
     for (const auto& owner : owners) {
       add_owner(owner.owner_id);
     }
@@ -568,8 +569,11 @@ void Renderer::prewarm_unit_templates(
   }
 
   {
-    const auto& troops = Game::Units::TroopCatalog::instance().get_all_classes();
-    const auto& nations = Game::Systems::NationRegistry::instance().get_all_nations();
+    static const std::vector<Game::Systems::Nation> k_no_nations;
+    const auto& troops = world_view().troop_catalog()->get_all_classes();
+    const auto& nations = world_view().nations() != nullptr
+                              ? world_view().nations()->get_all_nations()
+                              : k_no_nations;
     const bool restrict_to_active_nations = !active_nation_ids.empty();
     const bool has_catalog_entries = !troops.empty();
 
@@ -579,11 +583,11 @@ void Renderer::prewarm_unit_templates(
         return;
       }
 
-      auto profile =
-          Game::Systems::TroopProfileService::instance().get_profile(nation.id, type);
-      if (profile.visuals.renderer_id.empty()) {
+      const auto* profile_ptr = world_view().find_troop_profile(nation.id, type);
+      if (profile_ptr == nullptr || profile_ptr->visuals.renderer_id.empty()) {
         return;
       }
+      const auto& profile = *profile_ptr;
 
       add_profile(profile.visuals.renderer_id,
                   Game::Units::spawn_typeFromTroopType(type),

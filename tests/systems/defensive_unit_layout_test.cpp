@@ -5,12 +5,12 @@
 
 #include "core/component.h"
 #include "core/entity.h"
-#include "core/serialization.h"
 #include "core/world.h"
 #include "formation/unit_layout.h"
 #include "formation/unit_layout_state_system.h"
 #include "game/command/command.h"
 #include "game/command/command_dispatcher.h"
+#include "save/serialization.h"
 #include "systems/defensive_unit_layout_service.h"
 #include "systems/nation_loader.h"
 #include "systems/nation_registry.h"

@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "unit_layout_state.h"
+
 namespace Game::Formation {
 
 using UnitLayoutId = std::uint16_t;
@@ -23,16 +25,6 @@ enum class UnitLayoutShape : std::uint8_t {
   Circle,
   Shell,
   Arc
-};
-
-enum class UnitLayoutState : std::uint8_t {
-  Normal,
-  Defensive,
-  Attacking,
-  Braced,
-  Marching,
-  Routing,
-  Disrupted
 };
 
 [[nodiscard]] auto layout_shape_to_string(UnitLayoutShape shape) -> const char*;

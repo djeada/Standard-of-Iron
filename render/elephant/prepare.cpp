@@ -152,7 +152,8 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   elephant_ctx.model = ctx.model;
   elephant_ctx.model.translate(howdah.ground_offset);
   const float elephant_surface_world_y =
-      Render::Creature::Pipeline::ground_model_to_terrain(elephant_ctx.model);
+      Render::Creature::Pipeline::ground_model_to_terrain(
+          ctx.world_view.terrain_or_empty(), elephant_ctx.model);
 
   namespace RCP = Render::Creature::Pipeline;
   RCP::CreatureGraphInputs graph_inputs{};

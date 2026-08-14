@@ -147,8 +147,10 @@ auto HumanoidRendererBase::resolve_formation(
       params.spacing = definition.spacing;
     }
   } else if (owner.uses_mounted_pipeline()) {
-    params.spacing = resolve_formation_spacing(
-        Game::Units::SpawnType::MountedKnight, 0.0F, owner.get_mount_scale());
+    params.spacing = resolve_formation_spacing(*ctx.world_view.troop_config(),
+                                               Game::Units::SpawnType::MountedKnight,
+                                               0.0F,
+                                               owner.get_mount_scale());
   }
 
   return params;
