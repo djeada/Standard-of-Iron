@@ -142,7 +142,7 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
   const auto placement = resolve_contact_shadow_placement(ctx, inputs.camera_distance);
   const float shadow_alpha = k_shadow_base_alpha * placement.opacity;
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = ctx.world_view.terrain_or_empty();
   if (!terrain_service.is_initialized() || shadow_alpha < k_shadow_min_visible_alpha ||
       !admits_contact_shadow(ctx,
                              inputs.lod,
@@ -237,7 +237,7 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
   const auto placement = resolve_contact_shadow_placement(ctx, inputs.camera_distance);
   const float shadow_alpha = k_shadow_base_alpha * placement.opacity;
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = ctx.world_view.terrain_or_empty();
   if (!terrain_service.is_initialized() || shadow_alpha < k_shadow_min_visible_alpha ||
       !admits_contact_shadow(ctx,
                              inputs.lod,

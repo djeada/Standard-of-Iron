@@ -12,6 +12,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/runtime_system_registry.h"
@@ -73,8 +74,8 @@ auto add_wall_piece(SessionContext& session,
                     float x,
                     float z) -> EntityID {
   const auto snapped = Game::Systems::WallNetworkService::snap_world_position(x, z);
-  const auto center = Game::Systems::CommandService::grid_to_world(
-      Game::Systems::Point(snapped.x, snapped.z));
+  const auto center =
+      Game::Systems::NavGrid::grid_to_world(Game::Systems::Point(snapped.x, snapped.z));
 
   auto* entity = session.world().create_entity();
   auto* transform = entity->add_component<Engine::Core::TransformComponent>();
@@ -161,7 +162,7 @@ auto position_z(SessionContext& session, EntityID unit) -> float {
 
 class GateTraversalTest : public ::testing::Test {
 protected:
-  void SetUp() override { Game::Systems::CommandService::initialize(64, 64); }
+  void SetUp() override { Game::Systems::NavGrid::initialize(64, 64); }
 };
 
 TEST_F(GateTraversalTest, OwnerTroopWalksThroughItsOwnGate) {

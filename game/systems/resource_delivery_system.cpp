@@ -12,6 +12,7 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "command_service.h"
+#include "nav_grid.h"
 #include "player_resource_registry.h"
 #include "resource_stockpile.h"
 #include "resource_types.h"
@@ -216,17 +217,16 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
       continue;
     }
 
-    QVector3D target = CommandService::snap_to_walkable_ground(
+    QVector3D target = NavGrid::snap_to_walkable_ground(
         QVector3D(drop.x, transform->position.y, drop.z));
 
     float const snap_dx = target.x() - drop.x;
     float const snap_dz = target.z() - drop.z;
     if (((snap_dx * snap_dx) + (snap_dz * snap_dz)) >
         (k_stockpile_drop_radius * k_stockpile_drop_radius)) {
-      target = CommandService::snap_to_walkable_ground(
-          QVector3D(depot_transform->position.x,
-                    transform->position.y,
-                    depot_transform->position.z));
+      target = NavGrid::snap_to_walkable_ground(QVector3D(depot_transform->position.x,
+                                                          transform->position.y,
+                                                          depot_transform->position.z));
     }
     CommandService::move_unit(
         *world, hauler->get_id(), target, {.kind = MoveOrderKind::ScriptedMove});

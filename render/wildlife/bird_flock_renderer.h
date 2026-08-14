@@ -2,6 +2,8 @@
 
 #include <cstddef>
 
+#include "render/world_view.h"
+
 namespace Render::GL {
 
 class ISubmitter;
@@ -17,7 +19,8 @@ struct BirdFlockSubmitStats {
   std::size_t submitted{0U};
 };
 
-auto submit_bird_flocks(ISubmitter& out,
+auto submit_bird_flocks(const Render::WorldView& world,
+                        ISubmitter& out,
                         const SubmissionVisibilityPolicy* visibility,
                         const Camera* camera) -> BirdFlockSubmitStats;
 

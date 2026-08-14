@@ -20,6 +20,7 @@
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/submitter.h"
+#include "render/world_view.h"
 
 namespace {
 
@@ -298,6 +299,7 @@ TEST(CreatureRenderGraph, BuildBaseOutputSetsCulledFromDecision) {
 
 TEST(CreatureRenderGraph, BuildBaseOutputSetsPassIntentFromContext) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.template_prewarm = true;
 
   CreatureGraphInputs inputs;
@@ -311,6 +313,7 @@ TEST(CreatureRenderGraph, BuildBaseOutputSetsPassIntentFromContext) {
 
 TEST(CreatureRenderGraph, BuildBaseOutputCopiesWorldMatrix) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.model.translate(1.0F, 2.0F, 3.0F);
 
   CreatureGraphInputs inputs;
@@ -674,6 +677,7 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
 
 TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.template_prewarm = true;
 
   CreatureGraphInputs inputs;

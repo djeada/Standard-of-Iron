@@ -21,7 +21,7 @@
 #include "game/systems/combat_actions/combat_action_service.h"
 #include "game/systems/combat_system/damage_processor.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
-#include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/rpg_combat_system/rpg_bow_aim.h"
@@ -152,8 +152,8 @@ auto scatter_prop_blocks_commander_body(const Game::Systems::Pathfinding& pathfi
 auto is_walkable_at(float x, float z) -> bool {
   using CellValue = Game::Systems::Pathfinding::CellValue;
 
-  if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
-    const auto grid = Game::Systems::CommandService::world_to_grid(x, z);
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    const auto grid = Game::Systems::NavGrid::world_to_grid(x, z);
     const auto cell = pathfinder->cell_value(grid.x, grid.y);
 
     if (cell != CellValue::Walkable) {

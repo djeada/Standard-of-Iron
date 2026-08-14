@@ -13,8 +13,8 @@
 #include "formation/army_formation_registry.h"
 #include "formation/army_formation_service.h"
 #include "formation/formation_doctrine.h"
-#include "systems/command_service.h"
 #include "systems/nation_registry.h"
+#include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
 #include "systems/troop_profile_service.h"
 
@@ -89,8 +89,8 @@ auto plan_for(Engine::Core::World& world,
 class ArmyFormationPlannerTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    Game::Systems::CommandService::initialize(256, 256);
-    auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+    Game::Systems::NavGrid::initialize(256, 256);
+    auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
     if (pathfinder != nullptr) {
       pathfinder->update_navigation_grid();
     }
@@ -451,8 +451,8 @@ TEST_F(ArmyFormationPlannerTest, CommanderDoctrinePolicyFollowsTheCommander) {
 }
 
 TEST_F(ArmyFormationPlannerTest, BlockedSlotsNeverCollapseOntoOneFallbackPoint) {
-  Game::Systems::CommandService::initialize(64, 64);
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  Game::Systems::NavGrid::initialize(64, 64);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
@@ -466,8 +466,7 @@ TEST_F(ArmyFormationPlannerTest, BlockedSlotsNeverCollapseOntoOneFallbackPoint) 
   }
 
   QVector3D const target(16.0F, 0.0F, 16.0F);
-  auto const centre =
-      Game::Systems::CommandService::world_to_grid(target.x(), target.z());
+  auto const centre = Game::Systems::NavGrid::world_to_grid(target.x(), target.z());
   for (int dz = -2; dz <= 2; ++dz) {
     for (int dx = -2; dx <= 2; ++dx) {
       if (dx == 0 && dz == 0) {
@@ -495,8 +494,8 @@ TEST_F(ArmyFormationPlannerTest, BlockedSlotsNeverCollapseOntoOneFallbackPoint) 
 }
 
 TEST_F(ArmyFormationPlannerTest, SlotsAroundAnObstacleAreMarkedAdjustedNotBlocked) {
-  Game::Systems::CommandService::initialize(64, 64);
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  Game::Systems::NavGrid::initialize(64, 64);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
@@ -510,8 +509,7 @@ TEST_F(ArmyFormationPlannerTest, SlotsAroundAnObstacleAreMarkedAdjustedNotBlocke
   }
 
   QVector3D const target(20.0F, 0.0F, 20.0F);
-  auto const centre =
-      Game::Systems::CommandService::world_to_grid(target.x(), target.z());
+  auto const centre = Game::Systems::NavGrid::world_to_grid(target.x(), target.z());
   pathfinder->set_obstacle(centre.x, centre.y, true);
   pathfinder->set_obstacle(centre.x + 1, centre.y, true);
 
@@ -523,7 +521,7 @@ TEST_F(ArmyFormationPlannerTest, SlotsAroundAnObstacleAreMarkedAdjustedNotBlocke
       continue;
     }
     EXPECT_TRUE(
-        Game::Systems::CommandService::is_world_position_walkable(slot.world_position));
+        Game::Systems::NavGrid::is_world_position_walkable(slot.world_position));
   }
 }
 

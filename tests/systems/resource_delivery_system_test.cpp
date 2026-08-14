@@ -9,8 +9,8 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_delivery_system.h"
@@ -26,7 +26,7 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
-    Game::Systems::CommandService::initialize(64, 64);
+    Game::Systems::NavGrid::initialize(64, 64);
   }
 
   void TearDown() override {
@@ -168,7 +168,7 @@ TEST_F(ResourceDeliverySystemTest, AHaulerWalksTheWholeWayHomeBeforeTheCountersM
   map_def.grid.height = 64;
   map_def.grid.tile_size = 1.0F;
   Game::Map::TerrainService::instance().initialize(map_def);
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 

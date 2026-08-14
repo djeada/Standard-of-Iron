@@ -32,7 +32,7 @@ struct FrameContext {
 
   Render::GL::PrimitiveBatcher* primitive_batcher{nullptr};
 
-  Game::Map::VisibilityService* visibility{nullptr};
+  const Game::Map::VisibilityService* visibility{nullptr};
   bool visibility_enabled{false};
 
   QVector3D light_direction{0.65F, 0.50F, 0.40F};

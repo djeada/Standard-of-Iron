@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "app/core/input_command_handler.h"
+#include "game/systems/nav_grid.h"
 #define private public
 #include "app/core/production_manager.h"
 #undef private
@@ -11,7 +12,6 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
@@ -36,7 +36,7 @@ protected:
     resources.set(1, Game::Systems::ResourceType::Wood, 1000);
     resources.set(1, Game::Systems::ResourceType::Stone, 1000);
     resources.set(1, Game::Systems::ResourceType::Iron, 1000);
-    Game::Systems::CommandService::initialize(32, 32);
+    Game::Systems::NavGrid::initialize(32, 32);
 
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*registry);
@@ -155,7 +155,7 @@ protected:
     map_def.grid.tile_size = 1.0F;
     map_def.world_props.push_back({.type = prop_type, .x = 16.0F, .z = 16.0F});
     Game::Map::TerrainService::instance().initialize(map_def);
-    Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+    Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
   }
 
   void initialize_collect_hill_map(Game::Map::WorldProp::Type prop_type) {
@@ -175,7 +175,7 @@ protected:
                                .height = 8.0F});
     map_def.world_props.push_back({.type = prop_type, .x = 16.0F, .z = 16.0F});
     Game::Map::TerrainService::instance().initialize(map_def);
-    Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+    Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
   }
 
   auto find_collect_target(Game::Map::WorldProp::Type prop_type)
@@ -357,7 +357,7 @@ TEST_F(ProductionManagerTest,
   ProductionManager manager(&world, &picking_service, &camera);
 
   const QVector3D anchor_world =
-      Game::Systems::CommandService::grid_to_world(Game::Systems::Point{16, 16});
+      Game::Systems::NavGrid::grid_to_world(Game::Systems::Point{16, 16});
   auto* existing_wall = add_existing_wall(anchor_world.x(), anchor_world.z());
   ASSERT_NE(existing_wall, nullptr);
 
@@ -377,7 +377,7 @@ TEST_F(ProductionManagerTest,
   ASSERT_NE(preview_transform, nullptr);
 
   const QVector3D expected_world =
-      Game::Systems::CommandService::grid_to_world(Game::Systems::Point{16, 18});
+      Game::Systems::NavGrid::grid_to_world(Game::Systems::Point{16, 18});
   EXPECT_NEAR(preview_transform->position.x, expected_world.x(), 0.0001F);
   EXPECT_NEAR(preview_transform->position.z, expected_world.z(), 0.0001F);
 
@@ -571,7 +571,7 @@ TEST_F(ProductionManagerTest, CollectPreviewSnapsToResourceCenterWhenNearby) {
   Game::Map::apply_ground_type_defaults(map_def.biome,
                                         Game::Map::GroundType::SoilRocky);
   Game::Map::TerrainService::instance().initialize(map_def);
-  Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
 
   auto& terrain = Game::Map::TerrainService::instance();
   auto target = terrain.find_boulder_near_world(0.0F, 0.0F, 100.0F);
@@ -608,7 +608,7 @@ TEST_F(ProductionManagerTest,
   Game::Map::apply_ground_type_defaults(map_def.biome,
                                         Game::Map::GroundType::SoilRocky);
   Game::Map::TerrainService::instance().initialize(map_def);
-  Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
 
   auto& terrain = Game::Map::TerrainService::instance();
   auto target = terrain.find_boulder_near_world(0.0F, 0.0F, 100.0F);

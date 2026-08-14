@@ -403,10 +403,10 @@ auto palette_contact_y(CreatureKind kind,
   return 0.0F;
 }
 
-auto sample_terrain_height_or_fallback(float world_x,
+auto sample_terrain_height_or_fallback(const Game::Map::TerrainService& terrain_service,
+                                       float world_x,
                                        float world_z,
                                        float fallback_y) noexcept -> float {
-  auto& terrain_service = Game::Map::TerrainService::instance();
   return terrain_service
       .resolve_surface_world_position(world_x, world_z, 0.0F, fallback_y)
       .y();
@@ -426,18 +426,19 @@ auto make_runtime_prewarm_ctx(const Render::GL::DrawContext& ctx) noexcept
   return runtime_ctx;
 }
 
-auto ground_model_contact_to_surface(QMatrix4x4& model,
+auto ground_model_contact_to_surface(const Game::Map::TerrainService& terrain,
+                                     QMatrix4x4& model,
                                      float local_contact_y,
                                      float y_scale,
                                      float entity_ground_offset) noexcept -> float {
   float const world_y_offset = (entity_ground_offset + local_contact_y) * y_scale;
-  return ground_model_to_terrain(model, world_y_offset);
+  return ground_model_to_terrain(terrain, model, world_y_offset);
 }
 
-auto ground_model_to_terrain(QMatrix4x4& model,
+auto ground_model_to_terrain(const Game::Map::TerrainService& terrain_service,
+                             QMatrix4x4& model,
                              float world_y_offset) noexcept -> float {
   QVector3D const origin = model_world_origin(model);
-  auto& terrain_service = Game::Map::TerrainService::instance();
   QVector3D const grounded_origin = terrain_service.resolve_surface_world_position(
       origin.x(), origin.z(), -world_y_offset, origin.y());
   set_model_world_y(model, grounded_origin.y());

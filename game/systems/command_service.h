@@ -3,7 +3,6 @@
 #include <QVector3D>
 
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <vector>
 
@@ -44,18 +43,6 @@ public:
   static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16F;
   static constexpr float k_unit_radius_threshold = 0.5F;
 
-  static void initialize(int world_width, int world_height);
-
-  static auto get_pathfinder() -> Pathfinding*;
-  static auto world_to_grid(float world_x, float world_z) -> Point;
-  static auto grid_to_world(const Point& grid_pos) -> QVector3D;
-  static auto is_grid_walkable(const Point& grid_pos) -> bool;
-  static auto is_world_position_walkable(const QVector3D& world_position) -> bool;
-  static auto find_nearest_walkable_grid(const Point& origin,
-                                         int max_search_radius) -> std::optional<Point>;
-  static auto snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D;
-  static auto snap_to_walkable_ground(const QVector3D& world_position,
-                                      int max_search_radius) -> QVector3D;
   static auto plan_ground_move(Engine::Core::World& world,
                                const std::vector<Engine::Core::EntityID>& units,
                                const QVector3D& target,
@@ -96,7 +83,6 @@ public:
                             bool should_chase = true);
 
 private:
-  static std::unique_ptr<Pathfinding> s_pathfinder;
   static auto resolve_move_targets(Engine::Core::World& world,
                                    const std::vector<Engine::Core::EntityID>& units,
                                    const QVector3D& center) -> std::vector<QVector3D>;

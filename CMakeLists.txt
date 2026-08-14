@@ -381,8 +381,35 @@ if(Python3_Interpreter_FOUND)
         COMMENT "Checking layer dependencies"
         VERBATIM
     )
+    # The boundaries *inside* game/. Seven of the modules in
+    # scripts/module_rules.json are their own CMake target, so the linker
+    # enforces them; the rest still share libgame_sim.a, and this is the only
+    # thing that keeps combat, navigation, formations, economy and the world
+    # from growing new edges into each other. It holds the current count and
+    # will not let it rise.
+    add_custom_target(
+        check_modules
+        ALL
+        COMMAND
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-modules.py ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking module boundaries inside game/"
+        VERBATIM
+    )
+    # The renderer draws the match it was handed and does not resolve the
+    # ambient session for itself. That is the precondition for a client
+    # rendering state it received rather than state it simulated, so it is a
+    # build failure rather than a review comment. See render/world_view.h.
+    add_custom_target(
+        check_render_boundary
+        ALL
+        COMMAND
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-render-boundary.py
+            ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking the render/simulation boundary"
+        VERBATIM
+    )
 else()
-    message(STATUS "Python3 not found; skipping the layering check")
+    message(STATUS "Python3 not found; skipping the layering and module checks")
 endif()
 
 add_subdirectory(animation)
@@ -481,9 +508,14 @@ add_subdirectory(render)
 add_subdirectory(game)
 # render/ reads game state to draw it: terrain, visibility, nations, and the
 # shared world placement rules.  Declared here because render/ is configured
-# before game/.  This is now a one-way edge -- game_systems does not link
-# render_gl -- so the simulation builds and runs without the renderer.
-target_link_libraries(render_gl PUBLIC game_systems)
+# before game/.  This is a one-way edge -- game_sim does not link render_gl --
+# so the simulation builds and runs without the renderer.
+#
+# game_sim and not game_systems: the renderer includes nothing from game/view/,
+# and nothing from the AI, the mission loaders or the save stack. Naming the
+# facade here handed all of that to every binary that draws anything, which is
+# how a renderer test ended up linking the save database.
+target_link_libraries(render_gl PUBLIC game_sim)
 
 add_subdirectory(ui)
 add_subdirectory(tools)
@@ -586,9 +618,24 @@ target_link_libraries(
         render_gl
         game_sim
         game_view
+        # The application is the layer that legitimately needs all of gameplay:
+        # it starts missions, restores saves, installs the system registry and
+        # hands the AI its opponents. Named one by one rather than through the
+        # game_systems facade so this list stays a true statement of what the
+        # composition root touches -- and so removing a responsibility from it
+        # shows up here.
+        soi_ai
+        soi_runtime
+        soi_missions
+        soi_campaign
+        soi_persistence
         audio_system
 )
 set_target_properties(app_core PROPERTIES AUTOMOC ON)
+
+# The name docs/ARCHITECTURE.md gives this layer. See the alias note in
+# game/CMakeLists.txt.
+add_library(soi_app ALIAS app_core)
 
 # ---- Executable ----
 qt6_add_executable(standard_of_iron

@@ -7,9 +7,9 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_system.h"
@@ -26,7 +26,7 @@ protected:
     Game::Systems::MarketplaceSystem::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
-    Game::Systems::CommandService::initialize(8, 8);
+    Game::Systems::NavGrid::initialize(8, 8);
 
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*registry);
@@ -43,8 +43,8 @@ protected:
 };
 
 TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
-  auto const tree_world = Game::Systems::CommandService::grid_to_world({4, 4});
-  auto const work_world = Game::Systems::CommandService::grid_to_world({3, 4});
+  auto const tree_world = Game::Systems::NavGrid::grid_to_world({4, 4});
+  auto const work_world = Game::Systems::NavGrid::grid_to_world({3, 4});
 
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 8;
@@ -57,7 +57,7 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
   terrain.initialize(map_def);
   ASSERT_EQ(terrain.world_props().size(), 1U);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
   EXPECT_TRUE(pathfinder->is_tree(4, 4));
@@ -125,8 +125,8 @@ TEST_F(ProductionSystemTest, BuilderChopsTreeAndAwardsWood) {
 }
 
 TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
-  auto const boulder_world = Game::Systems::CommandService::grid_to_world({4, 4});
-  auto const work_world = Game::Systems::CommandService::grid_to_world({3, 4});
+  auto const boulder_world = Game::Systems::NavGrid::grid_to_world({4, 4});
+  auto const work_world = Game::Systems::NavGrid::grid_to_world({3, 4});
 
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 8;
@@ -139,7 +139,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
   terrain.initialize(map_def);
   ASSERT_EQ(terrain.world_props().size(), 1U);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
   EXPECT_TRUE(pathfinder->is_boulder(4, 4));
@@ -207,8 +207,8 @@ TEST_F(ProductionSystemTest, BuilderCollectsStoneAndAwardsStone) {
 }
 
 TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
-  auto const iron_ore_world = Game::Systems::CommandService::grid_to_world({4, 4});
-  auto const work_world = Game::Systems::CommandService::grid_to_world({3, 4});
+  auto const iron_ore_world = Game::Systems::NavGrid::grid_to_world({4, 4});
+  auto const work_world = Game::Systems::NavGrid::grid_to_world({3, 4});
 
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 8;
@@ -221,7 +221,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
   terrain.initialize(map_def);
   ASSERT_EQ(terrain.world_props().size(), 1U);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
   EXPECT_TRUE(pathfinder->is_iron_ore(4, 4));
@@ -289,7 +289,7 @@ TEST_F(ProductionSystemTest, BuilderCollectsIronOreAndAwardsIron) {
 }
 
 TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
 
   auto& terrain = Game::Map::TerrainService::instance();
@@ -313,7 +313,7 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
     pathfinder->update_navigation_grid();
     EXPECT_TRUE((pathfinder->*resource_check)(4, 4));
 
-    auto const target_world = Game::Systems::CommandService::grid_to_world({4, 4});
+    auto const target_world = Game::Systems::NavGrid::grid_to_world({4, 4});
     std::uint64_t const target_id = terrain.world_props().front().id;
     ASSERT_TRUE(terrain.reserve_world_prop(target_id));
 
@@ -376,7 +376,7 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
 }
 
 TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
-  auto const build_world = Game::Systems::CommandService::grid_to_world({4, 4});
+  auto const build_world = Game::Systems::NavGrid::grid_to_world({4, 4});
 
   Engine::Core::World world;
   auto* builder = world.create_entity();

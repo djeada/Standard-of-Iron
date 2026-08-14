@@ -166,11 +166,12 @@ auto build_soldier_layout(const SoldierLayoutInputs& inputs) -> SoldierLayout {
     query.spacing = inputs.formation_spacing;
     query.seed = inputs.seed;
     query.formed_ratio = inputs.formed_ratio;
-    auto const formation_offset =
-        Game::Formation::UnitLayoutSystem::instance().offset(query);
-    layout.offset_x = formation_offset.offset_x;
-    layout.offset_z = formation_offset.offset_z;
-    layout.yaw_offset = formation_offset.yaw_offset;
+    if (inputs.soldier_offsets != nullptr) {
+      auto const formation_offset = inputs.soldier_offsets->offset(query);
+      layout.offset_x = formation_offset.offset_x;
+      layout.offset_z = formation_offset.offset_z;
+      layout.yaw_offset = formation_offset.yaw_offset;
+    }
   }
 
   layout.offset_x += policy.offset_x_delta;

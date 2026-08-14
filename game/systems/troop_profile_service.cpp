@@ -36,6 +36,26 @@ void TroopProfileService::clear() {
   m_cache.clear();
 }
 
+void TroopProfileService::prime() {
+  for (const auto& nation : NationRegistry::instance().get_all_nations()) {
+    for (const auto& [type, troop_class] :
+         Game::Units::TroopCatalog::instance().get_all_classes()) {
+
+      (void)get_profile(nation.id, type);
+    }
+  }
+}
+
+auto TroopProfileService::find_profile(
+    NationID nation_id, Game::Units::TroopType type) const -> const TroopProfile* {
+  auto const nation_cache = m_cache.find(nation_id);
+  if (nation_cache == m_cache.end()) {
+    return nullptr;
+  }
+  auto const profile = nation_cache->second.find(type);
+  return profile != nation_cache->second.end() ? &profile->second : nullptr;
+}
+
 auto TroopProfileService::get_profile(NationID nation_id,
                                       Game::Units::TroopType type) -> TroopProfile {
   auto& nation_cache = m_cache[nation_id];

@@ -15,7 +15,8 @@ auto cavalry_formation_spacing(float mount_scale) -> float {
   return horse_length * 1.10F;
 }
 
-auto resolve_formation_spacing(Game::Units::SpawnType spawn_type,
+auto resolve_formation_spacing(const Game::Units::TroopConfig& config,
+                               Game::Units::SpawnType spawn_type,
                                float configured_spacing,
                                float mount_scale) -> float {
   switch (spawn_type) {
@@ -30,7 +31,7 @@ auto resolve_formation_spacing(Game::Units::SpawnType spawn_type,
   if (configured_spacing > 0.0F) {
     return configured_spacing;
   }
-  return Game::Units::TroopConfig::instance().get_formation_spacing(spawn_type);
+  return config.get_formation_spacing(spawn_type);
 }
 
 } // namespace Render::GL

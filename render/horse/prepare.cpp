@@ -60,14 +60,15 @@ auto horse_clip_for_motion(const Render::GL::HorseMotionSample& motion) noexcept
       k_horse_clips, motion.playback_gait_type, motion.is_fighting);
 }
 
-void ground_horse_model(QMatrix4x4& model,
+void ground_horse_model(const Game::Map::TerrainService& terrain,
+                        QMatrix4x4& model,
                         std::uint16_t clip_id,
                         float phase) noexcept {
   float const y_scale = model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
   float const contact_y =
       Render::Creature::Pipeline::horse_clip_contact_y(clip_id, phase).value_or(0.0F);
   Render::Creature::Pipeline::ground_model_contact_to_surface(
-      model, contact_y, y_scale);
+      terrain, model, contact_y, y_scale);
   auto const grounded_origin = Render::Creature::Pipeline::model_world_origin(model);
   Render::Creature::Pipeline::set_model_world_y(
       model, grounded_origin.y() + k_ground_clearance_epsilon);
@@ -79,7 +80,10 @@ auto grounded_horse_world(const Render::GL::DrawContext& ctx,
                           const Render::GL::HorseMotionSample& motion) noexcept
     -> QMatrix4x4 {
   QMatrix4x4 world = ctx.model;
-  ground_horse_model(world, horse_clip_for_motion(motion), motion.phase);
+  ground_horse_model(ctx.world_view.terrain_or_empty(),
+                     world,
+                     horse_clip_for_motion(motion),
+                     motion.phase);
   return world;
 }
 

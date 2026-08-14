@@ -1,33 +1,52 @@
 # Standard of Iron — test suite
 
-Around 2,700 GoogleTest cases across five binaries, plus a QtQuickTest suite for
+Around 2,700 GoogleTest cases across nine binaries, plus a QtQuickTest suite for
 the QML design system. The split is not organisational tidiness: each binary
 links a different slice of the project, so the boundary it sits behind is
 enforced by the link step rather than by review.
 
 ## The binaries
 
-| Binary                    | Links                                                 | Covers                                                                                                                                                                           |
-| ------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `simulation_tests`        | `engine_core`, `game_sim`                             | The simulation kernel: session, command pipeline, ECS, systems (combat, movement, AI, pathfinding, production, formations), map and mission loading, and the architecture guards |
-| `persistence_tests`       | `engine_core`, `game_sim`                             | The snapshot contract, the save format, the save database and mission progress                                                                                                   |
-| `render_tests`            | `+ render_gl`                                         | The renderer, the creature/equipment pipeline, the software rasteriser                                                                                                           |
-| `app_tests`               | `+ app_core`, `ui_shell`                              | View models, controllers, the widget shell, and the gameplay services that need a camera or the application around them                                                          |
-| `tools_tests`             | `+ map_editor_core`, `arena_*`, `balance_sim_harness` | The map editor document model, the arena harness and the balance runner                                                                                                          |
-| `design_system_qml_tests` | `ui_shell`                                            | The QML design system, driven by QtQuickTest. Skipped when Qt QuickTest is not installed                                                                                         |
+| Binary                    | Links                                                               | Covers                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `simulation_tests`        | `engine_core`, `game_sim`, `soi_persistence`                        | The kernel: session, command pipeline, ECS, terrain and map loading, production, wildlife, and the architecture guards  |
+| `combat_balance_tests`    | `+ soi_runtime`, `soi_persistence`                                  | Combat, formations, and the headless battles that drive the production system registry                                  |
+| `ai_tests`                | `+ soi_ai`, `soi_runtime`                                           | The computer opponent, and the two scenarios that need one to be meaningful                                             |
+| `campaign_tests`          | `+ soi_missions` (which brings `soi_campaign`)                      | Mission and campaign content, victory rules, wave archetypes, the map/mission catalogue                                 |
+| `persistence_tests`       | `+ soi_persistence`, `soi_missions`                                 | The snapshot contract, the save format, the save database and mission progress                                          |
+| `render_tests`            | `+ render_gl`                                                       | The renderer, the creature/equipment pipeline, the software rasteriser                                                  |
+| `app_tests`               | `+ app_core`, `ui_shell`                                            | View models, controllers, the widget shell, and the gameplay services that need a camera or the application around them |
+| `arena_tests`             | `+ render_gl`, `arena_scenario_harness`, `arena_panels`             | The arena scenarios, runner, frame continuity, promo capture schedule and panel population                              |
+| `tools_tests`             | `engine_core`, `game_sim`, `map_editor_core`, `balance_sim_harness` | The map editor document model and the balance runner. Links no renderer at all                                          |
+| `design_system_qml_tests` | `ui_shell`                                                          | The QML design system, driven by QtQuickTest. Skipped when Qt QuickTest is not installed                                |
 
-Two rules keep the split meaningful:
+Three rules keep the split meaningful:
 
 - **A test binary links production targets.** It never re-lists a production
   `.cpp` in its own source list — a separately compiled copy can pass while the
   object the game ships is broken.
-- **No test is quarantined.** Nothing is excluded from the default run. A test
-  that cannot build or cannot pass is fixed or deleted with an issue.
+- **A test binary links the domains it uses and no more.** Reaching for
+  `game_systems` because it is convenient puts the AI and the save database into
+  a binary that was supposed to prove it needed neither. (`simulation_tests` and
+  `combat_balance_tests` do link `soi_persistence`, for three "survives a save"
+  assertions. It sits _above_ `game_sim`, and a kernel file reaching down into it
+  fails `scripts/check-modules.py` — so the boundary is still enforced, just by
+  the module check rather than by the link step.)
+- **No test is quarantined.** Nothing is excluded from the default run, and no
+  test source is listed behind an `if(EXISTS)`. A test that cannot build or
+  cannot pass is fixed or deleted with an issue.
 
-`simulation_tests` is the one to watch. It links the kernel and nothing else, so
-a gameplay file that starts needing a camera, the renderer or `app/` breaks its
-link step. `tests/architecture/layering_test.cpp` says the same thing about
-includes, and `documentation_accuracy_test.cpp` checks that the README and
+All three are checked, not just asserted:
+`tests/architecture/module_boundary_test.cpp` fails if a production `.cpp`
+appears in this directory's source lists, and if `scripts/run-tests.sh` and
+`soi_test_binaries` disagree about which suites exist.
+
+`simulation_tests` is the one to watch. It links the kernel and nothing else —
+no AI, no save stack, no runtime, no camera — so a gameplay file that starts
+needing any of them breaks its link step.
+`tests/architecture/layering_test.cpp` says the same thing about includes,
+`module_boundary_test.cpp` covers the module map inside `game_sim`, and
+`documentation_accuracy_test.cpp` checks that the README and
 `docs/ARCHITECTURE.md` still describe the code that exists.
 
 ## Running them
@@ -57,9 +76,12 @@ the Makefile:
 make test-only TEST_ARGS="--gtest_filter=SaveLoadServiceTest.*"
 ```
 
-Two focused binaries exist alongside the five: `horse_model_tests` and
+Two focused binaries exist alongside the nine: `horse_model_tests` and
 `elephant_model_tests` build one contract file each, so they stay runnable when
-an unrelated translation unit in the render suite has interface drift.
+an unrelated translation unit in the render suite has interface drift. Both of
+those sources are also compiled into `render_tests`, which is where they run on
+the default path — the focused binaries are a debugging convenience, not a
+second verification route.
 
 ## Adding a test
 

@@ -32,6 +32,7 @@
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "render/world_view.h"
 #include "tests/render/test_asset_paths.h"
 
 namespace {
@@ -276,6 +277,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -318,6 +320,7 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -400,6 +403,7 @@ TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
   Render::Elephant::ElephantPreparation prep;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_horse_lod = true;
   ctx.forced_horse_lod = Render::GL::HorseLOD::Full;
 
@@ -520,6 +524,7 @@ TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.model.translate(0.2F, 11.0F, -0.35F);
 
   Render::GL::ElephantProfile profile = Render::GL::make_elephant_profile(
@@ -546,6 +551,7 @@ TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.template_prewarm = true;
   Render::GL::AnimationInputs const anim{
       .time = 0.4F,
@@ -577,6 +583,7 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.template_prewarm = true;
   Render::GL::AnimationInputs const anim{
       .time = 0.2F,
@@ -619,6 +626,7 @@ TEST(ElephantPrepare, FullTemplatePrewarmBypassesSnapshotCache) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.template_prewarm = true;
   ctx.force_horse_lod = true;
@@ -642,6 +650,7 @@ TEST(ElephantPrepare, ShadowBatchEmptyWithoutResources) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = true;
 
   Render::GL::AnimationInputs const anim{};

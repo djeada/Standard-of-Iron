@@ -7,8 +7,9 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "building_collision_registry.h"
-#include "command_service.h"
+#include "nav_grid.h"
 #include "owner_registry.h"
+#include "pathfinding.h"
 
 namespace Game::Systems {
 
@@ -51,7 +52,7 @@ auto GateService::passage_blocker_bounds(float center_x,
                    .min_z = center_z - extent.half_z,
                    .max_z = center_z + extent.half_z};
 
-  auto* pathfinder = CommandService::get_pathfinder();
+  auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return bounds;
   }

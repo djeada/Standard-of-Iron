@@ -22,39 +22,27 @@ target_include_directories(
 )
 target_link_libraries(map_editor_core PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui)
 
+# The widget sources. game/map/environment_lighting.cpp and ui/widget_shell.cpp
+# used to be listed here too, compiled a second time into the editor even though
+# game_sim and ui_shell already ship them. They are linked now.
+set(MAP_EDITOR_SOURCES
+    main.cpp
+    editor_window.cpp
+    mission_panel.cpp
+    map_canvas.cpp
+    spawn_icon_library.cpp
+    tool_panel.cpp
+    terrain_projection_widget.cpp
+    hill_projection_widget.cpp
+    mountain_projection_widget.cpp
+    json_edit_dialog.cpp
+    resize_dialog.cpp
+)
+
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt6_add_executable(map_editor
-        main.cpp
-        ${CMAKE_SOURCE_DIR}/game/map/environment_lighting.cpp
-        editor_window.cpp
-        mission_panel.cpp
-        map_canvas.cpp
-        spawn_icon_library.cpp
-        tool_panel.cpp
-        terrain_projection_widget.cpp
-        hill_projection_widget.cpp
-        mountain_projection_widget.cpp
-        json_edit_dialog.cpp
-        resize_dialog.cpp
-        ../../ui/widget_shell.cpp
-    )
+    qt6_add_executable(map_editor ${MAP_EDITOR_SOURCES})
 else()
-    add_executable(
-        map_editor
-        main.cpp
-        ${CMAKE_SOURCE_DIR}/game/map/environment_lighting.cpp
-        editor_window.cpp
-        mission_panel.cpp
-        map_canvas.cpp
-        spawn_icon_library.cpp
-        tool_panel.cpp
-        terrain_projection_widget.cpp
-        hill_projection_widget.cpp
-        mountain_projection_widget.cpp
-        json_edit_dialog.cpp
-        resize_dialog.cpp
-        ../../ui/widget_shell.cpp
-    )
+    add_executable(map_editor ${MAP_EDITOR_SOURCES})
 endif()
 
 target_link_libraries(
@@ -65,6 +53,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Qml
         map_editor_core
+        game_sim
 )
 
 # Keep tool binaries alongside the main game binary for consistent dev runs

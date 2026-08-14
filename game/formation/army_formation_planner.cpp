@@ -11,8 +11,8 @@
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
-#include "../systems/command_service.h"
 #include "../systems/nation_registry.h"
+#include "../systems/nav_grid.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_config.h"
 #include "army_formation_registry.h"
@@ -523,7 +523,7 @@ public:
     }
 
     if (m_grid.is_free(ideal) &&
-        Game::Systems::CommandService::is_world_position_walkable(ideal)) {
+        Game::Systems::NavGrid::is_world_position_walkable(ideal)) {
       m_grid.claim(ideal);
       status = SlotStatus::Valid;
       return ideal;
@@ -544,7 +544,7 @@ public:
         if (!m_grid.is_free(candidate)) {
           continue;
         }
-        if (!Game::Systems::CommandService::is_world_position_walkable(candidate)) {
+        if (!Game::Systems::NavGrid::is_world_position_walkable(candidate)) {
           continue;
         }
         m_grid.claim(candidate);
@@ -1002,7 +1002,7 @@ auto ArmyFormationPlanner::place(const ArmyFormationLayout& layout,
       layout.spacing, request.resolve_terrain, plan.slot_list.size());
   QVector3D const anchor =
       request.resolve_terrain
-          ? Game::Systems::CommandService::snap_to_walkable_ground(request.anchor, 15)
+          ? Game::Systems::NavGrid::snap_to_walkable_ground(request.anchor, 15)
           : request.anchor;
   plan.anchor = anchor;
 

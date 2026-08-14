@@ -11,7 +11,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
 #include "game/view/selection_controller.h"
@@ -24,7 +24,7 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    Game::Systems::CommandService::initialize(32, 32);
+    Game::Systems::NavGrid::initialize(32, 32);
 
     world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
     selection_system = world.get_system<Game::Systems::SelectionSystem>();

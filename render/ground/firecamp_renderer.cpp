@@ -223,7 +223,7 @@ void FireCampRenderer::generate_firecamp_instances() {
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
   }
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = world().terrain_or_empty();
   const float half_w = static_cast<float>(m_width) * 0.5F;
   const float half_h = static_cast<float>(m_height) * 0.5F;
 

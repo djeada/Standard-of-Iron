@@ -13,10 +13,6 @@
 
 namespace Game::Systems {
 
-auto GlobalStatsRegistry::instance() -> GlobalStatsRegistry& {
-  return Game::Session::SessionContext::active().stats();
-}
-
 void GlobalStatsRegistry::initialize() {
   m_unit_spawned_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(

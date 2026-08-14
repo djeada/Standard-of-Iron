@@ -32,6 +32,7 @@
 #include "render/horse/prepare.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "render/world_view.h"
 #include "tests/render/test_asset_paths.h"
 
 namespace {
@@ -164,6 +165,7 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.template_prewarm = true;
 
@@ -245,6 +247,7 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -295,6 +298,7 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -323,6 +327,7 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
 
   Render::GL::HorseRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.model.translate(-0.3F, 6.0F, 0.45F);
 
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
@@ -608,6 +613,7 @@ TEST(HorsePrepare, ShadowBatchEmptyWithoutResources) {
 
   Render::GL::HorseRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = true;
   Render::GL::AnimationInputs const anim{};
   Render::GL::HumanoidAnimationContext const rider_ctx{};

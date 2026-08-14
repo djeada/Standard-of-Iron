@@ -8,11 +8,18 @@ add_library(
     arena_trailer_scenarios.cpp
     arena_wildlife_scenarios.cpp
     terrain_alignment.cpp
+    # The promo camera and capture schedule. It needs no GL, so it belongs in
+    # the harness rather than only inside arena_app -- which is what forced
+    # tools_tests to compile promo_spec.cpp a second time to reach it.
+    promo_spec.cpp
 )
 target_include_directories(arena_scenario_harness PUBLIC "${CMAKE_SOURCE_DIR}")
+# game_sim, not game_systems: every scenario is scripted, so the harness spawns
+# units, issues commands and ticks combat without ever asking for an opponent, a
+# mission file, a save or a camera service.
 target_link_libraries(
     arena_scenario_harness
-    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core render_gl game_systems
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core render_gl game_sim
 )
 
 # The two panels whose population rules the tests assert. Same reasoning as
@@ -29,49 +36,26 @@ target_link_libraries(
         arena_scenario_harness
 )
 
+# Only the sources that exist nowhere else. The scenario files and promo_spec
+# come from arena_scenario_harness, the five app/core translation units from
+# app_core, and widget_shell.cpp from ui_shell -- all of which this target
+# already links. Listing them here as well compiled a private copy of each into
+# the arena, so a review run in the arena could disagree with the game about
+# camera framing, world bootstrap or the RTS action model.
+set(ARENA_APP_SOURCES
+    main.cpp
+    arena_window.cpp
+    arena_viewport.cpp
+    terrain_panel.cpp
+    prop_panel.cpp
+    promo_runner.cpp
+    video_encoder.cpp
+)
+
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt6_add_executable(arena_app
-        main.cpp
-        arena_window.cpp
-        arena_viewport.cpp
-        terrain_panel.cpp
-        prop_panel.cpp
-        arena_formation_scenarios.cpp
-        arena_showcase_scenarios.cpp
-    arena_trailer_scenarios.cpp
-    arena_wildlife_scenarios.cpp
-        promo_spec.cpp
-        promo_runner.cpp
-        video_encoder.cpp
-        ../../app/core/renderer_bootstrap.cpp
-        ../../app/core/commander_camera_rig.cpp
-        ../../app/core/commander_control_controller.cpp
-        ../../app/core/world_bootstrap.cpp
-        ../../app/core/rts_action_model.cpp
-        ../../ui/widget_shell.cpp
-    )
+    qt6_add_executable(arena_app ${ARENA_APP_SOURCES})
 else()
-    add_executable(
-        arena_app
-        main.cpp
-        arena_window.cpp
-        arena_viewport.cpp
-        terrain_panel.cpp
-        prop_panel.cpp
-        arena_formation_scenarios.cpp
-        arena_showcase_scenarios.cpp
-        arena_trailer_scenarios.cpp
-        arena_wildlife_scenarios.cpp
-        promo_spec.cpp
-        promo_runner.cpp
-        video_encoder.cpp
-        ../../app/core/renderer_bootstrap.cpp
-        ../../app/core/commander_camera_rig.cpp
-        ../../app/core/commander_control_controller.cpp
-        ../../app/core/world_bootstrap.cpp
-        ../../app/core/rts_action_model.cpp
-        ../../ui/widget_shell.cpp
-    )
+    add_executable(arena_app ${ARENA_APP_SOURCES})
 endif()
 
 target_include_directories(arena_app PRIVATE "${CMAKE_SOURCE_DIR}")
@@ -92,6 +76,7 @@ target_link_libraries(
         render_gl
         game_systems
         audio_system
+        app_core
         arena_scenario_harness
         arena_panels
 )

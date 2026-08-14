@@ -108,12 +108,14 @@ void draw_wing(ISubmitter& out,
 
 } // namespace
 
-auto submit_bird_flocks(ISubmitter& out,
+auto submit_bird_flocks(const Render::WorldView& world,
+                        ISubmitter& out,
                         const SubmissionVisibilityPolicy* visibility,
                         const Camera* camera) -> BirdFlockSubmitStats {
   BirdFlockSubmitStats stats;
 
-  const auto frame = Game::Wildlife::BirdFlockManager::instance().frame();
+  const auto* flocks = world.birds();
+  const auto frame = flocks != nullptr ? flocks->frame() : nullptr;
   if (frame == nullptr || frame->birds.empty()) {
     return stats;
   }

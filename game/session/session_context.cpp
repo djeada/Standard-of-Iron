@@ -102,6 +102,10 @@ auto SessionContext::visibility() -> Game::Map::VisibilityService& {
   return m_state->visibility;
 }
 
+auto SessionContext::visibility() const -> const Game::Map::VisibilityService& {
+  return m_state->visibility;
+}
+
 auto SessionContext::owners() -> Game::Systems::OwnerRegistry& {
   return m_state->owners;
 }

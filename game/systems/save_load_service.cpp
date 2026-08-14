@@ -14,8 +14,8 @@
 #include <chrono>
 #include <exception>
 
-#include "game/core/serialization.h"
 #include "game/core/world.h"
+#include "game/save/serialization.h"
 #include "save_storage.h"
 
 namespace Game::Systems {

@@ -8,9 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include "../session/session_context.h"
-#include "command_service.h"
-#include "pathfinding.h"
+#include "../core/world.h"
 
 namespace Game::Systems {
 
@@ -28,8 +26,49 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
 float BuildingCollisionRegistry::s_grid_padding =
     BuildingCollisionRegistry::k_default_grid_padding;
 
-auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry& {
-  return Game::Session::SessionContext::active().building_collision();
+namespace {
+
+BuildingCollisionRegistry::RegionDirtyHook g_region_dirty_hook = nullptr;
+BuildingCollisionRegistry::GridDirtyHook g_grid_dirty_hook = nullptr;
+BuildingCollisionRegistry::GridDirtyHook g_obstruction_released_hook = nullptr;
+
+void announce_region_dirty(float center_x, float center_z, float width, float depth) {
+  if (g_region_dirty_hook != nullptr) {
+    g_region_dirty_hook(center_x, center_z, width, depth);
+  }
+}
+
+void announce_grid_dirty() {
+  if (g_grid_dirty_hook != nullptr) {
+    g_grid_dirty_hook();
+  }
+}
+
+void announce_obstruction_released() {
+  if (g_obstruction_released_hook != nullptr) {
+    g_obstruction_released_hook();
+  }
+}
+
+} // namespace
+
+void BuildingCollisionRegistry::set_region_dirty_hook(RegionDirtyHook hook) {
+  g_region_dirty_hook = hook;
+}
+
+void BuildingCollisionRegistry::set_grid_dirty_hook(GridDirtyHook hook) {
+  g_grid_dirty_hook = hook;
+}
+
+void BuildingCollisionRegistry::set_obstruction_released_hook(GridDirtyHook hook) {
+  g_obstruction_released_hook = hook;
+}
+
+BuildingCollisionRegistry::BuildingCollisionRegistry() {
+
+  Engine::Core::World::set_entity_destroyed_hook([](Engine::Core::EntityID id) {
+    BuildingCollisionRegistry::instance().unregister_building(id);
+  });
 }
 
 auto BuildingCollisionRegistry::get_building_size(const std::string& building_type)
@@ -126,10 +165,7 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
   m_entity_to_index[entity_id] = m_buildings.size() - 1;
   add_to_spatial_index(m_buildings.back());
 
-  if (auto* pf = CommandService::get_pathfinder()) {
-
-    pf->mark_building_region_dirty(center_x, center_z, size.width, size.depth);
-  }
+  announce_region_dirty(center_x, center_z, size.width, size.depth);
 }
 
 void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entity_id) {
@@ -158,12 +194,8 @@ void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entit
 
   release_authored_obstacles_within(center_x, center_z, width, depth);
 
-  if (auto* pf = CommandService::get_pathfinder()) {
-
-    pf->mark_building_region_dirty(center_x, center_z, width, depth);
-
-    pf->mark_obstruction_released();
-  }
+  announce_region_dirty(center_x, center_z, width, depth);
+  announce_obstruction_released();
 }
 
 void BuildingCollisionRegistry::release_authored_obstacles_within(float center_x,
@@ -199,11 +231,8 @@ void BuildingCollisionRegistry::update_building_position(
   m_buildings[index].center_z = center_z;
   add_to_spatial_index(m_buildings[index]);
 
-  if (auto* pf = CommandService::get_pathfinder()) {
-
-    pf->mark_building_region_dirty(old_x, old_z, width, depth);
-    pf->mark_building_region_dirty(center_x, center_z, width, depth);
-  }
+  announce_region_dirty(old_x, old_z, width, depth);
+  announce_region_dirty(center_x, center_z, width, depth);
 }
 
 void BuildingCollisionRegistry::resize_building(Engine::Core::EntityID entity_id,
@@ -229,10 +258,8 @@ void BuildingCollisionRegistry::resize_building(Engine::Core::EntityID entity_id
   m_buildings[index].depth = size.depth;
   add_to_spatial_index(m_buildings[index]);
 
-  if (auto* pf = CommandService::get_pathfinder()) {
-    pf->mark_building_region_dirty(center_x, center_z, old_width, old_depth);
-    pf->mark_building_region_dirty(center_x, center_z, size.width, size.depth);
-  }
+  announce_region_dirty(center_x, center_z, old_width, old_depth);
+  announce_region_dirty(center_x, center_z, size.width, size.depth);
 }
 
 void BuildingCollisionRegistry::update_building_owner(Engine::Core::EntityID entity_id,
@@ -259,10 +286,8 @@ void BuildingCollisionRegistry::set_building_navigation_blocking(
   }
   footprint.blocks_navigation = blocks_navigation;
 
-  if (auto* pf = CommandService::get_pathfinder()) {
-    pf->mark_building_region_dirty(
-        footprint.center_x, footprint.center_z, footprint.width, footprint.depth);
-  }
+  announce_region_dirty(
+      footprint.center_x, footprint.center_z, footprint.width, footprint.depth);
 }
 
 auto BuildingCollisionRegistry::find_building(Engine::Core::EntityID entity_id) const
@@ -550,13 +575,9 @@ void BuildingCollisionRegistry::set_navigation_passages(
     return;
   }
 
-  auto* pathfinder = CommandService::get_pathfinder();
-  auto mark_dirty = [pathfinder](const std::vector<NavigationPassage>& list) {
-    if (pathfinder == nullptr) {
-      return;
-    }
+  auto mark_dirty = [](const std::vector<NavigationPassage>& list) {
     for (const auto& passage : list) {
-      pathfinder->mark_building_region_dirty(
+      announce_region_dirty(
           passage.center_x, passage.center_z, passage.width, passage.depth);
     }
   };
@@ -574,18 +595,14 @@ void BuildingCollisionRegistry::clear() {
   m_spatial_buckets.clear();
   m_max_half_extent = 0.0F;
 
-  if (auto* pf = CommandService::get_pathfinder()) {
-    pf->mark_navigation_grid_dirty();
-    pf->mark_obstruction_released();
-  }
+  announce_grid_dirty();
+  announce_obstruction_released();
 }
 
 void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_grid_padding = padding;
 
-  if (auto* pf = CommandService::get_pathfinder()) {
-    pf->mark_navigation_grid_dirty();
-  }
+  announce_grid_dirty();
 }
 
 auto BuildingCollisionRegistry::get_grid_padding() -> float {

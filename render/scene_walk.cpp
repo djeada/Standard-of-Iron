@@ -358,17 +358,21 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
 
   if (unit_comp != nullptr) {
     auto troop_type_opt = Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
-    auto& config = Game::Units::TroopConfig::instance();
+    const auto& config = *world_view().troop_config();
 
-    if (troop_type_opt) {
-      const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-          unit_comp->nation_id, *troop_type_opt);
+    const auto* profile_ptr =
+        troop_type_opt
+            ? world_view().find_troop_profile(unit_comp->nation_id, *troop_type_opt)
+            : nullptr;
+    if (profile_ptr != nullptr) {
+      const auto& profile = *profile_ptr;
       auto const formation =
           Game::Systems::FormationCombat::resolve_definition(*unit_comp);
       int const individuals_per_unit = resolved_individuals_per_unit(*unit_comp);
 
       ring_size =
-          Detail::selection_ring_visual_size(unit_comp->spawn_type,
+          Detail::selection_ring_visual_size(config,
+                                             unit_comp->spawn_type,
                                              individuals_per_unit,
                                              profile.visuals.selection_ring_size,
                                              formation.spacing);
@@ -408,7 +412,7 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
           ? Game::Accessibility::TeamIdentity::pattern_for_slot(unit_comp->owner_id)
           : Game::Accessibility::TeamPattern::Solid;
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = world_view().terrain_or_empty();
   for (const SelectionRingPlacement& placement : placements) {
     QVector3D const grounded_center = terrain_service.resolve_surface_world_position(
         placement.world_x,
@@ -575,8 +579,8 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
 
     if (unit_comp != nullptr) {
 
-      auto& cached =
-          m_unit_render_cache.get_or_create(entity_id, entity, m_frame_counter);
+      auto& cached = m_unit_render_cache.get_or_create(
+          world_view(), entity_id, entity, m_frame_counter);
 
       if (cached.renderable == nullptr || !cached.renderable->visible) {
         continue;
@@ -746,7 +750,7 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
     auto const* fn = m_entity_registry->get(entry.renderer_handle);
     if (fn == nullptr && entry.unit != nullptr) {
       const std::string profile_renderer_key =
-          Render::resolve_profile_unit_renderer_key(*entry.unit);
+          Render::resolve_profile_unit_renderer_key(world_view(), *entry.unit);
       if (!profile_renderer_key.empty() && profile_renderer_key != entry.renderer_key) {
         const auto profile_renderer_handle =
             m_entity_registry->get_handle(profile_renderer_key);
@@ -758,7 +762,8 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
       }
     }
     if (fn != nullptr) {
-      DrawContext draw_ctx{ctx.resources, entry.entity, ctx.world, model_matrix};
+      DrawContext draw_ctx{
+          ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
 
       draw_ctx.selected = entry.selected;
       draw_ctx.hovered = entry.hovered;
@@ -937,7 +942,7 @@ void Renderer::submit_non_unit_entry(const RenderEntry& entry,
       entry.renderer_handle != Render::GL::k_invalid_renderer_handle) {
     auto const* fn = m_entity_registry->get(entry.renderer_handle);
     if (fn != nullptr) {
-      DrawContext ctx{resources(), entry.entity, world, model_matrix};
+      DrawContext ctx{resources(), entry.entity, world, world_view(), model_matrix};
       ctx.selected = entry.selected;
       ctx.hovered = entry.hovered;
       ctx.animation_time = m_accumulated_time;
@@ -1007,8 +1012,7 @@ void Renderer::render_world(Engine::Core::World* world) {
     m_render_registry.attach(simulation_world);
   }
 
-  auto& vis = Game::Map::VisibilityService::instance();
-  const bool visibility_enabled = vis.is_initialized();
+  const bool visibility_enabled = world_view().has_visibility();
   std::span<const Engine::Core::EntityID> const unit_ids =
       render_snapshot != nullptr
           ? world->render_unit_ids()
@@ -1122,7 +1126,7 @@ void Renderer::render_world(Engine::Core::World* world) {
       world, batch_submitter, &m_submission_visibility, m_camera);
 
   Render::GL::Wildlife::submit_bird_flocks(
-      batch_submitter, &m_submission_visibility, m_camera);
+      world_view(), batch_submitter, &m_submission_visibility, m_camera);
 
   {
     Render::Pass::FrameContext pass_ctx;
@@ -1132,7 +1136,7 @@ void Renderer::render_world(Engine::Core::World* world) {
     pass_ctx.frame_counter = m_frame_counter;
     pass_ctx.view_proj = m_view_proj;
     pass_ctx.primitive_batcher = &batcher;
-    pass_ctx.visibility = const_cast<Game::Map::VisibilityService*>(&vis);
+    pass_ctx.visibility = world_view().visibility();
     pass_ctx.visibility_enabled = visibility_enabled;
     pass_ctx.light_direction = m_light_dir;
     pass_ctx.ambient_strength = m_ambient_strength;
@@ -1230,7 +1234,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
            marker_alpha);
     }
 
-    DrawContext ctx{resources(), entity, world, model_matrix};
+    DrawContext ctx{resources(), entity, world, world_view(), model_matrix};
     ctx.selected = false;
     ctx.hovered = false;
     ctx.animation_time = m_accumulated_time;

@@ -29,13 +29,15 @@ struct SelectionRingPlacement {
 };
 
 namespace Detail {
-[[nodiscard]] inline auto selection_ring_spacing(Game::Units::SpawnType spawn_type,
+[[nodiscard]] inline auto selection_ring_spacing(const Game::Units::TroopConfig& config,
+                                                 Game::Units::SpawnType spawn_type,
                                                  float configured_spacing) -> float {
-  return resolve_formation_spacing(spawn_type, configured_spacing);
+  return resolve_formation_spacing(config, spawn_type, configured_spacing);
 }
 
 [[nodiscard]] inline auto
-selection_ring_visual_size(Game::Units::SpawnType spawn_type,
+selection_ring_visual_size(const Game::Units::TroopConfig& config,
+                           Game::Units::SpawnType spawn_type,
                            int individuals_per_unit,
                            float unit_ring_size,
                            float formation_spacing = 0.0F) -> float {
@@ -44,7 +46,7 @@ selection_ring_visual_size(Game::Units::SpawnType spawn_type,
   }
 
   float const max_visual_size =
-      selection_ring_spacing(spawn_type, formation_spacing) * 0.48F;
+      selection_ring_spacing(config, spawn_type, formation_spacing) * 0.48F;
   return std::min(unit_ring_size * 0.25F, max_visual_size);
 }
 

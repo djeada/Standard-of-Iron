@@ -22,11 +22,11 @@
 #include "ground/terrain_renderer.h"
 #include "ground/terrain_scatter_manager.h"
 #include "ground/terrain_surface_manager.h"
+#include "scene_renderer.h"
 #include "terrain_scene_types.h"
 
 namespace Render::GL {
 
-class Renderer;
 class ResourceManager;
 
 struct TerrainSceneSubmitOptions {
@@ -69,9 +69,19 @@ public:
     m_passes.push_back(ambient_fog);
   }
 
+  void set_world_view(const Render::WorldView& view) const {
+    m_world_view = view;
+    for (auto* pass : m_passes) {
+      if (pass != nullptr) {
+        pass->set_world_view(view);
+      }
+    }
+  }
+
   void submit(Renderer& renderer,
               ResourceManager* resources,
               TerrainSceneSubmitOptions options = {}) const {
+    set_world_view(renderer.world_view());
     submit_surfaces(renderer, resources);
     if (options.include_features) {
       submit_features(renderer, resources);
@@ -139,21 +149,19 @@ public:
     return m_ambient_fog;
   }
 
-  [[nodiscard]] auto has_field() const -> bool {
-    return Game::Map::TerrainService::instance().is_initialized();
-  }
+  [[nodiscard]] auto has_field() const -> bool { return m_world_view.has_terrain(); }
 
   [[nodiscard]] auto field() const -> const Game::Map::TerrainField& {
-    return Game::Map::TerrainService::instance().terrain_field();
+    return m_world_view.terrain_or_empty().terrain_field();
   }
 
   [[nodiscard]] auto
   road_segments() const -> const std::vector<Game::Map::RoadSegment>& {
-    return Game::Map::TerrainService::instance().road_segments();
+    return m_world_view.terrain_or_empty().road_segments();
   }
 
   [[nodiscard]] auto surface_chunks() const -> std::vector<TerrainSurfaceChunk> {
-    auto& terrain_service = Game::Map::TerrainService::instance();
+    const auto& terrain_service = m_world_view.terrain_or_empty();
     TerrainSurfaceShaderParams base_params;
     if (terrain_service.is_initialized()) {
       base_params.biome_settings = &terrain_service.biome_settings();
@@ -171,7 +179,7 @@ public:
   }
 
   [[nodiscard]] auto feature_chunks() const -> std::vector<LinearFeatureChunk> {
-    auto& terrain = Game::Map::TerrainService::instance();
+    const auto& terrain = m_world_view.terrain_or_empty();
     auto const* height_map = terrain.get_height_map();
     std::size_t const water_count =
         height_map != nullptr
@@ -225,6 +233,8 @@ private:
   MapBoundaryFogRenderer* m_boundary_fog = nullptr;
   AmbientFogRenderer* m_ambient_fog = nullptr;
   std::vector<IRenderPass*> m_passes;
+
+  mutable Render::WorldView m_world_view;
 };
 
 } // namespace Render::GL

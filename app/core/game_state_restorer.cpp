@@ -10,10 +10,10 @@
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/gate_service.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/troop_count_registry.h"
@@ -152,7 +152,7 @@ void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) 
 
   Game::Systems::WallNetworkService::refresh_world(*world);
 
-  if (auto* pathfinder = Game::Systems::CommandService::get_pathfinder()) {
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
     pathfinder->mark_navigation_grid_dirty();
   }
 }
@@ -252,7 +252,7 @@ void GameStateRestorer::restore_environment_from_metadata(
       }
     }
 
-    Game::Systems::CommandService::initialize(grid_width, grid_height);
+    Game::Systems::NavGrid::initialize(grid_width, grid_height);
 
     if (visibility_coordinator != nullptr) {
       visibility_coordinator->initialize_for_world(*world,
@@ -268,8 +268,7 @@ void GameStateRestorer::restore_environment_from_metadata(
     fallback_def.grid.height = fallback_grid_height;
     fallback_def.grid.tile_size = fallback_tile_size;
 
-    Game::Systems::CommandService::initialize(fallback_grid_width,
-                                              fallback_grid_height);
+    Game::Systems::NavGrid::initialize(fallback_grid_width, fallback_grid_height);
 
     if (visibility_coordinator != nullptr) {
       visibility_coordinator->initialize_for_world(*world,

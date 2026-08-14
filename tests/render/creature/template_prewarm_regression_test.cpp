@@ -29,6 +29,7 @@
 #include "render/submitter.h"
 #include "render/template_prewarm_catalog.h"
 #include "render/visibility_budget.h"
+#include "render/world_view.h"
 #include "scene/camera.h"
 
 namespace {
@@ -382,6 +383,7 @@ TEST(TemplatePrewarmRegression, PreparedAnimationStateHonorsOverride) {
   override_anim.is_attacking = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.animation_override = &override_anim;
 
   auto const state = resolve_humanoid_animation_state(ctx);
@@ -398,6 +400,7 @@ TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
   attack->in_melee_lock = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
 
   auto const state = resolve_elephant_animation_state(ctx);
@@ -423,6 +426,7 @@ TEST(TemplatePrewarmRegression, HumanoidAnimationPromotesIdleMeleeLock) {
   combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
 
   auto const state = resolve_humanoid_animation_state(ctx);
@@ -438,6 +442,7 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
   camera.set_position(QVector3D(0.0F, 0.0F, 0.0F));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.camera = &camera;
 
   HumanoidLodStateInputs inputs{};
@@ -457,6 +462,7 @@ TEST(TemplatePrewarmRegression, SelectedHumanoidLodStaysFullAtDistance) {
   camera.set_position(QVector3D(0.0F, 0.0F, 0.0F));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.camera = &camera;
   ctx.selected = true;
 
@@ -592,6 +598,7 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
 
 TEST(TemplatePrewarmRegression, SeedDerivationIsDeterministic) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.has_seed_override = false;
 
   auto seed1 = derive_unit_seed(ctx, nullptr);
@@ -604,6 +611,7 @@ TEST(TemplatePrewarmRegression, SeedDerivationIsDeterministic) {
 
 TEST(TemplatePrewarmRegression, SeedOverrideRespected) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.has_seed_override = true;
   ctx.seed_override = 0xCAFEBABEU;
 
@@ -691,7 +699,9 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   roman.display_name = "Roman Republic";
   roman.doctrine = "rome";
   nation_registry.register_nation(std::move(roman));
+
   Game::Systems::TroopProfileService::instance().clear();
+  Game::Systems::TroopProfileService::instance().prime();
 
   Render::GL::Renderer renderer(Render::ShaderQuality::None);
   ASSERT_TRUE(renderer.initialize());
@@ -702,6 +712,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   add_test_unit(
       *archer, SpawnType::Archer, NationID::RomanRepublic, 1, "troops/roman/archer");
 
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -716,7 +727,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{renderer.resources(), &builder, nullptr, QMatrix4x4()};
+  Render::GL::DrawContext ctx{
+      renderer.resources(), &builder, nullptr, renderer.world_view(), QMatrix4x4()};
   ctx.renderer_id = "troops/roman/builder";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -763,6 +775,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
                 1,
                 "troops/roman/civilian");
 
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -780,8 +793,11 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{
-      renderer.resources(), &civilian_entity, nullptr, QMatrix4x4()};
+  Render::GL::DrawContext ctx{renderer.resources(),
+                              &civilian_entity,
+                              nullptr,
+                              renderer.world_view(),
+                              QMatrix4x4()};
   ctx.renderer_id = "troops/roman/civilian";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -828,6 +844,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
                 1,
                 "troops/carthage/civilian");
 
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -845,8 +862,11 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{
-      renderer.resources(), &civilian_entity, nullptr, QMatrix4x4()};
+  Render::GL::DrawContext ctx{renderer.resources(),
+                              &civilian_entity,
+                              nullptr,
+                              renderer.world_view(),
+                              QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/civilian";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -893,6 +913,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
                 1,
                 "troops/carthage/commanders/hannibal_barca");
 
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -911,8 +932,11 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{
-      renderer.resources(), &runtime_entity, nullptr, QMatrix4x4()};
+  Render::GL::DrawContext ctx{renderer.resources(),
+                              &runtime_entity,
+                              nullptr,
+                              renderer.world_view(),
+                              QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/commanders/hannibal_barca";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -959,6 +983,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
                 1,
                 "troops/roman/swordsman");
 
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -981,8 +1006,11 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
 
   renderer.rigged_mesh_cache().reset_frame_stats();
 
-  Render::GL::DrawContext ctx{
-      renderer.resources(), &runtime_entity, nullptr, QMatrix4x4()};
+  Render::GL::DrawContext ctx{renderer.resources(),
+                              &runtime_entity,
+                              nullptr,
+                              renderer.world_view(),
+                              QMatrix4x4()};
   ctx.renderer_id = "troops/roman/swordsman";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -1031,6 +1059,7 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants)
                 1,
                 "troops/carthage/spearman");
 
+  renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -1046,8 +1075,11 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants)
                 1,
                 "troops/carthage/spearman");
 
-  Render::GL::DrawContext ctx{
-      renderer.resources(), &runtime_entity, nullptr, QMatrix4x4()};
+  Render::GL::DrawContext ctx{renderer.resources(),
+                              &runtime_entity,
+                              nullptr,
+                              renderer.world_view(),
+                              QMatrix4x4()};
   ctx.renderer_id = "troops/carthage/spearman";
   ctx.backend = renderer.backend();
   ctx.allow_template_cache = true;
@@ -1117,7 +1149,8 @@ TEST(TemplatePrewarmRegression,
   auto render_variant = [&](Engine::Core::Entity& entity, float x, std::uint32_t seed) {
     QMatrix4x4 model;
     model.translate(x, 0.0F, 0.0F);
-    Render::GL::DrawContext ctx{renderer.resources(), &entity, nullptr, model};
+    Render::GL::DrawContext ctx{
+        renderer.resources(), &entity, nullptr, renderer.world_view(), model};
     ctx.renderer_id = "troops/carthage/spearman";
     ctx.backend = renderer.backend();
     ctx.camera = &camera;

@@ -13,6 +13,7 @@
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
+#include "nav_grid.h"
 #include "owner_registry.h"
 #include "units/spawn_type.h"
 
@@ -325,7 +326,7 @@ void run_from(Engine::Core::World& world,
     }
   }
 
-  QVector3D const destination = CommandService::snap_to_walkable_ground(QVector3D(
+  QVector3D const destination = NavGrid::snap_to_walkable_ground(QVector3D(
       transform.position.x + (away_x * SettlementLifeSystem::k_flee_distance),
       0.0F,
       transform.position.z + (away_z * SettlementLifeSystem::k_flee_distance)));
@@ -599,7 +600,7 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
     }
 
     QVector3D const destination =
-        CommandService::snap_to_walkable_ground(QVector3D(chosen.x, 0.0F, chosen.z));
+        NavGrid::snap_to_walkable_ground(QVector3D(chosen.x, 0.0F, chosen.z));
 
     resident->errand = SettlementErrand::WalkingTo;
     resident->role = chosen.role;

@@ -40,7 +40,7 @@ void StatueRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
     const Game::Map::TerrainHeightMap& height_map) {
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = world().terrain_or_empty();
   const float tile_size = height_map.get_tile_size();
   const int width = height_map.get_width();
   const int map_height = height_map.get_height();

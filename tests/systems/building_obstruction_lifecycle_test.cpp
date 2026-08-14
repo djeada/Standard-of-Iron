@@ -9,11 +9,13 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "map/terrain_service.h"
+#include "session/session_context.h"
 #include "systems/building_collision_registry.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/command_service.h"
 #include "systems/movement_system.h"
 #include "systems/nation_id.h"
+#include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
 #include "systems/wall_network_service.h"
 
@@ -26,10 +28,13 @@ constexpr int k_grid_size = 32;
 
 class BuildingObstructionLifecycleTest : public ::testing::Test {
 protected:
+  Game::Session::SessionContext m_session;
+  Game::Session::ScopedSession m_scope{m_session};
+
   void SetUp() override {
     BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    CommandService::initialize(k_grid_size, k_grid_size);
+    NavGrid::initialize(k_grid_size, k_grid_size);
   }
 
   void TearDown() override {
@@ -38,13 +43,13 @@ protected:
   }
 
   static auto pathfinder() -> Pathfinding& {
-    auto* pf = CommandService::get_pathfinder();
+    auto* pf = NavGrid::get_pathfinder();
     EXPECT_NE(pf, nullptr);
     return *pf;
   }
 
   static auto grid_cell(float world_x, float world_z) -> Point {
-    return CommandService::world_to_grid(world_x, world_z);
+    return NavGrid::world_to_grid(world_x, world_z);
   }
 
   static auto cell_is_walkable(float world_x, float world_z) -> bool {
@@ -129,7 +134,7 @@ protected:
 };
 
 TEST_F(BuildingObstructionLifecycleTest, WallSegmentBlocksAndReleasesNavigationCells) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
   auto* wall = make_wall(world, 0.0F, 0.0F, 2);
@@ -144,7 +149,7 @@ TEST_F(BuildingObstructionLifecycleTest, WallSegmentBlocksAndReleasesNavigationC
 }
 
 TEST_F(BuildingObstructionLifecycleTest, DestroyedWallOpensPassableBreachInSealedWall) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
   auto segments = build_sealing_wall(world, 2);
@@ -181,7 +186,7 @@ TEST_F(BuildingObstructionLifecycleTest, DestroyedWallOpensPassableBreachInSeale
 }
 
 TEST_F(BuildingObstructionLifecycleTest, DestroyedTowerSocketOpensTheWallLine) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
   auto segments = build_sealing_wall(world, 2);
@@ -216,7 +221,7 @@ TEST_F(BuildingObstructionLifecycleTest, DestroyedTowerSocketOpensTheWallLine) {
 }
 
 TEST_F(BuildingObstructionLifecycleTest, LargeBuildingReleasesItsWholeFootprint) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
   auto* barracks = make_building(
@@ -244,7 +249,7 @@ TEST_F(BuildingObstructionLifecycleTest, LargeBuildingReleasesItsWholeFootprint)
 }
 
 TEST_F(BuildingObstructionLifecycleTest, RepeatedBuildAndDestroyKeepsCellsConsistent) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
 
@@ -264,7 +269,7 @@ TEST_F(BuildingObstructionLifecycleTest, RepeatedBuildAndDestroyKeepsCellsConsis
 
 TEST_F(BuildingObstructionLifecycleTest,
        EntityRemovalWithoutCombatReleasesObstruction) {
-  World world;
+  World& world = m_session.world();
 
   auto* wall = make_wall(world, -6.0F, 2.0F, 1);
   EXPECT_FALSE(cell_is_walkable(-6.0F, 2.0F));
@@ -276,7 +281,7 @@ TEST_F(BuildingObstructionLifecycleTest,
 }
 
 TEST_F(BuildingObstructionLifecycleTest, DestructionReleasesAuthoredMapObstacle) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
 
@@ -296,7 +301,7 @@ TEST_F(BuildingObstructionLifecycleTest, DestructionReleasesAuthoredMapObstacle)
 }
 
 TEST_F(BuildingObstructionLifecycleTest, ReloadDoesNotRestoreDestroyedStructures) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
   auto* wall = make_wall(world, 2.0F, 0.0F, 2);
@@ -319,7 +324,7 @@ TEST_F(BuildingObstructionLifecycleTest, ReloadDoesNotRestoreDestroyedStructures
 }
 
 TEST_F(BuildingObstructionLifecycleTest, UnitsRerouteThroughNewlyOpenedBreach) {
-  World world;
+  World& world = m_session.world();
 
   auto* attacker = make_attacker(world, 1);
   auto segments = build_sealing_wall(world, 2);

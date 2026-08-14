@@ -13,7 +13,7 @@
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
 #include "builder_product_types.h"
-#include "command_service.h"
+#include "nav_grid.h"
 #include "owner_registry.h"
 #include "pathfinding.h"
 
@@ -61,7 +61,7 @@ auto work_position_beside(const Game::Map::WorldPropTarget& node,
   }
   approach.normalize();
 
-  return CommandService::snap_to_walkable_ground(
+  return NavGrid::snap_to_walkable_ground(
       QVector3D(node.x + (approach.x() * k_work_standoff),
                 0.0F,
                 node.z + (approach.z() * k_work_standoff)));
@@ -162,19 +162,19 @@ auto node_is_workable(const Game::Map::WorldPropTarget& node,
                       float worker_x,
                       float worker_z) -> bool {
 
-  Point const node_grid = CommandService::world_to_grid(node.x, node.z);
-  auto const standing_cell = CommandService::find_nearest_walkable_grid(
-      node_grid, k_work_position_search_radius);
+  Point const node_grid = NavGrid::world_to_grid(node.x, node.z);
+  auto const standing_cell =
+      NavGrid::find_nearest_walkable_grid(node_grid, k_work_position_search_radius);
   if (!standing_cell.has_value()) {
     return false;
   }
 
-  auto* pathfinder = CommandService::get_pathfinder();
+  auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return true;
   }
 
-  Point const start = CommandService::world_to_grid(worker_x, worker_z);
+  Point const start = NavGrid::world_to_grid(worker_x, worker_z);
   if (start.x == standing_cell->x && start.y == standing_cell->y) {
     return true;
   }

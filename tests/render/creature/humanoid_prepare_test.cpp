@@ -84,6 +84,7 @@
 #include "render/rigged_mesh.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "render/world_view.h"
 #include "tests/support/movement_test_access.h"
 
 namespace {
@@ -206,6 +207,7 @@ auto render_archer_role_color_count(const char* renderer_id) -> std::uint32_t {
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -243,6 +245,7 @@ auto render_bow_mesh_count(const char* renderer_id,
     }
 
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
@@ -304,6 +307,7 @@ auto render_direct_bow_mesh_count(const char* renderer_id,
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -345,6 +349,7 @@ auto render_runtime_mesh_count(const char* renderer_id,
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -400,6 +405,7 @@ auto find_archetype_id(std::string_view debug_name) -> Render::Creature::Archety
     Engine::Core::Entity entity(1);
     entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.entity = &entity;
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
@@ -450,6 +456,7 @@ auto render_archer_idle_bone_palette(
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
   Engine::Core::Entity entity(1);
@@ -508,6 +515,7 @@ auto moving_palette_changes_over_time(const char* renderer_id,
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
@@ -586,6 +594,7 @@ auto render_builder_submission_count(const char* renderer_id,
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -633,6 +642,7 @@ auto render_builder_unique_tool_mesh_count(
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
@@ -684,6 +694,7 @@ auto render_civilian_submission_count(const char* renderer_id,
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -716,6 +727,7 @@ auto render_builder_bone_palette(const char* renderer_id,
   }
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -833,6 +845,7 @@ auto render_builder_min_world_y(const char* renderer_id,
   ScopedFlatTerrain const terrain(terrain_height);
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
@@ -946,6 +959,7 @@ public:
 
 TEST(HumanoidPrepare, PassIntentFromCtxIsShadowOnPrewarm) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   EXPECT_EQ(Render::Creature::Pipeline::pass_intent_from_ctx(ctx),
             Render::Creature::Pipeline::RenderPassIntent::Main);
   ctx.template_prewarm = true;
@@ -1009,6 +1023,7 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
@@ -1044,6 +1059,7 @@ TEST(HumanoidPrepare, PoseLayerNeverRunsDuringRuntimePreparation) {
   PoseLayerRenderer const renderer;
   Render::GL::AnimationInputs const anim{};
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -1064,6 +1080,7 @@ TEST(HumanoidPrepare, PoseLayerNeverRunsDuringRuntimePreparation) {
 TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
   BeardRenderer const renderer;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
   Render::GL::AnimationInputs const anim{};
@@ -1235,6 +1252,7 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
 
   auto request_for_time = [&](float animation_time) {
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.allow_template_cache = false;
     ctx.force_humanoid_lod = true;
     ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
@@ -1342,6 +1360,7 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
 
   auto request_for_time = [&](float animation_time) {
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.allow_template_cache = false;
     ctx.force_humanoid_lod = true;
     ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
@@ -1444,6 +1463,7 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   unit->render_individuals_per_unit_override = 15;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
@@ -1646,6 +1666,7 @@ TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
 TEST(HumanoidPrepare, ActiveBuilderWorkOverridesSharedTravellingRowsWithCircle) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(4242);
@@ -5695,6 +5716,7 @@ TEST(HumanoidPrepare, ConstructionVariantTableMapsFourRolesToExpectedRequests) {
   builder->construction_site_z = 0.0F;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
@@ -6051,6 +6073,7 @@ TEST(HumanoidPrepare, LegacySpearPlaybackHelperKeepsHoldBaseClip) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -6097,6 +6120,7 @@ TEST(HumanoidPrepare, LegacyArcherPlaybackHelperKeepsHoldBaseClip) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -6137,6 +6161,7 @@ TEST(HumanoidPrepare, LegacyArcherPlaybackHelperKeepsHoldBaseClip) {
 TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.has_seed_override = true;
   ctx.seed_override = 0x1234ABCDU;
 
@@ -6206,6 +6231,7 @@ auto add_walk_motion(Engine::Core::Entity& entity,
 TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 10.0F;
 
@@ -6246,6 +6272,7 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
 TEST(HumanoidPrepare, CombatAdvancePreservesWalkClipWhileClosingDistance) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 10.0F;
 
@@ -6289,6 +6316,7 @@ TEST(HumanoidPrepare, FireballSpecialAttackResolvesExplicitCastIntent) {
   using Render::Creature::Pipeline::UnitVisualSpec;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.animation_time = 8.0F;
 
   Engine::Core::Entity entity(900);
@@ -6335,6 +6363,7 @@ TEST(HumanoidPrepare, FireballSpecialAttackResolvesExplicitCastIntent) {
 
 TEST(HumanoidPrepare, CursedArrowSpecialAttackStaysGenericRangedIntent) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.animation_time = 8.0F;
 
   Engine::Core::Entity entity(901);
@@ -6371,6 +6400,7 @@ TEST(HumanoidPrepare, CursedArrowSpecialAttackStaysGenericRangedIntent) {
 TEST(HumanoidPrepare, MeleeLockKeepsStaleForcedDisplacementOffTheRootLayer) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.2F;
 
@@ -6419,6 +6449,7 @@ TEST(HumanoidPrepare, MeleeLockKeepsStaleForcedDisplacementOffTheRootLayer) {
 TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 3.0F;
 
@@ -6470,6 +6501,7 @@ TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
 TEST(HumanoidPrepare, ActiveTargetMovementStillTriggersWalkAnimation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 4.0F;
 
@@ -6511,6 +6543,7 @@ TEST(HumanoidPrepare, ActiveTargetMovementStillTriggersWalkAnimation) {
 TEST(HumanoidPrepare, WaypointMovementStillTriggersWalkAnimation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 4.5F;
 
@@ -6551,6 +6584,7 @@ TEST(HumanoidPrepare, WaypointMovementStillTriggersWalkAnimation) {
 TEST(HumanoidPrepare, VelocityOnlyMovementStillTriggersWalkAnimation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 5.0F;
 
@@ -6589,6 +6623,7 @@ TEST(HumanoidPrepare, VelocityOnlyMovementStillTriggersWalkAnimation) {
 TEST(HumanoidPrepare, ChaseIntentOutOfRangeTriggersWalkAnimation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 5.5F;
 
@@ -6639,6 +6674,7 @@ TEST(HumanoidPrepare, ChaseIntentOutOfRangeTriggersWalkAnimation) {
 TEST(HumanoidPrepare, ChaseIntentInRangePreservesAttackInsteadOfWalk) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.0F;
 
@@ -6689,6 +6725,7 @@ TEST(HumanoidPrepare, ChaseIntentInRangePreservesAttackInsteadOfWalk) {
 TEST(HumanoidPrepare, ActiveMoveSegmentInRangeStillTriggersWalkAnimation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.1F;
 
@@ -6748,6 +6785,7 @@ TEST(HumanoidPrepare, ActiveMoveSegmentInRangeStillTriggersWalkAnimation) {
 TEST(HumanoidPrepare, MotionSnapshotDrivesWalkWithoutMovementComponentIntent) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.2F;
 
@@ -6788,6 +6826,7 @@ TEST(HumanoidPrepare, MotionSnapshotDrivesWalkWithoutMovementComponentIntent) {
 TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.5F;
 
@@ -6834,6 +6873,7 @@ TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears)
 TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 7.0F;
 
@@ -6871,6 +6911,7 @@ TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
 TEST(HumanoidPrepare, MovingAnimationOverrideBuildsStrideWithoutLiveIntent) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 7.5F;
 
@@ -6906,6 +6947,7 @@ TEST(HumanoidPrepare, MovingAnimationOverrideBuildsStrideWithoutLiveIntent) {
 TEST(HumanoidPrepare, MovingAnimationOverrideWithoutEntityBuildsAuthoritativeStride) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 8.0F;
 
@@ -6930,6 +6972,7 @@ TEST(HumanoidPrepare, MovingAnimationOverrideWithoutEntityBuildsAuthoritativeStr
 TEST(HumanoidPrepare, CommanderFpvAttacksKeepAuthoredClipPhaseMapping) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
 
   Engine::Core::Entity entity(42);
@@ -6978,6 +7021,7 @@ TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWal
   ASSERT_TRUE(static_cast<bool>(renderer));
   if (renderer) {
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
@@ -7048,6 +7092,7 @@ TEST(HumanoidPrepare, GuardStanceForSwordAssetKeepsSwordCreatureAsset) {
   FixedSpecRenderer const owner(spec);
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -7097,6 +7142,7 @@ TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuardi
 
   FixedSpecRenderer const owner(base_archetype);
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -7170,6 +7216,7 @@ TEST(HumanoidPrepare, GuardShieldFormationFacesRomanAndCarthageShieldsOutward) {
 
         FixedSpecRenderer const owner(base_archetype);
         Render::GL::DrawContext ctx{};
+        ctx.world_view = Render::WorldView::of_active_session();
         ctx.force_single_soldier = true;
         ctx.allow_template_cache = false;
 
@@ -7385,6 +7432,7 @@ TEST(HumanoidPrepare, ShieldBearingGuardFallsBackToNationFrontFormationPose) {
 
 TEST(HumanoidPrepare, FormationSamplingBlendsRomanInfantryShieldGuardInAndOut) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(81);
@@ -7432,6 +7480,7 @@ TEST(HumanoidPrepare, FormationSamplingBlendsRomanInfantryShieldGuardInAndOut) {
 
 TEST(HumanoidPrepare, HoldSamplingBlendsKneelInAndOutFromVisualState) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(82);
@@ -7480,6 +7529,7 @@ TEST(HumanoidPrepare, HeldSpearAndBowAttacksKeepPersistentKneelingState) {
                                Game::Units::SpawnType::Archer};
   for (std::size_t index = 0; index < families.size(); ++index) {
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.allow_template_cache = false;
 
     Engine::Core::Entity entity(820 + index);
@@ -7522,6 +7572,7 @@ TEST(HumanoidPrepare, HeldSpearAndBowAttacksKeepPersistentKneelingState) {
 
 TEST(HumanoidPrepare, FormationGuardDoesNotBuildHiddenKneelWhileAttacking) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(83);
@@ -7565,6 +7616,7 @@ TEST(HumanoidPrepare, FormationGuardDoesNotBuildHiddenKneelWhileAttacking) {
 
 TEST(HumanoidPrepare, ExplicitSpearBraceFeedsGuardAnimationState) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(830);
@@ -7596,6 +7648,7 @@ TEST(HumanoidPrepare, ExplicitSpearBraceFeedsGuardAnimationState) {
 
 TEST(HumanoidPrepare, MeleeAttackSmoothlyExitsExistingHoldKneel) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(84);
@@ -7664,6 +7717,7 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
   auto collect_archetypes = [&](Game::Systems::NationID nation_id) {
     FixedSpecRenderer const owner(base_archetype);
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.force_single_soldier = false;
     ctx.allow_template_cache = false;
 
@@ -7854,6 +7908,7 @@ TEST(HumanoidPrepare, RomanFormationFrontShieldMatchesDefaultRomanGuardFallback)
       [&](bool formation_active) -> const Render::Creature::StaticAttachmentSpec* {
     FixedSpecRenderer const owner(base_archetype);
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
@@ -7942,6 +7997,7 @@ TEST(HumanoidPrepare, CarthageFormationFrontShieldTiltsOverBody) {
       [&](bool formation_active) -> const Render::Creature::StaticAttachmentSpec* {
     FixedSpecRenderer const owner(base_archetype);
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
@@ -8052,6 +8108,7 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8086,6 +8143,7 @@ TEST(HumanoidPrepare, BuiltInRomanSwordsmanRemainsVisibleAfterGuardTransition) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
   ctx.force_humanoid_lod = true;
@@ -8125,6 +8183,7 @@ TEST(HumanoidPrepare, RomanArcherUsesRomanCloakRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8156,6 +8215,7 @@ TEST(HumanoidPrepare, RomanSpearmanUsesGreavesAndShoulderRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8187,6 +8247,7 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8218,6 +8279,7 @@ TEST(HumanoidPrepare, RomanHealerUsesSenatorRobeRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8245,6 +8307,7 @@ TEST(HumanoidPrepare, CarthageHealerUsesDarkMageRobeRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8272,6 +8335,7 @@ TEST(HumanoidPrepare, RomanBuilderUsesSupportLoadoutRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8302,6 +8366,7 @@ TEST(HumanoidPrepare, CarthageBuilderUsesSupportLoadoutRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8332,6 +8397,7 @@ TEST(HumanoidPrepare, RomanCivilianUsesDataLoadoutRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8360,6 +8426,7 @@ TEST(HumanoidPrepare, CarthageCivilianUsesDataLoadoutRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8405,6 +8472,7 @@ TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8436,6 +8504,7 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8465,6 +8534,7 @@ TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
   ScopedFlatTerrain const terrain(2.4F);
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8498,6 +8568,7 @@ TEST(HumanoidPrepare, BowReadySubmittedSurfaceGroundingTouchesTerrain) {
   ScopedFlatTerrain const terrain(2.4F);
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8531,6 +8602,7 @@ TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
 
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8573,6 +8645,7 @@ TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
 
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
@@ -8605,6 +8678,7 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
 
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(1);
@@ -8656,6 +8730,7 @@ TEST(HumanoidPrepare, LaunchedChargeCasualtyTravelsAndTumblesInSubmittedWorld) {
 
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   auto casualty_origin = [&owner, &ctx](bool launched) {
@@ -8717,6 +8792,7 @@ TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {
   ScopedFlatTerrain const terrain(2.4F);
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -8755,6 +8831,7 @@ TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
     ASSERT_TRUE(static_cast<bool>(renderer));
 
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
@@ -8798,6 +8875,7 @@ TEST(HumanoidPrepare, BuiltInArchersVisibleIdleGeometryTouchesTerrain) {
     ASSERT_TRUE(static_cast<bool>(renderer));
 
     Render::GL::DrawContext ctx{};
+    ctx.world_view = Render::WorldView::of_active_session();
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
@@ -8853,6 +8931,7 @@ TEST(HumanoidPrepare, MixedBatchOnlySubmitsMainRows) {
 
 TEST(HumanoidPrepare, DeriveUnitSeedHonorsOverride) {
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.has_seed_override = true;
   ctx.seed_override = 0xDEADBEEFU;
   EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr), 0xDEADBEEFU);
@@ -8878,6 +8957,8 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
   inputs.force_single_soldier = false;
   inputs.melee_attack = true;
   inputs.animation_time = 2.5F;
+
+  inputs.soldier_offsets = &Game::Formation::UnitLayoutSystem::instance();
 
   auto const first = Render::Humanoid::build_soldier_layout(inputs);
   auto const second = Render::Humanoid::build_soldier_layout(inputs);
@@ -9140,6 +9221,7 @@ TEST(HumanoidPrepare, TemplatePrewarmSamplingLeavesPersistentAnimationStateUntou
   humanoid_state->locomotion_phase = 0.35F;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.animation_time = 6.0F;
   ctx.template_prewarm = true;
@@ -9365,6 +9447,7 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderLeavesHumanoidAnimationStateUntouched
   humanoid_state->filtered_turn = 0.30F;
 
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
@@ -9435,6 +9518,7 @@ TEST(HumanoidPrepare, WalkRunTransitionKeepsPlaybackGroundingCoherent) {
 TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -9460,6 +9544,7 @@ TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
 TEST(HumanoidPrepare, FormationAmbientIdlesStaggerAndRotatePerSoldier) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
@@ -9520,6 +9605,7 @@ TEST(HumanoidPrepare, FormationAmbientIdlesStaggerAndRotatePerSoldier) {
 TEST(HumanoidPrepare, PopulationLodKeepsRepresentativesAcrossFormationFootprint) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
   ctx.max_rendered_individuals = 4;
 
@@ -9543,6 +9629,7 @@ TEST(HumanoidPrepare, PopulationLodKeepsRepresentativesAcrossFormationFootprint)
 TEST(HumanoidPrepare, SwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -9616,6 +9703,7 @@ TEST(HumanoidPrepare,
 
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.model.translate(0.4F, 8.0F, -0.2F);
   ctx.force_single_soldier = true;
 
@@ -9653,6 +9741,7 @@ TEST(HumanoidPrepare,
 
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.model.translate(-0.1F, 6.0F, 0.3F);
   ctx.force_single_soldier = true;
 
@@ -9675,6 +9764,7 @@ TEST(HumanoidPrepare,
      InfantryMovementStateDrivesRequestEvenWhenLegacyBooleansAreStale) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
   Engine::Core::Entity entity(77);
@@ -9701,6 +9791,7 @@ TEST(HumanoidPrepare,
      RaceWindowInitializedSnapshotDrivesWalkEvenWhenSnapshotValidFalse) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 11.0F;
 
@@ -9740,6 +9831,7 @@ TEST(HumanoidPrepare,
 TEST(HumanoidPrepare, RaceWindowSnapshotRunFlagDrivesRunningEvenWithoutLiveStamina) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.animation_time = 12.0F;
 
@@ -9776,6 +9868,7 @@ TEST(HumanoidPrepare, RaceWindowSnapshotRunFlagDrivesRunningEvenWithoutLiveStami
 TEST(HumanoidPrepare, HitReactionDoesNotMoveOrSquashFormationRoot) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -9825,6 +9918,7 @@ TEST(HumanoidPrepare, HitReactionDoesNotMoveOrSquashFormationRoot) {
 TEST(HumanoidPrepare, FogHiddenMemberIsRejectedBeforeBodyPreparation) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -9863,6 +9957,7 @@ TEST(HumanoidPrepare, FogHiddenMemberIsRejectedBeforeBodyPreparation) {
 TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
   Render::GL::HumanoidRendererBase const owner;
   Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 

@@ -5,7 +5,7 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/map/terrain_service.h"
-#include "game/systems/command_service.h"
+#include "game/systems/nav_grid.h"
 #include "game/units/spawn_type.h"
 
 namespace Arena {
@@ -33,7 +33,7 @@ void align_entity_to_ground(Engine::Core::Entity& entity) {
     return;
   }
 
-  const QVector3D snapped = Game::Systems::CommandService::snap_to_walkable_ground(
+  const QVector3D snapped = Game::Systems::NavGrid::snap_to_walkable_ground(
       {transform->position.x, transform->position.y, transform->position.z});
   transform->position.x = snapped.x();
   transform->position.y = snapped.y();

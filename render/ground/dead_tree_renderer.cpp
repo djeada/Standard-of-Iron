@@ -23,10 +23,10 @@ constexpr float k_base_color_r = 0.30F;
 constexpr float k_base_color_g = 0.27F;
 constexpr float k_base_color_b = 0.22F;
 
-auto resolve_tree_surface_position(float world_x,
+auto resolve_tree_surface_position(const Game::Map::TerrainService& terrain_service,
+                                   float world_x,
                                    float world_z,
                                    float fallback_y) -> QVector3D {
-  auto& terrain_service = Game::Map::TerrainService::instance();
   if (terrain_service.is_initialized()) {
     return terrain_service.resolve_surface_world_position(
         world_x, world_z, 0.0F, fallback_y);
@@ -76,7 +76,7 @@ void DeadTreeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 }
 
 void DeadTreeRenderer::append_world_prop_dead_trees() {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = world().terrain_or_empty();
   const float half_w = static_cast<float>(m_width) * 0.5F;
   const float half_h = static_cast<float>(m_height) * 0.5F;
   const float tile_size = m_tile_size;
@@ -161,8 +161,11 @@ void DeadTreeRenderer::generate_procedural_dead_trees(
     float world_x = 0.0F;
     float world_z = 0.0F;
     validator.grid_to_world(gx, gz, world_x, world_z);
-    QVector3D const world_pos = resolve_tree_surface_position(
-        world_x, world_z, terrain_cache.sample_height_at(gx, gz));
+    QVector3D const world_pos =
+        resolve_tree_surface_position(world().terrain_or_empty(),
+                                      world_x,
+                                      world_z,
+                                      terrain_cache.sample_height_at(gx, gz));
 
     float const color_var = rand_01(state);
     QVector3D const base_color(k_base_color_r, k_base_color_g, k_base_color_b);

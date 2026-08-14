@@ -14,6 +14,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/local_avoidance_system.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/units/troop_config.h"
 #include "render/entity/registry.h"
@@ -47,7 +48,7 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    Game::Systems::CommandService::initialize(32, 32);
+    Game::Systems::NavGrid::initialize(32, 32);
   }
 
   void TearDown() override {
@@ -94,9 +95,9 @@ protected:
         ASSERT_NE(unit, nullptr);
         auto* transform = unit->get_component<Engine::Core::TransformComponent>();
         ASSERT_NE(transform, nullptr);
-        auto const current_grid = Game::Systems::CommandService::world_to_grid(
+        auto const current_grid = Game::Systems::NavGrid::world_to_grid(
             transform->position.x, transform->position.z);
-        EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(current_grid))
+        EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(current_grid))
             << "unit=" << unit->get_id() << " world=(" << transform->position.x << ", "
             << transform->position.z << ") grid=(" << current_grid.x << ", "
             << current_grid.y << ")";
@@ -355,21 +356,21 @@ TEST_F(CommandServiceTest, ShortMoveNearObstacleKeepsWalkableOrder) {
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   Game::Systems::Point const obstacle =
-      Game::Systems::CommandService::world_to_grid(-1.0F, 1.0F);
+      Game::Systems::NavGrid::world_to_grid(-1.0F, 1.0F);
   pathfinder->set_obstacle(obstacle.x, obstacle.y, true);
 
   Game::Systems::CommandService::move_unit(
       world, entity->get_id(), QVector3D(2.0F, 0.0F, 0.0F));
 
   EXPECT_TRUE(movement->get_has_target());
-  auto const goal_grid = Game::Systems::CommandService::world_to_grid(
-      movement->get_goal_x(), movement->get_goal_y());
-  EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(goal_grid));
+  auto const goal_grid = Game::Systems::NavGrid::world_to_grid(movement->get_goal_x(),
+                                                               movement->get_goal_y());
+  EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(goal_grid));
 
   run_movement_for(world, {entity}, 60);
   EXPECT_GT(transform->position.x, 1.0F);
@@ -382,21 +383,20 @@ TEST_F(CommandServiceTest, MoveToBlockedDestinationStoresWalkableGoal) {
   auto* movement = entity->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   QVector3D const requested_target(2.0F, 0.0F, 0.0F);
   Game::Systems::Point const blocked_goal =
-      Game::Systems::CommandService::world_to_grid(requested_target.x(),
-                                                   requested_target.z());
+      Game::Systems::NavGrid::world_to_grid(requested_target.x(), requested_target.z());
   pathfinder->set_obstacle(blocked_goal.x, blocked_goal.y, true);
 
   Game::Systems::CommandService::move_unit(world, entity->get_id(), requested_target);
 
-  auto const stored_goal = Game::Systems::CommandService::world_to_grid(
+  auto const stored_goal = Game::Systems::NavGrid::world_to_grid(
       movement->get_goal_x(), movement->get_goal_y());
-  EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(stored_goal));
+  EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(stored_goal));
   EXPECT_FALSE(stored_goal == blocked_goal);
   EXPECT_TRUE(movement->get_has_target());
 }
@@ -427,19 +427,19 @@ TEST_F(CommandServiceTest, InvalidTileRecoveryAssignsSafeTargetImmediately) {
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
-  auto const blocked = Game::Systems::CommandService::world_to_grid(
-      transform->position.x, transform->position.z);
+  auto const blocked = Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                             transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
   Game::Systems::MovementSystem movement_system;
   movement_system.update(&world, 0.1F);
 
   EXPECT_TRUE(movement->get_has_target());
-  auto const recovered = Game::Systems::CommandService::world_to_grid(
-      movement->get_goal_x(), movement->get_goal_y());
+  auto const recovered = Game::Systems::NavGrid::world_to_grid(movement->get_goal_x(),
+                                                               movement->get_goal_y());
   EXPECT_TRUE(pathfinder->is_walkable(recovered.x, recovered.y));
   EXPECT_FALSE(recovered == blocked);
 }
@@ -459,18 +459,18 @@ TEST_F(CommandServiceTest, InvalidTileRecoveryKeepsActiveOrder) {
   MovementTestAccess::set_goal_x(*movement, 6.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
-  auto const blocked = Game::Systems::CommandService::world_to_grid(
-      transform->position.x, transform->position.z);
+  auto const blocked = Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                             transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
   Game::Systems::MovementSystem movement_system;
   movement_system.update(&world, 0.1F);
 
   EXPECT_TRUE(movement->get_has_target());
-  auto const recovered_goal = Game::Systems::CommandService::world_to_grid(
+  auto const recovered_goal = Game::Systems::NavGrid::world_to_grid(
       movement->get_goal_x(), movement->get_goal_y());
   EXPECT_TRUE(pathfinder->is_walkable(recovered_goal.x, recovered_goal.y));
 }
@@ -490,11 +490,11 @@ TEST_F(CommandServiceTest, RepeatedInvalidTileRecoveryKeepsOrder) {
   MovementTestAccess::set_goal_x(*movement, 6.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
-  auto const blocked = Game::Systems::CommandService::world_to_grid(
-      transform->position.x, transform->position.z);
+  auto const blocked = Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                             transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
   Game::Systems::MovementSystem movement_system;
@@ -555,12 +555,12 @@ TEST_F(CommandServiceTest, BlockedSegmentKeepsDirectOrderForRecovery) {
   auto* movement = entity->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   Game::Systems::Point const obstacle =
-      Game::Systems::CommandService::world_to_grid(0.0F, 0.0F);
+      Game::Systems::NavGrid::world_to_grid(0.0F, 0.0F);
   pathfinder->set_obstacle(obstacle.x, obstacle.y, true);
 
   MovementTestAccess::set_has_target(*movement, true);
@@ -585,21 +585,21 @@ TEST_F(CommandServiceTest, BlockedSegmentMoveKeepsOrderAndRoutesAroundObstacle) 
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   Game::Systems::Point const obstacle =
-      Game::Systems::CommandService::world_to_grid(0.0F, 0.0F);
+      Game::Systems::NavGrid::world_to_grid(0.0F, 0.0F);
   pathfinder->set_obstacle(obstacle.x, obstacle.y, true);
 
   Game::Systems::CommandService::move_unit(
       world, entity->get_id(), QVector3D(4.0F, 0.0F, 0.0F));
 
   EXPECT_TRUE(movement->get_has_target());
-  auto const goal_grid = Game::Systems::CommandService::world_to_grid(
-      movement->get_goal_x(), movement->get_goal_y());
-  EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(goal_grid));
+  auto const goal_grid = Game::Systems::NavGrid::world_to_grid(movement->get_goal_x(),
+                                                               movement->get_goal_y());
+  EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(goal_grid));
 
   run_movement_for(world, {entity}, 90);
   EXPECT_GT(transform->position.x, 2.0F);
@@ -655,7 +655,7 @@ TEST_F(CommandServiceTest, MultiUnitMoveRoutesEveryMemberThroughSingleCellGap) {
   ASSERT_NE(center_transform, nullptr);
   ASSERT_NE(right_transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
@@ -664,7 +664,7 @@ TEST_F(CommandServiceTest, MultiUnitMoveRoutesEveryMemberThroughSingleCellGap) {
       continue;
     }
     Game::Systems::Point const wall_cell =
-        Game::Systems::CommandService::world_to_grid(0.0F, static_cast<float>(world_z));
+        Game::Systems::NavGrid::world_to_grid(0.0F, static_cast<float>(world_z));
     pathfinder->set_obstacle(wall_cell.x, wall_cell.y, true);
   }
 
@@ -691,7 +691,7 @@ TEST_F(CommandServiceTest, MultiUnitMoveRoutesEveryMemberThroughSingleCellGap) {
 }
 
 TEST_F(CommandServiceTest, MultiUnitMoveFailureNearBoundaryDoesNotTeleportUnits) {
-  Game::Systems::CommandService::initialize(16, 16);
+  Game::Systems::NavGrid::initialize(16, 16);
   Engine::Core::World world;
 
   auto* left = create_unit(world, -7.0F, -2.0F, Game::Units::SpawnType::Archer);
@@ -714,13 +714,13 @@ TEST_F(CommandServiceTest, MultiUnitMoveFailureNearBoundaryDoesNotTeleportUnits)
   ASSERT_NE(center_movement, nullptr);
   ASSERT_NE(right_movement, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   for (int world_z = -7; world_z <= 7; ++world_z) {
     Game::Systems::Point const wall_cell =
-        Game::Systems::CommandService::world_to_grid(0.0F, static_cast<float>(world_z));
+        Game::Systems::NavGrid::world_to_grid(0.0F, static_cast<float>(world_z));
     pathfinder->set_obstacle(wall_cell.x, wall_cell.y, true);
   }
 
@@ -767,7 +767,7 @@ TEST_F(CommandServiceTest, MultiUnitMoveCanRouteMembersIndividuallyThroughGap) {
   ASSERT_NE(center_transform, nullptr);
   ASSERT_NE(right_transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
@@ -776,7 +776,7 @@ TEST_F(CommandServiceTest, MultiUnitMoveCanRouteMembersIndividuallyThroughGap) {
       continue;
     }
     Game::Systems::Point const wall_cell =
-        Game::Systems::CommandService::world_to_grid(0.0F, static_cast<float>(world_z));
+        Game::Systems::NavGrid::world_to_grid(0.0F, static_cast<float>(world_z));
     pathfinder->set_obstacle(wall_cell.x, wall_cell.y, true);
   }
 
@@ -826,12 +826,12 @@ TEST_F(CommandServiceTest,
   ASSERT_NE(center_transform, nullptr);
   ASSERT_NE(right_transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   Game::Systems::Point const diagonal_block =
-      Game::Systems::CommandService::world_to_grid(11.0F, 1.0F);
+      Game::Systems::NavGrid::world_to_grid(11.0F, 1.0F);
   pathfinder->set_obstacle(diagonal_block.x, diagonal_block.y, true);
 
   Game::Systems::CommandService::MoveOptions const options;
@@ -1035,7 +1035,7 @@ TEST_F(CommandServiceTest, AttackTargetCannotReplaceALivingMeleeLock) {
 }
 
 TEST_F(CommandServiceTest, InvalidPositionAssignsNearbyWalkableRecoveryMove) {
-  Game::Systems::CommandService::initialize(16, 16);
+  Game::Systems::NavGrid::initialize(16, 16);
   Engine::Core::World world;
 
   auto* unit = create_unit(world, -7.0F, 0.0F, Game::Units::SpawnType::Archer);
@@ -1048,10 +1048,10 @@ TEST_F(CommandServiceTest, InvalidPositionAssignsNearbyWalkableRecoveryMove) {
   MovementTestAccess::set_goal_x(*movement, 5.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
-  auto const current_grid = Game::Systems::CommandService::world_to_grid(
+  auto const current_grid = Game::Systems::NavGrid::world_to_grid(
       transform->position.x, transform->position.z);
   pathfinder->set_obstacle(current_grid.x, current_grid.y, true);
 
@@ -1060,16 +1060,16 @@ TEST_F(CommandServiceTest, InvalidPositionAssignsNearbyWalkableRecoveryMove) {
 
   EXPECT_TRUE(movement->get_has_target());
   EXPECT_GT(movement->get_target_x(), transform->position.x);
-  auto const target_grid = Game::Systems::CommandService::world_to_grid(
+  auto const target_grid = Game::Systems::NavGrid::world_to_grid(
       movement->get_target_x(), movement->get_target_y());
-  auto const goal_grid = Game::Systems::CommandService::world_to_grid(
-      movement->get_goal_x(), movement->get_goal_y());
-  EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(target_grid));
-  EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(goal_grid));
+  auto const goal_grid = Game::Systems::NavGrid::world_to_grid(movement->get_goal_x(),
+                                                               movement->get_goal_y());
+  EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(target_grid));
+  EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(goal_grid));
 }
 
 TEST_F(CommandServiceTest, PersistentInvalidPositionRetargetsToNearbyRecoveryCell) {
-  Game::Systems::CommandService::initialize(16, 16);
+  Game::Systems::NavGrid::initialize(16, 16);
   Engine::Core::World world;
 
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
@@ -1085,13 +1085,13 @@ TEST_F(CommandServiceTest, PersistentInvalidPositionRetargetsToNearbyRecoveryCel
   MovementTestAccess::set_goal_x(*movement, 6.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   for (int world_x = 0; world_x <= 3; ++world_x) {
     Game::Systems::Point const blocked =
-        Game::Systems::CommandService::world_to_grid(static_cast<float>(world_x), 0.0F);
+        Game::Systems::NavGrid::world_to_grid(static_cast<float>(world_x), 0.0F);
     pathfinder->set_obstacle(blocked.x, blocked.y, true);
   }
 
@@ -1101,17 +1101,16 @@ TEST_F(CommandServiceTest, PersistentInvalidPositionRetargetsToNearbyRecoveryCel
     world.update(0.1F);
   }
 
-  Game::Systems::Point const current_grid =
-      Game::Systems::CommandService::world_to_grid(transform->position.x,
-                                                   transform->position.z);
+  Game::Systems::Point const current_grid = Game::Systems::NavGrid::world_to_grid(
+      transform->position.x, transform->position.z);
   EXPECT_TRUE(pathfinder->is_walkable(current_grid.x, current_grid.y));
-  auto const goal_grid = Game::Systems::CommandService::world_to_grid(
-      movement->get_goal_x(), movement->get_goal_y());
+  auto const goal_grid = Game::Systems::NavGrid::world_to_grid(movement->get_goal_x(),
+                                                               movement->get_goal_y());
   EXPECT_TRUE(pathfinder->is_walkable(goal_grid.x, goal_grid.y));
 }
 
 TEST_F(CommandServiceTest, LocalRecoveryDoesNotSpliceBlockedGoalBackIntoPath) {
-  Game::Systems::CommandService::initialize(16, 16);
+  Game::Systems::NavGrid::initialize(16, 16);
   Engine::Core::World world;
 
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
@@ -1122,17 +1121,15 @@ TEST_F(CommandServiceTest, LocalRecoveryDoesNotSpliceBlockedGoalBackIntoPath) {
   ASSERT_NE(movement, nullptr);
   ASSERT_NE(transform, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
-  Game::Systems::Point const current_grid =
-      Game::Systems::CommandService::world_to_grid(transform->position.x,
-                                                   transform->position.z);
+  Game::Systems::Point const current_grid = Game::Systems::NavGrid::world_to_grid(
+      transform->position.x, transform->position.z);
   QVector3D const requested_goal(6.0F, 0.0F, 0.0F);
   Game::Systems::Point const blocked_goal =
-      Game::Systems::CommandService::world_to_grid(requested_goal.x(),
-                                                   requested_goal.z());
+      Game::Systems::NavGrid::world_to_grid(requested_goal.x(), requested_goal.z());
   pathfinder->set_obstacle(current_grid.x, current_grid.y, true);
   pathfinder->set_obstacle(blocked_goal.x, blocked_goal.y, true);
   MovementTestAccess::set_goal_x(*movement, requested_goal.x());
@@ -1141,12 +1138,12 @@ TEST_F(CommandServiceTest, LocalRecoveryDoesNotSpliceBlockedGoalBackIntoPath) {
   Game::Systems::MovementSystem movement_system;
   movement_system.update(&world, 0.3F);
 
-  auto const stored_goal = Game::Systems::CommandService::world_to_grid(
+  auto const stored_goal = Game::Systems::NavGrid::world_to_grid(
       movement->get_goal_x(), movement->get_goal_y());
   EXPECT_TRUE(pathfinder->is_walkable(stored_goal.x, stored_goal.y));
   EXPECT_FALSE(stored_goal == blocked_goal);
   for (auto const& [x, z] : movement->get_path()) {
-    auto const waypoint_grid = Game::Systems::CommandService::world_to_grid(x, z);
+    auto const waypoint_grid = Game::Systems::NavGrid::world_to_grid(x, z);
     EXPECT_TRUE(pathfinder->is_walkable(waypoint_grid.x, waypoint_grid.y));
   }
 }
@@ -1161,9 +1158,9 @@ TEST_F(CommandServiceTest, MultiUnitBridgeCrossingUsesWalkableBridgeCells) {
   map_def.bridges.push_back(
       {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F, 0.6F});
   Game::Map::TerrainService::instance().initialize(map_def);
-  Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->mark_navigation_grid_dirty();
   pathfinder->update_navigation_grid();
@@ -1212,9 +1209,9 @@ TEST_F(CommandServiceTest, MultiUnitBridgeCrossingUsesWalkableBridgeCells) {
     for (std::size_t idx = 0; idx < units.size(); ++idx) {
       auto* transform = units[idx]->get_component<Engine::Core::TransformComponent>();
       ASSERT_NE(transform, nullptr);
-      auto const current_grid = Game::Systems::CommandService::world_to_grid(
+      auto const current_grid = Game::Systems::NavGrid::world_to_grid(
           transform->position.x, transform->position.z);
-      EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(current_grid))
+      EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(current_grid))
           << "unit=" << units[idx]->get_id() << " world=(" << transform->position.x
           << ", " << transform->position.z << ") grid=(" << current_grid.x << ", "
           << current_grid.y << ")";
@@ -1240,12 +1237,12 @@ TEST_F(CommandServiceTest, MultiUnitMoveKeepsAllUnitsOrderedWhenOnePlannedSlotIs
   ASSERT_NE(second, nullptr);
   ASSERT_NE(third, nullptr);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->update_navigation_grid();
 
   Game::Systems::Point const blocked =
-      Game::Systems::CommandService::world_to_grid(4.0F, 0.0F);
+      Game::Systems::NavGrid::world_to_grid(4.0F, 0.0F);
   for (int dz = -1; dz <= 1; ++dz) {
     pathfinder->set_obstacle(blocked.x, blocked.y + dz, true);
   }
@@ -1282,7 +1279,7 @@ TEST_F(CommandServiceTest, RuntimeLocalAvoidanceKeepsBridgeEntrantsOnWalkableCel
   map_def.bridges.push_back(
       {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F, 0.6F});
   Game::Map::TerrainService::instance().initialize(map_def);
-  Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
 
   Engine::Core::World world;
   std::vector<Engine::Core::Entity*> units;
@@ -1312,9 +1309,9 @@ TEST_F(CommandServiceTest, RuntimeLocalAvoidanceKeepsBridgeEntrantsOnWalkableCel
     auto* movement = unit->get_component<Engine::Core::MovementComponent>();
     ASSERT_NE(transform, nullptr);
     ASSERT_NE(movement, nullptr);
-    auto const grid = Game::Systems::CommandService::world_to_grid(
-        transform->position.x, transform->position.z);
-    EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(grid));
+    auto const grid = Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                            transform->position.z);
+    EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(grid));
   }
 }
 
@@ -1328,9 +1325,9 @@ TEST_F(CommandServiceTest, UnitApproachingBridgeMovesOnWalkableCells) {
   map_def.bridges.push_back(
       {QVector3D(-2.0F, 0.0F, 0.0F), QVector3D(2.0F, 0.0F, 0.0F), 2.0F, 0.6F});
   Game::Map::TerrainService::instance().initialize(map_def);
-  Game::Systems::CommandService::initialize(map_def.grid.width, map_def.grid.height);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
 
-  auto* pathfinder = Game::Systems::CommandService::get_pathfinder();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
   ASSERT_NE(pathfinder, nullptr);
   pathfinder->mark_navigation_grid_dirty();
   pathfinder->update_navigation_grid();
@@ -1355,9 +1352,9 @@ TEST_F(CommandServiceTest, UnitApproachingBridgeMovesOnWalkableCells) {
 
   EXPECT_LT(transform->position.x, -3.0F);
   EXPECT_GT(transform->position.x, -4.1F);
-  auto const grid = Game::Systems::CommandService::world_to_grid(transform->position.x,
-                                                                 transform->position.z);
-  EXPECT_TRUE(Game::Systems::CommandService::is_grid_walkable(grid));
+  auto const grid = Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                          transform->position.z);
+  EXPECT_TRUE(Game::Systems::NavGrid::is_grid_walkable(grid));
 }
 
 } // namespace

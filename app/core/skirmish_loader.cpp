@@ -35,11 +35,11 @@
 #include "game/map/visibility_service.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/command_service.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_count_registry.h"
@@ -431,7 +431,7 @@ auto SkirmishLoader::start(const QString& map_path,
   constexpr int default_map_size = 100;
   const int map_width = level_result.ok ? level_result.grid_width : default_map_size;
   const int map_height = level_result.ok ? level_result.grid_height : default_map_size;
-  Game::Systems::CommandService::initialize(map_width, map_height);
+  Game::Systems::NavGrid::initialize(map_width, map_height);
   Game::Systems::WallNetworkService::refresh_world(m_world);
 
   if (m_on_visibility_initialized) {
