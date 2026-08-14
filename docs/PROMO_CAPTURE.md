@@ -162,9 +162,48 @@ untouched. If a new translucent pass ever shows a bright outline in captures and
 not in the game, check the alpha channel of the poster PNG first — the fringe
 pixels will be the non-opaque ones, and it is not a shading bug.
 
-Note that the _finished cut_ opens on black by design — `promo-edit.py` applies
-an `OPENING_FADE` from black, so a dark first frame there is the edit, not the
-recorder.
+## Frame zero is the thumbnail
+
+Every social platform takes the first frame of an upload as the poster image, so
+a black frame zero is a black thumbnail. This has shipped three times, each time
+from a different layer, so the rule is enforced in three places rather than
+argued about:
+
+- **Nothing in the edit may fade up from black.** `OPENING_FADE` is 0, and a
+  card sitting at timeline zero passes `fade=0.0` to `drawtext` so its text is
+  at full opacity on the very first frame. This is the one that bit last: the
+  advisory card paints an opaque black box over the whole frame for its hold and
+  then faded its text in over the first quarter-second, which is sixteen pure
+  black frames at 60 fps. Nobody sees that in review — the card looks right the
+  moment you scrub anywhere into it.
+- **The check counts visible pixels, not the brightest one.** Peak luma alone
+  passes anything with a single hot sample in it, and film grain over a black
+  card supplies one; a mean would reject a legitimate title card, which is 99%
+  black on purpose. `FIRST_FRAME_MIN_VISIBLE` is the fraction of the frame at or
+  above `FIRST_FRAME_VISIBLE_LUMA`, which separates "an image" from "black with
+  something in it". The shipped advisory card measures about 0.95%.
+- **A refused cut is never left where it publishes.** `promo-edit.py` encodes to
+  `<name>.staging.mp4` and only renames it over `<name>.mp4` once every delivery
+  check has passed; a failure moves it to `<name>.rejected.mp4` and deletes any
+  earlier `<name>.mp4`. Reporting a non-zero exit status is not enough on its
+  own — a reel is cut at the end of a long pipeline, the message scrolls past,
+  and a plausible `.mp4` under the expected name is what gets uploaded.
+
+`tests/promo_first_frame_test.sh` runs the shipped trailer spec through the real
+script on stand-in footage and asserts all of it, including that a black opening
+is refused _and_ leaves nothing uploadable behind. It is in the PR gate, needs no
+compiler, and takes about 25 seconds.
+
+To measure a finished cut by hand:
+
+```sh
+ffmpeg -v info -i trailer.mp4 \
+  -vf "select='lt(n,20)',signalstats,metadata=print:key=lavfi.signalstats.YMAX" \
+  -fps_mode passthrough -f null - 2>&1 | grep YMAX
+```
+
+A run of `YMAX=16` frames at the head is a black opening — 16 is the limited-
+range floor, not a dim image.
 
 ## The commander duel reel
 
