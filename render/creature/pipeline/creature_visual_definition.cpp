@@ -82,7 +82,6 @@ const CreatureVisualDefinition k_horse_visual_definition{
     &k_horse_attachment_frame_extractor,
     &k_horse_lod_strategy,
     8,
-    LegacySlotMask::HorseAttachments,
 };
 
 const CreatureMeshRecipe k_elephant_mesh_recipe{
@@ -136,7 +135,6 @@ const CreatureVisualDefinition k_elephant_visual_definition{
     &k_elephant_attachment_frame_extractor,
     &k_elephant_lod_strategy,
     static_cast<std::uint8_t>(Render::Elephant::k_elephant_role_count),
-    LegacySlotMask::ElephantHowdah,
 };
 
 auto sheep_part_graph(Render::Creature::CreatureLOD lod) noexcept
@@ -200,7 +198,6 @@ const CreatureVisualDefinition k_sheep_visual_definition{
     &k_wildlife_attachment_frame_extractor,
     &k_sheep_lod_strategy,
     static_cast<std::uint8_t>(Render::Wildlife::k_sheep_role_count),
-    LegacySlotMask::None,
 };
 
 const CreatureMeshRecipe k_wolf_mesh_recipe{
@@ -238,7 +235,6 @@ const CreatureVisualDefinition k_wolf_visual_definition{
     &k_wildlife_attachment_frame_extractor,
     &k_wolf_lod_strategy,
     static_cast<std::uint8_t>(Render::Wildlife::k_wolf_role_count),
-    LegacySlotMask::None,
 };
 
 } // namespace

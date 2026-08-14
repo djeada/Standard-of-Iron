@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <unordered_map>
 
 #include "prepare_internal.h"
 #include "render/submission_visibility.h"
@@ -42,56 +41,9 @@ auto resolve_casualty_launch(
           entry.launch_roll_speed * flight_time};
 }
 
-struct SoldierVisibilityKey {
-  std::uint32_t entity_id;
-  std::uint32_t slot;
-
-  auto operator==(const SoldierVisibilityKey& other) const noexcept -> bool {
-    return entity_id == other.entity_id && slot == other.slot;
-  }
-};
-
-struct SoldierVisibilityKeyHash {
-  auto operator()(const SoldierVisibilityKey& key) const noexcept -> std::size_t {
-    return (static_cast<std::size_t>(key.entity_id) << 8U) ^
-           static_cast<std::size_t>(key.slot);
-  }
-};
-
 constexpr float k_soldier_cull_enter_band = 1.5F;
 constexpr float k_soldier_cull_keep_band = 5.0F;
 constexpr std::uint32_t k_soldier_visibility_memory_frames = 12U;
-constexpr std::size_t k_soldier_visibility_capacity = 8192U;
-
-auto soldier_visibility_memory() -> std::unordered_map<SoldierVisibilityKey,
-                                                       std::uint32_t,
-                                                       SoldierVisibilityKeyHash>& {
-  static thread_local std::
-      unordered_map<SoldierVisibilityKey, std::uint32_t, SoldierVisibilityKeyHash>
-          drawn_frames;
-  return drawn_frames;
-}
-
-[[nodiscard]] auto soldier_was_recently_drawn(const SoldierVisibilityKey& key,
-                                              std::uint32_t frame_index) -> bool {
-  auto& memory = soldier_visibility_memory();
-  auto const found = memory.find(key);
-  if (found == memory.end()) {
-    return false;
-  }
-  return (frame_index - found->second) <= k_soldier_visibility_memory_frames;
-}
-
-void remember_soldier_drawn(const SoldierVisibilityKey& key,
-                            std::uint32_t frame_index) {
-  auto& memory = soldier_visibility_memory();
-  if (memory.size() > k_soldier_visibility_capacity) {
-    std::erase_if(memory, [frame_index](const auto& entry) {
-      return (frame_index - entry.second) > k_soldier_visibility_memory_frames;
-    });
-  }
-  memory[key] = frame_index;
-}
 
 } // namespace
 
@@ -173,7 +125,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       (ctx.entity != nullptr)
           ? ctx.entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>()
           : nullptr;
-  std::vector<int> live_slot_indices;
+  thread_local std::vector<int> live_slot_indices;
+  live_slot_indices.clear();
   bool const has_shared_formation_layout =
       !ctx.force_single_soldier && formation_presentation != nullptr &&
       formation_presentation->soldiers.size() ==
@@ -225,7 +178,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     active_casualty_count = static_cast<std::size_t>(
         std::count_if(casualties_comp->entries.begin(),
                       casualties_comp->entries.end(),
-                      [total_layout_count, &live_slot_indices](const auto& entry) {
+                      [total_layout_count](const auto& entry) {
                         return entry.slot_index < total_layout_count &&
                                std::find(live_slot_indices.begin(),
                                          live_slot_indices.end(),
@@ -243,6 +196,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
   }
   seed_missing_humanoid_wear(variant, seed);
+  const auto visual_spec = owner.visual_spec();
 
   if (!owner.m_proportion_scale_cached) {
     owner.m_cached_proportion_scale = owner.get_proportion_scaling();
@@ -401,11 +355,13 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
   if (layout_cache_comp != nullptr && use_per_soldier_locomotion_state) {
     auto& animation_states = layout_cache_comp->animation_states;
     auto& combat_lanes = layout_cache_comp->combat_lanes;
+    auto& visibility_frames = layout_cache_comp->visibility_frames;
     std::size_t const previous_state_count = animation_states.size();
     bool const state_count_changed =
         animation_states.size() != static_cast<std::size_t>(total_layout_count);
     animation_states.resize(static_cast<std::size_t>(total_layout_count));
     combat_lanes.resize(static_cast<std::size_t>(total_layout_count));
+    visibility_frames.resize(static_cast<std::size_t>(total_layout_count), 0U);
     if (!preserve_soldier_state_prefix) {
       for (auto& state : animation_states) {
         reset_humanoid_locomotion_state(state);
@@ -413,6 +369,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       for (auto& lane_state : combat_lanes) {
         lane_state = {};
       }
+      std::fill(visibility_frames.begin(), visibility_frames.end(), 0U);
     } else if (state_count_changed) {
       for (std::size_t idx = previous_state_count;
            idx < static_cast<std::size_t>(total_layout_count);
@@ -436,6 +393,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                                 ? 0.7F
                                                 : (anim.is_attacking ? 0.35F : 0.0F));
   const HumanoidPreparationModePolicy preparation_mode(ctx.entity);
+  const auto commander_jump = preparation_mode.jump_pose();
+  const auto rally_pose = preparation_mode.flag_rally_pose();
   float const unit_health_ratio =
       (unit_comp != nullptr && unit_comp->max_health > 0)
           ? std::clamp(static_cast<float>(unit_comp->health) /
@@ -458,6 +417,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     unit_attack_target_id = formation_presentation->target_id;
     unit_attack_target_alive = formation_presentation->target_alive;
   }
+  auto& animation_diagnostics =
+      Render::Profiling::CombatAnimationDiagnostics::instance();
+  const bool record_animation_diagnostics =
+      animation_diagnostics.enabled() || animation_diagnostics.logging_enabled();
   auto record_soldier_debug = [&](int idx,
                                   const AnimationInputs&,
                                   const AnimationInputs& resolved_anim,
@@ -471,7 +434,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                   float root_scale_y,
                                   float root_tilt_degrees,
                                   float hit_reaction_tilt_degrees) {
-    if (ctx.template_prewarm || ctx.entity == nullptr) {
+    if (!record_animation_diagnostics || ctx.template_prewarm ||
+        ctx.entity == nullptr) {
       return;
     }
 
@@ -495,8 +459,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     sample.root_scale_y = root_scale_y;
     sample.root_tilt_degrees = root_tilt_degrees;
     sample.hit_reaction_tilt_degrees = hit_reaction_tilt_degrees;
-    Render::Profiling::CombatAnimationDiagnostics::instance().record_soldier_sample(
-        ctx.entity->get_id(), sample);
+    animation_diagnostics.record_soldier_sample(ctx.entity->get_id(), sample);
   };
 
   bool const formation_fight_active = has_shared_formation_layout &&
@@ -558,7 +521,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
     if (!is_mounted_spawn && guard_pose_amount(soldier_render_anim) > 0.0F &&
         soldier_render_anim.shield_formation_pose == ShieldFormationPose::None) {
-      auto const visual_spec = owner.visual_spec();
       int const row = static_cast<int>(layout.row_index);
       int const col = static_cast<int>(layout.col_index);
       soldier_render_anim.shield_formation_pose = shared_guard_shield_pose(
@@ -579,7 +541,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     uint32_t const inst_seed = layout.inst_seed;
     float const phase_offset = layout.phase_offset;
     float const applied_yaw_offset = layout.yaw_offset + casualty_yaw;
-    auto const commander_jump = preparation_mode.jump_pose();
     bool const soldier_has_locomotion =
         Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
     bool const soldier_is_running =
@@ -624,9 +585,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     const QVector3D cull_center =
         inst_model.map(QVector3D(0.0F, k_soldier_cull_center_y, 0.0F));
 
-    const SoldierVisibilityKey visibility_key{ctx_entity_id,
-                                              static_cast<std::uint32_t>(idx)};
-    const bool recently_drawn = soldier_was_recently_drawn(visibility_key, frame_index);
+    const auto visibility_index = static_cast<std::size_t>(idx);
+    const std::uint32_t encoded_visible_frame =
+        layout_cache_comp != nullptr &&
+                visibility_index < layout_cache_comp->visibility_frames.size()
+            ? layout_cache_comp->visibility_frames[visibility_index]
+            : 0U;
+    const bool recently_drawn =
+        encoded_visible_frame != 0U && (frame_index - (encoded_visible_frame - 1U)) <=
+                                           k_soldier_visibility_memory_frames;
     const float cull_radius =
         k_soldier_cull_radius +
         (recently_drawn ? k_soldier_cull_keep_band : k_soldier_cull_enter_band);
@@ -916,7 +883,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       locomotion_state.gait.cycle_phase = phase_override.cycle_phase;
     }
 
-    auto const visual_spec = owner.visual_spec();
     ConstructionRole construction_role = ConstructionRole::None;
     if (soldier_render_anim.is_constructing) {
       construction_role =
@@ -949,7 +915,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.amplified_attack = false;
     anim_ctx.finisher_attack = anim_ctx.inputs.combat_visual.finisher_attack;
 
-    auto const rally_pose = preparation_mode.flag_rally_pose();
     Animation::HumanoidAmbientRuntimeState previous_ambient{};
     if (locomotion_persistent_state != nullptr) {
       previous_ambient = locomotion_persistent_state->ambient_idle;
@@ -1107,7 +1072,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         (soldier_render_anim.combat_phase != anim_ctx.inputs.combat_phase) ||
         (std::abs(soldier_render_anim.combat_phase_progress -
                   anim_ctx.inputs.combat_phase_progress) > 1.0e-4F);
-    remember_soldier_drawn(visibility_key, frame_index);
+    if (layout_cache_comp != nullptr &&
+        visibility_index < layout_cache_comp->visibility_frames.size()) {
+      layout_cache_comp->visibility_frames[visibility_index] = frame_index + 1U;
+    }
     record_soldier_debug(idx,
                          soldier_render_anim,
                          anim_ctx.inputs,
@@ -1160,12 +1128,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         break;
       }
 
-      RCP::PreparedHumanoidBodyState body_state;
-      body_state.graph = graph_output;
-      body_state.pose = pose;
-      body_state.variant = variant;
-      body_state.animation = anim_ctx;
-      out.bodies.add_humanoid(body_state);
+      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
       owner.append_companion_preparation(
           inst_ctx, variant, pose, anim_ctx, inst_seed, graph_output.lod, out);
       break;
@@ -1181,12 +1144,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
             inst_ctx, variant, pose, anim_ctx, inst_seed, graph_output.lod, out);
         break;
       }
-      RCP::PreparedHumanoidBodyState body_state;
-      body_state.graph = graph_output;
-      body_state.pose = pose;
-      body_state.variant = variant;
-      body_state.animation = anim_ctx;
-      out.bodies.add_humanoid(body_state);
+      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
       break;
     }
 

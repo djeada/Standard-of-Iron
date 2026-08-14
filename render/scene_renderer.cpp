@@ -582,6 +582,14 @@ void Renderer::rigged(const RiggedCreatureCmd& cmd) {
   m_active_queue->submit(std::move(submitted));
 }
 
+void Renderer::rigged(RiggedCreatureCmd&& cmd) {
+  if (m_active_queue == nullptr || cmd.mesh == nullptr) {
+    return;
+  }
+  cmd.alpha *= m_alpha_override;
+  m_active_queue->submit(std::move(cmd));
+}
+
 auto Renderer::last_playback_stats() const noexcept -> Backend::PlaybackStats {
   return m_gl_backend != nullptr ? m_gl_backend->last_playback_stats()
                                  : Backend::PlaybackStats{};

@@ -4,14 +4,10 @@
 #include <QVector3D>
 
 #include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <unordered_map>
 #include <vector>
 
 #include "pipeline_interface.h"
 #include "render/gl/frame_environment.h"
-#include "render/gl/persistent_buffer.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
@@ -27,12 +23,6 @@ namespace Render::GL::BackendPipelines {
 
 class RiggedCharacterPipeline final : public IPipeline {
 public:
-  static constexpr std::size_t k_max_bones = 64;
-
-  static constexpr std::size_t k_instanced_batch_ceiling = 64;
-
-  static constexpr std::size_t k_instanced_batch_floor = 4;
-
   RiggedCharacterPipeline(const GL::IFrameEnvironment* frame_environment,
                           GL::ShaderCache* shader_cache)
       : m_frame_environment(frame_environment)
@@ -48,50 +38,7 @@ public:
             const QMatrix4x4& view_proj,
             const QVector3D& camera_position = {}) -> bool;
 
-  auto draw_instanced(const RiggedCreatureCmd* const* cmds,
-                      std::size_t count,
-                      const QMatrix4x4& view_proj,
-                      const QVector3D& camera_position = {}) -> bool;
-  auto draw_shadow_instanced(const RiggedCreatureCmd* const* cmds,
-                             std::size_t count,
-                             const QMatrix4x4& light_view_proj) -> bool;
-  void begin_frame();
-  void end_frame();
-
   [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
-  [[nodiscard]] auto instanced_shader() const -> GL::Shader* {
-    return m_instanced_shader;
-  }
-
-  [[nodiscard]] static auto
-  batch_palettes_are_packable(const RiggedCreatureCmd* const* cmds,
-                              std::size_t count) noexcept -> bool;
-
-  [[nodiscard]] auto max_instances_per_batch() const noexcept -> std::size_t {
-    return m_max_instances_per_batch;
-  }
-
-  [[nodiscard]] static constexpr auto palette_range_bytes_for_instanced_shader(
-      std::size_t shader_batch_size) noexcept -> std::size_t {
-    return shader_batch_size * k_max_bones * sizeof(float) * 16U;
-  }
-
-  void reset_batch_stats() noexcept {
-    m_batch_sizes.clear();
-    m_last_instance_count = 0;
-  }
-  [[nodiscard]] auto
-  batch_sizes_for_test() const noexcept -> const std::vector<std::size_t>& {
-    return m_batch_sizes;
-  }
-  [[nodiscard]] auto last_instance_count_for_test() const noexcept -> std::size_t {
-    return m_last_instance_count;
-  }
-
-  static void compute_groups(const RiggedCreatureCmd* cmds,
-                             std::size_t count,
-                             std::size_t cap,
-                             std::vector<std::size_t>& out_groups);
 
   struct Uniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -116,60 +63,11 @@ private:
   const GL::IFrameEnvironment* m_frame_environment = nullptr;
   GL::ShaderCache* m_shader_cache = nullptr;
   GL::Shader* m_shader = nullptr;
-  GL::Shader* m_instanced_shader = nullptr;
-
-  std::unique_ptr<Shader> m_instanced_shader_storage;
-  std::unique_ptr<Shader> m_shadow_instanced_shader_storage;
-  GL::Shader* m_shadow_instanced_shader = nullptr;
   Uniforms m_uniforms{};
-
-  GL::Shader::UniformHandle m_instanced_view_proj{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_instanced_role_color_tbo{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_instanced_light_dir{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_instanced_ambient_strength{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_instanced_camera_position{GL::Shader::InvalidUniform};
-  GL::Shader::UniformHandle m_shadow_instanced_view_proj{GL::Shader::InvalidUniform};
-
-  std::size_t m_max_instances_per_batch = 0;
-
-  unsigned int m_instance_vbo = 0;
-  std::size_t m_instance_vbo_capacity_bytes = 0;
-
-  unsigned int m_role_color_buffer = 0;
-  unsigned int m_role_color_tbo_tex = 0;
-  std::size_t m_role_color_buffer_capacity_bytes = 0;
 
   unsigned int m_palette_ubo = 0;
   std::size_t m_palette_ubo_capacity_bytes = 0;
   std::vector<float> m_palette_scratch;
-
-  static constexpr std::size_t k_palette_stream_instance_capacity = 8192U;
-  PersistentRingBuffer<float> m_palette_stream;
-
-  struct InstancedVaoEntry {
-    unsigned int vao = 0;
-  };
-  std::unordered_map<std::uint64_t, InstancedVaoEntry> m_instanced_vaos;
-
-  std::vector<std::size_t> m_batch_sizes;
-  std::size_t m_last_instance_count = 0;
-
-  struct InstanceAttrib {
-    float world[16];
-    float color_alpha[4];
-    float variation_material[4];
-    float wear[4];
-    float role_meta[4];
-  };
-  std::vector<InstanceAttrib> m_instance_scratch;
-  std::vector<float> m_role_color_scratch;
-
-  auto build_instanced_shader_source() -> bool;
-  auto build_shadow_instanced_shader_source() -> bool;
-  auto bind_streamed_palette_batch(const RiggedCreatureCmd* const* cmds,
-                                   std::size_t count) -> bool;
-  auto ensure_instance_vbo(std::size_t bytes_needed) -> bool;
-  auto ensure_instanced_vao(RiggedMesh& mesh) -> unsigned int;
 };
 
 } // namespace Render::GL::BackendPipelines

@@ -334,8 +334,8 @@ void Backend::begin_frame() {
   if (m_mesh_instancing_pipeline) {
     m_mesh_instancing_pipeline->begin_frame();
   }
-  if (m_rigged_character_pipeline) {
-    m_rigged_character_pipeline->begin_frame();
+  if (m_rigged_cull_pipeline) {
+    m_rigged_cull_pipeline->begin_frame();
   }
 }
 
@@ -599,11 +599,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     };
 
     thread_local std::vector<const RiggedCreatureCmd*> visible_rigged;
-    const std::size_t rigged_cap =
-        m_rigged_character_pipeline != nullptr
-            ? std::max<std::size_t>(
-                  1U, m_rigged_character_pipeline->max_instances_per_batch())
-            : 1U;
     for (const PreparedBatch& prepared : queue.prepared_batches()) {
       if (prepared.count == 0U || prepared.type != DrawCmdType::RiggedCreature) {
         continue;
@@ -622,7 +617,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       }
 
       if (m_rigged_cull_pipeline != nullptr &&
-          m_rigged_cull_pipeline->has_shadow_path() && visible_rigged.size() >= 2U) {
+          m_rigged_cull_pipeline->has_shadow_path() && !visible_rigged.empty()) {
         if (m_rigged_cull_pipeline->draw_full_mesh_shadow(
                 visible_rigged.data(), visible_rigged.size(), light_vp)) {
           m_last_playback_stats.shadow_rigged_instanced_instances +=
@@ -645,27 +640,10 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         }
       }
 
-      std::size_t start = 0U;
-      while (start < visible_rigged.size()) {
-        const std::size_t count = std::min(rigged_cap, visible_rigged.size() - start);
-        bool const instanced = m_rigged_character_pipeline != nullptr &&
-                               m_rigged_character_pipeline->draw_shadow_instanced(
-                                   visible_rigged.data() + start, count, light_vp);
-        if (instanced) {
-          if (count > 1U) {
-            ++m_last_playback_stats.shadow_rigged_instanced_draws;
-            m_last_playback_stats.shadow_rigged_instanced_instances += count;
-          } else {
-            ++m_last_playback_stats.shadow_rigged_single_draws;
-          }
-        } else {
-          for (std::size_t offset = 0; offset < count; ++offset) {
-            if (visible_rigged[start + offset]->palette_ubo != 0U) {
-              draw_single_rigged_shadow(*visible_rigged[start + offset]);
-            }
-          }
+      for (const RiggedCreatureCmd* rigged : visible_rigged) {
+        if (rigged->palette_ubo != 0U) {
+          draw_single_rigged_shadow(*rigged);
         }
-        start += count;
       }
     }
 
@@ -936,8 +914,8 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
     m_last_bound_shader = nullptr;
   }
 
-  if (m_rigged_character_pipeline) {
-    m_rigged_character_pipeline->end_frame();
+  if (m_rigged_cull_pipeline) {
+    m_rigged_cull_pipeline->end_frame();
   }
 
   m_frame_tracker.mark_complete();

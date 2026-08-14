@@ -122,7 +122,6 @@ public:
     spec.kind = CreatureKind::Humanoid;
     spec.debug_name = m_renderer_key;
     spec.scaling = m_profile.proportion_profile.as_pipeline_scaling();
-    spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
     spec.archetype_id = resolve_humanoid_equipment_archetype(
         m_renderer_key,
         Render::Creature::ArchetypeRegistry::k_humanoid_base,

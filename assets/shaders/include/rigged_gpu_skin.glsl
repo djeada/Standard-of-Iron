@@ -30,6 +30,7 @@ layout(std430, binding = 3) readonly buffer RiggedInstanceBuffer {
 uniform mat4 u_view_proj;
 uniform uint u_vertex_count;
 uniform uint u_bone_count;
+uniform uint u_instance_base;
 
 const uint RG_WORDS_PER_VERTEX = 14u;
 
@@ -80,12 +81,13 @@ uint rg_primary_bone_index(uint v) {
 }
 
 mat4 rg_bone_matrix(uint instance, uint bone) {
-  uvec4 palette_ref = rg_instance[instance].palette_ref;
+  uint stream_instance = u_instance_base + instance;
+  uvec4 palette_ref = rg_instance[stream_instance].palette_ref;
   if (palette_ref.x == 0u) {
     return rg_owned_palette[palette_ref.y + bone];
   }
   mat4 first = rg_baked_palette[palette_ref.y + bone];
-  float weight = rg_instance[instance].palette_blend.x;
+  float weight = rg_instance[stream_instance].palette_blend.x;
   if (weight <= 0.0001) {
     return first;
   }
@@ -121,18 +123,20 @@ mat4 rg_skin_matrix(uint v, uint instance) {
 
 vec4 rg_clip_position(uint v, uint instance) {
   mat4 skin = rg_skin_matrix(v, instance);
-  vec3 variation_scale = rg_instance[instance].variation_material.xyz;
+  uint stream_instance = u_instance_base + instance;
+  vec3 variation_scale = rg_instance[stream_instance].variation_material.xyz;
   vec4 pos_local = vec4(rg_position(v) * variation_scale, 1.0);
   vec4 skinned_local = skin * pos_local;
-  vec4 pos_world = rg_instance[instance].world * skinned_local;
+  vec4 pos_world = rg_instance[stream_instance].world * skinned_local;
   return u_view_proj * pos_world;
 }
 
 vec4 rg_clip_position_rigid(uint v, uint instance) {
   mat4 skin = rg_bone_matrix(instance, rg_primary_bone_index(v));
-  vec3 variation_scale = rg_instance[instance].variation_material.xyz;
+  uint stream_instance = u_instance_base + instance;
+  vec3 variation_scale = rg_instance[stream_instance].variation_material.xyz;
   vec4 pos_local = vec4(rg_position(v) * variation_scale, 1.0);
-  vec4 pos_world = rg_instance[instance].world * (skin * pos_local);
+  vec4 pos_world = rg_instance[stream_instance].world * (skin * pos_local);
   return u_view_proj * pos_world;
 }
 

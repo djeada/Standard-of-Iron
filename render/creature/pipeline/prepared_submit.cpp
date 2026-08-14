@@ -1,5 +1,7 @@
 #include "prepared_submit.h"
 
+#include <algorithm>
+#include <iterator>
 #include <string_view>
 #include <vector>
 
@@ -23,21 +25,26 @@ void submit_post_body_request(const PostBodyDrawRequest& request,
 auto submit_preparation(CreaturePreparationResult& prep,
                         Render::GL::ISubmitter& out) noexcept -> SubmitStats {
   thread_local CreaturePipeline pipeline;
-  thread_local std::vector<Render::Creature::CreatureRenderRequest> visible_requests;
-  visible_requests.clear();
-
   auto const requests = prep.bodies.requests();
-  visible_requests.reserve(requests.size());
-
-  for (const auto& request : requests) {
-    if (request.pass != RenderPassIntent::Shadow) {
-      visible_requests.push_back(request);
-    }
-  }
-
   SubmitStats stats{};
-  if (!visible_requests.empty()) {
-    stats = pipeline.submit_requests(visible_requests, out);
+  const bool contains_shadow_only_request =
+      std::any_of(requests.begin(), requests.end(), [](const auto& request) {
+        return request.pass == RenderPassIntent::Shadow;
+      });
+  if (!contains_shadow_only_request) {
+    stats = pipeline.submit_requests(requests, out);
+  } else {
+    thread_local std::vector<Render::Creature::CreatureRenderRequest> visible_requests;
+    visible_requests.clear();
+    visible_requests.reserve(requests.size());
+    std::copy_if(
+        requests.begin(),
+        requests.end(),
+        std::back_inserter(visible_requests),
+        [](const auto& request) { return request.pass != RenderPassIntent::Shadow; });
+    if (!visible_requests.empty()) {
+      stats = pipeline.submit_requests(visible_requests, out);
+    }
   }
 
   for (const auto& request : prep.post_body_draws) {

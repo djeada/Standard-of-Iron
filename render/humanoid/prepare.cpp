@@ -172,7 +172,8 @@ void HumanoidRendererBase::render(const DrawContext& ctx, ISubmitter& out) const
 void HumanoidRendererBase::prepare_and_submit(const DrawContext& ctx,
                                               const AnimationInputs& anim,
                                               ISubmitter& out) const {
-  Render::Humanoid::HumanoidPreparation prep;
+  thread_local Render::Humanoid::HumanoidPreparation prep;
+  prep.clear();
   Render::Humanoid::prepare_humanoid_instances(
       *this, ctx, anim, humanoid_current_frame(), prep);
 

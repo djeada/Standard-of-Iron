@@ -88,34 +88,6 @@ struct ProportionScaling {
   [[nodiscard]] constexpr auto as_vector() const -> QVector3D { return {x, y, z}; }
 };
 
-enum class LegacySlotMask : std::uint8_t {
-  None = 0,
-  Helmet = 1U << 0U,
-  Armor = 1U << 1U,
-  ArmorOverlay = 1U << 2U,
-  ShoulderDecorations = 1U << 3U,
-  FacialHair = 1U << 4U,
-  Attachments = 1U << 5U,
-
-  AllHumanoid =
-      Helmet | Armor | ArmorOverlay | ShoulderDecorations | FacialHair | Attachments,
-
-  HorseAttachments = Attachments,
-  ElephantHowdah = Attachments,
-};
-
-[[nodiscard]] constexpr auto operator|(LegacySlotMask a,
-                                       LegacySlotMask b) noexcept -> LegacySlotMask {
-  return static_cast<LegacySlotMask>(static_cast<std::uint8_t>(a) |
-                                     static_cast<std::uint8_t>(b));
-}
-
-[[nodiscard]] constexpr auto operator&(LegacySlotMask a,
-                                       LegacySlotMask b) noexcept -> LegacySlotMask {
-  return static_cast<LegacySlotMask>(static_cast<std::uint8_t>(a) &
-                                     static_cast<std::uint8_t>(b));
-}
-
 struct MountedSpec;
 
 struct UnitVisualSpec {
@@ -128,7 +100,6 @@ struct UnitVisualSpec {
   ProportionScaling scaling{};
   const CreatureVisualDefinition* creature_definition{nullptr};
 
-  LegacySlotMask owned_legacy_slots{LegacySlotMask::None};
   bool skip_default_facial_hair_archetype{false};
 
   Render::Creature::ArchetypeId archetype_id{Render::Creature::k_invalid_archetype};

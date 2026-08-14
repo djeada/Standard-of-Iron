@@ -45,8 +45,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
     std::size_t rig_fallback_start = i;
 
     if (prepared.kind == PreparedBatchKind::RiggedCreatureInstanced &&
-        m_rigged_cull_pipeline != nullptr && m_rigged_cull_pipeline->is_available() &&
-        prepared.count >= 2U) {
+        m_rigged_cull_pipeline != nullptr && m_rigged_cull_pipeline->is_available()) {
       thread_local std::vector<const RiggedCreatureCmd*> cull_refs;
       cull_refs.clear();
       cull_refs.reserve(prepared.count);
@@ -78,53 +77,6 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         m_last_playback_stats.rigged_instanced_instances += cull_refs.size();
         m_last_bound_shader = m_rigged_cull_pipeline->shader();
         m_last_bound_texture = nullptr;
-        break;
-      }
-    }
-
-    if (prepared.kind == PreparedBatchKind::RiggedCreatureInstanced &&
-        m_rigged_character_pipeline->instanced_shader() != nullptr) {
-      thread_local std::vector<const RiggedCreatureCmd*> rig_batch_refs;
-      const std::size_t cap = std::max<std::size_t>(
-          1U, m_rigged_character_pipeline->max_instances_per_batch());
-      if (rig_batch_refs.capacity() < cap) {
-        rig_batch_refs.reserve(cap);
-      }
-      std::size_t j = i;
-      while (j < batch_end) {
-        const std::size_t chunk_end = std::min(batch_end, j + cap);
-        const std::size_t chunk_count = chunk_end - j;
-        if (chunk_count < 2U) {
-          const auto& single = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
-          m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
-          ++m_rigged_drawn_this_frame;
-          ++m_last_playback_stats.rigged_single_draws;
-          m_last_bound_shader = m_rigged_character_pipeline->shader();
-          m_last_bound_texture = single.texture;
-          ++j;
-          rig_fallback_start = j;
-          continue;
-        }
-
-        rig_batch_refs.clear();
-        for (std::size_t k = j; k < chunk_end; ++k) {
-          rig_batch_refs.push_back(
-              &std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
-        }
-        if (m_rigged_character_pipeline->draw_instanced(rig_batch_refs.data(),
-                                                        rig_batch_refs.size(),
-                                                        view_proj,
-                                                        cam.get_position())) {
-          m_rigged_drawn_this_frame += rig_batch_refs.size();
-          ++m_last_playback_stats.rigged_instanced_draws;
-          m_last_playback_stats.rigged_instanced_instances += rig_batch_refs.size();
-          m_last_bound_shader = m_rigged_character_pipeline->instanced_shader();
-          m_last_bound_texture = nullptr;
-          j = chunk_end;
-          rig_fallback_start = j;
-          continue;
-        }
-
         break;
       }
     }

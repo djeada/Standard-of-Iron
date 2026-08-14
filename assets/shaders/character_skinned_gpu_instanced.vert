@@ -19,7 +19,7 @@ uniform int u_rigid_skinning;
 void main() {
   uint v = uint(gl_VertexID);
   uint instance = uint(gl_InstanceID);
-  RiggedInstanceData data = rg_instance[instance];
+  RiggedInstanceData data = rg_instance[u_instance_base + instance];
 
   mat4 skin = u_rigid_skinning != 0 ? rg_bone_matrix(instance, rg_primary_bone_index(v))
                                     : rg_skin_matrix(v, instance);
@@ -39,7 +39,7 @@ void main() {
   v_alpha = data.color_alpha.a;
   v_material_id = int(data.variation_material.w);
   v_color_role = int(rg_color_role(v));
-  v_instance_id = int(instance);
+  v_instance_id = int(data.role_meta.y);
   v_role_color_count = int(data.role_meta.x);
   v_wear_params = data.wear_params;
 }
