@@ -259,9 +259,24 @@ high enough that the ground stays legible (0.30 — at 0.12 four fifths of the f
 below luma 20), and a shadow tint well off black.
 
 Afternoon (17) is defined by sun _height_, not colour. At y=0.55 it was indistinguish-
-able from noon; at y=0.26 it gets the long raking shadows that make golden hour read.
+able from noon; at y=0.24 it gets the long raking shadows that make golden hour read.
 A low sun costs direct light on every up-facing surface, so intensity and ambient have
-to rise to pay it back or the scene just goes dim.
+to rise to pay it back or the scene just goes dim. Pushing the sun even lower (y=0.19)
+was tried and reverted: `ndl` on flat ground collapses with it, the sun term starves,
+and the field goes _duller_, not more golden.
+
+The golden cast itself cannot come from the sun colour alone, because up-facing
+surfaces take their ambient from `sky_color` (the hemisphere mix) — with a blue sky
+the field stays midday-green no matter how amber the key is. Golden hour therefore
+warms `sky_color` itself ({0.66, 0.59, 0.52} — the ambient integral of a low sun is
+horizon scatter, not zenith blue), which also warms the rim light and the sky dome,
+and moves the coolness into `shadow_tint` ({0.28, 0.29, 0.44}) so the warm/cool split
+lives between light and shade instead of between ground and sky. Warmer, denser fog
+({0.94, 0.74, 0.48} at 0.005) gives the composite's distance fog and waterside mist
+a golden haze for free.
+
+Note when judging this in captures: the arena renders without directional shadow
+maps, so the long-shadow half of golden hour only shows in the real game.
 
 Snow in `apply_weather` does more than tint the ground bounce. A snowfield throws light
 back everywhere, so shadows weaken and soften and go blue, and the horizon hazes to a
