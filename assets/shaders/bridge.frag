@@ -160,9 +160,6 @@ void main() {
   vec3 L = environment_primary_direction();
   vec3 V = normalize(vec3(0.0, 0.9, 0.4));
 
-  float NdotL = max(dot(N, L), 0.0);
-  float diffuse = NdotL;
-
   float steep = saturate(length(slope));
   float roughness = clamp(mix(0.65, 0.95, steep), 0.02, 1.0);
   float F0 = 0.035;
@@ -171,16 +168,9 @@ void main() {
 
   vec3 base_color = mix(mortar_color, stone_color, stone_mask);
 
-  vec3 ambient = environment_ambient_light(N);
-  ambient = max(ambient,
-                mix(environment_ground_bounce_color(), environment_sky_color(), 0.5) *
-                    environment_ambient_intensity() * 0.62);
-
-  vec3 lit_color = base_color *
-                   (ambient + environment_primary_color() *
-                                  environment_primary_intensity() * diffuse * 0.76) *
-                   ao * environment_exposure();
+  vec3 lit_color = base_color * soi_surface_lighting_scaled(N, 0.76) * ao;
   lit_color += environment_primary_color() * spec * 0.14;
+  lit_color += soi_rim_light(N, V);
 
   float grime = (1.0 - cavity) * 0.25 * (0.8 + 0.2 * soi_noise_3d41e6(macro_uv * 5.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));

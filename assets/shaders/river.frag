@@ -11,8 +11,6 @@ uniform float time;
 uniform float u_segment_visibility;
 uniform int u_water_surface_kind;
 uniform vec3 u_camera_pos;
-uniform float u_fog_start;
-uniform float u_fog_end;
 
 const float PI = 3.14159265359;
 
@@ -158,11 +156,6 @@ void main() {
 
   color = apply_visibility_memory(color, world_pos.xz);
   color *= u_segment_visibility;
-
-  float view_distance = length(u_camera_pos - world_pos);
-  float fog_amount =
-      atmospheric_fog_amount(view_distance, u_fog_start, u_fog_end, 1.0, 0.0);
-  color = mix(color, environment_fog_color(), fog_amount);
 
   frag_color = vec4(color, 1.0);
 }

@@ -37,8 +37,6 @@ uniform float u_micro_normal_weight;
 uniform float u_albedo_jitter;
 uniform vec3 u_snow_color;
 uniform vec3 u_camera_pos;
-uniform float u_fog_start;
-uniform float u_fog_end;
 
 float fbm(vec2 p) {
   float v = 0.0, a = 0.5;
@@ -262,10 +260,8 @@ void main() {
   float spec_contrib = fres * 0.10 * (1.0 - surface_roughness);
   spec_contrib += moisture * 0.05 * fres;
   spec_contrib += puddle_mask * 0.10 * (0.4 + 0.6 * ndl);
-  vec3 light =
-      environment_ambient_light(n_micro) +
-      environment_primary_color() * environment_primary_intensity() * ndl * 0.65 +
-      vec3(spec_contrib);
+  vec3 light = environment_ambient_light(n_micro) + soi_key_light(n_micro) * 0.65 +
+               vec3(spec_contrib);
   vec3 lit = col * light * (u_ambient_boost + height_tint) * environment_exposure();
   lit += col * local_lighting(v_world_pos, n_micro);
   lit = apply_directional_shadow(lit, v_world_pos, n_micro);
@@ -273,14 +269,6 @@ void main() {
   vec3 disp_tint = mix(
       vec3(0.72, 0.88, 1.02), vec3(1.06, 0.94, 0.82), smoothstep(-0.12, 0.12, v_disp));
   lit = mix(lit, lit * disp_tint, 0.14);
-
-  vec3 to_camera = u_camera_pos - v_world_pos;
-  float view_distance = max(length(to_camera), 1e-4);
-  vec3 fog_view_dir = to_camera / view_distance;
-  float horizon_fog = smoothstep(0.18, 0.85, 1.0 - abs(fog_view_dir.y));
-  float fog_amount = atmospheric_fog_amount(
-      view_distance, u_fog_start, u_fog_end, 0.75, 0.55 * horizon_fog);
-  lit = mix(lit, environment_fog_color(), fog_amount);
 
   frag_color = vec4(lit, 1.0);
 }

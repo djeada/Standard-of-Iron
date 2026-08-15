@@ -2,9 +2,12 @@
 
 #include <QDebug>
 #include <QOpenGLContext>
+#include <QString>
 #include <QVector2D>
+#include <QVector4D>
 
 #include <algorithm>
+#include <cstddef>
 
 namespace Render::GL::BackendPipelines {
 
@@ -181,6 +184,26 @@ void PostProcessPipeline::set_depth_range(float near_plane, float far_plane) noe
   m_far_plane = far_plane;
 }
 
+void PostProcessPipeline::set_atmosphere(const QMatrix4x4& inverse_view_projection,
+                                         const QVector3D& camera_position,
+                                         float fog_start,
+                                         float fog_end,
+                                         float time) noexcept {
+  m_inverse_view_proj = inverse_view_projection;
+  m_camera_position = camera_position;
+  m_fog_start = fog_start;
+  m_fog_end = fog_end;
+  m_mist_time = time;
+}
+
+void PostProcessPipeline::set_mist(const std::vector<Render::MistVolume>& volumes) {
+  m_mist_volumes = volumes;
+  if (m_mist_volumes.size() > static_cast<std::size_t>(Render::k_max_mist_volumes)) {
+    m_mist_volumes.resize(Render::k_max_mist_volumes);
+  }
+  m_mist_dirty = true;
+}
+
 void PostProcessPipeline::draw_sky(const QMatrix4x4& view_projection,
                                    const QVector3D& camera_position) {
   if (!m_initialized || m_sky_shader == nullptr) {
@@ -300,6 +323,28 @@ void PostProcessPipeline::resolve_scene() {
                 1.0F / static_cast<float>(m_composite.height)));
   m_composite_shader->set_uniform("u_ground_ao_radius", k_ground_ao_radius);
   m_composite_shader->set_uniform("u_ground_ao_strength", k_ground_ao_strength);
+  m_composite_shader->set_uniform("u_inverse_view_proj", m_inverse_view_proj);
+  m_composite_shader->set_uniform("u_camera_position", m_camera_position);
+  m_composite_shader->set_uniform("u_fog_range", QVector2D(m_fog_start, m_fog_end));
+  m_composite_shader->set_uniform("u_time", m_mist_time);
+  if (m_mist_dirty) {
+    const int mist_count = static_cast<int>(m_mist_volumes.size());
+    m_composite_shader->set_uniform("u_mist_count", mist_count);
+    for (int i = 0; i < mist_count; ++i) {
+      const auto& volume = m_mist_volumes[static_cast<std::size_t>(i)];
+      m_composite_shader->set_uniform(
+          QStringLiteral("u_mist_seg[%1]").arg(i),
+          QVector4D(
+              volume.start.x(), volume.start.z(), volume.end.x(), volume.end.z()));
+      m_composite_shader->set_uniform(
+          QStringLiteral("u_mist_info[%1]").arg(i),
+          QVector4D(volume.radius,
+                    volume.strength,
+                    static_cast<float>(static_cast<int>(volume.kind)),
+                    volume.start.y()));
+    }
+    m_mist_dirty = false;
+  }
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, m_scene_depth);
   glActiveTexture(GL_TEXTURE1);

@@ -30,16 +30,8 @@ void main() {
   vec3 normal = normalize(v_normal);
   vec3 local_normal = normalize(v_local_normal);
   vec3 light_dir = environment_primary_direction();
-  float ndotl = dot(normal, light_dir);
-  float diffuse = max(ndotl, 0.0);
-  float wrap = clamp((ndotl + 0.38) / 1.38, 0.0, 1.0);
-  float ambient = environment_ambient_intensity();
   vec3 sun_color = environment_primary_color() * environment_primary_intensity();
-  vec3 sky_color = environment_sky_color();
-  float lit_t = clamp(wrap * 1.15, 0.0, 1.0);
-  vec3 light_tint = mix(sky_color * 0.58, sun_color, lit_t);
-  float lighting = ambient + wrap * environment_primary_intensity() * 0.46 +
-                   diffuse * environment_primary_intensity() * 0.14;
+  vec3 illumination = soi_surface_lighting_scaled(normal, 0.62);
   vec3 view_dir = normalize(vec3(0.0, 0.85, 0.53));
   vec3 half_vec = normalize(light_dir + view_dir);
   float spec_base = max(dot(normal, half_vec), 0.0);
@@ -113,9 +105,6 @@ void main() {
   material_color *= mix(0.96, 1.03, noise21(v_world_pos.xz * 1.4 + vec2(7.0, 3.0)));
 
   float specular = pow(spec_base, 20.0) * 0.008;
-  float rim = 1.0 - max(dot(normal, view_dir), 0.0);
-  rim = pow(rim, 4.0) * 0.045;
-  vec3 rim_color = sky_color * rim;
   float ao = clamp(local_normal.y * 0.34 + 0.82, 0.56, 1.0);
   float underside = 1.0 - smoothstep(-0.88, -0.32, local_normal.y);
   float near_ground = 1.0 - smoothstep(-0.10, 0.05, v_local_pos.y);
@@ -123,9 +112,9 @@ void main() {
 
   ao *= 1.0 - contact_shadow;
 
-  vec3 color = material_color * lighting * light_tint * ao * environment_exposure();
+  vec3 color = material_color * illumination * ao;
   color += vec3(specular) * sun_color * ao;
-  color += rim_color;
+  color += soi_rim_light(normal, view_dir);
   color += color * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color = apply_visibility_memory(color, v_world_pos.xz);

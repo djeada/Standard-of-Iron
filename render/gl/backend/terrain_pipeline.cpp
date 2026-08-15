@@ -139,8 +139,6 @@ void TerrainPipeline::cache_ground_uniforms() {
   m_ground_uniforms.albedo_jitter = m_ground_shader->uniform_handle("u_albedo_jitter");
   m_ground_uniforms.snow_color = m_ground_shader->uniform_handle("u_snow_color");
   m_ground_uniforms.camera_position = m_ground_shader->uniform_handle("u_camera_pos");
-  m_ground_uniforms.fog_start = m_ground_shader->uniform_handle("u_fog_start");
-  m_ground_uniforms.fog_end = m_ground_shader->uniform_handle("u_fog_end");
 }
 
 void TerrainPipeline::cache_terrain_uniforms() {
@@ -226,8 +224,6 @@ void TerrainPipeline::cache_terrain_uniforms() {
   m_terrain_uniforms.height_to_world =
       m_terrain_shader->optional_uniform_handle("u_height_tex_to_world");
   m_terrain_uniforms.camera_position = m_terrain_shader->uniform_handle("u_camera_pos");
-  m_terrain_uniforms.fog_start = m_terrain_shader->uniform_handle("u_fog_start");
-  m_terrain_uniforms.fog_end = m_terrain_shader->uniform_handle("u_fog_end");
   m_terrain_uniforms.has_visibility =
       m_terrain_shader->optional_uniform_handle("u_has_visibility");
   m_terrain_uniforms.visibility_texture =

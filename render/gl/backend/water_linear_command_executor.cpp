@@ -80,18 +80,11 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
     };
 
     auto set_water_environment = [&](Shader* shader, const auto& uniforms) {
-      auto const [fog_start, fog_end] = fog_range_for_camera(cam);
       if (uniforms.camera_position != Shader::InvalidUniform) {
         shader->set_uniform(uniforms.camera_position, cam.get_position());
       }
       if (uniforms.light_direction != Shader::InvalidUniform) {
         shader->set_uniform(uniforms.light_direction, m_light_dir);
-      }
-      if (uniforms.fog_start != Shader::InvalidUniform) {
-        shader->set_uniform(uniforms.fog_start, fog_start);
-      }
-      if (uniforms.fog_end != Shader::InvalidUniform) {
-        shader->set_uniform(uniforms.fog_end, fog_end);
       }
     };
 

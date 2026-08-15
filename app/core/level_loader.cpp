@@ -68,6 +68,8 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
     res.map_name = def.name;
     res.rain_settings = def.rain;
     res.fog_zones = def.fog_zones;
+    res.rivers = def.rivers;
+    res.lakes = def.lakes;
     res.biome_seed = def.biome.seed;
     res.environment = def.environment;
     EnvironmentClock initial_clock(def.environment);

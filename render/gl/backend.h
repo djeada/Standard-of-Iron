@@ -19,6 +19,7 @@
 #include "render/gl/frame_environment.h"
 #include "render/i_render_backend.h"
 #include "render/local_lighting.h"
+#include "render/mist_volume.h"
 #include "render/world_chunk.h"
 #include "resources.h"
 #include "scene/camera.h"
@@ -94,6 +95,10 @@ public:
     return m_environment_lighting;
   }
   void reset_local_lights() noexcept { m_local_light_fader.reset(); }
+  void set_mist_volumes(const std::vector<Render::MistVolume>& volumes) {
+    m_mist_volumes = volumes;
+    m_mist_volumes_dirty = true;
+  }
   [[nodiscard]] auto light_direction() const noexcept -> const QVector3D& override {
     return m_light_dir;
   }
@@ -190,15 +195,11 @@ private:
   void set_ground_plane_uniforms(Shader& shader,
                                  const TerrainSurfaceCmd& single,
                                  const QMatrix4x4& mvp,
-                                 const QVector3D& camera_position,
-                                 float fog_start,
-                                 float fog_end);
+                                 const QVector3D& camera_position);
   void set_terrain_chunk_uniforms(Shader& shader,
                                   const TerrainSurfaceCmd& single,
                                   const QMatrix4x4& mvp,
-                                  const QVector3D& camera_position,
-                                  float fog_start,
-                                  float fog_end);
+                                  const QVector3D& camera_position);
 
   void execute_cylinder_commands(const PreparedBatch& prepared,
                                  CommandExecutionContext& context);
@@ -315,6 +316,8 @@ private:
   QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
   float m_ambient_strength{0.30F};
   EnvironmentLightingState m_environment_lighting{};
+  std::vector<Render::MistVolume> m_mist_volumes;
+  bool m_mist_volumes_dirty{false};
 
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;
