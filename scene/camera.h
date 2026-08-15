@@ -18,6 +18,8 @@ inline constexpr float k_default_aspect_ratio = 16.0F / 9.0F;
 inline constexpr float k_default_far_plane = 200.0F;
 inline constexpr float k_default_ortho_size = 10.0F;
 inline constexpr float k_default_pitch_min = -85.0F;
+inline constexpr float k_min_rts_distance = 1.0F;
+inline constexpr float k_max_rts_distance = 85.0F;
 } // namespace CameraDefaults
 
 class Camera {

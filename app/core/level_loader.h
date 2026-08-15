@@ -34,6 +34,8 @@ struct LevelLoadResult {
   Game::Map::VictoryConfig victory_config;
   Game::Map::RainSettings rain_settings;
   std::vector<Game::Map::FogZone> fog_zones;
+  std::vector<Game::Map::RiverSegment> rivers;
+  std::vector<Game::Map::Lake> lakes;
   std::uint32_t biome_seed = 0;
   Game::Map::EnvironmentLightingState lighting_state;
   Game::Map::EnvironmentDefinition environment;
