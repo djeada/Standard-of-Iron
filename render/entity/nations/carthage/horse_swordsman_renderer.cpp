@@ -1,5 +1,6 @@
 #include "horse_swordsman_renderer.h"
 
+#include <memory>
 #include <optional>
 
 #include "render/creature/pipeline/creature_asset.h"
@@ -87,12 +88,10 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
 } // namespace
 
 void register_mounted_knight_renderer(EntityRendererRegistry& registry) {
-  registry.register_renderer(
-      "troops/carthage/horse_swordsman", [](const DrawContext& ctx, ISubmitter& out) {
-        static CarthageMountedKnightRenderer const static_renderer(
-            make_mounted_knight_config());
-        static_renderer.render(ctx, out);
-      });
+  register_humanoid_renderer(registry,
+                             "troops/carthage/horse_swordsman",
+                             std::make_shared<CarthageMountedKnightRenderer const>(
+                                 make_mounted_knight_config()));
 }
 
 } // namespace Render::GL::Carthage

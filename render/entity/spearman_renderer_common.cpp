@@ -527,11 +527,8 @@ void register_spearman_renderer_profile(
                                            renderer.renderer_key,
                                            renderer.creature_asset_id,
                                            renderer.use_beard_archetypes);
-    registry.register_renderer(
-        std::string(renderer.renderer_key),
-        [renderer_instance](const DrawContext& ctx, ISubmitter& out) {
-          renderer_instance->render(ctx, out);
-        });
+    register_humanoid_renderer(
+        registry, std::string(renderer.renderer_key), renderer_instance);
   }
 }
 

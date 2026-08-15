@@ -3026,8 +3026,7 @@ struct ArenaScenarioRunner::Impl {
         if (expectation.kind == ArenaExpectationKind::FullCreatureDetailOnly &&
             continuity_alive) {
           const bool lod_shed =
-              soldier.cull_reason == Render::Profiling::SoldierCullReason::Billboard ||
-              soldier.cull_reason == Render::Profiling::SoldierCullReason::Temporal;
+              soldier.cull_reason == Render::Profiling::SoldierCullReason::Billboard;
           const bool reduced_visible_mesh =
               !culled && soldier.lod != static_cast<std::uint8_t>(
                                             Render::Creature::CreatureLOD::Full);

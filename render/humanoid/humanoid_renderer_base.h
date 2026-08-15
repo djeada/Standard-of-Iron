@@ -4,6 +4,8 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <memory>
+#include <string>
 
 #include "animation/rig/humanoid_proportions.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
@@ -39,7 +41,7 @@ void prepare_humanoid_instances(const ::Render::GL::HumanoidRendererBase& owner,
 
 namespace Render::GL {
 
-class HumanoidRendererBase {
+class HumanoidRendererBase : public IParallelPreparer {
   friend void ::Render::Humanoid::prepare_humanoid_instances(
       const ::Render::GL::HumanoidRendererBase& owner,
       const ::Render::GL::DrawContext& ctx,
@@ -70,6 +72,12 @@ public:
   get_variant(const DrawContext& ctx, uint32_t seed, HumanoidVariant& v) const;
 
   void render(const DrawContext& ctx, ISubmitter& out) const;
+
+  void ensure_prepare_components(Engine::Core::Entity& entity) const override;
+
+  void
+  prepare(const DrawContext& ctx,
+          Render::Creature::Pipeline::CreaturePreparationResult& out) const override;
 
   virtual auto resolve_entity_ground_offset(
       const DrawContext& ctx,
@@ -124,10 +132,10 @@ protected:
       std::uint32_t seed,
       Render::Creature::CreatureLOD lod,
       Render::Creature::Pipeline::CreaturePreparationResult& out) const;
-
-  void prepare_and_submit(const DrawContext& ctx,
-                          const AnimationInputs& anim,
-                          ISubmitter& out) const;
 };
+
+void register_humanoid_renderer(EntityRendererRegistry& registry,
+                                std::string key,
+                                std::shared_ptr<const HumanoidRendererBase> renderer);
 
 } // namespace Render::GL

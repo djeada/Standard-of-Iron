@@ -49,39 +49,6 @@ auto resolve_renderer(Render::GL::ISubmitter& out) noexcept -> Render::GL::Rende
   return dynamic_cast<Render::GL::Renderer*>(out.unwrap_submitter());
 }
 
-auto species_to_bpat_id(CreatureKind kind) noexcept -> std::uint32_t {
-  switch (kind) {
-  case CreatureKind::Humanoid:
-    return Render::Creature::Bpat::k_species_humanoid;
-  case CreatureKind::Horse:
-    return Render::Creature::Bpat::k_species_horse;
-  case CreatureKind::Elephant:
-    return Render::Creature::Bpat::k_species_elephant;
-  case CreatureKind::Sheep:
-    return Render::Creature::Bpat::k_species_sheep;
-  case CreatureKind::Wolf:
-    return Render::Creature::Bpat::k_species_wolf;
-  case CreatureKind::Mounted:
-    return 0xFFFFFFFFU;
-  }
-  return 0xFFFFFFFFU;
-}
-
-auto adjust_world_to_palette_contact(const QMatrix4x4& world_from_unit,
-                                     CreatureKind kind,
-                                     std::span<const QMatrix4x4> palette) noexcept
-    -> QMatrix4x4 {
-  float const contact_y = palette_contact_y(kind, palette);
-  if (std::abs(contact_y) <= 1.0e-6F) {
-    return world_from_unit;
-  }
-  QMatrix4x4 adjusted = world_from_unit;
-  QVector3D origin = adjusted.column(3).toVector3D();
-  origin.setY(origin.y() - contact_y);
-  adjusted.setColumn(3, QVector4D(origin, 1.0F));
-  return adjusted;
-}
-
 void report_submit_cache_miss(std::string_view path,
                               const CreatureRenderAssetHandle& handle,
                               CreatureLOD lod,
@@ -198,11 +165,6 @@ auto make_rigged_cmd(Render::GL::RiggedMesh* mesh,
   return cmd;
 }
 
-auto humanoid_idle_variant_clip_is_usable(const Render::Creature::Bpat::BpatBlob* blob,
-                                          std::uint16_t clip_id,
-                                          Render::Creature::AnimationStateId state,
-                                          std::uint8_t clip_variant) noexcept -> bool;
-
 struct ResolvedRequestPlayback {
   const CreatureRenderAssetHandle* handle{nullptr};
   const Render::Creature::Bpat::BpatBlob* blob{nullptr};
@@ -277,9 +239,10 @@ auto resolve_request_playback(const CreatureRenderAssetHandle& primary_handle,
           ? resolve_bpat_playback(playback_desc.blob, playback_desc.clip_id, phase)
           : resolve_bpat_playback(
                 resolved.handle->asset->bpat_species_id, effective_clip_id, phase);
-  if (!has_explicit_clip &&
-      !humanoid_idle_variant_clip_is_usable(
-          playback.blob, effective_clip_id, state, effective_clip_variant)) {
+  if (!has_explicit_clip && effective_clip_id != playback_desc.clip_id &&
+      (playback.blob == nullptr ||
+       !playback.blob->clip_is_variant_of(
+           playback_desc.clip_id, effective_clip_id, effective_clip_variant))) {
     effective_clip_variant = 0U;
     effective_clip_id = playback_desc.clip_id;
 
@@ -565,37 +528,71 @@ auto blend_palette_owned(const QMatrix4x4* primary_palette,
   return owned;
 }
 
-struct BlendCacheKey {
+struct PaletteBlendKey {
   const Render::GL::RiggedMeshEntry* entry{nullptr};
-  std::uint32_t frame_a{0};
-  std::uint32_t frame_b{0};
-  std::uint32_t weight_bucket{0};
+  std::array<std::uint32_t, 6> frames{};
+  std::array<std::uint32_t, 5> buckets{};
+  std::uint8_t stage{0U};
 
-  auto operator==(const BlendCacheKey& other) const noexcept -> bool {
-    return entry == other.entry && frame_a == other.frame_a &&
-           frame_b == other.frame_b && weight_bucket == other.weight_bucket;
+  auto operator==(const PaletteBlendKey& other) const noexcept -> bool {
+    return entry == other.entry && frames == other.frames && buckets == other.buckets &&
+           stage == other.stage;
   }
 };
 
-struct BlendCacheKeyHash {
-  auto operator()(const BlendCacheKey& key) const noexcept -> std::size_t {
-    std::size_t hash = std::hash<const void*>{}(key.entry);
-    hash ^= key.frame_a * 0x9E3779B1U + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
-    hash ^= key.frame_b * 0x85EBCA77U + 0xC2B2AE3DU + (hash << 6U) + (hash >> 2U);
-    hash ^= key.weight_bucket * 0x27D4EB2FU + (hash << 6U) + (hash >> 2U);
+struct PaletteBlendKeyHash {
+  auto operator()(const PaletteBlendKey& key) const noexcept -> std::size_t {
+    std::size_t hash = std::hash<const void*>{}(key.entry) ^ key.stage;
+    for (auto const v : key.frames) {
+      hash ^= v * 0x9E3779B1U + 0x9E3779B9U + (hash << 6U) + (hash >> 2U);
+    }
+    for (auto const v : key.buckets) {
+      hash ^= v * 0x85EBCA77U + 0xC2B2AE3DU + (hash << 6U) + (hash >> 2U);
+    }
     return hash;
   }
 };
 
 constexpr std::uint32_t k_blend_weight_buckets = 32U;
 
-auto interpolated_palette_for_playback(
-    const Render::GL::RiggedMeshEntry& entry,
-    const ResolvedRequestPlayback& playback,
-    CreatureKind species_kind,
-    std::shared_ptr<
-        std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>&
-        owned_palette) noexcept -> const QMatrix4x4* {
+auto blend_weight_bucket(float weight) noexcept -> std::uint32_t {
+  return static_cast<std::uint32_t>(
+      std::lround(std::clamp(weight, 0.0F, 1.0F) *
+                  static_cast<float>(k_blend_weight_buckets - 1U)));
+}
+
+auto blend_bucket_weight(std::uint32_t bucket) noexcept -> float {
+  return static_cast<float>(bucket) / static_cast<float>(k_blend_weight_buckets - 1U);
+}
+
+using OwnedPalette = std::shared_ptr<
+    std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>;
+
+template <typename Compute>
+auto cached_blend_palette(const PaletteBlendKey& key,
+                          Compute&& compute) -> OwnedPalette {
+  thread_local std::unordered_map<PaletteBlendKey, OwnedPalette, PaletteBlendKeyHash>
+      cache;
+  thread_local std::uint32_t cache_frame = std::numeric_limits<std::uint32_t>::max();
+  if (std::uint32_t const now = Render::GL::humanoid_current_frame();
+      now != cache_frame) {
+    cache.clear();
+    cache_frame = now;
+  }
+  if (auto it = cache.find(key); it != cache.end()) {
+    return it->second;
+  }
+  OwnedPalette palette = compute();
+  cache.emplace(key, palette);
+  return palette;
+}
+
+auto interpolated_palette_for_playback(const Render::GL::RiggedMeshEntry& entry,
+                                       const ResolvedRequestPlayback& playback,
+                                       CreatureKind species_kind,
+                                       PaletteBlendKey& key,
+                                       OwnedPalette& owned_palette) noexcept
+    -> const QMatrix4x4* {
   const QMatrix4x4* current =
       frame_palette_for_global_frame(entry, playback.global_frame);
   if (current == nullptr) {
@@ -603,6 +600,9 @@ auto interpolated_palette_for_playback(
   }
   float const frame_lerp = std::clamp(playback.frame_lerp, 0.0F, 1.0F);
   if (frame_lerp <= 1.0e-4F || playback.next_global_frame == playback.global_frame) {
+    key.frames[0] = playback.global_frame;
+    key.frames[1] = playback.global_frame;
+    key.buckets[0] = 0U;
     return current;
   }
   const QMatrix4x4* next =
@@ -611,61 +611,39 @@ auto interpolated_palette_for_playback(
     return current;
   }
 
-  auto bucket = static_cast<std::uint32_t>(frame_lerp *
-                                           static_cast<float>(k_blend_weight_buckets));
-  bucket = std::min(bucket, k_blend_weight_buckets - 1U);
-  float const bucket_weight =
-      (static_cast<float>(bucket) + 0.5F) / static_cast<float>(k_blend_weight_buckets);
-
-  BlendCacheKey const key{
-      &entry, playback.global_frame, playback.next_global_frame, bucket};
-
-  using OwnedPalette = std::shared_ptr<
-      std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>;
-  thread_local std::unordered_map<BlendCacheKey, OwnedPalette, BlendCacheKeyHash> cache;
-  thread_local std::uint32_t cache_frame = std::numeric_limits<std::uint32_t>::max();
-  if (std::uint32_t const now = Render::GL::humanoid_current_frame();
-      now != cache_frame) {
-    cache.clear();
-    cache_frame = now;
-  }
-
-  if (auto it = cache.find(key); it != cache.end()) {
-    owned_palette = it->second;
-    return owned_palette ? owned_palette->data() : current;
-  }
-
-  owned_palette = blend_palette_owned(
-      current, next, entry.skin_atlas->bone_count, bucket_weight, false, species_kind);
-  cache.emplace(key, owned_palette);
+  std::uint32_t const bucket = blend_weight_bucket(frame_lerp);
+  key.entry = &entry;
+  key.frames[0] = playback.global_frame;
+  key.frames[1] = playback.next_global_frame;
+  key.buckets[0] = bucket;
+  key.stage = 0U;
+  owned_palette = cached_blend_palette(key, [&] {
+    return blend_palette_owned(current,
+                               next,
+                               entry.skin_atlas->bone_count,
+                               blend_bucket_weight(bucket),
+                               false,
+                               species_kind);
+  });
   return owned_palette ? owned_palette->data() : current;
 }
 
-auto clip_supplies_ground_contact(const Render::Creature::Bpat::BpatBlob* blob,
-                                  std::uint16_t clip_id) noexcept -> bool {
-  if (blob == nullptr || clip_id >= blob->clip_count()) {
-    return false;
-  }
-  auto const name = blob->clip(clip_id).name;
-  return !name.starts_with("riding_") && !name.starts_with("showcase_");
-}
-
-auto contact_y_for_playback(CreatureKind species_kind,
-                            const ResolvedRequestPlayback& playback) noexcept -> float {
-  if (playback.blob == nullptr) {
+auto contact_y_for_playback(const ResolvedRequestPlayback& playback) noexcept -> float {
+  if (playback.blob == nullptr ||
+      !playback.blob->clip_supplies_ground_contact(playback.clip_id)) {
     return 0.0F;
   }
-  if (!clip_supplies_ground_contact(playback.blob, playback.clip_id)) {
+  auto const contacts = playback.blob->frame_contacts();
+  if (playback.global_frame >= contacts.size()) {
     return 0.0F;
   }
-  float const current = palette_contact_y(
-      species_kind, playback.blob->frame_palette_view(playback.global_frame));
+  float const current = contacts[playback.global_frame].sole_y;
   float const frame_lerp = std::clamp(playback.frame_lerp, 0.0F, 1.0F);
-  if (frame_lerp <= 1.0e-4F || playback.next_global_frame == playback.global_frame) {
+  if (frame_lerp <= 1.0e-4F || playback.next_global_frame == playback.global_frame ||
+      playback.next_global_frame >= contacts.size()) {
     return current;
   }
-  float const next = palette_contact_y(
-      species_kind, playback.blob->frame_palette_view(playback.next_global_frame));
+  float const next = contacts[playback.next_global_frame].sole_y;
   return current * (1.0F - frame_lerp) + next * frame_lerp;
 }
 
@@ -763,15 +741,16 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       primary_playback.next_global_frame < skin_atlas->frame_total;
   const bool use_resident_frames = frames_resident && !wants_layered_pose;
 
-  std::shared_ptr<
-      std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>
-      primary_interpolated_palette;
+  PaletteBlendKey blend_key{};
+  blend_key.entry = entry;
+  OwnedPalette primary_interpolated_palette;
   const QMatrix4x4* frame_palette =
       use_resident_frames
           ? frame_palette_for_global_frame(*entry, primary_playback.global_frame)
           : interpolated_palette_for_playback(*entry,
                                               primary_playback,
                                               handle.archetype->species,
+                                              blend_key,
                                               primary_interpolated_palette);
   if (frame_palette == nullptr) {
     return;
@@ -809,48 +788,51 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     attach_owned_palette(
         cmd, std::move(primary_interpolated_palette), skin_atlas->bone_count);
   }
+  auto const apply_layer = [&](const ResolvedRequestPlayback& layer,
+                               float layer_weight,
+                               bool upper_body_only,
+                               std::size_t frame_slot,
+                               std::size_t bucket_slot,
+                               std::uint8_t stage) {
+    const QMatrix4x4* primary_palette = cmd.bone_palette;
+    PaletteBlendKey layer_key = blend_key;
+    OwnedPalette layer_interpolated_palette;
+    const QMatrix4x4* secondary_palette =
+        interpolated_palette_for_playback(*entry,
+                                          layer,
+                                          handle.archetype->species,
+                                          layer_key,
+                                          layer_interpolated_palette);
+    if (primary_palette == nullptr || secondary_palette == nullptr) {
+      return;
+    }
+    std::uint32_t const weight_bucket = blend_weight_bucket(layer_weight);
+    blend_key.frames[frame_slot] = layer_key.frames[0];
+    blend_key.frames[frame_slot + 1U] = layer_key.frames[1];
+    blend_key.buckets[bucket_slot] = layer_key.buckets[0];
+    blend_key.buckets[bucket_slot + 1U] = weight_bucket;
+    blend_key.stage = stage;
+    std::uint32_t const bone_count = cmd.bone_count;
+    attach_owned_palette(cmd,
+                         cached_blend_palette(blend_key,
+                                              [&] {
+                                                return blend_palette_owned(
+                                                    primary_palette,
+                                                    secondary_palette,
+                                                    bone_count,
+                                                    blend_bucket_weight(weight_bucket),
+                                                    upper_body_only,
+                                                    handle.archetype->species);
+                                              }),
+                         bone_count);
+  };
   if (full_body_blend != nullptr && full_body_blend->valid() &&
       full_body_blend_weight > 0.0F) {
-    std::shared_ptr<
-        std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>
-        full_body_interpolated_palette;
-    if (const QMatrix4x4* secondary_palette =
-            interpolated_palette_for_playback(*entry,
-                                              *full_body_blend,
-                                              handle.archetype->species,
-                                              full_body_interpolated_palette);
-        secondary_palette != nullptr) {
-      attach_owned_palette(cmd,
-                           blend_palette_owned(frame_palette,
-                                               secondary_palette,
-                                               skin_atlas->bone_count,
-                                               full_body_blend_weight,
-                                               false,
-                                               handle.archetype->species),
-                           skin_atlas->bone_count);
-    }
+    apply_layer(*full_body_blend, full_body_blend_weight, false, 2U, 1U, 1U);
   }
   if (upper_body_overlay != nullptr && upper_body_overlay->valid() &&
       upper_body_overlay_weight > 0.0F) {
-    const QMatrix4x4* primary_palette = cmd.bone_palette;
-    std::shared_ptr<
-        std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>>
-        overlay_interpolated_palette;
-    if (const QMatrix4x4* secondary_palette =
-            interpolated_palette_for_playback(*entry,
-                                              *upper_body_overlay,
-                                              handle.archetype->species,
-                                              overlay_interpolated_palette);
-        primary_palette != nullptr && secondary_palette != nullptr) {
-      attach_owned_palette(cmd,
-                           blend_palette_owned(primary_palette,
-                                               secondary_palette,
-                                               cmd.bone_count,
-                                               upper_body_overlay_weight,
-                                               true,
-                                               handle.archetype->species),
-                           cmd.bone_count);
-    }
+    apply_layer(*upper_body_overlay, upper_body_overlay_weight, true, 4U, 3U, 2U);
   }
   auto& animation_diagnostics =
       Render::Profiling::CombatAnimationDiagnostics::instance();
@@ -1132,20 +1114,6 @@ auto resolve_blob_palette(std::uint32_t species_id,
   return blob->frame_palette_view(out_global_frame);
 }
 
-auto humanoid_idle_variant_clip_is_usable(const Render::Creature::Bpat::BpatBlob* blob,
-                                          std::uint16_t clip_id,
-                                          Render::Creature::AnimationStateId state,
-                                          std::uint8_t clip_variant) noexcept -> bool {
-  if (state != Render::Creature::AnimationStateId::Idle || clip_variant == 0U) {
-    return true;
-  }
-  if (blob == nullptr || clip_id >= blob->clip_count()) {
-    return false;
-  }
-  return blob->clip(clip_id).name ==
-         Animation::humanoid_idle_variant_clip_name(clip_variant);
-}
-
 } // namespace
 
 auto CreaturePipeline::submit_requests(
@@ -1221,9 +1189,9 @@ auto CreaturePipeline::submit_requests(
 
     QMatrix4x4 draw_world = req.world;
     if (!req.world_already_grounded) {
-      float contact_y = contact_y_for_playback(species_kind, primary);
+      float contact_y = contact_y_for_playback(primary);
       if (req.full_body_blend.active() && full_body.valid()) {
-        float const secondary_contact = contact_y_for_playback(species_kind, full_body);
+        float const secondary_contact = contact_y_for_playback(full_body);
         float const blend_weight = std::clamp(req.full_body_blend.weight, 0.0F, 1.0F);
         contact_y =
             contact_y * (1.0F - blend_weight) + secondary_contact * blend_weight;

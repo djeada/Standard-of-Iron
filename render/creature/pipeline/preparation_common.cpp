@@ -153,21 +153,6 @@ auto humanoid_variant_inputs_for_state(const Render::GL::HumanoidAnimationContex
   };
 }
 
-auto humanoid_clip_matches_requested_idle_variant(
-    const Render::Creature::Bpat::BpatBlob& blob,
-    std::uint16_t clip_id,
-    Render::Creature::AnimationStateId state,
-    std::uint8_t clip_variant) noexcept -> bool {
-  if (state != Render::Creature::AnimationStateId::Idle || clip_variant == 0U) {
-    return true;
-  }
-  if (clip_id >= blob.clip_count()) {
-    return false;
-  }
-  return blob.clip(clip_id).name ==
-         Animation::humanoid_idle_variant_clip_name(clip_variant);
-}
-
 } // namespace
 
 auto humanoid_clip_variant_for_state(Render::Creature::ArchetypeId archetype_id,
@@ -213,11 +198,12 @@ auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
   auto const resolved_pose = resolved_humanoid_pose(anim);
   auto const state = resolved_pose.animation_state;
 
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
   auto clip_variant = anim.inputs.is_in_hold_mode
                           ? std::uint8_t{0U}
                           : humanoid_clip_variant_for_state(archetype_id, anim, state);
-  auto clip_id = Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
-      archetype_id, state, clip_variant);
+  auto const base_clip_id = registry.resolve_bpat_clip(archetype_id, state, 0U);
+  auto clip_id = registry.resolve_bpat_clip(archetype_id, state, clip_variant);
   if (clip_id == ArchetypeDescriptor::k_unmapped_clip) {
     return std::nullopt;
   }
@@ -226,15 +212,13 @@ auto humanoid_bpat_playback_for_anim(Render::Creature::ArchetypeId archetype_id,
     return std::nullopt;
   }
 
-  if (clip_id >= blob->clip_count() || !humanoid_clip_matches_requested_idle_variant(
-                                           *blob, clip_id, state, clip_variant)) {
+  if (clip_id != base_clip_id &&
+      !blob->clip_is_variant_of(base_clip_id, clip_id, clip_variant)) {
     clip_variant = 0U;
-    clip_id = Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
-        archetype_id, state, clip_variant);
-    if (clip_id == ArchetypeDescriptor::k_unmapped_clip ||
-        clip_id >= blob->clip_count()) {
-      return std::nullopt;
-    }
+    clip_id = base_clip_id;
+  }
+  if (clip_id >= blob->clip_count()) {
+    return std::nullopt;
   }
 
   auto const playback =
@@ -266,16 +250,12 @@ auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
     return std::nullopt;
   }
 
-  auto const palette =
-      blob->frame_palette_view(clip.frame_offset + playback->frame_in_clip);
-  if (palette.size() < Render::Humanoid::k_bone_count) {
+  auto const contacts = blob->frame_contacts();
+  std::uint32_t const global_frame = clip.frame_offset + playback->frame_in_clip;
+  if (global_frame >= contacts.size()) {
     return std::nullopt;
   }
-  auto const foot_l_idx =
-      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL);
-  auto const foot_r_idx =
-      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR);
-  return std::min(palette[foot_l_idx].column(3).y(), palette[foot_r_idx].column(3).y());
+  return contacts[global_frame].foot_y;
 }
 
 auto grounded_humanoid_contact_y(
@@ -303,18 +283,11 @@ auto horse_clip_contact_y(std::uint16_t clip_id,
     return std::nullopt;
   }
 
-  auto const palette = blob->frame_palette_view(playback.global_frame);
-  if (palette.size() < Render::Horse::k_horse_bone_count) {
+  auto const contacts = blob->frame_contacts();
+  if (playback.global_frame >= contacts.size()) {
     return std::nullopt;
   }
-
-  auto const foot_fl_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootFL);
-  auto const foot_fr_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootFR);
-  auto const foot_bl_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootBL);
-  auto const foot_br_idx = static_cast<std::size_t>(Render::Horse::HorseBone::FootBR);
-  return std::min(
-      std::min(palette[foot_fl_idx].column(3).y(), palette[foot_fr_idx].column(3).y()),
-      std::min(palette[foot_bl_idx].column(3).y(), palette[foot_br_idx].column(3).y()));
+  return contacts[playback.global_frame].foot_y;
 }
 
 auto palette_contact_y(CreatureKind kind,
@@ -401,6 +374,58 @@ auto palette_contact_y(CreatureKind kind,
     return 0.0F;
   }
   return 0.0F;
+}
+
+auto palette_foot_contact_y(CreatureKind kind,
+                            std::span<const QMatrix4x4> palette) noexcept -> float {
+  auto const foot_y = [&](std::size_t index) -> float {
+    return index < palette.size() ? palette[index].column(3).y() : 0.0F;
+  };
+  switch (kind) {
+  case CreatureKind::Humanoid:
+    return std::min(
+        foot_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL)),
+        foot_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR)));
+  case CreatureKind::Horse:
+    return std::min(
+        std::min(foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFL)),
+                 foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFR))),
+        std::min(foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBL)),
+                 foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBR))));
+  case CreatureKind::Elephant:
+    return std::min(
+        std::min(
+            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFL)),
+            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFR))),
+        std::min(
+            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBL)),
+            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBR))));
+  case CreatureKind::Sheep:
+  case CreatureKind::Wolf:
+    return std::min(
+        std::min(foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFL)),
+                 foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFR))),
+        std::min(foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBL)),
+                 foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBR))));
+  case CreatureKind::Mounted:
+    return 0.0F;
+  }
+  return 0.0F;
+}
+
+auto creature_kind_for_bpat_species(std::uint32_t species_id) noexcept -> CreatureKind {
+  switch (species_id) {
+  case Render::Creature::Bpat::k_species_horse:
+    return CreatureKind::Horse;
+  case Render::Creature::Bpat::k_species_elephant:
+    return CreatureKind::Elephant;
+  case Render::Creature::Bpat::k_species_sheep:
+    return CreatureKind::Sheep;
+  case Render::Creature::Bpat::k_species_wolf:
+    return CreatureKind::Wolf;
+  default:
+    return CreatureKind::Humanoid;
+  }
 }
 
 auto sample_terrain_height_or_fallback(const Game::Map::TerrainService& terrain_service,

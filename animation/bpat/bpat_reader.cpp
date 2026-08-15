@@ -35,6 +35,8 @@ bool BpatBlob::validate() {
   m_string_table = nullptr;
   m_palette_data = nullptr;
   m_socket_data = nullptr;
+  m_contact_data = nullptr;
+  m_contact_count = 0U;
   m_clip_index_entries.clear();
   m_clip_index_buckets.clear();
 
@@ -103,6 +105,28 @@ bool BpatBlob::validate() {
   if (header->socket_count > 0U && !in_bounds(socket_data_offset, socket_bytes)) {
     m_last_error = "socket data out of bounds";
     return false;
+  }
+
+  if (m_bytes.size() < sizeof(BpatHeader) + sizeof(BpatHeaderExtV3)) {
+    m_last_error = "file shorter than v3 extension header";
+    return false;
+  }
+  auto const* ext =
+      reinterpret_cast<const BpatHeaderExtV3*>(m_bytes.data() + sizeof(BpatHeader));
+  if (ext->contact_entry_count != 0U) {
+    if (ext->contact_entry_count != header->frame_total) {
+      m_last_error = "contact table size != frame_total";
+      return false;
+    }
+    if (!in_bounds(ext->contact_data_offset,
+                   std::uint64_t{ext->contact_entry_count} *
+                       sizeof(BpatFrameContact))) {
+      m_last_error = "contact table out of bounds";
+      return false;
+    }
+    m_contact_data = reinterpret_cast<const BpatFrameContact*>(
+        m_bytes.data() + ext->contact_data_offset);
+    m_contact_count = ext->contact_entry_count;
   }
 
   m_clip_table = reinterpret_cast<const BpatClipEntry*>(m_bytes.data() +
@@ -240,6 +264,49 @@ auto BpatBlob::clip_index(std::string_view name) const -> std::uint32_t {
         (bucket + 1U) & static_cast<std::uint32_t>(m_clip_index_buckets.size() - 1U);
   }
   return k_invalid_clip_index;
+}
+
+auto BpatBlob::clip_supplies_ground_contact(std::uint32_t index) const noexcept
+    -> bool {
+  if (m_header == nullptr || index >= m_header->clip_count) {
+    return false;
+  }
+  return (m_clip_table[index].flags & k_clip_flag_supplies_ground_contact) != 0U;
+}
+
+auto BpatBlob::clip_variant_family(std::uint32_t index) const noexcept
+    -> std::uint16_t {
+  if (m_header == nullptr || index >= m_header->clip_count) {
+    return static_cast<std::uint16_t>(k_invalid_clip_index);
+  }
+  return m_clip_table[index].variant_family;
+}
+
+auto BpatBlob::clip_variant_ordinal(std::uint32_t index) const noexcept
+    -> std::uint8_t {
+  if (m_header == nullptr || index >= m_header->clip_count) {
+    return 0U;
+  }
+  return m_clip_table[index].variant_ordinal;
+}
+
+auto BpatBlob::clip_is_variant_of(std::uint32_t base_index,
+                                  std::uint32_t index,
+                                  std::uint8_t ordinal) const noexcept -> bool {
+  if (m_header == nullptr || index >= m_header->clip_count ||
+      base_index >= m_header->clip_count) {
+    return false;
+  }
+  if (ordinal == 0U || index == base_index) {
+    return index == base_index;
+  }
+  return m_clip_table[index].variant_family ==
+             m_clip_table[base_index].variant_family &&
+         m_clip_table[index].variant_ordinal == ordinal;
+}
+
+auto BpatBlob::frame_contacts() const noexcept -> std::span<const BpatFrameContact> {
+  return {m_contact_data, m_contact_count};
 }
 
 auto BpatBlob::socket(std::uint32_t index) const -> SocketView {
