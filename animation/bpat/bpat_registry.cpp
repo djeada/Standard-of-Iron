@@ -10,10 +10,6 @@ namespace Render::Creature::Bpat {
 
 namespace {
 
-inline auto matrix_from_row_major(std::span<const float> row_major) -> QMatrix4x4 {
-  return QMatrix4x4(row_major.data());
-}
-
 constexpr std::array<std::string_view, k_species_count> k_species_asset_name{
     "humanoid.bpat",
     "horse.bpat",
@@ -142,11 +138,7 @@ auto BpatRegistry::sample_palette(std::uint32_t species_id,
   std::uint32_t const n =
       std::min<std::uint32_t>(bones, static_cast<std::uint32_t>(out.size()));
   for (std::uint32_t bone = 0; bone < n; ++bone) {
-    auto row = b->palette_matrix(global_frame, bone);
-    if (row.size() < k_matrix_floats) {
-      return bone;
-    }
-    out[bone] = matrix_from_row_major(row);
+    out[bone] = b->bone_global_matrix(global_frame, bone);
   }
   return n;
 }

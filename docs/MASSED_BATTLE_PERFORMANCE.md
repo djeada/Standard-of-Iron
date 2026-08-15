@@ -328,3 +328,85 @@ numbers from a different boot.
   baked mesh entry, so it stays a follow-up.
 - **Prebaked humanoid rigged meshes.** Unchanged (deliberate: humanoid archetype ×
   attachment-set combinatorics); prewarm still hides the first-sight bake.
+
+## GPU-side follow-up: what the profile actually said
+
+With the preparation pass out of the way the remaining full-LOD frame is
+render_execute, and the per-second timeline of `massed_battle_1000` is
+bimodal: about 4-6 ms while the armies march (frames 0-7 s) and 30-40 ms once
+they engage. Three things were tried against that; two stayed.
+
+### Owned-palette dedup and growable frame streams (kept)
+
+Combat is when soldiers stop playing resident BPAT frames and start carrying
+owned, blended palettes. `upload_instances` copied one 4 KB palette per command
+into the per-frame stream even when many commands shared the same blended
+result (which they do since the blend cache landed), and refused the batch when
+`instance_count × bone_count` would not fit the fixed 16 MB stream — sending
+the whole batch down the triangle-cull compute fallback for both the colour
+pass and every shadow cascade. `upload_instances` now uploads each distinct
+owned palette once and stores its slot per command, and both the palette and
+the instance stream grow (orphan-then-double, retained across frames, capped
+at 256 MB) instead of failing. Nothing about the drawn result changes.
+
+### Skinning matrices baked into BPAT (kept)
+
+The v3 palette block now holds `pose × inverse_bind` per bone, column-major, and
+the blob carries the bind palette it was baked against. `RiggedSkinAtlas`
+became a view over `BpatBlob::palette_matrices()`: no per-entry multiply, no
+per-entry copy of ~4 MB of matrices, and the atlas is rebound automatically if
+the species blob is reloaded. Everything that needed a bone's world pose (rider
+seat frame, animation diagnostics, `humanoid_preview`, `sample_palette` in the
+registry tests) goes through `BpatBlob::bone_global_matrix()`, and the contact
+helpers take skinning matrices directly. This is a load-time and memory
+change; it does not move the frame time.
+
+### Pre-skinning for the shadow cascades (implemented, measured, removed)
+
+The hypothesis was that Ultra's four cascades skin every soldier four extra
+times per frame. A compute pre-pass (`rigged_preskin.comp`) skinned each visible
+instance once into a half-float SSBO and the cascades drew from it with a
+trivial vertex shader. It worked, and it did not pay:
+
+- the cascade distance filter means each soldier is drawn in about one cascade
+  (`shadow_rigged_instanced_instances ≈ rigged_instanced_instances` in every
+  trace), so there is no multiplier to remove;
+- 2,000 soldiers × ~15,600 vertices × 8 bytes is 544 MB of GPU writes per frame
+  just to skip the second skinning of the same vertices, and the compute pass
+  cost more than the skinning it saved (march render_execute went from ~1 ms
+  to ~2 ms).
+
+The full experiment is in this branch's history for the record; the shipped
+tree does not carry it.
+
+### Interleaved A/B with the session active
+
+Two rounds of baseline (`main` + v2 blobs) against this branch, run the moment
+the desktop was unlocked (`tty7` active), `massed_battle_1000`, warmed
+`trace.jsonl` medians:
+
+| Build               |      frame p50 | march (0-6 s) |   world_submit | humanoid_preparation | render_execute |
+| ------------------- | -------------: | ------------: | -------------: | -------------------: | -------------: |
+| Baseline run 1 / 2  | 7.28 / 7.37 ms |      6 / 6 ms | 4.68 / 4.70 ms |       3.21 / 3.21 ms | 1.50 / 1.49 ms |
+| Candidate run 1 / 2 | 5.74 / 5.90 ms |      4 / 4 ms | 3.00 / 2.98 ms |       1.47 / 1.47 ms | 1.62 / 2.04 ms |
+
+Frame p50 improves 20% and the march sits at 4 ms instead of 6; both builds
+still show 25-40 ms stretches during the melee that come and go with the
+desktop's own GPU use, so the combat tail is not comparable across runs. The
+owned-palette dedup did not move the frame here — with the blend cache in place
+the palette stream never exceeded its 16 MB default (growth never triggered),
+which also retires the theory that the stream overflow was what made combat
+expensive; the expense was the lock screen.
+
+### Measurement caveat that dominated this round
+
+Combat render_execute on this machine flips between ~2-3 ms and ~30 ms for the
+_same_ binary depending on the display state: the sessions were partly run
+with the desktop locked (`lightdm` greeter active on tty8, the game's X server
+on an inactive VT), and every configuration — baseline included — reads ~30 ms
+in that state, while the same candidate build read 2-3 ms in the two runs that
+happened with the session active. Interleaved A/B still holds within a state
+(candidate march frames 4-5 ms vs baseline 6 ms; CPU phases as in the previous
+section), but no absolute combat number from a locked-screen run should be
+quoted, and the earlier "GPU-bound at 100% utilisation" reading was taken in
+that state.

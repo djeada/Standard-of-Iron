@@ -290,127 +290,106 @@ auto horse_clip_contact_y(std::uint16_t clip_id,
   return contacts[playback.global_frame].foot_y;
 }
 
-auto palette_contact_y(CreatureKind kind,
-                       std::span<const QMatrix4x4> palette) noexcept -> float {
-  auto const bind_adjusted_y = [&](std::size_t index,
-                                   std::span<const QMatrix4x4> bind_palette) -> float {
-    if (index >= palette.size() || index >= bind_palette.size()) {
-      return 0.0F;
-    }
-    return (palette[index] * bind_palette[index].inverted()).column(3).y();
-  };
-
+auto bind_palette_for_kind(CreatureKind kind) noexcept -> std::span<const QMatrix4x4> {
   switch (kind) {
-  case CreatureKind::Humanoid: {
+  case CreatureKind::Humanoid:
+    return Render::Humanoid::humanoid_bind_palette();
+  case CreatureKind::Horse:
+    return Render::Horse::horse_bind_palette();
+  case CreatureKind::Elephant:
+    return Render::Elephant::elephant_bind_palette();
+  case CreatureKind::Sheep:
+    return Render::Wildlife::sheep_bind_palette();
+  case CreatureKind::Wolf:
+    return Render::Wildlife::wolf_bind_palette();
+  case CreatureKind::Mounted:
+    return {};
+  }
+  return {};
+}
 
-    auto const bind_palette = Render::Humanoid::humanoid_bind_palette();
+namespace {
+
+auto lowest_of(std::span<const std::size_t> bones,
+               std::span<const QMatrix4x4> palette,
+               auto&& sample) -> float {
+  float lowest = std::numeric_limits<float>::max();
+  for (auto const bone : bones) {
+    if (bone < palette.size()) {
+      lowest = std::min(lowest, sample(bone));
+    }
+  }
+  return lowest == std::numeric_limits<float>::max() ? 0.0F : lowest;
+}
+
+auto foot_bones(CreatureKind kind) noexcept -> std::span<const std::size_t> {
+  static constexpr std::array<std::size_t, 2> k_humanoid{
+      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL),
+      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR)};
+  static constexpr std::array<std::size_t, 4> k_horse{
+      static_cast<std::size_t>(Render::Horse::HorseBone::FootFL),
+      static_cast<std::size_t>(Render::Horse::HorseBone::FootFR),
+      static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
+      static_cast<std::size_t>(Render::Horse::HorseBone::FootBR)};
+  static constexpr std::array<std::size_t, 4> k_elephant{
+      static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFL),
+      static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFR),
+      static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBL),
+      static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBR)};
+  static constexpr std::array<std::size_t, 4> k_wildlife{
+      static_cast<std::size_t>(Render::Wildlife::Bone::FootFL),
+      static_cast<std::size_t>(Render::Wildlife::Bone::FootFR),
+      static_cast<std::size_t>(Render::Wildlife::Bone::FootBL),
+      static_cast<std::size_t>(Render::Wildlife::Bone::FootBR)};
+  switch (kind) {
+  case CreatureKind::Humanoid:
+    return k_humanoid;
+  case CreatureKind::Horse:
+    return k_horse;
+  case CreatureKind::Elephant:
+    return k_elephant;
+  case CreatureKind::Sheep:
+  case CreatureKind::Wolf:
+    return k_wildlife;
+  case CreatureKind::Mounted:
+    return {};
+  }
+  return {};
+}
+
+} // namespace
+
+auto palette_contact_y(CreatureKind kind,
+                       std::span<const QMatrix4x4> skin_palette) noexcept -> float {
+  if (kind == CreatureKind::Humanoid) {
+    auto const bind = bind_palette_for_kind(kind);
     constexpr std::array<QVector3D, 2> k_sole_points{
         QVector3D{0.0F, -Render::GL::HumanProportions::FOOT_Y_OFFSET_DEFAULT, -0.060F},
         QVector3D{0.0F, -Render::GL::HumanProportions::FOOT_Y_OFFSET_DEFAULT, 0.165F}};
-    auto const sole_lift = [&](std::size_t index) -> float {
-      if (index >= palette.size() || index >= bind_palette.size()) {
+    return lowest_of(foot_bones(kind), skin_palette, [&](std::size_t bone) {
+      if (bone >= bind.size()) {
         return 0.0F;
       }
       float lowest = std::numeric_limits<float>::max();
       for (auto const& local : k_sole_points) {
-        float const posed = (palette[index] * QVector4D(local, 1.0F)).y();
-        float const bound = (bind_palette[index] * QVector4D(local, 1.0F)).y();
-        lowest = std::min(lowest, posed - bound);
+        QVector4D const bound = bind[bone] * QVector4D(local, 1.0F);
+        float const posed = (skin_palette[bone] * bound).y();
+        lowest = std::min(lowest, posed - bound.y());
       }
       return lowest;
-    };
-    return std::min(
-        sole_lift(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL)),
-        sole_lift(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR)));
+    });
   }
-  case CreatureKind::Horse: {
-    auto const bind_palette = Render::Horse::horse_bind_palette();
-    return std::min(
-        std::min(
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFL),
-                            bind_palette),
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFR),
-                            bind_palette)),
-        std::min(
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
-                            bind_palette),
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBR),
-                            bind_palette)));
-  }
-  case CreatureKind::Sheep:
-  case CreatureKind::Wolf: {
-    auto const bind_palette = kind == CreatureKind::Wolf
-                                  ? Render::Wildlife::wolf_bind_palette()
-                                  : Render::Wildlife::sheep_bind_palette();
-    return std::min(
-        std::min(
-            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFL),
-                            bind_palette),
-            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFR),
-                            bind_palette)),
-        std::min(
-            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBL),
-                            bind_palette),
-            bind_adjusted_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBR),
-                            bind_palette)));
-  }
-  case CreatureKind::Elephant: {
-    auto const bind_palette = Render::Elephant::elephant_bind_palette();
-    return std::min(
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFL),
-                     bind_palette),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFR),
-                     bind_palette)),
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBL),
-                     bind_palette),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBR),
-                     bind_palette)));
-  }
-  case CreatureKind::Mounted:
-    return 0.0F;
-  }
-  return 0.0F;
+  return lowest_of(foot_bones(kind), skin_palette, [&](std::size_t bone) {
+    return skin_palette[bone].column(3).y();
+  });
 }
 
-auto palette_foot_contact_y(CreatureKind kind,
-                            std::span<const QMatrix4x4> palette) noexcept -> float {
-  auto const foot_y = [&](std::size_t index) -> float {
-    return index < palette.size() ? palette[index].column(3).y() : 0.0F;
-  };
-  switch (kind) {
-  case CreatureKind::Humanoid:
-    return std::min(
-        foot_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL)),
-        foot_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR)));
-  case CreatureKind::Horse:
-    return std::min(
-        std::min(foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFL)),
-                 foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFR))),
-        std::min(foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBL)),
-                 foot_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBR))));
-  case CreatureKind::Elephant:
-    return std::min(
-        std::min(
-            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFL)),
-            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFR))),
-        std::min(
-            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBL)),
-            foot_y(static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBR))));
-  case CreatureKind::Sheep:
-  case CreatureKind::Wolf:
-    return std::min(
-        std::min(foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFL)),
-                 foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootFR))),
-        std::min(foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBL)),
-                 foot_y(static_cast<std::size_t>(Render::Wildlife::Bone::FootBR))));
-  case CreatureKind::Mounted:
-    return 0.0F;
-  }
-  return 0.0F;
+auto palette_foot_contact_y(
+    CreatureKind kind, std::span<const QMatrix4x4> skin_palette) noexcept -> float {
+  auto const bind = bind_palette_for_kind(kind);
+  return lowest_of(foot_bones(kind), skin_palette, [&](std::size_t bone) {
+    return bone < bind.size() ? (skin_palette[bone] * bind[bone]).column(3).y() : 0.0F;
+  });
 }
 
 auto creature_kind_for_bpat_species(std::uint32_t species_id) noexcept -> CreatureKind {

@@ -101,6 +101,18 @@ const std::array<BoneLengthRule, 8> k_length_rules{{
     {Bone::KneeR, Bone::FootR, HP::LOWER_LEG_LEN, "shin_r"},
 }};
 
+auto global_palette(const BpatBlob& blob,
+                    std::uint32_t global_frame) -> std::span<const QMatrix4x4> {
+  thread_local std::vector<QMatrix4x4> scratch;
+  auto const skin = blob.frame_palette_view(global_frame);
+  auto const bind = blob.bind_palette();
+  scratch.resize(skin.size());
+  for (std::size_t b = 0; b < skin.size(); ++b) {
+    scratch[b] = b < bind.size() ? skin[b] * bind[b] : skin[b];
+  }
+  return {scratch.data(), scratch.size()};
+}
+
 auto bone_origin(std::span<const QMatrix4x4> palette, Bone bone) -> QVector3D {
   auto const index = static_cast<std::size_t>(bone);
   if (index >= palette.size()) {
@@ -271,7 +283,7 @@ auto summarize_stride(const BpatBlob& blob,
   frames.reserve(clip.frame_count);
   foot_l_y.reserve(clip.frame_count);
   for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
-    auto const palette = blob.frame_palette_view(clip.frame_offset + f);
+    auto const palette = global_palette(blob, clip.frame_offset + f);
     frames.push_back(
         measure(palette, static_cast<float>(f) / static_cast<float>(clip.frame_count)));
     foot_l_y.push_back(bone_origin(palette, Bone::FootL).y());
@@ -372,7 +384,7 @@ void render_frame(const BpatBlob& blob,
                   int width,
                   int height,
                   QImage& out) {
-  auto const palette = blob.frame_palette_view(global_frame);
+  auto const palette = global_palette(blob, global_frame);
   std::vector<ColoredTriangle> triangles;
   triangles.reserve(2048);
   append_ground(triangles);
@@ -567,7 +579,7 @@ auto main(int argc, char** argv) -> int {
         (i / columns) * k_tile_h + 18,
         QString::asprintf("%.2f  f%u", static_cast<double>(phase), local_frame));
 
-    metrics.push_back(measure(blob.frame_palette_view(global_frame), phase));
+    metrics.push_back(measure(global_palette(blob, global_frame), phase));
   }
   painter.end();
 

@@ -45,6 +45,8 @@ constexpr std::size_t k_stream_role_color_palette_capacity = 8U * 1024U + 1U;
 constexpr std::size_t k_stream_owned_palette_instance_capacity = 4U * 1024U;
 constexpr std::size_t k_max_owned_bones = 64U;
 
+constexpr std::size_t k_max_stream_bytes = 256U * 1024U * 1024U;
+
 constexpr std::size_t k_min_instances_for_gpu_path = 24;
 constexpr std::size_t k_min_instances_for_full_mesh_path = 1;
 
@@ -234,15 +236,18 @@ void RiggedCullPipeline::begin_frame() {
   m_role_color_stream_cursor_bytes = 0U;
   m_role_color_palette_indices.clear();
 
-  const auto orphan_stream =
-      [this](GLenum target, GLuint& buffer, std::size_t& capacity, std::size_t wanted) {
-        if (buffer == 0U) {
-          glGenBuffers(1, &buffer);
-        }
-        glBindBuffer(target, buffer);
-        glBufferData(target, static_cast<GLsizeiptr>(wanted), nullptr, GL_STREAM_DRAW);
-        capacity = wanted;
-      };
+  const auto orphan_stream = [this](GLenum target,
+                                    GLuint& buffer,
+                                    std::size_t& capacity,
+                                    std::size_t wanted) {
+    if (buffer == 0U) {
+      glGenBuffers(1, &buffer);
+    }
+    const std::size_t retained = std::max(wanted, capacity);
+    glBindBuffer(target, buffer);
+    glBufferData(target, static_cast<GLsizeiptr>(retained), nullptr, GL_STREAM_DRAW);
+    capacity = retained;
+  };
   orphan_stream(GL_SHADER_STORAGE_BUFFER,
                 m_palette_ssbo,
                 m_palette_capacity_bytes,
@@ -284,8 +289,7 @@ auto RiggedCullPipeline::ensure_instance_buffers(std::size_t instance_count,
   const std::size_t instance_bytes =
       instance_count * k_floats_per_instance * sizeof(float);
   return m_palette_ssbo != 0U && m_instance_ssbo != 0U &&
-         palette_bytes <= m_palette_capacity_bytes &&
-         instance_bytes <= m_instance_capacity_bytes;
+         palette_bytes <= k_max_stream_bytes && instance_bytes <= k_max_stream_bytes;
 }
 
 auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
@@ -320,21 +324,37 @@ auto RiggedCullPipeline::ensure_buffers(std::size_t instance_count,
   return m_out_index_buffer != 0;
 }
 
+auto RiggedCullPipeline::ensure_stream_capacity(GLuint buffer,
+                                                std::size_t& capacity_bytes,
+                                                std::size_t& cursor_bytes,
+                                                std::size_t wanted_bytes) -> bool {
+  if (cursor_bytes + wanted_bytes <= capacity_bytes) {
+    return true;
+  }
+  if (wanted_bytes > k_max_stream_bytes) {
+    return false;
+  }
+  const std::size_t grown = std::min(
+      k_max_stream_bytes, std::max(capacity_bytes * 2U, cursor_bytes + wanted_bytes));
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+  glBufferData(GL_SHADER_STORAGE_BUFFER,
+               static_cast<GLsizeiptr>(grown),
+               nullptr,
+               GL_STREAM_DRAW);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+  capacity_bytes = grown;
+  cursor_bytes = 0U;
+  return true;
+}
+
 auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
                                           std::size_t count,
                                           std::size_t bone_count,
                                           bool depth_only) -> bool {
+  m_owned_palette_slots.clear();
+  m_owned_palette_by_cmd.resize(count);
   std::size_t owned_instances = 0;
-  for (std::size_t k = 0; k < count; ++k) {
-    if (!cmds[k]->palette_frames_resident) {
-      ++owned_instances;
-    }
-  }
-  m_palette_scratch.resize(owned_instances * bone_count * k_matrix_floats);
-  m_instance_scratch.resize(count * k_floats_per_instance);
-  m_stats.resident_instances = static_cast<std::uint32_t>(count - owned_instances);
-
-  std::size_t owned_cursor = 0;
+  std::size_t distinct_owned = 0;
   for (std::size_t k = 0; k < count; ++k) {
     const RiggedCreatureCmd& cmd = *cmds[k];
     if (cmd.palette_frames_resident) {
@@ -343,21 +363,36 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
     if (cmd.bone_palette == nullptr) {
       return false;
     }
+    ++owned_instances;
+    auto const [it, inserted] =
+        m_owned_palette_slots.try_emplace(cmd.bone_palette, distinct_owned);
+    if (inserted) {
+      ++distinct_owned;
+    }
+    m_owned_palette_by_cmd[k] = it->second;
+  }
+  m_palette_scratch.resize(distinct_owned * bone_count * k_matrix_floats);
+  m_instance_scratch.resize(count * k_floats_per_instance);
+  m_stats.resident_instances = static_cast<std::uint32_t>(count - owned_instances);
+
+  for (auto const& [palette, slot] : m_owned_palette_slots) {
     float* palette_dst =
-        m_palette_scratch.data() + (owned_cursor * bone_count * k_matrix_floats);
+        m_palette_scratch.data() + (slot * bone_count * k_matrix_floats);
     for (std::size_t b = 0; b < bone_count; ++b) {
       std::memcpy(palette_dst + (b * k_matrix_floats),
-                  cmd.bone_palette[b].constData(),
+                  palette[b].constData(),
                   sizeof(float) * k_matrix_floats);
     }
-    ++owned_cursor;
   }
 
   std::size_t palette_matrix_base = 0U;
   bool streamed_palette = false;
   if (!m_palette_scratch.empty()) {
     const std::size_t bytes = m_palette_scratch.size() * sizeof(float);
-    if (m_palette_stream_cursor_bytes + bytes > m_palette_capacity_bytes) {
+    if (!ensure_stream_capacity(m_palette_ssbo,
+                                m_palette_capacity_bytes,
+                                m_palette_stream_cursor_bytes,
+                                bytes)) {
       return false;
     }
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_palette_ssbo);
@@ -373,7 +408,6 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
 
   constexpr auto k_matrix_bytes =
       static_cast<std::uint32_t>(sizeof(float) * k_matrix_floats);
-  owned_cursor = 0;
   for (std::size_t k = 0; k < count; ++k) {
     const RiggedCreatureCmd& cmd = *cmds[k];
 
@@ -385,9 +419,9 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
       palette_ref[2] = cmd.palette_next_offset / k_matrix_bytes;
       blend = cmd.palette_lerp;
     } else {
-      palette_ref[1] = static_cast<std::uint32_t>(
-          (streamed_palette ? palette_matrix_base : 0U) + owned_cursor * bone_count);
-      ++owned_cursor;
+      palette_ref[1] =
+          static_cast<std::uint32_t>((streamed_palette ? palette_matrix_base : 0U) +
+                                     m_owned_palette_by_cmd[k] * bone_count);
     }
 
     float* dst = m_instance_scratch.data() + k * k_floats_per_instance;
@@ -415,7 +449,10 @@ auto RiggedCullPipeline::upload_instances(const RiggedCreatureCmd* const* cmds,
 
   m_instance_base = 0U;
   const std::size_t instance_bytes = m_instance_scratch.size() * sizeof(float);
-  if (m_instance_stream_cursor_bytes + instance_bytes > m_instance_capacity_bytes) {
+  if (!ensure_stream_capacity(m_instance_ssbo,
+                              m_instance_capacity_bytes,
+                              m_instance_stream_cursor_bytes,
+                              instance_bytes)) {
     return false;
   }
   m_instance_base = static_cast<std::uint32_t>(m_instance_stream_cursor_bytes /

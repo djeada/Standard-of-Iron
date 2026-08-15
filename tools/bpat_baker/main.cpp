@@ -113,6 +113,7 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
   }
   bpat::BpatWriter writer(manifest.species_id,
                           static_cast<std::uint32_t>(bind_palette.size()));
+  writer.set_bind_palette(bind_palette);
 
   for (auto const& socket : manifest.sockets) {
     bpat::SocketDescriptor s{};
@@ -152,6 +153,9 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
       manifest.bake_clip_frame(
           i, f, palettes, manifest.sockets.empty() ? nullptr : &sockets);
+    }
+    for (std::size_t p = 0; p < palettes.size(); ++p) {
+      palettes[p] = palettes[p] * inverse_bind[p % inverse_bind.size()];
     }
     writer.append_clip_palettes(palettes);
     if (!manifest.sockets.empty()) {

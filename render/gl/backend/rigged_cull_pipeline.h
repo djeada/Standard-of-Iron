@@ -99,6 +99,10 @@ private:
                            const QMatrix4x4& view_proj,
                            const QVector3D& camera_position,
                            Pass pass) -> bool;
+  auto ensure_stream_capacity(GLuint buffer,
+                              std::size_t& capacity_bytes,
+                              std::size_t& cursor_bytes,
+                              std::size_t wanted_bytes) -> bool;
   auto upload_instances(const RiggedCreatureCmd* const* cmds,
                         std::size_t count,
                         std::size_t bone_count,
@@ -142,6 +146,8 @@ private:
 
   std::vector<float> m_palette_scratch;
   std::vector<float> m_instance_scratch;
+  std::unordered_map<const QMatrix4x4*, std::size_t> m_owned_palette_slots;
+  std::vector<std::size_t> m_owned_palette_by_cmd;
 
   Stats m_stats{};
   std::uint32_t m_readback_counter{0};

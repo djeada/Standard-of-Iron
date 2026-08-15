@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>
@@ -68,6 +69,18 @@ public:
   [[nodiscard]] auto
   frame_contacts() const noexcept -> std::span<const BpatFrameContact>;
 
+  [[nodiscard]] auto bind_palette() const noexcept -> std::span<const QMatrix4x4>;
+
+  [[nodiscard]] auto palette_matrices() const noexcept -> std::span<const QMatrix4x4>;
+
+  [[nodiscard]] auto
+  palette_storage() const noexcept -> std::shared_ptr<const std::vector<QMatrix4x4>> {
+    return m_decoded_palette;
+  }
+
+  [[nodiscard]] auto bone_global_matrix(std::uint32_t global_frame_index,
+                                        std::uint32_t bone_index) const -> QMatrix4x4;
+
   [[nodiscard]] auto
   palette_matrix(std::uint32_t global_frame_index,
                  std::uint32_t bone_index) const -> std::span<const float>;
@@ -105,8 +118,10 @@ private:
   const float* m_socket_data{nullptr};
   const BpatFrameContact* m_contact_data{nullptr};
   std::uint32_t m_contact_count{0U};
+  const float* m_bind_palette_data{nullptr};
 
-  std::vector<QMatrix4x4> m_decoded_palette{};
+  std::shared_ptr<std::vector<QMatrix4x4>> m_decoded_palette{};
+  std::vector<QMatrix4x4> m_decoded_bind_palette{};
   std::vector<ClipIndexEntry> m_clip_index_entries{};
   std::vector<std::uint32_t> m_clip_index_buckets{};
 };

@@ -937,21 +937,20 @@ auto submit_snapshot_creature(
     auto const hand_r_index =
         static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
     if (palette.size() > hand_r_index) {
-      QVector3D const pelvis_world =
-          world_from_unit.map(palette[pelvis_index].column(3).toVector3D());
-      QVector3D const neck_world =
-          world_from_unit.map(palette[neck_index].column(3).toVector3D());
+      auto const bone_origin = [&](std::size_t bone) {
+        return blob.bone_global_matrix(global_frame, static_cast<std::uint32_t>(bone))
+            .column(3)
+            .toVector3D();
+      };
+      QVector3D const pelvis_world = world_from_unit.map(bone_origin(pelvis_index));
+      QVector3D const neck_world = world_from_unit.map(bone_origin(neck_index));
       QVector3D const visible_torso = neck_world - pelvis_world;
       float const body_up_y = visible_torso.lengthSquared() > 1.0e-8F
                                   ? visible_torso.normalized().y()
                                   : 1.0F;
-      float const max_arm_reach =
-          std::max((palette[hand_l_index].column(3).toVector3D() -
-                    palette[shoulder_l_index].column(3).toVector3D())
-                       .length(),
-                   (palette[hand_r_index].column(3).toVector3D() -
-                    palette[shoulder_r_index].column(3).toVector3D())
-                       .length());
+      float const max_arm_reach = std::max(
+          (bone_origin(hand_l_index) - bone_origin(shoulder_l_index)).length(),
+          (bone_origin(hand_r_index) - bone_origin(shoulder_r_index)).length());
       animation_diagnostics.record_submitted_body_pose(
           entity_id, instance_index, body_up_y, max_arm_reach);
     }

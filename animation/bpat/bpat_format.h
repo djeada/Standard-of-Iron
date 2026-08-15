@@ -48,8 +48,8 @@ struct BpatHeaderExtV3 {
   std::uint64_t contact_data_offset;
   std::uint32_t contact_entry_count;
   std::uint32_t reserved0;
+  std::uint64_t bind_palette_offset;
   std::uint64_t reserved1;
-  std::uint64_t reserved2;
 };
 
 static_assert(sizeof(BpatHeaderExtV3) == 32,

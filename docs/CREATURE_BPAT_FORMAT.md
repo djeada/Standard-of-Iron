@@ -49,6 +49,7 @@ Think of the file as a chest with a few labeled compartments.
 | Palette data | The real pose data for every frame of every move        |
 | Socket data  | Optional pre-baked attachment transforms                |
 | Contact data | One ground-contact height per frame (v3)                |
+| Bind palette | The rest pose the skinning matrices were built against  |
 
 ### Header
 
@@ -147,9 +148,27 @@ This is just the name drawer. Instead of storing repeated text inside every entr
 
 This is the heart of the file.
 
-For every stored frame, BPAT contains the full pose of the creature: where each bone should be and how it should be oriented. The data is laid out in one long run of frames, clip after clip.
+For every stored frame, BPAT contains one **skinning matrix per bone**: the posed bone
+transform already multiplied by the inverse of the bind pose, stored column-major
+exactly as the GPU consumes it. The data is laid out in one long run of frames, clip
+after clip. The renderer's skin atlas is a view straight into this block
+(`RiggedSkinAtlas::palettes` references `BpatBlob::palette_matrices()`), and the palette
+UBO is uploaded from it without any per-frame multiply or transposition at load.
 
-If you like analogies, this is a flipbook where each page contains the full bone pose for that instant.
+If you need a bone's world-space pose rather than its skinning matrix — the rider seat
+frame, the preview tool's stick figures, the animation diagnostics — multiply by the
+baked bind palette: `BpatBlob::bone_global_matrix(frame, bone)` does exactly
+`skin × bind`.
+
+If you like analogies, this is a flipbook where each page contains the finished
+deformation for that instant rather than the raw pose.
+
+### Bind palette (v3)
+
+`BpatHeaderExtV3::bind_palette_offset` points at `bone_count` column-major matrices:
+the rest pose the skinning matrices were built against. It exists so consumers can
+recover global bone poses without linking the species rig code (the baker writes it
+from the manifest's `bind_palette` provider), and so a blob is self-describing.
 
 ### Socket data
 
@@ -251,7 +270,8 @@ For readers who want the important hard facts without drowning in byte offset ta
 
 - BPAT v3 is **little-endian**.
 - Floating-point values are **32-bit IEEE 754 floats**.
-- Bone matrices are stored **row-major**.
+- Bone skinning matrices and the bind palette are stored **column-major** (GPU
+  layout); the 3×4 socket transforms stay **row-major**.
 - Each section begins on a **16-byte boundary**.
 - Variable-sized data lives in trailing blocks referenced by **absolute file offsets**.
 - Reserved and padding bytes must be **zero**.
@@ -259,7 +279,7 @@ For readers who want the important hard facts without drowning in byte offset ta
 - The header is **64 bytes** and is immediately followed by a **32-byte v3 extension
   header** (contact table offset and count); each clip entry is **48 bytes** (5 marker
   floats, flags, variant family and ordinal); each socket entry is **32 bytes**; each
-  contact record is **8 bytes**.
+  contact record is **8 bytes**; the bind palette is `bone_count × 64` bytes.
 - Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword, 4 = humanoid_spear, 5 = humanoid_skeleton, 6 = humanoid_caster, 7 = humanoid_stave_caster, 8 = sheep, 9 = wolf**.
 - Blobs are build output (`make bake-bpat`), never checked in, so a version bump simply
   re-bakes every species; the reader accepts exactly the current version and nothing else.
@@ -288,6 +308,7 @@ The current reader accepts a BPAT file when:
 8. every referenced clip or socket name really exists inside the string table and ends with `NUL`
 9. every socket anchor bone points at a real bone
 10. if a contact table is present it holds exactly one record per frame and stays inside the file
+11. if a bind palette is present it holds exactly one matrix per bone and stays inside the file
 
 The writer still emits zeroed padding and reserved fields, but the current reader does **not** actively reject non-zero reserved bytes.
 

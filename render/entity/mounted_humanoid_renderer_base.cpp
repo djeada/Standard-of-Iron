@@ -76,14 +76,13 @@ auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
   if (clip.frame_count == 0U) {
     return std::nullopt;
   }
-  auto const palette =
-      blob->frame_palette_view(clip.frame_offset + playback->frame_in_clip);
   auto const root_index =
-      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Root);
-  if (palette.size() <= root_index) {
+      static_cast<std::uint32_t>(Render::Humanoid::HumanoidBone::Root);
+  if (blob->bone_count() <= root_index || blob->bind_palette().empty()) {
     return std::nullopt;
   }
-  return palette[root_index];
+  return blob->bone_global_matrix(clip.frame_offset + playback->frame_in_clip,
+                                  root_index);
 }
 
 auto rider_local_world_from_mount(

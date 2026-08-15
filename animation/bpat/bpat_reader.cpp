@@ -37,6 +37,8 @@ bool BpatBlob::validate() {
   m_socket_data = nullptr;
   m_contact_data = nullptr;
   m_contact_count = 0U;
+  m_bind_palette_data = nullptr;
+  m_decoded_bind_palette.clear();
   m_clip_index_entries.clear();
   m_clip_index_buckets.clear();
 
@@ -127,6 +129,16 @@ bool BpatBlob::validate() {
     m_contact_data = reinterpret_cast<const BpatFrameContact*>(
         m_bytes.data() + ext->contact_data_offset);
     m_contact_count = ext->contact_entry_count;
+  }
+  if (ext->bind_palette_offset != 0U) {
+    if (!in_bounds(ext->bind_palette_offset,
+                   std::uint64_t{header->bone_count} * k_matrix_floats *
+                       sizeof(float))) {
+      m_last_error = "bind palette out of bounds";
+      return false;
+    }
+    m_bind_palette_data =
+        reinterpret_cast<const float*>(m_bytes.data() + ext->bind_palette_offset);
   }
 
   m_clip_table = reinterpret_cast<const BpatClipEntry*>(m_bytes.data() +
@@ -309,6 +321,26 @@ auto BpatBlob::frame_contacts() const noexcept -> std::span<const BpatFrameConta
   return {m_contact_data, m_contact_count};
 }
 
+auto BpatBlob::bind_palette() const noexcept -> std::span<const QMatrix4x4> {
+  return {m_decoded_bind_palette.data(), m_decoded_bind_palette.size()};
+}
+
+auto BpatBlob::palette_matrices() const noexcept -> std::span<const QMatrix4x4> {
+  if (m_decoded_palette == nullptr) {
+    return {};
+  }
+  return {m_decoded_palette->data(), m_decoded_palette->size()};
+}
+
+auto BpatBlob::bone_global_matrix(std::uint32_t global_frame_index,
+                                  std::uint32_t bone_index) const -> QMatrix4x4 {
+  auto const frame = frame_palette_view(global_frame_index);
+  if (bone_index >= frame.size() || bone_index >= m_decoded_bind_palette.size()) {
+    return {};
+  }
+  return frame[bone_index] * m_decoded_bind_palette[bone_index];
+}
+
 auto BpatBlob::socket(std::uint32_t index) const -> SocketView {
   SocketView v{};
   if (m_header == nullptr || index >= m_header->socket_count) {
@@ -339,12 +371,12 @@ auto BpatBlob::palette_matrix(std::uint32_t global_frame_index,
 auto BpatBlob::frame_palette_view(std::uint32_t global_frame_index) const
     -> std::span<const QMatrix4x4> {
   if (m_header == nullptr || global_frame_index >= m_header->frame_total ||
-      m_decoded_palette.empty()) {
+      m_decoded_palette == nullptr || m_decoded_palette->empty()) {
     return {};
   }
   std::size_t const off =
       static_cast<std::size_t>(global_frame_index) * m_header->bone_count;
-  return {m_decoded_palette.data() + off, m_header->bone_count};
+  return {m_decoded_palette->data() + off, m_header->bone_count};
 }
 
 auto BpatBlob::socket_matrix(std::uint32_t global_frame_index,
@@ -370,9 +402,22 @@ void BpatBlob::decode_palette_cache() {
   if (total == 0) {
     return;
   }
-  m_decoded_palette.assign(total, QMatrix4x4{});
+  auto const decode_column_major = [](const float* src) {
+    QMatrix4x4 m;
+    std::memcpy(m.data(), src, sizeof(float) * k_matrix_floats);
+    m.optimize();
+    return m;
+  };
+  m_decoded_palette = std::make_shared<std::vector<QMatrix4x4>>(total);
   for (std::size_t i = 0; i < total; ++i) {
-    m_decoded_palette[i] = QMatrix4x4(m_palette_data + i * k_matrix_floats);
+    (*m_decoded_palette)[i] = decode_column_major(m_palette_data + i * k_matrix_floats);
+  }
+  if (m_bind_palette_data != nullptr) {
+    m_decoded_bind_palette.assign(m_header->bone_count, QMatrix4x4{});
+    for (std::uint32_t b = 0; b < m_header->bone_count; ++b) {
+      m_decoded_bind_palette[b] =
+          decode_column_major(m_bind_palette_data + std::size_t{b} * k_matrix_floats);
+    }
   }
 }
 
