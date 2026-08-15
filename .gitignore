@@ -1,6 +1,7 @@
 .lightpad
 .copilot-tmp
 /perf*
+.claude
 *~
 .venv
 # C++ objects and libs
