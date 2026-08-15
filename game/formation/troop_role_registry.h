@@ -10,14 +10,6 @@
 
 namespace Game::Formation {
 
-struct TroopFormationProfile {
-  RoleTagSet roles{0U};
-  std::vector<ArmyRole> army_roles;
-  std::string unit_layout;
-  std::string defensive_layout;
-  std::string marching_layout;
-};
-
 class TroopRoleRegistry {
 public:
   static auto instance() -> TroopRoleRegistry&;

@@ -1,15 +1,22 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <vector>
 
+#include "game/session/session_context.h"
 #include "systems/battlefield_capture.h"
 
 int main(int argc, char** argv) {
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
   Game::BattlefieldCapture::RunnerConfig config;
   std::string output_path;
   bool verify_run = false;
   bool run_all = false;
+  int determinism_runs = 0;
   for (int i = 1; i < argc; ++i) {
     const std::string arg = argv[i];
     auto value = [&](const char* option) -> std::string {
@@ -33,6 +40,9 @@ int main(int argc, char** argv) {
       output_path = value("--output");
     } else if (arg == "--verify") {
       verify_run = true;
+    } else if (arg == "--determinism-runs") {
+
+      determinism_runs = std::stoi(value("--determinism-runs"));
     } else if (arg == "--all") {
       run_all = true;
       verify_run = true;
@@ -45,6 +55,39 @@ int main(int argc, char** argv) {
       std::cerr << "unknown option: " << arg << '\n';
       return 2;
     }
+  }
+  if (determinism_runs > 1) {
+    bool passed = true;
+    const auto scenarios =
+        run_all ? Game::BattlefieldCapture::all_scenarios()
+                : std::vector<Game::BattlefieldCapture::ScenarioId>{config.scenario};
+    for (auto const scenario : scenarios) {
+      config.scenario = scenario;
+      auto const report =
+          Game::BattlefieldCapture::check_determinism(config, determinism_runs);
+      std::cout << "[" << Game::BattlefieldCapture::scenario_name(scenario) << "] ";
+      if (report.deterministic()) {
+        std::cout << "DETERMINISTIC across " << report.runs << " runs\n";
+        continue;
+      }
+      passed = false;
+      std::cout << "DIVERGED at tick " << *report.divergent_tick << " (run "
+                << report.divergent_run << " vs run 0)\n";
+
+      std::istringstream first(report.first_state);
+      std::istringstream other(report.other_state);
+      std::string a;
+      std::string b;
+      int shown = 0;
+      while (std::getline(first, a) && std::getline(other, b) && shown < 20) {
+        if (a != b) {
+          std::cout << "  run0: " << a << "\n  run" << report.divergent_run << ": " << b
+                    << '\n';
+          ++shown;
+        }
+      }
+    }
+    return passed ? 0 : 1;
   }
   if (run_all) {
     bool passed = true;

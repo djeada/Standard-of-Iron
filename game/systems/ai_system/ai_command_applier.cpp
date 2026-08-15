@@ -30,18 +30,6 @@ namespace Game::Systems::AI {
 
 namespace {
 
-constexpr const char* BUILDING_TYPE_HOME = "home";
-constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
-constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
-constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
-
-constexpr float BUILD_TIME_HOME = 10.0F;
-constexpr float BUILD_TIME_DEFENSE_TOWER = 12.0F;
-constexpr float BUILD_TIME_BARRACKS = 15.0F;
-constexpr float BUILD_TIME_MARKETPLACE = 12.0F;
-constexpr float BUILD_TIME_DEFAULT = 10.0F;
-constexpr float HARVEST_TIME = 6.0F;
-
 void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload payload) {
   Game::Command::submit(world, Game::Command::Source::AI, owner_id, std::move(payload));
 }
@@ -106,99 +94,48 @@ void AICommandApplier::apply(Engine::Core::World& world,
     }
 
     case AICommandType::StartProduction: {
+
       auto* entity = world.get_entity(command.building_id);
-      if (entity == nullptr) {
+      auto* production =
+          entity != nullptr ? entity->get_component<Engine::Core::ProductionComponent>()
+                            : nullptr;
+      const auto* unit = entity != nullptr
+                             ? entity->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (production == nullptr || unit == nullptr || unit->owner_id != ai_owner_id) {
         break;
       }
-
-      auto* production = entity->get_component<Engine::Core::ProductionComponent>();
-      if (production == nullptr) {
+      if (Game::Systems::ProductionService::can_start_production(
+              world, command.building_id, command.product_type) !=
+          Game::Systems::ProductionResult::Success) {
         break;
       }
-
-      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if ((unit != nullptr) && unit->owner_id != ai_owner_id) {
-        break;
-      }
-
-      int const current_troops = Game::Systems::troop_count_for(ai_owner_id);
-      int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
-      int const production_cost =
-          Game::Units::TroopConfig::instance().get_production_cost(
-              command.product_type);
-      if (current_troops + production_cost > max_troops) {
-        break;
-      }
-      if (production->manpower_available < production_cost) {
-        break;
-      }
-
-      const std::vector<Engine::Core::EntityID> selected{command.building_id};
-      const auto result = Game::Systems::ProductionService::
-          start_production_for_first_selected_barracks(
-              world, selected, ai_owner_id, command.product_type);
-      if (result != Game::Systems::ProductionResult::Success) {
-        break;
-      }
-
+      submit(world,
+             ai_owner_id,
+             Game::Command::Produce{.building = command.building_id,
+                                    .product = command.product_type});
       break;
     }
 
     case AICommandType::SetRallyPoint: {
-      auto* entity = world.get_entity(command.building_id);
-      if (entity == nullptr) {
-        break;
-      }
-
-      auto* production = entity->get_component<Engine::Core::ProductionComponent>();
-      if (production == nullptr) {
-        break;
-      }
-
-      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if ((unit != nullptr) && unit->owner_id != ai_owner_id) {
-        break;
-      }
-
-      production->rally_x = command.rally_x;
-      production->rally_z = command.rally_z;
-      production->rally_set = true;
-
+      submit(world,
+             ai_owner_id,
+             Game::Command::SetRallyPoint{
+                 .building = command.building_id,
+                 .position = QVector3D(command.rally_x, 0.0F, command.rally_z)});
       break;
     }
 
-    case AICommandType::TriggerCommanderRally: {
-      for (auto entity_id : command.units) {
-        auto* entity = world.get_entity(entity_id);
-        if (entity == nullptr) {
-          continue;
-        }
-        auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
-          continue;
-        }
-        auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
-        if (commander != nullptr) {
-          commander->rally_requested = true;
-        }
-      }
-      break;
-    }
-
+    case AICommandType::TriggerCommanderRally:
     case AICommandType::TriggerCommanderAura: {
+      const auto ability = command.type == AICommandType::TriggerCommanderRally
+                               ? Game::Command::CommanderAbility::Rally
+                               : Game::Command::CommanderAbility::Aura;
       for (auto entity_id : command.units) {
-        auto* entity = world.get_entity(entity_id);
-        if (entity == nullptr) {
-          continue;
-        }
-        auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
-          continue;
-        }
-        auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
-        if (commander != nullptr) {
-          commander->aura_ability_requested = true;
-        }
+        submit(world,
+               ai_owner_id,
+               Game::Command::UseCommanderAbility{.commander = entity_id,
+                                                  .ability = ability});
       }
       break;
     }
@@ -207,68 +144,13 @@ void AICommandApplier::apply(Engine::Core::World& world,
       if (command.units.empty() || command.construction_type == nullptr) {
         break;
       }
-
-      const auto resource_costs =
-          Game::Systems::construction_cost_info(command.construction_type)
-              .resource_costs;
-      if (!resource_costs.empty() &&
-          !Game::Systems::PlayerResourceRegistry::instance().has_at_least(
-              ai_owner_id, resource_costs)) {
-        break;
-      }
-
-      bool assigned_any = false;
-      for (auto entity_id : command.units) {
-        auto* entity = world.get_entity(entity_id);
-        if (entity == nullptr) {
-          continue;
-        }
-
-        auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
-          continue;
-        }
-
-        if (unit->spawn_type != Game::Units::SpawnType::Builder) {
-          continue;
-        }
-
-        auto* builder_prod =
-            entity->get_component<Engine::Core::BuilderProductionComponent>();
-        if (builder_prod == nullptr) {
-          continue;
-        }
-
-        const std::string_view ctype(command.construction_type);
-        builder_prod->product_type = command.construction_type;
-        builder_prod->has_construction_site = true;
-        builder_prod->construction_site_x = command.construction_site_x;
-        builder_prod->construction_site_z = command.construction_site_z;
-        builder_prod->at_construction_site = false;
-        builder_prod->in_progress = false;
-        builder_prod->construction_complete = false;
-        builder_prod->is_placement_preview = false;
-
-        if (ctype == BUILDING_TYPE_HOME) {
-          builder_prod->build_time = BUILD_TIME_HOME;
-        } else if (ctype == BUILDING_TYPE_DEFENSE_TOWER) {
-          builder_prod->build_time = BUILD_TIME_DEFENSE_TOWER;
-        } else if (ctype == BUILDING_TYPE_BARRACKS) {
-          builder_prod->build_time = BUILD_TIME_BARRACKS;
-        } else if (ctype == BUILDING_TYPE_MARKETPLACE) {
-          builder_prod->build_time = BUILD_TIME_MARKETPLACE;
-        } else {
-          builder_prod->build_time = BUILD_TIME_DEFAULT;
-        }
-        builder_prod->time_remaining = builder_prod->build_time;
-        assigned_any = true;
-      }
-
-      if (assigned_any) {
-        Game::Systems::PlayerResourceRegistry::instance().spend(ai_owner_id,
-                                                                resource_costs);
-      }
-
+      submit(world,
+             ai_owner_id,
+             Game::Command::StartConstruction{
+                 .units = command.units,
+                 .construction_type = command.construction_type,
+                 .site = QVector3D(
+                     command.construction_site_x, 0.0F, command.construction_site_z)});
       break;
     }
 
@@ -277,52 +159,14 @@ void AICommandApplier::apply(Engine::Core::World& world,
           command.resource_target_id == 0) {
         break;
       }
-      auto& terrain = Game::Map::TerrainService::instance();
-      if (!terrain.reserve_world_prop(command.resource_target_id)) {
-        break;
-      }
-
-      bool assigned = false;
-      for (auto entity_id : command.units) {
-        auto* entity = world.get_entity(entity_id);
-        auto* unit = entity != nullptr
-                         ? entity->get_component<Engine::Core::UnitComponent>()
-                         : nullptr;
-        auto* builder =
-            entity != nullptr
-                ? entity->get_component<Engine::Core::BuilderProductionComponent>()
-                : nullptr;
-        if (unit == nullptr || builder == nullptr || unit->owner_id != ai_owner_id ||
-            unit->spawn_type != Game::Units::SpawnType::Builder) {
-          continue;
-        }
-
-        builder->product_type = command.construction_type;
-        builder->build_time = HARVEST_TIME;
-        builder->time_remaining = HARVEST_TIME;
-        builder->has_construction_site = true;
-        builder->construction_site_x = command.construction_site_x;
-        builder->construction_site_z = command.construction_site_z;
-        builder->at_construction_site = false;
-        builder->in_progress = false;
-        builder->construction_complete = false;
-        builder->is_placement_preview = false;
-        builder->bypass_movement_active = false;
-        builder->has_task_target = true;
-        builder->task_target_id = command.resource_target_id;
-        builder->task_target_x = command.construction_site_x;
-        builder->task_target_z = command.construction_site_z;
-        builder->task_target_reserved = true;
-        if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-          movement->set_rest_position(command.construction_site_x,
-                                      command.construction_site_z);
-        }
-        assigned = true;
-        break;
-      }
-      if (!assigned) {
-        terrain.release_world_prop(command.resource_target_id);
-      }
+      submit(world,
+             ai_owner_id,
+             Game::Command::StartHarvest{
+                 .units = command.units,
+                 .construction_type = command.construction_type,
+                 .resource_target = command.resource_target_id,
+                 .site = QVector3D(
+                     command.construction_site_x, 0.0F, command.construction_site_z)});
       break;
     }
     }

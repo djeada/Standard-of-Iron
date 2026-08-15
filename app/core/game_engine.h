@@ -35,6 +35,8 @@
 #include "commander_input_adapter.h"
 #include "entity_cache.h"
 #include "game/audio/audio_event_handler.h"
+#include "game/command/command.h"
+#include "game/command/replay.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
 #include "game/session/session_context.h"
@@ -337,6 +339,12 @@ public:
   [[nodiscard]] bool maps_loading() const { return m_maps_loading; }
   Q_INVOKABLE void start_skirmish(const QString& map_path,
                                   const QVariantList& player_configs = QVariantList());
+
+  void set_replay_record_path(const QString& path);
+  auto start_replay(const QString& path) -> bool;
+  [[nodiscard]] auto replay_playing() const -> bool;
+
+  void set_replay_verify_exit(bool enabled) { m_replay_verify_exit = enabled; }
   Q_INVOKABLE void start_campaign_mission(const QString& campaign_id);
   Q_INVOKABLE void start_mission_file(const QString& file_path);
   Q_INVOKABLE void mark_current_mission_completed();
@@ -513,7 +521,6 @@ private:
   [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
   void sync_selected_player_state();
   void sync_scatter_world_props();
-  static void reset_movement(Engine::Core::Entity* entity);
   QAbstractItemModel* selected_units_model();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
   void on_unit_died(const Engine::Core::UnitDiedEvent& event);
@@ -526,6 +533,20 @@ private:
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot& snapshot);
   [[nodiscard]] AppSceneContext scene_context() const;
+  struct ReplayLaunch {
+    QString kind;
+    QString reference;
+    QVariantList player_configs;
+  };
+  auto marketplace_trade(const QString& resource_key,
+                         Game::Command::TradeDirection direction) -> bool;
+  void arm_replay_for_started_match();
+  void finish_replay_verification_if_done();
+  bool m_replay_verify_exit = false;
+  ReplayLaunch m_replay_launch;
+  QString m_replay_record_path;
+  std::optional<Game::Command::ReplayFile> m_pending_replay;
+
   void start_skirmish_internal(const QString& map_path,
                                const QVariantList& player_configs,
                                bool set_skirmish_context);

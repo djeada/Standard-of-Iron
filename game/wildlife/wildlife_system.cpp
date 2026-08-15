@@ -11,7 +11,7 @@
 #include <memory>
 #include <numbers>
 
-#include "../audio/audio_cues.h"
+#include "../audio/cue_ids.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/event_manager.h"

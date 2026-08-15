@@ -1,40 +1,44 @@
 #include "marketplace_system.h"
 
-#include "../session/session_context.h"
+#include <vector>
+
+#include "../core/ambient_session.h"
+#include "../core/component.h"
+#include "../core/entity.h"
+#include "../core/world.h"
+#include "../units/spawn_type.h"
 #include "player_resource_registry.h"
 
 namespace Game::Systems {
 
 auto MarketplaceSystem::instance() -> MarketplaceSystem& {
-  return Game::Session::SessionContext::active().marketplace();
+  return *Game::Session::ambient_services().marketplace;
 }
 
 auto MarketplaceSystem::get_rates() const -> const MarketplaceTradeRates& {
   return m_rates;
 }
 
-auto MarketplaceSystem::owner_has_marketplace(int owner_id) const -> bool {
-  auto it = m_marketplace_count.find(owner_id);
-  return it != m_marketplace_count.end() && it->second > 0;
-}
-
-void MarketplaceSystem::register_marketplace(int owner_id) {
-  m_marketplace_count[owner_id]++;
-}
-
-void MarketplaceSystem::unregister_marketplace(int owner_id) {
-  auto it = m_marketplace_count.find(owner_id);
-  if (it != m_marketplace_count.end() && it->second > 0) {
-    it->second--;
+auto MarketplaceSystem::owner_has_marketplace(const Engine::Core::World& world,
+                                              int owner_id) -> bool {
+  std::vector<Engine::Core::Entity*> buildings;
+  world.resolve_entities_into(world.entities_with<Engine::Core::BuildingComponent>(),
+                              buildings);
+  for (const auto* building : buildings) {
+    const auto* unit = building->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->owner_id == owner_id &&
+        unit->spawn_type == Game::Units::SpawnType::Marketplace && unit->health > 0 &&
+        !building->has_component<Engine::Core::PendingRemovalComponent>()) {
+      return true;
+    }
   }
+  return false;
 }
 
-void MarketplaceSystem::clear() {
-  m_marketplace_count.clear();
-}
-
-auto MarketplaceSystem::can_buy(int owner_id, ResourceType resource) const -> bool {
-  if (!owner_has_marketplace(owner_id)) {
+auto MarketplaceSystem::can_buy(const Engine::Core::World& world,
+                                int owner_id,
+                                ResourceType resource) const -> bool {
+  if (!owner_has_marketplace(world, owner_id)) {
     return false;
   }
   if (resource == ResourceType::Gold || resource == ResourceType::Count) {
@@ -60,8 +64,10 @@ auto MarketplaceSystem::can_buy(int owner_id, ResourceType resource) const -> bo
   return PlayerResourceRegistry::instance().get(owner_id, ResourceType::Gold) >= price;
 }
 
-auto MarketplaceSystem::can_sell(int owner_id, ResourceType resource) const -> bool {
-  if (!owner_has_marketplace(owner_id)) {
+auto MarketplaceSystem::can_sell(const Engine::Core::World& world,
+                                 int owner_id,
+                                 ResourceType resource) const -> bool {
+  if (!owner_has_marketplace(world, owner_id)) {
     return false;
   }
   if (resource == ResourceType::Gold || resource == ResourceType::Count) {
@@ -71,8 +77,10 @@ auto MarketplaceSystem::can_sell(int owner_id, ResourceType resource) const -> b
          m_rates.trade_quantity;
 }
 
-auto MarketplaceSystem::buy_resource(int owner_id, ResourceType resource) -> bool {
-  if (!can_buy(owner_id, resource)) {
+auto MarketplaceSystem::buy_resource(const Engine::Core::World& world,
+                                     int owner_id,
+                                     ResourceType resource) -> bool {
+  if (!can_buy(world, owner_id, resource)) {
     return false;
   }
   int price = 0;
@@ -97,8 +105,10 @@ auto MarketplaceSystem::buy_resource(int owner_id, ResourceType resource) -> boo
   return true;
 }
 
-auto MarketplaceSystem::sell_resource(int owner_id, ResourceType resource) -> bool {
-  if (!can_sell(owner_id, resource)) {
+auto MarketplaceSystem::sell_resource(const Engine::Core::World& world,
+                                      int owner_id,
+                                      ResourceType resource) -> bool {
+  if (!can_sell(world, owner_id, resource)) {
     return false;
   }
   int sell_price = 0;

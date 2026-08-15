@@ -158,6 +158,39 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
         } else if constexpr (std::is_same_v<T, SetRallyPoint> ||
                              std::is_same_v<T, Produce>) {
           return validate_building_order(world, owner_id, payload.building);
+        } else if constexpr (std::is_same_v<T, DeliverCivilians>) {
+          if (const auto ruling =
+                  validate_building_order(world, owner_id, payload.barracks);
+              ruling != Rejection::None) {
+            return ruling;
+          }
+          return filter_subjects(world, owner_id, payload.units)
+                     ? Rejection::None
+                     : Rejection::NoSubjects;
+        } else if constexpr (std::is_same_v<T, RepairStructure>) {
+          if (const auto ruling =
+                  validate_building_order(world, owner_id, payload.structure);
+              ruling != Rejection::None) {
+            return ruling;
+          }
+          return filter_subjects(world, owner_id, payload.units)
+                     ? Rejection::None
+                     : Rejection::NoSubjects;
+        } else if constexpr (std::is_same_v<T, PlaceBuilding>) {
+
+          return Rejection::None;
+        } else if constexpr (std::is_same_v<T, Trade>) {
+
+          return Rejection::None;
+        } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
+          if (!is_commandable(world, payload.commander, owner_id)) {
+            return Rejection::NoSubjects;
+          }
+          auto* entity = world.get_entity(payload.commander);
+          return entity->template get_component<Engine::Core::CommanderComponent>() !=
+                         nullptr
+                     ? Rejection::None
+                     : Rejection::NoSubjects;
         } else {
           return filter_subjects(world, owner_id, payload.units)
                      ? Rejection::None

@@ -42,10 +42,9 @@ public:
                           FormationContentReport& report,
                           const QString& source) -> bool;
 
-  static auto parse_troop_profile(const QJsonObject& formation_object,
-                                  TroopFormationProfile& out) -> bool;
-
   static auto validate(FormationContentReport& report) -> bool;
+
+  static void merge_troop_profiles_from_catalog();
 
   static void reset_to_builtin_defaults();
 };

@@ -7,8 +7,16 @@
 #include "game/command/command_validator.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/builder_product_types.h"
+#include "game/systems/civilian_delivery_system.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
+#include "game/systems/resource_types.h"
+#include "game/systems/structure_placement_service.h"
+#include "game/systems/wall_plan_service.h"
+#include "game/units/spawn_type.h"
 
 namespace {
 
@@ -286,6 +294,355 @@ TEST(CommandSubmitTest, AppliesImmediatelyForAWorldWithNoSession) {
                                             .targets = {QVector3D(4.0F, 0.0F, 4.0F)}});
 
   EXPECT_NE(entity->get_component<Engine::Core::MovementComponent>(), nullptr);
+}
+
+auto drain(Match& match) -> std::size_t {
+  return match.session.commands().drain(match.session.world(), 1);
+}
+
+TEST(CommandPipelineTest, TradeBuysThroughTheOwnersMarketplace) {
+  Match match;
+  auto* market = match.session.world().create_entity();
+  market->add_component<Engine::Core::TransformComponent>();
+  market->add_component<Engine::Core::BuildingComponent>();
+  auto* unit = market->add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Marketplace;
+
+  auto& economy = match.session.economy();
+  economy.add(1, Game::Systems::ResourceType::Gold, 100);
+  const int wood_before = economy.get(1, Game::Systems::ResourceType::Wood);
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::Trade{.resource = Game::Systems::ResourceType::Wood,
+                           .direction = Game::Command::TradeDirection::Buy});
+  EXPECT_EQ(economy.get(1, Game::Systems::ResourceType::Wood), wood_before);
+
+  EXPECT_EQ(drain(match), 1U);
+  EXPECT_GT(economy.get(1, Game::Systems::ResourceType::Wood), wood_before);
+  EXPECT_LT(economy.get(1, Game::Systems::ResourceType::Gold), 100);
+}
+
+TEST(CommandPipelineTest, TradeWithoutAMarketplaceChangesNothing) {
+  Match match;
+  auto& economy = match.session.economy();
+  economy.add(1, Game::Systems::ResourceType::Gold, 100);
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::AI,
+      1,
+      Game::Command::Trade{.resource = Game::Systems::ResourceType::Wood,
+                           .direction = Game::Command::TradeDirection::Buy});
+  drain(match);
+
+  EXPECT_EQ(economy.get(1, Game::Systems::ResourceType::Gold), 100);
+}
+
+TEST(CommandPipelineTest, CommanderAbilityIsRejectedForAUnitWithoutACommand) {
+  Match match;
+  const EntityID soldier = match.spawn(1, 0.0F, 0.0F);
+
+  const Command command{
+      .source = Source::LocalPlayer,
+      .owner_id = 1,
+      .payload = Game::Command::UseCommanderAbility{
+          .commander = soldier, .ability = Game::Command::CommanderAbility::Rally}};
+
+  EXPECT_FALSE(Game::Command::validate(match.session.world(), command).accepted());
+}
+
+TEST(CommandPipelineTest, RallyOrderRaisesTheCommandersRallyRequest) {
+  Match match;
+  const EntityID commander = match.spawn(1, 0.0F, 0.0F);
+  auto* commander_data = match.session.world()
+                             .get_entity(commander)
+                             ->add_component<Engine::Core::CommanderComponent>();
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::UseCommanderAbility{
+          .commander = commander, .ability = Game::Command::CommanderAbility::Rally});
+  EXPECT_FALSE(commander_data->rally_requested);
+
+  drain(match);
+  EXPECT_TRUE(commander_data->rally_requested);
+}
+
+TEST(CommandPipelineTest, FormationModeTogglesOnlyTheIssuersUnits) {
+  Match match;
+  const EntityID mine = match.spawn(1, 0.0F, 0.0F);
+  const EntityID theirs = match.spawn(2, 3.0F, 3.0F);
+  auto& world = match.session.world();
+  world.get_entity(mine)->add_component<Engine::Core::FormationModeComponent>();
+  world.get_entity(theirs)->add_component<Engine::Core::FormationModeComponent>();
+
+  Game::Command::submit(
+      world,
+      Source::LocalPlayer,
+      1,
+      Game::Command::SetFormationMode{.units = {mine, theirs}, .active = true});
+  drain(match);
+
+  EXPECT_TRUE(world.get_entity(mine)
+                  ->get_component<Engine::Core::FormationModeComponent>()
+                  ->active);
+  EXPECT_FALSE(world.get_entity(theirs)
+                   ->get_component<Engine::Core::FormationModeComponent>()
+                   ->active);
+
+  Game::Command::submit(
+      world,
+      Source::LocalPlayer,
+      1,
+      Game::Command::SetFormationMode{.units = {mine}, .active = false});
+  drain(match);
+  EXPECT_FALSE(world.get_entity(mine)
+                   ->get_component<Engine::Core::FormationModeComponent>()
+                   ->active);
+}
+
+auto spawn_builder(Match& match, int owner_id)
+    -> std::pair<EntityID, Engine::Core::BuilderProductionComponent*> {
+  const EntityID id = match.spawn(owner_id, 0.0F, 0.0F);
+  auto* entity = match.session.world().get_entity(id);
+  entity->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::Builder;
+  entity->add_component<Engine::Core::MovementComponent>();
+  return {id, entity->add_component<Engine::Core::BuilderProductionComponent>()};
+}
+
+TEST(CommandPipelineTest, StartConstructionAssignsTheCrewAndChargesOnce) {
+  Match match;
+  auto [first, first_builder] = spawn_builder(match, 1);
+  auto [second, second_builder] = spawn_builder(match, 1);
+  auto& economy = match.session.economy();
+  economy.add(1, Game::Systems::ResourceType::Wood, 100);
+  economy.add(1, Game::Systems::ResourceType::Stone, 100);
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::StartConstruction{.units = {first, second},
+                                       .construction_type = "defense_tower",
+                                       .site = QVector3D(8.0F, 0.0F, 8.0F),
+                                       .rotation_y = 0.5F});
+  drain(match);
+
+  EXPECT_TRUE(first_builder->has_construction_site);
+  EXPECT_TRUE(second_builder->has_construction_site);
+  EXPECT_EQ(first_builder->product_type, "defense_tower");
+  EXPECT_FLOAT_EQ(first_builder->construction_site_x, 8.0F);
+  EXPECT_FLOAT_EQ(first_builder->construction_site_rotation_y, 0.5F);
+  EXPECT_GT(first_builder->build_time, 0.0F);
+  EXPECT_EQ(economy.get(1, Game::Systems::ResourceType::Wood), 40);
+  EXPECT_EQ(economy.get(1, Game::Systems::ResourceType::Stone), 20);
+}
+
+TEST(CommandPipelineTest, StartConstructionRefusesWhatTheIssuerCannotAfford) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 1);
+  match.session.economy().add(1, Game::Systems::ResourceType::Wood, 5);
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::AI,
+      1,
+      Game::Command::StartConstruction{.units = {builder_id},
+                                       .construction_type = "defense_tower",
+                                       .site = QVector3D(8.0F, 0.0F, 8.0F)});
+  drain(match);
+
+  EXPECT_FALSE(builder->has_construction_site);
+  EXPECT_EQ(match.session.economy().get(1, Game::Systems::ResourceType::Wood), 5);
+}
+
+TEST(CommandPipelineTest, StartHarvestNeedsAResourceTheTerrainKnows) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 1);
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::StartHarvest{.units = {builder_id},
+                                  .construction_type = "cut_tree",
+                                  .resource_target = 4242,
+                                  .site = QVector3D(2.0F, 0.0F, 2.0F)});
+  drain(match);
+
+  EXPECT_FALSE(builder->has_construction_site);
+  EXPECT_FALSE(builder->has_task_target);
+  EXPECT_FALSE(match.session.terrain().is_world_prop_reserved(4242));
+}
+
+auto spawn_structure(Match& match,
+                     int owner_id,
+                     Game::Units::SpawnType type,
+                     int health) -> EntityID {
+  const EntityID id = match.spawn(owner_id, 20.0F, 20.0F);
+  auto* entity = match.session.world().get_entity(id);
+  entity->add_component<Engine::Core::BuildingComponent>();
+  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = type;
+  unit->health = health;
+  return id;
+}
+
+TEST(CommandPipelineTest, RepairPutsTheCrewOnTheStructure) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 1);
+  const EntityID tower =
+      spawn_structure(match, 1, Game::Units::SpawnType::DefenseTower, 40);
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::RepairStructure{.units = {builder_id}, .structure = tower});
+  drain(match);
+
+  EXPECT_TRUE(builder->has_construction_site);
+  EXPECT_EQ(builder->structure_task_entity_id, tower);
+  EXPECT_EQ(builder->product_type,
+            std::string(Game::Systems::k_builder_product_repair));
+}
+
+TEST(CommandPipelineTest, RepairIsRefusedOnSomeoneElsesStructure) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 1);
+  const EntityID tower =
+      spawn_structure(match, 2, Game::Units::SpawnType::DefenseTower, 40);
+
+  const Command command{.source = Source::LocalPlayer,
+                        .owner_id = 1,
+                        .payload = Game::Command::RepairStructure{.units = {builder_id},
+                                                                  .structure = tower}};
+  EXPECT_EQ(Game::Command::validate(match.session.world(), command).rejection,
+            Rejection::NotOwnedBuilding);
+}
+
+TEST(CommandPipelineTest, DeliverySendsOnlyAsManyCiviliansAsTheBarracksCanTake) {
+  Match match;
+  auto& world = match.session.world();
+  const EntityID barracks =
+      spawn_structure(match, 1, Game::Units::SpawnType::Barracks, 100);
+  auto* production =
+      world.get_entity(barracks)->add_component<Engine::Core::ProductionComponent>();
+  production->max_units = 100;
+  production->manpower_available =
+      100 - Game::Systems::k_civilian_delivery_population_grant;
+
+  std::vector<EntityID> civilians;
+  for (int i = 0; i < 3; ++i) {
+    const EntityID id = match.spawn(1, float(i), 0.0F);
+    world.get_entity(id)->get_component<Engine::Core::UnitComponent>()->spawn_type =
+        Game::Units::SpawnType::Civilian;
+    civilians.push_back(id);
+  }
+
+  Game::Command::submit(
+      world,
+      Source::LocalPlayer,
+      1,
+      Game::Command::DeliverCivilians{.units = civilians, .barracks = barracks});
+  drain(match);
+
+  int carrying = 0;
+  for (const EntityID id : civilians) {
+    if (const auto* delivery =
+            world.get_entity(id)
+                ->get_component<Engine::Core::CivilianDeliveryComponent>();
+        delivery != nullptr && delivery->target_barracks_id == barracks) {
+      ++carrying;
+    }
+  }
+  EXPECT_EQ(carrying, 1);
+}
+
+TEST(CommandPipelineTest, WallPlanRaisesSitesChargesWoodAndSeatsTheCrew) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 1);
+  auto& economy = match.session.economy();
+  economy.add(1, Game::Systems::ResourceType::Wood, 500);
+
+  const auto plan = Game::Systems::WallPlanService::plan(
+      match.session.world(),
+      Game::Systems::WallPlanRequest{
+          .owner_id = 1, .anchor = {4, 4}, .target = {12, 4}});
+  ASSERT_GT(plan.valid_count, 0);
+
+  Game::Command::submit(match.session.world(),
+                        Source::LocalPlayer,
+                        1,
+                        Game::Command::PlaceWallPlan{.units = {builder_id},
+                                                     .anchor_x = 4,
+                                                     .anchor_z = 4,
+                                                     .target_x = 12,
+                                                     .target_z = 4});
+  EXPECT_TRUE(match.session.world()
+                  .get_entities_with<Engine::Core::WallConstructionSiteComponent>()
+                  .empty());
+  drain(match);
+
+  EXPECT_EQ(static_cast<int>(
+                match.session.world()
+                    .get_entities_with<Engine::Core::WallConstructionSiteComponent>()
+                    .size()),
+            plan.valid_count);
+  EXPECT_TRUE(builder->has_construction_site);
+  EXPECT_EQ(builder->product_type, "wall_segment");
+  EXPECT_EQ(economy.get(1, Game::Systems::ResourceType::Wood), 500 - plan.wood_cost());
+}
+
+TEST(CommandPipelineTest, WallPlanFromSomeoneElsesBuilderIsIgnored) {
+  Match match;
+  auto [builder_id, builder] = spawn_builder(match, 2);
+  match.session.economy().add(1, Game::Systems::ResourceType::Wood, 500);
+
+  Game::Command::submit(match.session.world(),
+                        Source::LocalPlayer,
+                        1,
+                        Game::Command::PlaceWallPlan{.units = {builder_id},
+                                                     .anchor_x = 4,
+                                                     .anchor_z = 4,
+                                                     .target_x = 12,
+                                                     .target_z = 4});
+  drain(match);
+
+  EXPECT_TRUE(match.session.world()
+                  .get_entities_with<Engine::Core::WallConstructionSiteComponent>()
+                  .empty());
+  EXPECT_FALSE(builder->has_construction_site);
+  EXPECT_EQ(match.session.economy().get(1, Game::Systems::ResourceType::Wood), 500);
+}
+
+TEST(CommandPipelineTest, PlaceBuildingRefusesAUnitTypeThatIsNotAStructure) {
+  Match match;
+  match.session.economy().add(1, Game::Systems::ResourceType::Wood, 500);
+  const auto before =
+      match.session.world().get_entities_with<Engine::Core::UnitComponent>().size();
+
+  Game::Command::submit(
+      match.session.world(),
+      Source::LocalPlayer,
+      1,
+      Game::Command::PlaceBuilding{.building_type = "archer",
+                                   .position = QVector3D(3.0F, 0.0F, 3.0F)});
+  drain(match);
+
+  EXPECT_EQ(
+      match.session.world().get_entities_with<Engine::Core::UnitComponent>().size(),
+      before);
+  EXPECT_EQ(Game::Systems::StructurePlacementService::ruling(
+                match.session.world(), 1, "archer", QVector3D(3.0F, 0.0F, 3.0F)),
+            Game::Systems::PlacementRuling::UnknownStructure);
 }
 
 } // namespace

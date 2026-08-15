@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "game/systems/default_content.h"
 #include "game/systems/nation_loader.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
@@ -291,7 +292,7 @@ TEST(NationLoader, DefaultNationRemainsRomanRepublic) {
   auto& registry = Game::Systems::NationRegistry::instance();
   registry.clear();
   registry.clear_player_assignments();
-  registry.initialize_defaults();
+  Game::Systems::initialize_default_content(registry);
 
   EXPECT_EQ(registry.default_nation_id(), Game::Systems::NationID::RomanRepublic);
 }

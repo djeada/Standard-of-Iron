@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <QString>
 
 #include <cstdint>
@@ -70,5 +71,16 @@ enum class ArmyRole : std::uint8_t {
 
 [[nodiscard]] auto army_role_to_string(ArmyRole role) -> const char*;
 [[nodiscard]] auto try_parse_army_role(const QString& value) -> std::optional<ArmyRole>;
+
+struct TroopFormationProfile {
+  RoleTagSet roles{0U};
+  std::vector<ArmyRole> army_roles;
+  std::string unit_layout;
+  std::string defensive_layout;
+  std::string marching_layout;
+};
+
+[[nodiscard]] auto parse_troop_formation_profile(const QJsonObject& formation_object,
+                                                 TroopFormationProfile& out) -> bool;
 
 } // namespace Game::Formation

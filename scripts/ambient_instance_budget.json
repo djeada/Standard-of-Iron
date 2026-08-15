@@ -1,0 +1,17 @@
+{
+  "app/controllers": 1,
+  "app/core": 92,
+  "game/command": 5,
+  "game/core": 1,
+  "game/formation": 4,
+  "game/map": 13,
+  "game/save": 4,
+  "game/systems": 113,
+  "game/units": 7,
+  "game/visuals": 1,
+  "game/wildlife": 3,
+  "render": 1,
+  "tools/arena": 45,
+  "tools/balance_sim": 4,
+  "tools/content_validator": 3
+}

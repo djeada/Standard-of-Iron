@@ -150,7 +150,6 @@ TEST(SnapshotContractTest, SessionStoresAreAllAccountedFor) {
                             "session.visibility",
                             "session.troop_counts",
                             "session.building_collision",
-                            "session.marketplace",
                             "session.commands"}) {
     EXPECT_NE(Game::Save::find(store), nullptr) << store << " is unclassified";
   }

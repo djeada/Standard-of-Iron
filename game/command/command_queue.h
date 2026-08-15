@@ -42,6 +42,10 @@ public:
     m_rejection_observer = std::move(observer);
   }
 
+  void set_replay_only(bool replay_only) { m_replay_only = replay_only; }
+  [[nodiscard]] auto replay_only() const -> bool { return m_replay_only; }
+  [[nodiscard]] auto dropped_count() const -> std::uint64_t { return m_dropped; }
+
   [[nodiscard]] auto accepted_count() const -> std::uint64_t { return m_accepted; }
   [[nodiscard]] auto rejected_count() const -> std::uint64_t { return m_rejected; }
 
@@ -52,6 +56,8 @@ private:
   RejectionObserver m_rejection_observer;
   std::uint64_t m_accepted = 0;
   std::uint64_t m_rejected = 0;
+  std::uint64_t m_dropped = 0;
+  bool m_replay_only = false;
 };
 
 void submit(Engine::Core::World& world, Source source, int owner_id, Payload payload);

@@ -63,7 +63,13 @@ private:
     std::unique_ptr<AI::AIBehaviorRegistry> behavior_registry;
     std::unique_ptr<AI::AIWorker> worker;
     float update_timer = 0.0F;
+
+    bool job_pending = false;
+    std::uint64_t job_due_update = 0;
   };
+
+  static constexpr std::uint64_t k_decision_latency_updates = 6;
+  std::uint64_t m_update_count = 0;
 
   std::vector<AIInstance> m_ai_instances;
 

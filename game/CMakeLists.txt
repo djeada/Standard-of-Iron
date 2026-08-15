@@ -1,4 +1,37 @@
-# Core ECS library (moved from engine/core to game/core)
+# The simulation, one static library per domain.
+#
+# Every target below is a layer, and the link lines are the layering: a target
+# links the domains it is allowed to use and nothing else, so a file that starts
+# including a header from a domain above it fails to link instead of quietly
+# adding an edge. scripts/module_rules.json is the same map at header
+# granularity -- it also separates the modules that still share one archive
+# (unit_catalog / registries / world in soi_world; simulation / session in
+# game_sim) -- and scripts/check-modules.py enforces it on every build.
+#
+# Bottom-up:
+#
+#   engine_core       ECS, the vocabulary types, the ambient session binding
+#   soi_world         what a unit type is, the registries, terrain and maps
+#   soi_navigation    nav grid, pathfinding, spatial index, walls and gates
+#   soi_units         the unit and building factories, the map-to-world spawner
+#   soi_formations    unit layouts, army formations, structure/formation geometry
+#   soi_movement      movement, local avoidance, order and command services
+#   soi_economy       production, gathering, delivery, capture, the marketplace
+#   soi_combat        every damage pipeline, projectiles, healing, guard/patrol
+#   soi_wildlife      the ambient creatures
+#   game_sim          the session, the command pipeline, and the systems that
+#                     compose a match (victory, cleanup, selection, settlement)
+#
+# game_sim links all of them PUBLIC, so linking `game_sim` still means "the
+# whole simulation kernel" -- the name every test and tool already spells.
+
+# ---- engine_core: the ECS and everything every layer names -------------------
+#
+# The vocabulary types (formation roles, army formation types) and the
+# simulation clock live here because every layer above names them and none of
+# them names anything above. The ambient session binding is here for the same
+# reason: the registries define their `instance()` accessors against it, and
+# the session module fills it in.
 add_library(
     engine_core
     STATIC
@@ -6,9 +39,15 @@ add_library(
     core/component.cpp
     core/system.cpp
     core/world.cpp
-    systems/unit_activity.cpp
+    core/ambient_session.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp
+    session/simulation_clock.cpp
+    systems/unit_activity.cpp
+    util/asset_text.cpp
+    util/json_vec_utils.cpp
+    formation/formation_roles.cpp
+    formation/army_formation_types.cpp
 )
 
 target_include_directories(engine_core PUBLIC .)
@@ -32,52 +71,181 @@ add_library(
 )
 target_include_directories(accessibility_runtime PUBLIC ..)
 
-# The simulation kernel.
+# ---- soi_world: catalogues, registries, terrain -------------------------------
 #
-# Everything a match needs to run with nothing on screen: the ECS systems, the
-# session, the command pipeline, terrain, units and world serialisation.
-#
-# It deliberately does NOT link scene_core or render_gl. That is the boundary
-# the build enforces: if a gameplay file starts needing a camera, this target
-# stops linking rather than the dependency slipping in unnoticed. Headless
-# balance runs, deterministic replay and a dedicated server all consume this
-# target alone.
-#
-# Nor does it contain the AI, the mission and campaign loaders, the save stack
-# or the system composition root. Those are separate targets below, stacked on
-# top of this one, so the kernel cannot call into them: `game_sim` links none of
-# them, and a kernel file that starts including `ai_system.h` or
-# `save_load_service.h` fails to link rather than quietly adding an edge.
-#
-# What remains here is one strongly connected component -- combat, movement,
-# navigation, formations, economy, units, world and wildlife all reach into each
-# other, so CMake cannot separate them yet. `scripts/check-modules.py` declares
-# the intended module map over those directories and holds the current
-# violations at a frozen count that may only shrink; each module that reaches
-# zero can be lifted out into its own target the same way the five below were.
+# What a unit type *is*, who owns what, and the ground it stands on. Three
+# modules share this archive -- unit_catalog, registries, world -- because
+# nothing above needs them apart; check-modules.py keeps their internal order.
 #
 # Qt::Gui is present only for the value types (QVector3D, QImage); it pulls in
-# no windowing or GL.
+# no windowing or GL. Qt::Sql is not linked here or anywhere below
+# soi_persistence.
 add_library(
-    game_sim
+    soi_world
     STATIC
-    command/command.cpp
-    command/command_dispatcher.cpp
-    command/command_queue.cpp
-    command/command_system.cpp
-    command/command_validator.cpp
-    util/asset_text.cpp
-    util/json_vec_utils.cpp
-    session/session_context.cpp
-    session/ambient_registries.cpp
-    session/simulation_clock.cpp
+    units/commander_catalog.cpp
+    units/troop_catalog.cpp
+    units/troop_catalog_loader.cpp
+    visuals/building_asset_key.cpp
+    visuals/visual_catalog.cpp
+    systems/building_collision_registry.cpp
+    systems/building_line_of_sight.cpp
+    systems/global_stats_registry.cpp
+    systems/nation_loader.cpp
+    systems/nation_registry.cpp
+    systems/owner_queries.cpp
+    systems/owner_registry.cpp
     systems/player_resource_registry.cpp
+    systems/run_stamina.cpp
+    systems/troop_count_registry.cpp
+    systems/troop_profile_service.cpp
+    map/environment_lighting.cpp
+    map/explored_mask_codec.cpp
+    map/map_loader.cpp
+    map/procedural_tree_generation.cpp
+    map/scatter/spawn_validator.cpp
+    map/terrain.cpp
+    map/terrain_landform.cpp
+    map/terrain_service.cpp
+    map/terrain_topology_audit.cpp
+    map/undead_shrine_placement.cpp
+    map/visibility_service.cpp
+    wildlife/wildlife_config.cpp
+    wildlife/wildlife_placement.cpp
+)
+target_include_directories(soi_world PUBLIC .)
+target_link_libraries(
+    soi_world
+    PUBLIC
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        engine_core
+        animation_core
+        accessibility_runtime
+)
+
+# ---- soi_navigation: where a unit can stand and how it gets there -----------
+#
+# The grid, the search, the spatial index, and the walls and gates that carve
+# the grid. It knows terrain and the collision registry; it does not know units
+# or formations, which is why the unit factories can register walls with it.
+add_library(
+    soi_navigation
+    STATIC
+    systems/nav_grid.cpp
+    systems/pathfinding.cpp
+    systems/spatial_grid.cpp
+    systems/gate_service.cpp
+    systems/wall_network_service.cpp
+    systems/terrain_alignment_system.cpp
+)
+target_include_directories(soi_navigation PUBLIC .)
+target_link_libraries(soi_navigation PUBLIC soi_world)
+
+# ---- soi_units: the factories ------------------------------------------------
+#
+# How each unit and building comes into the world, and the spawner that turns a
+# loaded map into entities. A factory places things; it does not order them
+# about, so nothing here links movement or combat.
+add_library(
+    soi_units
+    STATIC
+    units/unit.cpp
+    units/archer.cpp
+    units/swordsman.cpp
+    units/skeleton_swordsman.cpp
+    units/skeleton_archer.cpp
+    units/grave_priest.cpp
+    units/horse_swordsman.cpp
+    units/horse_archer.cpp
+    units/horse_spearman.cpp
+    units/spearman.cpp
+    units/healer.cpp
+    units/builder.cpp
+    units/catapult.cpp
+    units/ballista.cpp
+    units/elephant.cpp
+    units/civilian.cpp
+    units/building_spawn_setup.cpp
+    units/factory.cpp
+    units/barracks.cpp
+    units/defense_tower.cpp
+    units/home.cpp
+    units/marketplace.cpp
+    units/temple.cpp
+    units/wall_segment.cpp
+    units/wall_gate.cpp
+    units/sheep.cpp
+    units/wolf.cpp
+    units/wildlife_unit_common.cpp
+    map/map_transformer.cpp
+)
+target_include_directories(soi_units PUBLIC .)
+target_link_libraries(soi_units PUBLIC soi_navigation)
+
+# ---- soi_formations: layouts and army formations -----------------------------
+#
+# Soldier offsets inside a troop, multi-unit deployment, and the geometry that
+# combat and movement both read (formation frontage, structure contact). The
+# formation runtime *plans*; when a plan needs units moved it raises a flag the
+# movement layer consumes, so nothing here links movement.
+add_library(
+    soi_formations
+    STATIC
+    formation/troop_role_registry.cpp
+    formation/formation_doctrine.cpp
+    formation/unit_layout.cpp
+    formation/unit_layout_resolver.cpp
+    formation/army_formation_planner.cpp
+    formation/army_formation_registry.cpp
+    formation/army_formation_service.cpp
+    formation/formation_data_loader.cpp
+    formation/unit_layout_state_system.cpp
+    systems/cohort_system.cpp
+    systems/defensive_unit_layout_service.cpp
+    systems/formation_combat_geometry.cpp
+    systems/combat_system/structure_combat.cpp
+)
+target_include_directories(soi_formations PUBLIC .)
+target_link_libraries(soi_formations PUBLIC soi_units)
+
+# ---- soi_movement: moving units and issuing them orders ----------------------
+add_library(
+    soi_movement
+    STATIC
     systems/order_service.cpp
+    systems/command_service.cpp
     systems/movement_system.cpp
+    systems/movement_orders.cpp
+    systems/local_avoidance_system.cpp
+    systems/formation_move_dispatch_system.cpp
+)
+target_include_directories(soi_movement PUBLIC .)
+target_link_libraries(soi_movement PUBLIC soi_formations)
+
+# ---- soi_economy: production, gathering, delivery, capture, trade -----------
+add_library(
+    soi_economy
+    STATIC
+    systems/construction_cost_catalog.cpp
+    systems/production_service.cpp
+    systems/production_system.cpp
+    systems/civilian_delivery_system.cpp
+    systems/resource_delivery_system.cpp
+    systems/gather_loop_system.cpp
+    systems/capture_system.cpp
+    systems/marketplace_system.cpp
     systems/nation_collapse_service.cpp
+)
+target_include_directories(soi_economy PUBLIC .)
+target_link_libraries(soi_economy PUBLIC soi_movement)
+
+# ---- soi_combat: every way a unit hurts or heals another --------------------
+add_library(
+    soi_combat
+    STATIC
     systems/combat_system.cpp
     systems/combat_system/combat_utils.cpp
-    systems/combat_system/structure_combat.cpp
     systems/combat_system/structure_fire.cpp
     systems/combat_system/damage_application.cpp
     systems/combat_system/damage_processor.cpp
@@ -101,7 +269,6 @@ add_library(
     systems/combat_actions/combat_action_service.cpp
     systems/combat_actions/projectile_release.cpp
     systems/combat_actions/weapon_trace.cpp
-    systems/cleanup_system.cpp
     systems/rpg_combat_system/rpg_bow_aim.cpp
     systems/rpg_combat_system/rpg_bow_draw.cpp
     systems/rpg_combat_system/rpg_bow_shot.cpp
@@ -112,18 +279,8 @@ add_library(
     systems/rpg_combat_system/rpg_targeting.cpp
     systems/patrol_system.cpp
     systems/guard_system.cpp
-    systems/pathfinding.cpp
-    systems/spatial_grid.cpp
-    systems/local_avoidance_system.cpp
     systems/engagement_slot_system.cpp
     systems/target_commitment_system.cpp
-    systems/cohort_system.cpp
-    systems/building_collision_registry.cpp
-    systems/building_line_of_sight.cpp
-    systems/wall_network_service.cpp
-    systems/gate_service.cpp
-    systems/gate_system.cpp
-    systems/selection_system.cpp
     systems/attack_range.cpp
     systems/attack_targeting.cpp
     systems/arrow_system.cpp
@@ -132,115 +289,69 @@ add_library(
     systems/projectile_system.cpp
     systems/arrow_projectile.cpp
     systems/stone_projectile.cpp
-    systems/command_service.cpp
-    systems/nav_grid.cpp
-    systems/movement_orders.cpp
     systems/commander_system.cpp
-    systems/construction_cost_catalog.cpp
-    systems/production_service.cpp
-    systems/production_system.cpp
-    systems/civilian_delivery_system.cpp
-    systems/resource_delivery_system.cpp
-    systems/gather_loop_system.cpp
-    systems/capture_system.cpp
-    systems/terrain_alignment_system.cpp
     systems/healing_rules.cpp
     systems/healing_system.cpp
     systems/healing_beam.cpp
     systems/healing_beam_system.cpp
-    systems/owner_registry.cpp
-    systems/owner_queries.cpp
-    systems/troop_count_registry.cpp
-    systems/marketplace_system.cpp
-    systems/global_stats_registry.cpp
-    systems/victory_service.cpp
-    systems/undead_awakening_system.cpp
-    systems/nation_registry.cpp
-    systems/nation_loader.cpp
-    systems/defensive_unit_layout_service.cpp
-    systems/formation_combat_geometry.cpp
-    formation/formation_roles.cpp
-    formation/army_formation_types.cpp
-    formation/troop_role_registry.cpp
-    formation/formation_doctrine.cpp
-    formation/unit_layout.cpp
-    formation/unit_layout_resolver.cpp
-    formation/army_formation_planner.cpp
-    formation/army_formation_registry.cpp
-    formation/army_formation_service.cpp
-    formation/formation_data_loader.cpp
-    formation/unit_layout_state_system.cpp
-    systems/troop_profile_service.cpp
-    systems/rain_manager.cpp
-    systems/showcase_routine_system.cpp
     systems/stamina_system.cpp
-    map/map_loader.cpp
-    map/procedural_tree_generation.cpp
-    map/map_transformer.cpp
-    map/environment_lighting.cpp
-    map/scatter/spawn_validator.cpp
-    map/terrain.cpp
-    map/terrain_landform.cpp
-    map/terrain_service.cpp
-    map/undead_shrine_placement.cpp
-    map/terrain_topology_audit.cpp
-    map/visibility_service.cpp
-    map/explored_mask_codec.cpp
-    visuals/building_asset_key.cpp
-    visuals/visual_catalog.cpp
-    units/unit.cpp
-    units/archer.cpp
-    units/swordsman.cpp
-    units/skeleton_swordsman.cpp
-    units/skeleton_archer.cpp
-    units/grave_priest.cpp
-    units/horse_swordsman.cpp
-    units/horse_archer.cpp
-    units/horse_spearman.cpp
-    units/spearman.cpp
-    units/healer.cpp
-    units/builder.cpp
-    units/catapult.cpp
-    units/ballista.cpp
-    units/elephant.cpp
-    units/civilian.cpp
-    units/commander_catalog.cpp
-    units/troop_catalog.cpp
-    units/troop_catalog_loader.cpp
-    units/building_spawn_setup.cpp
-    units/factory.cpp
-    units/barracks.cpp
-    units/defense_tower.cpp
-    units/home.cpp
-    units/marketplace.cpp
-    units/temple.cpp
-    units/wall_segment.cpp
-    units/wall_gate.cpp
-    units/sheep.cpp
-    units/wolf.cpp
-    units/wildlife_unit_common.cpp
-    systems/home_system.cpp
-    systems/settlement_life_system.cpp
-    wildlife/wildlife_config.cpp
-    wildlife/wildlife_placement.cpp
+)
+target_include_directories(soi_combat PUBLIC .)
+target_link_libraries(soi_combat PUBLIC soi_economy)
+
+# ---- soi_wildlife: the ambient creatures -------------------------------------
+add_library(
+    soi_wildlife
+    STATIC
     wildlife/wildlife_terrain_probe.cpp
     wildlife/wildlife_threats.cpp
     wildlife/bird_flock.cpp
     wildlife/wildlife_system.cpp
     wildlife/nature_ai.cpp
 )
+target_include_directories(soi_wildlife PUBLIC .)
+target_link_libraries(soi_wildlife PUBLIC soi_combat)
+
+# ---- game_sim: the session and the systems that compose a match --------------
+#
+# The top of the kernel: the session context that owns every per-match service,
+# the command pipeline that every order -- player, AI, script -- goes through,
+# and the systems that are about the match rather than any one domain. It links
+# everything below, so `game_sim` still means "the whole simulation kernel".
+#
+# It deliberately does NOT link scene_core or render_gl. Headless balance runs,
+# deterministic replay and a dedicated server all consume this target alone.
+# Nor does it contain the AI, the mission and campaign loaders, the save stack
+# or the system composition root: those are separate targets below, stacked on
+# top of this one, so the kernel cannot call into them.
+add_library(
+    game_sim
+    STATIC
+    command/command.cpp
+    command/command_codec.cpp
+    command/command_dispatcher.cpp
+    command/command_queue.cpp
+    command/command_system.cpp
+    command/command_validator.cpp
+    command/replay.cpp
+    session/session_context.cpp
+    session/world_digest.cpp
+    systems/default_content.cpp
+    systems/structure_placement_service.cpp
+    systems/wall_plan_service.cpp
+    systems/cleanup_system.cpp
+    systems/gate_system.cpp
+    systems/home_system.cpp
+    systems/rain_manager.cpp
+    systems/selection_system.cpp
+    systems/settlement_life_system.cpp
+    systems/showcase_routine_system.cpp
+    systems/undead_awakening_system.cpp
+    systems/victory_service.cpp
+)
 
 target_include_directories(game_sim PUBLIC .)
-target_link_libraries(
-    game_sim
-    PUBLIC
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Gui
-        Qt${QT_VERSION_MAJOR}::Sql
-        engine_core
-        animation_core
-        accessibility_runtime
-)
+target_link_libraries(game_sim PUBLIC soi_wildlife soi_combat soi_economy soi_movement)
 
 # engine_core once linked game_sim as well, in a declared cycle.
 #
@@ -258,15 +369,17 @@ target_link_libraries(
 #     observer that SessionContext installs -- World already had the mechanism;
 #   * serialization moved to soi_persistence, which is what it always was.
 #
-# `nm -u libengine_core.a` now names nothing from Game:: outside engine_core
-# itself, so the edge is gone rather than merely discouraged.
+# The same shape came back once more when the registries were split from the
+# session: their `instance()` accessors were defined in game/session/, so the
+# registries archive needed the session archive to link. The accessors now
+# resolve through game/core/ambient_session.h, a leaf the session fills in.
+# `nm -u` on any archive below game_sim names nothing from the archives above.
 
 # ---------------------------------------------------------------------------
-# Domains lifted out of the kernel.
+# Domains stacked on the kernel.
 #
-# Each of these was measured to have no path back into it from `game_sim`: the
-# kernel does not include a single one of their headers. Making each its own
-# archive turns that measurement into a build rule -- the day a kernel file
+# None of these is reachable from `game_sim`: the kernel does not include a
+# single one of their headers, and does not link them, so the day a kernel file
 # calls the AI or the save stack, the kernel stops linking.
 #
 # They stack, they do not interleave:
@@ -318,7 +431,8 @@ add_library(
     systems/save_storage.cpp
 )
 target_include_directories(soi_persistence PUBLIC .)
-target_link_libraries(soi_persistence PUBLIC game_sim soi_campaign)
+# The save database is the only thing in the simulation stack that speaks SQL.
+target_link_libraries(soi_persistence PUBLIC Qt${QT_VERSION_MAJOR}::Sql game_sim soi_campaign)
 
 # The computer opponent. It reads a snapshot of the world and emits commands
 # through the same queue a player's clicks go through, which is why it can sit

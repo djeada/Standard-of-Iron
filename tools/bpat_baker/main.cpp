@@ -19,6 +19,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_writer.h"
 #include "animation/clip_manifest.h"
+#include "game/session/session_context.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/pipeline/preparation_common.h"
@@ -283,6 +284,9 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
 } // namespace
 
 int main(int argc, char** argv) {
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
   static_assert(Render::Creature::k_humanoid_idle_clip == 0U);
   static_assert(Render::Creature::k_humanoid_idle_squat_clip == 1U);
   static_assert(Render::Creature::k_humanoid_idle_jump_clip == 2U);

@@ -3,8 +3,19 @@
 #include <cstdint>
 #include <functional>
 #include <iosfwd>
+#include <memory>
+#include <optional>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
+
+#include "../units/factory.h"
+#include "../units/unit.h"
+
+namespace Engine::Core {
+class World;
+}
 
 namespace Game::BattlefieldCapture {
 
@@ -19,12 +30,27 @@ enum class ScenarioId {
   BotSkirmish,
 };
 
+struct ScenarioMatch {
+  Engine::Core::World* world = nullptr;
+  std::unique_ptr<Engine::Core::World> owned_world;
+  Game::Units::UnitFactoryRegistry factories;
+  std::vector<std::unique_ptr<Game::Units::Unit>> unit_handles;
+  std::vector<std::uint64_t> player_units;
+  std::vector<std::uint64_t> enemy_units;
+  std::unordered_map<std::uint64_t, std::pair<std::uint64_t, int>> slot_assignments;
+};
+
+auto build_scenario(ScenarioId id,
+                    Engine::Core::World& into) -> std::unique_ptr<ScenarioMatch>;
+
 struct RunnerConfig {
   ScenarioId scenario{ScenarioId::InfantryApproach20v20};
   std::uint64_t seed{1};
   double fixed_step_seconds{1.0 / 30.0};
   double duration_seconds{60.0};
   int capture_render_fps{30};
+
+  std::optional<std::uint64_t> snapshot_tick;
 };
 
 struct TickRecord {
@@ -100,7 +126,22 @@ struct CaptureResult {
   PerformanceCounters performance;
   QualityMetrics quality;
   std::uint64_t deterministic_digest{};
+
+  std::vector<std::uint64_t> tick_digests;
+  std::string world_snapshot;
 };
+
+struct DeterminismReport {
+  std::optional<std::uint64_t> divergent_tick;
+  int divergent_run{-1};
+  std::string first_state;
+  std::string other_state;
+  int runs{0};
+  [[nodiscard]] auto deterministic() const -> bool {
+    return !divergent_tick.has_value();
+  }
+};
+auto check_determinism(const RunnerConfig& config, int runs) -> DeterminismReport;
 
 using TickObserver = std::function<void(const TickRecord&)>;
 

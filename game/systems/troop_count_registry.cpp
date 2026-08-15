@@ -1,5 +1,6 @@
 #include "troop_count_registry.h"
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/troop_config.h"
@@ -7,6 +8,10 @@
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
+
+auto TroopCountRegistry::instance() -> TroopCountRegistry& {
+  return *Game::Session::ambient_services().troop_counts;
+}
 
 void TroopCountRegistry::initialize() {
   m_unit_spawned_subscription =

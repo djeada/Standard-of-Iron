@@ -13,6 +13,7 @@
 #include "balance_fixture.h"
 #include "balance_report.h"
 #include "battle_simulation.h"
+#include "game/session/session_context.h"
 
 namespace {
 
@@ -50,6 +51,9 @@ auto write_file(const QString& path, const QByteArray& contents) -> bool {
 auto main(int argc, char** argv) -> int {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QCoreApplication app(argc, argv);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
   QCoreApplication::setApplicationName(QStringLiteral("balance_sim"));
 
   QCommandLineParser parser;

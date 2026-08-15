@@ -7,6 +7,7 @@
 #include "core/event_manager.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
+#include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -79,7 +80,7 @@ protected:
 
     auto& nation_registry = Game::Systems::NationRegistry::instance();
     nation_registry.clear();
-    nation_registry.initialize_defaults();
+    Game::Systems::initialize_default_content(nation_registry);
     nation_registry.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
     nation_registry.set_player_nation(2, Game::Systems::NationID::Carthage);
     nation_registry.set_player_nation(3, Game::Systems::NationID::RomanRepublic);

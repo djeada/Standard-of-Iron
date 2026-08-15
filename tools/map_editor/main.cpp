@@ -3,6 +3,7 @@
 #include <QTimer>
 
 #include "editor_window.h"
+#include "game/session/session_context.h"
 #include "ui/preferences.h"
 #include "ui/theme.h"
 #include "ui/widget_shell.h"
@@ -10,6 +11,9 @@
 auto main(int argc, char* argv[]) -> int {
 
   QApplication app(argc, argv);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
   QApplication::setApplicationName("Standard of Iron Map Editor");
   QApplication::setApplicationVersion("1.0");
 

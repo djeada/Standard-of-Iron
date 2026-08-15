@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "game/systems/nation_id.h"
+#include "game/systems/wall_plan_service.h"
 
 namespace Engine::Core {
 class World;
@@ -100,16 +101,6 @@ signals:
   void construction_placement_rejected(const QString& reason);
 
 private:
-  struct WallPlacementSegment {
-    int grid_x{0};
-    int grid_z{0};
-    QVector3D world_position;
-    bool valid{false};
-    std::string failure_reason;
-    std::uint8_t connection_mask{0};
-    float rotation_y{0.0F};
-  };
-
   std::vector<Engine::Core::EntityID> collect_available_builders();
   QVector3D calculate_builder_center_position(
       const std::vector<Engine::Core::EntityID>& builder_ids);
@@ -121,7 +112,6 @@ private:
                                         int valid_segment_count,
                                         int total_cost);
   void clear_preview_entities();
-  void clear_builder_preview_sites();
   void update_non_wall_construction_preview(const QVector3D& world_position);
   void clear_non_wall_construction_preview();
   void rebuild_non_wall_preview_entity(const QVector3D& world_position);
@@ -165,6 +155,7 @@ private:
   bool m_wall_drag_active = false;
   bool m_wall_drag_anchor_set = false;
   QVector3D m_wall_drag_anchor_world;
-  std::vector<WallPlacementSegment> m_wall_preview_segments;
+  Game::Systems::WallPlanRequest m_wall_plan_request;
+  std::vector<Game::Systems::PlannedWallSegment> m_wall_preview_segments;
   std::vector<Engine::Core::EntityID> m_preview_entity_ids;
 };

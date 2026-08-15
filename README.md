@@ -225,9 +225,14 @@ application concerns:
 ```text
 animation / scene
         │
-   engine_core        ECS, 64-bit generational entity handles, serialization
+   engine_core        ECS, 64-bit generational entity handles, ambient session
         │
-     game_sim         fixed-tick simulation, commands, AI, combat, economy
+   soi_world … soi_wildlife   one static library per domain: catalogues and
+        │                     registries, navigation, units, formations,
+        │                     movement, economy, combat, wildlife
+        │
+     game_sim         the session, the command pipeline, match-level systems
+       ├── soi_ai / soi_missions / soi_campaign / soi_persistence / soi_runtime
        ├── game_view  picking, camera-facing services, minimap
        └── render_gl  OpenGL and CPU rendering backends
                 │
@@ -236,7 +241,9 @@ animation / scene
         standard_of_iron  Qt/QML executable
 ```
 
-The headless `game_sim` target links no renderer. Player input, AI, and scripts
+Each kernel library links only the layers below it, so a domain reaching for
+one above it fails to link (`docs/ARCHITECTURE.md` has the full map). The
+headless `game_sim` target links no renderer. Player input, AI, and scripts
 submit typed orders to the same `CommandQueue`; a fixed simulation tick
 validates and dispatches those orders before movement and combat. The queue also
 exposes the accepted command stream needed by a future replay recorder.
@@ -281,6 +288,14 @@ The repository includes more than the game executable:
   contracts before packaging.
 - **Asset pipelines** — generate campaign geography, creature animation data,
   synthesized interface cues, and audio derived from documented CC0 sources.
+- **Replays and the headless simulation** — `standard_of_iron --record-replay
+match.soireplay` writes every accepted command and a periodic world digest;
+  `--replay match.soireplay --replay-verify` plays it back with local input and
+  the AI shut out and exits non-zero at the first tick the simulation
+  diverges. `soi_headless` runs the same simulation with no window (record,
+  replay, verify) — the dedicated-server shape of the game — and
+  `battlefield_gameplay_verifier --determinism-runs N` runs every scenario N
+  times and names the tick and entity that differ.
 
 The test suite contains roughly 2,700 GoogleTest cases split across five
 binaries by link surface, plus a Qt Quick design-system suite. CI adds strict

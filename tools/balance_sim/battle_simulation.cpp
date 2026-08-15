@@ -26,6 +26,7 @@
 #include "game/systems/combat_system/mounted_charge_processor.h"
 #include "game/systems/command_service.h"
 #include "game/systems/commander_system.h"
+#include "game/systems/default_content.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_system.h"
@@ -383,7 +384,7 @@ void initialize_simulation_environment() {
 
   load_creature_pose_assets();
 
-  Game::Systems::NationRegistry::instance().initialize_defaults();
+  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
   Game::Units::register_built_in_units(factory_registry());
 }
 

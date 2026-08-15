@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "campaign_manager.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
@@ -236,9 +237,12 @@ void order_wave_advance(Engine::Core::World& world,
     return;
   }
 
-  Game::Systems::CommandService::MoveOptions options;
-  options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
-  Game::Systems::CommandService::move_units(world, units, plan.positions, options);
+  Game::Command::Move move;
+  move.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  move.units = units;
+  move.targets = plan.positions;
+  Game::Command::submit(
+      world, Game::Command::Source::Script, wave.owner_id, std::move(move));
 }
 
 } // namespace

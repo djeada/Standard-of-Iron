@@ -17,6 +17,7 @@
 #include <cmath>
 
 #include "arena_scenarios.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/units/troop_type.h"
@@ -435,7 +436,7 @@ void UnitPanel::populate_nation_options() {
 
   QString const preferred = selected_nation_id();
   auto& registry = Game::Systems::NationRegistry::instance();
-  registry.initialize_defaults();
+  Game::Systems::initialize_default_content(registry);
   const auto& nations = registry.get_all_nations();
 
   m_nation_box->clear();
