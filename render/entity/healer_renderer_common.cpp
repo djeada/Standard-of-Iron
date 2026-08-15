@@ -264,11 +264,8 @@ void register_healer_renderer_profile(
   for (const auto& renderer : renderers) {
     auto renderer_instance = std::make_shared<HealerRenderer>(
         profile, renderer.renderer_key, renderer.style_key, renderer.creature_asset_id);
-    registry.register_renderer(
-        std::string(renderer.renderer_key),
-        [renderer_instance](const DrawContext& ctx, ISubmitter& out) {
-          renderer_instance->render(ctx, out);
-        });
+    register_humanoid_renderer(
+        registry, std::string(renderer.renderer_key), renderer_instance);
   }
 }
 

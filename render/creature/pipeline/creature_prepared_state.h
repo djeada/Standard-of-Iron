@@ -86,8 +86,6 @@ struct HumanoidLodStateInputs {
   const Render::GL::DrawContext* ctx{nullptr};
   QVector3D soldier_world_pos{};
   CreatureLodConfig config{};
-  std::uint32_t frame_index{0U};
-  std::uint32_t instance_seed{0U};
 };
 
 struct PreparedHumanoidShadowState {

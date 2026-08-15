@@ -10,6 +10,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -1171,12 +1172,8 @@ public:
 
 void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
-  static BuilderRenderer const renderer;
-  registry.register_renderer("troops/carthage/builder",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static BuilderRenderer const r;
-                               r.render(ctx, out);
-                             });
+  register_humanoid_renderer(
+      registry, "troops/carthage/builder", std::make_shared<BuilderRenderer const>());
 
   auto& ar = Render::GL::RenderArchetypeRegistry::instance();
   ar.register_archetype("carthage_headwrap",
@@ -1195,12 +1192,8 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
-  static CivilianRenderer const renderer;
-  registry.register_renderer("troops/carthage/civilian",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static CivilianRenderer const r;
-                               r.render(ctx, out);
-                             });
+  register_humanoid_renderer(
+      registry, "troops/carthage/civilian", std::make_shared<CivilianRenderer const>());
 }
 
 } // namespace Render::GL::Carthage

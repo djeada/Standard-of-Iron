@@ -331,6 +331,15 @@ struct UnitSubmitContext {
   bool visibility_enabled{false};
 };
 
+struct UnitDrawPlan {
+  const RenderFunc* fn{nullptr};
+  const IParallelPreparer* preparer{nullptr};
+  DrawContext draw_ctx{};
+  bool use_batching{false};
+  bool tier_is_minimal{false};
+  int lod_tier{0};
+};
+
 namespace {
 constexpr float k_selection_marker_thickness = 0.11F;
 constexpr float k_selection_marker_min_thickness = 0.05F;
@@ -730,9 +739,12 @@ void Renderer::collect_non_unit_entries(
   }
 }
 
-void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext& ctx) {
-  if (!entry.in_frustum || !entry.fog_visible) {
-    return;
+auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
+                               const UnitSubmitContext& ctx) -> UnitDrawPlan {
+  UnitDrawPlan plan{};
+  if (!entry.in_frustum || !entry.fog_visible || entry.cache == nullptr ||
+      m_entity_registry == nullptr) {
+    return plan;
   }
 
   bool const should_update_temporal =
@@ -743,115 +755,140 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
                                                                     entry.combat_active,
                                                                     entry.distance_sq);
 
-  if (entry.cache == nullptr) {
-    return;
-  }
   UnitRenderCache::update_model_matrix(*entry.cache);
   const QMatrix4x4& model_matrix = entry.cache->model_matrix;
 
-  bool drawn_by_registry = false;
-  bool tier_is_minimal = false;
-  if (m_entity_registry) {
-    auto const* fn = m_entity_registry->get(entry.renderer_handle);
-    if (fn == nullptr && entry.unit != nullptr) {
-      const std::string profile_renderer_key =
-          Render::resolve_profile_unit_renderer_key(world_view(), *entry.unit);
-      if (!profile_renderer_key.empty() && profile_renderer_key != entry.renderer_key) {
-        const auto profile_renderer_handle =
-            m_entity_registry->get_handle(profile_renderer_key);
-        fn = m_entity_registry->get(profile_renderer_handle);
-        if (fn != nullptr) {
-          entry.renderer_key = profile_renderer_key;
-          entry.renderer_handle = profile_renderer_handle;
-        }
+  auto const* fn = m_entity_registry->get(entry.renderer_handle);
+  if (fn == nullptr && entry.unit != nullptr) {
+    const std::string profile_renderer_key =
+        Render::resolve_profile_unit_renderer_key(world_view(), *entry.unit);
+    if (!profile_renderer_key.empty() && profile_renderer_key != entry.renderer_key) {
+      const auto profile_renderer_handle =
+          m_entity_registry->get_handle(profile_renderer_key);
+      fn = m_entity_registry->get(profile_renderer_handle);
+      if (fn != nullptr) {
+        entry.renderer_key = profile_renderer_key;
+        entry.renderer_handle = profile_renderer_handle;
       }
     }
-    if (fn != nullptr) {
-      DrawContext draw_ctx{
-          ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
+  }
+  if (fn == nullptr) {
+    return plan;
+  }
+  plan.fn = fn;
+  plan.preparer = m_entity_registry->get_preparer(entry.renderer_handle);
+  if (plan.preparer != nullptr && entry.entity != nullptr) {
+    plan.preparer->ensure_prepare_components(*entry.entity);
+  }
+  {
+    DrawContext& draw_ctx = plan.draw_ctx;
+    draw_ctx =
+        DrawContext{ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
 
-      draw_ctx.selected = entry.selected;
-      draw_ctx.hovered = entry.hovered;
-      bool should_update_animation = ctx.full_creature_detail;
-      if (!ctx.full_creature_detail && should_update_temporal) {
-        should_update_animation =
-            ctx.optimizer->should_update_animation(entry.entity_id,
-                                                   entry.distance_sq,
-                                                   entry.selected,
-                                                   entry.combat_active,
-                                                   entry.motion);
-      } else if (!ctx.full_creature_detail) {
-        should_update_animation = false;
+    draw_ctx.selected = entry.selected;
+    draw_ctx.hovered = entry.hovered;
+    bool should_update_animation = ctx.full_creature_detail;
+    if (!ctx.full_creature_detail && should_update_temporal) {
+      should_update_animation =
+          ctx.optimizer->should_update_animation(entry.entity_id,
+                                                 entry.distance_sq,
+                                                 entry.selected,
+                                                 entry.combat_active,
+                                                 entry.motion);
+    } else if (!ctx.full_creature_detail) {
+      should_update_animation = false;
+    }
+
+    float const animation_time = resolve_animation_time(entry.entity_id,
+                                                        should_update_animation,
+                                                        m_accumulated_time,
+                                                        ctx.optimizer_frame);
+
+    draw_ctx.animation_time = animation_time;
+    draw_ctx.distance_sq = entry.distance_sq;
+    draw_ctx.renderer_id = entry.renderer_key;
+    draw_ctx.renderer_handle = entry.renderer_handle;
+    draw_ctx.backend = m_gl_backend;
+    draw_ctx.camera = m_camera;
+    draw_ctx.order_markers_visible =
+        entry.unit != nullptr && order_markers_visible_for_owner(entry.unit->owner_id);
+    draw_ctx.submission_visibility = &m_submission_visibility;
+    draw_ctx.submission_fog_mode =
+        entry.unit != nullptr && entry.unit->owner_id != m_view.local_owner_id() &&
+                ctx.visibility_enabled && non_local_unit_visibility_filter_enabled()
+            ? SubmissionFogMode::VisibleOnly
+            : SubmissionFogMode::Ignore;
+    draw_ctx.animation_throttled = !should_update_animation;
+
+    Render::Pipeline::LodInputs lod_in;
+    lod_in.distance_sq = entry.distance_sq;
+    lod_in.visible_unit_count = ctx.visible_unit_count;
+    lod_in.full_detail_max_distance_sq = ctx.full_shader_max_distance_sq;
+    lod_in.selected = entry.selected;
+    lod_in.hovered = entry.hovered;
+    lod_in.in_frustum = entry.in_frustum;
+    lod_in.fog_visible = entry.fog_visible;
+    lod_in.force_batching = ctx.force_batching;
+    lod_in.never_batch = ctx.never_batch;
+
+    const bool batching_available =
+        !ctx.full_creature_detail && ctx.batching_ratio > 0.0F;
+    const auto tier = ctx.full_creature_detail ? Render::Pipeline::LodTier::Full
+                                               : Render::Pipeline::select_lod(lod_in);
+
+    if (!entry.selected && !entry.hovered && !ctx.full_creature_detail) {
+      if (tier == Render::Pipeline::LodTier::Minimal) {
+        draw_ctx.max_rendered_individuals = 4;
+      } else if (tier == Render::Pipeline::LodTier::Simplified) {
+        draw_ctx.max_rendered_individuals = 8;
       }
+    }
 
-      float const animation_time = resolve_animation_time(entry.entity_id,
-                                                          should_update_animation,
-                                                          m_accumulated_time,
-                                                          ctx.optimizer_frame);
+    if (ctx.full_creature_detail) {
+      draw_ctx.force_humanoid_lod = true;
+      draw_ctx.forced_humanoid_lod = HumanoidLOD::Full;
+      draw_ctx.force_horse_lod = true;
+      draw_ctx.forced_horse_lod = HorseLOD::Full;
+    } else if (entry.combat_active) {
+      auto const stable_lod = stable_combat_creature_lod(entry.unit, entry.distance_sq);
+      draw_ctx.force_humanoid_lod = true;
+      draw_ctx.forced_humanoid_lod = stable_lod;
+      draw_ctx.force_horse_lod = true;
+      draw_ctx.forced_horse_lod = stable_lod;
+    }
 
-      draw_ctx.animation_time = animation_time;
-      draw_ctx.distance_sq = entry.distance_sq;
-      draw_ctx.renderer_id = entry.renderer_key;
-      draw_ctx.renderer_handle = entry.renderer_handle;
-      draw_ctx.backend = m_gl_backend;
-      draw_ctx.camera = m_camera;
-      draw_ctx.order_markers_visible =
-          entry.unit != nullptr &&
-          order_markers_visible_for_owner(entry.unit->owner_id);
-      draw_ctx.submission_visibility = &m_submission_visibility;
-      draw_ctx.submission_fog_mode =
-          entry.unit != nullptr && entry.unit->owner_id != m_view.local_owner_id() &&
-                  ctx.visibility_enabled && non_local_unit_visibility_filter_enabled()
-              ? SubmissionFogMode::VisibleOnly
-              : SubmissionFogMode::Ignore;
-      draw_ctx.animation_throttled = !should_update_animation;
+    plan.use_batching =
+        batching_available && (tier == Render::Pipeline::LodTier::Simplified ||
+                               tier == Render::Pipeline::LodTier::Minimal);
+    plan.tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
+    plan.lod_tier = static_cast<int>(tier);
+  }
+  return plan;
+}
 
-      Render::Pipeline::LodInputs lod_in;
-      lod_in.distance_sq = entry.distance_sq;
-      lod_in.visible_unit_count = ctx.visible_unit_count;
-      lod_in.full_detail_max_distance_sq = ctx.full_shader_max_distance_sq;
-      lod_in.selected = entry.selected;
-      lod_in.hovered = entry.hovered;
-      lod_in.in_frustum = entry.in_frustum;
-      lod_in.fog_visible = entry.fog_visible;
-      lod_in.force_batching = ctx.force_batching;
-      lod_in.never_batch = ctx.never_batch;
+void Renderer::submit_unit_entry(
+    UnitRenderEntry& entry,
+    UnitDrawPlan& plan,
+    const UnitSubmitContext& ctx,
+    Render::Creature::Pipeline::CreaturePreparationResult* prepared) {
+  if (!entry.in_frustum || !entry.fog_visible || entry.cache == nullptr) {
+    return;
+  }
+  const QMatrix4x4& model_matrix = entry.cache->model_matrix;
 
-      const bool batching_available =
-          !ctx.full_creature_detail && ctx.batching_ratio > 0.0F;
-      const auto tier = ctx.full_creature_detail ? Render::Pipeline::LodTier::Full
-                                                 : Render::Pipeline::select_lod(lod_in);
-
-      if (!entry.selected && !entry.hovered && !ctx.full_creature_detail) {
-        if (tier == Render::Pipeline::LodTier::Minimal) {
-          draw_ctx.max_rendered_individuals = 4;
-        } else if (tier == Render::Pipeline::LodTier::Simplified) {
-          draw_ctx.max_rendered_individuals = 8;
-        }
-      }
-
-      if (ctx.full_creature_detail) {
-        draw_ctx.force_humanoid_lod = true;
-        draw_ctx.forced_humanoid_lod = HumanoidLOD::Full;
-        draw_ctx.force_horse_lod = true;
-        draw_ctx.forced_horse_lod = HorseLOD::Full;
-      } else if (entry.combat_active) {
-        auto const stable_lod =
-            stable_combat_creature_lod(entry.unit, entry.distance_sq);
-        draw_ctx.force_humanoid_lod = true;
-        draw_ctx.forced_humanoid_lod = stable_lod;
-        draw_ctx.force_horse_lod = true;
-        draw_ctx.forced_horse_lod = stable_lod;
-      }
-
-      const bool use_batching =
-          batching_available && (tier == Render::Pipeline::LodTier::Simplified ||
-                                 tier == Render::Pipeline::LodTier::Minimal);
-      tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
+  bool drawn_by_registry = false;
+  bool const tier_is_minimal = plan.tier_is_minimal;
+  if (plan.fn != nullptr) {
+    {
       RiggedBodyProbeSubmitter probe(
-          use_batching ? static_cast<ISubmitter&>(*ctx.batch_submitter)
-                       : static_cast<ISubmitter&>(*this));
-      (*fn)(draw_ctx, probe);
+          plan.use_batching ? static_cast<ISubmitter&>(*ctx.batch_submitter)
+                            : static_cast<ISubmitter&>(*this));
+      if (prepared != nullptr) {
+        Render::Creature::Pipeline::submit_preparation(*prepared, probe);
+      } else {
+        (*plan.fn)(plan.draw_ctx, probe);
+      }
+      bool const use_batching = plan.use_batching;
 
       auto const* animation_debug =
           Render::Profiling::CombatAnimationDiagnostics::instance().find_unit(
@@ -891,7 +928,7 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
                      .arg(static_cast<int>(entry.combat_active))
                      .arg(entry.distance_sq)
                      .arg(static_cast<int>(use_batching))
-                     .arg(static_cast<int>(tier));
+                     .arg(plan.lod_tier);
         }
       }
 
@@ -934,6 +971,49 @@ void Renderer::submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext
        color,
        (ctx.resources != nullptr) ? ctx.resources->white() : nullptr,
        1.0F);
+}
+
+void Renderer::prepare_unit_plans(std::vector<UnitRenderEntry>& entries,
+                                  std::vector<UnitDrawPlan>& plans,
+                                  Render::Profiling::FrameProfile& frame_profile) {
+  auto const prepare_start = std::chrono::steady_clock::now();
+  m_unit_preparations.resize(entries.size());
+  for (auto& preparation : m_unit_preparations) {
+    preparation.clear();
+  }
+
+  auto const& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  bool const parallel_allowed =
+      !diagnostics.enabled() && !diagnostics.logging_enabled();
+
+  auto& parallel_jobs = m_parallel_prepare_jobs;
+  parallel_jobs.clear();
+  for (std::size_t i = 0; i < entries.size(); ++i) {
+    auto& plan = plans[i];
+    if (plan.preparer == nullptr) {
+      continue;
+    }
+    auto const handle = entries[i].renderer_handle;
+    if (m_prepare_warmed_handles.size() <= handle) {
+      m_prepare_warmed_handles.resize(static_cast<std::size_t>(handle) + 1U, 0U);
+    }
+    if (parallel_allowed && m_prepare_warmed_handles[handle] != 0U) {
+      parallel_jobs.push_back(i);
+      continue;
+    }
+    plan.preparer->prepare(plan.draw_ctx, m_unit_preparations[i]);
+    m_prepare_warmed_handles[handle] = 1U;
+  }
+
+  m_prepare_pool.run(parallel_jobs.size(), [&](std::size_t job) {
+    std::size_t const i = parallel_jobs[job];
+    plans[i].preparer->prepare(plans[i].draw_ctx, m_unit_preparations[i]);
+  });
+
+  frame_profile.humanoid_preparation_us =
+      static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+                                     std::chrono::steady_clock::now() - prepare_start)
+                                     .count());
 }
 
 void Renderer::submit_non_unit_entry(const RenderEntry& entry,
@@ -1113,8 +1193,22 @@ void Renderer::render_world(Engine::Core::World* world) {
                                      .full_creature_detail = full_creature_detail,
                                      .visibility_enabled = visibility_enabled};
 
-  for (auto& entry : unit_entries) {
-    submit_unit_entry(entry, submit_ctx);
+  static thread_local std::vector<UnitDrawPlan> unit_plans;
+  unit_plans.resize(unit_entries.size());
+  for (std::size_t i = 0; i < unit_entries.size(); ++i) {
+    unit_plans[i] = plan_unit_entry(unit_entries[i], submit_ctx);
+  }
+
+  prepare_unit_plans(unit_entries, unit_plans, frame_profile);
+
+  for (std::size_t i = 0; i < unit_entries.size(); ++i) {
+    auto& plan = unit_plans[i];
+    submit_unit_entry(unit_entries[i],
+                      plan,
+                      submit_ctx,
+                      (plan.preparer != nullptr && i < m_unit_preparations.size())
+                          ? &m_unit_preparations[i]
+                          : nullptr);
   }
 
   frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;

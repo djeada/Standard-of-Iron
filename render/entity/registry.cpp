@@ -39,16 +39,20 @@
 
 namespace Render::GL {
 
-void EntityRendererRegistry::register_renderer(const std::string& type,
-                                               RenderFunc func) {
+void EntityRendererRegistry::register_renderer(
+    const std::string& type,
+    RenderFunc func,
+    std::shared_ptr<const IParallelPreparer> preparer) {
   auto it = m_lookup.find(type);
   if (it != m_lookup.end()) {
     m_renderers[it->second] = std::move(func);
+    m_preparers[it->second] = std::move(preparer);
     return;
   }
 
   const auto handle = static_cast<RendererHandle>(m_renderers.size());
   m_renderers.push_back(std::move(func));
+  m_preparers.push_back(std::move(preparer));
   m_lookup.emplace(type, handle);
 }
 
@@ -64,6 +68,11 @@ auto EntityRendererRegistry::get(RendererHandle handle) const -> const RenderFun
     return nullptr;
   }
   return &m_renderers[handle];
+}
+
+auto EntityRendererRegistry::get_preparer(RendererHandle handle) const
+    -> const IParallelPreparer* {
+  return handle < m_preparers.size() ? m_preparers[handle].get() : nullptr;
 }
 
 auto EntityRendererRegistry::get_handle(std::string_view type) const -> RendererHandle {

@@ -25,6 +25,9 @@ struct ClipDescriptor {
   float marker_contact{-1.0F};
   float marker_recover_unlocked{-1.0F};
   float marker_exit_safe{-1.0F};
+
+  std::uint16_t variant_family{0U};
+  std::uint8_t variant_ordinal{0U};
 };
 
 struct SocketDescriptor {
@@ -44,6 +47,8 @@ public:
 
   void append_clip_socket_transforms(std::span<const QMatrix4x4> socket_frames);
 
+  void append_clip_contacts(std::span<const BpatFrameContact> contacts);
+
   [[nodiscard]] auto write(std::ostream& out) const -> bool;
 
   [[nodiscard]] auto species_id() const noexcept -> std::uint32_t {
@@ -62,6 +67,7 @@ private:
     std::uint32_t frame_offset{0U};
     bool palette_appended{false};
     bool sockets_appended{false};
+    bool contacts_appended{false};
   };
 
   std::uint32_t m_species_id;
@@ -71,6 +77,7 @@ private:
   std::vector<SocketDescriptor> m_sockets{};
   std::vector<float> m_palette_floats{};
   std::vector<float> m_socket_floats{};
+  std::vector<BpatFrameContact> m_contacts{};
 };
 
 } // namespace Render::Creature::Bpat

@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cstdint>
 #include <iterator>
+#include <mutex>
 #include <vector>
 
 #include "entity/registry.h"
@@ -20,6 +21,7 @@ public:
 
   void reset_frame() noexcept {
     m_full_detail_count.store(0, std::memory_order_relaxed);
+    std::lock_guard const lock(m_contact_shadow_mutex);
     m_contact_shadow_count = 0;
     m_contact_shadow_formations.clear();
   }
@@ -65,7 +67,11 @@ public:
   [[nodiscard]] auto request_contact_shadow(std::uint32_t formation_id,
                                             bool standing_idle) noexcept -> bool {
     const auto& budget = GraphicsSettings::instance().contact_shadow_budget();
-    if (!standing_idle || m_contact_shadow_count >= budget.max_casters) {
+    if (!standing_idle) {
+      return false;
+    }
+    std::lock_guard const lock(m_contact_shadow_mutex);
+    if (m_contact_shadow_count >= budget.max_casters) {
       return false;
     }
     auto formation =
@@ -88,6 +94,7 @@ public:
   }
 
   [[nodiscard]] auto contact_shadow_count() const noexcept -> int {
+    std::lock_guard const lock(m_contact_shadow_mutex);
     return m_contact_shadow_count;
   }
 
@@ -113,6 +120,7 @@ private:
   }
 
   std::atomic<int> m_full_detail_count{0};
+  mutable std::mutex m_contact_shadow_mutex;
   int m_contact_shadow_count{0};
   std::vector<ContactShadowFormationUsage> m_contact_shadow_formations;
 };

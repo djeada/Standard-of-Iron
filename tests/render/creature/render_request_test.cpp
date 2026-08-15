@@ -18,6 +18,7 @@
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
+#include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pose_intent.h"
 #include "render/creature/render_request.h"
@@ -71,51 +72,6 @@ TEST(SheepAnimation, GrazeHeadUsesLongEasedTransitionsAndAStableHold) {
   ASSERT_NE(graze, manifest.clips.end());
   EXPECT_GE(graze->frame_count, 120U);
   EXPECT_GE(static_cast<float>(graze->frame_count) / graze->fps, 5.0F);
-}
-
-auto palette_contact_y(CreatureKind kind,
-                       std::span<const QMatrix4x4> palette) -> float {
-  auto const bind_adjusted_y = [&](std::size_t index,
-                                   std::span<const QMatrix4x4> bind_palette) {
-    return (palette[index] * bind_palette[index].inverted()).column(3).y();
-  };
-  switch (kind) {
-  case CreatureKind::Humanoid:
-    return std::min(
-        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootL),
-                        Render::Humanoid::humanoid_bind_palette()),
-        bind_adjusted_y(static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR),
-                        Render::Humanoid::humanoid_bind_palette()));
-  case CreatureKind::Horse:
-    return std::min(
-        std::min(
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFL),
-                            Render::Horse::horse_bind_palette()),
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootFR),
-                            Render::Horse::horse_bind_palette())),
-        std::min(
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBL),
-                            Render::Horse::horse_bind_palette()),
-            bind_adjusted_y(static_cast<std::size_t>(Render::Horse::HorseBone::FootBR),
-                            Render::Horse::horse_bind_palette())));
-  case CreatureKind::Elephant:
-    return std::min(
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFL),
-                     Render::Elephant::elephant_bind_palette()),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootFR),
-                     Render::Elephant::elephant_bind_palette())),
-        std::min(bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBL),
-                     Render::Elephant::elephant_bind_palette()),
-                 bind_adjusted_y(
-                     static_cast<std::size_t>(Render::Elephant::ElephantBone::FootBR),
-                     Render::Elephant::elephant_bind_palette())));
-  case CreatureKind::Mounted:
-    return 0.0F;
-  }
-  return 0.0F;
 }
 
 auto animation_state_for_index(std::size_t index) -> AnimationStateId {
@@ -732,6 +688,41 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
   EXPECT_NEAR(sink.rigged_world_y[0], -humanoid_contact, 1.0e-4F);
   EXPECT_NEAR(sink.rigged_world_y[1], -horse_contact, 1.0e-4F);
   EXPECT_NEAR(sink.rigged_world_y[2], -elephant_contact, 1.0e-4F);
+}
+
+TEST(SubmitRequests, BakedContactTableMatchesPaletteComputationForEveryFrame) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+
+  auto& reg = BpatRegistry::instance();
+  struct SpeciesCase {
+    std::uint32_t species;
+    const char* file;
+    CreatureKind kind;
+  };
+  for (auto const& c :
+       {SpeciesCase{k_species_humanoid, "/humanoid.bpat", CreatureKind::Humanoid},
+        SpeciesCase{k_species_horse, "/horse.bpat", CreatureKind::Horse},
+        SpeciesCase{k_species_wolf, "/wolf.bpat", CreatureKind::Wolf}}) {
+    ASSERT_TRUE(reg.load_species(c.species, root + c.file));
+    auto const* blob = reg.blob(c.species);
+    ASSERT_NE(blob, nullptr);
+    auto const contacts = blob->frame_contacts();
+    ASSERT_EQ(contacts.size(), blob->frame_total()) << c.file;
+    for (std::uint32_t f = 0; f < blob->frame_total(); ++f) {
+      auto const palette = blob->frame_palette_view(f);
+      EXPECT_NEAR(contacts[f].sole_y,
+                  Render::Creature::Pipeline::palette_contact_y(c.kind, palette),
+                  1.0e-5F)
+          << c.file << " frame " << f;
+      EXPECT_NEAR(contacts[f].foot_y,
+                  Render::Creature::Pipeline::palette_foot_contact_y(c.kind, palette),
+                  1.0e-5F)
+          << c.file << " frame " << f;
+    }
+  }
 }
 
 TEST(SubmitRequests, GroundedRootCreaturesPreserveProvidedWorldHeight) {

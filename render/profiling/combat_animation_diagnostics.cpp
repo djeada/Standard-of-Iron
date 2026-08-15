@@ -160,8 +160,6 @@ auto soldier_cull_reason_name(SoldierCullReason reason) noexcept -> const char* 
     return "Fog";
   case SoldierCullReason::Billboard:
     return "Billboard";
-  case SoldierCullReason::Temporal:
-    return "Temporal";
   case SoldierCullReason::LensGap:
     return "LensGap";
   }

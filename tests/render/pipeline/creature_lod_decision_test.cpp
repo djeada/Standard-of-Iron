@@ -10,8 +10,6 @@ using Render::Creature::Pipeline::CullReason;
 using Render::Creature::Pipeline::decide_creature_lod;
 using Render::Creature::Pipeline::LodDistanceThresholds;
 using Render::Creature::Pipeline::select_distance_lod;
-using Render::Creature::Pipeline::should_render_temporal;
-using Render::Creature::Pipeline::TemporalSkipParams;
 
 namespace {
 
@@ -84,46 +82,6 @@ TEST(CreatureLodDecision, BudgetIgnoredWhenNotEnabled) {
   in.budget_grant_full = false;
   const auto d = decide_creature_lod(in);
   EXPECT_EQ(d.lod, CreatureLOD::Full);
-}
-
-TEST(CreatureLodDecision, TemporalSkipMinimalDoesNotCullDrawSubmission) {
-  auto in = make_inputs(46.0F);
-  in.thresholds = {12.0F, 80.0F};
-  in.temporal = TemporalSkipParams{45.0F, 3U};
-  in.frame_index = 1U;
-  in.instance_seed = 0U;
-  const auto d = decide_creature_lod(in);
-  EXPECT_EQ(d.lod, CreatureLOD::Minimal);
-  EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.reason, CullReason::None);
-}
-
-TEST(CreatureLodDecision, TemporalSkipMinimalAlsoRendersOnPhase) {
-  auto in = make_inputs(46.0F);
-  in.thresholds = {12.0F, 80.0F};
-  in.temporal = TemporalSkipParams{45.0F, 3U};
-  in.frame_index = 2U;
-  in.instance_seed = 1U;
-  const auto d = decide_creature_lod(in);
-  EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.lod, CreatureLOD::Minimal);
-}
-
-TEST(CreatureLodDecision, TemporalSkipDoesNotApplyBelowThreshold) {
-  auto in = make_inputs(20.0F);
-  in.thresholds = {12.0F, 80.0F};
-  in.temporal = TemporalSkipParams{45.0F, 3U};
-  in.frame_index = 1U;
-  in.instance_seed = 0U;
-  const auto d = decide_creature_lod(in);
-  EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.lod, CreatureLOD::Minimal);
-}
-
-TEST(CreatureLodDecision, TemporalPeriodOneAlwaysRenders) {
-  EXPECT_TRUE(should_render_temporal(0U, 0U, 1U));
-  EXPECT_TRUE(should_render_temporal(7U, 13U, 0U));
-  EXPECT_TRUE(should_render_temporal(7U, 13U, 1U));
 }
 
 TEST(CreatureLodDecision, ForcedLodWithBillboardIsNotCulled) {

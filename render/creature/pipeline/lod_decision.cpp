@@ -13,15 +13,6 @@ auto select_distance_lod(float distance,
   return CreatureLOD::Billboard;
 }
 
-auto should_render_temporal(std::uint32_t frame,
-                            std::uint32_t seed,
-                            std::uint32_t period) noexcept -> bool {
-  if (period <= 1) {
-    return true;
-  }
-  return ((frame + seed) % period) == 0U;
-}
-
 auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
     -> CreatureLodDecision {
   CreatureLodDecision out{};

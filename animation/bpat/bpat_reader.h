@@ -56,6 +56,19 @@ public:
   [[nodiscard]] auto socket(std::uint32_t index) const -> SocketView;
 
   [[nodiscard]] auto
+  clip_supplies_ground_contact(std::uint32_t index) const noexcept -> bool;
+  [[nodiscard]] auto
+  clip_variant_family(std::uint32_t index) const noexcept -> std::uint16_t;
+  [[nodiscard]] auto
+  clip_variant_ordinal(std::uint32_t index) const noexcept -> std::uint8_t;
+  [[nodiscard]] auto clip_is_variant_of(std::uint32_t base_index,
+                                        std::uint32_t index,
+                                        std::uint8_t ordinal) const noexcept -> bool;
+
+  [[nodiscard]] auto
+  frame_contacts() const noexcept -> std::span<const BpatFrameContact>;
+
+  [[nodiscard]] auto
   palette_matrix(std::uint32_t global_frame_index,
                  std::uint32_t bone_index) const -> std::span<const float>;
 
@@ -90,6 +103,8 @@ private:
   const char* m_string_table{nullptr};
   const float* m_palette_data{nullptr};
   const float* m_socket_data{nullptr};
+  const BpatFrameContact* m_contact_data{nullptr};
+  std::uint32_t m_contact_count{0U};
 
   std::vector<QMatrix4x4> m_decoded_palette{};
   std::vector<ClipIndexEntry> m_clip_index_entries{};

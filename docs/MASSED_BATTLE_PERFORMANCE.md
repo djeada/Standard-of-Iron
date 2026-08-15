@@ -224,3 +224,107 @@ invariant. Viable directions are packed vertex/palette formats, pre-skinning an
 exact pose once for reuse across color and shadow passes, and GPU timer queries
 to separate vertex shading from cascade raster cost. Reduced meshes, billboards,
 attachment removal, and simplified shadow casters are explicitly out of scope.
+
+## Preparation pass: per-soldier CPU work
+
+The measurements above are GPU/back-pressure limited, but the CPU side of a
+full-LOD frame is not free: `world_submit` runs `prepare_humanoid_instances`
+for every unit and the humanoid family accounts for the bulk of it. This pass
+attacked that cost without touching LOD, geometry, attachments, shadows or the
+animation result. Everything below is per soldier per frame unless stated.
+
+### What the profile said
+
+- The whole `append_prepared_soldier` lambda ran on the render thread, serially
+  across units, with a `DrawContext` copy per soldier (a heap allocation: the
+  context carries a `std::string`), several `QMatrix4x4::rotate` calls (sin/cos
+  and 4×4 multiplies) and a terrain height sample even when nobody moved.
+- Diagnostics-only work — the hit-reaction transform, `mapVector` + `acos` for
+  the root tilt, `resolve_pose` for the debug sample — was evaluated for every
+  soldier because it lived in the argument list of `record_soldier_debug`.
+- `resolve_humanoid_animation_selection` (crossfade, ambient, hold, combat layer
+  policy) ran for every soldier every frame even when the answer could not have
+  changed.
+- On the submit side `contact_y_for_playback` walked the bone palette (matrix
+  inversions, sole-point transforms) per soldier, twice when frame-lerping, and
+  tested clip _names_ for `riding_`/`showcase_`. Layered poses (full-body blend,
+  upper-body overlay) each rebuilt an owned palette through the hierarchical
+  rigid blend with no sharing between soldiers of the same unit.
+
+### What changed
+
+| Area                | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prepare loop        | One `DrawContext` and one unit base matrix per unit; per-soldier composition only translates and yaws. Diagnostics-only computations are gated on `CombatAnimationDiagnostics` being enabled. Unit-invariant inputs (commander jump override, archer bow-ready flag) are hoisted out of the lambda.                                                                                                                                                                                                                                                                                                                                                        |
+| Terrain grounding   | `HumanoidLayoutCacheComponent::ground_samples` caches the surface and model height per soldier and reuses it while the soldier's XZ has not moved by more than 1 mm.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Animation selection | `HumanoidLayoutCacheComponent::selection_cache` keeps the last resolved selection per soldier. When the soldier is _steady_ (pure idle/walk/run, no combat, hit, hold, guard, ambient, crossfade or overlay) and its archetype and movement state are unchanged, the selection is reused and only the playback phase is recomputed. Every soldier still fully re-resolves once every 8 frames (seed-staggered), so a stale cache can never survive longer than that. Full LOD geometry is unaffected; only the resolution cadence changed.                                                                                                                 |
+| Parallel prepare    | `HumanoidRendererBase` now implements `IParallelPreparer` (`ensure_prepare_components` + `prepare`) and registers it alongside its `RenderFunc`. `Renderer::render_world` plans every unit serially, adds any render-side components on the main thread, prepares humanoid units on a small persistent worker pool (`PrepareWorkerPool`, at most 3 workers plus the caller) and submits the prepared results serially in the original order. The first prepare of each renderer handle runs serially so lazily baked per-renderer caches are warm before workers touch them. Parallel prepare is skipped while combat animation diagnostics are recording. |
+| Thread safety       | `CreatureRenderAssetHandleRegistry` guards its lookup with a `shared_mutex`; `VisibilityBudgetTracker`'s contact-shadow bookkeeping is mutex-guarded; the humanoid/quadruped render stats and the prepare-touched `FrameProfile` accumulators are atomics. `humanoid_preparation_us` now measures the wall time of the whole prepare pass instead of summing per-unit durations, so it stays meaningful with workers.                                                                                                                                                                                                                                      |
+| BPAT v3             | Baked per-frame contact heights, per-clip flags and an explicit clip-variant table (see `CREATURE_BPAT_FORMAT.md`). `contact_y_for_playback`, `humanoid_clip_contact_y` and `horse_clip_contact_y` are table lookups; the clip-name tests and the duplicated idle-variant name check are gone.                                                                                                                                                                                                                                                                                                                                                             |
+| Layered blends      | Full-body and upper-body blends go through the same per-frame result cache the frame-lerp already used, keyed by `(mesh entry, both frame pairs, lerp buckets, weight bucket, stage)`, so soldiers of one unit in the same clip pair share one owned palette instead of each rebuilding the hierarchical blend. Blend weights quantise to 32 buckets that hit 0 and 1 exactly.                                                                                                                                                                                                                                                                             |
+| Purged              | `adjust_world_to_palette_contact`, `species_to_bpat_id`, the never-emitted temporal-skip cull (`should_render_temporal`, `TemporalSkipParams`, `CullReason::Temporal`, `SoldierCullReason::Temporal`, `soldiers_skipped_temporal`) and the duplicated humanoid renderer registration lambdas (`register_humanoid_renderer` replaces fourteen copies, including two builder sites that constructed a second unused static renderer).                                                                                                                                                                                                                        |
+
+### Measurement method
+
+`arena_app --batch --scenario <id> --fps 60 --capture-interval 0 --profile` on the
+RTX 5060 machine, warmed `trace.jsonl` samples (first 60 frames dropped), baseline
+binary built from `main` (`1afd892a`) with v2 blobs, candidate with v3 blobs,
+binaries and blob sets interleaved A/B/A/B/A/B and re-installed before every
+run. `p50`/`p95` are frame time; `submit` is `world_submit`, `prep` is
+`humanoid_preparation` (both medians, ms).
+
+`massed_battle_1000` (2,000 rendered soldiers, forced full LOD, Ultra):
+
+| Run | Baseline p50 | Baseline submit | Baseline prep | Candidate p50 | Candidate submit | Candidate prep |
+| --: | -----------: | --------------: | ------------: | ------------: | ---------------: | -------------: |
+|   1 |     16.47 ms |         4.78 ms |       3.20 ms |      16.93 ms |          2.97 ms |        1.50 ms |
+|   2 |     16.74 ms |         4.74 ms |       3.20 ms |      17.33 ms |          2.95 ms |        1.47 ms |
+|   3 |     17.36 ms |         4.79 ms |       3.21 ms |      15.65 ms |          2.94 ms |        1.48 ms |
+
+`massed_battle_2000` (4,000 rendered soldiers), one round:
+
+| Build     |      p50 |      p95 |  submit |    prep | render_execute |
+| --------- | -------: | -------: | ------: | ------: | -------------: |
+| Baseline  | 47.01 ms | 84.90 ms | 9.69 ms | 6.35 ms |       33.11 ms |
+| Candidate | 45.46 ms | 77.39 ms | 5.82 ms | 2.69 ms |       38.08 ms |
+
+`campaign_scale_battle` (production LOD, ~380 visible soldiers), two rounds:
+
+| Build     |            p50 |         submit |           prep |
+| --------- | -------------: | -------------: | -------------: |
+| Baseline  | 3.34 / 3.42 ms | 1.08 / 1.10 ms | 0.48 / 0.49 ms |
+| Candidate | 3.17 / 3.27 ms | 0.80 / 0.83 ms | 0.33 / 0.33 ms |
+
+Across the three scenarios the CPU-side prepare phase drops 31-58% and
+`world_submit` 26-40%. Visible-soldier, draw-call and instanced-draw counts are
+identical between the builds in every run (`report.json` metrics are the
+regression detector; frames themselves are not pixel-stable).
+
+Frame time at 2,000 and 4,000 full-LOD soldiers barely moves on this machine
+because the frame is GPU-bound: `nvidia-smi` reads 100% utilisation at P0
+during the run, and `render_execute` (the phase that waits on the GPU) grows by
+almost exactly the CPU time the prepare pass gives back. The saving is real —
+it is the render thread's own time — but it only becomes frame time once the
+GPU stops being the ceiling (a smaller crowd, production LOD, or the GPU-side
+items in _Remaining bottleneck_). Note for future A/B work: an earlier session
+on the same box measured the same 1,000-per-side scenario at ~7.5 ms p50 with
+`render_execute` around 1.5 ms; after a reboot the GPU throughput halved and
+stayed there for both binaries. Always interleave and never compare against
+numbers from a different boot.
+
+### Not done, and why
+
+- **GPU-side layered blend.** The humanoid full-body/upper-body blend is a
+  hierarchical, parent-local rigid interpolation with FK reconstruction
+  (`blend_palette_owned`); it cannot be reproduced by the per-vertex matrix lerp
+  the instanced shaders already do, so it was not moved into the vertex shader.
+  The remaining path is a compute pre-pass over the resident frame streams that
+  writes blended palettes per distinct `(clip pair, weight bucket)` combination.
+  With the shared blend cache in place the CPU cost is already amortised across a
+  unit, so this is deferred until profiling shows blends on the critical path.
+- **Skin atlas in GPU layout at bake time.** `rigged_entry_ensure_skin_atlas_from_blob`
+  still multiplies `palette × inverse_bind` per frame per bone at load. That is
+  load/hitch cost, not per-frame cost, and it depends on the bind palette of the
+  baked mesh entry, so it stays a follow-up.
+- **Prebaked humanoid rigged meshes.** Unchanged (deliberate: humanoid archetype ×
+  attachment-set combinatorics); prewarm still hides the first-sight bake.

@@ -55,8 +55,6 @@ struct CreatureGraphInputs {
   Engine::Core::UnitComponent* unit{nullptr};
   Engine::Core::TransformComponent* transform{nullptr};
 
-  std::uint32_t frame_index{0};
-
   float camera_distance{0.0F};
 
   bool has_camera{true};
@@ -90,7 +88,6 @@ struct CreatureGraphOutput {
 
 struct CreatureLodConfig {
   LodDistanceThresholds thresholds{};
-  TemporalSkipParams temporal{};
   bool apply_visibility_budget{false};
 };
 

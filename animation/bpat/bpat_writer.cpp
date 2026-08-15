@@ -4,11 +4,20 @@
 #include <cassert>
 #include <cstring>
 #include <ostream>
+#include <string_view>
 #include <unordered_map>
 
 namespace Render::Creature::Bpat {
 
 namespace {
+
+auto derive_clip_flags(std::string_view clip_name) noexcept -> std::uint8_t {
+  std::uint8_t flags = 0U;
+  if (!clip_name.starts_with("riding_") && !clip_name.starts_with("showcase_")) {
+    flags |= k_clip_flag_supplies_ground_contact;
+  }
+  return flags;
+}
 
 void write_pod(std::ostream& out, const void* src, std::size_t bytes) {
   out.write(static_cast<const char*>(src), static_cast<std::streamsize>(bytes));
@@ -101,8 +110,22 @@ void BpatWriter::append_clip_socket_transforms(
   pending.sockets_appended = true;
 }
 
+void BpatWriter::append_clip_contacts(std::span<const BpatFrameContact> contacts) {
+  assert(!m_clips.empty() && "add_clip() before append_clip_contacts()");
+  auto& pending = m_clips.back();
+  assert(!pending.contacts_appended && "contacts already appended for clip");
+  assert(contacts.size() == pending.desc.frame_count &&
+         "contacts.size() must equal frame_count");
+  m_contacts.insert(m_contacts.end(), contacts.begin(), contacts.end());
+  pending.contacts_appended = true;
+}
+
 auto BpatWriter::write(std::ostream& out) const -> bool {
   if (m_clips.empty() || m_bone_count == 0U) {
+    return false;
+  }
+  bool const has_contacts = !m_contacts.empty();
+  if (has_contacts && m_contacts.size() != m_frame_total) {
     return false;
   }
   for (auto const& c : m_clips) {
@@ -110,6 +133,9 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
       return false;
     }
     if (!m_sockets.empty() && !c.sockets_appended) {
+      return false;
+    }
+    if (has_contacts && !c.contacts_appended) {
       return false;
     }
     if (c.desc.frame_count == 0U) {
@@ -141,6 +167,9 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
     e.frame_offset = c.frame_offset;
     e.fps = c.desc.fps;
     e.loops = c.desc.loops ? 1U : 0U;
+    e.flags = derive_clip_flags(c.desc.name);
+    e.variant_ordinal = c.desc.variant_ordinal;
+    e.variant_family = c.desc.variant_family;
     e.marker_anticipation_start = c.desc.marker_anticipation_start;
     e.marker_weapon_release = c.desc.marker_weapon_release;
     e.marker_contact = c.desc.marker_contact;
@@ -162,7 +191,7 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
     socket_entries.push_back(e);
   }
 
-  std::uint64_t cursor = sizeof(BpatHeader);
+  std::uint64_t cursor = sizeof(BpatHeader) + sizeof(BpatHeaderExtV3);
   std::uint64_t const clip_table_offset = cursor;
   cursor += clip_entries.size() * sizeof(BpatClipEntry);
   std::uint64_t const socket_table_offset = socket_entries.empty() ? 0U : cursor;
@@ -171,6 +200,10 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   cursor += string_table.size();
   cursor = align_up(cursor, k_section_alignment);
   std::uint64_t const palette_data_offset = cursor;
+  cursor += m_palette_floats.size() * sizeof(float);
+  cursor += m_socket_floats.size() * sizeof(float);
+  cursor = align_up(cursor, k_section_alignment);
+  std::uint64_t const contact_data_offset = has_contacts ? cursor : 0U;
 
   BpatHeader header{};
   std::memcpy(header.magic, k_magic.data(), k_magic.size());
@@ -186,9 +219,16 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   header.string_table_offset = string_table_offset;
   header.palette_data_offset = palette_data_offset;
 
+  BpatHeaderExtV3 ext{};
+  ext.contact_data_offset = contact_data_offset;
+  ext.contact_entry_count =
+      has_contacts ? static_cast<std::uint32_t>(m_contacts.size()) : 0U;
+
   std::uint64_t written = 0U;
   write_pod(out, &header, sizeof(header));
   written += sizeof(header);
+  write_pod(out, &ext, sizeof(ext));
+  written += sizeof(ext);
 
   if (!clip_entries.empty()) {
     write_pod(out, clip_entries.data(), clip_entries.size() * sizeof(BpatClipEntry));
@@ -207,9 +247,15 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
 
   if (!m_palette_floats.empty()) {
     write_pod(out, m_palette_floats.data(), m_palette_floats.size() * sizeof(float));
+    written = palette_data_offset + m_palette_floats.size() * sizeof(float);
   }
   if (!m_socket_floats.empty()) {
     write_pod(out, m_socket_floats.data(), m_socket_floats.size() * sizeof(float));
+    written += m_socket_floats.size() * sizeof(float);
+  }
+  if (has_contacts) {
+    pad_to_alignment(out, written, k_section_alignment);
+    write_pod(out, m_contacts.data(), m_contacts.size() * sizeof(BpatFrameContact));
   }
   return out.good();
 }
