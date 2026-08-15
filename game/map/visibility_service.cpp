@@ -11,12 +11,17 @@
 #include <utility>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/owner_registry.h"
 
 namespace Game::Map {
+
+auto VisibilityService::instance() -> VisibilityService& {
+  return *Game::Session::ambient_services().visibility;
+}
 
 namespace {
 

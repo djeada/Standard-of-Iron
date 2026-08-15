@@ -40,8 +40,30 @@ auto payload_name(const Payload& payload) -> const char* {
           return "set-gate-mode";
         } else if constexpr (std::is_same_v<T, SetAutoGather>) {
           return "set-auto-gather";
-        } else {
+        } else if constexpr (std::is_same_v<T, Produce>) {
           return "produce";
+        } else if constexpr (std::is_same_v<T, Trade>) {
+          return "trade";
+        } else if constexpr (std::is_same_v<T, UseCommanderAbility>) {
+          return "use-commander-ability";
+        } else if constexpr (std::is_same_v<T, SetFormationMode>) {
+          return "set-formation-mode";
+        } else if constexpr (std::is_same_v<T, DeployFormation>) {
+          return "deploy-formation";
+        } else if constexpr (std::is_same_v<T, ReleaseFormation>) {
+          return "release-formation";
+        } else if constexpr (std::is_same_v<T, StartConstruction>) {
+          return "start-construction";
+        } else if constexpr (std::is_same_v<T, StartHarvest>) {
+          return "start-harvest";
+        } else if constexpr (std::is_same_v<T, DeliverCivilians>) {
+          return "deliver-civilians";
+        } else if constexpr (std::is_same_v<T, RepairStructure>) {
+          return "repair-structure";
+        } else if constexpr (std::is_same_v<T, PlaceWallPlan>) {
+          return "place-wall-plan";
+        } else {
+          return "place-building";
         }
       },
       payload);

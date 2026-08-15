@@ -56,16 +56,15 @@ auto module_rules(const fs::path& root) -> QJsonObject {
   return document.object();
 }
 
-const std::set<QString>& extracted_targets() {
-  static const std::set<QString> entries{
-      "soi_ai",
-      "soi_campaign",
-      "soi_missions",
-      "soi_persistence",
-      "soi_runtime",
-      "game_view",
-  };
-  return entries;
+auto declared_libraries(const QString& lists) -> std::set<QString> {
+  std::set<QString> names;
+  static const QRegularExpression pattern(
+      R"(add_library\(\s*(\w+)\s+(?:STATIC|OBJECT|SHARED)\b)");
+  auto it = pattern.globalMatch(lists);
+  while (it.hasNext()) {
+    names.insert(it.next().captured(1));
+  }
+  return names;
 }
 
 auto shell_suite_list(const QString& script) -> QStringList {
@@ -134,34 +133,42 @@ TEST(ModuleBoundaries, EveryModuleNamesNeighboursThatExist) {
   }
 }
 
-TEST(ModuleBoundaries, NothingDependsOnAModuleThatLeftTheKernel) {
+TEST(ModuleBoundaries, EveryModuleIsBackedByACmakeTargetTheLinkerEnforces) {
   const auto root = find_repo_root();
   const auto rules = module_rules(root);
   ASSERT_FALSE(rules.isEmpty());
 
+  const auto lists = read_text(root / "game" / "CMakeLists.txt") +
+                     read_text(root / "game" / "audio" / "CMakeLists.txt");
+  ASSERT_FALSE(lists.isEmpty());
+  const auto libraries = declared_libraries(lists);
+  ASSERT_FALSE(libraries.empty())
+      << "could not parse add_library() in game/CMakeLists.txt";
+
   const auto modules = rules.value("modules").toObject();
-  std::set<QString> extracted;
   for (const auto& name : modules.keys()) {
-    for (const auto& target :
-         modules.value(name).toObject().value("targets").toArray()) {
-      if (extracted_targets().contains(target.toString())) {
-        extracted.insert(name);
-      }
+    const auto targets = modules.value(name).toObject().value("targets").toArray();
+    EXPECT_FALSE(targets.isEmpty())
+        << "module " << name.toStdString()
+        << " names no CMake target. Every module is shipped by a static library so "
+           "that a wrong-way edge is a link error, not just a script finding.";
+    for (const auto& target : targets) {
+      EXPECT_TRUE(libraries.count(target.toString()) > 0)
+          << "module " << name.toStdString() << " says it is built into "
+          << target.toString().toStdString()
+          << ", which neither game/CMakeLists.txt nor game/audio/CMakeLists.txt "
+             "declares.";
     }
   }
-  EXPECT_FALSE(extracted.empty())
-      << "no module claims one of the extracted CMake targets";
+}
 
-  const auto baseline = rules.value("baseline").toObject();
-  for (const auto& pair : baseline.keys()) {
-    const auto parts = pair.split(" -> ");
-    ASSERT_EQ(parts.size(), 2) << "malformed baseline key: " << pair.toStdString();
-    EXPECT_EQ(extracted.count(parts.at(1)), 0U)
-        << "the baseline records an edge into " << parts.at(1).toStdString()
-        << ", which is its own CMake target. That edge cannot exist -- the kernel "
-           "does not link it. Either the module map is wrong or the target was "
-           "folded back in.";
-  }
+TEST(ModuleBoundaries, NoWrongWayEdgeIsToleratedAnyMore) {
+  const auto root = find_repo_root();
+  const auto rules = module_rules(root);
+  ASSERT_FALSE(rules.isEmpty());
+
+  EXPECT_FALSE(rules.contains("baseline"))
+      << "scripts/module_rules.json has grown a baseline again. Fix the edge.";
 }
 
 TEST(ModuleBoundaries, TestBinariesLinkProductionCodeRatherThanRecompilingIt) {

@@ -3,15 +3,15 @@
     "The module map for game/, and the dependency direction each module is allowed",
     "to point in. scripts/check-modules.py enforces it; docs/ARCHITECTURE.md explains it.",
     "",
-    "Seven of these modules are already separate CMake targets, so the linker enforces",
-    "them and their violation counts are zero and must stay there. The rest are still",
-    "inside libgame_sim.a, where CMake cannot tell them apart -- for those, 'baseline'",
-    "records how many edges currently point the wrong way. The count may go down and",
-    "may not go up. A module whose incoming baseline reaches zero can be lifted into",
-    "its own target the way soi_ai and soi_persistence were.",
+    "Every module names the CMake target that ships it ('targets'), so a wrong-way",
+    "edge is a link error as well as a failure here. Where several modules share one",
+    "archive (unit_catalog / registries / world in soi_world; simulation / session in",
+    "game_sim) this file is the only thing that keeps them apart. check-modules.py",
+    "also fails if game/CMakeLists.txt puts a source in a target its module does not",
+    "name, so the two descriptions of the split cannot drift.",
     "",
     "'modules' is ordered bottom-up: a module may only use modules listed before it,",
-    "and only those named in its 'may_use'."
+    "and only those named in its 'may_use'. There is no tolerated backlog."
   ],
   "modules": {
     "domain_types": {
@@ -36,7 +36,10 @@
         "game/units/troop_type",
         "game/wildlife/wildlife_species",
         "game/formation/unit_layout_state",
-        "game/systems/nav_grid_types"
+        "game/systems/nav_grid_types",
+        "game/formation/formation_roles",
+        "game/formation/army_formation_types",
+        "game/audio/cue_ids"
       ],
       "may_use": []
     },
@@ -47,21 +50,20 @@
         "game/game_config",
         "game/systems/unit_activity",
         "game/util/asset_text",
-        "game/util/json_vec_utils"
+        "game/util/json_vec_utils",
+        "game/session/simulation_clock",
+        "game/session/deterministic_rng",
+        "game/core/ambient_session"
       ],
       "may_use": ["domain_types"]
     },
     "unit_catalog": {
-      "targets": ["game_sim"],
+      "targets": ["soi_world"],
       "_comment": [
         "What a unit type *is*: the troop, spawn and building enumerations and the",
-        "catalogues loaded from assets/. Pure data. The registries read it, so it has",
-        "to sit below them; the unit classes that behave are in 'units' above.",
-        "",
-        "troop_catalog_loader is deliberately *not* here. It parses the troop file,",
-        "which carries a formation block per troop, and writes both the catalogue and",
-        "the formation role registry -- a loader sits above the things it fills, and",
-        "keeping it here was the only thing stopping unit_catalog from being clean."
+        "catalogues loaded from assets/. Pure data plus the loader that fills it: the",
+        "troop file's formation block is parsed here into a value the formation",
+        "registry reads back later, so loading the catalogue needs no formation code."
       ],
       "files": [
         "game/units/building_type",
@@ -69,24 +71,26 @@
         "game/units/troop_catalog",
         "game/units/commander_catalog",
         "game/visuals/building_asset_key",
-        "game/visuals/visual_catalog"
+        "game/visuals/visual_catalog",
+        "game/units/troop_catalog_loader"
       ],
       "may_use": ["domain_types", "components"]
     },
     "registries": {
-      "targets": ["game_sim"],
+      "targets": ["soi_world"],
       "_comment": [
         "Cross-cutting lookups and the value types that go with them: who owns a",
         "unit, which nation it belongs to, what occupies a tile, what a troop",
         "profile says. Everything above reads these, so they sit as low as they can",
-        "and are allowed to know nothing but components."
+        "and are allowed to know nothing but components and the catalogues.",
+        "",
+        "Their instance() accessors resolve through game/core/ambient_session.h,",
+        "which the session fills in -- that is why none of them includes the session."
       ],
       "files": [
-        "game/systems/battlefield_definitions",
         "game/systems/building_collision_registry",
         "game/systems/building_line_of_sight",
         "game/systems/combat_rules",
-        "game/systems/gate_service",
         "game/systems/global_stats_registry",
         "game/systems/healing_colors",
         "game/systems/mission_wave_query",
@@ -97,16 +101,16 @@
         "game/systems/player_resource_registry",
         "game/systems/projectile",
         "game/systems/resource_stockpile",
+        "game/systems/run_stamina",
         "game/systems/spent_projectile",
         "game/systems/troop_count_registry",
         "game/systems/troop_profile_service",
-        "game/systems/undead_zone_query",
-        "game/systems/wall_network_service"
+        "game/systems/undead_zone_query"
       ],
       "may_use": ["domain_types", "components", "unit_catalog"]
     },
     "world": {
-      "targets": ["game_sim"],
+      "targets": ["soi_world"],
       "paths": ["game/map/"],
       "excluded_paths": ["game/map/minimap/"],
       "excluded_files": [
@@ -119,13 +123,32 @@
         "game/map/map_catalog.cpp",
         "game/map/map_catalog.h",
         "game/map/campaign_loader.cpp",
-        "game/map/campaign_loader.h"
+        "game/map/campaign_loader.h",
+        "game/map/map_transformer.cpp",
+        "game/map/map_transformer.h"
       ],
-      "may_use": ["domain_types", "components", "unit_catalog", "registries"]
+      "may_use": ["domain_types", "components", "unit_catalog", "registries"],
+      "files": [
+        "game/wildlife/wildlife_config",
+        "game/wildlife/wildlife_placement"
+      ]
     },
-    "units": {
-      "targets": ["game_sim"],
-      "paths": ["game/units/", "game/visuals/"],
+    "navigation": {
+      "targets": ["soi_navigation"],
+      "_comment": [
+        "Where a unit can stand and how it gets there: the nav grid, the",
+        "search, the spatial index, and the walls and gates that carve the grid.",
+        "Everything that *moves* a unit along the result is in 'movement' above,",
+        "because moving is formation-aware and formations sit in between."
+      ],
+      "files": [
+        "game/systems/pathfinding",
+        "game/systems/spatial_grid",
+        "game/systems/nav_grid",
+        "game/systems/gate_service",
+        "game/systems/wall_network_service",
+        "game/systems/terrain_alignment_system"
+      ],
       "may_use": [
         "domain_types",
         "components",
@@ -134,34 +157,27 @@
         "world"
       ]
     },
-    "navigation": {
-      "targets": ["game_sim"],
-      "files": [
-        "game/systems/pathfinding",
-        "game/systems/spatial_grid",
-        "game/systems/local_avoidance_system",
-        "game/systems/movement_system",
-        "game/systems/movement_orders",
-        "game/systems/terrain_alignment_system",
-        "game/systems/nav_grid"
-      ],
+    "units": {
+      "targets": ["soi_units"],
+      "paths": ["game/units/", "game/visuals/"],
       "may_use": [
         "domain_types",
         "components",
         "unit_catalog",
         "registries",
         "world",
-        "units"
-      ]
+        "navigation"
+      ],
+      "files": ["game/map/map_transformer"]
     },
     "formations": {
-      "targets": ["game_sim"],
+      "targets": ["soi_formations"],
       "paths": ["game/formation/"],
       "files": [
         "game/systems/cohort_system",
         "game/systems/defensive_unit_layout_service",
         "game/systems/formation_combat_geometry",
-        "game/units/troop_catalog_loader"
+        "game/systems/combat_system/structure_combat"
       ],
       "may_use": [
         "domain_types",
@@ -169,12 +185,38 @@
         "unit_catalog",
         "registries",
         "world",
+        "navigation",
+        "units"
+      ]
+    },
+    "movement": {
+      "targets": ["soi_movement"],
+      "_comment": [
+        "Moving units along a path and issuing them orders: the movement",
+        "system, local avoidance, the order and command services. Above formations",
+        "because a formation's turn radius and speed multiplier shape the move."
+      ],
+      "files": [
+        "game/systems/movement_system",
+        "game/systems/movement_orders",
+        "game/systems/local_avoidance_system",
+        "game/systems/command_service",
+        "game/systems/order_service",
+        "game/systems/formation_move_dispatch_system"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "navigation",
         "units",
-        "navigation"
+        "formations"
       ]
     },
     "economy": {
-      "targets": ["game_sim"],
+      "targets": ["soi_economy"],
       "files": [
         "game/systems/production_service",
         "game/systems/production_system",
@@ -183,7 +225,8 @@
         "game/systems/civilian_delivery_system",
         "game/systems/gather_loop_system",
         "game/systems/marketplace_system",
-        "game/systems/capture_system"
+        "game/systems/capture_system",
+        "game/systems/nation_collapse_service"
       ],
       "may_use": [
         "domain_types",
@@ -191,13 +234,14 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
-        "formations"
+        "units",
+        "formations",
+        "movement"
       ]
     },
     "combat": {
-      "targets": ["game_sim"],
+      "targets": ["soi_combat"],
       "paths": [
         "game/systems/combat_system/",
         "game/systems/combat_actions/",
@@ -219,7 +263,6 @@
         "game/systems/healing_beam_system",
         "game/systems/healing_rules",
         "game/systems/healing_system",
-        "game/systems/order_service",
         "game/systems/guard_system",
         "game/systems/patrol_system",
         "game/systems/commander_system",
@@ -231,14 +274,15 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy"
       ]
     },
     "wildlife": {
-      "targets": ["game_sim"],
+      "targets": ["soi_wildlife"],
       "paths": ["game/wildlife/"],
       "may_use": [
         "domain_types",
@@ -246,46 +290,46 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat"
       ]
     },
     "simulation": {
       "targets": ["game_sim"],
-      "paths": ["game/command/", "game/systems/"],
+      "paths": ["game/systems/"],
       "may_use": [
         "domain_types",
         "components",
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife"
       ],
-      "files": [
-        "game/systems/nation_collapse_service",
-        "game/util/selection_utils"
-      ]
+      "files": ["game/util/selection_utils", "game/systems/default_content"]
     },
     "session": {
       "targets": ["game_sim"],
-      "paths": ["game/session/"],
+      "paths": ["game/session/", "game/command/"],
       "may_use": [
         "domain_types",
         "components",
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife",
@@ -301,9 +345,10 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife",
@@ -325,9 +370,10 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife",
@@ -350,9 +396,10 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife",
@@ -371,9 +418,10 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife",
@@ -393,9 +441,10 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife",
@@ -420,9 +469,10 @@
         "unit_catalog",
         "registries",
         "world",
-        "units",
         "navigation",
+        "units",
         "formations",
+        "movement",
         "economy",
         "combat",
         "wildlife",
@@ -435,37 +485,5 @@
       "paths": ["game/audio/"],
       "may_use": ["domain_types", "components", "unit_catalog", "registries"]
     }
-  },
-  "_baseline_comment": [
-    "Edges that point the wrong way today, counted per source->destination module",
-    "pair. Each number is a debt, not a permission. The check fails if a count goes",
-    "up, if a new pair appears, or if a count goes down without this file being",
-    "updated to match -- so paying a debt down is recorded rather than reabsorbed.",
-    "",
-    "Every module already backed by its own CMake target is absent from this list,",
-    "and must stay absent: for those the linker is the check and this file is only a",
-    "second opinion."
-  ],
-  "baseline": {
-    "combat -> audio": 1,
-    "combat -> simulation": 8,
-    "economy -> session": 1,
-    "economy -> simulation": 2,
-    "formations -> simulation": 1,
-    "navigation -> combat": 3,
-    "navigation -> formations": 3,
-    "navigation -> simulation": 4,
-    "registries -> formations": 4,
-    "registries -> navigation": 4,
-    "registries -> session": 2,
-    "registries -> world": 1,
-    "simulation -> session": 4,
-    "units -> combat": 1,
-    "units -> economy": 1,
-    "units -> simulation": 1,
-    "wildlife -> audio": 1,
-    "wildlife -> simulation": 1,
-    "world -> units": 2,
-    "world -> wildlife": 2
   }
 }

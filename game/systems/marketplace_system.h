@@ -1,9 +1,10 @@
 #pragma once
 
-#include <string_view>
-#include <unordered_map>
-
 #include "resource_types.h"
+
+namespace Engine::Core {
+class World;
+}
 
 namespace Game::Systems {
 
@@ -32,20 +33,25 @@ public:
 
   [[nodiscard]] auto get_rates() const -> const MarketplaceTradeRates&;
 
-  [[nodiscard]] auto can_buy(int owner_id, ResourceType resource) const -> bool;
-  [[nodiscard]] auto can_sell(int owner_id, ResourceType resource) const -> bool;
-  [[nodiscard]] auto owner_has_marketplace(int owner_id) const -> bool;
+  [[nodiscard]] static auto owner_has_marketplace(const Engine::Core::World& world,
+                                                  int owner_id) -> bool;
 
-  void register_marketplace(int owner_id);
-  void unregister_marketplace(int owner_id);
-  void clear();
+  [[nodiscard]] auto can_buy(const Engine::Core::World& world,
+                             int owner_id,
+                             ResourceType resource) const -> bool;
+  [[nodiscard]] auto can_sell(const Engine::Core::World& world,
+                              int owner_id,
+                              ResourceType resource) const -> bool;
 
-  auto buy_resource(int owner_id, ResourceType resource) -> bool;
-  auto sell_resource(int owner_id, ResourceType resource) -> bool;
+  auto buy_resource(const Engine::Core::World& world,
+                    int owner_id,
+                    ResourceType resource) -> bool;
+  auto sell_resource(const Engine::Core::World& world,
+                     int owner_id,
+                     ResourceType resource) -> bool;
 
 private:
   MarketplaceTradeRates m_rates;
-  std::unordered_map<int, int> m_marketplace_count;
 };
 
 } // namespace Game::Systems

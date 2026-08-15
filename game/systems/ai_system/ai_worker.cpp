@@ -60,6 +60,14 @@ void AIWorker::drain_results(std::queue<AIResult>& out) {
   }
 }
 
+void AIWorker::wait_idle() {
+  std::unique_lock<std::mutex> lock(m_result_mutex);
+  m_idle_condition.wait(lock, [this]() {
+    return !m_worker_busy.load(std::memory_order_acquire) ||
+           m_should_stop.load(std::memory_order_acquire);
+  });
+}
+
 void AIWorker::stop() {
   m_should_stop.store(true, std::memory_order_release);
   {
@@ -110,10 +118,19 @@ void AIWorker::worker_loop() {
       qWarning() << "AIWorker job failed with an unknown exception";
     }
 
-    m_worker_busy.store(false, std::memory_order_release);
+    {
+
+      std::lock_guard<std::mutex> const lock(m_result_mutex);
+      m_worker_busy.store(false, std::memory_order_release);
+    }
+    m_idle_condition.notify_all();
   }
 
-  m_worker_busy.store(false, std::memory_order_release);
+  {
+    std::lock_guard<std::mutex> const lock(m_result_mutex);
+    m_worker_busy.store(false, std::memory_order_release);
+  }
+  m_idle_condition.notify_all();
 }
 
 } // namespace Game::Systems::AI

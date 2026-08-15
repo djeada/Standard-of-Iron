@@ -133,7 +133,8 @@ public:
 
   auto get_all_nations() const -> const std::vector<Nation>& { return m_nations; }
 
-  void initialize_defaults();
+  void register_default_nations();
+  [[nodiscard]] auto initialized() const -> bool { return m_initialized; }
 
   void clear();
 

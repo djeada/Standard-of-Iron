@@ -162,6 +162,8 @@ struct ArmyFormation {
   std::uint32_t plan_revision{0U};
   bool needs_replan{true};
 
+  bool moves_pending{false};
+
   [[nodiscard]] auto maintains_formation() const -> bool {
     return options.movement_policy == MovementPolicy::MaintainFormation;
   }

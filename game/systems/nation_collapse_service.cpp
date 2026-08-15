@@ -10,7 +10,6 @@
 #include "../units/spawn_type.h"
 #include "building_collision_registry.h"
 #include "capture_system.h"
-#include "marketplace_system.h"
 #include "wall_network_service.h"
 
 namespace Game::Systems::NationCollapse {
@@ -19,11 +18,6 @@ namespace {
 
 void tear_down_structure(Engine::Core::World& world, Engine::Core::Entity& entity) {
   BuildingCollisionRegistry::instance().unregister_building(entity.get_id());
-
-  if (auto* unit = entity.get_component<Engine::Core::UnitComponent>();
-      unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Marketplace) {
-    MarketplaceSystem::instance().unregister_marketplace(unit->owner_id);
-  }
 
   const bool was_wall =
       entity.get_component<Engine::Core::WallSegmentComponent>() != nullptr;

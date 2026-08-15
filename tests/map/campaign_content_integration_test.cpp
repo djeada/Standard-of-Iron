@@ -24,6 +24,7 @@
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
@@ -66,7 +67,7 @@ protected:
 
     auto& nations = Game::Systems::NationRegistry::instance();
     nations.clear();
-    nations.initialize_defaults();
+    Game::Systems::initialize_default_content(nations);
     nations.set_player_nation(1, Game::Systems::NationID::Carthage);
 
     Game::Systems::BuildingCollisionRegistry::instance().clear();

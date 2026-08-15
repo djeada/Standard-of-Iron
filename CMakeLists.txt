@@ -381,12 +381,12 @@ if(Python3_Interpreter_FOUND)
         COMMENT "Checking layer dependencies"
         VERBATIM
     )
-    # The boundaries *inside* game/. Seven of the modules in
-    # scripts/module_rules.json are their own CMake target, so the linker
-    # enforces them; the rest still share libgame_sim.a, and this is the only
-    # thing that keeps combat, navigation, formations, economy and the world
-    # from growing new edges into each other. It holds the current count and
-    # will not let it rise.
+    # The boundaries *inside* game/. Every module in scripts/module_rules.json
+    # is its own CMake target (or shares one with a neighbour it is allowed to
+    # use), so the linker enforces the split at symbol level; this is the
+    # header-level counterpart, and the only thing that separates the modules
+    # that still share an archive. It also fails if game/CMakeLists.txt puts a
+    # source in a target its module does not name.
     add_custom_target(
         check_modules
         ALL
@@ -406,6 +406,31 @@ if(Python3_Interpreter_FOUND)
             ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-render-boundary.py
             ${CMAKE_SOURCE_DIR}
         COMMENT "Checking the render/simulation boundary"
+        VERBATIM
+    )
+    # The client (app/, ui/) submits orders as Game::Command payloads and never
+    # applies them itself. That is the precondition for the same client driving
+    # a local match, a remote one and a replay, so it is a build failure too.
+    # See scripts/check-command-boundary.py.
+    add_custom_target(
+        check_command_boundary
+        ALL
+        COMMAND
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-command-boundary.py
+            ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking the client/command boundary"
+        VERBATIM
+    )
+    # Ambient `X::instance()` lookups are the last thing standing between one
+    # match per process and several; their number may only go down. See
+    # scripts/check-ambient-instances.py and scripts/ambient_instance_budget.json.
+    add_custom_target(
+        check_ambient_instances
+        ALL
+        COMMAND
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-ambient-instances.py
+            ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking the ambient-lookup budget"
         VERBATIM
     )
 else()
@@ -584,6 +609,7 @@ add_library(
     app/core/mission_setup_coordinator.cpp
     app/core/mission_wave_director.cpp
     app/core/production_manager.cpp
+    app/utils/movement_utils.cpp
     app/core/renderer_bootstrap.cpp
     app/core/rts_action_model.cpp
     app/core/runtime_frame_orchestrator.cpp

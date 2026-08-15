@@ -213,8 +213,6 @@ private:
   void set_formation_facing(float degrees, bool explicit_choice);
   void follow_auto_formation_facing();
   void reset_formation_facing();
-
-  static void reset_movement(Engine::Core::Entity* entity);
 };
 
 } // namespace App::Controllers

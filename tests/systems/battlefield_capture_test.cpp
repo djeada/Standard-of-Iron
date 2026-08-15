@@ -28,6 +28,20 @@ TEST(BattlefieldCaptureTest, SameSeedProducesSameReplayAtEitherCaptureFps) {
   EXPECT_EQ(at_30.ticks.size(), at_60.ticks.size());
 }
 
+TEST(BattlefieldCaptureTest, TwoRunsFromOneSeedAgreeOnEveryTicksDigest) {
+  Capture::RunnerConfig config;
+  config.duration_seconds = 2.0;
+  config.seed = 91;
+  config.scenario = Capture::ScenarioId::MixedFormation;
+  const auto report = Capture::check_determinism(config, 2);
+  EXPECT_TRUE(report.deterministic())
+      << "diverged at tick " << report.divergent_tick.value_or(0) << "\n"
+      << report.first_state << "\n---\n"
+      << report.other_state;
+  const auto capture = Capture::run(config);
+  EXPECT_EQ(capture.tick_digests.size(), capture.performance.ticks);
+}
+
 TEST(BattlefieldCaptureTest, TelemetryIncludesRequiredTickAndOverlayChannels) {
   Capture::RunnerConfig config;
   config.duration_seconds = 0.5;

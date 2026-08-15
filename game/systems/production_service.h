@@ -44,6 +44,11 @@ struct ProductionState {
 
 class ProductionService {
 public:
+  static auto
+  can_start_production(Engine::Core::World& world,
+                       Engine::Core::EntityID building_id,
+                       Game::Units::TroopType unit_type) -> ProductionResult;
+
   static auto start_production(Engine::Core::World& world,
                                Engine::Core::EntityID building_id,
                                Game::Units::TroopType unit_type) -> ProductionResult;
@@ -58,42 +63,9 @@ public:
                          const std::vector<Engine::Core::EntityID>& selected,
                          int owner_id) -> Engine::Core::EntityID;
 
-  static auto start_production_for_first_selected_barracks(
-      Engine::Core::World& world,
-      const std::vector<Engine::Core::EntityID>& selected,
-      int owner_id,
-      Game::Units::TroopType unit_type) -> ProductionResult;
-
-  static auto start_production_for_first_selected_barracks(
-      Engine::Core::World& world,
-      const std::vector<Engine::Core::EntityID>& selected,
-      int owner_id,
-      const std::string& unit_type) -> ProductionResult {
-    return start_production_for_first_selected_barracks(
-        world, selected, owner_id, Game::Units::troop_typeFromString(unit_type));
-  }
-
-  static auto set_rally_for_first_selected_barracks(
-      Engine::Core::World& world,
-      const std::vector<Engine::Core::EntityID>& selected,
-      int owner_id,
-      float x,
-      float z) -> bool;
-
-  static auto start_production_for_first_selected_home(
-      Engine::Core::World& world,
-      const std::vector<Engine::Core::EntityID>& selected,
-      int owner_id,
-      Game::Units::TroopType unit_type) -> ProductionResult;
-
-  static auto start_production_for_first_selected_home(
-      Engine::Core::World& world,
-      const std::vector<Engine::Core::EntityID>& selected,
-      int owner_id,
-      const std::string& unit_type) -> ProductionResult {
-    return start_production_for_first_selected_home(
-        world, selected, owner_id, Game::Units::troop_typeFromString(unit_type));
-  }
+  static auto find_selected_home(Engine::Core::World& world,
+                                 const std::vector<Engine::Core::EntityID>& selected,
+                                 int owner_id) -> Engine::Core::EntityID;
 
   static auto
   get_selected_barracks_state(Engine::Core::World& world,

@@ -173,13 +173,13 @@ TEST_F(FormationDataLoaderTest, AnIntentWithNoLinesIsFatal) {
 
 TEST_F(FormationDataLoaderTest, TroopProfileParsesRolesAndLayouts) {
   TroopFormationProfile profile;
-  ASSERT_TRUE(FormationDataLoader::parse_troop_profile(object_from(R"({
+  ASSERT_TRUE(Game::Formation::parse_troop_formation_profile(object_from(R"({
         "roles": ["line_infantry", "shielded"],
         "unit_layout": "close_order_infantry",
         "defensive_layout": "shield_wall",
         "army_roles": ["centre", "reserve"]
       })"),
-                                                       profile));
+                                                             profile));
 
   EXPECT_TRUE(Game::Formation::has_role(profile.roles, RoleTag::LineInfantry));
   EXPECT_TRUE(Game::Formation::has_role(profile.roles, RoleTag::Shielded));
@@ -191,7 +191,7 @@ TEST_F(FormationDataLoaderTest, TroopProfileParsesRolesAndLayouts) {
 
 TEST_F(FormationDataLoaderTest, TroopProfileWithNoFormationKeysIsLeftAlone) {
   TroopFormationProfile profile;
-  EXPECT_FALSE(FormationDataLoader::parse_troop_profile(
+  EXPECT_FALSE(Game::Formation::parse_troop_formation_profile(
       object_from(R"({"individuals_per_unit": 12})"), profile));
   EXPECT_EQ(profile.roles, 0U);
 }

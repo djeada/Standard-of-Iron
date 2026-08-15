@@ -109,16 +109,18 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
 
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world, selected, 1, Game::Units::TroopType::Archer);
+  auto result = Game::Systems::ProductionService::start_production(
+      world,
+      Game::Systems::ProductionService::find_selected_barracks(world, selected, 1),
+      Game::Units::TroopType::Archer);
   EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientManpower);
   EXPECT_FALSE(production->in_progress);
 
   production->manpower_available = 60;
-  result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world, selected, 1, Game::Units::TroopType::Archer);
+  result = Game::Systems::ProductionService::start_production(
+      world,
+      Game::Systems::ProductionService::find_selected_barracks(world, selected, 1),
+      Game::Units::TroopType::Archer);
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);
@@ -144,17 +146,19 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
   auto& resources = Game::Systems::PlayerResourceRegistry::instance();
 
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world, selected, 1, Game::Units::TroopType::Archer);
+  auto result = Game::Systems::ProductionService::start_production(
+      world,
+      Game::Systems::ProductionService::find_selected_barracks(world, selected, 1),
+      Game::Units::TroopType::Archer);
   EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientResources);
   EXPECT_FALSE(production->in_progress);
 
   resources.set(1, Game::Systems::ResourceType::Wood, 6);
 
-  result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world, selected, 1, Game::Units::TroopType::Archer);
+  result = Game::Systems::ProductionService::start_production(
+      world,
+      Game::Systems::ProductionService::find_selected_barracks(world, selected, 1),
+      Game::Units::TroopType::Archer);
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Wood), 0);

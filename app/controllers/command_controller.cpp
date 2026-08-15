@@ -24,7 +24,6 @@
 #include "../../game/session/session_context.h"
 #include "../../game/systems/combat_rules.h"
 #include "../../game/systems/command_service.h"
-#include "../../game/systems/order_service.h"
 #include "../../game/systems/owner_registry.h"
 #include "../../game/systems/picking_service.h"
 #include "../../game/systems/production_service.h"
@@ -420,26 +419,37 @@ void CommandController::recruit_near_selected(const QString& unit_type,
     return;
   }
 
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          *m_world, sel, local_owner_id, unit_type.toStdString());
-  if (unit_type.compare(QStringLiteral("civilian"), Qt::CaseInsensitive) == 0) {
-    result = Game::Systems::ProductionService::start_production_for_first_selected_home(
-        *m_world, sel, local_owner_id, unit_type.toStdString());
+  const bool wants_civilian =
+      unit_type.compare(QStringLiteral("civilian"), Qt::CaseInsensitive) == 0;
+  const auto building = wants_civilian
+                            ? Game::Systems::ProductionService::find_selected_home(
+                                  *m_world, sel, local_owner_id)
+                            : Game::Systems::ProductionService::find_selected_barracks(
+                                  *m_world, sel, local_owner_id);
+  if (building == Engine::Core::NULL_ENTITY) {
+    return;
   }
+  const auto product = Game::Units::troop_typeFromString(unit_type.toStdString());
 
-  if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
+  const auto ruling = Game::Systems::ProductionService::can_start_production(
+      *m_world, building, product);
+  if (ruling == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
     emit troop_limit_reached();
-  } else if (result == Game::Systems::ProductionResult::InsufficientManpower) {
+    return;
+  }
+  if (ruling == Game::Systems::ProductionResult::InsufficientManpower) {
     emit insufficient_manpower();
-  } else if (result == Game::Systems::ProductionResult::InsufficientResources) {
+    return;
+  }
+  if (ruling == Game::Systems::ProductionResult::InsufficientResources) {
     emit insufficient_resources(
         tr("Not enough wood, stone, or iron to recruit this unit."));
+    return;
   }
-}
-
-void CommandController::reset_movement(Engine::Core::Entity* entity) {
-  App::Utils::reset_movement(entity);
+  if (ruling != Game::Systems::ProductionResult::Success) {
+    return;
+  }
+  submit(m_world, Game::Command::Produce{.building = building, .product = product});
 }
 
 void CommandController::reset_transient_state() {
@@ -454,16 +464,10 @@ void CommandController::reset_transient_state() {
     return;
   }
 
-  for (const auto id : m_formation_units) {
-    auto* entity = m_world != nullptr ? m_world->get_entity(id) : nullptr;
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if (formation_mode != nullptr) {
-      formation_mode->active = false;
-    }
+  if (m_world != nullptr && !m_formation_units.empty()) {
+    submit(
+        m_world,
+        Game::Command::SetFormationMode{.units = m_formation_units, .active = false});
   }
 
   m_is_placing_formation = false;
@@ -608,31 +612,9 @@ auto CommandController::on_guard_click(qreal sx,
     return result;
   }
 
-  for (auto id : guard_units) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-    if (guard_mode == nullptr) {
-      guard_mode = entity->add_component<Engine::Core::GuardModeComponent>();
-    }
-
-    guard_mode->active = true;
-    guard_mode->guarded_entity_id = 0;
-    guard_mode->guard_position_x = hit.x();
-    guard_mode->guard_position_z = hit.z();
-    guard_mode->returning_to_guard_position = false;
-    guard_mode->has_guard_target = true;
-
-    Game::Systems::OrderService::exit_hold_mode(entity);
-
-    Game::Systems::OrderService::clear_patrol(entity);
-    Game::Systems::OrderService::reset_movement(entity);
-    Game::Systems::OrderService::clear_attack_target(entity);
-    Game::Systems::OrderService::clear_player_order_intent(entity);
-  }
+  submit(m_world,
+         Game::Command::SetGuard{
+             .units = guard_units, .active = true, .anchor = hit, .has_anchor = true});
 
   emit guard_mode_changed(true);
 
@@ -753,46 +735,9 @@ auto CommandController::on_formation_command() -> CommandResult {
 
   const bool should_enable_formation = (formation_active_count < eligible_count);
 
-  for (auto id : selected) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-
-    if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
-      continue;
-    }
-
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-
-    if (should_enable_formation) {
-
-      if (formation_mode == nullptr) {
-        formation_mode = entity->add_component<Engine::Core::FormationModeComponent>();
-      }
-      formation_mode->active = true;
-
-      Game::Systems::OrderService::exit_hold_mode(entity);
-
-      auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-      if ((guard_mode != nullptr) && guard_mode->active) {
-        guard_mode->active = false;
-      }
-
-      Game::Systems::OrderService::clear_patrol(entity);
-    } else {
-
-      if ((formation_mode != nullptr) && formation_mode->active) {
-        formation_mode->active = false;
-      }
-    }
-  }
+  submit(m_world,
+         Game::Command::SetFormationMode{.units = {selected.begin(), selected.end()},
+                                         .active = should_enable_formation});
 
   if (should_enable_formation) {
     QVector3D center(0.0F, 0.0F, 0.0F);
@@ -970,58 +915,36 @@ void CommandController::confirm_formation_placement() {
     return;
   }
 
-  Game::Formation::ArmyFormationRequest request;
-  request.members = m_formation_units;
-  request.anchor = m_formation_placement_position;
-  request.facing = m_formation_facing_degrees;
-  request.frontage = m_formation_frontage;
-  request.intent = m_formation_intent;
-  request.doctrine = m_formation_doctrine_override;
-  request.options = m_formation_options;
-  request.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
+  Game::Command::DeployFormation deploy;
+  deploy.units = m_formation_units;
+  deploy.anchor = m_formation_placement_position;
+  deploy.facing = m_formation_facing_degrees;
+  deploy.frontage = m_formation_frontage;
+  deploy.intent = m_formation_intent;
+  deploy.doctrine = m_formation_doctrine_override;
+  deploy.options = m_formation_options;
+  deploy.spacing = Game::GameConfig::instance().gameplay().formation_spacing_default;
 
-  auto formation_result =
-      Game::Formation::ArmyFormationService::commit(*m_world, request);
+  {
 
-  if (!formation_result.valid) {
-    emit formation_placement_rejected(
-        QString::fromStdString(formation_result.rejection_reason));
+    Game::Formation::ArmyFormationRequest request;
+    request.members = deploy.units;
+    request.anchor = deploy.anchor;
+    request.facing = deploy.facing;
+    request.frontage = deploy.frontage;
+    request.intent = deploy.intent;
+    request.doctrine = deploy.doctrine;
+    request.options = deploy.options;
+    request.spacing = deploy.spacing;
+    auto const preview =
+        Game::Formation::ArmyFormationService::preview(*m_world, request);
+    if (!preview.valid) {
+      emit formation_placement_rejected(
+          QString::fromStdString(preview.rejection_reason));
+    }
   }
 
-  for (size_t i = 0; i < m_formation_units.size(); ++i) {
-    auto* entity = m_world->get_entity(m_formation_units[i]);
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (transform != nullptr) {
-
-      float const unit_facing = (i < formation_result.facing_angles.size())
-                                    ? formation_result.facing_angles[i]
-                                    : 0.0F;
-      transform->desired_yaw = unit_facing;
-      transform->has_desired_yaw = true;
-    }
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if (formation_mode != nullptr && i < formation_result.stable_slot_ids.size()) {
-      formation_mode->formation_id = formation_result.group_id;
-      formation_mode->stable_slot_id = formation_result.stable_slot_ids[i];
-      formation_mode->stable_rank = formation_result.stable_ranks[i];
-      formation_mode->stable_file = formation_result.stable_files[i];
-      formation_mode->stable_slot_x = formation_result.positions[i].x();
-      formation_mode->stable_slot_z = formation_result.positions[i].z();
-    }
-
-    Game::Systems::OrderService::clear_patrol(entity);
-  }
-
-  Game::Command::Move move;
-  move.units = m_formation_units;
-  move.targets = formation_result.positions;
-  move.kind = Game::Systems::MoveOrderKind::FormationMove;
-  move.preserve_formation_mode = formation_result.used_army_formation;
-  submit(m_world, std::move(move));
+  submit(m_world, std::move(deploy));
 
   m_is_placing_formation = false;
   m_formation_drag_active = false;
@@ -1043,19 +966,7 @@ void CommandController::cancel_formation_placement() {
     return;
   }
 
-  for (auto id : m_formation_units) {
-    auto* entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if (formation_mode != nullptr) {
-      formation_mode->active = false;
-    }
-  }
-
-  Game::Formation::ArmyFormationService::release(*m_world, m_formation_units);
+  submit(m_world, Game::Command::ReleaseFormation{.units = m_formation_units});
 
   m_is_placing_formation = false;
   m_formation_drag_active = false;

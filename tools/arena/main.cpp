@@ -25,6 +25,7 @@
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_topology_audit.h"
+#include "game/session/session_context.h"
 #include "promo_runner.h"
 #include "promo_spec.h"
 #include "render/gl/context_requirements.h"
@@ -183,6 +184,9 @@ auto write_terrain_review_report(const QString& directory,
 } // namespace
 
 auto main(int argc, char** argv) -> int {
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
   QSurfaceFormat fmt;
 #if defined(Q_OS_MACOS)
   constexpr auto gl_version = Render::GL::ContextRequirements::apple_maximum;

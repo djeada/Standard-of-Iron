@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "animation/bpat/bpat_registry.h"
+#include "game/session/session_context.h"
 
 namespace {
 
@@ -34,6 +35,10 @@ void load_baked_clips(const QCoreApplication& app) {
 auto main(int argc, char** argv) -> int {
   QCoreApplication app(argc, argv);
   load_baked_clips(app);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

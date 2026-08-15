@@ -9,6 +9,7 @@
 #include <optional>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../systems/building_collision_registry.h"
 #include "../units/spawn_type.h"
 #include "map_definition.h"
@@ -16,6 +17,10 @@
 #include "terrain.h"
 
 namespace Game::Map {
+
+auto TerrainService::instance() -> TerrainService& {
+  return *Game::Session::ambient_services().terrain;
+}
 
 namespace {
 

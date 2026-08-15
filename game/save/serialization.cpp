@@ -640,7 +640,6 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     builder_obj["task_target_z"] = static_cast<double>(builder->task_target_z);
     builder_obj["task_target_reserved"] = builder->task_target_reserved;
     builder_obj["at_construction_site"] = builder->at_construction_site;
-    builder_obj["is_placement_preview"] = builder->is_placement_preview;
     builder_obj["construction_site_entity_id"] =
         static_cast<qint64>(builder->construction_site_entity_id);
     QJsonArray queued_sites;
@@ -1534,7 +1533,6 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(builder_obj["task_target_z"].toDouble(0.0));
     builder->task_target_reserved = builder_obj["task_target_reserved"].toBool(false);
     builder->at_construction_site = builder_obj["at_construction_site"].toBool(false);
-    builder->is_placement_preview = builder_obj["is_placement_preview"].toBool(false);
     builder->construction_site_entity_id = static_cast<EntityID>(
         builder_obj["construction_site_entity_id"].toVariant().toULongLong());
     if (builder_obj.contains("queued_construction_site_ids")) {

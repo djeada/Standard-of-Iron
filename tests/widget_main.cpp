@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "animation/bpat/bpat_registry.h"
+#include "game/session/session_context.h"
 
 namespace {
 
@@ -35,6 +36,10 @@ auto main(int argc, char** argv) -> int {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
   load_baked_clips(app);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

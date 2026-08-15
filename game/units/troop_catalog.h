@@ -1,8 +1,10 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 
+#include "../formation/formation_roles.h"
 #include "../systems/resource_types.h"
 #include "troop_type.h"
 
@@ -56,6 +58,8 @@ struct TroopClass {
 
   int individuals_per_unit = 1;
   int max_units_per_row = 1;
+
+  std::optional<Game::Formation::TroopFormationProfile> formation_profile;
 };
 
 class TroopCatalog {

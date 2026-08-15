@@ -68,10 +68,6 @@ auto state_for_fault(Engine::Core::BuilderTaskFault fault) -> ActivityState {
 auto builder_activity(const Engine::Core::Entity& entity,
                       const Engine::Core::BuilderProductionComponent& builder)
     -> std::optional<UnitActivity> {
-  if (builder.is_placement_preview) {
-    return std::nullopt;
-  }
-
   UnitActivity activity;
   activity.kind = activity_for_builder_product(builder.product_type);
   activity.queued_orders =

@@ -8,9 +8,14 @@
 #include <utility>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/world.h"
 
 namespace Game::Systems {
+
+auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry& {
+  return *Game::Session::ambient_services().building_collision;
+}
 
 const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
     BuildingCollisionRegistry::s_building_sizes = {

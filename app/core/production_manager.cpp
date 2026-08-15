@@ -11,6 +11,7 @@
 
 #include "app/core/input_command_handler.h"
 #include "game/audio/audio_cues.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
@@ -25,6 +26,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/structure_placement_service.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/building_spawn_setup.h"
@@ -53,7 +55,6 @@ constexpr auto k_cut_tree_item_type = "cut_tree";
 constexpr auto k_collect_item_type = "collect";
 constexpr auto k_collect_stone_item_type = "collect_stone";
 constexpr auto k_collect_iron_ore_item_type = "collect_iron_ore";
-constexpr float k_collect_build_time = 6.0F;
 constexpr float k_construction_rotation_step_degrees = 5.0F;
 constexpr float k_wall_preview_rotation_step_degrees = 90.0F;
 
@@ -92,57 +93,6 @@ struct ConstructionPointerHit {
 
 constexpr int k_harvest_work_search_radius = 16;
 
-void clear_builder_task_target(Engine::Core::BuilderProductionComponent* builder_prod) {
-  if (builder_prod == nullptr) {
-    return;
-  }
-  if (builder_prod->task_target_reserved) {
-    Game::Map::TerrainService::instance().release_world_prop(
-        builder_prod->task_target_id);
-  }
-  builder_prod->has_task_target = false;
-  builder_prod->task_target_id = 0;
-  builder_prod->task_target_x = 0.0F;
-  builder_prod->task_target_z = 0.0F;
-  builder_prod->task_target_reserved = false;
-}
-
-void clear_builder_assignment(Engine::Core::BuilderProductionComponent* builder_prod) {
-  if (builder_prod == nullptr) {
-    return;
-  }
-  builder_prod->in_progress = false;
-  builder_prod->time_remaining = 0.0F;
-  builder_prod->construction_complete = false;
-  builder_prod->has_construction_site = false;
-  builder_prod->construction_site_x = 0.0F;
-  builder_prod->construction_site_z = 0.0F;
-  builder_prod->construction_site_rotation_y = 0.0F;
-  builder_prod->at_construction_site = false;
-  builder_prod->product_type.clear();
-  builder_prod->is_placement_preview = false;
-  builder_prod->construction_site_entity_id = 0;
-  builder_prod->queued_construction_site_ids.clear();
-  builder_prod->clear_auto_gather();
-  clear_builder_task_target(builder_prod);
-}
-
-auto is_construction_position_valid(float pos_x,
-                                    float pos_z,
-                                    const std::string& building_type) -> bool {
-  auto& collision_registry = Game::Systems::BuildingCollisionRegistry::instance();
-  auto size =
-      Game::Systems::BuildingCollisionRegistry::get_building_size(building_type);
-
-  if (collision_registry.is_circle_overlapping_building(
-          pos_x, pos_z, std::max(size.width, size.depth) * 0.5F, 0)) {
-    return false;
-  }
-
-  Game::Systems::Point const grid = Game::Systems::NavGrid::world_to_grid(pos_x, pos_z);
-  return Game::Systems::NavGrid::is_grid_walkable(grid);
-}
-
 auto normalize_rotation_degrees(float angle) -> float {
   while (angle < 0.0F) {
     angle += 360.0F;
@@ -169,49 +119,6 @@ auto is_previewable_structure_item(const QString& item_type) -> bool {
 
 auto item_supports_preview_rotation(const QString& item_type) -> bool {
   return is_previewable_structure_item(item_type);
-}
-
-auto spawn_type_for_construction_item(const QString& item_type)
-    -> std::optional<Game::Units::SpawnType> {
-  if (item_type == QStringLiteral("catapult")) {
-    return Game::Units::SpawnType::Catapult;
-  }
-  if (item_type == QStringLiteral("ballista")) {
-    return Game::Units::SpawnType::Ballista;
-  }
-  if (item_type == QStringLiteral("barracks")) {
-    return Game::Units::SpawnType::Barracks;
-  }
-  if (item_type == QStringLiteral("defense_tower")) {
-    return Game::Units::SpawnType::DefenseTower;
-  }
-  if (item_type == QStringLiteral("wall_segment")) {
-    return Game::Units::SpawnType::WallSegment;
-  }
-  if (item_type == QStringLiteral("wall_gate")) {
-    return Game::Units::SpawnType::WallGate;
-  }
-  if (item_type == QStringLiteral("home")) {
-    return Game::Units::SpawnType::Home;
-  }
-  if (item_type == QStringLiteral("temple")) {
-    return Game::Units::SpawnType::Temple;
-  }
-  if (item_type == QStringLiteral("marketplace")) {
-    return Game::Units::SpawnType::Marketplace;
-  }
-  return std::nullopt;
-}
-
-auto update_builder_move_target(Engine::Core::Entity* entity,
-                                float target_x,
-                                float target_z) -> void {
-  if (entity == nullptr) {
-    return;
-  }
-  if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-    movement->set_rest_position(target_x, target_z);
-  }
 }
 
 auto select_best_builder_for_target(
@@ -328,18 +235,6 @@ auto resource_amounts_to_variant_map(const Game::Systems::ResourceAmounts& amoun
   return map;
 }
 
-auto scaled_resource_amounts(const Game::Systems::ResourceAmounts& base,
-                             int multiplier) -> Game::Systems::ResourceAmounts {
-  Game::Systems::ResourceAmounts scaled;
-  if (multiplier <= 0) {
-    return scaled;
-  }
-  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
-    scaled.set(type, base.get(type) * multiplier);
-  }
-  return scaled;
-}
-
 auto translated_resource_name(Game::Systems::ResourceType type) -> QString {
   switch (type) {
   case Game::Systems::ResourceType::Gold:
@@ -373,6 +268,27 @@ auto first_missing_resource_name(
 auto construction_costs_for_item(const QString& item_type)
     -> Game::Systems::ResourceAmounts {
   return Game::Systems::construction_cost_info(item_type.toStdString()).resource_costs;
+}
+
+auto wall_segment_failure_text(const Game::Systems::PlannedWallSegment& segment)
+    -> QString {
+  switch (segment.fault) {
+  case Game::Systems::WallSegmentFault::Occupied:
+    return QCoreApplication::translate("ProductionManager",
+                                       "Blocked by an existing wall.");
+  case Game::Systems::WallSegmentFault::NotEnoughWood:
+    return QCoreApplication::translate("ProductionManager", "Not enough wood.");
+  case Game::Systems::WallSegmentFault::Invalid:
+    return QString::fromStdString(segment.failure_reason);
+  case Game::Systems::WallSegmentFault::None:
+    break;
+  }
+  return {};
+}
+
+auto wood_per_segment_for(const QString& item_type) -> int {
+  return Game::Systems::construction_cost_info(item_type.toStdString())
+      .resource_costs.get(Game::Systems::ResourceType::Wood);
 }
 
 auto insufficient_construction_resources_reason(
@@ -494,11 +410,39 @@ constexpr int k_collect_resource_cell_search_radius = 3;
 constexpr float k_collect_resource_grid_snap_distance = 1.5F;
 constexpr float k_collect_screen_fallback_radius_px = 12.0F;
 
+using CrewClaims = std::unordered_set<std::uint64_t>;
+
+auto crew_claims(Engine::Core::World* world,
+                 const std::vector<Engine::Core::EntityID>& builder_ids) -> CrewClaims {
+  CrewClaims claims;
+  if (world == nullptr) {
+    return claims;
+  }
+  for (const auto id : builder_ids) {
+    const auto* entity = world->get_entity(id);
+    const auto* builder =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::BuilderProductionComponent>()
+            : nullptr;
+    if (builder != nullptr && builder->task_target_reserved) {
+      claims.insert(builder->task_target_id);
+    }
+  }
+  return claims;
+}
+
+auto prop_taken(const Game::Map::TerrainService& terrain_service,
+                std::uint64_t prop_id,
+                const CrewClaims& claims) -> bool {
+  return terrain_service.is_world_prop_reserved(prop_id) && !claims.contains(prop_id);
+}
+
 auto find_specific_harvest_target_by_id(Game::Map::TerrainService& terrain_service,
                                         HarvestTargetKind kind,
-                                        std::uint64_t target_id)
+                                        std::uint64_t target_id,
+                                        const CrewClaims& claims)
     -> std::optional<Game::Map::WorldPropTarget> {
-  if (target_id == 0 || terrain_service.is_world_prop_reserved(target_id)) {
+  if (target_id == 0 || prop_taken(terrain_service, target_id, claims)) {
     return std::nullopt;
   }
 
@@ -532,7 +476,9 @@ auto find_harvest_target_near_grid(Game::Map::TerrainService& terrain_service,
   return std::nullopt;
 }
 
-auto resolve_preferred_harvest_target(const QString& item_type, std::uint64_t target_id)
+auto resolve_preferred_harvest_target(const QString& item_type,
+                                      std::uint64_t target_id,
+                                      const CrewClaims& claims)
     -> std::optional<ResolvedHarvestTarget> {
   if (target_id == 0) {
     return std::nullopt;
@@ -541,16 +487,15 @@ auto resolve_preferred_harvest_target(const QString& item_type, std::uint64_t ta
   auto& terrain_service = Game::Map::TerrainService::instance();
   if (auto specific_kind = harvest_target_kind_for_item(item_type);
       specific_kind.has_value()) {
-    auto target =
-        find_specific_harvest_target_by_id(terrain_service, *specific_kind, target_id);
+    auto target = find_specific_harvest_target_by_id(
+        terrain_service, *specific_kind, target_id, claims);
     if (!target.has_value()) {
       return std::nullopt;
     }
     return ResolvedHarvestTarget{.kind = *specific_kind, .target = *target};
   }
 
-  if (!is_collect_item(item_type) ||
-      terrain_service.is_world_prop_reserved(target_id)) {
+  if (!is_collect_item(item_type) || prop_taken(terrain_service, target_id, claims)) {
     return std::nullopt;
   }
 
@@ -569,6 +514,7 @@ auto resolve_preferred_harvest_target(const QString& item_type, std::uint64_t ta
 
 auto resolve_harvest_target_at_position(const QString& item_type,
                                         const QVector3D& world_position,
+                                        const CrewClaims& claims,
                                         std::uint64_t preferred_target_id = 0)
     -> std::optional<ResolvedHarvestTarget> {
   if (!is_harvest_construction_item(item_type)) {
@@ -576,7 +522,7 @@ auto resolve_harvest_target_at_position(const QString& item_type,
   }
 
   if (auto preferred_target =
-          resolve_preferred_harvest_target(item_type, preferred_target_id);
+          resolve_preferred_harvest_target(item_type, preferred_target_id, claims);
       preferred_target.has_value()) {
     return preferred_target;
   }
@@ -640,8 +586,11 @@ auto evaluate_harvest_placement(Engine::Core::World* world,
                                 const QString& item_type,
                                 std::uint64_t preferred_target_id = 0)
     -> HarvestPlacement {
-  if (auto resolved_target = resolve_harvest_target_at_position(
-          item_type, world_position, preferred_target_id);
+  if (auto resolved_target =
+          resolve_harvest_target_at_position(item_type,
+                                             world_position,
+                                             crew_claims(world, builder_ids),
+                                             preferred_target_id);
       resolved_target.has_value()) {
     return evaluate_resolved_harvest_placement(world, builder_ids, *resolved_target);
   }
@@ -680,7 +629,8 @@ auto point_to_segment_distance_sq(const QPointF& point,
 auto resolve_harvest_target_from_screen(const QString& item_type,
                                         const Render::GL::Camera& camera,
                                         const ViewportState& viewport,
-                                        const QPointF& screen_point)
+                                        const QPointF& screen_point,
+                                        const CrewClaims& claims)
     -> std::optional<ResolvedHarvestTarget> {
   if (!is_harvest_construction_item(item_type)) {
     return std::nullopt;
@@ -693,7 +643,7 @@ auto resolve_harvest_target_from_screen(const QString& item_type,
 
   for (const auto& prop : terrain_service.world_props()) {
     if (!Game::Map::is_harvestable_world_prop_type(prop.type) ||
-        terrain_service.is_world_prop_reserved(prop.id)) {
+        prop_taken(terrain_service, prop.id, claims)) {
       continue;
     }
 
@@ -727,7 +677,8 @@ auto resolve_harvest_target_from_screen(const QString& item_type,
       continue;
     }
 
-    auto const resolved_target = resolve_preferred_harvest_target(item_type, prop.id);
+    auto const resolved_target =
+        resolve_preferred_harvest_target(item_type, prop.id, claims);
     if (!resolved_target.has_value()) {
       continue;
     }
@@ -828,6 +779,7 @@ auto maybe_snap_rotated_wall_preview(Engine::Core::World* world,
 auto resolve_construction_pointer_hit(Engine::Core::World* world,
                                       const QString& item_type,
                                       int owner_id,
+                                      const std::vector<Engine::Core::EntityID>& crew,
                                       const Render::GL::Camera& camera,
                                       const ViewportState& viewport,
                                       const QPointF& screen_point)
@@ -844,10 +796,11 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
   }
 
   if (is_harvest_construction_item(item_type)) {
-    auto resolved_target = resolve_harvest_target_at_position(item_type, hit);
+    const CrewClaims claims = crew_claims(world, crew);
+    auto resolved_target = resolve_harvest_target_at_position(item_type, hit, claims);
     if (!resolved_target.has_value()) {
-      resolved_target =
-          resolve_harvest_target_from_screen(item_type, camera, viewport, screen_point);
+      resolved_target = resolve_harvest_target_from_screen(
+          item_type, camera, viewport, screen_point, claims);
     }
     if (!resolved_target.has_value()) {
       return std::nullopt;
@@ -952,7 +905,6 @@ void ProductionManager::reset_transient_state() {
   set_construction_preview_valid(false);
   clear_construction_preview_summary();
   clear_preview_entities();
-  clear_builder_preview_sites();
   m_wall_drag_active = false;
   m_wall_drag_anchor_set = false;
 }
@@ -970,6 +922,7 @@ void ProductionManager::on_construction_mouse_move(qreal sx,
       resolve_construction_pointer_hit(m_world,
                                        m_pending_construction_type,
                                        pending_construction_owner_id(),
+                                       m_pending_construction_builders,
                                        *m_camera,
                                        viewport,
                                        screenPt);
@@ -1020,6 +973,7 @@ void ProductionManager::on_construction_pointer_pressed(qreal sx,
       resolve_construction_pointer_hit(m_world,
                                        m_pending_construction_type,
                                        pending_construction_owner_id(),
+                                       m_pending_construction_builders,
                                        *m_camera,
                                        viewport,
                                        QPointF(sx, sy));
@@ -1047,6 +1001,7 @@ void ProductionManager::on_construction_pointer_released(
           resolve_construction_pointer_hit(m_world,
                                            m_pending_construction_type,
                                            pending_construction_owner_id(),
+                                           m_pending_construction_builders,
                                            *m_camera,
                                            viewport,
                                            screen_point);
@@ -1071,6 +1026,7 @@ void ProductionManager::on_construction_pointer_released(
             resolve_construction_pointer_hit(m_world,
                                              m_pending_construction_type,
                                              pending_construction_owner_id(),
+                                             m_pending_construction_builders,
                                              *m_camera,
                                              viewport,
                                              QPointF(sx, sy));
@@ -1140,56 +1096,32 @@ void ProductionManager::on_construction_confirm() {
       return;
     }
 
-    auto& terrain_service = Game::Map::TerrainService::instance();
-    if (!terrain_service.reserve_world_prop(placement.target->id)) {
+    if (prop_taken(Game::Map::TerrainService::instance(),
+                   placement.target->id,
+                   crew_claims(m_world, m_pending_construction_builders))) {
       set_construction_preview_valid(false);
       emit construction_placement_rejected(QCoreApplication::translate(
           "ProductionManager", "That resource is already assigned."));
       return;
     }
 
-    std::string const product_type = harvest_product_type(placement.kind);
-    float const build_time = get_construction_build_time(product_type);
+    std::vector<Engine::Core::EntityID> crew;
+    crew.reserve(m_pending_construction_builders.size());
+    crew.push_back(placement.builder_id);
     for (auto id : m_pending_construction_builders) {
-      auto* entity = m_world->get_entity(id);
-      auto* builder_prod =
-          entity != nullptr
-              ? entity->get_component<Engine::Core::BuilderProductionComponent>()
-              : nullptr;
-      if (builder_prod == nullptr) {
-        continue;
-      }
-
       if (id != placement.builder_id) {
-        clear_builder_assignment(builder_prod);
-        continue;
-      }
-
-      builder_prod->clear_auto_gather();
-      builder_prod->is_placement_preview = false;
-      builder_prod->product_type = product_type;
-      builder_prod->build_time = build_time;
-      builder_prod->time_remaining = build_time;
-      builder_prod->has_construction_site = true;
-      builder_prod->construction_site_x = placement.target->x;
-      builder_prod->construction_site_z = placement.target->z;
-      builder_prod->construction_site_rotation_y = 0.0F;
-      builder_prod->at_construction_site = false;
-      builder_prod->in_progress = false;
-      builder_prod->construction_complete = false;
-      builder_prod->bypass_movement_active = false;
-      builder_prod->has_task_target = true;
-      builder_prod->task_target_id = placement.target->id;
-      builder_prod->task_target_x = placement.target->x;
-      builder_prod->task_target_z = placement.target->z;
-      builder_prod->task_target_reserved = true;
-    }
-
-    if (auto* entity = m_world->get_entity(placement.builder_id)) {
-      if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-        movement->set_rest_position(placement.target->x, placement.target->z);
+        crew.push_back(id);
       }
     }
+    Game::Command::submit(
+        *m_world,
+        Game::Command::Source::LocalPlayer,
+        pending_construction_owner_id(),
+        Game::Command::StartHarvest{
+            .units = std::move(crew),
+            .construction_type = harvest_product_type(placement.kind),
+            .resource_target = placement.target->id,
+            .site = QVector3D(placement.target->x, 0.0F, placement.target->z)});
 
     m_is_placing_construction = false;
     m_is_direct_building_placement = false;
@@ -1207,35 +1139,36 @@ void ProductionManager::on_construction_confirm() {
     return;
   }
 
-  if (!is_construction_position_valid(m_construction_placement_position.x(),
-                                      m_construction_placement_position.z(),
-                                      m_pending_construction_type.toStdString())) {
+  if (!Game::Systems::StructurePlacementService::footprint_is_clear(
+          m_construction_placement_position.x(),
+          m_construction_placement_position.z(),
+          m_pending_construction_type.toStdString())) {
 
     emit construction_placement_rejected(
         QCoreApplication::translate("ProductionManager", "Cannot build there."));
     return;
   }
 
-  for (auto id : m_pending_construction_builders) {
-    auto* e = m_world->get_entity(id);
-    if (e == nullptr) {
-      continue;
+  {
+    const int owner_id = pending_construction_owner_id();
+    const Game::Systems::ResourceAmounts resource_costs =
+        construction_costs_for_item(m_pending_construction_type);
+    if (!resource_costs.empty() &&
+        !Game::Systems::PlayerResourceRegistry::instance().has_at_least(
+            owner_id, resource_costs)) {
+      emit construction_placement_rejected(
+          insufficient_construction_resources_reason(owner_id, resource_costs));
+      return;
     }
-
-    auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod != nullptr) {
-      builder_prod->is_placement_preview = false;
-      builder_prod->has_construction_site = true;
-      builder_prod->construction_site_x = m_construction_placement_position.x();
-      builder_prod->construction_site_z = m_construction_placement_position.z();
-      builder_prod->construction_site_rotation_y = m_construction_preview_rotation_y;
-    }
-
-    auto* mv = e->get_component<Engine::Core::MovementComponent>();
-    if (mv != nullptr) {
-      mv->set_rest_position(m_construction_placement_position.x(),
-                            m_construction_placement_position.z());
-    }
+    Game::Command::submit(
+        *m_world,
+        Game::Command::Source::LocalPlayer,
+        owner_id,
+        Game::Command::StartConstruction{
+            .units = m_pending_construction_builders,
+            .construction_type = m_pending_construction_type.toStdString(),
+            .site = m_construction_placement_position,
+            .rotation_y = m_construction_preview_rotation_y});
   }
 
   m_is_placing_construction = false;
@@ -1261,23 +1194,10 @@ void ProductionManager::on_construction_cancel() {
   }
 
   clear_preview_entities();
-  clear_builder_preview_sites();
   clear_construction_preview_summary();
   m_wall_preview_segments.clear();
   m_wall_drag_active = false;
   m_wall_drag_anchor_set = false;
-
-  for (auto id : m_pending_construction_builders) {
-    auto* e = m_world->get_entity(id);
-    if (e == nullptr) {
-      continue;
-    }
-
-    auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod != nullptr) {
-      clear_builder_assignment(builder_prod);
-    }
-  }
 
   m_is_placing_construction = false;
   m_is_direct_building_placement = false;
@@ -1327,43 +1247,6 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
   m_active_placement_owner_id = pending_construction_owner_id();
   m_active_placement_nation_id = pending_construction_nation_id();
 
-  std::string const item_str = item_type.toStdString();
-  float const build_time = get_construction_build_time(item_str);
-
-  if (is_wall_construction_mode()) {
-    clear_builder_preview_sites();
-    set_construction_preview_active(false);
-    set_construction_preview_valid(false);
-    Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_begin);
-    emit placing_construction_changed();
-    return;
-  }
-
-  for (auto id : m_pending_construction_builders) {
-    auto* e = m_world->get_entity(id);
-    if (e == nullptr) {
-      continue;
-    }
-
-    auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod == nullptr) {
-      continue;
-    }
-
-    builder_prod->clear_auto_gather();
-    builder_prod->product_type = item_str;
-    builder_prod->build_time = build_time;
-    builder_prod->time_remaining = build_time;
-    builder_prod->has_construction_site = false;
-    builder_prod->construction_site_x = m_construction_placement_position.x();
-    builder_prod->construction_site_z = m_construction_placement_position.z();
-    builder_prod->construction_site_rotation_y = 0.0F;
-    builder_prod->at_construction_site = false;
-    builder_prod->in_progress = false;
-    builder_prod->is_placement_preview = true;
-    clear_builder_task_target(builder_prod);
-  }
-
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_begin);
@@ -1388,29 +1271,6 @@ void ProductionManager::set_construction_preview_valid(bool valid) {
 
 void ProductionManager::clear_construction_preview_summary() {
   set_construction_preview_summary(0, 0, 0);
-}
-
-void ProductionManager::clear_builder_preview_sites() {
-  if (m_world == nullptr) {
-    return;
-  }
-
-  for (auto id : m_pending_construction_builders) {
-    auto* entity = m_world->get_entity(id);
-    auto* builder_prod =
-        entity != nullptr
-            ? entity->get_component<Engine::Core::BuilderProductionComponent>()
-            : nullptr;
-    if (builder_prod == nullptr || !builder_prod->is_placement_preview) {
-      continue;
-    }
-
-    builder_prod->has_construction_site = false;
-    builder_prod->construction_site_x = 0.0F;
-    builder_prod->construction_site_z = 0.0F;
-    builder_prod->construction_site_rotation_y = 0.0F;
-    builder_prod->construction_site_entity_id = 0;
-  }
 }
 
 void ProductionManager::on_construction_scroll(float delta) {
@@ -1452,16 +1312,16 @@ void ProductionManager::update_non_wall_construction_preview(
     set_construction_preview_valid(placement.valid());
   } else {
     set_construction_preview_valid(
-        is_construction_position_valid(world_position.x(),
-                                       world_position.z(),
-                                       m_pending_construction_type.toStdString()));
+        Game::Systems::StructurePlacementService::footprint_is_clear(
+            world_position.x(),
+            world_position.z(),
+            m_pending_construction_type.toStdString()));
   }
   rebuild_non_wall_preview_entity(world_position);
 }
 
 void ProductionManager::clear_non_wall_construction_preview() {
   m_pending_harvest_target_id = 0;
-  clear_builder_preview_sites();
   clear_preview_entities();
   set_construction_preview_active(false);
 }
@@ -1714,91 +1574,16 @@ void ProductionManager::rebuild_wall_preview_plan(
     }
   }
 
-  const auto chain =
-      is_gate_construction_mode()
-          ? std::vector<Game::Systems::WallGridPosition>{target}
-          : Game::Systems::WallNetworkService::build_axis_aligned_chain(anchor, target);
-  const QString item_type = m_pending_construction_type;
-  const int wood_cost =
-      construction_costs_for_item(item_type).get(Game::Systems::ResourceType::Wood);
-
-  auto occupancy = Game::Systems::WallNetworkService::OccupancySet{};
-  Game::Systems::WallNetworkService::add_world_occupancy(*m_world, occupancy, true);
-  const int owner_id = pending_construction_owner_id();
-  Game::Systems::WallNetworkService::OwnerOccupancyMap connection_occupancy_by_owner;
-  Game::Systems::WallNetworkService::build_connection_occupancy(
-      *m_world, connection_occupancy_by_owner, true, true);
-
-  int available_wood = Game::Systems::PlayerResourceRegistry::instance().get(
-      owner_id, Game::Systems::ResourceType::Wood);
-  int valid_segment_count = 0;
-
-  for (const auto& grid_pos : chain) {
-    const auto key =
-        Game::Systems::WallNetworkService::encode_key(grid_pos.x, grid_pos.z);
-    const QVector3D world_position = Game::Systems::NavGrid::grid_to_world(
-        Game::Systems::Point{grid_pos.x, grid_pos.z});
-
-    WallPlacementSegment segment;
-    segment.grid_x = grid_pos.x;
-    segment.grid_z = grid_pos.z;
-    segment.world_position = world_position;
-
-    if (occupancy.find(key) != occupancy.end()) {
-      segment.failure_reason = QCoreApplication::translate(
-                                   "ProductionManager", "Blocked by an existing wall.")
-                                   .toStdString();
-    } else if (const auto validation =
-                   Game::Systems::WallNetworkService::validate_wall_segment_placement(
-                       *m_world, grid_pos, true);
-               !validation.valid) {
-      segment.failure_reason = validation.failure_reason;
-    } else if (available_wood < wood_cost) {
-      segment.failure_reason =
-          QCoreApplication::translate("ProductionManager", "Not enough wood.")
-              .toStdString();
-    } else {
-      segment.valid = true;
-      ++valid_segment_count;
-      available_wood -= wood_cost;
-      occupancy.insert(key);
-    }
-
-    m_wall_preview_segments.push_back(segment);
-  }
-
-  const auto nation_id = pending_construction_nation_id();
-  auto preview_occupancy = connection_occupancy_by_owner.contains(owner_id)
-                               ? connection_occupancy_by_owner.at(owner_id)
-                               : Game::Systems::WallNetworkService::OccupancySet{};
-  for (const auto& segment : m_wall_preview_segments) {
-    if (segment.valid) {
-      preview_occupancy.insert(Game::Systems::WallNetworkService::encode_key(
-          segment.grid_x, segment.grid_z));
-    }
-  }
-
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  for (auto& segment : m_wall_preview_segments) {
-    segment.connection_mask =
-        Game::Systems::WallNetworkService::compute_connection_mask(
-            preview_occupancy, segment.grid_x, segment.grid_z);
-    const auto appearance =
-        is_gate_construction_mode()
-            ? Game::Systems::WallNetworkService::resolve_gate_appearance(
-                  nation_id, segment.connection_mask, m_wall_preview_rotation_y)
-            : Game::Systems::WallNetworkService::resolve_appearance(
-                  nation_id, segment.connection_mask);
-    segment.rotation_y = appearance.rotation_y;
-    if (chain.size() == 1U && segment.connection_mask == 0U) {
-      segment.rotation_y =
-          wall_preview_is_vertical(m_wall_preview_rotation_y) ? 90.0F : 0.0F;
-    }
-    if (terrain_service.is_initialized()) {
-      segment.world_position = terrain_service.resolve_surface_world_position(
-          segment.world_position.x(), segment.world_position.z(), 0.0F, 0.0F);
-    }
-  }
+  m_wall_plan_request =
+      Game::Systems::WallPlanRequest{.owner_id = pending_construction_owner_id(),
+                                     .gate = is_gate_construction_mode(),
+                                     .anchor = anchor,
+                                     .target = target,
+                                     .rotation_y = m_wall_preview_rotation_y};
+  const auto plan = Game::Systems::WallPlanService::plan(*m_world, m_wall_plan_request);
+  m_wall_preview_segments = plan.segments;
+  const int valid_segment_count = plan.valid_count;
+  const int wood_cost = plan.wood_per_segment;
 
   set_construction_preview_active(!m_wall_preview_segments.empty());
   set_construction_preview_valid(valid_segment_count > 0);
@@ -1817,8 +1602,8 @@ void ProductionManager::confirm_wall_construction_plan() {
     QString reason = QCoreApplication::translate(
         "ProductionManager", "No valid wall segments in that drag.");
     for (const auto& segment : m_wall_preview_segments) {
-      if (!segment.failure_reason.empty()) {
-        reason = QString::fromStdString(segment.failure_reason);
+      if (segment.fault != Game::Systems::WallSegmentFault::None) {
+        reason = wall_segment_failure_text(segment);
         break;
       }
     }
@@ -1828,11 +1613,11 @@ void ProductionManager::confirm_wall_construction_plan() {
     return;
   }
 
-  const QString item_type = m_pending_construction_type;
-  const bool gate_mode = is_gate_construction_mode();
   const int owner_id = pending_construction_owner_id();
-  const Game::Systems::ResourceAmounts total_cost = scaled_resource_amounts(
-      construction_costs_for_item(item_type), valid_segment_count);
+  Game::Systems::ResourceAmounts total_cost;
+  total_cost.set(Game::Systems::ResourceType::Wood,
+                 valid_segment_count *
+                     wood_per_segment_for(m_pending_construction_type));
   if (!Game::Systems::PlayerResourceRegistry::instance().has_at_least(owner_id,
                                                                       total_cost)) {
     emit construction_placement_rejected(
@@ -1842,130 +1627,23 @@ void ProductionManager::confirm_wall_construction_plan() {
     return;
   }
 
-  Game::Systems::PlayerResourceRegistry::instance().spend(owner_id, total_cost);
-
-  const auto nation_id = pending_construction_nation_id();
-  const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
-  const float build_time = get_construction_build_time(item_type.toStdString());
-
-  std::vector<Engine::Core::EntityID> site_ids;
-  site_ids.reserve(valid_segment_count);
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  for (const auto& segment : m_wall_preview_segments) {
-    if (!segment.valid) {
-      continue;
-    }
-
-    auto* entity = m_world->create_entity();
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* transform = entity->add_component<Engine::Core::TransformComponent>();
-    auto* renderable = entity->add_component<Engine::Core::RenderableComponent>("", "");
-    auto* wall = entity->add_component<Engine::Core::WallSegmentComponent>();
-    auto* site = entity->add_component<Engine::Core::WallConstructionSiteComponent>();
-    if (transform == nullptr || renderable == nullptr || wall == nullptr ||
-        site == nullptr) {
-      m_world->destroy_entity(entity->get_id());
-      continue;
-    }
-
-    QVector3D position = segment.world_position;
-    if (terrain_service.is_initialized()) {
-      position = terrain_service.resolve_surface_world_position(
-          position.x(), position.z(), 0.0F, position.y());
-    }
-
-    transform->position = {position.x(), position.y(), position.z()};
-    transform->rotation = {0.0F, segment.rotation_y, 0.0F};
-    transform->scale = {1.0F, 1.0F, 1.0F};
-
-    renderable->visible = false;
-    renderable->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
-    renderable->renderer_id =
-        (gate_mode ? Game::Systems::WallNetworkService::resolve_gate_appearance(
-                         nation_id, segment.connection_mask, segment.rotation_y)
-                   : Game::Systems::WallNetworkService::resolve_appearance(
-                         nation_id, segment.connection_mask))
-            .renderer_id;
-    renderable->color[0] = team_color.x();
-    renderable->color[1] = team_color.y();
-    renderable->color[2] = team_color.z();
-
-    wall->grid_x = segment.grid_x;
-    wall->grid_z = segment.grid_z;
-    wall->connection_mask = segment.connection_mask;
-
-    site->owner_id = owner_id;
-    site->nation_id = nation_id;
-    site->build_time = build_time;
-    site->progress = 0.0F;
-    site->product_type = gate_mode ? Game::Units::SpawnType::WallGate
-                                   : Game::Units::SpawnType::WallSegment;
-
-    site_ids.push_back(entity->get_id());
-  }
-
-  Game::Systems::WallNetworkService::refresh_world(*m_world);
-
   if (m_pending_construction_builders.empty()) {
     emit construction_placement_rejected(
         QCoreApplication::translate("ProductionManager", "No available builder."));
     return;
   }
 
-  std::vector<std::vector<Engine::Core::EntityID>> assignments(
-      m_pending_construction_builders.size());
-  for (std::size_t i = 0; i < site_ids.size(); ++i) {
-    assignments[i % assignments.size()].push_back(site_ids[i]);
-  }
-
-  for (std::size_t builder_index = 0;
-       builder_index < m_pending_construction_builders.size();
-       ++builder_index) {
-    const auto builder_id = m_pending_construction_builders[builder_index];
-    auto* entity = m_world->get_entity(builder_id);
-    auto* builder_prod =
-        entity != nullptr
-            ? entity->get_component<Engine::Core::BuilderProductionComponent>()
-            : nullptr;
-    if (builder_prod == nullptr) {
-      continue;
-    }
-
-    clear_builder_assignment(builder_prod);
-    if (assignments[builder_index].empty()) {
-      continue;
-    }
-
-    builder_prod->product_type = item_type.toStdString();
-    builder_prod->build_time = build_time;
-    builder_prod->time_remaining = build_time;
-    builder_prod->construction_complete = false;
-    builder_prod->queued_construction_site_ids = assignments[builder_index];
-    builder_prod->construction_site_entity_id =
-        builder_prod->queued_construction_site_ids.front();
-    builder_prod->queued_construction_site_ids.erase(
-        builder_prod->queued_construction_site_ids.begin());
-
-    auto* site_entity = m_world->get_entity(builder_prod->construction_site_entity_id);
-    auto* site_transform =
-        site_entity != nullptr
-            ? site_entity->get_component<Engine::Core::TransformComponent>()
-            : nullptr;
-    if (site_transform == nullptr) {
-      clear_builder_assignment(builder_prod);
-      continue;
-    }
-
-    builder_prod->has_construction_site = true;
-    builder_prod->construction_site_x = site_transform->position.x;
-    builder_prod->construction_site_z = site_transform->position.z;
-    builder_prod->construction_site_rotation_y = site_transform->rotation.y;
-    update_builder_move_target(
-        entity, builder_prod->construction_site_x, builder_prod->construction_site_z);
-  }
+  Game::Command::submit(
+      *m_world,
+      Game::Command::Source::LocalPlayer,
+      owner_id,
+      Game::Command::PlaceWallPlan{.units = m_pending_construction_builders,
+                                   .gate = m_wall_plan_request.gate,
+                                   .anchor_x = m_wall_plan_request.anchor.x,
+                                   .anchor_z = m_wall_plan_request.anchor.z,
+                                   .target_x = m_wall_plan_request.target.x,
+                                   .target_z = m_wall_plan_request.target.z,
+                                   .rotation_y = m_wall_plan_request.rotation_y});
 
   clear_preview_entities();
   m_wall_preview_segments.clear();
@@ -1993,63 +1671,41 @@ void ProductionManager::confirm_direct_building_placement() {
     return;
   }
 
-  if (!is_construction_position_valid(m_construction_placement_position.x(),
-                                      m_construction_placement_position.z(),
-                                      m_pending_construction_type.toStdString())) {
+  const int owner_id = pending_construction_owner_id();
+  const std::string building_type = m_pending_construction_type.toStdString();
+  switch (Game::Systems::StructurePlacementService::ruling(
+      *m_world, owner_id, building_type, m_construction_placement_position)) {
+  case Game::Systems::PlacementRuling::Blocked:
     emit construction_placement_rejected(
         QCoreApplication::translate("ProductionManager", "Cannot build there."));
     return;
-  }
-
-  const auto spawn_type = spawn_type_for_construction_item(m_pending_construction_type);
-  if (!spawn_type.has_value()) {
+  case Game::Systems::PlacementRuling::UnknownStructure:
     emit construction_placement_rejected(QCoreApplication::translate(
         "ProductionManager", "That structure cannot be placed."));
     return;
-  }
-
-  const int owner_id = pending_construction_owner_id();
-  const Game::Systems::ResourceAmounts resource_costs =
-      construction_costs_for_item(m_pending_construction_type);
-  if (!resource_costs.empty() &&
-      !Game::Systems::PlayerResourceRegistry::instance().has_at_least(owner_id,
-                                                                      resource_costs)) {
-    emit construction_placement_rejected(
-        insufficient_construction_resources_reason(owner_id, resource_costs));
+  case Game::Systems::PlacementRuling::Unaffordable:
+    emit construction_placement_rejected(insufficient_construction_resources_reason(
+        owner_id, construction_costs_for_item(m_pending_construction_type)));
     return;
-  }
-
-  auto registry = Game::Map::MapTransformer::get_factory_registry();
-  if (registry == nullptr) {
+  case Game::Systems::PlacementRuling::NoFactory:
+  case Game::Systems::PlacementRuling::SpawnFailed:
     emit construction_placement_rejected(QCoreApplication::translate(
         "ProductionManager", "Building factory unavailable."));
     return;
+  case Game::Systems::PlacementRuling::Ok:
+    break;
   }
 
-  Game::Units::SpawnParams params;
-  params.position = m_construction_placement_position;
-  params.rotation_y = item_supports_preview_rotation(m_pending_construction_type)
-                          ? m_construction_preview_rotation_y
-                          : 0.0F;
-  params.player_id = pending_construction_owner_id();
-  params.ai_controlled = false;
-  params.nation_id = pending_construction_nation_id();
-  params.is_initial_spawn = false;
-  params.spawn_type = *spawn_type;
-
-  auto unit = registry->create(params.spawn_type, *m_world, params);
-  if (!unit) {
-    emit construction_placement_rejected(
-        QCoreApplication::translate("ProductionManager", "Failed to place building."));
-    return;
-  }
-
-  Game::Systems::PlayerResourceRegistry::instance().spend(params.player_id,
-                                                          resource_costs);
-
-  if (params.spawn_type == Game::Units::SpawnType::WallSegment) {
-    Game::Systems::WallNetworkService::refresh_world(*m_world);
-  }
+  Game::Command::submit(
+      *m_world,
+      Game::Command::Source::LocalPlayer,
+      owner_id,
+      Game::Command::PlaceBuilding{
+          .building_type = building_type,
+          .position = m_construction_placement_position,
+          .rotation_y = item_supports_preview_rotation(m_pending_construction_type)
+                            ? m_construction_preview_rotation_y
+                            : 0.0F});
 
   clear_preview_entities();
   m_wall_preview_segments.clear();
@@ -2146,9 +1802,8 @@ auto ProductionManager::get_selected_builder_production_state() const -> QVarian
 
     auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder_prod != nullptr) {
-      m["in_progress"] = builder_prod->in_progress ||
-                         builder_prod->is_placement_preview ||
-                         builder_prod->has_construction_site;
+      m["in_progress"] =
+          builder_prod->in_progress || builder_prod->has_construction_site;
       m["time_remaining"] = builder_prod->time_remaining;
       m["build_time"] = builder_prod->build_time;
       m["product_type"] = QString::fromStdString(builder_prod->product_type);
@@ -2411,8 +2066,7 @@ auto ProductionManager::collect_available_builders()
     auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if (builder_prod != nullptr && unit != nullptr &&
         unit->spawn_type == Game::Units::SpawnType::Builder &&
-        !builder_prod->in_progress && !builder_prod->has_construction_site &&
-        !builder_prod->is_placement_preview) {
+        !builder_prod->in_progress && !builder_prod->has_construction_site) {
       builders.push_back(id);
     }
   }
@@ -2453,36 +2107,5 @@ auto ProductionManager::calculate_builder_center_position(
 
 auto ProductionManager::get_construction_build_time(const std::string& item_type)
     -> float {
-  constexpr float DEFAULT_BUILD_TIME = 10.0F;
-  constexpr float CATAPULT_BUILD_TIME = 15.0F;
-  constexpr float BALLISTA_BUILD_TIME = 12.0F;
-  constexpr float DEFENSE_TOWER_BUILD_TIME = 20.0F;
-  constexpr float WALL_SEGMENT_BUILD_TIME = 8.0F;
-  constexpr float WALL_GATE_BUILD_TIME = 12.0F;
-  constexpr float TEMPLE_BUILD_TIME = 18.0F;
-
-  if (item_type == "temple") {
-    return TEMPLE_BUILD_TIME;
-  }
-  if (item_type == "catapult") {
-    return CATAPULT_BUILD_TIME;
-  }
-  if (item_type == "ballista") {
-    return BALLISTA_BUILD_TIME;
-  }
-  if (item_type == "defense_tower") {
-    return DEFENSE_TOWER_BUILD_TIME;
-  }
-  if (item_type == "wall_segment") {
-    return WALL_SEGMENT_BUILD_TIME;
-  }
-  if (item_type == "wall_gate") {
-    return WALL_GATE_BUILD_TIME;
-  }
-  if (item_type == k_cut_tree_item_type || item_type == k_collect_item_type ||
-      item_type == k_collect_stone_item_type ||
-      item_type == k_collect_iron_ore_item_type) {
-    return k_collect_build_time;
-  }
-  return DEFAULT_BUILD_TIME;
+  return Game::Systems::construction_build_time(item_type);
 }

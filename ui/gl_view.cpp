@@ -323,8 +323,7 @@ void GLView::GLRenderer::observe_runtime_continuity() {
         }
       }
 
-      if (soldier.cull_reason == Render::Profiling::SoldierCullReason::Billboard ||
-          soldier.cull_reason == Render::Profiling::SoldierCullReason::Temporal) {
+      if (soldier.cull_reason == Render::Profiling::SoldierCullReason::Billboard) {
         ++probe.ultra_lod_culls;
       }
       state.reason = soldier.cull_reason;
