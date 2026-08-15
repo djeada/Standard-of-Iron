@@ -173,7 +173,7 @@ void close_and_bite(const NatureContext& ctx,
   if (in_reach && wildlife.bite_timer <= 0.0F && wildlife.state_timer <= 0.0F) {
     actions.halt(ctx);
     actions.face_toward(ctx, prey.x, prey.z);
-    actions.bite(ctx, prey);
+    (void)actions.bite(ctx, prey);
     return;
   }
   if (wildlife.bite_timer > 0.0F) {

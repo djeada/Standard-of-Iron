@@ -248,6 +248,12 @@ public:
     }
   }
 
+  void set_mist_volumes(const std::vector<Render::MistVolume>& volumes) {
+    if (m_gl_backend != nullptr) {
+      m_gl_backend->set_mist_volumes(volumes);
+    }
+  }
+
   [[nodiscard]] auto render_software_preview(int width, int height) -> QImage;
 
   void mesh(Mesh* mesh,

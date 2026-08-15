@@ -35,8 +35,8 @@ using namespace FrustumPlane;
 namespace {
 constexpr float k_eps = 1e-6F;
 constexpr float k_tiny = 1e-4F;
-constexpr float k_min_dist = 1.0F;
-constexpr float k_max_dist = 85.0F;
+constexpr float k_min_dist = CameraDefaults::k_min_rts_distance;
+constexpr float k_max_dist = CameraDefaults::k_max_rts_distance;
 constexpr float k_min_fov = 1.0F;
 constexpr float k_max_fov = 89.0F;
 

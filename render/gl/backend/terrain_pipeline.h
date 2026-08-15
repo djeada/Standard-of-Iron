@@ -71,8 +71,6 @@ public:
     GL::Shader::UniformHandle albedo_jitter{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
@@ -126,8 +124,6 @@ public:
     GL::Shader::UniformHandle height_uv_offset{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_to_world{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};

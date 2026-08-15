@@ -9,19 +9,11 @@ using namespace Render::GL::ComponentCount;
 namespace {
 
 template <typename Uniforms>
-void set_fog_uniforms(Shader& shader,
-                      const Uniforms& uniforms,
-                      const QVector3D& camera_position,
-                      float fog_start,
-                      float fog_end) {
+void set_camera_uniform(Shader& shader,
+                        const Uniforms& uniforms,
+                        const QVector3D& camera_position) {
   if (uniforms.camera_position != Shader::InvalidUniform) {
     shader.set_uniform(uniforms.camera_position, camera_position);
-  }
-  if (uniforms.fog_start != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.fog_start, fog_start);
-  }
-  if (uniforms.fog_end != Shader::InvalidUniform) {
-    shader.set_uniform(uniforms.fog_end, fog_end);
   }
 }
 
@@ -30,9 +22,7 @@ void set_fog_uniforms(Shader& shader,
 void Backend::set_ground_plane_uniforms(Shader& shader,
                                         const TerrainSurfaceCmd& single,
                                         const QMatrix4x4& mvp,
-                                        const QVector3D& camera_position,
-                                        float fog_start,
-                                        float fog_end) {
+                                        const QVector3D& camera_position) {
   const auto& pipeline = *m_terrain_pipeline;
   if (pipeline.m_ground_uniforms.mvp != Shader::InvalidUniform) {
     shader.set_uniform(pipeline.m_ground_uniforms.mvp, mvp);
@@ -156,16 +146,13 @@ void Backend::set_ground_plane_uniforms(Shader& shader,
   if (pipeline.m_ground_uniforms.snow_color != Shader::InvalidUniform) {
     shader.set_uniform(pipeline.m_ground_uniforms.snow_color, single.params.snow_color);
   }
-  set_fog_uniforms(
-      shader, pipeline.m_ground_uniforms, camera_position, fog_start, fog_end);
+  set_camera_uniform(shader, pipeline.m_ground_uniforms, camera_position);
 }
 
 void Backend::set_terrain_chunk_uniforms(Shader& shader,
                                          const TerrainSurfaceCmd& single,
                                          const QMatrix4x4& mvp,
-                                         const QVector3D& camera_position,
-                                         float fog_start,
-                                         float fog_end) {
+                                         const QVector3D& camera_position) {
   const auto& pipeline = *m_terrain_pipeline;
   const auto& visibility = single.visibility;
   if (pipeline.m_terrain_uniforms.has_visibility != Shader::InvalidUniform) {
@@ -362,8 +349,7 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
       shader.set_uniform(pipeline.m_terrain_uniforms.height_to_world, height.to_world);
     }
   }
-  set_fog_uniforms(
-      shader, pipeline.m_terrain_uniforms, camera_position, fog_start, fog_end);
+  set_camera_uniform(shader, pipeline.m_terrain_uniforms, camera_position);
 }
 
 void Backend::execute_terrain_commands(const PreparedBatch& prepared,
@@ -404,16 +390,13 @@ void Backend::execute_terrain_commands(const PreparedBatch& prepared,
     }
 
     QVector3D const camera_position = cam.get_position();
-    auto const [fog_start, fog_end] = fog_range_for_camera(cam);
 
     auto draw_surface = [&](const TerrainSurfaceCmd& single) {
       const QMatrix4x4 mvp = view_proj * single.model;
       if (single.params.is_ground_plane) {
-        set_ground_plane_uniforms(
-            *active_shader, single, mvp, camera_position, fog_start, fog_end);
+        set_ground_plane_uniforms(*active_shader, single, mvp, camera_position);
       } else {
-        set_terrain_chunk_uniforms(
-            *active_shader, single, mvp, camera_position, fog_start, fog_end);
+        set_terrain_chunk_uniforms(*active_shader, single, mvp, camera_position);
       }
 
       if (single.depth_bias != 0.0F) {

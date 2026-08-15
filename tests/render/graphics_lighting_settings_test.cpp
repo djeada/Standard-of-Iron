@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "render/graphics_settings.h"
+#include "scene/camera.h"
 
 TEST(GraphicsLightingSettingsTest, PresetsScaleDirectionalShadowCost) {
   auto& graphics = Render::GraphicsSettings::instance();
@@ -27,6 +28,24 @@ TEST(GraphicsLightingSettingsTest, PresetsScaleDirectionalShadowCost) {
   EXPECT_EQ(ultra.pcf_radius, 3);
   EXPECT_EQ(graphics.contact_shadow_budget().max_casters, 100);
   EXPECT_EQ(graphics.contact_shadow_budget().max_casters_per_formation, 12);
+
+  graphics.set_quality(Render::GraphicsQuality::High);
+}
+
+TEST(GraphicsLightingSettingsTest, GroundingReachesTheFullyZoomedOutCamera) {
+  auto& graphics = Render::GraphicsSettings::instance();
+
+  for (const auto quality : {Render::GraphicsQuality::Medium,
+                             Render::GraphicsQuality::High,
+                             Render::GraphicsQuality::Ultra}) {
+    graphics.set_quality(quality);
+    ASSERT_TRUE(graphics.shadows_enabled());
+    EXPECT_GE(graphics.shadow_max_distance(),
+              Render::GL::CameraDefaults::k_max_rts_distance)
+        << "contact shadows are what keep objects planted once the directional "
+           "cascades have faded, so their reach has to cover the widest view the "
+           "player can pull back to";
+  }
 
   graphics.set_quality(Render::GraphicsQuality::High);
 }
