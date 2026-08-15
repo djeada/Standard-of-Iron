@@ -156,28 +156,48 @@ auto HumanoidRendererBase::resolve_formation(
   return params;
 }
 
-void HumanoidRendererBase::render(const DrawContext& ctx, ISubmitter& out) const {
-  AnimationInputs const anim =
-      Render::Creature::Pipeline::resolve_humanoid_animation_state(ctx).inputs;
-
-  if (ctx.template_prewarm) {
-    prepare_and_submit(
-        Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx), anim, out);
-    return;
-  }
-
-  prepare_and_submit(ctx, anim, out);
+void HumanoidRendererBase::ensure_prepare_components(
+    Engine::Core::Entity& entity) const {
+  Engine::Core::get_or_add_component<Render::Creature::HumanoidAnimationStateComponent>(
+      entity);
+  Engine::Core::get_or_add_component<Render::Humanoid::HumanoidLayoutCacheComponent>(
+      entity);
 }
 
-void HumanoidRendererBase::prepare_and_submit(const DrawContext& ctx,
-                                              const AnimationInputs& anim,
-                                              ISubmitter& out) const {
+void HumanoidRendererBase::prepare(
+    const DrawContext& ctx,
+    Render::Creature::Pipeline::CreaturePreparationResult& out) const {
+  AnimationInputs const anim =
+      Render::Creature::Pipeline::resolve_humanoid_animation_state(ctx).inputs;
+  if (ctx.template_prewarm) {
+    Render::Humanoid::prepare_humanoid_instances(
+        *this,
+        Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx),
+        anim,
+        humanoid_current_frame(),
+        out);
+    return;
+  }
+  Render::Humanoid::prepare_humanoid_instances(
+      *this, ctx, anim, humanoid_current_frame(), out);
+}
+
+void HumanoidRendererBase::render(const DrawContext& ctx, ISubmitter& out) const {
   thread_local Render::Humanoid::HumanoidPreparation prep;
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(
-      *this, ctx, anim, humanoid_current_frame(), prep);
-
+  prepare(ctx, prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);
+}
+
+void register_humanoid_renderer(EntityRendererRegistry& registry,
+                                std::string key,
+                                std::shared_ptr<const HumanoidRendererBase> renderer) {
+  registry.register_renderer(
+      std::move(key),
+      [renderer](const DrawContext& ctx, ISubmitter& out) {
+        renderer->render(ctx, out);
+      },
+      renderer);
 }
 
 } // namespace Render::GL

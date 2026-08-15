@@ -248,11 +248,8 @@ void register_archer_renderer_profile(
                                          renderer.style_key,
                                          renderer.creature_asset_id,
                                          renderer.pose_layer);
-    registry.register_renderer(
-        std::string(renderer.renderer_key),
-        [renderer_instance](const DrawContext& ctx, ISubmitter& out) {
-          renderer_instance->render(ctx, out);
-        });
+    register_humanoid_renderer(
+        registry, std::string(renderer.renderer_key), renderer_instance);
   }
 }
 

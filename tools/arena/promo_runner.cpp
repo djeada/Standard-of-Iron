@@ -421,7 +421,7 @@ private:
       const auto& stats = Render::GL::get_humanoid_render_stats();
       qInfo().noquote() << QStringLiteral(
                                "  focus (%1, %2, %3) %4; soldiers %5/%6 drawn, culled "
-                               "frustum %7 fog %8 lod %9 temporal %10")
+                               "frustum %7 fog %8 lod %9")
                                .arg(QString::number(target.x(), 'f', 1),
                                     QString::number(target.y(), 'f', 1),
                                     QString::number(target.z(), 'f', 1),
@@ -431,8 +431,7 @@ private:
                                .arg(stats.soldiers_total)
                                .arg(stats.soldiers_skipped_frustum)
                                .arg(stats.soldiers_skipped_fog)
-                               .arg(stats.soldiers_skipped_lod)
-                               .arg(stats.soldiers_skipped_temporal);
+                               .arg(stats.soldiers_skipped_lod);
     }
 
     if (!recording && m_frames_written >= m_target_frames) {

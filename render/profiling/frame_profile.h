@@ -48,15 +48,15 @@ struct FrameProfile {
   std::array<std::uint64_t, static_cast<std::size_t>(Phase::_Count)> phase_us{};
 
   std::uint64_t combat_state_update_us{0};
-  std::uint64_t animation_input_sampling_us{0};
-  std::uint64_t humanoid_preparation_us{0};
-  std::uint64_t bpat_playback_us{0};
-  std::uint64_t render_asset_cache_lookup_us{0};
-  std::uint64_t soldier_layout_generation_us{0};
+  std::atomic<std::uint64_t> animation_input_sampling_us{0};
+  std::atomic<std::uint64_t> humanoid_preparation_us{0};
+  std::atomic<std::uint64_t> bpat_playback_us{0};
+  std::atomic<std::uint64_t> render_asset_cache_lookup_us{0};
+  std::atomic<std::uint64_t> soldier_layout_generation_us{0};
 
   std::uint64_t visible_soldiers{0};
-  std::uint64_t render_asset_cache_hits{0};
-  std::uint64_t render_asset_cache_misses{0};
+  std::atomic<std::uint64_t> render_asset_cache_hits{0};
+  std::atomic<std::uint64_t> render_asset_cache_misses{0};
 
   std::uint64_t draw_calls{0};
   std::uint64_t triangles{0};
@@ -176,7 +176,7 @@ private:
 
 class AccumulatorScope {
 public:
-  explicit AccumulatorScope(std::uint64_t* accumulator)
+  explicit AccumulatorScope(std::atomic<std::uint64_t>* accumulator)
       : m_accumulator(global_profile().enabled ? accumulator : nullptr)
       , m_start(m_accumulator != nullptr ? std::chrono::steady_clock::now()
                                          : std::chrono::steady_clock::time_point{}) {}
@@ -197,7 +197,7 @@ public:
   }
 
 private:
-  std::uint64_t* m_accumulator;
+  std::atomic<std::uint64_t>* m_accumulator;
   std::chrono::steady_clock::time_point m_start;
 };
 

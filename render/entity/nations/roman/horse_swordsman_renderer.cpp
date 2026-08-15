@@ -1,5 +1,7 @@
 #include "horse_swordsman_renderer.h"
 
+#include <memory>
+
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/entity/mounted_knight_renderer_base.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
@@ -46,12 +48,10 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
 } // namespace
 
 void register_mounted_knight_renderer(EntityRendererRegistry& registry) {
-  registry.register_renderer("troops/roman/horse_swordsman",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static MountedKnightRendererBase const static_renderer(
-                                   make_mounted_knight_config());
-                               static_renderer.render(ctx, out);
-                             });
+  register_humanoid_renderer(
+      registry,
+      "troops/roman/horse_swordsman",
+      std::make_shared<MountedKnightRendererBase const>(make_mounted_knight_config()));
 }
 
 } // namespace Render::GL::Roman

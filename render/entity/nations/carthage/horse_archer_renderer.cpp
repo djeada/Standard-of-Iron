@@ -1,5 +1,7 @@
 #include "horse_archer_renderer.h"
 
+#include <memory>
+
 #include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/nations/mounted_loadout.h"
@@ -30,12 +32,10 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
 } // namespace
 
 void register_horse_archer_renderer(EntityRendererRegistry& registry) {
-  registry.register_renderer("troops/carthage/horse_archer",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static HorseArcherRendererBase const static_renderer(
-                                   make_horse_archer_config());
-                               static_renderer.render(ctx, out);
-                             });
+  register_humanoid_renderer(
+      registry,
+      "troops/carthage/horse_archer",
+      std::make_shared<HorseArcherRendererBase const>(make_horse_archer_config()));
 }
 
 } // namespace Render::GL::Carthage

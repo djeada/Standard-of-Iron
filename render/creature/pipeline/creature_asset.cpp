@@ -345,8 +345,11 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
     *created = false;
   }
   const Key key{asset_id, archetype_id};
-  if (const auto found = lookup_.find(key); found != lookup_.end()) {
-    return found->second;
+  {
+    std::shared_lock const read_lock(mutex_);
+    if (const auto found = lookup_.find(key); found != lookup_.end()) {
+      return found->second;
+    }
   }
   if (created != nullptr) {
     *created = true;
@@ -365,6 +368,13 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
                   });
   if (!has_playback) {
     return Render::Creature::k_invalid_creature_render_asset_handle;
+  }
+  std::unique_lock const write_lock(mutex_);
+  if (const auto found = lookup_.find(key); found != lookup_.end()) {
+    if (created != nullptr) {
+      *created = false;
+    }
+    return found->second;
   }
   handle.attachment_set_id = acquire_attachment_set_id(
       handle.archetype->attachments_view(), handle.attachments_hash);
@@ -390,6 +400,7 @@ auto CreatureRenderAssetHandleRegistry::get(
     return nullptr;
   }
 
+  std::shared_lock const read_lock(mutex_);
   const auto index = static_cast<std::size_t>(id);
   if (index >= handles_.size()) {
     return nullptr;

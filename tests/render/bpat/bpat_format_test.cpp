@@ -34,8 +34,11 @@ std::vector<std::uint8_t> serialize(const BpatWriter& w) {
 
 TEST(BpatFormat, HeaderAndEntrySizesAreFrozen) {
   EXPECT_EQ(sizeof(BpatHeader), 64U);
-  EXPECT_EQ(sizeof(BpatClipEntry), 44U);
+  EXPECT_EQ(sizeof(BpatHeaderExtV3), 32U);
+  EXPECT_EQ(sizeof(BpatClipEntry), 48U);
   EXPECT_EQ(sizeof(BpatSocketEntry), 32U);
+  EXPECT_EQ(sizeof(BpatFrameContact), 8U);
+  EXPECT_EQ(k_version, 3U);
   EXPECT_EQ(k_magic[0], 'B');
   EXPECT_EQ(k_magic[3], 'T');
 }
@@ -101,6 +104,70 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
       }
     }
   }
+}
+
+TEST(BpatWriter, ClipFlagsAndVariantTableRoundTrip) {
+  constexpr std::uint32_t bone_count = 2U;
+  BpatWriter w(k_species_humanoid, bone_count);
+  struct Clip {
+    const char* name;
+    std::uint16_t family;
+    std::uint8_t ordinal;
+  };
+  for (Clip const& clip : {Clip{"idle", 0U, 0U},
+                           Clip{"idle_squat", 0U, 1U},
+                           Clip{"walk", 2U, 0U},
+                           Clip{"riding_idle", 3U, 0U},
+                           Clip{"showcase_jump", 4U, 0U}}) {
+    ClipDescriptor desc{clip.name, 1U, 30.0F, true};
+    desc.variant_family = clip.family;
+    desc.variant_ordinal = clip.ordinal;
+    w.add_clip(desc);
+    std::vector<QMatrix4x4> const palettes(bone_count);
+    w.append_clip_palettes(palettes);
+  }
+
+  auto blob = BpatBlob::from_bytes(serialize(w));
+  ASSERT_TRUE(blob.loaded()) << blob.last_error();
+  EXPECT_TRUE(blob.clip_supplies_ground_contact(0));
+  EXPECT_TRUE(blob.clip_supplies_ground_contact(2));
+  EXPECT_FALSE(blob.clip_supplies_ground_contact(3));
+  EXPECT_FALSE(blob.clip_supplies_ground_contact(4));
+  EXPECT_EQ(blob.clip_variant_family(1), 0U);
+  EXPECT_EQ(blob.clip_variant_ordinal(1), 1U);
+  EXPECT_TRUE(blob.clip_is_variant_of(0, 1, 1U));
+  EXPECT_FALSE(blob.clip_is_variant_of(0, 2, 2U));
+  EXPECT_FALSE(blob.clip_is_variant_of(0, 1, 2U));
+  EXPECT_TRUE(blob.frame_contacts().empty());
+}
+
+TEST(BpatWriter, ContactTableRoundTripsPerGlobalFrame) {
+  constexpr std::uint32_t bone_count = 2U;
+  BpatWriter w(k_species_humanoid, bone_count);
+
+  ClipDescriptor const idle{"idle", 3U, 30.0F, true};
+  w.add_clip(idle);
+  std::vector<QMatrix4x4> const idle_palettes(bone_count * idle.frame_count);
+  w.append_clip_palettes(idle_palettes);
+  std::vector<BpatFrameContact> const idle_contacts{
+      {0.0F, 0.02F}, {-0.01F, 0.03F}, {0.015F, 0.025F}};
+  w.append_clip_contacts(idle_contacts);
+
+  ClipDescriptor const walk{"walk", 2U, 30.0F, true};
+  w.add_clip(walk);
+  std::vector<QMatrix4x4> const walk_palettes(bone_count * walk.frame_count);
+  w.append_clip_palettes(walk_palettes);
+  std::vector<BpatFrameContact> const walk_contacts{{0.1F, 0.2F}, {-0.2F, 0.4F}};
+  w.append_clip_contacts(walk_contacts);
+
+  auto blob = BpatBlob::from_bytes(serialize(w));
+  ASSERT_TRUE(blob.loaded()) << blob.last_error();
+  auto const contacts = blob.frame_contacts();
+  ASSERT_EQ(contacts.size(), 5U);
+  EXPECT_FLOAT_EQ(contacts[1].sole_y, -0.01F);
+  EXPECT_FLOAT_EQ(contacts[1].foot_y, 0.03F);
+  EXPECT_FLOAT_EQ(contacts[3].sole_y, 0.1F);
+  EXPECT_FLOAT_EQ(contacts[4].foot_y, 0.4F);
 }
 
 TEST(BpatReader, ClipIndexFindsNamesAndSurvivesBlobMove) {

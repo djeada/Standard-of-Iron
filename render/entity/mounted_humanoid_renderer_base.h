@@ -19,6 +19,8 @@ public:
 
   auto uses_mounted_pipeline() const noexcept -> bool override { return true; }
 
+  void ensure_prepare_components(Engine::Core::Entity& entity) const override;
+
   auto get_mount_scale() const -> float override = 0;
 
   void set_mount_visual(Render::Creature::ArchetypeId id, std::string_view debug_name) {

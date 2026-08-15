@@ -76,7 +76,6 @@ TEST(CreatureRenderGraph, HumanoidLodConfigHasReasonableDefaults) {
   auto config = humanoid_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
   EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
-  EXPECT_GT(config.temporal.period_minimal, 0U);
 }
 
 TEST(CreatureRenderGraph, HorseLodConfigHasReasonableDefaults) {
@@ -104,7 +103,6 @@ TEST(CreatureRenderGraph, HumanoidConfigFromSettingsReturnsValidConfig) {
   auto config = humanoid_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
   EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
-  EXPECT_GT(config.temporal.period_minimal, 0U);
 }
 
 TEST(CreatureRenderGraph, HorseConfigFromSettingsReturnsValidConfig) {
@@ -191,12 +189,6 @@ TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
   settings.set_quality(Render::GraphicsQuality::High);
   EXPECT_TRUE(settings.creature_lod_enabled());
   settings.set_quality(Render::GraphicsQuality::Ultra);
-}
-
-TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
-  auto humanoid = humanoid_lod_config_from_settings();
-  auto horse = horse_lod_config_from_settings();
-  auto elephant = elephant_lod_config_from_settings();
 }
 
 TEST(CreatureRenderGraph, EvaluateLodReturnsFullAtCloseDistance) {
