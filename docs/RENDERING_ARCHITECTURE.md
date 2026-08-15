@@ -1080,6 +1080,14 @@ The Arena's `render_execute` bucket is sampled straight after `Renderer::end_fra
 it covers queue sort plus backend execution — it is not animation playback. It was called
 `playback` for a while, which sent at least one investigation in the wrong direction.
 
+`Backend::execute_scene` keeps at most two frames in flight: it fences the end of every
+frame and waits on the fence from two frames back before starting the next, so a CPU
+that outruns the GPU stalls a little every frame instead of for seconds when the driver
+runs out of queue. The wait, plus `GL_TIMESTAMP` brackets around the shadow and colour
+passes, are reported in `Backend::PlaybackStats` (`gpu_wait_ms`, `gpu_shadow_ms`,
+`gpu_color_ms`) and land in the Arena trace as `gpu_ms`. When `gpu_wait_ms` is large the
+frame is GPU-bound and the CPU phases are not what to optimise.
+
 ## Projectiles and siege engines
 
 Every arrow, bolt and ballista round in the game is the same three meshes, built once in

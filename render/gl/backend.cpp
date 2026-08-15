@@ -103,6 +103,18 @@ Backend::~Backend() {
     glDeleteBuffers(1, &m_directional_shadow_ubo);
     m_directional_shadow_ubo = 0;
   }
+  for (auto& timing : m_frame_timings) {
+    if (timing.fence != nullptr) {
+      glDeleteSync(timing.fence);
+      timing.fence = nullptr;
+    }
+    if (timing.timestamps[0] != 0U) {
+      glDeleteQueries(static_cast<GLsizei>(timing.timestamps.size()),
+                      timing.timestamps.data());
+      timing.timestamps = {0U, 0U, 0U};
+    }
+    timing.pending = false;
+  }
 
   SharedGeometryCache::instance().release_all();
   for_each_pipeline_slot([](auto& slot) { slot.reset(); });
@@ -781,23 +793,58 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
   }
 }
 
+void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
+  if (!slot.pending) {
+    return;
+  }
+  auto const wait_start = std::chrono::steady_clock::now();
+  constexpr GLuint64 k_wait_timeout_ns = 1'000'000'000ULL;
+  while (glClientWaitSync(slot.fence, GL_SYNC_FLUSH_COMMANDS_BIT, k_wait_timeout_ns) ==
+         GL_TIMEOUT_EXPIRED) {
+  }
+  glDeleteSync(slot.fence);
+  slot.fence = nullptr;
+  m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
+                                          std::chrono::steady_clock::now() - wait_start)
+                                          .count();
+  std::array<GLuint64, 3> ticks{};
+  for (std::size_t i = 0; i < ticks.size(); ++i) {
+    glGetQueryObjectui64v(slot.timestamps[i], GL_QUERY_RESULT, &ticks[i]);
+  }
+  m_last_playback_stats.gpu_shadow_ms =
+      static_cast<double>(ticks[1] - ticks[0]) / 1.0e6;
+  m_last_playback_stats.gpu_color_ms = static_cast<double>(ticks[2] - ticks[1]) / 1.0e6;
+  slot.pending = false;
+}
+
 void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   m_last_playback_stats = {};
   m_last_playback_stats.submitted_commands = queue.size();
   m_last_playback_stats.prepared_batches = queue.prepared_batches().size();
-  m_frame_tracker.begin_frame();
 
   if (m_basic_shader == nullptr) {
+    m_frame_tracker.begin_frame();
     m_frame_tracker.mark_complete();
     m_frame_tracker.end_frame();
     return;
   }
+
+  FrameGpuTiming& frame_timing = m_frame_timings[m_frame_timing_slot];
+  m_frame_timing_slot = (m_frame_timing_slot + 1U) % m_frame_timings.size();
+  wait_for_frame_slot(frame_timing);
+  m_frame_tracker.begin_frame();
+  if (frame_timing.timestamps[0] == 0U) {
+    glGenQueries(static_cast<GLsizei>(frame_timing.timestamps.size()),
+                 frame_timing.timestamps.data());
+  }
+  glQueryCounter(frame_timing.timestamps[0], GL_TIMESTAMP);
 
   const QMatrix4x4 view = cam.get_view_matrix();
   const QMatrix4x4 projection = cam.get_projection_matrix();
   const QMatrix4x4 view_proj = projection * view;
   upload_frame_uniform_buffers(view_proj, queue, cam);
   render_directional_shadows(queue, cam);
+  glQueryCounter(frame_timing.timestamps[1], GL_TIMESTAMP);
   if (m_post_process_pipeline != nullptr && m_post_process_pipeline->is_capturing()) {
     m_post_process_pipeline->set_depth_range(cam.get_near(), cam.get_far());
     m_post_process_pipeline->draw_sky(view_proj, cam.get_position());
@@ -909,6 +956,9 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   if (m_rigged_cull_pipeline) {
     m_rigged_cull_pipeline->end_frame();
   }
+  glQueryCounter(frame_timing.timestamps[2], GL_TIMESTAMP);
+  frame_timing.fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+  frame_timing.pending = frame_timing.fence != nullptr;
 
   m_frame_tracker.mark_complete();
   m_frame_tracker.end_frame();

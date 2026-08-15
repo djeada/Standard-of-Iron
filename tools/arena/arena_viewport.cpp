@@ -677,6 +677,9 @@ void ArenaViewport::paintGL() {
   timings.shadow_rigged_instanced_instances =
       playback_stats.shadow_rigged_instanced_instances;
   timings.shadow_rigged_single_draws = playback_stats.shadow_rigged_single_draws;
+  timings.gpu_shadow_ms = playback_stats.gpu_shadow_ms;
+  timings.gpu_color_ms = playback_stats.gpu_color_ms;
+  timings.gpu_wait_ms = playback_stats.gpu_wait_ms;
 
   bool const capture_keeps_overlays =
       m_scenario_runner != nullptr &&

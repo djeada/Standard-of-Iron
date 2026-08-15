@@ -440,6 +440,52 @@ Interleaved A/B against `main` on an idle, unlocked box (two rounds each,
 
 Frame p50 −40%, combat p50 −55%, and the melee tail is gone: the branch never
 leaves single digits where the baseline sat at 40 ms for seconds at a time.
+(These are CPU frame times from before the frame fence below; with the GPU on
+the critical path the same scenario is GPU-bound at ~37 ms on this machine.)
+
+### The multi-second stalls: an unbounded GPU queue in the bench (fixed)
+
+Every trace so far carried a handful of 1-5 s frames inside `render_execute`,
+in baseline and branch alike, at random points of the battle. Timing the
+individual GL calls showed them blocking in _whatever_ call happened to be
+next — a `glBufferSubData` of 89 KB, a static-mesh `draw()`, a scatter batch —
+which is the signature of the driver finally throttling a CPU that has run
+far ahead of the GPU. The Arena batch harness renders with vsync off and never
+blocks on a swap, so once the CPU frame dropped to 4 ms against a GPU frame of
+~37 ms the driver queued frames until it ran out of room and then stalled for
+seconds. The same reason made every "frame time" in the earlier tables a CPU
+number: the GPU was never on the critical path of the measurement.
+
+`Backend::execute_scene` now keeps at most two frames in flight: it inserts a
+fence at the end of each frame and waits on the fence from two frames earlier
+before starting the next. It also brackets the shadow pass and the colour pass
+with `GL_TIMESTAMP` queries and reports `gpu_shadow_ms`, `gpu_color_ms` and the
+fence wait through `PlaybackStats`, which the Arena writes into `trace.jsonl`
+as `gpu_ms.{shadow,color,wait}`. Multi-second frames are gone (worst frame in
+`massed_battle_1000` after the change: 96 ms, from 5,020 ms), and the frame
+time now means what it says.
+
+### What the GPU actually costs at Ultra full LOD
+
+With the queue bounded, `massed_battle_1000` reads a steady 37-41 ms per frame:
+`gpu_shadow` ≈ 15-16 ms, `gpu_color` ≈ 22-24 ms, CPU waiting ≈ 33 ms. Halving
+the viewport (`QT_SCALE_FACTOR=0.5`) does not move either number, so the pass
+is vertex-bound: 4,340 rigged instances × ~15,000 vertices, skinned once for
+the colour pass and once across the cascades. Two cheap experiments against
+that were measured with the new timers and rejected:
+
+- fetching vertices through the mesh VAO (attributes) instead of the SSBO
+  pull path: `gpu_color` 22.6 → 25.8 ms, `gpu_shadow` 15.3 → 16.8 ms — slower;
+- slimming the colour vertex outputs (instance colour/material/wear read in the
+  fragment shader from the instance buffer, unused texcoord dropped):
+  22.6 → 22.1 ms — inside noise, not worth a 4.30 fragment shader.
+
+The remaining GPU levers are content decisions (vertex count of the full-LOD
+body, cascade count/resolution), not renderer work, so they are left alone. On
+the production LOD path (`campaign_scale_battle`) the GPU is 3 + 8 ms and never
+on the critical path; the ~35 ms spikes that scenario shows without `--prewarm`
+are first-sight snapshot bakes, and vanish with the campaign's prewarm
+(0 frames above 30 ms).
 
 ### Measurement caveat that dominated this round
 

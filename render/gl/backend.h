@@ -65,6 +65,9 @@ public:
     std::size_t shadow_rigged_instanced_draws{0};
     std::size_t shadow_rigged_instanced_instances{0};
     std::size_t shadow_rigged_single_draws{0};
+    double gpu_shadow_ms{0.0};
+    double gpu_color_ms{0.0};
+    double gpu_wait_ms{0.0};
   };
 
   Backend();
@@ -318,6 +321,16 @@ private:
 
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;
+
+  static constexpr std::size_t k_frames_in_flight = 2;
+  struct FrameGpuTiming {
+    GLsync fence{nullptr};
+    std::array<GLuint, 3> timestamps{0U, 0U, 0U};
+    bool pending{false};
+  };
+  std::array<FrameGpuTiming, k_frames_in_flight> m_frame_timings{};
+  std::size_t m_frame_timing_slot{0};
+  void wait_for_frame_slot(FrameGpuTiming& slot);
   ShaderQuality m_shader_quality{ShaderQuality::Full};
 };
 
