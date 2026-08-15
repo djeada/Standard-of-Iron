@@ -398,6 +398,49 @@ the palette stream never exceeded its 16 MB default (growth never triggered),
 which also retires the theory that the stream overflow was what made combat
 expensive; the expense was the lock screen.
 
+### Pose layering as local-pose slerp + FK (kept)
+
+With the desktop unlocked the melee frame is CPU-bound in `world_submit`, which
+climbed from 1.9 ms (march) to 12.9 ms (late melee) while every other phase
+stayed flat. `perf` put the time in `blend_palette_owned` and its helpers:
+every layered soldier decomposed skinning matrices into quaternions
+(`matrix_rotation_quaternion`, `QQuaternion::length`, `acosf`), inverted parent
+matrices and rebuilt globals — per stage (frame lerp, full-body blend, overlay),
+plus a per-frame `unordered_map` blend cache that allocated and freed thousands
+of nodes every frame, plus a mutex on every `ArchetypeRegistry` read.
+
+Now:
+
+- BPAT v3 carries the bone hierarchy; the reader derives each frame's local
+  bone poses (quaternion + translation relative to the parent) once at load.
+- `submit_rigged_creature` builds one `LocalPose` per soldier: sample primary
+  (frame lerp in local space), slerp in the full-body layer, slerp the
+  upper-body bones toward the overlay, then a single FK pass × inverse bind
+  into the owned palette. One computation per distinct
+  `(entry, frames, lerp/weight buckets)` combination, cached in a fixed
+  8,192-slot frame-stamped table (no per-frame allocation), shared by every
+  soldier in that combination.
+- `ArchetypeRegistry` reads are lock-free (the table is append-only; the count
+  is an acquire/release atomic); the facial-hair archetype is resolved once per
+  unit instead of per soldier.
+
+`world_submit` in late melee (frame 16 s of `massed_battle_1000`, same run
+conditions): 12.9 ms → 3.4 ms; at 12 s: 7.7 ms → 2.6 ms. The march is
+unchanged (1.6-1.9 ms). The overlay/blend anatomy tests
+(`HumanoidPrepare.CreaturePipeline*Overlay*`, `Mounted*Interpolation*`) pin the
+visual result and pass unchanged.
+
+Interleaved A/B against `main` on an idle, unlocked box (two rounds each,
+`massed_battle_1000`, warmed medians; "combat" is frames 8-16 s):
+
+| Build    |      frame p50 |      frame p95 |     combat p50 |     combat p95 |   world_submit | humanoid_preparation |
+| -------- | -------------: | -------------: | -------------: | -------------: | -------------: | -------------------: |
+| Baseline | 7.38 / 7.32 ms | 54.6 / 16.7 ms | 16.9 / 11.1 ms | 60.1 / 22.6 ms | 4.72 / 4.68 ms |       3.21 / 3.19 ms |
+| Branch   | 4.58 / 4.22 ms |   6.8 / 6.3 ms |   5.5 / 4.9 ms |   7.1 / 6.8 ms | 1.67 / 1.61 ms |       1.03 / 1.00 ms |
+
+Frame p50 −40%, combat p50 −55%, and the melee tail is gone: the branch never
+leaves single digits where the baseline sat at 40 ms for seconds at a time.
+
 ### Measurement caveat that dominated this round
 
 Combat render_execute on this machine flips between ~2-3 ms and ~30 ms for the

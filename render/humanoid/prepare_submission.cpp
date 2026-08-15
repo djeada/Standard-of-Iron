@@ -223,7 +223,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
   }
   seed_missing_humanoid_wear(variant, seed);
-  const auto visual_spec = owner.visual_spec();
+  const auto visual_spec = Render::Creature::Pipeline::resolve_unit_visual_spec(
+      owner.visual_spec(), variant);
 
   if (!owner.m_proportion_scale_cached) {
     owner.m_cached_proportion_scale = owner.get_proportion_scaling();
@@ -1128,7 +1129,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
     graph_output.instance_index = static_cast<std::uint16_t>(idx);
     graph_output.spec = RCP::finalize_visible_humanoid_spec(
-        visual_spec, variant, soldier_render_anim, render_has_locomotion);
+        visual_spec, soldier_render_anim, render_has_locomotion);
     graph_output.seed = inst_seed;
     graph_output.world_already_grounded = world_already_grounded;
     bool const selection_steady = humanoid_selection_is_steady(anim_ctx);

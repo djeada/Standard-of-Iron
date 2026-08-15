@@ -3,6 +3,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <mutex>
 #include <span>
@@ -96,9 +97,8 @@ public:
                                ArchetypeDescriptor::ExtraRoleColorsFn
                                    extra_role_colors_fn = nullptr) -> ArchetypeId;
 
-  [[nodiscard]] auto size() const -> std::size_t {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    return m_count;
+  [[nodiscard]] auto size() const noexcept -> std::size_t {
+    return m_count.load(std::memory_order_acquire);
   }
 
 private:
@@ -107,8 +107,8 @@ private:
 
   static constexpr std::size_t k_max_archetypes = 1024;
   std::array<ArchetypeDescriptor, k_max_archetypes> m_table{};
-  std::size_t m_count{0};
-  mutable std::mutex m_mutex;
+  std::atomic<std::size_t> m_count{0};
+  std::mutex m_register_mutex;
 };
 
 } // namespace Render::Creature

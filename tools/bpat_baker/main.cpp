@@ -24,6 +24,7 @@
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/render_request.h"
 #include "render/creature/rigged_mesh_asset.h"
+#include "render/creature/skeleton.h"
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/creature/species_manifest.h"
 #include "render/elephant/elephant_manifest.h"
@@ -114,6 +115,16 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
   bpat::BpatWriter writer(manifest.species_id,
                           static_cast<std::uint32_t>(bind_palette.size()));
   writer.set_bind_palette(bind_palette);
+  {
+    std::vector<std::uint8_t> parents(bind_palette.size(), bpat::k_no_parent_bone);
+    auto const bones = manifest.topology->bones;
+    for (std::size_t b = 0; b < parents.size() && b < bones.size(); ++b) {
+      if (bones[b].parent != Render::Creature::k_invalid_bone) {
+        parents[b] = static_cast<std::uint8_t>(bones[b].parent);
+      }
+    }
+    writer.set_bone_parents(parents);
+  }
 
   for (auto const& socket : manifest.sockets) {
     bpat::SocketDescriptor s{};

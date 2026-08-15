@@ -49,8 +49,10 @@ struct BpatHeaderExtV3 {
   std::uint32_t contact_entry_count;
   std::uint32_t reserved0;
   std::uint64_t bind_palette_offset;
-  std::uint64_t reserved1;
+  std::uint64_t bone_parent_offset;
 };
+
+inline constexpr std::uint8_t k_no_parent_bone = 0xFFU;
 
 static_assert(sizeof(BpatHeaderExtV3) == 32,
               "BpatHeaderExtV3 must be exactly 32 bytes");

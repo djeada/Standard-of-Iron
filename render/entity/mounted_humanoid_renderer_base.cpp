@@ -299,8 +299,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   }
   auto rider_output = RCP::build_base_graph_output(rider_inputs, rider_lod);
   rider_output.spec = RCP::finalize_visible_humanoid_spec(
-      mounted_visual_spec().rider,
-      variant,
+      RCP::resolve_unit_visual_spec(mounted_visual_spec().rider, variant),
       anim_ctx.inputs,
       Render::Creature::is_moving_animation(anim_ctx.inputs.movement_state));
   rider_output.seed = seed;

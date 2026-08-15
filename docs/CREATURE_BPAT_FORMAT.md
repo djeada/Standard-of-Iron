@@ -50,6 +50,7 @@ Think of the file as a chest with a few labeled compartments.
 | Socket data  | Optional pre-baked attachment transforms                |
 | Contact data | One ground-contact height per frame (v3)                |
 | Bind palette | The rest pose the skinning matrices were built against  |
+| Bone parents | The skeleton hierarchy, one parent index per bone       |
 
 ### Header
 
@@ -162,6 +163,20 @@ baked bind palette: `BpatBlob::bone_global_matrix(frame, bone)` does exactly
 
 If you like analogies, this is a flipbook where each page contains the finished
 deformation for that instant rather than the raw pose.
+
+### Bone parents (v3)
+
+`BpatHeaderExtV3::bone_parent_offset` points at `bone_count` bytes: the parent index of
+every bone (`0xFF` for a root), written from the species topology and validated so a
+parent always precedes its child. Together with the bind palette this lets the reader
+rebuild the **local pose** of every bone for every frame at load
+(`BpatBlob::frame_local_pose_view`: a rotation quaternion and a translation relative to
+the parent). Runtime pose layering — frame interpolation, full-body blends, upper-body
+overlays — is a slerp/lerp of those local poses followed by one forward-kinematics pass
+back to skinning matrices, instead of decomposing skinning matrices into quaternions on
+every blend. The reader derives the local poses rather than the baker storing them
+because they are a pure function of data already in the file; storing them would only
+add 1.3 MB per humanoid blob and a second copy that could drift.
 
 ### Bind palette (v3)
 
@@ -279,7 +294,8 @@ For readers who want the important hard facts without drowning in byte offset ta
 - The header is **64 bytes** and is immediately followed by a **32-byte v3 extension
   header** (contact table offset and count); each clip entry is **48 bytes** (5 marker
   floats, flags, variant family and ordinal); each socket entry is **32 bytes**; each
-  contact record is **8 bytes**; the bind palette is `bone_count × 64` bytes.
+  contact record is **8 bytes**; the bind palette is `bone_count × 64` bytes; the bone
+  parent table is `bone_count` bytes.
 - Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword, 4 = humanoid_spear, 5 = humanoid_skeleton, 6 = humanoid_caster, 7 = humanoid_stave_caster, 8 = sheep, 9 = wolf**.
 - Blobs are build output (`make bake-bpat`), never checked in, so a version bump simply
   re-bakes every species; the reader accepts exactly the current version and nothing else.
@@ -309,6 +325,7 @@ The current reader accepts a BPAT file when:
 9. every socket anchor bone points at a real bone
 10. if a contact table is present it holds exactly one record per frame and stays inside the file
 11. if a bind palette is present it holds exactly one matrix per bone and stays inside the file
+12. if a bone parent table is present every parent index precedes its child (or is `0xFF`)
 
 The writer still emits zeroed padding and reserved fields, but the current reader does **not** actively reject non-zero reserved bytes.
 

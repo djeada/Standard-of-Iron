@@ -114,6 +114,11 @@ void BpatWriter::set_bind_palette(std::span<const QMatrix4x4> bind_palette) {
   }
 }
 
+void BpatWriter::set_bone_parents(std::span<const std::uint8_t> parents) {
+  assert(parents.size() == m_bone_count && "parent table must cover every bone");
+  m_bone_parents.assign(parents.begin(), parents.end());
+}
+
 void BpatWriter::append_clip_contacts(std::span<const BpatFrameContact> contacts) {
   assert(!m_clips.empty() && "add_clip() before append_clip_contacts()");
   auto& pending = m_clips.back();
@@ -211,6 +216,9 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   cursor += has_contacts ? m_contacts.size() * sizeof(BpatFrameContact) : 0U;
   cursor = align_up(cursor, k_section_alignment);
   std::uint64_t const bind_palette_offset = m_bind_palette_floats.empty() ? 0U : cursor;
+  cursor += m_bind_palette_floats.size() * sizeof(float);
+  cursor = align_up(cursor, k_section_alignment);
+  std::uint64_t const bone_parent_offset = m_bone_parents.empty() ? 0U : cursor;
 
   BpatHeader header{};
   std::memcpy(header.magic, k_magic.data(), k_magic.size());
@@ -231,6 +239,7 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   ext.contact_entry_count =
       has_contacts ? static_cast<std::uint32_t>(m_contacts.size()) : 0U;
   ext.bind_palette_offset = bind_palette_offset;
+  ext.bone_parent_offset = bone_parent_offset;
 
   std::uint64_t written = 0U;
   write_pod(out, &header, sizeof(header));
@@ -268,9 +277,14 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   }
   if (!m_bind_palette_floats.empty()) {
     pad_to_alignment(out, written, k_section_alignment);
+    written = bind_palette_offset + m_bind_palette_floats.size() * sizeof(float);
     write_pod(out,
               m_bind_palette_floats.data(),
               m_bind_palette_floats.size() * sizeof(float));
+  }
+  if (!m_bone_parents.empty()) {
+    pad_to_alignment(out, written, k_section_alignment);
+    write_pod(out, m_bone_parents.data(), m_bone_parents.size());
   }
   return out.good();
 }
