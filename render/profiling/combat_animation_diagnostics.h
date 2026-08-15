@@ -47,7 +47,6 @@ enum class SoldierCullReason : std::uint8_t {
   Frustum,
   Fog,
   Billboard,
-  Temporal,
   LensGap,
 };
 

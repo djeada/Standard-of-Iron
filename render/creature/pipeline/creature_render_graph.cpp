@@ -33,9 +33,6 @@ constexpr float k_horse_minimal_distance = 60.0F;
 constexpr float k_elephant_full_distance = 20.0F;
 constexpr float k_elephant_minimal_distance = 60.0F;
 
-constexpr float k_temporal_minimal_distance = 45.0F;
-constexpr std::uint32_t k_temporal_minimal_period = 3;
-
 constexpr float k_ultra_troop_full_distance = std::numeric_limits<float>::max() / 4.0F;
 constexpr float k_ultra_troop_minimal_distance =
     std::numeric_limits<float>::max() / 2.0F;
@@ -44,8 +41,6 @@ constexpr float k_ultra_troop_minimal_distance =
   CreatureLodConfig config;
   config.thresholds.full = k_ultra_troop_full_distance;
   config.thresholds.minimal = k_ultra_troop_minimal_distance;
-  config.temporal.distance_minimal = k_ultra_troop_minimal_distance;
-  config.temporal.period_minimal = 1U;
   config.apply_visibility_budget = false;
   return config;
 }
@@ -56,8 +51,6 @@ auto humanoid_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = k_humanoid_full_distance;
   config.thresholds.minimal = k_humanoid_minimal_distance;
-  config.temporal.distance_minimal = k_temporal_minimal_distance;
-  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = false;
   return config;
 }
@@ -66,8 +59,6 @@ auto horse_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = k_horse_full_distance;
   config.thresholds.minimal = k_horse_minimal_distance;
-  config.temporal.distance_minimal = k_temporal_minimal_distance;
-  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = false;
   return config;
 }
@@ -76,8 +67,6 @@ auto elephant_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = k_elephant_full_distance;
   config.thresholds.minimal = k_elephant_minimal_distance;
-  config.temporal.distance_minimal = k_temporal_minimal_distance;
-  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = false;
   return config;
 }
@@ -91,8 +80,6 @@ auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = gs.humanoid_full_detail_distance();
   config.thresholds.minimal = gs.humanoid_minimal_detail_distance();
-  config.temporal.distance_minimal = k_temporal_minimal_distance;
-  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
 }
@@ -106,8 +93,6 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = gs.horse_full_detail_distance();
   config.thresholds.minimal = gs.horse_minimal_detail_distance();
-  config.temporal.distance_minimal = k_temporal_minimal_distance;
-  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
 }
@@ -121,8 +106,6 @@ auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = gs.elephant_full_detail_distance();
   config.thresholds.minimal = gs.elephant_minimal_detail_distance();
-  config.temporal.distance_minimal = k_temporal_minimal_distance;
-  config.temporal.period_minimal = k_temporal_minimal_period;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
 }
@@ -155,15 +138,6 @@ auto evaluate_creature_lod(const CreatureGraphInputs& inputs,
   lod_inputs.thresholds = config.thresholds;
   lod_inputs.apply_visibility_budget = config.apply_visibility_budget;
   lod_inputs.budget_grant_full = inputs.budget_grant_full;
-  lod_inputs.temporal = config.temporal;
-  lod_inputs.frame_index = inputs.frame_index;
-
-  std::uint32_t seed = 0U;
-  if (inputs.ctx != nullptr) {
-    seed = derive_unit_seed(*inputs.ctx, inputs.unit);
-  }
-  lod_inputs.instance_seed = seed;
-
   return decide_creature_lod(lod_inputs);
 }
 

@@ -195,6 +195,14 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
   (void)apply_authored_horse_mount_pose(motion, mount);
 }
 
+void MountedHumanoidRendererBase::ensure_prepare_components(
+    Engine::Core::Entity& entity) const {
+  HumanoidRendererBase::ensure_prepare_components(entity);
+  Engine::Core::get_or_add_component<Render::Creature::HorseAnimationStateComponent>(
+      entity);
+  Engine::Core::get_or_add_component<Render::Creature::HorseAnatomyComponent>(entity);
+}
+
 auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext& ctx) const
     -> HorseLOD {
   namespace RCP = Render::Creature::Pipeline;

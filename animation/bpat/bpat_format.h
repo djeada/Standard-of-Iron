@@ -7,7 +7,7 @@
 namespace Render::Creature::Bpat {
 
 inline constexpr std::array<std::uint8_t, 4> k_magic{'B', 'P', 'A', 'T'};
-inline constexpr std::uint32_t k_version = 2U;
+inline constexpr std::uint32_t k_version = 3U;
 
 inline constexpr std::uint32_t k_species_humanoid = 0U;
 inline constexpr std::uint32_t k_species_horse = 1U;
@@ -44,6 +44,27 @@ struct BpatHeader {
 static_assert(sizeof(BpatHeader) == 64, "BpatHeader must be exactly 64 bytes");
 static_assert(alignof(BpatHeader) == 8, "BpatHeader must be 8-byte aligned");
 
+struct BpatHeaderExtV3 {
+  std::uint64_t contact_data_offset;
+  std::uint32_t contact_entry_count;
+  std::uint32_t reserved0;
+  std::uint64_t reserved1;
+  std::uint64_t reserved2;
+};
+
+static_assert(sizeof(BpatHeaderExtV3) == 32,
+              "BpatHeaderExtV3 must be exactly 32 bytes");
+
+inline constexpr std::uint8_t k_clip_flag_supplies_ground_contact = 0x01U;
+
+struct BpatFrameContact {
+  float sole_y;
+  float foot_y;
+};
+
+static_assert(sizeof(BpatFrameContact) == 8,
+              "BpatFrameContact must be exactly 8 bytes");
+
 struct BpatClipEntry {
   std::uint32_t name_offset;
   std::uint32_t name_length;
@@ -51,7 +72,11 @@ struct BpatClipEntry {
   std::uint32_t frame_offset;
   float fps;
   std::uint8_t loops;
-  std::uint8_t pad[3];
+  std::uint8_t flags;
+  std::uint8_t variant_ordinal;
+  std::uint8_t pad;
+  std::uint16_t variant_family;
+  std::uint16_t reserved;
 
   float marker_anticipation_start;
   float marker_weapon_release;
@@ -60,7 +85,7 @@ struct BpatClipEntry {
   float marker_exit_safe;
 };
 
-static_assert(sizeof(BpatClipEntry) == 44, "BpatClipEntry must be exactly 44 bytes");
+static_assert(sizeof(BpatClipEntry) == 48, "BpatClipEntry must be exactly 48 bytes");
 
 struct BpatSocketEntry {
   std::uint32_t name_offset;

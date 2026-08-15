@@ -1,5 +1,7 @@
 #include "horse_spearman_renderer.h"
 
+#include <memory>
+
 #include "render/entity/horse_spearman_renderer_base.h"
 #include "render/entity/nations/equipment_loadout_catalog.h"
 #include "render/entity/nations/mounted_loadout.h"
@@ -29,12 +31,10 @@ auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
 } // namespace
 
 void register_horse_spearman_renderer(EntityRendererRegistry& registry) {
-  registry.register_renderer("troops/carthage/horse_spearman",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static HorseSpearmanRendererBase const static_renderer(
-                                   make_horse_spearman_config());
-                               static_renderer.render(ctx, out);
-                             });
+  register_humanoid_renderer(
+      registry,
+      "troops/carthage/horse_spearman",
+      std::make_shared<HorseSpearmanRendererBase const>(make_horse_spearman_config()));
 }
 
 } // namespace Render::GL::Carthage

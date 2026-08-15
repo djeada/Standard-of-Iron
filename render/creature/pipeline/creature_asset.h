@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <shared_mutex>
 #include <span>
 #include <string_view>
 #include <unordered_map>
@@ -158,6 +159,7 @@ private:
       lookup_{};
   std::deque<CreatureRenderAssetHandle> handles_{};
   std::vector<AttachmentSetRecord> attachment_sets_{};
+  mutable std::shared_mutex mutex_{};
   AttachmentSetId next_attachment_set_id_{1U};
 };
 

@@ -97,9 +97,6 @@ auto resolve_humanoid_lod_state(const HumanoidLodStateInputs& inputs)
   lod_in.thresholds = inputs.config.thresholds;
   lod_in.apply_visibility_budget = inputs.config.apply_visibility_budget;
   lod_in.budget_grant_full = true;
-  lod_in.temporal = inputs.config.temporal;
-  lod_in.frame_index = inputs.frame_index;
-  lod_in.instance_seed = inputs.instance_seed;
 
   if (lod_in.apply_visibility_budget && !ctx.force_humanoid_lod &&
       ctx.camera != nullptr) {

@@ -21,6 +21,7 @@
 #include "animation/clip_manifest.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/part_graph.h"
+#include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/render_request.h"
 #include "render/creature/rigged_mesh_asset.h"
 #include "render/creature/snapshot_mesh_asset.h"
@@ -51,6 +52,50 @@ void apply_generic_markers(bpat::ClipDescriptor& desc) {
   apply_markers(Animation::authored_generic_clip_markers(desc.name), desc);
 }
 
+struct ClipVariantSlot {
+  std::uint16_t family{0U};
+  std::uint8_t ordinal{0U};
+};
+
+auto clip_manifests_for_species(std::uint32_t species_id)
+    -> std::vector<Animation::ClipManifest> {
+  switch (species_id) {
+  case bpat::k_species_horse:
+    return {Animation::horse_clip_manifest()};
+  case bpat::k_species_elephant:
+    return {Animation::elephant_clip_manifest()};
+  case bpat::k_species_sheep:
+    return {Animation::sheep_clip_manifest()};
+  case bpat::k_species_wolf:
+    return {Animation::wolf_clip_manifest()};
+  default:
+    return {Animation::humanoid_clip_manifest(), Animation::rider_clip_manifest()};
+  }
+}
+
+auto build_clip_variant_table(std::uint32_t species_id,
+                              std::size_t clip_count) -> std::vector<ClipVariantSlot> {
+  std::vector<ClipVariantSlot> table(clip_count);
+  for (std::size_t i = 0; i < clip_count; ++i) {
+    table[i].family = static_cast<std::uint16_t>(i);
+  }
+  for (auto const& manifest : clip_manifests_for_species(species_id)) {
+    for (std::size_t state = 0; state < manifest.clips.size(); ++state) {
+      auto const base = manifest.clips[state];
+      if (base == Animation::k_unmapped_clip || base >= clip_count) {
+        continue;
+      }
+      std::uint8_t const count =
+          std::max<std::uint8_t>(1U, manifest.variant_counts[state]);
+      for (std::uint8_t ordinal = 0U; ordinal < count && base + ordinal < clip_count;
+           ++ordinal) {
+        table[base + ordinal] = {base, ordinal};
+      }
+    }
+  }
+  return table;
+}
+
 bool bake_species_manifest(const std::filesystem::path& out_dir,
                            const Render::Creature::SpeciesManifest& manifest) {
   if (manifest.bind_palette == nullptr || manifest.creature_spec == nullptr ||
@@ -77,6 +122,8 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     writer.add_socket(std::move(s));
   }
 
+  auto const variant_table =
+      build_clip_variant_table(manifest.species_id, manifest.clips.size());
   for (std::size_t i = 0; i < manifest.clips.size(); ++i) {
     auto const& clip = manifest.clips[i];
     bpat::ClipDescriptor desc{};
@@ -84,6 +131,8 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     desc.frame_count = clip.frame_count;
     desc.fps = clip.fps;
     desc.loops = clip.loops;
+    desc.variant_family = variant_table[i].family;
+    desc.variant_ordinal = variant_table[i].ordinal;
     if (manifest.clip_markers != nullptr) {
       Animation::ClipMarkers markers{};
       manifest.clip_markers(i, clip.name, markers);
@@ -108,6 +157,19 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     if (!manifest.sockets.empty()) {
       writer.append_clip_socket_transforms(sockets);
     }
+
+    auto const kind =
+        Render::Creature::Pipeline::creature_kind_for_bpat_species(manifest.species_id);
+    std::vector<bpat::BpatFrameContact> contacts(clip.frame_count);
+    for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
+      std::span<const QMatrix4x4> const frame{
+          palettes.data() + static_cast<std::size_t>(f) * bind_palette.size(),
+          bind_palette.size()};
+      contacts[f].sole_y = Render::Creature::Pipeline::palette_contact_y(kind, frame);
+      contacts[f].foot_y =
+          Render::Creature::Pipeline::palette_foot_contact_y(kind, frame);
+    }
+    writer.append_clip_contacts(contacts);
   }
 
   std::filesystem::create_directories(out_dir);

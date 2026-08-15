@@ -10,6 +10,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -1074,12 +1075,8 @@ public:
 
 void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
-  static BuilderRenderer const renderer;
-  registry.register_renderer("troops/roman/builder",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static BuilderRenderer const r;
-                               r.render(ctx, out);
-                             });
+  register_humanoid_renderer(
+      registry, "troops/roman/builder", std::make_shared<BuilderRenderer const>());
 
   auto& ar = Render::GL::RenderArchetypeRegistry::instance();
   ar.register_archetype("roman_builder_work_tunic",
@@ -1097,12 +1094,8 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
-  static CivilianRenderer const renderer;
-  registry.register_renderer("troops/roman/civilian",
-                             [](const DrawContext& ctx, ISubmitter& out) {
-                               static CivilianRenderer const r;
-                               r.render(ctx, out);
-                             });
+  register_humanoid_renderer(
+      registry, "troops/roman/civilian", std::make_shared<CivilianRenderer const>());
 }
 
 } // namespace Render::GL::Roman

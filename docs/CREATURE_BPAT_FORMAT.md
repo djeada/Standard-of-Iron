@@ -48,6 +48,7 @@ Think of the file as a chest with a few labeled compartments.
 | String table | The actual text names used by the clip and socket lists |
 | Palette data | The real pose data for every frame of every move        |
 | Socket data  | Optional pre-baked attachment transforms                |
+| Contact data | One ground-contact height per frame (v3)                |
 
 ### Header
 
@@ -93,6 +94,40 @@ on the trigger frame — see the deferred-melee-strike flow in
 [`ANIMATION_ARCHITECTURE.md`](ANIMATION_ARCHITECTURE.md). This stays DPS-neutral
 (the cooldown still resets at swing start) and deterministic (the pending strike is
 serialized).
+
+### Clip flags and the variant table (v3)
+
+Version 3 stops the runtime from re-deriving facts about a clip that the baker already
+knows. Every clip entry now carries:
+
+- a **flags** byte. Bit 0, `supplies_ground_contact`, is set for every clip except the
+  `riding_*` and `showcase_*` families. The runtime used to test the clip _name_ for
+  those prefixes on every soldier every frame; now it reads one bit.
+- a **variant family** and **variant ordinal**. Clip variants (the three sword swings,
+  the six ambient idles, the infantry death poses) are still contiguous in the blob and
+  still selected as `base_clip + variant`, but the baker records which family every clip
+  belongs to and its ordinal inside it, straight from `animation/clip_manifest.h`. The
+  runtime validates `base_clip + variant` against that table
+  (`BpatBlob::clip_is_variant_of`) and falls back to the base clip when the arithmetic
+  would land outside the family. Before v3 the same guard existed only for the idle
+  ambient variants and worked by comparing clip names.
+
+### Contact data (v3)
+
+Every frame also gets a `BpatFrameContact` record with two floats:
+
+- `sole_y` — the lowest sole point of the posed feet relative to the bind pose. This is
+  what the submit path subtracts from the world matrix so a mid-stride soldier stands on
+  the ground instead of floating on its bind-pose feet.
+- `foot_y` — the lowest foot-bone origin in palette space, used by the shadow and
+  grounding pass in preparation.
+
+Both used to be computed at runtime from the full bone palette (matrix inversions and
+sole-point transforms per soldier per frame, twice when frame-lerping). The baker now
+runs the exact same functions once per frame
+(`Render::Creature::Pipeline::palette_contact_y` / `palette_foot_contact_y`) and the
+runtime does two array reads and a lerp. `render_request_test` verifies the baked table
+against the runtime computation for every frame of every species blob it can load.
 
 ### Socket list
 
@@ -214,16 +249,20 @@ In player terms: the creature animation is packed like an image so the graphics 
 
 For readers who want the important hard facts without drowning in byte offset tables:
 
-- BPAT v2 is **little-endian**.
+- BPAT v3 is **little-endian**.
 - Floating-point values are **32-bit IEEE 754 floats**.
 - Bone matrices are stored **row-major**.
 - Each section begins on a **16-byte boundary**.
 - Variable-sized data lives in trailing blocks referenced by **absolute file offsets**.
 - Reserved and padding bytes must be **zero**.
 - The file magic must be **`BPAT`**.
-- The header is **64 bytes**; each clip entry is **44 bytes** (it carries the 5 marker
-  floats); each socket entry is **32 bytes**.
-- Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword, 4 = humanoid_spear, 5 = humanoid_skeleton**.
+- The header is **64 bytes** and is immediately followed by a **32-byte v3 extension
+  header** (contact table offset and count); each clip entry is **48 bytes** (5 marker
+  floats, flags, variant family and ordinal); each socket entry is **32 bytes**; each
+  contact record is **8 bytes**.
+- Current supported species ids are **0 = humanoid, 1 = horse, 2 = elephant, 3 = humanoid_sword, 4 = humanoid_spear, 5 = humanoid_skeleton, 6 = humanoid_caster, 7 = humanoid_stave_caster, 8 = sheep, 9 = wolf**.
+- Blobs are build output (`make bake-bpat`), never checked in, so a version bump simply
+  re-bakes every species; the reader accepts exactly the current version and nothing else.
 
 ## How the frame data is packed
 
@@ -240,14 +279,15 @@ So a clip entry does not own a separate chunked mini-file. It simply points to i
 The current reader accepts a BPAT file when:
 
 1. it starts with the `BPAT` magic
-2. it uses version `2`
-3. its species id is known (`0..5` today)
+2. it uses version `3`
+3. its species id is known (`0..9` today)
 4. it has at least one clip
 5. its bone count is in range
 6. its clip frame offsets are contiguous and its frame counts add up correctly
 7. its offsets stay inside the file
 8. every referenced clip or socket name really exists inside the string table and ends with `NUL`
 9. every socket anchor bone points at a real bone
+10. if a contact table is present it holds exactly one record per frame and stays inside the file
 
 The writer still emits zeroed padding and reserved fields, but the current reader does **not** actively reject non-zero reserved bytes.
 

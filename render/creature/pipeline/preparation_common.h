@@ -87,6 +87,13 @@ palette_contact_y(CreatureKind kind,
                   std::span<const QMatrix4x4> palette) noexcept -> float;
 
 [[nodiscard]] auto
+palette_foot_contact_y(CreatureKind kind,
+                       std::span<const QMatrix4x4> palette) noexcept -> float;
+
+[[nodiscard]] auto
+creature_kind_for_bpat_species(std::uint32_t species_id) noexcept -> CreatureKind;
+
+[[nodiscard]] auto
 sample_terrain_height_or_fallback(const Game::Map::TerrainService& terrain,
                                   float world_x,
                                   float world_z,

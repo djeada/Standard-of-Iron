@@ -25,7 +25,9 @@
 #include "gl/texture.h"
 #include "i_render_backend.h"
 #include "persistent_render_registry.h"
+#include "prepare_worker_pool.h"
 #include "render/async_template_prewarm.h"
+#include "render/creature/pipeline/creature_render_graph.h"
 #include "render/render_view_state.h"
 #include "render/world_render_mode.h"
 #include "render/world_view.h"
@@ -50,6 +52,14 @@ namespace Game::Map {
 class VisibilityService;
 }
 
+namespace Render::Profiling {
+struct FrameProfile;
+}
+
+namespace Render::Creature::Pipeline {
+struct CreaturePreparationResult;
+}
+
 namespace Render::GL {
 class EntityRendererRegistry;
 }
@@ -69,6 +79,7 @@ class EffectsSubmitter;
 struct UnitRenderEntry;
 struct RenderEntry;
 struct UnitSubmitContext;
+struct UnitDrawPlan;
 
 class Renderer : public ISubmitter {
 public:
@@ -433,7 +444,16 @@ private:
                              Engine::Core::World* world,
                              ResourceManager* res);
 
-  void submit_unit_entry(UnitRenderEntry& entry, const UnitSubmitContext& ctx);
+  auto plan_unit_entry(UnitRenderEntry& entry,
+                       const UnitSubmitContext& ctx) -> UnitDrawPlan;
+  void prepare_unit_plans(std::vector<UnitRenderEntry>& entries,
+                          std::vector<UnitDrawPlan>& plans,
+                          Render::Profiling::FrameProfile& frame_profile);
+  void
+  submit_unit_entry(UnitRenderEntry& entry,
+                    UnitDrawPlan& plan,
+                    const UnitSubmitContext& ctx,
+                    Render::Creature::Pipeline::CreaturePreparationResult* prepared);
 
   void enqueue_selection_ring(Engine::Core::Entity* entity,
                               Engine::Core::TransformComponent* transform,
@@ -509,6 +529,11 @@ private:
   std::unordered_map<Engine::Core::EntityID, AnimationTimeCacheEntry>
       m_animation_time_cache;
   UnitRenderCache m_unit_render_cache;
+  Render::PrepareWorkerPool m_prepare_pool;
+  std::vector<Render::Creature::Pipeline::CreaturePreparationResult>
+      m_unit_preparations;
+  std::vector<std::uint8_t> m_prepare_warmed_handles;
+  std::vector<std::size_t> m_parallel_prepare_jobs;
   ModelMatrixCache m_model_matrix_cache;
   RiggedMeshCache m_rigged_mesh_cache;
   SnapshotMeshCache m_snapshot_mesh_cache;

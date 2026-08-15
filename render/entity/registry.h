@@ -23,6 +23,10 @@ class Entity;
 class World;
 } // namespace Engine::Core
 
+namespace Render::Creature::Pipeline {
+struct CreaturePreparationResult;
+}
+
 namespace Render::GL {
 class ResourceManager;
 class Mesh;
@@ -93,6 +97,17 @@ should_persist_animation_state(const DrawContext& ctx) noexcept -> bool {
 
 using RenderFunc = std::function<void(const DrawContext&, ISubmitter& out)>;
 
+class IParallelPreparer {
+public:
+  virtual ~IParallelPreparer() = default;
+
+  virtual void ensure_prepare_components(Engine::Core::Entity& entity) const = 0;
+
+  virtual void
+  prepare(const DrawContext& ctx,
+          Render::Creature::Pipeline::CreaturePreparationResult& out) const = 0;
+};
+
 class EntityRendererRegistry {
 public:
   struct TransparentStringHash {
@@ -102,9 +117,12 @@ public:
     }
   };
 
-  void register_renderer(const std::string& type, RenderFunc func);
+  void register_renderer(const std::string& type,
+                         RenderFunc func,
+                         std::shared_ptr<const IParallelPreparer> preparer = {});
   auto get(std::string_view type) const -> RenderFunc;
   auto get(RendererHandle handle) const -> const RenderFunc*;
+  auto get_preparer(RendererHandle handle) const -> const IParallelPreparer*;
   auto get_handle(std::string_view type) const -> RendererHandle;
 
 private:
@@ -112,6 +130,7 @@ private:
       unordered_map<std::string, RendererHandle, TransparentStringHash, std::equal_to<>>
           m_lookup;
   std::vector<RenderFunc> m_renderers;
+  std::vector<std::shared_ptr<const IParallelPreparer>> m_preparers;
 };
 
 void register_built_in_entity_renderers(EntityRendererRegistry& registry);
