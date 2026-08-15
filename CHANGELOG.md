@@ -56,6 +56,120 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Changed
 
+- **The simulation kernel is one static library per domain, and the build
+  enforces the layering.** `game_sim` used to hold combat, movement,
+  navigation, formations, economy, units, terrain and wildlife in a single
+  archive, with `scripts/module_rules.json` counting the forty-three edges that
+  pointed the wrong way between them. Those edges are paid down and the kernel
+  is now `engine_core` → `soi_world` → `soi_navigation` → `soi_units` →
+  `soi_formations` → `soi_movement` → `soi_economy` → `soi_combat` →
+  `soi_wildlife` → `game_sim`, each linking only the layers below it, so a
+  domain that starts reaching for one above it fails to link. `game_sim` still
+  links all of them, so every existing consumer keeps its one-line link. The
+  module checker no longer carries a baseline: the first wrong-way include
+  fails the build, and so does a source listed in a target its module does not
+  own. What moved to make that possible: the ambient service binding
+  (`OwnerRegistry::instance()` and friends) resolves through a leaf in
+  `engine_core` that the session fills in, instead of being defined in the
+  session; the troop file's formation block is carried on the catalogue entry
+  and read by the formation library afterwards, instead of the catalogue loader
+  writing the role registry; the content bootstrap that loaded formations,
+  troops and nations moved out of `NationRegistry` into
+  `Game::Systems::initialize_default_content`; the formation runtime raises a
+  flag after a replan and a movement-side system issues the orders; a unit's
+  run-mode stamina helper sits with the registries; walls and gates are
+  navigation, and the map-to-world spawner is a unit concern.
+- **A binary that uses per-match services owns its session.** There is no
+  longer a lazily created default `SessionContext` behind
+  `SessionContext::active()`; whether it was linked in depended on which
+  archive members the linker happened to pull once the kernel was split. The
+  game, every tool and every test main construct a session and make it active,
+  and an accessor called with none bound aborts with a message saying so.
+- **Every order goes through the command queue, from every issuer.** Trading
+  at a marketplace, a commander's aura, rally and flag rally, entering and
+  leaving formation mode, deploying an army formation, sending builders to a
+  construction site or a resource, delivering civilians to a barracks and
+  repairing a structure used to be applied by app code, the AI applier and the
+  arena harness writing gameplay components themselves — three copies of the
+  same assignment logic, each with its own idea of the rules. Each is now a
+  `Game::Command` payload (`Trade`, `UseCommanderAbility`, `SetFormationMode`,
+  `DeployFormation`, `ReleaseFormation`, `StartConstruction`, `StartHarvest`,
+  `DeliverCivilians`, `RepairStructure`) that is validated and dispatched like a
+  move, so a player click, a computer opponent and a scripted wave are judged
+  by the same code — and every payload is plain data, which is what a replay
+  file or a network transport carries. The app keeps only feedback: it may ask a
+  service whether an order would be accepted to phrase a refusal, then submits.
+  Consequences a player can notice: builder construction is paid for when the
+  crew is assigned (it was free for the human player before, and only the AI
+  paid); build times come from one table for both issuers, so the computer
+  opponent's tower now takes 20 s rather than 12, its barracks 10 s rather
+  than 15 and its marketplace 10 s rather than 12; and the marketplace
+  buy/sell buttons submit an order the queue applies at the top of the next
+  tick rather than changing your stock inside the click.
+- **The last three client-side mutations are payloads too, and the boundary
+  is enforced.** Wall plans (`PlaceWallPlan`: the drag's anchor and target on
+  the wall grid, re-planned from the world when applied so a stale preview
+  cannot place a wall the match would refuse), crew-less building placement
+  (`PlaceBuilding`) and the builder "placement preview" flag are gone from
+  `app/`. `WallPlanService` and `StructurePlacementService` (game side) give
+  the HUD its preview and refusal text and the dispatcher its ruling from one
+  function each; the `is_placement_preview` flag on `BuilderProductionComponent`
+  is removed — starting a placement is now a client gesture that touches no
+  builder, so cancelling it changes nothing and a crew keeps working until the
+  order lands (ordering the same crew back to its own tree is allowed, and the
+  dispatcher re-seats the claim). `scripts/check-command-boundary.py` fails
+  the build if anything under `app/` or `ui/` calls a mutating service or
+  writes a builder's task fields, with the commander's first-person mode as
+  the one allow-listed exception.
+- **Replays.** `--record-replay <file>` writes the launch, every accepted
+  command with its tick, and the world digest every 30 ticks; `--replay
+<file>` launches what the file describes and lets it drive the match with
+  local input and the AI shut out; `--replay-verify` exits 0 if every recorded
+  digest matched and 12 at the first tick that did not, and `--skip-briefing`
+  starts a scripted mission unpaused. `game/command/command_codec.{h,cpp}` is
+  the one place a payload is written and read (JSON), with a round-trip test
+  over every alternative of the variant that fails when a payload is added
+  without a sample.
+- **Determinism is checked, not assumed.** `game/session/world_digest.h`
+  fingerprints the simulation (entities, stock, tick, rng draws);
+  `battlefield_gameplay_verifier --determinism-runs N` runs every scenario N
+  times and prints the first divergent tick and entity; `ctest` carries
+  `simulation_determinism` and `headless_replay_round_trip`. The one
+  nondeterministic gameplay draw found — commander crit rolls seeded from
+  `std::random_device` — now comes from the session's `DeterministicRng`,
+  which the ambient binding exposes.
+- **The computer opponent decides on a schedule, not on a race.** `AISystem`
+  used to apply a decision on whatever tick the worker thread finished it,
+  so two runs of one match disagreed on when the AI moved — the determinism
+  check caught it on its first run. A decision now lands a fixed six updates
+  after the snapshot it was taken from, and the simulation waits for the
+  worker if it is not done by then (it normally is, by a wide margin).
+- **The simulation with no window.** `SessionContext::advance()` /
+  `step()` own the wall-time-to-ticks loop the frame orchestrator used to
+  hold, and `soi_headless` (a session, the runtime system registry, the AI
+  and that loop, with no Qt Quick or renderer linked) records and verifies
+  replays of the battlefield scenarios; the map-to-match setup that would let
+  it host a real skirmish is still in `app/core/skirmish_loader.cpp`.
+- **Ambient lookups can only go down.** `scripts/check-ambient-instances.py`
+  counts `X::instance()` / `SessionContext::active()` per directory against
+  `scripts/ambient_instance_budget.json` and fails the build when a directory
+  grows one; `--write` lowers the ceiling after a clean-up.
+- **Construction costs and build times live in
+  `assets/data/construction/catalog.json`**, loaded at content bootstrap;
+  the C++ table is the fallback and a test keeps the shipped file in step
+  with the wall constants the preview quotes.
+- **`ProductionService` has one production entry point.** The barracks and
+  home paths were two functions with the same shape; `start_production` now
+  takes the building and applies that building's rules (commander
+  recruitability and manpower for barracks, committed civilians for homes,
+  queue depth for both), and `can_start_production` gives the same ruling
+  without placing the order, which is what the HUD reads to explain a refusal.
+- **Marketplace availability is read from the world, not counted.** Whether an
+  owner can trade used to be a per-owner counter kept in step by the
+  marketplace factory, the damage pipeline and nation collapse, and rebuilt on
+  load; it is now a query over the standing buildings, so there is nothing to
+  register, unregister or rebuild.
+
 - **Infantry no longer skate.** The walk clip drew the planted foot 1.08 m under
   the body per cycle and was played at a cadence of about 0.9 s whatever the
   unit's speed, which is a walk for someone travelling 1.2 m/s. Infantry travel
@@ -89,6 +203,25 @@ may change in any release — see [Save compatibility](#save-compatibility).
   had gone on claiming otherwise.
 - The sanitizer and coverage lanes build only the test binaries instead of the
   whole application, which is what they then run.
+
+### Removed
+
+- `game/systems/battlefield_definitions.{h,cpp}` and `game/audio/music.{h,cpp}`,
+  which nothing compiled or included.
+- `BuilderProductionComponent::is_placement_preview` (and its save field);
+  `App::Utils::structure_work_position`/`barracks_delivery_target_position`;
+  the app's private copies of the wall-plan and site-validity logic;
+  `InputCommandHandler::reset_movement`; `app/utils/movement_utils.h` is now a
+  declaration header with the bodies in `movement_utils.cpp`.
+- `ProductionService::start_production_for_first_selected_barracks/home` and
+  `set_rally_for_first_selected_barracks`; the AI applier's private
+  `BUILD_TIME_*` table; `App::Utils::structure_work_position` (now
+  `CommandService::structure_work_position`, one definition shared by the
+  dispatcher, the arena and the tests); and the unused `reset_movement`
+  wrappers on `GameEngine` and `CommandController`.
+- The `Temporal` soldier-cull reason left the profiler with the humanoid
+  prepare pass but `ui/gl_view.cpp` still named it, so the executable did not
+  build; the reference is gone.
 
 ## [0.1.0] — 2026-08-09
 

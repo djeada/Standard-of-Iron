@@ -12,9 +12,25 @@ accessibility_runtime       team identity and motion settings, shared by both en
 soi_software_raster         the CPU triangle rasteriser, used by render_gl and three tools
 soi_audio_mastering         the limiter/loudness chain, used by audio_system and the preview tool
      |
-engine_core                 ECS: entities, components, world
+engine_core                 ECS: entities, components, world, the ambient session binding
      |
-game_sim                    the simulation kernel
+soi_world                   unit catalogues, registries, terrain and maps
+     |
+soi_navigation              nav grid, pathfinding, spatial index, walls and gates
+     |
+soi_units                   the unit and building factories, the map-to-world spawner
+     |
+soi_formations              unit layouts, army formations, formation/structure geometry
+     |
+soi_movement                movement, local avoidance, order and command services
+     |
+soi_economy                 production, gathering, delivery, capture, the marketplace
+     |
+soi_combat                  damage pipelines, projectiles, healing, guard and patrol
+     |
+soi_wildlife                the ambient creatures
+     |
+game_sim                    the session, the command pipeline, match-level systems
      |
      +-- soi_campaign       the campaign definition
      |        |
@@ -37,7 +53,9 @@ standard_of_iron            executable: main(), QML registration
 Dependencies point downwards only. Each arrow is a CMake link edge, so a
 violation is a build failure rather than a review comment.
 
-`game_systems` is an INTERFACE target that pulls in the whole gameplay stack at
+`game_sim` links every kernel target below it PUBLIC, so linking `game_sim`
+still means "the whole simulation kernel". `game_systems` is an INTERFACE target
+that pulls in the whole gameplay stack — kernel, AI, missions, save stack — at
 once. It exists for consumers that genuinely want all of it — the renderer, the
 arena. New code should name the domains it uses instead: linking `game_systems`
 puts the AI and the save database into a binary that may need neither, and the
@@ -48,44 +66,62 @@ The names used in this document are the target names. `soi_components`,
 aliases for `engine_core`, `game_sim`, `game_view`, `render_gl` and `app_core`
 respectively; either spelling links the same archive.
 
-### Inside `game_sim`
+### Inside the kernel
 
-The kernel is still one archive, so CMake cannot separate combat from movement
-from terrain. `scripts/module_rules.json` declares the module map anyway —
-`domain_types`, `components`, `unit_catalog`, `registries`, `world`, `units`,
-`navigation`, `formations`, `economy`, `combat`, `wildlife`, `simulation`,
-`session` — along with the direction each is allowed to point in, and
-`scripts/check-modules.py` enforces it on every build.
+Each kernel target is a layer, and its link line is the layering: a target links
+the layers below it and nothing else, so a file that starts including a header
+from a layer above fails to link. `scripts/module_rules.json` is the same map at
+header granularity — `domain_types`, `components`, `unit_catalog`, `registries`,
+`world`, `navigation`, `units`, `formations`, `movement`, `economy`, `combat`,
+`wildlife`, `simulation`, `session` — with the direction each is allowed to
+point in, and `scripts/check-modules.py` enforces it on every build. It is finer
+than the linker in two ways: it sees an include that only pulls in inline code,
+and it separates the modules that still share one archive (`unit_catalog`,
+`registries` and `world` in `soi_world`; `simulation` and `session` in
+`game_sim`). It also fails if `game/CMakeLists.txt` puts a source in a target
+its module does not name, so the two descriptions cannot drift.
 
-Two of those need a word. `domain_types` is the vocabulary: enumerations with no
-dependencies of their own, scattered across `game/systems`, `game/units` and
-`game/wildlife` by directory but belonging to no layer, because every layer names
-them. `component.h` storing a `SpawnType` is a struct holding a value, not the
-ECS reaching into gameplay, and separating the two is what makes the remaining
-counts mean something.
+There is no tolerated backlog. The map used to carry a `baseline` of wrong-way
+edges that was ratcheted down as modules were lifted out; the last of them went
+when navigation, formations, movement, economy, combat and wildlife became
+archives, and `tests/architecture/module_boundary_test.cpp` fails if the key
+comes back.
 
-`session` is at the _top_, not the bottom. `SessionContext` owns the terrain, the
-fog, the registries and the command queue by value, so everything it contains is
-below it — and a registry reaching back up to `SessionContext::active()` to find
-itself is a cycle. That is why those `instance()` definitions were collected into
-`game/session/ambient_registries.cpp`, which is the only file below the session
-that knows the ambient binding exists.
+Three of the modules need a word.
 
-Edges that point the wrong way today are counted per module pair in that file's
-`baseline`. The count may go down and may not go up, and paying one down has to
-be recorded, so the debt is visible rather than ambient. A module whose inbound
-count reaches zero can be lifted into a target of its own — that is exactly how
-`soi_ai`, `soi_missions`, `soi_campaign`, `soi_persistence` and `soi_runtime`
-left the kernel, and the remaining counts say what each of the others would
-cost.
+`domain_types` is the vocabulary: enumerations and plain value types with no
+dependencies of their own, scattered across `game/systems`, `game/units`,
+`game/formation` and `game/wildlife` by directory but belonging to no layer,
+because every layer names them. `component.h` storing a `SpawnType` is a struct
+holding a value, not the ECS reaching into gameplay. Formation roles and army
+formation types are here for the same reason: a nation names its doctrine, so
+the type has to sit below the registries.
+
+`session` is at the _top_, not the bottom. `SessionContext` owns the terrain,
+the fog, the registries and the command queue by value, so everything it
+contains is below it — and a registry reaching back up to
+`SessionContext::active()` to find itself would be a cycle. The `instance()`
+accessors therefore resolve through `game/core/ambient_session.h`, a leaf in
+`engine_core` that holds only forward declarations and a struct of pointers.
+The session fills that struct in when it becomes active; `OwnerRegistry::instance()`
+is defined beside `OwnerRegistry` and reads it. Nothing below `game_sim`
+includes `game/session/session_context.h`.
+
+`movement` sits _above_ `formations`, and `navigation` sits _below_ `units`.
+Moving a unit is formation-aware — a formation's turn radius and speed
+multiplier shape the move — while a formation is planned on the nav grid and
+a wall segment registers itself with the wall network as it is spawned. The
+formation runtime therefore plans and never moves anyone: when a replan leaves
+new slot positions behind it raises `moves_pending` on the formation, and
+`FormationMoveDispatchSystem` in the movement layer turns that into orders.
 
 ### `game_sim` — the simulation kernel
 
 Everything a match needs to run with nothing on screen: ECS systems, the
 session, the command pipeline, terrain, pathfinding, units, world serialisation.
 
-It links `engine_core` and `animation_core` and nothing else. In particular it
-does **not** link `scene_core` or `render_gl`. That is what makes headless
+It links the kernel layers, `engine_core` and `animation_core` and nothing
+else. In particular it does **not** link `scene_core` or `render_gl`. That is what makes headless
 balance runs, deterministic replay and a dedicated server possible, and it is
 enforced three ways:
 
@@ -167,9 +203,12 @@ Reaching a session, in order of preference:
 2. `SessionContext::for_world(world)` — a system already holds the world it
    operates on, so it can resolve its session without consulting a global;
 3. `SessionContext::active()` — the ambient accessor. The registry `instance()`
-   functions (`OwnerRegistry::instance()` and friends) resolve through this. They
-   remain because several hundred call sites still use them; they are no longer
-   singletons, only shortcuts to the installed session.
+   functions (`OwnerRegistry::instance()` and friends) resolve through the same
+   binding, `Game::Session::ambient_services()` in `game/core/ambient_session.h`.
+   They remain because several hundred call sites still use them; they are no
+   longer singletons, only shortcuts to the installed session. A binary that
+   never constructs a session gets the default one, exactly as before, because
+   the session module installs it as the binding's fallback.
 
 `ScopedSession` installs a session for a scope and restores the previous binding
 on exit — that is how a test gets isolation. `ScopedThreadSession` does the same
@@ -202,12 +241,37 @@ input / AI / replay  ->  CommandQueue::submit
 ```
 
 - `Game::Command::Command` is the typed order: a source, an issuing owner, a
-  tick stamp and a payload variant (move, attack, stop, hold, guard, run,
-  patrol, rally, produce).
+  tick stamp and a payload variant. The payloads cover every order a player
+  or the AI can give: move, attack, stop, hold, guard, run, patrol, rally
+  point, produce, trade, commander ability (aura, rally, flag rally),
+  formation mode / deploy / release, start construction, start harvest,
+  deliver civilians, repair structure, place wall plan, place building. Every
+  payload is plain data — entity ids, positions, enums — and
+  `command_codec.{h,cpp}` is the one place it is written out and read back
+  (JSON, one object per command). A replay file is that form on disk; a
+  network transport would carry the same objects.
 - `command_validator.cpp` is the single place ownership, liveness and target
   legality are checked, which is what stops player and AI orders drifting apart.
 - `command_dispatcher.cpp` is the only code that turns an order into calls on
-  the movement, order and production services.
+  the movement, order, production, marketplace, formation and builder
+  services. App code (`app/`), the AI applier and the arena harness submit
+  payloads; none of them writes gameplay components to give an order. The
+  app keeps only what a client needs for feedback: it may _ask_ a service
+  whether an order would be accepted (`ProductionService::can_start_production`,
+  `MarketplaceSystem::can_buy`, `ArmyFormationService::preview`) to phrase a
+  refusal, then submits and lets the dispatcher rule.
+- Costs and timings that both issuers share live in one table:
+  `assets/data/construction/catalog.json`, loaded at content bootstrap by
+  `construction_cost_catalog.{h,cpp}` (which keeps a built-in copy as the
+  fallback), holds resource costs and build times for every buildable, and the
+  dispatcher charges the issuer when a crew is assigned.
+- The client boundary is enforced, not just described:
+  `scripts/check-command-boundary.py` fails the build if anything under
+  `app/` or `ui/` calls a mutating service entry point the dispatcher owns
+  (`OrderService::*`, `CommandService::move_units`, `ProductionService::start_production`,
+  `WallPlanService::commit`, `StructurePlacementService::place`, …) or writes a
+  builder's task fields. The commander's first-person control mode is the one
+  allowed exception, because it is an input mode rather than an order.
 - `CommandSystem` drains the queue at the top of every tick, so orders always
   land at the same point relative to movement and combat.
 - `CommandQueue::set_observer` is the tap a replay recorder attaches to; it sees
@@ -215,6 +279,55 @@ input / AI / replay  ->  CommandQueue::submit
 
 Submitting is thread-safe (the AI runs on a worker); draining belongs to the
 simulation thread.
+
+### Replays
+
+`game/command/replay.{h,cpp}` records and plays back a match through the
+pipeline above. `ReplayRecorder` attaches to the queue's observer and writes
+the launch (`ReplayHeader`: what was started and how) followed by every
+accepted command with the tick it was applied on, as JSON lines. Every
+`digest_interval` ticks it also writes the session digest
+(`game/session/world_digest.h`: every entity's id, owner, kind, position,
+heading and health, every owner's stock, the tick, the rng draw count).
+`ReplayPlayer` submits the recorded commands at the top of the tick they were
+recorded on and compares the live digest against each recorded one; the first
+tick that differs is kept as `divergence()`. While a player is set on a session
+the queue is _replay-only_: local input and the AI are dropped at the door, so
+the file is the only input the simulation sees.
+
+The game exposes this as `--record-replay <file>` and
+`--replay <file> [--replay-verify]` (exit 0 if every digest matched, 12 at the
+first divergence); `soi_headless` does the same for the battlefield scenarios
+with no window. The AI's decisions are recorded as commands like everyone
+else's, and they land deterministically: `AISystem` applies a decision a fixed
+number of updates after the snapshot it was taken from (waiting for the worker
+if it is not done yet) rather than whenever the worker thread happens to
+finish, so two runs of one match agree on the tick every AI order lands on. A
+networked match would run the AI on the host and send its commands the same
+way.
+
+### Determinism, checked
+
+Two checks run under `ctest`: `simulation_determinism` runs every battlefield
+scenario twice from one seed and requires the world digest to agree on every
+tick (`battlefield_gameplay_verifier --determinism-runs 2` prints the first
+divergent tick and the entity lines that differ), and
+`headless_replay_round_trip` records a headless bot skirmish, replays it and
+requires every digest to match. `scripts/check-replay-determinism.sh` does the
+record-and-replay round trip through the real game on a display. Gameplay
+randomness draws from the session's `DeterministicRng` (reachable through the
+ambient binding as `services.rng`); `std::random_device` and wall clocks are
+for audio and presentation only.
+
+### Stepping the match
+
+`SessionContext::advance(real_dt, max_steps, per_tick)` is the one place wall
+time becomes ticks: the clock turns the delta into whole ticks and each one
+runs `SessionContext::step()` (the world's systems, once, for `tick_seconds`)
+or the host's wrapper around it. The frame orchestrator in `app/` calls it
+with a wrapper that adds commander-mode input; `soi_headless` calls it with
+none. That is the dedicated-server shape: a session, `soi_runtime`'s system
+registry, `soi_ai`, and a loop — no Qt Quick, no renderer linked in.
 
 ## Simulation and presentation ownership
 
@@ -297,26 +410,27 @@ These are real and deliberate, not oversights:
 
 - Most gameplay code still reaches per-match state through the ambient
   `instance()` accessors rather than an explicit `SessionContext&`. The isolation
-  mechanism is in place; the call-site migration is incremental.
+  mechanism is in place; the call-site migration is incremental, and
+  `scripts/check-ambient-instances.py` keeps it from going backwards: the
+  count per directory may only fall (`scripts/ambient_instance_budget.json`
+  is the ceiling; `--write` lowers it after a clean-up).
 - Components are pooled per type, so instances of one type are contiguous, but
   they still derive from a small polymorphic base with a virtual destructor.
   Access is by dense type-id array index, not by RTTI.
 - `GameEngine` remains large. See above.
-- `game_sim` is still one target for eleven modules. The AI, the mission and
-  campaign loaders, the save stack and the system composition root have been
-  lifted out into targets of their own, because nothing in the kernel reached
-  into them. The rest — `world`, `units`, `navigation`, `formations`, `economy`,
-  `combat`, `wildlife` — genuinely include each other, so CMake cannot separate
-  them yet. `scripts/module_rules.json` records exactly how many edges stand in
-  the way of each. Extraction is bottom-up: a module can become a target only
-  once everything below it already is one, so the order is `domain_types`,
-  `components`, `unit_catalog`, `registries`, `world`, `units`, `navigation`,
-  `formations`, `economy`, `combat`. The first three are at zero;
-  `scripts/check-modules.py` prints what the rest still cost.
-- `registries` is the next layer to clear, and its twelve remaining edges are
-  three separate problems: `NationRegistry::initialize_defaults()` is a content
-  bootstrap wearing a registry's clothes (it loads formations, troops and
-  nations, then primes the profile cache), `GateService` and
-  `WallNetworkService` are navigation consumers filed as registries, and
-  `NationCollapseService` reaches into the economy. None is large; all three are
-  code work.
+- Commander first-person control (`CommanderModeCoordinator`) drives the
+  controlled commander's components directly; it is a local input mode, not
+  an order, and `check-command-boundary.py` allow-lists those two files.
+- The placement ghost (`ConstructionPreviewComponent`) is an entity in the
+  match's world that only the local client should see. It is presentation
+  state living in simulation storage; a networked client would have to keep
+  it out of what it sends, or the ghost moves to a renderer-side overlay.
+- `soi_headless` cannot yet host a real skirmish from a map file: the map-to-
+  match setup (spawn points, the player table, starting stock, wall
+  networks) lives in `app/core/skirmish_loader.cpp` next to the renderers it
+  feeds. Lifting its non-render half into `game/` is the remaining step to a
+  dedicated server; the loop, the queue and the replay are already there.
+- `soi_world` still holds three modules (`unit_catalog`, `registries`,
+  `world`) and `game_sim` two (`simulation`, `session`). Nothing above needs
+  them apart, so they share an archive and `scripts/check-modules.py` keeps
+  their internal order; splitting them further is a CMake edit, not code work.

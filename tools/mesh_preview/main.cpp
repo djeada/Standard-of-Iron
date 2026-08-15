@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "animation/rig/horse_gait.h"
+#include "game/session/session_context.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/spec.h"
 #include "render/elephant/dimensions.h"
@@ -909,6 +910,9 @@ auto run_shape_verification(const CliOptions& options,
 
 auto main(int argc, char** argv) -> int {
   QGuiApplication const app(argc, argv);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
 
   CliOptions options;
   try {

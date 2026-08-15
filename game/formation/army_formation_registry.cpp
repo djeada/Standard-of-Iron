@@ -8,7 +8,6 @@
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
-#include "../systems/command_service.h"
 #include "army_formation_planner.h"
 
 namespace Game::Formation {
@@ -287,6 +286,7 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
     obj["cohesion"] = static_cast<double>(formation->cohesion);
     obj["plan_revision"] = static_cast<qint64>(formation->plan_revision);
     obj["needs_replan"] = formation->needs_replan;
+    obj["moves_pending"] = formation->moves_pending;
     obj["options"] = options_to_json(formation->options);
 
     QJsonArray members;
@@ -329,6 +329,7 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     formation.plan_revision =
         static_cast<std::uint32_t>(obj["plan_revision"].toVariant().toUInt());
     formation.needs_replan = obj["needs_replan"].toBool(false);
+    formation.moves_pending = obj["moves_pending"].toBool(false);
     formation.options = options_from_json(obj["options"].toObject());
 
     for (const auto& member : obj["members"].toArray()) {
@@ -611,12 +612,8 @@ auto ArmyFormationRuntime::replan(Engine::Core::World& world,
   sync_membership_components(world, *updated);
 
   if (updated->maintains_formation() && updated->has_destination) {
-    for (const auto& slot : updated->slot_list) {
-      if (slot.occupant == 0U || slot.status == SlotStatus::Blocked) {
-        continue;
-      }
-      Game::Systems::CommandService::move_unit(
-          world, slot.occupant, slot.world_position);
+    if (auto* pending = registry.find(id)) {
+      pending->moves_pending = true;
     }
   }
   return true;

@@ -10,6 +10,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -155,7 +156,7 @@ protected:
 
     auto& nations = Game::Systems::NationRegistry::instance();
     nations.clear();
-    nations.initialize_defaults();
+    Game::Systems::initialize_default_content(nations);
     nations.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
 
     Game::Systems::GlobalStatsRegistry::instance().clear();

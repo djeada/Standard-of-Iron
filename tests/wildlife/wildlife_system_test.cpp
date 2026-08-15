@@ -20,6 +20,7 @@
 #include "game/systems/combat_system/combat_action_processor.h"
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/combat_system/damage_application.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -158,7 +159,7 @@ protected:
 
     auto& nations = Game::Systems::NationRegistry::instance();
     nations.clear();
-    nations.initialize_defaults();
+    Game::Systems::initialize_default_content(nations);
     nations.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
 
     Game::Systems::BuildingCollisionRegistry::instance().clear();

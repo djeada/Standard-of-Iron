@@ -35,4 +35,40 @@ if(BUILD_TESTING)
         battlefield_gameplay_quality
         PROPERTIES LABELS "gameplay;soak" TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
+    # Every scenario, run twice from the same seed, must produce the same world
+    # digest on every tick. A failure here names the tick and the entity that
+    # went a different way -- the bug a lockstep multiplayer game would
+    # otherwise show as two players seeing different matches.
+    add_test(
+        NAME simulation_determinism
+        COMMAND battlefield_gameplay_verifier --all --seconds 15 --determinism-runs 2
+    )
+    set_tests_properties(
+        simulation_determinism
+        PROPERTIES LABELS "gameplay;determinism" TIMEOUT 120 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+endif()
+
+# ---- soi_headless: the simulation with no window ---------------------------
+#
+# A session, the runtime system registry, the AI and a fixed-step loop, linked
+# without Qt Quick or the renderer. The dedicated-server shape of the game;
+# also the headless way to record and verify a replay.
+add_executable(soi_headless headless/main.cpp)
+target_link_libraries(soi_headless PRIVATE Qt${QT_VERSION_MAJOR}::Core soi_runtime soi_ai game_sim)
+target_include_directories(soi_headless PRIVATE ${CMAKE_SOURCE_DIR})
+set_target_properties(soi_headless PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(BUILD_TESTING)
+    # Record a bot skirmish headless, replay it, and require every digest to
+    # match: the round trip a networked match depends on, with no display.
+    add_test(
+        NAME headless_replay_round_trip
+        COMMAND
+            ${CMAKE_COMMAND} -E env SOI_HEADLESS=$<TARGET_FILE:soi_headless>
+            ${CMAKE_SOURCE_DIR}/scripts/check-headless-replay.sh
+    )
+    set_tests_properties(
+        headless_replay_round_trip
+        PROPERTIES LABELS "gameplay;determinism" TIMEOUT 120 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
 endif()

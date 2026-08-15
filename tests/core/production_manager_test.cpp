@@ -29,7 +29,6 @@ class ProductionManagerTest : public ::testing::Test {
 protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
-    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
     auto& resources = Game::Systems::PlayerResourceRegistry::instance();
@@ -56,7 +55,6 @@ protected:
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     Game::Map::TerrainService::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
-    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
 
@@ -257,7 +255,6 @@ protected:
         builder->get_component<Engine::Core::BuilderProductionComponent>();
     ASSERT_NE(builder_prod, nullptr);
     EXPECT_FALSE(manager.is_placing_construction());
-    EXPECT_FALSE(builder_prod->is_placement_preview);
     EXPECT_TRUE(builder_prod->has_construction_site);
     EXPECT_TRUE(builder_prod->has_task_target);
     EXPECT_EQ(builder_prod->task_target_id, target->id);
@@ -285,7 +282,6 @@ TEST_F(ProductionManagerTest, NonWallBuilderConstructionStartsWithoutGhostPrevie
   EXPECT_TRUE(manager.is_placing_construction());
   EXPECT_FALSE(manager.construction_preview_active());
   EXPECT_FALSE(manager.construction_preview_valid());
-  EXPECT_TRUE(builder_prod->is_placement_preview);
   EXPECT_FALSE(builder_prod->has_construction_site);
   EXPECT_TRUE(preview_entities().empty());
 }
@@ -303,7 +299,6 @@ TEST_F(ProductionManagerTest, WallConstructionPreviewAppearsOnHoverAndRotates) {
   EXPECT_FALSE(manager.construction_preview_active());
   EXPECT_FALSE(manager.construction_preview_valid());
   EXPECT_EQ(manager.construction_preview_segment_count(), 0);
-  EXPECT_FALSE(builder_prod->is_placement_preview);
   EXPECT_FALSE(builder_prod->has_construction_site);
 
   const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
@@ -465,7 +460,7 @@ TEST_F(ProductionManagerTest, DirectMarketplacePlacementSpawnsAndRegistersBuildi
 
   auto* marketplace = find_spawned_unit(Game::Units::SpawnType::Marketplace);
   ASSERT_NE(marketplace, nullptr);
-  EXPECT_TRUE(Game::Systems::MarketplaceSystem::instance().owner_has_marketplace(1));
+  EXPECT_TRUE(Game::Systems::MarketplaceSystem::owner_has_marketplace(world, 1));
 }
 
 TEST_F(ProductionManagerTest,
@@ -495,18 +490,27 @@ TEST_F(ProductionManagerTest, MarketplaceSystemTradesWoodStoneAndIronForGold) {
   resources.set(1, Game::Systems::ResourceType::Stone, 20);
   resources.set(1, Game::Systems::ResourceType::Iron, 25);
 
-  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
-  marketplace.register_marketplace(1);
+  auto* market = world.create_entity();
+  market->add_component<Engine::Core::TransformComponent>(10.0F, 0.0F, 10.0F);
+  market->add_component<Engine::Core::BuildingComponent>();
+  auto* market_unit =
+      market->add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  market_unit->owner_id = 1;
+  market_unit->spawn_type = Game::Units::SpawnType::Marketplace;
+  ASSERT_TRUE(Game::Systems::MarketplaceSystem::owner_has_marketplace(world, 1));
+  EXPECT_FALSE(Game::Systems::MarketplaceSystem::owner_has_marketplace(world, 2));
 
-  EXPECT_TRUE(marketplace.buy_resource(1, Game::Systems::ResourceType::Wood));
+  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
+
+  EXPECT_TRUE(marketplace.buy_resource(world, 1, Game::Systems::ResourceType::Wood));
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 88);
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Wood), 25);
 
-  EXPECT_TRUE(marketplace.sell_resource(1, Game::Systems::ResourceType::Stone));
+  EXPECT_TRUE(marketplace.sell_resource(world, 1, Game::Systems::ResourceType::Stone));
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 96);
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Stone), 10);
 
-  EXPECT_TRUE(marketplace.sell_resource(1, Game::Systems::ResourceType::Iron));
+  EXPECT_TRUE(marketplace.sell_resource(world, 1, Game::Systems::ResourceType::Iron));
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 108);
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Iron), 15);
 }
@@ -530,7 +534,6 @@ TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueue
       builder->get_component<Engine::Core::BuilderProductionComponent>();
   ASSERT_NE(builder_prod, nullptr);
   EXPECT_FALSE(manager.is_placing_construction());
-  EXPECT_FALSE(builder_prod->is_placement_preview);
   EXPECT_TRUE(builder_prod->has_construction_site);
   EXPECT_FLOAT_EQ(builder_prod->construction_site_rotation_y, 15.0F);
   EXPECT_TRUE(preview_entities().empty());
@@ -593,7 +596,6 @@ TEST_F(ProductionManagerTest, CollectPreviewSnapsToResourceCenterWhenNearby) {
   EXPECT_TRUE(manager.is_placing_construction());
   EXPECT_TRUE(manager.construction_preview_active());
   EXPECT_TRUE(manager.construction_preview_valid());
-  EXPECT_TRUE(builder_prod->is_placement_preview);
   EXPECT_NEAR(manager.m_construction_placement_position.x(), target->x, 0.0001F);
   EXPECT_NEAR(manager.m_construction_placement_position.z(), target->z, 0.0001F);
 }
@@ -630,7 +632,6 @@ TEST_F(ProductionManagerTest,
   EXPECT_TRUE(manager.is_placing_construction());
   EXPECT_FALSE(manager.construction_preview_active());
   EXPECT_FALSE(manager.construction_preview_valid());
-  EXPECT_TRUE(builder_prod->is_placement_preview);
   EXPECT_TRUE(preview_entities().empty());
 }
 
@@ -704,10 +705,13 @@ TEST_F(ProductionManagerTest, RestartingCollectReleasesPreviousResourceReservati
   ProductionManager manager(&world, &picking_service, &camera);
   manager.start_builder_construction(QStringLiteral("collect"));
 
-  EXPECT_FALSE(terrain.is_world_prop_reserved(target->id));
+  EXPECT_TRUE(terrain.is_world_prop_reserved(target->id));
   QPointF const screen = elevated_collect_click_screen(*target, 3.6F);
   manager.on_construction_pointer_released(screen.x(), screen.y(), viewport);
+
   EXPECT_TRUE(terrain.is_world_prop_reserved(target->id));
+  EXPECT_TRUE(builder_prod->task_target_reserved);
+  EXPECT_EQ(builder_prod->task_target_id, target->id);
   EXPECT_FALSE(manager.is_placing_construction());
 }
 

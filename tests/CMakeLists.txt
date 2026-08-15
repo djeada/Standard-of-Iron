@@ -73,6 +73,7 @@ add_executable(
     simulation_tests
     session/session_context_test.cpp
     command/command_pipeline_test.cpp
+    command/command_codec_test.cpp
     core/entity_handle_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
@@ -101,6 +102,7 @@ add_executable(
     systems/building_collision_test.cpp
     systems/pathfinding_test.cpp
     systems/production_system_test.cpp
+    systems/construction_cost_catalog_test.cpp
     systems/resource_delivery_system_test.cpp
     systems/gather_loop_system_test.cpp
     systems/auto_gather_test.cpp

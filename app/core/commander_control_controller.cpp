@@ -28,7 +28,7 @@
 #include "game/systems/rpg_combat_system/rpg_bow_draw.h"
 #include "game/systems/rpg_combat_system/rpg_commander_damage.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
-#include "game/systems/stamina_system.h"
+#include "game/systems/run_stamina.h"
 #include "scene/camera.h"
 
 namespace {

@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "order_service.h"
@@ -52,6 +53,11 @@ public:
                                 const GroundMovePlan& plan);
   static auto get_unit_radius(Engine::Core::World& world,
                               Engine::Core::EntityID entity_id) -> float;
+
+  static auto structure_work_position(const QVector3D& worker_position,
+                                      const QVector3D& structure_position,
+                                      const std::string& structure_key,
+                                      float unit_radius) -> QVector3D;
   static void move_unit(Engine::Core::World& world,
                         Engine::Core::EntityID unit_id,
                         const QVector3D& target);

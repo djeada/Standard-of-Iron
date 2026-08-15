@@ -8,6 +8,7 @@
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
+#include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -47,7 +48,7 @@ protected:
 
     auto& nations = Game::Systems::NationRegistry::instance();
     nations.clear();
-    nations.initialize_defaults();
+    Game::Systems::initialize_default_content(nations);
 
     Game::Map::MapDefinition map_definition;
     map_definition.grid.width = 48;

@@ -7,10 +7,9 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
-#include "../systems/command_service.h"
 #include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"
-#include "../systems/stamina_system.h"
+#include "../systems/run_stamina.h"
 #include "../systems/troop_profile_service.h"
 #include "units/troop_type.h"
 
@@ -55,22 +54,6 @@ void Unit::ensure_core_components() {
     if (m_atk == nullptr) {
       m_atk = e->get_component<Engine::Core::AttackComponent>();
     }
-  }
-}
-
-void Unit::move_to(float x, float z) {
-  ensure_core_components();
-  if (m_world == nullptr || entity() == nullptr) {
-    return;
-  }
-
-  Game::Systems::CommandService::MoveOptions options;
-  options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
-  Game::Systems::CommandService::move_unit(
-      *m_world, m_id, QVector3D(x, 0.0F, z), options);
-
-  if (auto* e = entity()) {
-    m_mv = e->get_component<Engine::Core::MovementComponent>();
   }
 }
 

@@ -8,6 +8,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -31,7 +32,8 @@ protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
-    Game::Systems::NationRegistry::instance().initialize_defaults();
+    Game::Systems::initialize_default_content(
+        Game::Systems::NationRegistry::instance());
     Game::Systems::OwnerRegistry::instance().clear();
 
     auto registry = std::make_shared<Game::Units::UnitFactoryRegistry>();

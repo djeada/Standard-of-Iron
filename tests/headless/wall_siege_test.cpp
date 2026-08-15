@@ -14,6 +14,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_system/structure_combat.h"
+#include "game/systems/default_content.h"
 #include "game/systems/gate_service.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -55,7 +56,7 @@ protected:
     owners.register_owner_with_id(k_raider, Game::Systems::OwnerType::AI, "red");
     owners.set_owner_team(k_defender, 1);
     owners.set_owner_team(k_raider, 2);
-    session->nations().initialize_defaults();
+    Game::Systems::initialize_default_content(session->nations());
     Game::Systems::register_runtime_systems(session->world());
 
     Game::Map::MapDefinition map_definition;

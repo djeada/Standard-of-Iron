@@ -657,6 +657,10 @@ auto main(int argc, char* argv[]) -> int {
 
   QString direct_campaign_mission;
   QString direct_mission_file;
+  QString record_replay_path;
+  QString replay_path;
+  bool replay_verify = false;
+  bool skip_briefing = false;
   bool component_gallery_requested = false;
   QString screenshot_path;
   QString screenshot_view;
@@ -694,6 +698,24 @@ auto main(int argc, char* argv[]) -> int {
         "mission-file",
         "Start a mission definition file directly for editor testing.",
         "path");
+    QCommandLineOption const record_replay_opt(
+        "record-replay",
+        "Write every command the match accepts to this file, so the match can be "
+        "played back with --replay.",
+        "path");
+    QCommandLineOption const replay_opt(
+        "replay",
+        "Launch the match a replay file describes and let the file drive it; local "
+        "input and the computer opponent are shut out.",
+        "path");
+    QCommandLineOption const replay_verify_opt(
+        "replay-verify",
+        "With --replay: exit when the replay has played through, 0 if the "
+        "simulation matched every recorded digest, 12 if it diverged.");
+    QCommandLineOption const skip_briefing_opt(
+        "skip-briefing",
+        "Start a directly launched mission unpaused, without the objectives "
+        "briefing (for scripted runs).");
     QCommandLineOption const component_gallery_opt(
         "component-gallery",
         "Open the Iron and Ember component gallery instead of the game.");
@@ -725,6 +747,10 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(graphics_preset_opt);
     parser.addOption(campaign_mission_opt);
     parser.addOption(mission_file_opt);
+    parser.addOption(record_replay_opt);
+    parser.addOption(replay_opt);
+    parser.addOption(replay_verify_opt);
+    parser.addOption(skip_briefing_opt);
     parser.addOption(component_gallery_opt);
     parser.addOption(screenshot_opt);
     parser.addOption(screenshot_view_opt);
@@ -760,6 +786,10 @@ auto main(int argc, char* argv[]) -> int {
 
     direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
     direct_mission_file = parser.value(mission_file_opt).trimmed();
+    record_replay_path = parser.value(record_replay_opt).trimmed();
+    replay_path = parser.value(replay_opt).trimmed();
+    replay_verify = parser.isSet(replay_verify_opt);
+    skip_briefing = parser.isSet(skip_briefing_opt) || replay_verify;
     if (release_self_test) {
 
       direct_campaign_mission.clear();
@@ -970,7 +1000,15 @@ auto main(int argc, char* argv[]) -> int {
   game_engine->setWindow(window);
   qInfo() << "Window set successfully";
 
-  if (!direct_campaign_mission.isEmpty() || !direct_mission_file.isEmpty()) {
+  if (!record_replay_path.isEmpty()) {
+    game_engine->set_replay_record_path(record_replay_path);
+  }
+  if (replay_verify) {
+    game_engine->set_replay_verify_exit(true);
+  }
+
+  if (!direct_campaign_mission.isEmpty() || !direct_mission_file.isEmpty() ||
+      !replay_path.isEmpty()) {
 
     QTimer::singleShot(
         0,
@@ -979,7 +1017,9 @@ auto main(int argc, char* argv[]) -> int {
          &app,
          game_engine_ptr = game_engine.get(),
          direct_campaign_mission,
-         direct_mission_file] {
+         direct_mission_file,
+         replay_path,
+         skip_briefing] {
           auto* gl_view = root_obj->findChild<GLView*>();
           if (gl_view == nullptr) {
             qCritical() << "Could not find gameplay GLView for direct campaign mission";
@@ -990,12 +1030,19 @@ auto main(int argc, char* argv[]) -> int {
           auto start_direct_mission = [game_engine_ptr,
                                        direct_campaign_mission,
                                        direct_mission_file,
+                                       replay_path,
                                        mission_started]() {
             if (*mission_started) {
               return;
             }
             *mission_started = true;
-            if (!direct_mission_file.isEmpty()) {
+            if (!replay_path.isEmpty()) {
+              qInfo() << "Playing replay:" << replay_path;
+              if (!game_engine_ptr->start_replay(replay_path)) {
+                qCritical() << "Replay could not be started:" << replay_path;
+                QCoreApplication::exit(11);
+              }
+            } else if (!direct_mission_file.isEmpty()) {
               qInfo() << "Starting mission file directly:" << direct_mission_file;
               game_engine_ptr->start_mission_file(direct_mission_file);
             } else {
@@ -1015,6 +1062,10 @@ auto main(int argc, char* argv[]) -> int {
                            &app,
                            start_direct_mission,
                            Qt::QueuedConnection);
+          if (skip_briefing) {
+
+            root_obj->setProperty("suppress_modals", true);
+          }
           if (!root_obj->setProperty("game_started", true) ||
               !root_obj->setProperty("menu_visible", false)) {
             qCritical() << "Could not expose GameView for direct campaign mission";
