@@ -15,6 +15,7 @@
 #include <string_view>
 #include <vector>
 
+#include "game/session/session_context.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/species_manifest.h"
 #include "render/rigged_mesh_bake.h"
@@ -238,6 +239,9 @@ auto render_clip(const Render::Creature::SpeciesManifest& manifest,
 
 auto main(int argc, char** argv) -> int {
   QGuiApplication app(argc, argv);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
 
   std::string species = argc > 1 ? argv[1] : "wolf";
   std::string out_dir = argc > 2 ? argv[2] : "wildlife_preview";

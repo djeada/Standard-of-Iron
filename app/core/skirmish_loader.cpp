@@ -38,7 +38,6 @@
 #include "game/systems/ai_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/global_stats_registry.h"
-#include "game/systems/marketplace_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -223,7 +222,6 @@ void SkirmishLoader::reset_game_state() {
   m_renderer.clear_entity_render_caches();
 
   Game::Systems::BuildingCollisionRegistry::instance().clear();
-  Game::Systems::MarketplaceSystem::instance().clear();
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   owner_registry.clear();

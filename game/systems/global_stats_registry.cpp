@@ -2,9 +2,9 @@
 
 #include <unordered_map>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
-#include "../session/session_context.h"
 #include "../session/simulation_clock.h"
 #include "../units/troop_config.h"
 #include "core/event_manager.h"
@@ -12,6 +12,10 @@
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
+
+auto GlobalStatsRegistry::instance() -> GlobalStatsRegistry& {
+  return *Game::Session::ambient_services().stats;
+}
 
 void GlobalStatsRegistry::initialize() {
   m_unit_spawned_subscription =
@@ -51,8 +55,7 @@ auto GlobalStatsRegistry::get_stats(int owner_id) -> PlayerStats* {
 
 void GlobalStatsRegistry::mark_game_start(int owner_id) {
   auto& stats = m_player_stats[owner_id];
-  stats.game_start_sim_sec =
-      Game::Session::SessionContext::active().clock().now_seconds();
+  stats.game_start_sim_sec = Game::Session::ambient_services().clock->now_seconds();
   stats.game_ended = false;
   stats.play_time_sec = 0.0F;
 }
@@ -61,7 +64,7 @@ void GlobalStatsRegistry::mark_game_end(int owner_id) {
   auto it = m_player_stats.find(owner_id);
   if (it != m_player_stats.end() && !it->second.game_ended) {
     it->second.game_end_sim_sec =
-        Game::Session::SessionContext::active().clock().now_seconds();
+        Game::Session::ambient_services().clock->now_seconds();
     it->second.game_ended = true;
     it->second.play_time_sec =
         static_cast<float>(it->second.game_end_sim_sec - it->second.game_start_sim_sec);

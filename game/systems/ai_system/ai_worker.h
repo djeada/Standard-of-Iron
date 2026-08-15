@@ -32,6 +32,8 @@ public:
     return m_worker_busy.load(std::memory_order_acquire);
   }
 
+  void wait_idle();
+
   void stop();
 
 private:
@@ -52,6 +54,7 @@ private:
 
   std::mutex m_result_mutex;
   std::queue<AIResult> m_results;
+  std::condition_variable m_idle_condition;
 };
 
 } // namespace Game::Systems::AI

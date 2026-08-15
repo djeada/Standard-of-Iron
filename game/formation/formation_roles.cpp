@@ -1,5 +1,9 @@
 #include "formation_roles.h"
 
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QLatin1String>
+
 #include <array>
 #include <utility>
 
@@ -108,6 +112,47 @@ auto try_parse_army_role(const QString& value) -> std::optional<ArmyRole> {
     }
   }
   return std::nullopt;
+}
+
+auto parse_troop_formation_profile(const QJsonObject& formation_object,
+                                   TroopFormationProfile& out) -> bool {
+  bool touched = false;
+
+  std::vector<std::string> roles;
+  for (const auto& entry : formation_object.value(QLatin1String("roles")).toArray()) {
+    auto const text = entry.toString().trimmed();
+    if (!text.isEmpty()) {
+      roles.push_back(text.toLower().toStdString());
+    }
+  }
+  if (!roles.empty()) {
+    out.roles = parse_role_tag_set(roles);
+    touched = true;
+  }
+
+  auto const army_roles = formation_object.value(QLatin1String("army_roles")).toArray();
+  if (!army_roles.isEmpty()) {
+    out.army_roles.clear();
+    for (const auto& entry : army_roles) {
+      if (auto parsed = try_parse_army_role(entry.toString())) {
+        out.army_roles.push_back(*parsed);
+      }
+    }
+    touched = true;
+  }
+
+  auto assign = [&](const char* key, std::string& target) {
+    auto const value = formation_object.value(QLatin1String(key)).toString().trimmed();
+    if (!value.isEmpty()) {
+      target = value.toStdString();
+      touched = true;
+    }
+  };
+  assign("unit_layout", out.unit_layout);
+  assign("defensive_layout", out.defensive_layout);
+  assign("marching_layout", out.marching_layout);
+
+  return touched;
 }
 
 } // namespace Game::Formation

@@ -403,7 +403,12 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           auto unit = reg->create(sp.spawn_type, *world, sp);
 
           if (unit && prod->rally_set) {
-            unit->move_to(prod->rally_x, prod->rally_z);
+            CommandService::MoveOptions rally;
+            rally.kind = MoveOrderKind::ScriptedMove;
+            CommandService::move_unit(*world,
+                                      unit->id(),
+                                      QVector3D(prod->rally_x, 0.0F, prod->rally_z),
+                                      rally);
           }
           if (unit) {
             Engine::Core::EventManager::instance().publish(
@@ -435,10 +440,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   for (auto* e : builder_entities) {
     auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder_prod == nullptr) {
-      continue;
-    }
-
-    if (builder_prod->is_placement_preview) {
       continue;
     }
 

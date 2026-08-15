@@ -420,6 +420,7 @@
 
         <!-- Gameplay data -->
         <file>assets/data/troops/base.json</file>
+        <file>assets/data/construction/catalog.json</file>
         <file>assets/data/nations/roman_republic.json</file>
         <file>assets/data/nations/carthage.json</file>
         <file>assets/data/nations/iron_sepulcher.json</file>

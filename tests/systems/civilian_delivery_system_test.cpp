@@ -3,12 +3,13 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "app/utils/movement_utils.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/civilian_delivery_system.h"
+#include "game/systems/command_service.h"
 #include "game/systems/nav_grid.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/production_service.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -33,9 +34,10 @@ TEST(CivilianDeliverySystemTest, HomeRecruitsCivilianUsingHomeManpowerPool) {
   home_prod->villager_cost = 8;
 
   const std::vector<Engine::Core::EntityID> selected = {home->get_id()};
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_home(
-          world, selected, 1, Game::Units::TroopType::Civilian);
+  auto result = Game::Systems::ProductionService::start_production(
+      world,
+      Game::Systems::ProductionService::find_selected_home(world, selected, 1),
+      Game::Units::TroopType::Civilian);
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(home_prod->in_progress);
@@ -62,9 +64,10 @@ TEST(CivilianDeliverySystemTest, HomeCannotRecruitMoreThanThreeCivilians) {
   home_prod->villager_cost = 8;
 
   const std::vector<Engine::Core::EntityID> selected = {home->get_id()};
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_home(
-          world, selected, 1, Game::Units::TroopType::Civilian);
+  auto result = Game::Systems::ProductionService::start_production(
+      world,
+      Game::Systems::ProductionService::find_selected_home(world, selected, 1),
+      Game::Units::TroopType::Civilian);
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::PerBarracksLimitReached);
   EXPECT_TRUE(home_prod->in_progress);
@@ -144,10 +147,13 @@ TEST(CivilianDeliverySystemTest, DeliveryTargetOutsideBarracksStillTransfersManp
   pathfinder->update_navigation_grid();
 
   float const civilian_radius = 0.5F;
-  QVector3D const delivery_target = App::Utils::barracks_delivery_target_position(
-      QVector3D(12.0F, 0.0F, 20.0F),
-      QVector3D(barracks_transform->position.x, 0.0F, barracks_transform->position.z),
-      civilian_radius);
+  QVector3D const delivery_target =
+      Game::Systems::CommandService::structure_work_position(
+          QVector3D(12.0F, 0.0F, 20.0F),
+          QVector3D(
+              barracks_transform->position.x, 0.0F, barracks_transform->position.z),
+          "barracks",
+          civilian_radius);
 
   EXPECT_FALSE(collision_registry.is_circle_overlapping_building(
       delivery_target.x(), delivery_target.z(), civilian_radius));
@@ -210,10 +216,13 @@ TEST(CivilianDeliverySystemTest,
   pathfinder->update_navigation_grid();
 
   float const civilian_radius = 0.5F;
-  QVector3D const delivery_target = App::Utils::barracks_delivery_target_position(
-      QVector3D(12.0F, 0.0F, 12.0F),
-      QVector3D(barracks_transform->position.x, 0.0F, barracks_transform->position.z),
-      civilian_radius);
+  QVector3D const delivery_target =
+      Game::Systems::CommandService::structure_work_position(
+          QVector3D(12.0F, 0.0F, 12.0F),
+          QVector3D(
+              barracks_transform->position.x, 0.0F, barracks_transform->position.z),
+          "barracks",
+          civilian_radius);
 
   EXPECT_FALSE(collision_registry.is_circle_overlapping_building(
       delivery_target.x(), delivery_target.z(), civilian_radius));

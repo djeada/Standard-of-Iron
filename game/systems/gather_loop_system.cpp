@@ -268,7 +268,7 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (builder->is_placement_preview || unit == nullptr || unit->health <= 0) {
+    if (unit == nullptr || unit->health <= 0) {
       builder->clear_gather_order();
       builder->clear_auto_gather();
       continue;

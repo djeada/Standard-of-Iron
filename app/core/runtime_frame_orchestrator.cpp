@@ -56,23 +56,18 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
 
   if (scene.world != nullptr) {
 
-    Game::Session::SimulationClock& clock =
-        scene.session != nullptr ? scene.session->clock()
-                                 : Game::Session::SessionContext::active().clock();
+    Game::Session::SessionContext& session =
+        scene.session != nullptr ? *scene.session
+                                 : Game::Session::SessionContext::active();
 
-    clock.advance(static_cast<double>(std::max(dt, 0.0F)));
-
-    int simulation_steps = 0;
-    while (simulation_steps < k_max_simulation_steps_per_frame &&
-           clock.consume_tick()) {
-      const auto step = static_cast<float>(clock.tick_seconds());
-      simulation_step(step);
-      if (scene.environment_clock != nullptr) {
-        scene.environment_clock->update(step, false);
-      }
-      ++simulation_steps;
-    }
-    clock.drop_pending_ticks();
+    session.advance(static_cast<double>(std::max(dt, 0.0F)),
+                    k_max_simulation_steps_per_frame,
+                    [&](float step) {
+                      simulation_step(step);
+                      if (scene.environment_clock != nullptr) {
+                        scene.environment_clock->update(step, false);
+                      }
+                    });
 
     if (scene.visibility_coordinator != nullptr) {
       scene.visibility_coordinator->update(

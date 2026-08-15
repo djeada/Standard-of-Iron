@@ -15,6 +15,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -43,7 +44,8 @@ class TightGapNavigationTest : public ::testing::Test {
 protected:
   void SetUp() override {
     Game::Systems::NationRegistry::instance().clear();
-    Game::Systems::NationRegistry::instance().initialize_defaults();
+    Game::Systems::initialize_default_content(
+        Game::Systems::NationRegistry::instance());
     NavGrid::initialize(k_map, k_map);
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);
@@ -71,7 +73,7 @@ protected:
     m_session->owners().register_owner_with_id(
         k_owner, Game::Systems::OwnerType::Player, "carthage");
     m_session->owners().set_owner_team(k_owner, 1);
-    m_session->nations().initialize_defaults();
+    Game::Systems::initialize_default_content(m_session->nations());
     Game::Systems::register_runtime_systems(m_session->world());
     m_session->terrain().initialize(map);
     NavGrid::initialize(map.grid.width, map.grid.height);

@@ -4,6 +4,8 @@
 #include <unordered_map>
 
 #include "../command/command_queue.h"
+#include "../command/replay.h"
+#include "../core/ambient_session.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
@@ -21,17 +23,8 @@ namespace Game::Session {
 
 namespace {
 
-SessionContext* g_active_session = nullptr;
-
-thread_local SessionContext* t_active_session = nullptr;
-
 std::mutex g_world_owner_mutex;
 std::unordered_map<const Engine::Core::World*, SessionContext*> g_world_owners;
-
-auto default_session() -> SessionContext& {
-  static SessionContext s_default;
-  return s_default;
-}
 
 } // namespace
 
@@ -56,6 +49,10 @@ struct SessionContext::State {
   Game::Systems::MarketplaceSystem marketplace;
   Game::Map::VisibilityService visibility;
   Game::Command::CommandQueue commands;
+  std::unique_ptr<Game::Command::ReplayPlayer> replay_player;
+  std::unique_ptr<Game::Command::ReplayRecorder> replay_recorder;
+
+  AmbientServices services;
 };
 
 SessionContext::SessionContext()
@@ -64,6 +61,22 @@ SessionContext::SessionContext()
 
 SessionContext::SessionContext(const Config& config)
     : m_state(std::make_unique<State>(config)) {
+  auto& services = m_state->services;
+  services.session = this;
+  services.world = &m_state->world;
+  services.terrain = &m_state->terrain;
+  services.visibility = &m_state->visibility;
+  services.owners = &m_state->owners;
+  services.economy = &m_state->economy;
+  services.nations = &m_state->nations;
+  services.stats = &m_state->stats;
+  services.troop_counts = &m_state->troop_counts;
+  services.building_collision = &m_state->building_collision;
+  services.marketplace = &m_state->marketplace;
+  services.clock = &m_state->clock;
+  services.rng = &m_state->rng;
+  services.commands = &m_state->commands;
+
   const std::lock_guard<std::mutex> lock(g_world_owner_mutex);
   g_world_owners.emplace(&m_state->world, this);
 }
@@ -74,12 +87,7 @@ SessionContext::~SessionContext() {
     g_world_owners.erase(&m_state->world);
   }
 
-  if (g_active_session == this) {
-    g_active_session = nullptr;
-  }
-  if (t_active_session == this) {
-    t_active_session = nullptr;
-  }
+  unbind_ambient_services(&m_state->services);
 }
 
 auto SessionContext::world() -> Engine::Core::World& {
@@ -162,7 +170,55 @@ auto SessionContext::commands() -> Game::Command::CommandQueue& {
   return m_state->commands;
 }
 
+void SessionContext::set_replay_player(
+    std::unique_ptr<Game::Command::ReplayPlayer> player) {
+  m_state->replay_player = std::move(player);
+  m_state->commands.set_replay_only(m_state->replay_player != nullptr);
+}
+
+auto SessionContext::replay_player() -> Game::Command::ReplayPlayer* {
+  return m_state->replay_player.get();
+}
+
+void SessionContext::set_replay_recorder(
+    std::unique_ptr<Game::Command::ReplayRecorder> recorder) {
+  m_state->replay_recorder = std::move(recorder);
+}
+
+auto SessionContext::replay_recorder() -> Game::Command::ReplayRecorder* {
+  return m_state->replay_recorder.get();
+}
+
+auto SessionContext::rng_seed() const -> std::uint64_t {
+  return m_state->seed;
+}
+
+auto SessionContext::advance(double real_dt,
+                             int max_steps,
+                             const TickFn& per_tick) -> int {
+  auto& clock = m_state->clock;
+  clock.advance(real_dt);
+  int steps = 0;
+  while (steps < max_steps && clock.consume_tick()) {
+    if (per_tick) {
+      per_tick(static_cast<float>(clock.tick_seconds()));
+    } else {
+      step();
+    }
+    ++steps;
+  }
+  clock.drop_pending_ticks();
+  return steps;
+}
+
+void SessionContext::step() {
+  m_state->world.update(static_cast<float>(m_state->clock.tick_seconds()));
+}
+
 void SessionContext::reset() {
+
+  m_state->replay_recorder.reset();
+  set_replay_player(nullptr);
   m_state->commands.clear();
   m_state->visibility.reset();
   m_state->world.clear();
@@ -173,19 +229,12 @@ void SessionContext::reset() {
   m_state->stats.clear();
   m_state->troop_counts.clear();
   m_state->building_collision.clear();
-  m_state->marketplace.clear();
   m_state->clock.reset();
   m_state->rng.reseed(m_state->seed);
 }
 
 auto SessionContext::active() -> SessionContext& {
-  if (t_active_session != nullptr) {
-    return *t_active_session;
-  }
-  if (g_active_session != nullptr) {
-    return *g_active_session;
-  }
-  return default_session();
+  return *ambient_services().session;
 }
 
 auto SessionContext::for_world(const Engine::Core::World& world) -> SessionContext* {
@@ -195,19 +244,20 @@ auto SessionContext::for_world(const Engine::Core::World& world) -> SessionConte
 }
 
 auto SessionContext::active_or_null() -> SessionContext* {
-  return t_active_session != nullptr ? t_active_session : g_active_session;
+  const auto* bound = ambient_services_or_null();
+  return bound != nullptr ? bound->session : nullptr;
 }
 
 auto SessionContext::set_active(SessionContext* session) -> SessionContext* {
-  SessionContext* previous = g_active_session;
-  g_active_session = session;
-  return previous;
+  const auto* previous =
+      set_ambient_services(session != nullptr ? &session->m_state->services : nullptr);
+  return previous != nullptr ? previous->session : nullptr;
 }
 
 auto SessionContext::set_thread_active(SessionContext* session) -> SessionContext* {
-  SessionContext* previous = t_active_session;
-  t_active_session = session;
-  return previous;
+  const auto* previous = set_thread_ambient_services(
+      session != nullptr ? &session->m_state->services : nullptr);
+  return previous != nullptr ? previous->session : nullptr;
 }
 
 } // namespace Game::Session

@@ -19,6 +19,7 @@
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "game/session/session_context.h"
 #include "game/systems/nation_id.h"
 #include "render/entity/building_state.h"
 #include "render/entity/registry.h"
@@ -241,6 +242,9 @@ auto render_building(EntityRendererRegistry& registry,
 auto main(int argc, char** argv) -> int {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QGuiApplication const app(argc, argv);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
 
   QOpenGLContext gl;
   if (!gl.create()) {

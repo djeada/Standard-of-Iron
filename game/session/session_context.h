@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 
 namespace Engine::Core {
@@ -24,7 +25,9 @@ class TroopCountRegistry;
 
 namespace Game::Command {
 class CommandQueue;
-}
+class ReplayPlayer;
+class ReplayRecorder;
+} // namespace Game::Command
 
 namespace Game::Session {
 
@@ -79,6 +82,19 @@ public:
   [[nodiscard]] auto rng() -> DeterministicRng&;
 
   [[nodiscard]] auto commands() -> Game::Command::CommandQueue&;
+
+  void set_replay_player(std::unique_ptr<Game::Command::ReplayPlayer> player);
+  [[nodiscard]] auto replay_player() -> Game::Command::ReplayPlayer*;
+
+  void set_replay_recorder(std::unique_ptr<Game::Command::ReplayRecorder> recorder);
+  [[nodiscard]] auto replay_recorder() -> Game::Command::ReplayRecorder*;
+
+  [[nodiscard]] auto rng_seed() const -> std::uint64_t;
+
+  using TickFn = std::function<void(float tick_seconds)>;
+  auto advance(double real_dt, int max_steps, const TickFn& per_tick = {}) -> int;
+
+  void step();
 
   void reset();
 

@@ -98,9 +98,8 @@ TEST(CommanderProductionTest, RejectsCommanderProductionFromBarracks) {
   production->max_units = 10000;
   production->manpower_available = 1000;
 
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world, {barracks->get_id()}, 1, Game::Units::TroopType::RomanLegionOrganizer);
+  auto result = Game::Systems::ProductionService::start_production(
+      world, barracks->get_id(), Game::Units::TroopType::RomanLegionOrganizer);
   EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderNotRecruitable);
   EXPECT_FALSE(production->in_progress);
   EXPECT_EQ(production->manpower_available, 1000);
@@ -119,12 +118,8 @@ TEST(CommanderProductionTest, RejectsCommanderProductionEvenIfOwnerHasNoCommande
   production->max_units = 10000;
   production->manpower_available = 1000;
 
-  auto result =
-      Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-          world,
-          {barracks->get_id()},
-          1,
-          Game::Units::TroopType::CarthageSpearCommander);
+  auto result = Game::Systems::ProductionService::start_production(
+      world, barracks->get_id(), Game::Units::TroopType::CarthageSpearCommander);
   EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderNotRecruitable);
   EXPECT_FALSE(production->in_progress);
 }

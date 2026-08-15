@@ -11,6 +11,7 @@
 #include <QStringList>
 #include <QVBoxLayout>
 
+#include "game/systems/default_content.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 
@@ -148,7 +149,7 @@ void BuildingPanel::populate_nation_options() {
   }
 
   auto& registry = Game::Systems::NationRegistry::instance();
-  registry.initialize_defaults();
+  Game::Systems::initialize_default_content(registry);
   const auto& nations = registry.get_all_nations();
 
   m_nation_box->clear();

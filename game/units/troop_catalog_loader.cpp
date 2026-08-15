@@ -10,8 +10,7 @@
 #include <QLoggingCategory>
 #include <QVariant>
 
-#include "../formation/formation_data_loader.h"
-#include "../formation/troop_role_registry.h"
+#include "../formation/formation_roles.h"
 #include "troop_catalog.h"
 #include "troop_config.h"
 
@@ -241,10 +240,8 @@ auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
         read_int(formation, "max_units_per_row", troop_class.max_units_per_row);
 
     Game::Formation::TroopFormationProfile overrides;
-    if (Game::Formation::FormationDataLoader::parse_troop_profile(formation,
-                                                                  overrides)) {
-      Game::Formation::TroopRoleRegistry::instance().merge_profile(
-          troop_class.unit_type, overrides);
+    if (Game::Formation::parse_troop_formation_profile(formation, overrides)) {
+      troop_class.formation_profile = std::move(overrides);
     }
 
     catalog.register_class(std::move(troop_class));

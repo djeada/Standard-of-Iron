@@ -4,14 +4,20 @@
 #include <cmath>
 #include <random>
 
+#include "../../core/ambient_session.h"
 #include "../../core/component.h"
+#include "../../session/deterministic_rng.h"
 
 namespace Game::Systems::RpgCombat {
 
 namespace {
 
 auto random_float_01() -> float {
-  static std::mt19937 rng{std::random_device{}()};
+  if (const auto* services = Game::Session::ambient_services_or_null();
+      services != nullptr && services->rng != nullptr) {
+    return services->rng->next_float();
+  }
+  static std::mt19937 rng{0x5EEDU};
   static std::uniform_real_distribution<float> dist{0.0F, 1.0F};
   return dist(rng);
 }

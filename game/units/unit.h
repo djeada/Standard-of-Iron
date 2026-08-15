@@ -45,7 +45,6 @@ public:
   [[nodiscard]] auto id() const -> Engine::Core::EntityID { return m_id; }
   [[nodiscard]] auto type_string() const -> std::string { return m_type_string; }
 
-  void move_to(float x, float z);
   [[nodiscard]] auto is_alive() const -> bool;
   [[nodiscard]] auto position() const -> QVector3D;
 

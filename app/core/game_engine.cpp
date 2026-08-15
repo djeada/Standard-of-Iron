@@ -78,6 +78,7 @@
 #include "frame_ui_coordinator.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_system.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -95,6 +96,7 @@
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/attack_range.h"
@@ -105,6 +107,7 @@
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system.h"
+#include "game/systems/default_content.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/guard_system.h"
@@ -256,6 +259,10 @@ GameEngine::GameEngine(QObject* parent)
     , m_commander_input(this, this)
     , m_selected_units_model(new SelectedUnitsModel(this, this)) {
 
+  m_session = std::make_unique<Game::Session::SessionContext>();
+  m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
+  m_world = &m_session->world();
+
   m_save_slots_view_model =
       std::make_unique<App::ViewModels::SaveSlotsViewModel>(m_save_load_service, this);
   connect(m_save_slots_view_model.get(),
@@ -279,11 +286,7 @@ GameEngine::GameEngine(QObject* parent)
   m_activity_view_model =
       std::make_unique<App::ViewModels::ActivityViewModel>(&activity_host, this);
 
-  m_session = std::make_unique<Game::Session::SessionContext>();
-  m_session_scope = std::make_unique<Game::Session::ScopedSession>(*m_session);
-  m_world = &m_session->world();
-
-  Game::Systems::NationRegistry::instance().initialize_defaults();
+  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
   Game::Systems::TroopCountRegistry::instance().initialize();
   Game::Systems::GlobalStatsRegistry::instance().initialize();
 
@@ -834,10 +837,6 @@ void GameEngine::on_attack_click(qreal sx, qreal sy) {
   }
 }
 
-void GameEngine::reset_movement(Engine::Core::Entity* entity) {
-  InputCommandHandler::reset_movement(entity);
-}
-
 void GameEngine::on_stop_command() {
   if (!m_input_handler) {
     return;
@@ -1341,10 +1340,12 @@ void GameEngine::commander_trigger_aura() {
   if (commander_entity == nullptr) {
     return;
   }
-  if (auto* commander =
-          commander_entity->get_component<Engine::Core::CommanderComponent>()) {
-    commander->request_aura_ability();
-  }
+  Game::Command::submit(*m_world,
+                        Game::Command::Source::LocalPlayer,
+                        m_runtime.local_owner_id,
+                        Game::Command::UseCommanderAbility{
+                            .commander = commander_entity->get_id(),
+                            .ability = Game::Command::CommanderAbility::Aura});
 }
 
 void GameEngine::commander_trigger_rally() {
@@ -1916,6 +1917,34 @@ void GameEngine::update_active_runtime_simulation(float dt) {
 
   m_world->update(dt);
   update_rts_control_mode(dt);
+  finish_replay_verification_if_done();
+}
+
+void GameEngine::finish_replay_verification_if_done() {
+  if (!m_replay_verify_exit || m_session == nullptr) {
+    return;
+  }
+  auto* player = m_session->replay_player();
+  if (player == nullptr) {
+    return;
+  }
+  const auto& file = player->file();
+  const std::uint64_t last_recorded_tick = std::max<std::uint64_t>(
+      file.last_tick(), file.digests.empty() ? 0U : file.digests.back().tick);
+  if (!player->finished() || m_session->clock().tick() <= last_recorded_tick) {
+    return;
+  }
+  if (const auto& divergence = player->divergence(); divergence.has_value()) {
+    qCritical() << "SOI_REPLAY_VERIFY: FAIL - diverged at tick" << divergence->tick
+                << "(recorded" << divergence->recorded << ", observed"
+                << divergence->observed << ")";
+    QCoreApplication::exit(12);
+  } else {
+    qInfo() << "SOI_REPLAY_VERIFY: PASS -" << player->fed_count() << "commands,"
+            << player->checked_count() << "digests matched";
+    QCoreApplication::exit(0);
+  }
+  m_replay_verify_exit = false;
 }
 
 auto GameEngine::should_render_selected_entity(Engine::Core::EntityID id) const
@@ -2603,39 +2632,15 @@ auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
 }
 
 bool GameEngine::marketplace_buy_resource(const QString& resource_key) {
-  ensure_initialized();
-
-  QVariantMap const market_state = get_selected_marketplace_state();
-  if (!market_state.value("has_marketplace").toBool()) {
-    set_error(tr("Select your marketplace to trade."));
-    return false;
-  }
-
-  auto const resource_type = marketplace_trade_resource_from_key(resource_key);
-  if (!resource_type.has_value()) {
-    set_error(tr("Marketplace can trade only wood, stone, or iron."));
-    return false;
-  }
-
-  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
-  if (!marketplace.can_buy(m_runtime.local_owner_id, *resource_type)) {
-    set_error(tr("Not enough gold to buy %1.")
-                  .arg(marketplace_trade_resource_label(resource_key)));
-    return false;
-  }
-
-  if (!marketplace.buy_resource(m_runtime.local_owner_id, *resource_type)) {
-    set_error(tr("Cannot buy %1 right now.")
-                  .arg(marketplace_trade_resource_label(resource_key)));
-    return false;
-  }
-
-  clear_error();
-  sync_selected_player_state();
-  return true;
+  return marketplace_trade(resource_key, Game::Command::TradeDirection::Buy);
 }
 
 bool GameEngine::marketplace_sell_resource(const QString& resource_key) {
+  return marketplace_trade(resource_key, Game::Command::TradeDirection::Sell);
+}
+
+auto GameEngine::marketplace_trade(const QString& resource_key,
+                                   Game::Command::TradeDirection direction) -> bool {
   ensure_initialized();
 
   QVariantMap const market_state = get_selected_marketplace_state();
@@ -2650,18 +2655,24 @@ bool GameEngine::marketplace_sell_resource(const QString& resource_key) {
     return false;
   }
 
-  auto& marketplace = Game::Systems::MarketplaceSystem::instance();
-  if (!marketplace.can_sell(m_runtime.local_owner_id, *resource_type)) {
-    set_error(tr("Not enough %1 to sell.")
-                  .arg(marketplace_trade_resource_label(resource_key)));
+  const bool buying = direction == Game::Command::TradeDirection::Buy;
+  auto& marketplace = m_session->marketplace();
+  const bool allowed =
+      buying ? marketplace.can_buy(*m_world, m_runtime.local_owner_id, *resource_type)
+             : marketplace.can_sell(*m_world, m_runtime.local_owner_id, *resource_type);
+  if (!allowed) {
+    set_error(buying ? tr("Not enough gold to buy %1.")
+                           .arg(marketplace_trade_resource_label(resource_key))
+                     : tr("Not enough %1 to sell.")
+                           .arg(marketplace_trade_resource_label(resource_key)));
     return false;
   }
 
-  if (!marketplace.sell_resource(m_runtime.local_owner_id, *resource_type)) {
-    set_error(tr("Cannot sell %1 right now.")
-                  .arg(marketplace_trade_resource_label(resource_key)));
-    return false;
-  }
+  Game::Command::submit(
+      *m_world,
+      Game::Command::Source::LocalPlayer,
+      m_runtime.local_owner_id,
+      Game::Command::Trade{.resource = *resource_type, .direction = direction});
 
   clear_error();
   sync_selected_player_state();
@@ -2963,6 +2974,7 @@ void GameEngine::start_campaign_mission(const QString& mission_path) {
   }
 
   const auto& mission = *m_campaign_manager->current_mission_definition();
+  m_replay_launch = {QStringLiteral("campaign-mission"), mission_path, {}};
   start_skirmish_internal(
       mission.map_path, build_campaign_player_configs(mission), false);
 }
@@ -2982,6 +2994,7 @@ void GameEngine::start_mission_file(const QString& file_path) {
   }
 
   const auto& mission = *m_campaign_manager->current_mission_definition();
+  m_replay_launch = {QStringLiteral("mission-file"), file_path, {}};
   start_skirmish_internal(
       mission.map_path, build_campaign_player_configs(mission), false);
 }
@@ -3024,7 +3037,74 @@ QVariantMap GameEngine::get_mission_definition(const QString& mission_id) const 
 
 void GameEngine::start_skirmish(const QString& map_path,
                                 const QVariantList& player_configs) {
+  m_replay_launch = {QStringLiteral("skirmish"), map_path, player_configs};
   start_skirmish_internal(map_path, player_configs, true);
+}
+
+void GameEngine::set_replay_record_path(const QString& path) {
+  m_replay_record_path = path;
+}
+
+auto GameEngine::replay_playing() const -> bool {
+  return m_session != nullptr && m_session->replay_player() != nullptr;
+}
+
+auto GameEngine::start_replay(const QString& path) -> bool {
+  QString error;
+  auto file = Game::Command::ReplayFile::load(path, &error);
+  if (!file.has_value()) {
+    set_error(tr("Cannot play replay: %1").arg(error));
+    return false;
+  }
+  const Game::Command::ReplayHeader header = file->header;
+  m_pending_replay = std::move(file);
+  if (header.kind == QLatin1String("campaign-mission")) {
+    start_campaign_mission(header.reference);
+  } else if (header.kind == QLatin1String("mission-file")) {
+    start_mission_file(header.reference);
+  } else if (header.kind == QLatin1String("skirmish")) {
+    start_skirmish(
+        header.reference,
+        header.launch.value(QLatin1String("player_configs")).toArray().toVariantList());
+  } else {
+    m_pending_replay.reset();
+    set_error(tr("Cannot play replay: unknown launch kind '%1'").arg(header.kind));
+    return false;
+  }
+  return true;
+}
+
+void GameEngine::arm_replay_for_started_match() {
+  if (m_session == nullptr) {
+    return;
+  }
+  if (m_pending_replay.has_value()) {
+    auto file = std::move(*m_pending_replay);
+    m_pending_replay.reset();
+    qInfo() << "Replay: driving" << m_replay_launch.kind << m_replay_launch.reference
+            << "from" << file.commands.size() << "commands, last tick"
+            << file.last_tick();
+    m_session->set_replay_player(
+        std::make_unique<Game::Command::ReplayPlayer>(std::move(file)));
+    return;
+  }
+  if (m_replay_record_path.isEmpty()) {
+    return;
+  }
+  Game::Command::ReplayHeader header;
+  header.kind = m_replay_launch.kind;
+  header.reference = m_replay_launch.reference;
+  header.launch["player_configs"] =
+      QJsonArray::fromVariantList(m_replay_launch.player_configs);
+  header.tick_seconds = m_session->clock().tick_seconds();
+  header.rng_seed = m_session->rng_seed();
+  auto recorder = std::make_unique<Game::Command::ReplayRecorder>();
+  if (!recorder->begin(m_replay_record_path, header, m_session->commands())) {
+    qWarning() << "Replay: cannot write" << m_replay_record_path;
+    return;
+  }
+  qInfo() << "Replay: recording to" << m_replay_record_path;
+  m_session->set_replay_recorder(std::move(recorder));
 }
 
 void GameEngine::start_skirmish_internal(const QString& map_path,
@@ -3192,6 +3272,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     if (finalize_effects.emit_spectator_mode_changed) {
       emit spectator_mode_changed();
     }
+    arm_replay_for_started_match();
   });
 }
 
@@ -3332,7 +3413,6 @@ void GameEngine::reset_mission_runtime_state() {
     m_wave_view_model->clear();
   }
   Game::Systems::PlayerResourceRegistry::instance().clear();
-  Game::Systems::MarketplaceSystem::instance().clear();
   sync_selected_player_state();
   m_audio_coordinator->stop_mission_ambience();
   AudioSystem::get_instance().stop_music();

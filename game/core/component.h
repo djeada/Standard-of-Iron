@@ -1211,7 +1211,6 @@ public:
   float task_target_z{0.0F};
   bool task_target_reserved{false};
   bool at_construction_site{false};
-  bool is_placement_preview{false};
   EntityID construction_site_entity_id{0};
   std::vector<EntityID> queued_construction_site_ids{};
 

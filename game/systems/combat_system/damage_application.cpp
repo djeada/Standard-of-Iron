@@ -19,7 +19,6 @@
 #include "../command_service.h"
 #include "../defensive_unit_layout_service.h"
 #include "../formation_combat_geometry.h"
-#include "../marketplace_system.h"
 #include "../order_service.h"
 #include "../wall_network_service.h"
 #include "animation/death_pose_manifest.h"
@@ -1059,10 +1058,6 @@ apply_unit_damage(Engine::Core::World* world,
 
     if (target->has_component<Engine::Core::BuildingComponent>()) {
       BuildingCollisionRegistry::instance().unregister_building(target->get_id());
-      if (auto* unit = target->get_component<Engine::Core::UnitComponent>();
-          unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Marketplace) {
-        MarketplaceSystem::instance().unregister_marketplace(unit->owner_id);
-      }
     }
     if (world != nullptr &&
         target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {
