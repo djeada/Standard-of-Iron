@@ -25,8 +25,14 @@ Item {
             "heading": qsTr("Giving orders"),
             "body": qsTr("Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.")
         }, {
-            "heading": qsTr("Stances"),
-            "body": qsTr("Guard holds a spot, chases what comes near and returns. Hold stands the ground without pursuing - for archers and spearmen. Patrol walks between two points and engages what crosses the route. Stop cancels everything.")
+            "heading": qsTr("Guard - hold a spot"),
+            "body": qsTr("Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.")
+        }, {
+            "heading": qsTr("Hold - stand fast"),
+            "body": qsTr("Press Hold and the troops kneel where they stand. They never take a step, but they reach further, hit harder and take more punishment than they would on the move, and braced spears gut a cavalry charge. That is the trade: pursuit for staying power. Press Hold again, or give a move, attack or Stop order, to stand them up. Only archers and spearmen can hold.")
+        }, {
+            "heading": qsTr("Patrol - walk a beat"),
+            "body": qsTr("Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.")
         }, {
             "heading": qsTr("Winning and losing"),
             "body": qsTr("Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.")
@@ -70,7 +76,7 @@ Item {
             "body": qsTr("Your commander carries the standard. Troops close to him fight with higher morale, and morale decides who breaks first. Keep him behind the spears: if he falls the mission is lost.")
         }, {
             "heading": qsTr("Aura and Rally"),
-            "body": qsTr("With the commander selected, Aura briefly empowers every soldier around him and then recharges. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.")
+            "body": qsTr("With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.")
         }, {
             "heading": qsTr("Taking direct control"),
             "body": qsTr("Where the mission allows it, you can step into the commander's boots and lead from the field. The controls for that mode are listed under Controls.")

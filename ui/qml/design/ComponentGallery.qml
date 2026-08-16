@@ -148,6 +148,15 @@ ScrollView {
                                 label: qsTr("Guard")
                                 hotkey: "G"
                                 active: true
+                                hint: qsTr("Anchor troops to a spot. They step out to meet what comes near, then walk back.")
+                                statusText: qsTr("Holding a spot")
+                                details: [{
+                                        "term": qsTr("Reach"),
+                                        "text": qsTr("They fight what comes within 10 m of that spot, and drop a target that leaves it.")
+                                    }, {
+                                        "term": qsTr("Release"),
+                                        "text": qsTr("Press Guard again, or order a move or attack.")
+                                    }]
                             }
                             Design.IronCommandButton {
                                 actionId: "patrol"

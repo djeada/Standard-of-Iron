@@ -635,18 +635,21 @@ auto TutorialDirector::step_body(TutorialStepId id) -> QString {
               "in front, archers behind, and the commander close so his aura "
               "reaches them. Break the raid to continue.");
   case TutorialStepId::Stances:
-    return tr("Soldiers can be told how to behave. Guard: hold a spot and chase "
-              "anything that comes near, then return. Hold: stand your ground and "
-              "do not pursue - best for archers on a hill or a wall line. Patrol: "
-              "walk between two points and engage whatever crosses the route. Give "
-              "one of these orders to your soldiers.");
+    return tr("Soldiers can be told how to behave, and the three orders are not "
+              "the same. Guard: click a spot; they meet anything that comes near "
+              "it, then walk back to it. Hold: they never take a step, but they "
+              "reach further, hit harder and brace against a charge - archers and "
+              "spearmen only. Patrol: click two waypoints and they march the beat "
+              "between them, fighting whatever crosses it. Hover any of the three "
+              "to read the full rules, then give one of them to your soldiers.");
   case TutorialStepId::Commander:
     return tr("Your commander carries the standard. Troops near him fight with "
               "higher morale, and while he is selected two commands appear: Aura "
-              "briefly empowers every soldier around him, and Rally plants a flag "
-              "that the army marches to. If he dies, your lines break and the "
-              "mission is lost - keep him behind the spears. Trigger the Aura "
-              "now.");
+              "empowers every soldier in a ring around him for a stretch and then "
+              "recharges - the button prints the radius, how long it lasts and how "
+              "long until it returns - and Rally plants a flag that the army "
+              "marches to. If he dies, your lines break and the mission is lost - "
+              "keep him behind the spears. Trigger the Aura now.");
   case TutorialStepId::Camera:
     return tr("Move the view with the arrow keys or WASD, or push the mouse to the "
               "screen edge. Scroll to zoom, Q and E rotate, and the reset button in "
