@@ -45,6 +45,12 @@
           "ranged",
           "screen"
         ]
+      },
+      "lore": {
+        "role": "Massed missile line",
+        "strengths": "Out-trades everything at range, and massed bows are the answer to a war elephant.",
+        "weaknesses": "Fragile once contacted. Cavalry overruns it whenever it has no melee screen.",
+        "history": "Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve."
       }
     },
     {
@@ -96,6 +102,12 @@
           "vanguard",
           "reserve"
         ]
+      },
+      "lore": {
+        "role": "Heavy line infantry",
+        "strengths": "Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.",
+        "weaknesses": "The slowest troops in the line, and they take losses crossing open ground under archery.",
+        "history": "Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel."
       }
     },
     {
@@ -147,6 +159,12 @@
           "screen",
           "reserve"
         ]
+      },
+      "lore": {
+        "role": "Anti-cavalry spear line",
+        "strengths": "Repays its cost against cavalry, and braced on high ground it holds against far heavier attacks.",
+        "weaknesses": "Loses the straight infantry fight to swords, and caught in the open it is only a slower line.",
+        "history": "The spear was the cheapest way to make a horse refuse a charge, and every ancient army kept a wall of them."
       }
     },
     {
@@ -195,6 +213,12 @@
           "left_flank",
           "right_flank"
         ]
+      },
+      "lore": {
+        "role": "Shock cavalry",
+        "strengths": "Fast enough to choose its own fight, and it rides down archers left without a screen.",
+        "weaknesses": "Breaks on a braced spear line, which cuts mounted troops down at more than twice the usual rate.",
+        "history": "Cavalry rarely charged an unbroken line. It waited for a flank to open and then finished the day."
       }
     },
     {
@@ -245,6 +269,12 @@
           "left_flank",
           "right_flank"
         ]
+      },
+      "lore": {
+        "role": "Mounted skirmisher",
+        "strengths": "Outranges troops on foot and can withdraw from any fight it cannot win.",
+        "weaknesses": "Has no melee worth the name, and spears punish it the moment it is caught.",
+        "history": "Horse archers came from the steppe and the desert margins, and Mediterranean armies hired them rather than raised them."
       }
     },
     {
@@ -294,6 +324,12 @@
           "right_flank",
           "screen"
         ]
+      },
+      "lore": {
+        "role": "Lancer cavalry",
+        "strengths": "The longest reach of any mounted troop, striking before the enemy line can answer.",
+        "weaknesses": "Still cavalry. A braced spear line stops it, and it cannot trade with archers at range.",
+        "history": "The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear."
       }
     },
     {
@@ -341,6 +377,12 @@
         "army_roles": [
           "reserve"
         ]
+      },
+      "lore": {
+        "role": "Field surgeon",
+        "strengths": "Mends nearby wounded without being told to, so a line that holds keeps its strength.",
+        "weaknesses": "Cannot fight. Left unguarded it dies to anything that reaches it.",
+        "history": "Ancient armies kept surgeons close to the line; the wounded who walked away were the difference between a campaign and a rout."
       }
     },
     {
@@ -386,6 +428,12 @@
           "vanguard",
           "centre"
         ]
+      },
+      "lore": {
+        "role": "Expendable line infantry",
+        "strengths": "Costs nothing to raise and never breaks, so it buys time no living troop would.",
+        "weaknesses": "Slower and weaker than the living line it imitates, and nothing in the field can mend it.",
+        "history": "Raised from the burial ranks of an army that was interred still holding its shields."
       }
     },
     {
@@ -432,7 +480,13 @@
       },
       "abilities": [
         "cursed_arrow_volley"
-      ]
+      ],
+      "lore": {
+        "role": "Cursed missile line",
+        "strengths": "Its arrows carry a curse that drains the will of everything they strike.",
+        "weaknesses": "As brittle as any archer, and it withers as soon as the line in front of it fails.",
+        "history": "Its quiver was buried with it, and the curse worked into the shafts outlasted the hand that drew the bow."
+      }
     },
     {
       "id": "grave_priest",
@@ -480,7 +534,13 @@
       },
       "abilities": [
         "fireball"
-      ]
+      ],
+      "lore": {
+        "role": "Battle caster",
+        "strengths": "Hurls fire that bursts across a formation and clings to the ground where it lands.",
+        "weaknesses": "One slow body, helpless in melee, and it needs the awakened dead between it and the enemy.",
+        "history": "The priests who sealed the tombs learned to open them, and now walk ahead of what they woke."
+      }
     },
     {
       "id": "catapult",
@@ -528,6 +588,12 @@
           "siege",
           "reserve"
         ]
+      },
+      "lore": {
+        "role": "Siege artillery",
+        "strengths": "Denies ground nothing else can reach, at well over twice an archer's range.",
+        "weaknesses": "Overrun in seconds by any infantry that reaches it, and far too slow to withdraw.",
+        "history": "Torsion artillery was built on the spot from local timber and abandoned when the army moved on."
       }
     },
     {
@@ -576,6 +642,12 @@
           "siege",
           "reserve"
         ]
+      },
+      "lore": {
+        "role": "Siege bolt thrower",
+        "strengths": "The longest reach in any army, and quick enough to loose again before its target closes.",
+        "weaknesses": "Defenceless at close quarters. Infantry that reaches it kills it in a few seconds.",
+        "history": "The bolt thrower was the accurate half of a siege train, used against men and gates alike."
       }
     },
     {
@@ -625,6 +697,12 @@
           "vanguard",
           "centre"
         ]
+      },
+      "lore": {
+        "role": "Faction-defining heavy beast",
+        "strengths": "Carries more health than any squad on the field, and its reach breaks a line that stands to receive it.",
+        "weaknesses": "Archers are the answer to it, and massed bows bring it down before it closes.",
+        "history": "War elephants terrified armies that had never met them, and were nearly useless against those that had."
       }
     },
     {
@@ -932,6 +1010,12 @@
         "army_roles": [
           "reserve"
         ]
+      },
+      "lore": {
+        "role": "Engineer and labourer",
+        "strengths": "Raises every building an army needs and repairs what the enemy breaks.",
+        "weaknesses": "Not a soldier. It cannot hold ground and should never be the last thing guarding a camp.",
+        "history": "An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night."
       }
     },
     {
@@ -974,7 +1058,25 @@
         "army_roles": [
           "reserve"
         ]
+      },
+      "lore": {
+        "role": "Settlement population",
+        "strengths": "Gathers and delivers the resources every other unit is paid for with.",
+        "weaknesses": "The weakest body on the field. Anything that finds it kills it.",
+        "history": "Behind every field army stood the farms and quarries that fed it, and the people who worked them."
       }
+    }
+  ],
+  "abilities": [
+    {
+      "id": "cursed_arrow_volley",
+      "display_name": "Cursed Arrow Volley",
+      "effect": "Every arrow that lands leaves a curse on its target, draining the will of the formation it struck."
+    },
+    {
+      "id": "fireball",
+      "display_name": "Fireball",
+      "effect": "Hurls fire that bursts across a formation and leaves the ground burning where it lands."
     }
   ]
 }

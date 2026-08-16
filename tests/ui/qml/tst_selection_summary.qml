@@ -373,6 +373,104 @@ TestCase {
         summary.destroy();
     }
 
+    function spearmanLookup(typeKey, nation) {
+        if (typeKey !== "spearman")
+            return {
+                "valid": false
+            };
+        return {
+            "valid": true,
+            "attack_damage": 19,
+            "attack_range": 2.5,
+            "speed": 2.5
+        };
+    }
+
+    function test_a_unit_with_a_profile_offers_the_details_button() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 1,
+                "groups": makeGroups([{
+                            "typeKey": "spearman",
+                            "count": 1
+                        }]),
+                "profileLookup": testCase.spearmanLookup
+            });
+        verify(summary.canShowProfile, "a unit the readout knows must offer its details");
+        compare(summary.focusTypeKey, "spearman");
+        var button = findChild(summary, "selectionProfileButton");
+        verify(button !== null, "the details button is missing");
+        verify(button.visible);
+        var asked = [];
+        summary.profileRequested.connect(function (typeKey, nation) {
+                asked.push(typeKey);
+            });
+        button.clicked();
+        compare(asked, ["spearman"], "the button must name the focused unit");
+        summary.destroy();
+    }
+
+    function test_a_unit_the_readout_does_not_know_hides_the_details_button() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 1,
+                "groups": makeGroups([{
+                            "typeKey": "sheep",
+                            "count": 1
+                        }]),
+                "profileLookup": testCase.spearmanLookup
+            });
+        verify(!summary.canShowProfile);
+        verify(!findChild(summary, "selectionProfileButton").visible, "offering details that do not exist is worse than offering none");
+        summary.destroy();
+    }
+
+    function test_without_a_lookup_the_summary_behaves_exactly_as_before() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 1,
+                "groups": makeGroups([{
+                            "typeKey": "spearman",
+                            "count": 1
+                        }])
+            });
+        verify(!summary.canShowProfile);
+        verify(!findChild(summary, "selectionProfileButton").visible);
+        verify(!findChild(summary, "selectionStatStrip").visible);
+        summary.destroy();
+    }
+
+    function test_the_stat_strip_reads_the_profile_not_the_selection() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 1,
+                "groups": makeGroups([{
+                            "typeKey": "spearman",
+                            "count": 1
+                        }]),
+                "profileLookup": testCase.spearmanLookup
+            });
+        var strip = findChild(summary, "selectionStatStrip");
+        verify(strip !== null, "the compact stat strip is missing");
+        verify(strip.visible);
+        compare(summary.focusProfile.attack_damage, 19);
+        summary.destroy();
+    }
+
+    function test_an_inspected_enemy_offers_its_details_too() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({
+                        "valid": true,
+                        "typeKey": "spearman",
+                        "name": "Triarius",
+                        "isEnemy": true
+                    }),
+                "profileLookup": testCase.spearmanLookup
+            });
+        verify(summary.inspecting);
+        verify(summary.canShowProfile, "an enemy under the cursor is exactly when its counters matter");
+        compare(summary.focusTypeKey, "spearman");
+        summary.destroy();
+    }
+
     Component {
         id: summaryComponent
 

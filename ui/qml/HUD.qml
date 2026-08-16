@@ -23,6 +23,12 @@ Item {
 
     property bool camera_legend_visible: false
 
+    function show_unit_profile(unit_type, nation, from_selection) {
+        unitInspectPanel.show_availability = from_selection === true;
+        unitInspectPanel.load(unit_type, nation);
+        unitInspectPanel.visible = true;
+    }
+
     signal pause_toggled
     signal speed_changed(real speed)
     signal camera_settings_requested
@@ -154,6 +160,9 @@ Item {
                 onRecruit_unit: function (unit_type) {
                     hud.recruit_unit(unit_type);
                 }
+                onUnit_profile_requested: function (unit_type, nation, from_selection) {
+                    hud.show_unit_profile(unit_type, nation, from_selection);
+                }
             }
         }
 
@@ -205,6 +214,22 @@ Item {
             hud.camera_legend_visible = false;
             hud.camera_settings_requested();
         }
+    }
+
+    UnitInspectPanel {
+        id: unitInspectPanel
+
+        anchors.fill: parent
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                unitInspectPanel.forceActiveFocus();
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
+            }
+        }
+        onClose_requested: unitInspectPanel.visible = false
     }
 
     EconomyHelpPanel {

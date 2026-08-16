@@ -725,7 +725,28 @@ void TroopCatalog::register_class(TroopClass troop_class) {
 
 void TroopCatalog::reset_to_defaults() {
   m_classes.clear();
+  m_abilities.clear();
   register_defaults();
+}
+
+void TroopCatalog::register_ability(AbilityDefinition ability) {
+  for (auto& existing : m_abilities) {
+    if (existing.id == ability.id) {
+      existing = std::move(ability);
+      return;
+    }
+  }
+  m_abilities.push_back(std::move(ability));
+}
+
+auto TroopCatalog::get_ability(const std::string& ability_id) const
+    -> const AbilityDefinition* {
+  for (const auto& ability : m_abilities) {
+    if (ability.id == ability_id) {
+      return &ability;
+    }
+  }
+  return nullptr;
 }
 
 auto TroopCatalog::get_class(Game::Units::TroopType type) const -> const TroopClass* {
@@ -747,6 +768,7 @@ auto TroopCatalog::get_class_or_fallback(Game::Units::TroopType type) const
 
 void TroopCatalog::clear() {
   m_classes.clear();
+  m_abilities.clear();
 }
 
 void TroopCatalog::register_defaults() {

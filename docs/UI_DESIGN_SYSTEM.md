@@ -265,6 +265,48 @@ where the terrain-following, the dash/tick patterns and the focus pulse come
 from, and why every highlight on the ground costs one instanced draw between
 them.
 
+## Unit details: one readout, three surfaces
+
+Issue #1239 asked for a readable unit panel. The hard part was not the panel; it was
+that the numbers on a recruit card and the numbers on a details panel are the same
+numbers and had no shared source. So the rule is:
+
+**`App::Economy::unit_profile(type, nation)` is the only assembled unit readout.**
+`unit_production_info` delegates to it, `ActivityViewModel::unit_profile` exposes it to
+QML, and `unit_profile_test.cpp` pins the shared keys equal across every recruitable
+unit. A surface that wants a stat asks that function; nothing recomputes one.
+
+What it assembles:
+
+- Stats and derived DPS from `TroopProfile`, with the primary attack chosen by whichever
+  of melee/ranged actually does more per second, so a card never advertises a swordsman's
+  vestigial bow.
+- Costs, population and build time from the same profile.
+- Role labels from `Game::Formation::role_tag_label`. The 18 `RoleTag` ids had no
+  human-readable form anywhere; the label table sits next to the id table in
+  `formation_roles.cpp` so a new role cannot be added without an obvious empty slot
+  beside it.
+- Lore — role, strengths, weaknesses, history — from `assets/data/troops/base.json`,
+  with per-nation `history` overrides, because the nations rename nearly every unit and
+  the history follows the name rather than the stat block. Strengths and weaknesses are
+  written from the counter table in `UNIT_BALANCE.md`, so they teach the counters the
+  game implements; when a counter moves, the prose moves with it.
+- Documented abilities, which are **display only**. `TroopProfile::abilities` drives real
+  behaviour (`skeleton_archer.cpp` keys cursed arrows on it) and is still populated only
+  by nation variants. `documented_abilities` is the parallel list the panel reads, and a
+  regression test asserts a Roman skeleton archer gains no ability from it.
+
+`UnitInspectPanel.qml` is the detail surface, hosted in `HUD.qml` on the
+`EconomyHelpPanel` pattern (scrim, centred `IronPanel`, `ScrollView`, Escape, and a
+`close_requested` signal it never answers itself). It is keyed on **(type, nation)**, not
+on a live entity, so the same panel opens from a selected unit and from a recruit card;
+live order availability from `get_action_states()` is layered on only when a selection is
+open, because a recruit card has no selection to report a status for.
+
+The compact surfaces are the selection summary — an info button and a three-stat strip,
+both gated on the readout knowing the unit, so wildlife offers nothing rather than an
+empty panel — and `RecruitCard.qml`, the one card the recruit grid repeats.
+
 ## Iconography
 
 `Icons` is the only place an icon is named. It holds two families that are not

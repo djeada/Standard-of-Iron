@@ -1,5 +1,6 @@
 #include "formation_roles.h"
 
+#include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QLatin1String>
@@ -37,6 +38,32 @@ constexpr std::array<RoleTagName, 18> k_role_tag_names = {{
     {RoleTag::Elite, "elite"},
 }};
 
+struct RoleTagLabel {
+  RoleTag tag;
+  const char* label;
+};
+
+constexpr std::array<RoleTagLabel, 18> k_role_tag_labels = {{
+    {RoleTag::LineInfantry, QT_TRANSLATE_NOOP("Units", "Line infantry")},
+    {RoleTag::HeavyInfantry, QT_TRANSLATE_NOOP("Units", "Heavy infantry")},
+    {RoleTag::SpearInfantry, QT_TRANSLATE_NOOP("Units", "Spear infantry")},
+    {RoleTag::Ranged, QT_TRANSLATE_NOOP("Units", "Ranged")},
+    {RoleTag::Skirmisher, QT_TRANSLATE_NOOP("Units", "Skirmisher")},
+    {RoleTag::Cavalry, QT_TRANSLATE_NOOP("Units", "Cavalry")},
+    {RoleTag::Elephant, QT_TRANSLATE_NOOP("Units", "War beast")},
+    {RoleTag::Siege, QT_TRANSLATE_NOOP("Units", "Siege")},
+    {RoleTag::Command, QT_TRANSLATE_NOOP("Units", "Command")},
+    {RoleTag::Support, QT_TRANSLATE_NOOP("Units", "Support")},
+    {RoleTag::Worker, QT_TRANSLATE_NOOP("Units", "Worker")},
+    {RoleTag::Civilian, QT_TRANSLATE_NOOP("Units", "Civilian")},
+    {RoleTag::Caster, QT_TRANSLATE_NOOP("Units", "Caster")},
+    {RoleTag::Shielded, QT_TRANSLATE_NOOP("Units", "Shielded")},
+    {RoleTag::Mounted, QT_TRANSLATE_NOOP("Units", "Mounted")},
+    {RoleTag::Expendable, QT_TRANSLATE_NOOP("Units", "Expendable")},
+    {RoleTag::Awakened, QT_TRANSLATE_NOOP("Units", "Awakened")},
+    {RoleTag::Elite, QT_TRANSLATE_NOOP("Units", "Elite")},
+}};
+
 struct ArmyRoleName {
   ArmyRole role;
   const char* name;
@@ -63,6 +90,34 @@ auto role_tag_to_string(RoleTag tag) -> const char* {
     }
   }
   return "line_infantry";
+}
+
+auto role_tag_label(RoleTag tag) -> QString {
+  for (const auto& entry : k_role_tag_labels) {
+    if (entry.tag == tag) {
+      return QCoreApplication::translate("Units", entry.label);
+    }
+  }
+  return QCoreApplication::translate("Units", "Line infantry");
+}
+
+auto all_role_tags() -> std::vector<RoleTag> {
+  std::vector<RoleTag> tags;
+  tags.reserve(k_role_tag_names.size());
+  for (const auto& entry : k_role_tag_names) {
+    tags.push_back(entry.tag);
+  }
+  return tags;
+}
+
+auto role_tag_set_to_labels(RoleTagSet set) -> QStringList {
+  QStringList labels;
+  for (const auto& entry : k_role_tag_labels) {
+    if (has_role(set, entry.tag)) {
+      labels.append(QCoreApplication::translate("Units", entry.label));
+    }
+  }
+  return labels;
 }
 
 auto try_parse_role_tag(const QString& value) -> std::optional<RoleTag> {
