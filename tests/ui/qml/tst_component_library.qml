@@ -37,6 +37,9 @@ TestCase {
                 "tag": "IronTooltip",
                 "qml": "IronTooltip {}"
             }, {
+                "tag": "IronCommandTooltip",
+                "qml": "IronCommandTooltip { title: \"Guard\" }"
+            }, {
                 "tag": "IronDialog",
                 "qml": "IronDialog {}"
             }, {

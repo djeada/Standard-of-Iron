@@ -117,6 +117,93 @@ TestCase {
         button.destroy();
     }
 
+    function test_an_order_explains_its_rules_beyond_the_one_line_hint() {
+        var button = makeButton({
+                "actionId": "guard",
+                "label": "Guard",
+                "hint": "Anchor troops to a spot.",
+                "details": [{
+                        "term": "Reach",
+                        "text": "They fight anything within 10 m of that spot."
+                    }, {
+                        "term": "Release",
+                        "text": "Press Guard again."
+                    }]
+            });
+        compare(button.details.length, 2);
+        compare(button.details[0].term, "Reach");
+        button.destroy();
+    }
+
+    function test_the_order_grid_is_reachable_without_a_mouse() {
+        var button = makeButton({
+                "actionId": "patrol",
+                "label": "Patrol"
+            });
+        compare(button.focusPolicy, Qt.TabFocus);
+        button.destroy();
+    }
+
+    function test_keyboard_focus_opens_the_same_tooltip_hovering_would() {
+        var button = makeButton({
+                "actionId": "patrol",
+                "label": "Patrol",
+                "hotkey": "P",
+                "hint": "March a beat between two points.",
+                "details": [{
+                        "term": "Give it",
+                        "text": "Click the first waypoint, then the second."
+                    }],
+                "statusText": "Click waypoint 1",
+                "width": 200,
+                "height": 48
+            });
+        verify(!button.tooltip.visible);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryVerify(function () {
+                return button.tooltip.visible;
+            }, 4000);
+        compare(button.tooltip.title, "Patrol");
+        compare(button.tooltip.hotkey, "P");
+        compare(button.tooltip.summary, "March a beat between two points.");
+        compare(button.tooltip.details.length, 1);
+        compare(button.tooltip.status, "Click waypoint 1");
+        button.focus = false;
+        tryVerify(function () {
+                return !button.tooltip.visible;
+            }, 4000);
+        button.destroy();
+    }
+
+    function test_an_order_the_selection_cannot_take_says_so_in_the_tooltip() {
+        var button = makeButton({
+                "actionId": "hold",
+                "label": "Hold",
+                "blocked": true,
+                "hint": "Stand fast.",
+                "disabledReason": "Hold is only available to archers and spearmen"
+            });
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryVerify(function () {
+                return button.tooltip.visible;
+            }, 4000);
+        compare(button.tooltip.warning, "Hold is only available to archers and spearmen");
+        compare(button.tooltip.summary, "Stand fast.");
+        button.destroy();
+    }
+
+    function test_live_order_state_reads_on_the_button_face() {
+        var button = makeButton({
+                "actionId": "aura",
+                "label": "Aura",
+                "statusText": "Ready in 43s",
+                "cooldown": 0.7
+            });
+        compare(button.statusText, "Ready in 43s");
+        compare(button.cooldown, 0.7);
+        button.destroy();
+    }
+
     function test_the_active_state_is_exposed_to_assistive_tech() {
         var button = makeButton({
                 "actionId": "hold",

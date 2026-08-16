@@ -210,4 +210,123 @@ TEST(RtsActionModel, AnAutoGatheringBuilderShowsTheOrderAsActive) {
             QStringLiteral("mixed"));
 }
 
+TEST(RtsActionModel, GuardQuotesTheRingItActuallyFightsIn) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* unit = add_selected_unit(world, *selection, Game::Units::SpawnType::Spearman);
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  auto detail = App::Core::get_action_states(context)[QStringLiteral("guard")]
+                    .toMap()[QStringLiteral("detail")]
+                    .toMap();
+  EXPECT_FLOAT_EQ(detail[QStringLiteral("radius")].toFloat(),
+                  Engine::Core::Defaults::k_guard_default_radius);
+
+  auto* guard = unit->add_component<Engine::Core::GuardModeComponent>();
+  guard->guard_radius = 4.5F;
+  detail = App::Core::get_action_states(context)[QStringLiteral("guard")]
+               .toMap()[QStringLiteral("detail")]
+               .toMap();
+  EXPECT_FLOAT_EQ(detail[QStringLiteral("radius")].toFloat(), 4.5F);
+}
+
+TEST(RtsActionModel, HoldQuotesTheBonusesThatMakeItWorthPressing) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  const auto detail = App::Core::get_action_states(context)[QStringLiteral("hold")]
+                          .toMap()[QStringLiteral("detail")]
+                          .toMap();
+  EXPECT_EQ(detail[QStringLiteral("archerRangeBonusPercent")].toInt(), 50);
+  EXPECT_EQ(detail[QStringLiteral("spearmanRangeBonusPercent")].toInt(), 100);
+  EXPECT_EQ(detail[QStringLiteral("damageBonusPercent")].toInt(), 50);
+  EXPECT_EQ(detail[QStringLiteral("healthBonusPercent")].toInt(), 20);
+}
+
+TEST(RtsActionModel, PatrolSaysWhichWaypointComesNext) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
+
+  const auto stage = [](const App::Core::ActionContext& context) {
+    return App::Core::get_action_states(context)[QStringLiteral("patrol")]
+        .toMap()[QStringLiteral("detail")]
+        .toMap()[QStringLiteral("waypointStage")]
+        .toInt();
+  };
+
+  App::Core::ActionContext context;
+  context.world = &world;
+  EXPECT_EQ(stage(context), 0);
+
+  context.cursor_mode = CursorMode::Patrol;
+  EXPECT_EQ(stage(context), 1);
+
+  context.has_patrol_first_waypoint = true;
+  EXPECT_EQ(stage(context), 2);
+}
+
+TEST(RtsActionModel, AuraQuotesTheSelectedCommandersOwnNumbers) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* entity =
+      add_selected_unit(world, *selection, Game::Units::SpawnType::RomanVeteranConsul);
+  auto* commander = entity->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander, nullptr);
+  commander->aura_radius = 13.0F;
+  commander->aura_ability_duration = 12.0F;
+  commander->aura_ability_cooldown = 45.0F;
+  commander->aura_ability_cooldown_remaining = 9.0F;
+  commander->bonus_summary = "Nearby spearmen regenerate health.";
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  const auto detail = App::Core::get_action_states(context)[QStringLiteral("aura")]
+                          .toMap()[QStringLiteral("detail")]
+                          .toMap();
+  EXPECT_FLOAT_EQ(detail[QStringLiteral("radius")].toFloat(), 13.0F);
+  EXPECT_FLOAT_EQ(detail[QStringLiteral("duration")].toFloat(), 12.0F);
+  EXPECT_FLOAT_EQ(detail[QStringLiteral("cooldown")].toFloat(), 45.0F);
+  EXPECT_FLOAT_EQ(detail[QStringLiteral("cooldownRemaining")].toFloat(), 9.0F);
+  EXPECT_EQ(detail[QStringLiteral("summary")].toString(),
+            QStringLiteral("Nearby spearmen regenerate health."));
+}
+
+TEST(RtsActionModel, AnEmptySelectionStillCarriesTheStaticOrderFacts) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  const auto states = App::Core::get_action_states(context);
+  EXPECT_FALSE(states[QStringLiteral("guard")]
+                   .toMap()[QStringLiteral("detail")]
+                   .toMap()
+                   .isEmpty());
+  EXPECT_TRUE(states[QStringLiteral("aura")]
+                  .toMap()[QStringLiteral("detail")]
+                  .toMap()
+                  .isEmpty());
+}
+
 } // namespace
