@@ -504,7 +504,7 @@ that state.
 
 `tools/arena/promos/massed_battle.json` is the reel for this scenario: seven
 authored shots over one deterministic run of `massed_battle_1000` (both hosts
-from behind the blue line, the sword line advancing, the left cavalry column
+from behind the blue line, the sword line advancing, the right-hand cavalry column
 going in, the sword lines meeting, the horse reaching the archers, the press
 at half speed, and a crane out over the whole field), captured at 1080p60 with
 2× supersampling and cut with the shared editorial pipeline:
@@ -524,6 +524,16 @@ the scenario for the last shot. Cameras stay on the west (yaw 250-320) side
 for the close shots so the two colours read left/right rather than
 front/back, and every close shot uses `group_pair` focus so a wiped-out squad
 cannot leave the lens on empty grass.
+
+No shot uses `shake`, and every tracked focus carries 0.7-1.2 s of smoothing:
+handheld jitter over a mass of small figures reads as a shaky camera rather than
+as energy, and a tracked centroid that steps as soldiers fall would put that
+jitter into the lens even without it. The first cut of this reel also showed
+the cavalry columns flicking left and right on the approach; that was not the
+camera but the movement system following an 8-connected grid path cell by cell
+(a staircase of 45-degree and axis-aligned legs), fixed by pulling paths taut
+before they are followed — see "The path is pulled taut" in
+[PATHFINDING_ARCHITECTURE.md](PATHFINDING_ARCHITECTURE.md).
 
 The scenario is a performance fixture rather than a dressed capture stage, so
 terrain scatter stays on; the low-resolution framing pass

@@ -52,7 +52,7 @@
       "focus": {
         "mode": "group",
         "group": "blue_swords_a",
-        "smoothing": 0.6
+        "smoothing": 0.9
       },
       "camera": [
         {
@@ -78,32 +78,29 @@
     {
       "name": "cavalry_charge",
       "scenario": "massed_battle_1000",
-      "start": 2.2,
+      "start": 2.4,
       "duration": 2.6,
-      "shake": 0.03,
       "focus": {
         "mode": "group",
-        "group": "blue_cavalry_left",
-        "smoothing": 0.25
+        "group": "blue_cavalry_right",
+        "smoothing": 0.7
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 12,
+          "distance": 13,
           "pitch": 9,
-          "yaw": 208,
+          "yaw": 150,
           "fov": 50,
-          "height": 1.7,
-          "roll": -3
+          "height": 1.7
         },
         {
           "time": 2.6,
-          "distance": 10.5,
+          "distance": 11,
           "pitch": 11,
-          "yaw": 238,
+          "yaw": 176,
           "fov": 50,
           "height": 1.7,
-          "roll": 3,
           "ease": "linear"
         }
       ],
@@ -115,12 +112,11 @@
       "start": 7.2,
       "duration": 3.0,
       "slow_motion": 1.6,
-      "shake": 0.02,
       "focus": {
         "mode": "group_pair",
         "group": "blue_swords_a",
         "second_group": "red_swords_a",
-        "smoothing": 0.35
+        "smoothing": 0.9
       },
       "camera": [
         {
@@ -149,12 +145,11 @@
       "start": 8.4,
       "duration": 2.4,
       "slow_motion": 2.0,
-      "shake": 0.05,
       "focus": {
         "mode": "group_pair",
         "group": "blue_cavalry_left",
         "second_group": "red_archers_a",
-        "smoothing": 0.3
+        "smoothing": 0.8
       },
       "camera": [
         {
@@ -182,12 +177,11 @@
       "start": 12.0,
       "duration": 3.0,
       "slow_motion": 1.5,
-      "shake": 0.03,
       "focus": {
         "mode": "group_pair",
         "group": "blue_spears_a",
         "second_group": "red_swords_a",
-        "smoothing": 0.4
+        "smoothing": 1.0
       },
       "camera": [
         {
@@ -217,7 +211,7 @@
       "duration": 5.5,
       "focus": {
         "mode": "all",
-        "smoothing": 0.8
+        "smoothing": 1.2
       },
       "camera": [
         {
