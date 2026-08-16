@@ -150,6 +150,7 @@ struct MissionDefinition {
   std::vector<Condition> optional_objectives;
   std::vector<GameEvent> events;
   bool include_ambient_undead = false;
+  bool tutorial = false;
 };
 
 } // namespace Game::Mission

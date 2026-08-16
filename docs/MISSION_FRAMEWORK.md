@@ -638,6 +638,40 @@ Timed or state-based triggers for dynamic gameplay:
 ]
 ```
 
+### The tutorial mission
+
+`assets/missions/tutorial.json` is the guided first battle behind the main menu's
+**Tutorial** entry. It is an ordinary mission file with one extra flag:
+
+```json
+"tutorial": true
+```
+
+When a mission carrying that flag finishes loading, the engine attaches
+`App::Core::TutorialDirector` (`app/core/tutorial_director.h`), which walks the
+player through fifteen fixed steps — selection, movement, attacking a held scouting
+party, gathering each material, building a Home, recruiting, assembling an army,
+breaking a raid, stances, the commander's aura, camera, speed, objectives and a
+final assault. The director is exposed to QML as `game.tutorial`; the HUD card
+(`ui/qml/TutorialOverlay.qml`) only reads it, and the Field Manual
+(`ui/qml/HelpPanel.qml`) lists the steps and their completion state.
+
+Two things about the mission are load-bearing for the director:
+
+- **The mission clock is held** until the player reaches the _Defend the camp_
+  step, so a `waves` entry with a short `timing` still lands only once the player
+  has an army to meet it. `GameEngine::update_mission_waves` asks
+  `TutorialDirector::holds_mission_clock()` before advancing.
+- **The scouting party is authored on the map with `"behavior": "hold"`** for the
+  AI owner, so it is never handed to the AI and stays where the _Attack the Roman
+  scouts_ step says it is. `MissionAssetRulesTest.TutorialMissionIsFullyAuthored`
+  and `TutorialMissionTest` pin both, plus the commanders, props and barracks the
+  steps rely on.
+
+The map it uses, `assets/maps/map_tutorial.json`, declares
+`"skirmish_hidden": true`; `MapCatalog` skips such maps so a scripted stage never
+appears as a free-play choice.
+
 ## Campaign Configuration
 
 For the shipped Second Punic War campaign specifically -- opponents, wave
