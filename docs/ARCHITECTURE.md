@@ -383,26 +383,84 @@ list and `soi_test_binaries` drift apart.
 
 ## The application layer
 
-`GameEngine` is the composition root: it owns the session, the renderer, the
-controllers and the services, and drives the frame.
+`app/` is laid out by domain, not by kind. Each directory is one concern, and
+`CMakeLists.txt` lists the sources in the same grouping so the build file reads
+as a table of contents:
 
-It is also, historically, the QML API. That surface is being moved onto view
-models one coherent slice at a time, each exposed from `GameEngine` as a single
-CONSTANT property:
+| directory         | what lives there                                                |
+| ----------------- | --------------------------------------------------------------- |
+| `app/core`        | the composition root, the client context, the frame it drives   |
+| `app/session`     | bringing one match up: world, renderer, level, skirmish         |
+| `app/mission`     | campaigns, mission scripts, waves, the tutorial                 |
+| `app/commander`   | the first-person control mode and its camera                    |
+| `app/input`       | pointer and key gestures, before they become orders             |
+| `app/orders`      | gestures turned into `Game::Command` payloads, and the feedback |
+| `app/economy`     | production, trade, the resource coach                           |
+| `app/persistence` | saving and restoring a match                                    |
+| `app/world`       | world state read back as client presentation state              |
+| `app/audio`       | cue routing and the QML-facing audio proxy                      |
+| `app/viewmodels`  | the QML API, one coherent slice per model                       |
+| `app/models`      | Qt item models and image providers                              |
 
-- `game.saves` — `app/viewmodels/save_slots_view_model.h`
-- `game.placement` — `app/viewmodels/placement_view_model.h`: formation
-  placement, builder construction and building placement. It reaches back for
-  the few things only the root knows (lazy initialisation, the window mapping,
-  the local owner, the cursor) through `PlacementHost`, which is the shape a
-  further extraction should follow.
+### The composition root and its slices
 
-`tests/architecture/qml_surface_test.cpp` caps what is left — currently 103
-invokables and 39 properties — so the surface can only shrink, and fails if a
-member is removed without lowering the ceiling.
+`GameEngine` owns the session, the renderer, the controllers and the services,
+and drives the frame. It used to be the QML API as well. That surface now lives
+on view models, each exposed from the root as a single CONSTANT property:
 
-Slices still on `GameEngine` and worth extracting next: campaign progression,
-commander/FPV control, and camera control.
+`game.camera`, `game.minimap`, `game.orders`, `game.placement`,
+`game.production`, `game.commander`, `game.setup`, `game.saves`, `game.waves`,
+`game.activity`, `game.economy`, `game.tutorial`.
+
+Two things make that a boundary rather than a rename:
+
+- **`App::Core::ClientContext`** (`app/core/client_context.h`) is the match named
+  once — a struct of non-owning pointers to the world, the cameras, the picking
+  and selection services, the input handler, the production manager, the
+  viewport. The root fills it in as it builds the parts and keeps it current;
+  every view model holds a `const ClientContext&` and reads what it needs.
+
+    This replaced an earlier shape where each slice declared its own abstract
+    `…Host` of accessors that the root implemented. Five such interfaces between
+    them re-exported the same dozen pointers under a dozen names, which is the god
+    object with extra steps rather than a boundary.
+
+- **`App::Core::ClientHost`** is the two effects a slice cannot perform for
+  itself: `ensure_initialized()` (the renderer comes up on the first frame, and
+  a QML entry point can arrive before that) and `set_cursor_mode()` (which
+  repaints the root's window cursor).
+
+Everything else a slice needs from the root travels _outward_ as a signal, so
+the root listens instead of being called: `CommanderViewModel::game_mode_changed`
+(the renderer draws an RPG world differently), `active_camera_requested`,
+`rts_selection_restored`, `MatchSetupViewModel::launch_requested` (only the root
+can tear down and rebuild a match), `ProductionViewModel::refused`,
+`SaveSlotsViewModel::save_requested`. Queries that are really world reads became
+free functions instead — `App::World::unit_queries` is the model for that, and
+it is what let `SelectedUnitsModel` stop depending on `GameEngine` at all.
+
+`tests/architecture/qml_surface_test.cpp` caps what is left — currently 8
+invokables and 33 properties, 13 of them the CONSTANT view-model handles — so
+the surface can only shrink, and it fails if a member is removed without
+lowering the ceiling.
+
+### The other app-layer objects that were one file too many
+
+Three of them held two jobs each, and the second job was extracted rather than
+merely moved:
+
+- `ProductionManager` placed buildings _and_ answered every HUD production
+  question. The readouts are plain world reads with no placement state, so they
+  are free functions in `app/economy/production_readouts.h`; resolving a
+  "collect" order to a tree, a walkable tile and an idle builder is a different
+  problem again and lives in `app/economy/harvest_targeting.h`.
+- `CommandController` issued orders _and_ owned army deployment — two thirds of
+  its state and half its code, sharing nothing but the act of submitting an
+  order. Deployment is `App::Controllers::ArmyFormationController`, reached
+  through `command_controller.formation()`, and the shared act is
+  `App::Orders::OrderIssuer`.
+- `MissionSetupCoordinator` set a mission up _and_ ran its attack waves.
+  Waves are `app/mission/mission_waves.h`.
 
 ## Known limitations
 
@@ -417,7 +475,18 @@ These are real and deliberate, not oversights:
 - Components are pooled per type, so instances of one type are contiguous, but
   they still derive from a small polymorphic base with a virtual destructor.
   Access is by dense type-id array index, not by RTTI.
-- `GameEngine` remains large. See above.
+- `GameEngine` is still ~3,000 lines: the match lifecycle (bringing a world up,
+  saving and restoring it), the frame loop and the per-frame UI sync. Those are
+  the root's own work rather than a QML surface, but the file is bigger than one
+  reading.
+- `CommanderControlController` is still ~2,100 lines, and its `update()` is
+  ~560 of them. It is a first-person character controller, so movement, dodge,
+  jump, combat and camera genuinely interlock — but the input half (keys, mouse
+  capture, view angles) touches no world state and could be lifted out.
+- Types under `app/` are inconsistently namespaced: the newer ones are in
+  `App::Core` / `App::ViewModels` / `App::World`, while `GameEngine`,
+  `ProductionManager`, `MinimapManager`, `InputCommandHandler` and about a dozen
+  others are still at global scope.
 - Commander first-person control (`CommanderModeCoordinator`) drives the
   controlled commander's components directly; it is a local input mode, not
   an order, and `check-command-boundary.py` allow-lists those two files.
@@ -427,7 +496,7 @@ These are real and deliberate, not oversights:
   it out of what it sends, or the ghost moves to a renderer-side overlay.
 - `soi_headless` cannot yet host a real skirmish from a map file: the map-to-
   match setup (spawn points, the player table, starting stock, wall
-  networks) lives in `app/core/skirmish_loader.cpp` next to the renderers it
+  networks) lives in `app/session/skirmish_loader.cpp` next to the renderers it
   feeds. Lifting its non-render half into `game/` is the remaining step to a
   dedicated server; the loop, the queue and the replay are already there.
 - `soi_world` still holds three modules (`unit_catalog`, `registries`,

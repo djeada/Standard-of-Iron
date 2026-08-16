@@ -135,7 +135,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 } // namespace
 #endif
 
-#include "app/core/audio_resource_loader.h"
+#include "app/audio/audio_resource_loader.h"
 #include "app/core/game_engine.h"
 #include "app/core/game_speed.h"
 #include "app/core/language_manager.h"
@@ -143,6 +143,8 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/models/graphics_settings_proxy.h"
 #include "app/models/map_preview_image_provider.h"
 #include "app/models/minimap_image_provider.h"
+#include "app/viewmodels/match_setup_view_model.h"
+#include "app/viewmodels/minimap_view_model.h"
 #include "render/graphics_settings.h"
 #include "render/horse/horse_source_asset.h"
 #include "render/i_render_backend.h"
@@ -921,18 +923,20 @@ auto main(int argc, char* argv[]) -> int {
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
   engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
 
+  auto* minimap_view_model = qobject_cast<App::ViewModels::MinimapViewModel*>(
+      game_engine->minimap_view_model());
   QObject::connect(
-      game_engine.get(),
-      &GameEngine::minimap_image_changed,
+      minimap_view_model,
+      &App::ViewModels::MinimapViewModel::image_changed,
       &app,
-      [minimap_provider, game_engine_ptr = game_engine.get()]() {
-        minimap_provider->set_minimap_image(game_engine_ptr->minimap_image());
+      [minimap_provider, minimap_view_model]() {
+        minimap_provider->set_minimap_image(minimap_view_model->image());
       },
       Qt::DirectConnection);
 
-  if (!game_engine->minimap_image().isNull()) {
+  if (!minimap_view_model->image().isNull()) {
     qInfo() << "Setting initial minimap image";
-    minimap_provider->set_minimap_image(game_engine->minimap_image());
+    minimap_provider->set_minimap_image(minimap_view_model->image());
   }
 
   qInfo() << "Adding import path...";
@@ -1084,11 +1088,12 @@ auto main(int argc, char* argv[]) -> int {
               }
             } else if (!direct_mission_file.isEmpty()) {
               qInfo() << "Starting mission file directly:" << direct_mission_file;
-              game_engine_ptr->start_mission_file(direct_mission_file);
+              game_engine_ptr->match_setup()->start_mission_file(direct_mission_file);
             } else {
               qInfo() << "Starting campaign mission directly:"
                       << direct_campaign_mission;
-              game_engine_ptr->start_campaign_mission(direct_campaign_mission);
+              game_engine_ptr->match_setup()->start_campaign_mission(
+                  direct_campaign_mission);
             }
           };
 

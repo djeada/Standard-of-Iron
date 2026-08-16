@@ -59,9 +59,9 @@ Item {
     }
 
     function action_enabled(actionId) {
-        if (typeof game === 'undefined' || !game.get_hud_action_states)
+        if (typeof game === 'undefined' || !game.orders.action_states)
             return false;
-        var states = game.get_hud_action_states();
+        var states = game.orders.action_states();
         var state = states ? states[actionId] : null;
         return state && state.enabled === true;
     }
@@ -103,7 +103,7 @@ Item {
     }
 
     function is_commander_mode() {
-        return typeof game !== 'undefined' && game.control_mode === "commander";
+        return typeof game !== 'undefined' && game.commander.control_mode === "commander";
     }
 
     function is_commander_rally_placement() {
@@ -122,11 +122,11 @@ Item {
         if (typeof game === 'undefined')
             return;
         if (is_commander_rally_placement()) {
-            if (game.cancel_commander_flag_rally)
-                game.cancel_commander_flag_rally();
+            if (game.commander.cancel_flag_rally)
+                game.commander.cancel_flag_rally();
         } else if (is_barracks_rally_placement()) {
-            if (game.cancel_barracks_rally_placement)
-                game.cancel_barracks_rally_placement();
+            if (game.commander.cancel_barracks_rally)
+                game.commander.cancel_barracks_rally();
         }
     }
 
@@ -155,8 +155,8 @@ Item {
         switch (actionId) {
         case "global.toggle_control_mode":
             reset_rts_pan_keys();
-            if (game.toggle_commander_control_mode)
-                game.toggle_commander_control_mode();
+            if (game.commander.toggle_mode)
+                game.commander.toggle_mode();
             return true;
         case "global.menu":
             if (game.placement.is_placing_construction && game.placement.on_construction_cancel)
@@ -169,12 +169,12 @@ Item {
                 mainWindow.menu_visible = true;
             return true;
         case "global.quicksave":
-            if (game.quicksave)
-                game.quicksave();
+            if (game.saves.quicksave)
+                game.saves.quicksave();
             return true;
         case "global.quickload":
             if (game.saves.has_save_slot && game.saves.has_save_slot("quicksave"))
-                game.load_game_from_slot("quicksave");
+                game.saves.load_from_slot("quicksave");
             return true;
         }
         return false;
@@ -194,8 +194,8 @@ Item {
         case "rts.order_stop":
             if (!game.has_units_selected)
                 return false;
-            if (game.on_stop_command)
-                game.on_stop_command();
+            if (game.orders.stop)
+                game.orders.stop();
             return true;
         case "rts.order_attack":
             if (!game.has_units_selected || !action_enabled("attack"))
@@ -218,9 +218,9 @@ Item {
             game.cursor_mode = "guard";
             return true;
         case "rts.order_hold":
-            if (!game.has_units_selected || !game.on_hold_command)
+            if (!game.has_units_selected || !game.orders.hold)
                 return false;
-            game.on_hold_command();
+            game.orders.hold();
             return true;
         case "rts.order_formation":
             if (!game.has_units_selected || !game.placement.on_formation_command)
@@ -229,45 +229,45 @@ Item {
             return true;
         case "rts.camera_pan_up":
             begin_pan_action(actionId, event);
-            game.camera_move(0, inputStep);
+            game.camera.move(0, inputStep);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_pan_down":
             begin_pan_action(actionId, event);
-            game.camera_move(0, -inputStep);
+            game.camera.move(0, -inputStep);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_pan_left":
             begin_pan_action(actionId, event);
-            game.camera_move(-inputStep, 0);
+            game.camera.move(-inputStep, 0);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_pan_right":
             begin_pan_action(actionId, event);
-            game.camera_move(inputStep, 0);
+            game.camera.move(inputStep, 0);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_yaw_left":
-            game.camera_yaw(-yawStep);
+            game.camera.yaw(-yawStep);
             return true;
         case "rts.camera_yaw_right":
-            game.camera_yaw(yawStep);
+            game.camera.yaw(yawStep);
             return true;
         case "rts.camera_orbit_left":
-            game.camera_orbit_direction(1, shiftHeld);
+            game.camera.orbit_direction(1, shiftHeld);
             return true;
         case "rts.camera_orbit_right":
-            game.camera_orbit_direction(-1, shiftHeld);
+            game.camera.orbit_direction(-1, shiftHeld);
             return true;
         case "rts.commander_rally":
-            if (!action_enabled("rally") || !game.begin_commander_flag_rally)
+            if (!action_enabled("rally") || !game.commander.start_flag_rally)
                 return false;
-            game.begin_commander_flag_rally();
+            game.commander.start_flag_rally();
             return true;
         case "rts.select_all_troops":
-            if (!game.select_all_troops)
+            if (!game.orders.select_all_troops)
                 return false;
-            game.select_all_troops();
+            game.orders.select_all_troops();
             return true;
         }
         return false;
@@ -275,7 +275,7 @@ Item {
 
     function perform_commander_action(actionId, event) {
         var canonical = InputBindings.canonical_key_for(actionId);
-        if (canonical !== 0 && game.commander_key_down) {
+        if (canonical !== 0 && game.commander.key_down) {
             switch (actionId) {
             case "commander.move_forward":
             case "commander.move_back":
@@ -285,7 +285,7 @@ Item {
             case "commander.turn_right":
             case "commander.sprint":
                 pressed_keys[event.key] = actionId;
-                game.commander_key_down(canonical, event.modifiers);
+                game.commander.key_down(canonical, event.modifiers);
                 return true;
             }
         }
@@ -293,44 +293,44 @@ Item {
             return true;
         switch (actionId) {
         case "commander.dodge":
-            if (game.commander_dodge)
-                game.commander_dodge();
+            if (game.commander.dodge)
+                game.commander.dodge();
             return true;
         case "commander.jump":
-            if (game.commander_jump)
-                game.commander_jump();
+            if (game.commander.jump)
+                game.commander.jump();
             return true;
         case "commander.cycle_lock_on":
-            if (game.commander_cycle_lock_on)
-                game.commander_cycle_lock_on();
+            if (game.commander.cycle_lock_on)
+                game.commander.cycle_lock_on();
             return true;
         case "commander.ability_vanguard_rush":
-            if (game.commander_vanguard_rush)
-                game.commander_vanguard_rush();
+            if (game.commander.vanguard_rush)
+                game.commander.vanguard_rush();
             return true;
         case "commander.ability_second_wind":
-            if (game.commander_second_wind)
-                game.commander_second_wind();
+            if (game.commander.second_wind)
+                game.commander.second_wind();
             return true;
         case "commander.ability_aura":
-            if (game.commander_trigger_aura)
-                game.commander_trigger_aura();
+            if (game.commander.trigger_aura)
+                game.commander.trigger_aura();
             return true;
         case "commander.special_action":
-            if (game.commander_special_action)
-                game.commander_special_action();
+            if (game.commander.special_action)
+                game.commander.special_action();
             return true;
         case "commander.rally":
-            if (game.commander_trigger_rally)
-                game.commander_trigger_rally();
+            if (game.commander.trigger_rally)
+                game.commander.trigger_rally();
             return true;
         case "commander.toggle_weapon":
-            if (game.commander_input && game.commander_input.toggle_weapon_stance)
-                game.commander_input.toggle_weapon_stance();
+            if (game.commander && game.commander.toggle_weapon_stance)
+                game.commander.toggle_weapon_stance();
             return true;
         case "commander.toggle_camera_mode":
-            if (game.commander_toggle_camera_mode)
-                game.commander_toggle_camera_mode();
+            if (game.commander.toggle_camera_mode)
+                game.commander.toggle_camera_mode();
             return true;
         }
         return false;
@@ -375,8 +375,8 @@ Item {
             return;
         }
         var canonical = InputBindings.canonical_key_for(actionId);
-        if (canonical !== 0 && game.commander_key_up) {
-            game.commander_key_up(canonical, event.modifiers);
+        if (canonical !== 0 && game.commander.key_up) {
+            game.commander.key_up(canonical, event.modifiers);
             event.accepted = true;
         }
     }
@@ -406,13 +406,13 @@ Item {
             function onControl_mode_changed() {
                 if (typeof game === 'undefined')
                     return;
-                if (game.control_mode === "commander") {
+                if (game.commander.control_mode === "commander") {
                     mouseArea.is_selecting = false;
                     selectionBox.visible = false;
-                    if (game_view.cursor_mode === "place_barracks_rally" && game.cancel_barracks_rally_placement)
-                        game.cancel_barracks_rally_placement();
+                    if (game_view.cursor_mode === "place_barracks_rally" && game.commander.cancel_barracks_rally)
+                        game.commander.cancel_barracks_rally();
                     game_view.forceActiveFocus();
-                    commanderInputLayer.center_mouse();
+                    commanderLayer.center_mouse();
                 } else {
                     renderArea.mouse_pan_active = false;
                     game_view.forceActiveFocus();
@@ -451,14 +451,14 @@ Item {
             propagateComposedEvents: true
             preventStealing: true
             cursorShape: game_view.is_rally_placement() ? Qt.CrossCursor : (game_view.cursor_mode !== "normal" ? Qt.BlankCursor : Qt.ArrowCursor)
-            enabled: game_view.visible && typeof game !== 'undefined' && (game.control_mode !== "commander" || game_view.is_rally_placement())
+            enabled: game_view.visible && typeof game !== 'undefined' && (game.commander.control_mode !== "commander" || game_view.is_rally_placement())
             onEntered: {
-                if (typeof game !== 'undefined' && game.set_hover_at_screen)
-                    game.set_hover_at_screen(0, 0);
+                if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
+                    game.orders.set_hover_at_screen(0, 0);
             }
             onExited: {
-                if (typeof game !== 'undefined' && game.set_hover_at_screen)
-                    game.set_hover_at_screen(-1, -1);
+                if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
+                    game.orders.set_hover_at_screen(-1, -1);
             }
             onPositionChanged: function (mouse) {
                 if (is_selecting) {
@@ -469,11 +469,11 @@ Item {
                     selectionBox.width = Math.abs(endX - start_x);
                     selectionBox.height = Math.abs(endY - start_y);
                 } else {
-                    if (typeof game !== 'undefined' && game.set_hover_at_screen)
-                        game.set_hover_at_screen(mouse.x, mouse.y);
-                    if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.on_right_move) {
+                    if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
+                        game.orders.set_hover_at_screen(mouse.x, mouse.y);
+                    if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.orders.on_right_move) {
                         if (!game_view.is_rally_placement())
-                            game.on_right_move(mouse.x, mouse.y);
+                            game.orders.on_right_move(mouse.x, mouse.y);
                     } else if (game_view.is_placing_formation) {
                         if (typeof game !== 'undefined' && game.placement.is_dragging_formation && game.placement.is_dragging_formation())
                             game.placement.on_formation_drag_update(mouse.x, mouse.y);
@@ -502,26 +502,26 @@ Item {
                     w.accepted = true;
                     return;
                 }
-                if (dy !== 0 && typeof game !== 'undefined' && game.camera_zoom)
-                    game.camera_zoom(dy * 0.8);
+                if (dy !== 0 && typeof game !== 'undefined' && game.camera.zoom)
+                    game.camera.zoom(dy * 0.8);
                 w.accepted = true;
             }
             onPressed: function (mouse) {
                 game_view.forceActiveFocus();
                 if (mouse.button === Qt.LeftButton) {
                     if (game_view.cursor_mode === "attack") {
-                        if (typeof game !== 'undefined' && game.on_attack_click)
-                            game.on_attack_click(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.orders.attack_at)
+                            game.orders.attack_at(mouse.x, mouse.y);
                         return;
                     }
                     if (game_view.cursor_mode === "guard") {
-                        if (typeof game !== 'undefined' && game.on_guard_click)
-                            game.on_guard_click(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.orders.guard_at)
+                            game.orders.guard_at(mouse.x, mouse.y);
                         return;
                     }
                     if (game_view.cursor_mode === "deliver") {
-                        if (typeof game !== 'undefined' && game.on_civilian_delivery_click)
-                            game.on_civilian_delivery_click(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.orders.deliver_civilians_at)
+                            game.orders.deliver_civilians_at(mouse.x, mouse.y);
                         return;
                     }
                     if (game_view.cursor_mode === "repair") {
@@ -530,8 +530,8 @@ Item {
                         return;
                     }
                     if (game_view.cursor_mode === "patrol") {
-                        if (typeof game !== 'undefined' && game.on_patrol_click)
-                            game.on_patrol_click(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.orders.patrol_at)
+                            game.orders.patrol_at(mouse.x, mouse.y);
                         return;
                     }
                     if (game_view.cursor_mode === "place_building") {
@@ -542,13 +542,13 @@ Item {
                         return;
                     }
                     if (game_view.cursor_mode === "place_commander_rally") {
-                        if (typeof game !== 'undefined' && game.confirm_commander_flag_rally)
-                            game.confirm_commander_flag_rally(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.commander.confirm_flag_rally)
+                            game.commander.confirm_flag_rally(mouse.x, mouse.y);
                         return;
                     }
                     if (game_view.cursor_mode === "place_barracks_rally") {
-                        if (typeof game !== 'undefined' && game.confirm_barracks_rally_placement)
-                            game.confirm_barracks_rally_placement(mouse.x, mouse.y);
+                        if (typeof game !== 'undefined' && game.commander.confirm_barracks_rally)
+                            game.commander.confirm_barracks_rally(mouse.x, mouse.y);
                         return;
                     }
                     if (typeof game !== 'undefined' && game.placement.is_placing_formation) {
@@ -579,14 +579,15 @@ Item {
                         return;
                     }
                     renderArea.mouse_pan_active = true;
-                    if (typeof game !== 'undefined' && game.on_right_press)
-                        game.on_right_press(mouse.x, mouse.y);
+                    mainWindow.edge_scroll_disabled = true;
+                    if (typeof game !== 'undefined' && game.orders.on_right_press)
+                        game.orders.on_right_press(mouse.x, mouse.y);
                 }
             }
             onDoubleClicked: function (mouse) {
                 if (mouse.button === Qt.RightButton) {
-                    if (typeof game !== 'undefined' && game.on_right_double_click)
-                        game.on_right_double_click(mouse.x, mouse.y);
+                    if (typeof game !== 'undefined' && game.orders.on_right_double_click)
+                        game.orders.on_right_double_click(mouse.x, mouse.y);
                 }
             }
             onReleased: function (mouse) {
@@ -602,20 +603,20 @@ Item {
                     selectionBox.visible = false;
                     if (selectionBox.width > 5 && selectionBox.height > 5) {
                         area_selected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height);
-                        if (typeof game !== 'undefined' && game.on_area_selected)
-                            game.on_area_selected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height, false);
+                        if (typeof game !== 'undefined' && game.orders.on_area_selected)
+                            game.orders.on_area_selected(selectionBox.x, selectionBox.y, selectionBox.x + selectionBox.width, selectionBox.y + selectionBox.height, false);
                     } else {
                         map_clicked(mouse.x, mouse.y);
-                        if (typeof game !== 'undefined' && game.on_click_select)
-                            game.on_click_select(mouse.x, mouse.y, false);
+                        if (typeof game !== 'undefined' && game.orders.on_click_select)
+                            game.orders.on_click_select(mouse.x, mouse.y, false);
                     }
                 } else if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.placement.is_placing_construction) {
                     if (game.placement.on_construction_pointer_released)
                         game.placement.on_construction_pointer_released(mouse.x, mouse.y);
                 }
                 if (mouse.button === Qt.RightButton) {
-                    if (typeof game !== 'undefined' && game.on_right_release)
-                        game.on_right_release(mouse.x, mouse.y);
+                    if (typeof game !== 'undefined' && game.orders.on_right_release)
+                        game.orders.on_right_release(mouse.x, mouse.y);
                     renderArea.mouse_pan_active = false;
                 }
             }
@@ -628,11 +629,11 @@ Item {
     }
 
     CommanderInputLayer {
-        id: commanderInputLayer
+        id: commanderLayer
 
         anchors.fill: parent
-        active: game_view.visible && typeof game !== 'undefined' && game.control_mode === "commander" && !game_view.is_rally_placement()
-        commanderInput: typeof game !== 'undefined' ? game.commander_input : null
+        active: game_view.visible && typeof game !== 'undefined' && game.commander.control_mode === "commander" && !game_view.is_rally_placement()
+        commander: typeof game !== 'undefined' ? game.commander : null
         gameView: game_view
         mainWindowRef: mainWindow
         onInputCaptured: {
@@ -653,7 +654,7 @@ Item {
     Item {
         id: commanderReticle
 
-        visible: typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode !== "rpg" && !game_view.is_rally_placement()
+        visible: typeof game !== 'undefined' && game.commander.control_mode === "commander" && game.commander.game_mode !== "rpg" && !game_view.is_rally_placement()
         width: 22
         height: 22
         anchors.centerIn: parent
@@ -1305,7 +1306,7 @@ Item {
             if (game_view.pan_axis["rts.camera_pan_right"])
                 dx += step;
             if (dx !== 0 || dz !== 0)
-                game.camera_move(dx, dz);
+                game.camera.move(dx, dz);
         }
     }
 }

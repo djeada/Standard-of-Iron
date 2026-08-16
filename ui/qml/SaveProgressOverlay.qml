@@ -11,7 +11,7 @@ Item {
     property bool show_error: false
 
     anchors.fill: parent
-    visible: (typeof game !== 'undefined' && game.save_in_progress) || root.show_error
+    visible: (typeof game !== 'undefined' && game.saves.save_in_progress) || root.show_error
 
     Connections {
         function onSave_completed(slot_name, success, error) {
@@ -26,7 +26,7 @@ Item {
             error_timer.restart();
         }
 
-        target: typeof game !== 'undefined' ? game : null
+        target: typeof game !== 'undefined' ? game.saves : null
     }
 
     Timer {
@@ -58,7 +58,7 @@ Item {
             spacing: Theme.spacingSmall
 
             Label {
-                text: root.show_error ? qsTr("Save failed") : qsTr("Saving \"%1\"").arg(typeof game !== 'undefined' ? game.save_progress_slot : "")
+                text: root.show_error ? qsTr("Save failed") : qsTr("Saving \"%1\"").arg(typeof game !== 'undefined' ? game.saves.save_progress_slot : "")
                 color: Theme.textMain
                 font.pixelSize: Design.Typography.bodyLarge
                 font.bold: true
@@ -67,7 +67,7 @@ Item {
             }
 
             Label {
-                text: root.show_error ? root.last_error : (typeof game !== 'undefined' ? game.save_progress_stage : "")
+                text: root.show_error ? root.last_error : (typeof game !== 'undefined' ? game.saves.save_progress_stage : "")
                 color: root.show_error ? Theme.dangerBr : Theme.textSub
                 font.pixelSize: Design.Typography.body
                 wrapMode: Text.WordWrap
@@ -78,7 +78,7 @@ Item {
                 visible: !root.show_error
                 from: 0
                 to: 100
-                value: typeof game !== 'undefined' ? game.save_progress_percent : 0
+                value: typeof game !== 'undefined' ? game.saves.save_progress_percent : 0
                 Layout.fillWidth: true
             }
 
@@ -88,8 +88,8 @@ Item {
                 visible: !root.show_error
                 Layout.alignment: Qt.AlignRight
                 onClicked: {
-                    if (typeof game !== 'undefined' && game.cancel_active_save)
-                        game.cancel_active_save();
+                    if (typeof game !== 'undefined' && game.saves.cancel_active_save)
+                        game.saves.cancel_active_save();
                 }
             }
         }

@@ -35,8 +35,8 @@ CLIENT_LAYERS = ("app", "ui")
 
 
 FPV_FILES = {
-    "app/core/commander_mode_coordinator.cpp",
-    "app/core/commander_control_controller.cpp",
+    "app/commander/commander_mode_coordinator.cpp",
+    "app/commander/commander_control_controller.cpp",
 }
 
 ORDER_ENTRY_POINTS = re.compile(

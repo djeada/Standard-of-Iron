@@ -10,7 +10,7 @@
 #include <string>
 #include <thread>
 
-#include "app/core/audio_resource_loader.h"
+#include "app/audio/audio_resource_loader.h"
 #include "game/audio/audio_cues.h"
 
 namespace {

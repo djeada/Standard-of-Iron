@@ -16,7 +16,7 @@ Item {
     readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
     property int selection_tick: 0
     property bool has_movable_units: false
-    property bool commander_rpg_mode: typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg"
+    property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.control_mode === "commander" && game.commander.game_mode === "rpg"
     property var commander_status: ({})
     readonly property var economy: typeof game !== 'undefined' && game && game.economy ? game.economy : null
     property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
@@ -34,8 +34,8 @@ Item {
 
     function refresh_command_mode() {
         var actual_mode = "normal";
-        if (has_movable_units && typeof game !== 'undefined' && game.get_selected_units_command_mode)
-            actual_mode = game.get_selected_units_command_mode();
+        if (has_movable_units && typeof game !== 'undefined' && game.orders.command_mode)
+            actual_mode = game.orders.command_mode();
         if (current_command_mode !== actual_mode)
             current_command_mode = actual_mode;
     }
@@ -57,10 +57,10 @@ Item {
         function onSelected_units_changed() {
             selection_tick += 1;
             var has_troops = false;
-            if (typeof game !== 'undefined' && game.has_units_selected && game.has_selected_type) {
+            if (typeof game !== 'undefined' && game.has_units_selected && game.production.has_selected_type) {
                 var troop_types = ["warrior", "archer", "swordsman", "spearman", "healer", "catapult", "ballista", "horse_archer", "horse_swordsman", "horse_spearman", "elephant", "builder", "civilian"];
                 for (var i = 0; i < troop_types.length; i++) {
-                    if (game.has_selected_type(troop_types[i])) {
+                    if (game.production.has_selected_type(troop_types[i])) {
                         has_troops = true;
                         break;
                     }
@@ -90,9 +90,9 @@ Item {
 
         interval: 33
         repeat: true
-        running: typeof game !== 'undefined' && game.control_mode === "commander" && !!game.get_controlled_commander_status
+        running: typeof game !== 'undefined' && game.commander.control_mode === "commander" && !!game.commander.status
         triggeredOnStart: true
-        onTriggered: hud.commander_status = game.get_controlled_commander_status()
+        onTriggered: hud.commander_status = game.commander.status()
     }
 
     Item {
@@ -136,7 +136,7 @@ Item {
         Loader {
             id: bottomPanelLoader
             anchors.fill: parent
-            sourceComponent: typeof game !== 'undefined' && game.control_mode === "commander" ? commanderBottomHudComponent : rtsBottomHudComponent
+            sourceComponent: typeof game !== 'undefined' && game.commander.control_mode === "commander" ? commanderBottomHudComponent : rtsBottomHudComponent
         }
 
         Component {
@@ -253,14 +253,15 @@ Item {
         bottomInset: bottomPanel.height
         topInset: topPanel.height
         status: hud.commander_status
-        engine: typeof game !== 'undefined' ? game : null
+        camera: typeof game !== 'undefined' ? game.camera : null
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked
     }
 
     RpgDamageNumbers {
         id: rpgDamageNumbers
         anchors.fill: parent
-        engine: typeof game !== 'undefined' ? game : null
+        commander: typeof game !== 'undefined' ? game.commander : null
+        camera: typeof game !== 'undefined' ? game.camera : null
 
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked && Design.A11y.damageNumbers
     }
@@ -269,7 +270,8 @@ Item {
         id: combatDamageNumbers
 
         anchors.fill: parent
-        engine: typeof game !== 'undefined' ? game : null
+        activitySource: typeof game !== 'undefined' ? game.activity : null
+        camera: typeof game !== 'undefined' ? game.camera : null
         visible: !hud.commander_rpg_mode && Design.A11y.damageNumbers
     }
 

@@ -7,8 +7,8 @@ import StandardOfIron.Design 1.0 as Design
 Item {
     id: root
 
-    property var maps_model: (typeof game !== "undefined" && game.available_maps) ? game.available_maps : []
-    property bool maps_loading: (typeof game !== "undefined" && game.maps_loading) ? game.maps_loading : false
+    property var maps_model: (typeof game !== "undefined" && game.setup.maps) ? game.setup.maps : []
+    property bool maps_loading: (typeof game !== "undefined" && game.setup.maps_loading) ? game.setup.maps_loading : false
     property int selected_map_index: -1
     property var selected_map_data: null
     property string selected_map_path: ""
@@ -29,8 +29,8 @@ Item {
         })
 
     function refresh_available_nations() {
-        if (typeof game !== "undefined" && game.available_nations)
-            available_nations = game.available_nations;
+        if (typeof game !== "undefined" && game.setup.nations)
+            available_nations = game.setup.nations;
         else
             available_nations = [];
     }
@@ -46,7 +46,7 @@ Item {
 
     function commanders_for_nation(nationId) {
         if (typeof game !== "undefined" && game.available_commanders)
-            return variant_list_to_array(game.available_commanders(nationId || ""));
+            return variant_list_to_array(game.setup.commanders_for_nation(nationId || ""));
         return [];
     }
 
@@ -439,8 +439,8 @@ Item {
             selected_map_path = "";
             players_model.clear();
             refresh_available_nations();
-            if (typeof game !== "undefined" && game.start_loading_maps)
-                game.start_loading_maps();
+            if (typeof game !== "undefined" && game.setup.start_loading_maps)
+                game.setup.start_loading_maps();
         }
     }
     Keys.onPressed: function (event) {

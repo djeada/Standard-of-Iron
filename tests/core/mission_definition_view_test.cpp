@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-#include "app/core/mission_definition_view.h"
+#include "app/mission/mission_definition_view.h"
 #include "game/map/campaign_loader.h"
 
 TEST(MissionDefinitionViewTest, ReadsPlayerCommanderFromTheMissionMap) {

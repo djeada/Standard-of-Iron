@@ -51,12 +51,12 @@ Item {
     }
 
     function refresh_primary_objective() {
-        if (!game_ready() || !game.get_current_mission_objectives) {
+        if (!game_ready() || !game.setup.current_mission_objectives) {
             primaryObjective = "";
             primaryObjectiveCountsWaves = false;
             return;
         }
-        var objectives = game.get_current_mission_objectives();
+        var objectives = game.setup.current_mission_objectives();
         var conditions = objectives && objectives.victory_conditions ? objectives.victory_conditions : [];
         primaryObjective = conditions.length > 0 ? (conditions[0].description || "") : "";
         primaryObjectiveCountsWaves = conditions.length > 0 && conditions[0].type === "survive_waves";
@@ -65,11 +65,11 @@ Item {
     Component.onCompleted: refresh_primary_objective()
 
     Connections {
-        function onCampaign_mission_changed() {
+        function onCurrent_mission_changed() {
             topRoot.refresh_primary_objective();
         }
 
-        target: topRoot.game_ready() ? game : null
+        target: topRoot.game_ready() ? game.setup : null
     }
 
     function resource_amount(kind) {
@@ -220,8 +220,8 @@ Item {
                     checkable: true
                     tone: checked ? "primary" : "secondary"
                     onToggled: {
-                        if (topRoot.game_ready() && game.camera_follow_selection)
-                            game.camera_follow_selection(checked);
+                        if (topRoot.game_ready() && game.camera.follow_selection)
+                            game.camera.follow_selection(checked);
                     }
                 }
 
@@ -229,8 +229,8 @@ Item {
                     iconText: Design.Icons.reset
                     tooltip: qsTr("Reset the camera")
                     onClicked: {
-                        if (topRoot.game_ready() && game.reset_camera)
-                            game.reset_camera();
+                        if (topRoot.game_ready() && game.camera.reset)
+                            game.camera.reset();
                     }
                 }
 
@@ -421,11 +421,11 @@ Item {
             asynchronous: false
 
             Connections {
-                function onMinimap_image_changed() {
+                function onImage_changed() {
                     Qt.callLater(minimapImage.bump_version);
                 }
 
-                target: topRoot.game_ready() ? game : null
+                target: topRoot.game_ready() ? game.minimap : null
             }
 
             Text {
@@ -510,9 +510,9 @@ Item {
                     if (imgX < 0 || imgX >= paintedW || imgY < 0 || imgY >= paintedH)
                         return;
                     if (button === Qt.LeftButton)
-                        game.on_minimap_left_click(imgX, imgY, paintedW, paintedH);
+                        game.minimap.on_left_click(imgX, imgY, paintedW, paintedH);
                     else
-                        game.on_minimap_right_click(imgX, imgY, paintedW, paintedH);
+                        game.minimap.on_right_click(imgX, imgY, paintedW, paintedH);
                 }
 
                 anchors.fill: parent

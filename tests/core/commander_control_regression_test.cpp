@@ -3,14 +3,14 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 namespace {
 
 auto find_repo_root() -> std::filesystem::path {
   auto has_repo_markers = [](const std::filesystem::path& path) {
     return std::filesystem::exists(path / "CMakeLists.txt") &&
-           std::filesystem::exists(path / "app" / "core" /
-                                   "commander_control_controller.cpp") &&
+           std::filesystem::exists(path / "app" / "core" / "game_engine.cpp") &&
            std::filesystem::exists(path / "ui" / "qml" / "GameView.qml");
   };
 
@@ -49,6 +49,20 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   return buffer.str();
 }
 
+auto app_source(const std::filesystem::path& root,
+                std::string_view name) -> std::string {
+  const auto app = root / "app";
+  if (!std::filesystem::is_directory(app)) {
+    return {};
+  }
+  for (const auto& entry : std::filesystem::recursive_directory_iterator(app)) {
+    if (entry.is_regular_file() && entry.path().filename() == name) {
+      return read_text(entry.path());
+    }
+  }
+  return {};
+}
+
 auto contains(const std::string& text, const std::string& needle) -> bool {
   return text.find(needle) != std::string::npos;
 }
@@ -69,24 +83,23 @@ auto occurrences(const std::string& text, const std::string& needle) -> int {
 
 TEST(CommanderControlRegressionTest, CommanderStrafeUsesRightHandedBasis) {
   const auto root = find_repo_root();
-  const auto source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto source = app_source(root, "commander_control_controller.cpp");
   ASSERT_FALSE(source.empty());
 
   EXPECT_TRUE(
       contains(source, "const QVector3D right(-forward.z(), 0.0F, forward.x());"));
 }
 
-TEST(CommanderControlRegressionTest, CommanderMouseLookIsPolledInEngine) {
+TEST(CommanderControlRegressionTest, CommanderMouseLookIsPolledEveryFrame) {
   const auto root = find_repo_root();
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
-  const auto controller_source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto engine_source = app_source(root, "commander_view_model.cpp");
+  const auto controller_source = app_source(root, "commander_control_controller.cpp");
   ASSERT_FALSE(engine_source.empty());
   ASSERT_FALSE(controller_source.empty());
 
-  EXPECT_TRUE(contains(engine_source, "void GameEngine::poll_commander_mouse_look()"));
-  EXPECT_TRUE(contains(engine_source, "poll_commander_mouse_look();"));
+  EXPECT_TRUE(contains(engine_source,
+                       "void CommanderViewModel::update_control_mode(float dt)"));
+  EXPECT_TRUE(contains(engine_source, "m_control.poll_mouse_look(m_context.window);"));
   EXPECT_TRUE(
       contains(controller_source, "void CommanderControlController::poll_mouse_look"));
   EXPECT_TRUE(contains(controller_source, "mouse_move(delta.x(), delta.y());"));
@@ -116,27 +129,26 @@ TEST(CommanderControlRegressionTest, GameViewRestoresInputFocusAcrossModes) {
   EXPECT_TRUE(contains(source, "function is_commander_mode()"));
   EXPECT_TRUE(contains(source, "function input_context()"));
 
-  EXPECT_TRUE(contains(source, "game.commander_key_down(canonical, event.modifiers)"));
+  EXPECT_TRUE(contains(source, "game.commander.key_down(canonical, event.modifiers)"));
   EXPECT_TRUE(contains(source, "InputBindings.canonical_key_for(actionId)"));
-  EXPECT_TRUE(contains(source, "game.toggle_commander_control_mode()"));
+  EXPECT_TRUE(contains(source, "game.commander.toggle_mode()"));
   EXPECT_TRUE(contains(source, "function onControl_mode_changed()"));
   EXPECT_TRUE(contains(source, "game_view.forceActiveFocus();"));
 
-  EXPECT_TRUE(contains(source, "game.commander_input"));
-  EXPECT_TRUE(contains(commander_source, "property var commanderInput"));
+  EXPECT_TRUE(contains(source, "game.commander"));
+  EXPECT_TRUE(contains(commander_source, "property var commander"));
   EXPECT_FALSE(contains(commander_source, "root.game.commander_"));
 }
 
-TEST(CommanderControlRegressionTest,
-     GameViewRoutesRightGestureThroughEngineController) {
+TEST(CommanderControlRegressionTest, GameViewRoutesRightGestureThroughTheOrdersSlice) {
   const auto root = find_repo_root();
   const auto source = read_text(root / "ui" / "qml" / "GameView.qml");
   ASSERT_FALSE(source.empty());
 
-  EXPECT_TRUE(contains(source, "game.on_right_press(mouse.x, mouse.y);"));
-  EXPECT_TRUE(contains(source, "game.on_right_move(mouse.x, mouse.y);"));
-  EXPECT_TRUE(contains(source, "game.on_right_release(mouse.x, mouse.y);"));
-  EXPECT_TRUE(contains(source, "game.on_right_double_click(mouse.x, mouse.y);"));
+  EXPECT_TRUE(contains(source, "game.orders.on_right_press(mouse.x, mouse.y);"));
+  EXPECT_TRUE(contains(source, "game.orders.on_right_move(mouse.x, mouse.y);"));
+  EXPECT_TRUE(contains(source, "game.orders.on_right_release(mouse.x, mouse.y);"));
+  EXPECT_TRUE(contains(source, "game.orders.on_right_double_click(mouse.x, mouse.y);"));
 }
 
 TEST(CommanderControlRegressionTest,
@@ -153,71 +165,64 @@ TEST(CommanderControlRegressionTest,
 TEST(CommanderControlRegressionTest,
      GameEngineInitializesRtsRuntimeStateDuringConstruction) {
   const auto root = find_repo_root();
-  const auto source = read_text(root / "app" / "core" / "game_engine.cpp");
-  ASSERT_FALSE(source.empty());
+  const auto engine_source = app_source(root, "game_engine.cpp");
+  const auto commander_source = app_source(root, "commander_view_model.cpp");
+  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(commander_source.empty());
 
-  EXPECT_TRUE(contains(source, "enter_rts_runtime_mode();"));
-  EXPECT_TRUE(contains(source, "void GameEngine::enter_rts_runtime_mode()"));
-  EXPECT_FALSE(contains(source, "class GameEngine::RuntimeMode"));
-  EXPECT_FALSE(contains(source, "m_control_mode_toggle"));
+  EXPECT_TRUE(contains(engine_source, "apply_game_mode_render_policy();"));
+  EXPECT_TRUE(
+      contains(commander_source, "void CommanderViewModel::enter_rts_runtime_mode()"));
+  EXPECT_FALSE(contains(engine_source, "class GameEngine::RuntimeMode"));
+  EXPECT_FALSE(contains(engine_source, "m_control_mode_toggle"));
 }
 
 TEST(CommanderControlRegressionTest,
-     GameEngineLetsDoubleRightClickOverridePressStartedFormationPlacement) {
+     OrdersLetDoubleRightClickOverridePressStartedFormationPlacement) {
   const auto root = find_repo_root();
-  const auto header = read_text(root / "app" / "core" / "game_engine.h");
-  const auto source = read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto header = app_source(root, "orders_view_model.h");
+  const auto source = app_source(root, "orders_view_model.cpp");
   ASSERT_FALSE(header.empty());
   ASSERT_FALSE(source.empty());
 
   EXPECT_TRUE(contains(header, "bool placement_was_active_on_press = false;"));
   EXPECT_TRUE(contains(header, "bool started_formation_placement = false;"));
-  EXPECT_TRUE(
-      contains(source, "if (m_right_mouse_gesture.placement_was_active_on_press)"));
+  EXPECT_TRUE(contains(source, "if (m_right_mouse.placement_was_active_on_press)"));
   EXPECT_TRUE(contains(source, "if (started_formation_placement) {"));
-  EXPECT_TRUE(contains(source, "m_input_handler->on_formation_cancel();"));
-  EXPECT_TRUE(contains(source, "m_right_mouse_gesture.started_formation_placement ="));
+  EXPECT_TRUE(contains(source, "input->on_formation_cancel();"));
+  EXPECT_TRUE(contains(source, "m_right_mouse.started_formation_placement ="));
 }
 
-TEST(CommanderControlRegressionTest, CommanderRallyKeyIsWiredThroughAdapter) {
+TEST(CommanderControlRegressionTest, CommanderRallyKeyReachesTheCommanderSlice) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
-  const auto adapter_header =
-      read_text(root / "app" / "core" / "commander_input_adapter.h");
-  const auto adapter_source =
-      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
   ASSERT_FALSE(layer_source.empty());
-  ASSERT_FALSE(adapter_header.empty());
-  ASSERT_FALSE(adapter_source.empty());
-  ASSERT_FALSE(engine_header.empty());
+  ASSERT_FALSE(view_model_header.empty());
+  ASSERT_FALSE(view_model_source.empty());
 
   EXPECT_TRUE(contains(layer_source, "case \"commander.rally\":"));
-  EXPECT_TRUE(contains(layer_source, "root.commanderInput.trigger_rally()"));
-  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void trigger_rally();"));
-  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_trigger_rally();"));
-  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_trigger_rally();"));
+  EXPECT_TRUE(contains(layer_source, "root.commander.trigger_rally()"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void trigger_rally();"));
+  EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::trigger_rally()"));
 }
 
-TEST(CommanderControlRegressionTest, CommanderAuraKeyIsWiredThroughAdapter) {
+TEST(CommanderControlRegressionTest, CommanderAuraKeyReachesTheCommanderSlice) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
-  const auto adapter_header =
-      read_text(root / "app" / "core" / "commander_input_adapter.h");
-  const auto adapter_source =
-      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
 
   EXPECT_TRUE(contains(layer_source, "case \"commander.ability_aura\":"));
-  EXPECT_TRUE(contains(layer_source, "root.commanderInput.trigger_aura()"));
-  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void trigger_aura();"));
-  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_trigger_aura();"));
-  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_trigger_aura();"));
+  EXPECT_TRUE(contains(layer_source, "root.commander.trigger_aura()"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void trigger_aura();"));
+  EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::trigger_aura()"));
 }
 
 TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
   const auto root = find_repo_root();
-  const auto source = read_text(root / "app" / "core" / "commander_camera_rig.cpp");
+  const auto source = app_source(root, "commander_camera_rig.cpp");
   ASSERT_FALSE(source.empty());
 
   EXPECT_TRUE(contains(source, "Framing{3.10F, 1.15F, 0.90F, 6.0F, 68.0F, 0.0F}"));
@@ -244,72 +249,71 @@ TEST(CommanderControlRegressionTest, CommanderCameraUsesChaseOffsetView) {
 
 TEST(CommanderControlRegressionTest, CommanderModePreservesAndRestoresRtsSelection) {
   const auto root = find_repo_root();
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
   const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
-  ASSERT_FALSE(engine_header.empty());
-  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(view_model_header.empty());
+  ASSERT_FALSE(view_model_source.empty());
   ASSERT_FALSE(game_view_source.empty());
 
-  EXPECT_TRUE(contains(
-      engine_header, "std::vector<Engine::Core::EntityID> m_saved_rts_selection_ids;"));
-  EXPECT_TRUE(contains(engine_source, "void GameEngine::store_rts_selection()"));
   EXPECT_TRUE(
-      contains(engine_source, "void GameEngine::select_controlled_commander()"));
-  EXPECT_TRUE(contains(engine_source, "void GameEngine::restore_rts_selection()"));
-  EXPECT_TRUE(contains(engine_source, "store_rts_selection();"));
-  EXPECT_TRUE(contains(engine_source, "select_controlled_commander();"));
-  EXPECT_TRUE(contains(engine_source, "restore_rts_selection();"));
+      contains(view_model_header,
+               "std::vector<Engine::Core::EntityID> m_saved_rts_selection_ids;"));
   EXPECT_TRUE(
-      contains(engine_source, "m_commander_mode->select_controlled_commander("));
-  EXPECT_TRUE(contains(game_view_source, "game.cancel_barracks_rally_placement();"));
+      contains(view_model_source, "void CommanderViewModel::store_rts_selection()"));
+  EXPECT_TRUE(contains(view_model_source,
+                       "void CommanderViewModel::select_controlled_commander()"));
+  EXPECT_TRUE(
+      contains(view_model_source, "void CommanderViewModel::restore_rts_selection()"));
+  EXPECT_TRUE(contains(view_model_source, "store_rts_selection();"));
+  EXPECT_TRUE(contains(view_model_source, "select_controlled_commander();"));
+  EXPECT_TRUE(contains(view_model_source, "restore_rts_selection();"));
+  EXPECT_TRUE(contains(view_model_source, "m_mode->select_controlled_commander("));
+  EXPECT_TRUE(contains(game_view_source, "game.commander.cancel_barracks_rally();"));
 }
 
 TEST(CommanderControlRegressionTest, BarracksRallyPlacementUsesDedicatedCursorMode) {
   const auto root = find_repo_root();
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
-  const auto cursor_mode_header = read_text(root / "app" / "models" / "cursor_mode.h");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
+  const auto cursor_mode_header = app_source(root, "cursor_mode.h");
   const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
   const auto hud_source = read_text(root / "ui" / "qml" / "HUDBottom.qml");
   const auto production_panel_source =
       read_text(root / "ui" / "qml" / "ProductionPanel.qml");
-  ASSERT_FALSE(engine_header.empty());
+  ASSERT_FALSE(view_model_header.empty());
   ASSERT_FALSE(cursor_mode_header.empty());
   ASSERT_FALSE(game_view_source.empty());
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(production_panel_source.empty());
 
-  EXPECT_TRUE(
-      contains(engine_header, "Q_INVOKABLE void begin_barracks_rally_placement();"));
-  EXPECT_TRUE(contains(
-      engine_header,
-      "Q_INVOKABLE void confirm_barracks_rally_placement(qreal sx, qreal sy);"));
-  EXPECT_TRUE(
-      contains(engine_header, "Q_INVOKABLE void cancel_barracks_rally_placement();"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void begin_barracks_rally();"));
+  EXPECT_TRUE(contains(view_model_header,
+                       "Q_INVOKABLE void confirm_barracks_rally(qreal sx, qreal sy);"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void cancel_barracks_rally();"));
   EXPECT_TRUE(contains(cursor_mode_header, "PlaceBarracksRally"));
   EXPECT_TRUE(contains(cursor_mode_header, "\"place_barracks_rally\""));
   EXPECT_TRUE(contains(game_view_source, "function is_barracks_rally_placement()"));
   EXPECT_TRUE(contains(game_view_source,
-                       "game.confirm_barracks_rally_placement(mouse.x, mouse.y);"));
-  EXPECT_TRUE(contains(game_view_source, "game.cancel_barracks_rally_placement();"));
+                       "game.commander.confirm_barracks_rally(mouse.x, mouse.y);"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander.cancel_barracks_rally();"));
   EXPECT_TRUE(contains(production_panel_source,
                        "gameView.cursor_mode === \"place_barracks_rally\""));
-  EXPECT_TRUE(contains(hud_source, "game.begin_barracks_rally_placement();"));
+  EXPECT_TRUE(contains(hud_source, "game.commander.begin_barracks_rally();"));
 }
 
 TEST(CommanderControlRegressionTest, SaveAndLoadForceCommanderModeBackToRts) {
   const auto root = find_repo_root();
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto engine_source = app_source(root, "game_engine.cpp");
   ASSERT_FALSE(engine_source.empty());
 
   EXPECT_TRUE(contains(engine_source,
-                       "if (m_control_mode == PlayerControlMode::Commander) {\n"
-                       "    request_exit_commander_control_mode();\n"
+                       "if (m_commander_view_model->active()) {\n"
+                       "    m_commander_view_model->exit_mode();\n"
                        "  }\n\n"
                        "  reset_preload_interaction_state();"));
   EXPECT_TRUE(contains(engine_source,
-                       "if (m_control_mode == PlayerControlMode::Commander) {\n"
-                       "    request_exit_commander_control_mode();\n"
+                       "if (m_commander_view_model->active()) {\n"
+                       "    m_commander_view_model->exit_mode();\n"
                        "  }\n"
                        "  const Game::Systems::RuntimeSnapshot runtime_snapshot = "
                        "to_runtime_snapshot();"));
@@ -323,41 +327,42 @@ TEST(CommanderControlRegressionTest,
       read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
 
   const auto cmake_source = read_text(root / "CMakeLists.txt");
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(commander_hud_source.empty());
   ASSERT_FALSE(cmake_source.empty());
-  ASSERT_FALSE(engine_header.empty());
+  ASSERT_FALSE(view_model_header.empty());
 
   EXPECT_TRUE(contains(hud_source, "Loader {"));
-  EXPECT_TRUE(
-      contains(hud_source,
-               "sourceComponent: typeof game !== 'undefined' && game.control_mode === "
-               "\"commander\" ? commanderBottomHudComponent : rtsBottomHudComponent"));
+  EXPECT_TRUE(contains(
+      hud_source,
+      "sourceComponent: typeof game !== 'undefined' && game.commander.control_mode === "
+      "\"commander\" ? commanderBottomHudComponent : rtsBottomHudComponent"));
   EXPECT_TRUE(contains(hud_source, "HUDBottomCommander {"));
   EXPECT_TRUE(contains(cmake_source, "ui/qml/HUDBottomCommander.qml"));
-  EXPECT_TRUE(contains(commander_hud_source, "game.get_controlled_commander_status"));
-  EXPECT_TRUE(contains(commander_hud_source, "game.commander_trigger_rally"));
-  EXPECT_TRUE(contains(engine_header,
-                       "Q_INVOKABLE [[nodiscard]] QVariantMap "
-                       "get_controlled_commander_status() const;"));
+  EXPECT_TRUE(contains(commander_hud_source, "game.commander.status"));
+  EXPECT_TRUE(contains(commander_hud_source, "game.commander.trigger_rally"));
+  EXPECT_TRUE(contains(view_model_header,
+                       "Q_INVOKABLE [[nodiscard]] QVariantMap status() const;"));
 }
 
 TEST(CommanderControlRegressionTest, FpvCommanderHitOverlayUsesRichDamageBurstData) {
   const auto root = find_repo_root();
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
   const auto hud_source = read_text(root / "ui" / "qml" / "HUD.qml");
   const auto damage_numbers_source =
       read_text(root / "ui" / "qml" / "RpgDamageNumbers.qml");
-  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(view_model_source.empty());
   ASSERT_FALSE(hud_source.empty());
   ASSERT_FALSE(damage_numbers_source.empty());
 
-  EXPECT_TRUE(contains(engine_source, "m[\"damageRatio\"] = static_cast<double>("));
-  EXPECT_TRUE(contains(engine_source, "m[\"lane\"] = ev.lane;"));
-  EXPECT_TRUE(contains(engine_source, "m[\"killingBlow\"] = ev.killing_blow;"));
+  EXPECT_TRUE(
+      contains(view_model_source, "entry[\"damageRatio\"] = static_cast<double>("));
+  EXPECT_TRUE(contains(view_model_source, "entry[\"lane\"] = event.lane;"));
+  EXPECT_TRUE(
+      contains(view_model_source, "entry[\"killingBlow\"] = event.killing_blow;"));
 
-  EXPECT_TRUE(contains(hud_source, "game.control_mode === \"commander\""));
+  EXPECT_TRUE(contains(hud_source, "game.commander.control_mode === \"commander\""));
 
   EXPECT_TRUE(contains(damage_numbers_source, "property real ringSize"));
   EXPECT_TRUE(contains(damage_numbers_source, "damageRatio"));
@@ -376,10 +381,11 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
   ASSERT_FALSE(fpv_overlay_source.empty());
   ASSERT_FALSE(game_view_source.empty());
 
-  EXPECT_TRUE(contains(hud_source,
-                       "property bool commander_rpg_mode: typeof game !== "
-                       "'undefined' && game.control_mode === \"commander\" && "
-                       "game.game_mode === \"rpg\""));
+  EXPECT_TRUE(
+      contains(hud_source,
+               "property bool commander_rpg_mode: typeof game !== "
+               "'undefined' && game.commander.control_mode === \"commander\" && "
+               "game.commander.game_mode === \"rpg\""));
   EXPECT_TRUE(
       contains(hud_source,
                "property bool commander_rally_overlay_blocked: commander_rpg_mode && "
@@ -391,14 +397,15 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
                        "visible: hud.commander_rpg_mode && "
                        "!hud.commander_rally_overlay_blocked"));
 
-  EXPECT_TRUE(contains(game_view_source,
-                       "visible: typeof game !== 'undefined' && game.control_mode === "
-                       "\"commander\" && game.game_mode !== \"rpg\" && "
-                       "!game_view.is_rally_placement()"));
+  EXPECT_TRUE(contains(
+      game_view_source,
+      "visible: typeof game !== 'undefined' && game.commander.control_mode === "
+      "\"commander\" && game.commander.game_mode !== \"rpg\" && "
+      "!game_view.is_rally_placement()"));
 
   EXPECT_TRUE(contains(commander_hud_source,
                        "readonly property bool fpv_mode: typeof game !== "
-                       "'undefined' && game.game_mode === \"rpg\""));
+                       "'undefined' && game.commander.game_mode === \"rpg\""));
   EXPECT_TRUE(contains(commander_hud_source,
                        "text: bottomRoot.fpv_mode ? qsTr(\"ORDERS\") : "
                        "qsTr(\"ABILITIES\")"));
@@ -461,15 +468,14 @@ TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGame
   EXPECT_TRUE(contains(main_qml, "id: commanderCursorOverlay"));
   EXPECT_TRUE(contains(main_qml, "acceptedButtons: Qt.NoButton"));
   EXPECT_TRUE(contains(main_qml, "cursorShape: Qt.BlankCursor"));
-  EXPECT_TRUE(contains(main_qml, "game.control_mode === \"commander\" &&"));
-  EXPECT_TRUE(contains(main_qml, "game.game_mode === \"rpg\" &&"));
+  EXPECT_TRUE(contains(main_qml, "game.commander.control_mode === \"commander\" &&"));
+  EXPECT_TRUE(contains(main_qml, "game.commander.game_mode === \"rpg\" &&"));
   EXPECT_TRUE(contains(main_qml, "!save_game_panel.visible &&"));
 }
 
 TEST(CommanderControlRegressionTest, FpvMovementSetsHasTargetForAnimationSystem) {
   const auto root = find_repo_root();
-  const auto source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto source = app_source(root, "commander_control_controller.cpp");
   ASSERT_FALSE(source.empty());
 
   EXPECT_TRUE(contains(source, "movement->engage_manual_move("));
@@ -480,8 +486,7 @@ TEST(CommanderControlRegressionTest, FpvMovementSetsHasTargetForAnimationSystem)
 
 TEST(CommanderControlRegressionTest, FpvAttackAlwaysTriggersAnimationEvenWithNoTarget) {
   const auto root = find_repo_root();
-  const auto source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto source = app_source(root, "commander_control_controller.cpp");
   const auto action_service = read_text(root / "game" / "systems" / "combat_actions" /
                                         "combat_action_service.cpp");
   ASSERT_FALSE(source.empty());
@@ -523,11 +528,9 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
 
   const auto command_dispatcher =
       read_text(root / "game" / "command" / "command_dispatcher.cpp");
-  const auto game_engine = read_text(root / "app" / "core" / "game_engine.cpp");
-  const auto controller =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
-  const auto commander_mode =
-      read_text(root / "app" / "core" / "commander_mode_coordinator.cpp");
+  const auto game_engine = app_source(root, "game_engine.cpp");
+  const auto controller = app_source(root, "commander_control_controller.cpp");
+  const auto commander_mode = app_source(root, "commander_mode_coordinator.cpp");
   ASSERT_FALSE(combat_rules.empty());
   ASSERT_FALSE(attack_processor.empty());
   ASSERT_FALSE(movement_system.empty());
@@ -573,8 +576,8 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
 
 TEST(CommanderControlRegressionTest, FpvCombatCameraHasNoSyntheticHitShakeOrPunch) {
   const auto root = find_repo_root();
-  const auto rig_src = read_text(root / "app" / "core" / "commander_camera_rig.cpp");
-  const auto rig_hdr = read_text(root / "app" / "core" / "commander_camera_rig.h");
+  const auto rig_src = app_source(root, "commander_camera_rig.cpp");
+  const auto rig_hdr = app_source(root, "commander_camera_rig.h");
   ASSERT_FALSE(rig_src.empty());
   ASSERT_FALSE(rig_hdr.empty());
 
@@ -587,128 +590,96 @@ TEST(CommanderControlRegressionTest, FpvCombatCameraHasNoSyntheticHitShakeOrPunc
       contains(rig_src, "camera.look_at(m_eye_smooth, m_target_smooth, up_final);"));
 }
 
-TEST(CommanderControlRegressionTest, CommanderJumpKeyIsWiredThroughAdapter) {
+TEST(CommanderControlRegressionTest, CommanderJumpKeyReachesTheController) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
   const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
-  const auto adapter_header =
-      read_text(root / "app" / "core" / "commander_input_adapter.h");
-  const auto adapter_source =
-      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
-  const auto controller_header =
-      read_text(root / "app" / "core" / "commander_control_controller.h");
-  const auto controller_source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
+  const auto controller_header = app_source(root, "commander_control_controller.h");
+  const auto controller_source = app_source(root, "commander_control_controller.cpp");
   ASSERT_FALSE(layer_source.empty());
   ASSERT_FALSE(game_view_source.empty());
-  ASSERT_FALSE(adapter_header.empty());
-  ASSERT_FALSE(adapter_source.empty());
-  ASSERT_FALSE(engine_header.empty());
-  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(view_model_header.empty());
+  ASSERT_FALSE(view_model_source.empty());
   ASSERT_FALSE(controller_header.empty());
   ASSERT_FALSE(controller_source.empty());
 
   EXPECT_TRUE(contains(layer_source, "case \"commander.jump\":"));
-  EXPECT_TRUE(contains(layer_source, "root.commanderInput.jump()"));
+  EXPECT_TRUE(contains(layer_source, "root.commander.jump()"));
   EXPECT_TRUE(contains(game_view_source, "case \"commander.jump\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander_jump()"));
-  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void jump();"));
-  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_jump();"));
-  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_jump();"));
-  EXPECT_TRUE(contains(engine_source, "void GameEngine::commander_jump()"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander.jump()"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void jump();"));
+  EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::jump()"));
   EXPECT_TRUE(contains(controller_header, "void request_jump();"));
   EXPECT_TRUE(
       contains(controller_source, "void CommanderControlController::request_jump()"));
 }
 
-TEST(CommanderControlRegressionTest, CommanderCameraToggleIsWiredThroughAdapter) {
+TEST(CommanderControlRegressionTest, CommanderCameraToggleReachesTheController) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
   const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
-  const auto adapter_header =
-      read_text(root / "app" / "core" / "commander_input_adapter.h");
-  const auto adapter_source =
-      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
-  const auto controller_header =
-      read_text(root / "app" / "core" / "commander_control_controller.h");
-  const auto controller_source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
+  const auto controller_header = app_source(root, "commander_control_controller.h");
+  const auto controller_source = app_source(root, "commander_control_controller.cpp");
   ASSERT_FALSE(layer_source.empty());
   ASSERT_FALSE(game_view_source.empty());
-  ASSERT_FALSE(adapter_header.empty());
-  ASSERT_FALSE(adapter_source.empty());
-  ASSERT_FALSE(engine_header.empty());
-  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(view_model_header.empty());
+  ASSERT_FALSE(view_model_source.empty());
   ASSERT_FALSE(controller_header.empty());
   ASSERT_FALSE(controller_source.empty());
 
   EXPECT_TRUE(contains(layer_source, "case \"commander.toggle_camera_mode\":"));
-  EXPECT_TRUE(contains(layer_source, "root.commanderInput.toggle_camera_mode()"));
+  EXPECT_TRUE(contains(layer_source, "root.commander.toggle_camera_mode()"));
   EXPECT_TRUE(contains(game_view_source, "case \"commander.toggle_camera_mode\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander_toggle_camera_mode()"));
-  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void toggle_camera_mode();"));
-  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_toggle_camera_mode();"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander.toggle_camera_mode()"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void toggle_camera_mode();"));
   EXPECT_TRUE(
-      contains(engine_header, "Q_INVOKABLE void commander_toggle_camera_mode();"));
-  EXPECT_TRUE(
-      contains(engine_source, "void GameEngine::commander_toggle_camera_mode()"));
+      contains(view_model_source, "void CommanderViewModel::toggle_camera_mode()"));
   EXPECT_TRUE(contains(controller_header, "void toggle_close_camera_mode("));
   EXPECT_TRUE(contains(controller_source,
                        "void CommanderControlController::toggle_close_camera_mode("));
 }
 
-TEST(CommanderControlRegressionTest, CommanderAbilityKitIsWiredThroughAdapter) {
+TEST(CommanderControlRegressionTest, CommanderAbilityKitReachesTheController) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
   const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
   const auto commander_hud_source =
       read_text(root / "ui" / "qml" / "HUDBottomCommander.qml");
-  const auto adapter_header =
-      read_text(root / "app" / "core" / "commander_input_adapter.h");
-  const auto adapter_source =
-      read_text(root / "app" / "core" / "commander_input_adapter.cpp");
-  const auto engine_header = read_text(root / "app" / "core" / "game_engine.h");
-  const auto engine_source = read_text(root / "app" / "core" / "game_engine.cpp");
-  const auto controller_header =
-      read_text(root / "app" / "core" / "commander_control_controller.h");
+  const auto view_model_header = app_source(root, "commander_view_model.h");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
+  const auto controller_header = app_source(root, "commander_control_controller.h");
   ASSERT_FALSE(layer_source.empty());
   ASSERT_FALSE(game_view_source.empty());
   ASSERT_FALSE(commander_hud_source.empty());
-  ASSERT_FALSE(adapter_header.empty());
-  ASSERT_FALSE(adapter_source.empty());
-  ASSERT_FALSE(engine_header.empty());
-  ASSERT_FALSE(engine_source.empty());
+  ASSERT_FALSE(view_model_header.empty());
+  ASSERT_FALSE(view_model_source.empty());
   ASSERT_FALSE(controller_header.empty());
 
   EXPECT_TRUE(contains(layer_source, "case \"commander.ability_vanguard_rush\":"));
-  EXPECT_TRUE(contains(layer_source, "root.commanderInput.vanguard_rush()"));
+  EXPECT_TRUE(contains(layer_source, "root.commander.vanguard_rush()"));
   EXPECT_TRUE(contains(layer_source, "case \"commander.ability_second_wind\":"));
-  EXPECT_TRUE(contains(layer_source, "root.commanderInput.second_wind()"));
+  EXPECT_TRUE(contains(layer_source, "root.commander.second_wind()"));
   EXPECT_TRUE(contains(game_view_source, "case \"commander.ability_vanguard_rush\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander_vanguard_rush()"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander.vanguard_rush()"));
   EXPECT_TRUE(contains(game_view_source, "case \"commander.ability_second_wind\":"));
-  EXPECT_TRUE(contains(game_view_source, "game.commander_second_wind()"));
+  EXPECT_TRUE(contains(game_view_source, "game.commander.second_wind()"));
   EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"1\""));
   EXPECT_TRUE(contains(commander_hud_source, "\"key\": \"2\""));
-  EXPECT_TRUE(contains(commander_hud_source, "get_controlled_commander_status"));
+  EXPECT_TRUE(contains(commander_hud_source, "game.commander.status"));
   EXPECT_TRUE(contains(commander_hud_source, "cooldown_progress"));
   EXPECT_TRUE(contains(commander_hud_source, "vanguard_rush_cooldown_remaining"));
   EXPECT_TRUE(contains(commander_hud_source, "second_wind_cooldown_remaining"));
   EXPECT_TRUE(contains(commander_hud_source, "shield_bash_cooldown_remaining"));
   EXPECT_TRUE(contains(commander_hud_source, "Vanguard Rush"));
   EXPECT_TRUE(contains(commander_hud_source, "Second Wind"));
-  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void vanguard_rush();"));
-  EXPECT_TRUE(contains(adapter_header, "Q_INVOKABLE void second_wind();"));
-  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_vanguard_rush();"));
-  EXPECT_TRUE(contains(adapter_source, "m_engine->commander_second_wind();"));
-  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_vanguard_rush();"));
-  EXPECT_TRUE(contains(engine_header, "Q_INVOKABLE void commander_second_wind();"));
-  EXPECT_TRUE(contains(engine_source, "void GameEngine::commander_vanguard_rush()"));
-  EXPECT_TRUE(contains(engine_source, "void GameEngine::commander_second_wind()"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void vanguard_rush();"));
+  EXPECT_TRUE(contains(view_model_header, "Q_INVOKABLE void second_wind();"));
+  EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::vanguard_rush()"));
+  EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::second_wind()"));
   EXPECT_TRUE(contains(controller_header, "void request_vanguard_rush();"));
   EXPECT_TRUE(contains(controller_header, "void request_second_wind();"));
 }
@@ -716,10 +687,8 @@ TEST(CommanderControlRegressionTest, CommanderAbilityKitIsWiredThroughAdapter) {
 TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamera) {
   const auto root = find_repo_root();
   const auto component_source = read_text(root / "game" / "core" / "component.h");
-  const auto controller_source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
-  const auto commander_mode_source =
-      read_text(root / "app" / "core" / "commander_mode_coordinator.cpp");
+  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto commander_mode_source = app_source(root, "commander_mode_coordinator.cpp");
   const auto prepare_submission_source =
       read_text(root / "render" / "humanoid" / "prepare_submission.cpp");
   const auto locomotion_manifest_source =
@@ -764,8 +733,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
 TEST(CommanderControlRegressionTest,
      CommanderJumpAllowsAirborneTraversalAcrossGroundObstacles) {
   const auto root = find_repo_root();
-  const auto controller_source =
-      read_text(root / "app" / "core" / "commander_control_controller.cpp");
+  const auto controller_source = app_source(root, "commander_control_controller.cpp");
   const auto movement_source =
       read_text(root / "game" / "systems" / "movement_system.cpp");
   ASSERT_FALSE(controller_source.empty());

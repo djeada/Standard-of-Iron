@@ -5,9 +5,11 @@
 
 #include <vector>
 
-#include "../../game/core/entity.h"
+#include "game/core/entity.h"
 
-class GameEngine;
+namespace App::Core {
+struct ClientContext;
+}
 
 namespace App::Models {
 
@@ -54,7 +56,8 @@ public:
     ActivityStateRole
   };
 
-  explicit SelectedUnitsModel(GameEngine* engine, QObject* parent = nullptr);
+  explicit SelectedUnitsModel(const App::Core::ClientContext& context,
+                              QObject* parent = nullptr);
 
   [[nodiscard]] auto
   rowCount(const QModelIndex& parent = QModelIndex()) const -> int override;
@@ -68,6 +71,6 @@ public slots:
   void refresh();
 
 private:
-  GameEngine* m_engine = nullptr;
+  const App::Core::ClientContext& m_context;
   std::vector<Engine::Core::EntityID> m_ids;
 };

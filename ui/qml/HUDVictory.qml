@@ -25,8 +25,8 @@ Design.IronOutcomeOverlay {
     }
 
     victoryState: victoryOverlay.victory_state()
-    isCampaignMission: victoryOverlay.game_ready() && game.is_campaign_mission
-    campaignCompleted: victoryOverlay.game_ready() && game.campaign_completed === true
+    isCampaignMission: victoryOverlay.game_ready() && game.setup.is_campaign_mission
+    campaignCompleted: victoryOverlay.game_ready() && game.setup.campaign_completed === true
     factionId: victoryOverlay.game_ready() ? game.local_player_nation : ""
 
     onReportRequested: battleSummary.show()

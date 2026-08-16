@@ -1,10 +1,13 @@
-#include "frame_ui_coordinator.h"
+#include "app/core/frame_ui_coordinator.h"
 
 #include <algorithm>
 #include <vector>
 
-#include "../controllers/command_controller.h"
-#include "../models/cursor_manager.h"
+#include "app/economy/production_manager.h"
+#include "app/input/cursor_manager.h"
+#include "app/orders/command_controller.h"
+#include "app/orders/order_markers.h"
+#include "app/orders/rts_action_model.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -15,8 +18,6 @@
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
-#include "order_markers.h"
-#include "production_manager.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/commander_aura_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
@@ -30,7 +31,6 @@
 #include "render/geom/range_rings.h"
 #include "render/geom/target_focus_rings.h"
 #include "render/scene_renderer.h"
-#include "rts_action_model.h"
 
 namespace {
 
@@ -286,13 +286,14 @@ void render_effects(const RenderEffectsContext& context,
                                            context.commander_rally_preview_pos);
 
   if (context.command_controller != nullptr &&
-      context.command_controller->is_placing_formation()) {
+      context.command_controller->formation().is_placing_formation()) {
     Render::GL::FormationPlacementInfo placement;
-    placement.position = context.command_controller->get_formation_placement_position();
+    placement.position =
+        context.command_controller->formation().get_formation_placement_position();
     placement.position.setY(Game::Map::TerrainService::instance().get_terrain_height(
         placement.position.x(), placement.position.z()));
     placement.angle_degrees =
-        context.command_controller->get_formation_facing_degrees();
+        context.command_controller->formation().get_formation_facing_degrees();
     placement.active = true;
 
     const auto* nation =
@@ -314,7 +315,7 @@ void render_effects(const RenderEffectsContext& context,
       }
     }
 
-    const auto& preview = context.command_controller->formation_preview();
+    const auto& preview = context.command_controller->formation().formation_preview();
     placement.slot_markers.reserve(preview.slot_list.size());
     for (const auto& slot : preview.slot_list) {
       Render::GL::FormationSlotMarker marker;
@@ -350,7 +351,7 @@ auto prune_selection_action_context(const SelectionPruneContext& context)
   }
 
   if (context.command_controller != nullptr &&
-      context.command_controller->is_placing_formation() &&
+      context.command_controller->formation().is_placing_formation() &&
       !state_enabled(context.hud_action_states, QStringLiteral("formation"))) {
     effects.cancel_formation = true;
   }

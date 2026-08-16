@@ -1,9 +1,9 @@
-#include "graphics_settings_proxy.h"
+#include "app/models/graphics_settings_proxy.h"
 
 #include <QDebug>
 
-#include "../../render/graphics_settings.h"
-#include "../core/user_settings.h"
+#include "app/core/user_settings.h"
+#include "render/graphics_settings.h"
 
 namespace App::Models {
 
