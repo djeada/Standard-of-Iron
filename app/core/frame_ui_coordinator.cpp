@@ -16,6 +16,7 @@
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
+#include "order_markers.h"
 #include "production_manager.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/commander_aura_renderer.h"
@@ -84,6 +85,86 @@ void render_attack_targeting(
   Render::GL::render_attack_target_markers(renderer, resources, visuals);
 }
 
+constexpr float k_order_marker_base_radius = 0.9F;
+constexpr float k_order_marker_shrink = 0.35F;
+constexpr float k_order_marker_thickness = 0.12F;
+constexpr float k_order_marker_lift = 0.04F;
+constexpr float k_order_marker_alpha = 0.95F;
+
+const QVector3D k_order_move_color(0.55F, 0.95F, 0.55F);
+const QVector3D k_order_attack_color(1.0F, 0.32F, 0.22F);
+const QVector3D k_order_guard_color(0.45F, 0.70F, 1.0F);
+const QVector3D k_order_patrol_color(0.35F, 1.0F, 0.55F);
+const QVector3D k_order_neutral_color(0.95F, 0.90F, 0.70F);
+const QVector3D k_order_rejected_color(0.72F, 0.72F, 0.74F);
+
+auto order_marker_color(App::Core::OrderKind kind, bool rejected) -> QVector3D {
+  if (rejected) {
+    return k_order_rejected_color;
+  }
+  switch (kind) {
+  case App::Core::OrderKind::Move:
+    return k_order_move_color;
+  case App::Core::OrderKind::Attack:
+    return k_order_attack_color;
+  case App::Core::OrderKind::Guard:
+  case App::Core::OrderKind::Hold:
+    return k_order_guard_color;
+  case App::Core::OrderKind::Patrol:
+    return k_order_patrol_color;
+  default:
+    return k_order_neutral_color;
+  }
+}
+
+auto order_marker_pattern(App::Core::OrderKind kind,
+                          bool rejected) -> Game::Accessibility::TeamPattern {
+  if (rejected) {
+    return Game::Accessibility::TeamPattern::Dashed;
+  }
+  switch (kind) {
+  case App::Core::OrderKind::Attack:
+    return Game::Accessibility::TeamPattern::DoubleRing;
+  case App::Core::OrderKind::Guard:
+  case App::Core::OrderKind::Hold:
+    return Game::Accessibility::TeamPattern::Notched;
+  case App::Core::OrderKind::Patrol:
+    return Game::Accessibility::TeamPattern::Dotted;
+  default:
+    return Game::Accessibility::TeamPattern::Solid;
+  }
+}
+
+void render_order_markers(Render::GL::Renderer* renderer,
+                          const std::vector<App::Core::OrderMarker>& markers) {
+  if (renderer == nullptr || markers.empty()) {
+    return;
+  }
+  const auto& terrain = renderer->world_view().terrain_or_empty();
+  for (const auto& marker : markers) {
+    const float t = std::clamp(marker.progress(), 0.0F, 1.0F);
+    const float ease = 1.0F - (1.0F - t) * (1.0F - t);
+
+    Render::GL::GroundMarkerCmd ring;
+    const QVector3D grounded = terrain.resolve_surface_world_position(
+        marker.position.x(), marker.position.z(), 0.0F, marker.position.y());
+    ring.center = QVector3D(
+        marker.position.x(), grounded.y() + k_order_marker_lift, marker.position.z());
+
+    const float base_radius = marker.target != 0 ? k_order_marker_base_radius * 1.15F
+                                                 : k_order_marker_base_radius;
+    ring.outer_radius = marker.rejected
+                            ? base_radius * (1.0F + 0.25F * ease)
+                            : base_radius * (1.0F - k_order_marker_shrink * ease);
+    ring.thickness = k_order_marker_thickness * (1.0F - 0.4F * ease);
+    ring.color = order_marker_color(marker.kind, marker.rejected);
+    ring.alpha = k_order_marker_alpha * (1.0F - ease);
+    ring.pattern = order_marker_pattern(marker.kind, marker.rejected);
+    ring.focused = !marker.rejected && marker.kind == App::Core::OrderKind::Attack;
+    renderer->ground_marker(ring);
+  }
+}
+
 } // namespace
 
 namespace App::Core::FrameUiCoordinator {
@@ -134,6 +215,10 @@ void render_effects(const RenderEffectsContext& context,
   if (context.attack_range_rings != nullptr) {
     Render::GL::render_attack_range_rings(
         context.renderer, res, *context.attack_range_rings);
+  }
+
+  if (context.order_markers != nullptr) {
+    render_order_markers(context.renderer, *context.order_markers);
   }
 
   std::optional<QVector3D> preview_waypoint;

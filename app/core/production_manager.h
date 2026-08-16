@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "app/core/order_feedback.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/wall_plan_service.h"
 
@@ -99,6 +100,7 @@ signals:
   void construction_preview_valid_changed();
   void construction_preview_summary_changed();
   void construction_placement_rejected(const QString& reason);
+  void order_feedback(const App::Core::OrderOutcome& outcome);
 
 private:
   std::vector<Engine::Core::EntityID> collect_available_builders();

@@ -1,6 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <numbers>
+#include <vector>
 
 #include "app/controllers/command_controller.h"
 #include "app/core/input_command_handler.h"
@@ -84,6 +85,18 @@ protected:
     return screen_pos;
   }
 
+  auto capture_feedback() -> std::vector<App::Core::OrderOutcome>& {
+    feedback.clear();
+    QObject::connect(command_controller.get(),
+                     &App::Controllers::CommandController::order_feedback,
+                     command_controller.get(),
+                     [this](const App::Core::OrderOutcome& outcome) {
+                       feedback.push_back(outcome);
+                     });
+    return feedback;
+  }
+
+  std::vector<App::Core::OrderOutcome> feedback;
   Engine::Core::World world;
   Game::Systems::SelectionSystem* selection_system = nullptr;
   Game::Systems::PickingService picking_service;
@@ -503,6 +516,128 @@ TEST_F(InputCommandHandlerTest, UntouchedPlacementFacesAwayFromTheUnitsThatMarch
   const auto* transform = first->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
   EXPECT_NEAR(transform->desired_yaw, march_degrees, 0.5F);
+}
+
+TEST_F(InputCommandHandlerTest, RightPressAttackPublishesFeedbackForTheClickedEnemy) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  auto* bystander = create_unit(3.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  ASSERT_NE(bystander, nullptr);
+  selection_system->select_unit(unit->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_TRUE(
+      input_handler->on_right_press(enemy_screen.x(), enemy_screen.y(), 1, viewport));
+
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().accepted());
+  EXPECT_EQ(seen.front().kind, App::Core::OrderKind::Attack);
+  EXPECT_EQ(seen.front().target, enemy->get_id());
+  EXPECT_NE(seen.front().target, bystander->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, RightPressOnEnemyWithBuildersOnlyIsRefusedAndConsumed) {
+  auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(builder, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(builder->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  EXPECT_TRUE(
+      input_handler->on_right_press(enemy_screen.x(), enemy_screen.y(), 1, viewport));
+  EXPECT_FALSE(input_handler->is_placing_formation());
+
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().rejected());
+  EXPECT_EQ(seen.front().kind, App::Core::OrderKind::Attack);
+  EXPECT_EQ(seen.front().target, enemy->get_id());
+  EXPECT_FALSE(seen.front().reason.isEmpty());
+  EXPECT_EQ(builder->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+  auto* movement = builder->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_FALSE(movement->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest, RightClickOnGroundPublishesAMoveWithTheDestination) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+  auto& seen = capture_feedback();
+
+  QVector3D const destination(4.0F, 0.0F, 2.0F);
+  QPointF const ground_screen = world_to_screen(destination);
+  input_handler->on_right_click(ground_screen.x(), ground_screen.y(), 1, viewport);
+
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().accepted());
+  EXPECT_EQ(seen.front().kind, App::Core::OrderKind::Move);
+  ASSERT_TRUE(seen.front().has_destination);
+  EXPECT_NEAR(seen.front().destination.x(), destination.x(), 0.25F);
+  EXPECT_NEAR(seen.front().destination.z(), destination.z(), 0.25F);
+}
+
+TEST_F(InputCommandHandlerTest, RightClickWithEmptySelectionPublishesNothing) {
+  auto& seen = capture_feedback();
+
+  input_handler->on_right_click(400.0, 300.0, 1, viewport);
+  input_handler->on_minimap_right_click(QVector3D(2.0F, 0.0F, 2.0F), 1);
+  EXPECT_FALSE(input_handler->on_right_press(400.0, 300.0, 1, viewport));
+
+  EXPECT_TRUE(seen.empty());
+}
+
+TEST_F(InputCommandHandlerTest, AttackModeClickPublishesFeedbackAndResetsTheCursor) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(unit->get_id());
+  cursor_manager.set_mode(CursorMode::Attack);
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  input_handler->on_attack_click(enemy_screen.x(), enemy_screen.y(), viewport);
+
+  EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().accepted());
+  EXPECT_EQ(seen.front().target, enemy->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, AttackModeClickOnNothingExplainsTheRefusal) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+  cursor_manager.set_mode(CursorMode::Attack);
+  auto& seen = capture_feedback();
+
+  QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
+  input_handler->on_attack_click(ground_screen.x(), ground_screen.y(), viewport);
+
+  EXPECT_EQ(cursor_manager.mode(), CursorMode::Normal);
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().rejected());
+  EXPECT_FALSE(seen.front().reason.isEmpty());
+  EXPECT_EQ(unit->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+}
+
+TEST_F(InputCommandHandlerTest, MinimapRightClickPublishesMoveFeedback) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+  auto& seen = capture_feedback();
+
+  input_handler->on_minimap_right_click(QVector3D(5.0F, 0.0F, 5.0F), 1);
+
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().accepted());
+  EXPECT_EQ(seen.front().kind, App::Core::OrderKind::Move);
+  EXPECT_EQ(seen.front().destination, QVector3D(5.0F, 0.0F, 5.0F));
 }
 
 } // namespace

@@ -9,8 +9,26 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ## [Unreleased]
 
+### Added
+
+- **Every order now answers back.** Attack, move, guard, patrol, hold, stop,
+  build, gather, deliver, repair and rally-point orders — whether issued through
+  the command buttons or a right-click — go through one submission path that
+  reports accepted or rejected with the target or destination and a
+  player-readable reason. An accepted order drops a fading ring on the ground
+  (or on the target, following it), plays its cue and shows a short label next
+  to the cursor; a refused one plays the error cue, shows a dashed grey ring
+  and says why (`No enemy under the cursor.`, `The selected units cannot
+attack.`, `That target is already gone.`, …) instead of silently doing
+  nothing. Build and gather placement rejections now use the same in-HUD
+  notice rather than a modal error dialog.
+
 ### Fixed
 
+- Right-click attacks gave no visible or audible feedback at all, and the
+  left-click attack-mode path tried to re-pick its target at screen position
+  (0, 0), so the attack arrow could land on an unrelated unit. Both paths now
+  use the unit that was actually clicked.
 - **The sanitizer lanes had never run a test.** CTest discovers the test names
   by running each binary once with `--gtest_list_tests`, under a five-second
   budget. An AddressSanitizer build of the render suite needs about twenty-three
