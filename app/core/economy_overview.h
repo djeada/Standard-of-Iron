@@ -10,10 +10,19 @@ namespace Engine::Core {
 class World;
 }
 
+namespace Game::Systems {
+class NationRegistry;
+class PlayerResourceRegistry;
+} // namespace Game::Systems
+
 namespace App::Core {
 
 struct EconomyOverviewRequest {
   Engine::Core::World* world = nullptr;
+
+  const Game::Systems::NationRegistry* nations = nullptr;
+  Game::Systems::PlayerResourceRegistry* resources = nullptr;
+
   int owner_id = 0;
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
   int population_cap = 0;

@@ -9,8 +9,10 @@
 #include <QtQuickTest/quicktest.h>
 
 #include "app/core/user_settings.h"
+#include "ui/edge_scroll.h"
 #include "ui/game_speeds.h"
 #include "ui/icon_art.h"
+#include "ui/input_bindings.h"
 #include "ui/preferences.h"
 #include "ui/theme.h"
 
@@ -79,6 +81,10 @@ public slots:
           uri, 1, 0, "IconArt", &IconArtLibrary::create);
       qmlRegisterSingletonType<GameSpeeds>(
           uri, 1, 0, "GameSpeeds", &GameSpeeds::create);
+      qmlRegisterSingletonType<EdgeScroll>(
+          uri, 1, 0, "EdgeScroll", &EdgeScroll::create);
+      qmlRegisterSingletonType<InputBindings>(
+          uri, 1, 0, "InputBindings", &InputBindings::create);
     }
     qmlRegisterSingletonType<GlyphProbe>(
         "StandardOfIron.TestSupport", 1, 0, "GlyphProbe", &GlyphProbe::create);

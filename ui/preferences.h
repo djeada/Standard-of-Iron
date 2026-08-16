@@ -30,6 +30,8 @@ class UiPreferences : public QObject {
                  set_camera_motion_scale NOTIFY camera_motion_scale_changed)
   Q_PROPERTY(bool damageNumbers READ damage_numbers WRITE set_damage_numbers NOTIFY
                  damage_numbers_changed)
+  Q_PROPERTY(bool cameraLegendSeen READ camera_legend_seen WRITE set_camera_legend_seen
+                 NOTIFY camera_legend_seen_changed)
   Q_PROPERTY(qreal screenEffectIntensity READ screen_effect_intensity WRITE
                  set_screen_effect_intensity NOTIFY screen_effect_intensity_changed)
   Q_PROPERTY(QStringList colorVisionModes READ color_vision_modes CONSTANT)
@@ -60,6 +62,7 @@ public:
     return m_camera_motion_scale;
   }
   [[nodiscard]] auto damage_numbers() const -> bool { return m_damage_numbers; }
+  [[nodiscard]] auto camera_legend_seen() const -> bool { return m_camera_legend_seen; }
   [[nodiscard]] auto screen_effect_intensity() const -> qreal {
     return m_screen_effect_intensity;
   }
@@ -82,6 +85,7 @@ public:
   void set_edge_scroll_sensitivity(qreal sensitivity);
   void set_camera_motion_scale(qreal scale);
   void set_damage_numbers(bool enabled);
+  void set_camera_legend_seen(bool seen);
   void set_screen_effect_intensity(qreal intensity);
 
   Q_INVOKABLE void reset_to_defaults();
@@ -97,6 +101,7 @@ signals:
   void edge_scroll_sensitivity_changed();
   void camera_motion_scale_changed();
   void damage_numbers_changed();
+  void camera_legend_seen_changed();
   void screen_effect_intensity_changed();
 
 private:
@@ -114,6 +119,7 @@ private:
   qreal m_edge_scroll_sensitivity;
   qreal m_camera_motion_scale;
   bool m_damage_numbers;
+  bool m_camera_legend_seen;
   qreal m_screen_effect_intensity;
 };
 

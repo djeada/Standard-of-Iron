@@ -135,6 +135,22 @@ TEST_F(UiPreferencesTest, GameplayAccessibilityOptionsRoundTripThroughSettings) 
   EXPECT_TRUE(UserSettings::load_ui_team_patterns());
 }
 
+TEST_F(UiPreferencesTest, TheCameraLegendIsShownOnceAndThenRemembered) {
+  auto* prefs = UiPreferences::instance();
+
+  EXPECT_FALSE(prefs->camera_legend_seen())
+      << "a fresh profile should be offered the camera legend";
+  EXPECT_FALSE(UserSettings::load_ui_camera_legend_seen());
+
+  prefs->set_camera_legend_seen(true);
+
+  EXPECT_TRUE(prefs->camera_legend_seen());
+  EXPECT_TRUE(UserSettings::load_ui_camera_legend_seen());
+
+  prefs->reset_to_defaults();
+  EXPECT_FALSE(prefs->camera_legend_seen());
+}
+
 TEST_F(UiPreferencesTest, SlidersAreClampedToTheirSupportedRange) {
   auto* prefs = UiPreferences::instance();
 

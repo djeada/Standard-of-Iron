@@ -14,9 +14,12 @@ Item {
     readonly property bool ultraCompact: width < 620
     readonly property var speedOptions: GameSpeeds.options
 
+    property bool camera_legend_visible: false
+
     signal pause_toggled
     signal speed_changed(real speed)
     signal help_requested
+    signal camera_legend_toggled
 
     function game_ready() {
         return typeof game !== 'undefined' && game !== null;
@@ -230,6 +233,16 @@ Item {
                 }
 
                 Design.IronIconButton {
+                    iconText: Design.Icons.objective
+                    tooltip: topRoot.camera_legend_visible ? qsTr("Hide the camera controls") : qsTr("Show how to move the camera")
+                    accessibleName: qsTr("Camera controls")
+                    checkable: true
+                    checked: topRoot.camera_legend_visible
+                    tone: checked ? "primary" : "secondary"
+                    onToggled: topRoot.camera_legend_toggled()
+                }
+
+                Design.IronIconButton {
                     iconText: "?"
                     tooltip: qsTr("Open the field manual (help)")
                     onClicked: topRoot.help_requested()
@@ -248,7 +261,7 @@ Item {
 
                     anchors.centerIn: parent
                     spacing: Design.Metrics.space8
-                    width: Math.min(objectiveIcon.implicitWidth + spacing + objectiveText.implicitWidth, objectiveZone.width)
+                    width: Math.min(objectiveGlyph.implicitWidth + spacing + objectiveText.implicitWidth, objectiveZone.width)
                     visible: topRoot.primaryObjective !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
 
                     Text {

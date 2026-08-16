@@ -42,6 +42,7 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_edge_scroll_sensitivity(UserSettings::load_ui_edge_scroll_sensitivity())
     , m_camera_motion_scale(UserSettings::load_ui_camera_motion_scale())
     , m_damage_numbers(UserSettings::load_ui_damage_numbers())
+    , m_camera_legend_seen(UserSettings::load_ui_camera_legend_seen())
     , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity()) {
 
   Game::Accessibility::TeamIdentity::set_palette_variant_from_mode(
@@ -221,6 +222,16 @@ void UiPreferences::set_camera_motion_scale(qreal scale) {
   emit camera_motion_scale_changed();
 }
 
+void UiPreferences::set_camera_legend_seen(bool seen) {
+  if (seen == m_camera_legend_seen) {
+    return;
+  }
+
+  m_camera_legend_seen = seen;
+  UserSettings::save_ui_camera_legend_seen(seen);
+  emit camera_legend_seen_changed();
+}
+
 void UiPreferences::set_damage_numbers(bool enabled) {
   if (enabled == m_damage_numbers) {
     return;
@@ -257,5 +268,6 @@ void UiPreferences::reset_to_defaults() {
   set_edge_scroll_sensitivity(UserSettings::kDefaultEdgeScrollSensitivity);
   set_camera_motion_scale(UserSettings::kDefaultCameraMotionScale);
   set_damage_numbers(true);
+  set_camera_legend_seen(false);
   set_screen_effect_intensity(UserSettings::kDefaultScreenEffectIntensity);
 }

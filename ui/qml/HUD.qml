@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
 
 Item {
@@ -20,8 +21,11 @@ Item {
     readonly property var economy: typeof game !== 'undefined' && game && game.economy ? game.economy : null
     property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
 
+    property bool camera_legend_visible: false
+
     signal pause_toggled
     signal speed_changed(real speed)
+    signal camera_settings_requested
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
     signal return_to_main_menu_requested
@@ -37,8 +41,16 @@ Item {
     }
 
     onVisibleChanged: {
-        if (visible)
-            hud_became_visible();
+        if (!visible)
+            return;
+        if (!Core.UiPreferences.cameraLegendSeen && !hud.commander_rpg_mode)
+            hud.camera_legend_visible = true;
+        hud_became_visible();
+    }
+
+    onCamera_legend_visibleChanged: {
+        if (camera_legend_visible)
+            Core.UiPreferences.cameraLegendSeen = true;
     }
 
     Connections {
@@ -106,6 +118,8 @@ Item {
             }
             onEconomy_help_requested: economyHelpPanel.visible = true
             onHelp_requested: hud.help_requested()
+            camera_legend_visible: hud.camera_legend_visible
+            onCamera_legend_toggled: hud.camera_legend_visible = !hud.camera_legend_visible
         }
     }
 
@@ -175,6 +189,22 @@ Item {
         economy: hud.economy
         visible: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
         onHelp_requested: economyHelpPanel.visible = true
+    }
+
+    CameraLegend {
+        id: cameraLegend
+
+        anchors.right: parent.right
+        anchors.rightMargin: Design.Metrics.hudZoneMargin
+        anchors.top: topPanel.bottom
+        anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8
+
+        visible: hud.camera_legend_visible && !hud.commander_rpg_mode
+        onDismissed: hud.camera_legend_visible = false
+        onOpen_settings_requested: {
+            hud.camera_legend_visible = false;
+            hud.camera_settings_requested();
+        }
     }
 
     EconomyHelpPanel {

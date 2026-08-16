@@ -693,6 +693,17 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ${GENERATED_CAMPAIGN_MAP_QRC}
     )
 
+    # qt6_add_qml_module writes the module's qmldir itself, and a `pragma
+    # Singleton` file only becomes a singleton there when the source file carries
+    # this property. Without it the type registers as an ordinary component and
+    # every `StyleGuide.x` style reference silently evaluates to undefined.
+    set_source_files_properties(
+        ui/qml/StyleGuide.qml
+        ui/qml/EconomyGuide.qml
+        ui/qml/CameraGuide.qml
+        PROPERTIES QT_QML_SINGLETON_TYPE TRUE
+    )
+
     qt6_add_qml_module(standard_of_iron
         URI StandardOfIron
         VERSION 1.0
@@ -714,6 +725,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/StyledComboBox.qml
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
+            ui/qml/CameraGuide.qml
+            ui/qml/CameraLegend.qml
             ui/qml/EconomyGuide.qml
             ui/qml/EconomyCoach.qml
             ui/qml/EconomyHelpPanel.qml
