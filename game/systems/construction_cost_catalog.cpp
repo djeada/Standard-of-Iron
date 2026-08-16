@@ -1,10 +1,132 @@
 #include "construction_cost_catalog.h"
 
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QLoggingCategory>
+
+#include <string>
+#include <unordered_map>
+
+#include "../units/troop_catalog_loader.h"
 #include "wall_network_service.h"
 
 namespace Game::Systems {
 
+namespace {
+
+Q_LOGGING_CATEGORY(logger, "soi.construction.catalog")
+
+struct CatalogEntry {
+  bool has_costs = false;
+  ResourceAmounts costs;
+  bool has_build_time = false;
+  float build_time = 0.0F;
+};
+
+auto loaded_catalog() -> std::unordered_map<std::string, CatalogEntry>& {
+  static std::unordered_map<std::string, CatalogEntry> catalog;
+  return catalog;
+}
+
+auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo;
+auto builtin_build_time(std::string_view item_type) -> float;
+
+} // namespace
+
 auto construction_cost_info(std::string_view item_type) -> ConstructionCostInfo {
+  const auto& catalog = loaded_catalog();
+  if (const auto it = catalog.find(std::string(item_type));
+      it != catalog.end() && it->second.has_costs) {
+    return ConstructionCostInfo{.resource_costs = it->second.costs};
+  }
+  return builtin_cost_info(item_type);
+}
+
+auto construction_build_time(std::string_view item_type) -> float {
+  const auto& catalog = loaded_catalog();
+  if (const auto it = catalog.find(std::string(item_type));
+      it != catalog.end() && it->second.has_build_time) {
+    return it->second.build_time;
+  }
+  return builtin_build_time(item_type);
+}
+
+auto load_construction_catalog(const QString& path) -> bool {
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    qCWarning(logger) << "cannot open construction catalog" << path;
+    return false;
+  }
+  QJsonParseError parse_error{};
+  const auto document = QJsonDocument::fromJson(file.readAll(), &parse_error);
+  if (parse_error.error != QJsonParseError::NoError || !document.isObject()) {
+    qCWarning(logger) << "construction catalog" << path
+                      << "is not a JSON object:" << parse_error.errorString();
+    return false;
+  }
+  const auto items = document.object().value(QLatin1String("items"));
+  if (!items.isObject()) {
+    qCWarning(logger) << "construction catalog" << path << "has no 'items' object";
+    return false;
+  }
+
+  std::unordered_map<std::string, CatalogEntry> parsed;
+  const auto items_object = items.toObject();
+  for (auto it = items_object.begin(); it != items_object.end(); ++it) {
+    if (!it.value().isObject()) {
+      qCWarning(logger) << "construction catalog item" << it.key()
+                        << "is not an object";
+      return false;
+    }
+    const auto item = it.value().toObject();
+    CatalogEntry entry;
+    if (const auto costs = item.value(QLatin1String("costs")); costs.isObject()) {
+      entry.has_costs = true;
+      const auto costs_object = costs.toObject();
+      for (auto cost = costs_object.begin(); cost != costs_object.end(); ++cost) {
+        ResourceType type{};
+        if (!resource_type_from_key(cost.key(), type) || !cost.value().isDouble()) {
+          qCWarning(logger) << "construction catalog item" << it.key()
+                            << "has an unknown or non-numeric cost" << cost.key();
+          return false;
+        }
+        entry.costs.set(type, cost.value().toInt());
+      }
+    }
+    if (const auto build_time = item.value(QLatin1String("build_time"));
+        build_time.isDouble()) {
+      entry.has_build_time = true;
+      entry.build_time = static_cast<float>(build_time.toDouble());
+      if (entry.build_time <= 0.0F) {
+        qCWarning(logger) << "construction catalog item" << it.key()
+                          << "has a non-positive build_time";
+        return false;
+      }
+    }
+    parsed.emplace(it.key().toStdString(), entry);
+  }
+  loaded_catalog() = std::move(parsed);
+  return true;
+}
+
+auto load_default_construction_catalog() -> bool {
+  const QString path = Game::Units::TroopCatalogLoader::resolve_data_path(
+      "assets/data/construction/catalog.json");
+  if (path.isEmpty()) {
+    qCWarning(logger) << "construction catalog not found; using the built-in table";
+    return false;
+  }
+  return load_construction_catalog(path);
+}
+
+void reset_construction_catalog() {
+  loaded_catalog().clear();
+}
+
+namespace {
+
+auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo {
   ConstructionCostInfo info;
 
   if (item_type == "catapult") {
@@ -58,5 +180,33 @@ auto construction_cost_info(std::string_view item_type) -> ConstructionCostInfo 
 
   return info;
 }
+
+auto builtin_build_time(std::string_view item_type) -> float {
+  if (item_type == "temple") {
+    return 18.0F;
+  }
+  if (item_type == "catapult") {
+    return 15.0F;
+  }
+  if (item_type == "ballista") {
+    return 12.0F;
+  }
+  if (item_type == "defense_tower") {
+    return 20.0F;
+  }
+  if (item_type == "wall_segment") {
+    return 8.0F;
+  }
+  if (item_type == "wall_gate") {
+    return 12.0F;
+  }
+  if (item_type == "cut_tree" || item_type == "collect" ||
+      item_type == "collect_stone" || item_type == "collect_iron_ore") {
+    return 6.0F;
+  }
+  return 10.0F;
+}
+
+} // namespace
 
 } // namespace Game::Systems

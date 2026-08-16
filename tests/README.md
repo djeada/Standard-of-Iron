@@ -45,7 +45,7 @@ appears in this directory's source lists, and if `scripts/run-tests.sh` and
 no AI, no save stack, no runtime, no camera — so a gameplay file that starts
 needing any of them breaks its link step.
 `tests/architecture/layering_test.cpp` says the same thing about includes,
-`module_boundary_test.cpp` covers the module map inside `game_sim`, and
+`module_boundary_test.cpp` covers the module map across the kernel targets, and
 `documentation_accuracy_test.cpp` checks that the README and
 `docs/ARCHITECTURE.md` still describe the code that exists.
 

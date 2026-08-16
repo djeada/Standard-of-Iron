@@ -37,16 +37,24 @@ TEST(TimeOfDayTest, LightingForMorningReturnsLowSun) {
 TEST(TimeOfDayTest, LightingForAfternoonSitsLowerInTheSkyThanDay) {
   const auto day = lighting_for_time_of_day(TimeOfDay::Day);
   const auto afternoon = lighting_for_time_of_day(TimeOfDay::Afternoon);
+
   EXPECT_LT(afternoon.primary_direction.y(), day.primary_direction.y());
-  EXPECT_FLOAT_EQ(afternoon.ambient_intensity, 0.34F);
+  EXPECT_FLOAT_EQ(afternoon.ambient_intensity, 0.36F);
   EXPECT_NEAR(afternoon.primary_direction.length(), 1.0F, 1e-5F);
+
+  EXPECT_GT(afternoon.ambient_intensity, day.ambient_intensity);
+  EXPECT_GT(afternoon.primary_intensity, day.primary_intensity);
 }
 
-TEST(TimeOfDayTest, LightingForNightHasLowAmbient) {
+TEST(TimeOfDayTest, NightKeepsAmbientHighEnoughToStayLegible) {
+  const auto day = lighting_for_time_of_day(TimeOfDay::Day);
   const auto settings = lighting_for_time_of_day(TimeOfDay::Night);
   EXPECT_LT(ambient_radiance(settings), 0.10F);
   EXPECT_FLOAT_EQ(settings.ambient_intensity, 0.30F);
   EXPECT_NEAR(settings.primary_direction.length(), 1.0F, 1e-5F);
+
+  EXPECT_LT(settings.primary_intensity, day.primary_intensity * 0.5F);
+  EXPECT_GT(settings.primary_color.z(), settings.primary_color.x());
 }
 
 TEST(TimeOfDayTest, AllTimesProduceNormalizedLightDirections) {
@@ -57,19 +65,31 @@ TEST(TimeOfDayTest, AllTimesProduceNormalizedLightDirections) {
   }
 }
 
-TEST(TimeOfDayTest, AmbientRadianceOrderingAcrossTimesOfDay) {
-  const float morning = ambient_radiance_at(TimeOfDay::Morning);
-  const float day = ambient_radiance_at(TimeOfDay::Day);
-  const float afternoon = ambient_radiance_at(TimeOfDay::Afternoon);
-  const float night = ambient_radiance_at(TimeOfDay::Night);
+TEST(TimeOfDayTest, LightingOrderingAcrossTimesOfDay) {
+  const auto morning = lighting_for_time_of_day(TimeOfDay::Morning);
+  const auto day = lighting_for_time_of_day(TimeOfDay::Day);
+  const auto afternoon = lighting_for_time_of_day(TimeOfDay::Afternoon);
+  const auto night = lighting_for_time_of_day(TimeOfDay::Night);
 
-  EXPECT_LT(morning, day);
+  EXPECT_LT(morning.primary_intensity, day.primary_intensity);
+  EXPECT_LT(night.primary_intensity, morning.primary_intensity);
+  EXPECT_LT(night.primary_intensity, afternoon.primary_intensity);
 
-  EXPECT_LT(night, morning);
-  EXPECT_LT(night, day);
-  EXPECT_LT(night, afternoon);
+  EXPECT_LT(morning.ambient_intensity, day.ambient_intensity);
+  EXPECT_GE(night.ambient_intensity, morning.ambient_intensity);
 
-  EXPECT_GT(afternoon, day);
+  const float morning_radiance = ambient_radiance_at(TimeOfDay::Morning);
+  const float day_radiance = ambient_radiance_at(TimeOfDay::Day);
+  const float afternoon_radiance = ambient_radiance_at(TimeOfDay::Afternoon);
+  const float night_radiance = ambient_radiance_at(TimeOfDay::Night);
+
+  EXPECT_LT(morning_radiance, day_radiance);
+
+  EXPECT_LT(night_radiance, morning_radiance);
+  EXPECT_LT(night_radiance, day_radiance);
+  EXPECT_LT(night_radiance, afternoon_radiance);
+
+  EXPECT_GT(afternoon_radiance, day_radiance);
 }
 
 TEST(TimeOfDayTest, DefaultMapTimeOfDayIsDay) {

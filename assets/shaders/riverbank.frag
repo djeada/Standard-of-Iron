@@ -30,9 +30,6 @@ uniform float u_snow_coverage;
 uniform float u_ambient_boost;
 uniform vec3 u_camera_pos;
 
-uniform float u_fog_start;
-uniform float u_fog_end;
-
 float saturate(float value) {
   return clamp(value, 0.0, 1.0);
 }
@@ -300,17 +297,14 @@ void main() {
 
   vec3 view_dir = safe_normalize(u_camera_pos - world_pos, normal);
 
-  float ndl = max(dot(normal, light_dir), 0.0);
-
   float ambient_occlusion = mix(0.82, 1.0, smoothstep(0.0, 0.38, shore_t));
   ambient_occlusion *= 1.0 - (1.0 - relief_fade) * pebbles * 0.30;
 
-  vec3 sun_light = environment_primary_color() * environment_primary_intensity();
   vec3 ambient_term = ambient_occlusion * environment_ambient_light(normal);
 
   float exposure =
       environment_exposure() * (u_ambient_boost > 0.001 ? u_ambient_boost : 1.0);
-  vec3 color = earth * (ambient_term + sun_light * ndl * 0.70) * exposure;
+  vec3 color = earth * (ambient_term + soi_key_light(normal) * 0.70) * exposure;
 
   vec3 half_dir = safe_normalize(light_dir + view_dir, normal);
 
@@ -331,12 +325,6 @@ void main() {
   float segment_visibility = saturate(u_segment_visibility);
 
   color *= visibility_factor * segment_visibility;
-
-  float view_distance = length(u_camera_pos - world_pos);
-
-  float fog_amount =
-      atmospheric_fog_amount(view_distance, u_fog_start, u_fog_end, 1.0, 0.0);
-  color = mix(color, environment_fog_color(), fog_amount);
 
   float core_alpha =
       (1.0 -

@@ -17,11 +17,13 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../session/world_digest.h"
 #include "../units/factory.h"
 #include "../units/unit.h"
 #include "ai_system.h"
 #include "combat_actions/combat_action_definition.h"
 #include "command_service.h"
+#include "default_content.h"
 #include "nation_registry.h"
 #include "nav_grid.h"
 #include "owner_registry.h"
@@ -35,15 +37,7 @@ constexpr int k_player_owner = 1;
 constexpr int k_enemy_owner = 2;
 constexpr float k_world_extent = 128.0F;
 
-struct ScenarioWorld {
-  Engine::Core::World world;
-  Game::Units::UnitFactoryRegistry factories;
-  std::vector<std::unique_ptr<Game::Units::Unit>> unit_handles;
-  std::vector<Engine::Core::EntityID> player_units;
-  std::vector<Engine::Core::EntityID> enemy_units;
-  std::unordered_map<Engine::Core::EntityID, std::pair<std::uint64_t, int>>
-      slot_assignments;
-};
+using ScenarioWorld = ScenarioMatch;
 
 auto json_escape(const std::string& value) -> std::string {
   std::string result;
@@ -125,7 +119,7 @@ void configure_registries(bool use_ai) {
   owners.set_local_player_id(k_player_owner);
 
   auto& nations = Game::Systems::NationRegistry::instance();
-  nations.initialize_defaults();
+  Game::Systems::initialize_default_content(nations);
   nations.clear_player_assignments();
   nations.set_player_nation(k_player_owner, Game::Systems::NationID::RomanRepublic);
   nations.set_player_nation(k_enemy_owner, Game::Systems::NationID::Carthage);
@@ -148,7 +142,7 @@ auto spawn_unit(ScenarioWorld& scenario,
   params.ai_controlled = ai_controlled;
   params.nation_id = owner == k_player_owner ? Game::Systems::NationID::RomanRepublic
                                              : Game::Systems::NationID::Carthage;
-  auto handle = scenario.factories.create(type, scenario.world, params);
+  auto handle = scenario.factories.create(type, (*scenario.world), params);
   if (handle == nullptr) {
     throw std::runtime_error("battlefield verifier could not spawn unit");
   }
@@ -177,7 +171,7 @@ void spawn_line(ScenarioWorld& scenario,
         anchor_z +
         (static_cast<float>(file) - static_cast<float>(files - 1) * 0.5F) * 1.35F;
     auto const id = spawn_unit(scenario, type, owner, x, z, ai_controlled);
-    auto* entity = scenario.world.get_entity(id);
+    auto* entity = (*scenario.world).get_entity(id);
     auto* mode = entity->add_component<Engine::Core::FormationModeComponent>();
     mode->active = true;
     mode->formation_id = formation_id;
@@ -196,7 +190,7 @@ void issue_opposed_orders(ScenarioWorld& scenario, bool command_enemy) {
     std::vector<Game::Systems::CommandService::MoveIntent> intents;
     intents.reserve(units.size());
     for (auto const id : units) {
-      auto* entity = scenario.world.get_entity(id);
+      auto* entity = (*scenario.world).get_entity(id);
       auto* transform = entity != nullptr
                             ? entity->get_component<Engine::Core::TransformComponent>()
                             : nullptr;
@@ -218,7 +212,7 @@ void issue_opposed_orders(ScenarioWorld& scenario, bool command_enemy) {
       }
     }
     Game::Systems::CommandService::move_units(
-        scenario.world,
+        (*scenario.world),
         intents,
         {.kind = Game::Systems::MoveOrderKind::FormationMove,
          .preserve_formation_mode = true});
@@ -229,10 +223,17 @@ void issue_opposed_orders(ScenarioWorld& scenario, bool command_enemy) {
   }
 }
 
-auto build_world(ScenarioId id) -> std::unique_ptr<ScenarioWorld> {
+auto build_world(ScenarioId id, Engine::Core::World* into = nullptr)
+    -> std::unique_ptr<ScenarioWorld> {
   bool const use_ai = id == ScenarioId::BotSkirmish;
   configure_registries(use_ai);
   auto scenario = std::make_unique<ScenarioWorld>();
+  if (into != nullptr) {
+    scenario->world = into;
+  } else {
+    scenario->owned_world = std::make_unique<Engine::Core::World>();
+    scenario->world = scenario->owned_world.get();
+  }
   Game::Units::register_built_in_units(scenario->factories);
 
   switch (id) {
@@ -273,8 +274,8 @@ auto build_world(ScenarioId id) -> std::unique_ptr<ScenarioWorld> {
     break;
   }
 
-  Game::Systems::register_runtime_systems(scenario->world);
-  if (auto* ai = scenario->world.get_system<Game::Systems::AISystem>()) {
+  Game::Systems::register_runtime_systems((*scenario->world));
+  if (auto* ai = (*scenario->world).get_system<Game::Systems::AISystem>()) {
     ai->set_update_interval(0.1F);
   }
   issue_opposed_orders(*scenario, !use_ai);
@@ -387,9 +388,14 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
       prior_motion_state;
   std::unordered_map<Engine::Core::EntityID, int> previous_action_damage;
 
+  out.tick_digests.reserve(tick_count);
   for (std::uint64_t tick = 0; tick < tick_count; ++tick) {
+    out.tick_digests.push_back(Game::Session::world_digest((*scenario->world)));
+    if (config.snapshot_tick.has_value() && *config.snapshot_tick == tick) {
+      out.world_snapshot = Game::Session::describe_world((*scenario->world));
+    }
     auto const tick_started = std::chrono::steady_clock::now();
-    scenario->world.update(static_cast<float>(config.fixed_step_seconds));
+    (*scenario->world).update(static_cast<float>(config.fixed_step_seconds));
     if (config.scenario == ScenarioId::BotSkirmish) {
       std::this_thread::yield();
     }
@@ -398,11 +404,11 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
                                .count();
     out.performance.slowest_tick_ms =
         std::max(out.performance.slowest_tick_ms, tick_ms);
-    add_overlays(out, tick, scenario->world);
+    add_overlays(out, tick, (*scenario->world));
 
     std::vector<Engine::Core::Entity*> entities;
     for (auto* entity :
-         scenario->world.get_entities_with<Engine::Core::UnitComponent>()) {
+         (*scenario->world).get_entities_with<Engine::Core::UnitComponent>()) {
       entities.push_back(entity);
     }
     std::sort(entities.begin(), entities.end(), [](auto* lhs, auto* rhs) {
@@ -614,8 +620,8 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
     ++out.performance.ticks;
   }
 
-  if (auto* ai = scenario->world.get_system<Game::Systems::AISystem>()) {
-    ai->update(&scenario->world, 0.0F);
+  if (auto* ai = (*scenario->world).get_system<Game::Systems::AISystem>()) {
+    ai->update(&(*scenario->world), 0.0F);
     out.performance.ai_decisions = ai->completed_decision_count();
     out.performance.ai_commands = ai->applied_command_count();
   }
@@ -623,6 +629,44 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
   out.performance.wall_seconds =
       std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
   return out;
+}
+
+auto build_scenario(ScenarioId id,
+                    Engine::Core::World& into) -> std::unique_ptr<ScenarioMatch> {
+  return build_world(id, &into);
+}
+
+auto check_determinism(const RunnerConfig& config, int runs) -> DeterminismReport {
+  DeterminismReport report;
+  report.runs = std::max(runs, 1);
+  RunnerConfig base = config;
+  base.snapshot_tick.reset();
+  auto const first = run(base);
+  for (int index = 1; index < report.runs; ++index) {
+    auto const other = run(base);
+    auto const ticks = std::min(first.tick_digests.size(), other.tick_digests.size());
+    for (std::size_t tick = 0; tick < ticks; ++tick) {
+      if (first.tick_digests[tick] == other.tick_digests[tick]) {
+        continue;
+      }
+      report.divergent_tick = tick;
+      report.divergent_run = index;
+
+      RunnerConfig snap = base;
+      snap.snapshot_tick = tick;
+      snap.duration_seconds =
+          (static_cast<double>(tick) + 1.0) * base.fixed_step_seconds;
+      report.first_state = run(snap).world_snapshot;
+      report.other_state = run(snap).world_snapshot;
+      return report;
+    }
+    if (first.tick_digests.size() != other.tick_digests.size()) {
+      report.divergent_tick = ticks;
+      report.divergent_run = index;
+      return report;
+    }
+  }
+  return report;
 }
 
 auto verify(const CaptureResult& result) -> VerificationReport {

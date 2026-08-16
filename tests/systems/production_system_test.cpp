@@ -23,7 +23,6 @@ class ProductionSystemTest : public ::testing::Test {
 protected:
   void SetUp() override {
     Game::Systems::BuildingCollisionRegistry::instance().clear();
-    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::PlayerResourceRegistry::instance().clear();
     Game::Systems::NavGrid::initialize(8, 8);
@@ -36,7 +35,6 @@ protected:
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     Game::Systems::PlayerResourceRegistry::instance().clear();
-    Game::Systems::MarketplaceSystem::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
   }
@@ -421,7 +419,7 @@ TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
 
   ASSERT_NE(marketplace, nullptr);
   EXPECT_TRUE(marketplace->has_component<Engine::Core::BuildingComponent>());
-  EXPECT_TRUE(Game::Systems::MarketplaceSystem::instance().owner_has_marketplace(1));
+  EXPECT_TRUE(Game::Systems::MarketplaceSystem::owner_has_marketplace(world, 1));
 
   auto* marketplace_transform =
       marketplace->get_component<Engine::Core::TransformComponent>();

@@ -50,9 +50,6 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"session.building_collision",
      DerivedRebuilt,
      "Footprint index rebuilt from the restored buildings."},
-    {"session.marketplace",
-     DerivedRebuilt,
-     "Counts marketplaces per owner; rebuilt from the restored buildings."},
     {"session.commands",
      DerivedRebuilt,
      "Orders not yet executed are dropped on save; a restored match starts "

@@ -5,13 +5,13 @@
 #include <algorithm>
 
 #include "commander_control_controller.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
-#include "game/systems/command_service.h"
+#include "game/systems/order_service.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
-#include "input_command_handler.h"
 #include "production_manager.h"
 
 namespace App::Core {
@@ -299,27 +299,17 @@ auto CommanderModeCoordinator::confirm_commander_flag_rally(
     return effects;
   }
 
-  std::vector<Engine::Core::EntityID> const commander_selection{commander->get_id()};
-  auto const move_plan = Game::Systems::CommandService::plan_ground_move(
-      *context.world, commander_selection, hit);
-  if (move_plan.positions.empty()) {
-    effects.clear_rally_preview = true;
-    effects.cursor_mode = CursorMode::Normal;
-    return effects;
-  }
-
-  commander_data->begin_flag_rally(
-      move_plan.resolved_target.x(), move_plan.resolved_target.z(), false);
   if (context.commander_mode_active) {
     commander_data->fpv_controlled = false;
     effects.reset_commander_input = true;
   }
-  if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
-    stamina->run_requested = false;
-    stamina->is_running = false;
-  }
-  Game::Systems::CommandService::issue_ground_move(
-      *context.world, commander_selection, move_plan);
+  Game::Command::submit(*context.world,
+                        Game::Command::Source::LocalPlayer,
+                        context.local_owner_id,
+                        Game::Command::UseCommanderAbility{
+                            .commander = commander->get_id(),
+                            .ability = Game::Command::CommanderAbility::FlagRally,
+                            .target = hit});
 
   effects.clear_rally_preview = true;
   effects.cursor_mode = CursorMode::Normal;
@@ -527,7 +517,7 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
     rpg_action->action_active = false;
     rpg_action->weapon_trace_active = false;
   }
-  InputCommandHandler::reset_movement(commander);
+  Game::Systems::OrderService::reset_movement(commander);
 }
 
 auto CommanderModeCoordinator::active_commander(const CommanderRallyContext& context)

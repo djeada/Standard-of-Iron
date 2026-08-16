@@ -10,6 +10,7 @@
 #include "game/map/procedural_tree_generation.h"
 #include "game/map/scatter/spawn_validator.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "render/scene_renderer.h"
@@ -896,7 +897,7 @@ TEST_F(TerrainServiceTest, IronOreLookupReserveAndHarvest) {
 TEST_F(TerrainServiceTest, SkirmishLoaderKeepsRuntimeHarvestScatterAvailable) {
   auto& nation_registry = Game::Systems::NationRegistry::instance();
   nation_registry.clear();
-  nation_registry.initialize_defaults();
+  Game::Systems::initialize_default_content(nation_registry);
   Game::Systems::OwnerRegistry::instance().clear();
 
   Engine::Core::World world;

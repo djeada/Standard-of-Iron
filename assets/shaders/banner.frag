@@ -123,12 +123,10 @@ void main() {
       smoothstep(0.44, 0.82, fbm(uv * vec2(22.0, 11.0) + vec2(9.0, v_banner_seed)));
   albedo = mix(albedo, albedo * vec3(0.55, 0.50, 0.43), lower_dirt * 0.24);
 
-  float ndotl = dot(N, L);
-  float wrap = clamp((ndotl + 0.34) / 1.34, 0.0, 1.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
   vec3 sun = environment_primary_color() * environment_primary_intensity();
-  vec3 illumination = environment_ambient_light(N) + sun * wrap * 0.72;
+  vec3 illumination = environment_ambient_light(N) + soi_key_light(N) * 0.72;
 
   float pinned_ao = mix(0.76, 1.0, smoothstep(0.0, 0.20, uv.x));
   float fold_ao = mix(0.72, 1.0, smoothstep(0.015, 0.15, abs(v_billow)));

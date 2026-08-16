@@ -1,24 +1,18 @@
 #!/usr/bin/env python3
 """Fail the build when a module inside game/ points the wrong way.
 
-Seven of the modules in scripts/module_rules.json are their own CMake target, so
-a bad edge there is already a link error. The rest still share libgame_sim.a,
-where the linker cannot tell them apart -- combat, movement, navigation,
-formations, economy, units, world and wildlife all live in one archive, so
-nothing today stops a terrain file from calling the damage pipeline.
+Every module in scripts/module_rules.json is backed by a CMake target, so a
+symbol-level edge in the wrong direction is already a link error. This check
+is the header-level counterpart, and it is finer than the linker in two ways:
+it sees an include that only pulls in inline code, and it separates the modules
+that still share one archive (unit_catalog / registries / world in soi_world;
+simulation / session in game_sim).
 
-This is what stops it. Each module declares which modules it may use; every
-quoted include that resolves into game/ is checked against that. Edges that
-already point the wrong way are recorded per module pair in the "baseline" map,
-and the count may only go down. Getting a module's incoming baseline to zero is
-what makes it extractable into its own target -- that is how soi_ai and
-soi_persistence left the kernel.
+Each module declares which modules it may use; every quoted include that
+resolves into game/ is checked against that. There is no tolerated backlog:
+the first wrong-way edge fails the build and names the file.
 
-  usage: check-modules.py [repo-root] [--update-baseline]
-
---update-baseline rewrites the counts in place. Use it when you have paid debt
-down, and read the diff: a number that went up is a regression you are about to
-bless.
+  usage: check-modules.py [repo-root]
 """
 
 from __future__ import annotations
@@ -149,77 +143,71 @@ def audit_ownership(root: Path, modules: dict) -> tuple[list[str], list[str]]:
     return orphans, conflicts
 
 
-def report(counts: dict[str, int], baseline: dict[str, int], examples: dict) -> int:
-    status = 0
-    regressions = []
-    for pair, count in sorted(counts.items()):
-        allowed = baseline.get(pair, 0)
-        if count > allowed:
-            regressions.append((pair, count, allowed))
-    if regressions:
-        status = 1
-        print("Module boundary regression(s):", file=sys.stderr)
-        for pair, count, allowed in regressions:
-            print(
-                f"  {pair}: {count} edges, baseline allows {allowed}", file=sys.stderr
-            )
-            for example in examples[pair][: count - allowed + 2]:
-                print(f"      {example}", file=sys.stderr)
-        print(
-            "\nA module may only include the modules listed in its may_use in\n"
-            "scripts/module_rules.json. Invert the call, move the shared type down\n"
-            "into components, or -- if the new edge is genuinely part of the design --\n"
-            "change may_use and say why in the review.",
-            file=sys.stderr,
-        )
-
-    stale = []
-    for pair, allowed in sorted(baseline.items()):
-        actual = counts.get(pair, 0)
-        if actual < allowed:
-            stale.append((pair, actual, allowed))
-    if stale:
-        status = 1
-        print("\nBaseline is now too generous:", file=sys.stderr)
-        for pair, actual, allowed in stale:
-            print(
-                f"  {pair}: {actual} edges left, baseline still says {allowed}",
-                file=sys.stderr,
-            )
-        print(
-            "\nRun scripts/check-modules.py --update-baseline to record the progress.\n"
-            "The count is a ratchet: leaving it high lets the edge come back for free.",
-            file=sys.stderr,
-        )
-    return status
+LIBRARY = re.compile(r"add_library\(\s*(\w+)\s+(?:STATIC|OBJECT|SHARED)\b(.*?)\)", re.S)
 
 
-def write_baseline(baseline: dict[str, int]) -> None:
-    """Rewrite only the "baseline" object, leaving the rest of the file alone.
+def audit_targets(root: Path, modules: dict) -> list[str]:
+    """Sources game/CMakeLists.txt puts in a target their module does not own.
 
-    Re-serialising the whole document with json.dump would expand every short
-    array onto three lines, which prettier then collapses again -- so
-    `--update-baseline` would leave the repository unformatted every time. The
-    baseline is a flat map of long keys, which prettier always renders one entry
-    per line, so emitting it directly round-trips cleanly.
+    The module map and the CMake target list are two descriptions of the same
+    split. If a file sits in libsoi_combat.a but the map says it is navigation,
+    one of them is lying and the linker is enforcing a boundary this check no
+    longer describes. Every .cpp in every kernel target has to classify to a
+    module that names that target.
     """
-    text = RULES_FILE.read_text(encoding="utf-8")
-    marker = '  "baseline": {'
-    start = text.index(marker)
-    end = text.index("\n  }", start) + len("\n  }")
-    if baseline:
-        body = ",\n".join(
-            f"    {json.dumps(pair)}: {count}" for pair, count in baseline.items()
-        )
-        block = marker + "\n" + body + "\n  }"
-    else:
-        block = '  "baseline": {}'
-    RULES_FILE.write_text(text[:start] + block + text[end:], encoding="utf-8")
+    lists = root / "game" / "CMakeLists.txt"
+    try:
+        text = lists.read_text(encoding="utf-8")
+    except OSError:
+        return [f"{lists} is missing"]
+    owned_by = {name: set(spec.get("targets", ())) for name, spec in modules.items()}
+    problems: list[str] = []
+    for match in LIBRARY.finditer(text):
+        target = match.group(1)
+        if target == "accessibility_runtime":
+            continue
+        body = re.sub(r"#[^\n]*", "", match.group(2))
+        for token in body.split():
+            if not token.endswith(".cpp"):
+                continue
+            relative = f"game/{token}"
+            try:
+                module = classify(relative, modules)
+            except Ambiguous as error:
+                problems.append(str(error))
+                continue
+            if module is None:
+                problems.append(
+                    f"{relative} is in target {target} but no module claims it"
+                )
+            elif target not in owned_by[module]:
+                problems.append(
+                    f"{relative} is in target {target}, but its module '{module}' "
+                    f"is backed by {sorted(owned_by[module])}"
+                )
+    return problems
+
+
+def report(counts: dict[str, int], examples: dict) -> int:
+    if not counts:
+        return 0
+    print("Module boundary violation(s):", file=sys.stderr)
+    for pair, count in sorted(counts.items()):
+        print(f"  {pair}: {count} edge(s)", file=sys.stderr)
+        for example in examples[pair]:
+            print(f"      {example}", file=sys.stderr)
+    print(
+        "\nA module may only include the modules listed in its may_use in\n"
+        "scripts/module_rules.json. Invert the call, move the shared type down\n"
+        "into components, or -- if the new edge is genuinely part of the design --\n"
+        "change may_use and say why in the review.",
+        file=sys.stderr,
+    )
+    return 1
 
 
 def main() -> int:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    update = "--update-baseline" in sys.argv[1:]
     root = Path(args[0]).resolve() if args else Path.cwd()
 
     rules = load_rules()
@@ -249,15 +237,24 @@ def main() -> int:
         )
         return 1
 
+    misplaced = audit_targets(root, modules)
+    if misplaced:
+        print(
+            "game/CMakeLists.txt and scripts/module_rules.json disagree about "
+            "which target owns a file:",
+            file=sys.stderr,
+        )
+        for problem in misplaced:
+            print(f"  {problem}", file=sys.stderr)
+        print(
+            "\nMove the source to the target its module names, or move the module "
+            "in the map. The two must describe the same split.",
+            file=sys.stderr,
+        )
+        return 1
+
     counts, examples = measure(root, modules)
-
-    if update:
-        write_baseline(dict(sorted(counts.items())))
-        total = sum(counts.values())
-        print(f"Baseline updated: {len(counts)} module pairs, {total} edges.")
-        return 0
-
-    return report(counts, rules.get("baseline", {}), examples)
+    return report(counts, examples)
 
 
 if __name__ == "__main__":

@@ -88,60 +88,89 @@ auto home_committed_civilian_count(const Engine::Core::ProductionComponent* prod
 
 } // namespace
 
+namespace {
+
+auto production_ruling(Engine::Core::Entity& building,
+                       Game::Units::TroopType unit_type) -> ProductionResult {
+  const auto* unit = building.get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return ProductionResult::NoBarracks;
+  }
+  const bool is_home = unit->spawn_type == Game::Units::SpawnType::Home;
+  if (!is_home && Game::Units::is_commander_troop(unit_type)) {
+    return ProductionResult::CommanderNotRecruitable;
+  }
+  const auto* production = building.get_component<Engine::Core::ProductionComponent>();
+  const auto profile = TroopProfileService::instance().get_profile(
+      resolve_nation_id(unit->owner_id), unit_type);
+  const int production_cost = profile.production.cost;
+  const int manpower_available =
+      production != nullptr ? production->manpower_available : 0;
+  if (manpower_available < production_cost) {
+    return ProductionResult::InsufficientManpower;
+  }
+  if (is_home) {
+    if (production != nullptr &&
+        home_committed_civilian_count(production) >= production->max_units) {
+      return ProductionResult::PerBarracksLimitReached;
+    }
+  } else {
+    const int current_troops = Game::Systems::troop_count_for(unit->owner_id);
+    const int max_troops = Game::GameConfig::instance().get_max_troops_per_player();
+    if (current_troops + production_cost > max_troops) {
+      return ProductionResult::GlobalTroopLimitReached;
+    }
+  }
+  const int max_queue_size = is_home ? 3 : 5;
+  int total_in_queue = 0;
+  if (production != nullptr) {
+    total_in_queue = (production->in_progress ? 1 : 0) +
+                     static_cast<int>(production->production_queue.size());
+  }
+  if (total_in_queue >= max_queue_size) {
+    return ProductionResult::QueueFull;
+  }
+  if (!PlayerResourceRegistry::instance().has_at_least(
+          unit->owner_id, profile.production.resource_costs)) {
+    return ProductionResult::InsufficientResources;
+  }
+  return ProductionResult::Success;
+}
+
+} // namespace
+
+auto ProductionService::can_start_production(Engine::Core::World& world,
+                                             Engine::Core::EntityID building_id,
+                                             Game::Units::TroopType unit_type)
+    -> ProductionResult {
+  auto* building = world.get_entity(building_id);
+  if (building == nullptr) {
+    return ProductionResult::NoBarracks;
+  }
+  return production_ruling(*building, unit_type);
+}
+
 auto ProductionService::start_production(Engine::Core::World& world,
                                          Engine::Core::EntityID building_id,
                                          Game::Units::TroopType unit_type)
     -> ProductionResult {
-  auto* e = world.get_entity(building_id);
-  if (e == nullptr) {
+  auto* building = world.get_entity(building_id);
+  if (building == nullptr) {
     return ProductionResult::NoBarracks;
   }
-  auto* unit = e->get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr) {
-    return ProductionResult::NoBarracks;
+  auto* p = building->get_component<Engine::Core::ProductionComponent>();
+  if (p == nullptr) {
+    p = building->add_component<Engine::Core::ProductionComponent>();
   }
+  if (const auto ruling = production_ruling(*building, unit_type);
+      ruling != ProductionResult::Success) {
+    return ruling;
+  }
+  const auto* unit = building->get_component<Engine::Core::UnitComponent>();
   const int owner_id = unit->owner_id;
   const auto nation_id = resolve_nation_id(owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
-
-  auto* p = e->get_component<Engine::Core::ProductionComponent>();
-  if (p == nullptr) {
-    p = e->add_component<Engine::Core::ProductionComponent>();
-  }
-  if (p == nullptr) {
-    return ProductionResult::NoBarracks;
-  }
-
-  if (Game::Units::is_commander_troop(unit_type)) {
-    return ProductionResult::CommanderNotRecruitable;
-  }
-
-  int const individuals_per_unit = profile.individuals_per_unit;
-  int const production_cost = profile.production.cost;
-
-  if (p->manpower_available < production_cost) {
-    return ProductionResult::InsufficientManpower;
-  }
-
-  int const current_troops = Game::Systems::troop_count_for(owner_id);
-  int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
-  if (current_troops + production_cost > max_troops) {
-    return ProductionResult::GlobalTroopLimitReached;
-  }
-
-  const int max_queue_size = 5;
-  int total_in_queue = p->in_progress ? 1 : 0;
-  total_in_queue += static_cast<int>(p->production_queue.size());
-
-  if (total_in_queue >= max_queue_size) {
-    return ProductionResult::QueueFull;
-  }
-
-  auto& resources = PlayerResourceRegistry::instance();
-  if (!resources.has_at_least(owner_id, profile.production.resource_costs)) {
-    return ProductionResult::InsufficientResources;
-  }
 
   if (p->in_progress) {
     p->production_queue.push_back(unit_type);
@@ -153,22 +182,9 @@ auto ProductionService::start_production(Engine::Core::World& world,
   }
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioCueEvent("build.unit_queued"));
-  p->manpower_available -= production_cost;
-  resources.spend(owner_id, profile.production.resource_costs);
-
+  p->manpower_available -= profile.production.cost;
+  PlayerResourceRegistry::instance().spend(owner_id, profile.production.resource_costs);
   return ProductionResult::Success;
-}
-
-auto ProductionService::start_production_for_first_selected_barracks(
-    Engine::Core::World& world,
-    const std::vector<Engine::Core::EntityID>& selected,
-    int owner_id,
-    Game::Units::TroopType unit_type) -> ProductionResult {
-  auto* e = find_first_selected_barracks(world, selected, owner_id);
-  if (e == nullptr) {
-    return ProductionResult::NoBarracks;
-  }
-  return start_production(world, e->get_id(), unit_type);
 }
 
 auto ProductionService::set_rally_point(Engine::Core::World& world,
@@ -200,14 +216,12 @@ auto ProductionService::find_selected_barracks(
   return e != nullptr ? e->get_id() : Engine::Core::NULL_ENTITY;
 }
 
-auto ProductionService::set_rally_for_first_selected_barracks(
+auto ProductionService::find_selected_home(
     Engine::Core::World& world,
     const std::vector<Engine::Core::EntityID>& selected,
-    int owner_id,
-    float x,
-    float z) -> bool {
-  auto* e = find_first_selected_barracks(world, selected, owner_id);
-  return e != nullptr && set_rally_point(world, e->get_id(), x, z);
+    int owner_id) -> Engine::Core::EntityID {
+  auto* e = find_first_selected_home(world, selected, owner_id);
+  return e != nullptr ? e->get_id() : Engine::Core::NULL_ENTITY;
 }
 
 auto ProductionService::get_selected_barracks_state(
@@ -240,66 +254,6 @@ auto ProductionService::get_selected_barracks_state(
     out_state.production_queue = p->production_queue;
   }
   return true;
-}
-
-auto ProductionService::start_production_for_first_selected_home(
-    Engine::Core::World& world,
-    const std::vector<Engine::Core::EntityID>& selected,
-    int owner_id,
-    Game::Units::TroopType unit_type) -> ProductionResult {
-  auto* e = find_first_selected_home(world, selected, owner_id);
-  if (e == nullptr) {
-    return ProductionResult::NoBarracks;
-  }
-
-  auto* unit = e->get_component<Engine::Core::UnitComponent>();
-  const auto nation_id = resolve_nation_id(owner_id);
-  const auto profile =
-      TroopProfileService::instance().get_profile(nation_id, unit_type);
-
-  auto* p = e->get_component<Engine::Core::ProductionComponent>();
-  if (p == nullptr) {
-    p = e->add_component<Engine::Core::ProductionComponent>();
-  }
-  if (p == nullptr) {
-    return ProductionResult::NoBarracks;
-  }
-
-  int const production_cost = profile.production.cost;
-  if (p->manpower_available < production_cost) {
-    return ProductionResult::InsufficientManpower;
-  }
-
-  if (home_committed_civilian_count(p) >= p->max_units) {
-    return ProductionResult::PerBarracksLimitReached;
-  }
-
-  const int max_queue_size = 3;
-  int total_in_queue = p->in_progress ? 1 : 0;
-  total_in_queue += static_cast<int>(p->production_queue.size());
-  if (total_in_queue >= max_queue_size) {
-    return ProductionResult::QueueFull;
-  }
-
-  auto& resources = PlayerResourceRegistry::instance();
-  if (!resources.has_at_least(owner_id, profile.production.resource_costs)) {
-    return ProductionResult::InsufficientResources;
-  }
-
-  if (p->in_progress) {
-    p->production_queue.push_back(unit_type);
-  } else {
-    p->product_type = unit_type;
-    apply_production_profile(p, nation_id, unit_type);
-    p->time_remaining = p->build_time;
-    p->in_progress = true;
-  }
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent("build.unit_queued"));
-
-  p->manpower_available -= production_cost;
-  resources.spend(owner_id, profile.production.resource_costs);
-  return ProductionResult::Success;
 }
 
 auto ProductionService::get_selected_home_state(

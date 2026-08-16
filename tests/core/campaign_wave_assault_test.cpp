@@ -16,6 +16,7 @@
 #include "game/map/campaign_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/systems/default_content.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
@@ -41,7 +42,7 @@ protected:
   void SetUp() override {
     auto& nations = Game::Systems::NationRegistry::instance();
     nations.clear();
-    nations.initialize_defaults();
+    Game::Systems::initialize_default_content(nations);
     Game::Systems::OwnerRegistry::instance().clear();
     Game::Systems::GlobalStatsRegistry::instance().clear();
   }

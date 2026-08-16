@@ -5,6 +5,7 @@
 
 #include "animation/bpat/bpat_format.h"
 #include "animation/bpat/bpat_registry.h"
+#include "game/session/session_context.h"
 #include "render/creature/snapshot_mesh_registry.h"
 
 int main(int argc, char** argv) {
@@ -32,6 +33,9 @@ int main(int argc, char** argv) {
       break;
     }
   }
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

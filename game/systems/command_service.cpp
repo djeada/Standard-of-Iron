@@ -14,6 +14,7 @@
 #include "../game_config.h"
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
+#include "building_collision_registry.h"
 #include "combat_rules.h"
 #include "movement_system.h"
 #include "nav_grid.h"
@@ -192,6 +193,44 @@ void CommandService::issue_ground_move(Engine::Core::World& world,
   opts.kind = MoveOrderKind::FormationMove;
   opts.preserve_formation_mode = plan.preserve_formation_mode;
   move_units(world, units, plan.positions, opts);
+}
+
+auto CommandService::structure_work_position(const QVector3D& worker_position,
+                                             const QVector3D& structure_position,
+                                             const std::string& structure_key,
+                                             float unit_radius) -> QVector3D {
+  const auto size = BuildingCollisionRegistry::get_building_size(structure_key);
+  float dir_x = worker_position.x() - structure_position.x();
+  float dir_z = worker_position.z() - structure_position.z();
+  const float len_sq = dir_x * dir_x + dir_z * dir_z;
+  if (len_sq < 0.0001F) {
+    dir_x = 1.0F;
+    dir_z = 0.0F;
+  } else {
+    const float len = std::sqrt(len_sq);
+    dir_x /= len;
+    dir_z /= len;
+  }
+
+  const float clearance =
+      BuildingCollisionRegistry::get_grid_padding() + unit_radius + 0.25F;
+  const float half_width = size.width * 0.5F;
+  const float half_depth = size.depth * 0.5F;
+  const float abs_x = std::fabs(dir_x);
+  const float abs_z = std::fabs(dir_z);
+  const float sx = abs_x > 0.0001F ? (half_width + clearance) / abs_x
+                                   : std::numeric_limits<float>::infinity();
+  const float sz = abs_z > 0.0001F ? (half_depth + clearance) / abs_z
+                                   : std::numeric_limits<float>::infinity();
+  const float scale = std::min(sx, sz);
+  const float fallback_scale = std::max(half_width, half_depth) + clearance;
+  const float final_scale =
+      std::isfinite(scale) && scale > 0.0F ? scale : fallback_scale;
+
+  return NavGrid::snap_to_walkable_ground(
+      QVector3D(structure_position.x() + dir_x * final_scale,
+                0.0F,
+                structure_position.z() + dir_z * final_scale));
 }
 
 auto CommandService::get_unit_radius(Engine::Core::World& world,

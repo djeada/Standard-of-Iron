@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "../accessibility/team_identity.h"
+#include "../core/ambient_session.h"
 
 namespace {
 
@@ -61,6 +62,10 @@ auto color_from_json(const QJsonArray& array) -> std::array<float, 3> {
 } // namespace
 
 namespace Game::Systems {
+
+auto OwnerRegistry::instance() -> OwnerRegistry& {
+  return *Game::Session::ambient_services().owners;
+}
 
 void OwnerRegistry::clear() {
   m_owners.clear();

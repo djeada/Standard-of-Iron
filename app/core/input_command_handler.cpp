@@ -11,6 +11,7 @@
 #include "../models/hover_tracker.h"
 #include "../utils/movement_utils.h"
 #include "game/audio/audio_cues.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/picking_service.h"
@@ -333,10 +334,6 @@ void InputCommandHandler::on_attack_click(qreal sx,
   if (result.reset_cursor_to_normal) {
     m_cursor_manager->set_mode(CursorMode::Normal);
   }
-}
-
-void InputCommandHandler::reset_movement(Engine::Core::Entity* entity) {
-  App::Utils::reset_movement(entity);
 }
 
 void InputCommandHandler::on_stop_command() {

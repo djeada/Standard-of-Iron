@@ -2,6 +2,7 @@
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "render/unit_render_cache.h"
 
@@ -12,7 +13,7 @@ protected:
   void SetUp() override {
     auto& nations = Game::Systems::NationRegistry::instance();
     nations.clear();
-    nations.initialize_defaults();
+    Game::Systems::initialize_default_content(nations);
 
     world_view = Render::WorldView{};
   }

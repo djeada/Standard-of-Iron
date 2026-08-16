@@ -4,10 +4,12 @@
 #include <QVector3D>
 
 #include <array>
+#include <vector>
 
 #include "pipeline_interface.h"
 #include "render/gl/shader.h"
 #include "render/gl/shader_cache.h"
+#include "render/mist_volume.h"
 
 namespace Render::GL::BackendPipelines {
 
@@ -24,6 +26,12 @@ public:
   [[nodiscard]] auto begin_scene(int width, int height) -> bool;
   void draw_sky(const QMatrix4x4& view_projection, const QVector3D& camera_position);
   void set_depth_range(float near_plane, float far_plane) noexcept;
+  void set_atmosphere(const QMatrix4x4& inverse_view_projection,
+                      const QVector3D& camera_position,
+                      float fog_start,
+                      float fog_end,
+                      float time) noexcept;
+  void set_mist(const std::vector<Render::MistVolume>& volumes);
   void resolve_scene();
 
   [[nodiscard]] auto is_capturing() const noexcept -> bool { return m_capturing; }
@@ -54,7 +62,7 @@ private:
   static constexpr float k_bloom_intensity = 0.24F;
   static constexpr float k_vignette_strength = 0.14F;
   static constexpr float k_ground_ao_radius = 0.55F;
-  static constexpr float k_ground_ao_strength = 0.62F;
+  static constexpr float k_ground_ao_strength = 2.40F;
 
   GL::ShaderCache* m_shader_cache;
   GL::Shader* m_bright_shader{nullptr};
@@ -69,6 +77,13 @@ private:
   unsigned int m_scene_depth{0};
   float m_near_plane{1.0F};
   float m_far_plane{200.0F};
+  QMatrix4x4 m_inverse_view_proj;
+  QVector3D m_camera_position;
+  float m_fog_start{0.0F};
+  float m_fog_end{1.0F};
+  std::vector<Render::MistVolume> m_mist_volumes;
+  float m_mist_time{0.0F};
+  bool m_mist_dirty{false};
   unsigned int m_empty_vao{0};
 
   int m_output_fbo{0};

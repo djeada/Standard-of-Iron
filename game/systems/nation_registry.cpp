@@ -8,14 +8,17 @@
 #include <utility>
 #include <vector>
 
-#include "../formation/formation_data_loader.h"
+#include "../core/ambient_session.h"
 #include "systems/nation_loader.h"
 #include "systems/troop_profile_service.h"
 #include "units/troop_catalog.h"
-#include "units/troop_catalog_loader.h"
 #include "units/troop_type.h"
 
 namespace Game::Systems {
+
+auto NationRegistry::instance() -> NationRegistry& {
+  return *Game::Session::ambient_services().nations;
+}
 namespace {
 
 auto choose_default_nation_id(const std::vector<Nation>& nations) -> NationID {
@@ -166,15 +169,12 @@ void NationRegistry::restore_player_nations(
   }
 }
 
-void NationRegistry::initialize_defaults() {
+void NationRegistry::register_default_nations() {
   if (m_initialized) {
     return;
   }
 
   clear();
-  Game::Formation::FormationDataLoader::reset_to_builtin_defaults();
-  Game::Units::TroopCatalogLoader::load_default_catalog();
-  Game::Formation::FormationDataLoader::load_all();
 
   auto nations = NationLoader::load_default_nations();
   if (nations.empty()) {

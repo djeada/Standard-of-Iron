@@ -9,6 +9,7 @@
 #include "core/component.h"
 #include "core/event_manager.h"
 #include "core/world.h"
+#include "game/systems/default_content.h"
 #include "map/campaign_definition.h"
 #include "map/campaign_loader.h"
 #include "map/mission_loader.h"
@@ -72,7 +73,7 @@ protected:
 
     auto& nations = NationRegistry::instance();
     nations.clear();
-    nations.initialize_defaults();
+    Game::Systems::initialize_default_content(nations);
     nations.set_player_nation(1, NationID::Carthage);
     nations.set_player_nation(2, NationID::RomanRepublic);
 

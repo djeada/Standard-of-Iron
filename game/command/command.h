@@ -9,7 +9,9 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../formation/army_formation_types.h"
 #include "../systems/order_service.h"
+#include "../systems/resource_types.h"
 #include "../units/troop_type.h"
 
 namespace Game::Command {
@@ -87,6 +89,87 @@ struct Produce {
   Game::Units::TroopType product = Game::Units::TroopType::Archer;
 };
 
+enum class TradeDirection : std::uint8_t {
+  Buy,
+  Sell
+};
+struct Trade {
+  Game::Systems::ResourceType resource = Game::Systems::ResourceType::Wood;
+  TradeDirection direction = TradeDirection::Buy;
+};
+
+enum class CommanderAbility : std::uint8_t {
+  Aura,
+  Rally,
+  FlagRally
+};
+struct UseCommanderAbility {
+  Engine::Core::EntityID commander = Engine::Core::NULL_ENTITY;
+  CommanderAbility ability = CommanderAbility::Aura;
+  QVector3D target;
+};
+
+struct SetFormationMode {
+  std::vector<Engine::Core::EntityID> units;
+  bool active = true;
+};
+
+struct DeployFormation {
+  std::vector<Engine::Core::EntityID> units;
+  QVector3D anchor;
+  float facing = 0.0F;
+  float frontage = 0.0F;
+  float spacing = 1.0F;
+  Game::Formation::ArmyFormationIntent intent =
+      Game::Formation::ArmyFormationIntent::FactionDefault;
+  Game::Formation::FormationDoctrineId doctrine;
+  Game::Formation::ArmyFormationOptions options;
+};
+
+struct ReleaseFormation {
+  std::vector<Engine::Core::EntityID> units;
+};
+
+struct StartConstruction {
+  std::vector<Engine::Core::EntityID> units;
+  std::string construction_type;
+  QVector3D site;
+  float rotation_y = 0.0F;
+};
+
+struct PlaceWallPlan {
+  std::vector<Engine::Core::EntityID> units;
+  bool gate = false;
+  int anchor_x = 0;
+  int anchor_z = 0;
+  int target_x = 0;
+  int target_z = 0;
+  float rotation_y = 0.0F;
+};
+
+struct PlaceBuilding {
+  std::string building_type;
+  QVector3D position;
+  float rotation_y = 0.0F;
+};
+
+struct DeliverCivilians {
+  std::vector<Engine::Core::EntityID> units;
+  Engine::Core::EntityID barracks = Engine::Core::NULL_ENTITY;
+};
+
+struct RepairStructure {
+  std::vector<Engine::Core::EntityID> units;
+  Engine::Core::EntityID structure = Engine::Core::NULL_ENTITY;
+};
+
+struct StartHarvest {
+  std::vector<Engine::Core::EntityID> units;
+  std::string construction_type;
+  Engine::Core::EntityID resource_target = Engine::Core::NULL_ENTITY;
+  QVector3D site;
+};
+
 using Payload = std::variant<Move,
                              AttackTarget,
                              Stop,
@@ -97,7 +180,18 @@ using Payload = std::variant<Move,
                              SetRallyPoint,
                              SetGateMode,
                              SetAutoGather,
-                             Produce>;
+                             Produce,
+                             Trade,
+                             UseCommanderAbility,
+                             SetFormationMode,
+                             DeployFormation,
+                             ReleaseFormation,
+                             StartConstruction,
+                             StartHarvest,
+                             DeliverCivilians,
+                             RepairStructure,
+                             PlaceWallPlan,
+                             PlaceBuilding>;
 
 struct Command {
   Source source = Source::LocalPlayer;

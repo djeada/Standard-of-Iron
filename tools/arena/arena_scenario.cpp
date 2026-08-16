@@ -15,7 +15,6 @@
 #include <numbers>
 #include <utility>
 
-#include "app/utils/movement_utils.h"
 #include "game/command/command.h"
 #include "game/command/command_dispatcher.h"
 #include "game/core/component.h"
@@ -58,6 +57,14 @@ constexpr float k_default_fall_up_y = 0.72F;
 auto vector_from_transform(const Engine::Core::TransformComponent& transform)
     -> QVector3D {
   return {transform.position.x, transform.position.y, transform.position.z};
+}
+
+auto owner_of(Engine::Core::World& world, Engine::Core::EntityID entity_id) -> int {
+  auto* entity = world.get_entity(entity_id);
+  auto const* unit = entity != nullptr
+                         ? entity->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+  return unit != nullptr ? unit->owner_id : 0;
 }
 
 auto horizontal_distance(const QVector3D& lhs, const QVector3D& rhs) -> float {
@@ -1262,14 +1269,8 @@ struct ArenaScenarioRunner::Impl {
       auto const& targets = ids(step.target_group);
       auto const& subjects = ids(step.group);
 
-      int guard_owner_id = 0;
-      if (!subjects.empty()) {
-        auto* first = world.get_entity(subjects.front());
-        auto const* first_unit =
-            first != nullptr ? first->get_component<Engine::Core::UnitComponent>()
-                             : nullptr;
-        guard_owner_id = first_unit != nullptr ? first_unit->owner_id : 0;
-      }
+      const int guard_owner_id =
+          subjects.empty() ? 0 : owner_of(world, subjects.front());
 
       Game::Command::Command guard_command{};
       guard_command.source = Game::Command::Source::Script;
@@ -1315,124 +1316,34 @@ struct ArenaScenarioRunner::Impl {
       }
       break;
     case ScenarioCommandKind::RepairStructure: {
-
       auto const& structures = ids(step.target_group);
-      if (structures.empty()) {
+      auto const workers = ids(step.group);
+      if (structures.empty() || workers.empty()) {
         break;
       }
-      auto* structure = world.get_entity(structures.front());
-      auto* structure_transform =
-          structure != nullptr
-              ? structure->get_component<Engine::Core::TransformComponent>()
-              : nullptr;
-      auto* structure_unit =
-          structure != nullptr ? structure->get_component<Engine::Core::UnitComponent>()
-                               : nullptr;
-      if (structure_transform == nullptr || structure_unit == nullptr) {
-        break;
-      }
-
-      const QVector3D structure_position(
-          structure_transform->position.x, 0.0F, structure_transform->position.z);
-      const std::string structure_key =
-          Game::Units::spawn_typeToString(structure_unit->spawn_type);
-
-      std::vector<Engine::Core::EntityID> workers;
-      std::vector<QVector3D> destinations;
-      for (auto entity_id : ids(step.group)) {
-        auto* entity = world.get_entity(entity_id);
-        auto* builder =
-            entity != nullptr
-                ? entity->get_component<Engine::Core::BuilderProductionComponent>()
-                : nullptr;
-        auto* transform =
-            entity != nullptr
-                ? entity->get_component<Engine::Core::TransformComponent>()
-                : nullptr;
-        if (builder == nullptr || transform == nullptr) {
-          continue;
-        }
-
-        const QVector3D worker_position(
-            transform->position.x, 0.0F, transform->position.z);
-        const float radius =
-            Game::Systems::CommandService::get_unit_radius(world, entity_id);
-        const QVector3D work_position = App::Utils::structure_work_position(
-            worker_position, structure_position, structure_key, radius);
-
-        Game::Systems::OrderService::clear_builder_task(entity);
-        builder->is_placement_preview = false;
-        builder->product_type = std::string(Game::Systems::k_builder_product_repair);
-        builder->build_time = Game::Systems::k_builder_repair_tick_seconds;
-        builder->time_remaining = Game::Systems::k_builder_repair_tick_seconds;
-        builder->structure_task_entity_id = structures.front();
-        builder->has_construction_site = true;
-        builder->construction_site_x = work_position.x();
-        builder->construction_site_z = work_position.z();
-        builder->at_construction_site = false;
-        builder->in_progress = false;
-
-        workers.push_back(entity_id);
-        destinations.push_back(work_position);
-      }
-      if (!workers.empty()) {
-        Game::Systems::CommandService::move_units(world, workers, destinations);
-      }
+      Game::Command::dispatch(
+          world,
+          Game::Command::Command{
+              .source = Game::Command::Source::Script,
+              .owner_id = owner_of(world, workers.front()),
+              .payload = Game::Command::RepairStructure{
+                  .units = workers, .structure = structures.front()}});
       arm_response(step.group, command_name(step.command));
       break;
     }
     case ScenarioCommandKind::DeliverToStructure: {
       auto const& structures = ids(step.target_group);
-      if (structures.empty()) {
+      auto const carriers = ids(step.group);
+      if (structures.empty() || carriers.empty()) {
         break;
       }
-      auto* structure = world.get_entity(structures.front());
-      auto* structure_transform =
-          structure != nullptr
-              ? structure->get_component<Engine::Core::TransformComponent>()
-              : nullptr;
-      if (structure_transform == nullptr) {
-        break;
-      }
-      const QVector3D structure_position(
-          structure_transform->position.x, 0.0F, structure_transform->position.z);
-
-      std::vector<Engine::Core::EntityID> carriers;
-      std::vector<QVector3D> destinations;
-      for (auto entity_id : ids(step.group)) {
-        auto* entity = world.get_entity(entity_id);
-        auto* transform =
-            entity != nullptr
-                ? entity->get_component<Engine::Core::TransformComponent>()
-                : nullptr;
-        if (transform == nullptr) {
-          continue;
-        }
-        auto* delivery =
-            entity->get_component<Engine::Core::CivilianDeliveryComponent>();
-        if (delivery == nullptr) {
-          delivery = entity->add_component<Engine::Core::CivilianDeliveryComponent>();
-        }
-        if (delivery == nullptr) {
-          continue;
-        }
-        delivery->target_barracks_id = structures.front();
-
-        const float radius =
-            Game::Systems::CommandService::get_unit_radius(world, entity_id);
-        carriers.push_back(entity_id);
-        destinations.push_back(App::Utils::barracks_delivery_target_position(
-            QVector3D(transform->position.x, 0.0F, transform->position.z),
-            structure_position,
-            radius));
-      }
-      if (!carriers.empty()) {
-
-        Game::Systems::CommandService::MoveOptions options;
-        options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
-        Game::Systems::CommandService::move_units(
-            world, carriers, destinations, options);
-      }
+      Game::Command::dispatch(
+          world,
+          Game::Command::Command{
+              .source = Game::Command::Source::Script,
+              .owner_id = owner_of(world, carriers.front()),
+              .payload = Game::Command::DeliverCivilians{
+                  .units = carriers, .barracks = structures.front()}});
       arm_response(step.group, command_name(step.command));
       break;
     }
@@ -1458,8 +1369,6 @@ struct ArenaScenarioRunner::Impl {
               ? std::string(Game::Systems::k_builder_product_collect_iron_ore)
               : std::string(Game::Systems::k_builder_product_cut_tree);
 
-      std::vector<Engine::Core::EntityID> workers;
-      std::vector<QVector3D> destinations;
       for (auto entity_id : ids(step.group)) {
         auto* entity = world.get_entity(entity_id);
         auto* builder =
@@ -1490,42 +1399,20 @@ struct ArenaScenarioRunner::Impl {
             best = &candidate;
           }
         }
-        if (best == nullptr || !terrain.reserve_world_prop(best->id)) {
+        if (best == nullptr) {
           continue;
         }
 
         const QVector3D at = terrain.world_prop_world_position(*best);
-        QVector3D approach(
-            transform->position.x - at.x(), 0.0F, transform->position.z - at.z());
-        if (approach.lengthSquared() < 0.01F) {
-          approach = QVector3D(1.0F, 0.0F, 0.0F);
-        }
-        approach.normalize();
-        const QVector3D work_position =
-            Game::Systems::NavGrid::snap_to_walkable_ground(QVector3D(
-                at.x() + approach.x() * 1.8F, 0.0F, at.z() + approach.z() * 1.8F));
-
-        Game::Systems::OrderService::clear_builder_task(entity);
-        builder->is_placement_preview = false;
-        builder->product_type = product;
-        builder->build_time = 6.0F;
-        builder->time_remaining = 6.0F;
-        builder->has_construction_site = true;
-        builder->construction_site_x = work_position.x();
-        builder->construction_site_z = work_position.z();
-        builder->at_construction_site = false;
-        builder->in_progress = false;
-        builder->has_task_target = true;
-        builder->task_target_id = best->id;
-        builder->task_target_x = at.x();
-        builder->task_target_z = at.z();
-        builder->task_target_reserved = true;
-
-        workers.push_back(entity_id);
-        destinations.push_back(work_position);
-      }
-      if (!workers.empty()) {
-        Game::Systems::CommandService::move_units(world, workers, destinations);
+        Game::Command::dispatch(
+            world,
+            Game::Command::Command{
+                .source = Game::Command::Source::Script,
+                .owner_id = owner_of(world, entity_id),
+                .payload = Game::Command::StartHarvest{.units = {entity_id},
+                                                       .construction_type = product,
+                                                       .resource_target = best->id,
+                                                       .site = at}});
       }
       arm_response(step.group, command_name(step.command));
       break;

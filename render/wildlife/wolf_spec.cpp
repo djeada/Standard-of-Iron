@@ -339,8 +339,8 @@ void apply_lunge(RigPose& pose, const WolfDrive& drive) {
     return;
   }
 
-  QVector3D const surge(0.0F, -0.040F * lunge, 0.200F * lunge);
-  QVector3D const front_reach(0.0F, -0.048F * lunge, 0.062F * lunge);
+  QVector3D const surge(0.0F, -0.040F * lunge, 0.300F * lunge);
+  QVector3D const front_reach(0.0F, -0.048F * lunge, 0.086F * lunge);
 
   pose.root += surge;
   pose.body_rear += surge + QVector3D(0.0F, 0.058F * lunge, -0.030F * lunge);
@@ -383,7 +383,12 @@ void apply_lunge(RigPose& pose, const WolfDrive& drive) {
 
   apply_rear(pose, drive);
 
-  pose.jaw_tip = rotate_about_x(pose.jaw_tip, pose.jaw_hinge, 1.05F * drive.jaw_open);
+  float const gape = std::clamp(drive.jaw_open, 0.0F, 1.0F);
+  if (gape > 0.0F) {
+
+    pose.muzzle = rotate_about_x(pose.muzzle, pose.poll, -0.45F * gape);
+  }
+  pose.jaw_tip = rotate_about_x(pose.jaw_tip, pose.jaw_hinge, 0.95F * gape);
 
   if (drive.head_roll != 0.0F) {
 
@@ -504,6 +509,14 @@ void apply_collapse(RigPose& pose, const WolfDrive& drive) {
     place(pose.legs[i].knee, descent, 0.7F);
     place(pose.legs[i].foot, descent, 0.5F);
     place(pose.legs[i].toe, descent, 0.4F);
+
+    float const curl = (k_leg_plans[i].hind ? 0.50F : 0.36F) * m.roll;
+    pose.legs[i].foot = roll_about_spine(pose.legs[i].foot, pose.legs[i].knee, curl);
+    pose.legs[i].toe = roll_about_spine(pose.legs[i].toe, pose.legs[i].knee, curl);
+    pose.legs[i].toe =
+        roll_about_spine(pose.legs[i].toe, pose.legs[i].foot, curl * 0.8F);
+    pose.legs[i].foot.setY(std::max(pose.legs[i].foot.y(), 0.020F));
+    pose.legs[i].toe.setY(std::max(pose.legs[i].toe.y(), 0.020F));
   }
 
   place(pose.poll, head_descent, 0.7F);
@@ -810,8 +823,16 @@ auto build_mesh_nodes(std::uint8_t wanted_lod) -> std::vector<MeshNode> {
                        k_wolf_role_pale,
                        bind.jaw_hinge,
                        bind.jaw_tip,
-                       0.031F,
-                       0.020F));
+                       0.034F,
+                       0.022F));
+  nodes.push_back(tube("wolf.mouth",
+                       Bone::Jaw,
+                       k_wolf_role_nose,
+                       bind.jaw_hinge + (head_up * 0.014F),
+                       bind.jaw_tip + (head_up * 0.010F) - (facing * 0.014F),
+                       0.024F,
+                       0.013F,
+                       k_full));
   nodes.push_back(tube("wolf.bridge",
                        Bone::Head,
                        k_wolf_role_saddle,

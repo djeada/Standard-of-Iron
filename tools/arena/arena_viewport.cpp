@@ -55,6 +55,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/camera_service.h"
 #include "game/systems/combat_rules.h"
+#include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/nation_id.h"
@@ -417,7 +418,7 @@ ArenaViewport::~ArenaViewport() {
 }
 
 void ArenaViewport::configure_runtime() {
-  Game::Systems::NationRegistry::instance().initialize_defaults();
+  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
   Game::Systems::TroopCountRegistry::instance().initialize();
   Game::Systems::NavGrid::initialize(k_terrain_width, k_terrain_height);
 

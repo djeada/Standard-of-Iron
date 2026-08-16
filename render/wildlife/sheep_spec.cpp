@@ -420,6 +420,14 @@ void apply_collapse(RigPose& pose, const SheepDrive& drive) {
     place(pose.legs[i].knee, descent, 0.7F);
     place(pose.legs[i].foot, descent, 0.5F);
     place(pose.legs[i].toe, descent, 0.4F);
+
+    float const curl = (k_leg_plans[i].z < 0.0F ? 0.46F : 0.34F) * m.roll;
+    pose.legs[i].foot = roll_about_spine(pose.legs[i].foot, pose.legs[i].knee, curl);
+    pose.legs[i].toe = roll_about_spine(pose.legs[i].toe, pose.legs[i].knee, curl);
+    pose.legs[i].toe =
+        roll_about_spine(pose.legs[i].toe, pose.legs[i].foot, curl * 0.8F);
+    pose.legs[i].foot.setY(std::max(pose.legs[i].foot.y(), 0.022F));
+    pose.legs[i].toe.setY(std::max(pose.legs[i].toe.y(), 0.022F));
   }
 
   pose.poll += QVector3D(0.0F, 0.0F, -0.030F * m.head);

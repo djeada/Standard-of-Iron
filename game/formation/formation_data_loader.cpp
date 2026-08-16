@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+#include "../units/troop_catalog.h"
+
 namespace Game::Formation {
 
 namespace {
@@ -56,20 +58,6 @@ auto read_int(const QJsonObject& obj, const char* key, int fallback) -> int {
 auto read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   auto const value = obj.value(QLatin1String(key));
   return value.isBool() ? value.toBool() : fallback;
-}
-
-auto read_string_list(const QJsonObject& obj,
-                      const char* key) -> std::vector<std::string> {
-  std::vector<std::string> out;
-  auto const array = obj.value(QLatin1String(key)).toArray();
-  out.reserve(static_cast<std::size_t>(array.size()));
-  for (const auto& entry : array) {
-    auto const text = entry.toString().trimmed();
-    if (!text.isEmpty()) {
-      out.push_back(text.toLower().toStdString());
-    }
-  }
-  return out;
 }
 
 auto read_role_mask(const QJsonObject& obj,
@@ -374,42 +362,6 @@ auto FormationDataLoader::load_layout(const QJsonObject& root,
   return true;
 }
 
-auto FormationDataLoader::parse_troop_profile(const QJsonObject& formation_object,
-                                              TroopFormationProfile& out) -> bool {
-  bool touched = false;
-
-  auto const roles = read_string_list(formation_object, "roles");
-  if (!roles.empty()) {
-    out.roles = parse_role_tag_set(roles);
-    touched = true;
-  }
-
-  auto const army_roles =
-      formation_object.value(QStringLiteral("army_roles")).toArray();
-  if (!army_roles.isEmpty()) {
-    out.army_roles.clear();
-    for (const auto& entry : army_roles) {
-      if (auto parsed = try_parse_army_role(entry.toString())) {
-        out.army_roles.push_back(*parsed);
-      }
-    }
-    touched = true;
-  }
-
-  auto assign = [&](const char* key, std::string& target) {
-    auto const value = formation_object.value(QLatin1String(key)).toString().trimmed();
-    if (!value.isEmpty()) {
-      target = value.toStdString();
-      touched = true;
-    }
-  };
-  assign("unit_layout", out.unit_layout);
-  assign("defensive_layout", out.defensive_layout);
-  assign("marching_layout", out.marching_layout);
-
-  return touched;
-}
-
 auto FormationDataLoader::validate(FormationContentReport& report) -> bool {
   const auto& library = UnitLayoutLibrary::instance();
   auto& roles = TroopRoleRegistry::instance();
@@ -480,8 +432,20 @@ auto FormationDataLoader::validate(FormationContentReport& report) -> bool {
   return !report.has_errors();
 }
 
+void FormationDataLoader::merge_troop_profiles_from_catalog() {
+  auto& roles = TroopRoleRegistry::instance();
+  for (const auto& [troop, troop_class] :
+       Game::Units::TroopCatalog::instance().get_all_classes()) {
+    if (troop_class.formation_profile.has_value()) {
+      roles.merge_profile(troop, *troop_class.formation_profile);
+    }
+  }
+}
+
 auto FormationDataLoader::load_all(const QString& root_path) -> FormationContentReport {
   FormationContentReport report;
+
+  merge_troop_profiles_from_catalog();
 
   QString root = root_path;
   if (root.isEmpty()) {

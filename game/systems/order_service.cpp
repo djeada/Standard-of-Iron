@@ -138,7 +138,6 @@ void OrderService::clear_builder_task(Engine::Core::Entity* entity) {
   builder->construction_complete = false;
   builder->has_construction_site = false;
   builder->at_construction_site = false;
-  builder->is_placement_preview = false;
   builder->bypass_movement_active = false;
   builder->construction_site_entity_id = 0;
   builder->structure_task_entity_id = 0;

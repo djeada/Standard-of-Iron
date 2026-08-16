@@ -19,6 +19,7 @@
 #include "../../game/map/undead_shrine_placement.h"
 #include "../../game/systems/building_collision_registry.h"
 #include "game/formation/formation_data_loader.h"
+#include "game/session/session_context.h"
 #include "game/units/troop_catalog_loader.h"
 
 namespace {
@@ -449,6 +450,9 @@ auto validateFormationContent(const QString& assets_dir) -> bool {
 
 auto main(int argc, char* argv[]) -> int {
   QCoreApplication const app(argc, argv);
+
+  Game::Session::SessionContext session;
+  Game::Session::ScopedSession const active_session(session);
 
   if (argc == 3 && QString::fromLocal8Bit(argv[1]) == QStringLiteral("--mission")) {
     const QString mission_path = QString::fromLocal8Bit(argv[2]);

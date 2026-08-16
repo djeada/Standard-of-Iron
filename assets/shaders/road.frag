@@ -188,20 +188,13 @@ void main() {
   vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(vec3(0.0, 0.9, 0.4));
 
-  float n_dot_l = max(dot(n_final, light_dir), 0.0);
-  float diffuse = n_dot_l;
-
   float steep = saturate_val(length(vec2(sx, sy)) * bump_strength);
   float roughness = clamp(material_roughness + steep * 0.08, 0.18, 1.0);
   float f0 = 0.03;
 
   float spec = ggx_specular(n_final, view_dir, light_dir, roughness, f0);
 
-  vec3 lit_color =
-      base_color *
-      (environment_ambient_light(n_final) +
-       environment_primary_color() * environment_primary_intensity() * diffuse * 0.65) *
-      ao * environment_exposure();
+  vec3 lit_color = base_color * soi_surface_lighting_scaled(n_final, 0.65) * ao;
   lit_color += environment_primary_color() * spec * 0.20;
 
   float grime = (1.0 - ao) * 0.14 * (0.8 + 0.2 * noise_2d(uv * 6.0));

@@ -310,6 +310,47 @@ TEST(ShaderSource, WorldShadersLeaveGradingToThePostProcessPass) {
   EXPECT_NE(fxaa.find("u_inverse_resolution"), std::string::npos);
 }
 
+TEST(ShaderSource, WorldSurfacesTakeTheirKeyLightFromTheSharedModel) {
+  const auto root = find_repo_root();
+  const std::vector<std::string> shaders{
+      "bridge.frag",
+      "road.frag",
+      "riverbank.frag",
+      "ground_plane.frag",
+      "banner.frag",
+      "dead_tree_instanced.frag",
+      "stone_instanced.frag",
+      "tent_instanced.frag",
+      "ruins_instanced.frag",
+      "weapon_rack_instanced.frag",
+      "supply_cart_instanced.frag",
+      "statue_instanced.frag",
+      "magic_shrine_instanced.frag",
+      "iron_ore_instanced.frag",
+      "pine_instanced.frag",
+      "olive_instanced.frag",
+  };
+
+  for (const auto& name : shaders) {
+    const auto source = read_text(root / "assets" / "shaders" / name);
+    ASSERT_FALSE(source.empty()) << name;
+    const bool routed = source.find("soi_key_light(") != std::string::npos ||
+                        source.find("soi_surface_lighting") != std::string::npos;
+    EXPECT_TRUE(routed)
+        << name
+        << " multiplies the sun in by hand, so its terminator no longer matches the "
+           "wrapped-and-banded curve every other surface shades with";
+  }
+
+  const auto common =
+      read_text(root / "assets" / "shaders" / "include" / "environment_lighting.glsl");
+  ASSERT_FALSE(common.empty());
+  EXPECT_LT(common.find("vec3 soi_key_light(vec3 normal)"),
+            common.find("vec3 environment_direct_light("))
+      << "GLSL has no forward declarations: the shared shading helpers must stay "
+         "above their first caller in this include";
+}
+
 TEST(ShaderSource, GeneralWorldShadersDoNotHardCodeDaylightColors) {
   const auto root = find_repo_root();
   for (const auto* name : {"basic.frag",

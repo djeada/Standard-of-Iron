@@ -158,6 +158,7 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   m_total_game_time += delta_time;
+  ++m_update_count;
 
   m_command_filter.update(m_total_game_time);
 
@@ -175,7 +176,7 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    if (ai.worker->busy()) {
+    if (ai.job_pending) {
       continue;
     }
 
@@ -191,6 +192,8 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
 
     if (ai.worker->try_submit(std::move(job))) {
       ai.update_timer = 0.0F;
+      ai.job_pending = true;
+      ai.job_due_update = m_update_count + k_decision_latency_updates;
     }
   }
 }
@@ -198,6 +201,12 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
 void AISystem::process_results(Engine::Core::World& world) {
 
   for (auto& ai : m_ai_instances) {
+    if (!ai.job_pending || m_update_count < ai.job_due_update) {
+      continue;
+    }
+
+    ai.worker->wait_idle();
+    ai.job_pending = false;
 
     std::queue<AI::AIResult> results;
     ai.worker->drain_results(results);

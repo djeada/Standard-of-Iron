@@ -14,6 +14,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -61,7 +62,7 @@ protected:
     owners.register_owner_with_id(k_wave_ai, Game::Systems::OwnerType::AI, "rome");
     owners.set_owner_team(k_player, 0);
     owners.set_owner_team(k_wave_ai, 1);
-    session.nations().initialize_defaults();
+    Game::Systems::initialize_default_content(session.nations());
     Game::Systems::register_runtime_systems(session.world());
 
     Game::Map::MapDefinition map_definition;
