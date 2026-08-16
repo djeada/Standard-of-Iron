@@ -103,6 +103,8 @@ auto TroopProfileService::build_profile(const Nation& nation,
   profile.production = catalog_class.production;
   profile.combat = catalog_class.combat;
   profile.visuals = catalog_class.visuals;
+  profile.lore = catalog_class.lore;
+  profile.documented_abilities = catalog_class.documented_abilities;
   profile.individuals_per_unit = catalog_class.individuals_per_unit;
   profile.max_units_per_row = catalog_class.max_units_per_row;
   profile.doctrine = nation.doctrine;
@@ -193,6 +195,9 @@ auto TroopProfileService::build_profile(const Nation& nation,
     }
     if (!variant.abilities.empty()) {
       profile.abilities = variant.abilities;
+    }
+    if (variant.lore_history) {
+      profile.lore.history = *variant.lore_history;
     }
   }
 

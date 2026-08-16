@@ -64,6 +64,30 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   return obj.value(key).toBool(fallback);
 }
 
+[[nodiscard]] auto read_string(const QJsonObject& obj,
+                               const char* key,
+                               const std::string& fallback) -> std::string {
+  if (!obj.contains(key)) {
+    return fallback;
+  }
+  const auto value = obj.value(key);
+  if (!value.isString()) {
+    return fallback;
+  }
+  return value.toString().toStdString();
+}
+
+[[nodiscard]] auto read_string_array(const QJsonObject& obj,
+                                     const char* key) -> std::vector<std::string> {
+  std::vector<std::string> values;
+  for (const auto& entry : ensure_array(obj.value(key))) {
+    if (entry.isString()) {
+      values.push_back(entry.toString().toStdString());
+    }
+  }
+  return values;
+}
+
 [[nodiscard]] auto read_resource_amounts(const QJsonObject& obj,
                                          const char* key,
                                          Game::Systems::ResourceAmounts fallback)
@@ -85,6 +109,7 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
 namespace Game::Units {
 
 static constexpr const char* k_troop_list_key = "troops";
+static constexpr const char* k_ability_list_key = "abilities";
 static bool g_catalog_loaded = false;
 
 static auto logger() -> QLoggingCategory& {
@@ -244,7 +269,30 @@ auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
       troop_class.formation_profile = std::move(overrides);
     }
 
+    const QJsonObject lore = ensure_object(troop_obj.value("lore"));
+    troop_class.lore.role = read_string(lore, "role", troop_class.lore.role);
+    troop_class.lore.strengths =
+        read_string(lore, "strengths", troop_class.lore.strengths);
+    troop_class.lore.weaknesses =
+        read_string(lore, "weaknesses", troop_class.lore.weaknesses);
+    troop_class.lore.history = read_string(lore, "history", troop_class.lore.history);
+
+    troop_class.documented_abilities = read_string_array(troop_obj, "abilities");
+
     catalog.register_class(std::move(troop_class));
+  }
+
+  for (const QJsonValue& value : ensure_array(root.value(k_ability_list_key))) {
+    const QJsonObject ability_obj = ensure_object(value);
+    AbilityDefinition ability;
+    ability.id = read_string(ability_obj, "id", {});
+    if (ability.id.empty()) {
+      qCWarning(logger()) << "Encountered ability without id in" << path;
+      continue;
+    }
+    ability.display_name = read_string(ability_obj, "display_name", ability.id);
+    ability.effect = read_string(ability_obj, "effect", {});
+    catalog.register_ability(std::move(ability));
   }
 
   TroopConfig::instance().refresh_from_catalog();

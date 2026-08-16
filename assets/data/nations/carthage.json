@@ -57,6 +57,9 @@
       "formation": {
         "individuals_per_unit": 22,
         "max_units_per_row": 5
+      },
+      "lore": {
+        "history": "Carthage bought its archers from Libya and the islands, paying in silver what Rome demanded of its citizens."
       }
     },
     {
@@ -91,6 +94,9 @@
       "formation": {
         "individuals_per_unit": 16,
         "max_units_per_row": 4
+      },
+      "lore": {
+        "history": "Carthage sent its own citizens into the line only when the city itself was threatened. The rest of the army was hired."
       }
     },
     {
@@ -125,6 +131,9 @@
       "formation": {
         "individuals_per_unit": 28,
         "max_units_per_row": 6
+      },
+      "lore": {
+        "history": "The Liby-Phoenician spear was the steady centre that a mercenary army could be built around."
       }
     },
     {
@@ -158,6 +167,9 @@
       "formation": {
         "individuals_per_unit": 9,
         "max_units_per_row": 3
+      },
+      "lore": {
+        "history": "The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work."
       }
     },
     {
@@ -192,6 +204,9 @@
       "formation": {
         "individuals_per_unit": 1,
         "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "The Sacred Band kept physicians of its own, an honour reserved for the citizen elite."
       }
     },
     {
@@ -292,6 +307,9 @@
       "formation": {
         "individuals_per_unit": 1,
         "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "Carthage took its elephants from the forests south of the Atlas, smaller than the Indian beasts but the terror of Italy."
       }
     },
     {
@@ -326,6 +344,9 @@
       "formation": {
         "individuals_per_unit": 1,
         "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "Carthaginian engineers learned artillery from the Greek cities of Sicily, and then improved on it."
       }
     },
     {
@@ -360,6 +381,9 @@
       "formation": {
         "individuals_per_unit": 1,
         "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "The bolt throwers of Carthage were built in the same yards as its fleet, by the same shipwrights."
       }
     },
     {
@@ -394,6 +418,9 @@
       "formation": {
         "individuals_per_unit": 12,
         "max_units_per_row": 4
+      },
+      "lore": {
+        "history": "Phoenician craftsmen raised the harbours and walls that made Carthage the richest city in the western sea."
       }
     },
     {

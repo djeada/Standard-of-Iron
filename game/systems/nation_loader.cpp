@@ -354,6 +354,12 @@ auto nation_loader_logger() -> QLoggingCategory& {
     has_variant = true;
   }
 
+  const QJsonObject lore = obj.value("lore").toObject();
+  if (const auto history = lore.value("history"); history.isString()) {
+    variant.lore_history = history.toString().toStdString();
+    has_variant = true;
+  }
+
   if (has_variant) {
     nation.troop_variants[troop_type] = std::move(variant);
   }

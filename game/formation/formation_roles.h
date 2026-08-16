@@ -2,6 +2,7 @@
 
 #include <QJsonObject>
 #include <QString>
+#include <QStringList>
 
 #include <cstdint>
 #include <optional>
@@ -56,6 +57,10 @@ using RoleTagSet = std::uint32_t;
 [[nodiscard]] auto
 parse_role_tag_set(const std::vector<std::string>& tags) -> RoleTagSet;
 [[nodiscard]] auto role_tag_set_to_strings(RoleTagSet set) -> std::vector<std::string>;
+
+[[nodiscard]] auto role_tag_label(RoleTag tag) -> QString;
+[[nodiscard]] auto role_tag_set_to_labels(RoleTagSet set) -> QStringList;
+[[nodiscard]] auto all_role_tags() -> std::vector<RoleTag>;
 
 enum class ArmyRole : std::uint8_t {
   Centre,
