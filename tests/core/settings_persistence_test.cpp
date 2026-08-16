@@ -126,4 +126,82 @@ TEST_F(SettingsPersistenceTest, AudioVolumesAreSavedAndRestored) {
   EXPECT_FLOAT_EQ(audio.get_ambience_volume(), 0.75F);
 }
 
+TEST_F(SettingsPersistenceTest, FreshInstallUsesConservativeAudioDefaults) {
+  App::Core::UserSettings::clear();
+
+  const auto loaded = App::Core::UserSettings::load_audio_volumes();
+  const auto defaults = App::Core::UserSettings::default_audio_volumes();
+
+  EXPECT_FLOAT_EQ(loaded.master, defaults.master);
+  EXPECT_FLOAT_EQ(loaded.sound, defaults.sound);
+  EXPECT_FLOAT_EQ(loaded.music, defaults.music);
+  EXPECT_FLOAT_EQ(loaded.voice, defaults.voice);
+  EXPECT_FLOAT_EQ(loaded.ambience, defaults.ambience);
+
+  EXPECT_GT(defaults.master, AudioConstants::MIN_VOLUME);
+  EXPECT_LT(defaults.master, AudioConstants::MAX_VOLUME);
+  EXPECT_LT(defaults.music, AudioConstants::MAX_VOLUME);
+}
+
+TEST_F(SettingsPersistenceTest, FreshInstallDefaultsReachTheAudioSystem) {
+  App::Core::UserSettings::clear();
+
+  auto& audio = AudioSystem::get_instance();
+  audio.master_volume = AudioConstants::MAX_VOLUME;
+  audio.music_volume = AudioConstants::MAX_VOLUME;
+  audio.load_persisted_volumes();
+
+  const auto defaults = App::Core::UserSettings::default_audio_volumes();
+  EXPECT_FLOAT_EQ(audio.get_master_volume(), defaults.master);
+  EXPECT_FLOAT_EQ(audio.get_music_volume(), defaults.music);
+}
+
+TEST_F(SettingsPersistenceTest, FreshInstallDefaultsArePersistedOnFirstLoad) {
+  App::Core::UserSettings::clear();
+
+  const auto defaults = App::Core::UserSettings::load_audio_volumes();
+
+  auto settings = App::Core::UserSettings::open();
+  ASSERT_TRUE(settings.contains(
+      QString::fromLatin1(App::Core::UserSettings::kMasterVolumeKey)));
+  EXPECT_FLOAT_EQ(
+      settings.value(QString::fromLatin1(App::Core::UserSettings::kMasterVolumeKey))
+          .toFloat(),
+      defaults.master);
+  EXPECT_FLOAT_EQ(
+      settings.value(QString::fromLatin1(App::Core::UserSettings::kMusicVolumeKey))
+          .toFloat(),
+      defaults.music);
+}
+
+TEST_F(SettingsPersistenceTest, SavedFullVolumeSurvivesTheNewDefaults) {
+  App::Core::UserSettings::clear();
+  App::Core::UserSettings::save_master_volume(AudioConstants::MAX_VOLUME);
+  App::Core::UserSettings::save_music_volume(AudioConstants::MAX_VOLUME);
+  App::Core::UserSettings::save_sound_volume(0.25F);
+  App::Core::UserSettings::save_voice_volume(0.25F);
+  App::Core::UserSettings::save_ambience_volume(0.25F);
+
+  const auto loaded = App::Core::UserSettings::load_audio_volumes();
+
+  EXPECT_FLOAT_EQ(loaded.master, AudioConstants::MAX_VOLUME);
+  EXPECT_FLOAT_EQ(loaded.music, AudioConstants::MAX_VOLUME);
+  EXPECT_FLOAT_EQ(loaded.sound, 0.25F);
+  EXPECT_FLOAT_EQ(loaded.voice, 0.25F);
+  EXPECT_FLOAT_EQ(loaded.ambience, 0.25F);
+}
+
+TEST_F(SettingsPersistenceTest, PartiallySavedVolumesAreNotTreatedAsAFirstRun) {
+  App::Core::UserSettings::clear();
+  App::Core::UserSettings::save_master_volume(0.42F);
+
+  const auto loaded = App::Core::UserSettings::load_audio_volumes();
+
+  EXPECT_FLOAT_EQ(loaded.master, 0.42F);
+  EXPECT_FLOAT_EQ(loaded.music, AudioConstants::DEFAULT_VOLUME);
+  EXPECT_FLOAT_EQ(loaded.sound, AudioConstants::DEFAULT_VOLUME);
+  EXPECT_FLOAT_EQ(loaded.voice, AudioConstants::DEFAULT_VOLUME);
+  EXPECT_FLOAT_EQ(loaded.ambience, AudioConstants::DEFAULT_VOLUME);
+}
+
 } // namespace

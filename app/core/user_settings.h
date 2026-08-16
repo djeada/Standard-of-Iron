@@ -57,6 +57,10 @@ inline constexpr double kDefaultScreenEffectIntensity = 1.0;
 
 using AudioVolumes = Game::Audio::Settings::Volumes;
 
+inline auto default_audio_volumes() -> AudioVolumes {
+  return Game::Audio::Settings::first_run_volumes();
+}
+
 inline auto open() -> QSettings {
   return QSettings(QSettings::IniFormat,
                    QSettings::UserScope,
