@@ -82,7 +82,7 @@ Item {
                 Label {
                     text: qsTr("Campaign Missions")
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeHero
+                    font.pixelSize: Design.Typography.hero
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -151,7 +151,7 @@ Item {
                                     Label {
                                         text: modelData.title || ""
                                         color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeTitle
+                                        font.pixelSize: Design.Typography.heading
                                         font.bold: true
                                         Layout.fillWidth: true
                                     }
@@ -169,7 +169,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: qsTr("✓ Completed")
                                             color: Theme.successText
-                                            font.pointSize: Theme.fontSizeSmall
+                                            font.pixelSize: Design.Typography.body
                                             font.bold: true
                                         }
                                     }
@@ -187,7 +187,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: Design.Icons.locked + " " + qsTr("Locked")
                                             color: Theme.textDim
-                                            font.pointSize: Theme.fontSizeSmall
+                                            font.pixelSize: Design.Typography.body
                                         }
                                     }
                                 }
@@ -199,13 +199,13 @@ Item {
                                     maximumLineCount: 2
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                 }
                             }
 
                             Text {
                                 text: Design.Icons.chevronForward
-                                font.pointSize: Theme.fontSizeHero
+                                font.pixelSize: Design.Typography.hero
                                 color: Theme.textHint
                             }
                         }
@@ -229,7 +229,7 @@ Item {
                 visible: root.campaigns.length === 0
                 text: qsTr("No campaign missions available")
                 color: Theme.textDim
-                font.pointSize: Theme.fontSizeMedium
+                font.pixelSize: Design.Typography.bodyLarge
                 horizontalAlignment: Text.AlignHCenter
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -393,7 +393,7 @@ Item {
                 Label {
                     text: missionDetailPanel.campaign_data ? (missionDetailPanel.campaign_data.title || "") : ""
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeHero
+                    font.pixelSize: Design.Typography.hero
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -403,7 +403,7 @@ Item {
                     color: Theme.textSubLite
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                 }
 
                 Rectangle {
@@ -453,7 +453,7 @@ Item {
                             anchors.centerIn: parent
                             text: qsTr("Loading map…")
                             color: Theme.textDim
-                            font.pointSize: Theme.fontSizeMedium
+                            font.pixelSize: Design.Typography.bodyLarge
                         }
                     }
 
@@ -630,7 +630,7 @@ Item {
                             visible: false
                             text: modelData.display_name || modelData.name
                             color: (campaignMapLoader.item && campaignMapLoader.item.hover_province_id === modelData.id) ? Theme.accent : Theme.textMain
-                            font.pointSize: Theme.fontSizeSmall
+                            font.pixelSize: Design.Typography.body
                             font.bold: true
                             style: Text.Outline
                             styleColor: "#101010"
@@ -674,7 +674,7 @@ Item {
                                 Text {
                                     text: city_data.display_name || city_data.name
                                     color: "#111111"
-                                    font.pointSize: Theme.fontSizeTiny
+                                    font.pixelSize: Design.Typography.label
                                     font.bold: true
                                     style: Text.Outline
                                     styleColor: "#f2e6c8"
@@ -709,7 +709,7 @@ Item {
                                 style: Text.Outline
                                 styleColor: "#000000"
                                 font.bold: true
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                             }
 
                             Label {
@@ -717,7 +717,7 @@ Item {
                                 color: "#ffffff"
                                 style: Text.Outline
                                 styleColor: "#000000"
-                                font.pointSize: Theme.fontSizeTiny
+                                font.pixelSize: Design.Typography.label
                             }
                         }
                     }
@@ -730,7 +730,7 @@ Item {
                     Label {
                         text: qsTr("Legend")
                         color: Theme.textMain
-                        font.pointSize: Theme.fontSizeSmall
+                        font.pixelSize: Design.Typography.body
                         font.bold: true
                     }
 
@@ -752,7 +752,7 @@ Item {
                             Label {
                                 text: modelData.name
                                 color: Theme.textSubLite
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                             }
                         }
                     }
@@ -767,7 +767,7 @@ Item {
                 Label {
                     text: qsTr("Select a Mission")
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeTitle
+                    font.pixelSize: Design.Typography.heading
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -821,7 +821,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.ordinal(modelData.order_index)
                                     color: Theme.accent
-                                    font.pointSize: Theme.fontSizeTitle
+                                    font.pixelSize: Design.Typography.heading
                                     font.bold: true
                                     Layout.preferredWidth: 40
                                 }
@@ -833,7 +833,7 @@ Item {
                                     Label {
                                         text: titleize(modelData.mission_id || "")
                                         color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeLarge
+                                        font.pixelSize: Design.Typography.subheading
                                         font.bold: true
                                         Layout.fillWidth: true
                                     }
@@ -845,13 +845,13 @@ Item {
                                         maximumLineCount: 2
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
-                                        font.pointSize: Theme.fontSizeSmall
+                                        font.pixelSize: Design.Typography.body
                                     }
                                 }
 
                                 Text {
                                     text: Design.Icons.chevronForward
-                                    font.pointSize: Theme.fontSizeTitle
+                                    font.pixelSize: Design.Typography.heading
                                     color: Theme.textHint
                                 }
                             }

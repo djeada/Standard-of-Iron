@@ -232,7 +232,7 @@ ApplicationWindow {
                 Text {
                     text: qsTr("PAUSED")
                     color: Theme.textMain
-                    font.pixelSize: 36
+                    font.pixelSize: Design.Typography.hero
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -240,7 +240,7 @@ ApplicationWindow {
                 Text {
                     text: qsTr("Press Space to resume")
                     color: Theme.textSubLite
-                    font.pixelSize: 14
+                    font.pixelSize: Design.Typography.label
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }

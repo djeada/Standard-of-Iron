@@ -509,7 +509,7 @@ Item {
 
                     text: qsTr("Maps")
                     color: Theme.textMain
-                    font.pixelSize: 20
+                    font.pixelSize: Design.Typography.subheading
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -628,7 +628,7 @@ Item {
                                         Text {
                                             anchors.centerIn: parent
                                             text: Design.Icons.terrainPlains
-                                            font.pixelSize: Theme.fontSizeTitle
+                                            font.pixelSize: Design.Typography.heading
                                             color: Theme.textDim
                                         }
                                     }
@@ -650,7 +650,7 @@ Item {
 
                                         text: (typeof name !== "undefined") ? String(name) : (typeof modelData === "string" ? modelData : (modelData && modelData.name ? String(modelData.name) : ""))
                                         color: (index === list.currentIndex) ? Theme.textMain : Theme.textBright
-                                        font.pixelSize: (index === list.currentIndex) ? 17 : 15
+                                        font.pixelSize: (index === list.currentIndex) ? Design.Typography.body : Design.Typography.label
                                         font.bold: (index === list.currentIndex)
                                         elide: Text.ElideRight
 
@@ -670,7 +670,7 @@ Item {
                                     Text {
                                         text: (typeof description !== "undefined") ? String(description) : (modelData && modelData.description ? String(modelData.description) : "")
                                         color: (index === list.currentIndex) ? Theme.accentBright : Theme.textSub
-                                        font.pixelSize: 12
+                                        font.pixelSize: Design.Typography.caption
                                         elide: Text.ElideRight
 
                                         anchors {
@@ -682,7 +682,7 @@ Item {
 
                                     Text {
                                         text: Design.Icons.chevronForward
-                                        font.pointSize: 18
+                                        font.pixelSize: Design.Typography.heading
                                         color: (index === list.currentIndex) ? Theme.textMain : Theme.textHint
 
                                         anchors {
@@ -717,7 +717,7 @@ Item {
                     Text {
                         text: qsTr("No maps available")
                         color: Theme.textSub
-                        font.pixelSize: 14
+                        font.pixelSize: Design.Typography.label
                         anchors.centerIn: parent
                     }
                 }
@@ -733,7 +733,7 @@ Item {
 
                         Text {
                             text: "⟳"
-                            font.pixelSize: 24
+                            font.pixelSize: Design.Typography.heading
                             color: Theme.accent
                             anchors.horizontalCenter: parent.horizontalCenter
 
@@ -749,7 +749,7 @@ Item {
                         Text {
                             text: qsTr("Loading maps...")
                             color: Theme.textSub
-                            font.pixelSize: 12
+                            font.pixelSize: Design.Typography.caption
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
                     }
@@ -776,7 +776,7 @@ Item {
 
                 text: selected_map_data ? qsTr("► %1").arg(field(selected_map_data, "name")) : qsTr("Select a map to continue")
                 color: selected_map_data ? Theme.accent : Theme.textHint
-                font.pixelSize: 13
+                font.pixelSize: Design.Typography.caption
                 font.italic: !selected_map_data
                 elide: Text.ElideRight
 
@@ -806,7 +806,7 @@ Item {
 
                     Text {
                         text: "⟳"
-                        font.pixelSize: 40
+                        font.pixelSize: Design.Typography.hero
                         color: Theme.accent
                         anchors.horizontalCenter: parent.horizontalCenter
 
@@ -822,7 +822,7 @@ Item {
                     Text {
                         text: qsTr("Loading maps...")
                         color: Theme.textSub
-                        font.pixelSize: 14
+                        font.pixelSize: Design.Typography.label
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                 }
@@ -921,7 +921,7 @@ Item {
                     Text {
                         text: qsTr("Loading map details...")
                         color: Theme.textHint
-                        font.pixelSize: 12
+                        font.pixelSize: Design.Typography.caption
                         font.italic: true
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -938,7 +938,7 @@ Item {
                 }
                 visible: selected_map_data !== null
                 color: Theme.textMain
-                font.pixelSize: 24
+                font.pixelSize: Design.Typography.heading
                 font.bold: true
                 elide: Text.ElideRight
 
@@ -956,7 +956,7 @@ Item {
                 text: field(selected_map_data, "description")
                 visible: selected_map_data !== null
                 color: Theme.textSubLite
-                font.pixelSize: 13
+                font.pixelSize: Design.Typography.caption
                 wrapMode: Text.WordWrap
                 maximumLineCount: 3
                 elide: Text.ElideRight
@@ -1001,7 +1001,7 @@ Item {
                         Text {
                             text: qsTr("Players")
                             color: Theme.textMain
-                            font.pixelSize: 17
+                            font.pixelSize: Design.Typography.body
                             font.bold: true
                         }
 
@@ -1016,7 +1016,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: Design.Numerals.roman(players_model.count)
                                 color: Theme.textMain
-                                font.pixelSize: 13
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
                         }
@@ -1024,7 +1024,7 @@ Item {
                         Text {
                             text: qsTr("• Click color/team to cycle")
                             color: Theme.textSubLite
-                            font.pixelSize: 11
+                            font.pixelSize: Design.Typography.caption
                             font.italic: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -1032,7 +1032,7 @@ Item {
                         Text {
                             text: qsTr("• Click nation tag to change")
                             color: Theme.textSubLite
-                            font.pixelSize: 11
+                            font.pixelSize: Design.Typography.caption
                             font.italic: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -1099,7 +1099,7 @@ Item {
                                         anchors.centerIn: parent
                                         text: model.isEnabled ? "✓" : ""
                                         color: Theme.accent
-                                        font.pixelSize: 18
+                                        font.pixelSize: Design.Typography.bodyLarge
                                         font.bold: true
                                     }
 
@@ -1142,7 +1142,7 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: model.playerName || ""
                                     color: model.isEnabled ? (model.isHuman ? Theme.accentBright : Theme.textBright) : Theme.textDim
-                                    font.pixelSize: model.isHuman ? 15 : 14
+                                    font.pixelSize: model.isHuman ? Design.Typography.body : Design.Typography.label
                                     font.bold: true
                                     opacity: model.isEnabled ? 1 : 0.5
                                 }
@@ -1178,7 +1178,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: model.colorName || qsTr("Color")
                                             color: model.colorHex || Theme.textMain
-                                            font.pixelSize: 13
+                                            font.pixelSize: Design.Typography.caption
                                             font.bold: true
                                         }
 
@@ -1244,7 +1244,7 @@ Item {
                                             visible: parent.emblem_source === ""
                                             text: model.nationName || qsTr("Nation")
                                             color: Theme.textMain
-                                            font.pixelSize: 11
+                                            font.pixelSize: Design.Typography.caption
                                             font.bold: true
                                         }
 
@@ -1298,7 +1298,7 @@ Item {
                                                 anchors.horizontalCenter: parent.horizontalCenter
                                                 text: qsTr("Commander")
                                                 color: Theme.textSubLite
-                                                font.pixelSize: 10
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
 
@@ -1307,7 +1307,7 @@ Item {
                                                 width: parent.parent.width - Theme.spacingSmall * 2
                                                 text: model.commanderName || qsTr("Commander")
                                                 color: Theme.textMain
-                                                font.pixelSize: 12
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                                 horizontalAlignment: Text.AlignHCenter
                                                 wrapMode: Text.WordWrap
@@ -1365,7 +1365,7 @@ Item {
                                                 anchors.horizontalCenter: parent.horizontalCenter
                                                 text: model.teamIcon || "⚪"
                                                 color: Theme.textMain
-                                                font.pixelSize: 20
+                                                font.pixelSize: Design.Typography.subheading
                                                 font.bold: true
                                             }
 
@@ -1373,7 +1373,7 @@ Item {
                                                 anchors.horizontalCenter: parent.horizontalCenter
                                                 text: qsTr("Team %1").arg(Design.Numerals.roman(model.team_id || 0))
                                                 color: Theme.textBright
-                                                font.pixelSize: 10
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -1425,7 +1425,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: "✕"
                                             color: Theme.textMain
-                                            font.pixelSize: 16
+                                            font.pixelSize: Design.Typography.body
                                             font.bold: true
                                         }
 
@@ -1513,7 +1513,7 @@ Item {
 
                         contentItem: Text {
                             text: parent.text
-                            font.pixelSize: 13
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                             color: addCpuButton.allowed ? Theme.textMain : Theme.textDim
                             horizontalAlignment: Text.AlignHCenter
@@ -1584,14 +1584,14 @@ Item {
                                         return player_ids_for_map(selected_map_data).length;
                                     })()))
                         color: Theme.textMain
-                        font.pixelSize: 14
+                        font.pixelSize: Design.Typography.label
                         font.bold: true
                     }
 
                     Text {
                         text: qsTr("Select your player ID:")
                         color: Theme.textSubLite
-                        font.pixelSize: 12
+                        font.pixelSize: Design.Typography.caption
                     }
 
                     Flow {
@@ -1630,7 +1630,7 @@ Item {
                                             return Theme.textSub;
                                         return (game.selected_player_id === pid) ? Theme.textMain : Theme.textSub;
                                     }
-                                    font.pixelSize: 12
+                                    font.pixelSize: Design.Typography.caption
                                     font.bold: {
                                         var pid = modelData;
                                         if (typeof game === 'undefined')
@@ -1670,7 +1670,7 @@ Item {
                             return qsTr("CPU will control: ID %1").arg(others.join(qsTr(", ID ")));
                         }
                         color: Theme.textSubLite
-                        font.pixelSize: 11
+                        font.pixelSize: Design.Typography.caption
                         wrapMode: Text.WordWrap
                         width: parent.width
                     }
@@ -1710,7 +1710,7 @@ Item {
                 text: validation_error
                 visible: validation_error !== ""
                 color: Theme.removeColor
-                font.pixelSize: 13
+                font.pixelSize: Design.Typography.caption
                 font.bold: true
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
@@ -1753,7 +1753,7 @@ Item {
 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: backHover.containsMouse ? 14 : 13
+                    font.pixelSize: backHover.containsMouse ? Design.Typography.label : Design.Typography.caption
                     font.bold: backHover.containsMouse
                     color: Theme.textBright
                     horizontalAlignment: Text.AlignHCenter
@@ -1839,7 +1839,7 @@ Item {
 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: playButton.allowed ? (playHover.containsMouse ? 15 : 14) : 14
+                    font.pixelSize: (playButton.allowed && playHover.containsMouse) ? Design.Typography.body : Design.Typography.label
                     font.bold: true
                     color: playButton.allowed ? Theme.textMain : Theme.textDim
                     horizontalAlignment: Text.AlignHCenter

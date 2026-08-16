@@ -10,14 +10,15 @@ and how to build a screen on top of it.
 1. The aesthetic the tokens encode
 2. How the module is packaged and imported
 3. The token singletons and who owns which value
-4. Accessibility: one preference, every surface
-5. Faction identity as a skin, never a layout
-6. The single notification queue
-7. Iconography, and why emoji are banned
-8. Reviewing a screen with a screenshot
-9. The component gallery
-10. How the system is tested
-11. How the Qt Widgets tools stay in the same product
+4. The type ladder and its legibility floor
+5. Accessibility: one preference, every surface
+6. Faction identity as a skin, never a layout
+7. The single notification queue
+8. Iconography, and why emoji are banned
+9. Reviewing a screen with a screenshot
+10. The component gallery
+11. How the system is tested
+12. How the Qt Widgets tools stay in the same product
 
 ## The aesthetic: "Iron and Ember"
 
@@ -76,6 +77,47 @@ QML product cannot drift apart: `Theme.qml` reads `StandardOfIron.Theme` and lay
 accessibility variants on top of it.
 
 Screens should reference tokens, never literals. `Metrics.space12`, not `12`.
+
+## Type
+
+One ladder, in pixels, for every screen in the product:
+
+| Rung         | px at scale 1.0 | Used for                                     |
+| ------------ | --------------- | -------------------------------------------- |
+| `caption`    | 13              | Costs, counters, queue indices, hotkey chips |
+| `label`      | 15              | Field labels, button text, list rows         |
+| `body`       | 16              | Running prose, tooltips, descriptions        |
+| `bodyLarge`  | 19              | Emphasised body, panel intros                |
+| `subheading` | 21              | Section headings inside a panel              |
+| `heading`    | 24              | Panel titles                                 |
+| `title`      | 32              | Screen titles                                |
+| `hero`       | 40              | Menu and outcome display text                |
+| `glyphSmall` | 28              | Icon glyphs standing in for missing art      |
+| `glyph`      | 44              | Unit card glyphs                             |
+| `glyphLarge` | 56              | Large recruit card glyphs                    |
+
+Rules, in order of how often they are broken:
+
+- **Always `font.pixelSize`, never `font.pointSize`.** Points resolve against the screen's
+  reported DPI, so a point-sized label and a pixel-sized token drift apart on the same
+  panel. The ladder used to exist twice — pixels here, points on `Theme` — and the point
+  copy rendered a third larger, which is how the gameplay HUD ended up smaller than the
+  menus around it. `Theme` no longer carries font sizes.
+- **`caption` through `heading` carry a legibility floor** (`Typography.minimumSize`, 12px).
+  A player who drops the interface scale to 0.75 still gets readable costs and counters;
+  the bottom rungs converge on the floor rather than shrinking past it, the same way
+  `Metrics.minTouchTarget` refuses to go under 32px.
+- **For a size that is genuinely computed** — a damage number that ramps with severity, a
+  menu title that halves on a narrow window — use `Typography.scaled(px)` (floored) or
+  `Typography.display(px)` (unfloored). Both follow the interface scale. A bare number does
+  not, and `scripts/check-typography.py` rejects it.
+- **A `Control` is not the thing that draws its label.** `Button.font` is inherited default
+  state; the `contentItem: Text` under it is what renders, and its own `font.pixelSize`
+  survives. Set the size there, and measure there — a test that reads `button.font` is
+  reading a value no player ever sees.
+- **If the text scales, the box around it has to scale too.** A label on the ladder inside a
+  `height: 16` pill is legible at 1.0 and spills at 2.0. Size those containers from the
+  content (`implicitHeight + padding`) or from `A11y.scaled()`.
 
 ## Accessibility
 
@@ -318,7 +360,11 @@ the component belongs in the library first.
 `tests/ui/qml/` holds QtQuickTest cases that run against the real shipped module:
 
 - `tst_design_tokens.qml` — scale monotonicity, UI scale propagation and clamping, touch
-  target floor, reduced motion, high contrast, colour-vision repainting
+  target floor, the type legibility floor, reduced motion, high contrast, colour-vision
+  repainting
+- `tst_gameplay_typography.qml` — walks the real production panel at the minimum, default
+  and maximum interface scale: nothing renders under the legibility floor, every label
+  grows when the scale doubles, and no label outgrows the box drawn around it
 - `tst_component_library.qml` — every published type instantiates; accessible names;
   focus-ring behaviour; scale response
 - `tst_notifications.qml` — priority ordering, FIFO within a band, channel collapsing and

@@ -93,9 +93,22 @@ the UI:
 
 `UiPreferences.uiScale` runs from 75% to 200%. Both metric systems follow it:
 the design-system tokens (`Design.Metrics`, `Design.Typography`) and the older
-`Theme` spacing and font sizes, which are no longer constant. The settings panel
-itself is sized in scaled pixels and takes up to 90% of the window, so the
-screen where the scale is changed stays reachable at every step.
+`Theme` spacing, which is no longer constant. The settings panel itself is sized
+in scaled pixels and takes up to 90% of the window, so the screen where the scale
+is changed stays reachable at every step.
+
+Every font size in the product comes from `Design.Typography`, so the slider
+moves the campaign, the menus and the in-match HUD together. It used to move only
+some of them: the gameplay panels carried their own point sizes, which ignored
+the setting entirely and rendered small enough that testers reported them as
+unreadable. `scripts/check-typography.py` fails the build on a font size that is
+not a token, and `tests/ui/qml/tst_gameplay_typography.qml` measures the real
+production panel at 75%, 100% and 200% to prove the slider reaches it.
+
+The bottom of the type ladder carries a floor of 12px
+(`Design.Typography.minimumSize`), so costs, counters and objective text stay
+readable at the smallest interface scale rather than shrinking with it — the same
+guarantee `Design.Metrics.minTouchTarget` gives pointer targets.
 
 ### Team identity without hue
 
