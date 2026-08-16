@@ -3165,6 +3165,28 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Camera controls</source>
         <translation>Camera controls</translation>
     </message>
+    <message>
+        <source>Visible</source>
+        <translation>Visible</translation>
+    </message>
+    <message>
+        <source>Explored</source>
+        <translation>Explored</translation>
+    </message>
+    <message>
+        <source>Unseen</source>
+        <translation>Unseen</translation>
+    </message>
+    <message>
+        <source>Left click moves the camera, right click orders selected troops.
+Visible: currently scouted, enemies shown.
+Explored: seen before, terrain only.
+Unseen: never scouted.</source>
+        <translation>Left click moves the camera, right click orders selected troops.
+Visible: currently scouted, enemies shown.
+Explored: seen before, terrain only.
+Unseen: never scouted.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>

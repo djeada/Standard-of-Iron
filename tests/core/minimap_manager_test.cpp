@@ -196,6 +196,166 @@ TEST(MinimapManagerTest, YawedFogStillDarkensRuntimeMinimap) {
       << "Runtime-like yawed minimaps must still receive fog tint.";
 }
 
+TEST(MinimapManagerTest, FogStatesAreVisuallySeparableAtMinimapScale) {
+  const MapDefinition map = make_test_map(64, 64);
+
+  MinimapManager visible_manager;
+  visible_manager.generate_for_map(map);
+  visible_manager.update_fog(
+      make_visibility_snapshot(64, 64, 1, VisibilityState::Visible));
+  const QImage visible_image = visible_manager.get_image().copy();
+
+  MinimapManager explored_manager;
+  explored_manager.generate_for_map(map);
+  explored_manager.update_fog(
+      make_visibility_snapshot(64, 64, 1, VisibilityState::Explored));
+  const QImage explored_image = explored_manager.get_image().copy();
+
+  MinimapManager unseen_manager;
+  unseen_manager.generate_for_map(map);
+  unseen_manager.update_fog(
+      make_visibility_snapshot(64, 64, 1, VisibilityState::Unseen));
+  const QImage unseen_image = unseen_manager.get_image().copy();
+
+  ASSERT_FALSE(visible_image.isNull());
+  ASSERT_EQ(visible_image.size(), explored_image.size());
+  ASSERT_EQ(visible_image.size(), unseen_image.size());
+
+  const QRgb unseen_reference = unseen_image.pixel(0, 0);
+  int unseen_variation = 0;
+  int explored_vs_unseen_separation = 0;
+  int explored_vs_visible_separation = 0;
+  int sampled = 0;
+
+  for (int y = 0; y < visible_image.height(); ++y) {
+    for (int x = 0; x < visible_image.width(); ++x) {
+      const QRgb unseen_pixel = unseen_image.pixel(x, y);
+      const QRgb explored_pixel = explored_image.pixel(x, y);
+      const QRgb visible_pixel = visible_image.pixel(x, y);
+      ++sampled;
+
+      unseen_variation =
+          std::max({unseen_variation,
+                    std::abs(qRed(unseen_pixel) - qRed(unseen_reference)),
+                    std::abs(qGreen(unseen_pixel) - qGreen(unseen_reference)),
+                    std::abs(qBlue(unseen_pixel) - qBlue(unseen_reference))});
+
+      explored_vs_unseen_separation +=
+          std::abs(qRed(explored_pixel) - qRed(unseen_pixel)) +
+          std::abs(qGreen(explored_pixel) - qGreen(unseen_pixel)) +
+          std::abs(qBlue(explored_pixel) - qBlue(unseen_pixel));
+      explored_vs_visible_separation +=
+          std::abs(qRed(explored_pixel) - qRed(visible_pixel)) +
+          std::abs(qGreen(explored_pixel) - qGreen(visible_pixel)) +
+          std::abs(qBlue(explored_pixel) - qBlue(visible_pixel));
+    }
+  }
+
+  ASSERT_GT(sampled, 0);
+
+  EXPECT_EQ(unseen_variation, 0)
+      << "Never-seen cells must composite to a flat fog colour so no terrain "
+         "detail leaks through the minimap.";
+  EXPECT_GT(explored_vs_unseen_separation / sampled, 20)
+      << "Explored terrain must stay clearly distinguishable from never-seen "
+         "terrain at minimap scale.";
+  EXPECT_GT(explored_vs_visible_separation / sampled, 20)
+      << "Explored terrain must stay clearly distinguishable from currently "
+         "visible terrain at minimap scale.";
+}
+
+TEST(MinimapManagerTest, ClickingAMarkerPixelResolvesToThatUnitsWorldPosition) {
+  for (const float yaw : {0.0F, 90.0F, 225.0F}) {
+    const MapDefinition map = make_test_map(64, 64, yaw);
+
+    MinimapManager manager;
+    manager.generate_for_map(map);
+
+    const QImage image = manager.get_image().copy();
+    ASSERT_FALSE(image.isNull()) << "yaw " << yaw;
+
+    const std::vector<std::pair<float, float>> unit_positions = {
+        {0.0F, 0.0F}, {12.0F, -8.0F}, {-20.0F, 17.0F}, {18.0F, -14.0F}};
+
+    for (const auto& [world_x, world_z] : unit_positions) {
+      const auto [marker_px, marker_py] = world_to_pixel(image, map, world_x, world_z);
+
+      const auto [clicked_x, clicked_z] =
+          Game::Map::Minimap::pixel_to_world(static_cast<float>(marker_px),
+                                             static_cast<float>(marker_py),
+                                             manager.get_world_width(),
+                                             manager.get_world_height(),
+                                             static_cast<float>(image.width()),
+                                             static_cast<float>(image.height()),
+                                             manager.get_tile_size());
+
+      const float world_units_per_pixel = manager.get_world_width() *
+                                          manager.get_tile_size() /
+                                          static_cast<float>(image.width());
+      const float tolerance = 2.0F * world_units_per_pixel;
+
+      EXPECT_NEAR(clicked_x, world_x, tolerance)
+          << "Clicking the pixel a unit is drawn at must resolve back to that "
+             "unit (yaw "
+          << yaw << ").";
+      EXPECT_NEAR(clicked_z, world_z, tolerance)
+          << "Clicking the pixel a unit is drawn at must resolve back to that "
+             "unit (yaw "
+          << yaw << ").";
+    }
+  }
+}
+
+TEST(MinimapManagerTest, VisiblePatchClearsFogAtTheMatchingMinimapPixels) {
+  for (const float yaw : {0.0F, 225.0F}) {
+    const MapDefinition map = make_test_map(64, 64, yaw);
+
+    MinimapManager manager;
+    manager.generate_for_map(map);
+
+    auto snapshot = make_visibility_snapshot(64, 64, 1, VisibilityState::Unseen);
+    constexpr int k_patch_center = 16;
+    constexpr int k_patch_radius = 6;
+    for (int gz = k_patch_center - k_patch_radius;
+         gz <= k_patch_center + k_patch_radius;
+         ++gz) {
+      for (int gx = k_patch_center - k_patch_radius;
+           gx <= k_patch_center + k_patch_radius;
+           ++gx) {
+        snapshot.cells[static_cast<std::size_t>(gz * 64 + gx)] =
+            static_cast<std::uint8_t>(VisibilityState::Visible);
+      }
+    }
+    manager.update_fog(snapshot);
+
+    const QImage image = manager.get_image().copy();
+    ASSERT_FALSE(image.isNull()) << "yaw " << yaw;
+
+    const float patch_world =
+        (static_cast<float>(k_patch_center) - snapshot.half_width) * snapshot.tile_size;
+    const float far_world =
+        (static_cast<float>(64 - k_patch_center) - snapshot.half_width) *
+        snapshot.tile_size;
+
+    const auto [patch_x, patch_y] =
+        world_to_pixel(image, map, patch_world, patch_world);
+    const auto [far_x, far_y] = world_to_pixel(image, map, far_world, far_world);
+
+    const QRgb patch_pixel = image.pixel(patch_x, patch_y);
+    const QRgb far_pixel = image.pixel(far_x, far_y);
+
+    EXPECT_NE(qRgb(45, 38, 30),
+              qRgb(qRed(patch_pixel), qGreen(patch_pixel), qBlue(patch_pixel)))
+        << "Currently visible cells must clear the minimap fog at the pixels "
+           "they map to (yaw "
+        << yaw << ").";
+    EXPECT_EQ(qRgb(45, 38, 30),
+              qRgb(qRed(far_pixel), qGreen(far_pixel), qBlue(far_pixel)))
+        << "Cells far from the visible patch must stay fully fogged (yaw " << yaw
+        << ").";
+  }
+}
+
 TEST(NonLocalVisibilityRulesTest, OnlyCurrentlyVisibleCellsRenderNonLocalUnits) {
   Game::Map::VisibilityService::Snapshot snapshot;
   snapshot.initialized = true;
