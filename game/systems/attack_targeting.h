@@ -10,7 +10,9 @@
 
 namespace Engine::Core {
 class World;
-}
+class Entity;
+class UnitComponent;
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -56,6 +58,10 @@ struct AttackTargetingHighlights {
 
 inline constexpr float k_attack_highlight_max_distance = 60.0F;
 inline constexpr std::size_t k_attack_highlight_max_markers = 64;
+
+[[nodiscard]] auto attack_marker_radius(Engine::Core::Entity& entity,
+                                        const Engine::Core::UnitComponent& unit,
+                                        bool is_building) -> float;
 
 [[nodiscard]] auto
 classify_attack_target(Engine::Core::World* world,

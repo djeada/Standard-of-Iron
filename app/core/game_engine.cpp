@@ -94,6 +94,7 @@
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/mission_context.h"
 #include "game/map/mission_loader.h"
+#include "game/map/render_visibility_rules.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
 #include "game/session/simulation_clock.h"
@@ -332,6 +333,24 @@ GameEngine::GameEngine(QObject* parent)
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   m_selection_controller = std::make_unique<Game::Systems::SelectionController>(
       m_world, selection_system, m_picking_service.get());
+  m_selection_controller->set_inspect_filter([this](Engine::Core::EntityID id) {
+    if (m_world == nullptr || m_visibility_coordinator == nullptr) {
+      return true;
+    }
+    auto* entity = m_world->get_entity(id);
+    const auto* transform =
+        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+    if (transform == nullptr) {
+      return false;
+    }
+    const auto snapshot = m_visibility_coordinator->current_snapshot();
+    if (snapshot == nullptr || !snapshot->initialized) {
+      return true;
+    }
+    return Game::Map::should_render_non_local_unit(
+        *snapshot, transform->position.x, transform->position.z);
+  });
   m_command_controller = std::make_unique<App::Controllers::CommandController>(
       m_world, selection_system, m_picking_service.get());
 
@@ -587,8 +606,14 @@ GameEngine::GameEngine(QObject* parent)
   m_combat_hit_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
           [this](const Engine::Core::CombatHitEvent& e) {
-            if (m_controlled_commander_id == 0 ||
-                e.attacker_id != m_controlled_commander_id || m_world == nullptr) {
+            if (m_world == nullptr) {
+              return;
+            }
+            if (m_controlled_commander_id == 0) {
+              record_combat_hit(e);
+              return;
+            }
+            if (e.attacker_id != m_controlled_commander_id) {
               return;
             }
             auto* target_ent = m_world->get_entity(e.target_id);
@@ -1971,6 +1996,7 @@ void GameEngine::update(float dt) {
   }
 
   m_order_markers.update(dt, m_world);
+  m_combat_feedback.update(dt);
 
   if (m_runtime.paused) {
     dt = 0.0F;
@@ -2013,6 +2039,8 @@ void GameEngine::update(float dt) {
   sync_selected_player_state();
   sync_attack_targeting();
   sync_attack_range_rings();
+  sync_focus_targets();
+  sync_target_focus_markers();
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {
@@ -2068,7 +2096,8 @@ void GameEngine::render(int pixel_width, int pixel_height) {
        .commander_rally_preview_pos = m_commander_rally_preview_pos,
        .attack_targeting = &m_attack_targeting,
        .attack_range_rings = &m_attack_range_rings,
-       .order_markers = &m_order_markers.markers()},
+       .order_markers = &m_order_markers.markers(),
+       .target_focus = &m_target_focus},
       [this]() { render_runtime_mode_effects(); });
   m_renderer->end_frame();
 
@@ -2752,6 +2781,76 @@ auto GameEngine::get_controlled_commander_status() const -> QVariantMap {
     return get_unit_stamina_info(id, stamina_ratio, is_running, can_run);
   };
   return App::Core::build_controlled_commander_status(input);
+}
+
+void GameEngine::record_combat_hit(const Engine::Core::CombatHitEvent& e) {
+  if (m_world == nullptr || m_level.is_spectator_mode) {
+    return;
+  }
+  auto* target_ent = m_world->get_entity(e.target_id);
+  if (target_ent == nullptr) {
+    return;
+  }
+  const auto* tf = target_ent->get_component<Engine::Core::TransformComponent>();
+  const auto* target_unit = target_ent->get_component<Engine::Core::UnitComponent>();
+  if (tf == nullptr || target_unit == nullptr) {
+    return;
+  }
+  const bool target_visible = [&]() {
+    if (target_unit->owner_id == m_runtime.local_owner_id ||
+        m_visibility_coordinator == nullptr) {
+      return true;
+    }
+    const auto snapshot = m_visibility_coordinator->current_snapshot();
+    if (snapshot == nullptr || !snapshot->initialized) {
+      return true;
+    }
+    return Game::Map::should_render_non_local_unit(
+        *snapshot, tf->position.x, tf->position.z);
+  }();
+  if (!target_visible) {
+    return;
+  }
+
+  int attacker_owner = 0;
+  if (auto* attacker_ent = m_world->get_entity(e.attacker_id)) {
+    if (const auto* attacker_unit =
+            attacker_ent->get_component<Engine::Core::UnitComponent>()) {
+      attacker_owner = attacker_unit->owner_id;
+    }
+  }
+
+  App::Core::CombatHitFeedback hit;
+  hit.target = e.target_id;
+  const bool is_building = target_ent->has_component<Engine::Core::BuildingComponent>();
+  hit.x = tf->position.x;
+  hit.y = tf->position.y + (is_building ? std::max(2.4F, tf->scale.y * 0.9F) : 1.8F);
+  hit.z = tf->position.z;
+  hit.damage = e.damage;
+  hit.damage_ratio = target_unit->max_health > 0
+                         ? std::clamp(static_cast<float>(e.damage) /
+                                          static_cast<float>(target_unit->max_health),
+                                      0.0F,
+                                      1.5F)
+                         : 0.0F;
+  hit.killing_blow = e.is_killing_blow;
+  hit.incoming = target_unit->owner_id == m_runtime.local_owner_id;
+  hit.outgoing = attacker_owner == m_runtime.local_owner_id;
+  if (!hit.incoming && !hit.outgoing) {
+    return;
+  }
+  if (auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>()) {
+    const auto& selected = selection_system->get_selected_units();
+    hit.focused =
+        selection_system->inspected_entity() == e.target_id ||
+        std::find(selected.begin(), selected.end(), e.target_id) != selected.end() ||
+        App::Core::primary_attack_target(m_world, selected) == e.target_id;
+  }
+  m_combat_feedback.push(hit);
+}
+
+auto GameEngine::pop_combat_damage_events() -> QVariantList {
+  return App::Core::CombatFeedbackStore::to_variant(m_combat_feedback.pop_ready());
 }
 
 auto GameEngine::pop_rpg_damage_events() -> QVariantList {
@@ -3897,6 +3996,143 @@ void GameEngine::apply_runtime_snapshot(
     m_cursor_manager->set_mode(m_runtime.cursor_mode);
   }
   sync_selected_player_state();
+}
+
+auto GameEngine::describe_focus_entity(Engine::Core::EntityID id) const
+    -> App::Core::FocusTargetInfo {
+  App::Core::FocusTargetInfo info;
+  if (m_world == nullptr || id == Engine::Core::NULL_ENTITY) {
+    return info;
+  }
+  auto* entity = m_world->get_entity(id);
+  const auto* unit = entity != nullptr
+                         ? entity->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+  if (unit == nullptr || unit->health <= 0) {
+    return info;
+  }
+
+  QString name;
+  QString nation;
+  int health = 0;
+  int max_health = 0;
+  bool is_building = false;
+  bool alive = false;
+  if (!get_unit_info(id, name, health, max_health, is_building, alive, nation) ||
+      !alive) {
+    return info;
+  }
+  if (is_building) {
+    const QString pretty = App::Core::building_display_name(unit->spawn_type);
+    if (!pretty.isEmpty()) {
+      name = pretty;
+    }
+  }
+
+  info.valid = true;
+  info.id = id;
+  info.name = name;
+  info.nation = nation;
+  get_unit_type_key(id, info.type_key);
+  info.owner_id = unit->owner_id;
+  info.is_building = is_building;
+  info.is_own = unit->owner_id == m_runtime.local_owner_id;
+  info.is_enemy =
+      !info.is_own &&
+      (m_session != nullptr
+           ? m_session->owners().are_enemies(m_runtime.local_owner_id, unit->owner_id)
+           : true);
+  info.health = health;
+  info.max_health = max_health;
+  info.health_ratio = max_health > 0
+                          ? static_cast<double>(std::clamp(health, 0, max_health)) /
+                                static_cast<double>(max_health)
+                          : 0.0;
+  const QVariantMap activity = activity_to_variant(get_unit_activity_state(id));
+  info.activity = activity.value(QStringLiteral("activity")).toString();
+  info.activity_state = activity.value(QStringLiteral("state")).toString();
+
+  std::vector<Engine::Core::EntityID> selection;
+  get_selected_unit_ids(selection);
+  info.attacked_by_selection =
+      App::Core::count_selection_attacking(m_world, selection, id);
+  info.attacked_by_local =
+      App::Core::count_units_attacking(m_world, id, m_runtime.local_owner_id);
+  info.attackers_incoming =
+      App::Core::count_enemies_attacking(m_world, id, m_runtime.local_owner_id);
+  return info;
+}
+
+void GameEngine::sync_focus_targets() {
+  QVariantMap inspect;
+  QVariantMap target;
+  if (m_world != nullptr) {
+    auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+    if (selection_system != nullptr) {
+      const auto& selection = selection_system->get_selected_units();
+      const auto inspected = selection_system->inspected_entity();
+      const auto focus = App::Core::resolve_focus_entity(
+          m_world, selection, inspected, m_runtime.local_owner_id);
+      if (inspected != Engine::Core::NULL_ENTITY && focus != inspected) {
+        selection_system->clear_inspected_entity();
+      }
+      const auto inspect_info = describe_focus_entity(focus);
+      if (inspect_info.valid) {
+        inspect = App::Core::focus_target_to_variant(inspect_info);
+      }
+      const auto primary = App::Core::primary_attack_target(m_world, selection);
+      const auto target_info = describe_focus_entity(primary);
+      if (target_info.valid) {
+        target = App::Core::focus_target_to_variant(target_info);
+      }
+    }
+  }
+  if (inspect == m_inspect_target && target == m_selection_target) {
+    return;
+  }
+  m_inspect_target = std::move(inspect);
+  m_selection_target = std::move(target);
+  if (m_activity_view_model != nullptr) {
+    m_activity_view_model->set_focus_targets(m_inspect_target, m_selection_target);
+  }
+}
+
+void GameEngine::sync_target_focus_markers() {
+  m_target_focus.clear();
+  if (m_world == nullptr || m_level.is_spectator_mode) {
+    return;
+  }
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return;
+  }
+  const auto snapshot = m_visibility_coordinator != nullptr
+                            ? m_visibility_coordinator->current_snapshot()
+                            : nullptr;
+  Game::Systems::TargetFocusRequest request;
+  request.world = m_world;
+  request.local_owner_id = m_runtime.local_owner_id;
+  request.selection = &selection_system->get_selected_units();
+  request.inspected = selection_system->inspected_entity();
+  request.max_locked_targets = Game::Systems::k_target_focus_max_locked;
+  request.max_incoming_attackers = Game::Systems::k_target_focus_max_incoming;
+  request.visibility =
+      (snapshot != nullptr && snapshot->initialized) ? snapshot.get() : nullptr;
+  request.owners = m_session != nullptr ? &m_session->owners() : nullptr;
+  m_target_focus = Game::Systems::collect_target_focus_markers(request);
+}
+
+void GameEngine::clear_inspect_target() {
+  if (m_world == nullptr) {
+    return;
+  }
+  if (auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>()) {
+    if (selection_system->inspected_entity() != Engine::Core::NULL_ENTITY) {
+      selection_system->clear_inspected_entity();
+      emit selected_units_changed();
+    }
+  }
+  sync_focus_targets();
 }
 
 void GameEngine::sync_selected_player_state() {

@@ -1169,6 +1169,37 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>FocusTarget</name>
+    <message>
+        <source>Barracks</source>
+        <translation>Kaserne</translation>
+    </message>
+    <message>
+        <source>Defense tower</source>
+        <translation>Wehrturm</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Haus</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Mauer</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>Marktplatz</translation>
+    </message>
+    <message>
+        <source>Temple</source>
+        <translation>Tempel</translation>
+    </message>
+</context>
+<context>
     <name>Formation</name>
     <message>
         <source>No units selected.</source>
@@ -2498,6 +2529,79 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source> (mixed)</source>
         <translation> (gemischt)</translation>
+    </message>
+    <message>
+        <source>YOUR BUILDING</source>
+        <translation>DEIN GEBÄUDE</translation>
+    </message>
+    <message>
+        <source>YOUR UNIT</source>
+        <translation>DEINE EINHEIT</translation>
+    </message>
+    <message>
+        <source>ENEMY BUILDING</source>
+        <translation>FEINDLICHES GEBÄUDE</translation>
+    </message>
+    <message>
+        <source>ENEMY UNIT</source>
+        <translation>FEINDLICHE EINHEIT</translation>
+    </message>
+    <message>
+        <source>BUILDING</source>
+        <translation>GEBÄUDE</translation>
+    </message>
+    <message>
+        <source>UNIT</source>
+        <translation>EINHEIT</translation>
+    </message>
+    <message numerus="yes">
+        <source>Under attack by %n of your units</source>
+        <translation>
+            <numerusform>Wird von %n deiner Einheiten angegriffen</numerusform>
+            <numerusform>Wird von %n deiner Einheiten angegriffen</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Not engaged by your army</source>
+        <translation>Nicht von deiner Armee bekämpft</translation>
+    </message>
+    <message numerus="yes">
+        <source>Under attack by %n enemies</source>
+        <translation>
+            <numerusform>Wird von %n Feind angegriffen</numerusform>
+            <numerusform>Wird von %n Feinden angegriffen</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Not under attack</source>
+        <translation>Nicht unter Beschuss</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Feind</translation>
+    </message>
+    <message>
+        <source>Yours</source>
+        <translation>Deins</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <translation>Neutral</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <source>TARGET</source>
+        <translation>ZIEL</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n of your selected units attacking</source>
+        <translation>
+            <numerusform>%n deiner ausgewählten Einheiten greift an</numerusform>
+            <numerusform>%n deiner ausgewählten Einheiten greifen an</numerusform>
+        </translation>
     </message>
 </context>
 <context>

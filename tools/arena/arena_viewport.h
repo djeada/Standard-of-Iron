@@ -343,6 +343,7 @@ private:
   auto troop_display_name(Game::Systems::NationID nation_id,
                           Game::Units::SpawnType spawn_type) const -> QString;
   void render_attack_range_rings(Render::GL::ResourceManager* resources);
+  void render_target_focus_rings(Render::GL::ResourceManager* resources);
   auto selection_system() const -> Game::Systems::SelectionSystem*;
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
