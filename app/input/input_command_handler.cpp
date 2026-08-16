@@ -1,7 +1,6 @@
 #include "app/input/input_command_handler.h"
 
 #include <cmath>
-#include <numbers>
 
 #include "app/input/cursor_manager.h"
 #include "app/input/cursor_mode.h"
@@ -220,15 +219,7 @@ void InputCommandHandler::on_right_drag_orient(qreal sx,
     return;
   }
 
-  const QVector3D placement_pos =
-      m_command_controller->formation().get_formation_placement_position();
-  const QVector3D delta = hit - placement_pos;
-
-  if (delta.lengthSquared() > 0.01F) {
-    constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
-    m_command_controller->formation().update_formation_rotation(
-        std::atan2(delta.x(), delta.z()) * k_rad_to_deg);
-  }
+  m_command_controller->formation().aim_formation_at(hit);
 }
 
 void InputCommandHandler::on_attack_click(qreal sx,

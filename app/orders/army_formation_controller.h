@@ -52,6 +52,20 @@ public:
     return m_formation_facing_degrees;
   }
 
+  [[nodiscard]] float get_formation_aim_distance() const {
+    return m_formation_aim_distance;
+  }
+
+  [[nodiscard]] bool is_right_drag_placement() const {
+    return m_is_placing_formation && m_is_right_drag_formation;
+  }
+
+  [[nodiscard]] bool is_single_unit_placement() const {
+    return m_is_placing_formation && m_formation_units.size() == 1;
+  }
+
+  void aim_formation_at(const QVector3D& aim_point);
+
   Q_INVOKABLE void set_formation_intent(const QString& intent_id);
   Q_INVOKABLE [[nodiscard]] QString formation_intent() const;
   Q_INVOKABLE [[nodiscard]] QStringList formation_intents() const;
@@ -107,6 +121,7 @@ signals:
 
 private:
   [[nodiscard]] auto auto_formation_facing() const -> float;
+  [[nodiscard]] auto formation_unit_label() const -> QString;
   void set_formation_facing(float degrees, bool explicit_choice);
   void follow_auto_formation_facing();
   void reset_formation_facing();
@@ -123,6 +138,7 @@ private:
 
   float m_formation_facing_degrees = 0.0F;
   bool m_formation_facing_explicit = false;
+  float m_formation_aim_distance = 0.0F;
   std::vector<Engine::Core::EntityID> m_formation_units;
 
   Game::Formation::ArmyFormationIntent m_formation_intent =
