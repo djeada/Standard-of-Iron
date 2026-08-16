@@ -464,7 +464,7 @@ enum class BadgeStyle {
   Seal,
   Banner,
   Shield,
-  Medallion
+  Round
 };
 
 struct MissionBadgeConfig {
@@ -529,9 +529,9 @@ inline auto generate_banner_badge(const QVector2D& center,
   return verts;
 }
 
-inline auto generate_medallion_badge(const QVector2D& center,
-                                     float size,
-                                     int segments = 24) -> std::vector<QVector2D> {
+inline auto generate_round_badge(const QVector2D& center,
+                                 float size,
+                                 int segments = 24) -> std::vector<QVector2D> {
   std::vector<QVector2D> verts;
   verts.reserve(static_cast<size_t>(segments + 1));
 

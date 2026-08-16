@@ -291,7 +291,7 @@ than as something you compile yourself.
   shaders.
 - A CPU rasteriser fallback (`--force-software`) for machines without a 3.3
   driver. It is a diagnostic, not a supported way to play.
-- The "Iron and Ember" interface: activity medallions, Roman numerals, and a
+- The "Iron and Ember" interface: activity markers, Roman numerals, and a
   selection summary that regroups itself as a selection grows.
 
 ### Accessibility

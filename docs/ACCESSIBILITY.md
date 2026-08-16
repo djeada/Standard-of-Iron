@@ -130,9 +130,9 @@ order states — active, queued, unavailable, interrupted — never rely on colo
 alone:
 
 - **Shape.** A queued order carries a filled chevron in the corner of the
-  medallion, an interrupted one a pair of paused bars, an unavailable one a
+  marker, an interrupted one a pair of paused bars, an unavailable one a
   cross. An active order carries no corner mark at all.
-- **Weight.** Anything other than an active order also thickens the medallion
+- **Weight.** Anything other than an active order also thickens the marker
   border, so the difference survives a greyscale screenshot.
 - **Words.** Every marker exposes `Accessible.name` (the activity and its state)
   and `Accessible.description` (the same, plus the headcount when the marker

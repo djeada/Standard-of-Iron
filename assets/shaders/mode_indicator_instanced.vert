@@ -42,7 +42,7 @@ void main() {
   v_instance_color = a_instance_color_alpha.rgb;
   v_instance_alpha = a_instance_color_alpha.a;
 
-  float pulse = 1.0 + 0.015 * sin(u_time * 2.0 + v_phase);
+  float pulse = 1.0 + 0.006 * sin(u_time * 2.0 + v_phase);
   vec3 pos = vec3(a_position.xy * pulse, a_position.z);
   v_height = a_position.y * 2.0;
 

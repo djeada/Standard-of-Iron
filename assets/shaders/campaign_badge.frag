@@ -52,7 +52,7 @@ float sd_banner(vec2 p) {
   return max(rect, -v_cut);
 }
 
-float sd_medallion(vec2 p) {
+float sd_round_badge(vec2 p) {
 
   float r = 0.42;
   float d = length(p) - r;
@@ -98,7 +98,7 @@ float get_badge_sdf(vec2 p, int style) {
   if (style == 3)
     return sd_shield(p);
   if (style == 4)
-    return sd_medallion(p);
+    return sd_round_badge(p);
   return sd_circle(p, 0.4);
 }
 

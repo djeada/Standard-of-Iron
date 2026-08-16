@@ -140,11 +140,12 @@ auto carthage_shield_archetype(float scale_multiplier) -> const RenderArchetype&
 
   QVector3D const emblem_plane =
       shield_center + QVector3D(0.0F, 0.0F, dome_depth * 0.92F);
-  QMatrix4x4 medallion;
-  medallion.translate(emblem_plane);
-  medallion.scale(shield_radius * 0.34F, shield_radius * 0.34F, shield_radius * 0.08F);
+  QMatrix4x4 emblem_disc;
+  emblem_disc.translate(emblem_plane);
+  emblem_disc.scale(
+      shield_radius * 0.34F, shield_radius * 0.34F, shield_radius * 0.08F);
   builder.add_palette_mesh(
-      get_unit_cylinder(), medallion, k_trim_slot, nullptr, 1.0F, 4);
+      get_unit_cylinder(), emblem_disc, k_trim_slot, nullptr, 1.0F, 4);
 
   QVector3D const emblem_body_top =
       emblem_plane + QVector3D(0.0F, shield_radius * 0.14F, 0.0F);

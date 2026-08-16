@@ -51,8 +51,7 @@ public:
     float face_depth = 0.0F;
 
     float shadow_depth = 0.0F;
-    float shadow_grow = 0.0F;
-    float halo_grow = 0.0F;
+    float shadow_width = 0.0F;
     QVector2D shadow_offset{};
   };
 
@@ -106,8 +105,6 @@ private:
   };
 
   [[nodiscard]] auto collect_boundary_edges() const -> std::vector<BoundaryEdge>;
-  void emit_silhouette(
-      GlyphLayer layer, float depth, float grow, QVector2D offset, float shade);
   void emit_glyph_walls(const std::vector<BoundaryEdge>& edges,
                         float back_depth,
                         float face_depth);
