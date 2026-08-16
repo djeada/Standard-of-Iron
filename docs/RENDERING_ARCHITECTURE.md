@@ -902,23 +902,20 @@ text in the HUD. The simulation writes the result into
 which is why the renderer classifies nothing itself and touches no gameplay
 component to decide what to draw.
 
-Every one of them is the same medallion -- a soft drop shadow, a tinted halo, a
-dark contour, a near-neutral plaque, and a bevelled rim carrying the activity
-colour -- with a different icon stamped on its face. `add_medallion()` in
-`render/geom/mode_indicator.cpp` emits that frame first and the icon rides on top
-of it, which is what gives sixteen unrelated symbols one silhouette and one
-optical weight.
+Every one of them uses the same rendering treatment -- a soft drop shadow and a
+dark contour carrying the activity colour -- with a different icon. The shared
+glyph builder gives sixteen unrelated symbols one optical weight.
 
 The icons themselves are generated, not authored. `render/geom/icon_glyph.cpp`
 is a small vector builder -- bars, arcs, rings, convex polygons, arrow heads --
 and `mode_indicator.cpp` describes each icon as a handful of calls against it.
 `begin_glyph()`/`end_glyph()` records those flat shapes and turns them into a
-solid: it extracts the silhouette (the boundary edges of the recorded triangle
-soup), extrudes side walls along it, and lays a dark outline skirt outward from
-it. Everything an icon needs comes from its silhouette, so a new one is a few
-lines of 2D drawing and nothing else -- it does not even need to be drawn at the
-right size, because `fit_since()` scales whatever was emitted after the medallion
-down to a single radius that clears the rim.
+solid. It first unions overlapping bars, discs and polygons into one clean
+silhouette, then extrudes side walls and lays a narrow contour and offset shadow
+around only the exterior boundary. Internal primitive edges therefore never
+become dark seams. A new icon is still only a few lines of 2D drawing, and it
+does not need to be drawn at the right size because `fit_since()` scales the
+emitted geometry down to the shared footprint.
 
 Four properties are worth knowing before changing anything here:
 

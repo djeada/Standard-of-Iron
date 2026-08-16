@@ -1,9 +1,10 @@
 #include "icon_glyph.h"
 
+#include <QPainterPath>
+#include <QPointF>
+
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
-#include <map>
 #include <utility>
 #include <vector>
 
@@ -112,16 +113,18 @@ void GlyphBuilder::end_glyph(const GlyphExtrusion& extrusion) {
   GlyphLayer const saved_layer = m_layer;
   auto const edges = collect_boundary_edges();
 
-  emit_silhouette(GlyphLayer::Shadow,
-                  extrusion.shadow_depth,
-                  extrusion.halo_grow,
-                  extrusion.shadow_offset,
-                  1.0F);
-  emit_silhouette(GlyphLayer::Shadow,
-                  extrusion.shadow_depth,
-                  extrusion.shadow_grow,
-                  extrusion.shadow_offset,
-                  0.0F);
+  auto shadow_edges = edges;
+  for (BoundaryEdge& edge : shadow_edges) {
+    edge.from += extrusion.shadow_offset;
+    edge.to += extrusion.shadow_offset;
+  }
+  emit_skirt(shadow_edges,
+             GlyphLayer::Shadow,
+             extrusion.shadow_depth,
+             0.0F,
+             extrusion.shadow_width,
+             0.0F,
+             1.0F);
 
   emit_skirt(edges,
              GlyphLayer::Outline,
@@ -145,57 +148,51 @@ void GlyphBuilder::end_glyph(const GlyphExtrusion& extrusion) {
 }
 
 auto GlyphBuilder::collect_boundary_edges() const -> std::vector<BoundaryEdge> {
-  constexpr float k_quantum = 4096.0F;
-  auto key_of = [](QVector2D point) -> std::int64_t {
-    auto const x = static_cast<std::int64_t>(std::lround(point.x() * k_quantum));
-    auto const y = static_cast<std::int64_t>(std::lround(point.y() * k_quantum));
-    return (x << 32) ^ (y & 0xFFFFFFFFLL);
-  };
-
-  struct Tally {
-    BoundaryEdge edge;
-    int uses = 0;
-  };
-
-  std::map<std::pair<std::int64_t, std::int64_t>, Tally> tallies;
-
+  QPainterPath silhouette;
+  silhouette.setFillRule(Qt::WindingFill);
   for (PendingTri const& tri : m_recorded) {
-    QVector2D a = tri.a;
-    QVector2D b = tri.b;
-    QVector2D c = tri.c;
-    float const area =
-        (b.x() - a.x()) * (c.y() - a.y()) - (c.x() - a.x()) * (b.y() - a.y());
-    if (std::abs(area) < 1.0e-9F) {
-      continue;
-    }
-    if (area < 0.0F) {
-      std::swap(b, c);
-    }
-
-    const QVector2D corners[3] = {a, b, c};
-    for (int i = 0; i < 3; ++i) {
-      QVector2D const from = corners[i];
-      QVector2D const to = corners[(i + 1) % 3];
-      std::int64_t const key_from = key_of(from);
-      std::int64_t const key_to = key_of(to);
-      std::int64_t const key_low = std::min(key_from, key_to);
-      std::int64_t const key_high = std::max(key_from, key_to);
-
-      auto [it, inserted] = tallies.try_emplace({key_low, key_high},
-                                                Tally{BoundaryEdge{from, to, {}}, 0});
-      if (inserted) {
-        QVector2D const along = to - from;
-        it->second.edge.outward = QVector2D(along.y(), -along.x()).normalized();
-      }
-      ++it->second.uses;
+    QPainterPath triangle;
+    triangle.moveTo(tri.a.x(), tri.a.y());
+    triangle.lineTo(tri.b.x(), tri.b.y());
+    triangle.lineTo(tri.c.x(), tri.c.y());
+    triangle.closeSubpath();
+    if (silhouette.isEmpty()) {
+      silhouette = triangle;
+    } else {
+      silhouette = silhouette.united(triangle);
     }
   }
 
+  constexpr float k_probe_distance = 0.001F;
   std::vector<BoundaryEdge> edges;
-  edges.reserve(tallies.size());
-  for (auto const& [key, tally] : tallies) {
-    if (tally.uses == 1) {
-      edges.push_back(tally.edge);
+  for (QPolygonF const& contour : silhouette.toSubpathPolygons()) {
+    if (contour.size() < 3) {
+      continue;
+    }
+    qsizetype count = contour.size();
+    if (contour.front() == contour.back()) {
+      --count;
+    }
+    for (qsizetype i = 0; i < count; ++i) {
+      QPointF const& from_point = contour[i];
+      QPointF const& to_point = contour[(i + 1) % count];
+      QVector2D const from(static_cast<float>(from_point.x()),
+                           static_cast<float>(from_point.y()));
+      QVector2D const to(static_cast<float>(to_point.x()),
+                         static_cast<float>(to_point.y()));
+      QVector2D const along = to - from;
+      if (along.lengthSquared() <= 1.0e-10F) {
+        continue;
+      }
+
+      QVector2D outward(along.y(), -along.x());
+      outward.normalize();
+      QVector2D const midpoint = (from + to) * 0.5F;
+      QVector2D const probe = midpoint + outward * k_probe_distance;
+      if (silhouette.contains(QPointF(probe.x(), probe.y()))) {
+        outward = -outward;
+      }
+      edges.push_back({from, to, outward});
     }
   }
   return edges;
@@ -214,39 +211,6 @@ void GlyphBuilder::emit_glyph_walls(const std::vector<BoundaryEdge>& edges,
     QVector3D const p3(edge.from.x(), edge.from.y(), face_depth);
     emit_positioned(p0, p1, p2, normal, normal, normal);
     emit_positioned(p0, p2, p3, normal, normal, normal);
-  }
-}
-
-void GlyphBuilder::emit_silhouette(
-    GlyphLayer layer, float depth, float grow, QVector2D offset, float shade) {
-  if (m_recorded.empty() || grow <= 0.0F) {
-    return;
-  }
-
-  QVector2D low(m_recorded.front().a);
-  QVector2D high(m_recorded.front().a);
-  auto extend = [&](QVector2D point) {
-    low.setX(std::min(low.x(), point.x()));
-    low.setY(std::min(low.y(), point.y()));
-    high.setX(std::max(high.x(), point.x()));
-    high.setY(std::max(high.y(), point.y()));
-  };
-  for (PendingTri const& tri : m_recorded) {
-    extend(tri.a);
-    extend(tri.b);
-    extend(tri.c);
-  }
-  QVector2D const center = (low + high) * 0.5F;
-
-  float const scale = 1.0F + grow;
-  auto place = [&](QVector2D point) {
-    return center + (point - center) * scale + offset;
-  };
-
-  for (PendingTri const& tri : m_recorded) {
-    for (QVector2D const point : {place(tri.a), place(tri.b), place(tri.c)}) {
-      push_skirt_vertex(layer, point, depth, shade);
-    }
   }
 }
 
@@ -273,7 +237,7 @@ void GlyphBuilder::emit_skirt(const std::vector<BoundaryEdge>& edges,
     return;
   }
 
-  constexpr int k_corner_segments = 12;
+  constexpr int k_corner_segments = 8;
 
   for (BoundaryEdge const& edge : edges) {
     QVector2D const inner_from = edge.from + edge.outward * inner_offset;
