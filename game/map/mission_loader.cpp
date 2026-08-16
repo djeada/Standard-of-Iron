@@ -371,6 +371,7 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
 
   out_mission.include_ambient_undead =
       root["include_ambient_undead"].toBool(out_mission.include_ambient_undead);
+  out_mission.tutorial = root["tutorial"].toBool(out_mission.tutorial);
 
   return true;
 }

@@ -15,11 +15,15 @@ Item {
     readonly property int top_margin: Math.max(20, Math.min(54, height * 0.058))
     readonly property int command_width: root.compact ? width - side_margin * 2 : Math.min(600, Math.max(460, width * 0.40))
     readonly property var hs: StyleGuide.historical
+    readonly property int command_row_spacing: commandList.height < menuModel.count * 70 ? 4 : 9
+    readonly property int command_row_height: Math.max(60, Math.min(root.narrow ? 62 : 70, Math.floor((commandList.height - command_row_spacing * (menuModel.count - 1)) / Math.max(1, menuModel.count))))
     readonly property color ink: "#0B0806"
     readonly property color bronze: hs.bronze
 
     signal open_skirmish
     signal open_campaign
+    signal open_tutorial
+    signal open_help
     signal open_objectives
     signal open_settings
     signal load_save
@@ -38,6 +42,10 @@ Item {
             root.open_skirmish();
         else if (m.idStr === "campaign")
             root.open_campaign();
+        else if (m.idStr === "tutorial")
+            root.open_tutorial();
+        else if (m.idStr === "help")
+            root.open_help();
         else if (m.idStr === "objectives")
             root.open_objectives();
         else if (m.idStr === "save")
@@ -102,6 +110,15 @@ Item {
         }
 
         ListElement {
+            idStr: "tutorial"
+            title: QT_TR_NOOP("Tutorial")
+            subtitle: QT_TR_NOOP("Learn to command in a guided first battle")
+            detail: QT_TR_NOOP("Training")
+            requiresGame: false
+            accent: "#7E8F4E"
+        }
+
+        ListElement {
             idStr: "objectives"
             title: QT_TR_NOOP("Objectives")
             subtitle: QT_TR_NOOP("Review active orders")
@@ -135,6 +152,15 @@ Item {
             detail: QT_TR_NOOP("Options")
             requiresGame: false
             accent: "#8C6A3E"
+        }
+
+        ListElement {
+            idStr: "help"
+            title: QT_TR_NOOP("Field Manual")
+            subtitle: QT_TR_NOOP("How selection, economy, buildings and armies work")
+            detail: QT_TR_NOOP("Help")
+            requiresGame: false
+            accent: "#6F7F8C"
         }
 
         ListElement {
@@ -498,7 +524,7 @@ Item {
                 Layout.fillHeight: true
                 model: menuModel
                 currentIndex: 0
-                spacing: 9
+                spacing: root.command_row_spacing
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 interactive: contentHeight > height
@@ -519,7 +545,7 @@ Item {
                     readonly property bool hovered: menuMouse.containsMouse && item_enabled
 
                     width: commandList.width
-                    height: root.narrow ? 62 : 70
+                    height: root.command_row_height
                     opacity: item_enabled ? 1 : 0.38
 
                     Item {

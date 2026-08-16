@@ -34,6 +34,31 @@ may change in any release — see [Save compatibility](#save-compatibility).
   silently discarded. A speed stored in a save is checked against the offered
   set on load, so an out-of-range value cannot come back.
 
+- **A guided tutorial.** The main menu gains a **Tutorial** entry beside
+  Skirmish and Campaign that opens _Field Training_, a scripted first battle on
+  the new Training Meadow map. Fifteen steps teach, in order, selection and
+  movement with the order feedback, attacking a held Roman scouting party,
+  felling timber, quarrying stone and mining iron and where the loads end up,
+  raising a Home and what its cost and placement rules mean, recruiting and the
+  population pool that limits it, assembling an army, breaking a Roman raid,
+  Guard/Hold/Patrol, the commander's aura and rally, the camera, pause and game
+  speed, the Objectives screen, and finally taking the enemy camp. Every step
+  shows an on-screen objective with a completion state and progress, and when
+  the thing the player is trying does not work the card says why (`Collect and
+Build are only available to builders…`, `A Home costs 50 wood and 15 stone;
+you have…`, `A red outline means the site is blocked…`). The card can be
+  paused, hidden, skipped, replayed and ended at any time; the raid is held
+  back until the army step is reached, so the tutorial runs at the player's
+  pace, not the clock's. New tutorial missions declare `"tutorial": true`, and
+  a map that exists only to carry one hides itself from the skirmish list with
+  `"skirmish_hidden": true`.
+
+- **A Field Manual.** The `?` button in the top bar (and a **Field Manual**
+  entry in the main menu) opens a reference on the basics, economy, buildings,
+  army, commander and controls, lists the current key bindings, and shows every
+  tutorial step with its state. Opened from a battle it pauses the game and
+  resumes it on close.
+
 - **Every order now answers back.** Attack, move, guard, patrol, hold, stop,
   build, gather, deliver, repair and rally-point orders — whether issued through
   the command buttons or a right-click — go through one submission path that

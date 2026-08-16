@@ -127,6 +127,10 @@ auto load_campaign_map_paths() -> QSet<QString> {
   return map_paths;
 }
 
+auto is_hidden_from_skirmish(const QJsonObject& map_object) -> bool {
+  return map_object.value(SKIRMISH_HIDDEN).toBool(false);
+}
+
 auto has_scripted_opposition(const QJsonObject& map_object) -> bool {
   return map_object.contains(UNDEAD_ZONES) &&
          map_object.value(UNDEAD_ZONES).isArray() &&
@@ -161,6 +165,7 @@ auto MapCatalog::available_maps() -> QVariantList {
     QString desc;
     QSet<int> player_ids;
     bool solo_playable = false;
+    bool hidden = false;
     if (file.open(QIODevice::ReadOnly)) {
       QByteArray const data = file.readAll();
       file.close();
@@ -168,6 +173,7 @@ auto MapCatalog::available_maps() -> QVariantList {
       QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
       if (err.error == QJsonParseError::NoError && doc.isObject()) {
         QJsonObject obj = doc.object();
+        hidden = is_hidden_from_skirmish(obj);
         if (obj.contains(NAME) && obj[NAME].isString()) {
           name = obj[NAME].toString();
         }
@@ -193,6 +199,9 @@ auto MapCatalog::available_maps() -> QVariantList {
           }
         }
       }
+    }
+    if (hidden) {
+      continue;
     }
     QVariantMap entry;
     entry[NAME] = Util::tr_asset(Util::k_maps_context, name);
@@ -321,6 +330,9 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
     QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
     if (err.error == QJsonParseError::NoError && doc.isObject()) {
       QJsonObject obj = doc.object();
+      if (is_hidden_from_skirmish(obj)) {
+        return {};
+      }
       if (obj.contains(NAME) && obj[NAME].isString()) {
         name = obj[NAME].toString();
       }

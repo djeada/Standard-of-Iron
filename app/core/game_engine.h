@@ -60,6 +60,7 @@
 #include "renderer_bootstrap.h"
 #include "runtime_frame_orchestrator.h"
 #include "save_load_coordinator.h"
+#include "tutorial_director.h"
 
 class ProductionManager;
 class CampaignManager;
@@ -189,8 +190,6 @@ public:
 
   Q_PROPERTY(bool campaign_completed READ campaign_completed NOTIFY
                  available_campaigns_changed)
-  Q_PROPERTY(bool civilian_delivery_available READ civilian_delivery_available NOTIFY
-                 civilian_delivery_available_changed)
   Q_PROPERTY(QString control_mode READ control_mode NOTIFY control_mode_changed)
   Q_PROPERTY(QString game_mode READ game_mode NOTIFY game_mode_changed)
   Q_PROPERTY(bool commander_control_available READ commander_control_available NOTIFY
@@ -208,6 +207,7 @@ public:
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
   Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
   Q_PROPERTY(QObject* activity READ activity_view_model CONSTANT)
+  Q_PROPERTY(QObject* tutorial READ tutorial_view_model CONSTANT)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -359,6 +359,7 @@ public:
   void set_replay_verify_exit(bool enabled) { m_replay_verify_exit = enabled; }
   Q_INVOKABLE void start_campaign_mission(const QString& campaign_id);
   Q_INVOKABLE void start_mission_file(const QString& file_path);
+  void start_tutorial();
   Q_INVOKABLE void mark_current_mission_completed();
   Q_INVOKABLE [[nodiscard]] QVariantMap get_current_mission_objectives() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap
@@ -372,6 +373,7 @@ public:
   [[nodiscard]] QObject* save_slots_view_model() const;
   [[nodiscard]] QObject* placement_view_model() const;
   [[nodiscard]] QObject* wave_view_model() const;
+  [[nodiscard]] QObject* tutorial_view_model() const;
   [[nodiscard]] QObject* activity_view_model() const;
 
   [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
@@ -581,6 +583,10 @@ private:
   void publish_wave_status();
   void restore_mission_waves(const QJsonObject& wave_state);
   void update_mission_events();
+  void update_tutorial(float real_dt);
+  void activate_tutorial_if_configured();
+  [[nodiscard]] auto
+  build_tutorial_observation() const -> App::Core::TutorialObservation;
   void apply_game_mode_render_policy();
   void update_loading_overlay();
   void update_cursor_position();
@@ -598,6 +604,7 @@ private:
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
   std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
+  std::unique_ptr<App::Core::TutorialDirector> m_tutorial_director;
 
   [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const override;
   [[nodiscard]] const ViewportState& viewport() const override { return m_viewport; }
@@ -703,6 +710,22 @@ private:
   std::vector<PendingMissionWave> m_pending_mission_waves;
   std::vector<PendingMissionEvent> m_pending_mission_events;
   MissionWaveDirector m_mission_wave_director;
+  struct TutorialFrameNotes {
+    bool move_accepted = false;
+    bool attack_accepted = false;
+    bool hold_accepted = false;
+    bool guard_accepted = false;
+    bool patrol_accepted = false;
+    bool gather_accepted = false;
+    bool build_accepted = false;
+    bool speed_changed = false;
+    bool camera_used = false;
+    QString last_rejection_reason;
+
+    void reset() { *this = TutorialFrameNotes{}; }
+  };
+  TutorialFrameNotes m_tutorial_notes;
+  float m_tutorial_observe_accumulator = 0.0F;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
