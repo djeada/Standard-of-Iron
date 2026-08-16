@@ -585,6 +585,148 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>CameraGuide</name>
+    <message>
+        <source>unbound</source>
+        <translation>unbound</translation>
+    </message>
+    <message>
+        <source>on, %1 px</source>
+        <translation>on, %1 px</translation>
+    </message>
+    <message>
+        <source>off</source>
+        <translation>off</translation>
+    </message>
+    <message>
+        <source>Screen edge</source>
+        <translation>Screen edge</translation>
+    </message>
+    <message>
+        <source>Edge scroll</source>
+        <translation>Edge scroll</translation>
+    </message>
+    <message>
+        <source>Cursor to a screen edge</source>
+        <translation>Cursor to a screen edge</translation>
+    </message>
+    <message>
+        <source>Push the pointer into any edge of the screen and the camera follows. Turn it off or change how wide the band is under Settings › Accessibility.</source>
+        <translation>Push the pointer into any edge of the screen and the camera follows. Turn it off or change how wide the band is under Settings › Accessibility.</translation>
+    </message>
+    <message>
+        <source>Keyboard pan</source>
+        <translation>Keyboard pan</translation>
+    </message>
+    <message>
+        <source>Pans in steps and keeps panning while held. Hold Shift to move twice as far per step.</source>
+        <translation>Pans in steps and keeps panning while held. Hold Shift to move twice as far per step.</translation>
+    </message>
+    <message>
+        <source>Right-drag</source>
+        <translation>Right-drag</translation>
+    </message>
+    <message>
+        <source>Drag pan</source>
+        <translation>Drag pan</translation>
+    </message>
+    <message>
+        <source>Hold right button and drag</source>
+        <translation>Hold right button and drag</translation>
+    </message>
+    <message>
+        <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
+        <translation>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</translation>
+    </message>
+    <message>
+        <source>Wheel</source>
+        <translation>Wheel</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Mouse wheel</source>
+        <translation>Mouse wheel</translation>
+    </message>
+    <message>
+        <source>Scrolls the camera closer to and further from the battle.</source>
+        <translation>Scrolls the camera closer to and further from the battle.</translation>
+    </message>
+    <message>
+        <source>Rotate</source>
+        <translation>Rotate</translation>
+    </message>
+    <message>
+        <source>Swings the view around the point you are looking at. Hold Shift to swing further.</source>
+        <translation>Swings the view around the point you are looking at. Hold Shift to swing further.</translation>
+    </message>
+    <message>
+        <source>Click minimap</source>
+        <translation>Click minimap</translation>
+    </message>
+    <message>
+        <source>Minimap jump</source>
+        <translation>Minimap jump</translation>
+    </message>
+    <message>
+        <source>Click or drag the minimap</source>
+        <translation>Click or drag the minimap</translation>
+    </message>
+    <message>
+        <source>Left-click jumps the camera there; right-click sends the selection there.</source>
+        <translation>Left-click jumps the camera there; right-click sends the selection there.</translation>
+    </message>
+    <message>
+        <source>Top bar button</source>
+        <translation>Top bar button</translation>
+    </message>
+    <message>
+        <source>Follow selection</source>
+        <translation>Follow selection</translation>
+    </message>
+    <message>
+        <source>Follow button, top bar</source>
+        <translation>Follow button, top bar</translation>
+    </message>
+    <message>
+        <source>Keeps the camera on whatever you have selected until you switch it off.</source>
+        <translation>Keeps the camera on whatever you have selected until you switch it off.</translation>
+    </message>
+    <message>
+        <source>Reset camera</source>
+        <translation>Reset camera</translation>
+    </message>
+    <message>
+        <source>Reset button, top bar</source>
+        <translation>Reset button, top bar</translation>
+    </message>
+    <message>
+        <source>Returns the view to your own camp.</source>
+        <translation>Returns the view to your own camp.</translation>
+    </message>
+</context>
+<context>
+    <name>CameraLegend</name>
+    <message>
+        <source>Camera controls</source>
+        <translation>Camera controls</translation>
+    </message>
+    <message>
+        <source>Moving the camera</source>
+        <translation>Moving the camera</translation>
+    </message>
+    <message>
+        <source>Hide the camera legend</source>
+        <translation>Hide the camera legend</translation>
+    </message>
+    <message>
+        <source>Camera settings</source>
+        <translation>Camera settings</translation>
+    </message>
+</context>
+<context>
     <name>CampaignMap</name>
     <message>
         <source>Carthage Core</source>
@@ -3011,6 +3153,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Battle speed</source>
         <translation>Battle speed</translation>
     </message>
+    <message>
+        <source>Hide the camera controls</source>
+        <translation>Hide the camera controls</translation>
+    </message>
+    <message>
+        <source>Show how to move the camera</source>
+        <translation>Show how to move the camera</translation>
+    </message>
+    <message>
+        <source>Camera controls</source>
+        <translation>Camera controls</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -3217,6 +3371,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
         <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Camera</translation>
     </message>
 </context>
 <context>
@@ -6487,14 +6645,6 @@ Wide vision and a durable settlement anchor</translation>
         <translation>Edge scrolling</translation>
     </message>
     <message>
-        <source>Pans the camera when the cursor reaches the edge of the screen</source>
-        <translation>Pans the camera when the cursor reaches the edge of the screen</translation>
-    </message>
-    <message>
-        <source>Edge scroll speed:</source>
-        <translation>Edge scroll speed:</translation>
-    </message>
-    <message>
         <source>Team ring patterns</source>
         <translation>Team ring patterns</translation>
     </message>
@@ -6541,6 +6691,18 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>AudioCraft</source>
         <translation>AudioCraft</translation>
+    </message>
+    <message>
+        <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>
+        <translation>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</translation>
+    </message>
+    <message>
+        <source>Edge scroll strength:</source>
+        <translation>Edge scroll strength:</translation>
+    </message>
+    <message>
+        <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
+        <translation>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</translation>
     </message>
 </context>
 <context>

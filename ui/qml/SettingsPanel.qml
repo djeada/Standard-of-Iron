@@ -405,13 +405,13 @@ Item {
                             Design.IronCheckBox {
                                 Layout.columnSpan: 2
                                 text: qsTr("Edge scrolling")
-                                description: qsTr("Pans the camera when the cursor reaches the edge of the screen")
+                                description: qsTr("Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.")
                                 checked: UiPreferences.edgeScrollEnabled
                                 onToggled: UiPreferences.edgeScrollEnabled = checked
                             }
 
                             Label {
-                                text: qsTr("Edge scroll speed:")
+                                text: qsTr("Edge scroll strength:")
                                 color: Theme.textSub
                                 font.pointSize: Theme.fontSizeMedium
                                 enabled: UiPreferences.edgeScrollEnabled
@@ -441,6 +441,16 @@ Item {
                                     Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
+                            }
+
+                            Label {
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
+                                text: qsTr("Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.").arg(Math.round(EdgeScroll.horizontalZone(edge_scroll_slider.value, UiPreferences.uiScale))).arg(Math.round(EdgeScroll.verticalZone(edge_scroll_slider.value, UiPreferences.uiScale)))
+                                color: Theme.textDim
+                                font.pointSize: Theme.fontSizeTiny
+                                wrapMode: Text.WordWrap
+                                enabled: UiPreferences.edgeScrollEnabled
                             }
                         }
 

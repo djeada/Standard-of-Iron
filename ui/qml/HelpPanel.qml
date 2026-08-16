@@ -16,7 +16,7 @@ Item {
     readonly property var tutorial: (typeof game !== 'undefined' && game && game.tutorial) ? game.tutorial : null
     readonly property bool tutorial_active: tutorial !== null && tutorial.active
 
-    readonly property var tabs: [qsTr("Basics"), qsTr("Economy"), qsTr("Buildings"), qsTr("Army"), qsTr("Commander"), qsTr("Controls"), qsTr("Tutorial")]
+    readonly property var tabs: [qsTr("Basics"), qsTr("Economy"), qsTr("Buildings"), qsTr("Army"), qsTr("Commander"), qsTr("Camera"), qsTr("Controls"), qsTr("Tutorial")]
 
     readonly property var basics_sections: [{
             "heading": qsTr("Selecting"),
@@ -76,6 +76,13 @@ Item {
             "body": qsTr("Where the mission allows it, you can step into the commander's boots and lead from the field. The controls for that mode are listed under Controls.")
         }]
 
+    readonly property var camera_sections: CameraGuide.entries.map(function (entry) {
+            return {
+                "heading": entry.state.length > 0 ? entry.name + " — " + entry.state : entry.name,
+                "body": entry.control + ": " + entry.detail
+            };
+        })
+
     readonly property var flow_sections: [{
             "heading": qsTr("Pace and view"),
             "body": qsTr("The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.")
@@ -93,6 +100,8 @@ Item {
             return army_sections;
         case 4:
             return commander_sections;
+        case 5:
+            return camera_sections;
         default:
             return [];
         }
@@ -190,7 +199,7 @@ Item {
                     spacing: Design.Metrics.space16
 
                     Repeater {
-                        model: root.current_tab <= 4 ? root.sections_for(root.current_tab).concat(root.current_tab === 0 ? root.flow_sections : []) : []
+                        model: root.current_tab <= 5 ? root.sections_for(root.current_tab).concat(root.current_tab === 0 ? root.flow_sections : []) : []
 
                         delegate: Column {
                             required property var modelData
@@ -220,7 +229,7 @@ Item {
                     }
 
                     Repeater {
-                        model: root.current_tab === 5 ? root.binding_groups() : []
+                        model: root.current_tab === 6 ? root.binding_groups() : []
 
                         delegate: Column {
                             id: bindingGroup
@@ -269,7 +278,7 @@ Item {
                     Column {
                         width: scroller.availableWidth
                         spacing: Design.Metrics.space8
-                        visible: root.current_tab === 6
+                        visible: root.current_tab === 7
 
                         Text {
                             width: parent.width

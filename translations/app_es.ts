@@ -585,6 +585,148 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>CameraGuide</name>
+    <message>
+        <source>unbound</source>
+        <translation>sin asignar</translation>
+    </message>
+    <message>
+        <source>on, %1 px</source>
+        <translation>activado, %1 px</translation>
+    </message>
+    <message>
+        <source>off</source>
+        <translation>desactivado</translation>
+    </message>
+    <message>
+        <source>Screen edge</source>
+        <translation>Borde de pantalla</translation>
+    </message>
+    <message>
+        <source>Edge scroll</source>
+        <translation>Desplazamiento por el borde</translation>
+    </message>
+    <message>
+        <source>Cursor to a screen edge</source>
+        <translation>Lleva el cursor a un borde</translation>
+    </message>
+    <message>
+        <source>Push the pointer into any edge of the screen and the camera follows. Turn it off or change how wide the band is under Settings › Accessibility.</source>
+        <translation>Empuja el puntero contra cualquier borde de la pantalla y la cámara le sigue. Puedes desactivarlo o cambiar el ancho de la banda en Ajustes › Accesibilidad.</translation>
+    </message>
+    <message>
+        <source>Keyboard pan</source>
+        <translation>Desplazamiento con teclado</translation>
+    </message>
+    <message>
+        <source>Pans in steps and keeps panning while held. Hold Shift to move twice as far per step.</source>
+        <translation>Se desplaza a pasos y sigue mientras mantengas la tecla. Con Mayús recorre el doble por paso.</translation>
+    </message>
+    <message>
+        <source>Right-drag</source>
+        <translation>Arrastrar con derecho</translation>
+    </message>
+    <message>
+        <source>Drag pan</source>
+        <translation>Desplazamiento por arrastre</translation>
+    </message>
+    <message>
+        <source>Hold right button and drag</source>
+        <translation>Mantén el botón derecho y arrastra</translation>
+    </message>
+    <message>
+        <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
+        <translation>Arrastra el terreno bajo el cursor. El desplazamiento por el borde se detiene mientras arrastras, para que nunca se estorben.</translation>
+    </message>
+    <message>
+        <source>Wheel</source>
+        <translation>Rueda</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Mouse wheel</source>
+        <translation>Rueda del ratón</translation>
+    </message>
+    <message>
+        <source>Scrolls the camera closer to and further from the battle.</source>
+        <translation>Acerca y aleja la cámara de la batalla.</translation>
+    </message>
+    <message>
+        <source>Rotate</source>
+        <translation>Rotar</translation>
+    </message>
+    <message>
+        <source>Swings the view around the point you are looking at. Hold Shift to swing further.</source>
+        <translation>Gira la vista alrededor del punto que miras. Con Mayús gira más.</translation>
+    </message>
+    <message>
+        <source>Click minimap</source>
+        <translation>Clic en el minimapa</translation>
+    </message>
+    <message>
+        <source>Minimap jump</source>
+        <translation>Salto por minimapa</translation>
+    </message>
+    <message>
+        <source>Click or drag the minimap</source>
+        <translation>Haz clic o arrastra el minimapa</translation>
+    </message>
+    <message>
+        <source>Left-click jumps the camera there; right-click sends the selection there.</source>
+        <translation>El clic izquierdo lleva la cámara allí; el derecho envía la selección.</translation>
+    </message>
+    <message>
+        <source>Top bar button</source>
+        <translation>Botón de la barra superior</translation>
+    </message>
+    <message>
+        <source>Follow selection</source>
+        <translation>Seguir la selección</translation>
+    </message>
+    <message>
+        <source>Follow button, top bar</source>
+        <translation>Botón Seguir, barra superior</translation>
+    </message>
+    <message>
+        <source>Keeps the camera on whatever you have selected until you switch it off.</source>
+        <translation>Mantiene la cámara sobre lo que tengas seleccionado hasta que lo desactives.</translation>
+    </message>
+    <message>
+        <source>Reset camera</source>
+        <translation>Reiniciar la cámara</translation>
+    </message>
+    <message>
+        <source>Reset button, top bar</source>
+        <translation>Botón Reiniciar, barra superior</translation>
+    </message>
+    <message>
+        <source>Returns the view to your own camp.</source>
+        <translation>Devuelve la vista a tu propio campamento.</translation>
+    </message>
+</context>
+<context>
+    <name>CameraLegend</name>
+    <message>
+        <source>Camera controls</source>
+        <translation>Controles de cámara</translation>
+    </message>
+    <message>
+        <source>Moving the camera</source>
+        <translation>Mover la cámara</translation>
+    </message>
+    <message>
+        <source>Hide the camera legend</source>
+        <translation>Ocultar la leyenda de cámara</translation>
+    </message>
+    <message>
+        <source>Camera settings</source>
+        <translation>Ajustes de cámara</translation>
+    </message>
+</context>
+<context>
     <name>CampaignMap</name>
     <message>
         <source>Carthage Core</source>
@@ -3011,6 +3153,18 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Battle speed</source>
         <translation>Velocidad de batalla</translation>
     </message>
+    <message>
+        <source>Hide the camera controls</source>
+        <translation>Ocultar los controles de cámara</translation>
+    </message>
+    <message>
+        <source>Show how to move the camera</source>
+        <translation>Mostrar cómo mover la cámara</translation>
+    </message>
+    <message>
+        <source>Camera controls</source>
+        <translation>Controles de cámara</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -3217,6 +3371,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
         <translation>Los botones de la esquina superior izquierda pausan la batalla y ajustan la velocidad, de la mitad hasta el cuádruple; la barra espaciadora también pausa, y + y - recorren las velocidades. La velocidad activa permanece resaltada en pausa y puede cambiarse ahí. Mueve la cámara con las flechas o WASD, o lleva el ratón al borde de la pantalla; usa la rueda para acercar, Q y E para rotar; el botón de reinicio vuelve a tu campamento y Seguir mantiene la cámara sobre tu selección.</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>Cámara</translation>
     </message>
 </context>
 <context>
@@ -6487,14 +6645,6 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
         <translation>Desplazamiento por los bordes</translation>
     </message>
     <message>
-        <source>Pans the camera when the cursor reaches the edge of the screen</source>
-        <translation>Desplaza la cámara cuando el cursor llega al borde de la pantalla</translation>
-    </message>
-    <message>
-        <source>Edge scroll speed:</source>
-        <translation>Velocidad del desplazamiento por los bordes:</translation>
-    </message>
-    <message>
         <source>Team ring patterns</source>
         <translation>Patrones de anillo de equipo</translation>
     </message>
@@ -6541,6 +6691,18 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
     <message>
         <source>AudioCraft</source>
         <translation>AudioCraft</translation>
+    </message>
+    <message>
+        <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>
+        <translation>Desplaza la cámara cuando el cursor llega al borde de la pantalla. El teclado, el arrastre con el botón derecho y el minimapa siguen funcionando igualmente.</translation>
+    </message>
+    <message>
+        <source>Edge scroll strength:</source>
+        <translation>Intensidad del desplazamiento por el borde:</translation>
+    </message>
+    <message>
+        <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
+        <translation>Define a la vez cuánto se adentra la banda desde el borde y a qué velocidad se mueve la cámara dentro de ella. Con este ajuste la banda mide %1 px en los laterales y %2 px arriba y abajo, medidos a tu escala de interfaz.</translation>
     </message>
 </context>
 <context>
