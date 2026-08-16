@@ -3526,6 +3526,123 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    auto s = definition(
+        QString::fromLatin1(k_combat_feedback_capture_id),
+        QStringLiteral("Combat Feedback Capture"),
+        QStringLiteral("Every kind of hit the player has to read at once: a melee "
+                       "lane, an archer volley that connects, a volley loosed at "
+                       "riders who ride out of it and miss, a ballista chipping a "
+                       "wall, and a killing blow. Overlays are kept in the capture "
+                       "so the target lock rings, incoming-attacker chevrons and "
+                       "projectile relation tints can be reviewed."),
+        12.0F,
+        {30.0F, 50.0F, 8.0F});
+    s.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+    auto swords = group(
+        QStringLiteral("swords"), Troop::Swordsman, 1, 1, {-10.0F, 0.0F, -4.0F}, 3);
+    auto sword_targets = group(QStringLiteral("sword_targets"),
+                               Troop::Swordsman,
+                               2,
+                               1,
+                               {-10.0F, 0.0F, 3.0F},
+                               3);
+    auto archers =
+        group(QStringLiteral("archers"), Troop::Archer, 1, 1, {-2.0F, 0.0F, -9.0F}, 4);
+    auto archer_targets = group(QStringLiteral("archer_targets"),
+                                Troop::Spearman,
+                                2,
+                                1,
+                                {-2.0F, 0.0F, 4.0F},
+                                3);
+    auto enemy_archers = group(
+        QStringLiteral("enemy_archers"), Troop::Archer, 2, 1, {5.0F, 0.0F, 6.0F}, 3);
+    auto riders = group(
+        QStringLiteral("riders"), Troop::HorseArcher, 1, 1, {5.0F, 0.0F, -3.0F}, 2);
+    auto ballista = group(
+        QStringLiteral("ballista"), Troop::Ballista, 1, 1, {11.0F, 0.0F, -9.0F}, 1);
+    auto wall = building(QStringLiteral("wall"),
+                         Game::Units::SpawnType::WallSegment,
+                         Nation::Carthage,
+                         2,
+                         1,
+                         {12.0F, 0.0F, 4.0F});
+    auto killer = group(
+        QStringLiteral("killer"), Troop::Swordsman, 1, 1, {-15.0F, 0.0F, -2.0F}, 1);
+    auto victim =
+        group(QStringLiteral("victim"), Troop::Healer, 2, 1, {-15.0F, 0.0F, 1.6F}, 1);
+    swords.health_override = swords.max_health_override = 900;
+    sword_targets.health_override = sword_targets.max_health_override = 900;
+    archer_targets.health_override = archer_targets.max_health_override = 900;
+    riders.health_override = riders.max_health_override = 900;
+    wall.health_override = wall.max_health_override = 1400;
+    victim.health_override = victim.max_health_override = 6;
+    s.groups = {swords,
+                sword_targets,
+                archers,
+                archer_targets,
+                enemy_archers,
+                riders,
+                ballista,
+                wall,
+                killer,
+                victim};
+    s.steps = {
+        at(0.1F,
+           Command::Attack,
+           QStringLiteral("swords"),
+           QStringLiteral("sword_targets")),
+        at(0.1F,
+           Command::Attack,
+           QStringLiteral("archers"),
+           QStringLiteral("archer_targets")),
+        at(0.1F,
+           Command::Attack,
+           QStringLiteral("enemy_archers"),
+           QStringLiteral("riders")),
+        at(0.1F, Command::Attack, QStringLiteral("ballista"), QStringLiteral("wall")),
+        at(0.1F,
+           Command::AttackMove,
+           QStringLiteral("killer"),
+           QStringLiteral("victim")),
+        at(0.9F, Command::Run, QStringLiteral("riders")),
+    };
+    s.steps.back().destination = {16.0F, 0.0F, -14.0F};
+    s.capture_ui_overlays = true;
+    add_visual_stability(s,
+                         {QStringLiteral("swords"), QStringLiteral("sword_targets")});
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("swords")));
+    s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
+                                         QStringLiteral("swords"),
+                                         QStringLiteral("sword_targets")));
+    s.expectations.push_back(expectation(
+        Expect::GroupHealthReduced, QStringLiteral("sword_targets"), {}, 1.0F));
+    s.expectations.push_back(expectation(Expect::ProjectileFlightObserved,
+                                         QStringLiteral("archers"),
+                                         QStringLiteral("archer_targets")));
+    s.expectations.push_back(expectation(Expect::ProjectileImpactObserved,
+                                         QStringLiteral("archers"),
+                                         QStringLiteral("archer_targets")));
+    s.expectations.push_back(expectation(
+        Expect::GroupHealthReduced, QStringLiteral("archer_targets"), {}, 1.0F));
+    s.expectations.push_back(expectation(Expect::ProjectileFlightObserved,
+                                         QStringLiteral("enemy_archers"),
+                                         QStringLiteral("riders")));
+    s.expectations.push_back(expectation(
+        Expect::AllGroupsRespondWithin, QStringLiteral("riders"), {}, 1.5F));
+    s.expectations.push_back(expectation(Expect::GroupExists, QStringLiteral("wall")));
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthReduced, QStringLiteral("wall"), {}, 1.0F));
+    s.expectations.push_back(
+        expectation(Expect::StructureDamageCueObserved, QStringLiteral("wall")));
+    s.expectations.push_back(
+        expectation(Expect::GroupDestroyed, QStringLiteral("victim")));
+    s.expectations.push_back(
+        expectation(Expect::DeathAnimationObserved, QStringLiteral("victim")));
+    result.push_back(std::move(s));
+  }
+
+  {
     auto s =
         definition(QString::fromLatin1(k_retargeting_id),
                    QStringLiteral("Retargeting"),

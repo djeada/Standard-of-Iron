@@ -1169,6 +1169,37 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>FocusTarget</name>
+    <message>
+        <source>Barracks</source>
+        <translation>Barracks</translation>
+    </message>
+    <message>
+        <source>Defense tower</source>
+        <translation>Defense tower</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Home</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>Wall</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>Gate</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>Marketplace</translation>
+    </message>
+    <message>
+        <source>Temple</source>
+        <translation>Temple</translation>
+    </message>
+</context>
+<context>
     <name>Formation</name>
     <message>
         <source>No units selected.</source>
@@ -2498,6 +2529,79 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source> (mixed)</source>
         <translation> (mixed)</translation>
+    </message>
+    <message>
+        <source>YOUR BUILDING</source>
+        <translation>YOUR BUILDING</translation>
+    </message>
+    <message>
+        <source>YOUR UNIT</source>
+        <translation>YOUR UNIT</translation>
+    </message>
+    <message>
+        <source>ENEMY BUILDING</source>
+        <translation>ENEMY BUILDING</translation>
+    </message>
+    <message>
+        <source>ENEMY UNIT</source>
+        <translation>ENEMY UNIT</translation>
+    </message>
+    <message>
+        <source>BUILDING</source>
+        <translation>BUILDING</translation>
+    </message>
+    <message>
+        <source>UNIT</source>
+        <translation>UNIT</translation>
+    </message>
+    <message numerus="yes">
+        <source>Under attack by %n of your units</source>
+        <translation>
+            <numerusform>Under attack by one of your units</numerusform>
+            <numerusform>Under attack by %n of your units</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Not engaged by your army</source>
+        <translation>Not engaged by your army</translation>
+    </message>
+    <message numerus="yes">
+        <source>Under attack by %n enemies</source>
+        <translation>
+            <numerusform>Under attack by %n enemy</numerusform>
+            <numerusform>Under attack by %n enemies</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Not under attack</source>
+        <translation>Not under attack</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>Enemy</translation>
+    </message>
+    <message>
+        <source>Yours</source>
+        <translation>Yours</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <translation>Neutral</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <source>TARGET</source>
+        <translation>TARGET</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n of your selected units attacking</source>
+        <translation>
+            <numerusform>One of your selected units attacking</numerusform>
+            <numerusform>%n of your selected units attacking</numerusform>
+        </translation>
     </message>
 </context>
 <context>

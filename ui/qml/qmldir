@@ -15,3 +15,4 @@ ObjectivesPanel 1.0 ObjectivesPanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml
 RpgFpvOverlay 1.0 RpgFpvOverlay.qml
 RpgDamageNumbers 1.0 RpgDamageNumbers.qml
+CombatDamageNumbers 1.0 CombatDamageNumbers.qml

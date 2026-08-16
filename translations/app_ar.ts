@@ -1169,6 +1169,37 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>FocusTarget</name>
+    <message>
+        <source>Barracks</source>
+        <translation>ثكنة</translation>
+    </message>
+    <message>
+        <source>Defense tower</source>
+        <translation>برج دفاعي</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>منزل</translation>
+    </message>
+    <message>
+        <source>Wall</source>
+        <translation>سور</translation>
+    </message>
+    <message>
+        <source>Gate</source>
+        <translation>بوابة</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>سوق</translation>
+    </message>
+    <message>
+        <source>Temple</source>
+        <translation>معبد</translation>
+    </message>
+</context>
+<context>
     <name>Formation</name>
     <message>
         <source>No units selected.</source>
@@ -2498,6 +2529,91 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source> (mixed)</source>
         <translation> (مختلط)</translation>
+    </message>
+    <message>
+        <source>YOUR BUILDING</source>
+        <translation>مبناك</translation>
+    </message>
+    <message>
+        <source>YOUR UNIT</source>
+        <translation>وحدتك</translation>
+    </message>
+    <message>
+        <source>ENEMY BUILDING</source>
+        <translation>مبنى العدو</translation>
+    </message>
+    <message>
+        <source>ENEMY UNIT</source>
+        <translation>وحدة العدو</translation>
+    </message>
+    <message>
+        <source>BUILDING</source>
+        <translation>مبنى</translation>
+    </message>
+    <message>
+        <source>UNIT</source>
+        <translation>وحدة</translation>
+    </message>
+    <message numerus="yes">
+        <source>Under attack by %n of your units</source>
+        <translation>
+            <numerusform>لا تهاجمه أي من وحداتك</numerusform>
+            <numerusform>تهاجمه وحدة واحدة من وحداتك</numerusform>
+            <numerusform>تهاجمه وحدتان من وحداتك</numerusform>
+            <numerusform>تهاجمه %n من وحداتك</numerusform>
+            <numerusform>تهاجمه %n من وحداتك</numerusform>
+            <numerusform>تهاجمه %n من وحداتك</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Not engaged by your army</source>
+        <translation>جيشك لا يشتبك معه</translation>
+    </message>
+    <message numerus="yes">
+        <source>Under attack by %n enemies</source>
+        <translation>
+            <numerusform>لا يهاجمه أي عدو</numerusform>
+            <numerusform>يهاجمه عدو واحد</numerusform>
+            <numerusform>يهاجمه عدوان</numerusform>
+            <numerusform>يهاجمه %n أعداء</numerusform>
+            <numerusform>يهاجمه %n عدوًا</numerusform>
+            <numerusform>يهاجمه %n عدو</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Not under attack</source>
+        <translation>ليس تحت الهجوم</translation>
+    </message>
+    <message>
+        <source>Enemy</source>
+        <translation>عدو</translation>
+    </message>
+    <message>
+        <source>Yours</source>
+        <translation>لك</translation>
+    </message>
+    <message>
+        <source>Neutral</source>
+        <translation>محايد</translation>
+    </message>
+    <message>
+        <source>%1 / %2</source>
+        <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <source>TARGET</source>
+        <translation>الهدف</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n of your selected units attacking</source>
+        <translation>
+            <numerusform>لا تهاجم أي من وحداتك المختارة</numerusform>
+            <numerusform>تهاجم وحدة واحدة من وحداتك المختارة</numerusform>
+            <numerusform>تهاجم وحدتان من وحداتك المختارة</numerusform>
+            <numerusform>تهاجم %n من وحداتك المختارة</numerusform>
+            <numerusform>تهاجم %n من وحداتك المختارة</numerusform>
+            <numerusform>تهاجم %n من وحداتك المختارة</numerusform>
+        </translation>
     </message>
 </context>
 <context>

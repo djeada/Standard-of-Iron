@@ -640,4 +640,97 @@ TEST_F(InputCommandHandlerTest, MinimapRightClickPublishesMoveFeedback) {
   EXPECT_EQ(seen.front().destination, QVector3D(5.0F, 0.0F, 5.0F));
 }
 
+TEST_F(InputCommandHandlerTest, ClickingAnEnemyInspectsItInsteadOfSelectingIt) {
+  auto* mine = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(mine, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(mine->get_id());
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  input_handler->on_click_select(
+      enemy_screen.x(), enemy_screen.y(), false, 1, viewport);
+
+  EXPECT_TRUE(selection_system->get_selected_units().empty())
+      << "inspecting an enemy replaces the own selection, it is not a multiselect";
+  EXPECT_EQ(selection_system->inspected_entity(), enemy->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, ClickingAnEnemyBuildingInspectsIt) {
+  auto* barracks = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Barracks);
+  ASSERT_NE(barracks, nullptr);
+  barracks->add_component<Engine::Core::BuildingComponent>();
+
+  QPointF const screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  input_handler->on_click_select(screen.x(), screen.y(), false, 1, viewport);
+
+  EXPECT_EQ(selection_system->inspected_entity(), barracks->get_id());
+}
+
+TEST_F(InputCommandHandlerTest, SelectingOwnUnitsClearsTheInspectedEnemy) {
+  auto* mine = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(mine, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->set_inspected_entity(enemy->get_id());
+
+  QPointF const mine_screen = world_to_screen(QVector3D(-3.0F, 0.0F, 0.0F));
+  input_handler->on_click_select(mine_screen.x(), mine_screen.y(), false, 1, viewport);
+
+  ASSERT_EQ(selection_system->get_selected_units().size(), 1U);
+  EXPECT_EQ(selection_system->get_selected_units().front(), mine->get_id());
+  EXPECT_EQ(selection_system->inspected_entity(), 0U);
+}
+
+TEST_F(InputCommandHandlerTest, ClickingEmptyGroundClearsTheInspectedEnemy) {
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->set_inspected_entity(enemy->get_id());
+
+  QPointF const ground_screen = world_to_screen(QVector3D(6.0F, 0.0F, 6.0F));
+  input_handler->on_click_select(
+      ground_screen.x(), ground_screen.y(), false, 1, viewport);
+
+  EXPECT_EQ(selection_system->inspected_entity(), 0U);
+}
+
+TEST_F(InputCommandHandlerTest, ShiftClickingAnEnemyDoesNotInspectOrDeselect) {
+  auto* mine = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(mine, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(mine->get_id());
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  input_handler->on_click_select(enemy_screen.x(), enemy_screen.y(), true, 1, viewport);
+
+  ASSERT_EQ(selection_system->get_selected_units().size(), 1U);
+  EXPECT_EQ(selection_system->inspected_entity(), 0U);
+}
+
+TEST_F(InputCommandHandlerTest, TheInspectFilterCanVetoHiddenEnemies) {
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(enemy, nullptr);
+  selection_controller->set_inspect_filter(
+      [](Engine::Core::EntityID) { return false; });
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  input_handler->on_click_select(
+      enemy_screen.x(), enemy_screen.y(), false, 1, viewport);
+
+  EXPECT_EQ(selection_system->inspected_entity(), 0U);
+}
+
+TEST_F(InputCommandHandlerTest, DeadEnemiesCannotBeInspected) {
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(enemy, nullptr);
+  enemy->get_component<Engine::Core::UnitComponent>()->health = 0;
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  input_handler->on_click_select(
+      enemy_screen.x(), enemy_screen.y(), false, 1, viewport);
+
+  EXPECT_EQ(selection_system->inspected_entity(), 0U);
+}
+
 } // namespace

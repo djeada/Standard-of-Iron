@@ -199,6 +199,14 @@ Item {
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked && Design.A11y.damageNumbers
     }
 
+    CombatDamageNumbers {
+        id: combatDamageNumbers
+
+        anchors.fill: parent
+        engine: typeof game !== 'undefined' ? game : null
+        visible: !hud.commander_rpg_mode && Design.A11y.damageNumbers
+    }
+
     HUDVictory {
         id: hudVictory
 
