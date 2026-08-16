@@ -1,5 +1,6 @@
 singleton StyleGuide 1.0 StyleGuide.qml
 singleton EconomyGuide 1.0 EconomyGuide.qml
+singleton CameraGuide 1.0 CameraGuide.qml
 StyledButton 1.0 StyledButton.qml
 StyledComboBox 1.0 StyledComboBox.qml
 ProductionPanel 1.0 ProductionPanel.qml

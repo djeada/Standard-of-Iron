@@ -585,6 +585,148 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>CameraGuide</name>
+    <message>
+        <source>unbound</source>
+        <translation>غير مُعيَّن</translation>
+    </message>
+    <message>
+        <source>on, %1 px</source>
+        <translation>مفعّل، %1 بكسل</translation>
+    </message>
+    <message>
+        <source>off</source>
+        <translation>معطّل</translation>
+    </message>
+    <message>
+        <source>Screen edge</source>
+        <translation>حافة الشاشة</translation>
+    </message>
+    <message>
+        <source>Edge scroll</source>
+        <translation>التمرير من الحافة</translation>
+    </message>
+    <message>
+        <source>Cursor to a screen edge</source>
+        <translation>حرّك المؤشر إلى حافة الشاشة</translation>
+    </message>
+    <message>
+        <source>Push the pointer into any edge of the screen and the camera follows. Turn it off or change how wide the band is under Settings › Accessibility.</source>
+        <translation>ادفع المؤشر إلى أي حافة من الشاشة فتتبعه الكاميرا. يمكنك تعطيله أو تغيير عرض الشريط من الإعدادات › إمكانية الوصول.</translation>
+    </message>
+    <message>
+        <source>Keyboard pan</source>
+        <translation>التحريك بلوحة المفاتيح</translation>
+    </message>
+    <message>
+        <source>Pans in steps and keeps panning while held. Hold Shift to move twice as far per step.</source>
+        <translation>يحرّك المشهد خطوة بخطوة ويستمر ما دام المفتاح مضغوطًا. مع Shift يتحرك ضعف المسافة في كل خطوة.</translation>
+    </message>
+    <message>
+        <source>Right-drag</source>
+        <translation>السحب بالزر الأيمن</translation>
+    </message>
+    <message>
+        <source>Drag pan</source>
+        <translation>التحريك بالسحب</translation>
+    </message>
+    <message>
+        <source>Hold right button and drag</source>
+        <translation>اضغط الزر الأيمن واسحب</translation>
+    </message>
+    <message>
+        <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
+        <translation>يسحب الأرض تحت المؤشر. يتوقف التمرير من الحافة أثناء السحب حتى لا يتعارضا.</translation>
+    </message>
+    <message>
+        <source>Wheel</source>
+        <translation>عجلة الفأرة</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>التقريب</translation>
+    </message>
+    <message>
+        <source>Mouse wheel</source>
+        <translation>عجلة الفأرة</translation>
+    </message>
+    <message>
+        <source>Scrolls the camera closer to and further from the battle.</source>
+        <translation>يقرّب الكاميرا من المعركة ويبعدها عنها.</translation>
+    </message>
+    <message>
+        <source>Rotate</source>
+        <translation>التدوير</translation>
+    </message>
+    <message>
+        <source>Swings the view around the point you are looking at. Hold Shift to swing further.</source>
+        <translation>يدير المشهد حول النقطة التي تنظر إليها. مع Shift يدور أكثر.</translation>
+    </message>
+    <message>
+        <source>Click minimap</source>
+        <translation>انقر الخريطة المصغّرة</translation>
+    </message>
+    <message>
+        <source>Minimap jump</source>
+        <translation>الانتقال بالخريطة المصغّرة</translation>
+    </message>
+    <message>
+        <source>Click or drag the minimap</source>
+        <translation>انقر الخريطة المصغّرة أو اسحبها</translation>
+    </message>
+    <message>
+        <source>Left-click jumps the camera there; right-click sends the selection there.</source>
+        <translation>النقر الأيسر ينقل الكاميرا إلى هناك، والنقر الأيمن يرسل التحديد إلى هناك.</translation>
+    </message>
+    <message>
+        <source>Top bar button</source>
+        <translation>زر في الشريط العلوي</translation>
+    </message>
+    <message>
+        <source>Follow selection</source>
+        <translation>تتبع التحديد</translation>
+    </message>
+    <message>
+        <source>Follow button, top bar</source>
+        <translation>زر «تتبع» في الشريط العلوي</translation>
+    </message>
+    <message>
+        <source>Keeps the camera on whatever you have selected until you switch it off.</source>
+        <translation>يبقي الكاميرا على ما حدّدته حتى توقفه.</translation>
+    </message>
+    <message>
+        <source>Reset camera</source>
+        <translation>إعادة ضبط الكاميرا</translation>
+    </message>
+    <message>
+        <source>Reset button, top bar</source>
+        <translation>زر «إعادة الضبط» في الشريط العلوي</translation>
+    </message>
+    <message>
+        <source>Returns the view to your own camp.</source>
+        <translation>يعيد المشهد إلى معسكرك.</translation>
+    </message>
+</context>
+<context>
+    <name>CameraLegend</name>
+    <message>
+        <source>Camera controls</source>
+        <translation>تحكّم الكاميرا</translation>
+    </message>
+    <message>
+        <source>Moving the camera</source>
+        <translation>تحريك الكاميرا</translation>
+    </message>
+    <message>
+        <source>Hide the camera legend</source>
+        <translation>إخفاء دليل الكاميرا</translation>
+    </message>
+    <message>
+        <source>Camera settings</source>
+        <translation>إعدادات الكاميرا</translation>
+    </message>
+</context>
+<context>
     <name>CampaignMap</name>
     <message>
         <source>Carthage Core</source>
@@ -3015,6 +3157,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Battle speed</source>
         <translation>سرعة المعركة</translation>
     </message>
+    <message>
+        <source>Hide the camera controls</source>
+        <translation>إخفاء تحكّم الكاميرا</translation>
+    </message>
+    <message>
+        <source>Show how to move the camera</source>
+        <translation>اعرض كيفية تحريك الكاميرا</translation>
+    </message>
+    <message>
+        <source>Camera controls</source>
+        <translation>تحكّم الكاميرا</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -3221,6 +3375,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
         <translation>تُوقف الأزرار في أعلى اليسار المعركة مؤقتًا وتضبط السرعة، من النصف حتى أربعة أضعاف؛ مفتاح المسافة يوقف مؤقتًا أيضًا، و + و - ينتقلان بين السرعات. تبقى السرعة النشطة مضاءة أثناء الإيقاف المؤقت ويمكن تغييرها من هناك. حرّك الكاميرا بمفاتيح الأسهم أو WASD، أو ادفع مؤشر الفأرة إلى حافة الشاشة؛ استخدم عجلة الفأرة للتقريب، و Q و E للدوران؛ زر إعادة الضبط يعيدك إلى معسكرك، و«تتبع» يبقي الكاميرا على تحديدك.</translation>
+    </message>
+    <message>
+        <source>Camera</source>
+        <translation>الكاميرا</translation>
     </message>
 </context>
 <context>
@@ -6499,14 +6657,6 @@ Wide vision and a durable settlement anchor</source>
         <translation>التمرير من الحواف</translation>
     </message>
     <message>
-        <source>Pans the camera when the cursor reaches the edge of the screen</source>
-        <translation>يحرّك الكاميرا حين يبلغ المؤشر حافة الشاشة</translation>
-    </message>
-    <message>
-        <source>Edge scroll speed:</source>
-        <translation>سرعة التمرير من الحواف:</translation>
-    </message>
-    <message>
         <source>Team ring patterns</source>
         <translation>أنماط حلقات الفرق</translation>
     </message>
@@ -6553,6 +6703,18 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>AudioCraft</source>
         <translation>AudioCraft</translation>
+    </message>
+    <message>
+        <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>
+        <translation>يحرّك الكاميرا عندما يصل المؤشر إلى حافة الشاشة. يظل التحريك بلوحة المفاتيح والسحب بالزر الأيمن والخريطة المصغّرة تعمل في الحالتين.</translation>
+    </message>
+    <message>
+        <source>Edge scroll strength:</source>
+        <translation>قوة التمرير من الحافة:</translation>
+    </message>
+    <message>
+        <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
+        <translation>يحدّد في آن واحد مدى امتداد الشريط من الحافة إلى الداخل وسرعة حركة الكاميرا داخله. عند هذا الإعداد يبلغ عرض الشريط %1 بكسل على الجانبين و%2 بكسل في الأعلى والأسفل، مقيسًا بمقياس واجهتك.</translation>
     </message>
 </context>
 <context>

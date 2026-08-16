@@ -11,6 +11,20 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **The camera tells you how to move it.** A compact legend lists all seven ways
+  to move the view — edge scroll, keyboard pan, right-drag, wheel zoom, `Q`/`E`
+  rotate, the minimap, and the Follow and Reset buttons — with the live key
+  bindings and whether edge scrolling is currently on and how wide its band is.
+  It opens by itself on a new profile's first battle, is dismissed for good once
+  you close it, and comes back from a button in the top bar. The field manual
+  gains a matching **Camera** tab, and both read one list, so a rebound pan key
+  updates everywhere. Settings now says what the edge-scroll slider actually
+  does — it sets both the width of the band and the speed inside it — and prints
+  the resulting band in pixels at your interface scale.
+  See [docs/CAMERA_CONTROLS.md](docs/CAMERA_CONTROLS.md), which also carries a
+  manual regression checklist for windowed, fullscreen, high-resolution,
+  interface-scaled and right-to-left layouts.
+
 - **The battle runs at 3× and 4×, and the speed is never hidden.** The top bar
   now offers 0.5×, 1×, 2×, 3× and 4×, and `+` and `-` step through them without
   leaving the field. The active speed stays lit while the game is paused (it
@@ -88,6 +102,43 @@ attack.`, `That target is already gone.`, …) instead of silently doing
   misses, a wall under siege and a killing blow in one capture.
 
 ### Fixed
+
+- **Edge scrolling could switch itself off for the rest of the session.** The
+  flag that suspends it during a drag was set on right-press and cleared on
+  right-release, so a drag that never got its release — a modal opening over it,
+  the window losing focus, a lost grab — left it latched and edge scrolling dead
+  until the next mission. The same went for a pan key released while alt-tabbed
+  away. The flag is now derived from the live pan state instead of being
+  assigned, a cancelled press clears the drag, and an inactive window suspends
+  scrolling rather than letting the camera drift on in the background.
+
+- **Edge scrolling did nothing after closing a panel.** The overlay's timer was
+  started from the mouse-enter event, and an overlay that becomes visible under a
+  cursor already at rest never gets one — so returning from the menu, settings or
+  the objectives screen left edge scrolling dead until the pointer was moved out
+  of the window and back in. The timer now follows the cursor position directly.
+
+- **The edge band did not grow with the interface scale.** It stayed 12 logical
+  px on every layout, so at 200% interface scale on a high-resolution panel it
+  was a sliver next to every other target. It now scales with both the
+  sensitivity setting and the interface scale, and never falls below 4 px.
+
+- **World hover leaked through the HUD.** The check for "is the cursor over a HUD
+  panel" read `topPanelHeight`/`bottomPanelHeight`, which do not exist — the
+  properties are `top_panel_height` and `bottom_panel_height` — so it always
+  answered no. Units highlighted and building and formation previews followed the
+  cursor while it was over the command panel. Edge scrolling is deliberately left
+  alone by this check so that every screen edge still scrolls, including the
+  bottom edge behind the command panel.
+
+- **Three QML singletons were not singletons.** `StyleGuide`, `EconomyGuide` and
+  the new `CameraGuide` carry `pragma Singleton`, but the module's generated
+  `qmldir` only marks a type as a singleton when the source file says so in
+  CMake. Without it they registered as ordinary components and every
+  `StyleGuide.x` reference silently evaluated to `undefined`.
+
+- **The top bar's objective row had a broken width binding**, referring to an
+  `objectiveIcon` that does not exist; the icon's id is `objectiveGlyph`.
 
 - Right-click attacks gave no visible or audible feedback at all, and the
   left-click attack-mode path tried to re-pick its target at screen position

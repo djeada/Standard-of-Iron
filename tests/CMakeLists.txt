@@ -452,6 +452,7 @@ add_executable(
     controllers/command_controller_test.cpp
     ui/preferences_test.cpp
     ui/input_bindings_test.cpp
+    ui/edge_scroll_test.cpp
     ui/team_identity_test.cpp
     ui/selection_grouping_test.cpp
     ui/icon_art_test.cpp

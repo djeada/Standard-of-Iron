@@ -11,7 +11,7 @@ ApplicationWindow {
     property bool menu_visible: true
     property bool game_started: false
     property bool game_paused: false
-    property bool edge_scroll_disabled: false
+    readonly property bool edge_scroll_disabled: gameViewItem.camera_pan_active || !mainWindow.active
 
     property bool suppress_modals: false
 
@@ -160,6 +160,7 @@ ApplicationWindow {
             mainWindow.menu_visible = true;
         }
         onHelp_requested: mainWindow.open_help(false)
+        onCamera_settings_requested: mainWindow.show_view("settings")
     }
 
     MouseArea {
@@ -552,15 +553,16 @@ ApplicationWindow {
     Item {
         id: edge_scroll_overlay
 
-        property real horz_threshold: 12 * Design.A11y.edgeScrollSensitivity
-        property real vert_threshold: 10 * Design.A11y.edgeScrollSensitivity
+        readonly property real horz_threshold: EdgeScroll.horizontalZone(Design.A11y.edgeScrollSensitivity, Design.A11y.uiScale)
+        readonly property real vert_threshold: EdgeScroll.verticalZone(Design.A11y.edgeScrollSensitivity, Design.A11y.uiScale)
         property real x_pos: -1
         property real y_pos: -1
-        property int vertical_shift: 6
 
         function in_hud_zone(x, y) {
-            var topH = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0;
-            var bottomH = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0;
+            if (!hud.visible)
+                return false;
+            var topH = hud.top_panel_height;
+            var bottomH = hud.bottom_panel_height;
             if (y < topH)
                 return true;
             if (y > (height - bottomH))
@@ -615,7 +617,6 @@ ApplicationWindow {
                 w.accepted = false;
             }
             onEntered: function () {
-                edge_scroll_timer.start();
                 if (typeof game !== 'undefined' && game.set_hover_at_screen) {
                     if (!edge_scroll_overlay.in_hud_zone(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos))
                         game.set_hover_at_screen(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos);
@@ -624,7 +625,6 @@ ApplicationWindow {
                 }
             }
             onExited: function () {
-                edge_scroll_timer.stop();
                 edge_scroll_overlay.x_pos = -1;
                 edge_scroll_overlay.y_pos = -1;
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
@@ -637,6 +637,7 @@ ApplicationWindow {
 
             interval: 16
             repeat: true
+            running: edge_scroll_overlay.enabled && edge_scroll_overlay.x_pos >= 0 && edge_scroll_overlay.y_pos >= 0
             onTriggered: {
                 if (typeof game === 'undefined')
                     return;
@@ -651,36 +652,14 @@ ApplicationWindow {
                         game.set_hover_at_screen(-1, -1);
                     return;
                 }
+                const over_hud = edge_scroll_overlay.in_hud_zone(x, y);
                 if (game.set_hover_at_screen)
-                    game.set_hover_at_screen(x, y);
+                    game.set_hover_at_screen(over_hud ? -1 : x, over_hud ? -1 : y);
                 if (!Design.A11y.edgeScrollEnabled)
                     return;
-                const th = edge_scroll_overlay.horz_threshold;
-                const tv = edge_scroll_overlay.vert_threshold;
-                const clamp = function clamp(v, lo, hi) {
-                    return Math.max(lo, Math.min(hi, v));
-                };
-                const dl = x;
-                const dr = w - x;
-                const dt = y;
-                const db = h - y;
-                const il = clamp(1 - dl / th, 0, 1);
-                const ir = clamp(1 - dr / th, 0, 1);
-                const iu = clamp(1 - dt / tv, 0, 1);
-                const id = clamp(1 - db / tv, 0, 1);
-                if (il === 0 && ir === 0 && iu === 0 && id === 0)
-                    return;
-                const curveH = function curveH(a) {
-                    return a * a;
-                };
-                const curveV = function curveV(a) {
-                    return a * a * a;
-                };
-                const sensitivity = Design.A11y.edgeScrollSensitivity;
-                const dx = (curveH(ir) - curveH(il)) * sensitivity;
-                const dz = (curveV(iu) - curveV(id)) * sensitivity;
-                if (dx !== 0 || dz !== 0)
-                    game.camera_move(dx, dz);
+                const step = EdgeScroll.vector(x, y, w, h, Design.A11y.edgeScrollSensitivity, Design.A11y.uiScale);
+                if (step.x !== 0 || step.y !== 0)
+                    game.camera_move(step.x, step.y);
             }
         }
     }

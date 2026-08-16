@@ -203,9 +203,13 @@ struct UnitItem {
   int individuals_per_unit = 1;
 };
 
-auto unit_items(Game::Systems::NationID nation_id) -> std::vector<UnitItem> {
+auto unit_items(const Game::Systems::NationRegistry* nations,
+                Game::Systems::NationID nation_id) -> std::vector<UnitItem> {
   std::vector<UnitItem> items;
-  const auto* nation = Game::Systems::NationRegistry::instance().get_nation(nation_id);
+  if (nations == nullptr) {
+    return items;
+  }
+  const auto* nation = nations->get_nation(nation_id);
   if (nation == nullptr) {
     return items;
   }
@@ -249,7 +253,10 @@ void note_shortfall(const CostedItem& item,
 } // namespace
 
 auto build_resource_overview(const EconomyOverviewRequest& request) -> QVariantList {
-  auto& registry = Game::Systems::PlayerResourceRegistry::instance();
+  if (request.resources == nullptr) {
+    return {};
+  }
+  auto& registry = *request.resources;
   const ResourceAmounts available = registry.get_all(request.owner_id);
   const ResourceAmounts harvested = registry.get_harvested_all(request.owner_id);
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
@@ -266,7 +273,7 @@ auto build_resource_overview(const EconomyOverviewRequest& request) -> QVariantL
     }
     note_shortfall(item, available, shortfall, shortfall_item);
   }
-  for (const auto& unit : unit_items(request.nation_id)) {
+  for (const auto& unit : unit_items(request.nations, request.nation_id)) {
     for (const ResourceType type : Game::Systems::k_all_resource_types) {
       if (unit.item.costs.get(type) > 0) {
         used_by[Game::Systems::resource_type_index(type)].push_back(unit.item.key);
@@ -305,7 +312,10 @@ auto build_resource_overview(const EconomyOverviewRequest& request) -> QVariantL
 }
 
 auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap {
-  auto& registry = Game::Systems::PlayerResourceRegistry::instance();
+  if (request.resources == nullptr) {
+    return {};
+  }
+  auto& registry = *request.resources;
   const ResourceAmounts available = registry.get_all(request.owner_id);
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
   const int troop_count = Game::Systems::troop_count_for(request.owner_id);
@@ -326,7 +336,7 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
   }
 
   QVariantList units;
-  for (const auto& unit : unit_items(request.nation_id)) {
+  for (const auto& unit : unit_items(request.nations, request.nation_id)) {
     QVariantMap entry;
     entry["unit_type"] = unit.item.key;
     entry["display_name"] = unit.item.display_name;
@@ -386,8 +396,9 @@ auto build_economy_coach_state(const EconomyOverviewRequest& request,
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
   const int troop_population = Game::Systems::troop_count_for(request.owner_id);
   const ResourceAmounts harvested =
-      Game::Systems::PlayerResourceRegistry::instance().get_harvested_all(
-          request.owner_id);
+      request.resources != nullptr
+          ? request.resources->get_harvested_all(request.owner_id)
+          : ResourceAmounts{};
 
   const bool gather_done = !harvested.empty();
   const bool build_done = scan.building_count > baseline.building_count ||

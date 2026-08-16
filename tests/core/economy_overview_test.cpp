@@ -48,6 +48,8 @@ protected:
 
   [[nodiscard]] auto request() const -> App::Core::EconomyOverviewRequest {
     return {.world = const_cast<Engine::Core::World*>(&world),
+            .nations = &Game::Systems::NationRegistry::instance(),
+            .resources = &Game::Systems::PlayerResourceRegistry::instance(),
             .owner_id = k_owner,
             .nation_id = Game::Systems::NationID::RomanRepublic,
             .population_cap = k_population_cap};
