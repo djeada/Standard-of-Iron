@@ -34,7 +34,30 @@ Generate a gameplay-focused `provinces.json` with hand-authored boundaries (requ
 ./tools/map_pipeline/provinces.py
 ```
 
-This writes `assets/campaign_map/provinces.json` (triangulated UVs + colors).
+This writes `assets/campaign_map/provinces.json` (triangulated UVs + colors). The
+authored rings only sketch a province; land is then clipped, contested ground is
+divided, and every remaining scrap is handed to a province it borders. Two rules
+hold whatever the fill does:
+
+- **A province is one unbroken stretch of land.** Anything left on the far side of
+  a sea is given to a neighbour it actually touches, or dropped if it is a sliver.
+  `tests/map/campaign_province_data_test.cpp` fails if this ever breaks again.
+- **Provinces never cross a sea to reach another theatre.** Italy and the Balkans
+  are split down the middle of the Adriatic, not by overlapping rectangles.
+
+Watch the run for `exclave:`, `Warning:` and the final coverage line. The ~0.4% of
+land left uncovered is offshore islands (the Balearics, Malta, the Dalmatian
+islands) that no province borders; they stay unpainted rather than being coloured
+in by a mainland province.
+
+To look at the result:
+
+```bash
+./tools/map_pipeline/preview_provinces.py /tmp/provinces.png
+```
+
+It renders the fills and borders over the land mask, so a province that strays
+into the sea shows up as missing colour instead of being hidden by the water.
 
 ### Hannibal's Campaign Path
 
