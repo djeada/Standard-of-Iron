@@ -24,6 +24,16 @@ namespace {
 constexpr int k_selection_refresh_interval = 15;
 constexpr float k_minimap_unit_update_interval = 0.05F;
 constexpr int k_max_simulation_steps_per_frame = 8;
+constexpr int k_simulation_step_ceiling = 64;
+
+auto simulation_step_budget(double time_scale) -> int {
+  const double scaled =
+      std::ceil(static_cast<double>(k_max_simulation_steps_per_frame) *
+                std::max(1.0, time_scale));
+  return std::clamp(static_cast<int>(scaled),
+                    k_max_simulation_steps_per_frame,
+                    k_simulation_step_ceiling);
+}
 } // namespace
 
 void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
@@ -31,9 +41,16 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
                                       EntityCache& entity_cache,
                                       AmbientStateManager* ambient_state_manager,
                                       const QString& victory_state,
-                                      float dt,
+                                      float real_dt,
                                       const FrameUpdateCallbacks& callbacks,
                                       const SimulationStep& simulation_step) const {
+  const double time_scale =
+      std::max(0.0, static_cast<double>(state.simulation_time_scale));
+  const float frame_seconds = std::max(real_dt, 0.0F);
+  const float dt = static_cast<float>(static_cast<double>(frame_seconds) * time_scale);
+
+  state.dropped_simulation_ticks = 0;
+
   if (scene.world != nullptr && ambient_state_manager != nullptr) {
     ambient_state_manager->update(
         dt, scene.world, state.local_owner_id, entity_cache, victory_state);
@@ -60,14 +77,16 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
         scene.session != nullptr ? *scene.session
                                  : Game::Session::SessionContext::active();
 
-    session.advance(static_cast<double>(std::max(dt, 0.0F)),
-                    k_max_simulation_steps_per_frame,
+    session.clock().set_time_scale(time_scale);
+    session.advance(static_cast<double>(frame_seconds),
+                    simulation_step_budget(time_scale),
                     [&](float step) {
                       simulation_step(step);
                       if (scene.environment_clock != nullptr) {
                         scene.environment_clock->update(step, false);
                       }
                     });
+    state.dropped_simulation_ticks = session.clock().consume_dropped_ticks();
 
     if (scene.visibility_coordinator != nullptr) {
       scene.visibility_coordinator->update(

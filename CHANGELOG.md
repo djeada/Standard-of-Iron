@@ -11,6 +11,29 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **The battle runs at 3× and 4×, and the speed is never hidden.** The top bar
+  now offers 0.5×, 1×, 2×, 3× and 4×, and `+` and `-` step through them without
+  leaving the field. The active speed stays lit while the game is paused (it
+  used to grey out, so a paused game showed no speed at all) and can be changed
+  from there, the narrow-window selector lists every speed instead of three, and
+  the bar reads the speed back from the simulation, so a save loaded at 3×
+  displays 3×. The mission briefing points at the control before the first
+  battle. `--game-speed` starts a directly launched mission at a chosen speed
+  for scripted runs and benchmarks.
+
+  The simulation was made safe for those speeds first. Each frame's fixed-step
+  budget now scales with the speed — 8 steps at 1×, 32 at 4× — so 4× covers the
+  same 133 ms real frame that 1× did rather than losing a quarter of its ticks
+  on any frame slower than 62 ms. The stall guard that caps a long frame now
+  clamps real seconds instead of speed-multiplied seconds, so it no longer
+  fires four times as early at 4×. Ticks are still fixed at 1/60 s at every
+  speed, so a battle plays out identically whether it was run at 0.5× or 4× and
+  whatever frame rate delivered it; commands are still stamped and drained per
+  tick, so their order does not change either. When a machine genuinely cannot
+  keep up, the ticks that could not run are counted and logged rather than
+  silently discarded. A speed stored in a save is checked against the offered
+  set on load, so an out-of-range value cannot come back.
+
 - **Every order now answers back.** Attack, move, guard, patrol, hold, stop,
   build, gather, deliver, repair and rally-point orders — whether issued through
   the command buttons or a right-click — go through one submission path that

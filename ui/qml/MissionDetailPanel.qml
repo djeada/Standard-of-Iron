@@ -34,7 +34,18 @@ Rectangle {
     property var player_commander: mission_definition && mission_definition.player_setup ? mission_definition.player_setup.commander : null
     property var opposing_forces: mission_definition && mission_definition.ai_setups ? mission_definition.ai_setups : []
 
+    readonly property var speed_options: (typeof game !== 'undefined' && game && game.game_speed_options && game.game_speed_options.length > 0) ? game.game_speed_options : [0.5, 1, 2, 3, 4]
+
     signal start_mission_clicked
+
+    function speed_label(speed) {
+        return (Math.round(speed * 10) / 10) + "×";
+    }
+
+    function speed_shortcut(action_id) {
+        var shortcut = InputBindings.shortcut_for(action_id);
+        return shortcut.length > 0 ? InputBindings.describe(shortcut) : qsTr("its shortcut");
+    }
 
     function terrain_label(key) {
         switch (key) {
@@ -709,6 +720,39 @@ Rectangle {
                     wrapMode: Text.WordWrap
                     font.pointSize: Theme.fontSizeTiny
                     verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            Rectangle {
+                visible: !!(mission_data && mission_data.unlocked)
+                Layout.fillWidth: true
+                implicitHeight: tempo_row.implicitHeight + Theme.spacingSmall * 2
+                Layout.preferredHeight: implicitHeight
+                radius: Theme.radiusSmall
+                color: "#2f241a"
+                border.color: "#8f6d43"
+                border.width: 1
+
+                RowLayout {
+                    id: tempo_row
+
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingSmall
+                    spacing: Theme.spacingSmall
+
+                    Label {
+                        text: Design.Icons.objective
+                        font.pointSize: Theme.fontSizeMedium
+                        Layout.alignment: Qt.AlignTop
+                    }
+
+                    Label {
+                        text: qsTr("Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.").arg(root.speed_label(root.speed_options[0])).arg(root.speed_label(root.speed_options[root.speed_options.length - 1])).arg(root.speed_shortcut("rts.speed_down")).arg(root.speed_shortcut("rts.speed_up"))
+                        color: Theme.textSubLite
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        font.pointSize: Theme.fontSizeTiny
+                    }
                 }
             }
 

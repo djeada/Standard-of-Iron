@@ -7,7 +7,7 @@ Item {
     id: hud
 
     property bool game_is_paused: false
-    property real current_speed: 1
+    readonly property real current_speed: (typeof game !== 'undefined' && game && game.time_scale > 0) ? game.time_scale : 1
     property string current_command_mode: "normal"
     property int top_panel_height: topPanel.height
     property int bottom_panel_height: bottomPanel.height
@@ -98,7 +98,6 @@ Item {
                 hud.pause_toggled();
             }
             onSpeed_changed: function (s) {
-                hud.current_speed = s;
                 hud.speed_changed(s);
             }
         }

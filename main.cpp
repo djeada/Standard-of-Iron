@@ -137,6 +137,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 
 #include "app/core/audio_resource_loader.h"
 #include "app/core/game_engine.h"
+#include "app/core/game_speed.h"
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
@@ -661,6 +662,7 @@ auto main(int argc, char* argv[]) -> int {
   QString replay_path;
   bool replay_verify = false;
   bool skip_briefing = false;
+  float direct_game_speed = App::Core::GameSpeed::k_default;
   bool component_gallery_requested = false;
   QString screenshot_path;
   QString screenshot_view;
@@ -732,6 +734,10 @@ auto main(int argc, char* argv[]) -> int {
         "Milliseconds to let the surface settle before capturing.",
         "ms",
         "1200");
+    QCommandLineOption const game_speed_opt(
+        "game-speed",
+        "Start a directly launched mission at this battle speed (0.5, 1, 2, 3 or 4).",
+        "multiplier");
     QCommandLineOption const benchmark_seconds_opt(
         "benchmark-seconds",
         "Measure the directly started mission after a two-second warm-up, then exit.",
@@ -751,6 +757,7 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(replay_opt);
     parser.addOption(replay_verify_opt);
     parser.addOption(skip_briefing_opt);
+    parser.addOption(game_speed_opt);
     parser.addOption(component_gallery_opt);
     parser.addOption(screenshot_opt);
     parser.addOption(screenshot_view_opt);
@@ -790,6 +797,20 @@ auto main(int argc, char* argv[]) -> int {
     replay_path = parser.value(replay_opt).trimmed();
     replay_verify = parser.isSet(replay_verify_opt);
     skip_briefing = parser.isSet(skip_briefing_opt) || replay_verify;
+    if (parser.isSet(game_speed_opt)) {
+      bool speed_ok = false;
+      const float requested = parser.value(game_speed_opt).toFloat(&speed_ok);
+      if (!speed_ok) {
+        qWarning() << "Ignoring unreadable --game-speed value:"
+                   << parser.value(game_speed_opt);
+      } else {
+        direct_game_speed = App::Core::GameSpeed::sanitize(requested);
+        if (!qFuzzyCompare(direct_game_speed, requested)) {
+          qWarning() << "--game-speed" << requested << "is not offered; using"
+                     << direct_game_speed;
+        }
+      }
+    }
     if (release_self_test) {
 
       direct_campaign_mission.clear();
@@ -1019,7 +1040,8 @@ auto main(int argc, char* argv[]) -> int {
          direct_campaign_mission,
          direct_mission_file,
          replay_path,
-         skip_briefing] {
+         skip_briefing,
+         direct_game_speed] {
           auto* gl_view = root_obj->findChild<GLView*>();
           if (gl_view == nullptr) {
             qCritical() << "Could not find gameplay GLView for direct campaign mission";
@@ -1031,11 +1053,13 @@ auto main(int argc, char* argv[]) -> int {
                                        direct_campaign_mission,
                                        direct_mission_file,
                                        replay_path,
-                                       mission_started]() {
+                                       mission_started,
+                                       direct_game_speed]() {
             if (*mission_started) {
               return;
             }
             *mission_started = true;
+            game_engine_ptr->set_game_speed(direct_game_speed);
             if (!replay_path.isEmpty()) {
               qInfo() << "Playing replay:" << replay_path;
               if (!game_engine_ptr->start_replay(replay_path)) {
