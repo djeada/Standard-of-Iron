@@ -62,12 +62,12 @@ TEST(GameSpeedTest, ASaveMadeAtQuadrupleSpeedComesBackAtQuadrupleSpeed) {
     Game::Systems::RuntimeSnapshot saved;
     saved.time_scale = option;
 
-    const QJsonObject metadata =
-        Game::Systems::GameStateSerializer::build_metadata(world, nullptr, level, saved);
+    const QJsonObject metadata = Game::Systems::GameStateSerializer::build_metadata(
+        world, nullptr, level, saved);
 
     Game::Systems::RuntimeSnapshot restored;
     Game::Systems::GameStateSerializer::restore_runtime_from_metadata(metadata,
-                                                                     restored);
+                                                                      restored);
 
     EXPECT_FLOAT_EQ(restored.time_scale, option);
     EXPECT_FLOAT_EQ(Speed::sanitize(restored.time_scale), option);
@@ -82,12 +82,12 @@ TEST(GameSpeedTest, ASaveCarryingAnImpossibleSpeedLoadsAtAPlayableOne) {
     Game::Systems::RuntimeSnapshot saved;
     saved.time_scale = stored;
 
-    const QJsonObject metadata =
-        Game::Systems::GameStateSerializer::build_metadata(world, nullptr, level, saved);
+    const QJsonObject metadata = Game::Systems::GameStateSerializer::build_metadata(
+        world, nullptr, level, saved);
 
     Game::Systems::RuntimeSnapshot restored;
     Game::Systems::GameStateSerializer::restore_runtime_from_metadata(metadata,
-                                                                     restored);
+                                                                      restored);
 
     const float effective = Speed::sanitize(restored.time_scale);
     EXPECT_TRUE(Speed::is_supported(effective)) << stored;

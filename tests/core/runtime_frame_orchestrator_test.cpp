@@ -219,7 +219,9 @@ TEST(RuntimeFrameOrchestratorTest, AZeroTimeScaleStopsTheSimulationWithoutBankin
   RuntimeFrameState state{.simulation_time_scale = 0.0F};
   EntityCache entity_cache;
   int steps = 0;
-  const auto count = [&](float) { ++steps; };
+  const auto count = [&](float) {
+    ++steps;
+  };
 
   for (int frame = 0; frame < 120; ++frame) {
     orchestrator.update(AppSceneContext{.session = &session, .world = &world},
@@ -318,8 +320,7 @@ auto run_paced_battle(float speed, float real_dt, int frames) -> PacedRun {
     Game::Command::Move move;
     move.units = squad;
     for (std::size_t index = 0; index < squad.size(); ++index) {
-      move.targets.emplace_back(
-          target_x + static_cast<float>(index), 0.0F, target_z);
+      move.targets.emplace_back(target_x + static_cast<float>(index), 0.0F, target_z);
     }
     session.commands().submit(
         Game::Command::Source::LocalPlayer, 1, Game::Command::Payload{move});

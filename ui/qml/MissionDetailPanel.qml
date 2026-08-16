@@ -34,12 +34,12 @@ Rectangle {
     property var player_commander: mission_definition && mission_definition.player_setup ? mission_definition.player_setup.commander : null
     property var opposing_forces: mission_definition && mission_definition.ai_setups ? mission_definition.ai_setups : []
 
-    readonly property var speed_options: (typeof game !== 'undefined' && game && game.game_speed_options && game.game_speed_options.length > 0) ? game.game_speed_options : [0.5, 1, 2, 3, 4]
+    readonly property var speed_options: GameSpeeds.options
 
     signal start_mission_clicked
 
     function speed_label(speed) {
-        return (Math.round(speed * 10) / 10) + "×";
+        return GameSpeeds.label(speed);
     }
 
     function speed_shortcut(action_id) {

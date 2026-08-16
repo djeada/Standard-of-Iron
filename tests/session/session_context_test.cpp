@@ -173,7 +173,8 @@ TEST(SimulationClockTest, TheStallGuardClampsRealSecondsNotScaledSeconds) {
   stalled.set_time_scale(4.0);
   const double guard = Game::Session::SimulationClock::k_max_frame_seconds;
   EXPECT_EQ(stalled.advance(guard * 4.0), static_cast<int>(guard * 4.0 * 60.0));
-  EXPECT_EQ(stalled.dropped_ticks(), static_cast<std::uint64_t>(guard * 3.0 * 4.0 * 60.0));
+  EXPECT_EQ(stalled.dropped_ticks(),
+            static_cast<std::uint64_t>(guard * 3.0 * 4.0 * 60.0));
 }
 
 TEST(SimulationClockTest, TicksTheFrameCouldNotRunAreCountedNotSilentlyDiscarded) {

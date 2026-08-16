@@ -12,7 +12,7 @@ Item {
 
     readonly property bool compact: width < 1000
     readonly property bool ultraCompact: width < 620
-    readonly property var speedOptions: (typeof game !== 'undefined' && game && game.game_speed_options && game.game_speed_options.length > 0) ? game.game_speed_options : [0.5, 1, 2, 3, 4]
+    readonly property var speedOptions: GameSpeeds.options
 
     signal pause_toggled
     signal speed_changed(real speed)
@@ -23,27 +23,15 @@ Item {
     }
 
     function speed_label(speed) {
-        return (Math.round(speed * 10) / 10) + "×";
+        return GameSpeeds.label(speed);
     }
 
     function speed_index(speed) {
-        var best = 0;
-        var best_distance = Math.abs(speedOptions[0] - speed);
-        for (var i = 1; i < speedOptions.length; ++i) {
-            var distance = Math.abs(speedOptions[i] - speed);
-            if (distance < best_distance) {
-                best_distance = distance;
-                best = i;
-            }
-        }
-        return best;
+        return GameSpeeds.index_of(speed);
     }
 
     function speed_labels() {
-        var labels = [];
-        for (var i = 0; i < speedOptions.length; ++i)
-            labels.push(speed_label(speedOptions[i]));
-        return labels;
+        return GameSpeeds.labels();
     }
 
     property string primaryObjective: ""

@@ -69,7 +69,6 @@ TestCase {
         var running = testCase.findSpeedButtons(top);
         verify(running.length === top.speedOptions.length);
         compare(testCase.activeTone(running, top), "3×");
-
         top.game_is_paused = true;
         wait(50);
         var paused = testCase.findSpeedButtons(top);

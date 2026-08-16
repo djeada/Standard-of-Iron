@@ -148,6 +148,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "render/i_render_backend.h"
 #include "render/profiling/profiling_hud.h"
 #include "ui/campaign_map_view.h"
+#include "ui/game_speeds.h"
 #include "ui/gl_view.h"
 #include "ui/icon_art.h"
 #include "ui/input_bindings.h"
@@ -946,6 +947,8 @@ auto main(int argc, char* argv[]) -> int {
 
   qmlRegisterSingletonType<InputBindings>(
       "StandardOfIron", 1, 0, "InputBindings", &InputBindings::create);
+  qmlRegisterSingletonType<GameSpeeds>(
+      "StandardOfIron", 1, 0, "GameSpeeds", &GameSpeeds::create);
   qmlRegisterSingletonType<IconArtLibrary>(
       "StandardOfIron", 1, 0, "IconArt", &IconArtLibrary::create);
 
@@ -954,6 +957,8 @@ auto main(int argc, char* argv[]) -> int {
       "StandardOfIron.Core", 1, 0, "UiPreferences", &UiPreferences::create);
   qmlRegisterSingletonType<InputBindings>(
       "StandardOfIron.Core", 1, 0, "InputBindings", &InputBindings::create);
+  qmlRegisterSingletonType<GameSpeeds>(
+      "StandardOfIron.Core", 1, 0, "GameSpeeds", &GameSpeeds::create);
   qmlRegisterSingletonType<IconArtLibrary>(
       "StandardOfIron.Core", 1, 0, "IconArt", &IconArtLibrary::create);
 

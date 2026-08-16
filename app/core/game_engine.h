@@ -148,7 +148,6 @@ public:
   Q_PROPERTY(bool paused READ paused WRITE set_paused)
   Q_PROPERTY(
       float time_scale READ time_scale WRITE set_game_speed NOTIFY time_scale_changed)
-  Q_PROPERTY(QVariantList game_speed_options READ game_speed_options CONSTANT)
   Q_PROPERTY(QString victory_state READ victory_state NOTIFY victory_state_changed)
   Q_PROPERTY(QString cursor_mode READ cursor_mode WRITE set_cursor_mode NOTIFY
                  cursor_mode_changed)
@@ -292,10 +291,8 @@ public:
 
   Q_INVOKABLE void set_paused(bool paused);
   Q_INVOKABLE void set_game_speed(float speed);
-  Q_INVOKABLE void step_game_speed(int direction);
   [[nodiscard]] bool paused() const { return m_runtime.paused; }
   [[nodiscard]] float time_scale() const { return m_runtime.time_scale; }
-  [[nodiscard]] auto game_speed_options() const -> QVariantList;
   [[nodiscard]] auto dropped_simulation_ticks() const -> std::uint64_t {
     return m_dropped_simulation_ticks;
   }

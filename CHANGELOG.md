@@ -21,18 +21,18 @@ may change in any release — see [Save compatibility](#save-compatibility).
   battle. `--game-speed` starts a directly launched mission at a chosen speed
   for scripted runs and benchmarks.
 
-  The simulation was made safe for those speeds first. Each frame's fixed-step
-  budget now scales with the speed — 8 steps at 1×, 32 at 4× — so 4× covers the
-  same 133 ms real frame that 1× did rather than losing a quarter of its ticks
-  on any frame slower than 62 ms. The stall guard that caps a long frame now
-  clamps real seconds instead of speed-multiplied seconds, so it no longer
-  fires four times as early at 4×. Ticks are still fixed at 1/60 s at every
-  speed, so a battle plays out identically whether it was run at 0.5× or 4× and
-  whatever frame rate delivered it; commands are still stamped and drained per
-  tick, so their order does not change either. When a machine genuinely cannot
-  keep up, the ticks that could not run are counted and logged rather than
-  silently discarded. A speed stored in a save is checked against the offered
-  set on load, so an out-of-range value cannot come back.
+    The simulation was made safe for those speeds first. Each frame's fixed-step
+    budget now scales with the speed — 8 steps at 1×, 32 at 4× — so 4× covers the
+    same 133 ms real frame that 1× did rather than losing a quarter of its ticks
+    on any frame slower than 62 ms. The stall guard that caps a long frame now
+    clamps real seconds instead of speed-multiplied seconds, so it no longer
+    fires four times as early at 4×. Ticks are still fixed at 1/60 s at every
+    speed, so a battle plays out identically whether it was run at 0.5× or 4× and
+    whatever frame rate delivered it; commands are still stamped and drained per
+    tick, so their order does not change either. When a machine genuinely cannot
+    keep up, the ticks that could not run are counted and logged rather than
+    silently discarded. A speed stored in a save is checked against the offered
+    set on load, so an out-of-range value cannot come back.
 
 - **A guided tutorial.** The main menu gains a **Tutorial** entry beside
   Skirmish and Campaign that opens _Field Training_, a scripted first battle on

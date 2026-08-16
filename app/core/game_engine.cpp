@@ -76,7 +76,6 @@
 #include "commander_status_builder.h"
 #include "core/system.h"
 #include "frame_ui_coordinator.h"
-#include "game_speed.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_system.h"
 #include "game/command/command_queue.h"
@@ -144,6 +143,7 @@
 #include "game/util/selection_utils.h"
 #include "game/view/selection_controller.h"
 #include "game/visuals/team_colors.h"
+#include "game_speed.h"
 #include "game_state_restorer.h"
 #include "input_command_handler.h"
 #include "level_loader.h"
@@ -2715,19 +2715,6 @@ void GameEngine::set_game_speed(float speed) {
   m_tutorial_notes.speed_changed = true;
   Game::Audio::play_cue(Game::Audio::Cue::k_state_speed_change);
   emit time_scale_changed();
-}
-
-void GameEngine::step_game_speed(int direction) {
-  set_game_speed(App::Core::GameSpeed::stepped(m_runtime.time_scale, direction));
-}
-
-auto GameEngine::game_speed_options() const -> QVariantList {
-  QVariantList options;
-  options.reserve(static_cast<int>(App::Core::GameSpeed::k_options.size()));
-  for (const float option : App::Core::GameSpeed::k_options) {
-    options.append(static_cast<qreal>(option));
-  }
-  return options;
 }
 
 auto GameEngine::has_units_selected() const -> bool {

@@ -91,14 +91,14 @@ Item {
             root.gameView.set_paused(root.mainWindowRef.game_paused);
             return true;
         case "rts.speed_up":
-            if (!root.game.step_game_speed)
+            if (!root.game.set_game_speed)
                 return false;
-            root.game.step_game_speed(1);
+            root.game.set_game_speed(GameSpeeds.stepped(root.game.time_scale, 1));
             return true;
         case "rts.speed_down":
-            if (!root.game.step_game_speed)
+            if (!root.game.set_game_speed)
                 return false;
-            root.game.step_game_speed(-1);
+            root.game.set_game_speed(GameSpeeds.stepped(root.game.time_scale, -1));
             return true;
         case "rts.order_stop":
             if (!root.game.has_units_selected || !root.game.on_stop_command)

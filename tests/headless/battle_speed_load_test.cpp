@@ -44,8 +44,8 @@ auto ranks_per_side() -> int {
 }
 
 auto step_budget(double time_scale) -> int {
-  const double scaled =
-      std::ceil(static_cast<double>(k_base_steps_per_frame) * std::max(1.0, time_scale));
+  const double scaled = std::ceil(static_cast<double>(k_base_steps_per_frame) *
+                                  std::max(1.0, time_scale));
   return std::clamp(static_cast<int>(scaled), k_base_steps_per_frame, k_step_ceiling);
 }
 
@@ -65,18 +65,15 @@ protected:
     Game::Units::register_built_in_units(*m_factory);
   }
 
-  static void muster(SessionContext& session,
-                     int owner_id,
-                     float origin_z,
-                     float facing_z) {
+  static void
+  muster(SessionContext& session, int owner_id, float origin_z, float facing_z) {
     for (int rank = 0; rank < ranks_per_side(); ++rank) {
       for (int file = 0; file < k_files; ++file) {
         auto* entity = session.world().create_entity();
         auto* transform = entity->add_component<TransformComponent>();
         transform->position.x = 12.0F + static_cast<float>(file) * 1.4F;
         transform->position.z = origin_z + static_cast<float>(rank) * 1.4F * facing_z;
-        auto* unit =
-            entity->add_component<UnitComponent>(120, 120, 2.4F, 14.0F);
+        auto* unit = entity->add_component<UnitComponent>(120, 120, 2.4F, 14.0F);
         unit->owner_id = owner_id;
         unit->spawn_type = (file % 4 == 0) ? Game::Units::SpawnType::Archer
                                            : Game::Units::SpawnType::Spearman;
@@ -195,8 +192,9 @@ TEST_F(BattleSpeedLoadTest, AMoveOrderIsUnderwayWithinTwoTicksAtNormalSpeed) {
   for (int tick = 1; tick <= 12 && !moving; ++tick) {
     session->world().update(step);
     for (std::size_t index = 0; index < squad.size(); ++index) {
-      const auto* transform =
-          session->world().get_entity(squad[index])->get_component<TransformComponent>();
+      const auto* transform = session->world()
+                                  .get_entity(squad[index])
+                                  ->get_component<TransformComponent>();
       const float dx = transform->position.x - before[index].x;
       const float dz = transform->position.z - before[index].z;
       if ((dx * dx) + (dz * dz) > 1e-8F) {
