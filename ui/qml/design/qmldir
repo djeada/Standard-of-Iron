@@ -21,6 +21,7 @@ IronButton 1.0 controls/IronButton.qml
 IronIconButton 1.0 controls/IronIconButton.qml
 IronTabBar 1.0 controls/IronTabBar.qml
 IronTooltip 1.0 controls/IronTooltip.qml
+IronCommandTooltip 1.0 controls/IronCommandTooltip.qml
 IronDialog 1.0 controls/IronDialog.qml
 IronDropdown 1.0 controls/IronDropdown.qml
 IronSlider 1.0 controls/IronSlider.qml

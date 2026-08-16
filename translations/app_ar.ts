@@ -2036,6 +2036,50 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Which drill book shapes the deployment. Automatic follows the troops you selected.</source>
         <translation>أي دليل تدريب يشكّل الانتشار. التلقائي يتبع القوات التي حددتها.</translation>
     </message>
+    <message>
+        <source>%1°</source>
+        <translation>%1°</translation>
+    </message>
+    <message>
+        <source>Drag to face the unit · Release to move it</source>
+        <translation>اسحب لتوجيه الوحدة · أفلت لتحريكها</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Esc to cancel</source>
+        <translation>العجلة للدوران · Esc للإلغاء</translation>
+    </message>
+    <message>
+        <source>Drag to face the formation · Release to deploy</source>
+        <translation>اسحب لتوجيه التشكيل · أفلت للنشر</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Ctrl+wheel for depth · Esc to cancel</source>
+        <translation>العجلة للدوران · Ctrl+العجلة للعمق · Esc للإلغاء</translation>
+    </message>
+    <message>
+        <source>Drag on the ground to set facing · Click to move</source>
+        <translation>اسحب على الأرض لتحديد الاتجاه · انقر للتحريك</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Right-click or Esc to cancel</source>
+        <translation>العجلة للدوران · النقر الأيمن أو Esc للإلغاء</translation>
+    </message>
+    <message>
+        <source>Position %1</source>
+        <translation>تموضع %1</translation>
+    </message>
+    <message>
+        <source>Position unit</source>
+        <translation>تموضع الوحدة</translation>
+    </message>
+    <message>
+        <source>Facing</source>
+        <translation>الاتجاه</translation>
+    </message>
+    <message>
+        <source>Facing (auto)</source>
+        <translation>الاتجاه (تلقائي)</translation>
+    </message>
 </context>
 <context>
     <name>FormationStatusBadge</name>
@@ -2980,10 +3024,6 @@ Unseen: never scouted.</source>
         <translation>إصدار الأوامر</translation>
     </message>
     <message>
-        <source>Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
-        <translation>انقر بالزر الأيمن على الأرض للتحرك، وعلى عدو للهجوم. تقدم شبكة الأوامر الهجوم والحراسة والدورية والثبات والتوقف وأوامر البنّاء والقائد. تعرض علامة وجهة القوات، ويؤكد الشريط فوق الشبكة كل أمر، أو يشرح سبب رفضه.</translation>
-    </message>
-    <message>
         <source>Stances</source>
         <translation>المواقف</translation>
     </message>
@@ -3068,10 +3108,6 @@ Unseen: never scouted.</source>
         <translation>التشكيلات والصفوف</translation>
     </message>
     <message>
-        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. The Formation order arranges a mixed selection into a proper line; Run trades stamina for speed.</source>
-        <translation>حاملو الرماح يثبّتون الصف، والرماة يعاقبون من خلفه، والفرسان يكسرون الأجنحة، والمعالجون يداوون الجرحى القريبين من تلقاء أنفسهم. أمر التشكيل يرتب تحديدًا مختلطًا في صف منظم؛ والركض يقايض القدرة على التحمل بالسرعة.</translation>
-    </message>
-    <message>
         <source>The standard</source>
         <translation>الراية</translation>
     </message>
@@ -3146,6 +3182,14 @@ Unseen: never scouted.</source>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</source>
         <translation>تُوقف الأزرار في أعلى اليسار المعركة مؤقتًا وتضبط السرعة، من النصف حتى أربعة أضعاف؛ مفتاح المسافة يوقف مؤقتًا أيضًا، و + و - ينتقلان بين السرعات. تبقى السرعة النشطة مضاءة أثناء الإيقاف المؤقت ويمكن تغييرها من هناك. حرّك الكاميرا بمفاتيح الأسهم أو WASD، أو ادفع مؤشر الفأرة إلى حافة الشاشة؛ استخدم عجلة الفأرة أو PgUp و PgDown للتقريب، و Q و E للدوران، و Ctrl مع سهمي الأعلى والأسفل للإمالة؛ Home يعيدك إلى معسكرك، و«تتبع» يبقي الكاميرا على تحديدك. كل ذلك قابل لإعادة التعيين من الإعدادات › التحكم، حيث يشرح كل أمر كاميرا ما يفعله.</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
+        <translation>انقر بالزر الأيمن على الأرض للتحرك، وانقر بالزر الأيمن على عدو للهجوم. اضغط باستمرار على الزر الأيمن واسحب قبل الإفلات لاختيار الاتجاه الذي ستواجهه القوات: تستدير الوحدة الواحدة نحو مكان السحب، وتُوضع عدة وحدات في تشكيل يواجهه. تقدم شبكة الأوامر الهجوم والحراسة والدورية والثبات والتوقف وأوامر البنّاء والقائد. تُظهر علامة وجهة القوات وتؤكد اللافتة فوق الشبكة كل أمر – أو تشرح سبب رفضه.</translation>
+    </message>
+    <message>
+        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
+        <translation>يحافظ الرماحون على الخط، ويعاقب الرماة من خلفه، ويكسر الفرسان الأجنحة، ويداوي المعالجون الجرحى القريبين من تلقاء أنفسهم. انقر بالزر الأيمن واسحب مع تحديد عدة وحدات لنشرها في تشكيل يواجه اتجاه السحب؛ ويفتح أمر التشكيل المخطط نفسه حيث تقف. الركض يقايض القدرة على التحمل بالسرعة.</translation>
     </message>
 </context>
 <context>
@@ -3845,14 +3889,6 @@ This action cannot be undone.</source>
 <context>
     <name>MapPreview</name>
     <message>
-        <source>Map Preview</source>
-        <translation>معاينة الخريطة</translation>
-    </message>
-    <message>
-        <source>Player bases shown as colored circles</source>
-        <translation>تظهر قواعد اللاعبين كدوائر ملوّنة</translation>
-    </message>
-    <message>
         <source>Select a map
 to see preview</source>
         <translation>اختر خريطة
@@ -3862,13 +3898,13 @@ to see preview</source>
         <source>No preview available</source>
         <translation>لا تتوفر معاينة</translation>
     </message>
+    <message>
+        <source>Bases shown in player colours</source>
+        <translation>تظهر القواعد بألوان اللاعبين</translation>
+    </message>
 </context>
 <context>
     <name>MapSelect</name>
-    <message>
-        <source>Maps</source>
-        <translation>الخرائط</translation>
-    </message>
     <message>
         <source>No maps available</source>
         <translation>لا توجد خرائط متاحة</translation>
@@ -3878,72 +3914,12 @@ to see preview</source>
         <translation>جارٍ تحميل الخرائط...</translation>
     </message>
     <message>
-        <source>► %1</source>
-        <translation>◄ %1</translation>
-    </message>
-    <message>
-        <source>Select a map to continue</source>
-        <translation>اختر خريطة للمتابعة</translation>
-    </message>
-    <message>
-        <source>Loading map details...</source>
-        <translation>جارٍ تحميل تفاصيل الخريطة...</translation>
-    </message>
-    <message>
-        <source>No Map Selected</source>
-        <translation>لم تُحدَّد خريطة</translation>
-    </message>
-    <message>
-        <source>Players</source>
-        <translation>اللاعبون</translation>
-    </message>
-    <message>
-        <source>• Click color/team to cycle</source>
-        <translation>• انقر على اللون أو الفريق للتبديل</translation>
-    </message>
-    <message>
-        <source>Player color: %1 - Click to change</source>
-        <translation>لون اللاعب: %1 - انقر للتغيير</translation>
-    </message>
-    <message>
-        <source>Color</source>
-        <translation>لون</translation>
-    </message>
-    <message>
-        <source>Team %1 - Click to change</source>
-        <translation>الفريق %1 - انقر للتغيير</translation>
-    </message>
-    <message>
         <source>Team %1</source>
         <translation>الفريق %1</translation>
     </message>
     <message>
-        <source>Remove player</source>
-        <translation>إزالة اللاعب</translation>
-    </message>
-    <message>
         <source>+ Add CPU</source>
         <translation>+ إضافة حاسوب</translation>
-    </message>
-    <message>
-        <source>Add AI opponent</source>
-        <translation>إضافة خصم ذكاء اصطناعي</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>رجوع</translation>
-    </message>
-    <message>
-        <source>Return to main menu (Esc)</source>
-        <translation>العودة إلى القائمة الرئيسية (Esc)</translation>
-    </message>
-    <message>
-        <source>Play</source>
-        <translation>ابدأ</translation>
-    </message>
-    <message>
-        <source>Start game (Enter)</source>
-        <translation>بدء اللعبة (Enter)</translation>
     </message>
     <message>
         <source>Roman Republic</source>
@@ -3954,52 +3930,8 @@ to see preview</source>
         <translation>القائد</translation>
     </message>
     <message>
-        <source>• Click nation tag to change</source>
-        <translation>• انقر على وسم الأمة للتغيير</translation>
-    </message>
-    <message>
-        <source>Disable player (spectator mode)</source>
-        <translation>تعطيل اللاعب (وضع المشاهدة)</translation>
-    </message>
-    <message>
-        <source>Enable player</source>
-        <translation>تفعيل اللاعب</translation>
-    </message>
-    <message>
-        <source>Nation: %1 - Click to change</source>
-        <translation>الأمة: %1 - انقر للتغيير</translation>
-    </message>
-    <message>
         <source>Nation</source>
         <translation>الأمة</translation>
-    </message>
-    <message>
-        <source>Commander: %1 - Click to change</source>
-        <translation>القائد: %1 - انقر للتغيير</translation>
-    </message>
-    <message>
-        <source>Available Player Slots: %1</source>
-        <translation>خانات اللاعبين المتاحة: %1</translation>
-    </message>
-    <message>
-        <source>Select your player ID:</source>
-        <translation>اختر معرّف لاعبك:</translation>
-    </message>
-    <message>
-        <source>ID %1</source>
-        <translation>المعرّف %1</translation>
-    </message>
-    <message>
-        <source>All other slots will be CPU-controlled</source>
-        <translation>ستتحكم الحاسوب بكل الخانات الأخرى</translation>
-    </message>
-    <message>
-        <source>CPU will control: ID %1</source>
-        <translation>سيتحكم الحاسوب بـ: المعرّف %1</translation>
-    </message>
-    <message>
-        <source>, ID </source>
-        <translation>، المعرّف </translation>
     </message>
     <message>
         <source>Need at least 1 enabled player to start</source>
@@ -4014,16 +3946,156 @@ to see preview</source>
         <translation>يجب اختيار فريقين على الأقل لبدء مباراة</translation>
     </message>
     <message>
-        <source>Every slot on this map is taken</source>
-        <translation>كل خانة في هذه الخريطة مشغولة</translation>
-    </message>
-    <message>
-        <source>Player %1</source>
-        <translation>اللاعب %1</translation>
-    </message>
-    <message>
         <source>CPU %1</source>
         <translation>الحاسوب %1</translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>أنت</translation>
+    </message>
+    <message>
+        <source>Skirmish</source>
+        <translation>مناوشة</translation>
+    </message>
+    <message>
+        <source>Pick a battlefield, then set the colours, nations and commanders that take the field.</source>
+        <translation>اختر ساحة معركة، ثم حدّد الألوان والأمم والقادة الذين ينزلون إلى الميدان.</translation>
+    </message>
+    <message>
+        <source>← Back</source>
+        <translation>→ رجوع</translation>
+    </message>
+    <message>
+        <source>Battlefields</source>
+        <translation>ساحات المعارك</translation>
+    </message>
+    <message>
+        <source>Slots</source>
+        <translation>المقاعد</translation>
+    </message>
+    <message>
+        <source>Player slots this battlefield was authored for</source>
+        <translation>مقاعد اللاعبين التي صُمّمت لها ساحة المعركة هذه</translation>
+    </message>
+    <message>
+        <source>In play</source>
+        <translation>في المعركة</translation>
+    </message>
+    <message>
+        <source>Players that will take the field</source>
+        <translation>اللاعبون الذين سينزلون إلى الميدان</translation>
+    </message>
+    <message>
+        <source>Sides</source>
+        <translation>الأطراف</translation>
+    </message>
+    <message>
+        <source>Distinct teams among the players in play</source>
+        <translation>الفرق المختلفة بين اللاعبين المشاركين</translation>
+    </message>
+    <message>
+        <source>Opposition</source>
+        <translation>الخصوم</translation>
+    </message>
+    <message>
+        <source>Scripted</source>
+        <translation>مُبرمَجة</translation>
+    </message>
+    <message>
+        <source>Players only</source>
+        <translation>اللاعبون فقط</translation>
+    </message>
+    <message>
+        <source>This battlefield brings its own enemies, so you can start alone</source>
+        <translation>تأتي ساحة المعركة هذه بأعدائها الخاصين، لذا يمكنك البدء وحدك</translation>
+    </message>
+    <message>
+        <source>This battlefield needs at least two opposing players</source>
+        <translation>تحتاج ساحة المعركة هذه إلى لاعبَين متخاصمَين على الأقل</translation>
+    </message>
+    <message>
+        <source>Select a battlefield to continue</source>
+        <translation>اختر ساحة معركة للمتابعة</translation>
+    </message>
+    <message>
+        <source>Order of Battle</source>
+        <translation>ترتيب المعركة</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it</source>
+        <translation>انقر أي بطاقة لتغييرها</translation>
+    </message>
+    <message>
+        <source>Every slot on this battlefield is taken</source>
+        <translation>جميع المقاعد في ساحة المعركة هذه مشغولة</translation>
+    </message>
+    <message>
+        <source>Add an AI opponent</source>
+        <translation>إضافة خصم بالذكاء الاصطناعي</translation>
+    </message>
+    <message>
+        <source>Leave this slot empty</source>
+        <translation>ترك هذا المقعد فارغًا</translation>
+    </message>
+    <message>
+        <source>Bring this slot into the battle</source>
+        <translation>إدخال هذا المقعد إلى المعركة</translation>
+    </message>
+    <message>
+        <source>Slot %1 • click to move seat</source>
+        <translation>المقعد %1 • انقر لتغيير المقعد</translation>
+    </message>
+    <message>
+        <source>Slot %1 • AI</source>
+        <translation>المقعد %1 • ذكاء اصطناعي</translation>
+    </message>
+    <message>
+        <source>Colour</source>
+        <translation>اللون</translation>
+    </message>
+    <message>
+        <source>Player colour — click to change</source>
+        <translation>لون اللاعب — انقر للتغيير</translation>
+    </message>
+    <message>
+        <source>Nation — click to change</source>
+        <translation>الأمة — انقر للتغيير</translation>
+    </message>
+    <message>
+        <source>%1 — click to change commander</source>
+        <translation>%1 — انقر لتغيير القائد</translation>
+    </message>
+    <message>
+        <source>Commander — click to change</source>
+        <translation>القائد — انقر للتغيير</translation>
+    </message>
+    <message>
+        <source>Team — click to change sides</source>
+        <translation>الفريق — انقر لتغيير الطرف</translation>
+    </message>
+    <message>
+        <source>Remove this opponent</source>
+        <translation>إزالة هذا الخصم</translation>
+    </message>
+    <message>
+        <source>↑ ↓ Choose</source>
+        <translation>↑ ↓ اختيار</translation>
+    </message>
+    <message>
+        <source>Enter Start</source>
+        <translation>Enter بدء</translation>
+    </message>
+    <message>
+        <source>Esc Back</source>
+        <translation>Esc رجوع</translation>
+    </message>
+    <message>
+        <source>Play ▶</source>
+        <translation>ابدأ ◀</translation>
+    </message>
+    <message>
+        <source>Start the battle (Enter)</source>
+        <translation>ابدأ المعركة (Enter)</translation>
     </message>
 </context>
 <context>
@@ -7269,7 +7341,7 @@ Wide vision and a durable settlement anchor</source>
         <translation>خلف كل جيش ميداني وقفت المزارع والمحاجر التي أطعمته، والناس الذين عملوا فيها.</translation>
     </message>
     <message>
-        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</source>
+        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation&apos;s nerve.</source>
         <translation>قلّما حسمت القِسي معركةً قديمة وحدها، لكن رشقةً تُطلق قبل التلاحم كانت تكسر عزيمة التشكيل.</translation>
     </message>
     <message>
@@ -7337,7 +7409,7 @@ Wide vision and a durable settlement anchor</source>
         <translation>أعزل في المدى القريب. المشاة التي تبلغها تقتلها في ثوانٍ قليلة.</translation>
     </message>
     <message>
-        <source>Denies ground nothing else can reach, at well over twice an archer's range.</source>
+        <source>Denies ground nothing else can reach, at well over twice an archer&apos;s range.</source>
         <translation>يمنع أرضًا لا يبلغها سواه، على أكثر من ضِعف مدى الرامي بكثير.</translation>
     </message>
     <message>
@@ -7541,7 +7613,7 @@ Wide vision and a durable settlement anchor</source>
         <translation>كان الرمح الليبي الفينيقي المركز الثابت الذي يُبنى حوله جيش المرتزقة.</translation>
     </message>
     <message>
-        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</source>
+        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome&apos;s worst day, at Cannae, was their work.</source>
         <translation>امتطى النوميديون خيلهم بلا لجام، وكانوا أفضل خيّالة خفيفة في المتوسط. وأسوأ أيام روما في كانّاي كان صنيعهم.</translation>
     </message>
     <message>
@@ -7557,7 +7629,7 @@ Wide vision and a durable settlement anchor</source>
         <translation>بُنيت قواذف سهام قرطاج في الأحواض ذاتها التي بُني فيها أسطولها، وعلى أيدي بنّائي السفن أنفسهم.</translation>
     </message>
     <message>
-        <source>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</source>
+        <source>The equites were drawn from the wealthiest citizens, and Rome&apos;s cavalry was never the equal of its infantry.</source>
         <translation>جاء الفرسان من أثرى المواطنين، ولم تبلغ خيّالة روما يومًا مبلغ مشاتها.</translation>
     </message>
     <message>
@@ -7565,7 +7637,7 @@ Wide vision and a durable settlement anchor</source>
         <translation>بنى الفابري الطرق والجسور والمعسكر المحصّن الذي كان يُقام في كل ليلة مسير.</translation>
     </message>
     <message>
-        <source>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
+        <source>The legionary&apos;s short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
         <translation>صُمّم سيف الفيلقي القصير ورمحه الثقيل لغاية واحدة: قطع العشرين خطوة الأخيرة والانتصار هناك.</translation>
     </message>
     <message>
@@ -7581,11 +7653,11 @@ Wide vision and a durable settlement anchor</source>
         <translation>سار الطبيب مع الفيلق، وكان الطب الميداني الروماني أفضل ما نُظّم في العالم القديم.</translation>
     </message>
     <message>
-        <source>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
+        <source>The mounted lance traded the sword&apos;s flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
         <translation>استبدل الرمح الفارسي مرونة السيف بالمدى، فيضرب قبل أن يشهر العدو سلاحه.</translation>
     </message>
     <message>
-        <source>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</source>
+        <source>The onager kicked like the wild ass it was named for, and was Rome&apos;s answer to a wall that would not fall.</source>
         <translation>كان الأوناجر يرفس كالحمار الوحشي الذي سُمّي به، وكان جواب روما على سورٍ يأبى السقوط.</translation>
     </message>
     <message>

@@ -2,15 +2,18 @@
 
 #include <QString>
 
+#include <cmath>
 #include <string>
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/systems/builder_product_types.h"
+#include "game/systems/combat_system/combat_types.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
+#include "game/util/asset_text.h"
 
 namespace {
 
@@ -43,6 +46,8 @@ struct ActionStatus {
   bool mixed = false;
   bool placing = false;
   bool passive = false;
+
+  QVariantMap detail;
 };
 
 constexpr ActionId k_all_actions[] = {ActionId::Attack,
@@ -273,20 +278,114 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
   return false;
 }
 
+auto percent_bonus(float multiplier) -> int {
+  return static_cast<int>(std::lround((multiplier - 1.0F) * 100.0F));
+}
+
+auto guard_detail(const Engine::Core::Entity* sample) -> QVariantMap {
+  const auto* guard = sample != nullptr
+                          ? sample->get_component<Engine::Core::GuardModeComponent>()
+                          : nullptr;
+  QVariantMap detail;
+  detail[QStringLiteral("radius")] =
+      guard != nullptr ? guard->guard_radius
+                       : Engine::Core::Defaults::k_guard_default_radius;
+  detail[QStringLiteral("returnThreshold")] =
+      Engine::Core::Defaults::k_guard_return_threshold;
+  return detail;
+}
+
+auto hold_detail() -> QVariantMap {
+  namespace Constants = Game::Systems::Combat::Constants;
+  static_assert(Constants::k_damage_multiplier_archer_hold ==
+                    Constants::k_damage_multiplier_spearman_hold,
+                "the hold tooltip quotes one damage bonus for both eligible types");
+
+  QVariantMap detail;
+  detail[QStringLiteral("archerRangeBonusPercent")] =
+      percent_bonus(Constants::k_range_multiplier_hold);
+  detail[QStringLiteral("spearmanRangeBonusPercent")] =
+      percent_bonus(Constants::k_range_multiplier_spearman_hold);
+  detail[QStringLiteral("damageBonusPercent")] =
+      percent_bonus(Constants::k_damage_multiplier_archer_hold);
+  detail[QStringLiteral("healthBonusPercent")] =
+      percent_bonus(Constants::k_health_multiplier_hold);
+  return detail;
+}
+
+auto patrol_detail(const App::Core::ActionContext& context) -> QVariantMap {
+  int stage = 0;
+  if (context.has_patrol_first_waypoint) {
+    stage = 2;
+  } else if (context.cursor_mode == CursorMode::Patrol) {
+    stage = 1;
+  }
+
+  QVariantMap detail;
+  detail[QStringLiteral("waypointStage")] = stage;
+  return detail;
+}
+
+auto aura_detail(const Engine::Core::Entity* sample) -> QVariantMap {
+  const auto* commander =
+      sample != nullptr ? sample->get_component<Engine::Core::CommanderComponent>()
+                        : nullptr;
+  QVariantMap detail;
+  if (commander == nullptr) {
+    return detail;
+  }
+
+  detail[QStringLiteral("radius")] = commander->aura_radius;
+  detail[QStringLiteral("duration")] = commander->aura_ability_duration;
+  detail[QStringLiteral("remaining")] = commander->aura_ability_remaining;
+  detail[QStringLiteral("cooldown")] = commander->aura_ability_cooldown;
+  detail[QStringLiteral("cooldownRemaining")] =
+      commander->aura_ability_cooldown_remaining;
+  detail[QStringLiteral("wounded")] = commander->wounded;
+  if (!commander->bonus_summary.empty()) {
+    detail[QStringLiteral("summary")] = Game::Util::tr_asset(
+        Game::Util::k_commanders_context, commander->bonus_summary);
+  }
+  return detail;
+}
+
+auto action_detail(const App::Core::ActionContext& context,
+                   ActionId action,
+                   const Engine::Core::Entity* sample) -> QVariantMap {
+  switch (action) {
+  case ActionId::Guard:
+    return guard_detail(sample);
+  case ActionId::Hold:
+    return hold_detail();
+  case ActionId::Patrol:
+    return patrol_detail(context);
+  case ActionId::Aura:
+    return aura_detail(sample);
+  default:
+    break;
+  }
+  return {};
+}
+
 auto get_status(const App::Core::ActionContext& context,
                 ActionId action) -> ActionStatus {
   ActionStatus status;
   const auto* selected = selected_units(context.world);
   if (selected == nullptr) {
+    status.detail = action_detail(context, action, nullptr);
     return status;
   }
 
+  const Engine::Core::Entity* first_eligible = nullptr;
   for (const auto entity_id : *selected) {
     auto* entity = context.world->get_entity(entity_id);
     if ((entity == nullptr) || !unit_is_eligible_for_action(*entity, action)) {
       continue;
     }
 
+    if (first_eligible == nullptr) {
+      first_eligible = entity;
+    }
     ++status.eligible_count;
     status.active_count += unit_is_active_for_action(*entity, action) ? 1 : 0;
     if (action == ActionId::Aura) {
@@ -296,12 +395,14 @@ auto get_status(const App::Core::ActionContext& context,
     }
   }
 
+  status.detail = action_detail(context, action, first_eligible);
+
   switch (action) {
   case ActionId::Stop:
     status.enabled = status.eligible_count > 0;
     break;
   case ActionId::Formation:
-    status.enabled = status.eligible_count > 1;
+    status.enabled = status.eligible_count > 0;
     break;
   case ActionId::Heal:
     status.passive = status.eligible_count > 0;
@@ -362,6 +463,7 @@ auto to_variant_map(const ActionStatus& status) -> QVariantMap {
 
   result[QStringLiteral("activeCount")] = status.active_count;
   result[QStringLiteral("readyCount")] = status.ready_count;
+  result[QStringLiteral("detail")] = status.detail;
   return result;
 }
 

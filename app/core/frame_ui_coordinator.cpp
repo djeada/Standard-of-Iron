@@ -294,6 +294,8 @@ void render_effects(const RenderEffectsContext& context,
         placement.position.x(), placement.position.z()));
     placement.angle_degrees =
         context.command_controller->formation().get_formation_facing_degrees();
+    placement.aim_distance =
+        context.command_controller->formation().get_formation_aim_distance();
     placement.active = true;
 
     const auto* nation =

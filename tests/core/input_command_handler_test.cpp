@@ -10,6 +10,7 @@
 #include "app/orders/command_controller.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/formation/army_formation_registry.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/nav_grid.h"
@@ -237,22 +238,172 @@ TEST_F(InputCommandHandlerTest, RightPressStartsFormationPlacementForGroundMove)
   EXPECT_TRUE(movement->get_has_target());
 }
 
-TEST_F(InputCommandHandlerTest, OneTroopIsMovedWithoutOpeningThePlanner) {
+TEST_F(InputCommandHandlerTest, OneTroopOpensThePlannerAndPreviewsItsFootprintAtOnce) {
   auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
   selection_system->select_unit(unit->get_id());
 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
 
-  EXPECT_FALSE(
+  EXPECT_TRUE(
       input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
-  EXPECT_FALSE(input_handler->is_placing_formation());
+  ASSERT_TRUE(input_handler->is_placing_formation());
+  EXPECT_TRUE(command_controller->formation().is_single_unit_placement());
+  EXPECT_TRUE(command_controller->formation().is_right_drag_placement());
 
-  input_handler->on_right_click(ground_screen.x(), ground_screen.y(), 1, viewport);
+  const auto& preview = command_controller->formation().formation_preview();
+  EXPECT_TRUE(preview.valid);
+  ASSERT_EQ(preview.slot_list.size(), 1U);
+  EXPECT_EQ(preview.slot_list.front().occupant, unit->get_id());
+
+  EXPECT_TRUE(command_controller->formation().formation_intents().isEmpty())
+      << "one troop has no army shape to choose";
+
+  const QVariantMap options = command_controller->formation().formation_options();
+  EXPECT_TRUE(options[QStringLiteral("single_unit")].toBool());
+  EXPECT_EQ(options[QStringLiteral("gesture")].toString(),
+            QStringLiteral("right_drag"));
+  EXPECT_EQ(options[QStringLiteral("unit_count")].toInt(), 1);
+  EXPECT_EQ(options[QStringLiteral("slot_count")].toInt(), 1);
+  EXPECT_FALSE(options[QStringLiteral("facing_explicit")].toBool());
+
+  input_handler->on_formation_confirm();
+  EXPECT_FALSE(input_handler->is_placing_formation());
 
   auto* movement = unit->get_component<Engine::Core::MovementComponent>();
   ASSERT_NE(movement, nullptr);
   EXPECT_TRUE(movement->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest, OneTroopCanBeAimedAndFacesWhereItWasAimed) {
+  auto* unit = create_unit(0.0F, -6.0F, 1, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  const QVector3D anchor(0.0F, 0.0F, 0.0F);
+  QPointF const anchor_screen = world_to_screen(anchor);
+  ASSERT_TRUE(
+      input_handler->on_right_press(anchor_screen.x(), anchor_screen.y(), 1, viewport));
+
+  const QVector3D orient_target(-5.0F, 0.0F, 0.0F);
+  QPointF const orient_screen = world_to_screen(orient_target);
+  input_handler->on_right_drag_orient(orient_screen.x(), orient_screen.y(), viewport);
+
+  const QVector3D dragged =
+      orient_target -
+      command_controller->formation().get_formation_placement_position();
+  float const dragged_degrees =
+      std::atan2(dragged.x(), dragged.z()) * 180.0F / std::numbers::pi_v<float>;
+  float const arrow_degrees =
+      command_controller->formation().get_formation_facing_degrees();
+  EXPECT_NEAR(arrow_degrees, dragged_degrees, 0.5F);
+  EXPECT_NEAR(command_controller->formation().get_formation_aim_distance(),
+              dragged.length(),
+              0.3F);
+
+  const auto& preview = command_controller->formation().formation_preview();
+  ASSERT_EQ(preview.slot_list.size(), 1U);
+  EXPECT_NEAR(preview.slot_list.front().facing, arrow_degrees, 0.5F);
+
+  const QVariantMap options = command_controller->formation().formation_options();
+  EXPECT_TRUE(options[QStringLiteral("facing_explicit")].toBool());
+  EXPECT_NEAR(
+      options[QStringLiteral("facing_degrees")].toFloat(), arrow_degrees, 0.01F);
+
+  input_handler->on_formation_confirm();
+  EXPECT_NEAR(
+      command_controller->formation().get_formation_aim_distance(), 0.0F, 1e-6F);
+
+  const auto* transform = unit->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_TRUE(transform->has_desired_yaw);
+  EXPECT_NEAR(transform->desired_yaw, arrow_degrees, 0.5F);
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_TRUE(movement->get_has_target());
+}
+
+TEST_F(InputCommandHandlerTest, PositioningOneTroopDoesNotRegisterAnArmyFormation) {
+  auto& registry = Game::Formation::ArmyFormationRegistry::instance();
+  registry.clear();
+
+  auto* first = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* third = create_unit(-1.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  ASSERT_NE(third, nullptr);
+  selection_system->select_unit(first->get_id());
+  selection_system->select_unit(second->get_id());
+  selection_system->select_unit(third->get_id());
+
+  QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
+  ASSERT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  input_handler->on_formation_confirm();
+
+  const auto group = registry.group_of(first->get_id());
+  ASSERT_NE(group, Game::Formation::k_invalid_group);
+  ASSERT_NE(registry.find(group), nullptr);
+  EXPECT_EQ(registry.find(group)->members.size(), 3U);
+
+  selection_system->clear_selection();
+  selection_system->select_unit(first->get_id());
+  QPointF const elsewhere = world_to_screen(QVector3D(-4.0F, 0.0F, 3.0F));
+  ASSERT_TRUE(input_handler->on_right_press(elsewhere.x(), elsewhere.y(), 1, viewport));
+  input_handler->on_formation_confirm();
+
+  ASSERT_NE(registry.find(group), nullptr);
+  EXPECT_EQ(registry.find(group)->members.size(), 3U)
+      << "moving one member out must not shrink its group to itself";
+  EXPECT_EQ(registry.group_ids().size(), 1U);
+
+  auto* lone = create_unit(5.0F, 5.0F, 1, Game::Units::SpawnType::Knight);
+  ASSERT_NE(lone, nullptr);
+  selection_system->clear_selection();
+  selection_system->select_unit(lone->get_id());
+  ASSERT_TRUE(
+      input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
+  input_handler->on_formation_confirm();
+  EXPECT_EQ(registry.group_of(lone->get_id()), Game::Formation::k_invalid_group);
+  EXPECT_EQ(registry.group_ids().size(), 1U);
+  registry.clear();
+}
+
+TEST_F(InputCommandHandlerTest, TheFormationKeyPositionsOneTroopToo) {
+  auto* unit = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(unit, nullptr);
+  selection_system->select_unit(unit->get_id());
+
+  input_handler->on_formation_command();
+  ASSERT_TRUE(input_handler->is_placing_formation());
+  EXPECT_TRUE(command_controller->formation().is_single_unit_placement());
+  EXPECT_FALSE(command_controller->formation().is_right_drag_placement());
+  EXPECT_EQ(command_controller->formation()
+                .formation_options()[QStringLiteral("gesture")]
+                .toString(),
+            QStringLiteral("click"));
+
+  command_controller->formation().begin_formation_drag(QVector3D(2.0F, 0.0F, 2.0F));
+  command_controller->formation().update_formation_drag(QVector3D(2.0F, 0.0F, 8.0F));
+  command_controller->formation().end_formation_drag();
+
+  EXPECT_NEAR(command_controller->formation().get_formation_placement_position().x(),
+              2.0F,
+              1e-4F);
+  EXPECT_NEAR(command_controller->formation().get_formation_placement_position().z(),
+              2.0F,
+              1e-4F);
+  EXPECT_NEAR(
+      command_controller->formation().get_formation_facing_degrees(), 0.0F, 0.5F);
+  EXPECT_NEAR(
+      command_controller->formation().get_formation_aim_distance(), 6.0F, 1e-3F);
+
+  input_handler->on_formation_confirm();
+  const auto* transform = unit->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  EXPECT_TRUE(transform->has_desired_yaw);
+  EXPECT_NEAR(transform->desired_yaw, 0.0F, 0.5F);
 }
 
 TEST_F(InputCommandHandlerTest, FormationConfirmClearsPatrolBeforeApplyingMove) {

@@ -25,6 +25,8 @@ struct FormationPlacementInfo {
   float angle_degrees = 0.0F;
   bool active = false;
 
+  float aim_distance = 0.0F;
+
   float fade_alpha = 1.0F;
 
   std::optional<QVector3D> accent_color;

@@ -29,7 +29,62 @@ may change in any release — see [Save compatibility](#save-compatibility).
     rename, and anything you rebound yourself stays yours.
     See [docs/CAMERA_CONTROLS.md](docs/CAMERA_CONTROLS.md).
 
+- **One unit is positioned the way an army is.** Right-pressing the ground with
+  a single troop selected opens the same planner the army gets: the press marks
+  where it will stand, dragging is the direction its front will face, and the
+  release sends it — a shield wall can finally be told which way to look
+  without stacking two units to get the gesture. The panel switches to
+  **Position ‹unit›** with a live facing readout instead of offering Line and
+  Column to one block, the fine-tuning section stays out of the way, and no
+  one-member "army formation" is registered — pulling one unit out of a formed
+  line no longer risks shrinking that line to itself. `F` with one troop opens
+  the same planner in place, and its drag aims rather than drawing a front.
+
+- **Aiming a formation looks like aiming.** While the right button is held the
+  arrowhead sits under the cursor with a beam back to the anchor and a pivot at
+  the block's centre, the footprints are on the ground from the press itself
+  rather than after the first mouse move, and the panel's readout — facing,
+  ranks × files, in-place count — updates as you drag or turn the wheel instead
+  of freezing on the numbers from the last placement. The hint at the bottom of
+  the panel now describes the gesture actually in progress (hold and release
+  for the right-drag, click to deploy for `F`), and the field manual's
+  **Giving orders** and **Formations and lines** entries explain the drag.
+
+- **The skirmish screen reads like the campaign screen and says what the match
+  will be.** It now fills the window the way the war table does — a titled
+  header with the **← Back** pill, a full-height **Battlefields** list whose
+  rows carry the slot count, and a briefing that puts the map preview beside
+  the description with **Slots**, **In play**, **Sides** and **Opposition**
+  read out as chips, so a map that brings its own enemies no longer looks the
+  same as one that needs a second player. The roster became an **Order of
+  Battle**: every seat is one row of labelled chips for colour, nation,
+  commander and team, the seat you play is marked **You** and can be moved to
+  another slot by clicking it, and the dead space below now holds your
+  commander's role, bonus, aura and rally line — text the game already had and
+  never showed. Footer keys spell out `↑ ↓`, `Enter` and `Esc`, and **Play**
+  explains in a tooltip why it is refusing when the setup is not startable.
+
 ### Fixed
+
+- **Commanders can be chosen again on the skirmish screen.** The screen looked
+  for the commander list on a property that no longer exists, so every lookup
+  came back empty and both seats were stuck on a placeholder called
+  "Commander" that would not cycle. It asks the match-setup model directly now,
+  and the roster shows the real commander, their nation's default, and what
+  each one brings.
+
+- **Teams are numbered from I, and only as many as there are players.** Team
+  numbering started at the zero glyph — a two-player match read "Team N" versus
+  "Team I" — and cycling ran one team past the roster, so two players could be
+  spread across three teams. Teams now start at I, the mark beside the number
+  matches it, and cycling stops at the number of seats.
+
+- **Right-drag placement works again.** Every right press in the battle view
+  tried to write a camera flag that had been made read-only, and the resulting
+  script error aborted the handler before the order was ever forwarded — so the
+  drag-to-face planner never opened and every right-drag ended as a plain move
+  to the release point. The stray write is gone and a regression test keeps it
+  out.
 
 - **A battle no longer opens with your nose against one soldier's shield.**
   Every map authors the camera that frames its engagement — 18 units on the

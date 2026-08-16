@@ -30,6 +30,11 @@ Item {
     readonly property real plan_frontage: options.plan_frontage !== undefined ? options.plan_frontage : 0
     readonly property real plan_depth: options.plan_depth !== undefined ? options.plan_depth : 0
     readonly property bool plan_valid: options.plan_valid !== undefined ? options.plan_valid : false
+    readonly property bool single_unit: options.single_unit === true
+    readonly property string unit_label: options.unit_label !== undefined ? options.unit_label : ""
+    readonly property bool right_drag_gesture: options.gesture === "right_drag"
+    readonly property real facing_degrees: options.facing_degrees !== undefined ? options.facing_degrees : 0
+    readonly property bool facing_explicit: options.facing_explicit === true
 
     readonly property string described_intent: hovered_intent.length > 0 ? hovered_intent : active_intent
 
@@ -62,9 +67,27 @@ Item {
         if (!game_ready())
             return;
         options = game.placement.formation_options;
-        intents = game.placement.formation_intents;
+        var next_intents = game.placement.formation_intents;
+        if (String(next_intents) !== String(intents))
+            intents = next_intents;
         if (doctrines.length === 0 && game.placement.formation_doctrine_options)
             doctrines = game.placement.formation_doctrine_options();
+    }
+
+    function heading_text() {
+        var degrees = Math.round(((facing_degrees % 360) + 360) % 360);
+        return qsTr("%1°").arg(degrees);
+    }
+
+    function gesture_hint() {
+        if (right_drag_gesture) {
+            if (single_unit)
+                return qsTr("Drag to face the unit · Release to move it") + "\n" + qsTr("Wheel to turn · Esc to cancel");
+            return qsTr("Drag to face the formation · Release to deploy") + "\n" + qsTr("Wheel to turn · Ctrl+wheel for depth · Esc to cancel");
+        }
+        if (single_unit)
+            return qsTr("Drag on the ground to set facing · Click to move") + "\n" + qsTr("Wheel to turn · Right-click or Esc to cancel");
+        return qsTr("Drag on the ground to set width and facing.") + "\n" + qsTr("Click to deploy · Wheel to turn · Ctrl+wheel for depth · Right-click or Esc to cancel");
     }
 
     function doctrine_id_at(index) {
@@ -188,7 +211,7 @@ Item {
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.label
                         font.weight: Design.Typography.bold
-                        text: qsTr("Choose a formation")
+                        text: formationPanel.single_unit ? (formationPanel.unit_label.length > 0 ? qsTr("Position %1").arg(formationPanel.unit_label) : qsTr("Position unit")) : qsTr("Choose a formation")
                     }
 
                     Text {
@@ -197,7 +220,7 @@ Item {
                         color: Design.Theme.textSecondary
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
-                        text: formationPanel.unit_count > 0 ? qsTr("%1 · %2 units").arg(formationPanel.doctrine_name).arg(formationPanel.unit_count) : formationPanel.doctrine_name
+                        text: formationPanel.unit_count > 1 ? qsTr("%1 · %2 units").arg(formationPanel.doctrine_name).arg(formationPanel.unit_count) : formationPanel.doctrine_name
                     }
                 }
 
@@ -209,6 +232,7 @@ Item {
                     columnSpacing: Design.Metrics.space4
                     columns: 4
                     rowSpacing: Design.Metrics.space4
+                    visible: !formationPanel.single_unit
                     width: parent.width
 
                     Repeater {
@@ -299,6 +323,7 @@ Item {
 
                 Item {
                     height: Math.max(purpose.implicitHeight, Design.A11y.scaled(28))
+                    visible: !formationPanel.single_unit
                     width: parent.width
 
                     Text {
@@ -327,7 +352,7 @@ Item {
                     Row {
                         id: readout
 
-                        readonly property int cellWidth: Math.floor((parent.width - Design.Metrics.space8 * 2) / 4)
+                        readonly property int cellWidth: Math.floor((parent.width - Design.Metrics.space8 * 2) / (formationPanel.single_unit ? 4 : 5))
 
                         spacing: 0
                         x: Design.Metrics.space8
@@ -337,6 +362,7 @@ Item {
                             label: qsTr("Shape")
                             tone: Design.Theme.textPrimary
                             value: qsTr("%1 × %2").arg(formationPanel.ranks).arg(formationPanel.files)
+                            visible: !formationPanel.single_unit
                             width: readout.cellWidth
                         }
 
@@ -344,6 +370,7 @@ Item {
                             label: qsTr("Frontage")
                             tone: Design.Theme.textPrimary
                             value: formationPanel.measure(formationPanel.plan_frontage)
+                            visible: !formationPanel.single_unit
                             width: readout.cellWidth
                         }
 
@@ -351,14 +378,24 @@ Item {
                             label: qsTr("Depth")
                             tone: Design.Theme.textPrimary
                             value: formationPanel.measure(formationPanel.plan_depth)
+                            visible: !formationPanel.single_unit
                             width: readout.cellWidth
+                        }
+
+                        FormationReadoutCell {
+                            id: facingCell
+
+                            label: formationPanel.facing_explicit ? qsTr("Facing") : qsTr("Facing (auto)")
+                            tone: formationPanel.facing_explicit ? Design.Theme.textPrimary : Design.Theme.textSecondary
+                            value: formationPanel.heading_text()
+                            width: formationPanel.single_unit ? readout.cellWidth * 2 : readout.cellWidth
                         }
 
                         FormationReadoutCell {
                             label: qsTr("In place")
                             tone: formationPanel.blocked_slots > 0 ? Design.Theme.danger : Design.Theme.success
                             value: formationPanel.placed_count + "/" + formationPanel.slot_count
-                            width: readout.cellWidth
+                            width: formationPanel.single_unit ? readout.cellWidth * 2 : readout.cellWidth
                         }
                     }
                 }
@@ -392,13 +429,14 @@ Item {
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
                     lineHeight: 1.25
-                    text: qsTr("Drag on the ground to set width and facing.") + "\n" + qsTr("Click to deploy · Wheel to turn · Ctrl+wheel for depth · Right-click or Esc to cancel")
+                    text: formationPanel.gesture_hint()
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }
 
                 Design.IronButton {
                     text: formationPanel.advanced_expanded ? qsTr("Hide fine tuning") : qsTr("Fine tuning")
+                    visible: !formationPanel.single_unit
                     width: parent.width
 
                     onClicked: formationPanel.advanced_expanded = !formationPanel.advanced_expanded
@@ -406,7 +444,7 @@ Item {
 
                 Column {
                     spacing: Design.Metrics.space4
-                    visible: formationPanel.advanced_expanded
+                    visible: formationPanel.advanced_expanded && !formationPanel.single_unit
                     width: parent.width
 
                     FormationOptionRow {

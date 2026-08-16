@@ -151,6 +151,19 @@ TEST(CommanderControlRegressionTest, GameViewRoutesRightGestureThroughTheOrdersS
   EXPECT_TRUE(contains(source, "game.orders.on_right_double_click(mouse.x, mouse.y);"));
 }
 
+TEST(CommanderControlRegressionTest, GameViewNeverWritesTheDerivedEdgeScrollFlag) {
+
+  const auto root = find_repo_root();
+  const auto main_source = read_text(root / "ui" / "qml" / "Main.qml");
+  const auto source = read_text(root / "ui" / "qml" / "GameView.qml");
+  ASSERT_FALSE(main_source.empty());
+  ASSERT_FALSE(source.empty());
+
+  EXPECT_TRUE(contains(main_source, "readonly property bool edge_scroll_disabled"));
+  EXPECT_FALSE(contains(source, "edge_scroll_disabled ="));
+  EXPECT_FALSE(contains(source, "mainWindow.edge_scroll_disabled"));
+}
+
 TEST(CommanderControlRegressionTest,
      GameViewDoesNotKeepLocalRightGestureSuppressionState) {
   const auto root = find_repo_root();
