@@ -37,13 +37,8 @@ void pad_to_alignment(std::ostream& out,
   }
 }
 
-void copy_matrix_row_major(const QMatrix4x4& m, float* dst) {
-
-  for (int row = 0; row < 4; ++row) {
-    for (int col = 0; col < 4; ++col) {
-      dst[(row * 4) + col] = m(row, col);
-    }
-  }
+void copy_matrix_column_major(const QMatrix4x4& m, float* dst) {
+  std::memcpy(dst, m.constData(), sizeof(float) * k_matrix_floats);
 }
 
 void copy_socket_row_major(const QMatrix4x4& m, float* dst) {
@@ -84,9 +79,9 @@ void BpatWriter::append_clip_palettes(std::span<const QMatrix4x4> palette_frames
   std::size_t const base_floats = m_palette_floats.size();
   m_palette_floats.resize(base_floats + (expected * k_matrix_floats));
   for (std::size_t i = 0; i < palette_frames.size(); ++i) {
-    copy_matrix_row_major(palette_frames[i],
-                          m_palette_floats.data() + base_floats +
-                              (i * k_matrix_floats));
+    copy_matrix_column_major(palette_frames[i],
+                             m_palette_floats.data() + base_floats +
+                                 (i * k_matrix_floats));
   }
   pending.palette_appended = true;
 }
@@ -108,6 +103,20 @@ void BpatWriter::append_clip_socket_transforms(
                               (i * k_socket_matrix_floats));
   }
   pending.sockets_appended = true;
+}
+
+void BpatWriter::set_bind_palette(std::span<const QMatrix4x4> bind_palette) {
+  assert(bind_palette.size() == m_bone_count && "bind palette must cover every bone");
+  m_bind_palette_floats.resize(bind_palette.size() * k_matrix_floats);
+  for (std::size_t b = 0; b < bind_palette.size(); ++b) {
+    copy_matrix_column_major(bind_palette[b],
+                             m_bind_palette_floats.data() + b * k_matrix_floats);
+  }
+}
+
+void BpatWriter::set_bone_parents(std::span<const std::uint8_t> parents) {
+  assert(parents.size() == m_bone_count && "parent table must cover every bone");
+  m_bone_parents.assign(parents.begin(), parents.end());
 }
 
 void BpatWriter::append_clip_contacts(std::span<const BpatFrameContact> contacts) {
@@ -204,6 +213,12 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   cursor += m_socket_floats.size() * sizeof(float);
   cursor = align_up(cursor, k_section_alignment);
   std::uint64_t const contact_data_offset = has_contacts ? cursor : 0U;
+  cursor += has_contacts ? m_contacts.size() * sizeof(BpatFrameContact) : 0U;
+  cursor = align_up(cursor, k_section_alignment);
+  std::uint64_t const bind_palette_offset = m_bind_palette_floats.empty() ? 0U : cursor;
+  cursor += m_bind_palette_floats.size() * sizeof(float);
+  cursor = align_up(cursor, k_section_alignment);
+  std::uint64_t const bone_parent_offset = m_bone_parents.empty() ? 0U : cursor;
 
   BpatHeader header{};
   std::memcpy(header.magic, k_magic.data(), k_magic.size());
@@ -223,6 +238,8 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   ext.contact_data_offset = contact_data_offset;
   ext.contact_entry_count =
       has_contacts ? static_cast<std::uint32_t>(m_contacts.size()) : 0U;
+  ext.bind_palette_offset = bind_palette_offset;
+  ext.bone_parent_offset = bone_parent_offset;
 
   std::uint64_t written = 0U;
   write_pod(out, &header, sizeof(header));
@@ -255,7 +272,19 @@ auto BpatWriter::write(std::ostream& out) const -> bool {
   }
   if (has_contacts) {
     pad_to_alignment(out, written, k_section_alignment);
+    written = contact_data_offset + m_contacts.size() * sizeof(BpatFrameContact);
     write_pod(out, m_contacts.data(), m_contacts.size() * sizeof(BpatFrameContact));
+  }
+  if (!m_bind_palette_floats.empty()) {
+    pad_to_alignment(out, written, k_section_alignment);
+    written = bind_palette_offset + m_bind_palette_floats.size() * sizeof(float);
+    write_pod(out,
+              m_bind_palette_floats.data(),
+              m_bind_palette_floats.size() * sizeof(float));
+  }
+  if (!m_bone_parents.empty()) {
+    pad_to_alignment(out, written, k_section_alignment);
+    write_pod(out, m_bone_parents.data(), m_bone_parents.size());
   }
   return out.good();
 }

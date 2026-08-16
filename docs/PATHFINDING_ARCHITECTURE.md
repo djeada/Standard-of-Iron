@@ -410,6 +410,7 @@ CommandService
   - use direct path for short clear moves
   - run A* synchronously for longer or blocked moves
   - convert grid path to world waypoints
+  - pull the waypoint list taut (see below)
     |
     v
 MovementSystem
@@ -484,6 +485,35 @@ actually touches and refuses a diagonal that squeezes between two blocked
 corners — the same rule the search applies to its own neighbours. Sampling the
 line at fixed intervals is a second, weaker rule that steps over the thin corner
 of an obstacle and hands out a shortcut through a wall that has no gap in it.
+
+### The path is pulled taut before it is followed
+
+An 8-connected grid path is a staircase: a goal 27 degrees off-axis comes back
+as a run of diagonal cells, then a run of straight cells, then diagonals again.
+Followed cell by cell, a formation turns to face each leg in turn — the whole
+20-horse body swinging 45 degrees one way and back roughly every second, at the
+formation turn rate — which on screen reads as troops flicking left and right
+rather than routing around anything. `assign_path_to_movement` therefore
+string-pulls the waypoint list before the movement system sees it: from the
+unit's position it keeps advancing the next waypoint while the straight segment
+to it is walkable (`is_world_segment_walkable`, the same corner-safe test above)
+and does not cross a bridge or hill-entrance portal, then keeps only the last
+reachable one and continues from there. Legs across a portal stay cell by cell,
+which is what keeps the bridge-alignment projection working. On
+`massed_battle_1000` this took the cavalry columns from 2-8 heading reversals
+of more than 15 degrees during the approach down to the two or three legs the
+tree scatter actually forces, at no measurable simulation cost.
+
+A second, finer hunt survived that: a unit chasing a moving target re-issues
+its move every few simulation ticks, and each fresh route from a slightly
+different start cell could pick the other side of the same tree, so the first
+leg's heading flipped by 5-7 degrees several times a second and the formation
+turned toward each in turn. `assign_navigation_target` now keeps the route it
+has when the re-requested goal has moved less than `k_route_keep_goal_shift`
+(1.5 m, about one cell) and the new goal is walkable — it slides the final
+waypoint and goal onto the new position instead of re-pathing. A goal that has
+moved further, or a unit without an active multi-waypoint route, re-paths as
+before.
 
 ## Formations And Group Movement
 

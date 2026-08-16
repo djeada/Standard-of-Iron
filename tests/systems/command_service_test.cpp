@@ -1109,6 +1109,45 @@ TEST_F(CommandServiceTest, PersistentInvalidPositionRetargetsToNearbyRecoveryCel
   EXPECT_TRUE(pathfinder->is_walkable(goal_grid.x, goal_grid.y));
 }
 
+TEST_F(CommandServiceTest, RoutedPathIsPulledTautInsteadOfFollowedCellByCell) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(unit, nullptr);
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  QVector3D const goal(10.0F, 0.0F, 5.0F);
+  Game::Systems::Point const blocker =
+      Game::Systems::NavGrid::world_to_grid(4.0F, 2.0F);
+  pathfinder->set_obstacle(blocker.x, blocker.y, true);
+  pathfinder->update_navigation_grid();
+  ASSERT_FALSE(pathfinder->is_world_segment_walkable(
+      QVector3D(0.0F, 0.0F, 0.0F),
+      goal,
+      Game::Systems::Pathfinding::Passability::Heavy));
+
+  Game::Systems::CommandService::move_unit(world, unit->get_id(), goal, {});
+
+  ASSERT_TRUE(movement->get_has_target());
+  auto const& path = movement->get_path();
+  ASSERT_GE(path.size(), 2U);
+  EXPECT_LE(path.size(), 4U);
+
+  QVector3D previous(0.0F, 0.0F, 0.0F);
+  for (auto const& [x, z] : path) {
+    QVector3D const waypoint(x, 0.0F, z);
+    EXPECT_TRUE(pathfinder->is_world_segment_walkable(
+        previous, waypoint, Game::Systems::Pathfinding::Passability::Heavy));
+    previous = waypoint;
+  }
+  EXPECT_NEAR(path.back().first, goal.x(), 0.6F);
+  EXPECT_NEAR(path.back().second, goal.z(), 0.6F);
+}
+
 TEST_F(CommandServiceTest, LocalRecoveryDoesNotSpliceBlockedGoalBackIntoPath) {
   Game::Systems::NavGrid::initialize(16, 16);
   Engine::Core::World world;

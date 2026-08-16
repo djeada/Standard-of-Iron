@@ -49,6 +49,10 @@ public:
 
   void append_clip_contacts(std::span<const BpatFrameContact> contacts);
 
+  void set_bind_palette(std::span<const QMatrix4x4> bind_palette);
+
+  void set_bone_parents(std::span<const std::uint8_t> parents);
+
   [[nodiscard]] auto write(std::ostream& out) const -> bool;
 
   [[nodiscard]] auto species_id() const noexcept -> std::uint32_t {
@@ -78,6 +82,8 @@ private:
   std::vector<float> m_palette_floats{};
   std::vector<float> m_socket_floats{};
   std::vector<BpatFrameContact> m_contacts{};
+  std::vector<float> m_bind_palette_floats{};
+  std::vector<std::uint8_t> m_bone_parents{};
 };
 
 } // namespace Render::Creature::Bpat

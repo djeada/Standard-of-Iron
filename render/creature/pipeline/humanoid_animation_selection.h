@@ -52,8 +52,11 @@ struct HumanoidAnimationSelection {
     -> HumanoidAnimationSelection;
 
 [[nodiscard]] auto
+resolve_unit_visual_spec(UnitVisualSpec spec,
+                         const Render::GL::HumanoidVariant& variant) -> UnitVisualSpec;
+
+[[nodiscard]] auto
 finalize_visible_humanoid_spec(UnitVisualSpec spec,
-                               const Render::GL::HumanoidVariant& variant,
                                const Render::GL::AnimationInputs& anim,
                                bool has_locomotion) -> UnitVisualSpec;
 

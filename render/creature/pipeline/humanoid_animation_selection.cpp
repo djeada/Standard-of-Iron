@@ -343,15 +343,19 @@ auto action_only_pose(const Render::GL::HumanoidAnimationContext& anim) noexcept
 
 } // namespace
 
-auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
-                                    const Render::GL::HumanoidVariant& variant,
-                                    const Render::GL::AnimationInputs& anim,
-                                    bool has_locomotion) -> UnitVisualSpec {
+auto resolve_unit_visual_spec(
+    UnitVisualSpec spec, const Render::GL::HumanoidVariant& variant) -> UnitVisualSpec {
   if (!spec.skip_default_facial_hair_archetype) {
     spec.archetype_id =
         Render::Humanoid::resolve_facial_hair_archetype(spec.archetype_id, variant);
+    spec.skip_default_facial_hair_archetype = true;
   }
+  return spec;
+}
 
+auto finalize_visible_humanoid_spec(UnitVisualSpec spec,
+                                    const Render::GL::AnimationInputs& anim,
+                                    bool has_locomotion) -> UnitVisualSpec {
   if (Render::GL::guard_pose_amount(anim) > 0.0F &&
       (anim.is_defensive_layout_locked || !has_locomotion) &&
       (anim.is_defensive_layout_locked || !anim.is_attacking)) {

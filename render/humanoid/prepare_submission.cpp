@@ -223,7 +223,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     }
   }
   seed_missing_humanoid_wear(variant, seed);
-  const auto visual_spec = owner.visual_spec();
+  const auto visual_spec = Render::Creature::Pipeline::resolve_unit_visual_spec(
+      owner.visual_spec(), variant);
 
   if (!owner.m_proportion_scale_cached) {
     owner.m_cached_proportion_scale = owner.get_proportion_scaling();
@@ -468,6 +469,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                   Render::Profiling::SoldierCullReason cull_reason,
                                   bool transient_recovery_override,
                                   const QVector3D& root_position,
+                                  float root_yaw_degrees,
                                   float root_up_y,
                                   float root_scale_y,
                                   float root_tilt_degrees,
@@ -493,6 +495,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     sample.lod = static_cast<std::uint8_t>(lod);
     sample.cull_reason = cull_reason;
     sample.root_position = root_position;
+    sample.root_yaw_degrees = root_yaw_degrees;
     sample.root_up_y = root_up_y;
     sample.root_scale_y = root_scale_y;
     sample.root_tilt_degrees = root_tilt_degrees;
@@ -681,6 +684,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                             : Render::Profiling::SoldierCullReason::LensGap,
             false,
             early_world_pos,
+            applied_yaw,
             1.0F,
             1.0F,
             0.0F,
@@ -1102,6 +1106,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
             Render::Profiling::SoldierCullReason::Billboard,
             false,
             soldier_world_pos,
+            applied_yaw,
             root_up_y,
             root_scale_y,
             root_tilt_degrees,
@@ -1128,7 +1133,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
     graph_output.instance_index = static_cast<std::uint16_t>(idx);
     graph_output.spec = RCP::finalize_visible_humanoid_spec(
-        visual_spec, variant, soldier_render_anim, render_has_locomotion);
+        visual_spec, soldier_render_anim, render_has_locomotion);
     graph_output.seed = inst_seed;
     graph_output.world_already_grounded = world_already_grounded;
     bool const selection_steady = humanoid_selection_is_steady(anim_ctx);
@@ -1181,6 +1186,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                            Render::Profiling::SoldierCullReason::None,
                            transient_recovery_override,
                            soldier_world_pos,
+                           applied_yaw,
                            root_up_y,
                            root_scale_y,
                            root_tilt_degrees,

@@ -46,52 +46,6 @@ auto describe_rigged_key(const Render::Creature::CreatureSpec& spec,
 
 } // namespace
 
-void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,
-                                    const QMatrix4x4* bpat_palettes,
-                                    std::uint32_t frame_total,
-                                    std::uint32_t bone_count) {
-  if (entry.skin_atlas == nullptr) {
-    return;
-  }
-  auto& atlas = *entry.skin_atlas;
-  if (atlas.frame_total == frame_total && atlas.bone_count == bone_count &&
-      !atlas.palettes.empty()) {
-    return;
-  }
-  if (frame_total == 0 || bone_count == 0 || bpat_palettes == nullptr) {
-    return;
-  }
-  if (Render::Creature::runtime_bake_forbidden()) {
-    Render::Creature::report_runtime_bake_violation(
-        Render::Creature::RuntimeBakeOperation::SkinAtlasBuild,
-        "atlas missing for rigged mesh entry");
-    return;
-  }
-  if (bone_count > entry.inverse_bind.size()) {
-    bone_count = static_cast<std::uint32_t>(entry.inverse_bind.size());
-  }
-
-  if (atlas.palette_ubo != 0U) {
-    if (auto* fn = rigged_cache_gl_funcs(); fn != nullptr) {
-      GLuint stale = atlas.palette_ubo;
-      fn->glDeleteBuffers(1, &stale);
-    }
-    atlas.palette_ubo = 0U;
-    atlas.frame_stride_bytes = 0;
-  }
-  atlas.palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
-                        QMatrix4x4{});
-  for (std::uint32_t f = 0; f < frame_total; ++f) {
-    const QMatrix4x4* src = bpat_palettes + static_cast<std::size_t>(f) * bone_count;
-    QMatrix4x4* dst = atlas.palettes.data() + static_cast<std::size_t>(f) * bone_count;
-    for (std::uint32_t b = 0; b < bone_count; ++b) {
-      dst[b] = src[b] * entry.inverse_bind[b];
-    }
-  }
-  atlas.frame_total = frame_total;
-  atlas.bone_count = bone_count;
-}
-
 void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry) {
   if (entry.skin_atlas == nullptr) {
     return;
@@ -271,10 +225,6 @@ auto RiggedMeshCache::get_or_bake_prehashed(
         Render::Creature::bake_rigged_mesh(input).release());
   }
 
-  entry.inverse_bind.reserve(rest_palette.size());
-  for (const auto& m : rest_palette) {
-    entry.inverse_bind.push_back(m.inverted());
-  }
   const SkinAtlasKey atlas_key{&spec, skin_species_id};
   auto [atlas_it, atlas_inserted] = m_skin_atlases.try_emplace(atlas_key);
   if (atlas_inserted || atlas_it->second == nullptr) {
@@ -328,51 +278,28 @@ void RiggedMeshCache::upload_pending_skin_ubos() {
   }
 }
 
-namespace {
-auto matrix_from_row_major(std::span<const float> row) -> QMatrix4x4 {
-  if (row.size() < 16) {
-    return QMatrix4x4{};
-  }
-  return QMatrix4x4(row.data());
-}
-} // namespace
-
 void rigged_entry_ensure_skin_atlas_from_blob(
     const RiggedMeshEntry& entry, const Render::Creature::Bpat::BpatBlob& blob) {
   if (!blob.loaded() || entry.skin_atlas == nullptr) {
     return;
   }
   auto& atlas = *entry.skin_atlas;
-  const std::uint32_t frame_total = blob.frame_total();
-  std::uint32_t bone_count = blob.bone_count();
-  if (atlas.frame_total == frame_total && atlas.bone_count == bone_count &&
-      !atlas.palettes.empty()) {
+  auto storage = blob.palette_storage();
+  if (storage == nullptr || storage->empty() || atlas.palette_storage == storage) {
     return;
   }
-  if (frame_total == 0 || bone_count == 0) {
-    return;
-  }
-  if (Render::Creature::runtime_bake_forbidden()) {
-    Render::Creature::report_runtime_bake_violation(
-        Render::Creature::RuntimeBakeOperation::SkinAtlasBuild,
-        "BPAT atlas missing for rigged mesh entry");
-    return;
-  }
-  if (bone_count > entry.inverse_bind.size()) {
-    bone_count = static_cast<std::uint32_t>(entry.inverse_bind.size());
-  }
-  atlas.palettes.assign(static_cast<std::size_t>(frame_total) * bone_count,
-                        QMatrix4x4{});
-  for (std::uint32_t f = 0; f < frame_total; ++f) {
-    QMatrix4x4* dst = atlas.palettes.data() + static_cast<std::size_t>(f) * bone_count;
-    for (std::uint32_t b = 0; b < bone_count; ++b) {
-      auto row = blob.palette_matrix(f, b);
-      const QMatrix4x4 raw = matrix_from_row_major(row);
-      dst[b] = raw * entry.inverse_bind[b];
+  if (atlas.palette_ubo != 0U) {
+    if (auto* fn = rigged_cache_gl_funcs(); fn != nullptr) {
+      GLuint stale = atlas.palette_ubo;
+      fn->glDeleteBuffers(1, &stale);
     }
+    atlas.palette_ubo = 0U;
+    atlas.frame_stride_bytes = 0;
   }
-  atlas.frame_total = frame_total;
-  atlas.bone_count = bone_count;
+  atlas.palette_storage = std::move(storage);
+  atlas.palettes = blob.palette_matrices();
+  atlas.frame_total = blob.frame_total();
+  atlas.bone_count = blob.bone_count();
 }
 
 } // namespace Render::GL
