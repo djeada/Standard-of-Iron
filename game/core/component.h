@@ -1971,6 +1971,7 @@ struct FormationSoldierPresentation {
   float combat_phase_bias{0.0F};
   float combat_speed_scale{1.0F};
   bool damage_carrier{false};
+  float unassigned_seconds{0.0F};
 
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
 };
