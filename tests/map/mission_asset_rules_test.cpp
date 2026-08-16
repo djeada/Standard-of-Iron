@@ -397,3 +397,78 @@ TEST(MissionAssetRulesTest, TrasimeneIsTheTimeBoundOffensiveMission) {
   ASSERT_TRUE(time_limit->duration.has_value());
   EXPECT_FLOAT_EQ(*time_limit->duration, 1200.0F);
 }
+
+TEST(MissionAssetRulesTest, TutorialMissionIsFullyAuthored) {
+  Game::Mission::MissionDefinition mission;
+  QString mission_error;
+  ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+      asset_dir_path(QStringLiteral("missions/tutorial.json")),
+      mission,
+      &mission_error))
+      << mission_error.toStdString();
+
+  EXPECT_TRUE(mission.tutorial) << "the tutorial mission must flag itself so the "
+                                   "engine attaches the guided steps";
+  ASSERT_EQ(mission.ai_setups.size(), 1U);
+  EXPECT_FALSE(mission.ai_setups.front().waves.empty())
+      << "the defend step waits for a raid that never comes";
+  EXPECT_TRUE(std::any_of(mission.victory_conditions.begin(),
+                          mission.victory_conditions.end(),
+                          [](const Game::Mission::Condition& condition) {
+                            return condition.type ==
+                                   QStringLiteral("eliminate_commanders");
+                          }));
+
+  Game::Map::MapDefinition map;
+  QString map_error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      Utils::Resources::resolve_resource_path(mission.map_path), map, &map_error))
+      << map_error.toStdString();
+
+  const QJsonObject raw_map =
+      load_json_object(asset_dir_path(QStringLiteral("maps/map_tutorial.json")));
+  EXPECT_TRUE(raw_map.value(QStringLiteral("skirmish_hidden")).toBool())
+      << "the tutorial stage must not be offered as a skirmish map";
+
+  int player_commanders = 0;
+  int enemy_commanders = 0;
+  int held_enemy_scouts = 0;
+  for (const auto& spawn : map.spawns) {
+    const auto troop = Game::Units::spawn_typeToTroopType(spawn.type);
+    const bool commander = troop.has_value() && Game::Units::is_commander_troop(*troop);
+    if (spawn.player_id == 1 && commander) {
+      ++player_commanders;
+    }
+    if (spawn.player_id == 2 && commander) {
+      ++enemy_commanders;
+    }
+    if (spawn.player_id == 2 && !commander &&
+        spawn.behavior == QStringLiteral("hold") && spawn.z > 50.0F) {
+      ++held_enemy_scouts;
+    }
+  }
+  EXPECT_EQ(player_commanders, 1);
+  EXPECT_EQ(enemy_commanders, 1);
+  EXPECT_GE(held_enemy_scouts, 2) << "the attack step asks for two kills near the camp";
+
+  int trees = 0;
+  int boulders = 0;
+  int ore = 0;
+  for (const auto& prop : map.world_props) {
+    trees += Game::Map::is_tree_world_prop_type(prop.type) ? 1 : 0;
+    boulders += Game::Map::is_boulder_world_prop_type(prop.type) ? 1 : 0;
+    ore += Game::Map::is_iron_ore_world_prop_type(prop.type) ? 1 : 0;
+  }
+  EXPECT_GE(trees, 6);
+  EXPECT_GE(boulders, 3);
+  EXPECT_GE(ore, 3);
+
+  const bool player_barracks =
+      std::any_of(map.structures.begin(),
+                  map.structures.end(),
+                  [](const Game::Map::StructureEntry& structure) {
+                    return structure.player_id == 1 &&
+                           structure.type == Game::Units::SpawnType::Barracks;
+                  });
+  EXPECT_TRUE(player_barracks) << "gathered loads need a yard to be dropped on";
+}
