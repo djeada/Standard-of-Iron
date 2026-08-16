@@ -41,6 +41,7 @@ struct NationTroopVariant {
   std::optional<float> max_stamina;
   std::optional<float> stamina_regen_rate;
   std::optional<float> stamina_depletion_rate;
+  std::optional<std::string> lore_history;
   std::vector<std::string> abilities;
 };
 

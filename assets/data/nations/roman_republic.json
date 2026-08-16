@@ -57,6 +57,9 @@
       "formation": {
         "individuals_per_unit": 24,
         "max_units_per_row": 8
+      },
+      "lore": {
+        "history": "Rome raised few archers of its own and drew them from Crete and the eastern allies instead."
       }
     },
     {
@@ -91,6 +94,9 @@
       "formation": {
         "individuals_per_unit": 18,
         "max_units_per_row": 6
+      },
+      "lore": {
+        "history": "The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there."
       }
     },
     {
@@ -125,6 +131,9 @@
       "formation": {
         "individuals_per_unit": 26,
         "max_units_per_row": 7
+      },
+      "lore": {
+        "history": "The triarii were the oldest and steadiest men in the legion, knelt behind the line and committed only when the day was in doubt."
       }
     },
     {
@@ -158,6 +167,9 @@
       "formation": {
         "individuals_per_unit": 9,
         "max_units_per_row": 3
+      },
+      "lore": {
+        "history": "The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry."
       }
     },
     {
@@ -192,6 +204,9 @@
       "formation": {
         "individuals_per_unit": 1,
         "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "The medicus marched with the legion, and Roman field medicine was the best organised in the ancient world."
       }
     },
     {
@@ -292,6 +307,9 @@
       "formation": {
         "individuals_per_unit": 1,
         "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall."
       }
     },
     {
@@ -326,6 +344,9 @@
       "formation": {
         "individuals_per_unit": 1,
         "max_units_per_row": 1
+      },
+      "lore": {
+        "history": "Rome standardised the bolt thrower until every legion carried its own, mounted on carts and served by trained crews."
       }
     },
     {
@@ -360,6 +381,9 @@
       "formation": {
         "individuals_per_unit": 12,
         "max_units_per_row": 4
+      },
+      "lore": {
+        "history": "The fabri built the roads, the bridges and the fortified camp that went up every single night of a march."
       }
     },
     {

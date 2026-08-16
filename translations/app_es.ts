@@ -1192,6 +1192,14 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Unit activities</source>
         <translation>Actividades de las unidades</translation>
     </message>
+    <message>
+        <source>A collapsible block of detail. The unit panel stacks one per topic.</source>
+        <translation>Un bloque de detalle plegable. El panel de unidad apila uno por tema.</translation>
+    </message>
+    <message>
+        <source>In the field</source>
+        <translation>En el campo</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -3338,6 +3346,26 @@ Sin ver: nunca explorado.</translation>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <source>ATK</source>
+        <translation>ATQ</translation>
+    </message>
+    <message>
+        <source>RNG</source>
+        <translation>ALC</translation>
+    </message>
+    <message>
+        <source>SPD</source>
+        <translation>VEL</translation>
+    </message>
+    <message>
+        <source>Show what this unit is for</source>
+        <translation>Mostrar para qué sirve esta unidad</translation>
+    </message>
+    <message>
+        <source>Unit details</source>
+        <translation>Detalles de la unidad</translation>
     </message>
 </context>
 <context>
@@ -6929,6 +6957,108 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
     </message>
 </context>
 <context>
+    <name>UnitInspectPanel</name>
+    <message>
+        <source>Attack</source>
+        <translation>Ataque</translation>
+    </message>
+    <message>
+        <source>Build</source>
+        <translation>Construir</translation>
+    </message>
+    <message>
+        <source>Close the unit details</source>
+        <translation>Cerrar los detalles de la unidad</translation>
+    </message>
+    <message>
+        <source>Collect</source>
+        <translation>Recolectar</translation>
+    </message>
+    <message>
+        <source>Damage per second</source>
+        <translation>Daño por segundo</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Guardia</translation>
+    </message>
+    <message>
+        <source>Health</source>
+        <translation>Salud</translation>
+    </message>
+    <message>
+        <source>Highlighted orders are the ones this selection can carry out right now.</source>
+        <translation>Las órdenes resaltadas son las que esta selección puede ejecutar ahora mismo.</translation>
+    </message>
+    <message>
+        <source>History</source>
+        <translation>Historia</translation>
+    </message>
+    <message>
+        <source>Hold</source>
+        <translation>Mantener</translation>
+    </message>
+    <message>
+        <source>In the field</source>
+        <translation>En el campo</translation>
+    </message>
+    <message>
+        <source>Medic</source>
+        <translation>Sanador</translation>
+    </message>
+    <message>
+        <source>No details are available for this unit.</source>
+        <translation>No hay detalles disponibles para esta unidad.</translation>
+    </message>
+    <message>
+        <source>Patrol</source>
+        <translation>Patrulla</translation>
+    </message>
+    <message>
+        <source>Population %1  ·  Build time %2s</source>
+        <translation>Población %1  ·  Tiempo de creación %2 s</translation>
+    </message>
+    <message>
+        <source>Range</source>
+        <translation>Alcance</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Reparar</translation>
+    </message>
+    <message>
+        <source>Sight</source>
+        <translation>Visión</translation>
+    </message>
+    <message>
+        <source>Speed</source>
+        <translation>Velocidad</translation>
+    </message>
+    <message>
+        <source>Strengths and weaknesses</source>
+        <translation>Fortalezas y debilidades</translation>
+    </message>
+    <message>
+        <source>Unit details</source>
+        <translation>Detalles de la unidad</translation>
+    </message>
+    <message>
+        <source>What it can do</source>
+        <translation>Lo que puede hacer</translation>
+    </message>
+    <message>
+        <source>What it costs</source>
+        <translation>Lo que cuesta</translation>
+    </message>
+    <message numerus="yes">
+        <source>Fields %n soldier(s) in one squad.</source>
+        <translation>
+            <numerusform>Despliega %n soldado en una escuadra.</numerusform>
+            <numerusform>Despliega %n soldados en una escuadra.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>Units</name>
     <message>
         <source>Archer</source>
@@ -7089,6 +7219,398 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
     <message>
         <source>Triarius</source>
         <translation>Triario</translation>
+    </message>
+    <message>
+        <source>An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night.</source>
+        <translation>Un ejército antiguo marchaba con sus propios carpinteros y canteros, levantando y fortificando un campamento cada noche.</translation>
+    </message>
+    <message>
+        <source>Ancient armies kept surgeons close to the line; the wounded who walked away were the difference between a campaign and a rout.</source>
+        <translation>Los ejércitos antiguos mantenían cirujanos cerca de la línea; los heridos que se marchaban por su pie eran la diferencia entre una campaña y una desbandada.</translation>
+    </message>
+    <message>
+        <source>Anti-cavalry spear line</source>
+        <translation>Línea de lanzas anticaballería</translation>
+    </message>
+    <message>
+        <source>Archers are the answer to it, and massed bows bring it down before it closes.</source>
+        <translation>Los arqueros son la respuesta, y los arcos en masa lo abaten antes de que llegue.</translation>
+    </message>
+    <message>
+        <source>As brittle as any archer, and it withers as soon as the line in front of it fails.</source>
+        <translation>Tan quebradiza como cualquier arquero, y se marchita en cuanto cede la línea que tiene delante.</translation>
+    </message>
+    <message>
+        <source>Awakened</source>
+        <translation>Despertado</translation>
+    </message>
+    <message>
+        <source>Battle caster</source>
+        <translation>Hechicero de batalla</translation>
+    </message>
+    <message>
+        <source>Behind every field army stood the farms and quarries that fed it, and the people who worked them.</source>
+        <translation>Tras cada ejército de campaña estaban las granjas y canteras que lo alimentaban, y la gente que las trabajaba.</translation>
+    </message>
+    <message>
+        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</source>
+        <translation>Pocas batallas antiguas las decidió el arco por sí solo, pero una andanada lanzada antes del choque podía quebrar el ánimo de una formación.</translation>
+    </message>
+    <message>
+        <source>Breaks on a braced spear line, which cuts mounted troops down at more than twice the usual rate.</source>
+        <translation>Se rompe contra una línea de lanzas afianzada, que siega a las tropas montadas a más del doble del ritmo normal.</translation>
+    </message>
+    <message>
+        <source>Cannot fight. Left unguarded it dies to anything that reaches it.</source>
+        <translation>No puede combatir. Sin protección muere ante cualquier cosa que lo alcance.</translation>
+    </message>
+    <message>
+        <source>Carries more health than any squad on the field, and its reach breaks a line that stands to receive it.</source>
+        <translation>Lleva más vida que cualquier escuadra en el campo, y su alcance rompe la línea que aguarda su embestida.</translation>
+    </message>
+    <message>
+        <source>Carthage bought its archers from Libya and the islands, paying in silver what Rome demanded of its citizens.</source>
+        <translation>Cartago compraba sus arqueros en Libia y las islas, pagando en plata lo que Roma exigía a sus ciudadanos.</translation>
+    </message>
+    <message>
+        <source>Carthage sent its own citizens into the line only when the city itself was threatened. The rest of the army was hired.</source>
+        <translation>Cartago enviaba a sus propios ciudadanos a la línea solo cuando la ciudad misma peligraba. El resto del ejército era mercenario.</translation>
+    </message>
+    <message>
+        <source>Carthage took its elephants from the forests south of the Atlas, smaller than the Indian beasts but the terror of Italy.</source>
+        <translation>Cartago tomaba sus elefantes de los bosques al sur del Atlas: menores que las bestias índicas, pero el terror de Italia.</translation>
+    </message>
+    <message>
+        <source>Carthaginian engineers learned artillery from the Greek cities of Sicily, and then improved on it.</source>
+        <translation>Los ingenieros cartagineses aprendieron la artillería de las ciudades griegas de Sicilia y luego la mejoraron.</translation>
+    </message>
+    <message>
+        <source>Caster</source>
+        <translation>Hechicero</translation>
+    </message>
+    <message>
+        <source>Cavalry</source>
+        <translation>Caballería</translation>
+    </message>
+    <message>
+        <source>Cavalry rarely charged an unbroken line. It waited for a flank to open and then finished the day.</source>
+        <translation>La caballería rara vez cargaba contra una línea intacta. Esperaba a que se abriera un flanco y entonces remataba la jornada.</translation>
+    </message>
+    <message>
+        <source>Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel.</source>
+        <translation>Los espadachines en orden cerrado eran el núcleo caro de un ejército mediterráneo, instruidos para sostener una línea, no para batirse en duelo.</translation>
+    </message>
+    <message>
+        <source>Command</source>
+        <translation>Mando</translation>
+    </message>
+    <message>
+        <source>Costs nothing to raise and never breaks, so it buys time no living troop would.</source>
+        <translation>No cuesta nada levantarla y jamás se quiebra, así que gana un tiempo que ninguna tropa viva daría.</translation>
+    </message>
+    <message>
+        <source>Cursed Arrow Volley</source>
+        <translation>Andanada de flechas malditas</translation>
+    </message>
+    <message>
+        <source>Cursed missile line</source>
+        <translation>Línea de tiro maldita</translation>
+    </message>
+    <message>
+        <source>Defenceless at close quarters. Infantry that reaches it kills it in a few seconds.</source>
+        <translation>Indefensa a corta distancia. La infantería que la alcanza la mata en unos segundos.</translation>
+    </message>
+    <message>
+        <source>Denies ground nothing else can reach, at well over twice an archer's range.</source>
+        <translation>Niega terreno que nada más alcanza, a mucho más del doble del alcance de un arquero.</translation>
+    </message>
+    <message>
+        <source>Elite</source>
+        <translation>Élite</translation>
+    </message>
+    <message>
+        <source>Engineer and labourer</source>
+        <translation>Ingeniero y peón</translation>
+    </message>
+    <message>
+        <source>Every arrow that lands leaves a curse on its target, draining the will of the formation it struck.</source>
+        <translation>Cada flecha que acierta deja una maldición en su blanco y drena la voluntad de la formación alcanzada.</translation>
+    </message>
+    <message>
+        <source>Expendable</source>
+        <translation>Prescindible</translation>
+    </message>
+    <message>
+        <source>Expendable line infantry</source>
+        <translation>Infantería de línea prescindible</translation>
+    </message>
+    <message>
+        <source>Faction-defining heavy beast</source>
+        <translation>Bestia pesada que define a la facción</translation>
+    </message>
+    <message>
+        <source>Fast enough to choose its own fight, and it rides down archers left without a screen.</source>
+        <translation>Lo bastante rápida para elegir su combate, y arrolla a los arqueros dejados sin pantalla.</translation>
+    </message>
+    <message>
+        <source>Field surgeon</source>
+        <translation>Cirujano de campaña</translation>
+    </message>
+    <message>
+        <source>Fireball</source>
+        <translation>Bola de fuego</translation>
+    </message>
+    <message>
+        <source>Fragile once contacted. Cavalry overruns it whenever it has no melee screen.</source>
+        <translation>Frágil en cuanto la alcanzan. La caballería la arrolla siempre que carece de pantalla cuerpo a cuerpo.</translation>
+    </message>
+    <message>
+        <source>Gathers and delivers the resources every other unit is paid for with.</source>
+        <translation>Recoge y entrega los recursos con los que se paga a todas las demás unidades.</translation>
+    </message>
+    <message>
+        <source>Has no melee worth the name, and spears punish it the moment it is caught.</source>
+        <translation>No tiene cuerpo a cuerpo digno de ese nombre, y las lanzas lo castigan en cuanto lo atrapan.</translation>
+    </message>
+    <message>
+        <source>Heavy infantry</source>
+        <translation>Infantería pesada</translation>
+    </message>
+    <message>
+        <source>Heavy line infantry</source>
+        <translation>Infantería de línea pesada</translation>
+    </message>
+    <message>
+        <source>Horse archers came from the steppe and the desert margins, and Mediterranean armies hired them rather than raised them.</source>
+        <translation>Los arqueros a caballo venían de la estepa y los márgenes del desierto; los ejércitos mediterráneos los contrataban en vez de reclutarlos.</translation>
+    </message>
+    <message>
+        <source>Hurls fire that bursts across a formation and clings to the ground where it lands.</source>
+        <translation>Arroja fuego que estalla sobre una formación y se adhiere al suelo donde cae.</translation>
+    </message>
+    <message>
+        <source>Hurls fire that bursts across a formation and leaves the ground burning where it lands.</source>
+        <translation>Arroja fuego que estalla sobre una formación y deja el suelo ardiendo donde cae.</translation>
+    </message>
+    <message>
+        <source>Its arrows carry a curse that drains the will of everything they strike.</source>
+        <translation>Sus flechas llevan una maldición que drena la voluntad de todo lo que alcanzan.</translation>
+    </message>
+    <message>
+        <source>Its quiver was buried with it, and the curse worked into the shafts outlasted the hand that drew the bow.</source>
+        <translation>Su carcaj fue enterrado con él, y la maldición grabada en las astas sobrevivió a la mano que tensaba el arco.</translation>
+    </message>
+    <message>
+        <source>Lancer cavalry</source>
+        <translation>Caballería lancera</translation>
+    </message>
+    <message>
+        <source>Line infantry</source>
+        <translation>Infantería de línea</translation>
+    </message>
+    <message>
+        <source>Loses the straight infantry fight to swords, and caught in the open it is only a slower line.</source>
+        <translation>Pierde el combate directo de infantería ante las espadas, y sorprendida a campo abierto es solo una línea más lenta.</translation>
+    </message>
+    <message>
+        <source>Massed missile line</source>
+        <translation>Línea de tiro masivo</translation>
+    </message>
+    <message>
+        <source>Mends nearby wounded without being told to, so a line that holds keeps its strength.</source>
+        <translation>Cura a los heridos cercanos por su cuenta, de modo que una línea que aguanta conserva su fuerza.</translation>
+    </message>
+    <message>
+        <source>Mounted</source>
+        <translation>Montado</translation>
+    </message>
+    <message>
+        <source>Mounted skirmisher</source>
+        <translation>Hostigador montado</translation>
+    </message>
+    <message>
+        <source>Not a soldier. It cannot hold ground and should never be the last thing guarding a camp.</source>
+        <translation>No es un soldado. No puede mantener terreno y jamás debería ser lo último que guarda un campamento.</translation>
+    </message>
+    <message>
+        <source>One slow body, helpless in melee, and it needs the awakened dead between it and the enemy.</source>
+        <translation>Un cuerpo lento, indefenso en el cuerpo a cuerpo: necesita a los muertos despertados entre él y el enemigo.</translation>
+    </message>
+    <message>
+        <source>Out-trades everything at range, and massed bows are the answer to a war elephant.</source>
+        <translation>Supera a todo a distancia, y los arcos en masa son la respuesta al elefante de guerra.</translation>
+    </message>
+    <message>
+        <source>Outranges troops on foot and can withdraw from any fight it cannot win.</source>
+        <translation>Supera en alcance a las tropas a pie y puede retirarse de cualquier combate que no pueda ganar.</translation>
+    </message>
+    <message>
+        <source>Overrun in seconds by any infantry that reaches it, and far too slow to withdraw.</source>
+        <translation>Arrollada en segundos por cualquier infantería que la alcance, y demasiado lenta para retirarse.</translation>
+    </message>
+    <message>
+        <source>Phoenician craftsmen raised the harbours and walls that made Carthage the richest city in the western sea.</source>
+        <translation>Los artesanos fenicios levantaron los puertos y murallas que hicieron de Cartago la ciudad más rica del mar occidental.</translation>
+    </message>
+    <message>
+        <source>Raised from the burial ranks of an army that was interred still holding its shields.</source>
+        <translation>Alzado de las filas funerarias de un ejército sepultado aún aferrado a sus escudos.</translation>
+    </message>
+    <message>
+        <source>Raises every building an army needs and repairs what the enemy breaks.</source>
+        <translation>Levanta todo edificio que un ejército necesita y repara lo que el enemigo rompe.</translation>
+    </message>
+    <message>
+        <source>Ranged</source>
+        <translation>A distancia</translation>
+    </message>
+    <message>
+        <source>Repays its cost against cavalry, and braced on high ground it holds against far heavier attacks.</source>
+        <translation>Devuelve su coste frente a la caballería y, afianzada en altura, resiste ataques mucho más pesados.</translation>
+    </message>
+    <message>
+        <source>Rome raised few archers of its own and drew them from Crete and the eastern allies instead.</source>
+        <translation>Roma reclutaba pocos arqueros propios y los tomaba de Creta y de los aliados orientales.</translation>
+    </message>
+    <message>
+        <source>Rome standardised the bolt thrower until every legion carried its own, mounted on carts and served by trained crews.</source>
+        <translation>Roma estandarizó el lanzavirotes hasta que cada legión llevó el suyo, montado en carros y servido por dotaciones adiestradas.</translation>
+    </message>
+    <message>
+        <source>Settlement population</source>
+        <translation>Población del asentamiento</translation>
+    </message>
+    <message>
+        <source>Shielded</source>
+        <translation>Con escudo</translation>
+    </message>
+    <message>
+        <source>Shock cavalry</source>
+        <translation>Caballería de choque</translation>
+    </message>
+    <message>
+        <source>Siege</source>
+        <translation>Asedio</translation>
+    </message>
+    <message>
+        <source>Siege artillery</source>
+        <translation>Artillería de asedio</translation>
+    </message>
+    <message>
+        <source>Siege bolt thrower</source>
+        <translation>Lanzavirotes de asedio</translation>
+    </message>
+    <message>
+        <source>Skirmisher</source>
+        <translation>Hostigador</translation>
+    </message>
+    <message>
+        <source>Slower and weaker than the living line it imitates, and nothing in the field can mend it.</source>
+        <translation>Más lenta y débil que la línea viva que imita, y nada en el campo puede repararla.</translation>
+    </message>
+    <message>
+        <source>Spear infantry</source>
+        <translation>Infantería de lanza</translation>
+    </message>
+    <message>
+        <source>Still cavalry. A braced spear line stops it, and it cannot trade with archers at range.</source>
+        <translation>Sigue siendo caballería. Una línea de lanzas afianzada la detiene, y no puede batirse con arqueros a distancia.</translation>
+    </message>
+    <message>
+        <source>Support</source>
+        <translation>Apoyo</translation>
+    </message>
+    <message>
+        <source>The Liby-Phoenician spear was the steady centre that a mercenary army could be built around.</source>
+        <translation>La lanza libiofenicia era el centro firme en torno al cual podía construirse un ejército mercenario.</translation>
+    </message>
+    <message>
+        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</source>
+        <translation>Los númidas cabalgaban sin bridas y eran la mejor caballería ligera del Mediterráneo. El peor día de Roma, en Cannas, fue obra suya.</translation>
+    </message>
+    <message>
+        <source>The Sacred Band kept physicians of its own, an honour reserved for the citizen elite.</source>
+        <translation>El Batallón Sagrado tenía médicos propios, un honor reservado a la élite ciudadana.</translation>
+    </message>
+    <message>
+        <source>The bolt thrower was the accurate half of a siege train, used against men and gates alike.</source>
+        <translation>El lanzavirotes era la mitad precisa de un tren de asedio, usado tanto contra hombres como contra portones.</translation>
+    </message>
+    <message>
+        <source>The bolt throwers of Carthage were built in the same yards as its fleet, by the same shipwrights.</source>
+        <translation>Los lanzavirotes de Cartago se construían en los mismos astilleros que su flota, por los mismos carpinteros de ribera.</translation>
+    </message>
+    <message>
+        <source>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</source>
+        <translation>Los équites procedían de los ciudadanos más ricos, y la caballería de Roma nunca igualó a su infantería.</translation>
+    </message>
+    <message>
+        <source>The fabri built the roads, the bridges and the fortified camp that went up every single night of a march.</source>
+        <translation>Los fabri construían los caminos, los puentes y el campamento fortificado que se levantaba cada noche de marcha.</translation>
+    </message>
+    <message>
+        <source>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
+        <translation>La espada corta y el pesado pilo del legionario servían a una sola cosa: salvar los últimos veinte pasos y vencer allí.</translation>
+    </message>
+    <message>
+        <source>The longest reach in any army, and quick enough to loose again before its target closes.</source>
+        <translation>El mayor alcance de todo ejército, y bastante rápido para disparar de nuevo antes de que el blanco llegue.</translation>
+    </message>
+    <message>
+        <source>The longest reach of any mounted troop, striking before the enemy line can answer.</source>
+        <translation>El mayor alcance de toda tropa montada: golpea antes de que la línea enemiga pueda responder.</translation>
+    </message>
+    <message>
+        <source>The medicus marched with the legion, and Roman field medicine was the best organised in the ancient world.</source>
+        <translation>El medicus marchaba con la legión, y la medicina de campaña romana era la mejor organizada del mundo antiguo.</translation>
+    </message>
+    <message>
+        <source>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
+        <translation>La lanza montada cambió la flexibilidad de la espada por alcance, golpeando antes de que el enemigo pudiera esgrimir un arma.</translation>
+    </message>
+    <message>
+        <source>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</source>
+        <translation>El onagro coceaba como el asno salvaje que le dio nombre, y era la respuesta de Roma a un muro que no caía.</translation>
+    </message>
+    <message>
+        <source>The priests who sealed the tombs learned to open them, and now walk ahead of what they woke.</source>
+        <translation>Los sacerdotes que sellaron las tumbas aprendieron a abrirlas, y ahora caminan delante de lo que despertaron.</translation>
+    </message>
+    <message>
+        <source>The slowest troops in the line, and they take losses crossing open ground under archery.</source>
+        <translation>Las tropas más lentas de la línea, y sufren bajas al cruzar campo abierto bajo el tiro de los arcos.</translation>
+    </message>
+    <message>
+        <source>The spear was the cheapest way to make a horse refuse a charge, and every ancient army kept a wall of them.</source>
+        <translation>La lanza era el modo más barato de hacer que un caballo rehusara la carga, y todo ejército antiguo mantenía un muro de ellas.</translation>
+    </message>
+    <message>
+        <source>The triarii were the oldest and steadiest men in the legion, knelt behind the line and committed only when the day was in doubt.</source>
+        <translation>Los triarios eran los hombres más viejos y firmes de la legión: arrodillados tras la línea, solo entraban en combate cuando la jornada peligraba.</translation>
+    </message>
+    <message>
+        <source>The weakest body on the field. Anything that finds it kills it.</source>
+        <translation>El cuerpo más débil del campo. Cualquier cosa que lo encuentre lo mata.</translation>
+    </message>
+    <message>
+        <source>Torsion artillery was built on the spot from local timber and abandoned when the army moved on.</source>
+        <translation>La artillería de torsión se construía en el sitio con madera local y se abandonaba cuando el ejército seguía su marcha.</translation>
+    </message>
+    <message>
+        <source>War beast</source>
+        <translation>Bestia de guerra</translation>
+    </message>
+    <message>
+        <source>War elephants terrified armies that had never met them, and were nearly useless against those that had.</source>
+        <translation>Los elefantes de guerra aterraban a los ejércitos que nunca los habían visto, y resultaban casi inútiles ante los que sí.</translation>
+    </message>
+    <message>
+        <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>
+        <translation>Gana el combate directo de infantería contra las lanzas y arrolla en segundos el asedio sin escolta.</translation>
+    </message>
+    <message>
+        <source>Worker</source>
+        <translation>Trabajador</translation>
     </message>
 </context>
 <context>

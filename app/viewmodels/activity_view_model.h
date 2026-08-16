@@ -35,6 +35,8 @@ public:
 
   Q_INVOKABLE [[nodiscard]] QVariantMap unit(qulonglong unit_id) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selection_summary() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap unit_profile(const QString& unit_type,
+                                                     const QString& nation_id) const;
 
   Q_INVOKABLE void begin_repair_order();
   Q_INVOKABLE void confirm_repair_at(qreal sx, qreal sy);

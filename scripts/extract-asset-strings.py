@@ -69,7 +69,15 @@ ASSET_CONTEXTS: list[dict] = [
     {
         "context": "Units",
         "glob": ["data/nations/*.json", "data/troops/*.json"],
-        "paths": ["troops[]/display_name"],
+        "paths": [
+            "troops[]/display_name",
+            "troops[]/lore/role",
+            "troops[]/lore/strengths",
+            "troops[]/lore/weaknesses",
+            "troops[]/lore/history",
+            "abilities[]/display_name",
+            "abilities[]/effect",
+        ],
     },
     {
         "context": "Formation",

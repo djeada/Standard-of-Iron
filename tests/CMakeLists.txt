@@ -443,6 +443,7 @@ add_executable(
     core/campaign_wave_assault_test.cpp
     core/production_manager_test.cpp
     core/economy_overview_test.cpp
+    core/unit_profile_test.cpp
     core/selection_query_service_test.cpp
     core/combat_feedback_test.cpp
     core/order_feedback_test.cpp

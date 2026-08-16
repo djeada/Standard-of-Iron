@@ -102,3 +102,15 @@ survive being reached.
 
 Adding a new unit means adding a fixture that places it against equal-cost line
 infantry, so its tier is asserted rather than assumed.
+
+## The lore sits beside the numbers
+
+Each troop in `assets/data/troops/base.json` carries a `lore` block whose `strengths`
+and `weaknesses` are written from the counter table above, and the in-game unit panel
+shows them verbatim (see "Unit details" in `UI_DESIGN_SYSTEM.md`). That makes the prose
+part of the balance surface: retune a counter and the sentence that taught it is now
+wrong. `TroopCatalogLoader.ShippedTroopsCarryTheLoreTheInspectPanelDraws` checks the
+text exists, not that it is still true — that part is on the person changing the number.
+
+A new unit therefore needs a `lore` block as well as a fixture, and the English text
+needs translations in all five catalogues before `translations-check` will pass.

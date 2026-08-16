@@ -20,3 +20,5 @@ RpgDamageNumbers 1.0 RpgDamageNumbers.qml
 CombatDamageNumbers 1.0 CombatDamageNumbers.qml
 EconomyCoach 1.0 EconomyCoach.qml
 EconomyHelpPanel 1.0 EconomyHelpPanel.qml
+UnitInspectPanel 1.0 UnitInspectPanel.qml
+RecruitCard 1.0 RecruitCard.qml
