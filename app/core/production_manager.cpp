@@ -1861,11 +1861,13 @@ auto ProductionManager::get_selected_marketplace_state(int local_owner_id) const
 
     auto const& rates = Game::Systems::MarketplaceSystem::instance().get_rates();
     QVariantMap buy_prices;
+    buy_prices["food"] = rates.buy_price_food;
     buy_prices["wood"] = rates.buy_price_wood;
     buy_prices["stone"] = rates.buy_price_stone;
     buy_prices["iron"] = rates.buy_price_iron;
 
     QVariantMap sell_prices;
+    sell_prices["food"] = rates.sell_price_food;
     sell_prices["wood"] = rates.sell_price_wood;
     sell_prices["stone"] = rates.sell_price_stone;
     sell_prices["iron"] = rates.sell_price_iron;

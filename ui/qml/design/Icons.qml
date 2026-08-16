@@ -81,6 +81,7 @@ QtObject {
 
     readonly property var resourceArt: ({
             "gold": "gold.png",
+            "food": "food.png",
             "wood": "wood.png",
             "stone": "stone.png",
             "iron": "iron.png"
@@ -156,6 +157,14 @@ QtObject {
             "commander": "\u265B"
         })
 
+    readonly property var resourceGlyphs: ({
+            "gold": "\u25CF",
+            "food": "\u2740",
+            "wood": "\u2551",
+            "stone": "\u25B0",
+            "iron": "\u25C6"
+        })
+
     readonly property string defaultUnitGlyph: "\u25CF"
 
     function artPath(filename) {
@@ -172,6 +181,10 @@ QtObject {
 
     function resource(kind) {
         return root.artPath(root.resourceArt[kind] || "");
+    }
+
+    function resourceGlyph(kind) {
+        return root.resourceGlyphs[kind] || root.objective;
     }
 
     function status(kind) {

@@ -17,6 +17,7 @@ Item {
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg"
     property var commander_status: ({})
+    readonly property var economy: typeof game !== 'undefined' && game && game.economy ? game.economy : null
     property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
 
     signal pause_toggled
@@ -103,6 +104,7 @@ Item {
             onSpeed_changed: function (s) {
                 hud.speed_changed(s);
             }
+            onEconomy_help_requested: economyHelpPanel.visible = true
             onHelp_requested: hud.help_requested()
         }
     }
@@ -160,6 +162,36 @@ Item {
         anchors.leftMargin: Design.Metrics.hudZoneMargin
 
         visible: has_waves && !hud.commander_rpg_mode && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
+    }
+
+    EconomyCoach {
+        id: economyCoach
+
+        anchors.top: topPanel.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0)
+
+        economy: hud.economy
+        visible: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
+        onHelp_requested: economyHelpPanel.visible = true
+    }
+
+    EconomyHelpPanel {
+        id: economyHelpPanel
+
+        anchors.fill: parent
+        economy: hud.economy
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                economyHelpPanel.forceActiveFocus();
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
+            }
+        }
+        onClose_requested: economyHelpPanel.visible = false
     }
 
     FormationPanel {

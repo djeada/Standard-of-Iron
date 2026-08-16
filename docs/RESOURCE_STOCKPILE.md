@@ -117,6 +117,9 @@ back to the next node of the same kind near the one it last worked. A forest is 
 click, not one click per tree. The rules that end a round — and why the faction AI is
 deliberately left out of it — are in
 [SETTLEMENT_LIFE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/SETTLEMENT_LIFE.md).
+How the haul is explained to the player — counters, tooltips and the first-skirmish
+prompts — is in
+[ECONOMY_GUIDANCE.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/ECONOMY_GUIDANCE.md).
 
 ### What this changes elsewhere
 

@@ -5,13 +5,11 @@
 
 #include "../controllers/command_controller.h"
 #include "../models/cursor_manager.h"
-#include "../models/hover_tracker.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/arrow_system.h"
-#include "game/systems/civilian_delivery_system.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/projectile_system.h"
@@ -388,53 +386,6 @@ auto prune_selection_action_context(const SelectionPruneContext& context)
 
   effects.cursor_resolution = CursorResolution::ResetToNormal;
   return effects;
-}
-
-auto civilian_delivery_available(const CivilianDeliveryContext& context) -> bool {
-  if (context.world == nullptr || context.hover_tracker == nullptr) {
-    return false;
-  }
-
-  const auto hovered_id = context.hover_tracker->get_last_hovered_entity();
-  auto* hovered = hovered_id != 0 ? context.world->get_entity(hovered_id) : nullptr;
-  auto* hovered_unit = (hovered != nullptr)
-                           ? hovered->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
-  const bool hovered_friendly_barracks =
-      (hovered_unit != nullptr) && hovered_unit->owner_id == context.local_owner_id &&
-      hovered_unit->spawn_type == Game::Units::SpawnType::Barracks;
-  auto* hovered_production =
-      hovered != nullptr ? hovered->get_component<Engine::Core::ProductionComponent>()
-                         : nullptr;
-  const bool barracks_has_room =
-      (hovered_production != nullptr) &&
-      (hovered_production->manpower_available +
-           Game::Systems::k_civilian_delivery_population_grant <=
-       hovered_production->max_units);
-
-  if (!hovered_friendly_barracks || !barracks_has_room) {
-    return false;
-  }
-
-  auto* selection_system = context.world->get_system<Game::Systems::SelectionSystem>();
-  if (selection_system == nullptr) {
-    return false;
-  }
-
-  for (const auto id : selection_system->get_selected_units()) {
-    auto* selected_entity = context.world->get_entity(id);
-    auto* selected_unit =
-        (selected_entity != nullptr)
-            ? selected_entity->get_component<Engine::Core::UnitComponent>()
-            : nullptr;
-    if ((selected_unit != nullptr) &&
-        (selected_unit->owner_id == context.local_owner_id) &&
-        (selected_unit->spawn_type == Game::Units::SpawnType::Civilian)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 } // namespace App::Core::FrameUiCoordinator

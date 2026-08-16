@@ -92,6 +92,34 @@ TEST(DocumentationAccuracy, ArchitectureDocumentDescribesTheEnforcedBoundaries) 
       << "docs/ARCHITECTURE.md must keep stating what is still open";
 }
 
+TEST(DocumentationAccuracy, TheHudReadsTheResourceListFromTheEngine) {
+  const auto root = find_repo_root();
+  const auto hud = read_text(root / "ui" / "qml" / "HUDTop.qml");
+  ASSERT_FALSE(hud.empty()) << "ui/qml/HUDTop.qml is missing";
+
+  EXPECT_FALSE(contains(hud, "[\"gold\", \"wood\", \"stone\", \"iron\"]"))
+      << "HUDTop.qml lists resources literally again; a resource added to "
+         "k_all_resource_types would silently vanish from the HUD. Drive the row "
+         "from game.economy.resources instead -- see docs/ECONOMY_GUIDANCE.md";
+  EXPECT_TRUE(contains(hud, "economy.resources"))
+      << "HUDTop.qml no longer reads the engine's resource list";
+}
+
+TEST(DocumentationAccuracy, TheEconomyGuidanceDocumentDescribesItsThreeSurfaces) {
+  const auto root = find_repo_root();
+  const auto doc = read_text(root / "docs" / "ECONOMY_GUIDANCE.md");
+  ASSERT_FALSE(doc.empty()) << "docs/ECONOMY_GUIDANCE.md is missing";
+
+  for (const char* claim : {"EconomyHelpPanel.qml",
+                            "EconomyCoach.qml",
+                            "EconomyGuide.qml",
+                            "economy_overview.cpp",
+                            "harvest_yields.h"}) {
+    EXPECT_TRUE(contains(doc, claim))
+        << "docs/ECONOMY_GUIDANCE.md no longer describes " << claim;
+  }
+}
+
 TEST(DocumentationAccuracy, ReadmePointsAtTheArchitectureDocument) {
   const auto root = find_repo_root();
   const auto readme = read_text(root / "README.md");

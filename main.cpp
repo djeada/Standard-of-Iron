@@ -968,6 +968,12 @@ auto main(int argc, char* argv[]) -> int {
                            0,
                            "StyleGuide");
 
+  qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/EconomyGuide.qml"),
+                           "StandardOfIron",
+                           1,
+                           0,
+                           "EconomyGuide");
+
   const QUrl root_qml =
       component_gallery_requested
           ? QUrl(QStringLiteral("qrc:/StandardOfIron/Design/GalleryWindow.qml"))
