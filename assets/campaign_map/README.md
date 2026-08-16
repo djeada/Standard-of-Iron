@@ -104,11 +104,13 @@ and `campaign_state.json` to the ids `provinces.py` actually emits. It was added
 after all three had drifted apart -- they listed a `sicily_carthaginian` that the
 pipeline has never generated.
 
-`provinces.json` is a pipeline output and is not committed, so on a plain checkout
--- CI included -- the two checks that read it are skipped and only the
-`valid_provinces.json`/`campaign_state.json` comparison runs. Run
-`python3 tools/map_pipeline/provinces.py` to get the full check locally; if that
-run is stale the whitelist check is what tells you.
+`provinces.json` is a pipeline output but is committed, so those checks run on a
+plain checkout. The same test also holds every province to a single unbroken
+stretch of land: Etruria once carried a fifth of its area as an exclave down in
+Apulia, and Illyria had taken a bite out of the Gargano, because the theatre masks
+overlapped across the Adriatic. Regenerate with `python3
+tools/map_pipeline/provinces.py` after editing the province definitions, and
+commit the result.
 
 ### Mission to Province Mapping
 
