@@ -20,9 +20,6 @@ inline constexpr char k_music_volume_key[] = "audio/music_volume";
 inline constexpr char k_voice_volume_key[] = "audio/voice_volume";
 inline constexpr char k_ambience_volume_key[] = "audio/ambience_volume";
 
-// Volumes multiply (master * category * cue), so a fresh install opens well
-// below full scale rather than at the top of the mixer. Music sits under the
-// effects bed and ambience loops continuously, so both are pulled down further.
 inline constexpr float k_first_run_master_volume = 0.6F;
 inline constexpr float k_first_run_sound_volume = 1.0F;
 inline constexpr float k_first_run_music_volume = 0.5F;
@@ -50,7 +47,6 @@ inline auto open() -> QSettings {
 
 namespace Detail {
 
-// Returns nothing when the channel has no usable stored preference.
 inline auto read_volume(QSettings& settings,
                         const char* key,
                         const char* label) -> std::optional<float> {
@@ -83,9 +79,6 @@ inline auto load_volume(const char* key, const char* label) -> float {
       .value_or(AudioConstants::DEFAULT_VOLUME);
 }
 
-// A player who has never touched the mixer gets the conservative first-run
-// values; anyone with a stored preference keeps every channel they saved, and
-// the pre-existing full-scale fallback for the channels they never touched.
 inline auto load_volumes() -> Volumes {
   auto settings = open();
 
@@ -101,9 +94,6 @@ inline auto load_volumes() -> Volumes {
                                     ambience.has_value();
   if (!has_saved_preference) {
     const Volumes defaults = first_run_volumes();
-    // Persist immediately: otherwise the next time the player nudges a single
-    // slider the remaining channels would stop counting as a first run and
-    // snap back up to full scale.
     settings.setValue(QString::fromLatin1(k_master_volume_key), defaults.master);
     settings.setValue(QString::fromLatin1(k_sound_volume_key), defaults.sound);
     settings.setValue(QString::fromLatin1(k_music_volume_key), defaults.music);
