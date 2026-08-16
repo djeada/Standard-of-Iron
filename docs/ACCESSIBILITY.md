@@ -53,11 +53,19 @@ Confirming the reassignment unbinds the previous holder rather than leaving two
 commands fighting over one key. Any conflict that still exists is flagged
 against the affected row.
 
+Every command holds up to **two** chords, a primary and an alternate, and both
+are live at once: that is how panning answers to the arrows and to `WASD`
+without either being a second-class binding. Each is rebound from its own button
+on the row, conflict checking covers both slots — including a command trying to
+hold one chord in both of its own — and **Default** restores the pair together.
+
 One overlap is deliberate. `rts.commander_rally` is a **contextual** command: it
-shares `R` with `rts.camera_orbit_left`, claims the key only while a rally can
-actually be placed, and otherwise lets the camera keep it. Contextual commands
-are excluded from conflict reporting because the layering is the intended
-behaviour, not a collision.
+claims `R` only while a rally can actually be placed, and otherwise lets
+whatever else is bound to that key have it. Contextual commands are excluded
+from conflict reporting because the layering is the intended behaviour, not a
+collision. Nothing ships on `R` beside it any more — the camera pitch keys that
+used to sit there moved to `Ctrl+Up` / `Ctrl+Down` — but a player is free to
+rebind something onto it, and the layering still holds.
 
 ### Resolution rules
 
@@ -78,7 +86,8 @@ the UI:
 
 - **System** — open menu, switch between army and commander, quick save, quick
   load, pause.
-- **Camera** — pan (4), rotate (2), orbit (2), toggle first/third person.
+- **Camera** — pan (4), rotate (2), tilt (2), zoom (2), reset, toggle
+  first/third person.
 - **Selection** — select unit or drag a box, select all troops.
 - **Orders** — move or attack-move to cursor, stop, attack, move, patrol, guard,
   hold position, place commander rally flag.

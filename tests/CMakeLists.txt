@@ -450,6 +450,7 @@ add_executable(
     core/rts_action_model_test.cpp
     core/runtime_frame_orchestrator_test.cpp
     core/game_speed_test.cpp
+    core/camera_framing_test.cpp
     controllers/command_controller_test.cpp
     ui/preferences_test.cpp
     ui/input_bindings_test.cpp

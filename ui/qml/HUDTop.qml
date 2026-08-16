@@ -227,7 +227,7 @@ Item {
 
                 Design.IronIconButton {
                     iconText: Design.Icons.reset
-                    tooltip: qsTr("Reset the camera")
+                    tooltip: qsTr("Return the camera to your camp (%1)").arg(InputBindings.display_shortcut_for("rts.camera_reset"))
                     onClicked: {
                         if (topRoot.game_ready() && game.camera.reset)
                             game.camera.reset();

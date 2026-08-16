@@ -8,8 +8,10 @@ Item {
     id: root
 
     property string capturing_action: ""
+    property int capturing_slot: InputBindings.Primary
 
     property string pending_action: ""
+    property int pending_slot: InputBindings.Primary
     property string pending_shortcut: ""
     property var pending_conflicts: []
 
@@ -32,11 +34,16 @@ Item {
         return names.join(", ");
     }
 
-    function begin_capture(actionId) {
+    function begin_capture(actionId, slot) {
         root.pending_action = "";
         root.pending_conflicts = [];
         root.capturing_action = actionId;
+        root.capturing_slot = slot;
         captureArea.forceActiveFocus();
+    }
+
+    function is_capturing(actionId, slot) {
+        return root.capturing_action === actionId && root.capturing_slot === slot;
     }
 
     function cancel_capture() {
@@ -45,25 +52,26 @@ Item {
         root.pending_conflicts = [];
     }
 
-    function try_assign(actionId, shortcut) {
+    function try_assign(actionId, slot, shortcut) {
         if (!shortcut) {
             root.cancel_capture();
             return;
         }
-        var conflicts = InputBindings.conflicts_for(actionId, shortcut);
+        var conflicts = InputBindings.conflicts_for(actionId, shortcut, slot);
         if (conflicts.length === 0) {
-            InputBindings.assign(actionId, shortcut);
+            InputBindings.assign(actionId, shortcut, slot);
             root.cancel_capture();
             return;
         }
         root.capturing_action = "";
         root.pending_action = actionId;
+        root.pending_slot = slot;
         root.pending_shortcut = shortcut;
         root.pending_conflicts = conflicts;
     }
 
     function confirm_pending() {
-        InputBindings.assign_overriding(root.pending_action, root.pending_shortcut);
+        InputBindings.assign_overriding(root.pending_action, root.pending_shortcut, root.pending_slot);
         root.cancel_capture();
     }
 
@@ -78,13 +86,13 @@ Item {
             return;
         }
         if (event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete) {
-            InputBindings.clear_binding(root.capturing_action);
+            InputBindings.clear_binding(root.capturing_action, root.capturing_slot);
             root.cancel_capture();
             return;
         }
         if (InputBindings.is_modifier_key(event.key))
             return;
-        root.try_assign(root.capturing_action, InputBindings.encode_key(event.key, event.modifiers));
+        root.try_assign(root.capturing_action, root.capturing_slot, InputBindings.encode_key(event.key, event.modifiers));
     }
 
     function handle_capture_key_release(event) {
@@ -93,7 +101,7 @@ Item {
         if (!InputBindings.is_modifier_key(event.key))
             return;
         event.accepted = true;
-        root.try_assign(root.capturing_action, InputBindings.encode_key(event.key, Qt.NoModifier));
+        root.try_assign(root.capturing_action, root.capturing_slot, InputBindings.encode_key(event.key, Qt.NoModifier));
     }
 
     Item {
@@ -123,7 +131,7 @@ Item {
 
             Label {
                 Layout.fillWidth: true
-                text: root.capturing_action !== "" ? qsTr("Press a key or click a mouse button. Backspace clears it, Esc cancels.") : qsTr("Select a command to rebind it.")
+                text: root.capturing_action !== "" ? qsTr("Press a key or click a mouse button. Backspace clears it, Esc cancels.") : qsTr("Select a command to rebind it. Each one takes two keys, so the camera can answer to the arrows and to WASD at once.")
                 color: root.capturing_action !== "" ? Theme.accent : Theme.textSub
                 font.pixelSize: Design.Typography.body
                 wrapMode: Text.WordWrap
@@ -201,7 +209,9 @@ Item {
                 required property int index
 
                 readonly property bool starts_category: index === 0 || root.actions[index - 1].category !== modelData.category
-                readonly property bool is_capturing: root.capturing_action === modelData.id
+                readonly property bool is_capturing: root.is_capturing(modelData.id, InputBindings.Primary)
+                readonly property bool is_capturing_alternate: root.is_capturing(modelData.id, InputBindings.Alternate)
+                readonly property var all_conflicts: modelData.conflicts.concat(modelData.alternateConflicts)
 
                 Layout.fillWidth: true
                 spacing: Theme.spacingTiny
@@ -222,6 +232,7 @@ Item {
 
                     ColumnLayout {
                         Layout.fillWidth: true
+                        Layout.minimumWidth: Design.Metrics.space32 * 6
                         spacing: 0
 
                         Label {
@@ -234,27 +245,48 @@ Item {
 
                         Label {
                             Layout.fillWidth: true
-                            visible: modelData.description !== "" || modelData.conflicts.length > 0
-                            text: modelData.conflicts.length > 0 ? qsTr("Conflicts with %1").arg(root.conflict_summary(modelData.conflicts)) : modelData.description
-                            color: modelData.conflicts.length > 0 ? Theme.warning : Theme.textSub
+                            visible: modelData.description !== "" || bindingRow.all_conflicts.length > 0
+                            text: bindingRow.all_conflicts.length > 0 ? qsTr("Conflicts with %1").arg(root.conflict_summary(bindingRow.all_conflicts)) : modelData.description
+                            color: bindingRow.all_conflicts.length > 0 ? Theme.warning : Theme.textSub
                             font.pixelSize: Design.Typography.body
-                            opacity: modelData.conflicts.length > 0 ? 1.0 : 0.7
+                            opacity: bindingRow.all_conflicts.length > 0 ? 1.0 : 0.7
                             wrapMode: Text.WordWrap
                         }
                     }
 
                     StyledButton {
                         Layout.minimumWidth: Design.Metrics.space32 * 4
+                        Layout.maximumWidth: Design.Metrics.space32 * 5
                         text: bindingRow.is_capturing ? qsTr("Press a key…") : (modelData.unbound ? qsTr("Unbound") : modelData.displayShortcut)
                         button_style: bindingRow.is_capturing ? "primary" : "secondary"
-                        onClicked: bindingRow.is_capturing ? root.cancel_capture() : root.begin_capture(bindingRow.modelData.id)
+                        onClicked: bindingRow.is_capturing ? root.cancel_capture() : root.begin_capture(bindingRow.modelData.id, InputBindings.Primary)
 
                         MouseArea {
                             anchors.fill: parent
                             enabled: bindingRow.is_capturing
                             acceptedButtons: Qt.RightButton | Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton
                             onPressed: function (mouse) {
-                                root.try_assign(bindingRow.modelData.id, InputBindings.encode_mouse(mouse.button, mouse.modifiers));
+                                root.try_assign(bindingRow.modelData.id, InputBindings.Primary, InputBindings.encode_mouse(mouse.button, mouse.modifiers));
+                                mouse.accepted = true;
+                            }
+                        }
+                    }
+
+                    StyledButton {
+                        Layout.minimumWidth: Design.Metrics.space32 * 4
+                        Layout.maximumWidth: Design.Metrics.space32 * 5
+                        text: bindingRow.is_capturing_alternate ? qsTr("Press a key…") : (modelData.alternateUnbound ? "+" : modelData.displayAlternate)
+                        accessibleName: modelData.alternateUnbound ? qsTr("Add a second key for %1").arg(modelData.name) : qsTr("Second key for %1").arg(modelData.name)
+                        button_style: bindingRow.is_capturing_alternate ? "primary" : "secondary"
+                        opacity: modelData.alternateUnbound && !bindingRow.is_capturing_alternate ? 0.6 : 1.0
+                        onClicked: bindingRow.is_capturing_alternate ? root.cancel_capture() : root.begin_capture(bindingRow.modelData.id, InputBindings.Alternate)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: bindingRow.is_capturing_alternate
+                            acceptedButtons: Qt.RightButton | Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton
+                            onPressed: function (mouse) {
+                                root.try_assign(bindingRow.modelData.id, InputBindings.Alternate, InputBindings.encode_mouse(mouse.button, mouse.modifiers));
                                 mouse.accepted = true;
                             }
                         }

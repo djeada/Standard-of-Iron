@@ -13,7 +13,7 @@ TestCase {
     height: 700
     visible: true
 
-    readonly property var required_controls: ["edge_scroll", "keyboard_pan", "drag_pan", "zoom", "minimap", "follow", "reset"]
+    readonly property var required_controls: ["edge_scroll", "keyboard_pan", "drag_pan", "zoom", "rotate", "tilt", "minimap", "follow", "reset"]
 
     function entry_for(key) {
         var entries = CameraGuide.entries;
@@ -48,9 +48,29 @@ TestCase {
         var pan = testCase.entry_for("keyboard_pan");
         var expected = InputBindings.describe(InputBindings.shortcut_for("rts.camera_pan_up"));
         verify(pan.control.indexOf(expected) !== -1, "pan entry does not name the bound key: " + pan.control);
-        var rotate = testCase.entry_for("orbit");
-        var rotate_key = InputBindings.describe(InputBindings.shortcut_for("rts.camera_yaw_left"));
+        var rotate = testCase.entry_for("rotate");
+        var rotate_key = InputBindings.describe(InputBindings.shortcut_for("rts.camera_rotate_left"));
         verify(rotate.control.indexOf(rotate_key) !== -1, "rotate entry does not name the bound key: " + rotate.control);
+        var tilt = testCase.entry_for("tilt");
+        var tilt_key = InputBindings.describe(InputBindings.shortcut_for("rts.camera_tilt_up"));
+        verify(tilt.control.indexOf(tilt_key) !== -1, "tilt entry does not name the bound key: " + tilt.control);
+        var reset = testCase.entry_for("reset");
+        var reset_key = InputBindings.describe(InputBindings.shortcut_for("rts.camera_reset"));
+        verify(reset.control.indexOf(reset_key) !== -1, "reset entry does not name the bound key: " + reset.control);
+    }
+
+    function test_the_slot_enum_reaches_qml() {
+        compare(InputBindings.Primary, 0);
+        compare(InputBindings.Alternate, 1);
+    }
+
+    function test_the_pan_entry_names_both_the_arrows_and_wasd() {
+        var pan = testCase.entry_for("keyboard_pan");
+        var arrow = InputBindings.describe(InputBindings.shortcut_for("rts.camera_pan_left", InputBindings.Primary));
+        var letter = InputBindings.describe(InputBindings.shortcut_for("rts.camera_pan_left", InputBindings.Alternate));
+        verify(letter.length > 0, "pan left has no alternate key");
+        verify(pan.control.indexOf(arrow) !== -1, "pan entry omits the arrow key: " + pan.control);
+        verify(pan.control.indexOf(letter) !== -1, "pan entry omits the letter key: " + pan.control);
     }
 
     function test_the_edge_scroll_entry_reports_whether_it_is_on() {

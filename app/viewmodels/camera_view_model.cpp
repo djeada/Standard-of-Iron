@@ -56,15 +56,17 @@ void CameraViewModel::orbit(float yaw_deg, float pitch_deg) {
   }
 }
 
-void CameraViewModel::orbit_direction(int direction, bool shift) {
+void CameraViewModel::tilt(int direction, bool shift) {
+  m_host.ensure_initialized();
   emit moved();
   if (auto* camera = m_context.camera_controller) {
-    camera->orbit_direction(direction, shift);
+    camera->tilt(direction, shift);
   }
 }
 
 void CameraViewModel::reset() {
   m_host.ensure_initialized();
+  emit moved();
   auto* camera = m_context.camera_controller;
   if (camera == nullptr || m_context.level == nullptr) {
     return;
