@@ -32,3 +32,10 @@ TEST(MapCatalogTest, ConventionalSkirmishMapsAreNotSoloPlayable) {
   EXPECT_FALSE(entry.value(QStringLiteral("soloPlayable")).toBool());
   EXPECT_GE(entry.value(QStringLiteral("playerCount")).toInt(), 2);
 }
+
+TEST(MapCatalogTest, MapsHiddenFromSkirmishAreNotListed) {
+  const QVariantMap entry = load_map_entry(QStringLiteral("map_tutorial.json"));
+
+  EXPECT_TRUE(entry.isEmpty())
+      << "the tutorial map is a scripted mission stage, not a free-play choice";
+}

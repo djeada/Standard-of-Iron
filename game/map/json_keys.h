@@ -22,6 +22,7 @@ inline constexpr const char* ROADS = "roads";
 inline constexpr const char* BRIDGES = "bridges";
 inline constexpr const char* VICTORY = "victory";
 inline constexpr const char* THUMBNAIL = "thumbnail";
+inline constexpr const char* SKIRMISH_HIDDEN = "skirmish_hidden";
 
 inline constexpr const char* WIDTH = "width";
 inline constexpr const char* HEIGHT = "height";
