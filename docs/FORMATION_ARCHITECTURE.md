@@ -301,9 +301,10 @@ level; soldiers are offsets inside a unit, not agents.
 - Drag placement: drag length sets frontage, drag direction sets facing. Wheel
   turns the deployment, `Ctrl`+wheel changes depth, left-click deploys, and
   right-click or `Esc` cancels and releases the group.
-- Right-clicking the ground with two or more troops selected: the press opens
-  the planner at that point, dragging away from it aims the block, and the
-  release deploys.
+- Right-clicking the ground with any troops selected: the press opens the
+  planner at that point, dragging away from it aims the block, and the release
+  deploys. One troop goes through the same gesture; it is positioned and faced,
+  not arranged.
 - A fine-tuning section that scales the faction template rather than replacing
   it — frontage, depth, spacing, cavalry wing, missile placement, reserve rows,
   slot order, movement policy, mixed-army doctrine policy, and an explicit
@@ -314,14 +315,38 @@ footprints, never as individual soldiers.
 
 ### Positioning troops is what opens the planner
 
-Ordering two or more troops to a spot is already a formation decision, so the
-right-click that gives that order is what raises the planner — there is no
-command-bar button to press first. `InputCommandHandler::on_right_press` calls
-`begin_move_placement_at_position`, which starts placement only when the
-selection holds **at least two** troops and otherwise reports back that it did
-nothing, so a single unit takes the plain move order it always did rather than
-being asked to pick a deployment for itself. `on_right_release` issues that
-ordinary move whenever the press did not consume the gesture.
+Ordering troops to a spot is already a formation decision, so the right-click
+that gives that order is what raises the planner — there is no command-bar
+button to press first. `InputCommandHandler::on_right_press` calls
+`begin_move_placement_at_position`, which starts placement for any selection
+that holds at least one troop and reports back that it did nothing otherwise
+(builders, civilians, an empty selection). `on_right_release` issues the
+ordinary move whenever the press did not consume the gesture. The preview is
+planned on the press itself, so the footprint and the arrow are on the ground
+before the mouse moves; a plain click deploys with the automatic facing.
+
+#### One troop is positioned, not arranged
+
+A single troop is still a block of soldiers with a front, and which way that
+front points is the whole point of a shield wall, so it goes through the same
+press–drag–release gesture as an army: the press marks where it will stand, the
+drag is the direction it will face, and the release sends it. What it does not
+get is an army formation. `ArmyFormationService::build` never registers a
+one-member group — that would either create a "line" of one or, worse, shrink
+the group the unit already belongs to down to itself when it is pulled out of a
+formed line — and `formation_intents()` returns an empty catalogue for it, so
+the number keys and the intent cards have nothing to pick. The panel switches
+to a **Position <unit>** header with a facing readout, and the fine-tuning
+section (frontage, depth, spacing, wings) is hidden because none of it applies
+to one slot. `PositioningOneTroopDoesNotRegisterAnArmyFormation` and
+`OneTroopCanBeAimedAndFacesWhereItWasAimed` cover both halves. `F` with one
+troop opens the same single-unit planner in place, and its left-drag aims
+rather than drawing a front line (`TheFormationKeyPositionsOneTroopToo`).
+
+The HUD `formation` action is enabled from one eligible troop upwards for the
+same reason: `prune_selection_action_context` cancels any placement whose
+action the HUD reports as disabled, so a stricter rule there would tear the
+single-unit planner down on the next frame.
 
 `rts.order_formation` (`F`) remains a real entry in the binding catalogue and
 still opens the planner around the current selection, which is what
@@ -344,6 +369,25 @@ another — off by however far the units had to march. `on_right_drag_orient` fe
 it a world angle, which meant the error was the whole auto-facing term.
 `ThePlacementArrowPointsWhereTheUnitsEndUpFacing` pins the arrow, the previewed
 plan and the committed `desired_yaw` to the same angle.
+
+While the player is aiming — a right-drag, or the left-drag of a lone unit —
+`ArmyFormationController::aim_formation_at` also records how far from the
+anchor the aim point is (`get_formation_aim_distance`). The renderer draws a
+beam from the anchor to that point and puts the arrowhead under the cursor, so
+the facing gesture reads as "point at where the front should look" rather than
+a small arrow rotating at the anchor. Moving the anchor, a wheel turn that is
+not a drag, or ending placement resets the distance to zero and the arrow
+returns to the anchor.
+
+The panel's readout is a live view of the same state: `formation_preview_changed`
+is wired to `PlacementViewModel::formation_options_changed`, so a right-drag or
+a wheel turn updates the facing, the ranks × files and the in-place count as
+they happen. Before that wiring the readout was refreshed only by clicks in the
+panel itself, and the whole right-drag path left it showing the numbers from
+whatever was placed last. `formation_options()` carries `gesture`
+(`right_drag` or `click`) so the hint at the bottom of the panel describes the
+gesture that is actually in progress — hold-and-release for the right-drag,
+click-to-deploy for `F` — instead of always describing the latter.
 
 Nothing is set by a modifier held during a click any more. `Ctrl`, `Shift` and
 `Alt` on mouse-down used to set tight spacing, preserve order and cycle the
@@ -498,8 +542,8 @@ See `assets/data/formations/README.md` for the file schemas.
 | `tests/formation/formation_planner_cache_test.cpp`      | layout/place equivalence, layout signature, slot separation under the hash grid, per-plan cost report |
 | `tests/systems/defensive_unit_layout_test.cpp`          | defensive unit layouts: single-unit activation, faction timing and geometry, modifiers, transitions   |
 | `tests/ui/qml/tst_formation_status_badge.qml`           | the persistent badge: phase labels, distinct phase colours, unknown-phase fallback                    |
-| `tests/ui/qml/tst_formation_panel.qml`                  | the planner survives being shown and expanded, one silhouette per intent, the band the HUD gives it   |
-| `tests/core/input_command_handler_test.cpp`             | who opens the planner, arrow and committed facing agree, slots keep their meaning across selections   |
+| `tests/ui/qml/tst_formation_panel.qml`                  | the planner survives being shown and expanded, one silhouette per intent, the single-unit variant     |
+| `tests/core/input_command_handler_test.cpp`             | who opens the planner, one troop is aimed but not registered, arrow and committed facing agree        |
 | `tests/ui/input_bindings_test.cpp`                      | the formation order owns the key it is documented with                                                |
 
 These are headless and run in `simulation_tests`. The terrain suite is a real

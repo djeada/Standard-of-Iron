@@ -8,6 +8,7 @@ SaveGamePanel 1.0 SaveGamePanel.qml
 LoadGamePanel 1.0 LoadGamePanel.qml
 SaveProgressOverlay 1.0 SaveProgressOverlay.qml
 MapPreview 1.0 MapPreview.qml
+SkirmishChip 1.0 SkirmishChip.qml
 FormationPanel 1.0 FormationPanel.qml
 FormationShape 1.0 FormationShape.qml
 FormationReadoutCell 1.0 FormationReadoutCell.qml

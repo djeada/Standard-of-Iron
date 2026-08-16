@@ -631,6 +631,10 @@ GameEngine::GameEngine(QObject* parent)
           &App::Controllers::CommandController::formation_placement_ended,
           m_placement_view_model.get(),
           &App::ViewModels::PlacementViewModel::placing_formation_changed);
+  connect(m_command_controller.get(),
+          &App::Controllers::CommandController::formation_preview_changed,
+          m_placement_view_model.get(),
+          &App::ViewModels::PlacementViewModel::formation_options_changed);
 
   connect(
       this, SIGNAL(selected_units_changed()), m_selected_units_model, SLOT(refresh()));

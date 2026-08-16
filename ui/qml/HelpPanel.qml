@@ -23,7 +23,7 @@ Item {
             "body": qsTr("Left-click a unit to select it, or hold the left button and drag a box around several. Hold Ctrl to add to the selection. Selected units show a ring at their feet, and the panel at the bottom lists them by type - click a type to keep only those.")
         }, {
             "heading": qsTr("Giving orders"),
-            "body": qsTr("Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.")
+            "body": qsTr("Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.")
         }, {
             "heading": qsTr("Guard - hold a spot"),
             "body": qsTr("Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.")
@@ -68,7 +68,7 @@ Item {
             "body": qsTr("A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map's overall cap.")
         }, {
             "heading": qsTr("Formations and lines"),
-            "body": qsTr("Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. The Formation order arranges a mixed selection into a proper line; Run trades stamina for speed.")
+            "body": qsTr("Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.")
         }]
 
     readonly property var commander_sections: [{

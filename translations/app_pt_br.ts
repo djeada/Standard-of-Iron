@@ -2036,6 +2036,50 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Which drill book shapes the deployment. Automatic follows the troops you selected.</source>
         <translation>Qual manual de instrução molda a formação. Automático segue as tropas que você selecionou.</translation>
     </message>
+    <message>
+        <source>%1°</source>
+        <translation>%1°</translation>
+    </message>
+    <message>
+        <source>Drag to face the unit · Release to move it</source>
+        <translation>Arraste para orientar a unidade · Solte para movê-la</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Esc to cancel</source>
+        <translation>Roda para girar · Esc para cancelar</translation>
+    </message>
+    <message>
+        <source>Drag to face the formation · Release to deploy</source>
+        <translation>Arraste para orientar a formação · Solte para posicionar</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Ctrl+wheel for depth · Esc to cancel</source>
+        <translation>Roda para girar · Ctrl+roda para profundidade · Esc para cancelar</translation>
+    </message>
+    <message>
+        <source>Drag on the ground to set facing · Click to move</source>
+        <translation>Arraste no chão para definir a orientação · Clique para mover</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Right-click or Esc to cancel</source>
+        <translation>Roda para girar · Clique direito ou Esc para cancelar</translation>
+    </message>
+    <message>
+        <source>Position %1</source>
+        <translation>Posicionar %1</translation>
+    </message>
+    <message>
+        <source>Position unit</source>
+        <translation>Posicionar unidade</translation>
+    </message>
+    <message>
+        <source>Facing</source>
+        <translation>Orientação</translation>
+    </message>
+    <message>
+        <source>Facing (auto)</source>
+        <translation>Orientação (auto)</translation>
+    </message>
 </context>
 <context>
     <name>FormationStatusBadge</name>
@@ -2976,10 +3020,6 @@ Não visto: nunca explorado.</translation>
         <translation>Dar ordens</translation>
     </message>
     <message>
-        <source>Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
-        <translation>Botão direito no chão para mover, botão direito em um inimigo para atacar. A grade de comandos oferece Atacar, Guarda, Patrulha, Manter, Parar e as ordens de construtor e de comandante. Um marcador mostra para onde as tropas vão e a faixa acima da grade confirma cada ordem, ou explica por que foi recusada.</translation>
-    </message>
-    <message>
         <source>Stances</source>
         <translation>Posturas</translation>
     </message>
@@ -3064,10 +3104,6 @@ Não visto: nunca explorado.</translation>
         <translation>Formações e linhas</translation>
     </message>
     <message>
-        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. The Formation order arranges a mixed selection into a proper line; Run trades stamina for speed.</source>
-        <translation>Lanceiros seguram a linha, arqueiros punem de trás dela, a cavalaria rompe os flancos, curandeiros tratam sozinhos os feridos próximos. A ordem Formação organiza uma seleção mista em uma linha de verdade; Correr troca vigor por velocidade.</translation>
-    </message>
-    <message>
         <source>The standard</source>
         <translation>O estandarte</translation>
     </message>
@@ -3142,6 +3178,14 @@ Não visto: nunca explorado.</translation>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</source>
         <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade, de metade até o quádruplo; a barra de espaço também pausa, e + e - percorrem as velocidades. A velocidade ativa continua destacada durante a pausa e pode ser alterada ali. Mova a câmera com as setas ou WASD, ou empurre o mouse até a borda da tela; role ou use PgUp e PgDown para o zoom, Q e E para girar, Ctrl com as setas para cima e para baixo para inclinar; Home volta ao seu acampamento e Seguir mantém a câmera na sua seleção. Tudo isso pode ser reatribuído em Configurações › Controles, onde cada comando de câmera diz o que faz.</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
+        <translation>Clique direito no chão para mover, clique direito em um inimigo para atacar. Segure o botão direito e arraste antes de soltar para escolher a direção que as tropas vão encarar: uma unidade gira para onde você arrasta, várias unidades são posicionadas em formação voltadas para lá. A grade de comandos oferece Atacar, Guardar, Patrulhar, Manter, Parar e as ordens de construtor e comandante. Um marcador mostra para onde as tropas vão e a faixa acima da grade confirma cada ordem – ou explica por que foi recusada.</translation>
+    </message>
+    <message>
+        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
+        <translation>Lanceiros seguram uma linha, arqueiros castigam por trás dela, a cavalaria rompe flancos, curandeiros tratam os feridos próximos por conta própria. Com várias unidades selecionadas, clique com o direito e arraste para posicioná-las em uma formação voltada para o arrasto; a ordem Formação abre o mesmo planejador onde elas estão. Correr troca vigor por velocidade.</translation>
     </message>
 </context>
 <context>
@@ -3833,14 +3877,6 @@ Esta ação não pode ser desfeita.</translation>
 <context>
     <name>MapPreview</name>
     <message>
-        <source>Map Preview</source>
-        <translation>Prévia do mapa</translation>
-    </message>
-    <message>
-        <source>Player bases shown as colored circles</source>
-        <translation>As bases dos jogadores aparecem como círculos coloridos</translation>
-    </message>
-    <message>
         <source>Select a map
 to see preview</source>
         <translation>Selecione um mapa
@@ -3850,13 +3886,13 @@ para ver a prévia</translation>
         <source>No preview available</source>
         <translation>Nenhuma prévia disponível</translation>
     </message>
+    <message>
+        <source>Bases shown in player colours</source>
+        <translation>As bases aparecem nas cores dos jogadores</translation>
+    </message>
 </context>
 <context>
     <name>MapSelect</name>
-    <message>
-        <source>Maps</source>
-        <translation>Mapas</translation>
-    </message>
     <message>
         <source>No maps available</source>
         <translation>Nenhum mapa disponível</translation>
@@ -3866,72 +3902,12 @@ para ver a prévia</translation>
         <translation>Carregando mapas...</translation>
     </message>
     <message>
-        <source>► %1</source>
-        <translation>► %1</translation>
-    </message>
-    <message>
-        <source>Select a map to continue</source>
-        <translation>Selecione um mapa para continuar</translation>
-    </message>
-    <message>
-        <source>Loading map details...</source>
-        <translation>Carregando detalhes do mapa...</translation>
-    </message>
-    <message>
-        <source>No Map Selected</source>
-        <translation>Nenhum mapa selecionado</translation>
-    </message>
-    <message>
-        <source>Players</source>
-        <translation>Jogadores</translation>
-    </message>
-    <message>
-        <source>• Click color/team to cycle</source>
-        <translation>• Clique na cor/equipe para alternar</translation>
-    </message>
-    <message>
-        <source>Player color: %1 - Click to change</source>
-        <translation>Cor do jogador: %1 - clique para alterar</translation>
-    </message>
-    <message>
-        <source>Color</source>
-        <translation>Cor</translation>
-    </message>
-    <message>
-        <source>Team %1 - Click to change</source>
-        <translation>Equipe %1 - clique para alterar</translation>
-    </message>
-    <message>
         <source>Team %1</source>
         <translation>Equipe %1</translation>
     </message>
     <message>
-        <source>Remove player</source>
-        <translation>Remover jogador</translation>
-    </message>
-    <message>
         <source>+ Add CPU</source>
         <translation>+ Adicionar CPU</translation>
-    </message>
-    <message>
-        <source>Add AI opponent</source>
-        <translation>Adicionar oponente de IA</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Voltar</translation>
-    </message>
-    <message>
-        <source>Return to main menu (Esc)</source>
-        <translation>Voltar ao menu principal (Esc)</translation>
-    </message>
-    <message>
-        <source>Play</source>
-        <translation>Jogar</translation>
-    </message>
-    <message>
-        <source>Start game (Enter)</source>
-        <translation>Iniciar jogo (Enter)</translation>
     </message>
     <message>
         <source>Roman Republic</source>
@@ -3942,52 +3918,8 @@ para ver a prévia</translation>
         <translation>Comandante</translation>
     </message>
     <message>
-        <source>• Click nation tag to change</source>
-        <translation>• Clique na etiqueta da nação para alterar</translation>
-    </message>
-    <message>
-        <source>Disable player (spectator mode)</source>
-        <translation>Desativar jogador (modo espectador)</translation>
-    </message>
-    <message>
-        <source>Enable player</source>
-        <translation>Ativar jogador</translation>
-    </message>
-    <message>
-        <source>Nation: %1 - Click to change</source>
-        <translation>Nação: %1 - clique para alterar</translation>
-    </message>
-    <message>
         <source>Nation</source>
         <translation>Nação</translation>
-    </message>
-    <message>
-        <source>Commander: %1 - Click to change</source>
-        <translation>Comandante: %1 - clique para alterar</translation>
-    </message>
-    <message>
-        <source>Available Player Slots: %1</source>
-        <translation>Vagas de jogador disponíveis: %1</translation>
-    </message>
-    <message>
-        <source>Select your player ID:</source>
-        <translation>Selecione seu ID de jogador:</translation>
-    </message>
-    <message>
-        <source>ID %1</source>
-        <translation>ID %1</translation>
-    </message>
-    <message>
-        <source>All other slots will be CPU-controlled</source>
-        <translation>Todas as outras vagas serão controladas pela CPU</translation>
-    </message>
-    <message>
-        <source>CPU will control: ID %1</source>
-        <translation>A CPU controlará: ID %1</translation>
-    </message>
-    <message>
-        <source>, ID </source>
-        <translation>, ID </translation>
     </message>
     <message>
         <source>Need at least 1 enabled player to start</source>
@@ -4002,16 +3934,156 @@ para ver a prévia</translation>
         <translation>Pelo menos duas equipes precisam ser selecionadas para iniciar uma partida</translation>
     </message>
     <message>
-        <source>Every slot on this map is taken</source>
-        <translation>Todas as posições deste mapa estão ocupadas</translation>
-    </message>
-    <message>
-        <source>Player %1</source>
-        <translation>Jogador %1</translation>
-    </message>
-    <message>
         <source>CPU %1</source>
         <translation>CPU %1</translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>Você</translation>
+    </message>
+    <message>
+        <source>Skirmish</source>
+        <translation>Escaramuça</translation>
+    </message>
+    <message>
+        <source>Pick a battlefield, then set the colours, nations and commanders that take the field.</source>
+        <translation>Escolha um campo de batalha e depois defina as cores, as nações e os comandantes que entrarão em campo.</translation>
+    </message>
+    <message>
+        <source>← Back</source>
+        <translation>← Voltar</translation>
+    </message>
+    <message>
+        <source>Battlefields</source>
+        <translation>Campos de batalha</translation>
+    </message>
+    <message>
+        <source>Slots</source>
+        <translation>Vagas</translation>
+    </message>
+    <message>
+        <source>Player slots this battlefield was authored for</source>
+        <translation>Vagas de jogador para as quais este campo de batalha foi criado</translation>
+    </message>
+    <message>
+        <source>In play</source>
+        <translation>Em jogo</translation>
+    </message>
+    <message>
+        <source>Players that will take the field</source>
+        <translation>Jogadores que entrarão em campo</translation>
+    </message>
+    <message>
+        <source>Sides</source>
+        <translation>Lados</translation>
+    </message>
+    <message>
+        <source>Distinct teams among the players in play</source>
+        <translation>Equipes distintas entre os jogadores em jogo</translation>
+    </message>
+    <message>
+        <source>Opposition</source>
+        <translation>Oposição</translation>
+    </message>
+    <message>
+        <source>Scripted</source>
+        <translation>Roteirizada</translation>
+    </message>
+    <message>
+        <source>Players only</source>
+        <translation>Somente jogadores</translation>
+    </message>
+    <message>
+        <source>This battlefield brings its own enemies, so you can start alone</source>
+        <translation>Este campo de batalha traz os próprios inimigos, então você pode começar sozinho</translation>
+    </message>
+    <message>
+        <source>This battlefield needs at least two opposing players</source>
+        <translation>Este campo de batalha precisa de pelo menos dois jogadores adversários</translation>
+    </message>
+    <message>
+        <source>Select a battlefield to continue</source>
+        <translation>Escolha um campo de batalha para continuar</translation>
+    </message>
+    <message>
+        <source>Order of Battle</source>
+        <translation>Ordem de batalha</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it</source>
+        <translation>Clique em qualquer ficha para alterá-la</translation>
+    </message>
+    <message>
+        <source>Every slot on this battlefield is taken</source>
+        <translation>Todas as vagas deste campo de batalha estão ocupadas</translation>
+    </message>
+    <message>
+        <source>Add an AI opponent</source>
+        <translation>Adicionar um adversário de IA</translation>
+    </message>
+    <message>
+        <source>Leave this slot empty</source>
+        <translation>Deixar esta vaga vazia</translation>
+    </message>
+    <message>
+        <source>Bring this slot into the battle</source>
+        <translation>Levar esta vaga para a batalha</translation>
+    </message>
+    <message>
+        <source>Slot %1 • click to move seat</source>
+        <translation>Vaga %1 • clique para trocar de lugar</translation>
+    </message>
+    <message>
+        <source>Slot %1 • AI</source>
+        <translation>Vaga %1 • IA</translation>
+    </message>
+    <message>
+        <source>Colour</source>
+        <translation>Cor</translation>
+    </message>
+    <message>
+        <source>Player colour — click to change</source>
+        <translation>Cor do jogador — clique para alterar</translation>
+    </message>
+    <message>
+        <source>Nation — click to change</source>
+        <translation>Nação — clique para alterar</translation>
+    </message>
+    <message>
+        <source>%1 — click to change commander</source>
+        <translation>%1 — clique para trocar de comandante</translation>
+    </message>
+    <message>
+        <source>Commander — click to change</source>
+        <translation>Comandante — clique para alterar</translation>
+    </message>
+    <message>
+        <source>Team — click to change sides</source>
+        <translation>Equipe — clique para trocar de lado</translation>
+    </message>
+    <message>
+        <source>Remove this opponent</source>
+        <translation>Remover este adversário</translation>
+    </message>
+    <message>
+        <source>↑ ↓ Choose</source>
+        <translation>↑ ↓ Escolher</translation>
+    </message>
+    <message>
+        <source>Enter Start</source>
+        <translation>Enter Começar</translation>
+    </message>
+    <message>
+        <source>Esc Back</source>
+        <translation>Esc Voltar</translation>
+    </message>
+    <message>
+        <source>Play ▶</source>
+        <translation>Jogar ▶</translation>
+    </message>
+    <message>
+        <source>Start the battle (Enter)</source>
+        <translation>Começar a batalha (Enter)</translation>
     </message>
 </context>
 <context>
@@ -7253,7 +7325,7 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
         <translation>Por trás de cada exército de campanha estavam as fazendas e pedreiras que o alimentavam, e as pessoas que as trabalhavam.</translation>
     </message>
     <message>
-        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</source>
+        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation&apos;s nerve.</source>
         <translation>Poucas batalhas antigas foram decididas só pelo arco, mas uma saraivada disparada antes do choque podia quebrar o ânimo de uma formação.</translation>
     </message>
     <message>
@@ -7321,7 +7393,7 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
         <translation>Indefesa a curta distância. A infantaria que a alcança mata-a em poucos segundos.</translation>
     </message>
     <message>
-        <source>Denies ground nothing else can reach, at well over twice an archer's range.</source>
+        <source>Denies ground nothing else can reach, at well over twice an archer&apos;s range.</source>
         <translation>Nega terreno que mais nada alcança, a bem mais do dobro do alcance de um arqueiro.</translation>
     </message>
     <message>
@@ -7525,7 +7597,7 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
         <translation>A lança libiofenícia era o centro firme em torno do qual se podia construir um exército mercenário.</translation>
     </message>
     <message>
-        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</source>
+        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome&apos;s worst day, at Cannae, was their work.</source>
         <translation>Os númidas cavalgavam sem bridões e eram a melhor cavalaria ligeira do Mediterrâneo. O pior dia de Roma, em Canas, foi obra deles.</translation>
     </message>
     <message>
@@ -7541,7 +7613,7 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
         <translation>Os lançadores de virotes de Cartago eram construídos nos mesmos estaleiros da sua frota, pelos mesmos carpinteiros navais.</translation>
     </message>
     <message>
-        <source>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</source>
+        <source>The equites were drawn from the wealthiest citizens, and Rome&apos;s cavalry was never the equal of its infantry.</source>
         <translation>Os équites vinham dos cidadãos mais ricos, e a cavalaria de Roma nunca igualou a sua infantaria.</translation>
     </message>
     <message>
@@ -7549,7 +7621,7 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
         <translation>Os fabri construíam as estradas, as pontes e o acampamento fortificado que se erguia a cada noite de marcha.</translation>
     </message>
     <message>
-        <source>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
+        <source>The legionary&apos;s short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
         <translation>A espada curta e o pesado pilo do legionário serviam a uma só coisa: vencer os últimos vinte passos e ganhar ali.</translation>
     </message>
     <message>
@@ -7565,11 +7637,11 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
         <translation>O medicus marchava com a legião, e a medicina de campanha romana era a mais bem organizada do mundo antigo.</translation>
     </message>
     <message>
-        <source>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
+        <source>The mounted lance traded the sword&apos;s flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
         <translation>A lança montada trocou a flexibilidade da espada por alcance, golpeando antes que o inimigo pudesse empunhar uma arma.</translation>
     </message>
     <message>
-        <source>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</source>
+        <source>The onager kicked like the wild ass it was named for, and was Rome&apos;s answer to a wall that would not fall.</source>
         <translation>O ónagro coiceava como o asno selvagem que lhe deu nome, e era a resposta de Roma a um muro que não caía.</translation>
     </message>
     <message>

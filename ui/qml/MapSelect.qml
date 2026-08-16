@@ -12,8 +12,19 @@ Item {
     property int selected_map_index: -1
     property var selected_map_data: null
     property string selected_map_path: ""
+    property var map_slots: []
     property string validation_error: ""
     property var available_nations: []
+    property int roster_revision: 0
+    property string human_nation_name: ""
+    property string human_commander_name: ""
+    property string human_commander_role: ""
+    property string human_commander_bonus: ""
+    property string human_commander_aura: ""
+    property string human_commander_rally: ""
+
+    readonly property bool has_selection: selected_map_data !== null
+    property alias roster: players_model
 
     signal map_chosen(string map_path, var player_configs)
     signal cancelled
@@ -22,10 +33,7 @@ Item {
             if (selected_map_data !== null || !maps_model || (maps_model.length || 0) <= 0)
                 return;
             list.currentIndex = 0;
-            selected_map_index = 0;
-            selected_map_data = get_map_data(0);
-            selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
-            initialize_players(selected_map_data);
+            select_map(0);
         })
 
     function refresh_available_nations() {
@@ -45,7 +53,7 @@ Item {
     }
 
     function commanders_for_nation(nationId) {
-        if (typeof game !== "undefined" && game.available_commanders)
+        if (typeof game !== "undefined" && game.setup && game.setup.commanders_for_nation)
             return variant_list_to_array(game.setup.commanders_for_nation(nationId || ""));
         return [];
     }
@@ -56,24 +64,56 @@ Item {
             return commanders[0];
         return {
             "troop": "",
-            "display_name": qsTr("Commander")
+            "display_name": qsTr("Commander"),
+            "battlefield_role": ""
         };
     }
 
-    function has_minimum_distinct_teams() {
-        let enabledPlayers = [];
+    function commander_field(entry, key) {
+        if (!entry)
+            return "";
+        return String(entry[key] || "");
+    }
+
+    function nation_entry_at(offset) {
+        if (!available_nations || available_nations.length === 0)
+            return default_nation_entry();
+        return available_nations[offset % available_nations.length];
+    }
+
+    function refresh_commander_dossier() {
+        for (let i = 0; i < players_model.count; i++) {
+            let p = players_model.get(i);
+            if (!p.isHuman)
+                continue;
+            human_nation_name = p.nationName || "";
+            human_commander_name = p.commanderName || "";
+            human_commander_role = p.commanderRole || "";
+            human_commander_bonus = p.commanderBonus || "";
+            human_commander_aura = p.commanderAura || "";
+            human_commander_rally = p.commanderRally || "";
+            return;
+        }
+        human_nation_name = "";
+        human_commander_name = "";
+        human_commander_role = "";
+        human_commander_bonus = "";
+        human_commander_aura = "";
+        human_commander_rally = "";
+    }
+
+    function distinct_team_count() {
+        let teams = new Set();
         for (let i = 0; i < players_model.count; i++) {
             let p = players_model.get(i);
             if (p.isEnabled)
-                enabledPlayers.push(p);
+                teams.add(p.team_id);
         }
-        if (enabledPlayers.length < 2)
-            return false;
-        let teams = new Set();
-        for (let i = 0; i < enabledPlayers.length; i++) {
-            teams.add(enabledPlayers[i].team_id);
-        }
-        return teams.size >= 2;
+        return teams.size;
+    }
+
+    function has_minimum_distinct_teams() {
+        return enabled_player_count() >= 2 && distinct_team_count() >= 2;
     }
 
     function map_is_solo_playable(mapData) {
@@ -100,6 +140,8 @@ Item {
     }
 
     function update_validation_error() {
+        roster_revision++;
+        refresh_commander_dossier();
         let enabledCount = enabled_player_count();
         let soloPlayable = map_is_solo_playable(selected_map_data);
         if (enabledCount < 1)
@@ -185,61 +227,79 @@ Item {
 
     function refresh_map_preview() {
         Qt.callLater(function () {
-                if (mapPreviewLeft && mapPreviewLeft.refresh_preview) {
-                    mapPreviewLeft.player_configs = get_player_configs();
-                    mapPreviewLeft.refresh_preview();
+                if (map_preview && map_preview.refresh_preview) {
+                    map_preview.player_configs = get_player_configs();
+                    map_preview.refresh_preview();
                 }
             });
     }
 
+    function select_map(index) {
+        if (index < 0 || index >= list.count) {
+            selected_map_index = -1;
+            selected_map_data = null;
+            selected_map_path = "";
+            map_slots = [];
+            players_model.clear();
+            update_validation_error();
+            return;
+        }
+        selected_map_index = index;
+        selected_map_data = get_map_data(index);
+        selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
+        map_slots = player_ids_for_map(selected_map_data);
+        initialize_players(selected_map_data);
+    }
+
     function initialize_players(mapData) {
         players_model.clear();
-        let playerIds = player_ids_for_map(mapData);
+        let playerIds = map_slots;
         if (!mapData || playerIds.length === 0) {
+            update_validation_error();
             refresh_map_preview();
             return;
         }
         let requestedPlayerId = (typeof game !== "undefined") ? Number(game.selected_player_id) : Number(playerIds[0]);
         let humanPlayerId = playerIds.indexOf(requestedPlayerId) !== -1 ? requestedPlayerId : Number(playerIds[0]);
-        let defaultNation = default_nation_entry();
+        let defaultNation = nation_entry_at(0);
         let defaultCommander = default_commander_entry(defaultNation.id);
         players_model.append({
                 "player_id": humanPlayerId,
-                "playerName": qsTr("Player %1").arg(humanPlayerId + 1),
+                "playerName": qsTr("You"),
                 "colorIndex": 0,
                 "colorHex": Theme.playerColors[0].hex,
                 "colorName": Theme.playerColors[0].name,
                 "team_id": 0,
-                "teamIcon": Theme.teamIcons[0],
+                "teamIcon": Theme.teamIcons[1],
                 "nationId": defaultNation.id,
                 "nationName": defaultNation.name,
                 "commanderTroop": defaultCommander.troop,
                 "commanderName": defaultCommander.display_name,
+                "commanderRole": commander_field(defaultCommander, "battlefield_role"),
+                "commanderBonus": commander_field(defaultCommander, "bonus_summary"),
+                "commanderAura": commander_field(defaultCommander, "passive_aura"),
+                "commanderRally": commander_field(defaultCommander, "rally_ability"),
                 "isHuman": true,
                 "isEnabled": true
             });
-        let cpuId = playerIds.find(function (id) {
-                return id !== humanPlayerId;
-            });
-        if (cpuId !== undefined)
+        if (playerIds.length > 1)
             add_cpu();
         update_validation_error();
         refresh_map_preview();
     }
 
     function add_cpu() {
-        let playerIds = player_ids_for_map(selected_map_data);
-        if (!selected_map_data || playerIds.length === 0)
+        if (!selected_map_data || map_slots.length === 0)
             return;
-        if (players_model.count >= playerIds.length)
+        if (players_model.count >= map_slots.length)
             return;
         let usedIds = [];
         for (let i = 0; i < players_model.count; i++)
             usedIds.push(players_model.get(i).player_id);
         let nextId = -1;
-        for (let j = 0; j < playerIds.length; j++) {
-            if (usedIds.indexOf(Number(playerIds[j])) === -1) {
-                nextId = Number(playerIds[j]);
+        for (let j = 0; j < map_slots.length; j++) {
+            if (usedIds.indexOf(Number(map_slots[j])) === -1) {
+                nextId = Number(map_slots[j]);
                 break;
             }
         }
@@ -256,20 +316,24 @@ Item {
             }
         }
         let defaultTeamId = players_model.count > 0 ? 1 : 0;
-        let defaultNation = default_nation_entry();
+        let defaultNation = nation_entry_at(players_model.count);
         let defaultCommander = default_commander_entry(defaultNation.id);
         players_model.append({
                 "player_id": nextId,
-                "playerName": qsTr("CPU %1").arg(nextId),
+                "playerName": qsTr("CPU %1").arg(Design.Numerals.roman(nextId)),
                 "colorIndex": colorIdx,
                 "colorHex": Theme.playerColors[colorIdx].hex,
                 "colorName": Theme.playerColors[colorIdx].name,
                 "team_id": defaultTeamId,
-                "teamIcon": Theme.teamIcons[defaultTeamId],
+                "teamIcon": Theme.teamIcons[defaultTeamId + 1],
                 "nationId": defaultNation.id,
                 "nationName": defaultNation.name,
                 "commanderTroop": defaultCommander.troop,
                 "commanderName": defaultCommander.display_name,
+                "commanderRole": commander_field(defaultCommander, "battlefield_role"),
+                "commanderBonus": commander_field(defaultCommander, "bonus_summary"),
+                "commanderAura": commander_field(defaultCommander, "passive_aura"),
+                "commanderRally": commander_field(defaultCommander, "rally_ability"),
                 "isHuman": false,
                 "isEnabled": true
             });
@@ -316,10 +380,10 @@ Item {
         if (index < 0 || index >= players_model.count)
             return;
         let p = players_model.get(index);
-        let maxTeam = Math.min(8, players_model.count);
-        let newTeamId = (p.team_id + 1) % (maxTeam + 1);
+        let teamCount = Math.max(2, Math.min(8, players_model.count));
+        let newTeamId = (p.team_id + 1) % teamCount;
         players_model.setProperty(index, "team_id", newTeamId);
-        players_model.setProperty(index, "teamIcon", Theme.teamIcons[newTeamId]);
+        players_model.setProperty(index, "teamIcon", Theme.teamIcons[newTeamId + 1]);
         update_validation_error();
         refresh_map_preview();
     }
@@ -342,9 +406,18 @@ Item {
         let nextCommander = default_commander_entry(nextNation.id);
         players_model.setProperty(index, "nationId", nextNation.id);
         players_model.setProperty(index, "nationName", nextNation.name);
-        players_model.setProperty(index, "commanderTroop", nextCommander.troop);
-        players_model.setProperty(index, "commanderName", nextCommander.display_name);
+        apply_commander(index, nextCommander);
         refresh_map_preview();
+    }
+
+    function apply_commander(index, entry) {
+        players_model.setProperty(index, "commanderTroop", commander_field(entry, "troop"));
+        players_model.setProperty(index, "commanderName", commander_field(entry, "display_name"));
+        players_model.setProperty(index, "commanderRole", commander_field(entry, "battlefield_role"));
+        players_model.setProperty(index, "commanderBonus", commander_field(entry, "bonus_summary"));
+        players_model.setProperty(index, "commanderAura", commander_field(entry, "passive_aura"));
+        players_model.setProperty(index, "commanderRally", commander_field(entry, "rally_ability"));
+        refresh_commander_dossier();
     }
 
     function cycle_player_commander(index) {
@@ -362,9 +435,42 @@ Item {
                 break;
             }
         }
-        let nextCommander = commanders[nextIndex];
-        players_model.setProperty(index, "commanderTroop", nextCommander.troop);
-        players_model.setProperty(index, "commanderName", nextCommander.display_name);
+        apply_commander(index, commanders[nextIndex]);
+        refresh_map_preview();
+    }
+
+    function cycle_human_slot() {
+        if (map_slots.length < 2 || players_model.count === 0)
+            return;
+        let humanIndex = -1;
+        for (let i = 0; i < players_model.count; i++) {
+            if (players_model.get(i).isHuman) {
+                humanIndex = i;
+                break;
+            }
+        }
+        if (humanIndex < 0)
+            return;
+        let humanId = players_model.get(humanIndex).player_id;
+        let slotIndex = map_slots.indexOf(humanId);
+        let nextId = Number(map_slots[(slotIndex + 1) % map_slots.length]);
+        if (nextId === humanId)
+            return;
+        let occupantIndex = -1;
+        for (let j = 0; j < players_model.count; j++) {
+            if (players_model.get(j).player_id === nextId) {
+                occupantIndex = j;
+                break;
+            }
+        }
+        if (occupantIndex >= 0) {
+            players_model.setProperty(occupantIndex, "player_id", humanId);
+            players_model.setProperty(occupantIndex, "playerName", qsTr("CPU %1").arg(Design.Numerals.roman(humanId)));
+        }
+        players_model.setProperty(humanIndex, "player_id", nextId);
+        if (typeof game !== "undefined")
+            game.selected_player_id = nextId;
+        update_validation_error();
         refresh_map_preview();
     }
 
@@ -372,8 +478,7 @@ Item {
         if (index < 0 || index >= players_model.count)
             return;
         let p = players_model.get(index);
-        let newEnabled = !p.isEnabled;
-        players_model.setProperty(index, "isEnabled", newEnabled);
+        players_model.setProperty(index, "isEnabled", !p.isEnabled);
         update_validation_error();
         refresh_map_preview();
     }
@@ -384,16 +489,14 @@ Item {
             let p = players_model.get(i);
             if (!p.isEnabled)
                 continue;
-            let config = {
-                "player_id": p.player_id,
-                "colorHex": p.colorHex,
-                "team_id": p.team_id,
-                "nationId": p.nationId,
-                "commanderTroop": p.commanderTroop,
-                "isHuman": p.isHuman
-            };
-            console.log("MapSelect: Player", p.player_id, "config - Team:", p.team_id, "Color:", p.colorHex, "Nation:", p.nationId, "Commander:", p.commanderTroop, "Human:", p.isHuman);
-            configs.push(config);
+            configs.push({
+                    "player_id": p.player_id,
+                    "colorHex": p.colorHex,
+                    "team_id": p.team_id,
+                    "nationId": p.nationId,
+                    "commanderTroop": p.commanderTroop,
+                    "isHuman": p.isHuman
+                });
         }
         return configs;
     }
@@ -402,30 +505,11 @@ Item {
         if (selected_map_index < 0 || !selected_map_path)
             return;
         if (!can_start()) {
-            console.log("MapSelect: Player setup is not valid for this map");
             update_validation_error();
             return;
         }
         validation_error = "";
-        let configs = get_player_configs();
-        console.log("MapSelect: Starting game with", configs.length, "enabled players");
-        root.map_chosen(selected_map_path, configs);
-    }
-
-    function player_color_clicked(index) {
-        cycle_player_color(index);
-    }
-
-    function player_team_clicked(index) {
-        cycle_player_team(index);
-    }
-
-    function add_cpu_clicked() {
-        add_cpu();
-    }
-
-    function remove_player_clicked(index) {
-        remove_player(index);
+        root.map_chosen(selected_map_path, get_player_configs());
     }
 
     Component.onCompleted: refresh_available_nations()
@@ -434,10 +518,7 @@ Item {
     onVisibleChanged: {
         if (visible) {
             root.focus = true;
-            selected_map_index = -1;
-            selected_map_data = null;
-            selected_map_path = "";
-            players_model.clear();
+            select_map(-1);
             refresh_available_nations();
             if (typeof game !== "undefined" && game.setup.start_loading_maps)
                 game.setup.start_loading_maps();
@@ -473,1076 +554,750 @@ Item {
     }
 
     Rectangle {
-        id: panel
+        id: container
 
+        width: Math.min(parent.width * 0.975, 1660)
+        height: Math.min(parent.height * 0.975, 1040)
         anchors.centerIn: parent
-        width: Math.min(parent.width * 0.9, 1300)
-        height: Math.min(parent.height * 0.88, 800)
         radius: Theme.radiusPanel
-        color: Theme.panelBase
-        border.color: Theme.panelBr
-        border.width: 1
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#2b2118"
+            }
+
+            GradientStop {
+                position: 1
+                color: "#1a140f"
+            }
+        }
+        border.color: "#8f6d43"
+        border.width: 2
         opacity: 0.98
         clip: true
 
-        Item {
-            id: left
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 4
+            color: "transparent"
+            border.color: "#4a3722"
+            border.width: 1
+            radius: Math.max(2, container.radius - 4)
+        }
 
-            width: Math.max(360, Math.min(panel.width * 0.38, 460))
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: Theme.spacingLarge
+            spacing: Theme.spacingMedium
 
-            anchors {
-                top: parent.top
-                left: parent.left
-                bottom: footer.top
-                topMargin: Theme.spacingXLarge
-                leftMargin: Theme.spacingXLarge
-                bottomMargin: Theme.spacingMedium
-            }
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 0
+            RowLayout {
+                Layout.fillWidth: true
                 spacing: Theme.spacingMedium
 
-                Text {
-                    id: leftTitle
-
-                    text: qsTr("Maps")
-                    color: Theme.textMain
-                    font.pixelSize: Design.Typography.subheading
-                    font.bold: true
+                ColumnLayout {
                     Layout.fillWidth: true
+                    spacing: Theme.spacingTiny
+
+                    Label {
+                        text: qsTr("Skirmish")
+                        color: Theme.textMain
+                        font.pixelSize: Design.Typography.hero
+                        font.bold: true
+                        font.family: "serif"
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: qsTr("Pick a battlefield, then set the colours, nations and commanders that take the field.")
+                        color: Theme.textSubLite
+                        font.pixelSize: Design.Typography.bodyLarge
+                        font.family: "serif"
+                        wrapMode: Text.WordWrap
+                        elide: Text.ElideRight
+                        maximumLineCount: 2
+                        Layout.fillWidth: true
+                    }
                 }
 
-                MapPreview {
-                    id: mapPreviewLeft
-
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: visible ? 240 : 0
-                    visible: selected_map_data !== null
-                    map_path: selected_map_path
-                    player_configs: get_player_configs()
+                StyledButton {
+                    text: qsTr("← Back")
+                    onClicked: root.cancelled()
                 }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: Theme.spacingLarge
 
                 Rectangle {
-                    id: listFrame
+                    id: maps_panel
 
-                    color: Qt.rgba(0, 0, 0, 0)
-                    radius: Theme.radiusLarge
-                    border.color: Theme.panelBr
-                    border.width: 1
-                    clip: true
-                    Layout.fillWidth: true
-                    Layout.fillHeight: (!maps_loading && list.count > 0)
-
-                    ListView {
-                        id: list
-
-                        anchors.fill: parent
-                        anchors.margins: Theme.spacingSmall
-                        model: maps_model
-                        spacing: Theme.spacingSmall
-                        currentIndex: (count > 0 ? 0 : -1)
-                        keyNavigationWraps: false
-                        boundsBehavior: Flickable.StopAtBounds
-                        onCurrentIndexChanged: {
-                            if (currentIndex < 0) {
-                                selected_map_index = -1;
-                                selected_map_data = null;
-                                selected_map_path = "";
-                                players_model.clear();
-                                return;
-                            }
-                            selected_map_index = currentIndex;
-                            selected_map_data = get_map_data(currentIndex);
-                            selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
-                            initialize_players(selected_map_data);
+                    Layout.preferredWidth: Math.max(340, container.width * 0.31)
+                    Layout.fillHeight: true
+                    radius: Theme.radiusMedium
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0
+                            color: "#3a2f23"
                         }
 
-                        delegate: Item {
-                            id: row
+                        GradientStop {
+                            position: 1
+                            color: "#241b14"
+                        }
+                    }
+                    border.color: "#a7814a"
+                    border.width: 2
 
-                            width: list.width
-                            height: 72
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingMedium
+                        spacing: Theme.spacingSmall
 
-                            MouseArea {
-                                id: rowMouse
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingSmall
 
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    Design.UiSound.activate();
-                                    list.currentIndex = index;
-                                }
-                                onDoubleClicked: accept_selection()
-                                onContainsMouseChanged: {
-                                    if (containsMouse)
-                                        Design.UiSound.hover();
-                                }
+                            Label {
+                                text: qsTr("Battlefields")
+                                color: Theme.textMain
+                                font.pixelSize: Design.Typography.heading
+                                font.bold: true
+                                font.family: "serif"
                             }
 
-                            Rectangle {
-                                id: card
+                            Item {
+                                Layout.fillWidth: true
+                            }
+
+                            Design.IronBadge {
+                                text: Design.Numerals.roman(list.count)
+                                visible: list.count > 0
+                            }
+                        }
+
+                        Rectangle {
+                            id: list_frame
+
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            color: "#241c14"
+                            radius: Theme.radiusSmall
+                            border.color: "#8f6d43"
+                            border.width: 1
+                            clip: true
+
+                            ListView {
+                                id: list
 
                                 anchors.fill: parent
-                                radius: Theme.radiusLarge
-                                clip: true
-                                color: rowMouse.containsPress ? Theme.hoverBg : (index === list.currentIndex ? Theme.selectedBg : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.03) : Qt.rgba(0, 0, 0, 0)))
-                                border.width: 1
-                                border.color: (index === list.currentIndex) ? Theme.selectedBr : (rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Theme.thumbBr)
+                                anchors.margins: Theme.spacingSmall
+                                model: maps_model
+                                spacing: Theme.spacingSmall
+                                currentIndex: (count > 0 ? 0 : -1)
+                                keyNavigationWraps: false
+                                boundsBehavior: Flickable.StopAtBounds
+                                visible: !maps_loading && count > 0
+                                onCurrentIndexChanged: select_map(currentIndex)
 
-                                Rectangle {
-                                    id: thumbWrap
+                                ScrollBar.vertical: ScrollBar {
+                                    policy: list.contentHeight > list.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                                }
 
-                                    width: 76
-                                    height: 54
-                                    radius: Theme.radiusMedium
-                                    color: Theme.cardBase
-                                    border.color: Theme.thumbBr
-                                    border.width: 1
+                                delegate: Rectangle {
+                                    id: map_card
+
+                                    readonly property bool current: index === list.currentIndex
+                                    readonly property int slot_count: Number((typeof playerCount !== "undefined") ? playerCount : ((modelData && modelData.playerCount !== undefined) ? modelData.playerCount : 0))
+
+                                    width: list.width - (list.ScrollBar.vertical.visible ? Theme.spacingMedium : 0)
+                                    height: 76
+                                    radius: Theme.radiusSmall
                                     clip: true
-
-                                    anchors {
-                                        left: parent.left
-                                        leftMargin: Theme.spacingSmall
-                                        verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Image {
-                                        id: thumbImage
-
-                                        anchors.fill: parent
-                                        source: (typeof thumbnail !== "undefined" && thumbnail !== "") ? thumbnail : ""
-                                        asynchronous: true
-                                        fillMode: Image.PreserveAspectCrop
-                                        visible: status === Image.Ready
-                                    }
+                                    color: map_card.current ? Theme.selectedBg : (map_mouse.containsMouse ? Theme.hoverBg : "#2c231a")
+                                    border.width: map_card.current ? 2 : 1
+                                    border.color: map_card.current ? Theme.selectedBr : (map_mouse.containsMouse ? Theme.accentBr : Theme.thumbBr)
 
                                     Rectangle {
-                                        anchors.fill: parent
+                                        id: thumb_wrap
+
+                                        width: 80
+                                        height: 56
+                                        radius: Theme.radiusSmall
                                         color: Theme.cardBase
-                                        visible: !thumbImage.visible
+                                        border.color: Theme.thumbBr
+                                        border.width: 1
+                                        clip: true
+
+                                        anchors {
+                                            left: parent.left
+                                            leftMargin: Theme.spacingSmall
+                                            verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Image {
+                                            id: thumb_image
+
+                                            anchors.fill: parent
+                                            source: (typeof thumbnail !== "undefined" && thumbnail !== "") ? thumbnail : ""
+                                            asynchronous: true
+                                            fillMode: Image.PreserveAspectCrop
+                                            visible: status === Image.Ready
+                                        }
 
                                         Text {
                                             anchors.centerIn: parent
-                                            text: Design.Icons.terrainPlains
-                                            font.pixelSize: Design.Typography.heading
-                                            color: Theme.textDim
+                                            visible: !thumb_image.visible
+                                            text: Design.Icons.map
+                                            font.pixelSize: Design.Typography.glyphSmall
+                                            color: map_card.current ? Theme.accentBright : Theme.textDim
                                         }
                                     }
-                                }
 
-                                Item {
-                                    height: 54
-
-                                    anchors {
-                                        left: thumbWrap.right
-                                        right: parent.right
-                                        leftMargin: Theme.spacingSmall
-                                        rightMargin: Theme.spacingSmall
-                                        verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Text {
-                                        id: map_name
-
-                                        text: (typeof name !== "undefined") ? String(name) : (typeof modelData === "string" ? modelData : (modelData && modelData.name ? String(modelData.name) : ""))
-                                        color: (index === list.currentIndex) ? Theme.textMain : Theme.textBright
-                                        font.pixelSize: (index === list.currentIndex) ? Design.Typography.body : Design.Typography.label
-                                        font.bold: (index === list.currentIndex)
-                                        elide: Text.ElideRight
-
+                                    Item {
                                         anchors {
-                                            top: parent.top
-                                            left: parent.left
+                                            left: thumb_wrap.right
                                             right: parent.right
+                                            top: parent.top
+                                            bottom: parent.bottom
+                                            leftMargin: Theme.spacingSmall
+                                            rightMargin: Theme.spacingSmall
+                                            topMargin: Theme.spacingSmall
+                                            bottomMargin: Theme.spacingSmall
                                         }
 
-                                        Behavior on font.pixelSize  {
-                                            NumberAnimation {
-                                                duration: Theme.animNormal
+                                        Text {
+                                            id: map_name
+
+                                            text: (typeof name !== "undefined") ? String(name) : (typeof modelData === "string" ? modelData : (modelData && modelData.name ? String(modelData.name) : ""))
+                                            color: map_card.current ? Theme.textMain : Theme.textBright
+                                            font.pixelSize: Design.Typography.body
+                                            font.bold: true
+                                            font.family: "serif"
+                                            elide: Text.ElideRight
+
+                                            anchors {
+                                                top: parent.top
+                                                left: parent.left
+                                                right: slot_badge.left
+                                                rightMargin: Theme.spacingSmall
+                                            }
+                                        }
+
+                                        Design.IronBadge {
+                                            id: slot_badge
+
+                                            text: Design.Icons.population + " " + Design.Numerals.roman(map_card.slot_count)
+                                            tone: map_card.current ? Theme.accentBright : Theme.textSub
+                                            visible: map_card.slot_count > 0
+
+                                            anchors {
+                                                top: parent.top
+                                                right: parent.right
+                                            }
+                                        }
+
+                                        Text {
+                                            text: (typeof description !== "undefined") ? String(description) : (modelData && modelData.description ? String(modelData.description) : "")
+                                            color: map_card.current ? Theme.textSubLite : Theme.textSub
+                                            font.pixelSize: Design.Typography.caption
+                                            wrapMode: Text.WordWrap
+                                            maximumLineCount: 2
+                                            elide: Text.ElideRight
+
+                                            anchors {
+                                                left: parent.left
+                                                right: parent.right
+                                                top: map_name.bottom
+                                                bottom: parent.bottom
+                                                topMargin: Theme.spacingTiny
                                             }
                                         }
                                     }
 
-                                    Text {
-                                        text: (typeof description !== "undefined") ? String(description) : (modelData && modelData.description ? String(modelData.description) : "")
-                                        color: (index === list.currentIndex) ? Theme.accentBright : Theme.textSub
-                                        font.pixelSize: Design.Typography.caption
-                                        elide: Text.ElideRight
-
-                                        anchors {
-                                            left: parent.left
-                                            right: parent.right
-                                            bottom: parent.bottom
-                                        }
-                                    }
-
-                                    Text {
-                                        text: Design.Icons.chevronForward
-                                        font.pixelSize: Design.Typography.heading
-                                        color: (index === list.currentIndex) ? Theme.textMain : Theme.textHint
-
-                                        anchors {
-                                            right: parent.right
-                                            rightMargin: 0
-                                            verticalCenter: parent.verticalCenter
-                                        }
-                                    }
-                                }
-
-                                Behavior on color  {
-                                    ColorAnimation {
-                                        duration: Theme.animNormal
-                                    }
-                                }
-
-                                Behavior on border.color  {
-                                    ColorAnimation {
-                                        duration: Theme.animNormal
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: visible
-                    visible: list.count === 0 && !maps_loading
-
-                    Text {
-                        text: qsTr("No maps available")
-                        color: Theme.textSub
-                        font.pixelSize: Design.Typography.label
-                        anchors.centerIn: parent
-                    }
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: visible
-                    visible: maps_loading
-
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: Theme.spacingSmall
-
-                        Text {
-                            text: "⟳"
-                            font.pixelSize: Design.Typography.heading
-                            color: Theme.accent
-                            anchors.horizontalCenter: parent.horizontalCenter
-
-                            RotationAnimator on rotation  {
-                                from: 0
-                                to: 360
-                                duration: 1500
-                                loops: Animation.Infinite
-                                running: maps_loading
-                            }
-                        }
-
-                        Text {
-                            text: qsTr("Loading maps...")
-                            color: Theme.textSub
-                            font.pixelSize: Design.Typography.caption
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
-                }
-            }
-        }
-
-        Item {
-            id: right
-
-            anchors {
-                top: parent.top
-                bottom: footer.top
-                right: parent.right
-                left: left.right
-                leftMargin: Theme.spacingXLarge
-                rightMargin: Theme.spacingXLarge
-                topMargin: Theme.spacingXLarge
-                bottomMargin: Theme.spacingMedium
-            }
-
-            Text {
-                id: breadcrumb
-
-                text: selected_map_data ? qsTr("► %1").arg(field(selected_map_data, "name")) : qsTr("Select a map to continue")
-                color: selected_map_data ? Theme.accent : Theme.textHint
-                font.pixelSize: Design.Typography.caption
-                font.italic: !selected_map_data
-                elide: Text.ElideRight
-
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    right: parent.right
-                }
-            }
-
-            Item {
-                id: loadingIndicator
-
-                visible: maps_loading && list.count === 0
-                height: 100
-
-                anchors {
-                    top: breadcrumb.bottom
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.spacingXLarge * 2
-                }
-
-                Column {
-                    anchors.centerIn: parent
-                    spacing: Theme.spacingMedium
-
-                    Text {
-                        text: "⟳"
-                        font.pixelSize: Design.Typography.hero
-                        color: Theme.accent
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        RotationAnimator on rotation  {
-                            from: 0
-                            to: 360
-                            duration: 1500
-                            loops: Animation.Infinite
-                            running: loadingIndicator.visible
-                        }
-                    }
-
-                    Text {
-                        text: qsTr("Loading maps...")
-                        color: Theme.textSub
-                        font.pixelSize: Design.Typography.label
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                }
-            }
-
-            Item {
-                id: loadingSkeleton
-
-                visible: !selected_map_data && !maps_loading && list.currentIndex >= 0
-                height: 200
-
-                anchors {
-                    top: breadcrumb.bottom
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.spacingMedium
-                }
-
-                Column {
-                    anchors.fill: parent
-                    spacing: Theme.spacingMedium
-
-                    Rectangle {
-                        width: parent.width * 0.6
-                        height: 28
-                        radius: Theme.radiusSmall
-                        color: Theme.cardBase
-                        opacity: 0.3
-
-                        SequentialAnimation on opacity  {
-                            loops: Animation.Infinite
-                            running: loadingSkeleton.visible
-
-                            NumberAnimation {
-                                to: 0.6
-                                duration: 800
-                            }
-
-                            NumberAnimation {
-                                to: 0.3
-                                duration: 800
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: parent.width * 0.8
-                        height: 16
-                        radius: Theme.radiusSmall
-                        color: Theme.cardBase
-                        opacity: 0.3
-
-                        SequentialAnimation on opacity  {
-                            loops: Animation.Infinite
-                            running: loadingSkeleton.visible
-
-                            NumberAnimation {
-                                to: 0.6
-                                duration: 800
-                                easing.type: Easing.InOutQuad
-                            }
-
-                            NumberAnimation {
-                                to: 0.3
-                                duration: 800
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: parent.width * 0.7
-                        height: 16
-                        radius: Theme.radiusSmall
-                        color: Theme.cardBase
-                        opacity: 0.3
-
-                        SequentialAnimation on opacity  {
-                            loops: Animation.Infinite
-                            running: loadingSkeleton.visible
-
-                            NumberAnimation {
-                                to: 0.6
-                                duration: 800
-                                easing.type: Easing.InOutQuad
-                            }
-
-                            NumberAnimation {
-                                to: 0.3
-                                duration: 800
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
-                    }
-
-                    Text {
-                        text: qsTr("Loading map details...")
-                        color: Theme.textHint
-                        font.pixelSize: Design.Typography.caption
-                        font.italic: true
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                }
-            }
-
-            Text {
-                id: title
-
-                text: {
-                    var it = selected_map_data;
-                    var t = field(it, "name");
-                    return t || field(it, "path") || qsTr("No Map Selected");
-                }
-                visible: selected_map_data !== null
-                color: Theme.textMain
-                font.pixelSize: Design.Typography.heading
-                font.bold: true
-                elide: Text.ElideRight
-
-                anchors {
-                    top: breadcrumb.bottom
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.spacingSmall
-                }
-            }
-
-            Text {
-                id: descr
-
-                text: field(selected_map_data, "description")
-                visible: selected_map_data !== null
-                color: Theme.textSubLite
-                font.pixelSize: Design.Typography.caption
-                wrapMode: Text.WordWrap
-                maximumLineCount: 3
-                elide: Text.ElideRight
-                lineHeight: 1.3
-
-                anchors {
-                    top: title.bottom
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.spacingSmall
-                }
-            }
-
-            Rectangle {
-                id: playerConfigPanel
-
-                height: Math.min(240, (players_model.count * 60) + 90)
-                radius: Theme.radiusLarge
-                color: Theme.cardBaseA
-                border.color: Theme.panelBr
-                border.width: 1
-                visible: selected_map_data !== null
-
-                anchors {
-                    top: descr.bottom
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.spacingMedium
-                }
-
-                Column {
-                    spacing: Theme.spacingMedium
-
-                    anchors {
-                        fill: parent
-                        margins: Theme.spacingMedium + 2
-                    }
-
-                    Row {
-                        spacing: Theme.spacingSmall + 2
-
-                        Text {
-                            text: qsTr("Players")
-                            color: Theme.textMain
-                            font.pixelSize: Design.Typography.body
-                            font.bold: true
-                        }
-
-                        Rectangle {
-                            width: 30
-                            height: 22
-                            radius: Theme.radiusSmall
-                            color: Theme.selectedBg
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: Design.Numerals.roman(players_model.count)
-                                color: Theme.textMain
-                                font.pixelSize: Design.Typography.caption
-                                font.bold: true
-                            }
-                        }
-
-                        Text {
-                            text: qsTr("• Click color/team to cycle")
-                            color: Theme.textSubLite
-                            font.pixelSize: Design.Typography.caption
-                            font.italic: true
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            text: qsTr("• Click nation tag to change")
-                            color: Theme.textSubLite
-                            font.pixelSize: Design.Typography.caption
-                            font.italic: true
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    ListView {
-                        id: playersList
-
-                        width: parent.width
-                        height: Math.min(200, players_model.count * 60)
-                        model: players_model
-                        spacing: Theme.spacingMedium
-                        clip: true
-
-                        delegate: Rectangle {
-                            id: playerCard
-
-                            width: playersList.width
-                            height: 52
-                            radius: Theme.radiusMedium
-                            color: playerCardMouse.containsMouse ? Qt.lighter(Theme.cardBaseB, 1.1) : Theme.cardBaseB
-                            border.color: model.isHuman ? Theme.accent : (playerCardMouse.containsMouse ? Theme.selectedBr : Theme.thumbBr)
-                            border.width: model.isHuman ? 1.5 : (playerCardMouse.containsMouse ? 1.5 : 1)
-
-                            MouseArea {
-                                id: playerCardMouse
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.NoButton
-                            }
-
-                            Rectangle {
-                                height: 1
-                                color: Qt.rgba(1, 1, 1, 0.05)
-
-                                anchors {
-                                    left: parent.left
-                                    right: parent.right
-                                    top: parent.top
-                                }
-                            }
-
-                            Item {
-                                anchors.fill: parent
-                                anchors.margins: Theme.spacingSmall + 2
-
-                                Rectangle {
-                                    id: enabledCheckbox
-
-                                    width: 32
-                                    height: 32
-                                    radius: Theme.radiusSmall
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 4
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    color: enabledCheckMA.containsMouse ? Qt.lighter(Theme.cardBase, 1.2) : Theme.cardBase
-                                    border.color: model.isEnabled ? Theme.accent : Theme.thumbBr
-                                    border.width: enabledCheckMA.containsMouse ? 2 : 1
-                                    ToolTip.visible: enabledCheckMA.containsMouse
-                                    ToolTip.text: model.isEnabled ? qsTr("Disable player (spectator mode)") : qsTr("Enable player")
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: model.isEnabled ? "✓" : ""
-                                        color: Theme.accent
-                                        font.pixelSize: Design.Typography.bodyLarge
-                                        font.bold: true
-                                    }
-
                                     MouseArea {
-                                        id: enabledCheckMA
+                                        id: map_mouse
 
                                         anchors.fill: parent
                                         hoverEnabled: true
+                                        acceptedButtons: Qt.LeftButton
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            Design.UiSound.toggle();
-                                            toggle_player_enabled(index);
+                                            Design.UiSound.activate();
+                                            list.currentIndex = index;
+                                        }
+                                        onDoubleClicked: accept_selection()
+                                        onContainsMouseChanged: {
+                                            if (containsMouse)
+                                                Design.UiSound.hover();
                                         }
                                     }
 
                                     Behavior on color  {
                                         ColorAnimation {
-                                            duration: Theme.animFast
+                                            duration: Theme.animNormal
                                         }
                                     }
 
                                     Behavior on border.color  {
                                         ColorAnimation {
-                                            duration: Theme.animFast
+                                            duration: Theme.animNormal
                                         }
                                     }
+                                }
+                            }
 
-                                    Behavior on border.width  {
-                                        NumberAnimation {
-                                            duration: Theme.animFast
-                                        }
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: Theme.spacingSmall
+                                visible: maps_loading
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: Design.Icons.autoGather
+                                    font.pixelSize: Design.Typography.glyph
+                                    color: Theme.accent
+
+                                    RotationAnimator on rotation  {
+                                        from: 0
+                                        to: 360
+                                        duration: 1500
+                                        loops: Animation.Infinite
+                                        running: maps_loading
                                     }
                                 }
 
                                 Text {
-                                    id: playerNameText
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: qsTr("Loading maps...")
+                                    color: Theme.textSubLite
+                                    font.pixelSize: Design.Typography.label
+                                }
+                            }
 
-                                    anchors.left: enabledCheckbox.right
-                                    anchors.leftMargin: Theme.spacingSmall
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: model.playerName || ""
-                                    color: model.isEnabled ? (model.isHuman ? Theme.accentBright : Theme.textBright) : Theme.textDim
-                                    font.pixelSize: model.isHuman ? Design.Typography.body : Design.Typography.label
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !maps_loading && list.count === 0
+                                text: qsTr("No maps available")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.label
+                            }
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    id: right_column
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: Theme.spacingMedium
+
+                    Rectangle {
+                        id: briefing_panel
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 236
+                        radius: Theme.radiusMedium
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: "#3a2f23"
+                            }
+
+                            GradientStop {
+                                position: 1
+                                color: "#241b14"
+                            }
+                        }
+                        border.color: "#a7814a"
+                        border.width: 2
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingMedium
+                            spacing: Theme.spacingMedium
+                            visible: root.has_selection
+
+                            MapPreview {
+                                id: map_preview
+
+                                Layout.preferredWidth: briefing_panel.height - Theme.spacingMedium * 2
+                                Layout.fillHeight: true
+                                map_path: selected_map_path
+                                player_configs: get_player_configs()
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                spacing: Theme.spacingSmall
+
+                                Label {
+                                    text: field(selected_map_data, "name")
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.heading
                                     font.bold: true
-                                    opacity: model.isEnabled ? 1 : 0.5
+                                    font.family: "serif"
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+
+                                Label {
+                                    text: field(selected_map_data, "description")
+                                    color: Theme.textSubLite
+                                    font.pixelSize: Design.Typography.label
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 4
+                                    elide: Text.ElideRight
+                                    lineHeight: 1.25
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
                                 }
 
                                 Row {
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: Theme.spacingMedium
-                                    opacity: model.isEnabled ? 1 : 0.4
+                                    spacing: Theme.spacingSmall
+                                    Layout.fillWidth: true
 
-                                    Rectangle {
-                                        width: 105
-                                        height: playerCard.height - (Theme.spacingSmall + 2) * 2 - 4
-                                        radius: Theme.radiusSmall + 1
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        color: Theme.cardBase
-                                        border.color: model.colorHex || Theme.textDim
-                                        border.width: colorMA.containsMouse ? 3 : 2
-                                        ToolTip.visible: colorMA.containsMouse
-                                        ToolTip.text: qsTr("Player color: %1 - Click to change").arg(model.colorName || qsTr("Color"))
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: 1
-                                            radius: parent.radius - 1
-                                            color: "transparent"
-                                            border.color: model.colorHex || Theme.textDim
-                                            border.width: 1
-                                            opacity: 0.3
-                                        }
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: model.colorName || qsTr("Color")
-                                            color: model.colorHex || Theme.textMain
-                                            font.pixelSize: Design.Typography.caption
-                                            font.bold: true
-                                        }
-
-                                        MouseArea {
-                                            id: colorMA
-
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                Design.UiSound.toggle();
-                                                cycle_player_color(index);
-                                            }
-                                        }
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            radius: parent.radius
-                                            color: model.colorHex || Theme.textDim
-                                            opacity: colorMA.containsMouse ? 0.15 : 0
-
-                                            Behavior on opacity  {
-                                                NumberAnimation {
-                                                    duration: Theme.animFast
-                                                }
-                                            }
-                                        }
-
-                                        Behavior on border.width  {
-                                            NumberAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
+                                    SkirmishChip {
+                                        width: 92
+                                        height: implicitHeight
+                                        caption: qsTr("Slots")
+                                        value: Design.Numerals.roman(map_slots.length)
+                                        tooltip_text: qsTr("Player slots this battlefield was authored for")
                                     }
 
-                                    Rectangle {
-                                        readonly property real emblem_size: Math.min(playerCard.height - Theme.spacingSmall * 2, 72)
-                                        property string emblem_source: root.nation_emblem_for(model.nationId)
-
-                                        width: emblem_size
-                                        height: emblem_size
-                                        radius: Theme.radiusSmall
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        color: nationMA.containsMouse ? Qt.lighter(Theme.cardBaseB, 1.1) : Theme.cardBaseB
-                                        border.color: nationMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
-                                        border.width: nationMA.containsMouse ? 2 : 1
-                                        ToolTip.visible: nationMA.containsMouse
-                                        ToolTip.text: qsTr("Nation: %1 - Click to change").arg(model.nationName || qsTr("Nation"))
-
-                                        Image {
-                                            anchors.centerIn: parent
-                                            visible: parent.emblem_source !== ""
-                                            source: parent.emblem_source
-                                            width: parent.width * 0.8
-                                            height: width
-                                            fillMode: Image.PreserveAspectFit
-                                            smooth: true
-                                            mipmap: true
-                                        }
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            visible: parent.emblem_source === ""
-                                            text: model.nationName || qsTr("Nation")
-                                            color: Theme.textMain
-                                            font.pixelSize: Design.Typography.caption
-                                            font.bold: true
-                                        }
-
-                                        MouseArea {
-                                            id: nationMA
-
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                Design.UiSound.toggle();
-                                                cycle_player_nation(index);
-                                            }
-                                        }
-
-                                        Behavior on color  {
-                                            ColorAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-
-                                        Behavior on border.color  {
-                                            ColorAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-
-                                        Behavior on border.width  {
-                                            NumberAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
+                                    SkirmishChip {
+                                        width: 92
+                                        height: implicitHeight
+                                        caption: qsTr("In play")
+                                        value: Design.Numerals.roman(roster_revision >= 0 ? enabled_player_count() : 0)
+                                        outline: validation_error === "" ? Theme.thumbBr : Theme.removeColor
+                                        tooltip_text: qsTr("Players that will take the field")
                                     }
 
-                                    Rectangle {
-                                        width: 168
-                                        height: playerCard.height - (Theme.spacingSmall + 2) * 2 - 4
-                                        radius: Theme.radiusSmall
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        color: commanderMA.containsMouse ? Qt.lighter(Theme.cardBaseA, 1.08) : Theme.cardBaseA
-                                        border.color: commanderMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
-                                        border.width: commanderMA.containsMouse ? 2 : 1
-                                        ToolTip.visible: commanderMA.containsMouse
-                                        ToolTip.text: qsTr("Commander: %1 - Click to change").arg(model.commanderName || qsTr("Commander"))
+                                    SkirmishChip {
+                                        readonly property int sides: roster_revision >= 0 ? distinct_team_count() : 0
 
-                                        Column {
-                                            anchors.centerIn: parent
-                                            spacing: 2
-
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                text: qsTr("Commander")
-                                                color: Theme.textSubLite
-                                                font.pixelSize: Design.Typography.caption
-                                                font.bold: true
-                                            }
-
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                width: parent.parent.width - Theme.spacingSmall * 2
-                                                text: model.commanderName || qsTr("Commander")
-                                                color: Theme.textMain
-                                                font.pixelSize: Design.Typography.caption
-                                                font.bold: true
-                                                horizontalAlignment: Text.AlignHCenter
-                                                wrapMode: Text.WordWrap
-                                                maximumLineCount: 2
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: commanderMA
-
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                Design.UiSound.toggle();
-                                                cycle_player_commander(index);
-                                            }
-                                        }
-
-                                        Behavior on color  {
-                                            ColorAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-
-                                        Behavior on border.color  {
-                                            ColorAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-
-                                        Behavior on border.width  {
-                                            NumberAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
+                                        width: 92
+                                        height: implicitHeight
+                                        caption: qsTr("Sides")
+                                        value: Design.Numerals.roman(sides)
+                                        outline: (sides >= 2 || map_is_solo_playable(selected_map_data)) ? Theme.thumbBr : Theme.removeColor
+                                        tooltip_text: qsTr("Distinct teams among the players in play")
                                     }
 
-                                    Rectangle {
-                                        width: 70
-                                        height: playerCard.height - (Theme.spacingSmall + 2) * 2 - 4
-                                        radius: Theme.radiusSmall
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        color: teamMA.containsMouse ? Qt.lighter(Theme.hoverBg, 1.2) : Theme.hoverBg
-                                        border.color: teamMA.containsMouse ? Theme.selectedBr : Theme.thumbBr
-                                        border.width: teamMA.containsMouse ? 2 : 1
-                                        ToolTip.visible: teamMA.containsMouse
-                                        ToolTip.text: qsTr("Team %1 - Click to change").arg(Design.Numerals.roman(model.team_id || 0))
-
-                                        Column {
-                                            anchors.centerIn: parent
-                                            spacing: 2
-
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                text: model.teamIcon || "⚪"
-                                                color: Theme.textMain
-                                                font.pixelSize: Design.Typography.subheading
-                                                font.bold: true
-                                            }
-
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                text: qsTr("Team %1").arg(Design.Numerals.roman(model.team_id || 0))
-                                                color: Theme.textBright
-                                                font.pixelSize: Design.Typography.caption
-                                                font.bold: true
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: teamMA
-
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                Design.UiSound.toggle();
-                                                cycle_player_team(index);
-                                            }
-                                        }
-
-                                        Behavior on color  {
-                                            ColorAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-
-                                        Behavior on border.color  {
-                                            ColorAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-
-                                        Behavior on border.width  {
-                                            NumberAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-                                    }
-
-                                    Rectangle {
-                                        width: 36
-                                        height: playerCard.height - (Theme.spacingSmall + 2) * 2 - 4
-                                        radius: Theme.radiusSmall
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        color: removeMA.containsMouse ? Theme.removeColor : Theme.cardBaseA
-                                        border.color: Theme.removeColor
-                                        border.width: removeMA.containsMouse ? 2 : 1
-                                        visible: !model.isHuman
-                                        ToolTip.visible: removeMA.containsMouse
-                                        ToolTip.text: qsTr("Remove player")
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "✕"
-                                            color: Theme.textMain
-                                            font.pixelSize: Design.Typography.body
-                                            font.bold: true
-                                        }
-
-                                        MouseArea {
-                                            id: removeMA
-
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                Design.UiSound.toggle();
-                                                remove_player(index);
-                                            }
-                                        }
-
-                                        Behavior on color  {
-                                            ColorAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
-
-                                        Behavior on border.width  {
-                                            NumberAnimation {
-                                                duration: Theme.animFast
-                                            }
-                                        }
+                                    SkirmishChip {
+                                        width: 132
+                                        height: implicitHeight
+                                        caption: qsTr("Opposition")
+                                        value: map_is_solo_playable(selected_map_data) ? qsTr("Scripted") : qsTr("Players only")
+                                        tooltip_text: map_is_solo_playable(selected_map_data) ? qsTr("This battlefield brings its own enemies, so you can start alone") : qsTr("This battlefield needs at least two opposing players")
                                     }
                                 }
                             }
+                        }
 
-                            Behavior on color  {
-                                ColorAnimation {
-                                    duration: Theme.animNormal
-                                }
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: Theme.spacingSmall
+                            visible: !root.has_selection
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: Design.Icons.map
+                                font.pixelSize: Design.Typography.glyph
+                                color: Theme.textDim
                             }
 
-                            Behavior on border.color  {
-                                ColorAnimation {
-                                    duration: Theme.animNormal
-                                }
-                            }
-
-                            Behavior on border.width  {
-                                NumberAnimation {
-                                    duration: Theme.animNormal
-                                }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: maps_loading ? qsTr("Loading maps...") : qsTr("Select a battlefield to continue")
+                                color: Theme.textHint
+                                font.pixelSize: Design.Typography.label
+                                font.italic: true
                             }
                         }
                     }
 
                     Rectangle {
-                        width: parent.width
-                        height: 8
-                        color: "transparent"
-                    }
+                        id: roster_panel
 
-                    Button {
-                        id: addCpuButton
-
-                        readonly property bool allowed: players_model.count < player_ids_for_map(selected_map_data).length
-
-                        text: qsTr("+ Add CPU")
-                        onClicked: {
-                            if (!allowed) {
-                                Design.UiSound.warning();
-                                return;
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: Theme.radiusMedium
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: "#3a2f23"
                             }
-                            Design.UiSound.activate();
-                            add_cpu();
+
+                            GradientStop {
+                                position: 1
+                                color: "#241b14"
+                            }
                         }
-                        hoverEnabled: true
-                        implicitHeight: 38
-                        implicitWidth: 120
-                        ToolTip.visible: addCpuHover.containsMouse
-                        ToolTip.text: allowed ? qsTr("Add AI opponent") : qsTr("Every slot on this map is taken")
+                        border.color: "#a7814a"
+                        border.width: 2
+                        visible: root.has_selection
 
-                        MouseArea {
-                            id: addCpuHover
-
+                        ColumnLayout {
                             anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.NoButton
-                            cursorShape: addCpuButton.allowed ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                        }
+                            anchors.margins: Theme.spacingMedium
+                            spacing: Theme.spacingSmall
 
-                        contentItem: Text {
-                            text: parent.text
-                            font.pixelSize: Design.Typography.caption
-                            font.bold: true
-                            color: addCpuButton.allowed ? Theme.textMain : Theme.textDim
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingSmall
 
-                        background: Rectangle {
-                            radius: Theme.radiusMedium
-                            color: {
-                                if (!addCpuButton.allowed)
-                                    return Theme.cardBase;
-                                if (parent.down)
-                                    return Qt.darker(Theme.addColor, 1.2);
-                                if (addCpuHover.containsMouse)
-                                    return Qt.lighter(Theme.addColor, 1.2);
-                                return Theme.addColor;
-                            }
-                            border.width: addCpuButton.allowed && addCpuHover.containsMouse ? 2 : 1
-                            border.color: addCpuButton.allowed ? Qt.lighter(Theme.addColor, 1.3) : Theme.thumbBr
+                                Label {
+                                    text: qsTr("Order of Battle")
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.heading
+                                    font.bold: true
+                                    font.family: "serif"
+                                }
 
-                            Behavior on color  {
-                                ColorAnimation {
-                                    duration: Theme.animFast
+                                Label {
+                                    text: qsTr("Click any chip to change it")
+                                    color: Theme.textSubLite
+                                    font.pixelSize: Design.Typography.caption
+                                    font.italic: true
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                StyledButton {
+                                    id: add_cpu_button
+
+                                    readonly property bool allowed: players_model.count < map_slots.length
+
+                                    text: qsTr("+ Add CPU")
+                                    button_style: "small"
+                                    blocked: !allowed
+                                    disabledReason: qsTr("Every slot on this battlefield is taken")
+                                    ToolTip.visible: hovered && allowed
+                                    ToolTip.text: qsTr("Add an AI opponent")
+                                    ToolTip.delay: Design.Metrics.tooltipDelay
+                                    onClicked: add_cpu()
                                 }
                             }
 
-                            Behavior on border.width  {
-                                NumberAnimation {
-                                    duration: Theme.animFast
+                            ListView {
+                                id: players_list
+
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                model: players_model
+                                spacing: Theme.spacingSmall
+                                clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                ScrollBar.vertical: ScrollBar {
+                                    policy: players_list.contentHeight > players_list.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                                }
+
+                                delegate: Rectangle {
+                                    id: player_card
+
+                                    width: players_list.width - (players_list.ScrollBar.vertical.visible ? Theme.spacingMedium : 0)
+                                    height: 68
+                                    radius: Theme.radiusSmall
+                                    color: model.isHuman ? "#33261a" : "#2c231a"
+                                    border.color: model.isHuman ? Theme.accent : Theme.thumbBr
+                                    border.width: model.isHuman ? 2 : 1
+                                    opacity: model.isEnabled ? 1 : 0.55
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: Theme.spacingSmall
+                                        spacing: Theme.spacingSmall
+
+                                        Design.IronCheckBox {
+                                            checked: model.isEnabled
+                                            ToolTip.visible: hovered
+                                            ToolTip.text: model.isEnabled ? qsTr("Leave this slot empty") : qsTr("Bring this slot into the battle")
+                                            ToolTip.delay: Design.Metrics.tooltipDelay
+                                            onToggled: toggle_player_enabled(index)
+                                        }
+
+                                        Rectangle {
+                                            Layout.preferredWidth: 8
+                                            Layout.preferredHeight: player_card.height - Theme.spacingMedium
+                                            radius: 4
+                                            color: model.colorHex || Theme.textDim
+                                        }
+
+                                        ColumnLayout {
+                                            Layout.fillWidth: true
+                                            Layout.minimumWidth: 96
+                                            spacing: 0
+
+                                            Label {
+                                                text: model.playerName || ""
+                                                color: model.isHuman ? Theme.accentBright : Theme.textBright
+                                                font.pixelSize: Design.Typography.body
+                                                font.bold: true
+                                                elide: Text.ElideRight
+                                                Layout.fillWidth: true
+                                            }
+
+                                            Label {
+                                                text: model.isHuman ? qsTr("Slot %1 • click to move seat").arg(Design.Numerals.roman(model.player_id)) : qsTr("Slot %1 • AI").arg(Design.Numerals.roman(model.player_id))
+                                                color: Theme.textSubLite
+                                                font.pixelSize: Design.Typography.caption
+                                                elide: Text.ElideRight
+                                                Layout.fillWidth: true
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    enabled: (model.isHuman === true) && map_slots.length > 1
+                                                    hoverEnabled: enabled
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: {
+                                                        Design.UiSound.toggle();
+                                                        cycle_human_slot();
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        SkirmishChip {
+                                            Layout.preferredWidth: 104
+                                            caption: qsTr("Colour")
+                                            value: model.colorName || qsTr("Colour")
+                                            value_color: model.colorHex || Theme.textMain
+                                            outline: model.colorHex || Theme.thumbBr
+                                            interactive: true
+                                            tooltip_text: qsTr("Player colour — click to change")
+                                            onActivated: cycle_player_color(index)
+                                        }
+
+                                        SkirmishChip {
+                                            Layout.preferredWidth: 192
+                                            caption: qsTr("Nation")
+                                            value: model.nationName || qsTr("Nation")
+                                            emblem_source: root.nation_emblem_for(model.nationId)
+                                            interactive: true
+                                            tooltip_text: qsTr("Nation — click to change")
+                                            onActivated: cycle_player_nation(index)
+                                        }
+
+                                        SkirmishChip {
+                                            Layout.preferredWidth: 190
+                                            caption: qsTr("Commander")
+                                            value: model.commanderName || qsTr("Commander")
+                                            interactive: true
+                                            tooltip_text: model.commanderRole !== "" ? qsTr("%1 — click to change commander").arg(model.commanderRole) : qsTr("Commander — click to change")
+                                            onActivated: cycle_player_commander(index)
+                                        }
+
+                                        SkirmishChip {
+                                            Layout.preferredWidth: 92
+                                            caption: model.teamIcon || Theme.teamIcons[1]
+                                            value: qsTr("Team %1").arg(Design.Numerals.roman(model.team_id + 1))
+                                            interactive: true
+                                            tooltip_text: qsTr("Team — click to change sides")
+                                            onActivated: cycle_player_team(index)
+                                        }
+
+                                        Design.IronIconButton {
+                                            iconText: Design.Icons.close
+                                            tooltip: qsTr("Remove this opponent")
+                                            visible: !model.isHuman
+                                            tone: "destructive"
+                                            onClicked: remove_player(index)
+                                        }
+                                    }
+
+                                    Behavior on opacity  {
+                                        NumberAnimation {
+                                            duration: Theme.animFast
+                                        }
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                id: dossier
+
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: dossier_column.implicitHeight + Theme.spacingMedium * 2
+                                radius: Theme.radiusSmall
+                                color: "#241c14"
+                                border.color: "#8f6d43"
+                                border.width: 1
+                                visible: human_commander_name !== ""
+
+                                ColumnLayout {
+                                    id: dossier_column
+
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.margins: Theme.spacingMedium
+                                    spacing: Theme.spacingTiny
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Theme.spacingSmall
+
+                                        Label {
+                                            text: Design.Icons.commander + " " + human_commander_name
+                                            color: Theme.accentBright
+                                            font.pixelSize: Design.Typography.body
+                                            font.bold: true
+                                            font.family: "serif"
+                                        }
+
+                                        Design.IronBadge {
+                                            text: human_nation_name
+                                            tone: Theme.textSub
+                                            visible: human_nation_name !== ""
+                                        }
+
+                                        Item {
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+
+                                    Label {
+                                        text: human_commander_role
+                                        visible: human_commander_role !== ""
+                                        color: Theme.textSub
+                                        font.pixelSize: Design.Typography.caption
+                                        font.italic: true
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Label {
+                                        text: human_commander_bonus
+                                        visible: human_commander_bonus !== ""
+                                        color: Theme.textSubLite
+                                        font.pixelSize: Design.Typography.caption
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Label {
+                                        text: human_commander_aura !== "" ? Design.Icons.aura + " " + human_commander_aura : ""
+                                        visible: human_commander_aura !== ""
+                                        color: Theme.textSub
+                                        font.pixelSize: Design.Typography.caption
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Label {
+                                        text: human_commander_rally !== "" ? Design.Icons.rally + " " + human_commander_rally : ""
+                                        visible: human_commander_rally !== ""
+                                        color: Theme.textSub
+                                        font.pixelSize: Design.Typography.caption
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
                                 }
                             }
                         }
@@ -1551,338 +1306,62 @@ Item {
             }
 
             Rectangle {
-                id: playerSelectionPanel
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: Theme.panelBr
+            }
 
-                radius: Theme.radiusLarge
-                color: Theme.cardBaseA
-                border.color: Theme.panelBr
-                border.width: 1
-                visible: false
-                height: playerSelectionContent.height + 20
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.spacingMedium
 
-                anchors {
-                    top: playerConfigPanel.bottom
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.spacingMedium
-                }
-
-                Column {
-                    id: playerSelectionContent
-
+                Row {
                     spacing: Theme.spacingSmall
 
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        top: parent.top
-                        margins: Theme.spacingSmall
+                    Design.IronHotkeyLabel {
+                        text: qsTr("↑ ↓ Choose")
                     }
 
-                    Text {
-                        text: qsTr("Available Player Slots: %1").arg(Design.Numerals.roman((function () {
-                                        return player_ids_for_map(selected_map_data).length;
-                                    })()))
-                        color: Theme.textMain
-                        font.pixelSize: Design.Typography.label
-                        font.bold: true
+                    Design.IronHotkeyLabel {
+                        text: qsTr("Enter Start")
                     }
 
-                    Text {
-                        text: qsTr("Select your player ID:")
-                        color: Theme.textSubLite
-                        font.pixelSize: Design.Typography.caption
-                    }
-
-                    Flow {
-                        width: parent.width
-                        spacing: Theme.spacingSmall
-
-                        Repeater {
-                            model: {
-                                return player_ids_for_map(selected_map_data);
-                            }
-
-                            delegate: Rectangle {
-                                width: 60
-                                height: 32
-                                radius: Theme.radiusMedium
-                                color: {
-                                    var pid = modelData;
-                                    if (typeof game === 'undefined')
-                                        return Theme.cardBaseB;
-                                    return (game.selected_player_id === pid) ? Theme.selectedBg : Theme.cardBaseB;
-                                }
-                                border.color: {
-                                    var pid = modelData;
-                                    if (typeof game === 'undefined')
-                                        return Theme.thumbBr;
-                                    return (game.selected_player_id === pid) ? Theme.selectedBr : Theme.thumbBr;
-                                }
-                                border.width: 1
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: qsTr("ID %1").arg(Design.Numerals.roman(modelData))
-                                    color: {
-                                        var pid = modelData;
-                                        if (typeof game === 'undefined')
-                                            return Theme.textSub;
-                                        return (game.selected_player_id === pid) ? Theme.textMain : Theme.textSub;
-                                    }
-                                    font.pixelSize: Design.Typography.caption
-                                    font.bold: {
-                                        var pid = modelData;
-                                        if (typeof game === 'undefined')
-                                            return false;
-                                        return game.selected_player_id === pid;
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        Design.UiSound.activate();
-                                        if (typeof game !== 'undefined')
-                                            game.selected_player_id = Number(modelData);
-                                        initialize_players(selected_map_data);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Text {
-                        text: {
-                            if (typeof game === 'undefined')
-                                return "";
-                            var ids = player_ids_for_map(selected_map_data);
-                            if (ids.length === 0)
-                                return "";
-                            var others = [];
-                            for (var i = 0; i < ids.length; i++) {
-                                if (Number(ids[i]) !== game.selected_player_id)
-                                    others.push(Design.Numerals.roman(Number(ids[i])));
-                            }
-                            if (others.length === 0)
-                                return qsTr("All other slots will be CPU-controlled");
-                            return qsTr("CPU will control: ID %1").arg(others.join(qsTr(", ID ")));
-                        }
-                        color: Theme.textSubLite
-                        font.pixelSize: Design.Typography.caption
-                        wrapMode: Text.WordWrap
-                        width: parent.width
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            id: footer
-
-            height: 60
-            color: "transparent"
-
-            anchors {
-                left: parent.left
-                right: parent.right
-                bottom: parent.bottom
-                leftMargin: Theme.spacingXLarge
-                rightMargin: Theme.spacingXLarge
-                bottomMargin: Theme.spacingMedium
-            }
-
-            Rectangle {
-                height: 1
-                color: Theme.panelBr
-
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    top: parent.top
-                }
-            }
-
-            Text {
-                id: validationErrorText
-
-                text: validation_error
-                visible: validation_error !== ""
-                color: Theme.removeColor
-                font.pixelSize: Design.Typography.caption
-                font.bold: true
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                    leftMargin: 140
-                    rightMargin: 140
-                }
-            }
-
-            Button {
-                text: qsTr("Back")
-                onClicked: {
-                    Design.UiSound.back();
-                    root.cancelled();
-                }
-                hoverEnabled: true
-                implicitHeight: 42
-                implicitWidth: 120
-                ToolTip.visible: backHover.containsMouse
-                ToolTip.text: qsTr("Return to main menu (Esc)")
-
-                anchors {
-                    left: parent.left
-                    verticalCenter: parent.verticalCenter
-                    topMargin: Theme.spacingSmall
-                }
-
-                MouseArea {
-                    id: backHover
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.NoButton
-                    cursorShape: Qt.PointingHandCursor
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    font.pixelSize: backHover.containsMouse ? Design.Typography.label : Design.Typography.caption
-                    font.bold: backHover.containsMouse
-                    color: Theme.textBright
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-
-                    Behavior on font.pixelSize  {
-                        NumberAnimation {
-                            duration: Theme.animFast
-                        }
+                    Design.IronHotkeyLabel {
+                        text: qsTr("Esc Back")
                     }
                 }
 
-                background: Rectangle {
-                    radius: Theme.radiusLarge
-                    color: {
-                        if (parent.down)
-                            return Theme.hover;
-                        if (backHover.containsMouse)
-                            return Theme.cardBase;
-                        return Qt.rgba(0, 0, 0, 0);
-                    }
-                    border.width: backHover.containsMouse ? 2 : 1
-                    border.color: backHover.containsMouse ? Theme.thumbBr : Theme.panelBr
-
-                    Behavior on color  {
-                        ColorAnimation {
-                            duration: Theme.animFast
-                        }
-                    }
-
-                    Behavior on border.color  {
-                        ColorAnimation {
-                            duration: Theme.animFast
-                        }
-                    }
-
-                    Behavior on border.width  {
-                        NumberAnimation {
-                            duration: Theme.animFast
-                        }
-                    }
-                }
-            }
-
-            Button {
-                id: playButton
-
-                readonly property bool allowed: list.currentIndex >= 0 && list.count > 0 && players_model.count > 0 && validation_error === ""
-
-                text: qsTr("Play")
-                onClicked: {
-                    if (!allowed) {
-                        Design.UiSound.warning();
-                        return;
-                    }
-                    Design.UiSound.activate();
-                    accept_selection();
-                }
-                hoverEnabled: true
-                implicitHeight: 42
-                implicitWidth: 130
-                ToolTip.visible: playHover.containsMouse
-                ToolTip.text: {
-                    if (validation_error !== "")
-                        return validation_error;
-                    return qsTr("Start game (Enter)");
-                }
-
-                anchors {
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                    topMargin: Theme.spacingSmall
-                }
-
-                MouseArea {
-                    id: playHover
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.NoButton
-                    cursorShape: playButton.allowed ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                }
-
-                contentItem: Text {
-                    text: parent.text
-                    font.pixelSize: (playButton.allowed && playHover.containsMouse) ? Design.Typography.body : Design.Typography.label
+                Label {
+                    text: validation_error
+                    visible: validation_error !== "" && root.has_selection
+                    color: Theme.removeColor
+                    font.pixelSize: Design.Typography.label
                     font.bold: true
-                    color: playButton.allowed ? Theme.textMain : Theme.textDim
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-
-                    Behavior on font.pixelSize  {
-                        NumberAnimation {
-                            duration: Theme.animFast
-                        }
-                    }
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
                 }
 
-                background: Rectangle {
-                    radius: Theme.radiusLarge
-                    color: {
-                        if (!playButton.allowed)
-                            return Theme.cardBaseB;
-                        if (parent.down)
-                            return Theme.selectedBr;
-                        if (playHover.containsMouse)
-                            return Qt.lighter(Theme.selectedBg, 1.2);
-                        return Theme.selectedBg;
-                    }
-                    border.width: playButton.allowed && playHover.containsMouse ? 2 : 1
-                    border.color: playButton.allowed ? Theme.selectedBr : Theme.panelBr
+                Item {
+                    Layout.fillWidth: true
+                    visible: validation_error === "" || !root.has_selection
+                }
 
-                    Behavior on color  {
-                        ColorAnimation {
-                            duration: Theme.animFast
-                        }
-                    }
+                StyledButton {
+                    id: play_button
 
-                    Behavior on border.color  {
-                        ColorAnimation {
-                            duration: Theme.animFast
-                        }
-                    }
+                    readonly property bool allowed: root.has_selection && players_model.count > 0 && validation_error === ""
 
-                    Behavior on border.width  {
-                        NumberAnimation {
-                            duration: Theme.animFast
-                        }
-                    }
+                    text: qsTr("Play ▶")
+                    button_style: "primary"
+                    implicitWidth: Design.Metrics.space24 * 8
+                    implicitHeight: Design.Metrics.controlHeight + Design.Metrics.space8
+                    blocked: !allowed
+                    disabledReason: validation_error !== "" ? validation_error : qsTr("Select a battlefield to continue")
+                    ToolTip.visible: hovered && allowed
+                    ToolTip.text: qsTr("Start the battle (Enter)")
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    onClicked: accept_selection()
                 }
             }
         }

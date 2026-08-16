@@ -591,7 +591,6 @@ Item {
                         return;
                     }
                     renderArea.mouse_pan_active = true;
-                    mainWindow.edge_scroll_disabled = true;
                     if (typeof game !== 'undefined' && game.orders.on_right_press)
                         game.orders.on_right_press(mouse.x, mouse.y);
                 }
