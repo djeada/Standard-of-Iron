@@ -3165,6 +3165,28 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Camera controls</source>
         <translation>Kamerasteuerung</translation>
     </message>
+    <message>
+        <source>Visible</source>
+        <translation>Sichtbar</translation>
+    </message>
+    <message>
+        <source>Explored</source>
+        <translation>Erkundet</translation>
+    </message>
+    <message>
+        <source>Unseen</source>
+        <translation>Unbekannt</translation>
+    </message>
+    <message>
+        <source>Left click moves the camera, right click orders selected troops.
+Visible: currently scouted, enemies shown.
+Explored: seen before, terrain only.
+Unseen: never scouted.</source>
+        <translation>Linksklick bewegt die Kamera, Rechtsklick befiehlt den ausgewählten Truppen.
+Sichtbar: derzeit aufgeklärt, Feinde werden angezeigt.
+Erkundet: früher gesehen, nur Gelände.
+Unbekannt: nie aufgeklärt.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>

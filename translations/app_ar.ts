@@ -3169,6 +3169,28 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Camera controls</source>
         <translation>تحكّم الكاميرا</translation>
     </message>
+    <message>
+        <source>Visible</source>
+        <translation>مرئي</translation>
+    </message>
+    <message>
+        <source>Explored</source>
+        <translation>مستكشف</translation>
+    </message>
+    <message>
+        <source>Unseen</source>
+        <translation>مجهول</translation>
+    </message>
+    <message>
+        <source>Left click moves the camera, right click orders selected troops.
+Visible: currently scouted, enemies shown.
+Explored: seen before, terrain only.
+Unseen: never scouted.</source>
+        <translation>النقر الأيسر يحرك الكاميرا، والنقر الأيمن يأمر القوات المحددة.
+مرئي: مكشوف حاليا، ويظهر الأعداء.
+مستكشف: شوهد سابقا، التضاريس فقط.
+مجهول: لم يكشف قط.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>

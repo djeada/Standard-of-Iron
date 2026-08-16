@@ -3165,6 +3165,28 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Camera controls</source>
         <translation>Controles de cámara</translation>
     </message>
+    <message>
+        <source>Visible</source>
+        <translation>Visible</translation>
+    </message>
+    <message>
+        <source>Explored</source>
+        <translation>Explorado</translation>
+    </message>
+    <message>
+        <source>Unseen</source>
+        <translation>Sin ver</translation>
+    </message>
+    <message>
+        <source>Left click moves the camera, right click orders selected troops.
+Visible: currently scouted, enemies shown.
+Explored: seen before, terrain only.
+Unseen: never scouted.</source>
+        <translation>Clic izquierdo mueve la cámara, clic derecho da órdenes a las tropas seleccionadas.
+Visible: explorado ahora, se muestran los enemigos.
+Explorado: visto antes, solo el terreno.
+Sin ver: nunca explorado.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
