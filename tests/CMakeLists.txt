@@ -438,6 +438,7 @@ add_executable(
     core/campaign_wave_assault_test.cpp
     core/production_manager_test.cpp
     core/selection_query_service_test.cpp
+    core/order_feedback_test.cpp
     core/rts_action_model_test.cpp
     core/runtime_frame_orchestrator_test.cpp
     controllers/command_controller_test.cpp

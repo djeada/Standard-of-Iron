@@ -608,6 +608,9 @@ add_library(
     app/core/mission_definition_view.cpp
     app/core/mission_setup_coordinator.cpp
     app/core/mission_wave_director.cpp
+    app/core/order_feedback.cpp
+    app/core/order_markers.cpp
+    app/core/order_service.cpp
     app/core/production_manager.cpp
     app/utils/movement_utils.cpp
     app/core/renderer_bootstrap.cpp
