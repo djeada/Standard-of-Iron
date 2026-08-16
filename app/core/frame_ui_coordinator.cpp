@@ -6,6 +6,7 @@
 #include "../controllers/command_controller.h"
 #include "../models/cursor_manager.h"
 #include "../models/hover_tracker.h"
+#include "game/accessibility/motion_settings.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -29,6 +30,7 @@
 #include "render/geom/patrol_flags.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/geom/range_rings.h"
+#include "render/geom/target_focus_rings.h"
 #include "render/scene_renderer.h"
 #include "rts_action_model.h"
 
@@ -135,6 +137,41 @@ auto order_marker_pattern(App::Core::OrderKind kind,
   }
 }
 
+auto focus_visual_role(Game::Systems::TargetFocusRole role)
+    -> Render::GL::TargetFocusVisualRole {
+  switch (role) {
+  case Game::Systems::TargetFocusRole::Inspected:
+    return Render::GL::TargetFocusVisualRole::Inspected;
+  case Game::Systems::TargetFocusRole::LockedTarget:
+    return Render::GL::TargetFocusVisualRole::LockedTarget;
+  case Game::Systems::TargetFocusRole::IncomingAttacker:
+    return Render::GL::TargetFocusVisualRole::IncomingAttacker;
+  }
+  return Render::GL::TargetFocusVisualRole::LockedTarget;
+}
+
+void render_target_focus(Render::GL::Renderer* renderer,
+                         Render::GL::ResourceManager* resources,
+                         const std::vector<Game::Systems::TargetFocusMarker>& markers) {
+  if (markers.empty()) {
+    return;
+  }
+  std::vector<Render::GL::TargetFocusVisual> visuals;
+  visuals.reserve(markers.size());
+  for (const auto& marker : markers) {
+    visuals.push_back(
+        {.position = QVector3D(marker.world_x, marker.world_y, marker.world_z),
+         .radius = marker.radius,
+         .role = focus_visual_role(marker.role),
+         .hostile = marker.hostile,
+         .is_building = marker.is_building,
+         .weight = marker.weight});
+  }
+  Render::GL::TargetFocusStyle style;
+  style.reduced_motion = Game::Accessibility::MotionSettings::reduced_motion();
+  Render::GL::render_target_focus_rings(renderer, resources, visuals, style);
+}
+
 void render_order_markers(Render::GL::Renderer* renderer,
                           const std::vector<App::Core::OrderMarker>& markers) {
   if (renderer == nullptr || markers.empty()) {
@@ -186,7 +223,18 @@ void render_effects(const RenderEffectsContext& context,
 
   if (auto* projectile_system =
           context.world->get_system<Game::Systems::ProjectileSystem>()) {
-    Render::GL::render_projectiles(context.renderer, res, *projectile_system);
+    Render::GL::ProjectileViewContext view;
+    view.local_owner_id = context.local_owner_id;
+    view.reduced_effects = Game::Accessibility::MotionSettings::reduced_motion();
+    Engine::Core::World* world = context.world;
+    view.owner_of = [world](std::uint64_t id) -> int {
+      auto* entity = world->get_entity(id);
+      const auto* unit = entity != nullptr
+                             ? entity->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      return unit != nullptr ? unit->owner_id : 0;
+    };
+    Render::GL::render_projectiles(context.renderer, res, *projectile_system, &view);
   }
 
   if (auto* healing_beam_system =
@@ -215,6 +263,10 @@ void render_effects(const RenderEffectsContext& context,
   if (context.attack_range_rings != nullptr) {
     Render::GL::render_attack_range_rings(
         context.renderer, res, *context.attack_range_rings);
+  }
+
+  if (context.target_focus != nullptr) {
+    render_target_focus(context.renderer, res, *context.target_focus);
   }
 
   if (context.order_markers != nullptr) {

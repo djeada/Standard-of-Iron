@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 
+#include <functional>
 #include <vector>
 
 #include "../core/entity.h"
@@ -43,6 +44,12 @@ public:
   void on_right_click_clear_selection();
   void select_all_player_troops(int local_owner_id);
   void select_single_unit(Engine::Core::EntityID id, int local_owner_id);
+  [[nodiscard]] auto can_inspect(Engine::Core::EntityID entity_id,
+                                 int local_owner_id) const -> bool;
+  using InspectFilter = std::function<bool(Engine::Core::EntityID)>;
+  void set_inspect_filter(InspectFilter filter) {
+    m_inspect_filter = std::move(filter);
+  }
   void select_selected_units_by_type(const QString& unit_type, int local_owner_id);
 
   [[nodiscard]] auto has_units_selected() const -> bool;
@@ -57,6 +64,7 @@ private:
   Engine::Core::World* m_world;
   SelectionSystem* m_selection_system;
   PickingService* m_picking_service;
+  InspectFilter m_inspect_filter;
 
   void sync_selection_flags();
 };

@@ -66,6 +66,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/target_focus.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/systems/unit_activity.h"
@@ -86,6 +87,7 @@
 #include "render/geom/arrow.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/geom/range_rings.h"
+#include "render/geom/target_focus_rings.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/rain_renderer.h"
@@ -616,7 +618,17 @@ void ArenaViewport::paintGL() {
     }
     if (auto* projectile_system =
             m_world->get_system<Game::Systems::ProjectileSystem>()) {
-      Render::GL::render_projectiles(m_renderer.get(), res, *projectile_system);
+      Render::GL::ProjectileViewContext view;
+      view.local_owner_id = k_local_owner_id;
+      Engine::Core::World* world = m_world.get();
+      view.owner_of = [world](std::uint64_t id) -> int {
+        auto* entity = world->get_entity(id);
+        const auto* unit = entity != nullptr
+                               ? entity->get_component<Engine::Core::UnitComponent>()
+                               : nullptr;
+        return unit != nullptr ? unit->owner_id : 0;
+      };
+      Render::GL::render_projectiles(m_renderer.get(), res, *projectile_system, &view);
     }
     if (auto* healing_beam_system =
             m_world->get_system<Game::Systems::HealingBeamSystem>()) {
@@ -632,6 +644,7 @@ void ArenaViewport::paintGL() {
     }
     Render::GL::render_blood_stains(m_renderer.get(), res, m_world.get());
     render_attack_range_rings(res);
+    render_target_focus_rings(res);
     const bool cinematic_capture =
         m_clean_capture || m_promo_mode ||
         (m_scenario_runner != nullptr &&
@@ -1088,6 +1101,53 @@ void ArenaViewport::render_attack_range_rings(Render::GL::ResourceManager* resou
   m_attack_range_rings = Game::Systems::collect_attack_range_rings(request);
   Render::GL::render_attack_range_rings(
       m_renderer.get(), resources, m_attack_range_rings);
+}
+
+void ArenaViewport::render_target_focus_rings(Render::GL::ResourceManager* resources) {
+  auto* selection = selection_system();
+  if (selection == nullptr || m_world == nullptr || m_renderer == nullptr) {
+    return;
+  }
+  const bool cinematic_capture = m_clean_capture || m_promo_mode ||
+                                 (m_scenario_runner != nullptr &&
+                                  m_scenario_runner->definition().suppress_ui_overlays);
+  if (cinematic_capture) {
+    return;
+  }
+  Game::Systems::TargetFocusRequest request;
+  request.world = m_world.get();
+  request.local_owner_id = k_local_owner_id;
+  request.selection = &selection->get_selected_units();
+  request.inspected = selection->inspected_entity();
+  const auto markers = Game::Systems::collect_target_focus_markers(request);
+  if (markers.empty()) {
+    return;
+  }
+  std::vector<Render::GL::TargetFocusVisual> visuals;
+  visuals.reserve(markers.size());
+  for (const auto& marker : markers) {
+    Render::GL::TargetFocusVisualRole role =
+        Render::GL::TargetFocusVisualRole::LockedTarget;
+    switch (marker.role) {
+    case Game::Systems::TargetFocusRole::Inspected:
+      role = Render::GL::TargetFocusVisualRole::Inspected;
+      break;
+    case Game::Systems::TargetFocusRole::LockedTarget:
+      role = Render::GL::TargetFocusVisualRole::LockedTarget;
+      break;
+    case Game::Systems::TargetFocusRole::IncomingAttacker:
+      role = Render::GL::TargetFocusVisualRole::IncomingAttacker;
+      break;
+    }
+    visuals.push_back(
+        {.position = QVector3D(marker.world_x, marker.world_y, marker.world_z),
+         .radius = marker.radius,
+         .role = role,
+         .hostile = marker.hostile,
+         .is_building = marker.is_building,
+         .weight = marker.weight});
+  }
+  Render::GL::render_target_focus_rings(m_renderer.get(), resources, visuals);
 }
 
 auto ArenaViewport::selection_system() const -> Game::Systems::SelectionSystem* {

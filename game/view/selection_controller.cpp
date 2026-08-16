@@ -83,12 +83,50 @@ void SelectionController::on_click_select(qreal sx,
     return;
   }
 
-  if (!additive && !m_selection_system->get_selected_units().empty()) {
+  if (!additive) {
+    Engine::Core::EntityID const foreign = Game::Systems::PickingService::pick_single(
+        float(sx), float(sy), *m_world, *cam, viewport_width, viewport_height, 0, true);
+    if (foreign != 0U && can_inspect(foreign, local_owner_id)) {
+      const bool changed = m_selection_system->inspected_entity() != foreign ||
+                           !m_selection_system->get_selected_units().empty();
+      m_selection_system->clear_selection();
+      m_selection_system->set_inspected_entity(foreign);
+      sync_selection_flags();
+      if (changed) {
+        play_selection_cue(1);
+        emit selection_changed();
+      }
+      return;
+    }
+  }
+
+  const bool had_focus = !m_selection_system->get_selected_units().empty() ||
+                         m_selection_system->inspected_entity() != 0U;
+  if (!additive && had_focus) {
     m_selection_system->clear_selection();
     sync_selection_flags();
     play_deselect_cue();
     emit selection_changed();
   }
+}
+
+auto SelectionController::can_inspect(Engine::Core::EntityID entity_id,
+                                      int local_owner_id) const -> bool {
+  if (m_world == nullptr) {
+    return false;
+  }
+  auto* entity = m_world->get_entity(entity_id);
+  if (entity == nullptr) {
+    return false;
+  }
+  const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr || unit->health <= 0) {
+    return false;
+  }
+  if (unit->owner_id == local_owner_id) {
+    return false;
+  }
+  return !m_inspect_filter || m_inspect_filter(entity_id);
 }
 
 void SelectionController::on_area_selected(qreal x1,

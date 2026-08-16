@@ -252,6 +252,7 @@
         "game/systems/combat_status_effect_system",
         "game/systems/attack_range",
         "game/systems/attack_targeting",
+        "game/systems/target_focus",
         "game/systems/arrow_system",
         "game/systems/arrow_projectile",
         "game/systems/arrow_visual_profile",

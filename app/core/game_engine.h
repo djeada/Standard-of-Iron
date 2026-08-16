@@ -31,9 +31,11 @@
 #include "ambient_state_manager.h"
 #include "app_scene_context.h"
 #include "camera_controller.h"
+#include "combat_feedback.h"
 #include "commander_control_controller.h"
 #include "commander_input_adapter.h"
 #include "entity_cache.h"
+#include "focus_target.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/command/command.h"
 #include "game/command/replay.h"
@@ -44,6 +46,7 @@
 #include "game/systems/attack_targeting.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/save_format.h"
+#include "game/systems/target_focus.h"
 #include "game/systems/unit_activity.h"
 #include "game/util/selection_utils.h"
 #include "game/view/selection_controller.h"
@@ -436,6 +439,8 @@ public:
   void toggle_repair_order() override;
   void toggle_auto_gather(const QString& priority_product_type) override;
   void confirm_repair_at(qreal sx, qreal sy) override;
+  void clear_inspect_target() override;
+  [[nodiscard]] auto pop_combat_damage_events() -> QVariantList override;
 
   [[nodiscard]] bool has_patrol_preview_waypoint() const;
   [[nodiscard]] QVector3D get_patrol_preview_waypoint() const;
@@ -523,6 +528,11 @@ private:
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
   [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
   void sync_selected_player_state();
+  void sync_focus_targets();
+  void sync_target_focus_markers();
+  void record_combat_hit(const Engine::Core::CombatHitEvent& e);
+  [[nodiscard]] auto
+  describe_focus_entity(Engine::Core::EntityID id) const -> App::Core::FocusTargetInfo;
   void sync_scatter_world_props();
   QAbstractItemModel* selected_units_model();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
@@ -618,6 +628,10 @@ private:
   Game::Systems::AttackTargetingHighlights m_attack_targeting;
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   App::Core::OrderMarkerStore m_order_markers;
+  std::vector<Game::Systems::TargetFocusMarker> m_target_focus;
+  App::Core::CombatFeedbackStore m_combat_feedback;
+  QVariantMap m_inspect_target;
+  QVariantMap m_selection_target;
   QVariantMap m_attack_target_hint;
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::SelectionController> m_selection_controller;

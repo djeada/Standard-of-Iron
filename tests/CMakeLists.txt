@@ -159,6 +159,7 @@ add_executable(
     systems/stamina_system_test.cpp
     systems/attack_range_test.cpp
     systems/attack_targeting_test.cpp
+    systems/target_focus_test.cpp
     systems/combat_mode_test.cpp
     systems/hold_mode_test.cpp
     systems/rpg_bow_test.cpp
@@ -373,6 +374,7 @@ add_executable(
     render/selection_ring_layout_test.cpp
     render/ground_marker_pattern_test.cpp
     render/arrow_cloud_render_test.cpp
+    render/projectile_relation_test.cpp
     render/orientation_arrow_mesh_test.cpp
     render/creature/rigged_mesh_asset_test.cpp
     render/creature/snapshot_mesh_asset_test.cpp
@@ -438,6 +440,7 @@ add_executable(
     core/campaign_wave_assault_test.cpp
     core/production_manager_test.cpp
     core/selection_query_service_test.cpp
+    core/combat_feedback_test.cpp
     core/order_feedback_test.cpp
     core/rts_action_model_test.cpp
     core/runtime_frame_orchestrator_test.cpp

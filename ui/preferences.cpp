@@ -49,6 +49,7 @@ UiPreferences::UiPreferences(QObject* parent)
   Game::Accessibility::TeamIdentity::set_patterns_enabled(effective_team_patterns());
   Game::Accessibility::MotionSettings::set_camera_motion_scale(
       static_cast<float>(m_camera_motion_scale));
+  Game::Accessibility::MotionSettings::set_reduced_motion(m_reduced_motion);
 }
 
 auto UiPreferences::instance() -> UiPreferences* {
@@ -117,6 +118,7 @@ void UiPreferences::set_reduced_motion(bool enabled) {
 
   m_reduced_motion = enabled;
   UserSettings::save_ui_reduced_motion(enabled);
+  Game::Accessibility::MotionSettings::set_reduced_motion(enabled);
   emit reduced_motion_changed();
 }
 

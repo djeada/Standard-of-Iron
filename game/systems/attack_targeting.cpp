@@ -19,9 +19,11 @@ constexpr float k_building_marker_scale = 0.62F;
 constexpr float k_building_marker_min_radius = 0.9F;
 constexpr float k_unit_marker_min_radius = 0.55F;
 
-auto marker_radius(Engine::Core::Entity& entity,
-                   const Engine::Core::UnitComponent& unit,
-                   bool is_building) -> float {
+} // namespace
+
+auto attack_marker_radius(Engine::Core::Entity& entity,
+                          const Engine::Core::UnitComponent& unit,
+                          bool is_building) -> float {
   if (is_building) {
     const auto* transform = entity.get_component<Engine::Core::TransformComponent>();
     float const footprint =
@@ -35,6 +37,8 @@ auto marker_radius(Engine::Core::Entity& entity,
       Game::Units::TroopConfig::instance().get_selection_ring_size(unit.spawn_type);
   return std::max(configured, k_unit_marker_min_radius);
 }
+
+namespace {
 
 auto target_is_visible(const Game::Map::VisibilityService::Snapshot* visibility,
                        float world_x,
@@ -56,7 +60,7 @@ auto make_marker(Engine::Core::Entity& entity,
   marker.world_x = transform.position.x;
   marker.world_y = transform.position.y;
   marker.world_z = transform.position.z;
-  marker.radius = marker_radius(entity, unit, is_building);
+  marker.radius = attack_marker_radius(entity, unit, is_building);
   marker.is_building = is_building;
   return marker;
 }
