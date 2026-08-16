@@ -27,7 +27,7 @@ public:
   [[nodiscard]] float distance() const;
   void yaw(float degrees);
   void orbit(float yaw_deg, float pitch_deg);
-  void orbit_direction(int direction, bool shift);
+  void tilt(int direction, bool shift);
   void follow_selection(bool enable);
   void set_follow_lerp(float alpha);
   void update_follow(bool follow_enabled);

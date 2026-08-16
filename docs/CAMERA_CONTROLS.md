@@ -1,24 +1,97 @@
 # Camera controls
 
-Seven ways to move the view, one legend that lists all of them, and a manual
+Nine ways to move the view, one legend that lists all of them, and a manual
 checklist for the layouts the automated tests cannot reach.
 
-## The seven controls
+## The nine controls
 
-| Control        | How                                        | Where it lives                                 |
-| -------------- | ------------------------------------------ | ---------------------------------------------- |
-| Edge scroll    | Push the cursor into a screen edge         | `ui/qml/Main.qml`, `edge_scroll_overlay`       |
-| Keyboard pan   | Arrow keys / WASD, Shift for a double step | `rts.camera_pan_*` in `ui/input_bindings.cpp`  |
-| Drag pan       | Hold the right button and drag             | `ui/qml/GameView.qml`, `renderArea` mouse area |
-| Zoom           | Mouse wheel                                | `ui/qml/GameView.qml`                          |
-| Rotate         | `Q` / `E`, Shift to swing further          | `rts.camera_yaw_*`                             |
-| Minimap jump   | Left-click or drag the minimap             | `ui/qml/HUDTop.qml`, `minimapMouse`            |
-| Follow / Reset | Buttons in the top bar                     | `ui/qml/HUDTop.qml`                            |
+| Control      | How                                               | Where it lives                                 |
+| ------------ | ------------------------------------------------- | ---------------------------------------------- |
+| Edge scroll  | Push the cursor into a screen edge                | `ui/qml/Main.qml`, `edge_scroll_overlay`       |
+| Keyboard pan | Arrow keys **or** `WASD`, Shift for a double step | `rts.camera_pan_*` in `ui/input_bindings.cpp`  |
+| Drag pan     | Hold the right button and drag                    | `ui/qml/GameView.qml`, `renderArea` mouse area |
+| Zoom         | Mouse wheel, or `PgUp` / `PgDown`                 | `rts.camera_zoom_*`                            |
+| Rotate       | `Q` / `E`, Shift to swing further                 | `rts.camera_rotate_*`                          |
+| Tilt         | `Ctrl+Up` / `Ctrl+Down`, Shift to tilt further    | `rts.camera_tilt_*`                            |
+| Minimap jump | Left-click or drag the minimap                    | `ui/qml/HUDTop.qml`, `minimapMouse`            |
+| Follow       | Button in the top bar                             | `ui/qml/HUDTop.qml`                            |
+| Reset        | `Home`, or the button in the top bar              | `rts.camera_reset`                             |
 
 `ui/qml/CameraGuide.qml` is the single list every surface reads: the compact
 in-battle legend (`CameraLegend.qml`), the Camera tab of the field manual
 (`HelpPanel.qml`), and the live edge-scroll state shown in both. Adding a
 control means adding one entry there; nothing else needs a second copy.
+
+## What the words mean
+
+The three rotations are separate commands and were, until recently, separately
+misnamed. Keep them apart:
+
+- **Pan** moves the point the camera looks at across the ground. It never
+  changes the angle.
+- **Rotate** swings the camera around that point on the horizontal circle —
+  yaw. `Camera::yaw` and `CameraService::yaw`.
+- **Tilt** raises the camera towards an overhead view or lowers it towards the
+  horizon — pitch. `CameraService::tilt`, which used to be called
+  `orbit_direction` and was bound as "orbit camera left/right" even though it
+  never touched yaw. `Camera::orbit(yaw, pitch)` keeps its name: it is the
+  two-axis primitive both of the above drive.
+
+`R` and `T` used to carry tilt, which put tilt on the same key as the commander
+rally flag and relied on a contextual-priority rule to sort out which one the
+player meant. Tilt now lives on `Ctrl+Up` / `Ctrl+Down` and `R` belongs to the
+rally flag alone.
+
+### The pitch sign
+
+`CameraService::tilt` takes a direction where **positive raises the camera**,
+and it passes the opposite sign down to the orbit. That is not a typo. The
+camera's own pitch is the elevation of the _view_ direction, so straight down is
+`-85` and level is `-5`: raising the camera makes that number smaller. Read the
+sign the other way round — as `orbit_direction` did — and `Ctrl+Up` dives at the
+horizon while `Ctrl+Down` climbs. The unit tests assert the camera's height
+above its target rather than its pitch, because the height cannot be read
+backwards.
+
+## Two keys per command
+
+`InputBindings` stores a **primary** and an **alternate** chord per action
+(`InputBindings::Slot`), so panning answers to the arrows and to `WASD` without
+either being second-class. The alternate is stored under the action id with an
+`|alt` suffix, remapped from its own button in Settings › Controls, and resolved
+by `actions_for_key` alongside the primary.
+
+`WASD` on the pan commands is why **Attack** moved to `C` and **Stop** to `Z`.
+A key can only mean one thing in a context, and a pan key that is dead whenever
+troops are selected — which is nearly always — is not a pan key.
+
+Saved keymaps survive both changes: a renamed action carries its stored chord
+across on load, and a player who rebound Attack or Stop keeps what they chose.
+The rename pairs by behaviour, not by name — `rts.camera_orbit_left` lowered the
+camera, so it becomes `rts.camera_tilt_down` — because a key that survives the
+upgrade doing the opposite of what it used to do is worse than one that is
+simply unbound.
+
+## Where a reset lands
+
+Every map authors the camera that frames its whole engagement — 18 on the
+48-tile Sepulcher Watch, 273 on the 650-tile field at Cannae. Reset used to
+ignore all of it and snap to a flat 12 units on every map alike, which on a
+battle map meant going from the whole battlefield to one soldier's shield in a
+single keystroke. The mission's opening shot went through the same code, so a
+campaign began at that same 12 units.
+
+`Game::reset_framing` in `game/camera_framing.h` derives the reset view from
+what the map authored: a third of its distance, floored at 24 units, and never
+further out than the map itself asked for. The authored tilt and swing carry
+over unchanged. `GameConfig::camera_reset_framing` applies it, falling back to
+the built-in default only when no map is loaded.
+
+That one function is what the camp focus at load
+(`app/session/level_orchestrator.cpp`), the Reset command
+(`CameraService::snap_to_entity`) and the skirmish opening shot
+(`SkirmishRuntimeCoordinator::center_camera_on_local_forces`) all read, so the
+opening framing and the framing a reset returns to cannot drift apart.
 
 ## Edge scroll geometry
 
@@ -147,5 +220,24 @@ by hand when touching anything above. Every row should behave identically.
 - [ ] Dismissing it (× or the top-bar star) keeps it dismissed across restarts.
 - [ ] The star button in the top bar toggles it back on.
 - [ ] The legend's **Camera settings** button opens Settings.
-- [ ] The field manual's **Camera** tab lists the same seven controls with the
+- [ ] The field manual's **Camera** tab lists the same nine controls with the
       same key names, and both follow a rebound pan or rotate key.
+- [ ] The legend's pan row names **both** the arrows and `WASD`, and rebinding
+      either slot in Settings updates it.
+
+### Bindings and framing
+
+- [ ] Settings › Controls shows two key buttons for every command; binding the
+      second one to a key another command already holds warns before taking it.
+- [ ] Clearing the alternate with Backspace leaves the primary alone, and
+      **Default** on the row restores both.
+- [ ] `WASD` pans; `A` and `S` no longer stop or attack, and `C` and `Z` do.
+- [ ] `Ctrl+Up` / `Ctrl+Down` tilt; plain `Up` / `Down` still pan while Ctrl is
+      not held.
+- [ ] `R` places a rally flag and does nothing to the camera.
+- [ ] `Home` and the top-bar Reset button land on the same view.
+- [ ] Start Cannae and press `Home`: the camera frames the camp and the ground
+      around it, not a single soldier. Start the tutorial and do the same: the
+      view is closer, but still wider than one formation.
+- [ ] Load a save from a build before this change: any camera key you had
+      rebound is still yours, and tilt is where "orbit" used to be.

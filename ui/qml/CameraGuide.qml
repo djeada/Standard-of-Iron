@@ -17,23 +17,53 @@ QtObject {
         return shortcut.length > 0 ? Core.InputBindings.describe(shortcut) : qsTr("unbound");
     }
 
-    function pan_keys() {
+    function keys_for(actions, slot) {
         var keys = [];
-        var actions = ["rts.camera_pan_up", "rts.camera_pan_left", "rts.camera_pan_down", "rts.camera_pan_right"];
         for (var i = 0; i < actions.length; ++i) {
-            var shortcut = Core.InputBindings.shortcut_for(actions[i]);
+            var shortcut = Core.InputBindings.shortcut_for(actions[i], slot);
             if (shortcut.length > 0)
                 keys.push(Core.InputBindings.describe(shortcut));
         }
-        return keys.length > 0 ? keys.join(" ") : qsTr("unbound");
+        return keys.join(" ");
     }
 
-    function orbit_keys() {
-        var left = Core.InputBindings.shortcut_for("rts.camera_yaw_left");
-        var right = Core.InputBindings.shortcut_for("rts.camera_yaw_right");
+    readonly property var pan_actions: ["rts.camera_pan_up", "rts.camera_pan_left", "rts.camera_pan_down", "rts.camera_pan_right"]
+
+    function pan_keys() {
+        var primary = root.keys_for(root.pan_actions, Core.InputBindings.Primary);
+        var alternate = root.keys_for(root.pan_actions, Core.InputBindings.Alternate);
+        if (primary.length === 0 && alternate.length === 0)
+            return qsTr("unbound");
+        if (primary.length === 0)
+            return alternate;
+        if (alternate.length === 0)
+            return primary;
+        return qsTr("%1 or %2").arg(primary).arg(alternate);
+    }
+
+    function pair_keys(left_action, right_action) {
+        var left = Core.InputBindings.shortcut_for(left_action);
+        var right = Core.InputBindings.shortcut_for(right_action);
         if (left.length === 0 || right.length === 0)
             return qsTr("unbound");
         return Core.InputBindings.describe(left) + " " + Core.InputBindings.describe(right);
+    }
+
+    function rotate_keys() {
+        return root.pair_keys("rts.camera_rotate_left", "rts.camera_rotate_right");
+    }
+
+    function tilt_keys() {
+        return root.pair_keys("rts.camera_tilt_up", "rts.camera_tilt_down");
+    }
+
+    function zoom_keys() {
+        return root.pair_keys("rts.camera_zoom_in", "rts.camera_zoom_out");
+    }
+
+    function reset_key() {
+        var shortcut = Core.InputBindings.shortcut_for("rts.camera_reset");
+        return shortcut.length > 0 ? Core.InputBindings.describe(shortcut) : qsTr("unbound");
     }
 
     readonly property string edge_scroll_state: edge_scroll_enabled ? qsTr("on, %1 px").arg(Math.round(root.edge_zone_width)) : qsTr("off")
@@ -51,7 +81,7 @@ QtObject {
             "compact": root.pan_keys(),
             "name": qsTr("Keyboard pan"),
             "control": root.pan_keys(),
-            "detail": qsTr("Pans in steps and keeps panning while held. Hold Shift to move twice as far per step."),
+            "detail": qsTr("Slides the view over the battlefield and keeps going while held. Either the arrows or WASD; hold Shift to cover twice the ground per step."),
             "state": "",
             "muted": false
         }, {
@@ -64,18 +94,26 @@ QtObject {
             "muted": false
         }, {
             "key": "zoom",
-            "compact": qsTr("Wheel"),
+            "compact": qsTr("Wheel or %1").arg(root.zoom_keys()),
             "name": qsTr("Zoom"),
-            "control": qsTr("Mouse wheel"),
-            "detail": qsTr("Scrolls the camera closer to and further from the battle."),
+            "control": qsTr("Mouse wheel, or %1").arg(root.zoom_keys()),
+            "detail": qsTr("Moves the camera closer to and further from the battle."),
             "state": "",
             "muted": false
         }, {
-            "key": "orbit",
-            "compact": root.orbit_keys(),
+            "key": "rotate",
+            "compact": root.rotate_keys(),
             "name": qsTr("Rotate"),
-            "control": root.orbit_keys(),
+            "control": root.rotate_keys(),
             "detail": qsTr("Swings the view around the point you are looking at. Hold Shift to swing further."),
+            "state": "",
+            "muted": false
+        }, {
+            "key": "tilt",
+            "compact": root.tilt_keys(),
+            "name": qsTr("Tilt"),
+            "control": root.tilt_keys(),
+            "detail": qsTr("Raises the camera towards an overhead view or lowers it towards the horizon. Hold Shift to tilt further."),
             "state": "",
             "muted": false
         }, {
@@ -96,10 +134,10 @@ QtObject {
             "muted": false
         }, {
             "key": "reset",
-            "compact": qsTr("Top bar button"),
+            "compact": root.reset_key(),
             "name": qsTr("Reset camera"),
-            "control": qsTr("Reset button, top bar"),
-            "detail": qsTr("Returns the view to your own camp."),
+            "control": qsTr("%1, or the Reset button in the top bar").arg(root.reset_key()),
+            "detail": qsTr("Returns the view to your own camp, framed the way the battle opened."),
             "state": "",
             "muted": false
         }]

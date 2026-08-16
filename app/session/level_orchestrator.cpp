@@ -159,11 +159,9 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
   }
 
   if (load_result.has_focus_position && (scene.active_camera != nullptr)) {
-    const auto& cam_config = Game::GameConfig::instance().camera();
-    scene.active_camera->set_rts_view(load_result.focus_position,
-                                      cam_config.default_distance,
-                                      cam_config.default_pitch,
-                                      cam_config.default_yaw);
+    const auto framing = Game::GameConfig::instance().camera_reset_framing();
+    scene.active_camera->set_rts_view(
+        load_result.focus_position, framing.distance, framing.pitch, framing.yaw);
   }
 
   if (progress_tracker != nullptr) {

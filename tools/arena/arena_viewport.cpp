@@ -835,7 +835,7 @@ void ArenaViewport::keyPressEvent(QKeyEvent* event) {
     return;
   case Qt::Key_R:
     if (m_camera_service != nullptr && m_camera != nullptr) {
-      m_camera_service->orbit_direction(
+      m_camera_service->tilt(
           *m_camera, 1, (event->modifiers() & Qt::ShiftModifier) != 0);
       update();
     }
@@ -843,7 +843,7 @@ void ArenaViewport::keyPressEvent(QKeyEvent* event) {
     return;
   case Qt::Key_F:
     if (m_camera_service != nullptr && m_camera != nullptr) {
-      m_camera_service->orbit_direction(
+      m_camera_service->tilt(
           *m_camera, -1, (event->modifiers() & Qt::ShiftModifier) != 0);
       update();
     }
@@ -5230,7 +5230,7 @@ void ArenaViewport::draw_controls_overlay(QPainter& painter) {
       QStringLiteral("Arrow keys: pan camera"),
       QStringLiteral("Shift+Arrows: faster pan"),
       QStringLiteral("Q / E: yaw"),
-      QStringLiteral("R / F: orbit pitch"),
+      QStringLiteral("R / F: tilt overhead / towards the horizon"),
       QStringLiteral("Home: show whole terrain"),
       QStringLiteral("X: select local army"),
       QStringLiteral("Space: pause"),

@@ -44,6 +44,15 @@ TEST_F(InputBindingsTest, EveryCatalogedCommandShipsWithAReadableDefault) {
 
     EXPECT_EQ(InputBindings::format(chord), spec.default_shortcut)
         << spec.id.toStdString();
+
+    if (spec.default_alternate.isEmpty()) {
+      continue;
+    }
+    const auto alternate = InputBindings::parse(spec.default_alternate);
+    EXPECT_TRUE(alternate.is_valid()) << spec.id.toStdString() << " alternate "
+                                      << spec.default_alternate.toStdString();
+    EXPECT_EQ(InputBindings::format(alternate), spec.default_alternate)
+        << spec.id.toStdString();
   }
 }
 
@@ -128,15 +137,15 @@ TEST_F(InputBindingsTest, TakingAnotherCommandsChordIsReportedAsAConflict) {
   auto* bindings = InputBindings::instance();
 
   const QStringList conflicts =
-      bindings->conflicts_for(QStringLiteral("rts.order_stop"), QStringLiteral("A"));
+      bindings->conflicts_for(QStringLiteral("rts.order_stop"), QStringLiteral("C"));
 
   EXPECT_TRUE(conflicts.contains(QStringLiteral("rts.order_attack")));
-  EXPECT_FALSE(bindings->assign(QStringLiteral("rts.order_stop"), QStringLiteral("A")));
+  EXPECT_FALSE(bindings->assign(QStringLiteral("rts.order_stop"), QStringLiteral("C")));
 
   EXPECT_EQ(bindings->shortcut_for(QStringLiteral("rts.order_stop")),
-            QStringLiteral("S"));
+            QStringLiteral("Z"));
   EXPECT_EQ(bindings->shortcut_for(QStringLiteral("rts.order_attack")),
-            QStringLiteral("A"));
+            QStringLiteral("C"));
 }
 
 TEST_F(InputBindingsTest, CommandsInSeparateContextsMayShareAChord) {
@@ -163,10 +172,10 @@ TEST_F(InputBindingsTest, AGlobalCommandConflictsWithBothGameplayContexts) {
 TEST_F(InputBindingsTest, OverridingAConflictUnbindsThePreviousHolder) {
   auto* bindings = InputBindings::instance();
 
-  bindings->assign_overriding(QStringLiteral("rts.order_stop"), QStringLiteral("A"));
+  bindings->assign_overriding(QStringLiteral("rts.order_stop"), QStringLiteral("C"));
 
   EXPECT_EQ(bindings->shortcut_for(QStringLiteral("rts.order_stop")),
-            QStringLiteral("A"));
+            QStringLiteral("C"));
   EXPECT_TRUE(bindings->shortcut_for(QStringLiteral("rts.order_attack")).isEmpty());
   EXPECT_FALSE(bindings->has_conflicts());
 }
@@ -181,7 +190,7 @@ TEST_F(InputBindingsTest, RebindingSurvivesAReload) {
 
   bindings->reset_action(QStringLiteral("rts.order_stop"));
   EXPECT_EQ(bindings->shortcut_for(QStringLiteral("rts.order_stop")),
-            QStringLiteral("S"));
+            QStringLiteral("Z"));
   EXPECT_TRUE(
       UserSettings::load_input_binding(QStringLiteral("rts.order_stop")).isEmpty());
 }
@@ -249,15 +258,27 @@ TEST_F(InputBindingsTest, AnExactModifierMatchBeatsTheUnmodifiedFallback) {
   EXPECT_EQ(resolved, QStringList{QStringLiteral("rts.order_hold")});
 }
 
+TEST_F(InputBindingsTest, TheRallyFlagNoLongerHasToShareItsKeyWithTheCamera) {
+  auto* bindings = InputBindings::instance();
+
+  const auto resolved = bindings->actions_for_key(
+      Qt::Key_R, Qt::NoModifier, QString::fromLatin1(InputBindings::kContextRts));
+
+  ASSERT_EQ(resolved.size(), 1);
+  EXPECT_EQ(resolved.at(0), QStringLiteral("rts.commander_rally"));
+}
+
 TEST_F(InputBindingsTest, ContextualCommandsLayerOverTheGeneralOneTheyShareAKeyWith) {
   auto* bindings = InputBindings::instance();
+  bindings->assign_overriding(QStringLiteral("rts.camera_tilt_up"),
+                              QStringLiteral("R"));
 
   const auto resolved = bindings->actions_for_key(
       Qt::Key_R, Qt::NoModifier, QString::fromLatin1(InputBindings::kContextRts));
 
   ASSERT_EQ(resolved.size(), 2);
   EXPECT_EQ(resolved.at(0), QStringLiteral("rts.commander_rally"));
-  EXPECT_EQ(resolved.at(1), QStringLiteral("rts.camera_orbit_left"));
+  EXPECT_EQ(resolved.at(1), QStringLiteral("rts.camera_tilt_up"));
 }
 
 TEST_F(InputBindingsTest, MouseResolutionHonoursTheActiveContext) {
@@ -374,6 +395,185 @@ TEST_F(InputBindingsTest, BattleSpeedIsReachableFromTheKeyboardInBothDirections)
   const auto shifted = bindings->actions_for_key(Qt::Key_Plus, Qt::ShiftModifier, rts);
   ASSERT_EQ(shifted.size(), 1);
   EXPECT_EQ(shifted.at(0), QStringLiteral("rts.speed_up"));
+}
+
+TEST_F(InputBindingsTest, PanningAnswersToBothTheArrowsAndWasd) {
+  auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+
+  struct Case {
+    const char* action;
+    Qt::Key arrow;
+    Qt::Key letter;
+  };
+  const Case cases[] = {{"rts.camera_pan_up", Qt::Key_Up, Qt::Key_W},
+                        {"rts.camera_pan_down", Qt::Key_Down, Qt::Key_S},
+                        {"rts.camera_pan_left", Qt::Key_Left, Qt::Key_A},
+                        {"rts.camera_pan_right", Qt::Key_Right, Qt::Key_D}};
+
+  for (const auto& test_case : cases) {
+    const QString action = QString::fromLatin1(test_case.action);
+    EXPECT_EQ(bindings->actions_for_key(test_case.arrow, Qt::NoModifier, rts),
+              QStringList{action})
+        << test_case.action;
+    EXPECT_EQ(bindings->actions_for_key(test_case.letter, Qt::NoModifier, rts),
+              QStringList{action})
+        << test_case.action;
+  }
+}
+
+TEST_F(InputBindingsTest, TheOrderHotkeysWasdDisplacedMovedRatherThanVanished) {
+  auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_C, Qt::NoModifier, rts),
+            QStringList{QStringLiteral("rts.order_attack")});
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_Z, Qt::NoModifier, rts),
+            QStringList{QStringLiteral("rts.order_stop")});
+}
+
+TEST_F(InputBindingsTest, AnAlternateIsRemappedAndResetIndependentlyOfThePrimary) {
+  auto* bindings = InputBindings::instance();
+  const QString pan_up = QStringLiteral("rts.camera_pan_up");
+
+  ASSERT_TRUE(bindings->assign(pan_up, QStringLiteral("I"), InputBindings::Alternate));
+
+  EXPECT_EQ(bindings->shortcut_for(pan_up), QStringLiteral("Up"));
+  EXPECT_EQ(bindings->shortcut_for(pan_up, InputBindings::Alternate),
+            QStringLiteral("I"));
+  EXPECT_EQ(UserSettings::load_input_binding(pan_up + QStringLiteral("|alt")),
+            QStringLiteral("I"));
+  EXPECT_TRUE(UserSettings::load_input_binding(pan_up).isEmpty());
+
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+  EXPECT_EQ(bindings->actions_for_key(Qt::Key_I, Qt::NoModifier, rts),
+            QStringList{pan_up});
+  EXPECT_TRUE(bindings->actions_for_key(Qt::Key_W, Qt::NoModifier, rts).isEmpty());
+
+  bindings->reset_action(pan_up);
+  EXPECT_EQ(bindings->shortcut_for(pan_up, InputBindings::Alternate),
+            QStringLiteral("W"));
+  EXPECT_TRUE(bindings->is_default());
+}
+
+TEST_F(InputBindingsTest, AnAlternateCollidingWithAnotherCommandIsAConflict) {
+  auto* bindings = InputBindings::instance();
+
+  const QStringList conflicts = bindings->conflicts_for(
+      QStringLiteral("rts.order_move"), QStringLiteral("W"), InputBindings::Primary);
+
+  EXPECT_TRUE(conflicts.contains(QStringLiteral("rts.camera_pan_up")));
+  EXPECT_FALSE(bindings->assign(QStringLiteral("rts.order_move"), QStringLiteral("W")));
+
+  bindings->assign_overriding(QStringLiteral("rts.order_move"), QStringLiteral("W"));
+  EXPECT_TRUE(
+      bindings
+          ->shortcut_for(QStringLiteral("rts.camera_pan_up"), InputBindings::Alternate)
+          .isEmpty());
+  EXPECT_EQ(bindings->shortcut_for(QStringLiteral("rts.camera_pan_up")),
+            QStringLiteral("Up"));
+  EXPECT_FALSE(bindings->has_conflicts());
+}
+
+TEST_F(InputBindingsTest, ACommandCannotHoldTheSameChordInBothSlots) {
+  auto* bindings = InputBindings::instance();
+  const QString pan_up = QStringLiteral("rts.camera_pan_up");
+
+  EXPECT_EQ(
+      bindings->conflicts_for(pan_up, QStringLiteral("Up"), InputBindings::Alternate),
+      QStringList{pan_up});
+  EXPECT_FALSE(
+      bindings->assign(pan_up, QStringLiteral("Up"), InputBindings::Alternate));
+  EXPECT_EQ(bindings->shortcut_for(pan_up, InputBindings::Alternate),
+            QStringLiteral("W"));
+}
+
+TEST_F(InputBindingsTest, TheQmlActionListCarriesBothSlots) {
+  auto* bindings = InputBindings::instance();
+
+  bool saw_pan = false;
+  for (const QVariant& entry : bindings->actions()) {
+    const QVariantMap action = entry.toMap();
+    if (action[QStringLiteral("id")].toString() !=
+        QLatin1String("rts.camera_pan_left")) {
+      continue;
+    }
+    saw_pan = true;
+    EXPECT_EQ(action[QStringLiteral("shortcut")].toString(), QStringLiteral("Left"));
+    EXPECT_EQ(action[QStringLiteral("alternate")].toString(), QStringLiteral("A"));
+    EXPECT_EQ(action[QStringLiteral("defaultAlternate")].toString(),
+              QStringLiteral("A"));
+    EXPECT_FALSE(action[QStringLiteral("alternateUnbound")].toBool());
+    EXPECT_TRUE(action[QStringLiteral("isDefault")].toBool());
+    EXPECT_FALSE(action[QStringLiteral("displayAlternate")].toString().isEmpty());
+  }
+  EXPECT_TRUE(saw_pan);
+}
+
+TEST_F(InputBindingsTest, AnAlternateOnlyLeavesTheDefaultStateWhileItIsRebound) {
+  auto* bindings = InputBindings::instance();
+  const QString pan_down = QStringLiteral("rts.camera_pan_down");
+
+  ASSERT_TRUE(
+      bindings->assign(pan_down, QStringLiteral("K"), InputBindings::Alternate));
+  EXPECT_FALSE(bindings->is_default());
+
+  ASSERT_TRUE(
+      bindings->assign(pan_down, QStringLiteral("S"), InputBindings::Alternate));
+  EXPECT_TRUE(bindings->is_default());
+  EXPECT_TRUE(
+      UserSettings::load_input_binding(pan_down + QStringLiteral("|alt")).isEmpty());
+}
+
+TEST_F(InputBindingsTest, TheCameraCategoryNamesWhatEachCommandActuallyDoes) {
+  auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+
+  const struct {
+    const char* action;
+    Qt::Key key;
+    int modifiers;
+  } cases[] = {{"rts.camera_rotate_left", Qt::Key_Q, Qt::NoModifier},
+               {"rts.camera_rotate_right", Qt::Key_E, Qt::NoModifier},
+               {"rts.camera_tilt_up", Qt::Key_Up, Qt::ControlModifier},
+               {"rts.camera_tilt_down", Qt::Key_Down, Qt::ControlModifier},
+               {"rts.camera_zoom_in", Qt::Key_PageUp, Qt::NoModifier},
+               {"rts.camera_zoom_out", Qt::Key_PageDown, Qt::NoModifier},
+               {"rts.camera_reset", Qt::Key_Home, Qt::NoModifier}};
+
+  for (const auto& test_case : cases) {
+    const QString action = QString::fromLatin1(test_case.action);
+    EXPECT_EQ(bindings->actions_for_key(test_case.key, test_case.modifiers, rts),
+              QStringList{action})
+        << test_case.action;
+  }
+
+  for (const auto& spec : InputBindings::catalog()) {
+    if (!spec.id.startsWith(QLatin1String("rts.camera_"))) {
+      continue;
+    }
+    EXPECT_FALSE(spec.description.isEmpty()) << spec.id.toStdString();
+    EXPECT_FALSE(spec.id.contains(QLatin1String("orbit"))) << spec.id.toStdString();
+    EXPECT_FALSE(spec.name.contains(QLatin1String("Orbit"))) << spec.id.toStdString();
+  }
+}
+
+TEST_F(InputBindingsTest, AKeyBoundToTheOldOrbitNameFollowsItToTilt) {
+  UserSettings::save_input_binding(QStringLiteral("rts.camera_orbit_left"),
+                                   QStringLiteral("B"));
+  UserSettings::save_input_binding(QStringLiteral("rts.camera_orbit_right"),
+                                   QStringLiteral("N"));
+
+  InputBindings::instance()->reload_from_settings();
+
+  auto* bindings = InputBindings::instance();
+  EXPECT_EQ(bindings->shortcut_for(QStringLiteral("rts.camera_tilt_down")),
+            QStringLiteral("B"))
+      << "orbit left lowered the camera, which is what tilt down does";
+  EXPECT_EQ(bindings->shortcut_for(QStringLiteral("rts.camera_tilt_up")),
+            QStringLiteral("N"));
+  EXPECT_TRUE(UserSettings::load_input_binding(QStringLiteral("rts.camera_orbit_left"))
+                  .isEmpty());
 }
 
 TEST_F(InputBindingsTest, EveryCommandBarChipResolvesToARealAction) {

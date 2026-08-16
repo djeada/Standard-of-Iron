@@ -50,6 +50,7 @@
       "paths": ["game/core/", "game/accessibility/"],
       "files": [
         "game/game_config",
+        "game/camera_framing",
         "game/systems/unit_activity",
         "game/util/asset_text",
         "game/util/json_vec_utils",

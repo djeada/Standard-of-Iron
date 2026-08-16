@@ -85,11 +85,8 @@ void SkirmishRuntimeCoordinator::center_camera_on_local_forces(
   const QVector3D current_position = ctx.camera->get_position();
   const QVector3D offset = current_position - current_target;
   if (offset.lengthSquared() < 1e-6F) {
-    const auto& cam_config = Game::GameConfig::instance().camera();
-    ctx.camera->set_rts_view(focus,
-                             cam_config.default_distance,
-                             cam_config.default_pitch,
-                             cam_config.default_yaw);
+    const auto framing = Game::GameConfig::instance().camera_reset_framing();
+    ctx.camera->set_rts_view(focus, framing.distance, framing.pitch, framing.yaw);
     return;
   }
 
