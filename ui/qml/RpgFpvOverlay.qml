@@ -11,9 +11,14 @@ Item {
     property var status: ({})
     property var engine: null
 
-    readonly property real uiScale: Math.max(0.75, Math.min(2.0, height / 1080))
+    readonly property real resolutionScale: Math.max(0.75, Math.min(2.0, height / 1080))
+    readonly property real uiScale: Math.max(0.75, Math.min(4.0, root.resolutionScale * Design.A11y.uiScale))
     function scaled(value) {
         return Math.round(value * root.uiScale);
+    }
+
+    function fontSize(rung) {
+        return Math.max(Design.Typography.minimumSize, Math.round(rung * root.resolutionScale));
     }
 
     property real pulsePhase
@@ -747,7 +752,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 text: focusPlate.targetName
                 color: "#f2ece0"
-                font.pixelSize: root.scaled(13)
+                font.pixelSize: root.fontSize(Design.Typography.label)
                 font.bold: true
                 style: Text.Outline
                 styleColor: "#cc000000"
@@ -856,7 +861,7 @@ Item {
                     anchors.centerIn: parent
                     text: qsTr("HP %1/%2").arg(Number(root.status_value("health", 0))).arg(Number(root.status_value("max_health", 100)))
                     color: "#ffffff"
-                    font.pixelSize: root.scaled(12)
+                    font.pixelSize: root.fontSize(Design.Typography.label)
                     font.bold: true
                     style: Text.Outline
                     styleColor: "#88000000"
@@ -918,7 +923,7 @@ Item {
                     anchors.centerIn: parent
                     text: qsTr("STM %1%").arg(Number(root.status_value("stamina_ratio", 1) * 100).toFixed(0))
                     color: "#cff7ffff"
-                    font.pixelSize: root.scaled(12)
+                    font.pixelSize: root.fontSize(Design.Typography.label)
                     font.bold: true
                     style: Text.Outline
                     styleColor: "#66000000"
@@ -951,7 +956,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: comboIndicator.finisherReady ? qsTr("FINISHER") : qsTr("COMBO")
             color: comboIndicator.finisherReady ? "#ffdd00" : "#99ffffff"
-            font.pixelSize: root.scaled(9)
+            font.pixelSize: root.fontSize(Design.Typography.caption)
             font.bold: true
             font.letterSpacing: 1.2
             style: Text.Outline
@@ -1035,7 +1040,7 @@ Item {
             anchors.centerIn: parent
             text: qsTr("POSTURE")
             color: "#99ffffff"
-            font.pixelSize: root.scaled(8)
+            font.pixelSize: root.fontSize(Design.Typography.caption)
             font.bold: true
             font.letterSpacing: 1.0
         }
@@ -1058,7 +1063,7 @@ Item {
             anchors.centerIn: parent
             text: qsTr("GUARD BROKEN")
             color: "#ff4444"
-            font.pixelSize: root.scaled(22)
+            font.pixelSize: root.fontSize(Design.Typography.subheading)
             font.bold: true
             font.letterSpacing: 2.0
             style: Text.Outline
@@ -1083,7 +1088,7 @@ Item {
             anchors.centerIn: parent
             text: qsTr("\u26A1 PUNISH \u26A1")
             color: "#ffcc00"
-            font.pixelSize: root.scaled(18)
+            font.pixelSize: root.fontSize(Design.Typography.bodyLarge)
             font.bold: true
             style: Text.Outline
             styleColor: "#88000000"
@@ -1110,7 +1115,7 @@ Item {
             anchors.centerIn: parent
             text: root.bowStance ? qsTr("BOW  ·  X") : qsTr("BLADE  ·  X")
             color: root.bowStance ? "#f0dcae" : "#d6e2ea"
-            font.pixelSize: root.scaled(10)
+            font.pixelSize: root.fontSize(Design.Typography.caption)
             font.bold: true
             font.letterSpacing: 1.0
         }
@@ -1200,7 +1205,7 @@ Item {
                         anchors.centerIn: parent
                         text: modelData.key
                         color: "#1a120b"
-                        font.pixelSize: root.scaled(10)
+                        font.pixelSize: root.fontSize(Design.Typography.caption)
                         font.bold: true
                     }
                 }
@@ -1217,7 +1222,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: modelData.name
                         color: abilityLabels.ready ? "#eeffeeee" : "#88aaaaaa"
-                        font.pixelSize: root.scaled(11)
+                        font.pixelSize: root.fontSize(Design.Typography.label)
                         font.bold: true
                         font.letterSpacing: 0.8
                     }
@@ -1226,7 +1231,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: abilityLabels.ready ? qsTr("READY") : Math.ceil(Number(root.status_value(modelData.cdKey, 0.0))).toString()
                         color: abilityLabels.ready ? "#d2ffe7cb" : "#d2f5c88f"
-                        font.pixelSize: root.scaled(9)
+                        font.pixelSize: root.fontSize(Design.Typography.caption)
                         font.bold: true
                         font.letterSpacing: 0.7
                     }

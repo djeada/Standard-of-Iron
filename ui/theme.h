@@ -90,13 +90,6 @@ class Theme : public QObject {
   Q_PROPERTY(int animNormal READ animNormal CONSTANT)
   Q_PROPERTY(int animSlow READ animSlow CONSTANT)
 
-  Q_PROPERTY(int fontSizeTiny READ fontSizeTiny NOTIFY metrics_changed)
-  Q_PROPERTY(int fontSizeSmall READ fontSizeSmall NOTIFY metrics_changed)
-  Q_PROPERTY(int fontSizeMedium READ fontSizeMedium NOTIFY metrics_changed)
-  Q_PROPERTY(int fontSizeLarge READ fontSizeLarge NOTIFY metrics_changed)
-  Q_PROPERTY(int fontSizeTitle READ fontSizeTitle NOTIFY metrics_changed)
-  Q_PROPERTY(int fontSizeHero READ fontSizeHero NOTIFY metrics_changed)
-
   Q_PROPERTY(QVariantList playerColors READ playerColors NOTIFY player_colors_changed)
   Q_PROPERTY(QVariantList teamIcons READ teamIcons CONSTANT)
   Q_PROPERTY(QVariantList factions READ factions CONSTANT)
@@ -189,13 +182,6 @@ public:
   [[nodiscard]] static auto animFast() -> int { return 120; }
   [[nodiscard]] static auto animNormal() -> int { return 160; }
   [[nodiscard]] static auto animSlow() -> int { return 200; }
-
-  [[nodiscard]] static auto fontSizeTiny() -> int { return scaled(11); }
-  [[nodiscard]] static auto fontSizeSmall() -> int { return scaled(12); }
-  [[nodiscard]] static auto fontSizeMedium() -> int { return scaled(14); }
-  [[nodiscard]] static auto fontSizeLarge() -> int { return scaled(16); }
-  [[nodiscard]] static auto fontSizeTitle() -> int { return scaled(18); }
-  [[nodiscard]] static auto fontSizeHero() -> int { return scaled(28); }
 
   [[nodiscard]] static auto playerColors() -> QVariantList;
   [[nodiscard]] static auto teamIcons() -> QVariantList;

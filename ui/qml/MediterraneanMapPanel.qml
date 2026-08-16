@@ -717,7 +717,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: qsTr("Loading map…")
                 color: "#c8b89a"
-                font.pointSize: Theme.fontSizeMedium
+                font.pixelSize: Design.Typography.bodyLarge
             }
         }
 
@@ -782,7 +782,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: qsTr("Tilt -")
                     color: "#f2dfba"
-                    font.pointSize: Theme.fontSizeTiny
+                    font.pixelSize: Design.Typography.label
                     font.bold: true
                 }
 
@@ -816,7 +816,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: qsTr("Tilt +")
                     color: "#f2dfba"
-                    font.pointSize: Theme.fontSizeTiny
+                    font.pixelSize: Design.Typography.label
                     font.bold: true
                 }
 
@@ -850,7 +850,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: qsTr("Reset view")
                     color: "#f2dfba"
-                    font.pointSize: Theme.fontSizeTiny
+                    font.pixelSize: Design.Typography.label
                     font.bold: true
                 }
 
@@ -1029,7 +1029,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: "⚔"
                         color: "#ffffff"
-                        font.pointSize: Theme.fontSizeSmall
+                        font.pixelSize: Design.Typography.body
                         font.bold: true
                     }
 
@@ -1184,13 +1184,13 @@ Rectangle {
                     text: root.hover_province_name
                     color: "#2d241c"
                     font.bold: true
-                    font.pointSize: Theme.fontSizeSmall
+                    font.pixelSize: Design.Typography.body
                 }
 
                 Label {
                     text: qsTr("Control: ") + root.hover_province_owner
                     color: "#4a3f32"
-                    font.pointSize: Theme.fontSizeTiny
+                    font.pixelSize: Design.Typography.label
                 }
             }
         }
@@ -1218,7 +1218,7 @@ Rectangle {
                 Label {
                     text: qsTr("Legend")
                     color: Design.Theme.textSecondary
-                    font.pointSize: Theme.fontSizeSmall
+                    font.pixelSize: Design.Typography.body
                     font.bold: true
                 }
 
@@ -1250,7 +1250,7 @@ Rectangle {
                         Label {
                             text: modelData.name
                             color: "#4a3f32"
-                            font.pointSize: Theme.fontSizeTiny
+                            font.pixelSize: Design.Typography.label
                         }
                     }
                 }
@@ -1301,7 +1301,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: Design.Icons.capture + " " + root.active_region_name
                 color: "#2d241c"
-                font.pointSize: Theme.fontSizeSmall
+                font.pixelSize: Design.Typography.body
                 font.bold: true
             }
         }

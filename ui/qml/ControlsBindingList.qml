@@ -125,7 +125,7 @@ Item {
                 Layout.fillWidth: true
                 text: root.capturing_action !== "" ? qsTr("Press a key or click a mouse button. Backspace clears it, Esc cancels.") : qsTr("Select a command to rebind it.")
                 color: root.capturing_action !== "" ? Theme.accent : Theme.textSub
-                font.pointSize: Theme.fontSizeSmall
+                font.pixelSize: Design.Typography.body
                 wrapMode: Text.WordWrap
             }
 
@@ -161,7 +161,7 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("%1 is already used by %2.").arg(InputBindings.describe(root.pending_shortcut)).arg(root.conflict_summary(root.pending_conflicts))
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                     wrapMode: Text.WordWrap
                 }
 
@@ -185,7 +185,7 @@ Item {
                     Layout.fillWidth: true
                     text: qsTr("Taking it leaves the other command unbound.")
                     color: Theme.textSub
-                    font.pointSize: Theme.fontSizeSmall
+                    font.pixelSize: Design.Typography.body
                     wrapMode: Text.WordWrap
                 }
             }
@@ -212,7 +212,7 @@ Item {
                     visible: bindingRow.starts_category
                     text: modelData.category
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                     font.bold: true
                 }
 
@@ -228,7 +228,7 @@ Item {
                             Layout.fillWidth: true
                             text: modelData.name
                             color: Theme.textSub
-                            font.pointSize: Theme.fontSizeMedium
+                            font.pixelSize: Design.Typography.bodyLarge
                             wrapMode: Text.WordWrap
                         }
 
@@ -237,7 +237,7 @@ Item {
                             visible: modelData.description !== "" || modelData.conflicts.length > 0
                             text: modelData.conflicts.length > 0 ? qsTr("Conflicts with %1").arg(root.conflict_summary(modelData.conflicts)) : modelData.description
                             color: modelData.conflicts.length > 0 ? Theme.warning : Theme.textSub
-                            font.pointSize: Theme.fontSizeSmall
+                            font.pixelSize: Design.Typography.body
                             opacity: modelData.conflicts.length > 0 ? 1.0 : 0.7
                             wrapMode: Text.WordWrap
                         }

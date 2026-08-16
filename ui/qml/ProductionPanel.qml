@@ -338,7 +338,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("PRODUCTION QUEUE")
                         color: hs.bronze
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         font.bold: true
                     }
 
@@ -364,8 +364,8 @@ Rectangle {
                                     return "archer";
                                 }
 
-                                width: 36
-                                height: 36
+                                width: Design.A11y.scaled(36)
+                                height: Design.A11y.scaled(36)
                                 radius: 6
                                 color: is_producing ? "#7F9A5F" : (is_occupied ? "#2F251D" : "#120D09")
                                 border.color: is_producing ? "#8FA46B" : (is_occupied ? "#6F8E8C" : "#3B2F24")
@@ -375,8 +375,8 @@ Rectangle {
                                     id: queueIconImage
 
                                     anchors.centerIn: parent
-                                    width: 28
-                                    height: 28
+                                    width: Design.A11y.scaled(28)
+                                    height: Design.A11y.scaled(28)
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
                                     source: parent.is_occupied ? productionPanel.unit_icon_source(parent.queue_unit_type, productionContent.prod.nation_id) : ""
@@ -387,7 +387,7 @@ Rectangle {
                                     anchors.centerIn: parent
                                     text: parent.is_occupied ? productionPanel.unit_icon_emoji(parent.queue_unit_type) : "·"
                                     color: parent.is_producing ? "#F4E7C8" : (parent.is_occupied ? "#D4B57C" : "#6B5231")
-                                    font.pointSize: parent.is_occupied ? 16 : 20
+                                    font.pixelSize: parent.is_occupied ? Design.Typography.subheading : Design.Typography.heading
                                     font.bold: parent.is_producing
                                     visible: !queueIconImage.visible
                                 }
@@ -398,7 +398,7 @@ Rectangle {
                                     anchors.margins: 2
                                     text: (index + 1).toString()
                                     color: parent.is_occupied ? "#8D7146" : "#3B2F24"
-                                    font.pointSize: 7
+                                    font.pixelSize: Design.Typography.caption
                                     font.bold: true
                                 }
 
@@ -428,13 +428,13 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: queue_total + " / 5"
                         color: queue_total >= 5 ? "#C0403B" : "#D4B57C"
-                        font.pointSize: 9
+                        font.pixelSize: Design.Typography.caption
                         font.bold: queue_total >= 5
                     }
 
                     Rectangle {
                         width: parent.width - 20
-                        height: 20
+                        height: Math.max(Design.A11y.scaled(20), Design.Typography.label + 6)
                         anchors.horizontalCenter: parent.horizontalCenter
                         radius: 10
                         color: "#120D09"
@@ -478,7 +478,7 @@ Rectangle {
                             anchors.centerIn: parent
                             text: productionContent.prod.in_progress ? qsTr("%1s").arg(Math.max(0, productionContent.prod.time_remaining).toFixed(1)) : qsTr("Idle")
                             color: "#F4E7C8"
-                            font.pointSize: 9
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                             style: Text.Outline
                             styleColor: "#120D09"
@@ -489,7 +489,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Available Population: %1 / %2").arg(productionContent.prod.manpower_available || 0).arg(productionContent.prod.max_units || 0)
                         color: (productionContent.prod.manpower_available <= 0) ? "#C0403B" : "#D4B57C"
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                     }
                 }
             }
@@ -519,7 +519,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("RECRUIT UNITS")
                         color: hs.bronze
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         font.bold: true
                     }
 
@@ -563,7 +563,7 @@ Rectangle {
                                 visible: !archerRecruitIcon.visible
                                 text: productionPanel.unit_icon_emoji("archer")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -579,7 +579,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: archerCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: archerCostRow.implicitHeight + 6
                                         radius: 8
                                         color: archerCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: archerCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -592,8 +592,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -602,7 +602,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: archerCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -693,7 +693,7 @@ Rectangle {
                                 visible: !swordsmanRecruitIcon.visible
                                 text: productionPanel.unit_icon_emoji("swordsman")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -709,7 +709,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: swordsmanCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: swordsmanCostRow.implicitHeight + 6
                                         radius: 8
                                         color: swordsmanCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: swordsmanCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -722,8 +722,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -732,7 +732,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: swordsmanCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -823,7 +823,7 @@ Rectangle {
                                 visible: !spearmanRecruitIcon.visible
                                 text: productionPanel.unit_icon_emoji("spearman")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -839,7 +839,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: spearmanCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: spearmanCostRow.implicitHeight + 6
                                         radius: 8
                                         color: spearmanCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: spearmanCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -852,8 +852,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -862,7 +862,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: spearmanCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -953,7 +953,7 @@ Rectangle {
                                 visible: !horseKnightIcon.visible
                                 text: productionPanel.unit_icon_emoji("horse_swordsman")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -969,7 +969,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: horseKnightCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: horseKnightCostRow.implicitHeight + 6
                                         radius: 8
                                         color: horseKnightCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: horseKnightCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -982,8 +982,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -992,7 +992,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: horseKnightCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -1083,7 +1083,7 @@ Rectangle {
                                 visible: !horseArcherIcon.visible
                                 text: productionPanel.unit_icon_emoji("horse_archer")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -1099,7 +1099,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: horseArcherCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: horseArcherCostRow.implicitHeight + 6
                                         radius: 8
                                         color: horseArcherCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: horseArcherCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -1112,8 +1112,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -1122,7 +1122,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: horseArcherCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -1213,7 +1213,7 @@ Rectangle {
                                 visible: !horseSpearmanIcon.visible
                                 text: productionPanel.unit_icon_emoji("horse_spearman")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -1229,7 +1229,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: horseSpearmanCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: horseSpearmanCostRow.implicitHeight + 6
                                         radius: 8
                                         color: horseSpearmanCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: horseSpearmanCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -1242,8 +1242,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -1252,7 +1252,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: horseSpearmanCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -1343,7 +1343,7 @@ Rectangle {
                                 visible: !healerRecruitIcon.visible
                                 text: productionPanel.unit_icon_emoji("healer")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -1359,7 +1359,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: healerCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: healerCostRow.implicitHeight + 6
                                         radius: 8
                                         color: healerCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: healerCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -1372,8 +1372,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -1382,7 +1382,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: healerCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -1473,7 +1473,7 @@ Rectangle {
                                 visible: !builderRecruitIcon.visible
                                 text: productionPanel.unit_icon_emoji("builder")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -1489,7 +1489,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: builderRecruitCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: builderRecruitCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderRecruitCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderRecruitCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -1502,8 +1502,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -1512,7 +1512,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderRecruitCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -1604,7 +1604,7 @@ Rectangle {
                                 visible: !elephantRecruitIcon.visible
                                 text: productionPanel.unit_icon_emoji("elephant")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 42
+                                font.pixelSize: Design.Typography.glyphLarge
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -1620,7 +1620,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: elephantCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: elephantCostRow.implicitHeight + 6
                                         radius: 8
                                         color: elephantCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: elephantCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -1633,8 +1633,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -1643,7 +1643,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: elephantCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -1729,7 +1729,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("HOME RECRUITMENT")
                         color: hs.bronze
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         font.bold: true
                     }
 
@@ -1742,7 +1742,7 @@ Rectangle {
                             return qsTr("Available civilians: %1 / %2").arg(ready).arg(homeProductionContent.prod.max_units || 0);
                         }
                         color: Theme.textSubLite
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                     }
 
                     Rectangle {
@@ -1783,7 +1783,7 @@ Rectangle {
                             visible: !civilianRecruitIcon.visible
                             text: productionPanel.unit_icon_emoji("civilian")
                             color: parent.is_enabled ? Theme.textMain : Theme.textHint
-                            font.pointSize: 36
+                            font.pixelSize: Design.Typography.glyph
                             opacity: parent.is_enabled ? 0.9 : 0.4
                         }
 
@@ -1799,7 +1799,7 @@ Rectangle {
 
                                 delegate: Rectangle {
                                     width: civilianCostRow.implicitWidth + 8
-                                    height: 16
+                                    height: civilianCostRow.implicitHeight + 6
                                     radius: 8
                                     color: civilianCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                     border.color: civilianCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -1812,8 +1812,8 @@ Rectangle {
                                         spacing: 3
 
                                         Image {
-                                            width: 9
-                                            height: 9
+                                            width: Design.A11y.scaled(9)
+                                            height: Design.A11y.scaled(9)
                                             fillMode: Image.PreserveAspectFit
                                             smooth: true
                                             source: productionPanel.cost_icon_source(modelData.key)
@@ -1822,7 +1822,7 @@ Rectangle {
                                         Text {
                                             text: modelData.amount
                                             color: civilianCard.is_enabled ? Theme.textMain : Theme.textDim
-                                            font.pointSize: 7
+                                            font.pixelSize: Design.Typography.caption
                                             font.bold: true
                                         }
                                     }
@@ -1894,7 +1894,7 @@ Rectangle {
 
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.parent.width - 20
-                        height: 32
+                        height: Design.A11y.scaled(32)
                         text: rallyContent.placing_barracks_rally ? Design.Icons.rally + " " + qsTr("Click Map to Set Rally") : Design.Icons.rally + " " + qsTr("Set Rally Point")
                         focusPolicy: Qt.NoFocus
                         onClicked: {
@@ -1918,7 +1918,7 @@ Rectangle {
 
                         contentItem: Text {
                             text: parent.text
-                            font.pointSize: 9
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                             color: rallyButton.allowed ? "#F4E7C8" : "#6B5231"
                             horizontalAlignment: Text.AlignHCenter
@@ -1930,7 +1930,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: rallyContent.placing_barracks_rally ? qsTr("Right-click to cancel") : ""
                         color: "#8D7146"
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         font.italic: true
                     }
                 }
@@ -1990,7 +1990,7 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             text: builderHeaderIcon.visible ? qsTr("BUILDER CONSTRUCTION") : Design.Icons.build + " " + qsTr("BUILDER CONSTRUCTION")
                             color: hs.bronze
-                            font.pointSize: 9
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                         }
                     }
@@ -1999,12 +1999,12 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Build siege weapons, structures, and gather wood, stone, and iron")
                         color: "#8D7146"
-                        font.pointSize: 7
+                        font.pixelSize: Design.Typography.caption
                     }
 
                     Rectangle {
                         width: parent.width - 20
-                        height: 20
+                        height: Math.max(Design.A11y.scaled(20), Design.Typography.label + 6)
                         anchors.horizontalCenter: parent.horizontalCenter
                         radius: 10
                         color: "#120D09"
@@ -2048,7 +2048,7 @@ Rectangle {
                             anchors.centerIn: parent
                             text: builderProductionContent.builder_prod.in_progress ? qsTr("%1s").arg(Math.max(0, builderProductionContent.builder_prod.time_remaining).toFixed(1)) : qsTr("Idle")
                             color: "#F4E7C8"
-                            font.pointSize: 9
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                             style: Text.Outline
                             styleColor: "#120D09"
@@ -2079,7 +2079,7 @@ Rectangle {
                             return (is_collection_task ? qsTr("Task: %1") : qsTr("Building: %1")).arg(label);
                         }
                         color: builderProductionContent.builder_prod.in_progress ? "#7F9A5F" : "#8D7146"
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         font.bold: builderProductionContent.builder_prod.in_progress
                         visible: true
                     }
@@ -2124,7 +2124,7 @@ Rectangle {
                                 visible: !builderCatapultIcon.visible
                                 text: productionPanel.unit_icon_emoji("catapult")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 36
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -2134,7 +2134,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Catapult")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -2150,7 +2150,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: catapultCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: catapultCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderCatapultCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderCatapultCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -2163,8 +2163,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -2173,7 +2173,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderCatapultCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -2264,7 +2264,7 @@ Rectangle {
                                 visible: !builderBallistaIcon.visible
                                 text: productionPanel.unit_icon_emoji("ballista")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 36
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -2274,7 +2274,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Ballista")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -2290,7 +2290,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: ballistaCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: ballistaCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderBallistaCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderBallistaCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -2303,8 +2303,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -2313,7 +2313,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderBallistaCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -2404,7 +2404,7 @@ Rectangle {
                                 visible: !builderDefenseTowerIcon.visible
                                 text: Design.Icons.unitGlyph("defense_tower")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 36
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -2414,7 +2414,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Defense Tower")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -2430,7 +2430,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: defenseTowerCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: defenseTowerCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderDefenseTowerCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderDefenseTowerCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -2443,8 +2443,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -2453,7 +2453,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderDefenseTowerCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -2544,7 +2544,7 @@ Rectangle {
                                 visible: !builderHomeIcon.visible
                                 text: Design.Icons.unitGlyph("home")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 36
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -2554,7 +2554,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Home")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -2570,7 +2570,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: homeCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: homeCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderHomeCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderHomeCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -2583,8 +2583,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -2593,7 +2593,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderHomeCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -2684,7 +2684,7 @@ Rectangle {
                                 visible: !builderWallSegmentIcon.visible
                                 text: Design.Icons.collect
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 34
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -2694,7 +2694,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Wall Segment")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -2710,7 +2710,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: wallSegmentCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: wallSegmentCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderWallSegmentCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderWallSegmentCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -2723,8 +2723,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -2733,7 +2733,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderWallSegmentCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -2824,7 +2824,7 @@ Rectangle {
                                 visible: !builderWallGateIcon.visible
                                 text: Design.Icons.gate
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 34
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -2834,7 +2834,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Wall Gate")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -2850,7 +2850,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: wallGateCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: wallGateCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderWallGateCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderWallGateCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -2863,8 +2863,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -2873,7 +2873,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderWallGateCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -2964,7 +2964,7 @@ Rectangle {
                                 visible: builderMarketplaceIcon.status !== Image.Ready
                                 text: Design.Icons.unitGlyph("marketplace")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 34
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -2974,7 +2974,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Marketplace")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -2990,7 +2990,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: marketplaceCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: marketplaceCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderMarketplaceCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderMarketplaceCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -3003,8 +3003,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -3013,7 +3013,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderMarketplaceCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -3104,7 +3104,7 @@ Rectangle {
                                 visible: builderTempleIcon.status !== Image.Ready
                                 text: Design.Icons.unitGlyph("temple")
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
-                                font.pointSize: 34
+                                font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
@@ -3114,7 +3114,7 @@ Rectangle {
                                 anchors.bottomMargin: 24
                                 text: qsTr("Temple")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -3130,7 +3130,7 @@ Rectangle {
 
                                     delegate: Rectangle {
                                         width: templeCostRow.implicitWidth + 8
-                                        height: 16
+                                        height: templeCostRow.implicitHeight + 6
                                         radius: 8
                                         color: builderTempleCard.is_enabled ? "#cc2a1d12" : "#991f150d"
                                         border.color: builderTempleCard.is_enabled ? hs.bronze : "#8C6A3E"
@@ -3143,8 +3143,8 @@ Rectangle {
                                             spacing: 3
 
                                             Image {
-                                                width: 9
-                                                height: 9
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
                                                 fillMode: Image.PreserveAspectFit
                                                 smooth: true
                                                 source: productionPanel.cost_icon_source(modelData.key)
@@ -3153,7 +3153,7 @@ Rectangle {
                                             Text {
                                                 text: modelData.amount
                                                 color: builderTempleCard.is_enabled ? Theme.textMain : Theme.textDim
-                                                font.pointSize: 7
+                                                font.pixelSize: Design.Typography.caption
                                                 font.bold: true
                                             }
                                         }
@@ -3254,7 +3254,7 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             text: marketplaceHeaderIcon.visible ? qsTr("MARKETPLACE") : Design.Icons.unitGlyph("marketplace") + " " + qsTr("MARKETPLACE")
                             color: hs.bronze
-                            font.pointSize: 9
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                         }
                     }
@@ -3263,7 +3263,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: marketplaceContent.market_state.has_marketplace ? qsTr("Trade resources for gold at fixed exchange rates") : qsTr("Select your marketplace to trade")
                         color: "#8D7146"
-                        font.pointSize: 7
+                        font.pixelSize: Design.Typography.caption
                     }
 
                     Text {
@@ -3271,7 +3271,7 @@ Rectangle {
                         visible: marketplaceContent.market_state.has_marketplace
                         text: qsTr("Gold: %1    Trade size: %2").arg(productionPanel.resource_amount(productionPanel.current_resources(), "gold")).arg(Math.max(0, marketplaceContent.market_state.trade_quantity || 0))
                         color: "#F4E7C8"
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         font.bold: true
                     }
 
@@ -3280,7 +3280,7 @@ Rectangle {
                         visible: !marketplaceContent.market_state.has_marketplace
                         text: qsTr("Trading is available only for your own marketplace.")
                         color: "#8D7146"
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         wrapMode: Text.WordWrap
                         horizontalAlignment: Text.AlignHCenter
                         width: parent.width - 24
@@ -3327,14 +3327,14 @@ Rectangle {
                                         Text {
                                             text: modelData.label
                                             color: "#F4E7C8"
-                                            font.pointSize: 8
+                                            font.pixelSize: Design.Typography.caption
                                             font.bold: true
                                         }
 
                                         Text {
                                             text: qsTr("You have %1").arg(productionPanel.resource_amount(productionPanel.current_resources(), resource_key))
                                             color: "#8D7146"
-                                            font.pointSize: 7
+                                            font.pixelSize: Design.Typography.caption
                                         }
                                     }
 
@@ -3421,7 +3421,7 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             text: templeHeaderIcon.visible ? qsTr("TEMPLE") : Design.Icons.unitGlyph("temple") + " " + qsTr("TEMPLE")
                             color: hs.bronze
-                            font.pointSize: 9
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                         }
                     }
@@ -3430,7 +3430,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("The sanctuary of your nation, raised in its own architectural style")
                         color: "#8D7146"
-                        font.pointSize: 7
+                        font.pixelSize: Design.Typography.caption
                         wrapMode: Text.WordWrap
                         horizontalAlignment: Text.AlignHCenter
                         width: parent.width
@@ -3440,7 +3440,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Watches over a wide stretch of ground and holds a settlement together")
                         color: "#F4E7C8"
-                        font.pointSize: 8
+                        font.pixelSize: Design.Typography.caption
                         wrapMode: Text.WordWrap
                         horizontalAlignment: Text.AlignHCenter
                         width: parent.width
@@ -3467,14 +3467,14 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: Design.Icons.unitGlyph("defense_tower")
                         color: "#3B2F24"
-                        font.pointSize: 32
+                        font.pixelSize: Design.Typography.glyph
                     }
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("No Barracks Selected")
                         color: "#8D7146"
-                        font.pointSize: 11
+                        font.pixelSize: Design.Typography.label
                         font.bold: true
                     }
 
@@ -3482,7 +3482,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Select a barracks to recruit units")
                         color: Theme.textSubLite
-                        font.pointSize: 9
+                        font.pixelSize: Design.Typography.caption
                     }
                 }
             }

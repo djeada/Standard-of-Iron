@@ -64,7 +64,7 @@ Item {
 
         text: root.map_title
         color: colors.textMain
-        font.pixelSize: 20
+        font.pixelSize: Design.Typography.subheading
         font.bold: true
         elide: Text.ElideRight
 
@@ -92,7 +92,7 @@ Item {
 
             text: qsTr("Players (%1)").arg(Design.Numerals.roman(players_model ? players_model.count : 0))
             color: colors.textMain
-            font.pixelSize: 16
+            font.pixelSize: Design.Typography.body
             font.bold: true
         }
 
@@ -101,7 +101,7 @@ Item {
 
             text: qsTr("Click color/team to cycle")
             color: colors.textSubLite
-            font.pixelSize: 11
+            font.pixelSize: Design.Typography.caption
             font.italic: true
 
             anchors {
@@ -148,7 +148,7 @@ Item {
                         anchors.centerIn: parent
                         text: qsTr("Select a map to configure players")
                         color: colors.textSub
-                        font.pixelSize: 13
+                        font.pixelSize: Design.Typography.caption
                     }
                 }
 
@@ -202,7 +202,7 @@ Item {
 
             contentItem: Text {
                 text: addCPUBtn.text
-                font.pixelSize: 12
+                font.pixelSize: Design.Typography.caption
                 font.bold: true
                 color: addCPUBtn.allowed ? colors.addColor : colors.textSub
                 horizontalAlignment: Text.AlignHCenter
@@ -237,7 +237,7 @@ Item {
                 return available === 1 ? qsTr("%1 slot available").arg(Design.Numerals.roman(available)) : qsTr("%1 slots available").arg(Design.Numerals.roman(available));
             }
             color: colors.textSubLite
-            font.pixelSize: 11
+            font.pixelSize: Design.Typography.caption
 
             anchors {
                 left: addCPUBtn.right
@@ -279,7 +279,7 @@ Item {
             visible: !previewImage.visible
             text: qsTr("(map preview)")
             color: colors.hint
-            font.pixelSize: 14
+            font.pixelSize: Design.Typography.label
         }
     }
 }

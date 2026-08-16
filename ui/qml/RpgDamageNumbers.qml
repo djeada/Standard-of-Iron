@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
@@ -205,7 +206,7 @@ Item {
                     text: burst.dmg.toString()
                     color: "#000000"
                     opacity: 0.82
-                    font.pixelSize: burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30)
+                    font.pixelSize: Design.Typography.display(burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30))
                     font.bold: true
                     style: Text.Outline
                     styleColor: "#66000000"
@@ -216,7 +217,7 @@ Item {
                     anchors.centerIn: parent
                     text: burst.dmg.toString()
                     color: burst.killingBlow ? "#fff3bf" : (burst.severity >= 0.72 ? "#ffebe3" : (burst.severity >= 0.46 ? "#fff0c6" : "#ffffff"))
-                    font.pixelSize: burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30)
+                    font.pixelSize: Design.Typography.display(burst.killingBlow ? 42 : (burst.severity >= 0.72 ? 36 : 30))
                     font.bold: true
                     font.letterSpacing: burst.severity >= 0.72 ? 0.6 : 0.2
                     style: Text.Outline

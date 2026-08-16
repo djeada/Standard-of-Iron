@@ -69,7 +69,7 @@ Item {
                 Label {
                     text: qsTr("Save Game")
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeHero
+                    font.pixelSize: Design.Typography.hero
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -94,7 +94,7 @@ Item {
                 Label {
                     text: qsTr("Save Name:")
                     color: Theme.textSub
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                 }
 
                 TextField {
@@ -103,7 +103,7 @@ Item {
                     Layout.fillWidth: true
                     placeholderText: qsTr("Enter save name...")
                     text: "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm")
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                     color: Theme.textMain
 
                     background: Rectangle {
@@ -132,7 +132,7 @@ Item {
             Label {
                 text: qsTr("Existing Saves")
                 color: Theme.textSub
-                font.pointSize: Theme.fontSizeMedium
+                font.pixelSize: Design.Typography.bodyLarge
             }
 
             Rectangle {
@@ -228,7 +228,7 @@ Item {
                                         visible: !thumbnailImage.visible
                                         text: qsTr("No Preview")
                                         color: Theme.textHint
-                                        font.pointSize: Theme.fontSizeTiny
+                                        font.pixelSize: Design.Typography.label
                                     }
                                 }
 
@@ -239,7 +239,7 @@ Item {
                                     Label {
                                         text: model.title
                                         color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeLarge
+                                        font.pixelSize: Design.Typography.subheading
                                         font.bold: true
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
@@ -248,7 +248,7 @@ Item {
                                     Label {
                                         text: qsTr("Slot: %1").arg(model.slot_name)
                                         color: Theme.textSub
-                                        font.pointSize: Theme.fontSizeSmall
+                                        font.pixelSize: Design.Typography.body
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
@@ -256,7 +256,7 @@ Item {
                                     Label {
                                         text: model.uncompressed_size > 0 ? qsTr("%1 - %2 (%3 KB on disk)").arg(model.map_name).arg(model.mode === "campaign" ? qsTr("Campaign") : qsTr("Skirmish")).arg(Design.Numerals.roman(Math.max(1, Math.round(model.stored_size / 1024)))) : model.map_name
                                         color: Theme.textSub
-                                        font.pointSize: Theme.fontSizeSmall
+                                        font.pixelSize: Design.Typography.body
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
@@ -264,7 +264,7 @@ Item {
                                     Label {
                                         text: qsTr("Last saved: %1").arg(Qt.formatDateTime(new Date(model.timestamp), "yyyy-MM-dd hh:mm:ss"))
                                         color: Theme.textHint
-                                        font.pointSize: Theme.fontSizeSmall
+                                        font.pixelSize: Design.Typography.body
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
@@ -332,7 +332,7 @@ Item {
                     color: Theme.textMain
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                 }
             }
         }

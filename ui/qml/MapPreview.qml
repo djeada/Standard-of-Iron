@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Rectangle {
     id: root
@@ -55,7 +56,7 @@ Rectangle {
 
         text: qsTr("Map Preview")
         color: Theme.textMain
-        font.pixelSize: 16
+        font.pixelSize: Design.Typography.body
         font.bold: true
 
         anchors {
@@ -112,7 +113,7 @@ Rectangle {
 
                 text: qsTr("Player bases shown as colored circles")
                 color: Theme.textSubLite
-                font.pixelSize: 12
+                font.pixelSize: Design.Typography.caption
                 font.italic: true
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignLeft
@@ -127,7 +128,7 @@ Rectangle {
             anchors.centerIn: parent
             text: qsTr("Select a map\nto see preview")
             color: Theme.textHint
-            font.pixelSize: 13
+            font.pixelSize: Design.Typography.caption
             horizontalAlignment: Text.AlignHCenter
             visible: !loading && preview_image.status !== Image.Ready && map_path === ""
         }
@@ -136,7 +137,7 @@ Rectangle {
             anchors.centerIn: parent
             text: qsTr("No preview available")
             color: Theme.textHint
-            font.pixelSize: 13
+            font.pixelSize: Design.Typography.caption
             horizontalAlignment: Text.AlignHCenter
             visible: !loading && preview_image.status !== Image.Ready && map_path !== ""
         }
@@ -150,7 +151,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: "⟳"
-                font.pixelSize: 36
+                font.pixelSize: Design.Typography.hero
                 color: Theme.accent
 
                 RotationAnimator on rotation  {
