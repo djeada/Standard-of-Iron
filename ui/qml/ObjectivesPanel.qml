@@ -16,7 +16,7 @@ Item {
     }
 
     function refresh_objectives() {
-        mission_objectives = (game_ready() && game.get_current_mission_objectives) ? game.get_current_mission_objectives() : null;
+        mission_objectives = (game_ready() && game.setup.current_mission_objectives) ? game.setup.current_mission_objectives() : null;
     }
 
     function objective_list(key) {
@@ -39,12 +39,12 @@ Item {
     }
 
     Connections {
-        function onCampaign_mission_changed() {
+        function onCurrent_mission_changed() {
             root.refresh_objectives();
         }
 
         ignoreUnknownSignals: true
-        target: root.game_ready() ? game : null
+        target: root.game_ready() ? game.setup : null
     }
 
     Rectangle {

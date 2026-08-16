@@ -17,8 +17,8 @@ Item {
     signal cancelled
 
     function refresh_campaigns() {
-        if (typeof game !== "undefined" && game.available_campaigns) {
-            campaigns = game.available_campaigns;
+        if (typeof game !== "undefined" && game.setup.campaigns) {
+            campaigns = game.setup.campaigns;
             if (campaigns.length > 0 && !current_campaign)
                 current_campaign = campaigns[0];
         }
@@ -105,8 +105,8 @@ Item {
     }
 
     onVisibleChanged: {
-        if (visible && typeof game !== "undefined" && game.load_campaigns) {
-            game.load_campaigns();
+        if (visible && typeof game !== "undefined" && game.setup.load_campaigns) {
+            game.setup.load_campaigns();
             refresh_campaigns();
         }
     }
@@ -125,11 +125,11 @@ Item {
     }
 
     Connections {
-        function onAvailable_campaigns_changed() {
+        function onCampaigns_changed() {
             refresh_campaigns();
         }
 
-        target: (typeof game !== "undefined") ? game : null
+        target: (typeof game !== "undefined") ? game.setup : null
     }
 
     Rectangle {

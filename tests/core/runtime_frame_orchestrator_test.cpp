@@ -3,8 +3,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "app/core/minimap_manager.h"
 #include "app/core/runtime_frame_orchestrator.h"
+#include "app/world/minimap_manager.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
 #include "game/command/command_system.h"

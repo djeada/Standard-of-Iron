@@ -5,11 +5,12 @@
 #include <map>
 #include <vector>
 
-#include "app/core/campaign_manager.h"
 #include "app/core/entity_cache.h"
-#include "app/core/mission_definition_view.h"
-#include "app/core/mission_setup_coordinator.h"
-#include "app/core/skirmish_loader.h"
+#include "app/mission/campaign_manager.h"
+#include "app/mission/mission_definition_view.h"
+#include "app/mission/mission_setup_coordinator.h"
+#include "app/mission/mission_waves.h"
+#include "app/session/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
 #include "game/map/campaign_definition.h"
@@ -148,11 +149,10 @@ public:
     const QVector3D camp = wave.defense_reference_world_position;
     result.spawn_distance = (wave.entry_world_position - camp).length();
 
-    const auto effects =
-        m_coordinator.spawn_wave({.world = m_world,
-                                  .level = m_level,
-                                  .campaign_mission_elapsed = wave.trigger_time},
-                                 wave);
+    const auto effects = m_waves.spawn({.world = m_world,
+                                        .level = m_level,
+                                        .campaign_mission_elapsed = wave.trigger_time},
+                                       wave);
     m_spawned = effects.spawned_entity_ids;
     if (m_spawned.empty()) {
       return result;
@@ -254,6 +254,7 @@ private:
   Render::GL::Camera m_camera;
   CampaignManager m_campaign;
   App::Core::MissionSetupCoordinator m_coordinator;
+  App::Core::MissionWaves m_waves;
   Game::Systems::LevelSnapshot m_level;
   EntityCache m_entity_cache;
   std::vector<App::Core::PendingMissionWave> m_pending_waves;

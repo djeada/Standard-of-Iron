@@ -1,22 +1,16 @@
-#include "selected_units_model.h"
-
-#include <qabstractitemmodel.h>
-#include <qhash.h>
-#include <qhashfunctions.h>
-#include <qobject.h>
-#include <qstringview.h>
-#include <qtmetamacros.h>
-#include <qvariant.h>
+#include "app/models/selected_units_model.h"
 
 #include <algorithm>
-#include <iterator>
 #include <vector>
 
-#include "../core/game_engine.h"
+#include "app/core/client_context.h"
+#include "app/world/unit_queries.h"
+#include "game/view/selection_controller.h"
 
-SelectedUnitsModel::SelectedUnitsModel(GameEngine* engine, QObject* parent)
+SelectedUnitsModel::SelectedUnitsModel(const App::Core::ClientContext& context,
+                                       QObject* parent)
     : QAbstractListModel(parent)
-    , m_engine(engine) {
+    , m_context(context) {
 }
 
 auto SelectedUnitsModel::rowCount(const QModelIndex& parent) const -> int {
@@ -31,66 +25,58 @@ auto SelectedUnitsModel::data(const QModelIndex& index, int role) const -> QVari
       index.row() >= static_cast<int>(m_ids.size())) {
     return {};
   }
-  auto id = m_ids[index.row()];
-  if (m_engine == nullptr) {
-    return {};
-  }
-  QString name;
-  QString nation;
-  int hp = 0;
-  int max_hp = 0;
-  bool is_b = false;
-  bool alive = false;
-  if (role == UnitIdRole) {
+  const auto id = m_ids[index.row()];
 
+  if (role == UnitIdRole) {
     return QVariant::fromValue<qulonglong>(static_cast<qulonglong>(id));
   }
   if (role == UnitTypeRole) {
     QString type_key;
-    if (m_engine->get_unit_type_key(id, type_key)) {
+    if (App::World::unit_type_key(m_context.world, id, type_key)) {
       return type_key;
     }
     return {};
   }
   if (role == ActivityRole || role == ActivityStateRole) {
-    const QVariantMap activity = m_engine->unit_activity(id);
-    return role == ActivityRole ? activity.value(QStringLiteral("activity"))
-                                : activity.value(QStringLiteral("state"));
+    const auto activity = App::World::unit_activity(m_context.world, id);
+    const auto text = role == ActivityRole
+                          ? Game::Systems::activity_kind_id(activity.kind)
+                          : Game::Systems::activity_state_id(activity.state);
+    return QString::fromUtf8(text.data(), static_cast<int>(text.size()));
   }
-  if (!m_engine->get_unit_info(id, name, hp, max_hp, is_b, alive, nation)) {
+
+  App::World::UnitDescription unit;
+  if (!App::World::describe_unit(m_context.world, id, unit)) {
     return {};
   }
   if (role == NameRole) {
-    return name;
+    return unit.name;
   }
   if (role == HealthRole) {
-    return hp;
+    return unit.health;
   }
   if (role == max_healthRole) {
-    return max_hp;
+    return unit.max_health;
   }
   if (role == HealthRatioRole) {
-    return (max_hp > 0 ? static_cast<double>(std::clamp(hp, 0, max_hp)) /
-                             static_cast<double>(max_hp)
-                       : 0.0);
+    return unit.max_health > 0
+               ? static_cast<double>(std::clamp(unit.health, 0, unit.max_health)) /
+                     static_cast<double>(unit.max_health)
+               : 0.0;
   }
   if (role == NationRole) {
-    return nation;
+    return unit.nation;
   }
   if (role == StaminaRatioRole || role == IsRunningRole || role == CanRunRole) {
-    float stamina_ratio = 1.0F;
-    bool is_running = false;
-    bool can_run = false;
-    m_engine->get_unit_stamina_info(id, stamina_ratio, is_running, can_run);
+    App::World::UnitStamina stamina;
+    (void)App::World::describe_unit_stamina(m_context.world, id, stamina);
     if (role == StaminaRatioRole) {
-      return static_cast<double>(stamina_ratio);
+      return static_cast<double>(stamina.ratio);
     }
     if (role == IsRunningRole) {
-      return is_running;
+      return stamina.is_running;
     }
-    if (role == CanRunRole) {
-      return can_run;
-    }
+    return stamina.can_run;
   }
   return {};
 }
@@ -110,7 +96,7 @@ auto SelectedUnitsModel::roleNames() const -> QHash<int, QByteArray> {
           {ActivityStateRole, "activity_state"}};
 }
 
-QVariantList SelectedUnitsModel::grouped_by_type() const {
+auto SelectedUnitsModel::grouped_by_type() const -> QVariantList {
   QVariantList units;
   units.reserve(static_cast<int>(m_ids.size()));
   for (int row = 0; row < rowCount(); ++row) {
@@ -131,16 +117,16 @@ QVariantList SelectedUnitsModel::grouped_by_type() const {
 }
 
 void SelectedUnitsModel::refresh() {
-  if (m_engine == nullptr) {
+  if (m_context.selection == nullptr) {
     return;
   }
   std::vector<Engine::Core::EntityID> ids;
-  m_engine->get_selected_unit_ids(ids);
+  m_context.selection->get_selected_unit_ids(ids);
 
   if (ids.size() == m_ids.size() && std::equal(ids.begin(), ids.end(), m_ids.begin())) {
     if (!m_ids.empty()) {
-      QModelIndex const first = index(0, 0);
-      QModelIndex const last = index(static_cast<int>(m_ids.size()) - 1, 0);
+      const QModelIndex first = index(0, 0);
+      const QModelIndex last = index(static_cast<int>(m_ids.size()) - 1, 0);
       emit dataChanged(first,
                        last,
                        {HealthRole,
@@ -156,22 +142,13 @@ void SelectedUnitsModel::refresh() {
   }
 
   beginResetModel();
-
   m_ids.clear();
-  for (auto id : ids) {
-    QString nm;
-    QString nation;
-    int hp = 0;
-    int max_hp = 0;
-    bool is_b = false;
-    bool alive = false;
-    if (!m_engine->get_unit_info(id, nm, hp, max_hp, is_b, alive, nation)) {
+  for (const auto id : ids) {
+    App::World::UnitDescription unit;
+    if (!App::World::describe_unit(m_context.world, id, unit)) {
       continue;
     }
-    if (is_b) {
-      continue;
-    }
-    if (!alive) {
+    if (unit.is_building || !unit.alive) {
       continue;
     }
     m_ids.push_back(id);

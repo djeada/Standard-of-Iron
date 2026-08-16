@@ -9,7 +9,7 @@ Item {
     property real bottomInset: 0
     property real topInset: 0
     property var status: ({})
-    property var engine: null
+    property var camera: null
 
     readonly property real resolutionScale: Math.max(0.75, Math.min(2.0, height / 1080))
     readonly property real uiScale: Math.max(0.75, Math.min(4.0, root.resolutionScale * Design.A11y.uiScale))
@@ -80,8 +80,8 @@ Item {
     Timer {
         interval: 33
         repeat: true
-        running: root.visible && root.engine === null && typeof game !== 'undefined' && game.get_controlled_commander_status
-        onTriggered: root.status = game.get_controlled_commander_status()
+        running: root.visible && typeof game !== 'undefined' && game.commander.status
+        onTriggered: root.status = game.commander.status()
     }
 
     property bool focusProjected: false
@@ -90,16 +90,16 @@ Item {
     property real focusScreenHeight: 0
 
     function refresh_focus_projection() {
-        var provider = root.engine !== null ? root.engine : (typeof game !== 'undefined' ? game : null);
-        if (provider === null || !provider.rpg_project_world || root.status_value("focus_marker_valid", false) !== true) {
+        var provider = root.camera !== null ? root.camera : (typeof game !== 'undefined' ? game.camera : null);
+        if (provider === null || !provider.project_world || root.status_value("focus_marker_valid", false) !== true) {
             root.focusProjected = false;
             return;
         }
         var wx = Number(root.status_value("focus_marker_x", 0));
         var wy = Number(root.status_value("focus_marker_y", 0));
         var wz = Number(root.status_value("focus_marker_z", 0));
-        var chest = provider.rpg_project_world(wx, wy + 1.15, wz);
-        var feet = provider.rpg_project_world(wx, wy, wz);
+        var chest = provider.project_world(wx, wy + 1.15, wz);
+        var feet = provider.project_world(wx, wy, wz);
         if (!chest || !chest.valid || !feet || !feet.valid) {
             root.focusProjected = false;
             return;

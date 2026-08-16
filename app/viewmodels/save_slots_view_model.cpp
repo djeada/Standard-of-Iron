@@ -1,9 +1,9 @@
-#include "save_slots_view_model.h"
+#include "app/viewmodels/save_slots_view_model.h"
 
 #include <QDebug>
 #include <QFileInfo>
 
-#include "../core/user_settings.h"
+#include "app/core/user_settings.h"
 #include "game/systems/save_format.h"
 #include "game/systems/save_load_service.h"
 
@@ -139,6 +139,37 @@ void SaveSlotsViewModel::set_autosave_interval_minutes(int minutes) {
   App::Core::UserSettings::save_autosave_interval_minutes(minutes);
   emit autosave_interval_changed();
   emit autosave_settings_changed();
+}
+
+void SaveSlotsViewModel::save_to_slot(const QString& slot_name) {
+  emit save_requested(slot_name);
+}
+
+void SaveSlotsViewModel::quicksave() {
+  emit quicksave_requested();
+}
+
+void SaveSlotsViewModel::autosave() {
+  emit autosave_requested();
+}
+
+void SaveSlotsViewModel::cancel_active_save() {
+  emit cancel_save_requested();
+}
+
+void SaveSlotsViewModel::load_from_slot(const QString& slot_name) {
+  emit load_requested(slot_name);
+}
+
+void SaveSlotsViewModel::set_save_progress(bool in_progress,
+                                           int percent,
+                                           const QString& stage,
+                                           const QString& slot) {
+  m_in_progress = in_progress;
+  m_percent = percent;
+  m_stage = stage;
+  m_slot = slot;
+  emit save_progress_changed();
 }
 
 } // namespace App::ViewModels

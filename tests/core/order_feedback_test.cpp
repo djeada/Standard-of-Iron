@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "app/core/order_feedback.h"
-#include "app/core/order_markers.h"
-#include "app/core/order_service.h"
+#include "app/orders/order_feedback.h"
+#include "app/orders/order_markers.h"
+#include "app/orders/order_submission.h"
 #include "game/command/command.h"
 #include "game/core/component.h"
 #include "game/core/world.h"

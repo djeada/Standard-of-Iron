@@ -98,7 +98,7 @@ Item {
             loadListView.selected_index = newIndex;
         }
 
-        target: typeof game !== 'undefined' ? game : null
+        target: typeof game !== 'undefined' ? game.saves : null
     }
 
     Rectangle {

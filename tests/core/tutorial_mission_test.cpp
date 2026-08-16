@@ -6,12 +6,13 @@
 #include <map>
 #include <vector>
 
-#include "app/core/campaign_manager.h"
 #include "app/core/entity_cache.h"
-#include "app/core/mission_definition_view.h"
-#include "app/core/mission_setup_coordinator.h"
-#include "app/core/skirmish_loader.h"
-#include "app/core/tutorial_director.h"
+#include "app/mission/campaign_manager.h"
+#include "app/mission/mission_definition_view.h"
+#include "app/mission/mission_setup_coordinator.h"
+#include "app/mission/mission_waves.h"
+#include "app/mission/tutorial_director.h"
+#include "app/session/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
@@ -112,6 +113,7 @@ protected:
   Render::GL::Camera m_camera;
   CampaignManager m_campaign;
   App::Core::MissionSetupCoordinator m_coordinator;
+  App::Core::MissionWaves m_waves;
   Game::Systems::LevelSnapshot m_level;
   EntityCache m_entity_cache;
   std::vector<App::Core::PendingMissionWave> m_pending_waves;
@@ -197,11 +199,10 @@ TEST_F(TutorialMissionTest, TheRaidClosesOnThePlayerCamp) {
   const float spawn_distance = (wave.entry_world_position - camp).length();
   ASSERT_GT(spawn_distance, 20.0F);
 
-  const auto effects =
-      m_coordinator.spawn_wave({.world = m_world,
-                                .level = m_level,
-                                .campaign_mission_elapsed = wave.trigger_time},
-                               wave);
+  const auto effects = m_waves.spawn({.world = m_world,
+                                      .level = m_level,
+                                      .campaign_mission_elapsed = wave.trigger_time},
+                                     wave);
   ASSERT_GE(effects.spawned_entity_ids.size(), 2U);
 
   auto closest = [&]() {

@@ -61,8 +61,8 @@ Item {
         switch (actionId) {
         case "global.toggle_control_mode":
             reset_pan_keys();
-            if (root.game.toggle_commander_control_mode)
-                root.game.toggle_commander_control_mode();
+            if (root.game.commander.toggle_mode)
+                root.game.commander.toggle_mode();
             return true;
         case "global.menu":
             if (typeof root.mainWindowRef === 'undefined' || root.mainWindowRef.menu_visible)
@@ -70,14 +70,14 @@ Item {
             root.mainWindowRef.menu_visible = true;
             return true;
         case "global.quicksave":
-            if (!root.game.quicksave)
+            if (!root.game.saves.quicksave)
                 return false;
-            root.game.quicksave();
+            root.game.saves.quicksave();
             return true;
         case "global.quickload":
             if (!root.game.saves.has_save_slot || !root.game.saves.has_save_slot("quicksave"))
                 return false;
-            root.game.load_game_from_slot("quicksave");
+            root.game.saves.load_from_slot("quicksave");
             return true;
         case "rts.pause":
             if (typeof root.mainWindowRef === 'undefined')
@@ -96,9 +96,9 @@ Item {
             root.game.set_game_speed(GameSpeeds.stepped(root.game.time_scale, -1));
             return true;
         case "rts.order_stop":
-            if (!root.game.has_units_selected || !root.game.on_stop_command)
+            if (!root.game.has_units_selected || !root.game.orders.stop)
                 return false;
-            root.game.on_stop_command();
+            root.game.orders.stop();
             return true;
         case "rts.order_attack":
             if (!root.game.has_units_selected)
@@ -121,46 +121,46 @@ Item {
             root.game.cursor_mode = "guard";
             return true;
         case "rts.order_hold":
-            if (!root.game.has_units_selected || !root.game.on_hold_command)
+            if (!root.game.has_units_selected || !root.game.orders.hold)
                 return false;
-            root.game.on_hold_command();
+            root.game.orders.hold();
             return true;
         case "rts.camera_pan_up":
             begin_pan_action(actionId, event);
-            root.game.camera_move(0, inputStep);
+            root.game.camera.move(0, inputStep);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_pan_down":
             begin_pan_action(actionId, event);
-            root.game.camera_move(0, -inputStep);
+            root.game.camera.move(0, -inputStep);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_pan_left":
             begin_pan_action(actionId, event);
-            root.game.camera_move(-inputStep, 0);
+            root.game.camera.move(-inputStep, 0);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_pan_right":
             begin_pan_action(actionId, event);
-            root.game.camera_move(inputStep, 0);
+            root.game.camera.move(inputStep, 0);
             ensure_pan_timer_running();
             return true;
         case "rts.camera_yaw_left":
-            root.game.camera_yaw(-yawStep);
+            root.game.camera.yaw(-yawStep);
             return true;
         case "rts.camera_yaw_right":
-            root.game.camera_yaw(yawStep);
+            root.game.camera.yaw(yawStep);
             return true;
         case "rts.camera_orbit_left":
-            root.game.camera_orbit_direction(1, shiftHeld);
+            root.game.camera.orbit_direction(1, shiftHeld);
             return true;
         case "rts.camera_orbit_right":
-            root.game.camera_orbit_direction(-1, shiftHeld);
+            root.game.camera.orbit_direction(-1, shiftHeld);
             return true;
         case "rts.select_all_troops":
-            if (!root.game.select_all_troops)
+            if (!root.game.orders.select_all_troops)
                 return false;
-            root.game.select_all_troops();
+            root.game.orders.select_all_troops();
             return true;
         }
         return false;
@@ -237,7 +237,7 @@ Item {
             if (root.pan_axis["rts.camera_pan_right"])
                 dx += step;
             if (dx !== 0 || dz !== 0)
-                root.game.camera_move(dx, dz);
+                root.game.camera.move(dx, dz);
         }
     }
 }

@@ -5,7 +5,8 @@ Item {
     id: root
     anchors.fill: parent
 
-    property var engine: null
+    property var commander: null
+    property var camera: null
     readonly property int maxActiveBursts: 48
 
     function clamp01(value) {
@@ -60,11 +61,11 @@ Item {
             opacity: progress < 0.56 ? 1.0 : Math.max(0.0, 1.0 - ((progress - 0.56) / 0.44))
 
             function refreshProjection() {
-                if (root.engine === null) {
+                if (root.commander === null) {
                     projected = false;
                     return;
                 }
-                var proj = root.engine.rpg_project_world(worldX, worldY, worldZ);
+                var proj = root.camera.project_world(worldX, worldY, worldZ);
                 projected = !!proj.valid;
                 if (!projected)
                     return;
@@ -234,7 +235,7 @@ Item {
 
     Timer {
         interval: 16
-        running: root.engine !== null && effectLayer.children.length > 0
+        running: root.commander !== null && effectLayer.children.length > 0
         repeat: true
         onTriggered: {
             for (var i = 0; i < effectLayer.children.length; ++i) {
@@ -247,12 +248,12 @@ Item {
 
     Timer {
         interval: 16
-        running: root.engine !== null
+        running: root.commander !== null
         repeat: true
         onTriggered: {
-            if (root.engine === null)
+            if (root.commander === null)
                 return;
-            var events = root.engine.pop_rpg_damage_events();
+            var events = root.commander.pop_damage_events();
             if (!root.visible)
                 return;
             for (var i = 0; i < events.length; ++i) {

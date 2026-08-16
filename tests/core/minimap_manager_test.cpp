@@ -6,9 +6,9 @@
 #include <vector>
 
 #include "app/core/app_scene_context.h"
-#include "app/core/game_state_restorer.h"
-#include "app/core/minimap_manager.h"
-#include "app/core/visibility_coordinator.h"
+#include "app/persistence/game_state_restorer.h"
+#include "app/world/minimap_manager.h"
+#include "app/world/visibility_coordinator.h"
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"

@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <functional>
 
-#include "app_scene_context.h"
-#include "entity_cache.h"
+#include "app/core/app_scene_context.h"
+#include "app/core/entity_cache.h"
 
 class AmbientStateManager;
 class QString;

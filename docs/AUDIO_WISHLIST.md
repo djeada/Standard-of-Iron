@@ -45,94 +45,94 @@ Manifest resources in a cue-driven category that no cue references.
 
 A cue can be bound to a good asset and still never play, which sounds exactly like having no asset at all. This is the audit trail from the catalogue back to the code.
 
-| Cue                           | Fired from                                                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `ui.hover`                    | `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
-| `ui.click`                    | `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
-| `ui.back`                     | `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
-| `ui.tab_switch`               | `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
-| `ui.panel_open`               | `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
-| `ui.panel_close`              | `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
-| `ui.toggle`                   | `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
-| `ui.error`                    | `app/core/game_engine.cpp`, `app/models/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js` |
-| `ui.notification`             | `ui/qml/design/UiSound.qml`                                                                                        |
-| `ui.select_unit`              | `game/view/selection_controller.cpp`                                                                               |
-| `ui.select_group`             | `game/view/selection_controller.cpp`                                                                               |
-| `ui.deselect`                 | `game/view/selection_controller.cpp`                                                                               |
-| `order.move`                  | `app/core/input_command_handler.cpp`                                                                               |
-| `order.attack`                | `app/core/game_engine.cpp`                                                                                         |
-| `order.patrol`                | `app/controllers/command_controller.cpp`                                                                           |
-| `order.stop`                  | `app/controllers/command_controller.cpp`                                                                           |
-| `order.hold`                  | `app/core/game_engine.cpp`                                                                                         |
-| `order.guard`                 | `app/core/game_engine.cpp`                                                                                         |
-| `order.run`                   | `app/core/game_engine.cpp`                                                                                         |
-| `order.formation`             | `app/core/game_engine.cpp`                                                                                         |
-| `order.formation_placed`      | `app/core/game_engine.cpp`                                                                                         |
-| `order.gate_mode`             | `app/core/game_engine.cpp`                                                                                         |
-| `order.rally_set`             | `app/controllers/command_controller.cpp`                                                                           |
-| `build.placement_begin`       | `app/core/production_manager.cpp`                                                                                  |
-| `build.placement_confirmed`   | `app/core/production_manager.cpp`, `game/systems/resource_delivery_system.cpp`                                     |
-| `build.placement_rejected`    | `app/core/game_engine.cpp`                                                                                         |
-| `build.construction_started`  | `game/systems/production_system.cpp`                                                                               |
-| `build.construction_complete` | `game/systems/production_system.cpp`                                                                               |
-| `build.unit_queued`           | `game/systems/production_service.cpp`                                                                              |
-| `build.unit_ready`            | `game/systems/production_system.cpp`                                                                               |
-| `build.building_destroyed`    | `game/audio/audio_event_handler.cpp`                                                                               |
-| `build.gate_open`             | `game/systems/gate_system.cpp`                                                                                     |
-| `build.gate_close`            | `game/systems/gate_system.cpp`                                                                                     |
-| `alert.low_resources`         | `app/core/game_engine.cpp`                                                                                         |
-| `alert.population_limit`      | `app/core/game_engine.cpp`                                                                                         |
-| `alert.base_under_attack`     | `game/audio/audio_event_handler.cpp`                                                                               |
-| `alert.reinforcements`        | `game/audio/audio_event_handler.cpp`                                                                               |
-| `alert.enemy_reinforcements`  | `app/core/mission_wave_director.cpp`, `game/audio/audio_event_handler.cpp`                                         |
-| `alert.objective_complete`    | `app/core/mission_wave_director.cpp`, `game/systems/undead_awakening_system.cpp`                                   |
-| `alert.objective_failed`      | `app/core/game_engine.cpp`                                                                                         |
-| `alert.unit_lost`             | `game/audio/audio_event_handler.cpp`                                                                               |
-| `combat.hit.sword`            | `game/audio/audio_event_handler.cpp`                                                                               |
-| `combat.hit.spear`            | `game/audio/audio_event_handler.cpp`                                                                               |
-| `combat.hit.arrow`            | `game/audio/audio_event_handler.cpp`, `game/systems/projectile_system.cpp`                                         |
-| `combat.hit.cavalry`          | `game/audio/audio_event_handler.cpp`                                                                               |
-| `combat.hit.elephant`         | `game/audio/audio_event_handler.cpp`                                                                               |
-| `combat.hit.siege`            | `game/audio/audio_event_handler.cpp`                                                                               |
-| `combat.hit.generic`          | `game/audio/audio_event_handler.cpp`, `game/systems/undead_awakening_system.cpp`                                   |
-| `combat.death`                | `game/audio/audio_event_handler.cpp`                                                                               |
-| `combat.arrow_launch`         | `game/systems/projectile_system.cpp`                                                                               |
-| `combat.bow_draw`             | `game/systems/combat_system/combat_action_processor.cpp`                                                           |
-| `combat.bow_full_draw`        | `game/systems/combat_system/combat_action_processor.cpp`                                                           |
-| `combat.bow_strain`           | `game/systems/combat_system/combat_action_processor.cpp`                                                           |
-| `combat.bow_loose_heavy`      | `game/systems/projectile_system.cpp`                                                                               |
-| `combat.arrow_flyby`          | `game/systems/projectile_system.cpp`                                                                               |
-| `combat.arrow_volley`         | `game/systems/projectile_system.cpp`                                                                               |
-| `combat.siege_launch`         | `game/systems/projectile_system.cpp`                                                                               |
-| `combat.siege_impact`         | `game/systems/projectile_system.cpp`                                                                               |
-| `combat.charge`               | `app/controllers/command_controller.cpp`                                                                           |
-| `combat.heal`                 | `game/systems/healing_system.cpp`                                                                                  |
-| `combat.guard_raise`          | `app/core/commander_control_controller.cpp`                                                                        |
-| `combat.block`                | `game/systems/rpg_combat_system/rpg_commander_damage.cpp`                                                          |
-| `combat.perfect_guard`        | `game/systems/rpg_combat_system/rpg_commander_damage.cpp`                                                          |
-| `combat.guard_break`          | `game/systems/rpg_combat_system/rpg_commander_damage.cpp`                                                          |
-| `combat.dodge`                | `app/core/commander_control_controller.cpp`                                                                        |
-| `combat.jump`                 | `app/core/commander_control_controller.cpp`                                                                        |
-| `combat.land`                 | `app/core/commander_control_controller.cpp`                                                                        |
-| `combat.shield_bash`          | `app/core/commander_control_controller.cpp`                                                                        |
-| `combat.vanguard_rush`        | `app/core/commander_control_controller.cpp`                                                                        |
-| `combat.second_wind`          | `app/core/commander_control_controller.cpp`                                                                        |
-| `combat.ability_refused`      | `app/core/commander_control_controller.cpp`, `game/systems/combat_system/combat_action_processor.cpp`              |
-| `combat.lock_on`              | `app/core/commander_control_controller.cpp`                                                                        |
-| `move.footstep`               | `app/core/commander_control_controller.cpp`                                                                        |
-| `move.footstep_hard`          | `app/core/commander_control_controller.cpp`                                                                        |
-| `move.footstep_run`           | `app/core/commander_control_controller.cpp`                                                                        |
-| `wildlife.wolf_hunt`          | `game/wildlife/wildlife_system.cpp`                                                                                |
-| `wildlife.wolf_bite`          | `game/wildlife/wildlife_system.cpp`                                                                                |
-| `state.victory`               | `game/audio/audio_event_handler.cpp`                                                                               |
-| `state.defeat`                | `game/audio/audio_event_handler.cpp`                                                                               |
-| `state.pause`                 | `app/core/game_engine.cpp`                                                                                         |
-| `state.resume`                | `app/core/game_engine.cpp`                                                                                         |
-| `state.speed_change`          | `app/core/game_engine.cpp`                                                                                         |
-| `state.save_complete`         | `app/core/game_engine.cpp`                                                                                         |
-| `state.load_complete`         | `app/core/game_engine.cpp`                                                                                         |
-| `state.commander_enter`       | `app/core/game_engine.cpp`                                                                                         |
-| `state.commander_exit`        | `app/core/game_engine.cpp`                                                                                         |
+| Cue                           | Fired from                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ui.hover`                    | `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
+| `ui.click`                    | `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
+| `ui.back`                     | `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
+| `ui.tab_switch`               | `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
+| `ui.panel_open`               | `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
+| `ui.panel_close`              | `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
+| `ui.toggle`                   | `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js`                             |
+| `ui.error`                    | `app/core/game_engine.cpp`, `app/audio/audio_system_proxy.cpp`, `ui/qml/design/UiSound.qml`, `ui/qml/ui_audio.js` |
+| `ui.notification`             | `ui/qml/design/UiSound.qml`                                                                                       |
+| `ui.select_unit`              | `game/view/selection_controller.cpp`                                                                              |
+| `ui.select_group`             | `game/view/selection_controller.cpp`                                                                              |
+| `ui.deselect`                 | `game/view/selection_controller.cpp`                                                                              |
+| `order.move`                  | `app/input/input_command_handler.cpp`                                                                             |
+| `order.attack`                | `app/core/game_engine.cpp`                                                                                        |
+| `order.patrol`                | `app/orders/command_controller.cpp`                                                                               |
+| `order.stop`                  | `app/orders/command_controller.cpp`                                                                               |
+| `order.hold`                  | `app/core/game_engine.cpp`                                                                                        |
+| `order.guard`                 | `app/core/game_engine.cpp`                                                                                        |
+| `order.run`                   | `app/core/game_engine.cpp`                                                                                        |
+| `order.formation`             | `app/core/game_engine.cpp`                                                                                        |
+| `order.formation_placed`      | `app/core/game_engine.cpp`                                                                                        |
+| `order.gate_mode`             | `app/core/game_engine.cpp`                                                                                        |
+| `order.rally_set`             | `app/orders/command_controller.cpp`                                                                               |
+| `build.placement_begin`       | `app/economy/production_manager.cpp`                                                                              |
+| `build.placement_confirmed`   | `app/economy/production_manager.cpp`, `game/systems/resource_delivery_system.cpp`                                 |
+| `build.placement_rejected`    | `app/core/game_engine.cpp`                                                                                        |
+| `build.construction_started`  | `game/systems/production_system.cpp`                                                                              |
+| `build.construction_complete` | `game/systems/production_system.cpp`                                                                              |
+| `build.unit_queued`           | `game/systems/production_service.cpp`                                                                             |
+| `build.unit_ready`            | `game/systems/production_system.cpp`                                                                              |
+| `build.building_destroyed`    | `game/audio/audio_event_handler.cpp`                                                                              |
+| `build.gate_open`             | `game/systems/gate_system.cpp`                                                                                    |
+| `build.gate_close`            | `game/systems/gate_system.cpp`                                                                                    |
+| `alert.low_resources`         | `app/core/game_engine.cpp`                                                                                        |
+| `alert.population_limit`      | `app/core/game_engine.cpp`                                                                                        |
+| `alert.base_under_attack`     | `game/audio/audio_event_handler.cpp`                                                                              |
+| `alert.reinforcements`        | `game/audio/audio_event_handler.cpp`                                                                              |
+| `alert.enemy_reinforcements`  | `app/mission/mission_wave_director.cpp`, `game/audio/audio_event_handler.cpp`                                     |
+| `alert.objective_complete`    | `app/mission/mission_wave_director.cpp`, `game/systems/undead_awakening_system.cpp`                               |
+| `alert.objective_failed`      | `app/core/game_engine.cpp`                                                                                        |
+| `alert.unit_lost`             | `game/audio/audio_event_handler.cpp`                                                                              |
+| `combat.hit.sword`            | `game/audio/audio_event_handler.cpp`                                                                              |
+| `combat.hit.spear`            | `game/audio/audio_event_handler.cpp`                                                                              |
+| `combat.hit.arrow`            | `game/audio/audio_event_handler.cpp`, `game/systems/projectile_system.cpp`                                        |
+| `combat.hit.cavalry`          | `game/audio/audio_event_handler.cpp`                                                                              |
+| `combat.hit.elephant`         | `game/audio/audio_event_handler.cpp`                                                                              |
+| `combat.hit.siege`            | `game/audio/audio_event_handler.cpp`                                                                              |
+| `combat.hit.generic`          | `game/audio/audio_event_handler.cpp`, `game/systems/undead_awakening_system.cpp`                                  |
+| `combat.death`                | `game/audio/audio_event_handler.cpp`                                                                              |
+| `combat.arrow_launch`         | `game/systems/projectile_system.cpp`                                                                              |
+| `combat.bow_draw`             | `game/systems/combat_system/combat_action_processor.cpp`                                                          |
+| `combat.bow_full_draw`        | `game/systems/combat_system/combat_action_processor.cpp`                                                          |
+| `combat.bow_strain`           | `game/systems/combat_system/combat_action_processor.cpp`                                                          |
+| `combat.bow_loose_heavy`      | `game/systems/projectile_system.cpp`                                                                              |
+| `combat.arrow_flyby`          | `game/systems/projectile_system.cpp`                                                                              |
+| `combat.arrow_volley`         | `game/systems/projectile_system.cpp`                                                                              |
+| `combat.siege_launch`         | `game/systems/projectile_system.cpp`                                                                              |
+| `combat.siege_impact`         | `game/systems/projectile_system.cpp`                                                                              |
+| `combat.charge`               | `app/orders/command_controller.cpp`                                                                               |
+| `combat.heal`                 | `game/systems/healing_system.cpp`                                                                                 |
+| `combat.guard_raise`          | `app/commander/commander_control_controller.cpp`                                                                  |
+| `combat.block`                | `game/systems/rpg_combat_system/rpg_commander_damage.cpp`                                                         |
+| `combat.perfect_guard`        | `game/systems/rpg_combat_system/rpg_commander_damage.cpp`                                                         |
+| `combat.guard_break`          | `game/systems/rpg_combat_system/rpg_commander_damage.cpp`                                                         |
+| `combat.dodge`                | `app/commander/commander_control_controller.cpp`                                                                  |
+| `combat.jump`                 | `app/commander/commander_control_controller.cpp`                                                                  |
+| `combat.land`                 | `app/commander/commander_control_controller.cpp`                                                                  |
+| `combat.shield_bash`          | `app/commander/commander_control_controller.cpp`                                                                  |
+| `combat.vanguard_rush`        | `app/commander/commander_control_controller.cpp`                                                                  |
+| `combat.second_wind`          | `app/commander/commander_control_controller.cpp`                                                                  |
+| `combat.ability_refused`      | `app/commander/commander_control_controller.cpp`, `game/systems/combat_system/combat_action_processor.cpp`        |
+| `combat.lock_on`              | `app/commander/commander_control_controller.cpp`                                                                  |
+| `move.footstep`               | `app/commander/commander_control_controller.cpp`                                                                  |
+| `move.footstep_hard`          | `app/commander/commander_control_controller.cpp`                                                                  |
+| `move.footstep_run`           | `app/commander/commander_control_controller.cpp`                                                                  |
+| `wildlife.wolf_hunt`          | `game/wildlife/wildlife_system.cpp`                                                                               |
+| `wildlife.wolf_bite`          | `game/wildlife/wildlife_system.cpp`                                                                               |
+| `state.victory`               | `game/audio/audio_event_handler.cpp`                                                                              |
+| `state.defeat`                | `game/audio/audio_event_handler.cpp`                                                                              |
+| `state.pause`                 | `app/core/game_engine.cpp`                                                                                        |
+| `state.resume`                | `app/core/game_engine.cpp`                                                                                        |
+| `state.speed_change`          | `app/core/game_engine.cpp`                                                                                        |
+| `state.save_complete`         | `app/core/game_engine.cpp`                                                                                        |
+| `state.load_complete`         | `app/core/game_engine.cpp`                                                                                        |
+| `state.commander_enter`       | `app/core/game_engine.cpp`                                                                                        |
+| `state.commander_exit`        | `app/core/game_engine.cpp`                                                                                        |
 
 ## Broken links
 

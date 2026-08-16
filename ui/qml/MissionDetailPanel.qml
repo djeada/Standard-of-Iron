@@ -114,8 +114,8 @@ Rectangle {
     }
 
     function load_mission_definition() {
-        if (mission_data && mission_data.mission_id && typeof game !== "undefined" && game.get_mission_definition)
-            mission_definition = game.get_mission_definition(mission_data.mission_id);
+        if (mission_data && mission_data.mission_id && typeof game !== "undefined" && game.setup.mission_definition)
+            mission_definition = game.setup.mission_definition(mission_data.mission_id);
     }
 
     function titleize(value) {

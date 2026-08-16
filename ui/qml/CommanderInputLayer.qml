@@ -4,7 +4,7 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    property var commanderInput: null
+    property var commander: null
     property var gameView
     property var mainWindowRef
     property bool active: false
@@ -18,19 +18,19 @@ Item {
     }
 
     function center_mouse() {
-        if (!root.active || root.commanderInput === null || !root.commanderInput.center_mouse)
+        if (!root.active || root.commander === null || !root.commander.center_mouse)
             return;
         var center = scene_center();
-        root.commanderInput.center_mouse(center.x, center.y);
+        root.commander.center_mouse(center.x, center.y);
     }
 
     function release_actions() {
-        if (root.commanderInput === null)
+        if (root.commander === null)
             return;
-        if (root.commanderInput.primary_action_up)
-            root.commanderInput.primary_action_up();
-        if (root.commanderInput.secondary_action_up)
-            root.commanderInput.secondary_action_up();
+        if (root.commander.primary_action_up)
+            root.commander.primary_action_up();
+        if (root.commander.secondary_action_up)
+            root.commander.secondary_action_up();
         root.held_keys = ({});
     }
 
@@ -55,17 +55,17 @@ Item {
             return true;
         }
         if (actionId === "global.toggle_control_mode") {
-            if (root.commanderInput !== null && root.commanderInput.toggle_mode)
-                root.commanderInput.toggle_mode();
+            if (root.commander !== null && root.commander.toggle_mode)
+                root.commander.toggle_mode();
             return true;
         }
-        if (root.commanderInput === null)
+        if (root.commander === null)
             return false;
         if (is_locomotion(actionId)) {
             var canonical = InputBindings.canonical_key_for(actionId);
-            if (canonical !== 0 && root.commanderInput.key_down) {
+            if (canonical !== 0 && root.commander.key_down) {
                 root.held_keys[event.key] = actionId;
-                root.commanderInput.key_down(canonical, event.modifiers);
+                root.commander.key_down(canonical, event.modifiers);
                 return true;
             }
             return false;
@@ -74,44 +74,44 @@ Item {
             return true;
         switch (actionId) {
         case "commander.dodge":
-            if (root.commanderInput.dodge)
-                root.commanderInput.dodge();
+            if (root.commander.dodge)
+                root.commander.dodge();
             return true;
         case "commander.jump":
-            if (root.commanderInput.jump)
-                root.commanderInput.jump();
+            if (root.commander.jump)
+                root.commander.jump();
             return true;
         case "commander.cycle_lock_on":
-            if (root.commanderInput.cycle_lock_on)
-                root.commanderInput.cycle_lock_on();
+            if (root.commander.cycle_lock_on)
+                root.commander.cycle_lock_on();
             return true;
         case "commander.ability_vanguard_rush":
-            if (root.commanderInput.vanguard_rush)
-                root.commanderInput.vanguard_rush();
+            if (root.commander.vanguard_rush)
+                root.commander.vanguard_rush();
             return true;
         case "commander.ability_second_wind":
-            if (root.commanderInput.second_wind)
-                root.commanderInput.second_wind();
+            if (root.commander.second_wind)
+                root.commander.second_wind();
             return true;
         case "commander.ability_aura":
-            if (root.commanderInput.trigger_aura)
-                root.commanderInput.trigger_aura();
+            if (root.commander.trigger_aura)
+                root.commander.trigger_aura();
             return true;
         case "commander.special_action":
-            if (root.commanderInput.special_action)
-                root.commanderInput.special_action();
+            if (root.commander.special_action)
+                root.commander.special_action();
             return true;
         case "commander.rally":
-            if (root.commanderInput.trigger_rally)
-                root.commanderInput.trigger_rally();
+            if (root.commander.trigger_rally)
+                root.commander.trigger_rally();
             return true;
         case "commander.toggle_weapon":
-            if (root.commanderInput.toggle_weapon_stance)
-                root.commanderInput.toggle_weapon_stance();
+            if (root.commander.toggle_weapon_stance)
+                root.commander.toggle_weapon_stance();
             return true;
         case "commander.toggle_camera_mode":
-            if (root.commanderInput.toggle_camera_mode)
-                root.commanderInput.toggle_camera_mode();
+            if (root.commander.toggle_camera_mode)
+                root.commander.toggle_camera_mode();
             return true;
         }
         return false;
@@ -137,28 +137,28 @@ Item {
             return;
         delete root.held_keys[event.key];
         var canonical = InputBindings.canonical_key_for(actionId);
-        if (canonical !== 0 && root.commanderInput !== null && root.commanderInput.key_up)
-            root.commanderInput.key_up(canonical, event.modifiers);
+        if (canonical !== 0 && root.commander !== null && root.commander.key_up)
+            root.commander.key_up(canonical, event.modifiers);
         event.accepted = true;
     }
 
     function handle_mouse(button, modifiers, pressed) {
-        if (root.commanderInput === null)
+        if (root.commander === null)
             return;
         var candidates = InputBindings.actions_for_mouse(button, modifiers, "commander");
         for (var i = 0; i < candidates.length; ++i) {
             if (candidates[i] === "commander.primary_action") {
-                if (pressed && root.commanderInput.primary_action_down)
-                    root.commanderInput.primary_action_down();
-                else if (!pressed && root.commanderInput.primary_action_up)
-                    root.commanderInput.primary_action_up();
+                if (pressed && root.commander.primary_action_down)
+                    root.commander.primary_action_down();
+                else if (!pressed && root.commander.primary_action_up)
+                    root.commander.primary_action_up();
                 return;
             }
             if (candidates[i] === "commander.secondary_action") {
-                if (pressed && root.commanderInput.secondary_action_down)
-                    root.commanderInput.secondary_action_down();
-                else if (!pressed && root.commanderInput.secondary_action_up)
-                    root.commanderInput.secondary_action_up();
+                if (pressed && root.commander.secondary_action_down)
+                    root.commander.secondary_action_down();
+                else if (!pressed && root.commander.secondary_action_up)
+                    root.commander.secondary_action_up();
                 return;
             }
         }
