@@ -18,11 +18,7 @@
       "duration": 4.0,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          -6.0
-        ]
+        "point": [0.0, 0.0, -6.0]
       },
       "camera": [
         {
