@@ -66,6 +66,40 @@ TEST(ModeIndicator, EveryNoteworthyActivityHasGlyphGeometry) {
   }
 }
 
+TEST(ModeIndicator, OverlappingPrimitivesProduceOnlyExteriorSideWalls) {
+  Render::Geom::GlyphBuilder builder;
+  builder.begin_glyph();
+  builder.bar({-0.40F, 0.0F}, {0.40F, 0.0F}, 0.16F);
+  builder.bar({0.0F, -0.40F}, {0.0F, 0.40F}, 0.16F);
+  builder.end_glyph({.back_depth = 0.01F, .face_depth = 0.05F});
+
+  auto inside_cross = [](float x, float y) {
+    constexpr float half_width = 0.08F;
+    constexpr float half_length = 0.40F;
+    return (std::abs(x) < half_length && std::abs(y) < half_width) ||
+           (std::abs(x) < half_width && std::abs(y) < half_length);
+  };
+
+  auto const& vertices = builder.vertices();
+  auto const& indices = builder.indices();
+  constexpr float probe = 0.012F;
+  for (std::size_t i = 0; i + 2U < indices.size(); i += 3U) {
+    auto const& a = vertices[indices[i]];
+    if (static_cast<int>(a.tex_coord[0]) != static_cast<int>(GlyphLayer::GlyphSide)) {
+      continue;
+    }
+    auto const& b = vertices[indices[i + 1U]];
+    auto const& c = vertices[indices[i + 2U]];
+    float const x = (a.position[0] + b.position[0] + c.position[0]) / 3.0F;
+    float const y = (a.position[1] + b.position[1] + c.position[1]) / 3.0F;
+    bool const touches_exterior =
+        !inside_cross(x + probe, y) || !inside_cross(x - probe, y) ||
+        !inside_cross(x, y + probe) || !inside_cross(x, y - probe);
+    EXPECT_TRUE(touches_exterior)
+        << "side wall remained inside the merged glyph at " << x << ", " << y;
+  }
+}
+
 TEST(ModeIndicator, ItemsShareOneNormalisedFootprint) {
   for (IndicatorKind const kind : all_kinds()) {
     auto const builder = Render::Geom::build_indicator_glyph(kind);
