@@ -151,6 +151,9 @@ public slots:
   void set_clean_capture(bool enabled) { m_clean_capture = enabled; }
 
   void set_prewarm_unit_templates(bool enabled) { m_prewarm_unit_templates = enabled; }
+  void set_force_animation_diagnostics(bool enabled) {
+    m_force_animation_diagnostics = enabled;
+  }
 
   void set_capture_orbit_speed(float degrees_per_second) {
     m_capture_orbit_speed = degrees_per_second;
@@ -452,6 +455,7 @@ private:
   bool m_controls_overlay_visible = true;
 
   bool m_force_full_creature_lod = true;
+  bool m_force_animation_diagnostics = false;
   bool m_fog_of_war_enabled = false;
   float m_visibility_accumulator = 0.0F;
   bool m_terrain_review_mode = false;

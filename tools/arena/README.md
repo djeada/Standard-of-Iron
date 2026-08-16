@@ -250,6 +250,13 @@ Shot fields:
 gameplay-camera shots with the bow HUD on, cut end to end across one
 deterministic run of nine aimed kills.
 
+`--animation-diagnostics` forces per-soldier animation diagnostics on for a
+batch run of a scenario that normally leaves them off for speed; the trace then
+carries every soldier's `root_yaw_degrees`, pose and cull reason per frame,
+which is how the formation heading hunt was measured (see "The path is pulled
+taut" in `docs/PATHFINDING_ARCHITECTURE.md`). Expect a trace of several hundred
+MB on the massed scenarios.
+
 `tools/arena/promos/massed_battle.json` films `massed_battle_1000` — the
 2,000-soldier full-LOD performance fixture — as a seven-shot reel, its windows
 read out of the scenario trace so the cavalry, the line contact and the press

@@ -23,6 +23,7 @@ namespace {
 constexpr float same_target_threshold_sq = 0.01F;
 
 constexpr int k_recovery_search_radius = 16;
+constexpr float k_route_keep_goal_shift = 1.5F;
 
 auto passability_for(const Engine::Core::MovementComponent& movement)
     -> Pathfinding::Passability {
@@ -314,6 +315,21 @@ void MovementSystem::assign_navigation_target(
     const Engine::Core::TransformComponent& transform,
     Engine::Core::MovementComponent& movement,
     const QVector3D& requested_target) {
+  if (movement.has_requested_goal && movement.has_target && movement.has_waypoints() &&
+      movement.remaining_waypoints() > 1U) {
+    float const moved_x = requested_target.x() - movement.requested_goal_x;
+    float const moved_z = requested_target.z() - movement.requested_goal_z;
+    if (moved_x * moved_x + moved_z * moved_z <=
+            k_route_keep_goal_shift * k_route_keep_goal_shift &&
+        NavGrid::is_world_position_walkable(requested_target)) {
+      movement.requested_goal_x = requested_target.x();
+      movement.requested_goal_z = requested_target.z();
+      movement.path.back() = {requested_target.x(), requested_target.z()};
+      movement.goal_x = requested_target.x();
+      movement.goal_y = requested_target.z();
+      return;
+    }
+  }
   movement.requested_goal_x = requested_target.x();
   movement.requested_goal_z = requested_target.z();
   movement.has_requested_goal = true;

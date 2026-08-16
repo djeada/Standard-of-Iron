@@ -504,6 +504,17 @@ which is what keeps the bridge-alignment projection working. On
 of more than 15 degrees during the approach down to the two or three legs the
 tree scatter actually forces, at no measurable simulation cost.
 
+A second, finer hunt survived that: a unit chasing a moving target re-issues
+its move every few simulation ticks, and each fresh route from a slightly
+different start cell could pick the other side of the same tree, so the first
+leg's heading flipped by 5-7 degrees several times a second and the formation
+turned toward each in turn. `assign_navigation_target` now keeps the route it
+has when the re-requested goal has moved less than `k_route_keep_goal_shift`
+(1.5 m, about one cell) and the new goal is walkable — it slides the final
+waypoint and goal onto the new position instead of re-pathing. A goal that has
+moved further, or a unit without an active multi-waypoint route, re-paths as
+before.
+
 ## Formations And Group Movement
 
 The navigation grid is unit-agnostic. Formations add only initial target offsets:
