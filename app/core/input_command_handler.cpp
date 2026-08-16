@@ -3,15 +3,11 @@
 #include <cmath>
 #include <numbers>
 
-#include "../controllers/action_vfx.h"
 #include "../controllers/command_controller.h"
-#include "../core/rts_action_model.h"
 #include "../models/cursor_manager.h"
 #include "../models/cursor_mode.h"
 #include "../models/hover_tracker.h"
 #include "../utils/movement_utils.h"
-#include "game/audio/audio_cues.h"
-#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/picking_service.h"
@@ -77,26 +73,14 @@ void InputCommandHandler::on_right_click(qreal sx,
   }
 
   const auto& sel = selection_system->get_selected_units();
-  if (sel.empty()) {
+  if (sel.empty() || (m_command_controller == nullptr) || (m_camera == nullptr)) {
     return;
   }
 
-  if (m_command_controller != nullptr) {
-    m_command_controller->disable_run_mode_for_selected();
-  }
-  App::Utils::issue_move_or_attack_command(m_world,
-                                           sel,
-                                           m_picking_service,
-                                           m_camera,
-                                           sx,
-                                           sy,
-                                           viewport.width,
-                                           viewport.height,
-                                           local_owner_id);
-  Game::Audio::play_cue(Game::Audio::Cue::k_order_move);
-  if (m_command_controller != nullptr) {
-    m_command_controller->disable_run_mode_for_selected();
-  }
+  m_command_controller->disable_run_mode_for_selected();
+  (void)m_command_controller->on_move_or_attack_click(
+      sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
+  m_command_controller->disable_run_mode_for_selected();
 }
 
 void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,
@@ -111,12 +95,11 @@ void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,
   }
 
   const auto& selected = selection_system->get_selected_units();
-  if (selected.empty()) {
+  if (selected.empty() || (m_command_controller == nullptr)) {
     return;
   }
 
-  App::Utils::submit_ground_move(*m_world, selected, world_target, local_owner_id);
-  Game::Audio::play_cue(Game::Audio::Cue::k_order_move);
+  (void)m_command_controller->on_minimap_move(world_target, local_owner_id);
 }
 
 void InputCommandHandler::on_right_double_click(qreal sx,
@@ -152,26 +135,14 @@ void InputCommandHandler::on_right_double_click(qreal sx,
   }
 
   const auto& sel = selection_system->get_selected_units();
-  if (sel.empty()) {
+  if (sel.empty() || (m_command_controller == nullptr) || (m_camera == nullptr)) {
     return;
   }
 
-  if (m_command_controller != nullptr) {
-    m_command_controller->enable_run_mode_for_selected();
-  }
-  App::Utils::issue_move_or_attack_command(m_world,
-                                           sel,
-                                           m_picking_service,
-                                           m_camera,
-                                           sx,
-                                           sy,
-                                           viewport.width,
-                                           viewport.height,
-                                           local_owner_id);
-  Game::Audio::play_cue(Game::Audio::Cue::k_order_move);
-  if (m_command_controller != nullptr) {
-    m_command_controller->enable_run_mode_for_selected();
-  }
+  m_command_controller->enable_run_mode_for_selected();
+  (void)m_command_controller->on_move_or_attack_click(
+      sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
+  m_command_controller->enable_run_mode_for_selected();
 }
 
 auto InputCommandHandler::on_right_press(qreal sx,
@@ -206,47 +177,17 @@ auto InputCommandHandler::on_right_press(qreal sx,
     return false;
   }
 
-  if (m_picking_service != nullptr && m_camera != nullptr) {
-    Engine::Core::EntityID const target_id =
-        Game::Systems::PickingService::pick_unit_first(float(sx),
-                                                       float(sy),
-                                                       *m_world,
-                                                       *m_camera,
-                                                       viewport.width,
-                                                       viewport.height,
-                                                       0);
-    if (target_id != 0U) {
-      auto* target_entity = m_world->get_entity(target_id);
-      if (target_entity != nullptr) {
-        auto* target_unit = target_entity->get_component<Engine::Core::UnitComponent>();
-        if (target_unit != nullptr) {
-          bool const is_enemy = (target_unit->owner_id != local_owner_id);
-          bool const is_building =
-              target_entity->has_component<Engine::Core::BuildingComponent>();
-          if (is_enemy && !is_building) {
-            auto const attackers = App::Core::filter_selected_units_for_action(
-                m_world, sel, QStringLiteral("attack"));
-            if (attackers.empty()) {
-              return false;
-            }
-            if (m_command_controller != nullptr) {
-              m_command_controller->disable_run_mode_for_selected();
-            }
-            Game::Command::submit(
-                *m_world,
-                Game::Command::Source::LocalPlayer,
-                local_owner_id,
-                Game::Command::AttackTarget{.units = attackers, .target = target_id});
-            return true;
-          }
-        }
-      }
-    }
-  }
-
   if ((m_command_controller == nullptr) || (m_camera == nullptr) ||
       (m_picking_service == nullptr)) {
     return false;
+  }
+
+  {
+    auto const attack = m_command_controller->on_attack_press(
+        sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
+    if (attack.input_consumed) {
+      return true;
+    }
   }
 
   QVector3D hit;
@@ -302,34 +243,6 @@ void InputCommandHandler::on_attack_click(qreal sx,
 
   auto result = m_command_controller->on_attack_click(
       sx, sy, viewport.width, viewport.height, m_camera);
-
-  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
-  if ((selection_system == nullptr) || (m_picking_service == nullptr) ||
-      (m_camera == nullptr) || (m_world == nullptr)) {
-    return;
-  }
-
-  const auto& selected = selection_system->get_selected_units();
-  if (!selected.empty()) {
-    Engine::Core::EntityID const target_id =
-        Game::Systems::PickingService::pick_unit_first(float(sx),
-                                                       float(sy),
-                                                       *m_world,
-                                                       *m_camera,
-                                                       viewport.width,
-                                                       viewport.height,
-                                                       0);
-
-    if (target_id != 0) {
-      auto* target_entity = m_world->get_entity(target_id);
-      if (target_entity != nullptr) {
-        auto* target_unit = target_entity->get_component<Engine::Core::UnitComponent>();
-        if ((target_unit != nullptr)) {
-          App::Controllers::ActionVFX::spawn_attack_arrow(m_world, target_id);
-        }
-      }
-    }
-  }
 
   if (result.reset_cursor_to_normal) {
     m_cursor_manager->set_mode(CursorMode::Normal);

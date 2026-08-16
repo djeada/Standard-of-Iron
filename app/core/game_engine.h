@@ -51,6 +51,8 @@
 #include "minimap_manager.h"
 #include "mission_setup_coordinator.h"
 #include "mission_wave_director.h"
+#include "order_feedback.h"
+#include "order_markers.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "renderer_bootstrap.h"
 #include "runtime_frame_orchestrator.h"
@@ -518,6 +520,7 @@ private:
   void sync_selection_flags();
   void sync_attack_targeting();
   void sync_attack_range_rings();
+  void handle_order_feedback(const App::Core::OrderOutcome& outcome);
   [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
   void sync_selected_player_state();
   void sync_scatter_world_props();
@@ -614,6 +617,7 @@ private:
   bool m_civilian_delivery_available = false;
   Game::Systems::AttackTargetingHighlights m_attack_targeting;
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
+  App::Core::OrderMarkerStore m_order_markers;
   QVariantMap m_attack_target_hint;
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::SelectionController> m_selection_controller;
@@ -737,6 +741,7 @@ signals:
   void game_mode_changed();
   void commander_control_available_changed();
   void mission_announcement(QString text);
+  void order_feedback(QString kind, bool accepted, QString message);
   void save_progress_changed();
   void save_completed(QString slot_name, bool success, QString error);
   void autosave_settings_changed();

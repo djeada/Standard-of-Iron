@@ -10,6 +10,7 @@
 #include "../models/cursor_mode.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
+#include "order_markers.h"
 
 class CursorManager;
 class HoverTracker;
@@ -38,6 +39,7 @@ struct RenderEffectsContext {
 
   const Game::Systems::AttackTargetingHighlights* attack_targeting = nullptr;
   const std::vector<Game::Systems::AttackRangeRing>* attack_range_rings = nullptr;
+  const std::vector<App::Core::OrderMarker>* order_markers = nullptr;
 };
 
 void render_effects(const RenderEffectsContext& context,
