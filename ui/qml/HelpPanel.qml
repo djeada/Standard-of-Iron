@@ -85,7 +85,7 @@ Item {
 
     readonly property var flow_sections: [{
             "heading": qsTr("Pace and view"),
-            "body": qsTr("The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.")
+            "body": qsTr("The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.")
         }]
 
     function sections_for(index) {

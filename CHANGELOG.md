@@ -11,6 +11,34 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **The camera says what it does, and every command takes two keys.** Bindings
+  hold a primary and an alternate chord at once, so panning answers to the
+  arrow keys _and_ to `WASD` with neither being second-class; each has its own
+  button in Settings › Controls, conflict checking covers both, and **Default**
+  restores the pair. Making room for `WASD` moved **Attack** to `C` and **Stop**
+  to `Z`.
+
+    The two rotations are no longer both called the wrong thing. `Q`/`E` rotate
+    (yaw) and keep their keys. What shipped as "orbit camera left/right" on
+    `R`/`T` never orbited — it raised and lowered the camera — so it is now
+    **Tilt camera up/down** on `Ctrl+Up`/`Ctrl+Down`, which also gives `R` back
+    to the commander rally flag it used to share. Zoom and reset gained keys of
+    their own (`PgUp`/`PgDown` and `Home`) instead of living only on the wheel
+    and a top-bar button, and every camera command now carries a sentence in
+    Settings saying what it does. A keymap saved by an older build follows the
+    rename, and anything you rebound yourself stays yours.
+    See [docs/CAMERA_CONTROLS.md](docs/CAMERA_CONTROLS.md).
+
+### Fixed
+
+- **A battle no longer opens with your nose against one soldier's shield.**
+  Every map authors the camera that frames its engagement — 18 units on the
+  48-tile Sepulcher Watch, 273 on the 650-tile field at Cannae — and the opening
+  shot and the Reset button both ignored all of it and snapped to a flat 12
+  units on every map alike. Both now derive their framing from what the map
+  authored, so a campaign mission opens on your camp with the battlefield around
+  it and Reset returns to that same view instead of diving to ground level.
+
 - **The camera tells you how to move it.** A compact legend lists all seven ways
   to move the view — edge scroll, keyboard pan, right-drag, wheel zoom, `Q`/`E`
   rotate, the minimap, and the Follow and Reset buttons — with the live key

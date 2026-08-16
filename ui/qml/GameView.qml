@@ -181,9 +181,10 @@ Item {
     }
 
     function perform_rts_action(actionId, event) {
-        var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
-        var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
+        var yawStep = shiftHeld ? 8 : 4;
+        var inputStep = shiftHeld ? 2 : 1;
+        var zoomStep = shiftHeld ? 2 : 1;
         switch (actionId) {
         case "rts.pause":
             if (typeof mainWindow === 'undefined')
@@ -247,17 +248,28 @@ Item {
             game.camera.move(inputStep, 0);
             ensure_pan_timer_running();
             return true;
-        case "rts.camera_yaw_left":
+        case "rts.camera_rotate_left":
             game.camera.yaw(-yawStep);
             return true;
-        case "rts.camera_yaw_right":
+        case "rts.camera_rotate_right":
             game.camera.yaw(yawStep);
             return true;
-        case "rts.camera_orbit_left":
-            game.camera.orbit_direction(1, shiftHeld);
+        case "rts.camera_tilt_up":
+            game.camera.tilt(1, shiftHeld);
             return true;
-        case "rts.camera_orbit_right":
-            game.camera.orbit_direction(-1, shiftHeld);
+        case "rts.camera_tilt_down":
+            game.camera.tilt(-1, shiftHeld);
+            return true;
+        case "rts.camera_zoom_in":
+            game.camera.zoom(zoomStep);
+            return true;
+        case "rts.camera_zoom_out":
+            game.camera.zoom(-zoomStep);
+            return true;
+        case "rts.camera_reset":
+            if (!game.camera.reset)
+                return false;
+            game.camera.reset();
             return true;
         case "rts.commander_rally":
             if (!action_enabled("rally") || !game.commander.start_flag_rally)

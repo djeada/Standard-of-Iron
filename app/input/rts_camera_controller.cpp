@@ -82,11 +82,11 @@ void RtsCameraController::orbit(float yaw_deg, float pitch_deg) {
   m_camera_service->orbit(*m_camera, yaw_deg, pitch_deg);
 }
 
-void RtsCameraController::orbit_direction(int direction, bool shift) {
+void RtsCameraController::tilt(int direction, bool shift) {
   if (!m_camera || !m_camera_service) {
     return;
   }
-  m_camera_service->orbit_direction(*m_camera, direction, shift);
+  m_camera_service->tilt(*m_camera, direction, shift);
 }
 
 void RtsCameraController::follow_selection(bool enable) {

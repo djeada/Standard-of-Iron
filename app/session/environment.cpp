@@ -22,6 +22,9 @@ void Environment::apply(const MapDefinition& def,
        .snow = def.rain.enabled && def.rain.type == WeatherType::Snow
                    ? def.rain.intensity
                    : 0.0F}));
+  Game::GameConfig::instance().set_authored_camera({.distance = def.camera.distance,
+                                                    .pitch = def.camera.tilt_deg,
+                                                    .yaw = def.camera.yaw_deg});
   camera.set_rts_view(
       def.camera.center, def.camera.distance, def.camera.tilt_deg, def.camera.yaw_deg);
   camera.set_perspective(
@@ -36,8 +39,13 @@ void Environment::apply_default(Render::GL::Renderer& renderer,
                                 Render::GL::Camera& camera) {
   renderer.set_environment_lighting(lighting_for_hour(13.0F));
   const auto& camera_config = Game::GameConfig::instance().camera();
+  constexpr float k_mapless_distance = 15.0F;
+  Game::GameConfig::instance().set_authored_camera(
+      {.distance = k_mapless_distance,
+       .pitch = camera_config.default_pitch,
+       .yaw = camera_config.default_yaw});
   camera.set_rts_view(QVector3D(0, 0, 0),
-                      15.0F,
+                      k_mapless_distance,
                       camera_config.default_pitch,
                       camera_config.default_yaw);
 
