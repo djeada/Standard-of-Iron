@@ -35,7 +35,7 @@ auto count_occurrences(const fs::path& file, const std::string& needle) -> int {
 
 constexpr int k_max_invokables = 103;
 
-constexpr int k_max_properties = 41;
+constexpr int k_max_properties = 42;
 
 constexpr const char* k_guidance =
     "\nGameEngine is the composition root, not the UI API. New QML-facing "

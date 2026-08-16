@@ -19,7 +19,6 @@ Item {
         pan_axis[actionId] = true;
         pressed_keys[e.key] = actionId;
         renderAreaRef.key_pan_count += 1;
-        mainWindowRef.edge_scroll_disabled = true;
     }
 
     function any_pan_held() {
@@ -38,8 +37,6 @@ Item {
         if (!any_pan_held()) {
             if (keyPanTimer.running)
                 keyPanTimer.stop();
-            if (renderAreaRef.key_pan_count === 0 && !renderAreaRef.mouse_pan_active)
-                mainWindowRef.edge_scroll_disabled = false;
         }
     }
 
@@ -50,8 +47,6 @@ Item {
             keyPanTimer.stop();
         if (typeof renderAreaRef !== 'undefined')
             renderAreaRef.key_pan_count = 0;
-        if (typeof mainWindowRef !== 'undefined' && typeof renderAreaRef !== 'undefined' && !renderAreaRef.mouse_pan_active)
-            mainWindowRef.edge_scroll_disabled = false;
     }
 
     function ensure_pan_timer_running() {

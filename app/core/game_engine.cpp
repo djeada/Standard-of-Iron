@@ -4273,10 +4273,12 @@ void GameEngine::sync_economy_state() {
 
   int const owner_id =
       m_selected_player_id > 0 ? m_selected_player_id : m_runtime.local_owner_id;
-  auto& nations = Game::Systems::NationRegistry::instance();
+  auto& nations = m_session->nations();
   const auto* nation = nations.get_nation_for_player(owner_id);
   const App::Core::EconomyOverviewRequest request{
       .world = m_world,
+      .nations = &nations,
+      .resources = &m_session->economy(),
       .owner_id = owner_id,
       .nation_id = nation != nullptr ? nation->id : nations.default_nation_id(),
       .population_cap = m_level.max_troops_per_player,

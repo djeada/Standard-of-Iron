@@ -16,6 +16,8 @@ Item {
     property var pressed_keys: ({})
     property var pan_axis: ({})
 
+    readonly property bool camera_pan_active: renderArea.key_pan_count > 0 || renderArea.mouse_pan_active
+
     onConstruction_preview_activeChanged: {
         if (constructionCursor)
             constructionCursor.requestPaint();
@@ -74,7 +76,6 @@ Item {
         pan_axis[actionId] = true;
         pressed_keys[e.key] = actionId;
         renderArea.key_pan_count += 1;
-        mainWindow.edge_scroll_disabled = true;
     }
 
     function end_pan_action(actionId) {
@@ -85,8 +86,6 @@ Item {
         if (!any_pan_held()) {
             if (keyPanTimer.running)
                 keyPanTimer.stop();
-            if (renderArea.key_pan_count === 0 && !renderArea.mouse_pan_active)
-                mainWindow.edge_scroll_disabled = false;
         }
     }
 
@@ -138,8 +137,6 @@ Item {
             keyPanTimer.stop();
         if (typeof renderArea !== 'undefined')
             renderArea.key_pan_count = 0;
-        if (typeof mainWindow !== 'undefined' && typeof renderArea !== 'undefined' && !renderArea.mouse_pan_active)
-            mainWindow.edge_scroll_disabled = false;
     }
 
     function select_formation_intent_slot(slot_index) {
@@ -418,7 +415,6 @@ Item {
                     commanderInputLayer.center_mouse();
                 } else {
                     renderArea.mouse_pan_active = false;
-                    mainWindow.edge_scroll_disabled = false;
                     game_view.forceActiveFocus();
                 }
             }
@@ -583,7 +579,6 @@ Item {
                         return;
                     }
                     renderArea.mouse_pan_active = true;
-                    mainWindow.edge_scroll_disabled = true;
                     if (typeof game !== 'undefined' && game.on_right_press)
                         game.on_right_press(mouse.x, mouse.y);
                 }
@@ -622,8 +617,12 @@ Item {
                     if (typeof game !== 'undefined' && game.on_right_release)
                         game.on_right_release(mouse.x, mouse.y);
                     renderArea.mouse_pan_active = false;
-                    mainWindow.edge_scroll_disabled = (renderArea.key_pan_count > 0) || renderArea.mouse_pan_active;
                 }
+            }
+            onCanceled: {
+                is_selecting = false;
+                selectionBox.visible = false;
+                renderArea.mouse_pan_active = false;
             }
         }
     }
