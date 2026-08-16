@@ -90,6 +90,17 @@ attack.`, `That target is already gone.`, …) instead of silently doing
 
 ### Changed
 
+- **A fresh install no longer opens at full volume.** Every mixer channel used
+  to start at full scale, and because master, category and cue gains multiply,
+  the first mission was painfully loud on a new profile. A profile with no saved
+  audio preference now starts at 60% master and 50% music, with ambience at 80%,
+  and those values are written to the settings file on that first load. Anyone
+  who has already moved a slider keeps exactly what they saved — including a
+  deliberate full-scale setting — and the settings panel reads the effective
+  values back into the sliders each time it opens, so what you see is what is
+  playing. Settings remains one entry away on the main menu for anyone who wants
+  to adjust it before starting.
+
 - **The simulation kernel is one static library per domain, and the build
   enforces the layering.** `game_sim` used to hold combat, movement,
   navigation, formations, economy, units, terrain and wildlife in a single
