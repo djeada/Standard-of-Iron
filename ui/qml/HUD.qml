@@ -197,7 +197,7 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: Design.Metrics.hudZoneMargin
         anchors.top: topPanel.bottom
-        anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8
+        anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
 
         visible: hud.camera_legend_visible && !hud.commander_rpg_mode
         onDismissed: hud.camera_legend_visible = false

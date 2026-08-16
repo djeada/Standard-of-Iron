@@ -150,3 +150,42 @@ TEST_F(MinimapUtilsTest, TileSizeScaling) {
 
   ExpectNearPair({world_x, world_z}, {expected_world_x, expected_world_z});
 }
+
+TEST_F(MinimapUtilsTest, PixelToWorldInversesWorldToPixelAtEveryMapYaw) {
+  const float world_width = 96.0F;
+  const float world_height = 96.0F;
+  const float img_width = 192.0F;
+  const float img_height = 192.0F;
+
+  const std::vector<float> yaw_degrees = {0.0F, 45.0F, 90.0F, 135.0F, 225.0F, 315.0F};
+  const std::vector<std::pair<float, float>> test_coords = {
+      {0.0F, 0.0F},
+      {18.0F, -34.0F},
+      {-42.0F, 26.0F},
+      {60.0F, 60.0F},
+  };
+
+  auto& orientation = MinimapOrientation::instance();
+  const float original_yaw = orientation.yaw_degrees();
+
+  for (const float yaw : yaw_degrees) {
+    orientation.set_yaw_degrees(yaw);
+
+    for (const auto& [world_x, world_z] : test_coords) {
+      auto [px, py] = world_to_pixel(world_x / TILE_SIZE,
+                                     world_z / TILE_SIZE,
+                                     world_width,
+                                     world_height,
+                                     img_width,
+                                     img_height);
+
+      auto [result_x, result_z] = pixel_to_world(
+          px, py, world_width, world_height, img_width, img_height, TILE_SIZE);
+
+      EXPECT_NEAR(result_x, world_x, EPSILON) << "yaw " << yaw;
+      EXPECT_NEAR(result_z, world_z, EPSILON) << "yaw " << yaw;
+    }
+  }
+
+  orientation.set_yaw_degrees(original_yaw);
+}
