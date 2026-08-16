@@ -39,9 +39,32 @@ TestCase {
     function test_type_scale_is_monotonic() {
         verify(Typography.caption < Typography.label);
         verify(Typography.label < Typography.body);
-        verify(Typography.body < Typography.heading);
+        verify(Typography.body < Typography.bodyLarge);
+        verify(Typography.bodyLarge < Typography.subheading);
+        verify(Typography.subheading < Typography.heading);
         verify(Typography.heading < Typography.title);
         verify(Typography.title < Typography.hero);
+    }
+
+    function test_glyph_scale_is_monotonic() {
+        verify(Typography.glyphSmall < Typography.glyph);
+        verify(Typography.glyph < Typography.glyphLarge);
+    }
+
+    function test_gameplay_type_never_falls_below_the_legibility_floor() {
+        Core.UiPreferences.uiScale = Core.UiPreferences.minUiScale;
+        verify(Typography.minimumSize >= 12, "the floor itself is under 12px");
+        verify(Typography.caption >= Typography.minimumSize, "caption fell under the floor");
+        verify(Typography.label >= Typography.minimumSize, "label fell under the floor");
+        verify(Typography.body >= Typography.minimumSize, "body fell under the floor");
+        compare(Typography.scaled(4), Typography.minimumSize);
+    }
+
+    function test_display_sizes_follow_the_scale_without_the_floor() {
+        Core.UiPreferences.uiScale = 1.0;
+        compare(Typography.display(54), 54);
+        Core.UiPreferences.uiScale = 2.0;
+        compare(Typography.display(54), 108);
     }
 
     function test_ui_scale_resizes_spacing_and_type() {

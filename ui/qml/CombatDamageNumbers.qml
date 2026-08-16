@@ -51,7 +51,7 @@ Item {
                     "killingBlow": killingBlow,
                     "incoming": incoming
                 })
-            property real fontSize: (focused ? 17 : 14) + (killingBlow ? 4 : 0) + severity * 3
+            property real fontSize: Design.Typography.display((focused ? 17 : 14) + (killingBlow ? 4 : 0) + severity * 3)
 
             width: label.implicitWidth + 14
             height: label.implicitHeight + 6
@@ -131,7 +131,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "×" + tick.hits
                     color: tick.accent
-                    font.pixelSize: Math.max(10, tick.fontSize - 5)
+                    font.pixelSize: Math.max(Design.Typography.minimumSize, tick.fontSize - 5)
                     font.bold: true
                 }
             }

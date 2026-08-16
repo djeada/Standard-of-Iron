@@ -1074,7 +1074,7 @@ Item {
             anchors.centerIn: parent
             color: Theme.textMain
             text: qsTr("%1/%2 walls  •  %3 wood").arg(game.placement.construction_preview_valid_segment_count).arg(game.placement.construction_preview_segment_count).arg(game.placement.construction_preview_total_cost)
-            font.pixelSize: 14
+            font.pixelSize: Design.Typography.label
         }
     }
 
@@ -1170,14 +1170,14 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 color: orderFeedbackBanner.accepted ? Theme.successText : Theme.dangerBr
                 text: orderFeedbackBanner.glyph_for(orderFeedbackBanner.kind, orderFeedbackBanner.accepted)
-                font.pixelSize: 14
+                font.pixelSize: Design.Typography.label
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 color: orderFeedbackBanner.accepted ? Theme.textMain : Theme.warningText
                 text: orderFeedbackBanner.message
-                font.pixelSize: 13
+                font.pixelSize: Design.Typography.caption
             }
         }
     }
@@ -1264,14 +1264,14 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 color: attackTargetHint.attackable ? Theme.dangerBr : Theme.textDim
                 text: attackTargetHint.attackable ? "⚔" : "⊘"
-                font.pixelSize: 14
+                font.pixelSize: Design.Typography.label
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 color: attackTargetHint.attackable ? Theme.textMain : Theme.textDim
                 text: attackTargetHint.hint_text()
-                font.pixelSize: 13
+                font.pixelSize: Design.Typography.caption
             }
 
             Text {
@@ -1279,7 +1279,7 @@ Item {
                 visible: attackTargetHint.range_text().length > 0
                 color: attackTargetHint.in_range ? Theme.successText : Theme.warningText
                 text: attackTargetHint.range_glyph() + " " + attackTargetHint.range_text()
-                font.pixelSize: 12
+                font.pixelSize: Design.Typography.caption
             }
         }
     }

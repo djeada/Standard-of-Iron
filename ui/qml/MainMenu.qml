@@ -379,7 +379,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("SPQR")
                             color: Theme.accentBright
-                            font.pixelSize: root.narrow ? 11 : 12
+                            font.pixelSize: root.narrow ? Design.Typography.caption : Design.Typography.label
                             font.bold: true
                             font.letterSpacing: 3.2
                         }
@@ -396,7 +396,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("QART-HADAST")
                             color: Theme.accentBright
-                            font.pixelSize: root.narrow ? 11 : 12
+                            font.pixelSize: root.narrow ? Design.Typography.caption : Design.Typography.label
                             font.bold: true
                             font.letterSpacing: 3.2
                         }
@@ -425,7 +425,7 @@ Item {
                             text: qsTr("STANDARD OF IRON")
                             color: "#00060403"
                             font.family: "serif"
-                            font.pixelSize: root.narrow ? 36 : 54
+                            font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
                             font.bold: true
                             font.letterSpacing: root.narrow ? 1.2 : 2.4
                             elide: Text.ElideRight
@@ -442,7 +442,7 @@ Item {
                             text: qsTr("STANDARD OF IRON")
                             color: Theme.textMain
                             font.family: "serif"
-                            font.pixelSize: root.narrow ? 36 : 54
+                            font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
                             font.bold: true
                             font.letterSpacing: root.narrow ? 1.2 : 2.4
                             elide: Text.ElideRight
@@ -487,7 +487,7 @@ Item {
                         width: parent.width
                         text: qsTr("Rome and Carthage at the edge of empire")
                         color: Theme.textSubLite
-                        font.pixelSize: root.narrow ? 13 : 15
+                        font.pixelSize: root.narrow ? Design.Typography.caption : Design.Typography.label
                         font.letterSpacing: 0.8
                         elide: Text.ElideRight
                         maximumLineCount: 1
@@ -654,7 +654,7 @@ Item {
                                     text: Design.Numerals.ordinal(commandItem.index)
                                     color: commandItem.selected ? Theme.accentBright : Theme.textDim
                                     font.family: "serif"
-                                    font.pixelSize: root.narrow ? 11 : 13
+                                    font.pixelSize: root.narrow ? Design.Typography.caption : Design.Typography.label
                                     font.bold: true
                                     font.letterSpacing: 0.5
                                 }
@@ -670,7 +670,7 @@ Item {
                                     text: qsTr(commandItem.title)
                                     color: commandItem.selected ? Theme.textMain : Theme.textBright
                                     font.family: "serif"
-                                    font.pixelSize: root.narrow ? 18 : 21
+                                    font.pixelSize: root.narrow ? Design.Typography.bodyLarge : Design.Typography.subheading
                                     font.bold: true
                                     font.letterSpacing: commandItem.selected ? 0.9 : 0.3
                                     elide: Text.ElideRight
@@ -687,7 +687,7 @@ Item {
                                     Layout.fillWidth: true
                                     text: qsTr(commandItem.subtitle)
                                     color: commandItem.selected ? Theme.accentBright : Theme.textDim
-                                    font.pixelSize: root.narrow ? 11 : 13
+                                    font.pixelSize: root.narrow ? Design.Typography.caption : Design.Typography.label
                                     elide: Text.ElideRight
                                     maximumLineCount: 1
                                 }
@@ -709,7 +709,7 @@ Item {
                                     anchors.centerIn: parent
                                     text: qsTr(commandItem.detail).toUpperCase()
                                     color: commandItem.selected ? Theme.accentBright : Theme.textDim
-                                    font.pixelSize: 9
+                                    font.pixelSize: Design.Typography.caption
                                     font.bold: true
                                     font.letterSpacing: 1.4
                                 }
@@ -850,7 +850,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: modelData === "navigate" ? "↑ ↓" : (modelData === "confirm" ? qsTr("Enter") : qsTr("Esc"))
                                 color: Theme.textSubLite
-                                font.pixelSize: 9
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                                 font.letterSpacing: 1
                             }
@@ -860,7 +860,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: modelData === "navigate" ? qsTr("Navigate") : (modelData === "confirm" ? qsTr("Confirm") : qsTr("Resume battle"))
                             color: Theme.textDim
-                            font.pixelSize: 11
+                            font.pixelSize: Design.Typography.caption
                             font.letterSpacing: 0.6
                         }
                     }
@@ -1038,7 +1038,7 @@ Item {
                     text: qsTr("SECOND PUNIC WAR")
                     color: Theme.textMain
                     font.family: "serif"
-                    font.pixelSize: 19
+                    font.pixelSize: Design.Typography.bodyLarge
                     font.bold: true
                     font.letterSpacing: 3
                     horizontalAlignment: Text.AlignHCenter
@@ -1051,7 +1051,7 @@ Item {
                     Layout.topMargin: 5
                     text: qsTr("Legions, fleets, elephants, and contested supply lines")
                     color: Theme.textDim
-                    font.pixelSize: 12
+                    font.pixelSize: Design.Typography.caption
                     font.letterSpacing: 0.4
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
@@ -1138,7 +1138,7 @@ Item {
                                         text: plaque.carthaginian ? qsTr("Hannibal Barca") : qsTr("Scipio Africanus")
                                         color: Theme.textBright
                                         font.family: "serif"
-                                        font.pixelSize: 13
+                                        font.pixelSize: Design.Typography.caption
                                         font.bold: true
                                         elide: Text.ElideRight
                                         maximumLineCount: 1
@@ -1155,7 +1155,7 @@ Item {
                                         width: parent.width
                                         text: plaque.carthaginian ? qsTr("CARTHAGE") : qsTr("ROME")
                                         color: Theme.textDim
-                                        font.pixelSize: 10
+                                        font.pixelSize: Design.Typography.caption
                                         font.letterSpacing: 1.6
                                         elide: Text.ElideRight
                                         maximumLineCount: 1
@@ -1202,7 +1202,7 @@ Item {
         anchors.bottomMargin: 8
         text: "v" + Qt.application.version
         color: Theme.textDim
-        font.pixelSize: 10
+        font.pixelSize: Design.Typography.caption
         font.letterSpacing: 0.8
         opacity: 0.8
         z: 12

@@ -36,7 +36,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: player_data.playerName || ""
                 color: player_data.isHuman ? colors.addColor : colors.textMain
-                font.pixelSize: 14
+                font.pixelSize: Design.Typography.label
                 font.bold: player_data.isHuman || false
             }
         }
@@ -53,7 +53,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: player_data.colorName || qsTr("Color")
                 color: "white"
-                font.pixelSize: 11
+                font.pixelSize: Design.Typography.caption
                 font.bold: true
                 style: Text.Outline
                 styleColor: "black"
@@ -103,14 +103,14 @@ Rectangle {
                         return team_icons[(player_data.team_id - 1) % team_icons.length];
                     }
                     color: colors.textMain
-                    font.pixelSize: 18
+                    font.pixelSize: Design.Typography.bodyLarge
                 }
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "T" + Design.Numerals.roman(player_data.team_id || 1)
                     color: colors.textSubLite
-                    font.pixelSize: 9
+                    font.pixelSize: Design.Typography.caption
                 }
             }
 
@@ -152,7 +152,7 @@ Rectangle {
 
                 text: player_data.factionName || "Standard of Iron"
                 color: colors.textSub
-                font.pixelSize: 11
+                font.pixelSize: Design.Typography.caption
                 elide: Text.ElideRight
                 width: parent.width - 8
                 horizontalAlignment: Text.AlignHCenter
@@ -184,7 +184,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: "✕"
                 color: "white"
-                font.pixelSize: 16
+                font.pixelSize: Design.Typography.body
                 font.bold: true
             }
 

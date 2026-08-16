@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
+import StandardOfIron.Design 1.0 as Design
 
 Item {
     id: root
@@ -59,7 +60,7 @@ Item {
             Label {
                 text: root.show_error ? qsTr("Save failed") : qsTr("Saving \"%1\"").arg(typeof game !== 'undefined' ? game.save_progress_slot : "")
                 color: Theme.textMain
-                font.pointSize: Theme.fontSizeMedium
+                font.pixelSize: Design.Typography.bodyLarge
                 font.bold: true
                 Layout.fillWidth: true
                 elide: Label.ElideRight
@@ -68,7 +69,7 @@ Item {
             Label {
                 text: root.show_error ? root.last_error : (typeof game !== 'undefined' ? game.save_progress_stage : "")
                 color: root.show_error ? Theme.dangerBr : Theme.textSub
-                font.pointSize: Theme.fontSizeSmall
+                font.pixelSize: Design.Typography.body
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }

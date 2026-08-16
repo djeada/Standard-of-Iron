@@ -185,7 +185,7 @@ Item {
                     Label {
                         text: current_campaign ? current_campaign.title : qsTr("Campaign")
                         color: Theme.textMain
-                        font.pointSize: Theme.fontSizeHero
+                        font.pixelSize: Design.Typography.hero
                         font.bold: true
                         font.family: "serif"
                         Layout.fillWidth: true
@@ -194,7 +194,7 @@ Item {
                     Label {
                         text: qsTr("Campaign Chronicle • ") + (current_campaign ? current_campaign.description : "")
                         color: Theme.textSubLite
-                        font.pointSize: Theme.fontSizeMedium
+                        font.pixelSize: Design.Typography.bodyLarge
                         font.family: "serif"
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
@@ -241,7 +241,7 @@ Item {
                         Label {
                             text: qsTr("Campaign Chronicle")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeTitle
+                            font.pixelSize: Design.Typography.heading
                             font.bold: true
                             font.family: "serif"
                         }
@@ -269,7 +269,7 @@ Item {
                                     Label {
                                         text: qsTr("Campaign Progress:")
                                         color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeSmall
+                                        font.pixelSize: Design.Typography.body
                                         font.bold: true
                                         font.family: "serif"
                                     }
@@ -326,7 +326,7 @@ Item {
 
                                         text: Design.Numerals.ratio(completed_count, total_count)
                                         color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeSmall
+                                        font.pixelSize: Design.Typography.body
                                         font.bold: true
                                     }
                                 }
@@ -384,7 +384,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: root.theater_heading
                                 color: "#f0dfbc"
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                                 font.bold: true
                                 font.family: "serif"
                             }

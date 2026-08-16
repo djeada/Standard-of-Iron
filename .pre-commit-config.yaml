@@ -56,6 +56,12 @@ repos:
         types_or: [c, c++, python, shell]
         exclude: ^(third_party/|scripts/check-quality-markers\.py$)
 
+      - id: soi-typography
+        name: font sizes come from Design.Typography
+        entry: python3 scripts/check-typography.py
+        language: system
+        files: ^ui/qml/.*\.qml$
+
       # always_run, because the failure this catches is a deleted asset whose
       # .qrc entry stayed behind - and pre-commit never passes deleted files to
       # a hook, so a `files: \.qrc$` filter would miss exactly that commit.

@@ -130,7 +130,7 @@ Item {
                 Label {
                     text: qsTr("Load Game")
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeHero
+                    font.pixelSize: Design.Typography.hero
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -288,7 +288,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: qsTr("No Preview")
                                             color: Theme.textHint
-                                            font.pointSize: Theme.fontSizeTiny
+                                            font.pixelSize: Design.Typography.label
                                         }
                                     }
                                 }
@@ -301,7 +301,7 @@ Item {
                                     Label {
                                         text: model.title
                                         color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeLarge
+                                        font.pixelSize: Design.Typography.subheading
                                         font.bold: true
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
@@ -310,7 +310,7 @@ Item {
                                     Label {
                                         text: qsTr("%1 · %2").arg(model.map_name).arg(root.describe_mode(model.mode, model.kind))
                                         color: Theme.textSub
-                                        font.pointSize: Theme.fontSizeMedium
+                                        font.pixelSize: Design.Typography.bodyLarge
                                         Layout.fillWidth: true
                                         elide: Label.ElideRight
                                     }
@@ -322,7 +322,7 @@ Item {
                                         Label {
                                             text: qsTr("Saved %1").arg(Qt.formatDateTime(new Date(model.timestamp), "MMM d, yyyy · h:mm AP"))
                                             color: Theme.textHint
-                                            font.pointSize: Theme.fontSizeSmall
+                                            font.pixelSize: Design.Typography.body
                                             Layout.fillWidth: true
                                             elide: Label.ElideRight
                                         }
@@ -330,7 +330,7 @@ Item {
                                         Label {
                                             text: model.playTime !== "" ? qsTr("Played %1").arg(model.playTime) : ""
                                             color: Theme.textHint
-                                            font.pointSize: Theme.fontSizeSmall
+                                            font.pixelSize: Design.Typography.body
                                             visible: model.playTime !== ""
                                         }
                                     }
@@ -339,7 +339,7 @@ Item {
                                 Label {
                                     text: model.slot_name
                                     color: Theme.textDim
-                                    font.pointSize: Theme.fontSizeLarge
+                                    font.pixelSize: Design.Typography.subheading
                                     Layout.fillWidth: true
                                     horizontalAlignment: Text.AlignHCenter
                                     visible: model.isEmpty
@@ -403,7 +403,7 @@ Item {
                 Label {
                     text: root.status_message
                     color: Theme.textHint
-                    font.pointSize: Theme.fontSizeSmall
+                    font.pixelSize: Design.Typography.body
                     Layout.fillWidth: true
                     elide: Label.ElideRight
                 }
@@ -466,7 +466,7 @@ Item {
                 text: qsTr("Are you sure you want to delete the save:\n\"%1\"?\n\nThis action cannot be undone.").arg(confirmDeleteDialog.slot_name)
                 color: Theme.textMain
                 wrapMode: Text.WordWrap
-                font.pointSize: Theme.fontSizeMedium
+                font.pixelSize: Design.Typography.bodyLarge
             }
         }
     }
@@ -492,7 +492,7 @@ Item {
                 Label {
                     text: root.verify_result_title
                     color: root.verify_result_success ? Theme.success : Theme.danger
-                    font.pointSize: Theme.fontSizeHero
+                    font.pixelSize: Design.Typography.hero
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -500,7 +500,7 @@ Item {
                 Label {
                     text: root.verify_result_message
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
@@ -530,7 +530,7 @@ Item {
                 Label {
                     text: qsTr("Save files found in the exports folder:")
                     color: Theme.textSub
-                    font.pointSize: Theme.fontSizeSmall
+                    font.pixelSize: Design.Typography.body
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                 }
@@ -564,7 +564,7 @@ Item {
                         Label {
                             text: model.name
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeSmall
+                            font.pixelSize: Design.Typography.body
                             Layout.fillWidth: true
                             elide: Label.ElideMiddle
                         }
@@ -585,7 +585,7 @@ Item {
                 Label {
                     text: importModel.count === 0 ? qsTr("No importable save files were found.") : ""
                     color: Theme.textHint
-                    font.pointSize: Theme.fontSizeSmall
+                    font.pixelSize: Design.Typography.body
                     visible: importModel.count === 0
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
