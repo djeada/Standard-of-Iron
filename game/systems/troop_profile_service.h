@@ -14,7 +14,9 @@ struct TroopProfile {
   Game::Units::TroopProductionStats production;
   Game::Units::TroopCombatStats combat;
   Game::Units::TroopVisualStats visuals;
+  Game::Units::TroopLore lore;
   std::vector<std::string> abilities;
+  std::vector<std::string> documented_abilities;
   int individuals_per_unit = 1;
   int max_units_per_row = 1;
   Game::Formation::FormationDoctrineId doctrine{"rome"};

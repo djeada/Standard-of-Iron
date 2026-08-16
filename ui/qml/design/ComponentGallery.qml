@@ -300,6 +300,20 @@ ScrollView {
                             health: 0.78
                         }
 
+                        Design.IronInspectorSection {
+                            width: parent.width
+                            title: qsTr("In the field")
+
+                            Text {
+                                width: parent.width
+                                text: qsTr("A collapsible block of detail. The unit panel stacks one per topic.")
+                                color: Design.Theme.textSecondary
+                                font.family: Design.Typography.family
+                                font.pixelSize: Design.Typography.label
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
                         Design.IronSelectionSummary {
                             width: parent.width
                             unitCount: 64

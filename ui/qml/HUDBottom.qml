@@ -18,6 +18,7 @@ RowLayout {
 
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
+    signal unit_profile_requested(string unit_type, string nation, bool from_selection)
 
     function game_ready() {
         return typeof game !== 'undefined' && game !== null;
@@ -313,6 +314,10 @@ RowLayout {
         groups: bottomRoot.selection_groups
         unitCount: bottomRoot.selection_count
         inspected: bottomRoot.game_ready() && game.activity ? game.activity.inspect_target : null
+        profileLookup: bottomRoot.game_ready() && game.activity && game.activity.unit_profile ? game.activity.unit_profile : null
+        onProfileRequested: function (unitType, nation) {
+            bottomRoot.unit_profile_requested(unitType, nation, true);
+        }
         onUnitActivated: function (unitId) {
             if (bottomRoot.game_ready() && game.orders.select_unit_by_id)
                 game.orders.select_unit_by_id(unitId);
@@ -460,6 +465,9 @@ RowLayout {
         player_state: bottomRoot.game_ready() ? game.selected_player_state : null
         onRecruit_unit: function (unit_type) {
             bottomRoot.recruit_unit(unit_type);
+        }
+        onUnit_details_requested: function (unit_type, nation) {
+            bottomRoot.unit_profile_requested(unit_type, nation, false);
         }
         onRally_mode_toggled: {
             if (!bottomRoot.game_ready() || typeof gameView === 'undefined')

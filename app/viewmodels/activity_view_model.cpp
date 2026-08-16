@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "app/core/client_context.h"
+#include "app/economy/unit_profile.h"
 #include "app/input/cursor_manager.h"
 #include "app/input/input_command_handler.h"
 #include "app/world/focus_target.h"
@@ -47,6 +48,11 @@ ActivityViewModel::ActivityViewModel(const App::Core::ClientContext& context,
 auto ActivityViewModel::unit(qulonglong unit_id) const -> QVariantMap {
   return activity_to_variant(App::World::unit_activity(
       m_context.world, static_cast<Engine::Core::EntityID>(unit_id)));
+}
+
+auto ActivityViewModel::unit_profile(const QString& unit_type,
+                                     const QString& nation_id) const -> QVariantMap {
+  return App::Economy::unit_profile(unit_type, nation_id);
 }
 
 auto ActivityViewModel::selection_summary() const -> QVariantMap {

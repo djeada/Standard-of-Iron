@@ -1470,6 +1470,14 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Unit activities</source>
         <translation>أنشطة الوحدات</translation>
     </message>
+    <message>
+        <source>A collapsible block of detail. The unit panel stacks one per topic.</source>
+        <translation>كتلة تفاصيل قابلة للطي. تُكدّس لوحة الوحدة واحدةً لكل موضوع.</translation>
+    </message>
+    <message>
+        <source>In the field</source>
+        <translation>في الميدان</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -3613,6 +3621,26 @@ Unseen: never scouted.</source>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <source>ATK</source>
+        <translation>هجم</translation>
+    </message>
+    <message>
+        <source>RNG</source>
+        <translation>مدى</translation>
+    </message>
+    <message>
+        <source>SPD</source>
+        <translation>سرع</translation>
+    </message>
+    <message>
+        <source>Show what this unit is for</source>
+        <translation>أظهر الغرض من هذه الوحدة</translation>
+    </message>
+    <message>
+        <source>Unit details</source>
+        <translation>تفاصيل الوحدة</translation>
     </message>
 </context>
 <context>
@@ -6884,6 +6912,112 @@ Wide vision and a durable settlement anchor</source>
     </message>
 </context>
 <context>
+    <name>UnitInspectPanel</name>
+    <message>
+        <source>Attack</source>
+        <translation>هجوم</translation>
+    </message>
+    <message>
+        <source>Build</source>
+        <translation>بناء</translation>
+    </message>
+    <message>
+        <source>Close the unit details</source>
+        <translation>إغلاق تفاصيل الوحدة</translation>
+    </message>
+    <message>
+        <source>Collect</source>
+        <translation>جمع</translation>
+    </message>
+    <message>
+        <source>Damage per second</source>
+        <translation>الضرر في الثانية</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>حراسة</translation>
+    </message>
+    <message>
+        <source>Health</source>
+        <translation>الصحة</translation>
+    </message>
+    <message>
+        <source>Highlighted orders are the ones this selection can carry out right now.</source>
+        <translation>الأوامر المميّزة هي التي يستطيع هذا التحديد تنفيذها الآن.</translation>
+    </message>
+    <message>
+        <source>History</source>
+        <translation>التاريخ</translation>
+    </message>
+    <message>
+        <source>Hold</source>
+        <translation>ثبات</translation>
+    </message>
+    <message>
+        <source>In the field</source>
+        <translation>في الميدان</translation>
+    </message>
+    <message>
+        <source>Medic</source>
+        <translation>مسعف</translation>
+    </message>
+    <message>
+        <source>No details are available for this unit.</source>
+        <translation>لا تتوفّر تفاصيل لهذه الوحدة.</translation>
+    </message>
+    <message>
+        <source>Patrol</source>
+        <translation>دورية</translation>
+    </message>
+    <message>
+        <source>Population %1  ·  Build time %2s</source>
+        <translation>السكان %1  ·  زمن البناء %2 ث</translation>
+    </message>
+    <message>
+        <source>Range</source>
+        <translation>المدى</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>إصلاح</translation>
+    </message>
+    <message>
+        <source>Sight</source>
+        <translation>الرؤية</translation>
+    </message>
+    <message>
+        <source>Speed</source>
+        <translation>السرعة</translation>
+    </message>
+    <message>
+        <source>Strengths and weaknesses</source>
+        <translation>نقاط القوة والضعف</translation>
+    </message>
+    <message>
+        <source>Unit details</source>
+        <translation>تفاصيل الوحدة</translation>
+    </message>
+    <message>
+        <source>What it can do</source>
+        <translation>ما تستطيع فعله</translation>
+    </message>
+    <message>
+        <source>What it costs</source>
+        <translation>ما تكلّفه</translation>
+    </message>
+    <message numerus="yes">
+        <source>Fields %n soldier(s) in one squad.</source>
+        <translation>
+            <numerusform>لا تضع جنودًا في الفرقة.</numerusform>
+            <numerusform>تضع جنديًّا واحدًا في فرقة واحدة.</numerusform>
+            <numerusform>تضع جنديّين في فرقة واحدة.</numerusform>
+            <numerusform>تضع %n جنود في فرقة واحدة.</numerusform>
+            <numerusform>تضع %n جنديًّا في فرقة واحدة.</numerusform>
+            <numerusform>تضع %n جنديٍّ في فرقة واحدة.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>Units</name>
     <message>
         <source>Archer</source>
@@ -7044,6 +7178,398 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Triarius</source>
         <translation>تريّاري</translation>
+    </message>
+    <message>
+        <source>An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night.</source>
+        <translation>كان الجيش القديم يسير بنجّاريه وبنّائيه، فيقيم معسكرًا ويحصّنه كل ليلة.</translation>
+    </message>
+    <message>
+        <source>Ancient armies kept surgeons close to the line; the wounded who walked away were the difference between a campaign and a rout.</source>
+        <translation>أبقت الجيوش القديمة الجرّاحين قرب الخط؛ فالجرحى الذين مشوا على أقدامهم كانوا الفارق بين حملةٍ وهزيمةٍ منكرة.</translation>
+    </message>
+    <message>
+        <source>Anti-cavalry spear line</source>
+        <translation>خط رماح مضاد للفرسان</translation>
+    </message>
+    <message>
+        <source>Archers are the answer to it, and massed bows bring it down before it closes.</source>
+        <translation>الرماة هم الجواب عليه، والقِسي المحتشدة تُسقطه قبل أن يقترب.</translation>
+    </message>
+    <message>
+        <source>As brittle as any archer, and it withers as soon as the line in front of it fails.</source>
+        <translation>هشّ كأي رامٍ، ويذبل ما إن ينهار الخط الذي أمامه.</translation>
+    </message>
+    <message>
+        <source>Awakened</source>
+        <translation>مُستيقظ</translation>
+    </message>
+    <message>
+        <source>Battle caster</source>
+        <translation>ساحر معركة</translation>
+    </message>
+    <message>
+        <source>Behind every field army stood the farms and quarries that fed it, and the people who worked them.</source>
+        <translation>خلف كل جيش ميداني وقفت المزارع والمحاجر التي أطعمته، والناس الذين عملوا فيها.</translation>
+    </message>
+    <message>
+        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</source>
+        <translation>قلّما حسمت القِسي معركةً قديمة وحدها، لكن رشقةً تُطلق قبل التلاحم كانت تكسر عزيمة التشكيل.</translation>
+    </message>
+    <message>
+        <source>Breaks on a braced spear line, which cuts mounted troops down at more than twice the usual rate.</source>
+        <translation>ينكسر أمام خط رماح متحصّن يفتك بالوحدات الراكبة بأكثر من ضِعف المعدّل المعتاد.</translation>
+    </message>
+    <message>
+        <source>Cannot fight. Left unguarded it dies to anything that reaches it.</source>
+        <translation>لا يقاتل. وإن تُرك بلا حماية مات بأي شيء يبلغه.</translation>
+    </message>
+    <message>
+        <source>Carries more health than any squad on the field, and its reach breaks a line that stands to receive it.</source>
+        <translation>يحمل صحّةً أكبر من أي فرقة في الميدان، ومداه يكسر خطًّا يقف لاستقباله.</translation>
+    </message>
+    <message>
+        <source>Carthage bought its archers from Libya and the islands, paying in silver what Rome demanded of its citizens.</source>
+        <translation>اشترت قرطاج رماتها من ليبيا والجزر، ودفعت فضّةً ما كانت روما تطلبه من مواطنيها.</translation>
+    </message>
+    <message>
+        <source>Carthage sent its own citizens into the line only when the city itself was threatened. The rest of the army was hired.</source>
+        <translation>لم ترسل قرطاج مواطنيها إلى الخط إلا إذا هُدّدت المدينة نفسها. أما بقية الجيش فكانت مستأجرة.</translation>
+    </message>
+    <message>
+        <source>Carthage took its elephants from the forests south of the Atlas, smaller than the Indian beasts but the terror of Italy.</source>
+        <translation>أخذت قرطاج أفيالها من غابات جنوب الأطلس، أصغر من وحوش الهند لكنها رعب إيطاليا.</translation>
+    </message>
+    <message>
+        <source>Carthaginian engineers learned artillery from the Greek cities of Sicily, and then improved on it.</source>
+        <translation>تعلّم مهندسو قرطاج المدفعية من مدن صقلية اليونانية ثم حسّنوها.</translation>
+    </message>
+    <message>
+        <source>Caster</source>
+        <translation>ساحر</translation>
+    </message>
+    <message>
+        <source>Cavalry</source>
+        <translation>فرسان</translation>
+    </message>
+    <message>
+        <source>Cavalry rarely charged an unbroken line. It waited for a flank to open and then finished the day.</source>
+        <translation>قلّما اندفع الفرسان على خط لم يُكسر. كانوا ينتظرون انفتاح جناح ثم يحسمون النهار.</translation>
+    </message>
+    <message>
+        <source>Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel.</source>
+        <translation>كان سيّافو النظام المتراص نواة الجيش المتوسطي الغالية، دُرّبوا على حفظ الخط لا على المبارزة.</translation>
+    </message>
+    <message>
+        <source>Command</source>
+        <translation>قيادة</translation>
+    </message>
+    <message>
+        <source>Costs nothing to raise and never breaks, so it buys time no living troop would.</source>
+        <translation>لا يكلّف بعثه شيئًا ولا ينكسر أبدًا، فيشتري وقتًا لا تشتريه أي وحدة حيّة.</translation>
+    </message>
+    <message>
+        <source>Cursed Arrow Volley</source>
+        <translation>رشقة سهام ملعونة</translation>
+    </message>
+    <message>
+        <source>Cursed missile line</source>
+        <translation>خط رماية ملعون</translation>
+    </message>
+    <message>
+        <source>Defenceless at close quarters. Infantry that reaches it kills it in a few seconds.</source>
+        <translation>أعزل في المدى القريب. المشاة التي تبلغها تقتلها في ثوانٍ قليلة.</translation>
+    </message>
+    <message>
+        <source>Denies ground nothing else can reach, at well over twice an archer's range.</source>
+        <translation>يمنع أرضًا لا يبلغها سواه، على أكثر من ضِعف مدى الرامي بكثير.</translation>
+    </message>
+    <message>
+        <source>Elite</source>
+        <translation>نخبة</translation>
+    </message>
+    <message>
+        <source>Engineer and labourer</source>
+        <translation>مهندس وعامل</translation>
+    </message>
+    <message>
+        <source>Every arrow that lands leaves a curse on its target, draining the will of the formation it struck.</source>
+        <translation>كل سهم يصيب يترك لعنةً على هدفه، فيستنزف عزيمة التشكيل الذي أصابه.</translation>
+    </message>
+    <message>
+        <source>Expendable</source>
+        <translation>يُستغنى عنه</translation>
+    </message>
+    <message>
+        <source>Expendable line infantry</source>
+        <translation>مشاة خط يُستغنى عنها</translation>
+    </message>
+    <message>
+        <source>Faction-defining heavy beast</source>
+        <translation>وحش ثقيل يميّز الفصيل</translation>
+    </message>
+    <message>
+        <source>Fast enough to choose its own fight, and it rides down archers left without a screen.</source>
+        <translation>سريع بما يكفي ليختار معركته، ويدهس الرماة الذين تُركوا بلا ساتر.</translation>
+    </message>
+    <message>
+        <source>Field surgeon</source>
+        <translation>جرّاح ميدان</translation>
+    </message>
+    <message>
+        <source>Fireball</source>
+        <translation>كرة نار</translation>
+    </message>
+    <message>
+        <source>Fragile once contacted. Cavalry overruns it whenever it has no melee screen.</source>
+        <translation>هشّ عند الاشتباك. تكتسحه الفرسان كلما خلا من ساتر للالتحام.</translation>
+    </message>
+    <message>
+        <source>Gathers and delivers the resources every other unit is paid for with.</source>
+        <translation>يجمع ويسلّم الموارد التي تُدفع بها كل وحدة أخرى.</translation>
+    </message>
+    <message>
+        <source>Has no melee worth the name, and spears punish it the moment it is caught.</source>
+        <translation>لا يملك التحامًا يُذكر، والرماح تعاقبه لحظة الإمساك به.</translation>
+    </message>
+    <message>
+        <source>Heavy infantry</source>
+        <translation>مشاة ثقيلة</translation>
+    </message>
+    <message>
+        <source>Heavy line infantry</source>
+        <translation>مشاة خط ثقيلة</translation>
+    </message>
+    <message>
+        <source>Horse archers came from the steppe and the desert margins, and Mediterranean armies hired them rather than raised them.</source>
+        <translation>جاء الرماة الفرسان من السهوب وأطراف الصحراء، فاستأجرتهم جيوش المتوسط بدل أن تجنّدهم.</translation>
+    </message>
+    <message>
+        <source>Hurls fire that bursts across a formation and clings to the ground where it lands.</source>
+        <translation>يقذف نارًا تنفجر فوق التشكيل وتلتصق بالأرض حيث تسقط.</translation>
+    </message>
+    <message>
+        <source>Hurls fire that bursts across a formation and leaves the ground burning where it lands.</source>
+        <translation>يقذف نارًا تنفجر فوق التشكيل وتترك الأرض مشتعلةً حيث تسقط.</translation>
+    </message>
+    <message>
+        <source>Its arrows carry a curse that drains the will of everything they strike.</source>
+        <translation>سهامه تحمل لعنة تستنزف عزيمة كل ما تصيبه.</translation>
+    </message>
+    <message>
+        <source>Its quiver was buried with it, and the curse worked into the shafts outlasted the hand that drew the bow.</source>
+        <translation>دُفنت جعبته معه، واللعنة المنسوجة في العِيدان بقيت بعد اليد التي شدّت القوس.</translation>
+    </message>
+    <message>
+        <source>Lancer cavalry</source>
+        <translation>فرسان رماح</translation>
+    </message>
+    <message>
+        <source>Line infantry</source>
+        <translation>مشاة الخط</translation>
+    </message>
+    <message>
+        <source>Loses the straight infantry fight to swords, and caught in the open it is only a slower line.</source>
+        <translation>يخسر قتال المشاة المباشر أمام السيوف، وإذا فوجئ في العراء فهو مجرّد خط أبطأ.</translation>
+    </message>
+    <message>
+        <source>Massed missile line</source>
+        <translation>خط رماية مكثّف</translation>
+    </message>
+    <message>
+        <source>Mends nearby wounded without being told to, so a line that holds keeps its strength.</source>
+        <translation>يداوي الجرحى القريبين من تلقاء نفسه، فيحتفظ الخط الصامد بقوته.</translation>
+    </message>
+    <message>
+        <source>Mounted</source>
+        <translation>راكب</translation>
+    </message>
+    <message>
+        <source>Mounted skirmisher</source>
+        <translation>مناوش على صهوة الجواد</translation>
+    </message>
+    <message>
+        <source>Not a soldier. It cannot hold ground and should never be the last thing guarding a camp.</source>
+        <translation>ليس جنديًّا. لا يثبت في أرض، ويجب ألّا يكون آخر ما يحرس معسكرًا.</translation>
+    </message>
+    <message>
+        <source>One slow body, helpless in melee, and it needs the awakened dead between it and the enemy.</source>
+        <translation>جسدٌ بطيء أعزل في الالتحام، ويحتاج إلى الموتى المستيقظين بينه وبين العدو.</translation>
+    </message>
+    <message>
+        <source>Out-trades everything at range, and massed bows are the answer to a war elephant.</source>
+        <translation>يتفوّق على كل شيء من بعيد، والقِسي المحتشدة هي الجواب على فيل الحرب.</translation>
+    </message>
+    <message>
+        <source>Outranges troops on foot and can withdraw from any fight it cannot win.</source>
+        <translation>يفوق مشاة الأرض مدى، ويستطيع الانسحاب من أي قتال لا يقدر على كسبه.</translation>
+    </message>
+    <message>
+        <source>Overrun in seconds by any infantry that reaches it, and far too slow to withdraw.</source>
+        <translation>تُكتسح في ثوانٍ بأي مشاة تبلغها، وهي أبطأ من أن تنسحب.</translation>
+    </message>
+    <message>
+        <source>Phoenician craftsmen raised the harbours and walls that made Carthage the richest city in the western sea.</source>
+        <translation>أقام الصنّاع الفينيقيون المرافئ والأسوار التي جعلت قرطاج أغنى مدن البحر الغربي.</translation>
+    </message>
+    <message>
+        <source>Raised from the burial ranks of an army that was interred still holding its shields.</source>
+        <translation>بُعث من صفوف دفنٍ لجيشٍ ووري الثرى وهو ما زال ممسكًا بتروسه.</translation>
+    </message>
+    <message>
+        <source>Raises every building an army needs and repairs what the enemy breaks.</source>
+        <translation>يبني كل مبنى يحتاجه الجيش ويصلح ما يحطّمه العدو.</translation>
+    </message>
+    <message>
+        <source>Ranged</source>
+        <translation>بعيد المدى</translation>
+    </message>
+    <message>
+        <source>Repays its cost against cavalry, and braced on high ground it holds against far heavier attacks.</source>
+        <translation>يردّ ثمنه أمام الفرسان، وإذا تحصّن في الأرض المرتفعة صمد أمام هجمات أثقل بكثير.</translation>
+    </message>
+    <message>
+        <source>Rome raised few archers of its own and drew them from Crete and the eastern allies instead.</source>
+        <translation>جنّدت روما قليلًا من رماتها، واستقدمتهم من كريت وحلفاء الشرق بدلًا من ذلك.</translation>
+    </message>
+    <message>
+        <source>Rome standardised the bolt thrower until every legion carried its own, mounted on carts and served by trained crews.</source>
+        <translation>وحّدت روما قاذف السهام حتى حمل كل فيلق قاذفه، محمولًا على العربات وتخدمه أطقم مدرّبة.</translation>
+    </message>
+    <message>
+        <source>Settlement population</source>
+        <translation>سكان المستوطنة</translation>
+    </message>
+    <message>
+        <source>Shielded</source>
+        <translation>مُتترّس</translation>
+    </message>
+    <message>
+        <source>Shock cavalry</source>
+        <translation>فرسان صدم</translation>
+    </message>
+    <message>
+        <source>Siege</source>
+        <translation>حصار</translation>
+    </message>
+    <message>
+        <source>Siege artillery</source>
+        <translation>مدفعية حصار</translation>
+    </message>
+    <message>
+        <source>Siege bolt thrower</source>
+        <translation>قاذف سهام حصار</translation>
+    </message>
+    <message>
+        <source>Skirmisher</source>
+        <translation>مناوش</translation>
+    </message>
+    <message>
+        <source>Slower and weaker than the living line it imitates, and nothing in the field can mend it.</source>
+        <translation>أبطأ وأضعف من الخط الحيّ الذي يحاكيه، ولا شيء في الميدان يرمّمه.</translation>
+    </message>
+    <message>
+        <source>Spear infantry</source>
+        <translation>مشاة رماح</translation>
+    </message>
+    <message>
+        <source>Still cavalry. A braced spear line stops it, and it cannot trade with archers at range.</source>
+        <translation>يبقى فارسًا. خط الرماح المتحصّن يوقفه، ولا يقوى على مبادلة الرماة من بعيد.</translation>
+    </message>
+    <message>
+        <source>Support</source>
+        <translation>إسناد</translation>
+    </message>
+    <message>
+        <source>The Liby-Phoenician spear was the steady centre that a mercenary army could be built around.</source>
+        <translation>كان الرمح الليبي الفينيقي المركز الثابت الذي يُبنى حوله جيش المرتزقة.</translation>
+    </message>
+    <message>
+        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</source>
+        <translation>امتطى النوميديون خيلهم بلا لجام، وكانوا أفضل خيّالة خفيفة في المتوسط. وأسوأ أيام روما في كانّاي كان صنيعهم.</translation>
+    </message>
+    <message>
+        <source>The Sacred Band kept physicians of its own, an honour reserved for the citizen elite.</source>
+        <translation>احتفظت الكتيبة المقدسة بأطبائها الخاصين، وهو شرف اقتُصر على نخبة المواطنين.</translation>
+    </message>
+    <message>
+        <source>The bolt thrower was the accurate half of a siege train, used against men and gates alike.</source>
+        <translation>كان قاذف السهام النصف الدقيق من رتل الحصار، يُستخدم ضد الرجال والأبواب سواء.</translation>
+    </message>
+    <message>
+        <source>The bolt throwers of Carthage were built in the same yards as its fleet, by the same shipwrights.</source>
+        <translation>بُنيت قواذف سهام قرطاج في الأحواض ذاتها التي بُني فيها أسطولها، وعلى أيدي بنّائي السفن أنفسهم.</translation>
+    </message>
+    <message>
+        <source>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</source>
+        <translation>جاء الفرسان من أثرى المواطنين، ولم تبلغ خيّالة روما يومًا مبلغ مشاتها.</translation>
+    </message>
+    <message>
+        <source>The fabri built the roads, the bridges and the fortified camp that went up every single night of a march.</source>
+        <translation>بنى الفابري الطرق والجسور والمعسكر المحصّن الذي كان يُقام في كل ليلة مسير.</translation>
+    </message>
+    <message>
+        <source>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
+        <translation>صُمّم سيف الفيلقي القصير ورمحه الثقيل لغاية واحدة: قطع العشرين خطوة الأخيرة والانتصار هناك.</translation>
+    </message>
+    <message>
+        <source>The longest reach in any army, and quick enough to loose again before its target closes.</source>
+        <translation>أطول مدى في أي جيش، وسريع بما يكفي ليرمي ثانيةً قبل أن يقترب هدفه.</translation>
+    </message>
+    <message>
+        <source>The longest reach of any mounted troop, striking before the enemy line can answer.</source>
+        <translation>أطول مدى بين جميع الوحدات الراكبة؛ يضرب قبل أن يردّ خط العدو.</translation>
+    </message>
+    <message>
+        <source>The medicus marched with the legion, and Roman field medicine was the best organised in the ancient world.</source>
+        <translation>سار الطبيب مع الفيلق، وكان الطب الميداني الروماني أفضل ما نُظّم في العالم القديم.</translation>
+    </message>
+    <message>
+        <source>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
+        <translation>استبدل الرمح الفارسي مرونة السيف بالمدى، فيضرب قبل أن يشهر العدو سلاحه.</translation>
+    </message>
+    <message>
+        <source>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</source>
+        <translation>كان الأوناجر يرفس كالحمار الوحشي الذي سُمّي به، وكان جواب روما على سورٍ يأبى السقوط.</translation>
+    </message>
+    <message>
+        <source>The priests who sealed the tombs learned to open them, and now walk ahead of what they woke.</source>
+        <translation>الكهنة الذين ختموا القبور تعلّموا فتحها، وهم الآن يسيرون أمام ما أيقظوه.</translation>
+    </message>
+    <message>
+        <source>The slowest troops in the line, and they take losses crossing open ground under archery.</source>
+        <translation>أبطأ وحدات الخط، وتتكبّد خسائر وهي تعبر أرضًا مكشوفة تحت الرماية.</translation>
+    </message>
+    <message>
+        <source>The spear was the cheapest way to make a horse refuse a charge, and every ancient army kept a wall of them.</source>
+        <translation>كان الرمح أرخص وسيلة لجعل الحصان يرفض الاندفاع، وكل جيش قديم احتفظ بجدار منها.</translation>
+    </message>
+    <message>
+        <source>The triarii were the oldest and steadiest men in the legion, knelt behind the line and committed only when the day was in doubt.</source>
+        <translation>كان التّرياري أكبر رجال الفيلق سنًّا وأثبتهم، يجثون خلف الخط ولا يُزجّ بهم إلا إذا صار النهار في خطر.</translation>
+    </message>
+    <message>
+        <source>The weakest body on the field. Anything that finds it kills it.</source>
+        <translation>أضعف جسد في الميدان. كل ما يجده يقتله.</translation>
+    </message>
+    <message>
+        <source>Torsion artillery was built on the spot from local timber and abandoned when the army moved on.</source>
+        <translation>كانت مدفعية الالتواء تُبنى في الموقع من خشب المكان وتُترك حين يمضي الجيش.</translation>
+    </message>
+    <message>
+        <source>War beast</source>
+        <translation>وحش حرب</translation>
+    </message>
+    <message>
+        <source>War elephants terrified armies that had never met them, and were nearly useless against those that had.</source>
+        <translation>أرعبت أفيال الحرب الجيوش التي لم تلقها قط، وكانت شبه عديمة النفع أمام من عرفها.</translation>
+    </message>
+    <message>
+        <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>
+        <translation>يفوز بقتال المشاة المباشر ضد الرماح، ويكتسح آلات الحصار غير المحروسة في ثوانٍ.</translation>
+    </message>
+    <message>
+        <source>Worker</source>
+        <translation>عامل</translation>
     </message>
 </context>
 <context>
