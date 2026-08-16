@@ -653,10 +653,11 @@ auto TutorialDirector::step_body(TutorialStepId id) -> QString {
               "the top bar returns to your camp. Follow keeps the camera on your "
               "selection. Move the camera now.");
   case TutorialStepId::GameSpeed:
-    return tr("The top-left buttons pause the battle and set the speed to half, "
-              "normal or double. Space pauses too. Speed buttons stay disabled "
-              "while paused - resume first. Change the speed or pause and resume "
-              "now.");
+    return tr("The top-left buttons pause the battle and set the speed, from half "
+              "up to quadruple. Space pauses too, and + and - step through the "
+              "speeds without reaching for the bar. The active speed stays lit "
+              "while paused, and you can change it there. Change the speed or "
+              "pause and resume now.");
   case TutorialStepId::Objectives:
     return tr("The star in the top bar shows your current objective. Press Escape "
               "and choose Objectives to read the full briefing: what wins the "

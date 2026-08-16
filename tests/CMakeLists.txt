@@ -179,6 +179,7 @@ add_executable(
     headless/gate_traversal_test.cpp
     headless/wall_siege_test.cpp
     headless/tight_gap_navigation_test.cpp
+    headless/battle_speed_load_test.cpp
     simulation_main.cpp
 )
 target_link_libraries(
@@ -446,6 +447,7 @@ add_executable(
     core/order_feedback_test.cpp
     core/rts_action_model_test.cpp
     core/runtime_frame_orchestrator_test.cpp
+    core/game_speed_test.cpp
     controllers/command_controller_test.cpp
     ui/preferences_test.cpp
     ui/input_bindings_test.cpp
