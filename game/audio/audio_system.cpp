@@ -36,11 +36,11 @@ auto is_effectively_muted(float volume) -> bool {
 
 AudioSystem::AudioSystem()
     : is_running(false)
-    , master_volume(AudioConstants::DEFAULT_VOLUME)
-    , sound_volume(AudioConstants::DEFAULT_VOLUME)
-    , music_volume(AudioConstants::DEFAULT_VOLUME)
-    , voice_volume(AudioConstants::DEFAULT_VOLUME)
-    , ambience_volume(AudioConstants::DEFAULT_VOLUME) {
+    , master_volume(Game::Audio::Settings::k_first_run_master_volume)
+    , sound_volume(Game::Audio::Settings::k_first_run_sound_volume)
+    , music_volume(Game::Audio::Settings::k_first_run_music_volume)
+    , voice_volume(Game::Audio::Settings::k_first_run_voice_volume)
+    , ambience_volume(Game::Audio::Settings::k_first_run_ambience_volume) {
   load_persisted_volumes();
 }
 

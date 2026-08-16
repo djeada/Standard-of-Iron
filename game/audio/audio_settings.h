@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 
 #include "audio_constants.h"
 
@@ -19,13 +20,23 @@ inline constexpr char k_music_volume_key[] = "audio/music_volume";
 inline constexpr char k_voice_volume_key[] = "audio/voice_volume";
 inline constexpr char k_ambience_volume_key[] = "audio/ambience_volume";
 
+inline constexpr float k_first_run_master_volume = 0.6F;
+inline constexpr float k_first_run_sound_volume = 1.0F;
+inline constexpr float k_first_run_music_volume = 0.5F;
+inline constexpr float k_first_run_voice_volume = 1.0F;
+inline constexpr float k_first_run_ambience_volume = 0.8F;
+
 struct Volumes {
-  float master{AudioConstants::DEFAULT_VOLUME};
-  float sound{AudioConstants::DEFAULT_VOLUME};
-  float music{AudioConstants::DEFAULT_VOLUME};
-  float voice{AudioConstants::DEFAULT_VOLUME};
-  float ambience{AudioConstants::DEFAULT_VOLUME};
+  float master{k_first_run_master_volume};
+  float sound{k_first_run_sound_volume};
+  float music{k_first_run_music_volume};
+  float voice{k_first_run_voice_volume};
+  float ambience{k_first_run_ambience_volume};
 };
+
+inline auto first_run_volumes() -> Volumes {
+  return {};
+}
 
 inline auto open() -> QSettings {
   return QSettings(QSettings::IniFormat,
@@ -34,18 +45,21 @@ inline auto open() -> QSettings {
                    QString::fromLatin1(k_application));
 }
 
-inline auto load_volume(const char* key, const char* label) -> float {
-  auto settings = open();
+namespace Detail {
+
+inline auto read_volume(QSettings& settings,
+                        const char* key,
+                        const char* label) -> std::optional<float> {
   const QVariant value = settings.value(QString::fromLatin1(key));
   if (!value.isValid()) {
-    return AudioConstants::DEFAULT_VOLUME;
+    return std::nullopt;
   }
 
   bool ok = false;
   const float stored = value.toFloat(&ok);
   if (!ok || !std::isfinite(stored)) {
     qWarning() << "Ignoring invalid saved audio volume for" << label << ":" << value;
-    return AudioConstants::DEFAULT_VOLUME;
+    return std::nullopt;
   }
 
   const float clamped =
@@ -57,13 +71,44 @@ inline auto load_volume(const char* key, const char* label) -> float {
   return clamped;
 }
 
+} // namespace Detail
+
+inline auto load_volume(const char* key, const char* label) -> float {
+  auto settings = open();
+  return Detail::read_volume(settings, key, label)
+      .value_or(AudioConstants::DEFAULT_VOLUME);
+}
+
 inline auto load_volumes() -> Volumes {
+  auto settings = open();
+
+  const auto master = Detail::read_volume(settings, k_master_volume_key, "master");
+  const auto sound = Detail::read_volume(settings, k_sound_volume_key, "sound");
+  const auto music = Detail::read_volume(settings, k_music_volume_key, "music");
+  const auto voice = Detail::read_volume(settings, k_voice_volume_key, "voice");
+  const auto ambience =
+      Detail::read_volume(settings, k_ambience_volume_key, "ambience");
+
+  const bool has_saved_preference = master.has_value() || sound.has_value() ||
+                                    music.has_value() || voice.has_value() ||
+                                    ambience.has_value();
+  if (!has_saved_preference) {
+    const Volumes defaults = first_run_volumes();
+    settings.setValue(QString::fromLatin1(k_master_volume_key), defaults.master);
+    settings.setValue(QString::fromLatin1(k_sound_volume_key), defaults.sound);
+    settings.setValue(QString::fromLatin1(k_music_volume_key), defaults.music);
+    settings.setValue(QString::fromLatin1(k_voice_volume_key), defaults.voice);
+    settings.setValue(QString::fromLatin1(k_ambience_volume_key), defaults.ambience);
+    settings.sync();
+    return defaults;
+  }
+
   return {
-      .master = load_volume(k_master_volume_key, "master"),
-      .sound = load_volume(k_sound_volume_key, "sound"),
-      .music = load_volume(k_music_volume_key, "music"),
-      .voice = load_volume(k_voice_volume_key, "voice"),
-      .ambience = load_volume(k_ambience_volume_key, "ambience"),
+      .master = master.value_or(AudioConstants::DEFAULT_VOLUME),
+      .sound = sound.value_or(AudioConstants::DEFAULT_VOLUME),
+      .music = music.value_or(AudioConstants::DEFAULT_VOLUME),
+      .voice = voice.value_or(AudioConstants::DEFAULT_VOLUME),
+      .ambience = ambience.value_or(AudioConstants::DEFAULT_VOLUME),
   };
 }
 
