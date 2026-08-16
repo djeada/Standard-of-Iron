@@ -19,6 +19,10 @@ Row {
     property string status: "default"
     property bool compact: false
 
+    property string tooltipText: ""
+
+    readonly property string effectiveTooltip: root.tooltipText !== "" ? root.tooltipText : (root.label !== "" ? root.label + ": " + root.displayText : "")
+
     readonly property string displayText: amountText !== "" ? amountText : amount.toString()
     readonly property color valueColor: root.status === "default" ? Design.Theme.textPrimary : Design.Theme.statusColor(root.status)
 
@@ -28,9 +32,9 @@ Row {
     Accessible.name: root.label
     Accessible.description: root.displayText
 
-    ToolTip.visible: hover.hovered && root.label !== ""
+    ToolTip.visible: hover.hovered && root.effectiveTooltip !== ""
     ToolTip.delay: Design.Metrics.tooltipDelay
-    ToolTip.text: root.label + ": " + root.displayText
+    ToolTip.text: root.effectiveTooltip
 
     HoverHandler {
         id: hover

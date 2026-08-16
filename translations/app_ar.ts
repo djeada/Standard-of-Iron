@@ -1385,6 +1385,351 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>EconomyCoach</name>
+    <message>
+        <source>Economy prompts</source>
+        <translation>إرشادات الاقتصاد</translation>
+    </message>
+    <message>
+        <source>Stop showing these prompts</source>
+        <translation>أوقف عرض هذه الإرشادات</translation>
+    </message>
+    <message>
+        <source>How it works</source>
+        <translation>كيف يعمل</translation>
+    </message>
+</context>
+<context>
+    <name>EconomyGuide</name>
+    <message>
+        <source>Gold</source>
+        <translation>ذهب</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>طعام</translation>
+    </message>
+    <message>
+        <source>Wood</source>
+        <translation>خشب</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>حجر</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>حديد</translation>
+    </message>
+    <message>
+        <source>Comes from your starting treasury, mission rewards, and selling goods at a marketplace.</source>
+        <translation>يأتي من خزينتك الأولية ومن مكافآت المهمة ومن بيع البضائع في السوق.</translation>
+    </message>
+    <message>
+        <source>Comes from your starting stores, mission rewards, and buying at a marketplace.</source>
+        <translation>يأتي من مخزونك الأولي ومن مكافآت المهمة ومن الشراء في السوق.</translation>
+    </message>
+    <message>
+        <source>Send a builder to chop a tree with Collect, or leave Auto Gather running.</source>
+        <translation>أرسل بنّاءً ليقطع شجرة بأمر «اجمع»، أو اترك «جمع تلقائي» يعمل.</translation>
+    </message>
+    <message>
+        <source>Send a builder to a boulder with Collect, or leave Auto Gather running.</source>
+        <translation>أرسل بنّاءً إلى صخرة بأمر «اجمع»، أو اترك «جمع تلقائي» يعمل.</translation>
+    </message>
+    <message>
+        <source>Send a builder to an iron ore deposit with Collect, or leave Auto Gather running.</source>
+        <translation>أرسل بنّاءً إلى منجم حديد بأمر «اجمع»، أو اترك «جمع تلقائي» يعمل.</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>منزل</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>ثكنة</translation>
+    </message>
+    <message>
+        <source>Defense Tower</source>
+        <translation>برج دفاعي</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>سوق</translation>
+    </message>
+    <message>
+        <source>Temple</source>
+        <translation>معبد</translation>
+    </message>
+    <message>
+        <source>Wall Segment</source>
+        <translation>مقطع سور</translation>
+    </message>
+    <message>
+        <source>Wall Gate</source>
+        <translation>بوابة سور</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>منجنيق</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>بالِستا</translation>
+    </message>
+    <message>
+        <source>Archer</source>
+        <translation>رامٍ</translation>
+    </message>
+    <message>
+        <source>Swordsman</source>
+        <translation>سيّاف</translation>
+    </message>
+    <message>
+        <source>Spearman</source>
+        <translation>رامح</translation>
+    </message>
+    <message>
+        <source>Horse Swordsman</source>
+        <translation>سيّاف فارس</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>رامٍ فارس</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>رامح فارس</translation>
+    </message>
+    <message>
+        <source>Healer</source>
+        <translation>معالج</translation>
+    </message>
+    <message>
+        <source>Builder</source>
+        <translation>بنّاء</translation>
+    </message>
+    <message>
+        <source>Civilian</source>
+        <translation>مدني</translation>
+    </message>
+    <message>
+        <source>Elephant</source>
+        <translation>فيل حرب</translation>
+    </message>
+    <message>
+        <source>Raises the population the nearest barracks can recruit from.</source>
+        <translation>يرفع التعداد الذي تجنّد منه أقرب ثكنة.</translation>
+    </message>
+    <message>
+        <source>Recruits troops and receives everything your builders gather.</source>
+        <translation>تجنّد القوات وتستقبل كل ما يجمعه بنّاؤوك.</translation>
+    </message>
+    <message>
+        <source>Shoots at enemies that come near it.</source>
+        <translation>يطلق النار على الأعداء الذين يقتربون منه.</translation>
+    </message>
+    <message>
+        <source>Buys and sells resources for gold.</source>
+        <translation>يشتري الموارد ويبيعها مقابل الذهب.</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together.</source>
+        <translation>يشرف على مساحة واسعة من الأرض ويحفظ تماسك المستوطنة.</translation>
+    </message>
+    <message>
+        <source>Blocks enemy movement.</source>
+        <translation>يمنع حركة العدو.</translation>
+    </message>
+    <message>
+        <source>Opens for your troops and allies, shut to everyone else.</source>
+        <translation>تُفتح لقواتك وحلفائك وتبقى مغلقة أمام غيرهم.</translation>
+    </message>
+    <message>
+        <source>Long-range siege engine, best against structures.</source>
+        <translation>آلة حصار بعيدة المدى، الأفضل ضد المباني.</translation>
+    </message>
+    <message>
+        <source>Precise siege engine, best against units.</source>
+        <translation>آلة حصار دقيقة، الأفضل ضد الوحدات.</translation>
+    </message>
+    <message>
+        <source>, and %1 more</source>
+        <translation> و%1 غير ذلك</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>No resource cost</source>
+        <translation>بلا تكلفة موارد</translation>
+    </message>
+    <message>
+        <source>%1 more %2</source>
+        <translation>%1 إضافية من %2</translation>
+    </message>
+    <message>
+        <source>Nobody is gathering it right now.</source>
+        <translation>لا أحد يجمعه في الوقت الحالي.</translation>
+    </message>
+    <message>
+        <source>Builders gathering it: %1</source>
+        <translation>البنّاؤون الذين يجمعونه: %1</translation>
+    </message>
+    <message>
+        <source>%1 being hauled to a barracks</source>
+        <translation>%1 في طريقها إلى ثكنة</translation>
+    </message>
+    <message>
+        <source>Held in your treasury; no storage limit.</source>
+        <translation>يُحفظ في خزينتك؛ بلا حد للتخزين.</translation>
+    </message>
+    <message>
+        <source>Hauled to a barracks yard before it is credited. The yard looks full at %1.</source>
+        <translation>يُنقل إلى ساحة ثكنة قبل أن يُضاف إلى رصيدك. تبدو الساحة ممتلئة عند %1.</translation>
+    </message>
+    <message>
+        <source>Short %1 for a %2.</source>
+        <translation>ينقصك %1 من أجل %2.</translation>
+    </message>
+    <message>
+        <source>%1 in store: %2</source>
+        <translation>%1 في المخزون: %2</translation>
+    </message>
+    <message>
+        <source>Spent on: %1</source>
+        <translation>يُنفق على: %1</translation>
+    </message>
+    <message>
+        <source>Step 1 — Gather</source>
+        <translation>الخطوة 1 — اجمع</translation>
+    </message>
+    <message>
+        <source>Step 2 — Build</source>
+        <translation>الخطوة 2 — ابنِ</translation>
+    </message>
+    <message>
+        <source>Step 3 — Recruit</source>
+        <translation>الخطوة 3 — جنّد</translation>
+    </message>
+    <message>
+        <source>Step 4 — Keep an army</source>
+        <translation>الخطوة 4 — حافظ على جيش</translation>
+    </message>
+    <message>
+        <source>Your settlement runs itself</source>
+        <translation>مستوطنتك تدير نفسها</translation>
+    </message>
+    <message>
+        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
+        <translation>جنّد بنّاءً في ثكنة ثم أرسله ليجمع الخشب أو الحجر أو الحديد.</translation>
+    </message>
+    <message>
+        <source>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</source>
+        <translation>اختر بنّاءً، اضغط «اجمع»، ثم انقر على شجرة أو صخرة أو منجم. سينقل الحمولة إلى ساحة ثكنة ثم يعود لجلب المزيد.</translation>
+    </message>
+    <message>
+        <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
+        <translation>بعد اختيار بنّاء، اضغط «بناء» وضع منزلًا لرفع تعدادك، أو ثكنة للتجنيد منها.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</source>
+        <translation>اختر ثكنة وجنّد القوات. كل وحدة تكلّف تعدادًا وموارد، وكلاهما مبيّن على بطاقتها.</translation>
+    </message>
+    <message>
+        <source>Keep recruiting while your builders gather. Raise more Homes when population runs out.</source>
+        <translation>واصل التجنيد بينما يجمع بنّاؤوك. ابنِ منازل إضافية عندما ينفد التعداد.</translation>
+    </message>
+    <message>
+        <source>Gathering, building and recruiting are all under way.</source>
+        <translation>الجمع والبناء والتجنيد جارية كلها.</translation>
+    </message>
+</context>
+<context>
+    <name>EconomyHelpPanel</name>
+    <message>
+        <source>You have no builders. Recruit one at a barracks before you can gather or build.</source>
+        <translation>ليس لديك بنّاؤون. جنّد واحدًا في ثكنة قبل أن تتمكن من الجمع أو البناء.</translation>
+    </message>
+    <message>
+        <source>Builders: %1 (%2 idle). Placing a structure sends every selected builder to the site.</source>
+        <translation>البنّاؤون: %1 (%2 بلا عمل). عند وضع مبنى يتوجه كل بنّاء محدد إلى موقع البناء.</translation>
+    </message>
+    <message>
+        <source>Recruiting draws on the manpower held by each barracks.</source>
+        <translation>يستهلك التجنيد الأفراد المتاحين في كل ثكنة.</translation>
+    </message>
+    <message>
+        <source>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</source>
+        <translation>التعداد %1 / %2. يضيف المنزل %3 إلى أقرب ثكنة، ويضيف إدخال مدني إليها %4.</translation>
+    </message>
+    <message>
+        <source>Needs a barracks</source>
+        <translation>يتطلب ثكنة</translation>
+    </message>
+    <message>
+        <source>Needs a builder</source>
+        <translation>يتطلب بنّاءً</translation>
+    </message>
+    <message>
+        <source>Not enough manpower at the barracks</source>
+        <translation>لا يوجد أفراد كافون في الثكنة</translation>
+    </message>
+    <message>
+        <source>Population limit reached</source>
+        <translation>بلغت حد التعداد</translation>
+    </message>
+    <message>
+        <source>Missing %1</source>
+        <translation>ينقص: %1</translation>
+    </message>
+    <message>
+        <source>Economy guide</source>
+        <translation>دليل الاقتصاد</translation>
+    </message>
+    <message>
+        <source>Resources and Building</source>
+        <translation>الموارد والبناء</translation>
+    </message>
+    <message>
+        <source>Close the economy guide</source>
+        <translation>أغلق دليل الاقتصاد</translation>
+    </message>
+    <message>
+        <source>Gather with builders, spend what they bring on structures, recruit from a barracks, and keep both running.</source>
+        <translation>اجمع بالبنّائين، وأنفق ما يجلبونه على المباني، وجنّد من ثكنة، وأبقِ الاثنين مستمرين.</translation>
+    </message>
+    <message>
+        <source>WHAT EACH RESOURCE IS FOR</source>
+        <translation>فيمَ يُستخدم كل مورد</translation>
+    </message>
+    <message>
+        <source>Spent on: %1</source>
+        <translation>يُنفق على: %1</translation>
+    </message>
+    <message>
+        <source>WHAT A BUILDER CAN RAISE</source>
+        <translation>ما الذي يستطيع البنّاء تشييده</translation>
+    </message>
+    <message>
+        <source>%1 — %2 · %3s</source>
+        <translation>%1 — %2 · %3 ث</translation>
+    </message>
+    <message>
+        <source>WHAT A BARRACKS CAN RECRUIT</source>
+        <translation>ما الذي تستطيع الثكنة تجنيده</translation>
+    </message>
+    <message>
+        <source>%1 — %2 population, %3 · %4s</source>
+        <translation>%1 — %2 من التعداد، %3 · %4 ث</translation>
+    </message>
+    <message>
+        <source>Back to the battle</source>
+        <translation>عُد إلى المعركة</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2653,6 +2998,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source> (%1/%2)</source>
         <translation> (%1/%2)</translation>
+    </message>
+    <message>
+        <source>Resource and building guide</source>
+        <translation>دليل الموارد والبناء</translation>
     </message>
     <message>
         <source>Open the field manual (help)</source>
@@ -5141,48 +5490,12 @@ Opens for your troops and allies</source>
 تُفتح لقواتك وحلفائك</translation>
     </message>
     <message>
-        <source>wood</source>
-        <translation>خشب</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>حجر</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>حديد</translation>
-    </message>
-    <message>
-        <source>gold</source>
-        <translation>ذهب</translation>
-    </message>
-    <message>
         <source>%1 %2</source>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <source>%1 wood</source>
-        <translation>%1 خشب</translation>
-    </message>
-    <message>
-        <source>%1 stone</source>
-        <translation>%1 حجر</translation>
-    </message>
-    <message>
-        <source>%1 iron</source>
-        <translation>%1 حديد</translation>
-    </message>
-    <message>
-        <source>%1 gold</source>
-        <translation>%1 ذهب</translation>
-    </message>
-    <message>
         <source>Not enough available population</source>
         <translation>التعداد المتاح لا يكفي</translation>
-    </message>
-    <message>
-        <source>Not enough %1</source>
-        <translation>لا يكفي %1</translation>
     </message>
     <message>
         <source>Already building...</source>
@@ -5449,6 +5762,14 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Watches over a wide stretch of ground and holds a settlement together</source>
         <translation>يشرف على رقعة واسعة من الأرض ويشدّ المستوطنة إلى بعضها</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>طعام</translation>
+    </message>
+    <message>
+        <source>Need %1</source>
+        <translation>تحتاج: %1</translation>
     </message>
 </context>
 <context>

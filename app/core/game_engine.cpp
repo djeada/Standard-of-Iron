@@ -288,6 +288,8 @@ GameEngine::GameEngine(QObject* parent)
   App::ViewModels::ActivityHost& activity_host = *this;
   m_activity_view_model =
       std::make_unique<App::ViewModels::ActivityViewModel>(&activity_host, this);
+  m_economy_view_model = std::make_unique<App::ViewModels::EconomyViewModel>(this);
+  m_economy_refresh_timer.start();
   m_tutorial_director = std::make_unique<App::Core::TutorialDirector>(this);
   connect(m_tutorial_director.get(),
           &App::Core::TutorialDirector::start_requested,
@@ -1717,15 +1719,6 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
   if (m_input_handler) {
     m_input_handler->set_hover_at_screen(sx, sy, m_viewport);
   }
-  const bool civilian_delivery_available =
-      App::Core::FrameUiCoordinator::civilian_delivery_available(
-          {.world = m_world,
-           .hover_tracker = m_hover_tracker.get(),
-           .local_owner_id = m_runtime.local_owner_id});
-  if (m_civilian_delivery_available != civilian_delivery_available) {
-    m_civilian_delivery_available = civilian_delivery_available;
-    emit civilian_delivery_available_changed();
-  }
 
   if (m_cursor_manager == nullptr || m_picking_service == nullptr ||
       m_camera == nullptr) {
@@ -2061,6 +2054,7 @@ void GameEngine::update(float dt) {
   note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
   sync_scatter_world_props();
   sync_selected_player_state();
+  sync_economy_state();
   sync_attack_targeting();
   sync_attack_range_rings();
   sync_focus_targets();
@@ -2301,15 +2295,6 @@ void GameEngine::sync_selection_flags() {
   emit guard_mode_changed(any_selected_in_guard_mode());
   emit formation_mode_changed(m_placement_view_model->any_selected_in_formation_mode());
   emit run_mode_changed(any_selected_in_run_mode());
-  const bool civilian_delivery_available =
-      App::Core::FrameUiCoordinator::civilian_delivery_available(
-          {.world = m_world,
-           .hover_tracker = m_hover_tracker.get(),
-           .local_owner_id = m_runtime.local_owner_id});
-  if (m_civilian_delivery_available != civilian_delivery_available) {
-    m_civilian_delivery_available = civilian_delivery_available;
-    emit civilian_delivery_available_changed();
-  }
 }
 
 void GameEngine::sync_attack_range_rings() {
@@ -3639,6 +3624,7 @@ void GameEngine::reset_mission_runtime_state() {
   }
   Game::Systems::PlayerResourceRegistry::instance().clear();
   sync_selected_player_state();
+  reset_economy_coach();
   m_audio_coordinator->stop_mission_ambience();
   AudioSystem::get_instance().stop_music();
   AudioResourceLoader::unload_audio_resources(AudioLoadPolicy::Mission);
@@ -4230,6 +4216,127 @@ void GameEngine::sync_selected_player_state() {
   emit owner_info_changed();
 }
 
+namespace {
+
+constexpr qint64 k_economy_refresh_interval_ms = 250;
+
+} // namespace
+
+auto GameEngine::mission_objective_resources() const -> Game::Systems::ResourceAmounts {
+  Game::Systems::ResourceAmounts required;
+  if (!m_campaign_manager) {
+    return required;
+  }
+  const auto& mission = m_campaign_manager->current_mission_definition();
+  if (!mission.has_value()) {
+    return required;
+  }
+  const auto note = [&required](const std::vector<Game::Mission::Condition>& list) {
+    for (const auto& condition : list) {
+      if (!condition.resources.has_value()) {
+        continue;
+      }
+      for (const auto type : Game::Systems::k_all_resource_types) {
+        required.set(type,
+                     std::max(required.get(type), condition.resources->get(type)));
+      }
+    }
+  };
+  note(mission->victory_conditions);
+  note(mission->optional_objectives);
+  return required;
+}
+
+void GameEngine::reset_economy_coach() {
+  m_economy_coach_baseline = {};
+  m_economy_coach_available = false;
+  m_economy_resources.clear();
+  m_economy_help.clear();
+  m_economy_coach.clear();
+  if (m_economy_view_model) {
+    QMetaObject::invokeMethod(
+        m_economy_view_model.get(),
+        [view_model = m_economy_view_model.get()]() { view_model->clear(); },
+        Qt::QueuedConnection);
+  }
+}
+
+void GameEngine::sync_economy_state() {
+  if (!m_economy_view_model || m_world == nullptr || m_runtime.loading) {
+    return;
+  }
+  if (m_economy_refresh_timer.isValid() &&
+      m_economy_refresh_timer.elapsed() < k_economy_refresh_interval_ms) {
+    return;
+  }
+  m_economy_refresh_timer.restart();
+
+  int const owner_id =
+      m_selected_player_id > 0 ? m_selected_player_id : m_runtime.local_owner_id;
+  auto& nations = Game::Systems::NationRegistry::instance();
+  const auto* nation = nations.get_nation_for_player(owner_id);
+  const App::Core::EconomyOverviewRequest request{
+      .world = m_world,
+      .owner_id = owner_id,
+      .nation_id = nation != nullptr ? nation->id : nations.default_nation_id(),
+      .population_cap = m_level.max_troops_per_player,
+      .objective_resources = mission_objective_resources()};
+
+  const bool coach_available = !m_level.is_spectator_mode && !is_campaign_mission() &&
+                               owner_id == m_runtime.local_owner_id &&
+                               (nation == nullptr || nation->has_economy);
+  if (coach_available && !m_economy_coach_baseline.captured) {
+    m_economy_coach_baseline = App::Core::capture_economy_coach_baseline(request);
+  }
+
+  QVariantList resources = App::Core::build_resource_overview(request);
+  QVariantMap help = App::Core::build_production_help(request);
+  QVariantMap coach =
+      coach_available
+          ? App::Core::build_economy_coach_state(request, m_economy_coach_baseline)
+          : QVariantMap{};
+
+  const bool resources_changed = resources != m_economy_resources;
+  const bool help_changed = help != m_economy_help;
+  const bool coach_changed = coach != m_economy_coach;
+  const bool availability_changed = coach_available != m_economy_coach_available;
+  if (!resources_changed && !help_changed && !coach_changed && !availability_changed) {
+    return;
+  }
+  m_economy_coach_available = coach_available;
+  if (resources_changed) {
+    m_economy_resources = resources;
+  }
+  if (help_changed) {
+    m_economy_help = help;
+  }
+  if (coach_changed) {
+    m_economy_coach = coach;
+  }
+  QMetaObject::invokeMethod(
+      m_economy_view_model.get(),
+      [view_model = m_economy_view_model.get(),
+       resources = std::move(resources),
+       help = std::move(help),
+       coach = std::move(coach),
+       resources_changed,
+       help_changed,
+       coach_changed,
+       coach_available]() {
+        if (resources_changed) {
+          view_model->set_resources(resources);
+        }
+        if (help_changed) {
+          view_model->set_help(help);
+        }
+        if (coach_changed) {
+          view_model->set_coach(coach);
+        }
+        view_model->set_coach_available(coach_available);
+      },
+      Qt::QueuedConnection);
+}
+
 void GameEngine::sync_scatter_world_props() {
   auto& terrain_service = Game::Map::TerrainService::instance();
   if (m_scatter == nullptr || !terrain_service.is_initialized() ||
@@ -4686,6 +4793,10 @@ auto GameEngine::build_tutorial_observation() const -> App::Core::TutorialObserv
 
 auto GameEngine::activity_view_model() const -> QObject* {
   return m_activity_view_model.get();
+}
+
+auto GameEngine::economy_view_model() const -> QObject* {
+  return m_economy_view_model.get();
 }
 
 auto GameEngine::input_handler() const -> InputCommandHandler* {

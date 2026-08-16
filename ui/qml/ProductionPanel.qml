@@ -18,6 +18,9 @@ Rectangle {
 
     readonly property var recruit_unit_cards: ["archer", "swordsman", "spearman", "horse_swordsman", "horse_archer", "horse_spearman", "healer", "builder", "elephant"]
     readonly property var marketplace_trade_specs: [{
+            "key": "food",
+            "label": qsTr("Food")
+        }, {
             "key": "wood",
             "label": qsTr("Wood")
         }, {
@@ -151,32 +154,24 @@ Rectangle {
         return Math.max(0, costs[key] || 0);
     }
 
-    function missing_resource_names(costs) {
+    function missing_resource_amounts(costs) {
         var resources = current_resources();
-        var missing = [];
-        var ordered = [{
-                "key": "wood",
-                "label": qsTr("wood")
-            }, {
-                "key": "stone",
-                "label": qsTr("stone")
-            }, {
-                "key": "iron",
-                "label": qsTr("iron")
-            }, {
-                "key": "gold",
-                "label": qsTr("gold")
-            }];
-        for (var i = 0; i < ordered.length; ++i) {
-            var entry = ordered[i];
-            if (resource_amount(resources, entry.key) < resource_amount(costs, entry.key))
-                missing.push(entry.label);
+        var missing = {};
+        for (var i = 0; i < EconomyGuide.resourceOrder.length; ++i) {
+            var key = EconomyGuide.resourceOrder[i];
+            var shortfall = resource_amount(costs, key) - resource_amount(resources, key);
+            if (shortfall > 0)
+                missing[key] = shortfall;
         }
         return missing;
     }
 
     function can_afford_resource_costs(costs) {
-        return missing_resource_names(costs).length === 0;
+        return Object.keys(missing_resource_amounts(costs)).length === 0;
+    }
+
+    function missing_resource_reason(costs) {
+        return qsTr("Need %1").arg(EconomyGuide.missing_summary(missing_resource_amounts(costs)));
     }
 
     function cost_entries(popCost, resourceCosts, includePopulation) {
@@ -186,7 +181,7 @@ Rectangle {
                     "key": "population",
                     "amount": popCost
                 });
-        var ordered = ["wood", "stone", "iron", "gold"];
+        var ordered = EconomyGuide.resourceOrder;
         for (var i = 0; i < ordered.length; ++i) {
             var key = ordered[i];
             var amount = resource_amount(resourceCosts, key);
@@ -209,18 +204,12 @@ Rectangle {
         var parts = [];
         if (popCost > 0)
             parts.push(qsTr("%1 %2").arg(popCost).arg(populationLabel));
-        var woodCost = resource_amount(resourceCosts, "wood");
-        var stoneCost = resource_amount(resourceCosts, "stone");
-        var ironCost = resource_amount(resourceCosts, "iron");
-        var goldCost = resource_amount(resourceCosts, "gold");
-        if (woodCost > 0)
-            parts.push(qsTr("%1 wood").arg(woodCost));
-        if (stoneCost > 0)
-            parts.push(qsTr("%1 stone").arg(stoneCost));
-        if (ironCost > 0)
-            parts.push(qsTr("%1 iron").arg(ironCost));
-        if (goldCost > 0)
-            parts.push(qsTr("%1 gold").arg(goldCost));
+        for (var i = 0; i < EconomyGuide.resourceOrder.length; ++i) {
+            var key = EconomyGuide.resourceOrder[i];
+            var amount = resource_amount(resourceCosts, key);
+            if (amount > 0)
+                parts.push(qsTr("%1 %2").arg(amount).arg(EconomyGuide.resource_label(key)));
+        }
         return parts.join(", ");
     }
 
@@ -259,11 +248,10 @@ Rectangle {
                 "enabled": false,
                 "reason": qsTr("Not enough available population")
             };
-        var missing = missing_resource_names(unitInfo.resource_costs || {});
-        if (missing.length > 0)
+        if (!can_afford_resource_costs(unitInfo.resource_costs || {}))
             return {
                 "enabled": false,
-                "reason": qsTr("Not enough %1").arg(missing.join(", "))
+                "reason": missing_resource_reason(unitInfo.resource_costs || {})
             };
         return {
             "enabled": true,
@@ -277,11 +265,10 @@ Rectangle {
                 "enabled": false,
                 "reason": qsTr("Already building...")
             };
-        var missing = missing_resource_names(constructionInfo.resource_costs || {});
-        if (missing.length > 0)
+        if (!can_afford_resource_costs(constructionInfo.resource_costs || {}))
             return {
                 "enabled": false,
-                "reason": qsTr("Not enough %1").arg(missing.join(", "))
+                "reason": missing_resource_reason(constructionInfo.resource_costs || {})
             };
         return {
             "enabled": true,
