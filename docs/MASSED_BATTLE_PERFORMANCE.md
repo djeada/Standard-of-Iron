@@ -499,3 +499,34 @@ happened with the session active. Interleaved A/B still holds within a state
 section), but no absolute combat number from a locked-screen run should be
 quoted, and the earlier "GPU-bound at 100% utilisation" reading was taken in
 that state.
+
+## Filming the battle
+
+`tools/arena/promos/massed_battle.json` is the reel for this scenario: seven
+authored shots over one deterministic run of `massed_battle_1000` (both hosts
+from behind the blue line, the sword line advancing, the left cavalry column
+going in, the sword lines meeting, the horse reaching the archers, the press
+at half speed, and a crane out over the whole field), captured at 1080p60 with
+2× supersampling and cut with the shared editorial pipeline:
+
+```bash
+build/bin/arena_app --promo-spec tools/arena/promos/massed_battle.json \
+  --promo-out artifacts/promo
+scripts/promo-edit.py --spec tools/arena/promos/massed_battle.json \
+  --clips artifacts/promo/massed_battle
+```
+
+The shot windows were read out of `trace.jsonl` rather than guessed: the sword
+lines cover the 22 m between them in ~7.5 s, the left cavalry columns cross
+each other around 3-4 s and reach the archers at ~8 s, and the melee is dense
+from ~12 s. `duration` beyond the scenario's 16 s is legal — the runner extends
+the scenario for the last shot. Cameras stay on the west (yaw 250-320) side
+for the close shots so the two colours read left/right rather than
+front/back, and every close shot uses `group_pair` focus so a wiped-out squad
+cannot leave the lens on empty grass.
+
+The scenario is a performance fixture rather than a dressed capture stage, so
+terrain scatter stays on; the low-resolution framing pass
+(`--promo-spec` at 640×360, then first/middle/last frames of every clip
+tiled with ffmpeg) is what caught the two shots that opened behind a pine and
+the crane that flew above the mountain ring.

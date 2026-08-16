@@ -1,0 +1,258 @@
+{
+  "id": "massed_battle",
+  "title": "ONE THOUSAND AGAINST ONE THOUSAND",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 2,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.35
+  },
+  "shots": [
+    {
+      "name": "two_hosts",
+      "scenario": "massed_battle_1000",
+      "start": 0.0,
+      "duration": 4.0,
+      "focus": {
+        "mode": "point",
+        "point": [
+          0.0,
+          0.0,
+          -6.0
+        ]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 58,
+          "pitch": 30,
+          "yaw": 190,
+          "fov": 44,
+          "height": 1.5
+        },
+        {
+          "time": 4.0,
+          "distance": 46,
+          "pitch": 24,
+          "yaw": 204,
+          "fov": 44,
+          "height": 1.5,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "TWO THOUSAND SOLDIERS ON ONE FIELD"
+    },
+    {
+      "name": "the_advance",
+      "scenario": "massed_battle_1000",
+      "start": 2.8,
+      "duration": 3.2,
+      "transition": {
+        "type": "cut"
+      },
+      "focus": {
+        "mode": "group",
+        "group": "blue_swords_a",
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12.5,
+          "pitch": 10,
+          "yaw": 38,
+          "fov": 46,
+          "height": 1.6
+        },
+        {
+          "time": 3.2,
+          "distance": 10.5,
+          "pitch": 12,
+          "yaw": 22,
+          "fov": 46,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ],
+      "caption": "THE LINES GO FORWARD"
+    },
+    {
+      "name": "cavalry_charge",
+      "scenario": "massed_battle_1000",
+      "start": 2.2,
+      "duration": 2.6,
+      "shake": 0.03,
+      "focus": {
+        "mode": "group",
+        "group": "blue_cavalry_left",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12,
+          "pitch": 9,
+          "yaw": 208,
+          "fov": 50,
+          "height": 1.7,
+          "roll": -3
+        },
+        {
+          "time": 2.6,
+          "distance": 10.5,
+          "pitch": 11,
+          "yaw": 238,
+          "fov": 50,
+          "height": 1.7,
+          "roll": 3,
+          "ease": "linear"
+        }
+      ],
+      "caption": "THE HORSE GOES IN"
+    },
+    {
+      "name": "lines_collide",
+      "scenario": "massed_battle_1000",
+      "start": 7.2,
+      "duration": 3.0,
+      "slow_motion": 1.6,
+      "shake": 0.02,
+      "focus": {
+        "mode": "group_pair",
+        "group": "blue_swords_a",
+        "second_group": "red_swords_a",
+        "smoothing": 0.35
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 12.5,
+          "pitch": 14,
+          "yaw": 262,
+          "fov": 48,
+          "height": 1.7
+        },
+        {
+          "time": 3.0,
+          "distance": 9.5,
+          "pitch": 17,
+          "yaw": 282,
+          "fov": 48,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "CONTACT"
+    },
+    {
+      "name": "into_the_archers",
+      "scenario": "massed_battle_1000",
+      "start": 8.4,
+      "duration": 2.4,
+      "slow_motion": 2.0,
+      "shake": 0.05,
+      "focus": {
+        "mode": "group_pair",
+        "group": "blue_cavalry_left",
+        "second_group": "red_archers_a",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.5,
+          "pitch": 12,
+          "yaw": 250,
+          "fov": 52,
+          "height": 1.6
+        },
+        {
+          "time": 2.4,
+          "distance": 8.0,
+          "pitch": 15,
+          "yaw": 268,
+          "fov": 52,
+          "height": 1.6,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "the_press",
+      "scenario": "massed_battle_1000",
+      "start": 12.0,
+      "duration": 3.0,
+      "slow_motion": 1.5,
+      "shake": 0.03,
+      "focus": {
+        "mode": "group_pair",
+        "group": "blue_spears_a",
+        "second_group": "red_swords_a",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 9.0,
+          "pitch": 16,
+          "yaw": 296,
+          "fov": 48,
+          "height": 1.5
+        },
+        {
+          "time": 3.0,
+          "distance": 8.0,
+          "pitch": 19,
+          "yaw": 316,
+          "fov": 48,
+          "height": 1.5,
+          "ease": "linear"
+        }
+      ],
+      "caption": "SHIELD ON SHIELD"
+    },
+    {
+      "name": "the_field",
+      "scenario": "massed_battle_1000",
+      "start": 14.0,
+      "duration": 5.5,
+      "focus": {
+        "mode": "all",
+        "smoothing": 0.8
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 20,
+          "pitch": 16,
+          "yaw": 300,
+          "fov": 44,
+          "height": 1.5
+        },
+        {
+          "time": 5.5,
+          "distance": 48,
+          "pitch": 30,
+          "yaw": 268,
+          "fov": 44,
+          "height": 1.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "EVERY SOLDIER DRAWN. EVERY FRAME."
+    }
+  ],
+  "grade": {
+    "contrast": 1.1,
+    "saturation": 1.08,
+    "brightness": 0.03,
+    "gamma": 1.1,
+    "grain": 4,
+    "vignette": 0.08
+  },
+  "music": "assets/audio/music/combat/combat_cavalry_flank_fast.ogg",
+  "music_start": 8.0
+}

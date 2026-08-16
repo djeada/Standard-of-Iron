@@ -250,6 +250,12 @@ Shot fields:
 gameplay-camera shots with the bow HUD on, cut end to end across one
 deterministic run of nine aimed kills.
 
+`tools/arena/promos/massed_battle.json` films `massed_battle_1000` — the
+2,000-soldier full-LOD performance fixture — as a seven-shot reel, its windows
+read out of the scenario trace so the cavalry, the line contact and the press
+are each cut to the second they happen. See "Filming the battle" in
+[docs/MASSED_BATTLE_PERFORMANCE.md](../../docs/MASSED_BATTLE_PERFORMANCE.md).
+
 `promo_commander_duel` stages single combat for filming: both armies drawn up in
 line as spectators, a ring of low hills closing the horizon, and Scipio against
 Hannibal in the ground between them until Hannibal falls. It is the scene to
