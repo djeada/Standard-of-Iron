@@ -144,7 +144,7 @@ Rectangle {
             text: qsTr("Loading...")
             color: Theme.textMain
             font.family: "serif"
-            font.pixelSize: 40
+            font.pixelSize: Design.Typography.hero
             font.bold: true
             font.letterSpacing: 4
             style: Text.Outline
@@ -268,7 +268,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: Design.Numerals.percent(Math.floor(load_screen.display_progress * 100))
                 color: Theme.textMain
-                font.pixelSize: 14
+                font.pixelSize: Design.Typography.label
                 font.bold: true
                 font.letterSpacing: 1.2
                 style: Text.Outline
@@ -280,7 +280,7 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             text: load_screen.stage_text
             color: Theme.textSubLite
-            font.pixelSize: 14
+            font.pixelSize: Design.Typography.label
             font.letterSpacing: 0.6
         }
     }

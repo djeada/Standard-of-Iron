@@ -102,7 +102,7 @@ Item {
                 Label {
                     text: qsTr("Settings")
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeHero
+                    font.pixelSize: Design.Typography.hero
                     font.bold: true
                     Layout.fillWidth: true
                 }
@@ -138,7 +138,7 @@ Item {
                         Label {
                             text: qsTr("Audio Settings")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeLarge
+                            font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
 
@@ -158,7 +158,7 @@ Item {
                             Label {
                                 text: qsTr("Master Volume:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -181,7 +181,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.percent(master_volume_slider.value)
                                     color: Theme.textSub
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
                                 }
                             }
@@ -189,7 +189,7 @@ Item {
                             Label {
                                 text: qsTr("Music Volume:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -212,7 +212,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.percent(music_volume_slider.value)
                                     color: Theme.textSub
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
                                 }
                             }
@@ -220,7 +220,7 @@ Item {
                             Label {
                                 text: qsTr("SFX Volume:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -243,7 +243,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.percent(sfx_volume_slider.value)
                                     color: Theme.textSub
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
                                 }
                             }
@@ -251,7 +251,7 @@ Item {
                             Label {
                                 text: qsTr("Voice Volume:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -274,7 +274,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.percent(voice_volume_slider.value)
                                     color: Theme.textSub
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
                                 }
                             }
@@ -282,7 +282,7 @@ Item {
                             Label {
                                 text: qsTr("Ambience Volume:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -305,7 +305,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.percent(ambience_volume_slider.value)
                                     color: Theme.textSub
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.minimumWidth: 88
                                 }
                             }
@@ -325,7 +325,7 @@ Item {
                         Label {
                             text: qsTr("Graphics Settings")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeLarge
+                            font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
 
@@ -345,7 +345,7 @@ Item {
                             Label {
                                 text: qsTr("Graphics Quality:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             StyledComboBox {
@@ -363,7 +363,7 @@ Item {
                             Label {
                                 text: typeof graphics_settings !== 'undefined' ? graphics_settings.get_quality_description() : ""
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 opacity: 0.7
                                 wrapMode: Text.WordWrap
                                 Layout.columnSpan: 2
@@ -385,7 +385,7 @@ Item {
                         Label {
                             text: qsTr("Controls")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeLarge
+                            font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
 
@@ -413,7 +413,7 @@ Item {
                             Label {
                                 text: qsTr("Edge scroll strength:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                                 enabled: UiPreferences.edgeScrollEnabled
                             }
 
@@ -437,7 +437,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.percent(edge_scroll_slider.value * 100)
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
@@ -448,7 +448,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: qsTr("Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.").arg(Math.round(EdgeScroll.horizontalZone(edge_scroll_slider.value, UiPreferences.uiScale))).arg(Math.round(EdgeScroll.verticalZone(edge_scroll_slider.value, UiPreferences.uiScale)))
                                 color: Theme.textDim
-                                font.pointSize: Theme.fontSizeTiny
+                                font.pixelSize: Design.Typography.label
                                 wrapMode: Text.WordWrap
                                 enabled: UiPreferences.edgeScrollEnabled
                             }
@@ -472,7 +472,7 @@ Item {
                         Label {
                             text: qsTr("Autosave")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeLarge
+                            font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
 
@@ -492,7 +492,7 @@ Item {
                             Label {
                                 text: qsTr("Autosaves to keep:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -517,7 +517,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.roman(autosave_slot_slider.value)
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 56
                                     horizontalAlignment: Text.AlignRight
                                 }
@@ -526,7 +526,7 @@ Item {
                             Label {
                                 text: qsTr("Autosave every:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -551,7 +551,7 @@ Item {
                                 Label {
                                     text: autosave_interval_slider.value <= 0 ? qsTr("Off") : qsTr("%1 min").arg(Design.Numerals.roman(autosave_interval_slider.value))
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 104
                                     horizontalAlignment: Text.AlignRight
                                 }
@@ -560,7 +560,7 @@ Item {
                             Label {
                                 text: qsTr("Older autosaves beyond this count are deleted automatically.")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 opacity: 0.7
                                 wrapMode: Text.WordWrap
                                 Layout.columnSpan: 2
@@ -582,7 +582,7 @@ Item {
                         Label {
                             text: qsTr("Accessibility")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeLarge
+                            font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
 
@@ -602,7 +602,7 @@ Item {
                             Label {
                                 text: qsTr("Interface Scale:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -624,7 +624,7 @@ Item {
                                 Label {
                                     text: Design.Numerals.percent(ui_scale_slider.value * 100)
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
@@ -633,7 +633,7 @@ Item {
                             Label {
                                 text: qsTr("Colour Vision:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             StyledComboBox {
@@ -695,7 +695,7 @@ Item {
                             Label {
                                 text: qsTr("Screen effects:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -717,7 +717,7 @@ Item {
                                 Label {
                                     text: screen_effect_slider.value <= 0 ? qsTr("Off") : Design.Numerals.percent(screen_effect_slider.value * 100)
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
@@ -726,7 +726,7 @@ Item {
                             Label {
                                 text: qsTr("Camera motion:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             RowLayout {
@@ -748,7 +748,7 @@ Item {
                                 Label {
                                     text: camera_motion_slider.value <= 0 ? qsTr("Off") : Design.Numerals.percent(camera_motion_slider.value * 100)
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     Layout.preferredWidth: 96
                                     horizontalAlignment: Text.AlignRight
                                 }
@@ -757,7 +757,7 @@ Item {
                             Label {
                                 text: qsTr("Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 opacity: 0.7
                                 wrapMode: Text.WordWrap
                                 Layout.columnSpan: 2
@@ -767,7 +767,7 @@ Item {
                             Label {
                                 text: qsTr("These settings apply to the campaign, skirmish and editor tools alike.")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 opacity: 0.7
                                 wrapMode: Text.WordWrap
                                 Layout.columnSpan: 2
@@ -789,7 +789,7 @@ Item {
                         Label {
                             text: qsTr("Language")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeLarge
+                            font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
 
@@ -809,7 +809,7 @@ Item {
                             Label {
                                 text: qsTr("Select Language:")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                             }
 
                             StyledComboBox {
@@ -840,7 +840,7 @@ Item {
                             Label {
                                 text: qsTr("Language changes apply immediately")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 opacity: 0.7
                                 Layout.columnSpan: 2
                             }
@@ -860,7 +860,7 @@ Item {
                         Label {
                             text: qsTr("About")
                             color: Theme.textMain
-                            font.pointSize: Theme.fontSizeLarge
+                            font.pixelSize: Design.Typography.subheading
                             font.bold: true
                         }
 
@@ -878,14 +878,14 @@ Item {
                             Label {
                                 text: qsTr("Standard of Iron - RTS Game")
                                 color: Theme.textMain
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                                 font.bold: true
                             }
 
                             Label {
                                 text: qsTr("Version %1").arg(Qt.application.version)
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                             }
 
                             Rectangle {
@@ -900,14 +900,14 @@ Item {
                             Label {
                                 text: qsTr("Third-Party Software")
                                 color: Theme.textMain
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                                 font.bold: true
                             }
 
                             Label {
                                 text: qsTr("This game uses the Qt framework, licensed under the GNU Lesser General Public License v3 (LGPL v3).")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -915,7 +915,7 @@ Item {
                             Label {
                                 text: qsTr("Qt is dynamically linked, allowing you to replace Qt libraries with your own versions.")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -923,7 +923,7 @@ Item {
                             Label {
                                 text: "<a href='https://www.gnu.org/licenses/lgpl-3.0.html'>" + qsTr("LGPL v3 License") + "</a> | <a href='https://www.qt.io'>" + qsTr("Qt Website") + "</a>"
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 textFormat: Text.RichText
                                 onLinkActivated: function (link) {
                                     Qt.openUrlExternally(link);
@@ -939,7 +939,7 @@ Item {
                             Label {
                                 text: qsTr("Music generated with Meta's AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -947,7 +947,7 @@ Item {
                             Label {
                                 text: qsTr("Voice lines recorded by Adam Djellouli.")
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -955,7 +955,7 @@ Item {
                             Label {
                                 text: "<a href='https://creativecommons.org/licenses/by-nc/4.0/'>" + qsTr("CC BY-NC 4.0 License") + "</a> | <a href='https://github.com/facebookresearch/audiocraft'>" + qsTr("AudioCraft") + "</a>"
                                 color: Theme.textSub
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 textFormat: Text.RichText
                                 onLinkActivated: function (link) {
                                     Qt.openUrlExternally(link);

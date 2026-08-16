@@ -219,7 +219,7 @@ Rectangle {
                             return mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "";
                         }
                         color: Theme.textMain
-                        font.pointSize: Theme.fontSizeTitle
+                        font.pixelSize: Design.Typography.heading
                         font.bold: true
                         font.family: "serif"
                         Layout.fillWidth: true
@@ -245,7 +245,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 text: command_glyph
                                 color: "#f2dfba"
-                                font.pointSize: Theme.fontSizeTiny
+                                font.pixelSize: Design.Typography.label
                                 font.bold: true
                             }
                         }
@@ -276,7 +276,7 @@ Rectangle {
                                             return "";
                                         return Design.Icons.terrain(mission_definition.terrain_type);
                                     }
-                                    font.pointSize: Theme.fontSizeSmall
+                                    font.pixelSize: Design.Typography.body
                                 }
 
                                 Label {
@@ -286,7 +286,7 @@ Rectangle {
                                         return terrain_label(mission_definition.terrain_type);
                                     }
                                     color: "#ffffff"
-                                    font.pointSize: Theme.fontSizeTiny
+                                    font.pixelSize: Design.Typography.label
                                     font.bold: true
                                 }
                             }
@@ -299,7 +299,7 @@ Rectangle {
                         color: Theme.textSubLite
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
-                        font.pointSize: Theme.fontSizeMedium
+                        font.pixelSize: Design.Typography.bodyLarge
                         font.family: "serif"
                     }
 
@@ -321,7 +321,7 @@ Rectangle {
 
                             Label {
                                 text: Design.Icons.briefing
-                                font.pointSize: Theme.fontSizeMedium
+                                font.pixelSize: Design.Typography.bodyLarge
                                 Layout.alignment: Qt.AlignTop
                             }
 
@@ -332,7 +332,7 @@ Rectangle {
                                 color: Theme.textSubLite
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
-                                font.pointSize: Theme.fontSizeTiny
+                                font.pixelSize: Design.Typography.label
                                 font.italic: true
                                 font.family: "serif"
                             }
@@ -351,7 +351,7 @@ Rectangle {
                                 return qsTr("Campaign Objectives:");
                             }
                             color: Theme.textDim
-                            font.pointSize: Theme.fontSizeSmall
+                            font.pixelSize: Design.Typography.body
                             font.bold: true
                         }
 
@@ -365,7 +365,7 @@ Rectangle {
                             delegate: Label {
                                 text: "• " + (modelData.description || qsTr("Complete mission objective"))
                                 color: Theme.textSubLite
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -375,7 +375,7 @@ Rectangle {
                             visible: !!(mission_definition && mission_definition.optional_objectives && mission_definition.optional_objectives.length > 0)
                             text: qsTr("Optional:")
                             color: Theme.textDim
-                            font.pointSize: Theme.fontSizeTiny
+                            font.pixelSize: Design.Typography.label
                             font.bold: true
                         }
 
@@ -389,7 +389,7 @@ Rectangle {
                             delegate: Label {
                                 text: "• " + (modelData.description || qsTr("Complete optional objective"))
                                 color: Theme.textSubLite
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -399,7 +399,7 @@ Rectangle {
                             visible: !!(mission_definition && mission_definition.defeat_conditions && mission_definition.defeat_conditions.length > 0)
                             text: qsTr("Failure:")
                             color: Theme.textDim
-                            font.pointSize: Theme.fontSizeTiny
+                            font.pixelSize: Design.Typography.label
                             font.bold: true
                         }
 
@@ -413,7 +413,7 @@ Rectangle {
                             delegate: Label {
                                 text: "• " + (modelData.description || qsTr("Avoid mission failure"))
                                 color: Theme.textSubLite
-                                font.pointSize: Theme.fontSizeSmall
+                                font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
                             }
@@ -423,7 +423,7 @@ Rectangle {
                             visible: !mission_definition || objectives_empty()
                             text: qsTr("• Complete the mission successfully")
                             color: Theme.textSubLite
-                            font.pointSize: Theme.fontSizeSmall
+                            font.pixelSize: Design.Typography.body
                         }
                     }
 
@@ -435,7 +435,7 @@ Rectangle {
                         Label {
                             text: qsTr("Army Composition:")
                             color: Theme.textDim
-                            font.pointSize: Theme.fontSizeSmall
+                            font.pixelSize: Design.Typography.body
                             font.bold: true
                         }
 
@@ -478,7 +478,7 @@ Rectangle {
                                         anchors.centerIn: parent
                                         text: Design.Numerals.roman(modelData.count) + "x " + titleize(modelData.type)
                                         color: Theme.infoText
-                                        font.pointSize: Theme.fontSizeTiny
+                                        font.pixelSize: Design.Typography.label
                                     }
                                 }
                             }
@@ -492,7 +492,7 @@ Rectangle {
                         Label {
                             text: qsTr("Historical Ledger:")
                             color: Theme.textDim
-                            font.pointSize: Theme.fontSizeSmall
+                            font.pixelSize: Design.Typography.body
                             font.bold: true
                         }
 
@@ -523,7 +523,7 @@ Rectangle {
                                         anchors.centerIn: parent
                                         text: modelData.text
                                         color: Theme.textSubLite
-                                        font.pointSize: Theme.fontSizeTiny
+                                        font.pixelSize: Design.Typography.label
                                     }
                                 }
                             }
@@ -578,7 +578,7 @@ Rectangle {
                                 Label {
                                     text: commander_title
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeSmall
+                                    font.pixelSize: Design.Typography.body
                                     font.bold: true
                                     font.family: "serif"
                                     Layout.fillWidth: true
@@ -588,7 +588,7 @@ Rectangle {
                                 Label {
                                     text: root.player_commander && root.player_commander.display_name ? root.player_commander.display_name : root.command_banner_text
                                     color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeMedium
+                                    font.pixelSize: Design.Typography.bodyLarge
                                     font.bold: true
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
@@ -597,7 +597,7 @@ Rectangle {
                                 Label {
                                     text: root.player_commander && root.player_commander.battlefield_role ? root.player_commander.battlefield_role : root.commander_title
                                     color: Theme.textDim
-                                    font.pointSize: Theme.fontSizeTiny
+                                    font.pixelSize: Design.Typography.label
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
                                 }
@@ -607,7 +607,7 @@ Rectangle {
                                     text: root.player_commander && root.player_commander.bonus_summary ? root.player_commander.bonus_summary : ""
                                     color: Theme.textSubLite
                                     wrapMode: Text.WordWrap
-                                    font.pointSize: Theme.fontSizeTiny
+                                    font.pixelSize: Design.Typography.label
                                     Layout.fillWidth: true
                                 }
 
@@ -615,7 +615,7 @@ Rectangle {
                                     text: root.reward_summary
                                     color: Theme.textSubLite
                                     wrapMode: Text.WordWrap
-                                    font.pointSize: Theme.fontSizeTiny
+                                    font.pixelSize: Design.Typography.label
                                     Layout.fillWidth: true
                                 }
 
@@ -623,7 +623,7 @@ Rectangle {
                                     visible: root.opposing_forces.length > 0
                                     text: qsTr("Opposition Command")
                                     color: Theme.textDim
-                                    font.pointSize: Theme.fontSizeSmall
+                                    font.pixelSize: Design.Typography.body
                                     font.bold: true
                                     Layout.fillWidth: true
                                 }
@@ -654,7 +654,7 @@ Rectangle {
                                                 Label {
                                                     text: root.command_glyph_for_setup(modelData)
                                                     color: "#c29555"
-                                                    font.pointSize: Theme.fontSizeSmall
+                                                    font.pixelSize: Design.Typography.body
                                                     font.bold: true
                                                 }
 
@@ -662,7 +662,7 @@ Rectangle {
                                                     Layout.fillWidth: true
                                                     text: modelData.commander && modelData.commander.display_name ? modelData.commander.display_name : qsTr("Field Command Pending")
                                                     color: Theme.textMain
-                                                    font.pointSize: Theme.fontSizeSmall
+                                                    font.pixelSize: Design.Typography.body
                                                     font.bold: true
                                                     wrapMode: Text.WordWrap
                                                 }
@@ -672,7 +672,7 @@ Rectangle {
                                                 Layout.fillWidth: true
                                                 text: root.setup_summary(modelData)
                                                 color: Theme.textDim
-                                                font.pointSize: Theme.fontSizeTiny
+                                                font.pixelSize: Design.Typography.label
                                                 wrapMode: Text.WordWrap
                                                 visible: text.length > 0
                                             }
@@ -681,7 +681,7 @@ Rectangle {
                                                 Layout.fillWidth: true
                                                 text: modelData.commander && modelData.commander.battlefield_role ? modelData.commander.battlefield_role : root.command_banner_for_setup(modelData)
                                                 color: Theme.textSubLite
-                                                font.pointSize: Theme.fontSizeTiny
+                                                font.pixelSize: Design.Typography.label
                                                 wrapMode: Text.WordWrap
                                             }
 
@@ -689,7 +689,7 @@ Rectangle {
                                                 Layout.fillWidth: true
                                                 text: modelData.commander && modelData.commander.bonus_summary ? modelData.commander.bonus_summary : qsTr("No named commander assigned to this force.")
                                                 color: Theme.textSubLite
-                                                font.pointSize: Theme.fontSizeTiny
+                                                font.pixelSize: Design.Typography.label
                                                 wrapMode: Text.WordWrap
                                             }
                                         }
@@ -718,7 +718,7 @@ Rectangle {
                     text: mission_data && !mission_data.unlocked ? qsTr("Orders sealed until prior victories are secured.") : (mission_data && mission_data.completed ? qsTr("Victory recorded. You may replay this engagement at will.") : qsTr("Orders issued. Deploy when ready."))
                     color: Theme.textSubLite
                     wrapMode: Text.WordWrap
-                    font.pointSize: Theme.fontSizeTiny
+                    font.pixelSize: Design.Typography.label
                     verticalAlignment: Text.AlignVCenter
                 }
             }
@@ -742,7 +742,7 @@ Rectangle {
 
                     Label {
                         text: Design.Icons.objective
-                        font.pointSize: Theme.fontSizeMedium
+                        font.pixelSize: Design.Typography.bodyLarge
                         Layout.alignment: Qt.AlignTop
                     }
 
@@ -751,7 +751,7 @@ Rectangle {
                         color: Theme.textSubLite
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
-                        font.pointSize: Theme.fontSizeTiny
+                        font.pixelSize: Design.Typography.label
                     }
                 }
             }
@@ -776,7 +776,7 @@ Rectangle {
                 visible: !!(mission_data && !mission_data.unlocked)
                 text: Design.Icons.locked + " " + qsTr("Locked")
                 color: Theme.textDim
-                font.pointSize: Theme.fontSizeSmall
+                font.pixelSize: Design.Typography.body
                 horizontalAlignment: Text.AlignHCenter
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -785,7 +785,7 @@ Rectangle {
                 visible: !!(mission_data && mission_data.completed)
                 text: qsTr("✓ Completed")
                 color: Theme.successText
-                font.pointSize: Theme.fontSizeSmall
+                font.pixelSize: Design.Typography.body
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
                 Layout.alignment: Qt.AlignHCenter

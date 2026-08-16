@@ -97,7 +97,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: mission_data ? Design.Numerals.ordinal(mission_data.order_index) : "?"
                 color: "#f5e7c5"
-                font.pointSize: Theme.fontSizeMedium
+                font.pixelSize: Design.Typography.bodyLarge
                 font.bold: true
             }
         }
@@ -115,7 +115,7 @@ Rectangle {
                 Label {
                     text: mission_glyph_prefix + root.mission_title
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeMedium
+                    font.pixelSize: Design.Typography.bodyLarge
                     font.bold: true
                     font.family: "serif"
                     Layout.fillWidth: true
@@ -139,7 +139,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: qsTr("✓ Archived")
                         color: Theme.successText
-                        font.pointSize: Theme.fontSizeTiny
+                        font.pixelSize: Design.Typography.label
                         font.bold: true
                     }
                 }
@@ -159,7 +159,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: Design.Icons.locked + " " + qsTr("Sealed")
                         color: Theme.textDim
-                        font.pointSize: Theme.fontSizeTiny
+                        font.pixelSize: Design.Typography.label
                     }
                 }
 
@@ -178,7 +178,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: qsTr("Open Order")
                         color: Theme.infoText
-                        font.pointSize: Theme.fontSizeTiny
+                        font.pixelSize: Design.Typography.label
                         font.bold: true
                     }
                 }
@@ -193,7 +193,7 @@ Rectangle {
                 maximumLineCount: 2
                 elide: Text.ElideRight
                 Layout.fillWidth: true
-                font.pointSize: Theme.fontSizeSmall
+                font.pixelSize: Design.Typography.body
                 font.family: "serif"
             }
 
@@ -204,7 +204,7 @@ Rectangle {
                 Label {
                     text: qsTr("Difficulty:")
                     color: Theme.textDim
-                    font.pointSize: Theme.fontSizeTiny
+                    font.pixelSize: Design.Typography.label
                 }
 
                 Repeater {
@@ -223,7 +223,7 @@ Rectangle {
 
                         text: index < filled ? "★" : "☆"
                         color: index < filled ? Theme.warningText : Theme.textDim
-                        font.pointSize: Theme.fontSizeTiny
+                        font.pixelSize: Design.Typography.label
                     }
                 }
             }
@@ -233,7 +233,7 @@ Rectangle {
             id: advanceArrow
 
             text: "➤"
-            font.pointSize: Theme.fontSizeTitle
+            font.pixelSize: Design.Typography.heading
             color: "#c29555"
             Layout.alignment: Qt.AlignVCenter
 

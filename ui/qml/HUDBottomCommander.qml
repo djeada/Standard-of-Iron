@@ -230,14 +230,14 @@ RowLayout {
                     Text {
                         text: qsTr("COMMANDER")
                         color: hs.bronze
-                        font.pointSize: 9
+                        font.pixelSize: Design.Typography.caption
                         font.bold: true
                     }
 
                     Text {
                         text: bottomRoot.status_value("name", qsTr("Commander"))
                         color: Theme.textMain
-                        font.pointSize: 12
+                        font.pixelSize: Design.Typography.body
                         font.bold: true
                         elide: Text.ElideRight
                     }
@@ -245,7 +245,7 @@ RowLayout {
                     Text {
                         text: bottomRoot.status_value("nation", "") !== "" ? bottomRoot.status_value("nation", "") : qsTr("Frontline command")
                         color: Theme.textSubLite
-                        font.pointSize: 9
+                        font.pixelSize: Design.Typography.caption
                         elide: Text.ElideRight
                     }
                 }
@@ -282,7 +282,7 @@ RowLayout {
                             anchors.verticalCenter: parent.verticalCenter
                             text: bottomRoot.status_value("aura_active", false) ? qsTr("Aura active") : (bottomRoot.status_value("aura_ready", false) ? qsTr("Aura ready") : qsTr("Aura cooling"))
                             color: Theme.textMain
-                            font.pointSize: 7
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                         }
                     }
@@ -305,7 +305,7 @@ RowLayout {
                         Text {
                             text: qsTr("HP %1/%2").arg(bottomRoot.status_value("health", 0)).arg(bottomRoot.status_value("max_health", 0))
                             color: Theme.textMain
-                            font.pointSize: 8
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                         }
 
@@ -334,7 +334,7 @@ RowLayout {
                         Text {
                             text: bottomRoot.status_value("can_run", false) ? qsTr("STM %1%").arg(Math.round(Number(bottomRoot.status_value("stamina_ratio", 1)) * 100)) : qsTr("Stable")
                             color: Theme.textMain
-                            font.pointSize: 8
+                            font.pixelSize: Design.Typography.caption
                             font.bold: true
                         }
 
@@ -359,7 +359,7 @@ RowLayout {
                 Text {
                     text: qsTr("Posture")
                     color: Theme.textMain
-                    font.pointSize: 8
+                    font.pixelSize: Design.Typography.caption
                 }
 
                 Rectangle {
@@ -384,7 +384,7 @@ RowLayout {
                 visible: !bottomRoot.fpv_mode
                 text: qsTr("State: %1").arg(bottomRoot.stance_label())
                 color: Theme.textSubLite
-                font.pointSize: 8
+                font.pixelSize: Design.Typography.caption
                 wrapMode: Text.WordWrap
                 maximumLineCount: 1
                 elide: Text.ElideRight
@@ -394,7 +394,7 @@ RowLayout {
                 visible: !bottomRoot.fpv_mode
                 text: bottomRoot.status_value("perfect_guard_active", false) ? qsTr("Perfect guard live") : (bottomRoot.status_value("finisher_ready", false) ? qsTr("Finisher primed") : (bottomRoot.fpv_mode ? qsTr("Aura %1").arg(bottomRoot.status_value("aura_active", false) ? qsTr("empowers nearby troops") : qsTr("is recovering")) : qsTr("Camera: %1").arg(bottomRoot.status_value("camera_mode", qsTr("Chase")))))
                 color: Theme.textSubLite
-                font.pointSize: 9
+                font.pixelSize: Design.Typography.caption
                 wrapMode: Text.WordWrap
             }
         }
@@ -417,7 +417,7 @@ RowLayout {
             Text {
                 text: bottomRoot.fpv_mode ? qsTr("ORDERS") : qsTr("ABILITIES")
                 color: hs.bronze
-                font.pointSize: 9
+                font.pixelSize: Design.Typography.caption
                 font.bold: true
             }
 
@@ -440,7 +440,7 @@ RowLayout {
                         Text {
                             text: qsTr("Rally")
                             color: Theme.textMain
-                            font.pointSize: bottomRoot.fpv_mode ? 9 : 11
+                            font.pixelSize: bottomRoot.fpv_mode ? Design.Typography.caption : Design.Typography.label
                             font.bold: true
                         }
 
@@ -460,7 +460,7 @@ RowLayout {
                                 anchors.centerIn: parent
                                 text: bottomRoot.rally_label()
                                 color: Theme.textMain
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
                         }
@@ -488,7 +488,7 @@ RowLayout {
                         text: bottomRoot.rally_description()
                         color: Theme.textSubLite
                         wrapMode: Text.WordWrap
-                        font.pointSize: 9
+                        font.pixelSize: Design.Typography.caption
                     }
 
                     GridLayout {
@@ -533,7 +533,7 @@ RowLayout {
                             contentItem: Text {
                                 text: parent.text
                                 color: rallyButton.allowed ? Theme.textMain : Theme.textDim
-                                font.pointSize: bottomRoot.fpv_mode ? 9 : 10
+                                font.pixelSize: bottomRoot.fpv_mode ? Design.Typography.caption : Design.Typography.label
                                 font.bold: true
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
@@ -572,7 +572,7 @@ RowLayout {
                             contentItem: Text {
                                 text: parent.text
                                 color: auraButton.allowed || bottomRoot.status_value("aura_active", false) ? Theme.textMain : Theme.textDim
-                                font.pointSize: bottomRoot.fpv_mode ? 9 : 10
+                                font.pixelSize: bottomRoot.fpv_mode ? Design.Typography.caption : Design.Typography.label
                                 font.bold: true
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
@@ -587,7 +587,7 @@ RowLayout {
                         Text {
                             text: qsTr("Combo")
                             color: hs.bronze
-                            font.pointSize: 9
+                            font.pixelSize: Design.Typography.caption
                         }
 
                         Repeater {
@@ -655,7 +655,7 @@ RowLayout {
                             Text {
                                 text: qsTr("%1 [%2]").arg(modelData["title"]).arg(modelData["key"])
                                 color: bottomRoot.status_value(modelData["readyKey"], true) ? hs.bronze : hs.bronzeDeep
-                                font.pointSize: 9
+                                font.pixelSize: Design.Typography.caption
                                 font.bold: true
                             }
 
@@ -680,7 +680,7 @@ RowLayout {
                                 text: modelData["description"]
                                 color: Theme.textSubLite
                                 wrapMode: Text.WordWrap
-                                font.pointSize: 8
+                                font.pixelSize: Design.Typography.caption
                             }
                         }
                     }
@@ -707,7 +707,7 @@ RowLayout {
             Text {
                 text: qsTr("COMBAT CONTROLS")
                 color: hs.bronze
-                font.pointSize: 9
+                font.pixelSize: Design.Typography.caption
                 font.bold: true
             }
 
@@ -723,7 +723,7 @@ RowLayout {
                     delegate: Text {
                         text: modelData
                         color: Theme.textMain
-                        font.pointSize: bottomRoot.fpv_mode ? 7 : 8
+                        font.pixelSize: bottomRoot.fpv_mode ? Design.Typography.caption : Design.Typography.label
                         elide: Text.ElideRight
                     }
                 }
@@ -737,7 +737,7 @@ RowLayout {
                 Layout.fillWidth: true
                 text: !bottomRoot.status_value("alive", false) ? qsTr("Commander unavailable") : (bottomRoot.status_value("rally_in_progress", false) ? qsTr("Rally autopilot engaged until the flag is planted") : (bottomRoot.fpv_mode ? qsTr("Combat HUD synced for close-quarters command") : qsTr("First-person command engaged")))
                 color: Theme.textSubLite
-                font.pointSize: bottomRoot.fpv_mode ? 7 : 8
+                font.pixelSize: bottomRoot.fpv_mode ? Design.Typography.caption : Design.Typography.label
                 wrapMode: Text.WordWrap
                 maximumLineCount: 1
                 elide: Text.ElideRight

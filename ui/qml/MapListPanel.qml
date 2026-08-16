@@ -24,7 +24,7 @@ Item {
 
         text: qsTr("Maps")
         color: colors.textMain
-        font.pixelSize: 18
+        font.pixelSize: Design.Typography.bodyLarge
         font.bold: true
 
         anchors {
@@ -39,7 +39,7 @@ Item {
 
         text: "(" + Design.Numerals.roman(list.count || 0) + ")"
         color: colors.textSubLite
-        font.pixelSize: 12
+        font.pixelSize: Design.Typography.caption
 
         anchors {
             left: title.right
@@ -91,7 +91,7 @@ Item {
                 Text {
                     text: qsTr("No maps available")
                     color: colors.textSub
-                    font.pixelSize: 14
+                    font.pixelSize: Design.Typography.label
                     anchors.centerIn: parent
                 }
             }
@@ -178,7 +178,7 @@ Item {
                         Text {
                             text: (typeof name !== "undefined") ? String(name) : ""
                             color: (index === list.currentIndex) ? "white" : "#dff0ff"
-                            font.pixelSize: (index === list.currentIndex) ? 15 : 14
+                            font.pixelSize: (index === list.currentIndex) ? Design.Typography.body : Design.Typography.label
                             font.bold: (index === list.currentIndex)
                             elide: Text.ElideRight
                             width: parent.width
@@ -187,7 +187,7 @@ Item {
                         Text {
                             text: (typeof description !== "undefined") ? String(description) : ""
                             color: (index === list.currentIndex) ? "#d0e8ff" : colors.textSub
-                            font.pixelSize: 11
+                            font.pixelSize: Design.Typography.caption
                             elide: Text.ElideRight
                             width: parent.width
                         }

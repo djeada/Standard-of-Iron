@@ -610,6 +610,8 @@ quality:
 	@echo "$(BOLD)$(BLUE)Checking quality markers...$(RESET)"
 	@git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
 		| xargs -0 -r $(PYTHON) scripts/check-quality-markers.py
+	@echo "$(BOLD)$(BLUE)Checking QML typography...$(RESET)"
+	@$(PYTHON) scripts/check-typography.py
 	@$(PYTHON) scripts/validate_qrc_resources.py
 	@echo "$(GREEN)✓ Quality checks passed$(RESET)"
 

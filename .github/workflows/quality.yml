@@ -72,6 +72,12 @@ jobs:
           git ls-files -z '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hpp' '*.py' '*.sh' \
             | xargs -0 -r python scripts/check-quality-markers.py
 
+      # A hard-coded font size ignores the interface scale a player sets, which
+      # is invisible in review and only shows up as "the text is too small" from
+      # a tester on a screen nobody on the team runs.
+      - name: QML typography
+        run: python scripts/check-typography.py
+
       # There used to be a scripts/validate_shader_config.py here, excluded
       # because it "reports 24 pre-existing content issues on main". Those 24
       # were not real: it expected a per-nation, per-unit .vert/.frag pair and a
