@@ -580,6 +580,7 @@ add_library(
     app/controllers/action_vfx.cpp
     app/viewmodels/save_slots_view_model.cpp
     app/viewmodels/activity_view_model.cpp
+    app/viewmodels/economy_view_model.cpp
     app/viewmodels/placement_view_model.cpp
     app/viewmodels/wave_view_model.cpp
     app/controllers/command_controller.cpp
@@ -595,6 +596,7 @@ add_library(
     app/core/commander_mode_coordinator.cpp
     app/core/combat_feedback.cpp
     app/core/commander_status_builder.cpp
+    app/core/economy_overview.cpp
     app/core/environment.cpp
     app/core/focus_target.cpp
     app/core/frame_ui_coordinator.cpp
@@ -712,6 +714,9 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/StyledComboBox.qml
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
+            ui/qml/EconomyGuide.qml
+            ui/qml/EconomyCoach.qml
+            ui/qml/EconomyHelpPanel.qml
             ui/qml/WaveTracker.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDBottomCommander.qml

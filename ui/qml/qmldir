@@ -1,4 +1,5 @@
 singleton StyleGuide 1.0 StyleGuide.qml
+singleton EconomyGuide 1.0 EconomyGuide.qml
 StyledButton 1.0 StyledButton.qml
 StyledComboBox 1.0 StyledComboBox.qml
 ProductionPanel 1.0 ProductionPanel.qml
@@ -16,3 +17,5 @@ HUDBottomCommander 1.0 HUDBottomCommander.qml
 RpgFpvOverlay 1.0 RpgFpvOverlay.qml
 RpgDamageNumbers 1.0 RpgDamageNumbers.qml
 CombatDamageNumbers 1.0 CombatDamageNumbers.qml
+EconomyCoach 1.0 EconomyCoach.qml
+EconomyHelpPanel 1.0 EconomyHelpPanel.qml

@@ -1385,6 +1385,351 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>EconomyCoach</name>
+    <message>
+        <source>Economy prompts</source>
+        <translation>Avisos de economía</translation>
+    </message>
+    <message>
+        <source>Stop showing these prompts</source>
+        <translation>Dejar de mostrar estos avisos</translation>
+    </message>
+    <message>
+        <source>How it works</source>
+        <translation>Cómo funciona</translation>
+    </message>
+</context>
+<context>
+    <name>EconomyGuide</name>
+    <message>
+        <source>Gold</source>
+        <translation>Oro</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Comida</translation>
+    </message>
+    <message>
+        <source>Wood</source>
+        <translation>Madera</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>Piedra</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>Hierro</translation>
+    </message>
+    <message>
+        <source>Comes from your starting treasury, mission rewards, and selling goods at a marketplace.</source>
+        <translation>Procede de tu tesoro inicial, de las recompensas de misión y de vender mercancías en un mercado.</translation>
+    </message>
+    <message>
+        <source>Comes from your starting stores, mission rewards, and buying at a marketplace.</source>
+        <translation>Procede de tus reservas iniciales, de las recompensas de misión y de comprar en un mercado.</translation>
+    </message>
+    <message>
+        <source>Send a builder to chop a tree with Collect, or leave Auto Gather running.</source>
+        <translation>Envía a un constructor a talar un árbol con Recoger, o deja activa la Recolección automática.</translation>
+    </message>
+    <message>
+        <source>Send a builder to a boulder with Collect, or leave Auto Gather running.</source>
+        <translation>Envía a un constructor a una roca con Recoger, o deja activa la Recolección automática.</translation>
+    </message>
+    <message>
+        <source>Send a builder to an iron ore deposit with Collect, or leave Auto Gather running.</source>
+        <translation>Envía a un constructor a un yacimiento de hierro con Recoger, o deja activa la Recolección automática.</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Casa</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>Cuartel</translation>
+    </message>
+    <message>
+        <source>Defense Tower</source>
+        <translation>Torre defensiva</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>Mercado</translation>
+    </message>
+    <message>
+        <source>Temple</source>
+        <translation>Templo</translation>
+    </message>
+    <message>
+        <source>Wall Segment</source>
+        <translation>Tramo de muralla</translation>
+    </message>
+    <message>
+        <source>Wall Gate</source>
+        <translation>Puerta de muralla</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>Catapulta</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>Balista</translation>
+    </message>
+    <message>
+        <source>Archer</source>
+        <translation>Arquero</translation>
+    </message>
+    <message>
+        <source>Swordsman</source>
+        <translation>Espadero</translation>
+    </message>
+    <message>
+        <source>Spearman</source>
+        <translation>Lancero</translation>
+    </message>
+    <message>
+        <source>Horse Swordsman</source>
+        <translation>Espadero a caballo</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>Arquero a caballo</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>Lancero a caballo</translation>
+    </message>
+    <message>
+        <source>Healer</source>
+        <translation>Sanador</translation>
+    </message>
+    <message>
+        <source>Builder</source>
+        <translation>Constructor</translation>
+    </message>
+    <message>
+        <source>Civilian</source>
+        <translation>Civil</translation>
+    </message>
+    <message>
+        <source>Elephant</source>
+        <translation>Elefante de guerra</translation>
+    </message>
+    <message>
+        <source>Raises the population the nearest barracks can recruit from.</source>
+        <translation>Aumenta la población de la que puede reclutar el cuartel más cercano.</translation>
+    </message>
+    <message>
+        <source>Recruits troops and receives everything your builders gather.</source>
+        <translation>Recluta tropas y recibe todo lo que recogen tus constructores.</translation>
+    </message>
+    <message>
+        <source>Shoots at enemies that come near it.</source>
+        <translation>Dispara a los enemigos que se acercan.</translation>
+    </message>
+    <message>
+        <source>Buys and sells resources for gold.</source>
+        <translation>Compra y vende recursos a cambio de oro.</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together.</source>
+        <translation>Vigila una amplia extensión de terreno y mantiene unido un asentamiento.</translation>
+    </message>
+    <message>
+        <source>Blocks enemy movement.</source>
+        <translation>Bloquea el movimiento enemigo.</translation>
+    </message>
+    <message>
+        <source>Opens for your troops and allies, shut to everyone else.</source>
+        <translation>Se abre para tus tropas y aliados, y permanece cerrada para los demás.</translation>
+    </message>
+    <message>
+        <source>Long-range siege engine, best against structures.</source>
+        <translation>Máquina de asedio de largo alcance, ideal contra estructuras.</translation>
+    </message>
+    <message>
+        <source>Precise siege engine, best against units.</source>
+        <translation>Máquina de asedio precisa, ideal contra unidades.</translation>
+    </message>
+    <message>
+        <source>, and %1 more</source>
+        <translation> y %1 más</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>No resource cost</source>
+        <translation>Sin coste de recursos</translation>
+    </message>
+    <message>
+        <source>%1 more %2</source>
+        <translation>%1 más de %2</translation>
+    </message>
+    <message>
+        <source>Nobody is gathering it right now.</source>
+        <translation>Ahora mismo nadie lo está recogiendo.</translation>
+    </message>
+    <message>
+        <source>Builders gathering it: %1</source>
+        <translation>Constructores recogiéndolo: %1</translation>
+    </message>
+    <message>
+        <source>%1 being hauled to a barracks</source>
+        <translation>%1 en camino a un cuartel</translation>
+    </message>
+    <message>
+        <source>Held in your treasury; no storage limit.</source>
+        <translation>Se guarda en tu tesoro; sin límite de almacenamiento.</translation>
+    </message>
+    <message>
+        <source>Hauled to a barracks yard before it is credited. The yard looks full at %1.</source>
+        <translation>Se lleva al patio de un cuartel antes de contabilizarse. El patio parece lleno a partir de %1.</translation>
+    </message>
+    <message>
+        <source>Short %1 for a %2.</source>
+        <translation>Faltan %1 para %2.</translation>
+    </message>
+    <message>
+        <source>%1 in store: %2</source>
+        <translation>%1 en reserva: %2</translation>
+    </message>
+    <message>
+        <source>Spent on: %1</source>
+        <translation>Se gasta en: %1</translation>
+    </message>
+    <message>
+        <source>Step 1 — Gather</source>
+        <translation>Paso 1: Recoger</translation>
+    </message>
+    <message>
+        <source>Step 2 — Build</source>
+        <translation>Paso 2: Construir</translation>
+    </message>
+    <message>
+        <source>Step 3 — Recruit</source>
+        <translation>Paso 3: Reclutar</translation>
+    </message>
+    <message>
+        <source>Step 4 — Keep an army</source>
+        <translation>Paso 4: Mantener un ejército</translation>
+    </message>
+    <message>
+        <source>Your settlement runs itself</source>
+        <translation>Tu asentamiento se sostiene solo</translation>
+    </message>
+    <message>
+        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
+        <translation>Recluta un constructor en un cuartel y envíalo a recoger madera, piedra o hierro.</translation>
+    </message>
+    <message>
+        <source>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</source>
+        <translation>Selecciona un constructor, pulsa Recoger y haz clic en un árbol, una roca o un yacimiento. Llevará la carga al patio de un cuartel y volverá a por más.</translation>
+    </message>
+    <message>
+        <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
+        <translation>Con un constructor seleccionado, pulsa Construir y coloca una Casa para aumentar tu población, o un Cuartel para reclutar.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</source>
+        <translation>Selecciona un cuartel y recluta tropas. Cada una cuesta población y recursos, ambos indicados en su ficha.</translation>
+    </message>
+    <message>
+        <source>Keep recruiting while your builders gather. Raise more Homes when population runs out.</source>
+        <translation>Sigue reclutando mientras tus constructores recogen. Levanta más Casas cuando se te acabe la población.</translation>
+    </message>
+    <message>
+        <source>Gathering, building and recruiting are all under way.</source>
+        <translation>La recogida, la construcción y el reclutamiento ya están en marcha.</translation>
+    </message>
+</context>
+<context>
+    <name>EconomyHelpPanel</name>
+    <message>
+        <source>You have no builders. Recruit one at a barracks before you can gather or build.</source>
+        <translation>No tienes constructores. Recluta uno en un cuartel antes de poder recoger o construir.</translation>
+    </message>
+    <message>
+        <source>Builders: %1 (%2 idle). Placing a structure sends every selected builder to the site.</source>
+        <translation>Constructores: %1 (%2 inactivos). Al colocar una estructura, todos los constructores seleccionados van a la obra.</translation>
+    </message>
+    <message>
+        <source>Recruiting draws on the manpower held by each barracks.</source>
+        <translation>Reclutar consume los efectivos disponibles en cada cuartel.</translation>
+    </message>
+    <message>
+        <source>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</source>
+        <translation>Población %1 / %2. Una Casa suma %3 al cuartel más cercano; llevar un civil a uno suma %4.</translation>
+    </message>
+    <message>
+        <source>Needs a barracks</source>
+        <translation>Necesita un cuartel</translation>
+    </message>
+    <message>
+        <source>Needs a builder</source>
+        <translation>Necesita un constructor</translation>
+    </message>
+    <message>
+        <source>Not enough manpower at the barracks</source>
+        <translation>No hay suficientes efectivos en el cuartel</translation>
+    </message>
+    <message>
+        <source>Population limit reached</source>
+        <translation>Límite de población alcanzado</translation>
+    </message>
+    <message>
+        <source>Missing %1</source>
+        <translation>Falta: %1</translation>
+    </message>
+    <message>
+        <source>Economy guide</source>
+        <translation>Guía de economía</translation>
+    </message>
+    <message>
+        <source>Resources and Building</source>
+        <translation>Recursos y construcción</translation>
+    </message>
+    <message>
+        <source>Close the economy guide</source>
+        <translation>Cerrar la guía de economía</translation>
+    </message>
+    <message>
+        <source>Gather with builders, spend what they bring on structures, recruit from a barracks, and keep both running.</source>
+        <translation>Recoge con constructores, gasta lo que traen en estructuras, recluta en un cuartel y mantén ambas cosas en marcha.</translation>
+    </message>
+    <message>
+        <source>WHAT EACH RESOURCE IS FOR</source>
+        <translation>PARA QUÉ SIRVE CADA RECURSO</translation>
+    </message>
+    <message>
+        <source>Spent on: %1</source>
+        <translation>Se gasta en: %1</translation>
+    </message>
+    <message>
+        <source>WHAT A BUILDER CAN RAISE</source>
+        <translation>QUÉ PUEDE LEVANTAR UN CONSTRUCTOR</translation>
+    </message>
+    <message>
+        <source>%1 — %2 · %3s</source>
+        <translation>%1: %2 · %3 s</translation>
+    </message>
+    <message>
+        <source>WHAT A BARRACKS CAN RECRUIT</source>
+        <translation>QUÉ PUEDE RECLUTAR UN CUARTEL</translation>
+    </message>
+    <message>
+        <source>%1 — %2 population, %3 · %4s</source>
+        <translation>%1: %2 de población, %3 · %4 s</translation>
+    </message>
+    <message>
+        <source>Back to the battle</source>
+        <translation>Volver a la batalla</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2649,6 +2994,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source> (%1/%2)</source>
         <translation> (%1/%2)</translation>
+    </message>
+    <message>
+        <source>Resource and building guide</source>
+        <translation>Guía de recursos y construcción</translation>
     </message>
     <message>
         <source>Open the field manual (help)</source>
@@ -5129,48 +5478,12 @@ Opens for your troops and allies</source>
 Se abre para tus tropas y aliados</translation>
     </message>
     <message>
-        <source>wood</source>
-        <translation>madera</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>piedra</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>hierro</translation>
-    </message>
-    <message>
-        <source>gold</source>
-        <translation>oro</translation>
-    </message>
-    <message>
         <source>%1 %2</source>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <source>%1 wood</source>
-        <translation>%1 de madera</translation>
-    </message>
-    <message>
-        <source>%1 stone</source>
-        <translation>%1 de piedra</translation>
-    </message>
-    <message>
-        <source>%1 iron</source>
-        <translation>%1 de hierro</translation>
-    </message>
-    <message>
-        <source>%1 gold</source>
-        <translation>%1 de oro</translation>
-    </message>
-    <message>
         <source>Not enough available population</source>
         <translation>No hay suficiente población disponible</translation>
-    </message>
-    <message>
-        <source>Not enough %1</source>
-        <translation>No hay suficiente %1</translation>
     </message>
     <message>
         <source>Already building...</source>
@@ -5437,6 +5750,14 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
     <message>
         <source>Watches over a wide stretch of ground and holds a settlement together</source>
         <translation>Vigila una amplia extensión de terreno y mantiene unido un asentamiento</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Comida</translation>
+    </message>
+    <message>
+        <source>Need %1</source>
+        <translation>Necesitas: %1</translation>
     </message>
 </context>
 <context>
