@@ -1,6 +1,7 @@
 #include "app/economy/production_readouts.h"
 
 #include "app/economy/resource_text.h"
+#include "app/economy/unit_profile.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/construction_cost_catalog.h"
@@ -214,66 +215,18 @@ auto selected_home_state(Engine::Core::World* world,
 
 auto unit_production_info(const QString& unit_type,
                           const QString& nation_id) -> QVariantMap {
-  QVariantMap info;
-  const auto& config = Game::Units::TroopConfig::instance();
-  std::string const type_str = unit_type.toStdString();
+  QVariantMap info = unit_profile(unit_type, nation_id);
+  if (info.value("valid").toBool()) {
+    return info;
+  }
 
+  const auto& config = Game::Units::TroopConfig::instance();
+  const std::string type_str = unit_type.toStdString();
   info["cost"] = config.get_production_cost(type_str);
   info["population_cost"] = info["cost"];
   info["resource_costs"] = QVariantMap{};
   info["build_time"] = static_cast<double>(config.get_build_time(type_str));
   info["individuals_per_unit"] = config.get_individuals_per_unit(type_str);
-
-  auto troop_type_opt = Game::Units::try_parse_troop_type(type_str);
-  if (troop_type_opt.has_value()) {
-    auto nation_id_opt = Game::Systems::nation_id_from_string(nation_id.toStdString());
-    auto nation_id_enum = nation_id_opt.value_or(
-        Game::Systems::NationRegistry::instance().default_nation_id());
-    auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-        nation_id_enum, *troop_type_opt);
-    info["cost"] = profile.production.cost;
-    info["population_cost"] = profile.production.cost;
-    info["resource_costs"] = to_variant_map(profile.production.resource_costs);
-    info["build_time"] = static_cast<double>(profile.production.build_time);
-    info["individuals_per_unit"] = profile.individuals_per_unit;
-    info["display_name"] =
-        Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
-    if (const auto* commander = Game::Units::commander_definition(*troop_type_opt)) {
-      info["is_commander"] = true;
-      info["strategic_identity"] = Game::Util::tr_asset(
-          Game::Util::k_commanders_context, commander->strategic_identity);
-      info["recruitment_effect"] = Game::Util::tr_asset(
-          Game::Util::k_commanders_context, commander->recruitment_effect);
-      info["battlefield_role"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
-                                                      commander->battlefield_role);
-      info["strengths"] =
-          Game::Util::tr_asset(Game::Util::k_commanders_context, commander->strengths);
-      info["weaknesses"] =
-          Game::Util::tr_asset(Game::Util::k_commanders_context, commander->weaknesses);
-      info["passive_aura"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
-                                                  commander->passive_aura);
-      info["bonus_type"] = QString::fromStdString(commander->bonus_type);
-      info["bonus_summary"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
-                                                   commander->bonus_summary);
-      info["aura_bonus_value"] = static_cast<double>(commander->aura_bonus_value);
-      info["rally_ability"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
-                                                   commander->rally_ability);
-      info["death_consequence"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
-                                                       commander->death_consequence);
-      info["visual_requirements"] =
-          QString::fromStdString(commander->visual_requirements);
-      info["bodyguard_count"] = commander->bodyguard_count;
-      info["aura_radius"] = static_cast<double>(commander->aura_radius);
-      info["rally_cooldown"] = static_cast<double>(commander->rally_cooldown);
-    } else {
-      info["is_commander"] = false;
-    }
-  } else {
-
-    info["display_name"] = unit_type;
-    info["is_commander"] = false;
-  }
-
   return info;
 }
 

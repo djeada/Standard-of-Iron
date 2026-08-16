@@ -1470,6 +1470,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Unit activities</source>
         <translation>Unit activities</translation>
     </message>
+    <message>
+        <source>A collapsible block of detail. The unit panel stacks one per topic.</source>
+        <translation>A collapsible block of detail. The unit panel stacks one per topic.</translation>
+    </message>
+    <message>
+        <source>In the field</source>
+        <translation>In the field</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -3601,6 +3609,26 @@ Unseen: never scouted.</translation>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
+    </message>
+    <message>
+        <source>ATK</source>
+        <translation>ATK</translation>
+    </message>
+    <message>
+        <source>RNG</source>
+        <translation>RNG</translation>
+    </message>
+    <message>
+        <source>SPD</source>
+        <translation>SPD</translation>
+    </message>
+    <message>
+        <source>Show what this unit is for</source>
+        <translation>Show what this unit is for</translation>
+    </message>
+    <message>
+        <source>Unit details</source>
+        <translation>Unit details</translation>
     </message>
 </context>
 <context>
@@ -6872,6 +6900,108 @@ Wide vision and a durable settlement anchor</translation>
     </message>
 </context>
 <context>
+    <name>UnitInspectPanel</name>
+    <message>
+        <source>Attack</source>
+        <translation>Attack</translation>
+    </message>
+    <message>
+        <source>Build</source>
+        <translation>Build</translation>
+    </message>
+    <message>
+        <source>Close the unit details</source>
+        <translation>Close the unit details</translation>
+    </message>
+    <message>
+        <source>Collect</source>
+        <translation>Collect</translation>
+    </message>
+    <message>
+        <source>Damage per second</source>
+        <translation>Damage per second</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Guard</translation>
+    </message>
+    <message>
+        <source>Health</source>
+        <translation>Health</translation>
+    </message>
+    <message>
+        <source>Highlighted orders are the ones this selection can carry out right now.</source>
+        <translation>Highlighted orders are the ones this selection can carry out right now.</translation>
+    </message>
+    <message>
+        <source>History</source>
+        <translation>History</translation>
+    </message>
+    <message>
+        <source>Hold</source>
+        <translation>Hold</translation>
+    </message>
+    <message>
+        <source>In the field</source>
+        <translation>In the field</translation>
+    </message>
+    <message>
+        <source>Medic</source>
+        <translation>Medic</translation>
+    </message>
+    <message>
+        <source>No details are available for this unit.</source>
+        <translation>No details are available for this unit.</translation>
+    </message>
+    <message>
+        <source>Patrol</source>
+        <translation>Patrol</translation>
+    </message>
+    <message>
+        <source>Population %1  ·  Build time %2s</source>
+        <translation>Population %1  ·  Build time %2s</translation>
+    </message>
+    <message>
+        <source>Range</source>
+        <translation>Range</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Repair</translation>
+    </message>
+    <message>
+        <source>Sight</source>
+        <translation>Sight</translation>
+    </message>
+    <message>
+        <source>Speed</source>
+        <translation>Speed</translation>
+    </message>
+    <message>
+        <source>Strengths and weaknesses</source>
+        <translation>Strengths and weaknesses</translation>
+    </message>
+    <message>
+        <source>Unit details</source>
+        <translation>Unit details</translation>
+    </message>
+    <message>
+        <source>What it can do</source>
+        <translation>What it can do</translation>
+    </message>
+    <message>
+        <source>What it costs</source>
+        <translation>What it costs</translation>
+    </message>
+    <message numerus="yes">
+        <source>Fields %n soldier(s) in one squad.</source>
+        <translation>
+            <numerusform>Fields one soldier in one squad.</numerusform>
+            <numerusform>Fields %n soldiers in one squad.</numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>Units</name>
     <message>
         <source>Archer</source>
@@ -7032,6 +7162,398 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Triarius</source>
         <translation>Triarius</translation>
+    </message>
+    <message>
+        <source>An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night.</source>
+        <translation>An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night.</translation>
+    </message>
+    <message>
+        <source>Ancient armies kept surgeons close to the line; the wounded who walked away were the difference between a campaign and a rout.</source>
+        <translation>Ancient armies kept surgeons close to the line; the wounded who walked away were the difference between a campaign and a rout.</translation>
+    </message>
+    <message>
+        <source>Anti-cavalry spear line</source>
+        <translation>Anti-cavalry spear line</translation>
+    </message>
+    <message>
+        <source>Archers are the answer to it, and massed bows bring it down before it closes.</source>
+        <translation>Archers are the answer to it, and massed bows bring it down before it closes.</translation>
+    </message>
+    <message>
+        <source>As brittle as any archer, and it withers as soon as the line in front of it fails.</source>
+        <translation>As brittle as any archer, and it withers as soon as the line in front of it fails.</translation>
+    </message>
+    <message>
+        <source>Awakened</source>
+        <translation>Awakened</translation>
+    </message>
+    <message>
+        <source>Battle caster</source>
+        <translation>Battle caster</translation>
+    </message>
+    <message>
+        <source>Behind every field army stood the farms and quarries that fed it, and the people who worked them.</source>
+        <translation>Behind every field army stood the farms and quarries that fed it, and the people who worked them.</translation>
+    </message>
+    <message>
+        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</source>
+        <translation>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</translation>
+    </message>
+    <message>
+        <source>Breaks on a braced spear line, which cuts mounted troops down at more than twice the usual rate.</source>
+        <translation>Breaks on a braced spear line, which cuts mounted troops down at more than twice the usual rate.</translation>
+    </message>
+    <message>
+        <source>Cannot fight. Left unguarded it dies to anything that reaches it.</source>
+        <translation>Cannot fight. Left unguarded it dies to anything that reaches it.</translation>
+    </message>
+    <message>
+        <source>Carries more health than any squad on the field, and its reach breaks a line that stands to receive it.</source>
+        <translation>Carries more health than any squad on the field, and its reach breaks a line that stands to receive it.</translation>
+    </message>
+    <message>
+        <source>Carthage bought its archers from Libya and the islands, paying in silver what Rome demanded of its citizens.</source>
+        <translation>Carthage bought its archers from Libya and the islands, paying in silver what Rome demanded of its citizens.</translation>
+    </message>
+    <message>
+        <source>Carthage sent its own citizens into the line only when the city itself was threatened. The rest of the army was hired.</source>
+        <translation>Carthage sent its own citizens into the line only when the city itself was threatened. The rest of the army was hired.</translation>
+    </message>
+    <message>
+        <source>Carthage took its elephants from the forests south of the Atlas, smaller than the Indian beasts but the terror of Italy.</source>
+        <translation>Carthage took its elephants from the forests south of the Atlas, smaller than the Indian beasts but the terror of Italy.</translation>
+    </message>
+    <message>
+        <source>Carthaginian engineers learned artillery from the Greek cities of Sicily, and then improved on it.</source>
+        <translation>Carthaginian engineers learned artillery from the Greek cities of Sicily, and then improved on it.</translation>
+    </message>
+    <message>
+        <source>Caster</source>
+        <translation>Caster</translation>
+    </message>
+    <message>
+        <source>Cavalry</source>
+        <translation>Cavalry</translation>
+    </message>
+    <message>
+        <source>Cavalry rarely charged an unbroken line. It waited for a flank to open and then finished the day.</source>
+        <translation>Cavalry rarely charged an unbroken line. It waited for a flank to open and then finished the day.</translation>
+    </message>
+    <message>
+        <source>Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel.</source>
+        <translation>Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel.</translation>
+    </message>
+    <message>
+        <source>Command</source>
+        <translation>Command</translation>
+    </message>
+    <message>
+        <source>Costs nothing to raise and never breaks, so it buys time no living troop would.</source>
+        <translation>Costs nothing to raise and never breaks, so it buys time no living troop would.</translation>
+    </message>
+    <message>
+        <source>Cursed Arrow Volley</source>
+        <translation>Cursed Arrow Volley</translation>
+    </message>
+    <message>
+        <source>Cursed missile line</source>
+        <translation>Cursed missile line</translation>
+    </message>
+    <message>
+        <source>Defenceless at close quarters. Infantry that reaches it kills it in a few seconds.</source>
+        <translation>Defenceless at close quarters. Infantry that reaches it kills it in a few seconds.</translation>
+    </message>
+    <message>
+        <source>Denies ground nothing else can reach, at well over twice an archer's range.</source>
+        <translation>Denies ground nothing else can reach, at well over twice an archer's range.</translation>
+    </message>
+    <message>
+        <source>Elite</source>
+        <translation>Elite</translation>
+    </message>
+    <message>
+        <source>Engineer and labourer</source>
+        <translation>Engineer and labourer</translation>
+    </message>
+    <message>
+        <source>Every arrow that lands leaves a curse on its target, draining the will of the formation it struck.</source>
+        <translation>Every arrow that lands leaves a curse on its target, draining the will of the formation it struck.</translation>
+    </message>
+    <message>
+        <source>Expendable</source>
+        <translation>Expendable</translation>
+    </message>
+    <message>
+        <source>Expendable line infantry</source>
+        <translation>Expendable line infantry</translation>
+    </message>
+    <message>
+        <source>Faction-defining heavy beast</source>
+        <translation>Faction-defining heavy beast</translation>
+    </message>
+    <message>
+        <source>Fast enough to choose its own fight, and it rides down archers left without a screen.</source>
+        <translation>Fast enough to choose its own fight, and it rides down archers left without a screen.</translation>
+    </message>
+    <message>
+        <source>Field surgeon</source>
+        <translation>Field surgeon</translation>
+    </message>
+    <message>
+        <source>Fireball</source>
+        <translation>Fireball</translation>
+    </message>
+    <message>
+        <source>Fragile once contacted. Cavalry overruns it whenever it has no melee screen.</source>
+        <translation>Fragile once contacted. Cavalry overruns it whenever it has no melee screen.</translation>
+    </message>
+    <message>
+        <source>Gathers and delivers the resources every other unit is paid for with.</source>
+        <translation>Gathers and delivers the resources every other unit is paid for with.</translation>
+    </message>
+    <message>
+        <source>Has no melee worth the name, and spears punish it the moment it is caught.</source>
+        <translation>Has no melee worth the name, and spears punish it the moment it is caught.</translation>
+    </message>
+    <message>
+        <source>Heavy infantry</source>
+        <translation>Heavy infantry</translation>
+    </message>
+    <message>
+        <source>Heavy line infantry</source>
+        <translation>Heavy line infantry</translation>
+    </message>
+    <message>
+        <source>Horse archers came from the steppe and the desert margins, and Mediterranean armies hired them rather than raised them.</source>
+        <translation>Horse archers came from the steppe and the desert margins, and Mediterranean armies hired them rather than raised them.</translation>
+    </message>
+    <message>
+        <source>Hurls fire that bursts across a formation and clings to the ground where it lands.</source>
+        <translation>Hurls fire that bursts across a formation and clings to the ground where it lands.</translation>
+    </message>
+    <message>
+        <source>Hurls fire that bursts across a formation and leaves the ground burning where it lands.</source>
+        <translation>Hurls fire that bursts across a formation and leaves the ground burning where it lands.</translation>
+    </message>
+    <message>
+        <source>Its arrows carry a curse that drains the will of everything they strike.</source>
+        <translation>Its arrows carry a curse that drains the will of everything they strike.</translation>
+    </message>
+    <message>
+        <source>Its quiver was buried with it, and the curse worked into the shafts outlasted the hand that drew the bow.</source>
+        <translation>Its quiver was buried with it, and the curse worked into the shafts outlasted the hand that drew the bow.</translation>
+    </message>
+    <message>
+        <source>Lancer cavalry</source>
+        <translation>Lancer cavalry</translation>
+    </message>
+    <message>
+        <source>Line infantry</source>
+        <translation>Line infantry</translation>
+    </message>
+    <message>
+        <source>Loses the straight infantry fight to swords, and caught in the open it is only a slower line.</source>
+        <translation>Loses the straight infantry fight to swords, and caught in the open it is only a slower line.</translation>
+    </message>
+    <message>
+        <source>Massed missile line</source>
+        <translation>Massed missile line</translation>
+    </message>
+    <message>
+        <source>Mends nearby wounded without being told to, so a line that holds keeps its strength.</source>
+        <translation>Mends nearby wounded without being told to, so a line that holds keeps its strength.</translation>
+    </message>
+    <message>
+        <source>Mounted</source>
+        <translation>Mounted</translation>
+    </message>
+    <message>
+        <source>Mounted skirmisher</source>
+        <translation>Mounted skirmisher</translation>
+    </message>
+    <message>
+        <source>Not a soldier. It cannot hold ground and should never be the last thing guarding a camp.</source>
+        <translation>Not a soldier. It cannot hold ground and should never be the last thing guarding a camp.</translation>
+    </message>
+    <message>
+        <source>One slow body, helpless in melee, and it needs the awakened dead between it and the enemy.</source>
+        <translation>One slow body, helpless in melee, and it needs the awakened dead between it and the enemy.</translation>
+    </message>
+    <message>
+        <source>Out-trades everything at range, and massed bows are the answer to a war elephant.</source>
+        <translation>Out-trades everything at range, and massed bows are the answer to a war elephant.</translation>
+    </message>
+    <message>
+        <source>Outranges troops on foot and can withdraw from any fight it cannot win.</source>
+        <translation>Outranges troops on foot and can withdraw from any fight it cannot win.</translation>
+    </message>
+    <message>
+        <source>Overrun in seconds by any infantry that reaches it, and far too slow to withdraw.</source>
+        <translation>Overrun in seconds by any infantry that reaches it, and far too slow to withdraw.</translation>
+    </message>
+    <message>
+        <source>Phoenician craftsmen raised the harbours and walls that made Carthage the richest city in the western sea.</source>
+        <translation>Phoenician craftsmen raised the harbours and walls that made Carthage the richest city in the western sea.</translation>
+    </message>
+    <message>
+        <source>Raised from the burial ranks of an army that was interred still holding its shields.</source>
+        <translation>Raised from the burial ranks of an army that was interred still holding its shields.</translation>
+    </message>
+    <message>
+        <source>Raises every building an army needs and repairs what the enemy breaks.</source>
+        <translation>Raises every building an army needs and repairs what the enemy breaks.</translation>
+    </message>
+    <message>
+        <source>Ranged</source>
+        <translation>Ranged</translation>
+    </message>
+    <message>
+        <source>Repays its cost against cavalry, and braced on high ground it holds against far heavier attacks.</source>
+        <translation>Repays its cost against cavalry, and braced on high ground it holds against far heavier attacks.</translation>
+    </message>
+    <message>
+        <source>Rome raised few archers of its own and drew them from Crete and the eastern allies instead.</source>
+        <translation>Rome raised few archers of its own and drew them from Crete and the eastern allies instead.</translation>
+    </message>
+    <message>
+        <source>Rome standardised the bolt thrower until every legion carried its own, mounted on carts and served by trained crews.</source>
+        <translation>Rome standardised the bolt thrower until every legion carried its own, mounted on carts and served by trained crews.</translation>
+    </message>
+    <message>
+        <source>Settlement population</source>
+        <translation>Settlement population</translation>
+    </message>
+    <message>
+        <source>Shielded</source>
+        <translation>Shielded</translation>
+    </message>
+    <message>
+        <source>Shock cavalry</source>
+        <translation>Shock cavalry</translation>
+    </message>
+    <message>
+        <source>Siege</source>
+        <translation>Siege</translation>
+    </message>
+    <message>
+        <source>Siege artillery</source>
+        <translation>Siege artillery</translation>
+    </message>
+    <message>
+        <source>Siege bolt thrower</source>
+        <translation>Siege bolt thrower</translation>
+    </message>
+    <message>
+        <source>Skirmisher</source>
+        <translation>Skirmisher</translation>
+    </message>
+    <message>
+        <source>Slower and weaker than the living line it imitates, and nothing in the field can mend it.</source>
+        <translation>Slower and weaker than the living line it imitates, and nothing in the field can mend it.</translation>
+    </message>
+    <message>
+        <source>Spear infantry</source>
+        <translation>Spear infantry</translation>
+    </message>
+    <message>
+        <source>Still cavalry. A braced spear line stops it, and it cannot trade with archers at range.</source>
+        <translation>Still cavalry. A braced spear line stops it, and it cannot trade with archers at range.</translation>
+    </message>
+    <message>
+        <source>Support</source>
+        <translation>Support</translation>
+    </message>
+    <message>
+        <source>The Liby-Phoenician spear was the steady centre that a mercenary army could be built around.</source>
+        <translation>The Liby-Phoenician spear was the steady centre that a mercenary army could be built around.</translation>
+    </message>
+    <message>
+        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</source>
+        <translation>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</translation>
+    </message>
+    <message>
+        <source>The Sacred Band kept physicians of its own, an honour reserved for the citizen elite.</source>
+        <translation>The Sacred Band kept physicians of its own, an honour reserved for the citizen elite.</translation>
+    </message>
+    <message>
+        <source>The bolt thrower was the accurate half of a siege train, used against men and gates alike.</source>
+        <translation>The bolt thrower was the accurate half of a siege train, used against men and gates alike.</translation>
+    </message>
+    <message>
+        <source>The bolt throwers of Carthage were built in the same yards as its fleet, by the same shipwrights.</source>
+        <translation>The bolt throwers of Carthage were built in the same yards as its fleet, by the same shipwrights.</translation>
+    </message>
+    <message>
+        <source>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</source>
+        <translation>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</translation>
+    </message>
+    <message>
+        <source>The fabri built the roads, the bridges and the fortified camp that went up every single night of a march.</source>
+        <translation>The fabri built the roads, the bridges and the fortified camp that went up every single night of a march.</translation>
+    </message>
+    <message>
+        <source>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
+        <translation>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</translation>
+    </message>
+    <message>
+        <source>The longest reach in any army, and quick enough to loose again before its target closes.</source>
+        <translation>The longest reach in any army, and quick enough to loose again before its target closes.</translation>
+    </message>
+    <message>
+        <source>The longest reach of any mounted troop, striking before the enemy line can answer.</source>
+        <translation>The longest reach of any mounted troop, striking before the enemy line can answer.</translation>
+    </message>
+    <message>
+        <source>The medicus marched with the legion, and Roman field medicine was the best organised in the ancient world.</source>
+        <translation>The medicus marched with the legion, and Roman field medicine was the best organised in the ancient world.</translation>
+    </message>
+    <message>
+        <source>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
+        <translation>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</translation>
+    </message>
+    <message>
+        <source>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</source>
+        <translation>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</translation>
+    </message>
+    <message>
+        <source>The priests who sealed the tombs learned to open them, and now walk ahead of what they woke.</source>
+        <translation>The priests who sealed the tombs learned to open them, and now walk ahead of what they woke.</translation>
+    </message>
+    <message>
+        <source>The slowest troops in the line, and they take losses crossing open ground under archery.</source>
+        <translation>The slowest troops in the line, and they take losses crossing open ground under archery.</translation>
+    </message>
+    <message>
+        <source>The spear was the cheapest way to make a horse refuse a charge, and every ancient army kept a wall of them.</source>
+        <translation>The spear was the cheapest way to make a horse refuse a charge, and every ancient army kept a wall of them.</translation>
+    </message>
+    <message>
+        <source>The triarii were the oldest and steadiest men in the legion, knelt behind the line and committed only when the day was in doubt.</source>
+        <translation>The triarii were the oldest and steadiest men in the legion, knelt behind the line and committed only when the day was in doubt.</translation>
+    </message>
+    <message>
+        <source>The weakest body on the field. Anything that finds it kills it.</source>
+        <translation>The weakest body on the field. Anything that finds it kills it.</translation>
+    </message>
+    <message>
+        <source>Torsion artillery was built on the spot from local timber and abandoned when the army moved on.</source>
+        <translation>Torsion artillery was built on the spot from local timber and abandoned when the army moved on.</translation>
+    </message>
+    <message>
+        <source>War beast</source>
+        <translation>War beast</translation>
+    </message>
+    <message>
+        <source>War elephants terrified armies that had never met them, and were nearly useless against those that had.</source>
+        <translation>War elephants terrified armies that had never met them, and were nearly useless against those that had.</translation>
+    </message>
+    <message>
+        <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>
+        <translation>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</translation>
+    </message>
+    <message>
+        <source>Worker</source>
+        <translation>Worker</translation>
     </message>
 </context>
 <context>

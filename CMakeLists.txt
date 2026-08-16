@@ -626,6 +626,7 @@ add_library(
     app/economy/production_manager.cpp
     app/economy/production_readouts.cpp
     app/economy/resource_text.cpp
+    app/economy/unit_profile.cpp
     # app/persistence -- saving and restoring a match.
     app/persistence/game_state_restorer.cpp
     app/persistence/save_load_coordinator.cpp
@@ -758,6 +759,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/WaveTracker.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDBottomCommander.qml
+            ui/qml/UnitInspectPanel.qml
+            ui/qml/RecruitCard.qml
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgDamageNumbers.qml
             ui/qml/CombatDamageNumbers.qml

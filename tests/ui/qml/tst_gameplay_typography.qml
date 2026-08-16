@@ -86,7 +86,8 @@ TestCase {
         verify(host !== null, "panel host was not created");
         var panel = panel_component().createObject(host, {
                 "width": 320,
-                "game_instance": stubEngine
+                "production": stubEngine,
+                "player_state": stubEngine.selected_player_state()
             });
         verify(panel !== null, "ProductionPanel was not created");
         host.panel = panel;
@@ -163,9 +164,17 @@ TestCase {
         Core.UiPreferences.uiScale = 2.0;
         var large = panelText();
         compare(large.items.length, baseline.length, "the panel changed shape between scales");
+        var smallestByText = ({});
+        for (var b = 0; b < baseline.length; ++b) {
+            var key = baseline[b].text;
+            if (smallestByText[key] === undefined || baseline[b].px < smallestByText[key])
+                smallestByText[key] = baseline[b].px;
+        }
         for (var j = 0; j < large.items.length; ++j) {
-            var grew = large.items[j].font.pixelSize > baseline[j].px;
-            verify(grew, "\"" + baseline[j].text.substring(0, 24) + "\" stayed at " + baseline[j].px + "px when the interface scale doubled");
+            var text = String(large.items[j].text);
+            var was = smallestByText[text];
+            verify(was !== undefined, "\"" + text.substring(0, 24) + "\" appeared only at the larger scale");
+            verify(large.items[j].font.pixelSize > was, "\"" + text.substring(0, 24) + "\" stayed at " + was + "px when the interface scale doubled");
         }
         large.host.destroy();
     }

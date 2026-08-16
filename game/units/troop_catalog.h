@@ -3,12 +3,30 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "../formation/formation_roles.h"
 #include "../systems/resource_types.h"
 #include "troop_type.h"
 
 namespace Game::Units {
+
+struct TroopLore {
+  std::string role;
+  std::string strengths;
+  std::string weaknesses;
+  std::string history;
+
+  [[nodiscard]] auto empty() const -> bool {
+    return role.empty() && strengths.empty() && weaknesses.empty() && history.empty();
+  }
+};
+
+struct AbilityDefinition {
+  std::string id;
+  std::string display_name;
+  std::string effect;
+};
 
 struct TroopCombatStats {
   int health = 100;
@@ -55,6 +73,9 @@ struct TroopClass {
   TroopProductionStats production;
   TroopCombatStats combat;
   TroopVisualStats visuals;
+  TroopLore lore;
+
+  std::vector<std::string> documented_abilities;
 
   int individuals_per_unit = 1;
   int max_units_per_row = 1;
@@ -79,6 +100,16 @@ public:
     return m_classes;
   }
 
+  void register_ability(AbilityDefinition ability);
+
+  [[nodiscard]] auto
+  get_ability(const std::string& ability_id) const -> const AbilityDefinition*;
+
+  [[nodiscard]] auto
+  get_all_abilities() const -> const std::vector<AbilityDefinition>& {
+    return m_abilities;
+  }
+
   void clear();
 
 private:
@@ -87,6 +118,7 @@ private:
   void register_defaults();
 
   std::unordered_map<Game::Units::TroopType, TroopClass> m_classes;
+  std::vector<AbilityDefinition> m_abilities;
   TroopClass m_fallback{};
 };
 

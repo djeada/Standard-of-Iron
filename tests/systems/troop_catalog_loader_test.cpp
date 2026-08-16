@@ -2,8 +2,13 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
+#include "game/systems/default_content.h"
+#include "game/systems/nation_id.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/resource_types.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/troop_catalog.h"
 #include "game/units/troop_catalog_loader.h"
 #include "game/units/troop_config.h"
@@ -120,6 +125,92 @@ TEST(TroopCatalogLoader, IronSepulcherTroopsLoadFromCatalog) {
   EXPECT_EQ(grave_priest->production.cost, 0);
   EXPECT_TRUE(grave_priest->combat.can_ranged);
   EXPECT_EQ(grave_priest->visuals.renderer_id, "troops/iron_sepulcher/grave_priest");
+}
+
+TEST(TroopCatalogLoader, ShippedTroopsCarryTheLoreTheInspectPanelDraws) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  for (auto const type : {Game::Units::TroopType::Archer,
+                          Game::Units::TroopType::Swordsman,
+                          Game::Units::TroopType::Spearman,
+                          Game::Units::TroopType::MountedKnight,
+                          Game::Units::TroopType::HorseArcher,
+                          Game::Units::TroopType::HorseSpearman,
+                          Game::Units::TroopType::Healer,
+                          Game::Units::TroopType::Catapult,
+                          Game::Units::TroopType::Ballista,
+                          Game::Units::TroopType::Elephant,
+                          Game::Units::TroopType::Builder,
+                          Game::Units::TroopType::Civilian,
+                          Game::Units::TroopType::SkeletonSwordsman,
+                          Game::Units::TroopType::SkeletonArcher,
+                          Game::Units::TroopType::GravePriest}) {
+    auto const* troop_class = Game::Units::TroopCatalog::instance().get_class(type);
+    ASSERT_NE(troop_class, nullptr);
+    const std::string name = Game::Units::troop_typeToString(type);
+
+    EXPECT_FALSE(troop_class->lore.role.empty()) << name << " has no role line";
+    EXPECT_FALSE(troop_class->lore.strengths.empty()) << name << " has no strengths";
+    EXPECT_FALSE(troop_class->lore.weaknesses.empty()) << name << " has no weaknesses";
+    EXPECT_FALSE(troop_class->lore.history.empty()) << name << " has no history";
+  }
+}
+
+TEST(TroopCatalogLoader, ATroopWithoutLoreStillLoads) {
+  auto& catalog = Game::Units::TroopCatalog::instance();
+  catalog.reset_to_defaults();
+
+  auto const* compiled = catalog.get_class(Game::Units::TroopType::Archer);
+  ASSERT_NE(compiled, nullptr);
+  EXPECT_TRUE(compiled->lore.empty())
+      << "the compiled fallback carries stats only; lore is asset content";
+}
+
+TEST(TroopCatalogLoader, DocumentedAbilitiesAreDisplayOnlyAndNeverReachGameplay) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
+  Game::Systems::TroopProfileService::instance().clear();
+
+  auto const* skeleton_archer = Game::Units::TroopCatalog::instance().get_class(
+      Game::Units::TroopType::SkeletonArcher);
+  ASSERT_NE(skeleton_archer, nullptr);
+  EXPECT_EQ(skeleton_archer->documented_abilities,
+            (std::vector<std::string>{"cursed_arrow_volley"}));
+
+  auto& profiles = Game::Systems::TroopProfileService::instance();
+
+  const auto sepulcher = profiles.get_profile(Game::Systems::NationID::IronSepulcher,
+                                              Game::Units::TroopType::SkeletonArcher);
+  EXPECT_TRUE(sepulcher.has_ability("cursed_arrow_volley"))
+      << "the Sepulcher declares this ability on its nation variant and must keep it";
+
+  const auto roman = profiles.get_profile(Game::Systems::NationID::RomanRepublic,
+                                          Game::Units::TroopType::SkeletonArcher);
+  EXPECT_FALSE(roman.has_ability("cursed_arrow_volley"))
+      << "reading the base ability list must stay display-only: routing it into the "
+         "gameplay profile would arm cursed arrows for every nation that fields this "
+         "type, which skeleton_archer.cpp keys its special attack on";
+  EXPECT_EQ(roman.documented_abilities,
+            (std::vector<std::string>{"cursed_arrow_volley"}))
+      << "the panel still names the ability even where the nation does not grant it";
+}
+
+TEST(TroopCatalogLoader, TheAbilityCatalogueExplainsEveryAbilityTheTroopsDeclare) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+  auto const& catalog = Game::Units::TroopCatalog::instance();
+
+  for (auto const& [type, troop_class] : catalog.get_all_classes()) {
+    for (auto const& ability_id : troop_class.documented_abilities) {
+      auto const* definition = catalog.get_ability(ability_id);
+      EXPECT_NE(definition, nullptr)
+          << Game::Units::troop_typeToString(type) << " declares '" << ability_id
+          << "' but the ability catalogue has no entry to describe it";
+      if (definition != nullptr) {
+        EXPECT_FALSE(definition->display_name.empty());
+        EXPECT_FALSE(definition->effect.empty());
+      }
+    }
+  }
 }
 
 TEST(TroopCatalogLoader, CommandersLoadFromCatalog) {

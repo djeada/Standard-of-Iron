@@ -25,6 +25,21 @@ Design.IronPanel {
 
     signal unitActivated(var unitId)
     signal groupActivated(string unitType)
+    signal profileRequested(string unitType, string nation)
+
+    property var profileLookup: null
+
+    readonly property string focusTypeKey: root.inspecting ? (root.inspected.typeKey || "") : root.groups.length > 0 ? (root.groups[0].typeKey || "") : ""
+    readonly property string focusNation: root.inspecting ? (root.inspected.nation || "") : root.groups.length > 0 ? (root.groups[0].nation || "") : ""
+
+    readonly property var focusProfile: {
+        if (!root.profileLookup || root.focusTypeKey === "")
+            return null;
+        var found = root.profileLookup(root.focusTypeKey, root.focusNation);
+        return found && found.valid === true ? found : null;
+    }
+
+    readonly property bool canShowProfile: !!root.focusProfile
 
     accessibleName: qsTr("Selected units")
     Accessible.description: header.text
@@ -137,10 +152,24 @@ Design.IronPanel {
                 }
             }
 
+            Design.IronIconButton {
+                id: profileButton
+
+                objectName: "selectionProfileButton"
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root.canShowProfile
+                iconText: Design.Icons.capture
+                tooltip: qsTr("Show what this unit is for")
+                accessibleName: qsTr("Unit details")
+                onClicked: root.profileRequested(root.focusTypeKey, root.focusNation)
+            }
+
             Design.IronBadge {
                 id: selectionCountBadge
 
-                anchors.right: parent.right
+                anchors.right: profileButton.visible ? profileButton.left : parent.right
+                anchors.rightMargin: profileButton.visible ? Design.Metrics.space8 : 0
                 anchors.verticalCenter: parent.verticalCenter
                 visible: !root.empty || root.inspecting
                 tone: root.inspecting ? root.focusTone(root.inspected) : Design.Theme.accent
@@ -181,6 +210,53 @@ Design.IronPanel {
             active: root.army || root.groupedSquad
             visible: active
             sourceComponent: rosterView
+        }
+
+        Row {
+            id: statStrip
+
+            objectName: "selectionStatStrip"
+            width: parent.width
+            spacing: Design.Metrics.space12
+            visible: root.canShowProfile && (!root.empty || root.inspecting)
+
+            Repeater {
+                model: root.canShowProfile ? [{
+                        "label": qsTr("ATK"),
+                        "value": String(root.focusProfile.attack_damage)
+                    }, {
+                        "label": qsTr("RNG"),
+                        "value": Number(root.focusProfile.attack_range).toFixed(1)
+                    }, {
+                        "label": qsTr("SPD"),
+                        "value": Number(root.focusProfile.speed).toFixed(1)
+                    }] : []
+
+                delegate: Row {
+                    required property var modelData
+
+                    spacing: Design.Metrics.space4
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: parent.modelData.label
+                        color: Design.Theme.textDisabled
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.medium
+                        font.letterSpacing: Design.Typography.trackingWide
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: parent.modelData.value
+                        color: Design.Theme.textPrimary
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.bold
+                    }
+                }
+            }
         }
     }
 
