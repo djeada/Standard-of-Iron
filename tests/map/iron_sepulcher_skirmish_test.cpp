@@ -10,6 +10,8 @@
 #include "app/session/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
+#include "game/camera_framing.h"
+#include "game/game_config.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
@@ -481,4 +483,42 @@ TEST_F(IronSepulcherSkirmishTest, CapturingTheShrineBarracksDestroysItsGarrison)
   EXPECT_TRUE(living_guardians_of_owner(world, shrine->owner_id).empty())
       << "capturing the shrine must put its risen garrison down";
   EXPECT_TRUE(undead->is_shrine_purified(QStringLiteral("shrine_sentinels")));
+}
+
+TEST_F(IronSepulcherSkirmishTest, TheOpeningShotIsFramedByTheMapNotByAFlatDefault) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  App::Core::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+  ASSERT_TRUE(load_result.has_focus_position)
+      << "the load must find the camp it frames";
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+
+  const auto expected = Game::reset_framing({.distance = map_definition.camera.distance,
+                                             .pitch = map_definition.camera.tilt_deg,
+                                             .yaw = map_definition.camera.yaw_deg});
+
+  EXPECT_NEAR(camera.get_distance(), expected.distance, 0.01F);
+  EXPECT_NEAR(camera.get_distance(),
+              Game::GameConfig::instance().camera_reset_framing().distance,
+              0.01F)
+      << "a reset must land on the framing the battle opened with";
+  EXPECT_GT(camera.get_distance(),
+            Game::GameConfig::instance().get_camera_default_distance())
+      << "the old flat 12-unit default put the camera inside the camp";
 }

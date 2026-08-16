@@ -202,21 +202,24 @@ for Linux, macOS, and Windows.
 
 All gameplay bindings can be changed under **Settings → Controls**.
 
-| Context   | Default input      | Action                                        |
-| --------- | ------------------ | --------------------------------------------- |
-| Camera    | Arrow keys / WASD  | Pan                                           |
-| Camera    | Q / E              | Rotate                                        |
-| Camera    | R / F              | Change elevation                              |
-| Selection | Left-click / drag  | Select one unit or draw a selection rectangle |
-| Selection | Shift + left-click | Add to selection                              |
-| Orders    | Right-click        | Context move, attack, or interact             |
-| Orders    | A / M              | Enter attack mode / return to move mode       |
-| Orders    | S / H / G          | Stop / hold / guard                           |
-| Orders    | P, then two clicks | Set a patrol route                            |
-| Game      | Space              | Pause or resume                               |
-| Game      | Enter              | Enter or leave direct commander control       |
-| Game      | F5 / F9            | Quick-save / quick-load                       |
-| Game      | Escape             | Cancel the current mode or open the menu      |
+| Context   | Default input           | Action                                        |
+| --------- | ----------------------- | --------------------------------------------- |
+| Camera    | Arrow keys or WASD      | Pan (hold Shift to move faster)               |
+| Camera    | Q / E                   | Rotate                                        |
+| Camera    | Ctrl+Up / Ctrl+Down     | Tilt overhead or towards the horizon          |
+| Camera    | Wheel, or PgUp / PgDown | Zoom                                          |
+| Camera    | Home                    | Return to your camp                           |
+| Camera    | Right-drag              | Drag the ground under the cursor              |
+| Selection | Left-click / drag       | Select one unit or draw a selection rectangle |
+| Selection | Shift + left-click      | Add to selection                              |
+| Orders    | Right-click             | Context move, attack, or interact             |
+| Orders    | C / M                   | Enter attack mode / return to move mode       |
+| Orders    | Z / H / G               | Stop / hold / guard                           |
+| Orders    | P, then two clicks      | Set a patrol route                            |
+| Game      | Space                   | Pause or resume                               |
+| Game      | Enter                   | Enter or leave direct commander control       |
+| Game      | F5 / F9                 | Quick-save / quick-load                       |
+| Game      | Escape                  | Cancel the current mode or open the menu      |
 
 ## Architecture
 

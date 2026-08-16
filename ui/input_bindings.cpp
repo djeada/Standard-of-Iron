@@ -16,6 +16,17 @@ namespace {
 
 constexpr char kUnboundToken[] = "None";
 
+constexpr char kAlternateSuffix[] = "|alt";
+
+struct RenamedAction {
+  const char* legacy_id;
+  const char* current_id;
+};
+
+constexpr std::array<RenamedAction, 2> k_renamed_actions{
+    {{"rts.camera_orbit_left", "rts.camera_tilt_down"},
+     {"rts.camera_orbit_right", "rts.camera_tilt_up"}}};
+
 constexpr int kModifierMask =
     Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
 
@@ -108,7 +119,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
   const QString combat = QObject::tr("Commander combat");
 
   QVector<Spec> catalog;
-  catalog.reserve(45);
+  catalog.reserve(48);
 
   catalog.append({QStringLiteral("global.menu"),
                   global,
@@ -164,57 +175,89 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   rts,
                   camera,
                   QObject::tr("Pan camera up"),
-                  QObject::tr("Hold Shift while panning to move faster"),
+                  QObject::tr("Slides the view north over the battlefield. Hold Shift "
+                              "to cover twice the ground per step."),
                   QStringLiteral("Up"),
-                  false});
+                  false,
+                  QStringLiteral("W")});
   catalog.append({QStringLiteral("rts.camera_pan_down"),
                   rts,
                   camera,
                   QObject::tr("Pan camera down"),
-                  {},
+                  QObject::tr("Slides the view south. Hold Shift to move faster."),
                   QStringLiteral("Down"),
-                  false});
+                  false,
+                  QStringLiteral("S")});
   catalog.append({QStringLiteral("rts.camera_pan_left"),
                   rts,
                   camera,
                   QObject::tr("Pan camera left"),
-                  {},
+                  QObject::tr("Slides the view west. Hold Shift to move faster."),
                   QStringLiteral("Left"),
-                  false});
+                  false,
+                  QStringLiteral("A")});
   catalog.append({QStringLiteral("rts.camera_pan_right"),
                   rts,
                   camera,
                   QObject::tr("Pan camera right"),
-                  {},
+                  QObject::tr("Slides the view east. Hold Shift to move faster."),
                   QStringLiteral("Right"),
-                  false});
-  catalog.append({QStringLiteral("rts.camera_yaw_left"),
+                  false,
+                  QStringLiteral("D")});
+  catalog.append({QStringLiteral("rts.camera_rotate_left"),
                   rts,
                   camera,
                   QObject::tr("Rotate camera left"),
-                  {},
+                  QObject::tr("Swings the view anticlockwise around the point you are "
+                              "looking at. Hold Shift to swing further."),
                   QStringLiteral("Q"),
                   false});
-  catalog.append({QStringLiteral("rts.camera_yaw_right"),
+  catalog.append({QStringLiteral("rts.camera_rotate_right"),
                   rts,
                   camera,
                   QObject::tr("Rotate camera right"),
-                  {},
+                  QObject::tr("Swings the view clockwise around the point you are "
+                              "looking at. Hold Shift to swing further."),
                   QStringLiteral("E"),
                   false});
-  catalog.append({QStringLiteral("rts.camera_orbit_left"),
+  catalog.append({QStringLiteral("rts.camera_tilt_up"),
                   rts,
                   camera,
-                  QObject::tr("Orbit camera left"),
-                  {},
-                  QStringLiteral("R"),
+                  QObject::tr("Tilt camera up"),
+                  QObject::tr("Raises the camera towards an overhead view. Hold Shift "
+                              "to tilt further."),
+                  QStringLiteral("Ctrl+Up"),
                   false});
-  catalog.append({QStringLiteral("rts.camera_orbit_right"),
+  catalog.append({QStringLiteral("rts.camera_tilt_down"),
                   rts,
                   camera,
-                  QObject::tr("Orbit camera right"),
-                  {},
-                  QStringLiteral("T"),
+                  QObject::tr("Tilt camera down"),
+                  QObject::tr("Lowers the camera towards the horizon. Hold Shift to "
+                              "tilt further."),
+                  QStringLiteral("Ctrl+Down"),
+                  false});
+  catalog.append(
+      {QStringLiteral("rts.camera_zoom_in"),
+       rts,
+       camera,
+       QObject::tr("Zoom in"),
+       QObject::tr("Moves the camera closer. The mouse wheel does the same."),
+       QStringLiteral("PgUp"),
+       false});
+  catalog.append({QStringLiteral("rts.camera_zoom_out"),
+                  rts,
+                  camera,
+                  QObject::tr("Zoom out"),
+                  QObject::tr("Pulls the camera back. The mouse wheel does the same."),
+                  QStringLiteral("PgDown"),
+                  false});
+  catalog.append({QStringLiteral("rts.camera_reset"),
+                  rts,
+                  camera,
+                  QObject::tr("Reset camera"),
+                  QObject::tr("Returns to your own camp at the framing the mission "
+                              "opened with. The top bar has the same button."),
+                  QStringLiteral("Home"),
                   false});
   catalog.append({QStringLiteral("rts.select"),
                   rts,
@@ -242,14 +285,14 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   orders,
                   QObject::tr("Stop"),
                   {},
-                  QStringLiteral("S"),
+                  QStringLiteral("Z"),
                   false});
   catalog.append({QStringLiteral("rts.order_attack"),
                   rts,
                   orders,
                   QObject::tr("Attack"),
                   {},
-                  QStringLiteral("A"),
+                  QStringLiteral("C"),
                   false});
   catalog.append({QStringLiteral("rts.order_move"),
                   rts,
@@ -290,8 +333,8 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   rts,
                   orders,
                   QObject::tr("Place commander rally flag"),
-                  QObject::tr("Shares its key with orbit camera left by default and "
-                              "takes priority only while a rally can be placed"),
+                  QObject::tr("Takes priority over anything else on its key while a "
+                              "rally can be placed"),
                   QStringLiteral("R"),
                   true});
 
@@ -438,21 +481,41 @@ InputBindings* InputBindings::m_instance = nullptr;
 
 InputBindings::InputBindings(QObject* parent)
     : QObject(parent) {
+  load_stored_bindings();
+}
+
+void InputBindings::load_stored_bindings() {
+  for (const auto& renamed : k_renamed_actions) {
+    const QString legacy = QString::fromLatin1(renamed.legacy_id);
+    const QString current = QString::fromLatin1(renamed.current_id);
+    const QString carried = UserSettings::load_input_binding(legacy);
+    if (carried.isEmpty()) {
+      continue;
+    }
+    if (UserSettings::load_input_binding(current).isEmpty()) {
+      UserSettings::save_input_binding(current, carried);
+    }
+    UserSettings::save_input_binding(legacy, QString());
+  }
+
   for (const ActionSpec& spec : catalog()) {
-    const QString stored = UserSettings::load_input_binding(spec.id);
-    if (stored.isEmpty()) {
-      continue;
+    for (int slot = 0; slot < kSlotCount; ++slot) {
+      const QString key = storage_key(spec.id, slot);
+      const QString stored = UserSettings::load_input_binding(key);
+      if (stored.isEmpty()) {
+        continue;
+      }
+      if (stored == QLatin1String(kUnboundToken)) {
+        m_overrides.insert(key, QString());
+        continue;
+      }
+      const Chord chord = parse(stored);
+      if (!chord.is_valid()) {
+        qWarning() << "Ignoring unreadable saved binding for" << key << stored;
+        continue;
+      }
+      m_overrides.insert(key, format(chord));
     }
-    if (stored == QLatin1String(kUnboundToken)) {
-      m_overrides.insert(spec.id, QString());
-      continue;
-    }
-    const Chord chord = parse(stored);
-    if (!chord.is_valid()) {
-      qWarning() << "Ignoring unreadable saved binding for" << spec.id << stored;
-      continue;
-    }
-    m_overrides.insert(spec.id, format(chord));
   }
 }
 
@@ -486,26 +549,46 @@ auto InputBindings::spec_for(const QString& action_id) const -> const ActionSpec
   return nullptr;
 }
 
-auto InputBindings::shortcut_for(const QString& action_id) const -> QString {
-  const auto override_it = m_overrides.constFind(action_id);
+auto InputBindings::is_slot(int slot) -> bool {
+  return slot >= 0 && slot < kSlotCount;
+}
+
+auto InputBindings::storage_key(const QString& action_id, int slot) -> QString {
+  return slot == Alternate ? action_id + QLatin1String(kAlternateSuffix) : action_id;
+}
+
+auto InputBindings::default_in(const ActionSpec& spec, int slot) -> QString {
+  return slot == Alternate ? spec.default_alternate : spec.default_shortcut;
+}
+
+auto InputBindings::shortcut_for(const QString& action_id, int slot) const -> QString {
+  if (!is_slot(slot)) {
+    return {};
+  }
+  const auto override_it = m_overrides.constFind(storage_key(action_id, slot));
   if (override_it != m_overrides.constEnd()) {
     return override_it.value();
   }
   const ActionSpec* spec = spec_for(action_id);
-  return spec != nullptr ? spec->default_shortcut : QString();
+  return spec != nullptr ? default_in(*spec, slot) : QString();
 }
 
-auto InputBindings::display_shortcut_for(const QString& action_id) const -> QString {
-  return describe(shortcut_for(action_id));
+auto InputBindings::display_shortcut_for(const QString& action_id,
+                                         int slot) const -> QString {
+  return describe(shortcut_for(action_id, slot));
 }
 
-auto InputBindings::default_shortcut_for(const QString& action_id) const -> QString {
+auto InputBindings::default_shortcut_for(const QString& action_id,
+                                         int slot) const -> QString {
   const ActionSpec* spec = spec_for(action_id);
-  return spec != nullptr ? spec->default_shortcut : QString();
+  if (spec == nullptr || !is_slot(slot)) {
+    return {};
+  }
+  return default_in(*spec, slot);
 }
 
-auto InputBindings::chord_for(const QString& action_id) const -> Chord {
-  return parse(shortcut_for(action_id));
+auto InputBindings::chord_for(const QString& action_id, int slot) const -> Chord {
+  return parse(shortcut_for(action_id, slot));
 }
 
 auto InputBindings::contexts_overlap(const QString& lhs, const QString& rhs) -> bool {
@@ -514,12 +597,20 @@ auto InputBindings::contexts_overlap(const QString& lhs, const QString& rhs) -> 
 }
 
 auto InputBindings::conflicts_for(const QString& action_id,
-                                  const QString& shortcut) const -> QStringList {
+                                  const QString& shortcut,
+                                  int slot) const -> QStringList {
   QStringList conflicts;
   const ActionSpec* subject = spec_for(action_id);
   const Chord chord = parse(shortcut);
-  if (subject == nullptr || !chord.is_valid()) {
+  if (subject == nullptr || !chord.is_valid() || !is_slot(slot)) {
     return conflicts;
+  }
+
+  for (int other_slot = 0; other_slot < kSlotCount; ++other_slot) {
+    if (other_slot != slot && chord_for(action_id, other_slot) == chord) {
+      conflicts.append(action_id);
+      break;
+    }
   }
 
   for (const ActionSpec& other : catalog()) {
@@ -533,53 +624,83 @@ auto InputBindings::conflicts_for(const QString& action_id,
     if (subject->contextual || other.contextual) {
       continue;
     }
-    if (chord_for(other.id) == chord) {
-      conflicts.append(other.id);
+    for (int other_slot = 0; other_slot < kSlotCount; ++other_slot) {
+      if (chord_for(other.id, other_slot) == chord) {
+        conflicts.append(other.id);
+        break;
+      }
     }
   }
   return conflicts;
 }
 
-auto InputBindings::assign(const QString& action_id, const QString& shortcut) -> bool {
-  if (!conflicts_for(action_id, shortcut).isEmpty()) {
+auto InputBindings::assign(const QString& action_id,
+                           const QString& shortcut,
+                           int slot) -> bool {
+  if (!conflicts_for(action_id, shortcut, slot).isEmpty()) {
     return false;
   }
   const Chord chord = parse(shortcut);
-  if (spec_for(action_id) == nullptr || !chord.is_valid()) {
+  if (spec_for(action_id) == nullptr || !chord.is_valid() || !is_slot(slot)) {
     return false;
   }
-  store(action_id, format(chord));
+  store(action_id, slot, format(chord));
   emit bindings_changed();
   return true;
 }
 
 void InputBindings::assign_overriding(const QString& action_id,
-                                      const QString& shortcut) {
+                                      const QString& shortcut,
+                                      int slot) {
   const Chord chord = parse(shortcut);
-  if (spec_for(action_id) == nullptr || !chord.is_valid()) {
+  if (spec_for(action_id) == nullptr || !chord.is_valid() || !is_slot(slot)) {
     return;
   }
 
-  for (const QString& conflicting : conflicts_for(action_id, shortcut)) {
-    store(conflicting, QString());
+  for (const QString& conflicting : conflicts_for(action_id, shortcut, slot)) {
+    for (int other_slot = 0; other_slot < kSlotCount; ++other_slot) {
+      if (conflicting == action_id && other_slot == slot) {
+        continue;
+      }
+      if (chord_for(conflicting, other_slot) == chord) {
+        store(conflicting, other_slot, QString());
+      }
+    }
   }
-  store(action_id, format(chord));
+  store(action_id, slot, format(chord));
   emit bindings_changed();
 }
 
-void InputBindings::clear_binding(const QString& action_id) {
-  if (spec_for(action_id) == nullptr) {
+void InputBindings::clear_binding(const QString& action_id, int slot) {
+  if (spec_for(action_id) == nullptr || !is_slot(slot)) {
     return;
   }
-  store(action_id, QString());
+  store(action_id, slot, QString());
   emit bindings_changed();
 }
 
 void InputBindings::reset_action(const QString& action_id) {
-  if (spec_for(action_id) == nullptr || m_overrides.remove(action_id) == 0) {
+  if (spec_for(action_id) == nullptr) {
     return;
   }
-  UserSettings::save_input_binding(action_id, QString());
+  int removed = 0;
+  for (int slot = 0; slot < kSlotCount; ++slot) {
+    const QString key = storage_key(action_id, slot);
+    if (m_overrides.remove(key) == 0) {
+      continue;
+    }
+    UserSettings::save_input_binding(key, QString());
+    ++removed;
+  }
+  if (removed == 0) {
+    return;
+  }
+  emit bindings_changed();
+}
+
+void InputBindings::reload_from_settings() {
+  m_overrides.clear();
+  load_stored_bindings();
   emit bindings_changed();
 }
 
@@ -592,28 +713,30 @@ void InputBindings::reset_to_defaults() {
   emit bindings_changed();
 }
 
-void InputBindings::store(const QString& action_id, const QString& shortcut) {
+void InputBindings::store(const QString& action_id, int slot, const QString& shortcut) {
   const ActionSpec* spec = spec_for(action_id);
-  if (spec == nullptr) {
+  if (spec == nullptr || !is_slot(slot)) {
+    return;
+  }
+  const QString key = storage_key(action_id, slot);
+
+  if (shortcut == default_in(*spec, slot)) {
+    m_overrides.remove(key);
+    UserSettings::save_input_binding(key, QString());
     return;
   }
 
-  if (shortcut == spec->default_shortcut) {
-    m_overrides.remove(action_id);
-    UserSettings::save_input_binding(action_id, QString());
-    return;
-  }
-
-  m_overrides.insert(action_id, shortcut);
+  m_overrides.insert(key, shortcut);
   UserSettings::save_input_binding(
-      action_id, shortcut.isEmpty() ? QString::fromLatin1(kUnboundToken) : shortcut);
+      key, shortcut.isEmpty() ? QString::fromLatin1(kUnboundToken) : shortcut);
 }
 
 auto InputBindings::actions() const -> QVariantList {
   QVariantList list;
   list.reserve(catalog().size());
   for (const ActionSpec& spec : catalog()) {
-    const QString shortcut = shortcut_for(spec.id);
+    const QString shortcut = shortcut_for(spec.id, Primary);
+    const QString alternate = shortcut_for(spec.id, Alternate);
     QVariantMap entry;
     entry[QStringLiteral("id")] = spec.id;
     entry[QStringLiteral("context")] = spec.context;
@@ -623,9 +746,16 @@ auto InputBindings::actions() const -> QVariantList {
     entry[QStringLiteral("shortcut")] = shortcut;
     entry[QStringLiteral("displayShortcut")] = describe(shortcut);
     entry[QStringLiteral("defaultShortcut")] = spec.default_shortcut;
-    entry[QStringLiteral("isDefault")] = shortcut == spec.default_shortcut;
     entry[QStringLiteral("unbound")] = shortcut.isEmpty();
-    entry[QStringLiteral("conflicts")] = conflicts_for(spec.id, shortcut);
+    entry[QStringLiteral("conflicts")] = conflicts_for(spec.id, shortcut, Primary);
+    entry[QStringLiteral("alternate")] = alternate;
+    entry[QStringLiteral("displayAlternate")] = describe(alternate);
+    entry[QStringLiteral("defaultAlternate")] = spec.default_alternate;
+    entry[QStringLiteral("alternateUnbound")] = alternate.isEmpty();
+    entry[QStringLiteral("alternateConflicts")] =
+        conflicts_for(spec.id, alternate, Alternate);
+    entry[QStringLiteral("isDefault")] =
+        shortcut == spec.default_shortcut && alternate == spec.default_alternate;
     list.append(entry);
   }
   return list;
@@ -633,8 +763,10 @@ auto InputBindings::actions() const -> QVariantList {
 
 auto InputBindings::has_conflicts() const -> bool {
   for (const ActionSpec& spec : catalog()) {
-    if (!conflicts_for(spec.id, shortcut_for(spec.id)).isEmpty()) {
-      return true;
+    for (int slot = 0; slot < kSlotCount; ++slot) {
+      if (!conflicts_for(spec.id, shortcut_for(spec.id, slot), slot).isEmpty()) {
+        return true;
+      }
     }
   }
   return false;
@@ -655,18 +787,23 @@ auto InputBindings::actions_for_key(int key,
     if (!contexts_overlap(spec.context, context)) {
       continue;
     }
-    const Chord chord = chord_for(spec.id);
-    if (chord.key == 0 || chord.key != key) {
-      continue;
-    }
-    QStringList& bucket = chord.modifiers == masked ? exact : unmodified;
-    if (chord.modifiers != masked && chord.modifiers != 0) {
-      continue;
-    }
-    if (spec.contextual) {
-      bucket.prepend(spec.id);
-    } else {
-      bucket.append(spec.id);
+    for (int slot = 0; slot < kSlotCount; ++slot) {
+      const Chord chord = chord_for(spec.id, slot);
+      if (chord.key == 0 || chord.key != key) {
+        continue;
+      }
+      QStringList& bucket = chord.modifiers == masked ? exact : unmodified;
+      if (chord.modifiers != masked && chord.modifiers != 0) {
+        continue;
+      }
+      if (bucket.contains(spec.id)) {
+        continue;
+      }
+      if (spec.contextual) {
+        bucket.prepend(spec.id);
+      } else {
+        bucket.append(spec.id);
+      }
     }
   }
 
@@ -687,18 +824,23 @@ auto InputBindings::actions_for_mouse(int button,
     if (!contexts_overlap(spec.context, context)) {
       continue;
     }
-    const Chord chord = chord_for(spec.id);
-    if (chord.mouse_button == 0 || chord.mouse_button != button) {
-      continue;
-    }
-    QStringList& bucket = chord.modifiers == masked ? exact : unmodified;
-    if (chord.modifiers != masked && chord.modifiers != 0) {
-      continue;
-    }
-    if (spec.contextual) {
-      bucket.prepend(spec.id);
-    } else {
-      bucket.append(spec.id);
+    for (int slot = 0; slot < kSlotCount; ++slot) {
+      const Chord chord = chord_for(spec.id, slot);
+      if (chord.mouse_button == 0 || chord.mouse_button != button) {
+        continue;
+      }
+      QStringList& bucket = chord.modifiers == masked ? exact : unmodified;
+      if (chord.modifiers != masked && chord.modifiers != 0) {
+        continue;
+      }
+      if (bucket.contains(spec.id)) {
+        continue;
+      }
+      if (spec.contextual) {
+        bucket.prepend(spec.id);
+      } else {
+        bucket.append(spec.id);
+      }
     }
   }
 

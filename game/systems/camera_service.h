@@ -33,7 +33,8 @@ public:
   void zoom(Render::GL::Camera& camera, float delta);
   void yaw(Render::GL::Camera& camera, float degrees);
   void orbit(Render::GL::Camera& camera, float yaw_deg, float pitch_deg);
-  void orbit_direction(Render::GL::Camera& camera, int direction, bool shift);
+
+  void tilt(Render::GL::Camera& camera, int direction, bool shift);
   void
   follow_selection(Render::GL::Camera& camera, Engine::Core::World& world, bool enable);
   void set_follow_lerp(Render::GL::Camera& camera, float alpha);

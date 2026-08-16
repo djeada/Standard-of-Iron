@@ -181,311 +181,14 @@
     </message>
 </context>
 <context>
-    <name>App::Controllers::CommandController</name>
-    <message>
-        <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>Madeira, pedra ou ferro insuficiente para recrutar esta unidade.</translation>
-    </message>
-    <message>
-        <source>%1 of %2 positions do not fit on this ground.</source>
-        <translation>%1 de %2 posições não cabem neste terreno.</translation>
-    </message>
+    <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
         <translation>Automático</translation>
     </message>
-</context>
-<context>
-    <name>App::Core::TutorialDirector</name>
     <message>
-        <source>stone %1 / %2 · iron %3 / %4</source>
-        <translation>pedra %1 / %2 · ferro %3 / %4</translation>
-    </message>
-    <message>
-        <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
-        <translation>Construtores não lutam. Esta ordem precisa de soldados: selecione os lanceiros, arqueiros ou espadachins perto do seu acampamento.</translation>
-    </message>
-    <message>
-        <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
-        <translation>Isso é um edifício. As ordens desta etapa precisam de soldados: clique com o botão esquerdo em uma das tropas perto do seu acampamento.</translation>
-    </message>
-    <message>
-        <source>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</source>
-        <translation>Nada está selecionado, então ninguém pode receber a ordem. Clique com o botão esquerdo em um soldado ou arraste uma caixa em volta de vários.</translation>
-    </message>
-    <message>
-        <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
-        <translation>Coletar e Construir só estão disponíveis para construtores: soldados e edifícios não fazem esse trabalho. Selecione primeiro um construtor (o trabalhador com o martelo).</translation>
-    </message>
-    <message>
-        <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
-        <translation>Nenhum construtor está selecionado. Clique com o botão esquerdo em um dos construtores ao lado do seu quartel.</translation>
-    </message>
-    <message>
-        <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
-        <translation>Isso é um edifício. Em vez disso, clique com o botão esquerdo em um dos soldados perto do seu acampamento.</translation>
-    </message>
-    <message>
-        <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
-        <translation>Uma casa custa %1 de madeira e %2 de pedra; você tem %3 de madeira e %4 de pedra. O cartão de construção fica cinza até o pátio ter o suficiente: mande um construtor coletar a diferença.</translation>
-    </message>
-    <message>
-        <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
-        <translation>Um contorno vermelho significa que o local está bloqueado: perto demais de outro edifício, sobre água ou em uma encosta. Mova-o para terreno plano e livre e confirme com o botão esquerdo. O botão direito cancela.</translation>
-    </message>
-    <message>
-        <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
-        <translation>Os recrutas saem do quartel. Clique com o botão esquerdo no seu quartel para abrir o painel de produção à direita.</translation>
-    </message>
-    <message>
-        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>O quartel só tem %1 de população restante. Cada recruta custa população; quando ela acaba, construa casas: cada casa cria famílias, e um civil recrutado ali e enviado ao quartel com Entregar a repõe.</translation>
-    </message>
-    <message>
-        <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
-        <translation>Um cartão de recruta fica cinza quando falta um recurso: soldados precisam de madeira para as hastes e ferro para as lâminas. Mande um construtor coletar mais.</translation>
-    </message>
-    <message>
-        <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
-        <translation>Os saqueadores chegaram. Mantenha seus soldados juntos perto do quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance.</translation>
-    </message>
-    <message>
-        <source>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</source>
-        <translation>O ataque romano está a caminho. O contador de ondas sob a barra superior faz a contagem regressiva e o minimapa marca por onde ele entrará.</translation>
-    </message>
-    <message>
-        <source>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</source>
-        <translation>A ordem Aura só aparece quando seu comandante está selecionado. Ele é o porta-estandarte com o distintivo de coroa, perto do quartel.</translation>
-    </message>
-    <message>
-        <source>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</source>
-        <translation>A aura está recarregando ou o comandante está ferido; o botão acende de novo quando ela estiver pronta.</translation>
-    </message>
-    <message>
-        <source>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</source>
-        <translation>O comandante romano ainda está vivo. Uma nação morre com o homem que a lidera: mate-o e o acampamento cai.</translation>
-    </message>
-    <message>
-        <source>Select your troops</source>
-        <translation>Selecione suas tropas</translation>
-    </message>
-    <message>
-        <source>Move, and read the feedback</source>
-        <translation>Mova-se e leia a resposta</translation>
-    </message>
-    <message>
-        <source>Attack the Roman scouts</source>
-        <translation>Ataque os batedores romanos</translation>
-    </message>
-    <message>
-        <source>Fell timber</source>
-        <translation>Corte madeira</translation>
-    </message>
-    <message>
-        <source>Quarry stone, mine iron</source>
-        <translation>Extraia pedra e ferro</translation>
-    </message>
-    <message>
-        <source>Raise a Home</source>
-        <translation>Erga uma casa</translation>
-    </message>
-    <message>
-        <source>Recruit a soldier</source>
-        <translation>Recrute um soldado</translation>
-    </message>
-    <message>
-        <source>Assemble an army</source>
-        <translation>Reúna um exército</translation>
-    </message>
-    <message>
-        <source>Defend the camp</source>
-        <translation>Defenda o acampamento</translation>
-    </message>
-    <message>
-        <source>Guard, Hold and Patrol</source>
-        <translation>Guarda, Manter e Patrulha</translation>
-    </message>
-    <message>
-        <source>Your commander</source>
-        <translation>Seu comandante</translation>
-    </message>
-    <message>
-        <source>The camera</source>
-        <translation>A câmera</translation>
-    </message>
-    <message>
-        <source>Pause and game speed</source>
-        <translation>Pausa e velocidade do jogo</translation>
-    </message>
-    <message>
-        <source>Objectives</source>
-        <translation>Objetivos</translation>
-    </message>
-    <message>
-        <source>Take the Roman camp</source>
-        <translation>Tome o acampamento romano</translation>
-    </message>
-    <message>
-        <source>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</source>
-        <translation>Tudo começa com uma seleção. Clique com o botão esquerdo em um soldado para selecioná-lo, ou segure o botão esquerdo e arraste uma caixa em volta de vários. Tropas selecionadas mostram um anel aos pés, e o painel inferior lista quem está sob seu comando.</translation>
-    </message>
-    <message>
-        <source>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</source>
-        <translation>Com tropas selecionadas, clique com o botão direito no chão para marchar até lá. Um marcador aparece no destino e a faixa acima da grade de comandos confirma a ordem. Uma ordem recusada diz por que não pôde ser cumprida: leia a faixa quando nada acontecer.</translation>
-    </message>
-    <message>
-        <source>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</source>
-        <translation>Um grupo de batedores romanos está logo além das suas tendas; o minimapa marca inimigos em vermelho. Clique com o botão direito em um inimigo para atacá-lo, ou pressione Atacar e clique no alvo. Enquanto suas tropas lutam, o painel de alvo acima da grade de comandos acompanha a saúde do inimigo.</translation>
-    </message>
-    <message>
-        <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
-        <translation>A madeira paga quase tudo. Selecione um construtor, pressione Coletar e clique em um pinheiro. O construtor o derruba, leva as toras ao pátio de pedra ao lado do seu quartel, e só quando a carga é deixada ali o contador de madeira na barra superior sobe. Coleta automática mantém um construtor trabalhando sozinho nos nós mais próximos.</translation>
-    </message>
-    <message>
-        <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
-        <translation>Rochas dão pedra para edifícios e torres; veios de minério dão ferro para lâminas e armaduras. Ambos são levados ao mesmo pátio do quartel, que se enche conforme seus estoques crescem. O ouro vem com o acampamento e do comércio em um mercado. Coloque um construtor nas rochas e outro no minério.</translation>
-    </message>
-    <message>
-        <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
-        <translation>Selecione um construtor e pressione Construir para abrir a lista de estruturas. Cada cartão mostra o custo em madeira, pedra e ouro; um cartão cinza significa que você ainda não pode pagá-lo. Escolha Casa e mova o contorno: verde significa terreno plano e livre, vermelho significa bloqueado. Role para girar, botão esquerdo para confirmar. As casas criam as famílias das quais seu quartel recrutará depois.</translation>
-    </message>
-    <message>
-        <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
-        <translation>Clique com o botão esquerdo no seu quartel e escolha um soldado no painel de produção. Cada recruta custa população e recursos: a população vem da reserva própria do quartel, mostrada no cartão, e se repõe quando civis das suas casas são entregues a ele. A barra no painel superior mostra seu exército contra o limite de população do mapa.</translation>
-    </message>
-    <message>
-        <source>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</source>
-        <translation>Um soldado não é um exército. Continue recrutando até ter oito em campo: misture lanceiros para segurar a linha com arqueiros para punir o que avançar contra ela. Se um cartão ficar cinza, a dica do tutorial diz o que faltou. Os novos recrutas se reúnem na bandeira de reunião do quartel; defina uma no painel de produção.</translation>
-    </message>
-    <message>
-        <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
-        <translation>Um ataque romano se aproxima. O contador de ondas faz a contagem regressiva e o minimapa marca o ponto de entrada. Forme perto do seu quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance. Repila o ataque para continuar.</translation>
-    </message>
-    <message>
-        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
-        <translation>É possível dizer aos soldados como se comportar. Guarda: manter um ponto, perseguir o que se aproximar e voltar. Manter: segurar a posição sem perseguir, ideal para arqueiros em uma colina ou numa linha de muralha. Patrulha: andar entre dois pontos e enfrentar o que cruzar a rota. Dê uma dessas ordens aos seus soldados.</translation>
-    </message>
-    <message>
-        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
-        <translation>Seu comandante carrega o estandarte. Tropas perto dele lutam com mais moral, e enquanto ele está selecionado aparecem duas ordens: Aura fortalece brevemente todo soldado ao redor, e Reunião finca uma bandeira para a qual o exército marcha. Se ele morrer, suas linhas se rompem e a missão está perdida: mantenha-o atrás das lanças. Ative a Aura agora.</translation>
-    </message>
-    <message>
-        <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, and the reset button in the top bar returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
-        <translation>Mova a visão com as setas ou WASD, ou leve o mouse até a borda da tela. Role para aproximar, Q e E giram, e o botão de reinício na barra superior volta ao seu acampamento. Seguir mantém a câmera na sua seleção. Mova a câmera agora.</translation>
-    </message>
-    <message>
-        <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
-        <translation>A estrela na barra superior mostra seu objetivo atual. Pressione Escape e escolha Objetivos para ler o briefing completo: o que vence a missão, o que a perde e as metas opcionais. Abra-o agora e depois volte à batalha.</translation>
-    </message>
-    <message>
-        <source>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</source>
-        <translation>Você já sabe tudo o que o campo vai exigir. O acampamento romano fica do outro lado da campina. Reúna seu exército, mantenha o comandante atrás da linha e tome o acampamento: mate o comandante romano e a missão está vencida.</translation>
-    </message>
-    <message>
-        <source>Select at least one of your soldiers</source>
-        <translation>Selecione pelo menos um dos seus soldados</translation>
-    </message>
-    <message>
-        <source>Right-click the ground to move your selected troops</source>
-        <translation>Clique com o botão direito no chão para mover as tropas selecionadas</translation>
-    </message>
-    <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Destrua o grupo de batedores romanos (%1 soldados)</translation>
-    </message>
-    <message>
-        <source>Deliver %1 wood to your barracks yard</source>
-        <translation>Entregue %1 de madeira no pátio do seu quartel</translation>
-    </message>
-    <message>
-        <source>Deliver %1 stone and %2 iron</source>
-        <translation>Entregue %1 de pedra e %2 de ferro</translation>
-    </message>
-    <message>
-        <source>Build a Home with a builder</source>
-        <translation>Construa uma casa com um construtor</translation>
-    </message>
-    <message>
-        <source>Recruit a soldier at the barracks and wait for it to march out</source>
-        <translation>Recrute um soldado no quartel e espere ele sair</translation>
-    </message>
-    <message>
-        <source>Field at least %1 soldiers</source>
-        <translation>Tenha pelo menos %1 soldados em campo</translation>
-    </message>
-    <message>
-        <source>Break the Roman raid</source>
-        <translation>Repila o ataque romano</translation>
-    </message>
-    <message>
-        <source>Give a Guard, Hold or Patrol order</source>
-        <translation>Dê uma ordem de Guarda, Manter ou Patrulha</translation>
-    </message>
-    <message>
-        <source>Select your commander and trigger the Aura</source>
-        <translation>Selecione seu comandante e ative a Aura</translation>
-    </message>
-    <message>
-        <source>Move, zoom or rotate the camera</source>
-        <translation>Mova, aproxime ou gire a câmera</translation>
-    </message>
-    <message>
-        <source>Change the game speed or pause and resume</source>
-        <translation>Mude a velocidade do jogo ou pause e retome</translation>
-    </message>
-    <message>
-        <source>Open the Objectives screen</source>
-        <translation>Abra a tela de Objetivos</translation>
-    </message>
-    <message>
-        <source>Kill the Roman commander and take the camp</source>
-        <translation>Mate o comandante romano e tome o acampamento</translation>
-    </message>
-    <message>
-        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
-        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade, de metade até o quádruplo. A barra de espaço também pausa, e + e - percorrem as velocidades sem recorrer à barra. A velocidade ativa continua destacada durante a pausa e pode ser alterada ali. Mude a velocidade ou pause e retome agora.</translation>
-    </message>
-</context>
-<context>
-    <name>App::Models::GraphicsSettingsProxy</name>
-    <message>
-        <source>Low</source>
-        <translation>Baixa</translation>
-    </message>
-    <message>
-        <source>Medium</source>
-        <translation>Média</translation>
-    </message>
-    <message>
-        <source>High</source>
-        <translation>Alta</translation>
-    </message>
-    <message>
-        <source>Ultra</source>
-        <translation>Ultra</translation>
-    </message>
-    <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Desempenho máximo. LOD agressivo, menos detalhes à distância.</translation>
-    </message>
-    <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Equilíbrio entre desempenho e qualidade. Recomendado para a maioria dos sistemas.</translation>
-    </message>
-    <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Qualidade superior. Mais detalhes visíveis à distância. Exige hardware melhor.</translation>
-    </message>
-    <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Qualidade máxima. Detalhes completos sempre. Recomenda-se o melhor hardware.</translation>
-    </message>
-</context>
-<context>
-    <name>App::ViewModels::SaveSlotsViewModel</name>
-    <message>
-        <source>Cannot export a save with an empty name</source>
-        <translation>Não é possível exportar um jogo salvo sem nome</translation>
+        <source>%1 of %2 positions do not fit on this ground.</source>
+        <translation>%1 de %2 posições não cabem neste terreno.</translation>
     </message>
 </context>
 <context>
@@ -619,10 +322,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Movimento pelo teclado</translation>
     </message>
     <message>
-        <source>Pans in steps and keeps panning while held. Hold Shift to move twice as far per step.</source>
-        <translation>Move em passos e continua enquanto a tecla estiver pressionada. Com Shift, o dobro por passo.</translation>
-    </message>
-    <message>
         <source>Right-drag</source>
         <translation>Arrastar com o direito</translation>
     </message>
@@ -639,20 +338,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Arrasta o terreno sob o cursor. A rolagem pela borda pausa enquanto você arrasta, para que as duas nunca briguem.</translation>
     </message>
     <message>
-        <source>Wheel</source>
-        <translation>Roda</translation>
-    </message>
-    <message>
         <source>Zoom</source>
         <translation>Zoom</translation>
-    </message>
-    <message>
-        <source>Mouse wheel</source>
-        <translation>Roda do mouse</translation>
-    </message>
-    <message>
-        <source>Scrolls the camera closer to and further from the battle.</source>
-        <translation>Aproxima e afasta a câmera da batalha.</translation>
     </message>
     <message>
         <source>Rotate</source>
@@ -699,12 +386,40 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Redefinir a câmera</translation>
     </message>
     <message>
-        <source>Reset button, top bar</source>
-        <translation>Botão Redefinir, barra superior</translation>
+        <source>%1 or %2</source>
+        <translation>%1 ou %2</translation>
     </message>
     <message>
-        <source>Returns the view to your own camp.</source>
-        <translation>Devolve a vista ao seu próprio acampamento.</translation>
+        <source>Slides the view over the battlefield and keeps going while held. Either the arrows or WASD; hold Shift to cover twice the ground per step.</source>
+        <translation>Desloca a visão pelo campo de batalha e continua enquanto você segurar a tecla. As setas ou WASD; segure Shift para cobrir o dobro do terreno por passo.</translation>
+    </message>
+    <message>
+        <source>Wheel or %1</source>
+        <translation>Roda ou %1</translation>
+    </message>
+    <message>
+        <source>Mouse wheel, or %1</source>
+        <translation>Roda do mouse, ou %1</translation>
+    </message>
+    <message>
+        <source>Moves the camera closer to and further from the battle.</source>
+        <translation>Aproxima e afasta a câmera da batalha.</translation>
+    </message>
+    <message>
+        <source>Tilt</source>
+        <translation>Inclinar</translation>
+    </message>
+    <message>
+        <source>Raises the camera towards an overhead view or lowers it towards the horizon. Hold Shift to tilt further.</source>
+        <translation>Eleva a câmera para uma visão de cima ou a baixa em direção ao horizonte. Segure Shift para inclinar mais.</translation>
+    </message>
+    <message>
+        <source>%1, or the Reset button in the top bar</source>
+        <translation>%1, ou o botão Redefinir na barra superior</translation>
+    </message>
+    <message>
+        <source>Returns the view to your own camp, framed the way the battle opened.</source>
+        <translation>Devolve a visão ao seu acampamento, com o enquadramento com que a batalha começou.</translation>
     </message>
 </context>
 <context>
@@ -1036,6 +751,13 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>Os sobreviventes fogem rumo a Placência através da saraiva e da lama. Tendas, grãos e armas romanas são capturados; os corpos sob o gelo só se erguem quando ninguém está olhando.</translation>
+    </message>
+</context>
+<context>
+    <name>CommandController</name>
+    <message>
+        <source>Not enough wood, stone, or iron to recruit this unit.</source>
+        <translation>Madeira, pedra ou ferro insuficiente para recrutar esta unidade.</translation>
     </message>
 </context>
 <context>
@@ -1478,10 +1200,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Pressione uma tecla ou clique um botão do mouse. Backspace limpa, Esc cancela.</translation>
     </message>
     <message>
-        <source>Select a command to rebind it.</source>
-        <translation>Selecione um comando para redefini-lo.</translation>
-    </message>
-    <message>
         <source>Reset all</source>
         <translation>Redefinir tudo</translation>
     </message>
@@ -1524,6 +1242,18 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>This binding is already the default.</source>
         <translation>Este atalho já é o padrão.</translation>
+    </message>
+    <message>
+        <source>Select a command to rebind it. Each one takes two keys, so the camera can answer to the arrows and to WASD at once.</source>
+        <translation>Escolha um comando para reatribuí-lo. Cada um aceita duas teclas, então a câmera pode responder às setas e ao WASD ao mesmo tempo.</translation>
+    </message>
+    <message>
+        <source>Add a second key for %1</source>
+        <translation>Adicionar uma segunda tecla para %1</translation>
+    </message>
+    <message>
+        <source>Second key for %1</source>
+        <translation>Segunda tecla para %1</translation>
     </message>
 </context>
 <context>
@@ -2463,34 +2193,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Mão de obra insuficiente. Construa casas ou aguarde novas famílias.</translation>
     </message>
     <message>
-        <source>Select your marketplace to trade.</source>
-        <translation>Selecione seu mercado para negociar.</translation>
-    </message>
-    <message>
-        <source>Marketplace can trade only wood, stone, or iron.</source>
-        <translation>O mercado só negocia madeira, pedra ou ferro.</translation>
-    </message>
-    <message>
-        <source>Not enough gold to buy %1.</source>
-        <translation>Ouro insuficiente para comprar %1.</translation>
-    </message>
-    <message>
-        <source>Not enough %1 to sell.</source>
-        <translation>%1 insuficiente para vender.</translation>
-    </message>
-    <message>
-        <source>Campaign manager not initialized</source>
-        <translation>Gerenciador de campanha não inicializado</translation>
-    </message>
-    <message>
-        <source>Failed to load mission</source>
-        <translation>Falha ao carregar a missão</translation>
-    </message>
-    <message>
-        <source>Failed to load mission preview: %1</source>
-        <translation>Falha ao carregar a prévia da missão: %1</translation>
-    </message>
-    <message>
         <source>Cannot start skirmish: renderer not initialized</source>
         <translation>Não é possível iniciar a escaramuça: renderizador não inicializado</translation>
     </message>
@@ -2560,6 +2262,41 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>No firing line</source>
         <translation>Sem linha de tiro</translation>
+    </message>
+</context>
+<context>
+    <name>GraphicsSettingsProxy</name>
+    <message>
+        <source>Low</source>
+        <translation>Baixa</translation>
+    </message>
+    <message>
+        <source>Medium</source>
+        <translation>Média</translation>
+    </message>
+    <message>
+        <source>High</source>
+        <translation>Alta</translation>
+    </message>
+    <message>
+        <source>Ultra</source>
+        <translation>Ultra</translation>
+    </message>
+    <message>
+        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
+        <translation>Desempenho máximo. LOD agressivo, menos detalhes à distância.</translation>
+    </message>
+    <message>
+        <source>Balanced performance and quality. Recommended for most systems.</source>
+        <translation>Equilíbrio entre desempenho e qualidade. Recomendado para a maioria dos sistemas.</translation>
+    </message>
+    <message>
+        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
+        <translation>Qualidade superior. Mais detalhes visíveis à distância. Exige hardware melhor.</translation>
+    </message>
+    <message>
+        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
+        <translation>Qualidade máxima. Detalhes completos sempre. Recomenda-se o melhor hardware.</translation>
     </message>
 </context>
 <context>
@@ -3102,10 +2839,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Seguir a seleção com a câmera</translation>
     </message>
     <message>
-        <source>Reset the camera</source>
-        <translation>Redefinir a câmera</translation>
-    </message>
-    <message>
         <source>SPECTATOR</source>
         <translation>ESPECTADOR</translation>
     </message>
@@ -3186,6 +2919,10 @@ Unseen: never scouted.</source>
 Visível: sob observação agora, inimigos aparecem.
 Explorado: visto antes, apenas o terreno.
 Não visto: nunca explorado.</translation>
+    </message>
+    <message>
+        <source>Return the camera to your camp (%1)</source>
+        <translation>Devolver a câmera ao seu acampamento (%1)</translation>
     </message>
 </context>
 <context>
@@ -3391,12 +3128,12 @@ Não visto: nunca explorado.</translation>
         <translation>Fechar</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
-        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade, de metade até o quádruplo; a barra de espaço também pausa, e + e - percorrem as velocidades. A velocidade ativa continua destacada durante a pausa e pode ser alterada ali. Mova a câmera com as setas ou WASD, ou empurre o mouse até a borda da tela; role para aproximar, Q e E giram; o botão de redefinir volta ao seu acampamento e Seguir mantém a câmera na sua seleção.</translation>
-    </message>
-    <message>
         <source>Camera</source>
         <translation>Câmera</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</source>
+        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade, de metade até o quádruplo; a barra de espaço também pausa, e + e - percorrem as velocidades. A velocidade ativa continua destacada durante a pausa e pode ser alterada ali. Mova a câmera com as setas ou WASD, ou empurre o mouse até a borda da tela; role ou use PgUp e PgDown para o zoom, Q e E para girar, Ctrl com as setas para cima e para baixo para inclinar; Home volta ao seu acampamento e Seguir mantém a câmera na sua seleção. Tudo isso pode ser reatribuído em Configurações › Controles, onde cada comando de câmera diz o que faz.</translation>
     </message>
 </context>
 <context>
@@ -4345,6 +4082,21 @@ para ver a prévia</translation>
     <message>
         <source>Training Meadow</source>
         <translation>Campina de Treinamento</translation>
+    </message>
+</context>
+<context>
+    <name>MatchSetupViewModel</name>
+    <message>
+        <source>Campaign manager not initialized</source>
+        <translation>Gerenciador de campanha não inicializado</translation>
+    </message>
+    <message>
+        <source>Failed to load mission</source>
+        <translation>Falha ao carregar a missão</translation>
+    </message>
+    <message>
+        <source>Failed to load mission preview: %1</source>
+        <translation>Falha ao carregar a prévia da missão: %1</translation>
     </message>
 </context>
 <context>
@@ -5423,34 +5175,6 @@ para ver a prévia</translation>
 <context>
     <name>ProductionManager</name>
     <message>
-        <source>gold</source>
-        <translation>ouro</translation>
-    </message>
-    <message>
-        <source>food</source>
-        <translation>comida</translation>
-    </message>
-    <message>
-        <source>wood</source>
-        <translation>madeira</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>pedra</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>ferro</translation>
-    </message>
-    <message>
-        <source>resources</source>
-        <translation>recursos</translation>
-    </message>
-    <message>
-        <source>Not enough %1.</source>
-        <translation>%1 insuficiente.</translation>
-    </message>
-    <message>
         <source>Select a tree, boulder, or iron ore deposit.</source>
         <translation>Selecione uma árvore, pedregulho ou depósito de minério de ferro.</translation>
     </message>
@@ -5513,14 +5237,6 @@ para ver a prévia</translation>
     <message>
         <source>Cannot build there.</source>
         <translation>Não é possível construir aí.</translation>
-    </message>
-    <message>
-        <source>Blocked by an existing wall.</source>
-        <translation>Bloqueado por uma muralha existente.</translation>
-    </message>
-    <message>
-        <source>Not enough wood.</source>
-        <translation>Madeira insuficiente.</translation>
     </message>
     <message>
         <source>No valid wall segments in that drag.</source>
@@ -5941,6 +5657,37 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     </message>
 </context>
 <context>
+    <name>ProductionViewModel</name>
+    <message>
+        <source>wood</source>
+        <translation>madeira</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>pedra</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>ferro</translation>
+    </message>
+    <message>
+        <source>Select your marketplace to trade.</source>
+        <translation>Selecione seu mercado para negociar.</translation>
+    </message>
+    <message>
+        <source>Marketplace can trade only wood, stone, or iron.</source>
+        <translation>O mercado só negocia madeira, pedra ou ferro.</translation>
+    </message>
+    <message>
+        <source>Not enough gold to buy %1.</source>
+        <translation>Ouro insuficiente para comprar %1.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to sell.</source>
+        <translation>%1 insuficiente para vender.</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>System</source>
@@ -5995,10 +5742,6 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
         <translation>Deslocar câmera para cima</translation>
     </message>
     <message>
-        <source>Hold Shift while panning to move faster</source>
-        <translation>Segure Shift ao deslocar para mover mais rápido</translation>
-    </message>
-    <message>
         <source>Pan camera down</source>
         <translation>Deslocar câmera para baixo</translation>
     </message>
@@ -6017,14 +5760,6 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>Rotate camera right</source>
         <translation>Girar câmera para a direita</translation>
-    </message>
-    <message>
-        <source>Orbit camera left</source>
-        <translation>Orbitar câmera para a esquerda</translation>
-    </message>
-    <message>
-        <source>Orbit camera right</source>
-        <translation>Orbitar câmera para a direita</translation>
     </message>
     <message>
         <source>Select unit or drag a selection box</source>
@@ -6073,10 +5808,6 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>Place commander rally flag</source>
         <translation>Colocar a bandeira de reunião do comandante</translation>
-    </message>
-    <message>
-        <source>Shares its key with orbit camera left by default and takes priority only while a rally can be placed</source>
-        <translation>Compartilha a tecla com “orbitar câmera para a esquerda” por padrão e só tem prioridade enquanto for possível marcar uma reunião</translation>
     </message>
     <message>
         <source>Move forward</source>
@@ -6161,6 +5892,74 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>Slow down the battle</source>
         <translation>Desacelerar a batalha</translation>
+    </message>
+    <message>
+        <source>Slides the view north over the battlefield. Hold Shift to cover twice the ground per step.</source>
+        <translation>Desloca a visão para o norte do campo de batalha. Segure Shift para cobrir o dobro do terreno por passo.</translation>
+    </message>
+    <message>
+        <source>Slides the view south. Hold Shift to move faster.</source>
+        <translation>Desloca a visão para o sul. Segure Shift para ir mais rápido.</translation>
+    </message>
+    <message>
+        <source>Slides the view west. Hold Shift to move faster.</source>
+        <translation>Desloca a visão para o oeste. Segure Shift para ir mais rápido.</translation>
+    </message>
+    <message>
+        <source>Slides the view east. Hold Shift to move faster.</source>
+        <translation>Desloca a visão para o leste. Segure Shift para ir mais rápido.</translation>
+    </message>
+    <message>
+        <source>Swings the view anticlockwise around the point you are looking at. Hold Shift to swing further.</source>
+        <translation>Gira a visão no sentido anti-horário em torno do ponto que você está olhando. Segure Shift para girar mais.</translation>
+    </message>
+    <message>
+        <source>Swings the view clockwise around the point you are looking at. Hold Shift to swing further.</source>
+        <translation>Gira a visão no sentido horário em torno do ponto que você está olhando. Segure Shift para girar mais.</translation>
+    </message>
+    <message>
+        <source>Tilt camera up</source>
+        <translation>Inclinar câmera para cima</translation>
+    </message>
+    <message>
+        <source>Raises the camera towards an overhead view. Hold Shift to tilt further.</source>
+        <translation>Eleva a câmera para uma visão de cima. Segure Shift para inclinar mais.</translation>
+    </message>
+    <message>
+        <source>Tilt camera down</source>
+        <translation>Inclinar câmera para baixo</translation>
+    </message>
+    <message>
+        <source>Lowers the camera towards the horizon. Hold Shift to tilt further.</source>
+        <translation>Baixa a câmera em direção ao horizonte. Segure Shift para inclinar mais.</translation>
+    </message>
+    <message>
+        <source>Zoom in</source>
+        <translation>Aproximar</translation>
+    </message>
+    <message>
+        <source>Moves the camera closer. The mouse wheel does the same.</source>
+        <translation>Aproxima a câmera. A roda do mouse faz o mesmo.</translation>
+    </message>
+    <message>
+        <source>Zoom out</source>
+        <translation>Afastar</translation>
+    </message>
+    <message>
+        <source>Pulls the camera back. The mouse wheel does the same.</source>
+        <translation>Afasta a câmera. A roda do mouse faz o mesmo.</translation>
+    </message>
+    <message>
+        <source>Reset camera</source>
+        <translation>Redefinir a câmera</translation>
+    </message>
+    <message>
+        <source>Returns to your own camp at the framing the mission opened with. The top bar has the same button.</source>
+        <translation>Volta ao seu acampamento com o enquadramento com que a missão começou. A barra superior tem o mesmo botão.</translation>
+    </message>
+    <message>
+        <source>Takes priority over anything else on its key while a rally can be placed</source>
+        <translation>Tem prioridade sobre qualquer outra coisa na sua tecla enquanto uma bandeira de reunião puder ser colocada</translation>
     </message>
 </context>
 <context>
@@ -6363,6 +6162,13 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>Cancel</source>
         <translation>Cancelar</translation>
+    </message>
+</context>
+<context>
+    <name>SaveSlotsViewModel</name>
+    <message>
+        <source>Cannot export a save with an empty name</source>
+        <translation>Não é possível exportar um jogo salvo sem nome</translation>
     </message>
 </context>
 <context>
@@ -6771,6 +6577,257 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>Pink</source>
         <translation>Rosa</translation>
+    </message>
+</context>
+<context>
+    <name>TutorialDirector</name>
+    <message>
+        <source>stone %1 / %2 · iron %3 / %4</source>
+        <translation>pedra %1 / %2 · ferro %3 / %4</translation>
+    </message>
+    <message>
+        <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
+        <translation>Construtores não lutam. Esta ordem precisa de soldados: selecione os lanceiros, arqueiros ou espadachins perto do seu acampamento.</translation>
+    </message>
+    <message>
+        <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
+        <translation>Isso é um edifício. As ordens desta etapa precisam de soldados: clique com o botão esquerdo em uma das tropas perto do seu acampamento.</translation>
+    </message>
+    <message>
+        <source>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</source>
+        <translation>Nada está selecionado, então ninguém pode receber a ordem. Clique com o botão esquerdo em um soldado ou arraste uma caixa em volta de vários.</translation>
+    </message>
+    <message>
+        <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
+        <translation>Coletar e Construir só estão disponíveis para construtores: soldados e edifícios não fazem esse trabalho. Selecione primeiro um construtor (o trabalhador com o martelo).</translation>
+    </message>
+    <message>
+        <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
+        <translation>Nenhum construtor está selecionado. Clique com o botão esquerdo em um dos construtores ao lado do seu quartel.</translation>
+    </message>
+    <message>
+        <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
+        <translation>Isso é um edifício. Em vez disso, clique com o botão esquerdo em um dos soldados perto do seu acampamento.</translation>
+    </message>
+    <message>
+        <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
+        <translation>Uma casa custa %1 de madeira e %2 de pedra; você tem %3 de madeira e %4 de pedra. O cartão de construção fica cinza até o pátio ter o suficiente: mande um construtor coletar a diferença.</translation>
+    </message>
+    <message>
+        <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
+        <translation>Um contorno vermelho significa que o local está bloqueado: perto demais de outro edifício, sobre água ou em uma encosta. Mova-o para terreno plano e livre e confirme com o botão esquerdo. O botão direito cancela.</translation>
+    </message>
+    <message>
+        <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
+        <translation>Os recrutas saem do quartel. Clique com o botão esquerdo no seu quartel para abrir o painel de produção à direita.</translation>
+    </message>
+    <message>
+        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>O quartel só tem %1 de população restante. Cada recruta custa população; quando ela acaba, construa casas: cada casa cria famílias, e um civil recrutado ali e enviado ao quartel com Entregar a repõe.</translation>
+    </message>
+    <message>
+        <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
+        <translation>Um cartão de recruta fica cinza quando falta um recurso: soldados precisam de madeira para as hastes e ferro para as lâminas. Mande um construtor coletar mais.</translation>
+    </message>
+    <message>
+        <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
+        <translation>Os saqueadores chegaram. Mantenha seus soldados juntos perto do quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance.</translation>
+    </message>
+    <message>
+        <source>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</source>
+        <translation>O ataque romano está a caminho. O contador de ondas sob a barra superior faz a contagem regressiva e o minimapa marca por onde ele entrará.</translation>
+    </message>
+    <message>
+        <source>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</source>
+        <translation>A ordem Aura só aparece quando seu comandante está selecionado. Ele é o porta-estandarte com o distintivo de coroa, perto do quartel.</translation>
+    </message>
+    <message>
+        <source>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</source>
+        <translation>A aura está recarregando ou o comandante está ferido; o botão acende de novo quando ela estiver pronta.</translation>
+    </message>
+    <message>
+        <source>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</source>
+        <translation>O comandante romano ainda está vivo. Uma nação morre com o homem que a lidera: mate-o e o acampamento cai.</translation>
+    </message>
+    <message>
+        <source>Select your troops</source>
+        <translation>Selecione suas tropas</translation>
+    </message>
+    <message>
+        <source>Move, and read the feedback</source>
+        <translation>Mova-se e leia a resposta</translation>
+    </message>
+    <message>
+        <source>Attack the Roman scouts</source>
+        <translation>Ataque os batedores romanos</translation>
+    </message>
+    <message>
+        <source>Fell timber</source>
+        <translation>Corte madeira</translation>
+    </message>
+    <message>
+        <source>Quarry stone, mine iron</source>
+        <translation>Extraia pedra e ferro</translation>
+    </message>
+    <message>
+        <source>Raise a Home</source>
+        <translation>Erga uma casa</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier</source>
+        <translation>Recrute um soldado</translation>
+    </message>
+    <message>
+        <source>Assemble an army</source>
+        <translation>Reúna um exército</translation>
+    </message>
+    <message>
+        <source>Defend the camp</source>
+        <translation>Defenda o acampamento</translation>
+    </message>
+    <message>
+        <source>Guard, Hold and Patrol</source>
+        <translation>Guarda, Manter e Patrulha</translation>
+    </message>
+    <message>
+        <source>Your commander</source>
+        <translation>Seu comandante</translation>
+    </message>
+    <message>
+        <source>The camera</source>
+        <translation>A câmera</translation>
+    </message>
+    <message>
+        <source>Pause and game speed</source>
+        <translation>Pausa e velocidade do jogo</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Objetivos</translation>
+    </message>
+    <message>
+        <source>Take the Roman camp</source>
+        <translation>Tome o acampamento romano</translation>
+    </message>
+    <message>
+        <source>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</source>
+        <translation>Tudo começa com uma seleção. Clique com o botão esquerdo em um soldado para selecioná-lo, ou segure o botão esquerdo e arraste uma caixa em volta de vários. Tropas selecionadas mostram um anel aos pés, e o painel inferior lista quem está sob seu comando.</translation>
+    </message>
+    <message>
+        <source>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</source>
+        <translation>Com tropas selecionadas, clique com o botão direito no chão para marchar até lá. Um marcador aparece no destino e a faixa acima da grade de comandos confirma a ordem. Uma ordem recusada diz por que não pôde ser cumprida: leia a faixa quando nada acontecer.</translation>
+    </message>
+    <message>
+        <source>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</source>
+        <translation>Um grupo de batedores romanos está logo além das suas tendas; o minimapa marca inimigos em vermelho. Clique com o botão direito em um inimigo para atacá-lo, ou pressione Atacar e clique no alvo. Enquanto suas tropas lutam, o painel de alvo acima da grade de comandos acompanha a saúde do inimigo.</translation>
+    </message>
+    <message>
+        <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
+        <translation>A madeira paga quase tudo. Selecione um construtor, pressione Coletar e clique em um pinheiro. O construtor o derruba, leva as toras ao pátio de pedra ao lado do seu quartel, e só quando a carga é deixada ali o contador de madeira na barra superior sobe. Coleta automática mantém um construtor trabalhando sozinho nos nós mais próximos.</translation>
+    </message>
+    <message>
+        <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
+        <translation>Rochas dão pedra para edifícios e torres; veios de minério dão ferro para lâminas e armaduras. Ambos são levados ao mesmo pátio do quartel, que se enche conforme seus estoques crescem. O ouro vem com o acampamento e do comércio em um mercado. Coloque um construtor nas rochas e outro no minério.</translation>
+    </message>
+    <message>
+        <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
+        <translation>Selecione um construtor e pressione Construir para abrir a lista de estruturas. Cada cartão mostra o custo em madeira, pedra e ouro; um cartão cinza significa que você ainda não pode pagá-lo. Escolha Casa e mova o contorno: verde significa terreno plano e livre, vermelho significa bloqueado. Role para girar, botão esquerdo para confirmar. As casas criam as famílias das quais seu quartel recrutará depois.</translation>
+    </message>
+    <message>
+        <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
+        <translation>Clique com o botão esquerdo no seu quartel e escolha um soldado no painel de produção. Cada recruta custa população e recursos: a população vem da reserva própria do quartel, mostrada no cartão, e se repõe quando civis das suas casas são entregues a ele. A barra no painel superior mostra seu exército contra o limite de população do mapa.</translation>
+    </message>
+    <message>
+        <source>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</source>
+        <translation>Um soldado não é um exército. Continue recrutando até ter oito em campo: misture lanceiros para segurar a linha com arqueiros para punir o que avançar contra ela. Se um cartão ficar cinza, a dica do tutorial diz o que faltou. Os novos recrutas se reúnem na bandeira de reunião do quartel; defina uma no painel de produção.</translation>
+    </message>
+    <message>
+        <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
+        <translation>Um ataque romano se aproxima. O contador de ondas faz a contagem regressiva e o minimapa marca o ponto de entrada. Forme perto do seu quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance. Repila o ataque para continuar.</translation>
+    </message>
+    <message>
+        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
+        <translation>É possível dizer aos soldados como se comportar. Guarda: manter um ponto, perseguir o que se aproximar e voltar. Manter: segurar a posição sem perseguir, ideal para arqueiros em uma colina ou numa linha de muralha. Patrulha: andar entre dois pontos e enfrentar o que cruzar a rota. Dê uma dessas ordens aos seus soldados.</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
+        <translation>Seu comandante carrega o estandarte. Tropas perto dele lutam com mais moral, e enquanto ele está selecionado aparecem duas ordens: Aura fortalece brevemente todo soldado ao redor, e Reunião finca uma bandeira para a qual o exército marcha. Se ele morrer, suas linhas se rompem e a missão está perdida: mantenha-o atrás das lanças. Ative a Aura agora.</translation>
+    </message>
+    <message>
+        <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
+        <translation>Mova a visão com as setas ou WASD, ou leve o mouse até a borda da tela. Role para aproximar, Q e E giram, Ctrl com as setas para cima e para baixo inclina, e Home volta ao seu acampamento. Seguir mantém a câmera na sua seleção. Mova a câmera agora.</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
+        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade, de metade até o quádruplo. A barra de espaço também pausa, e + e - percorrem as velocidades sem recorrer à barra. A velocidade ativa continua destacada durante a pausa e pode ser alterada ali. Mude a velocidade ou pause e retome agora.</translation>
+    </message>
+    <message>
+        <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
+        <translation>A estrela na barra superior mostra seu objetivo atual. Pressione Escape e escolha Objetivos para ler o briefing completo: o que vence a missão, o que a perde e as metas opcionais. Abra-o agora e depois volte à batalha.</translation>
+    </message>
+    <message>
+        <source>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</source>
+        <translation>Você já sabe tudo o que o campo vai exigir. O acampamento romano fica do outro lado da campina. Reúna seu exército, mantenha o comandante atrás da linha e tome o acampamento: mate o comandante romano e a missão está vencida.</translation>
+    </message>
+    <message>
+        <source>Select at least one of your soldiers</source>
+        <translation>Selecione pelo menos um dos seus soldados</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move your selected troops</source>
+        <translation>Clique com o botão direito no chão para mover as tropas selecionadas</translation>
+    </message>
+    <message>
+        <source>Destroy the Roman scouting party (%1 soldiers)</source>
+        <translation>Destrua o grupo de batedores romanos (%1 soldados)</translation>
+    </message>
+    <message>
+        <source>Deliver %1 wood to your barracks yard</source>
+        <translation>Entregue %1 de madeira no pátio do seu quartel</translation>
+    </message>
+    <message>
+        <source>Deliver %1 stone and %2 iron</source>
+        <translation>Entregue %1 de pedra e %2 de ferro</translation>
+    </message>
+    <message>
+        <source>Build a Home with a builder</source>
+        <translation>Construa uma casa com um construtor</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier at the barracks and wait for it to march out</source>
+        <translation>Recrute um soldado no quartel e espere ele sair</translation>
+    </message>
+    <message>
+        <source>Field at least %1 soldiers</source>
+        <translation>Tenha pelo menos %1 soldados em campo</translation>
+    </message>
+    <message>
+        <source>Break the Roman raid</source>
+        <translation>Repila o ataque romano</translation>
+    </message>
+    <message>
+        <source>Give a Guard, Hold or Patrol order</source>
+        <translation>Dê uma ordem de Guarda, Manter ou Patrulha</translation>
+    </message>
+    <message>
+        <source>Select your commander and trigger the Aura</source>
+        <translation>Selecione seu comandante e ative a Aura</translation>
+    </message>
+    <message>
+        <source>Move, zoom or rotate the camera</source>
+        <translation>Mova, aproxime ou gire a câmera</translation>
+    </message>
+    <message>
+        <source>Change the game speed or pause and resume</source>
+        <translation>Mude a velocidade do jogo ou pause e retome</translation>
+    </message>
+    <message>
+        <source>Open the Objectives screen</source>
+        <translation>Abra a tela de Objetivos</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commander and take the camp</source>
+        <translation>Mate o comandante romano e tome o acampamento</translation>
     </message>
 </context>
 <context>

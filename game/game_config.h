@@ -1,13 +1,17 @@
 #pragma once
 
+#include "camera_framing.h"
+
 namespace Game {
 
 struct CameraConfig {
   float default_distance = 12.0F;
   float default_pitch = 45.0F;
   float default_yaw = 225.0F;
-  float orbit_step_normal = 4.0F;
-  float orbit_step_shift = 8.0F;
+  float tilt_step_normal = 4.0F;
+  float tilt_step_shift = 8.0F;
+
+  CameraFraming authored;
 };
 
 struct ArrowConfig {
@@ -48,6 +52,20 @@ public:
     return m_camera.default_yaw;
   }
 
+  [[nodiscard]] auto camera_reset_framing() const noexcept -> CameraFraming {
+    if (m_camera.authored.distance <= 0.0F) {
+      return {.distance = m_camera.default_distance,
+              .pitch = m_camera.default_pitch,
+              .yaw = m_camera.default_yaw};
+    }
+    return reset_framing(m_camera.authored);
+  }
+
+  void set_authored_camera(const CameraFraming& authored) noexcept {
+    m_camera.authored = authored;
+  }
+  void clear_authored_camera() noexcept { m_camera.authored = {}; }
+
   [[nodiscard]] auto get_arrow_arc_height_multiplier() const noexcept -> float {
     return m_arrow.arc_height_multiplier;
   }
@@ -73,11 +91,11 @@ public:
     return m_gameplay.formation_spacing_default;
   }
 
-  [[nodiscard]] auto get_camera_orbit_step_normal() const noexcept -> float {
-    return m_camera.orbit_step_normal;
+  [[nodiscard]] auto get_camera_tilt_step_normal() const noexcept -> float {
+    return m_camera.tilt_step_normal;
   }
-  [[nodiscard]] auto get_camera_orbit_step_shift() const noexcept -> float {
-    return m_camera.orbit_step_shift;
+  [[nodiscard]] auto get_camera_tilt_step_shift() const noexcept -> float {
+    return m_camera.tilt_step_shift;
   }
 
   void set_camera_default_distance(float value) noexcept {
@@ -109,11 +127,11 @@ public:
     m_gameplay.formation_spacing_default = value;
   }
 
-  void set_camera_orbit_step_normal(float value) noexcept {
-    m_camera.orbit_step_normal = value;
+  void set_camera_tilt_step_normal(float value) noexcept {
+    m_camera.tilt_step_normal = value;
   }
-  void set_camera_orbit_step_shift(float value) noexcept {
-    m_camera.orbit_step_shift = value;
+  void set_camera_tilt_step_shift(float value) noexcept {
+    m_camera.tilt_step_shift = value;
   }
 
   [[nodiscard]] auto get_max_troops_per_player() const noexcept -> int {

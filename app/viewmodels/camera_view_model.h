@@ -27,7 +27,7 @@ public:
   Q_INVOKABLE void zoom(float delta);
   Q_INVOKABLE void yaw(float degrees);
   Q_INVOKABLE void orbit(float yaw_deg, float pitch_deg);
-  Q_INVOKABLE void orbit_direction(int direction, bool shift);
+  Q_INVOKABLE void tilt(int direction, bool shift);
   Q_INVOKABLE void reset();
   Q_INVOKABLE void follow_selection(bool enable);
   Q_INVOKABLE void set_follow_lerp(float alpha);

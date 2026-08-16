@@ -55,9 +55,10 @@ Item {
     }
 
     function perform_action(actionId, event) {
-        var yawStep = (event.modifiers & Qt.ShiftModifier) ? 8 : 4;
-        var inputStep = (event.modifiers & Qt.ShiftModifier) ? 2 : 1;
         var shiftHeld = (event.modifiers & Qt.ShiftModifier) !== 0;
+        var yawStep = shiftHeld ? 8 : 4;
+        var inputStep = shiftHeld ? 2 : 1;
+        var zoomStep = shiftHeld ? 2 : 1;
         switch (actionId) {
         case "global.toggle_control_mode":
             reset_pan_keys();
@@ -145,17 +146,28 @@ Item {
             root.game.camera.move(inputStep, 0);
             ensure_pan_timer_running();
             return true;
-        case "rts.camera_yaw_left":
+        case "rts.camera_rotate_left":
             root.game.camera.yaw(-yawStep);
             return true;
-        case "rts.camera_yaw_right":
+        case "rts.camera_rotate_right":
             root.game.camera.yaw(yawStep);
             return true;
-        case "rts.camera_orbit_left":
-            root.game.camera.orbit_direction(1, shiftHeld);
+        case "rts.camera_tilt_up":
+            root.game.camera.tilt(1, shiftHeld);
             return true;
-        case "rts.camera_orbit_right":
-            root.game.camera.orbit_direction(-1, shiftHeld);
+        case "rts.camera_tilt_down":
+            root.game.camera.tilt(-1, shiftHeld);
+            return true;
+        case "rts.camera_zoom_in":
+            root.game.camera.zoom(zoomStep);
+            return true;
+        case "rts.camera_zoom_out":
+            root.game.camera.zoom(-zoomStep);
+            return true;
+        case "rts.camera_reset":
+            if (!root.game.camera.reset)
+                return false;
+            root.game.camera.reset();
             return true;
         case "rts.select_all_troops":
             if (!root.game.orders.select_all_troops)

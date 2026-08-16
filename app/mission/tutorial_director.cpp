@@ -649,9 +649,9 @@ auto TutorialDirector::step_body(TutorialStepId id) -> QString {
               "now.");
   case TutorialStepId::Camera:
     return tr("Move the view with the arrow keys or WASD, or push the mouse to the "
-              "screen edge. Scroll to zoom, Q and E rotate, and the reset button in "
-              "the top bar returns to your camp. Follow keeps the camera on your "
-              "selection. Move the camera now.");
+              "screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and "
+              "down arrows tilts, and Home returns to your camp. Follow keeps the "
+              "camera on your selection. Move the camera now.");
   case TutorialStepId::GameSpeed:
     return tr("The top-left buttons pause the battle and set the speed, from half "
               "up to quadruple. Space pauses too, and + and - step through the "

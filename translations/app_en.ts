@@ -181,311 +181,14 @@
     </message>
 </context>
 <context>
-    <name>App::Controllers::CommandController</name>
-    <message>
-        <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>Not enough wood, stone, or iron to recruit this unit.</translation>
-    </message>
-    <message>
-        <source>%1 of %2 positions do not fit on this ground.</source>
-        <translation>%1 of %2 positions do not fit on this ground.</translation>
-    </message>
+    <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
         <translation>Automatic</translation>
     </message>
-</context>
-<context>
-    <name>App::Core::TutorialDirector</name>
     <message>
-        <source>stone %1 / %2 · iron %3 / %4</source>
-        <translation>stone %1 / %2 · iron %3 / %4</translation>
-    </message>
-    <message>
-        <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
-        <translation>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</translation>
-    </message>
-    <message>
-        <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
-        <translation>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</translation>
-    </message>
-    <message>
-        <source>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</source>
-        <translation>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</translation>
-    </message>
-    <message>
-        <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
-        <translation>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</translation>
-    </message>
-    <message>
-        <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
-        <translation>No builder is selected. Left-click one of the builders standing by your barracks.</translation>
-    </message>
-    <message>
-        <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
-        <translation>That is a building. Left-click one of the soldiers standing near your camp instead.</translation>
-    </message>
-    <message>
-        <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
-        <translation>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</translation>
-    </message>
-    <message>
-        <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
-        <translation>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</translation>
-    </message>
-    <message>
-        <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
-        <translation>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</translation>
-    </message>
-    <message>
-        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</translation>
-    </message>
-    <message>
-        <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
-        <translation>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</translation>
-    </message>
-    <message>
-        <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
-        <translation>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</translation>
-    </message>
-    <message>
-        <source>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</source>
-        <translation>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</translation>
-    </message>
-    <message>
-        <source>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</source>
-        <translation>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</translation>
-    </message>
-    <message>
-        <source>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</source>
-        <translation>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</translation>
-    </message>
-    <message>
-        <source>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</source>
-        <translation>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</translation>
-    </message>
-    <message>
-        <source>Select your troops</source>
-        <translation>Select your troops</translation>
-    </message>
-    <message>
-        <source>Move, and read the feedback</source>
-        <translation>Move, and read the feedback</translation>
-    </message>
-    <message>
-        <source>Attack the Roman scouts</source>
-        <translation>Attack the Roman scouts</translation>
-    </message>
-    <message>
-        <source>Fell timber</source>
-        <translation>Fell timber</translation>
-    </message>
-    <message>
-        <source>Quarry stone, mine iron</source>
-        <translation>Quarry stone, mine iron</translation>
-    </message>
-    <message>
-        <source>Raise a Home</source>
-        <translation>Raise a Home</translation>
-    </message>
-    <message>
-        <source>Recruit a soldier</source>
-        <translation>Recruit a soldier</translation>
-    </message>
-    <message>
-        <source>Assemble an army</source>
-        <translation>Assemble an army</translation>
-    </message>
-    <message>
-        <source>Defend the camp</source>
-        <translation>Defend the camp</translation>
-    </message>
-    <message>
-        <source>Guard, Hold and Patrol</source>
-        <translation>Guard, Hold and Patrol</translation>
-    </message>
-    <message>
-        <source>Your commander</source>
-        <translation>Your commander</translation>
-    </message>
-    <message>
-        <source>The camera</source>
-        <translation>The camera</translation>
-    </message>
-    <message>
-        <source>Pause and game speed</source>
-        <translation>Pause and game speed</translation>
-    </message>
-    <message>
-        <source>Objectives</source>
-        <translation>Objectives</translation>
-    </message>
-    <message>
-        <source>Take the Roman camp</source>
-        <translation>Take the Roman camp</translation>
-    </message>
-    <message>
-        <source>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</source>
-        <translation>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</translation>
-    </message>
-    <message>
-        <source>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</source>
-        <translation>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</translation>
-    </message>
-    <message>
-        <source>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</source>
-        <translation>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</translation>
-    </message>
-    <message>
-        <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
-        <translation>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</translation>
-    </message>
-    <message>
-        <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
-        <translation>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</translation>
-    </message>
-    <message>
-        <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
-        <translation>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</translation>
-    </message>
-    <message>
-        <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
-        <translation>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</translation>
-    </message>
-    <message>
-        <source>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</source>
-        <translation>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</translation>
-    </message>
-    <message>
-        <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
-        <translation>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</translation>
-    </message>
-    <message>
-        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
-        <translation>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</translation>
-    </message>
-    <message>
-        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
-        <translation>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</translation>
-    </message>
-    <message>
-        <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, and the reset button in the top bar returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
-        <translation>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, and the reset button in the top bar returns to your camp. Follow keeps the camera on your selection. Move the camera now.</translation>
-    </message>
-    <message>
-        <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
-        <translation>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</translation>
-    </message>
-    <message>
-        <source>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</source>
-        <translation>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</translation>
-    </message>
-    <message>
-        <source>Select at least one of your soldiers</source>
-        <translation>Select at least one of your soldiers</translation>
-    </message>
-    <message>
-        <source>Right-click the ground to move your selected troops</source>
-        <translation>Right-click the ground to move your selected troops</translation>
-    </message>
-    <message>
-        <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Destroy the Roman scouting party (%1 soldiers)</translation>
-    </message>
-    <message>
-        <source>Deliver %1 wood to your barracks yard</source>
-        <translation>Deliver %1 wood to your barracks yard</translation>
-    </message>
-    <message>
-        <source>Deliver %1 stone and %2 iron</source>
-        <translation>Deliver %1 stone and %2 iron</translation>
-    </message>
-    <message>
-        <source>Build a Home with a builder</source>
-        <translation>Build a Home with a builder</translation>
-    </message>
-    <message>
-        <source>Recruit a soldier at the barracks and wait for it to march out</source>
-        <translation>Recruit a soldier at the barracks and wait for it to march out</translation>
-    </message>
-    <message>
-        <source>Field at least %1 soldiers</source>
-        <translation>Field at least %1 soldiers</translation>
-    </message>
-    <message>
-        <source>Break the Roman raid</source>
-        <translation>Break the Roman raid</translation>
-    </message>
-    <message>
-        <source>Give a Guard, Hold or Patrol order</source>
-        <translation>Give a Guard, Hold or Patrol order</translation>
-    </message>
-    <message>
-        <source>Select your commander and trigger the Aura</source>
-        <translation>Select your commander and trigger the Aura</translation>
-    </message>
-    <message>
-        <source>Move, zoom or rotate the camera</source>
-        <translation>Move, zoom or rotate the camera</translation>
-    </message>
-    <message>
-        <source>Change the game speed or pause and resume</source>
-        <translation>Change the game speed or pause and resume</translation>
-    </message>
-    <message>
-        <source>Open the Objectives screen</source>
-        <translation>Open the Objectives screen</translation>
-    </message>
-    <message>
-        <source>Kill the Roman commander and take the camp</source>
-        <translation>Kill the Roman commander and take the camp</translation>
-    </message>
-    <message>
-        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
-        <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</translation>
-    </message>
-</context>
-<context>
-    <name>App::Models::GraphicsSettingsProxy</name>
-    <message>
-        <source>Low</source>
-        <translation>Low</translation>
-    </message>
-    <message>
-        <source>Medium</source>
-        <translation>Medium</translation>
-    </message>
-    <message>
-        <source>High</source>
-        <translation>High</translation>
-    </message>
-    <message>
-        <source>Ultra</source>
-        <translation>Ultra</translation>
-    </message>
-    <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Maximum performance. Aggressive LOD, reduced detail at distance.</translation>
-    </message>
-    <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Balanced performance and quality. Recommended for most systems.</translation>
-    </message>
-    <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Higher quality. More detail visible at distance. Requires better hardware.</translation>
-    </message>
-    <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Maximum quality. Full detail always. Best hardware recommended.</translation>
-    </message>
-</context>
-<context>
-    <name>App::ViewModels::SaveSlotsViewModel</name>
-    <message>
-        <source>Cannot export a save with an empty name</source>
-        <translation>Cannot export a save with an empty name</translation>
+        <source>%1 of %2 positions do not fit on this ground.</source>
+        <translation>%1 of %2 positions do not fit on this ground.</translation>
     </message>
 </context>
 <context>
@@ -619,10 +322,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Keyboard pan</translation>
     </message>
     <message>
-        <source>Pans in steps and keeps panning while held. Hold Shift to move twice as far per step.</source>
-        <translation>Pans in steps and keeps panning while held. Hold Shift to move twice as far per step.</translation>
-    </message>
-    <message>
         <source>Right-drag</source>
         <translation>Right-drag</translation>
     </message>
@@ -639,20 +338,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</translation>
     </message>
     <message>
-        <source>Wheel</source>
-        <translation>Wheel</translation>
-    </message>
-    <message>
         <source>Zoom</source>
         <translation>Zoom</translation>
-    </message>
-    <message>
-        <source>Mouse wheel</source>
-        <translation>Mouse wheel</translation>
-    </message>
-    <message>
-        <source>Scrolls the camera closer to and further from the battle.</source>
-        <translation>Scrolls the camera closer to and further from the battle.</translation>
     </message>
     <message>
         <source>Rotate</source>
@@ -699,12 +386,40 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Reset camera</translation>
     </message>
     <message>
-        <source>Reset button, top bar</source>
-        <translation>Reset button, top bar</translation>
+        <source>%1 or %2</source>
+        <translation>%1 or %2</translation>
     </message>
     <message>
-        <source>Returns the view to your own camp.</source>
-        <translation>Returns the view to your own camp.</translation>
+        <source>Slides the view over the battlefield and keeps going while held. Either the arrows or WASD; hold Shift to cover twice the ground per step.</source>
+        <translation>Slides the view over the battlefield and keeps going while held. Either the arrows or WASD; hold Shift to cover twice the ground per step.</translation>
+    </message>
+    <message>
+        <source>Wheel or %1</source>
+        <translation>Wheel or %1</translation>
+    </message>
+    <message>
+        <source>Mouse wheel, or %1</source>
+        <translation>Mouse wheel, or %1</translation>
+    </message>
+    <message>
+        <source>Moves the camera closer to and further from the battle.</source>
+        <translation>Moves the camera closer to and further from the battle.</translation>
+    </message>
+    <message>
+        <source>Tilt</source>
+        <translation>Tilt</translation>
+    </message>
+    <message>
+        <source>Raises the camera towards an overhead view or lowers it towards the horizon. Hold Shift to tilt further.</source>
+        <translation>Raises the camera towards an overhead view or lowers it towards the horizon. Hold Shift to tilt further.</translation>
+    </message>
+    <message>
+        <source>%1, or the Reset button in the top bar</source>
+        <translation>%1, or the Reset button in the top bar</translation>
+    </message>
+    <message>
+        <source>Returns the view to your own camp, framed the way the battle opened.</source>
+        <translation>Returns the view to your own camp, framed the way the battle opened.</translation>
     </message>
 </context>
 <context>
@@ -1036,6 +751,13 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
         <translation>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</translation>
+    </message>
+</context>
+<context>
+    <name>CommandController</name>
+    <message>
+        <source>Not enough wood, stone, or iron to recruit this unit.</source>
+        <translation>Not enough wood, stone, or iron to recruit this unit.</translation>
     </message>
 </context>
 <context>
@@ -1478,10 +1200,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Press a key or click a mouse button. Backspace clears it, Esc cancels.</translation>
     </message>
     <message>
-        <source>Select a command to rebind it.</source>
-        <translation>Select a command to rebind it.</translation>
-    </message>
-    <message>
         <source>Reset all</source>
         <translation>Reset all</translation>
     </message>
@@ -1524,6 +1242,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>This binding is already the default.</source>
         <translation>This binding is already the default.</translation>
+    </message>
+    <message>
+        <source>Select a command to rebind it. Each one takes two keys, so the camera can answer to the arrows and to WASD at once.</source>
+        <translation>Select a command to rebind it. Each one takes two keys, so the camera can answer to the arrows and to WASD at once.</translation>
+    </message>
+    <message>
+        <source>Add a second key for %1</source>
+        <translation>Add a second key for %1</translation>
+    </message>
+    <message>
+        <source>Second key for %1</source>
+        <translation>Second key for %1</translation>
     </message>
 </context>
 <context>
@@ -2463,34 +2193,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Not enough manpower. Build homes or wait for families.</translation>
     </message>
     <message>
-        <source>Select your marketplace to trade.</source>
-        <translation>Select your marketplace to trade.</translation>
-    </message>
-    <message>
-        <source>Marketplace can trade only wood, stone, or iron.</source>
-        <translation>Marketplace can trade only wood, stone, or iron.</translation>
-    </message>
-    <message>
-        <source>Not enough gold to buy %1.</source>
-        <translation>Not enough gold to buy %1.</translation>
-    </message>
-    <message>
-        <source>Not enough %1 to sell.</source>
-        <translation>Not enough %1 to sell.</translation>
-    </message>
-    <message>
-        <source>Campaign manager not initialized</source>
-        <translation>Campaign manager not initialized</translation>
-    </message>
-    <message>
-        <source>Failed to load mission</source>
-        <translation>Failed to load mission</translation>
-    </message>
-    <message>
-        <source>Failed to load mission preview: %1</source>
-        <translation>Failed to load mission preview: %1</translation>
-    </message>
-    <message>
         <source>Cannot start skirmish: renderer not initialized</source>
         <translation>Cannot start skirmish: renderer not initialized</translation>
     </message>
@@ -2560,6 +2262,41 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>No firing line</source>
         <translation>No firing line</translation>
+    </message>
+</context>
+<context>
+    <name>GraphicsSettingsProxy</name>
+    <message>
+        <source>Low</source>
+        <translation>Low</translation>
+    </message>
+    <message>
+        <source>Medium</source>
+        <translation>Medium</translation>
+    </message>
+    <message>
+        <source>High</source>
+        <translation>High</translation>
+    </message>
+    <message>
+        <source>Ultra</source>
+        <translation>Ultra</translation>
+    </message>
+    <message>
+        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
+        <translation>Maximum performance. Aggressive LOD, reduced detail at distance.</translation>
+    </message>
+    <message>
+        <source>Balanced performance and quality. Recommended for most systems.</source>
+        <translation>Balanced performance and quality. Recommended for most systems.</translation>
+    </message>
+    <message>
+        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
+        <translation>Higher quality. More detail visible at distance. Requires better hardware.</translation>
+    </message>
+    <message>
+        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
+        <translation>Maximum quality. Full detail always. Best hardware recommended.</translation>
     </message>
 </context>
 <context>
@@ -3102,10 +2839,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Follow the selection with the camera</translation>
     </message>
     <message>
-        <source>Reset the camera</source>
-        <translation>Reset the camera</translation>
-    </message>
-    <message>
         <source>SPECTATOR</source>
         <translation>SPECTATOR</translation>
     </message>
@@ -3186,6 +2919,10 @@ Unseen: never scouted.</source>
 Visible: currently scouted, enemies shown.
 Explored: seen before, terrain only.
 Unseen: never scouted.</translation>
+    </message>
+    <message>
+        <source>Return the camera to your camp (%1)</source>
+        <translation>Return the camera to your camp (%1)</translation>
     </message>
 </context>
 <context>
@@ -3391,12 +3128,12 @@ Unseen: never scouted.</translation>
         <translation>Close</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
-        <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</translation>
-    </message>
-    <message>
         <source>Camera</source>
         <translation>Camera</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</source>
+        <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</translation>
     </message>
 </context>
 <context>
@@ -4345,6 +4082,21 @@ to see preview</translation>
     <message>
         <source>Training Meadow</source>
         <translation>Training Meadow</translation>
+    </message>
+</context>
+<context>
+    <name>MatchSetupViewModel</name>
+    <message>
+        <source>Campaign manager not initialized</source>
+        <translation>Campaign manager not initialized</translation>
+    </message>
+    <message>
+        <source>Failed to load mission</source>
+        <translation>Failed to load mission</translation>
+    </message>
+    <message>
+        <source>Failed to load mission preview: %1</source>
+        <translation>Failed to load mission preview: %1</translation>
     </message>
 </context>
 <context>
@@ -5423,34 +5175,6 @@ to see preview</translation>
 <context>
     <name>ProductionManager</name>
     <message>
-        <source>gold</source>
-        <translation>gold</translation>
-    </message>
-    <message>
-        <source>food</source>
-        <translation>food</translation>
-    </message>
-    <message>
-        <source>wood</source>
-        <translation>wood</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>stone</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>iron</translation>
-    </message>
-    <message>
-        <source>resources</source>
-        <translation>resources</translation>
-    </message>
-    <message>
-        <source>Not enough %1.</source>
-        <translation>Not enough %1.</translation>
-    </message>
-    <message>
         <source>Select a tree, boulder, or iron ore deposit.</source>
         <translation>Select a tree, boulder, or iron ore deposit.</translation>
     </message>
@@ -5513,14 +5237,6 @@ to see preview</translation>
     <message>
         <source>Cannot build there.</source>
         <translation>Cannot build there.</translation>
-    </message>
-    <message>
-        <source>Blocked by an existing wall.</source>
-        <translation>Blocked by an existing wall.</translation>
-    </message>
-    <message>
-        <source>Not enough wood.</source>
-        <translation>Not enough wood.</translation>
     </message>
     <message>
         <source>No valid wall segments in that drag.</source>
@@ -5941,6 +5657,37 @@ Wide vision and a durable settlement anchor</translation>
     </message>
 </context>
 <context>
+    <name>ProductionViewModel</name>
+    <message>
+        <source>wood</source>
+        <translation>wood</translation>
+    </message>
+    <message>
+        <source>stone</source>
+        <translation>stone</translation>
+    </message>
+    <message>
+        <source>iron</source>
+        <translation>iron</translation>
+    </message>
+    <message>
+        <source>Select your marketplace to trade.</source>
+        <translation>Select your marketplace to trade.</translation>
+    </message>
+    <message>
+        <source>Marketplace can trade only wood, stone, or iron.</source>
+        <translation>Marketplace can trade only wood, stone, or iron.</translation>
+    </message>
+    <message>
+        <source>Not enough gold to buy %1.</source>
+        <translation>Not enough gold to buy %1.</translation>
+    </message>
+    <message>
+        <source>Not enough %1 to sell.</source>
+        <translation>Not enough %1 to sell.</translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
         <source>System</source>
@@ -5995,10 +5742,6 @@ Wide vision and a durable settlement anchor</translation>
         <translation>Pan camera up</translation>
     </message>
     <message>
-        <source>Hold Shift while panning to move faster</source>
-        <translation>Hold Shift while panning to move faster</translation>
-    </message>
-    <message>
         <source>Pan camera down</source>
         <translation>Pan camera down</translation>
     </message>
@@ -6017,14 +5760,6 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Rotate camera right</source>
         <translation>Rotate camera right</translation>
-    </message>
-    <message>
-        <source>Orbit camera left</source>
-        <translation>Orbit camera left</translation>
-    </message>
-    <message>
-        <source>Orbit camera right</source>
-        <translation>Orbit camera right</translation>
     </message>
     <message>
         <source>Select unit or drag a selection box</source>
@@ -6073,10 +5808,6 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Place commander rally flag</source>
         <translation>Place commander rally flag</translation>
-    </message>
-    <message>
-        <source>Shares its key with orbit camera left by default and takes priority only while a rally can be placed</source>
-        <translation>Shares its key with orbit camera left by default and takes priority only while a rally can be placed</translation>
     </message>
     <message>
         <source>Move forward</source>
@@ -6161,6 +5892,74 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Slow down the battle</source>
         <translation>Slow down the battle</translation>
+    </message>
+    <message>
+        <source>Slides the view north over the battlefield. Hold Shift to cover twice the ground per step.</source>
+        <translation>Slides the view north over the battlefield. Hold Shift to cover twice the ground per step.</translation>
+    </message>
+    <message>
+        <source>Slides the view south. Hold Shift to move faster.</source>
+        <translation>Slides the view south. Hold Shift to move faster.</translation>
+    </message>
+    <message>
+        <source>Slides the view west. Hold Shift to move faster.</source>
+        <translation>Slides the view west. Hold Shift to move faster.</translation>
+    </message>
+    <message>
+        <source>Slides the view east. Hold Shift to move faster.</source>
+        <translation>Slides the view east. Hold Shift to move faster.</translation>
+    </message>
+    <message>
+        <source>Swings the view anticlockwise around the point you are looking at. Hold Shift to swing further.</source>
+        <translation>Swings the view anticlockwise around the point you are looking at. Hold Shift to swing further.</translation>
+    </message>
+    <message>
+        <source>Swings the view clockwise around the point you are looking at. Hold Shift to swing further.</source>
+        <translation>Swings the view clockwise around the point you are looking at. Hold Shift to swing further.</translation>
+    </message>
+    <message>
+        <source>Tilt camera up</source>
+        <translation>Tilt camera up</translation>
+    </message>
+    <message>
+        <source>Raises the camera towards an overhead view. Hold Shift to tilt further.</source>
+        <translation>Raises the camera towards an overhead view. Hold Shift to tilt further.</translation>
+    </message>
+    <message>
+        <source>Tilt camera down</source>
+        <translation>Tilt camera down</translation>
+    </message>
+    <message>
+        <source>Lowers the camera towards the horizon. Hold Shift to tilt further.</source>
+        <translation>Lowers the camera towards the horizon. Hold Shift to tilt further.</translation>
+    </message>
+    <message>
+        <source>Zoom in</source>
+        <translation>Zoom in</translation>
+    </message>
+    <message>
+        <source>Moves the camera closer. The mouse wheel does the same.</source>
+        <translation>Moves the camera closer. The mouse wheel does the same.</translation>
+    </message>
+    <message>
+        <source>Zoom out</source>
+        <translation>Zoom out</translation>
+    </message>
+    <message>
+        <source>Pulls the camera back. The mouse wheel does the same.</source>
+        <translation>Pulls the camera back. The mouse wheel does the same.</translation>
+    </message>
+    <message>
+        <source>Reset camera</source>
+        <translation>Reset camera</translation>
+    </message>
+    <message>
+        <source>Returns to your own camp at the framing the mission opened with. The top bar has the same button.</source>
+        <translation>Returns to your own camp at the framing the mission opened with. The top bar has the same button.</translation>
+    </message>
+    <message>
+        <source>Takes priority over anything else on its key while a rally can be placed</source>
+        <translation>Takes priority over anything else on its key while a rally can be placed</translation>
     </message>
 </context>
 <context>
@@ -6363,6 +6162,13 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Cancel</source>
         <translation>Cancel</translation>
+    </message>
+</context>
+<context>
+    <name>SaveSlotsViewModel</name>
+    <message>
+        <source>Cannot export a save with an empty name</source>
+        <translation>Cannot export a save with an empty name</translation>
     </message>
 </context>
 <context>
@@ -6771,6 +6577,257 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Pink</source>
         <translation>Pink</translation>
+    </message>
+</context>
+<context>
+    <name>TutorialDirector</name>
+    <message>
+        <source>stone %1 / %2 · iron %3 / %4</source>
+        <translation>stone %1 / %2 · iron %3 / %4</translation>
+    </message>
+    <message>
+        <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
+        <translation>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</translation>
+    </message>
+    <message>
+        <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
+        <translation>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</translation>
+    </message>
+    <message>
+        <source>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</source>
+        <translation>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</translation>
+    </message>
+    <message>
+        <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
+        <translation>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</translation>
+    </message>
+    <message>
+        <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
+        <translation>No builder is selected. Left-click one of the builders standing by your barracks.</translation>
+    </message>
+    <message>
+        <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
+        <translation>That is a building. Left-click one of the soldiers standing near your camp instead.</translation>
+    </message>
+    <message>
+        <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
+        <translation>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</translation>
+    </message>
+    <message>
+        <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
+        <translation>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
+        <translation>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</translation>
+    </message>
+    <message>
+        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</translation>
+    </message>
+    <message>
+        <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
+        <translation>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</translation>
+    </message>
+    <message>
+        <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
+        <translation>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</translation>
+    </message>
+    <message>
+        <source>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</source>
+        <translation>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</translation>
+    </message>
+    <message>
+        <source>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</source>
+        <translation>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</translation>
+    </message>
+    <message>
+        <source>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</source>
+        <translation>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</translation>
+    </message>
+    <message>
+        <source>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</source>
+        <translation>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</translation>
+    </message>
+    <message>
+        <source>Select your troops</source>
+        <translation>Select your troops</translation>
+    </message>
+    <message>
+        <source>Move, and read the feedback</source>
+        <translation>Move, and read the feedback</translation>
+    </message>
+    <message>
+        <source>Attack the Roman scouts</source>
+        <translation>Attack the Roman scouts</translation>
+    </message>
+    <message>
+        <source>Fell timber</source>
+        <translation>Fell timber</translation>
+    </message>
+    <message>
+        <source>Quarry stone, mine iron</source>
+        <translation>Quarry stone, mine iron</translation>
+    </message>
+    <message>
+        <source>Raise a Home</source>
+        <translation>Raise a Home</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier</source>
+        <translation>Recruit a soldier</translation>
+    </message>
+    <message>
+        <source>Assemble an army</source>
+        <translation>Assemble an army</translation>
+    </message>
+    <message>
+        <source>Defend the camp</source>
+        <translation>Defend the camp</translation>
+    </message>
+    <message>
+        <source>Guard, Hold and Patrol</source>
+        <translation>Guard, Hold and Patrol</translation>
+    </message>
+    <message>
+        <source>Your commander</source>
+        <translation>Your commander</translation>
+    </message>
+    <message>
+        <source>The camera</source>
+        <translation>The camera</translation>
+    </message>
+    <message>
+        <source>Pause and game speed</source>
+        <translation>Pause and game speed</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Objectives</translation>
+    </message>
+    <message>
+        <source>Take the Roman camp</source>
+        <translation>Take the Roman camp</translation>
+    </message>
+    <message>
+        <source>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</source>
+        <translation>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</translation>
+    </message>
+    <message>
+        <source>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</source>
+        <translation>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</translation>
+    </message>
+    <message>
+        <source>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</source>
+        <translation>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</translation>
+    </message>
+    <message>
+        <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
+        <translation>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</translation>
+    </message>
+    <message>
+        <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
+        <translation>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</translation>
+    </message>
+    <message>
+        <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
+        <translation>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</translation>
+    </message>
+    <message>
+        <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
+        <translation>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</translation>
+    </message>
+    <message>
+        <source>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</source>
+        <translation>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</translation>
+    </message>
+    <message>
+        <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
+        <translation>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</translation>
+    </message>
+    <message>
+        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
+        <translation>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
+        <translation>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</translation>
+    </message>
+    <message>
+        <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
+        <translation>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
+        <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</translation>
+    </message>
+    <message>
+        <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
+        <translation>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</translation>
+    </message>
+    <message>
+        <source>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</source>
+        <translation>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</translation>
+    </message>
+    <message>
+        <source>Select at least one of your soldiers</source>
+        <translation>Select at least one of your soldiers</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move your selected troops</source>
+        <translation>Right-click the ground to move your selected troops</translation>
+    </message>
+    <message>
+        <source>Destroy the Roman scouting party (%1 soldiers)</source>
+        <translation>Destroy the Roman scouting party (%1 soldiers)</translation>
+    </message>
+    <message>
+        <source>Deliver %1 wood to your barracks yard</source>
+        <translation>Deliver %1 wood to your barracks yard</translation>
+    </message>
+    <message>
+        <source>Deliver %1 stone and %2 iron</source>
+        <translation>Deliver %1 stone and %2 iron</translation>
+    </message>
+    <message>
+        <source>Build a Home with a builder</source>
+        <translation>Build a Home with a builder</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier at the barracks and wait for it to march out</source>
+        <translation>Recruit a soldier at the barracks and wait for it to march out</translation>
+    </message>
+    <message>
+        <source>Field at least %1 soldiers</source>
+        <translation>Field at least %1 soldiers</translation>
+    </message>
+    <message>
+        <source>Break the Roman raid</source>
+        <translation>Break the Roman raid</translation>
+    </message>
+    <message>
+        <source>Give a Guard, Hold or Patrol order</source>
+        <translation>Give a Guard, Hold or Patrol order</translation>
+    </message>
+    <message>
+        <source>Select your commander and trigger the Aura</source>
+        <translation>Select your commander and trigger the Aura</translation>
+    </message>
+    <message>
+        <source>Move, zoom or rotate the camera</source>
+        <translation>Move, zoom or rotate the camera</translation>
+    </message>
+    <message>
+        <source>Change the game speed or pause and resume</source>
+        <translation>Change the game speed or pause and resume</translation>
+    </message>
+    <message>
+        <source>Open the Objectives screen</source>
+        <translation>Open the Objectives screen</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commander and take the camp</source>
+        <translation>Kill the Roman commander and take the camp</translation>
     </message>
 </context>
 <context>
