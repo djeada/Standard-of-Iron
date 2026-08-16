@@ -161,6 +161,53 @@ TEST(SimulationClockTest, PausedAndScaledTimeDivergeFromWallClock) {
   EXPECT_EQ(clock.advance(1.0 / 60.0), 2);
 }
 
+TEST(SimulationClockTest, TheStallGuardClampsRealSecondsNotScaledSeconds) {
+  Game::Session::SimulationClock normal(1.0 / 60.0);
+  Game::Session::SimulationClock quadruple(1.0 / 60.0);
+  quadruple.set_time_scale(4.0);
+
+  EXPECT_EQ(normal.advance(0.1), 6);
+  EXPECT_EQ(quadruple.advance(0.1), 24);
+
+  Game::Session::SimulationClock stalled(1.0 / 60.0);
+  stalled.set_time_scale(4.0);
+  const double guard = Game::Session::SimulationClock::k_max_frame_seconds;
+  EXPECT_EQ(stalled.advance(guard * 4.0), static_cast<int>(guard * 4.0 * 60.0));
+  EXPECT_EQ(stalled.dropped_ticks(),
+            static_cast<std::uint64_t>(guard * 3.0 * 4.0 * 60.0));
+}
+
+TEST(SimulationClockTest, TicksTheFrameCouldNotRunAreCountedNotSilentlyDiscarded) {
+  Game::Session::SimulationClock clock(1.0 / 60.0);
+  clock.set_time_scale(4.0);
+
+  ASSERT_EQ(clock.advance(0.25), 60);
+  for (int step = 0; step < 32; ++step) {
+    ASSERT_TRUE(clock.consume_tick());
+  }
+
+  clock.drop_pending_ticks();
+  EXPECT_EQ(clock.dropped_ticks(), 28U);
+  EXPECT_EQ(clock.consume_dropped_ticks(), 28U);
+  EXPECT_EQ(clock.dropped_ticks(), 0U);
+
+  ASSERT_EQ(clock.advance(1.0 / 240.0), 1);
+  ASSERT_TRUE(clock.consume_tick());
+  clock.drop_pending_ticks();
+  EXPECT_EQ(clock.dropped_ticks(), 0U);
+}
+
+TEST(SimulationClockTest, LoadingASaveIsNotCountedAsADroppedTick) {
+  Game::Session::SimulationClock clock(1.0 / 60.0);
+  ASSERT_GT(clock.advance(0.2), 0);
+
+  clock.restore(4096);
+
+  EXPECT_EQ(clock.tick(), 4096U);
+  EXPECT_EQ(clock.pending_ticks(), 0);
+  EXPECT_EQ(clock.dropped_ticks(), 0U);
+}
+
 TEST(SimulationClockTest, ClampsStallsInsteadOfCatchingUp) {
   Game::Session::SimulationClock clock(1.0 / 60.0);
 

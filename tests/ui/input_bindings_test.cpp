@@ -354,6 +354,28 @@ TEST_F(InputBindingsTest, TheFormationOrderOwnsTheKeyItIsDocumentedWith) {
             QStringLiteral("F"));
 }
 
+TEST_F(InputBindingsTest, BattleSpeedIsReachableFromTheKeyboardInBothDirections) {
+  auto* bindings = InputBindings::instance();
+  const QString rts = QString::fromLatin1(InputBindings::kContextRts);
+
+  EXPECT_EQ(bindings->display_shortcut_for(QStringLiteral("rts.speed_up")),
+            QStringLiteral("+"));
+  EXPECT_EQ(bindings->display_shortcut_for(QStringLiteral("rts.speed_down")),
+            QStringLiteral("-"));
+
+  const auto faster = bindings->actions_for_key(Qt::Key_Plus, Qt::NoModifier, rts);
+  ASSERT_EQ(faster.size(), 1);
+  EXPECT_EQ(faster.at(0), QStringLiteral("rts.speed_up"));
+
+  const auto slower = bindings->actions_for_key(Qt::Key_Minus, Qt::NoModifier, rts);
+  ASSERT_EQ(slower.size(), 1);
+  EXPECT_EQ(slower.at(0), QStringLiteral("rts.speed_down"));
+
+  const auto shifted = bindings->actions_for_key(Qt::Key_Plus, Qt::ShiftModifier, rts);
+  ASSERT_EQ(shifted.size(), 1);
+  EXPECT_EQ(shifted.at(0), QStringLiteral("rts.speed_up"));
+}
+
 TEST_F(InputBindingsTest, EveryCommandBarChipResolvesToARealAction) {
 
   auto* bindings = InputBindings::instance();

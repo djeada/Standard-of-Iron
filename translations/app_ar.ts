@@ -374,10 +374,6 @@
         <translation>حرّك المنظر بمفاتيح الأسهم أو WASD، أو ادفع الفأرة إلى حافة الشاشة. مرّر العجلة للتكبير، وQ وE للتدوير، وزر الإعادة في الشريط العلوي يعيدك إلى معسكرك. المتابعة تُبقي الكاميرا على تحديدك. حرّك الكاميرا الآن.</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set the speed to half, normal or double. Space pauses too. Speed buttons stay disabled while paused - resume first. Change the speed or pause and resume now.</source>
-        <translation>الأزرار في الأعلى يسارًا توقف المعركة مؤقتًا وتضبط السرعة على النصف أو العادية أو الضعف. مفتاح المسافة يوقف مؤقتًا أيضًا. تبقى أزرار السرعة معطلة أثناء الإيقاف؛ فاستأنف أولًا. غيّر السرعة أو أوقف مؤقتًا واستأنف الآن.</translation>
-    </message>
-    <message>
         <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
         <translation>النجمة في الشريط العلوي تعرض هدفك الحالي. اضغط Escape واختر الأهداف لقراءة الإحاطة الكاملة: ما يكسب المهمة، وما يخسرها، وأي أهداف اختيارية. افتحها الآن ثم عد إلى المعركة.</translation>
     </message>
@@ -444,6 +440,10 @@
     <message>
         <source>Kill the Roman commander and take the camp</source>
         <translation>اقتل القائد الروماني واستولِ على المعسكر</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
+        <translation>تُوقف الأزرار في أعلى اليسار المعركة مؤقتًا وتضبط السرعة، من النصف حتى أربعة أضعاف. مفتاح المسافة يوقف مؤقتًا أيضًا، و + و - ينتقلان بين السرعات دون الحاجة إلى الشريط. تبقى السرعة النشطة مضاءة أثناء الإيقاف المؤقت ويمكن تغييرها من هناك. غيّر السرعة الآن أو أوقف المعركة ثم استأنفها.</translation>
     </message>
 </context>
 <context>
@@ -2615,10 +2615,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>إيقاف مؤقت</translation>
     </message>
     <message>
-        <source>Resume the battle to change speed</source>
-        <translation>استأنف المعركة لتغيير السرعة</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>تتبّع التحديد بالكاميرا</translation>
     </message>
@@ -2661,6 +2657,14 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Open the field manual (help)</source>
         <translation>افتح الدليل الميداني (المساعدة)</translation>
+    </message>
+    <message>
+        <source>Battle speed %1</source>
+        <translation>سرعة المعركة %1</translation>
+    </message>
+    <message>
+        <source>Battle speed</source>
+        <translation>سرعة المعركة</translation>
     </message>
 </context>
 <context>
@@ -2826,10 +2830,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>الإيقاع والمنظر</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set half, normal or double speed; Space pauses too. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
-        <translation>الأزرار في الأعلى يسارًا توقف المعركة مؤقتًا وتضبط السرعة على النصف أو العادية أو الضعف؛ ومفتاح المسافة يوقف مؤقتًا أيضًا. حرّك الكاميرا بمفاتيح الأسهم أو WASD، أو ادفع الفأرة إلى حافة الشاشة؛ مرّر العجلة للتكبير، وQ وE للتدوير؛ زر الإعادة يعيدك إلى معسكرك، والمتابعة تُبقي الكاميرا على تحديدك.</translation>
-    </message>
-    <message>
         <source>Field manual</source>
         <translation>الدليل الميداني</translation>
     </message>
@@ -2868,6 +2868,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Close</source>
         <translation>إغلاق</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
+        <translation>تُوقف الأزرار في أعلى اليسار المعركة مؤقتًا وتضبط السرعة، من النصف حتى أربعة أضعاف؛ مفتاح المسافة يوقف مؤقتًا أيضًا، و + و - ينتقلان بين السرعات. تبقى السرعة النشطة مضاءة أثناء الإيقاف المؤقت ويمكن تغييرها من هناك. حرّك الكاميرا بمفاتيح الأسهم أو WASD، أو ادفع مؤشر الفأرة إلى حافة الشاشة؛ استخدم عجلة الفأرة للتقريب، و Q و E للدوران؛ زر إعادة الضبط يعيدك إلى معسكرك، و«تتبع» يبقي الكاميرا على تحديدك.</translation>
     </message>
 </context>
 <context>
@@ -4082,6 +4086,14 @@ to see preview</source>
     <message>
         <source>Winter river plain</source>
         <translation>سهل نهري شتوي</translation>
+    </message>
+    <message>
+        <source>its shortcut</source>
+        <translation>الاختصار الخاص به</translation>
+    </message>
+    <message>
+        <source>Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.</source>
+        <translation>إيقاع المعركة: أزرار السرعة في الشريط العلوي بجوار الإيقاف المؤقت، من %1 حتى %2. اضغط %3 أو %4 لتغيير السرعة دون مغادرة الميدان.</translation>
     </message>
 </context>
 <context>
@@ -5648,6 +5660,18 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Toggle first and third person</source>
         <translation>التبديل بين منظور الشخص الأول والثالث</translation>
+    </message>
+    <message>
+        <source>Speed up the battle</source>
+        <translation>تسريع المعركة</translation>
+    </message>
+    <message>
+        <source>Steps through the speeds shown on the top bar</source>
+        <translation>ينتقل بين السرعات المعروضة في الشريط العلوي</translation>
+    </message>
+    <message>
+        <source>Slow down the battle</source>
+        <translation>إبطاء المعركة</translation>
     </message>
 </context>
 <context>

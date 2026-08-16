@@ -18,6 +18,7 @@ add_library(
     theme.cpp
     preferences.cpp
     input_bindings.cpp
+    game_speeds.cpp
     icon_art.cpp
     widget_shell.cpp
 )

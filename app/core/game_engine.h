@@ -146,7 +146,8 @@ public:
   Q_PROPERTY(QAbstractItemModel* selected_units_model READ selected_units_model NOTIFY
                  selected_units_changed)
   Q_PROPERTY(bool paused READ paused WRITE set_paused)
-  Q_PROPERTY(float time_scale READ time_scale WRITE set_game_speed)
+  Q_PROPERTY(
+      float time_scale READ time_scale WRITE set_game_speed NOTIFY time_scale_changed)
   Q_PROPERTY(QString victory_state READ victory_state NOTIFY victory_state_changed)
   Q_PROPERTY(QString cursor_mode READ cursor_mode WRITE set_cursor_mode NOTIFY
                  cursor_mode_changed)
@@ -292,6 +293,9 @@ public:
   Q_INVOKABLE void set_game_speed(float speed);
   [[nodiscard]] bool paused() const { return m_runtime.paused; }
   [[nodiscard]] float time_scale() const { return m_runtime.time_scale; }
+  [[nodiscard]] auto dropped_simulation_ticks() const -> std::uint64_t {
+    return m_dropped_simulation_ticks;
+  }
   [[nodiscard]] QString victory_state() const { return m_runtime.victory_state; }
   [[nodiscard]] QString cursor_mode() const;
   void set_cursor_mode(const QString& mode);
@@ -510,7 +514,8 @@ private:
   void enter_commander_runtime_mode();
   void exit_commander_runtime_mode();
   void set_active_camera(Render::GL::Camera* camera);
-  [[nodiscard]] auto apply_runtime_time_effects(float dt) -> float;
+  [[nodiscard]] auto runtime_time_effect_scale(float scaled_dt) -> float;
+  void note_dropped_simulation_ticks(std::uint64_t dropped, float real_dt);
   void update_active_runtime_simulation(float dt);
   [[nodiscard]] auto
   should_render_selected_entity(Engine::Core::EntityID id) const -> bool;
@@ -744,6 +749,9 @@ private:
   EntityCache m_entity_cache;
   RuntimeFrameOrchestrator m_frame_orchestrator;
   std::optional<QVector3D> m_commander_rally_preview_pos;
+  static constexpr float k_dropped_tick_report_interval = 5.0F;
+  std::uint64_t m_dropped_simulation_ticks{0};
+  float m_dropped_tick_report_cooldown{0.0F};
 
 signals:
   void renderer_initialized_changed();
@@ -751,6 +759,7 @@ signals:
   void selected_units_data_changed();
   void enemy_troops_defeated_changed();
   void victory_state_changed();
+  void time_scale_changed();
   void cursor_mode_changed();
   void global_cursor_changed();
   void troop_count_changed();

@@ -108,7 +108,7 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
   const QString combat = QObject::tr("Commander combat");
 
   QVector<Spec> catalog;
-  catalog.reserve(42);
+  catalog.reserve(45);
 
   catalog.append({QStringLiteral("global.menu"),
                   global,
@@ -145,6 +145,20 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   QObject::tr("Pause"),
                   {},
                   QStringLiteral("Space"),
+                  false});
+  catalog.append({QStringLiteral("rts.speed_up"),
+                  rts,
+                  system,
+                  QObject::tr("Speed up the battle"),
+                  QObject::tr("Steps through the speeds shown on the top bar"),
+                  QStringLiteral("+"),
+                  false});
+  catalog.append({QStringLiteral("rts.speed_down"),
+                  rts,
+                  system,
+                  QObject::tr("Slow down the battle"),
+                  QObject::tr("Steps through the speeds shown on the top bar"),
+                  QStringLiteral("-"),
                   false});
   catalog.append({QStringLiteral("rts.camera_pan_up"),
                   rts,

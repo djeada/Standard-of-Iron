@@ -143,6 +143,7 @@
 #include "game/util/selection_utils.h"
 #include "game/view/selection_controller.h"
 #include "game/visuals/team_colors.h"
+#include "game_speed.h"
 #include "game_state_restorer.h"
 #include "input_command_handler.h"
 #include "level_loader.h"
@@ -1903,25 +1904,41 @@ void GameEngine::update_commander_control_mode(float dt) {
   }
 }
 
-auto GameEngine::apply_runtime_time_effects(float dt) -> float {
+auto GameEngine::runtime_time_effect_scale(float scaled_dt) -> float {
   if (m_control_mode != PlayerControlMode::Commander) {
-    return dt;
+    return 1.0F;
   }
 
   if (!m_runtime.paused && m_rpg_hit_stop_timer > 0.0F) {
-    m_rpg_hit_stop_timer -= dt;
+    m_rpg_hit_stop_timer -= scaled_dt;
     if (m_rpg_hit_stop_timer < 0.0F) {
       m_rpg_hit_stop_timer = 0.0F;
     } else {
 
       const float progress =
           1.0F - std::clamp(m_rpg_hit_stop_timer / m_rpg_hit_stop_total, 0.0F, 1.0F);
-      const float time_scale =
-          progress < 0.5F ? 0.04F : (0.04F + 0.96F * (progress - 0.5F) * 2.0F);
-      dt *= time_scale;
+      return progress < 0.5F ? 0.04F : (0.04F + 0.96F * (progress - 0.5F) * 2.0F);
     }
   }
-  return dt;
+  return 1.0F;
+}
+
+void GameEngine::note_dropped_simulation_ticks(std::uint64_t dropped, float real_dt) {
+  m_dropped_tick_report_cooldown =
+      std::max(0.0F, m_dropped_tick_report_cooldown - std::max(real_dt, 0.0F));
+  if (dropped == 0) {
+    return;
+  }
+
+  m_dropped_simulation_ticks += dropped;
+  if (m_dropped_tick_report_cooldown > 0.0F) {
+    return;
+  }
+
+  m_dropped_tick_report_cooldown = k_dropped_tick_report_interval;
+  qWarning() << "Simulation could not keep up at" << m_runtime.time_scale
+             << "x speed: dropped" << dropped << "tick(s) this frame,"
+             << m_dropped_simulation_ticks << "since the mission started";
 }
 
 void GameEngine::update_active_runtime_simulation(float dt) {
@@ -2004,14 +2021,13 @@ void GameEngine::update(float dt) {
   m_order_markers.update(dt, m_world);
   m_combat_feedback.update(dt);
 
-  if (m_runtime.paused) {
-    dt = 0.0F;
-  } else {
-    dt *= m_runtime.time_scale;
-    dt = apply_runtime_time_effects(dt);
+  float simulation_time_scale = 0.0F;
+  if (!m_runtime.paused) {
+    simulation_time_scale =
+        m_runtime.time_scale * runtime_time_effect_scale(dt * m_runtime.time_scale);
   }
 
-  update_mission_waves(dt);
+  update_mission_waves(dt * simulation_time_scale);
 
   RuntimeFrameState frame_state{
       .local_owner_id = m_runtime.local_owner_id,
@@ -2020,7 +2036,8 @@ void GameEngine::update(float dt) {
       .viewport_height = m_viewport.height,
       .selection_refresh_enabled = (m_selected_units_model != nullptr),
       .selection_refresh_counter = m_runtime.selection_refresh_counter,
-      .minimap_unit_update_accumulator = m_runtime.minimap_unit_update_accumulator};
+      .minimap_unit_update_accumulator = m_runtime.minimap_unit_update_accumulator,
+      .simulation_time_scale = simulation_time_scale};
   const FrameUpdateCallbacks callbacks{
       .on_minimap_image_changed = [this]() { emit minimap_image_changed(); },
       .on_selected_units_data_changed =
@@ -2041,6 +2058,7 @@ void GameEngine::update(float dt) {
   m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
   m_runtime.minimap_unit_update_accumulator =
       frame_state.minimap_unit_update_accumulator;
+  note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
   sync_scatter_world_props();
   sync_selected_player_state();
   sync_attack_targeting();
@@ -2689,13 +2707,14 @@ void GameEngine::set_paused(bool paused) {
 }
 
 void GameEngine::set_game_speed(float speed) {
-  const float clamped = std::max(0.0F, speed);
-  if (qFuzzyCompare(m_runtime.time_scale, clamped)) {
+  const float sanitized = App::Core::GameSpeed::sanitize(speed);
+  if (qFuzzyCompare(m_runtime.time_scale, sanitized)) {
     return;
   }
-  m_runtime.time_scale = clamped;
+  m_runtime.time_scale = sanitized;
   m_tutorial_notes.speed_changed = true;
   Game::Audio::play_cue(Game::Audio::Cue::k_state_speed_change);
+  emit time_scale_changed();
 }
 
 auto GameEngine::has_units_selected() const -> bool {
@@ -4053,6 +4072,8 @@ void GameEngine::apply_runtime_snapshot(
        .cursor_mode = m_runtime.cursor_mode,
        .selected_player_id = m_selected_player_id,
        .follow_selection = m_follow_selection_enabled});
+  m_runtime.time_scale = App::Core::GameSpeed::sanitize(m_runtime.time_scale);
+  emit time_scale_changed();
   if (m_cursor_manager) {
     m_cursor_manager->set_mode(m_runtime.cursor_mode);
   }

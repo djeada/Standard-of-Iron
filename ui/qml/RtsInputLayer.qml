@@ -90,6 +90,16 @@ Item {
             root.mainWindowRef.game_paused = !root.mainWindowRef.game_paused;
             root.gameView.set_paused(root.mainWindowRef.game_paused);
             return true;
+        case "rts.speed_up":
+            if (!root.game.set_game_speed)
+                return false;
+            root.game.set_game_speed(GameSpeeds.stepped(root.game.time_scale, 1));
+            return true;
+        case "rts.speed_down":
+            if (!root.game.set_game_speed)
+                return false;
+            root.game.set_game_speed(GameSpeeds.stepped(root.game.time_scale, -1));
+            return true;
         case "rts.order_stop":
             if (!root.game.has_units_selected || !root.game.on_stop_command)
                 return false;
