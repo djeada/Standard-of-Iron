@@ -1706,16 +1706,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>لا يكفي الذهب لشراء %1.</translation>
     </message>
     <message>
-        <source>Cannot buy %1 right now.</source>
-        <translation>لا يمكن شراء %1 الآن.</translation>
-    </message>
-    <message>
         <source>Not enough %1 to sell.</source>
         <translation>لا يكفي %1 للبيع.</translation>
-    </message>
-    <message>
-        <source>Cannot sell %1 right now.</source>
-        <translation>لا يمكن بيع %1 الآن.</translation>
     </message>
     <message>
         <source>Campaign manager not initialized</source>
@@ -1752,6 +1744,14 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Load: not initialized</source>
         <translation>التحميل: غير مهيّأ</translation>
+    </message>
+    <message>
+        <source>Cannot play replay: %1</source>
+        <translation>تعذّر تشغيل الإعادة: %1</translation>
+    </message>
+    <message>
+        <source>Cannot play replay: unknown launch kind &apos;%1&apos;</source>
+        <translation>تعذّر تشغيل الإعادة: نوع تشغيل غير معروف «%1»</translation>
     </message>
 </context>
 <context>
@@ -4034,6 +4034,153 @@ to see preview</source>
     </message>
 </context>
 <context>
+    <name>OrderFeedback</name>
+    <message>
+        <source>Move</source>
+        <translation>تحرّك</translation>
+    </message>
+    <message>
+        <source>Attack</source>
+        <translation>هجوم</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>حراسة</translation>
+    </message>
+    <message>
+        <source>Patrol</source>
+        <translation>دورية</translation>
+    </message>
+    <message>
+        <source>Hold position</source>
+        <translation>الثبات في الموقع</translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation>توقّف</translation>
+    </message>
+    <message>
+        <source>Build</source>
+        <translation>بناء</translation>
+    </message>
+    <message>
+        <source>Gather</source>
+        <translation>جمع</translation>
+    </message>
+    <message>
+        <source>Deliver</source>
+        <translation>تسليم</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>إصلاح</translation>
+    </message>
+    <message>
+        <source>Rally point</source>
+        <translation>نقطة التجمّع</translation>
+    </message>
+    <message>
+        <source>Formation</source>
+        <translation>تشكيل</translation>
+    </message>
+    <message>
+        <source>You are not in command of these units.</source>
+        <translation>أنت لا تقود هذه الوحدات.</translation>
+    </message>
+    <message>
+        <source>That target is already gone.</source>
+        <translation>هذا الهدف لم يعد موجودًا.</translation>
+    </message>
+    <message>
+        <source>Cannot attack a friendly or neutral target.</source>
+        <translation>لا يمكن مهاجمة هدف صديق أو محايد.</translation>
+    </message>
+    <message>
+        <source>That building no longer exists.</source>
+        <translation>هذا المبنى لم يعد موجودًا.</translation>
+    </message>
+    <message>
+        <source>That building is not yours.</source>
+        <translation>هذا المبنى ليس لك.</translation>
+    </message>
+    <message>
+        <source>That order could not be carried out.</source>
+        <translation>تعذّر تنفيذ هذا الأمر.</translation>
+    </message>
+    <message>
+        <source>%1: %2 units</source>
+        <translation>%1: %2 وحدات</translation>
+    </message>
+    <message>
+        <source>No units selected.</source>
+        <translation>لم يتم اختيار أي وحدات.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot attack.</source>
+        <translation>الوحدات المختارة لا يمكنها الهجوم.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot guard.</source>
+        <translation>الوحدات المختارة لا يمكنها الحراسة.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot patrol.</source>
+        <translation>الوحدات المختارة لا يمكنها القيام بدورية.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot hold position.</source>
+        <translation>الوحدات المختارة لا يمكنها الثبات في الموقع.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot build.</source>
+        <translation>الوحدات المختارة لا يمكنها البناء.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot gather.</source>
+        <translation>الوحدات المختارة لا يمكنها الجمع.</translation>
+    </message>
+    <message>
+        <source>Only civilians can be delivered to a barracks.</source>
+        <translation>المدنيون فقط يمكن تسليمهم إلى الثكنة.</translation>
+    </message>
+    <message>
+        <source>Only builders can repair structures.</source>
+        <translation>البنّاؤون فقط يمكنهم إصلاح المنشآت.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot take that order.</source>
+        <translation>الوحدات المختارة لا يمكنها تنفيذ هذا الأمر.</translation>
+    </message>
+    <message>
+        <source>No enemy under the cursor.</source>
+        <translation>لا يوجد عدو تحت المؤشر.</translation>
+    </message>
+    <message>
+        <source>Select a friendly barracks with room for more people.</source>
+        <translation>اختر ثكنة صديقة فيها متسع لمزيد من الأشخاص.</translation>
+    </message>
+    <message>
+        <source>Select a damaged friendly building to repair.</source>
+        <translation>اختر مبنى صديقًا متضررًا لإصلاحه.</translation>
+    </message>
+    <message>
+        <source>Nothing to target there.</source>
+        <translation>لا يوجد هدف هناك.</translation>
+    </message>
+    <message>
+        <source>Choose a spot on the map.</source>
+        <translation>اختر موقعًا على الخريطة.</translation>
+    </message>
+    <message>
+        <source>That barracks has no room for more people.</source>
+        <translation>لا يوجد متسع في هذه الثكنة لمزيد من الأشخاص.</translation>
+    </message>
+    <message>
+        <source>That building does not need repairs.</source>
+        <translation>هذا المبنى لا يحتاج إلى إصلاح.</translation>
+    </message>
+</context>
+<context>
     <name>OutcomeLayout</name>
     <message>
         <source>Continue</source>
@@ -4223,10 +4370,6 @@ to see preview</source>
     <message>
         <source>Building factory unavailable.</source>
         <translation>مصنع المباني غير متاح.</translation>
-    </message>
-    <message>
-        <source>Failed to place building.</source>
-        <translation>فشل وضع المبنى.</translation>
     </message>
 </context>
 <context>

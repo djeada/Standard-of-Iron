@@ -10,8 +10,10 @@
 #include <cstdint>
 #include <vector>
 
+#include "../../game/command/command.h"
 #include "../../game/formation/army_formation_planner.h"
 #include "../../game/formation/army_formation_types.h"
+#include "../core/order_feedback.h"
 
 namespace Engine::Core {
 class World;
@@ -29,6 +31,8 @@ namespace App::Controllers {
 struct CommandResult {
   bool input_consumed = false;
   bool reset_cursor_to_normal = false;
+
+  App::Core::OrderOutcome order;
 };
 
 class CommandController : public QObject {
@@ -44,6 +48,24 @@ public:
                        int viewport_width,
                        int viewport_height,
                        void* camera) -> CommandResult;
+
+  auto on_attack_press(qreal sx,
+                       qreal sy,
+                       int viewport_width,
+                       int viewport_height,
+                       void* camera,
+                       int local_owner_id) -> CommandResult;
+
+  auto on_move_or_attack_click(qreal sx,
+                               qreal sy,
+                               int viewport_width,
+                               int viewport_height,
+                               void* camera,
+                               int local_owner_id) -> CommandResult;
+
+  auto on_minimap_move(const QVector3D& world_target,
+                       int local_owner_id) -> CommandResult;
+
   auto on_stop_command() -> CommandResult;
   auto on_hold_command() -> CommandResult;
   auto on_gate_command() -> CommandResult;
@@ -157,7 +179,7 @@ public:
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_run_mode() const;
 
 signals:
-  void attack_target_selected();
+  void order_feedback(const App::Core::OrderOutcome& outcome);
   void troop_limit_reached();
   void insufficient_manpower();
   void insufficient_resources(const QString& message);
@@ -208,6 +230,23 @@ private:
 
   void apply_formation_option_change();
   void invalidate_formation_layout();
+
+  [[nodiscard]] auto
+  issue_order(App::Core::OrderKind kind,
+              Game::Command::Payload payload,
+              Engine::Core::EntityID target = 0,
+              const QVector3D* destination = nullptr) -> App::Core::OrderOutcome;
+  auto publish_order(App::Core::OrderOutcome outcome) -> App::Core::OrderOutcome;
+  [[nodiscard]] auto reject_order(App::Core::OrderKind kind,
+                                  const QString& reason) -> App::Core::OrderOutcome;
+  [[nodiscard]] auto
+  reject_order_at(App::Core::OrderKind kind,
+                  const QString& reason,
+                  const QVector3D& destination) -> App::Core::OrderOutcome;
+  [[nodiscard]] auto
+  reject_order_on(App::Core::OrderKind kind,
+                  const QString& reason,
+                  Engine::Core::EntityID target) -> App::Core::OrderOutcome;
 
   [[nodiscard]] auto auto_formation_facing() const -> float;
   void set_formation_facing(float degrees, bool explicit_choice);

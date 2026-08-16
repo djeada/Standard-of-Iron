@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <string>
+#include <vector>
 
 #include "app/controllers/command_controller.h"
 #include "game/core/component.h"
@@ -68,6 +69,17 @@ protected:
     return screen_pos;
   }
 
+  auto capture_feedback() -> std::vector<App::Core::OrderOutcome>& {
+    feedback.clear();
+    QObject::connect(command_controller.get(),
+                     &App::Controllers::CommandController::order_feedback,
+                     command_controller.get(),
+                     [this](const App::Core::OrderOutcome& outcome) {
+                       feedback.push_back(outcome);
+                     });
+    return feedback;
+  }
+
   Engine::Core::World world;
   Game::Systems::SelectionSystem* selection_system = nullptr;
   Game::Systems::PickingService picking_service;
@@ -75,6 +87,7 @@ protected:
   Render::GL::Camera camera;
   int viewport_width = 800;
   int viewport_height = 600;
+  std::vector<App::Core::OrderOutcome> feedback;
 };
 
 TEST_F(CommandControllerTest, AttackClickAppliesOnlyToEligibleUnits) {
@@ -197,6 +210,250 @@ TEST_F(CommandControllerTest, AutoGatherIgnoresASelectionWithoutBuilders) {
   auto const result = command_controller->on_auto_gather_command();
 
   EXPECT_FALSE(result.input_consumed);
+}
+
+TEST_F(CommandControllerTest, LeftClickAttackModeReportsTheClickedTarget) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(archer->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_attack_click(
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera);
+
+  EXPECT_TRUE(result.input_consumed);
+  EXPECT_TRUE(result.reset_cursor_to_normal);
+  EXPECT_TRUE(result.order.accepted());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Attack);
+  EXPECT_EQ(result.order.target, enemy->get_id());
+  EXPECT_EQ(result.order.unit_count, 1U);
+  EXPECT_TRUE(result.order.reason.isEmpty());
+
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().accepted());
+  EXPECT_EQ(seen.front().target, enemy->get_id());
+}
+
+TEST_F(CommandControllerTest, AttackClickOnEmptyGroundIsRejectedWithAReason) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
+  auto const result = command_controller->on_attack_click(
+      ground_screen.x(), ground_screen.y(), viewport_width, viewport_height, &camera);
+
+  EXPECT_FALSE(result.input_consumed);
+  EXPECT_TRUE(result.reset_cursor_to_normal);
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Attack);
+  EXPECT_EQ(result.order.target, 0U);
+  EXPECT_TRUE(result.order.has_destination);
+  EXPECT_FALSE(result.order.reason.isEmpty());
+  EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_TRUE(seen.front().rejected());
+}
+
+TEST_F(CommandControllerTest, AttackClickOnAFriendlyUnitIsRejectedWithAReason) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* friendly = create_unit(0.0F, 0.0F, 1, Game::Units::SpawnType::Knight);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(friendly, nullptr);
+  selection_system->select_unit(archer->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const friendly_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_attack_click(friendly_screen.x(),
+                                                          friendly_screen.y(),
+                                                          viewport_width,
+                                                          viewport_height,
+                                                          &camera);
+
+  EXPECT_FALSE(result.input_consumed);
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_EQ(result.order.rejection, Game::Command::Rejection::FriendlyTarget);
+  EXPECT_EQ(result.order.target, friendly->get_id());
+  EXPECT_FALSE(result.order.reason.isEmpty());
+  EXPECT_EQ(archer->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_EQ(seen.front().rejection, Game::Command::Rejection::FriendlyTarget);
+}
+
+TEST_F(CommandControllerTest, AttackClickWithNonCombatSelectionExplainsWhy) {
+  auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(builder, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(builder->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_attack_click(
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera);
+
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_EQ(result.order.target, enemy->get_id());
+  EXPECT_EQ(result.order.reason,
+            App::Core::no_eligible_units_reason(App::Core::OrderKind::Attack));
+  EXPECT_EQ(builder->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+  ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, AttackClickWithEmptySelectionIsRejectedNotSilent) {
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(enemy, nullptr);
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_attack_click(
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera);
+
+  EXPECT_FALSE(result.input_consumed);
+  EXPECT_TRUE(result.reset_cursor_to_normal);
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_EQ(result.order.reason, App::Core::no_selection_reason());
+  ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, RightClickOnEnemyAttacksTheClickedTarget) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(archer, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(archer->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_move_or_attack_click(
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera, 1);
+
+  EXPECT_TRUE(result.input_consumed);
+  EXPECT_TRUE(result.order.accepted());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Attack);
+  EXPECT_EQ(result.order.target, enemy->get_id());
+  auto* target = archer->get_component<Engine::Core::AttackTargetComponent>();
+  ASSERT_NE(target, nullptr);
+  EXPECT_EQ(target->target_id, enemy->get_id());
+  ASSERT_EQ(seen.size(), 1U);
+  EXPECT_EQ(seen.front().kind, App::Core::OrderKind::Attack);
+}
+
+TEST_F(CommandControllerTest, RightClickOnGroundReportsTheDestination) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+  auto& seen = capture_feedback();
+
+  QVector3D const destination(4.0F, 0.0F, 2.0F);
+  QPointF const ground_screen = world_to_screen(destination);
+  auto const result = command_controller->on_move_or_attack_click(ground_screen.x(),
+                                                                  ground_screen.y(),
+                                                                  viewport_width,
+                                                                  viewport_height,
+                                                                  &camera,
+                                                                  1);
+
+  EXPECT_TRUE(result.order.accepted());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Move);
+  EXPECT_EQ(result.order.target, 0U);
+  ASSERT_TRUE(result.order.has_destination);
+  EXPECT_NEAR(result.order.destination.x(), destination.x(), 0.25F);
+  EXPECT_NEAR(result.order.destination.z(), destination.z(), 0.25F);
+  auto* movement = archer->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_TRUE(movement->get_has_target());
+  ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, RightClickOnEnemyWithNonCombatSelectionDoesNotMove) {
+  auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  auto* enemy = create_unit(0.0F, 0.0F, 2, Game::Units::SpawnType::Knight);
+  ASSERT_NE(builder, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  selection_system->select_unit(builder->get_id());
+  auto& seen = capture_feedback();
+
+  QPointF const enemy_screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  auto const result = command_controller->on_move_or_attack_click(
+      enemy_screen.x(), enemy_screen.y(), viewport_width, viewport_height, &camera, 1);
+
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Attack);
+  EXPECT_EQ(result.order.target, enemy->get_id());
+  EXPECT_FALSE(result.order.reason.isEmpty());
+  auto* movement = builder->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_FALSE(movement->get_has_target());
+  ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, MinimapMoveReportsTheDestination) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+  auto& seen = capture_feedback();
+
+  QVector3D const destination(5.0F, 0.0F, 5.0F);
+  auto const result = command_controller->on_minimap_move(destination, 1);
+
+  EXPECT_TRUE(result.order.accepted());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Move);
+  ASSERT_TRUE(result.order.has_destination);
+  EXPECT_EQ(result.order.destination, destination);
+  ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, HoldWithoutEligibleUnitsIsRejectedWithAReason) {
+  auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(builder, nullptr);
+  selection_system->select_unit(builder->get_id());
+  auto& seen = capture_feedback();
+
+  auto const result = command_controller->on_hold_command();
+
+  EXPECT_FALSE(result.input_consumed);
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Hold);
+  EXPECT_FALSE(result.order.reason.isEmpty());
+  ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, GuardClickReportsTheAnchor) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+  auto& seen = capture_feedback();
+
+  QVector3D const anchor(4.0F, 0.0F, 2.0F);
+  QPointF const ground_screen = world_to_screen(anchor);
+  auto const result = command_controller->on_guard_click(
+      ground_screen.x(), ground_screen.y(), viewport_width, viewport_height, &camera);
+
+  EXPECT_TRUE(result.input_consumed);
+  EXPECT_TRUE(result.order.accepted());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Guard);
+  ASSERT_TRUE(result.order.has_destination);
+  EXPECT_NEAR(result.order.destination.x(), anchor.x(), 0.25F);
+  EXPECT_NEAR(result.order.destination.z(), anchor.z(), 0.25F);
+  ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, StopWithEmptySelectionIsRejectedNotSilent) {
+  auto& seen = capture_feedback();
+
+  auto const result = command_controller->on_stop_command();
+
+  EXPECT_FALSE(result.input_consumed);
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_EQ(result.order.kind, App::Core::OrderKind::Stop);
+  EXPECT_EQ(result.order.reason, App::Core::no_selection_reason());
+  ASSERT_EQ(seen.size(), 1U);
 }
 
 } // namespace

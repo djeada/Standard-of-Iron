@@ -30,6 +30,7 @@
 #include "../../game/systems/selection_system.h"
 #include "../../game/systems/troop_profile_service.h"
 #include "../../game/util/asset_text.h"
+#include "../core/order_service.h"
 #include "../core/rts_action_model.h"
 #include "../utils/movement_utils.h"
 #include "game/audio/audio_cues.h"
@@ -67,28 +68,72 @@ CommandController::CommandController(Engine::Core::World* world,
     , m_picking_service(picking_service) {
 }
 
+auto CommandController::publish_order(App::Core::OrderOutcome outcome)
+    -> App::Core::OrderOutcome {
+  if (outcome.issued()) {
+    emit order_feedback(outcome);
+  }
+  return outcome;
+}
+
+auto CommandController::issue_order(App::Core::OrderKind kind,
+                                    Game::Command::Payload payload,
+                                    Engine::Core::EntityID target,
+                                    const QVector3D* destination)
+    -> App::Core::OrderOutcome {
+  if (m_world == nullptr) {
+    return publish_order(App::Core::rejected_order(
+        kind,
+        App::Core::rejection_reason_text(Game::Command::Rejection::MalformedPayload,
+                                         kind)));
+  }
+  App::Core::OrderRequest request;
+  request.kind = kind;
+  request.payload = std::move(payload);
+  request.target = target;
+  if (destination != nullptr) {
+    request.has_destination = true;
+    request.destination = *destination;
+  }
+  return publish_order(App::Core::submit_player_order(
+      *m_world, local_owner(m_world), std::move(request)));
+}
+
+auto CommandController::reject_order(App::Core::OrderKind kind,
+                                     const QString& reason) -> App::Core::OrderOutcome {
+  return publish_order(App::Core::rejected_order(kind, reason));
+}
+
+auto CommandController::reject_order_at(App::Core::OrderKind kind,
+                                        const QString& reason,
+                                        const QVector3D& destination)
+    -> App::Core::OrderOutcome {
+  return publish_order(App::Core::rejected_order_at(kind, reason, destination));
+}
+
+auto CommandController::reject_order_on(App::Core::OrderKind kind,
+                                        const QString& reason,
+                                        Engine::Core::EntityID target)
+    -> App::Core::OrderOutcome {
+  return publish_order(App::Core::rejected_order_on(kind, reason, target));
+}
+
 auto CommandController::on_attack_click(qreal sx,
                                         qreal sy,
                                         int viewport_width,
                                         int viewport_height,
                                         void* camera) -> CommandResult {
+  using App::Core::OrderKind;
   CommandResult result;
+  result.reset_cursor_to_normal = true;
   if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
       (camera == nullptr) || (m_world == nullptr)) {
-    result.reset_cursor_to_normal = true;
     return result;
   }
 
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
-    result.reset_cursor_to_normal = true;
-    return result;
-  }
-
-  auto const attackers = App::Core::filter_selected_units_for_action(
-      m_world, selected, QStringLiteral("attack"));
-  if (attackers.empty()) {
-    result.reset_cursor_to_normal = true;
+    result.order = reject_order(OrderKind::Attack, App::Core::no_selection_reason());
     return result;
   }
 
@@ -97,27 +142,121 @@ auto CommandController::on_attack_click(qreal sx,
       Game::Systems::PickingService::pick_unit_first(
           float(sx), float(sy), *m_world, *cam, viewport_width, viewport_height, 0);
 
-  if (target_id == 0) {
-    result.reset_cursor_to_normal = true;
-    return result;
-  }
-
-  auto* target_entity = m_world->get_entity(target_id);
-  if (target_entity == nullptr) {
-    return result;
-  }
-
-  auto* target_unit = target_entity->get_component<Engine::Core::UnitComponent>();
+  auto* target_entity = target_id != 0 ? m_world->get_entity(target_id) : nullptr;
+  auto* target_unit = target_entity != nullptr
+                          ? target_entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
   if (target_unit == nullptr) {
+    QVector3D hit;
+    if (Game::Systems::PickingService::screen_to_ground(
+            QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
+      result.order =
+          reject_order_at(OrderKind::Attack,
+                          App::Core::no_target_under_cursor_reason(OrderKind::Attack),
+                          hit);
+    } else {
+      result.order =
+          reject_order(OrderKind::Attack,
+                       App::Core::no_target_under_cursor_reason(OrderKind::Attack));
+    }
     return result;
   }
 
-  submit(m_world, Game::Command::AttackTarget{.units = attackers, .target = target_id});
+  auto const attackers = App::Core::filter_selected_units_for_action(
+      m_world, selected, QStringLiteral("attack"));
+  if (attackers.empty()) {
+    result.order =
+        reject_order_on(OrderKind::Attack,
+                        App::Core::no_eligible_units_reason(OrderKind::Attack),
+                        target_id);
+    return result;
+  }
 
-  emit attack_target_selected();
+  result.order =
+      issue_order(OrderKind::Attack,
+                  Game::Command::AttackTarget{.units = attackers, .target = target_id},
+                  target_id);
+  result.input_consumed = result.order.accepted();
+  return result;
+}
 
+auto CommandController::on_attack_press(qreal sx,
+                                        qreal sy,
+                                        int viewport_width,
+                                        int viewport_height,
+                                        void* camera,
+                                        int local_owner_id) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
+      (camera == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  const auto& selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return result;
+  }
+
+  auto* cam = static_cast<Render::GL::Camera*>(camera);
+  Engine::Core::EntityID const target_id = App::Utils::pick_enemy_unit_at_screen(
+      m_world, cam, sx, sy, viewport_width, viewport_height, local_owner_id);
+  if (target_id == 0U) {
+    return result;
+  }
+
+  disable_run_mode_for_selected();
+  result.order = publish_order(
+      App::Utils::issue_attack_command(m_world, selected, target_id, local_owner_id));
   result.input_consumed = true;
-  result.reset_cursor_to_normal = true;
+  return result;
+}
+
+auto CommandController::on_move_or_attack_click(qreal sx,
+                                                qreal sy,
+                                                int viewport_width,
+                                                int viewport_height,
+                                                void* camera,
+                                                int local_owner_id) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
+      (camera == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  const auto& selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return result;
+  }
+
+  auto* cam = static_cast<Render::GL::Camera*>(camera);
+  result.order =
+      publish_order(App::Utils::issue_move_or_attack_command(m_world,
+                                                             selected,
+                                                             m_picking_service,
+                                                             cam,
+                                                             sx,
+                                                             sy,
+                                                             viewport_width,
+                                                             viewport_height,
+                                                             local_owner_id));
+  result.input_consumed = result.order.issued();
+  return result;
+}
+
+auto CommandController::on_minimap_move(const QVector3D& world_target,
+                                        int local_owner_id) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+  const auto& selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return result;
+  }
+
+  result.order = publish_order(
+      App::Utils::submit_ground_move(*m_world, selected, world_target, local_owner_id));
+  result.input_consumed = result.order.accepted();
   return result;
 }
 
@@ -129,6 +268,8 @@ auto CommandController::on_stop_command() -> CommandResult {
 
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
+    result.order =
+        reject_order(App::Core::OrderKind::Stop, App::Core::no_selection_reason());
     return result;
   }
 
@@ -147,8 +288,12 @@ auto CommandController::on_stop_command() -> CommandResult {
         had_active_formation || (formation_mode != nullptr && formation_mode->active);
   }
 
-  submit(m_world, Game::Command::Stop{.units = {selected.begin(), selected.end()}});
-  Game::Audio::play_cue(Game::Audio::Cue::k_order_stop);
+  result.order =
+      issue_order(App::Core::OrderKind::Stop,
+                  Game::Command::Stop{.units = {selected.begin(), selected.end()}});
+  if (!result.order.accepted()) {
+    return result;
+  }
 
   if (had_hold_mode) {
     emit hold_mode_changed(false);
@@ -170,6 +315,8 @@ auto CommandController::on_hold_command() -> CommandResult {
 
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
+    result.order =
+        reject_order(App::Core::OrderKind::Hold, App::Core::no_selection_reason());
     return result;
   }
 
@@ -200,14 +347,21 @@ auto CommandController::on_hold_command() -> CommandResult {
   }
 
   if (eligible_count == 0) {
+    result.order =
+        reject_order(App::Core::OrderKind::Hold,
+                     App::Core::no_eligible_units_reason(App::Core::OrderKind::Hold));
     return result;
   }
 
   const bool should_enable_hold = (hold_active_count < eligible_count);
 
-  submit(m_world,
-         Game::Command::SetHold{.units = {selected.begin(), selected.end()},
-                                .active = should_enable_hold});
+  result.order =
+      issue_order(App::Core::OrderKind::Hold,
+                  Game::Command::SetHold{.units = {selected.begin(), selected.end()},
+                                         .active = should_enable_hold});
+  if (!result.order.accepted()) {
+    return result;
+  }
 
   emit hold_mode_changed(should_enable_hold);
 
@@ -226,6 +380,11 @@ auto CommandController::on_auto_gather_command(const QString& priority_product_t
   auto const builders = App::Core::filter_selected_units_for_action(
       m_world, m_selection_system->get_selected_units(), QStringLiteral("auto_gather"));
   if (builders.empty()) {
+    result.order = reject_order(
+        App::Core::OrderKind::Gather,
+        m_selection_system->get_selected_units().empty()
+            ? App::Core::no_selection_reason()
+            : App::Core::no_eligible_units_reason(App::Core::OrderKind::Gather));
     return result;
   }
 
@@ -241,11 +400,15 @@ auto CommandController::on_auto_gather_command(const QString& priority_product_t
 
   const bool should_enable = already_gathering < static_cast<int>(builders.size());
 
-  submit(m_world,
-         Game::Command::SetAutoGather{.units = builders,
-                                      .active = should_enable,
-                                      .priority_product_type =
-                                          priority_product_type.toStdString()});
+  result.order =
+      issue_order(App::Core::OrderKind::Gather,
+                  Game::Command::SetAutoGather{
+                      .units = builders,
+                      .active = should_enable,
+                      .priority_product_type = priority_product_type.toStdString()});
+  if (!result.order.accepted()) {
+    return result;
+  }
 
   emit auto_gather_changed(should_enable);
 
@@ -329,6 +492,8 @@ auto CommandController::on_patrol_click(qreal sx,
       clear_patrol_first_waypoint();
       result.reset_cursor_to_normal = true;
     }
+    result.order =
+        reject_order(App::Core::OrderKind::Patrol, App::Core::no_selection_reason());
     return result;
   }
 
@@ -338,6 +503,9 @@ auto CommandController::on_patrol_click(qreal sx,
     if (m_has_patrol_first_waypoint) {
       clear_patrol_first_waypoint();
     }
+    result.order =
+        reject_order(App::Core::OrderKind::Patrol,
+                     App::Core::no_eligible_units_reason(App::Core::OrderKind::Patrol));
     result.reset_cursor_to_normal = true;
     return result;
   }
@@ -362,14 +530,16 @@ auto CommandController::on_patrol_click(qreal sx,
 
   QVector3D const second_waypoint = hit;
 
-  submit(m_world,
-         Game::Command::Patrol{.units = {patrol_units.begin(), patrol_units.end()},
-                               .first_waypoint = m_patrol_first_waypoint,
-                               .second_waypoint = second_waypoint});
-  Game::Audio::play_cue(Game::Audio::Cue::k_order_patrol);
+  result.order = issue_order(
+      App::Core::OrderKind::Patrol,
+      Game::Command::Patrol{.units = {patrol_units.begin(), patrol_units.end()},
+                            .first_waypoint = m_patrol_first_waypoint,
+                            .second_waypoint = second_waypoint},
+      0,
+      &second_waypoint);
 
   clear_patrol_first_waypoint();
-  result.input_consumed = true;
+  result.input_consumed = result.order.accepted();
   result.reset_cursor_to_normal = true;
   return result;
 }
@@ -396,12 +566,15 @@ auto CommandController::set_rally_at_screen(qreal sx,
   const auto barracks = Game::Systems::ProductionService::find_selected_barracks(
       *m_world, m_selection_system->get_selected_units(), local_owner_id);
   if (barracks != Engine::Core::NULL_ENTITY) {
-    Game::Command::submit(
-        *m_world,
-        Game::Command::Source::LocalPlayer,
-        local_owner_id,
-        Game::Command::SetRallyPoint{.building = barracks, .position = hit});
-    Game::Audio::play_cue(Game::Audio::Cue::k_order_rally_set);
+    App::Core::OrderRequest request;
+    request.kind = App::Core::OrderKind::Rally;
+    request.payload =
+        Game::Command::SetRallyPoint{.building = barracks, .position = hit};
+    request.target = barracks;
+    request.has_destination = true;
+    request.destination = hit;
+    result.order = publish_order(
+        App::Core::submit_player_order(*m_world, local_owner_id, std::move(request)));
   }
 
   result.input_consumed = true;
@@ -533,6 +706,8 @@ auto CommandController::on_guard_command() -> CommandResult {
 
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
+    result.order =
+        reject_order(App::Core::OrderKind::Guard, App::Core::no_selection_reason());
     return result;
   }
 
@@ -563,14 +738,21 @@ auto CommandController::on_guard_command() -> CommandResult {
   }
 
   if (eligible_count == 0) {
+    result.order =
+        reject_order(App::Core::OrderKind::Guard,
+                     App::Core::no_eligible_units_reason(App::Core::OrderKind::Guard));
     return result;
   }
 
   const bool should_enable_guard = (guard_active_count < eligible_count);
 
-  submit(m_world,
-         Game::Command::SetGuard{.units = {selected.begin(), selected.end()},
-                                 .active = should_enable_guard});
+  result.order =
+      issue_order(App::Core::OrderKind::Guard,
+                  Game::Command::SetGuard{.units = {selected.begin(), selected.end()},
+                                          .active = should_enable_guard});
+  if (!result.order.accepted()) {
+    return result;
+  }
 
   emit guard_mode_changed(should_enable_guard);
 
@@ -593,6 +775,8 @@ auto CommandController::on_guard_click(qreal sx,
 
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
+    result.order =
+        reject_order(App::Core::OrderKind::Guard, App::Core::no_selection_reason());
     result.reset_cursor_to_normal = true;
     return result;
   }
@@ -600,6 +784,9 @@ auto CommandController::on_guard_click(qreal sx,
   auto const guard_units = App::Core::filter_selected_units_for_action(
       m_world, selected, QStringLiteral("guard"));
   if (guard_units.empty()) {
+    result.order =
+        reject_order(App::Core::OrderKind::Guard,
+                     App::Core::no_eligible_units_reason(App::Core::OrderKind::Guard));
     result.reset_cursor_to_normal = true;
     return result;
   }
@@ -608,18 +795,26 @@ auto CommandController::on_guard_click(qreal sx,
   QVector3D hit;
   if (!Game::Systems::PickingService::screen_to_ground(
           QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
+    result.order = reject_order(App::Core::OrderKind::Guard,
+                                App::Core::no_ground_under_cursor_reason());
     result.reset_cursor_to_normal = true;
     return result;
   }
 
-  submit(m_world,
-         Game::Command::SetGuard{
-             .units = guard_units, .active = true, .anchor = hit, .has_anchor = true});
+  result.order = issue_order(
+      App::Core::OrderKind::Guard,
+      Game::Command::SetGuard{
+          .units = guard_units, .active = true, .anchor = hit, .has_anchor = true},
+      0,
+      &hit);
+  result.reset_cursor_to_normal = true;
+  if (!result.order.accepted()) {
+    return result;
+  }
 
   emit guard_mode_changed(true);
 
   result.input_consumed = true;
-  result.reset_cursor_to_normal = true;
   return result;
 }
 
@@ -639,20 +834,24 @@ auto CommandController::on_civilian_delivery_click(qreal sx,
 
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
+    result.order =
+        reject_order(App::Core::OrderKind::Deliver, App::Core::no_selection_reason());
     result.reset_cursor_to_normal = true;
     return result;
   }
 
   auto* cam = static_cast<Render::GL::Camera*>(camera);
-  result.input_consumed = App::Utils::issue_civilian_delivery_command(m_world,
-                                                                      selected,
-                                                                      m_picking_service,
-                                                                      cam,
-                                                                      sx,
-                                                                      sy,
-                                                                      viewport_width,
-                                                                      viewport_height,
-                                                                      local_owner_id);
+  result.order =
+      publish_order(App::Utils::issue_civilian_delivery_command(m_world,
+                                                                selected,
+                                                                m_picking_service,
+                                                                cam,
+                                                                sx,
+                                                                sy,
+                                                                viewport_width,
+                                                                viewport_height,
+                                                                local_owner_id));
+  result.input_consumed = result.order.accepted();
   result.reset_cursor_to_normal = true;
   return result;
 }
@@ -672,21 +871,24 @@ auto CommandController::on_builder_repair_click(qreal sx,
 
   const auto& selected = m_selection_system->get_selected_units();
   if (selected.empty()) {
+    result.order =
+        reject_order(App::Core::OrderKind::Repair, App::Core::no_selection_reason());
     result.reset_cursor_to_normal = true;
     return result;
   }
 
   auto* cam = static_cast<Render::GL::Camera*>(camera);
-  result.input_consumed = App::Utils::issue_builder_repair_command(m_world,
-                                                                   selected,
-                                                                   m_picking_service,
-                                                                   cam,
-                                                                   sx,
-                                                                   sy,
-                                                                   viewport_width,
-                                                                   viewport_height,
-                                                                   local_owner_id);
-
+  result.order =
+      publish_order(App::Utils::issue_builder_repair_command(m_world,
+                                                             selected,
+                                                             m_picking_service,
+                                                             cam,
+                                                             sx,
+                                                             sy,
+                                                             viewport_width,
+                                                             viewport_height,
+                                                             local_owner_id));
+  result.input_consumed = result.order.accepted();
   result.reset_cursor_to_normal = result.input_consumed;
   return result;
 }
@@ -944,7 +1146,10 @@ void CommandController::confirm_formation_placement() {
     }
   }
 
-  submit(m_world, std::move(deploy));
+  {
+    const QVector3D anchor = deploy.anchor;
+    (void)issue_order(App::Core::OrderKind::Formation, std::move(deploy), 0, &anchor);
+  }
 
   m_is_placing_formation = false;
   m_formation_drag_active = false;

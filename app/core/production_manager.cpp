@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "app/core/input_command_handler.h"
+#include "app/core/order_service.h"
 #include "game/audio/audio_cues.h"
 #include "game/command/command_queue.h"
 #include "game/core/component.h"
@@ -1113,15 +1114,19 @@ void ProductionManager::on_construction_confirm() {
         crew.push_back(id);
       }
     }
-    Game::Command::submit(
-        *m_world,
-        Game::Command::Source::LocalPlayer,
-        pending_construction_owner_id(),
-        Game::Command::StartHarvest{
-            .units = std::move(crew),
-            .construction_type = harvest_product_type(placement.kind),
-            .resource_target = placement.target->id,
-            .site = QVector3D(placement.target->x, 0.0F, placement.target->z)});
+    {
+      App::Core::OrderRequest request;
+      request.kind = App::Core::OrderKind::Gather;
+      request.payload = Game::Command::StartHarvest{
+          .units = std::move(crew),
+          .construction_type = harvest_product_type(placement.kind),
+          .resource_target = placement.target->id,
+          .site = QVector3D(placement.target->x, 0.0F, placement.target->z)};
+      request.has_destination = true;
+      request.destination = QVector3D(placement.target->x, 0.0F, placement.target->z);
+      emit order_feedback(App::Core::submit_player_order(
+          *m_world, pending_construction_owner_id(), std::move(request)));
+    }
 
     m_is_placing_construction = false;
     m_is_direct_building_placement = false;
@@ -1160,15 +1165,17 @@ void ProductionManager::on_construction_confirm() {
           insufficient_construction_resources_reason(owner_id, resource_costs));
       return;
     }
-    Game::Command::submit(
-        *m_world,
-        Game::Command::Source::LocalPlayer,
-        owner_id,
-        Game::Command::StartConstruction{
-            .units = m_pending_construction_builders,
-            .construction_type = m_pending_construction_type.toStdString(),
-            .site = m_construction_placement_position,
-            .rotation_y = m_construction_preview_rotation_y});
+    App::Core::OrderRequest request;
+    request.kind = App::Core::OrderKind::Build;
+    request.payload = Game::Command::StartConstruction{
+        .units = m_pending_construction_builders,
+        .construction_type = m_pending_construction_type.toStdString(),
+        .site = m_construction_placement_position,
+        .rotation_y = m_construction_preview_rotation_y};
+    request.has_destination = true;
+    request.destination = m_construction_placement_position;
+    emit order_feedback(
+        App::Core::submit_player_order(*m_world, owner_id, std::move(request)));
   }
 
   m_is_placing_construction = false;
@@ -1633,17 +1640,22 @@ void ProductionManager::confirm_wall_construction_plan() {
     return;
   }
 
-  Game::Command::submit(
-      *m_world,
-      Game::Command::Source::LocalPlayer,
-      owner_id,
-      Game::Command::PlaceWallPlan{.units = m_pending_construction_builders,
-                                   .gate = m_wall_plan_request.gate,
-                                   .anchor_x = m_wall_plan_request.anchor.x,
-                                   .anchor_z = m_wall_plan_request.anchor.z,
-                                   .target_x = m_wall_plan_request.target.x,
-                                   .target_z = m_wall_plan_request.target.z,
-                                   .rotation_y = m_wall_plan_request.rotation_y});
+  {
+    App::Core::OrderRequest request;
+    request.kind = App::Core::OrderKind::Build;
+    request.payload =
+        Game::Command::PlaceWallPlan{.units = m_pending_construction_builders,
+                                     .gate = m_wall_plan_request.gate,
+                                     .anchor_x = m_wall_plan_request.anchor.x,
+                                     .anchor_z = m_wall_plan_request.anchor.z,
+                                     .target_x = m_wall_plan_request.target.x,
+                                     .target_z = m_wall_plan_request.target.z,
+                                     .rotation_y = m_wall_plan_request.rotation_y};
+    request.has_destination = true;
+    request.destination = m_construction_placement_position;
+    emit order_feedback(
+        App::Core::submit_player_order(*m_world, owner_id, std::move(request)));
+  }
 
   clear_preview_entities();
   m_wall_preview_segments.clear();
@@ -1662,7 +1674,6 @@ void ProductionManager::confirm_wall_construction_plan() {
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   clear_construction_preview_summary();
-  Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_confirmed);
   emit placing_construction_changed();
 }
 
@@ -1696,16 +1707,20 @@ void ProductionManager::confirm_direct_building_placement() {
     break;
   }
 
-  Game::Command::submit(
-      *m_world,
-      Game::Command::Source::LocalPlayer,
-      owner_id,
-      Game::Command::PlaceBuilding{
-          .building_type = building_type,
-          .position = m_construction_placement_position,
-          .rotation_y = item_supports_preview_rotation(m_pending_construction_type)
-                            ? m_construction_preview_rotation_y
-                            : 0.0F});
+  {
+    App::Core::OrderRequest request;
+    request.kind = App::Core::OrderKind::Build;
+    request.payload = Game::Command::PlaceBuilding{
+        .building_type = building_type,
+        .position = m_construction_placement_position,
+        .rotation_y = item_supports_preview_rotation(m_pending_construction_type)
+                          ? m_construction_preview_rotation_y
+                          : 0.0F};
+    request.has_destination = true;
+    request.destination = m_construction_placement_position;
+    emit order_feedback(
+        App::Core::submit_player_order(*m_world, owner_id, std::move(request)));
+  }
 
   clear_preview_entities();
   m_wall_preview_segments.clear();
@@ -1724,7 +1739,6 @@ void ProductionManager::confirm_direct_building_placement() {
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   clear_construction_preview_summary();
-  Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_confirmed);
   emit placing_construction_changed();
 }
 

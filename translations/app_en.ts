@@ -1706,16 +1706,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Not enough gold to buy %1.</translation>
     </message>
     <message>
-        <source>Cannot buy %1 right now.</source>
-        <translation>Cannot buy %1 right now.</translation>
-    </message>
-    <message>
         <source>Not enough %1 to sell.</source>
         <translation>Not enough %1 to sell.</translation>
-    </message>
-    <message>
-        <source>Cannot sell %1 right now.</source>
-        <translation>Cannot sell %1 right now.</translation>
     </message>
     <message>
         <source>Campaign manager not initialized</source>
@@ -1752,6 +1744,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Load: not initialized</source>
         <translation>Load: not initialized</translation>
+    </message>
+    <message>
+        <source>Cannot play replay: %1</source>
+        <translation>Cannot play replay: %1</translation>
+    </message>
+    <message>
+        <source>Cannot play replay: unknown launch kind &apos;%1&apos;</source>
+        <translation>Cannot play replay: unknown launch kind &apos;%1&apos;</translation>
     </message>
 </context>
 <context>
@@ -4034,6 +4034,153 @@ to see preview</translation>
     </message>
 </context>
 <context>
+    <name>OrderFeedback</name>
+    <message>
+        <source>Move</source>
+        <translation>Move</translation>
+    </message>
+    <message>
+        <source>Attack</source>
+        <translation>Attack</translation>
+    </message>
+    <message>
+        <source>Guard</source>
+        <translation>Guard</translation>
+    </message>
+    <message>
+        <source>Patrol</source>
+        <translation>Patrol</translation>
+    </message>
+    <message>
+        <source>Hold position</source>
+        <translation>Hold position</translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation>Stop</translation>
+    </message>
+    <message>
+        <source>Build</source>
+        <translation>Build</translation>
+    </message>
+    <message>
+        <source>Gather</source>
+        <translation>Gather</translation>
+    </message>
+    <message>
+        <source>Deliver</source>
+        <translation>Deliver</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Repair</translation>
+    </message>
+    <message>
+        <source>Rally point</source>
+        <translation>Rally point</translation>
+    </message>
+    <message>
+        <source>Formation</source>
+        <translation>Formation</translation>
+    </message>
+    <message>
+        <source>You are not in command of these units.</source>
+        <translation>You are not in command of these units.</translation>
+    </message>
+    <message>
+        <source>That target is already gone.</source>
+        <translation>That target is already gone.</translation>
+    </message>
+    <message>
+        <source>Cannot attack a friendly or neutral target.</source>
+        <translation>Cannot attack a friendly or neutral target.</translation>
+    </message>
+    <message>
+        <source>That building no longer exists.</source>
+        <translation>That building no longer exists.</translation>
+    </message>
+    <message>
+        <source>That building is not yours.</source>
+        <translation>That building is not yours.</translation>
+    </message>
+    <message>
+        <source>That order could not be carried out.</source>
+        <translation>That order could not be carried out.</translation>
+    </message>
+    <message>
+        <source>%1: %2 units</source>
+        <translation>%1: %2 units</translation>
+    </message>
+    <message>
+        <source>No units selected.</source>
+        <translation>No units selected.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot attack.</source>
+        <translation>The selected units cannot attack.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot guard.</source>
+        <translation>The selected units cannot guard.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot patrol.</source>
+        <translation>The selected units cannot patrol.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot hold position.</source>
+        <translation>The selected units cannot hold position.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot build.</source>
+        <translation>The selected units cannot build.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot gather.</source>
+        <translation>The selected units cannot gather.</translation>
+    </message>
+    <message>
+        <source>Only civilians can be delivered to a barracks.</source>
+        <translation>Only civilians can be delivered to a barracks.</translation>
+    </message>
+    <message>
+        <source>Only builders can repair structures.</source>
+        <translation>Only builders can repair structures.</translation>
+    </message>
+    <message>
+        <source>The selected units cannot take that order.</source>
+        <translation>The selected units cannot take that order.</translation>
+    </message>
+    <message>
+        <source>No enemy under the cursor.</source>
+        <translation>No enemy under the cursor.</translation>
+    </message>
+    <message>
+        <source>Select a friendly barracks with room for more people.</source>
+        <translation>Select a friendly barracks with room for more people.</translation>
+    </message>
+    <message>
+        <source>Select a damaged friendly building to repair.</source>
+        <translation>Select a damaged friendly building to repair.</translation>
+    </message>
+    <message>
+        <source>Nothing to target there.</source>
+        <translation>Nothing to target there.</translation>
+    </message>
+    <message>
+        <source>Choose a spot on the map.</source>
+        <translation>Choose a spot on the map.</translation>
+    </message>
+    <message>
+        <source>That barracks has no room for more people.</source>
+        <translation>That barracks has no room for more people.</translation>
+    </message>
+    <message>
+        <source>That building does not need repairs.</source>
+        <translation>That building does not need repairs.</translation>
+    </message>
+</context>
+<context>
     <name>OutcomeLayout</name>
     <message>
         <source>Continue</source>
@@ -4223,10 +4370,6 @@ to see preview</translation>
     <message>
         <source>Building factory unavailable.</source>
         <translation>Building factory unavailable.</translation>
-    </message>
-    <message>
-        <source>Failed to place building.</source>
-        <translation>Failed to place building.</translation>
     </message>
 </context>
 <context>

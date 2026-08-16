@@ -150,6 +150,7 @@
 #include "mission_commander_setup.h"
 #include "mission_definition_view.h"
 #include "mission_setup_coordinator.h"
+#include "order_service.h"
 #include "production_manager.h"
 #include "render/camera_visibility.h"
 #include "render/geom/stone.h"
@@ -405,10 +406,21 @@ GameEngine::GameEngine(QObject* parent)
           this,
           [this](const QString& reason) {
             Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_rejected);
-            if (!reason.isEmpty()) {
-              set_error(reason);
+            if (reason.isEmpty()) {
+              return;
             }
+            const bool gathering =
+                m_production_manager->pending_builder_construction_type() ==
+                QStringLiteral("collect");
+            auto outcome = App::Core::rejected_order(
+                gathering ? App::Core::OrderKind::Gather : App::Core::OrderKind::Build,
+                reason);
+            handle_order_feedback(outcome);
           });
+  connect(m_production_manager.get(),
+          &ProductionManager::order_feedback,
+          this,
+          &GameEngine::handle_order_feedback);
 
   m_campaign_manager = std::make_unique<CampaignManager>(this);
   connect(m_campaign_manager.get(),
@@ -458,30 +470,9 @@ GameEngine::GameEngine(QObject* parent)
           this,
           &GameEngine::selected_units_data_changed);
   connect(m_command_controller.get(),
-          &App::Controllers::CommandController::attack_target_selected,
-          [this]() {
-            Game::Audio::play_cue(Game::Audio::Cue::k_order_attack);
-            if (auto* sel_sys = m_world->get_system<Game::Systems::SelectionSystem>()) {
-              const auto& sel = sel_sys->get_selected_units();
-              if (!sel.empty()) {
-                auto* cam = m_camera;
-                auto* picking = m_picking_service.get();
-                if ((cam != nullptr) && (picking != nullptr)) {
-                  Engine::Core::EntityID const target_id =
-                      Game::Systems::PickingService::pick_unit_first(0.0F,
-                                                                     0.0F,
-                                                                     *m_world,
-                                                                     *cam,
-                                                                     m_viewport.width,
-                                                                     m_viewport.height,
-                                                                     0);
-                  if (target_id != 0) {
-                    App::Controllers::ActionVFX::spawn_attack_arrow(m_world, target_id);
-                  }
-                }
-              }
-            }
-          });
+          &App::Controllers::CommandController::order_feedback,
+          this,
+          &GameEngine::handle_order_feedback);
 
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::troop_limit_reached,
@@ -1979,6 +1970,8 @@ void GameEngine::update(float dt) {
     return;
   }
 
+  m_order_markers.update(dt, m_world);
+
   if (m_runtime.paused) {
     dt = 0.0F;
   } else {
@@ -2074,7 +2067,8 @@ void GameEngine::render(int pixel_width, int pixel_height) {
        .local_owner_id = m_runtime.local_owner_id,
        .commander_rally_preview_pos = m_commander_rally_preview_pos,
        .attack_targeting = &m_attack_targeting,
-       .attack_range_rings = &m_attack_range_rings},
+       .attack_range_rings = &m_attack_range_rings,
+       .order_markers = &m_order_markers.markers()},
       [this]() { render_runtime_mode_effects(); });
   m_renderer->end_frame();
 
@@ -2287,6 +2281,62 @@ void GameEngine::sync_attack_range_rings() {
   }
 
   m_attack_range_rings = std::move(rings);
+}
+
+namespace {
+
+auto accepted_order_cue(App::Core::OrderKind kind) -> const char* {
+  switch (kind) {
+  case App::Core::OrderKind::Move:
+  case App::Core::OrderKind::Deliver:
+  case App::Core::OrderKind::Repair:
+    return Game::Audio::Cue::k_order_move;
+  case App::Core::OrderKind::Attack:
+    return Game::Audio::Cue::k_order_attack;
+  case App::Core::OrderKind::Patrol:
+    return Game::Audio::Cue::k_order_patrol;
+  case App::Core::OrderKind::Stop:
+    return Game::Audio::Cue::k_order_stop;
+  case App::Core::OrderKind::Rally:
+    return Game::Audio::Cue::k_order_rally_set;
+  case App::Core::OrderKind::Build:
+  case App::Core::OrderKind::Gather:
+    return Game::Audio::Cue::k_build_placement_confirmed;
+  case App::Core::OrderKind::Guard:
+  case App::Core::OrderKind::Hold:
+  case App::Core::OrderKind::Formation:
+  case App::Core::OrderKind::None:
+    break;
+  }
+  return nullptr;
+}
+
+} // namespace
+
+void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
+  if (!outcome.issued()) {
+    return;
+  }
+
+  m_order_markers.push(outcome, m_world);
+
+  QString message;
+  if (outcome.accepted()) {
+    if (const char* cue = accepted_order_cue(outcome.kind)) {
+      Game::Audio::play_cue(cue);
+    }
+    if (outcome.kind == App::Core::OrderKind::Attack && outcome.target != 0) {
+      App::Controllers::ActionVFX::spawn_attack_arrow(m_world, outcome.target);
+    }
+    message = App::Core::accepted_order_message(outcome);
+  } else {
+    Game::Audio::play_cue(Game::Audio::Cue::k_ui_error);
+    message = outcome.reason;
+  }
+
+  emit order_feedback(QString::fromLatin1(App::Core::order_kind_name(outcome.kind)),
+                      outcome.accepted(),
+                      message);
 }
 
 void GameEngine::sync_attack_targeting() {

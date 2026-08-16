@@ -1080,6 +1080,118 @@ Item {
     }
 
     Rectangle {
+        id: orderFeedbackBanner
+
+        property string kind: ""
+        property bool accepted: true
+        property string message: ""
+        property real anchor_x: 0
+        property real anchor_y: 0
+
+        function glyph_for(kind, accepted) {
+            if (!accepted)
+                return "\u2298";
+            switch (kind) {
+            case "attack":
+                return "\u2694";
+            case "move":
+                return "\u279C";
+            case "guard":
+                return "\u26E8";
+            case "patrol":
+                return "\u21BB";
+            case "hold":
+                return "\u23F8";
+            case "stop":
+                return "\u25A0";
+            case "build":
+                return "\u2692";
+            case "gather":
+                return "\u26CF";
+            case "deliver":
+                return "\u2302";
+            case "repair":
+                return "\u2692";
+            case "rally":
+                return "\u2691";
+            case "formation":
+                return "\u2637";
+            }
+            return "\u2713";
+        }
+
+        function show(kind, accepted, message) {
+            if (!message || message.length === 0)
+                return;
+            orderFeedbackBanner.kind = kind;
+            orderFeedbackBanner.accepted = accepted;
+            orderFeedbackBanner.message = message;
+            if (typeof game !== 'undefined') {
+                orderFeedbackBanner.anchor_x = game.global_cursor_x;
+                orderFeedbackBanner.anchor_y = game.global_cursor_y;
+            }
+            orderFeedbackBanner.opacity = 1;
+            orderFeedbackDismiss.interval = accepted ? 1400 : 2600;
+            orderFeedbackDismiss.restart();
+        }
+
+        visible: opacity > 0.01
+        opacity: 0
+        z: 999998
+        radius: 5
+        color: "#C8141414"
+        border.color: accepted ? Theme.successBr : Theme.dangerBr
+        border.width: 1
+        width: orderFeedbackRow.implicitWidth + 16
+        height: orderFeedbackRow.implicitHeight + 8
+        x: Math.min(Math.max(0, anchor_x + 22), game_view.width - width)
+        y: Math.min(Math.max(0, anchor_y + 44), game_view.height - height)
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: 220
+            }
+        }
+
+        Timer {
+            id: orderFeedbackDismiss
+
+            interval: 1400
+            repeat: false
+            onTriggered: orderFeedbackBanner.opacity = 0
+        }
+
+        Row {
+            id: orderFeedbackRow
+
+            anchors.centerIn: parent
+            spacing: 6
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: orderFeedbackBanner.accepted ? Theme.successText : Theme.dangerBr
+                text: orderFeedbackBanner.glyph_for(orderFeedbackBanner.kind, orderFeedbackBanner.accepted)
+                font.pixelSize: 14
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: orderFeedbackBanner.accepted ? Theme.textMain : Theme.warningText
+                text: orderFeedbackBanner.message
+                font.pixelSize: 13
+            }
+        }
+    }
+
+    Connections {
+        function onOrder_feedback(kind, accepted, message) {
+            orderFeedbackBanner.show(kind, accepted, message);
+        }
+
+        target: typeof game !== 'undefined' ? game : null
+    }
+
+    Rectangle {
         id: attackTargetHint
 
         readonly property var hint: (typeof game !== 'undefined' && game.activity && game.activity.attack_target_hint) ? game.activity.attack_target_hint : ({
