@@ -196,6 +196,257 @@
     </message>
 </context>
 <context>
+    <name>App::Core::TutorialDirector</name>
+    <message>
+        <source>stone %1 / %2 · iron %3 / %4</source>
+        <translation>حجر %1 / %2 · حديد %3 / %4</translation>
+    </message>
+    <message>
+        <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
+        <translation>البنّاؤون لا يقاتلون. يحتاج هذا الأمر إلى جنود: اختر حاملي الرماح أو الرماة أو حاملي السيوف قرب معسكرك.</translation>
+    </message>
+    <message>
+        <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
+        <translation>هذا مبنى. تحتاج أوامر هذه الخطوة إلى جنود: انقر بالزر الأيسر على أحد الجنود الواقفين قرب معسكرك.</translation>
+    </message>
+    <message>
+        <source>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</source>
+        <translation>لم يُحدَّد شيء، فلا أحد يتلقى الأمر. انقر بالزر الأيسر على جندي أو اسحب إطارًا حول عدة جنود.</translation>
+    </message>
+    <message>
+        <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
+        <translation>الجمع والبناء متاحان للبنّائين فقط؛ فالجنود والمباني لا يؤدون هذا العمل. اختر بنّاءً أولًا (العامل حامل المطرقة).</translation>
+    </message>
+    <message>
+        <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
+        <translation>لم يُحدَّد أي بنّاء. انقر بالزر الأيسر على أحد البنّائين الواقفين بجوار ثكنتك.</translation>
+    </message>
+    <message>
+        <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
+        <translation>هذا مبنى. انقر بالزر الأيسر بدلًا من ذلك على أحد الجنود الواقفين قرب معسكرك.</translation>
+    </message>
+    <message>
+        <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
+        <translation>يكلف المنزل %1 خشبًا و%2 حجرًا؛ ولديك %3 خشبًا و%4 حجرًا. تبقى بطاقة البناء رمادية حتى يحوي الساحة ما يكفي، فأرسل بنّاءً ليجمع الفارق.</translation>
+    </message>
+    <message>
+        <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
+        <translation>الإطار الأحمر يعني أن الموقع محجوب: قريب جدًا من مبنى آخر، أو فوق الماء، أو على منحدر. انقله إلى أرض مستوية مكشوفة وانقر بالزر الأيسر للتأكيد. الزر الأيمن يلغي.</translation>
+    </message>
+    <message>
+        <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
+        <translation>يأتي المجنّدون من الثكنة. انقر بالزر الأيسر على ثكنتك لفتح لوحة الإنتاج على اليمين.</translation>
+    </message>
+    <message>
+        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>لم يتبقَّ للثكنة سوى %1 من السكان. كل مجنّد يكلف سكانًا؛ وحين ينفدون ابنِ منازل: فكل منزل يربّي عائلات، وأي مدني يُجنَّد هناك ويُرسَل إلى الثكنة بأمر التسليم يعيد ملأها.</translation>
+    </message>
+    <message>
+        <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
+        <translation>تتحول بطاقة التجنيد إلى الرمادي حين ينقص مورد: يحتاج الجنود إلى الخشب للأعمدة والحديد للنصال. أرسل بنّاءً ليجمع المزيد.</translation>
+    </message>
+    <message>
+        <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
+        <translation>وصل المغيرون. أبقِ جنودك متجمعين قرب الثكنة: حاملو الرماح في المقدمة، والرماة خلفهم، والقائد قريبًا لتبلغهم هالته.</translation>
+    </message>
+    <message>
+        <source>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</source>
+        <translation>الغارة الرومانية في الطريق. يعدّ متتبع الموجات أسفل الشريط العلوي تنازليًا، وتحدد الخريطة المصغرة موضع دخولها.</translation>
+    </message>
+    <message>
+        <source>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</source>
+        <translation>لا يظهر أمر الهالة إلا عند تحديد قائدك. هو حامل الراية ذو شارة التاج، قرب الثكنة.</translation>
+    </message>
+    <message>
+        <source>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</source>
+        <translation>الهالة تُشحن أو القائد جريح؛ يضيء الزر من جديد حين تصبح جاهزة.</translation>
+    </message>
+    <message>
+        <source>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</source>
+        <translation>القائد الروماني ما زال حيًا. تموت الأمة بموت من يقودها؛ اقتله يسقط المعسكر.</translation>
+    </message>
+    <message>
+        <source>Select your troops</source>
+        <translation>حدّد قواتك</translation>
+    </message>
+    <message>
+        <source>Move, and read the feedback</source>
+        <translation>تحرك واقرأ الرد</translation>
+    </message>
+    <message>
+        <source>Attack the Roman scouts</source>
+        <translation>هاجم الكشافة الرومان</translation>
+    </message>
+    <message>
+        <source>Fell timber</source>
+        <translation>اقطع الخشب</translation>
+    </message>
+    <message>
+        <source>Quarry stone, mine iron</source>
+        <translation>اقتلع الحجر واستخرج الحديد</translation>
+    </message>
+    <message>
+        <source>Raise a Home</source>
+        <translation>ابنِ منزلًا</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier</source>
+        <translation>جنّد جنديًا</translation>
+    </message>
+    <message>
+        <source>Assemble an army</source>
+        <translation>احشد جيشًا</translation>
+    </message>
+    <message>
+        <source>Defend the camp</source>
+        <translation>دافع عن المعسكر</translation>
+    </message>
+    <message>
+        <source>Guard, Hold and Patrol</source>
+        <translation>الحراسة والثبات والدورية</translation>
+    </message>
+    <message>
+        <source>Your commander</source>
+        <translation>قائدك</translation>
+    </message>
+    <message>
+        <source>The camera</source>
+        <translation>الكاميرا</translation>
+    </message>
+    <message>
+        <source>Pause and game speed</source>
+        <translation>الإيقاف المؤقت وسرعة اللعبة</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>الأهداف</translation>
+    </message>
+    <message>
+        <source>Take the Roman camp</source>
+        <translation>استولِ على المعسكر الروماني</translation>
+    </message>
+    <message>
+        <source>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</source>
+        <translation>كل شيء يبدأ بالتحديد. انقر بالزر الأيسر على جندي لتحديده، أو اضغط الزر الأيسر مطولًا واسحب إطارًا حول عدة جنود. تظهر حلقة عند أقدام القوات المحددة، وتعرض اللوحة السفلية من هم تحت إمرتك.</translation>
+    </message>
+    <message>
+        <source>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</source>
+        <translation>بعد تحديد القوات، انقر بالزر الأيمن على الأرض للزحف إليها. تظهر علامة حيث تتجه القوات، ويؤكد الشريط فوق شبكة الأوامر الأمر. الأمر المرفوض يبيّن سبب تعذر تنفيذه؛ فاقرأ الشريط حين لا يحدث شيء.</translation>
+    </message>
+    <message>
+        <source>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</source>
+        <translation>تقف فرقة كشافة رومانية خلف خيامك مباشرة؛ تحدد الخريطة المصغرة الأعداء بالأحمر. انقر بالزر الأيمن على عدو لمهاجمته، أو اضغط هجوم ثم انقر على الهدف. وبينما تقاتل قواتك، تتابع لوحة الهدف فوق شبكة الأوامر صحة العدو.</translation>
+    </message>
+    <message>
+        <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
+        <translation>الخشب يدفع ثمن كل شيء تقريبًا. اختر بنّاءً، واضغط جمع، ثم انقر على شجرة صنوبر. يقطعها البنّاء ويحمل الجذوع إلى ساحة الحجر بجوار ثكنتك، ولا يرتفع عداد الخشب في الشريط العلوي إلا عندما تُفرَّغ الحمولة هناك. الجمع التلقائي يُبقي البنّاء يعمل من تلقاء نفسه في أقرب المواقع.</translation>
+    </message>
+    <message>
+        <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
+        <translation>تعطي الصخور حجرًا للمباني والأبراج؛ وتعطي عروق الخام حديدًا للنصال والدروع. يُنقل كلاهما إلى ساحة الثكنة نفسها التي تمتلئ كلما نمت مخازنك. الذهب يأتي مع المعسكر ومن التجارة في السوق. ضع بنّاءً على الصخور وآخر على الخام.</translation>
+    </message>
+    <message>
+        <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
+        <translation>اختر بنّاءً واضغط بناء لفتح قائمة المنشآت. تعرض كل بطاقة كلفتها من الخشب والحجر والذهب؛ والبطاقة الرمادية تعني أنك لا تستطيع تحمل كلفتها بعد. اختر منزلًا ثم حرّك الإطار: الأخضر يعني أرضًا مستوية خالية، والأحمر يعني أنها محجوبة. مرّر العجلة للتدوير، وانقر بالزر الأيسر للتأكيد. المنازل تربّي العائلات التي ستجنّد منها ثكنتك لاحقًا.</translation>
+    </message>
+    <message>
+        <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
+        <translation>انقر بالزر الأيسر على ثكنتك واختر جنديًا من لوحة الإنتاج. كل مجنّد يكلف سكانًا وموارد: يأتي السكان من رصيد الثكنة الخاص المعروض على البطاقة، ويُعاد ملؤه حين يُسلَّم إليها مدنيون من منازلك. يعرض الشريط في اللوحة العلوية جيشك مقابل الحد الأقصى لسكان الخريطة.</translation>
+    </message>
+    <message>
+        <source>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</source>
+        <translation>جندي واحد ليس جيشًا. واصل التجنيد حتى تحشد ثمانية: امزج حاملي الرماح لتثبيت الصف مع الرماة لمعاقبة كل من يهاجمه. إذا تحولت بطاقة إلى الرمادي، يخبرك تلميح الدليل بما نفد. يتجمع المجنّدون الجدد عند راية تجمّع الثكنة؛ ضع واحدة من لوحة الإنتاج.</translation>
+    </message>
+    <message>
+        <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
+        <translation>غارة رومانية قادمة. يعدّ متتبع الموجات تنازليًا وتحدد الخريطة المصغرة نقطة دخولها. اصطفّ قرب ثكنتك: حاملو الرماح في المقدمة، والرماة خلفهم، والقائد قريبًا لتبلغهم هالته. اكسر الغارة للمتابعة.</translation>
+    </message>
+    <message>
+        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
+        <translation>يمكن إخبار الجنود بكيفية التصرف. الحراسة: التمسك بموقع ومطاردة كل ما يقترب ثم العودة. الثبات: الصمود في المكان دون مطاردة، وهو الأنسب للرماة فوق تل أو على خط سور. الدورية: السير بين نقطتين والاشتباك مع كل ما يعبر الطريق. أعطِ جنودك أحد هذه الأوامر.</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
+        <translation>قائدك يحمل الراية. تقاتل القوات القريبة منه بمعنويات أعلى، وحين يكون محددًا يظهر أمران: الهالة تقوّي لفترة وجيزة كل جندي حوله، والتجمّع يغرس راية يزحف إليها الجيش. إن مات، انهارت صفوفك وخُسرت المهمة؛ فأبقِه خلف الرماح. فعّل الهالة الآن.</translation>
+    </message>
+    <message>
+        <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, and the reset button in the top bar returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
+        <translation>حرّك المنظر بمفاتيح الأسهم أو WASD، أو ادفع الفأرة إلى حافة الشاشة. مرّر العجلة للتكبير، وQ وE للتدوير، وزر الإعادة في الشريط العلوي يعيدك إلى معسكرك. المتابعة تُبقي الكاميرا على تحديدك. حرّك الكاميرا الآن.</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed to half, normal or double. Space pauses too. Speed buttons stay disabled while paused - resume first. Change the speed or pause and resume now.</source>
+        <translation>الأزرار في الأعلى يسارًا توقف المعركة مؤقتًا وتضبط السرعة على النصف أو العادية أو الضعف. مفتاح المسافة يوقف مؤقتًا أيضًا. تبقى أزرار السرعة معطلة أثناء الإيقاف؛ فاستأنف أولًا. غيّر السرعة أو أوقف مؤقتًا واستأنف الآن.</translation>
+    </message>
+    <message>
+        <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
+        <translation>النجمة في الشريط العلوي تعرض هدفك الحالي. اضغط Escape واختر الأهداف لقراءة الإحاطة الكاملة: ما يكسب المهمة، وما يخسرها، وأي أهداف اختيارية. افتحها الآن ثم عد إلى المعركة.</translation>
+    </message>
+    <message>
+        <source>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</source>
+        <translation>بتّ تعرف كل ما سيطلبه منك الميدان. يقع المعسكر الروماني عبر المرج. احشد جيشك، وأبقِ القائد خلف الصف، واستولِ على المعسكر: اقتل القائد الروماني وتُكسب المهمة.</translation>
+    </message>
+    <message>
+        <source>Select at least one of your soldiers</source>
+        <translation>حدّد جنديًا واحدًا على الأقل من جنودك</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move your selected troops</source>
+        <translation>انقر بالزر الأيمن على الأرض لتحريك قواتك المحددة</translation>
+    </message>
+    <message>
+        <source>Destroy the Roman scouting party (%1 soldiers)</source>
+        <translation>دمّر فرقة الكشافة الرومانية (%1 جنود)</translation>
+    </message>
+    <message>
+        <source>Deliver %1 wood to your barracks yard</source>
+        <translation>سلّم %1 خشبًا إلى ساحة ثكنتك</translation>
+    </message>
+    <message>
+        <source>Deliver %1 stone and %2 iron</source>
+        <translation>سلّم %1 حجرًا و%2 حديدًا</translation>
+    </message>
+    <message>
+        <source>Build a Home with a builder</source>
+        <translation>ابنِ منزلًا ببنّاء</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier at the barracks and wait for it to march out</source>
+        <translation>جنّد جنديًا في الثكنة وانتظر خروجه</translation>
+    </message>
+    <message>
+        <source>Field at least %1 soldiers</source>
+        <translation>احشد %1 جنود على الأقل</translation>
+    </message>
+    <message>
+        <source>Break the Roman raid</source>
+        <translation>اكسر الغارة الرومانية</translation>
+    </message>
+    <message>
+        <source>Give a Guard, Hold or Patrol order</source>
+        <translation>أعطِ أمر حراسة أو ثبات أو دورية</translation>
+    </message>
+    <message>
+        <source>Select your commander and trigger the Aura</source>
+        <translation>حدّد قائدك وفعّل الهالة</translation>
+    </message>
+    <message>
+        <source>Move, zoom or rotate the camera</source>
+        <translation>حرّك الكاميرا أو كبّر أو دوّر</translation>
+    </message>
+    <message>
+        <source>Change the game speed or pause and resume</source>
+        <translation>غيّر سرعة اللعبة أو أوقف مؤقتًا واستأنف</translation>
+    </message>
+    <message>
+        <source>Open the Objectives screen</source>
+        <translation>افتح شاشة الأهداف</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commander and take the camp</source>
+        <translation>اقتل القائد الروماني واستولِ على المعسكر</translation>
+    </message>
+</context>
+<context>
     <name>App::Models::GraphicsSettingsProxy</name>
     <message>
         <source>Low</source>
@@ -2050,6 +2301,25 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Repair is only available to builders</source>
         <translation>الإصلاح متاح للبنّائين فقط</translation>
     </message>
+    <message>
+        <source>TARGET</source>
+        <translation>الهدف</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attacking</source>
+        <translation>
+            <numerusform>لا أحد يهاجم</numerusform>
+            <numerusform>واحد يهاجم</numerusform>
+            <numerusform>اثنان يهاجمان</numerusform>
+            <numerusform>%n يهاجمون</numerusform>
+            <numerusform>%n يهاجمون</numerusform>
+            <numerusform>%n يهاجم</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -2388,6 +2658,217 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source> (%1/%2)</source>
         <translation> (%1/%2)</translation>
     </message>
+    <message>
+        <source>Open the field manual (help)</source>
+        <translation>افتح الدليل الميداني (المساعدة)</translation>
+    </message>
+</context>
+<context>
+    <name>HelpPanel</name>
+    <message>
+        <source>Basics</source>
+        <translation>الأساسيات</translation>
+    </message>
+    <message>
+        <source>Economy</source>
+        <translation>الاقتصاد</translation>
+    </message>
+    <message>
+        <source>Buildings</source>
+        <translation>المباني</translation>
+    </message>
+    <message>
+        <source>Army</source>
+        <translation>الجيش</translation>
+    </message>
+    <message>
+        <source>Commander</source>
+        <translation>القائد</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>التحكم</translation>
+    </message>
+    <message>
+        <source>Tutorial</source>
+        <translation>الدليل التعليمي</translation>
+    </message>
+    <message>
+        <source>Selecting</source>
+        <translation>التحديد</translation>
+    </message>
+    <message>
+        <source>Left-click a unit to select it, or hold the left button and drag a box around several. Hold Ctrl to add to the selection. Selected units show a ring at their feet, and the panel at the bottom lists them by type - click a type to keep only those.</source>
+        <translation>انقر بالزر الأيسر على وحدة لتحديدها، أو اضغط الزر الأيسر مطولًا واسحب إطارًا حول عدة وحدات. اضغط Ctrl للإضافة إلى التحديد. تظهر حلقة عند أقدام الوحدات المحددة، وتعرضها اللوحة السفلية بحسب النوع؛ انقر على نوع للإبقاء عليه وحده.</translation>
+    </message>
+    <message>
+        <source>Giving orders</source>
+        <translation>إصدار الأوامر</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
+        <translation>انقر بالزر الأيمن على الأرض للتحرك، وعلى عدو للهجوم. تقدم شبكة الأوامر الهجوم والحراسة والدورية والثبات والتوقف وأوامر البنّاء والقائد. تعرض علامة وجهة القوات، ويؤكد الشريط فوق الشبكة كل أمر، أو يشرح سبب رفضه.</translation>
+    </message>
+    <message>
+        <source>Stances</source>
+        <translation>المواقف</translation>
+    </message>
+    <message>
+        <source>Guard holds a spot, chases what comes near and returns. Hold stands the ground without pursuing - for archers and spearmen. Patrol walks between two points and engages what crosses the route. Stop cancels everything.</source>
+        <translation>الحراسة تتمسك بموقع وتطارد ما يقترب ثم تعود. الثبات يصمد في المكان دون مطاردة، للرماة وحاملي الرماح. الدورية تسير بين نقطتين وتشتبك مع ما يعبر الطريق. التوقف يلغي كل شيء.</translation>
+    </message>
+    <message>
+        <source>Winning and losing</source>
+        <translation>الفوز والخسارة</translation>
+    </message>
+    <message>
+        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
+        <translation>تبيّن كل مهمة شروط فوزها وخسارتها في شاشة الأهداف (Escape ثم الأهداف). في كل معركة يجب أن ينجو قائدك: تموت الأمة بموت من يقودها، والقائد الوحيد خاسر سلفًا.</translation>
+    </message>
+    <message>
+        <source>The three materials</source>
+        <translation>المواد الثلاث</translation>
+    </message>
+    <message>
+        <source>Wood comes from pine trees, stone from boulders and iron from ore seams. A builder harvests a node with Collect (or Auto Gather), then carries the load to the stone yard beside a friendly barracks. Only when it is dropped there does the counter in the top bar rise. The yard&apos;s piles grow and shrink with your stores.</source>
+        <translation>يأتي الخشب من أشجار الصنوبر، والحجر من الصخور، والحديد من عروق الخام. يحصد البنّاء موقعًا بأمر الجمع (أو الجمع التلقائي)، ثم يحمل الحمولة إلى ساحة الحجر بجوار ثكنة صديقة. ولا يرتفع العداد في الشريط العلوي إلا عندما تُفرَّغ هناك. تكبر أكوام الساحة وتصغر مع مخازنك.</translation>
+    </message>
+    <message>
+        <source>Gold and trade</source>
+        <translation>الذهب والتجارة</translation>
+    </message>
+    <message>
+        <source>Gold comes with the camp and cannot be mined. A marketplace lets you buy materials for gold and sell surplus for it; a temple costs gold to raise.</source>
+        <translation>يأتي الذهب مع المعسكر ولا يمكن تعدينه. يتيح لك السوق شراء المواد بالذهب وبيع الفائض مقابله؛ ويكلف المعبد ذهبًا لبنائه.</translation>
+    </message>
+    <message>
+        <source>Costs</source>
+        <translation>التكاليف</translation>
+    </message>
+    <message>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost a little wood and iron plus population.</source>
+        <translation>تعرض كل بطاقة، سواء لمجنّد أو لمبنى، سعرها. البطاقة الرمادية تعني نقص شيء ما؛ مرّر المؤشر فوقها لتقرأ ما هو. تكلف المنازل 50 خشبًا و15 حجرًا، والثكنة 100 خشب و60 حجرًا، وبرج الدفاع 60 خشبًا و80 حجرًا؛ ويكلف الجنود قليلًا من الخشب والحديد إضافة إلى السكان.</translation>
+    </message>
+    <message>
+        <source>Placing a structure</source>
+        <translation>وضع منشأة</translation>
+    </message>
+    <message>
+        <source>Select a builder and press Build to open the structure list. Move the outline over the ground: green means flat, clear ground; red means it is blocked by another building, water or a slope. Scroll to rotate, left-click to confirm, right-click to cancel. The builder walks over and works until it stands.</source>
+        <translation>اختر بنّاءً واضغط بناء لفتح قائمة المنشآت. حرّك الإطار فوق الأرض: الأخضر يعني أرضًا مستوية خالية؛ والأحمر يعني أنها محجوبة بمبنى آخر أو ماء أو منحدر. مرّر العجلة للتدوير، وانقر بالزر الأيسر للتأكيد، وبالزر الأيمن للإلغاء. يمشي البنّاء إلى الموقع ويعمل حتى يقوم البناء.</translation>
+    </message>
+    <message>
+        <source>What each building does</source>
+        <translation>ما يفعله كل مبنى</translation>
+    </message>
+    <message>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>الثكنات تجنّد الجنود وتضم ساحة مخزونك. المنازل تربّي العائلات والمدنيين. أبراج الدفاع ترمي كل ما في مداها. الأسواق تتاجر. المعابد تقوّي المعنويات. الأسوار والبوابات تشكّل الميدان؛ والبوابات تُفتح لقواتك أنت.</translation>
+    </message>
+    <message>
+        <source>Repair and dismantle</source>
+        <translation>الإصلاح والتفكيك</translation>
+    </message>
+    <message>
+        <source>A damaged building can be repaired by a builder with the Repair order. Buildings you no longer need can be dismantled from their panel.</source>
+        <translation>يمكن للبنّاء إصلاح مبنى متضرر بأمر الإصلاح. ويمكن تفكيك المباني التي لم تعد تحتاجها من لوحتها.</translation>
+    </message>
+    <message>
+        <source>Recruiting</source>
+        <translation>التجنيد</translation>
+    </message>
+    <message>
+        <source>Left-click a barracks and pick a soldier. Recruits queue up to five deep and march out to the rally flag. Each costs population from the barracks&apos; own pool as well as materials.</source>
+        <translation>انقر بالزر الأيسر على ثكنة واختر جنديًا. يصطف المجنّدون في طابور حتى خمسة ويخرجون إلى راية التجمّع. يكلف كل منهم سكانًا من رصيد الثكنة الخاص إضافة إلى المواد.</translation>
+    </message>
+    <message>
+        <source>Population</source>
+        <translation>السكان</translation>
+    </message>
+    <message>
+        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>تبدأ الثكنة برصيد من السكان تنفقه على كل مجنّد. تعيد المنازل ملأه: كل منزل يربّي عائلات مع الوقت، ويمكن تجنيد مدني هناك وإرساله إلى الثكنة بأمر التسليم فينمو الرصيد. يعرض الشريط العلوي جيشك مقابل الحد الأقصى الكلي للخريطة.</translation>
+    </message>
+    <message>
+        <source>Formations and lines</source>
+        <translation>التشكيلات والصفوف</translation>
+    </message>
+    <message>
+        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. The Formation order arranges a mixed selection into a proper line; Run trades stamina for speed.</source>
+        <translation>حاملو الرماح يثبّتون الصف، والرماة يعاقبون من خلفه، والفرسان يكسرون الأجنحة، والمعالجون يداوون الجرحى القريبين من تلقاء أنفسهم. أمر التشكيل يرتب تحديدًا مختلطًا في صف منظم؛ والركض يقايض القدرة على التحمل بالسرعة.</translation>
+    </message>
+    <message>
+        <source>The standard</source>
+        <translation>الراية</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops close to him fight with higher morale, and morale decides who breaks first. Keep him behind the spears: if he falls the mission is lost.</source>
+        <translation>قائدك يحمل الراية. تقاتل القوات القريبة منه بمعنويات أعلى، والمعنويات تقرر من ينكسر أولًا. أبقِه خلف الرماح: إن سقط خُسرت المهمة.</translation>
+    </message>
+    <message>
+        <source>Aura and Rally</source>
+        <translation>الهالة والتجمّع</translation>
+    </message>
+    <message>
+        <source>With the commander selected, Aura briefly empowers every soldier around him and then recharges. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
+        <translation>حين يكون القائد محددًا، تقوّي الهالة لفترة وجيزة كل جندي حوله ثم تُشحن من جديد. التجمّع يغرس راية يزحف إليها جيشك، وهو مفيد لإعادة قوة مبعثرة إلى الصف.</translation>
+    </message>
+    <message>
+        <source>Taking direct control</source>
+        <translation>تولّي التحكم المباشر</translation>
+    </message>
+    <message>
+        <source>Where the mission allows it, you can step into the commander&apos;s boots and lead from the field. The controls for that mode are listed under Controls.</source>
+        <translation>حيث تسمح المهمة، يمكنك أن تحل محل القائد وتقود من الميدان. مفاتيح ذلك الوضع مذكورة تحت التحكم.</translation>
+    </message>
+    <message>
+        <source>Pace and view</source>
+        <translation>الإيقاع والمنظر</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set half, normal or double speed; Space pauses too. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
+        <translation>الأزرار في الأعلى يسارًا توقف المعركة مؤقتًا وتضبط السرعة على النصف أو العادية أو الضعف؛ ومفتاح المسافة يوقف مؤقتًا أيضًا. حرّك الكاميرا بمفاتيح الأسهم أو WASD، أو ادفع الفأرة إلى حافة الشاشة؛ مرّر العجلة للتكبير، وQ وE للتدوير؛ زر الإعادة يعيدك إلى معسكرك، والمتابعة تُبقي الكاميرا على تحديدك.</translation>
+    </message>
+    <message>
+        <source>Field manual</source>
+        <translation>الدليل الميداني</translation>
+    </message>
+    <message>
+        <source>Field Manual</source>
+        <translation>الدليل الميداني</translation>
+    </message>
+    <message>
+        <source>Close the field manual</source>
+        <translation>أغلق الدليل الميداني</translation>
+    </message>
+    <message>
+        <source>unbound</source>
+        <translation>غير مُعيَّن</translation>
+    </message>
+    <message>
+        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. Steps can be paused, skipped and replayed at any time.</source>
+        <translation>الدليل التعليمي معركة أولى موجَّهة في مرج صغير. تسمّي كل خطوة هدفًا واحدًا، وتخبرك متى أُنجز، وتشرح سبب رفض أي أمر. يمكن إيقاف الخطوات مؤقتًا وتخطيها وإعادتها في أي وقت.</translation>
+    </message>
+    <message>
+        <source>%1. %2</source>
+        <translation>%1. %2</translation>
+    </message>
+    <message>
+        <source>Start the tutorial</source>
+        <translation>ابدأ الدليل التعليمي</translation>
+    </message>
+    <message>
+        <source>Show tutorial card</source>
+        <translation>أظهر بطاقة الدليل</translation>
+    </message>
+    <message>
+        <source>Restart the steps</source>
+        <translation>أعد بدء الخطوات</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>إغلاق</translation>
+    </message>
 </context>
 <context>
     <name>InputBindings</name>
@@ -2599,21 +3080,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
-    </message>
-    <message>
-        <source>TARGET</source>
-        <translation>الهدف</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n of your selected units attacking</source>
-        <translation>
-            <numerusform>لا تهاجم أي من وحداتك المختارة</numerusform>
-            <numerusform>تهاجم وحدة واحدة من وحداتك المختارة</numerusform>
-            <numerusform>تهاجم وحدتان من وحداتك المختارة</numerusform>
-            <numerusform>تهاجم %n من وحداتك المختارة</numerusform>
-            <numerusform>تهاجم %n من وحداتك المختارة</numerusform>
-            <numerusform>تهاجم %n من وحداتك المختارة</numerusform>
-        </translation>
     </message>
 </context>
 <context>
@@ -3042,6 +3508,30 @@ This action cannot be undone.</source>
         <source>ROME</source>
         <translation>روما</translation>
     </message>
+    <message>
+        <source>Tutorial</source>
+        <translation>الدليل التعليمي</translation>
+    </message>
+    <message>
+        <source>Learn to command in a guided first battle</source>
+        <translation>تعلّم القيادة في معركة أولى موجَّهة</translation>
+    </message>
+    <message>
+        <source>Training</source>
+        <translation>تدريب</translation>
+    </message>
+    <message>
+        <source>Field Manual</source>
+        <translation>الدليل الميداني</translation>
+    </message>
+    <message>
+        <source>How selection, economy, buildings and armies work</source>
+        <translation>كيف يعمل التحديد والاقتصاد والمباني والجيوش</translation>
+    </message>
+    <message>
+        <source>Help</source>
+        <translation>مساعدة</translation>
+    </message>
 </context>
 <context>
     <name>MapListPanel</name>
@@ -3326,6 +3816,14 @@ to see preview</source>
     <message>
         <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
         <translation>ميدان غابات كثيف ومتناظر للاعبَين نشطين، مبني على قراءة الطرق، وأحراش الكمائن، والسيطرة على التلال، وأهداف جانبية، وثكنتين محايدتين. لا أنهار ولا جسور ولا جبال. وتلتف الطرق عمداً حول التلال بدل عبورها.</translation>
+    </message>
+    <message>
+        <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
+        <translation>مرج هادئ بين معسكر قرطاجي وموقع روماني متقدم، أُعدّ للدليل التعليمي: خشب وحجر وخام على مسافة قصيرة من الثكنة، وفرقة كشافة للتدرب عليها، ومعسكر عدو صغير للاستيلاء عليه حين يجهز الجيش.</translation>
+    </message>
+    <message>
+        <source>Training Meadow</source>
+        <translation>مرج التدريب</translation>
     </message>
 </context>
 <context>
@@ -4105,6 +4603,30 @@ to see preview</source>
     <message>
         <source>Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.</source>
         <translation>لا يُحتسب الخشب إلا حين يفرغه بنّاء في المعسكر. وأغنى الأحراش أبعدها عن المخزن، فالمهمة تُكسب بطول المسير لا بضربة الفأس.</translation>
+    </message>
+    <message>
+        <source>A guided first field, paced by the player rather than the clock: the Roman raid waits until the recruit&apos;s army stands, and the enemy camp is small enough to fall to a first attack.</source>
+        <translation>ميدان أول موجَّه، إيقاعه بيد اللاعب لا الساعة: تنتظر الغارة الرومانية حتى يقوم جيش المجنّد، ومعسكر العدو صغير بما يكفي ليسقط أمام أول هجوم.</translation>
+    </message>
+    <message>
+        <source>Every system a first match asks for, in the order a new commander meets them: selection and orders, the resource loop from tree to yard, construction cost and placement, recruitment and the population that limits it, stances, the commander&apos;s aura and rally, camera, speed and objectives - then one small assault to put it all together.</source>
+        <translation>كل نظام تطلبه أول مباراة، بالترتيب الذي يقابله به القائد الجديد: التحديد والأوامر، ودورة الموارد من الشجرة إلى الساحة، وكلفة البناء ووضعه، والتجنيد والسكان الذين يحدّونه، والمواقف، وهالة القائد وتجمّعه، والكاميرا والسرعة والأهداف؛ ثم هجوم صغير يجمع ذلك كله.</translation>
+    </message>
+    <message>
+        <source>Field Training</source>
+        <translation>التدريب الميداني</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commander and take the outpost. A nation dies with the man who leads it.</source>
+        <translation>اقتل القائد الروماني واستولِ على الموقع المتقدم. تموت الأمة بموت من يقودها.</translation>
+    </message>
+    <message>
+        <source>Learn to command before Rome comes looking for you: select and move troops, drive off a scouting party, put builders to work on timber, stone and ore, raise a Home, recruit an army, break a Roman raid, and take the enemy camp.</source>
+        <translation>تعلّم القيادة قبل أن تأتي روما تبحث عنك: حدّد القوات وحرّكها، واطرد فرقة كشافة، وشغّل البنّائين في الخشب والحجر والخام، وابنِ منزلًا، وجنّد جيشًا، واكسر غارة رومانية، واستولِ على معسكر العدو.</translation>
+    </message>
+    <message>
+        <source>Your commander falls - and every line collapses behind him.</source>
+        <translation>يسقط قائدك، فينهار كل صف من خلفه.</translation>
     </message>
 </context>
 <context>
@@ -5732,6 +6254,69 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Pink</source>
         <translation>وردي</translation>
+    </message>
+</context>
+<context>
+    <name>TutorialOverlay</name>
+    <message>
+        <source>Tutorial</source>
+        <translation>الدليل التعليمي</translation>
+    </message>
+    <message>
+        <source>Tutorial %1/%2 · %3</source>
+        <translation>الدليل %1/%2 · %3</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>إظهار</translation>
+    </message>
+    <message>
+        <source>Tutorial step</source>
+        <translation>خطوة الدليل التعليمي</translation>
+    </message>
+    <message>
+        <source>TUTORIAL · STEP %1 OF %2</source>
+        <translation>الدليل التعليمي · الخطوة %1 من %2</translation>
+    </message>
+    <message>
+        <source>Open the help screen</source>
+        <translation>افتح شاشة المساعدة</translation>
+    </message>
+    <message>
+        <source>Hide the tutorial card (it can be shown again)</source>
+        <translation>أخفِ بطاقة الدليل (يمكن إظهارها مجددًا)</translation>
+    </message>
+    <message>
+        <source>Well done - the tutorial is complete.</source>
+        <translation>أحسنت؛ اكتمل الدليل التعليمي.</translation>
+    </message>
+    <message>
+        <source>Well done. The next step follows in a moment, or press Continue.</source>
+        <translation>أحسنت. تأتي الخطوة التالية بعد لحظة، أو اضغط متابعة.</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation>استئناف</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>إيقاف مؤقت</translation>
+    </message>
+    <message>
+        <source>Replay step</source>
+        <translation>إعادة الخطوة</translation>
+    </message>
+    <message>
+        <source>Skip step</source>
+        <translation>تخطي الخطوة</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation>متابعة</translation>
+    </message>
+    <message>
+        <source>End tutorial</source>
+        <translation>إنهاء الدليل التعليمي</translation>
     </message>
 </context>
 <context>

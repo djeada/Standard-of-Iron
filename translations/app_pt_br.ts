@@ -196,6 +196,257 @@
     </message>
 </context>
 <context>
+    <name>App::Core::TutorialDirector</name>
+    <message>
+        <source>stone %1 / %2 · iron %3 / %4</source>
+        <translation>pedra %1 / %2 · ferro %3 / %4</translation>
+    </message>
+    <message>
+        <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
+        <translation>Construtores não lutam. Esta ordem precisa de soldados: selecione os lanceiros, arqueiros ou espadachins perto do seu acampamento.</translation>
+    </message>
+    <message>
+        <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
+        <translation>Isso é um edifício. As ordens desta etapa precisam de soldados: clique com o botão esquerdo em uma das tropas perto do seu acampamento.</translation>
+    </message>
+    <message>
+        <source>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</source>
+        <translation>Nada está selecionado, então ninguém pode receber a ordem. Clique com o botão esquerdo em um soldado ou arraste uma caixa em volta de vários.</translation>
+    </message>
+    <message>
+        <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
+        <translation>Coletar e Construir só estão disponíveis para construtores: soldados e edifícios não fazem esse trabalho. Selecione primeiro um construtor (o trabalhador com o martelo).</translation>
+    </message>
+    <message>
+        <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
+        <translation>Nenhum construtor está selecionado. Clique com o botão esquerdo em um dos construtores ao lado do seu quartel.</translation>
+    </message>
+    <message>
+        <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
+        <translation>Isso é um edifício. Em vez disso, clique com o botão esquerdo em um dos soldados perto do seu acampamento.</translation>
+    </message>
+    <message>
+        <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
+        <translation>Uma casa custa %1 de madeira e %2 de pedra; você tem %3 de madeira e %4 de pedra. O cartão de construção fica cinza até o pátio ter o suficiente: mande um construtor coletar a diferença.</translation>
+    </message>
+    <message>
+        <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
+        <translation>Um contorno vermelho significa que o local está bloqueado: perto demais de outro edifício, sobre água ou em uma encosta. Mova-o para terreno plano e livre e confirme com o botão esquerdo. O botão direito cancela.</translation>
+    </message>
+    <message>
+        <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
+        <translation>Os recrutas saem do quartel. Clique com o botão esquerdo no seu quartel para abrir o painel de produção à direita.</translation>
+    </message>
+    <message>
+        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>O quartel só tem %1 de população restante. Cada recruta custa população; quando ela acaba, construa casas: cada casa cria famílias, e um civil recrutado ali e enviado ao quartel com Entregar a repõe.</translation>
+    </message>
+    <message>
+        <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
+        <translation>Um cartão de recruta fica cinza quando falta um recurso: soldados precisam de madeira para as hastes e ferro para as lâminas. Mande um construtor coletar mais.</translation>
+    </message>
+    <message>
+        <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
+        <translation>Os saqueadores chegaram. Mantenha seus soldados juntos perto do quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance.</translation>
+    </message>
+    <message>
+        <source>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</source>
+        <translation>O ataque romano está a caminho. O contador de ondas sob a barra superior faz a contagem regressiva e o minimapa marca por onde ele entrará.</translation>
+    </message>
+    <message>
+        <source>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</source>
+        <translation>A ordem Aura só aparece quando seu comandante está selecionado. Ele é o porta-estandarte com o distintivo de coroa, perto do quartel.</translation>
+    </message>
+    <message>
+        <source>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</source>
+        <translation>A aura está recarregando ou o comandante está ferido; o botão acende de novo quando ela estiver pronta.</translation>
+    </message>
+    <message>
+        <source>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</source>
+        <translation>O comandante romano ainda está vivo. Uma nação morre com o homem que a lidera: mate-o e o acampamento cai.</translation>
+    </message>
+    <message>
+        <source>Select your troops</source>
+        <translation>Selecione suas tropas</translation>
+    </message>
+    <message>
+        <source>Move, and read the feedback</source>
+        <translation>Mova-se e leia a resposta</translation>
+    </message>
+    <message>
+        <source>Attack the Roman scouts</source>
+        <translation>Ataque os batedores romanos</translation>
+    </message>
+    <message>
+        <source>Fell timber</source>
+        <translation>Corte madeira</translation>
+    </message>
+    <message>
+        <source>Quarry stone, mine iron</source>
+        <translation>Extraia pedra e ferro</translation>
+    </message>
+    <message>
+        <source>Raise a Home</source>
+        <translation>Erga uma casa</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier</source>
+        <translation>Recrute um soldado</translation>
+    </message>
+    <message>
+        <source>Assemble an army</source>
+        <translation>Reúna um exército</translation>
+    </message>
+    <message>
+        <source>Defend the camp</source>
+        <translation>Defenda o acampamento</translation>
+    </message>
+    <message>
+        <source>Guard, Hold and Patrol</source>
+        <translation>Guarda, Manter e Patrulha</translation>
+    </message>
+    <message>
+        <source>Your commander</source>
+        <translation>Seu comandante</translation>
+    </message>
+    <message>
+        <source>The camera</source>
+        <translation>A câmera</translation>
+    </message>
+    <message>
+        <source>Pause and game speed</source>
+        <translation>Pausa e velocidade do jogo</translation>
+    </message>
+    <message>
+        <source>Objectives</source>
+        <translation>Objetivos</translation>
+    </message>
+    <message>
+        <source>Take the Roman camp</source>
+        <translation>Tome o acampamento romano</translation>
+    </message>
+    <message>
+        <source>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</source>
+        <translation>Tudo começa com uma seleção. Clique com o botão esquerdo em um soldado para selecioná-lo, ou segure o botão esquerdo e arraste uma caixa em volta de vários. Tropas selecionadas mostram um anel aos pés, e o painel inferior lista quem está sob seu comando.</translation>
+    </message>
+    <message>
+        <source>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</source>
+        <translation>Com tropas selecionadas, clique com o botão direito no chão para marchar até lá. Um marcador aparece no destino e a faixa acima da grade de comandos confirma a ordem. Uma ordem recusada diz por que não pôde ser cumprida: leia a faixa quando nada acontecer.</translation>
+    </message>
+    <message>
+        <source>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</source>
+        <translation>Um grupo de batedores romanos está logo além das suas tendas; o minimapa marca inimigos em vermelho. Clique com o botão direito em um inimigo para atacá-lo, ou pressione Atacar e clique no alvo. Enquanto suas tropas lutam, o painel de alvo acima da grade de comandos acompanha a saúde do inimigo.</translation>
+    </message>
+    <message>
+        <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
+        <translation>A madeira paga quase tudo. Selecione um construtor, pressione Coletar e clique em um pinheiro. O construtor o derruba, leva as toras ao pátio de pedra ao lado do seu quartel, e só quando a carga é deixada ali o contador de madeira na barra superior sobe. Coleta automática mantém um construtor trabalhando sozinho nos nós mais próximos.</translation>
+    </message>
+    <message>
+        <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
+        <translation>Rochas dão pedra para edifícios e torres; veios de minério dão ferro para lâminas e armaduras. Ambos são levados ao mesmo pátio do quartel, que se enche conforme seus estoques crescem. O ouro vem com o acampamento e do comércio em um mercado. Coloque um construtor nas rochas e outro no minério.</translation>
+    </message>
+    <message>
+        <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
+        <translation>Selecione um construtor e pressione Construir para abrir a lista de estruturas. Cada cartão mostra o custo em madeira, pedra e ouro; um cartão cinza significa que você ainda não pode pagá-lo. Escolha Casa e mova o contorno: verde significa terreno plano e livre, vermelho significa bloqueado. Role para girar, botão esquerdo para confirmar. As casas criam as famílias das quais seu quartel recrutará depois.</translation>
+    </message>
+    <message>
+        <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
+        <translation>Clique com o botão esquerdo no seu quartel e escolha um soldado no painel de produção. Cada recruta custa população e recursos: a população vem da reserva própria do quartel, mostrada no cartão, e se repõe quando civis das suas casas são entregues a ele. A barra no painel superior mostra seu exército contra o limite de população do mapa.</translation>
+    </message>
+    <message>
+        <source>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</source>
+        <translation>Um soldado não é um exército. Continue recrutando até ter oito em campo: misture lanceiros para segurar a linha com arqueiros para punir o que avançar contra ela. Se um cartão ficar cinza, a dica do tutorial diz o que faltou. Os novos recrutas se reúnem na bandeira de reunião do quartel; defina uma no painel de produção.</translation>
+    </message>
+    <message>
+        <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
+        <translation>Um ataque romano se aproxima. O contador de ondas faz a contagem regressiva e o minimapa marca o ponto de entrada. Forme perto do seu quartel: lanceiros na frente, arqueiros atrás e o comandante perto para que a aura dele os alcance. Repila o ataque para continuar.</translation>
+    </message>
+    <message>
+        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
+        <translation>É possível dizer aos soldados como se comportar. Guarda: manter um ponto, perseguir o que se aproximar e voltar. Manter: segurar a posição sem perseguir, ideal para arqueiros em uma colina ou numa linha de muralha. Patrulha: andar entre dois pontos e enfrentar o que cruzar a rota. Dê uma dessas ordens aos seus soldados.</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
+        <translation>Seu comandante carrega o estandarte. Tropas perto dele lutam com mais moral, e enquanto ele está selecionado aparecem duas ordens: Aura fortalece brevemente todo soldado ao redor, e Reunião finca uma bandeira para a qual o exército marcha. Se ele morrer, suas linhas se rompem e a missão está perdida: mantenha-o atrás das lanças. Ative a Aura agora.</translation>
+    </message>
+    <message>
+        <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, and the reset button in the top bar returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
+        <translation>Mova a visão com as setas ou WASD, ou leve o mouse até a borda da tela. Role para aproximar, Q e E giram, e o botão de reinício na barra superior volta ao seu acampamento. Seguir mantém a câmera na sua seleção. Mova a câmera agora.</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed to half, normal or double. Space pauses too. Speed buttons stay disabled while paused - resume first. Change the speed or pause and resume now.</source>
+        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade como metade, normal ou dobro. A barra de espaço também pausa. Os botões de velocidade ficam desativados na pausa: retome primeiro. Mude a velocidade ou pause e retome agora.</translation>
+    </message>
+    <message>
+        <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
+        <translation>A estrela na barra superior mostra seu objetivo atual. Pressione Escape e escolha Objetivos para ler o briefing completo: o que vence a missão, o que a perde e as metas opcionais. Abra-o agora e depois volte à batalha.</translation>
+    </message>
+    <message>
+        <source>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</source>
+        <translation>Você já sabe tudo o que o campo vai exigir. O acampamento romano fica do outro lado da campina. Reúna seu exército, mantenha o comandante atrás da linha e tome o acampamento: mate o comandante romano e a missão está vencida.</translation>
+    </message>
+    <message>
+        <source>Select at least one of your soldiers</source>
+        <translation>Selecione pelo menos um dos seus soldados</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move your selected troops</source>
+        <translation>Clique com o botão direito no chão para mover as tropas selecionadas</translation>
+    </message>
+    <message>
+        <source>Destroy the Roman scouting party (%1 soldiers)</source>
+        <translation>Destrua o grupo de batedores romanos (%1 soldados)</translation>
+    </message>
+    <message>
+        <source>Deliver %1 wood to your barracks yard</source>
+        <translation>Entregue %1 de madeira no pátio do seu quartel</translation>
+    </message>
+    <message>
+        <source>Deliver %1 stone and %2 iron</source>
+        <translation>Entregue %1 de pedra e %2 de ferro</translation>
+    </message>
+    <message>
+        <source>Build a Home with a builder</source>
+        <translation>Construa uma casa com um construtor</translation>
+    </message>
+    <message>
+        <source>Recruit a soldier at the barracks and wait for it to march out</source>
+        <translation>Recrute um soldado no quartel e espere ele sair</translation>
+    </message>
+    <message>
+        <source>Field at least %1 soldiers</source>
+        <translation>Tenha pelo menos %1 soldados em campo</translation>
+    </message>
+    <message>
+        <source>Break the Roman raid</source>
+        <translation>Repila o ataque romano</translation>
+    </message>
+    <message>
+        <source>Give a Guard, Hold or Patrol order</source>
+        <translation>Dê uma ordem de Guarda, Manter ou Patrulha</translation>
+    </message>
+    <message>
+        <source>Select your commander and trigger the Aura</source>
+        <translation>Selecione seu comandante e ative a Aura</translation>
+    </message>
+    <message>
+        <source>Move, zoom or rotate the camera</source>
+        <translation>Mova, aproxime ou gire a câmera</translation>
+    </message>
+    <message>
+        <source>Change the game speed or pause and resume</source>
+        <translation>Mude a velocidade do jogo ou pause e retome</translation>
+    </message>
+    <message>
+        <source>Open the Objectives screen</source>
+        <translation>Abra a tela de Objetivos</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commander and take the camp</source>
+        <translation>Mate o comandante romano e tome o acampamento</translation>
+    </message>
+</context>
+<context>
     <name>App::Models::GraphicsSettingsProxy</name>
     <message>
         <source>Low</source>
@@ -2050,6 +2301,21 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Repair is only available to builders</source>
         <translation>Reparar só está disponível para construtores</translation>
     </message>
+    <message>
+        <source>TARGET</source>
+        <translation>ALVO</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n attacking</source>
+        <translation>
+            <numerusform>Um atacando</numerusform>
+            <numerusform>%n atacando</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>%1%</source>
+        <translation>%1%</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -2388,6 +2654,217 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source> (%1/%2)</source>
         <translation> (%1/%2)</translation>
     </message>
+    <message>
+        <source>Open the field manual (help)</source>
+        <translation>Abrir o manual de campo (ajuda)</translation>
+    </message>
+</context>
+<context>
+    <name>HelpPanel</name>
+    <message>
+        <source>Basics</source>
+        <translation>Fundamentos</translation>
+    </message>
+    <message>
+        <source>Economy</source>
+        <translation>Economia</translation>
+    </message>
+    <message>
+        <source>Buildings</source>
+        <translation>Edifícios</translation>
+    </message>
+    <message>
+        <source>Army</source>
+        <translation>Exército</translation>
+    </message>
+    <message>
+        <source>Commander</source>
+        <translation>Comandante</translation>
+    </message>
+    <message>
+        <source>Controls</source>
+        <translation>Controles</translation>
+    </message>
+    <message>
+        <source>Tutorial</source>
+        <translation>Tutorial</translation>
+    </message>
+    <message>
+        <source>Selecting</source>
+        <translation>Selecionar</translation>
+    </message>
+    <message>
+        <source>Left-click a unit to select it, or hold the left button and drag a box around several. Hold Ctrl to add to the selection. Selected units show a ring at their feet, and the panel at the bottom lists them by type - click a type to keep only those.</source>
+        <translation>Clique com o botão esquerdo em uma unidade para selecioná-la, ou segure o botão esquerdo e arraste uma caixa em volta de várias. Segure Ctrl para adicionar à seleção. Unidades selecionadas mostram um anel aos pés, e o painel inferior as lista por tipo: clique em um tipo para manter só aquelas.</translation>
+    </message>
+    <message>
+        <source>Giving orders</source>
+        <translation>Dar ordens</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
+        <translation>Botão direito no chão para mover, botão direito em um inimigo para atacar. A grade de comandos oferece Atacar, Guarda, Patrulha, Manter, Parar e as ordens de construtor e de comandante. Um marcador mostra para onde as tropas vão e a faixa acima da grade confirma cada ordem, ou explica por que foi recusada.</translation>
+    </message>
+    <message>
+        <source>Stances</source>
+        <translation>Posturas</translation>
+    </message>
+    <message>
+        <source>Guard holds a spot, chases what comes near and returns. Hold stands the ground without pursuing - for archers and spearmen. Patrol walks between two points and engages what crosses the route. Stop cancels everything.</source>
+        <translation>Guarda mantém um ponto, persegue o que se aproxima e volta. Manter segura a posição sem perseguir: para arqueiros e lanceiros. Patrulha anda entre dois pontos e enfrenta o que cruzar a rota. Parar cancela tudo.</translation>
+    </message>
+    <message>
+        <source>Winning and losing</source>
+        <translation>Vencer e perder</translation>
+    </message>
+    <message>
+        <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
+        <translation>Cada missão informa suas condições de vitória e derrota na tela de Objetivos (Escape e depois Objetivos). Em toda batalha seu comandante precisa sobreviver: uma nação morre com o homem que a lidera, e um comandante sozinho já está perdido.</translation>
+    </message>
+    <message>
+        <source>The three materials</source>
+        <translation>Os três materiais</translation>
+    </message>
+    <message>
+        <source>Wood comes from pine trees, stone from boulders and iron from ore seams. A builder harvests a node with Collect (or Auto Gather), then carries the load to the stone yard beside a friendly barracks. Only when it is dropped there does the counter in the top bar rise. The yard&apos;s piles grow and shrink with your stores.</source>
+        <translation>A madeira vem dos pinheiros, a pedra das rochas e o ferro dos veios de minério. Um construtor colhe um nó com Coletar (ou Coleta automática) e depois leva a carga ao pátio de pedra ao lado de um quartel aliado. Só quando ela é deixada ali o contador da barra superior sobe. As pilhas do pátio crescem e diminuem com seus estoques.</translation>
+    </message>
+    <message>
+        <source>Gold and trade</source>
+        <translation>Ouro e comércio</translation>
+    </message>
+    <message>
+        <source>Gold comes with the camp and cannot be mined. A marketplace lets you buy materials for gold and sell surplus for it; a temple costs gold to raise.</source>
+        <translation>O ouro vem com o acampamento e não pode ser minerado. Um mercado permite comprar materiais com ouro e vender excedentes por ouro; um templo custa ouro para ser erguido.</translation>
+    </message>
+    <message>
+        <source>Costs</source>
+        <translation>Custos</translation>
+    </message>
+    <message>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost a little wood and iron plus population.</source>
+        <translation>Cada cartão, de recruta ou de edifício, mostra seu preço. Um cartão cinza significa que algo está faltando; passe o mouse para ler o quê. Casas custam 50 de madeira e 15 de pedra, um quartel 100 de madeira e 60 de pedra, uma torre de defesa 60 de madeira e 80 de pedra; soldados custam um pouco de madeira e ferro mais população.</translation>
+    </message>
+    <message>
+        <source>Placing a structure</source>
+        <translation>Posicionar uma estrutura</translation>
+    </message>
+    <message>
+        <source>Select a builder and press Build to open the structure list. Move the outline over the ground: green means flat, clear ground; red means it is blocked by another building, water or a slope. Scroll to rotate, left-click to confirm, right-click to cancel. The builder walks over and works until it stands.</source>
+        <translation>Selecione um construtor e pressione Construir para abrir a lista de estruturas. Mova o contorno sobre o terreno: verde significa terreno plano e livre; vermelho significa que está bloqueado por outro edifício, água ou uma encosta. Role para girar, botão esquerdo para confirmar, botão direito para cancelar. O construtor vai até lá e trabalha até a estrutura ficar de pé.</translation>
+    </message>
+    <message>
+        <source>What each building does</source>
+        <translation>O que cada edifício faz</translation>
+    </message>
+    <message>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>Quartéis recrutam soldados e abrigam seu pátio de estoque. Casas criam famílias e civis. Torres de defesa atiram em tudo ao alcance. Mercados comerciam. Templos fortalecem a moral. Muralhas e portões moldam o campo; os portões se abrem para as suas próprias tropas.</translation>
+    </message>
+    <message>
+        <source>Repair and dismantle</source>
+        <translation>Reparar e desmontar</translation>
+    </message>
+    <message>
+        <source>A damaged building can be repaired by a builder with the Repair order. Buildings you no longer need can be dismantled from their panel.</source>
+        <translation>Um edifício danificado pode ser reparado por um construtor com a ordem Reparar. Edifícios de que você não precisa mais podem ser desmontados pelo painel deles.</translation>
+    </message>
+    <message>
+        <source>Recruiting</source>
+        <translation>Recrutamento</translation>
+    </message>
+    <message>
+        <source>Left-click a barracks and pick a soldier. Recruits queue up to five deep and march out to the rally flag. Each costs population from the barracks&apos; own pool as well as materials.</source>
+        <translation>Clique com o botão esquerdo em um quartel e escolha um soldado. Os recrutas formam fila de até cinco e saem para a bandeira de reunião. Cada um custa população da reserva própria do quartel, além de materiais.</translation>
+    </message>
+    <message>
+        <source>Population</source>
+        <translation>População</translation>
+    </message>
+    <message>
+        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>Um quartel começa com uma reserva de população e a gasta em cada recruta. As casas a repõem: cada casa cria famílias com o tempo, um civil pode ser recrutado ali e enviado ao quartel com Entregar, e a reserva cresce. A barra superior mostra seu exército contra o limite total do mapa.</translation>
+    </message>
+    <message>
+        <source>Formations and lines</source>
+        <translation>Formações e linhas</translation>
+    </message>
+    <message>
+        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. The Formation order arranges a mixed selection into a proper line; Run trades stamina for speed.</source>
+        <translation>Lanceiros seguram a linha, arqueiros punem de trás dela, a cavalaria rompe os flancos, curandeiros tratam sozinhos os feridos próximos. A ordem Formação organiza uma seleção mista em uma linha de verdade; Correr troca vigor por velocidade.</translation>
+    </message>
+    <message>
+        <source>The standard</source>
+        <translation>O estandarte</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops close to him fight with higher morale, and morale decides who breaks first. Keep him behind the spears: if he falls the mission is lost.</source>
+        <translation>Seu comandante carrega o estandarte. Tropas perto dele lutam com mais moral, e a moral decide quem cede primeiro. Mantenha-o atrás das lanças: se ele cair, a missão está perdida.</translation>
+    </message>
+    <message>
+        <source>Aura and Rally</source>
+        <translation>Aura e Reunião</translation>
+    </message>
+    <message>
+        <source>With the commander selected, Aura briefly empowers every soldier around him and then recharges. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
+        <translation>Com o comandante selecionado, Aura fortalece brevemente todo soldado ao redor dele e depois recarrega. Reunião finca uma bandeira para a qual seu exército marcha: útil para trazer uma força dispersa de volta à linha.</translation>
+    </message>
+    <message>
+        <source>Taking direct control</source>
+        <translation>Assumir o controle direto</translation>
+    </message>
+    <message>
+        <source>Where the mission allows it, you can step into the commander&apos;s boots and lead from the field. The controls for that mode are listed under Controls.</source>
+        <translation>Quando a missão permite, você pode calçar as botas do comandante e liderar de dentro do campo. Os controles desse modo estão listados em Controles.</translation>
+    </message>
+    <message>
+        <source>Pace and view</source>
+        <translation>Ritmo e visão</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set half, normal or double speed; Space pauses too. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
+        <translation>Os botões no canto superior esquerdo pausam a batalha e definem velocidade metade, normal ou dobro; a barra de espaço também pausa. Mova a câmera com as setas ou WASD, ou leve o mouse até a borda da tela; role para aproximar, Q e E para girar; o botão de reinício volta ao seu acampamento e Seguir mantém a câmera na sua seleção.</translation>
+    </message>
+    <message>
+        <source>Field manual</source>
+        <translation>Manual de campo</translation>
+    </message>
+    <message>
+        <source>Field Manual</source>
+        <translation>Manual de campo</translation>
+    </message>
+    <message>
+        <source>Close the field manual</source>
+        <translation>Fechar o manual de campo</translation>
+    </message>
+    <message>
+        <source>unbound</source>
+        <translation>não atribuído</translation>
+    </message>
+    <message>
+        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. Steps can be paused, skipped and replayed at any time.</source>
+        <translation>O tutorial é uma primeira batalha guiada em uma pequena campina. Cada etapa nomeia uma meta, avisa quando ela foi cumprida e explica por que uma ordem é recusada. As etapas podem ser pausadas, puladas e repetidas a qualquer momento.</translation>
+    </message>
+    <message>
+        <source>%1. %2</source>
+        <translation>%1. %2</translation>
+    </message>
+    <message>
+        <source>Start the tutorial</source>
+        <translation>Iniciar o tutorial</translation>
+    </message>
+    <message>
+        <source>Show tutorial card</source>
+        <translation>Mostrar o cartão do tutorial</translation>
+    </message>
+    <message>
+        <source>Restart the steps</source>
+        <translation>Reiniciar as etapas</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Fechar</translation>
+    </message>
 </context>
 <context>
     <name>InputBindings</name>
@@ -2591,17 +3068,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>%1 / %2</source>
         <translation>%1 / %2</translation>
-    </message>
-    <message>
-        <source>TARGET</source>
-        <translation>ALVO</translation>
-    </message>
-    <message numerus="yes">
-        <source>%n of your selected units attacking</source>
-        <translation>
-            <numerusform>%n das suas unidades selecionadas atacando</numerusform>
-            <numerusform>%n das suas unidades selecionadas atacando</numerusform>
-        </translation>
     </message>
 </context>
 <context>
@@ -3030,6 +3496,30 @@ Esta ação não pode ser desfeita.</translation>
         <source>ROME</source>
         <translation>ROMA</translation>
     </message>
+    <message>
+        <source>Tutorial</source>
+        <translation>Tutorial</translation>
+    </message>
+    <message>
+        <source>Learn to command in a guided first battle</source>
+        <translation>Aprenda a comandar em uma primeira batalha guiada</translation>
+    </message>
+    <message>
+        <source>Training</source>
+        <translation>Treinamento</translation>
+    </message>
+    <message>
+        <source>Field Manual</source>
+        <translation>Manual de campo</translation>
+    </message>
+    <message>
+        <source>How selection, economy, buildings and armies work</source>
+        <translation>Como funcionam a seleção, a economia, os edifícios e os exércitos</translation>
+    </message>
+    <message>
+        <source>Help</source>
+        <translation>Ajuda</translation>
+    </message>
 </context>
 <context>
     <name>MapListPanel</name>
@@ -3314,6 +3804,14 @@ para ver a prévia</translation>
     <message>
         <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
         <translation>Um campo de batalha florestal denso e simétrico para dois jogadores ativos, construído em torno da leitura das estradas, bosques de emboscada, controle das colinas, objetivos secundários e dois quartéis neutros. Não há rios, pontes ou montanhas. As estradas contornam as colinas de propósito, em vez de atravessá-las.</translation>
+    </message>
+    <message>
+        <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
+        <translation>Uma campina tranquila entre um acampamento cartaginês e um posto avançado romano, preparada para o tutorial: madeira, pedra e minério a uma curta caminhada do quartel, um grupo de batedores para praticar e um pequeno acampamento inimigo para tomar quando o exército estiver pronto.</translation>
+    </message>
+    <message>
+        <source>Training Meadow</source>
+        <translation>Campina de Treinamento</translation>
     </message>
 </context>
 <context>
@@ -4093,6 +4591,30 @@ para ver a prévia</translation>
     <message>
         <source>Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.</source>
         <translation>A madeira só conta quando um construtor a descarrega no acampamento. Os melhores bosques ficam mais longe do depósito, então a missão se vence pela extensão da caminhada, não pelo golpe do machado.</translation>
+    </message>
+    <message>
+        <source>A guided first field, paced by the player rather than the clock: the Roman raid waits until the recruit&apos;s army stands, and the enemy camp is small enough to fall to a first attack.</source>
+        <translation>Um primeiro campo guiado, no ritmo do jogador e não do relógio: o ataque romano espera até o exército do recruta estar de pé, e o acampamento inimigo é pequeno o bastante para cair num primeiro ataque.</translation>
+    </message>
+    <message>
+        <source>Every system a first match asks for, in the order a new commander meets them: selection and orders, the resource loop from tree to yard, construction cost and placement, recruitment and the population that limits it, stances, the commander&apos;s aura and rally, camera, speed and objectives - then one small assault to put it all together.</source>
+        <translation>Todos os sistemas que uma primeira partida exige, na ordem em que um novo comandante os encontra: seleção e ordens, o ciclo de recursos da árvore ao pátio, custo e posicionamento das construções, recrutamento e a população que o limita, posturas, a aura e a reunião do comandante, câmera, velocidade e objetivos; e então um pequeno assalto para juntar tudo.</translation>
+    </message>
+    <message>
+        <source>Field Training</source>
+        <translation>Treinamento de Campo</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commander and take the outpost. A nation dies with the man who leads it.</source>
+        <translation>Mate o comandante romano e tome o posto avançado. Uma nação morre com o homem que a lidera.</translation>
+    </message>
+    <message>
+        <source>Learn to command before Rome comes looking for you: select and move troops, drive off a scouting party, put builders to work on timber, stone and ore, raise a Home, recruit an army, break a Roman raid, and take the enemy camp.</source>
+        <translation>Aprenda a comandar antes que Roma venha atrás de você: selecione e mova tropas, afugente um grupo de batedores, ponha construtores para trabalhar madeira, pedra e minério, erga uma casa, recrute um exército, repila um ataque romano e tome o acampamento inimigo.</translation>
+    </message>
+    <message>
+        <source>Your commander falls - and every line collapses behind him.</source>
+        <translation>Seu comandante cai, e todas as linhas desabam atrás dele.</translation>
     </message>
 </context>
 <context>
@@ -5720,6 +6242,69 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>Pink</source>
         <translation>Rosa</translation>
+    </message>
+</context>
+<context>
+    <name>TutorialOverlay</name>
+    <message>
+        <source>Tutorial</source>
+        <translation>Tutorial</translation>
+    </message>
+    <message>
+        <source>Tutorial %1/%2 · %3</source>
+        <translation>Tutorial %1/%2 · %3</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Mostrar</translation>
+    </message>
+    <message>
+        <source>Tutorial step</source>
+        <translation>Etapa do tutorial</translation>
+    </message>
+    <message>
+        <source>TUTORIAL · STEP %1 OF %2</source>
+        <translation>TUTORIAL · ETAPA %1 DE %2</translation>
+    </message>
+    <message>
+        <source>Open the help screen</source>
+        <translation>Abrir a tela de ajuda</translation>
+    </message>
+    <message>
+        <source>Hide the tutorial card (it can be shown again)</source>
+        <translation>Ocultar o cartão do tutorial (ele pode ser mostrado de novo)</translation>
+    </message>
+    <message>
+        <source>Well done - the tutorial is complete.</source>
+        <translation>Muito bem: o tutorial está completo.</translation>
+    </message>
+    <message>
+        <source>Well done. The next step follows in a moment, or press Continue.</source>
+        <translation>Muito bem. A próxima etapa vem em instantes, ou pressione Continuar.</translation>
+    </message>
+    <message>
+        <source>Resume</source>
+        <translation>Retomar</translation>
+    </message>
+    <message>
+        <source>Pause</source>
+        <translation>Pausar</translation>
+    </message>
+    <message>
+        <source>Replay step</source>
+        <translation>Repetir etapa</translation>
+    </message>
+    <message>
+        <source>Skip step</source>
+        <translation>Pular etapa</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation>Continuar</translation>
+    </message>
+    <message>
+        <source>End tutorial</source>
+        <translation>Encerrar o tutorial</translation>
     </message>
 </context>
 <context>

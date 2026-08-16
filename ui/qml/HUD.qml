@@ -11,6 +11,8 @@ Item {
     property string current_command_mode: "normal"
     property int top_panel_height: topPanel.height
     property int bottom_panel_height: bottomPanel.height
+
+    readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
     property int selection_tick: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.control_mode === "commander" && game.game_mode === "rpg"
@@ -23,6 +25,7 @@ Item {
     signal recruit_unit(string unit_type)
     signal return_to_main_menu_requested
     signal hud_became_visible
+    signal help_requested
 
     function refresh_command_mode() {
         var actual_mode = "normal";
@@ -101,6 +104,7 @@ Item {
                 hud.current_speed = s;
                 hud.speed_changed(s);
             }
+            onHelp_requested: hud.help_requested()
         }
     }
 
@@ -155,7 +159,8 @@ Item {
         anchors.left: parent.left
         anchors.topMargin: Design.Metrics.space8
         anchors.leftMargin: Design.Metrics.hudZoneMargin
-        visible: has_waves && !hud.commander_rpg_mode
+
+        visible: has_waves && !hud.commander_rpg_mode && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
     }
 
     FormationPanel {

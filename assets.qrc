@@ -136,6 +136,7 @@
         <file>assets/maps/map_spanish_grove.json</file>
         <file>assets/maps/map_rivers.json</file>
         <file>assets/maps/map_mountain.json</file>
+        <file>assets/maps/map_tutorial.json</file>
         <!-- Only git-tracked campaign map files belong here. The generated
              tools/map_pipeline outputs (base color, water, coastlines_uv,
              rivers_uv, land_mesh, provinces) are embedded via the generated
@@ -154,6 +155,7 @@
         <file>assets/missions/crossing_the_alps.json</file>
         <file>assets/missions/crossing_the_rhone.json</file>
         <file>assets/missions/iron_sepulcher_watch.json</file>
+        <file>assets/missions/tutorial.json</file>
 
         <!-- Audio assets. Music and ambience are deliberately absent:
              they are long-form beds, they are always installed on disk

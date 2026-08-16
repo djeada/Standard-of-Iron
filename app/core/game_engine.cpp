@@ -287,6 +287,11 @@ GameEngine::GameEngine(QObject* parent)
   App::ViewModels::ActivityHost& activity_host = *this;
   m_activity_view_model =
       std::make_unique<App::ViewModels::ActivityViewModel>(&activity_host, this);
+  m_tutorial_director = std::make_unique<App::Core::TutorialDirector>(this);
+  connect(m_tutorial_director.get(),
+          &App::Core::TutorialDirector::start_requested,
+          this,
+          &GameEngine::start_tutorial);
 
   Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
   Game::Systems::TroopCountRegistry::instance().initialize();
@@ -1995,6 +2000,7 @@ void GameEngine::update(float dt) {
     return;
   }
 
+  const float real_dt = dt;
   m_order_markers.update(dt, m_world);
   m_combat_feedback.update(dt);
 
@@ -2041,6 +2047,7 @@ void GameEngine::update(float dt) {
   sync_attack_range_rings();
   sync_focus_targets();
   sync_target_focus_markers();
+  update_tutorial(real_dt);
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {
@@ -2349,6 +2356,37 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
 
   m_order_markers.push(outcome, m_world);
 
+  if (outcome.accepted()) {
+    switch (outcome.kind) {
+    case App::Core::OrderKind::Move:
+      m_tutorial_notes.move_accepted = true;
+      break;
+    case App::Core::OrderKind::Attack:
+      m_tutorial_notes.attack_accepted = true;
+      break;
+    case App::Core::OrderKind::Hold:
+      m_tutorial_notes.hold_accepted = true;
+      break;
+    case App::Core::OrderKind::Guard:
+      m_tutorial_notes.guard_accepted = true;
+      break;
+    case App::Core::OrderKind::Patrol:
+      m_tutorial_notes.patrol_accepted = true;
+      break;
+    case App::Core::OrderKind::Gather:
+      m_tutorial_notes.gather_accepted = true;
+      break;
+    case App::Core::OrderKind::Build:
+      m_tutorial_notes.build_accepted = true;
+      break;
+    default:
+      break;
+    }
+    m_tutorial_notes.last_rejection_reason.clear();
+  } else {
+    m_tutorial_notes.last_rejection_reason = outcome.reason;
+  }
+
   QString message;
   if (outcome.accepted()) {
     if (const char* cue = accepted_order_cue(outcome.kind)) {
@@ -2460,6 +2498,7 @@ auto GameEngine::is_action_enabled(const QString& action_id) const -> bool {
 
 void GameEngine::camera_move(float dx, float dz) {
   ensure_initialized();
+  m_tutorial_notes.camera_used = true;
   if (m_camera_controller) {
     m_camera_controller->move(dx, dz);
   }
@@ -2467,6 +2506,7 @@ void GameEngine::camera_move(float dx, float dz) {
 
 void GameEngine::camera_elevate(float dy) {
   ensure_initialized();
+  m_tutorial_notes.camera_used = true;
   if (m_camera_controller) {
     m_camera_controller->elevate(dy);
   }
@@ -2481,6 +2521,7 @@ void GameEngine::reset_camera() {
 
 void GameEngine::camera_zoom(float delta) {
   ensure_initialized();
+  m_tutorial_notes.camera_used = true;
   if (m_camera_controller) {
     m_camera_controller->zoom(delta);
   }
@@ -2495,6 +2536,7 @@ auto GameEngine::camera_distance() const -> float {
 
 void GameEngine::camera_yaw(float degrees) {
   ensure_initialized();
+  m_tutorial_notes.camera_used = true;
   if (m_camera_controller) {
     m_camera_controller->yaw(degrees);
   }
@@ -2502,12 +2544,14 @@ void GameEngine::camera_yaw(float degrees) {
 
 void GameEngine::camera_orbit(float yaw_deg, float pitch_deg) {
   ensure_initialized();
+  m_tutorial_notes.camera_used = true;
   if (m_camera_controller) {
     m_camera_controller->orbit(yaw_deg, pitch_deg);
   }
 }
 
 void GameEngine::camera_orbit_direction(int direction, bool shift) {
+  m_tutorial_notes.camera_used = true;
   if (m_camera_controller) {
     m_camera_controller->orbit_direction(direction, shift);
   }
@@ -2636,6 +2680,7 @@ void GameEngine::set_paused(bool paused) {
     return;
   }
   m_runtime.paused = paused;
+  m_tutorial_notes.speed_changed = true;
   if (m_runtime.loading) {
     return;
   }
@@ -2649,6 +2694,7 @@ void GameEngine::set_game_speed(float speed) {
     return;
   }
   m_runtime.time_scale = clamped;
+  m_tutorial_notes.speed_changed = true;
   Game::Audio::play_cue(Game::Audio::Cue::k_state_speed_change);
 }
 
@@ -3148,6 +3194,11 @@ void GameEngine::start_mission_file(const QString& file_path) {
       mission.map_path, build_campaign_player_configs(mission), false);
 }
 
+void GameEngine::start_tutorial() {
+  start_mission_file(Utils::Resources::resolve_resource_path(
+      QStringLiteral(":/assets/missions/tutorial.json")));
+}
+
 void GameEngine::mark_current_mission_completed() {
   if (!m_campaign_manager) {
     return;
@@ -3422,6 +3473,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
       emit spectator_mode_changed();
     }
     arm_replay_for_started_match();
+    activate_tutorial_if_configured();
   });
 }
 
@@ -3553,6 +3605,11 @@ void GameEngine::reset_preload_interaction_state() {
 }
 
 void GameEngine::reset_mission_runtime_state() {
+  if (m_tutorial_director) {
+    m_tutorial_director->end();
+  }
+  m_tutorial_notes.reset();
+  m_tutorial_observe_accumulator = 0.0F;
   m_campaign_mission_elapsed = 0.0F;
   m_runtime.minimap_unit_update_accumulator = 0.0F;
   m_pending_mission_waves.clear();
@@ -3586,6 +3643,10 @@ void GameEngine::update_mission_events() {
 void GameEngine::update_mission_waves(float dt) {
   if (dt <= 0.0F || !m_world || !m_mission_setup ||
       !m_runtime.victory_state.isEmpty()) {
+    return;
+  }
+  if (m_tutorial_director && m_tutorial_director->holds_mission_clock()) {
+
     return;
   }
 
@@ -4446,6 +4507,160 @@ auto GameEngine::placement_view_model() const -> QObject* {
 
 auto GameEngine::wave_view_model() const -> QObject* {
   return m_wave_view_model.get();
+}
+
+auto GameEngine::tutorial_view_model() const -> QObject* {
+  return m_tutorial_director.get();
+}
+
+void GameEngine::activate_tutorial_if_configured() {
+  if (!m_tutorial_director) {
+    return;
+  }
+  const bool tutorial_mission =
+      m_campaign_manager != nullptr &&
+      m_campaign_manager->current_mission_definition().has_value() &&
+      m_campaign_manager->current_mission_definition()->tutorial;
+  m_tutorial_notes.reset();
+  m_tutorial_observe_accumulator = 0.0F;
+  if (tutorial_mission) {
+    m_tutorial_director->begin();
+  } else {
+    m_tutorial_director->end();
+  }
+}
+
+void GameEngine::update_tutorial(float real_dt) {
+  if (!m_tutorial_director || !m_tutorial_director->active()) {
+    m_tutorial_notes.reset();
+    return;
+  }
+
+  constexpr float k_observe_interval = 0.2F;
+  m_tutorial_observe_accumulator += std::max(0.0F, real_dt);
+  if (m_tutorial_observe_accumulator < k_observe_interval) {
+    return;
+  }
+  const float elapsed = m_tutorial_observe_accumulator;
+  m_tutorial_observe_accumulator = 0.0F;
+  m_tutorial_director->advance(build_tutorial_observation(), elapsed);
+  m_tutorial_notes.reset();
+}
+
+auto GameEngine::build_tutorial_observation() const -> App::Core::TutorialObservation {
+  App::Core::TutorialObservation o;
+  o.mission_running = m_world != nullptr && m_runtime.initialized && !is_loading();
+  o.victory = m_runtime.victory_state == QLatin1String("victory");
+  o.defeat = m_runtime.victory_state == QLatin1String("defeat");
+  if (!o.mission_running) {
+    return o;
+  }
+
+  o.move_order_accepted = m_tutorial_notes.move_accepted;
+  o.attack_order_accepted = m_tutorial_notes.attack_accepted;
+  o.hold_order_accepted = m_tutorial_notes.hold_accepted;
+  o.guard_order_accepted = m_tutorial_notes.guard_accepted;
+  o.patrol_order_accepted = m_tutorial_notes.patrol_accepted;
+  o.gather_order_accepted = m_tutorial_notes.gather_accepted;
+  o.build_order_accepted = m_tutorial_notes.build_accepted;
+  o.last_rejection_reason = m_tutorial_notes.last_rejection_reason;
+  o.speed_changed = m_tutorial_notes.speed_changed;
+  o.camera_used = m_tutorial_notes.camera_used;
+
+  const int owner = m_runtime.local_owner_id;
+  o.enemy_troops_defeated = m_enemy_troops_defeated;
+
+  const auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  const auto harvested = resources.get_harvested_all(owner);
+  const auto stock = resources.get_all(owner);
+  o.harvested_wood = harvested.get(Game::Systems::ResourceType::Wood);
+  o.harvested_stone = harvested.get(Game::Systems::ResourceType::Stone);
+  o.harvested_iron = harvested.get(Game::Systems::ResourceType::Iron);
+  o.wood = stock.get(Game::Systems::ResourceType::Wood);
+  o.stone = stock.get(Game::Systems::ResourceType::Stone);
+  o.iron = stock.get(Game::Systems::ResourceType::Iron);
+
+  if (auto* selection = m_world->get_system<Game::Systems::SelectionSystem>()) {
+    for (const auto id : selection->get_selected_units()) {
+      const auto* entity = m_world->get_entity(id);
+      const auto* unit = entity != nullptr
+                             ? entity->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (unit == nullptr || unit->owner_id != owner || unit->health <= 0) {
+        continue;
+      }
+      if (Game::Units::is_building_spawn(unit->spawn_type)) {
+        ++o.selected_building_count;
+        if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+          ++o.selected_barracks_count;
+        }
+        continue;
+      }
+      if (unit->spawn_type == Game::Units::SpawnType::Builder) {
+        ++o.selected_builder_count;
+        continue;
+      }
+      if (entity->get_component<Engine::Core::CommanderComponent>() != nullptr) {
+        o.commander_selected = true;
+      }
+      if (unit->spawn_type != Game::Units::SpawnType::Civilian) {
+        ++o.selected_troop_count;
+      }
+    }
+  }
+
+  const auto& owners = Game::Systems::OwnerRegistry::instance();
+  m_world->for_each_entity([&](const Engine::Core::Entity& entity) {
+    const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->health <= 0) {
+      return;
+    }
+    const auto* commander = entity.get_component<Engine::Core::CommanderComponent>();
+    if (unit->owner_id != owner) {
+      if (commander != nullptr && owners.are_enemies(owner, unit->owner_id)) {
+        ++o.enemy_commanders_alive;
+      }
+      return;
+    }
+    if (unit->spawn_type == Game::Units::SpawnType::Home &&
+        entity.get_component<Engine::Core::WallConstructionSiteComponent>() ==
+            nullptr) {
+      ++o.home_count;
+      return;
+    }
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      if (const auto* production =
+              entity.get_component<Engine::Core::ProductionComponent>()) {
+        o.barracks_manpower += production->manpower_available;
+        o.production_in_progress = o.production_in_progress || production->in_progress;
+      }
+      return;
+    }
+    if (commander != nullptr) {
+      o.aura_ready = o.aura_ready || commander->can_activate_aura_ability();
+      o.aura_active = o.aura_active || commander->aura_ability_active ||
+                      commander->aura_ability_requested;
+      return;
+    }
+    if (Game::Units::is_troop_spawn(unit->spawn_type) &&
+        unit->spawn_type != Game::Units::SpawnType::Builder &&
+        unit->spawn_type != Game::Units::SpawnType::Civilian) {
+      ++o.soldier_count;
+    }
+  });
+
+  if (m_placement_view_model) {
+    o.construction_preview_active =
+        m_placement_view_model->construction_preview_active();
+    o.construction_preview_valid = m_placement_view_model->construction_preview_valid();
+  }
+
+  const QVariantMap waves = m_mission_wave_director.status();
+  o.waves_cleared = waves.value(QStringLiteral("cleared")).toInt();
+  o.wave_live = waves.value(QStringLiteral("live_enemies")).toInt() > 0;
+  o.wave_pending = waves.value(QStringLiteral("active")).toBool() &&
+                   waves.value(QStringLiteral("seconds_until_next")).toDouble() >= 0.0;
+  return o;
 }
 
 auto GameEngine::activity_view_model() const -> QObject* {

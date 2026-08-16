@@ -610,6 +610,7 @@ add_library(
     app/core/mission_definition_view.cpp
     app/core/mission_setup_coordinator.cpp
     app/core/mission_wave_director.cpp
+    app/core/tutorial_director.cpp
     app/core/order_feedback.cpp
     app/core/order_markers.cpp
     app/core/order_service.cpp
@@ -727,6 +728,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/LoadGamePanel.qml
             ui/qml/SaveProgressOverlay.qml
             ui/qml/ObjectivesPanel.qml
+            ui/qml/HelpPanel.qml
+            ui/qml/TutorialOverlay.qml
             ui/qml/SettingsPanel.qml
             ui/qml/ControlsBindingList.qml
             ui/qml/HUDVictory.qml

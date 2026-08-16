@@ -30,6 +30,7 @@ ApplicationWindow {
         load_game_panel.visible = (name === "load");
         save_game_panel.visible = (name === "save");
         objectivesPanel.visible = (name === "briefing");
+        help_panel.visible = (name === "help");
         if (name === "hud" || name === "rpg") {
             mainWindow.game_started = true;
             mainWindow.menu_visible = false;
@@ -46,12 +47,41 @@ ApplicationWindow {
         mainWindow.sync_audio_context();
     }
 
+    function start_tutorial() {
+        if (typeof game === 'undefined' || !game.tutorial || !game.tutorial.start)
+            return;
+        game.tutorial.start();
+        help_panel.visible = false;
+        mainWindow.menu_visible = false;
+        mainWindow.game_started = true;
+        mainWindow.game_paused = false;
+        gameViewItem.forceActiveFocus();
+    }
+
+    function open_help(from_menu) {
+        help_panel.from_menu = from_menu;
+        help_panel.paused_game_on_open = false;
+        if (!from_menu && mainWindow.game_started && !mainWindow.game_paused) {
+            mainWindow.game_paused = true;
+            gameViewItem.set_paused(true);
+            help_panel.paused_game_on_open = true;
+        }
+        help_panel.visible = true;
+        if (from_menu)
+            mainWindow.menu_visible = false;
+    }
+
+    function note_objectives_opened() {
+        if (typeof game !== 'undefined' && game.tutorial && game.tutorial.note_objectives_opened)
+            game.tutorial.note_objectives_opened();
+    }
+
     function sync_audio_context() {
         if (typeof game === 'undefined' || !game.set_audio_frontend_context)
             return;
         if (campaign_screen.visible) {
             game.set_audio_frontend_context("campaign");
-        } else if (mainWindow.menu_visible || mapSelect.visible || (!mainWindow.game_started && (save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible))) {
+        } else if (mainWindow.menu_visible || mapSelect.visible || (!mainWindow.game_started && (save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible))) {
             game.set_audio_frontend_context("menu");
         } else {
             game.set_audio_frontend_context("battle");
@@ -129,6 +159,7 @@ ApplicationWindow {
         onReturn_to_main_menu_requested: {
             mainWindow.menu_visible = true;
         }
+        onHelp_requested: mainWindow.open_help(false)
     }
 
     MouseArea {
@@ -143,6 +174,26 @@ ApplicationWindow {
         propagateComposedEvents: true
         preventStealing: false
         cursorShape: Qt.BlankCursor
+    }
+
+    TutorialOverlay {
+        id: tutorial_overlay
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.topMargin: hud.left_stack_bottom + Design.Metrics.space8
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+        max_height: Math.max(Design.Metrics.space24 * 6, hud.height - hud.bottom_panel_height - anchors.topMargin - Design.Metrics.space12)
+        z: 10.5
+        visible: active && mainWindow.game_started && !mainWindow.menu_visible && !hud.commander_rpg_mode
+        game_is_paused: mainWindow.game_paused
+        onPause_requested: {
+            mainWindow.game_paused = !mainWindow.game_paused;
+            hud.game_is_paused = mainWindow.game_paused;
+            gameViewItem.set_paused(mainWindow.game_paused);
+            gameViewItem.forceActiveFocus();
+        }
+        onHelp_requested: mainWindow.open_help(false)
     }
 
     Design.NotificationHost {
@@ -242,6 +293,12 @@ ApplicationWindow {
             campaign_screen.visible = true;
             mainWindow.menu_visible = false;
         }
+        onOpen_tutorial: function () {
+            mainWindow.start_tutorial();
+        }
+        onOpen_help: function () {
+            mainWindow.open_help(true);
+        }
         onSave_game: function () {
             if (mainWindow.game_started) {
                 save_game_panel.visible = true;
@@ -259,6 +316,7 @@ ApplicationWindow {
         onOpen_objectives: function () {
             objectivesPanel.visible = true;
             mainWindow.menu_visible = false;
+            mainWindow.note_objectives_opened();
         }
         onExit_requested: function () {
             if (typeof game !== 'undefined' && game.exit_game)
@@ -446,6 +504,41 @@ ApplicationWindow {
             } else {
                 mainWindow.menu_visible = true;
             }
+        }
+    }
+
+    HelpPanel {
+        id: help_panel
+
+        property bool paused_game_on_open: false
+
+        anchors.fill: parent
+        z: 22
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                help_panel.forceActiveFocus();
+                gameViewItem.focus = false;
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
+            }
+            mainWindow.sync_audio_context();
+        }
+        onStart_tutorial_requested: mainWindow.start_tutorial()
+        onClose_requested: {
+            Design.UiSound.back();
+            help_panel.visible = false;
+            if (help_panel.from_menu || !mainWindow.game_started) {
+                mainWindow.menu_visible = true;
+                return;
+            }
+            if (help_panel.paused_game_on_open) {
+                mainWindow.game_paused = false;
+                gameViewItem.set_paused(false);
+            }
+            help_panel.paused_game_on_open = false;
+            gameViewItem.forceActiveFocus();
         }
     }
 

@@ -1,0 +1,85 @@
+{
+  "id": "tutorial",
+  "title": "Field Training",
+  "summary": "Learn to command before Rome comes looking for you: select and move troops, drive off a scouting party, put builders to work on timber, stone and ore, raise a Home, recruit an army, break a Roman raid, and take the enemy camp.",
+  "teaching_goal": "Every system a first match asks for, in the order a new commander meets them: selection and orders, the resource loop from tree to yard, construction cost and placement, recruitment and the population that limits it, stances, the commander's aura and rally, camera, speed and objectives - then one small assault to put it all together.",
+  "narrative_intent": "A guided first field, paced by the player rather than the clock: the Roman raid waits until the recruit's army stands, and the enemy camp is small enough to fall to a first attack.",
+  "terrain_type": "meadow",
+  "tutorial": true,
+  "map_path": ":/assets/maps/map_tutorial.json",
+  "player_setup": {
+    "nation": "carthage",
+    "faction": "carthaginian",
+    "color": "brown",
+    "starting_units": [],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 150,
+      "food": 100,
+      "wood": 120,
+      "stone": 40,
+      "iron": 40
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "roman_outpost",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "red",
+      "team_id": 2,
+      "difficulty": "easy",
+      "strategy": "defensive",
+      "personality": {
+        "aggression": 0.1,
+        "defense": 0.9,
+        "harassment": 0.05
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "waves": [
+        {
+          "timing": 25.0,
+          "warning_seconds": 15.0,
+          "phase": 1,
+          "label": "Roman raiding party",
+          "entry_point": {
+            "x": 84,
+            "z": 40
+          },
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 3
+            },
+            {
+              "type": "archer",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "victory_mode": "all",
+  "victory_conditions": [
+    {
+      "type": "eliminate_commanders",
+      "description": "Kill the Roman commander and take the outpost. A nation dies with the man who leads it."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_commander",
+      "description": "Your commander falls - and every line collapses behind him."
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "A general alone on a dead field is just the last corpse standing."
+    }
+  ],
+  "optional_objectives": [],
+  "events": [],
+  "include_ambient_undead": false,
+  "theme": "Learn the trade of war before Rome comes looking for you."
+}

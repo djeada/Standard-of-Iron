@@ -16,6 +16,7 @@ Item {
 
     signal pause_toggled
     signal speed_changed(real speed)
+    signal help_requested
 
     function game_ready() {
         return typeof game !== 'undefined' && game !== null;
@@ -187,6 +188,12 @@ Item {
                             game.reset_camera();
                     }
                 }
+
+                Design.IronIconButton {
+                    iconText: "?"
+                    tooltip: qsTr("Open the field manual (help)")
+                    onClicked: topRoot.help_requested()
+                }
             }
 
             Item {
@@ -194,11 +201,15 @@ Item {
                 Layout.fillHeight: true
 
                 Row {
+                    id: objectiveRow
+
                     anchors.centerIn: parent
                     spacing: Design.Metrics.space8
                     visible: topRoot.primaryObjective !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
 
                     Text {
+                        id: objectiveGlyph
+
                         anchors.verticalCenter: parent.verticalCenter
                         text: Design.Icons.objective
                         color: Design.Theme.accent
@@ -208,6 +219,8 @@ Item {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
+
+                        width: Math.min(implicitWidth, Math.max(0, objectiveRow.parent.width - objectiveGlyph.width - objectiveRow.spacing))
                         text: topRoot.primaryObjectiveText
                         color: Design.Theme.textSecondary
                         font.family: Design.Typography.family
