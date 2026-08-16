@@ -259,7 +259,7 @@ auto ArmyFormationService::build(Engine::Core::World& world,
   result.valid = true;
   result.used_army_formation = true;
 
-  if (!commit_group) {
+  if (!commit_group || member_count < 2) {
     return result;
   }
 

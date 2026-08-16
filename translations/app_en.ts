@@ -2036,6 +2036,50 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Which drill book shapes the deployment. Automatic follows the troops you selected.</source>
         <translation>Which drill book shapes the deployment. Automatic follows the troops you selected.</translation>
     </message>
+    <message>
+        <source>%1°</source>
+        <translation>%1°</translation>
+    </message>
+    <message>
+        <source>Drag to face the unit · Release to move it</source>
+        <translation>Drag to face the unit · Release to move it</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Esc to cancel</source>
+        <translation>Wheel to turn · Esc to cancel</translation>
+    </message>
+    <message>
+        <source>Drag to face the formation · Release to deploy</source>
+        <translation>Drag to face the formation · Release to deploy</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Ctrl+wheel for depth · Esc to cancel</source>
+        <translation>Wheel to turn · Ctrl+wheel for depth · Esc to cancel</translation>
+    </message>
+    <message>
+        <source>Drag on the ground to set facing · Click to move</source>
+        <translation>Drag on the ground to set facing · Click to move</translation>
+    </message>
+    <message>
+        <source>Wheel to turn · Right-click or Esc to cancel</source>
+        <translation>Wheel to turn · Right-click or Esc to cancel</translation>
+    </message>
+    <message>
+        <source>Position %1</source>
+        <translation>Position %1</translation>
+    </message>
+    <message>
+        <source>Position unit</source>
+        <translation>Position unit</translation>
+    </message>
+    <message>
+        <source>Facing</source>
+        <translation>Facing</translation>
+    </message>
+    <message>
+        <source>Facing (auto)</source>
+        <translation>Facing (auto)</translation>
+    </message>
 </context>
 <context>
     <name>FormationStatusBadge</name>
@@ -2976,10 +3020,6 @@ Unseen: never scouted.</translation>
         <translation>Giving orders</translation>
     </message>
     <message>
-        <source>Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
-        <translation>Right-click the ground to move, right-click an enemy to attack. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</translation>
-    </message>
-    <message>
         <source>Stances</source>
         <translation>Stances</translation>
     </message>
@@ -3064,10 +3104,6 @@ Unseen: never scouted.</translation>
         <translation>Formations and lines</translation>
     </message>
     <message>
-        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. The Formation order arranges a mixed selection into a proper line; Run trades stamina for speed.</source>
-        <translation>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. The Formation order arranges a mixed selection into a proper line; Run trades stamina for speed.</translation>
-    </message>
-    <message>
         <source>The standard</source>
         <translation>The standard</translation>
     </message>
@@ -3142,6 +3178,14 @@ Unseen: never scouted.</translation>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</source>
         <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</translation>
+    </message>
+    <message>
+        <source>Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
+        <translation>Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</translation>
+    </message>
+    <message>
+        <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
+        <translation>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</translation>
     </message>
 </context>
 <context>
@@ -3833,14 +3877,6 @@ This action cannot be undone.</translation>
 <context>
     <name>MapPreview</name>
     <message>
-        <source>Map Preview</source>
-        <translation>Map Preview</translation>
-    </message>
-    <message>
-        <source>Player bases shown as colored circles</source>
-        <translation>Player bases shown as colored circles</translation>
-    </message>
-    <message>
         <source>Select a map
 to see preview</source>
         <translation>Select a map
@@ -3850,13 +3886,13 @@ to see preview</translation>
         <source>No preview available</source>
         <translation>No preview available</translation>
     </message>
+    <message>
+        <source>Bases shown in player colours</source>
+        <translation>Bases shown in player colours</translation>
+    </message>
 </context>
 <context>
     <name>MapSelect</name>
-    <message>
-        <source>Maps</source>
-        <translation>Maps</translation>
-    </message>
     <message>
         <source>No maps available</source>
         <translation>No maps available</translation>
@@ -3866,72 +3902,12 @@ to see preview</translation>
         <translation>Loading maps...</translation>
     </message>
     <message>
-        <source>► %1</source>
-        <translation>► %1</translation>
-    </message>
-    <message>
-        <source>Select a map to continue</source>
-        <translation>Select a map to continue</translation>
-    </message>
-    <message>
-        <source>Loading map details...</source>
-        <translation>Loading map details...</translation>
-    </message>
-    <message>
-        <source>No Map Selected</source>
-        <translation>No Map Selected</translation>
-    </message>
-    <message>
-        <source>Players</source>
-        <translation>Players</translation>
-    </message>
-    <message>
-        <source>• Click color/team to cycle</source>
-        <translation>• Click color/team to cycle</translation>
-    </message>
-    <message>
-        <source>Player color: %1 - Click to change</source>
-        <translation>Player color: %1 - Click to change</translation>
-    </message>
-    <message>
-        <source>Color</source>
-        <translation>Color</translation>
-    </message>
-    <message>
-        <source>Team %1 - Click to change</source>
-        <translation>Team %1 - Click to change</translation>
-    </message>
-    <message>
         <source>Team %1</source>
         <translation>Team %1</translation>
     </message>
     <message>
-        <source>Remove player</source>
-        <translation>Remove player</translation>
-    </message>
-    <message>
         <source>+ Add CPU</source>
         <translation>+ Add CPU</translation>
-    </message>
-    <message>
-        <source>Add AI opponent</source>
-        <translation>Add AI opponent</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Back</translation>
-    </message>
-    <message>
-        <source>Return to main menu (Esc)</source>
-        <translation>Return to main menu (Esc)</translation>
-    </message>
-    <message>
-        <source>Play</source>
-        <translation>Play</translation>
-    </message>
-    <message>
-        <source>Start game (Enter)</source>
-        <translation>Start game (Enter)</translation>
     </message>
     <message>
         <source>Roman Republic</source>
@@ -3942,52 +3918,8 @@ to see preview</translation>
         <translation>Commander</translation>
     </message>
     <message>
-        <source>• Click nation tag to change</source>
-        <translation>• Click nation tag to change</translation>
-    </message>
-    <message>
-        <source>Disable player (spectator mode)</source>
-        <translation>Disable player (spectator mode)</translation>
-    </message>
-    <message>
-        <source>Enable player</source>
-        <translation>Enable player</translation>
-    </message>
-    <message>
-        <source>Nation: %1 - Click to change</source>
-        <translation>Nation: %1 - Click to change</translation>
-    </message>
-    <message>
         <source>Nation</source>
         <translation>Nation</translation>
-    </message>
-    <message>
-        <source>Commander: %1 - Click to change</source>
-        <translation>Commander: %1 - Click to change</translation>
-    </message>
-    <message>
-        <source>Available Player Slots: %1</source>
-        <translation>Available Player Slots: %1</translation>
-    </message>
-    <message>
-        <source>Select your player ID:</source>
-        <translation>Select your player ID:</translation>
-    </message>
-    <message>
-        <source>ID %1</source>
-        <translation>ID %1</translation>
-    </message>
-    <message>
-        <source>All other slots will be CPU-controlled</source>
-        <translation>All other slots will be CPU-controlled</translation>
-    </message>
-    <message>
-        <source>CPU will control: ID %1</source>
-        <translation>CPU will control: ID %1</translation>
-    </message>
-    <message>
-        <source>, ID </source>
-        <translation>, ID </translation>
     </message>
     <message>
         <source>Need at least 1 enabled player to start</source>
@@ -4002,16 +3934,156 @@ to see preview</translation>
         <translation>At least two teams must be selected to start a match</translation>
     </message>
     <message>
-        <source>Every slot on this map is taken</source>
-        <translation>Every slot on this map is taken</translation>
-    </message>
-    <message>
-        <source>Player %1</source>
-        <translation>Player %1</translation>
-    </message>
-    <message>
         <source>CPU %1</source>
         <translation>CPU %1</translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>You</translation>
+    </message>
+    <message>
+        <source>Skirmish</source>
+        <translation>Skirmish</translation>
+    </message>
+    <message>
+        <source>Pick a battlefield, then set the colours, nations and commanders that take the field.</source>
+        <translation>Pick a battlefield, then set the colours, nations and commanders that take the field.</translation>
+    </message>
+    <message>
+        <source>← Back</source>
+        <translation>← Back</translation>
+    </message>
+    <message>
+        <source>Battlefields</source>
+        <translation>Battlefields</translation>
+    </message>
+    <message>
+        <source>Slots</source>
+        <translation>Slots</translation>
+    </message>
+    <message>
+        <source>Player slots this battlefield was authored for</source>
+        <translation>Player slots this battlefield was authored for</translation>
+    </message>
+    <message>
+        <source>In play</source>
+        <translation>In play</translation>
+    </message>
+    <message>
+        <source>Players that will take the field</source>
+        <translation>Players that will take the field</translation>
+    </message>
+    <message>
+        <source>Sides</source>
+        <translation>Sides</translation>
+    </message>
+    <message>
+        <source>Distinct teams among the players in play</source>
+        <translation>Distinct teams among the players in play</translation>
+    </message>
+    <message>
+        <source>Opposition</source>
+        <translation>Opposition</translation>
+    </message>
+    <message>
+        <source>Scripted</source>
+        <translation>Scripted</translation>
+    </message>
+    <message>
+        <source>Players only</source>
+        <translation>Players only</translation>
+    </message>
+    <message>
+        <source>This battlefield brings its own enemies, so you can start alone</source>
+        <translation>This battlefield brings its own enemies, so you can start alone</translation>
+    </message>
+    <message>
+        <source>This battlefield needs at least two opposing players</source>
+        <translation>This battlefield needs at least two opposing players</translation>
+    </message>
+    <message>
+        <source>Select a battlefield to continue</source>
+        <translation>Select a battlefield to continue</translation>
+    </message>
+    <message>
+        <source>Order of Battle</source>
+        <translation>Order of Battle</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it</source>
+        <translation>Click any chip to change it</translation>
+    </message>
+    <message>
+        <source>Every slot on this battlefield is taken</source>
+        <translation>Every slot on this battlefield is taken</translation>
+    </message>
+    <message>
+        <source>Add an AI opponent</source>
+        <translation>Add an AI opponent</translation>
+    </message>
+    <message>
+        <source>Leave this slot empty</source>
+        <translation>Leave this slot empty</translation>
+    </message>
+    <message>
+        <source>Bring this slot into the battle</source>
+        <translation>Bring this slot into the battle</translation>
+    </message>
+    <message>
+        <source>Slot %1 • click to move seat</source>
+        <translation>Slot %1 • click to move seat</translation>
+    </message>
+    <message>
+        <source>Slot %1 • AI</source>
+        <translation>Slot %1 • AI</translation>
+    </message>
+    <message>
+        <source>Colour</source>
+        <translation>Colour</translation>
+    </message>
+    <message>
+        <source>Player colour — click to change</source>
+        <translation>Player colour — click to change</translation>
+    </message>
+    <message>
+        <source>Nation — click to change</source>
+        <translation>Nation — click to change</translation>
+    </message>
+    <message>
+        <source>%1 — click to change commander</source>
+        <translation>%1 — click to change commander</translation>
+    </message>
+    <message>
+        <source>Commander — click to change</source>
+        <translation>Commander — click to change</translation>
+    </message>
+    <message>
+        <source>Team — click to change sides</source>
+        <translation>Team — click to change sides</translation>
+    </message>
+    <message>
+        <source>Remove this opponent</source>
+        <translation>Remove this opponent</translation>
+    </message>
+    <message>
+        <source>↑ ↓ Choose</source>
+        <translation>↑ ↓ Choose</translation>
+    </message>
+    <message>
+        <source>Enter Start</source>
+        <translation>Enter Start</translation>
+    </message>
+    <message>
+        <source>Esc Back</source>
+        <translation>Esc Back</translation>
+    </message>
+    <message>
+        <source>Play ▶</source>
+        <translation>Play ▶</translation>
+    </message>
+    <message>
+        <source>Start the battle (Enter)</source>
+        <translation>Start the battle (Enter)</translation>
     </message>
 </context>
 <context>
@@ -7253,8 +7325,8 @@ Wide vision and a durable settlement anchor</translation>
         <translation>Behind every field army stood the farms and quarries that fed it, and the people who worked them.</translation>
     </message>
     <message>
-        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</source>
-        <translation>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation's nerve.</translation>
+        <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation&apos;s nerve.</source>
+        <translation>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation&apos;s nerve.</translation>
     </message>
     <message>
         <source>Breaks on a braced spear line, which cuts mounted troops down at more than twice the usual rate.</source>
@@ -7321,8 +7393,8 @@ Wide vision and a durable settlement anchor</translation>
         <translation>Defenceless at close quarters. Infantry that reaches it kills it in a few seconds.</translation>
     </message>
     <message>
-        <source>Denies ground nothing else can reach, at well over twice an archer's range.</source>
-        <translation>Denies ground nothing else can reach, at well over twice an archer's range.</translation>
+        <source>Denies ground nothing else can reach, at well over twice an archer&apos;s range.</source>
+        <translation>Denies ground nothing else can reach, at well over twice an archer&apos;s range.</translation>
     </message>
     <message>
         <source>Elite</source>
@@ -7525,8 +7597,8 @@ Wide vision and a durable settlement anchor</translation>
         <translation>The Liby-Phoenician spear was the steady centre that a mercenary army could be built around.</translation>
     </message>
     <message>
-        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</source>
-        <translation>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome's worst day, at Cannae, was their work.</translation>
+        <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome&apos;s worst day, at Cannae, was their work.</source>
+        <translation>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome&apos;s worst day, at Cannae, was their work.</translation>
     </message>
     <message>
         <source>The Sacred Band kept physicians of its own, an honour reserved for the citizen elite.</source>
@@ -7541,16 +7613,16 @@ Wide vision and a durable settlement anchor</translation>
         <translation>The bolt throwers of Carthage were built in the same yards as its fleet, by the same shipwrights.</translation>
     </message>
     <message>
-        <source>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</source>
-        <translation>The equites were drawn from the wealthiest citizens, and Rome's cavalry was never the equal of its infantry.</translation>
+        <source>The equites were drawn from the wealthiest citizens, and Rome&apos;s cavalry was never the equal of its infantry.</source>
+        <translation>The equites were drawn from the wealthiest citizens, and Rome&apos;s cavalry was never the equal of its infantry.</translation>
     </message>
     <message>
         <source>The fabri built the roads, the bridges and the fortified camp that went up every single night of a march.</source>
         <translation>The fabri built the roads, the bridges and the fortified camp that went up every single night of a march.</translation>
     </message>
     <message>
-        <source>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
-        <translation>The legionary's short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</translation>
+        <source>The legionary&apos;s short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
+        <translation>The legionary&apos;s short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</translation>
     </message>
     <message>
         <source>The longest reach in any army, and quick enough to loose again before its target closes.</source>
@@ -7565,12 +7637,12 @@ Wide vision and a durable settlement anchor</translation>
         <translation>The medicus marched with the legion, and Roman field medicine was the best organised in the ancient world.</translation>
     </message>
     <message>
-        <source>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
-        <translation>The mounted lance traded the sword's flexibility for reach, striking before an enemy could bring a weapon to bear.</translation>
+        <source>The mounted lance traded the sword&apos;s flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
+        <translation>The mounted lance traded the sword&apos;s flexibility for reach, striking before an enemy could bring a weapon to bear.</translation>
     </message>
     <message>
-        <source>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</source>
-        <translation>The onager kicked like the wild ass it was named for, and was Rome's answer to a wall that would not fall.</translation>
+        <source>The onager kicked like the wild ass it was named for, and was Rome&apos;s answer to a wall that would not fall.</source>
+        <translation>The onager kicked like the wild ass it was named for, and was Rome&apos;s answer to a wall that would not fall.</translation>
     </message>
     <message>
         <source>The priests who sealed the tombs learned to open them, and now walk ahead of what they woke.</source>

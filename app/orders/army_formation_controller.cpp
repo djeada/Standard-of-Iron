@@ -95,6 +95,7 @@ void ArmyFormationController::reset_transient_state() {
     m_formation_placement_position = QVector3D();
     m_formation_facing_degrees = 0.0F;
     m_formation_facing_explicit = false;
+    m_formation_aim_distance = 0.0F;
     m_formation_units.clear();
     invalidate_formation_layout();
     return;
@@ -111,6 +112,7 @@ void ArmyFormationController::reset_transient_state() {
   m_formation_placement_position = QVector3D();
   m_formation_facing_degrees = 0.0F;
   m_formation_facing_explicit = false;
+  m_formation_aim_distance = 0.0F;
   m_formation_frontage = 0.0F;
   m_formation_units.clear();
   m_formation_preview = Game::Formation::ArmyFormationPlan{};
@@ -127,7 +129,7 @@ auto ArmyFormationController::on_formation_command() -> CommandResult {
   }
 
   const auto& selected = m_selection_system->get_selected_units();
-  if (selected.size() <= 1) {
+  if (selected.empty()) {
     return result;
   }
 
@@ -158,7 +160,7 @@ auto ArmyFormationController::on_formation_command() -> CommandResult {
     }
   }
 
-  if (eligible_count <= 1) {
+  if (eligible_count < 1) {
     return result;
   }
 
@@ -205,6 +207,7 @@ auto ArmyFormationController::on_formation_command() -> CommandResult {
       m_is_right_drag_formation = false;
       m_formation_placement_position = center;
       reset_formation_facing();
+      m_formation_aim_distance = 0.0F;
       m_formation_frontage = 0.0F;
       m_formation_drag_active = false;
       m_formation_members.clear();
@@ -281,6 +284,7 @@ void ArmyFormationController::update_formation_placement(const QVector3D& positi
     return;
   }
   m_formation_placement_position = position;
+  m_formation_aim_distance = 0.0F;
   follow_auto_formation_facing();
   refresh_formation_preview();
   emit formation_placement_updated(m_formation_placement_position,
@@ -292,6 +296,25 @@ void ArmyFormationController::update_formation_rotation(float angle_degrees) {
     return;
   }
   set_formation_facing(angle_degrees, true);
+  refresh_formation_preview();
+  emit formation_placement_updated(m_formation_placement_position,
+                                   m_formation_facing_degrees);
+}
+
+void ArmyFormationController::aim_formation_at(const QVector3D& aim_point) {
+  if (!m_is_placing_formation) {
+    return;
+  }
+  QVector3D delta = aim_point - m_formation_placement_position;
+  delta.setY(0.0F);
+  constexpr float k_min_aim_distance = 0.1F;
+  float const distance = delta.length();
+  if (distance < k_min_aim_distance) {
+    return;
+  }
+  m_formation_aim_distance = distance;
+  set_formation_facing(
+      std::atan2(delta.x(), delta.z()) * 180.0F / std::numbers::pi_v<float>, true);
   refresh_formation_preview();
   emit formation_placement_updated(m_formation_placement_position,
                                    m_formation_facing_degrees);
@@ -321,7 +344,7 @@ auto ArmyFormationController::begin_move_placement_at_position(
     troops.push_back(id);
   }
 
-  if (troops.size() < 2) {
+  if (troops.empty()) {
     return false;
   }
 
@@ -329,9 +352,12 @@ auto ArmyFormationController::begin_move_placement_at_position(
   m_is_placing_formation = true;
   m_is_right_drag_formation = true;
   m_formation_placement_position = position;
+  m_formation_frontage = 0.0F;
+  m_formation_aim_distance = 0.0F;
   reset_formation_facing();
   m_formation_members.clear();
   invalidate_formation_layout();
+  refresh_formation_preview();
 
   emit formation_placement_started();
   emit formation_placement_updated(m_formation_placement_position,
@@ -383,6 +409,7 @@ void ArmyFormationController::confirm_formation_placement() {
   m_is_placing_formation = false;
   m_formation_drag_active = false;
   m_formation_facing_explicit = false;
+  m_formation_aim_distance = 0.0F;
   m_formation_units.clear();
   m_formation_members.clear();
   invalidate_formation_layout();
@@ -405,6 +432,7 @@ void ArmyFormationController::cancel_formation_placement() {
   m_is_placing_formation = false;
   m_formation_drag_active = false;
   m_formation_facing_explicit = false;
+  m_formation_aim_distance = 0.0F;
   m_formation_frontage = 0.0F;
   m_formation_units.clear();
   m_formation_members.clear();
@@ -437,7 +465,8 @@ auto ArmyFormationController::formation_intent() const -> QString {
 auto ArmyFormationController::formation_intents() const -> QStringList {
 
   QStringList out;
-  if (m_formation_units.empty()) {
+
+  if (m_formation_units.size() < 2) {
     return out;
   }
   for (auto intent : Game::Formation::all_intents()) {
@@ -515,6 +544,7 @@ void ArmyFormationController::begin_formation_drag(const QVector3D& start) {
   m_formation_drag_start = start;
   m_formation_placement_position = start;
   m_formation_frontage = 0.0F;
+  m_formation_aim_distance = 0.0F;
   follow_auto_formation_facing();
   invalidate_formation_layout();
   refresh_formation_preview();
@@ -530,6 +560,21 @@ void ArmyFormationController::update_formation_drag(const QVector3D& current) {
   QVector3D along = current - m_formation_drag_start;
   along.setY(0.0F);
   float const length = along.length();
+
+  if (m_formation_units.size() == 1) {
+
+    m_formation_placement_position = m_formation_drag_start;
+    if (length > 0.5F) {
+      aim_formation_at(current);
+      return;
+    }
+    m_formation_aim_distance = 0.0F;
+    follow_auto_formation_facing();
+    refresh_formation_preview();
+    emit formation_placement_updated(m_formation_placement_position,
+                                     m_formation_facing_degrees);
+    return;
+  }
 
   m_formation_placement_position = m_formation_drag_start + (along * 0.5F);
 
@@ -669,6 +714,13 @@ auto ArmyFormationController::formation_options() const -> QVariantMap {
   map["preserve_index"] = m_formation_options.preserve_member_order ? 1 : 0;
   map["intent_display_name"] = Game::Formation::intent_display_name(m_formation_intent);
   map["unit_count"] = static_cast<int>(m_formation_units.size());
+  map["single_unit"] = m_formation_units.size() == 1;
+  map["unit_label"] = formation_unit_label();
+  map["gesture"] = m_is_right_drag_formation ? QStringLiteral("right_drag")
+                                             : QStringLiteral("click");
+  map["facing_degrees"] = m_formation_facing_degrees;
+  map["facing_explicit"] = m_formation_facing_explicit;
+  map["aim_distance"] = m_formation_aim_distance;
   map["placed_count"] = m_formation_preview.placed_count();
   map["slot_count"] = static_cast<int>(m_formation_preview.slot_list.size());
   map["ranks"] = m_formation_preview.rank_count();
@@ -677,6 +729,26 @@ auto ArmyFormationController::formation_options() const -> QVariantMap {
   map["plan_depth"] = m_formation_preview.depth;
   map["plan_valid"] = m_formation_preview.valid;
   return map;
+}
+
+auto ArmyFormationController::formation_unit_label() const -> QString {
+  if (m_world == nullptr || m_formation_units.size() != 1) {
+    return {};
+  }
+  auto* entity = m_world->get_entity(m_formation_units.front());
+  const auto* unit = entity != nullptr
+                         ? entity->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+  if (unit == nullptr) {
+    return {};
+  }
+  const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
+  if (!troop_type.has_value()) {
+    return QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type));
+  }
+  const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+      unit->nation_id, *troop_type);
+  return Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
 }
 
 auto ArmyFormationController::selected_formation_status() const -> QVariantMap {
