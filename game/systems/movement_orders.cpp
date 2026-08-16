@@ -23,6 +23,7 @@ namespace {
 constexpr float same_target_threshold_sq = 0.01F;
 
 constexpr int k_recovery_search_radius = 16;
+constexpr float k_route_keep_goal_shift = 1.5F;
 
 auto passability_for(const Engine::Core::MovementComponent& movement)
     -> Pathfinding::Passability {
@@ -141,6 +142,38 @@ auto align_portal_waypoint(const QVector3D& waypoint,
   return waypoint;
 }
 
+void pull_path_taut(Pathfinding& pathfinder,
+                    const Engine::Core::TransformComponent& transform,
+                    Pathfinding::Passability passability,
+                    std::vector<std::pair<float, float>>& path) {
+  if (path.size() < 3U) {
+    return;
+  }
+  auto shortcut_allowed = [&](const QVector3D& from, const QVector3D& to) -> bool {
+    return pathfinder.is_world_segment_walkable(from, to, passability) &&
+           !segment_traverses_navigation_portal(from, to);
+  };
+
+  std::vector<std::pair<float, float>> taut;
+  taut.reserve(path.size());
+  QVector3D anchor(transform.position.x, 0.0F, transform.position.z);
+  std::size_t index = 0;
+  while (index < path.size()) {
+    std::size_t reach = index;
+    while (reach + 1U < path.size()) {
+      QVector3D const candidate(path[reach + 1U].first, 0.0F, path[reach + 1U].second);
+      if (!shortcut_allowed(anchor, candidate)) {
+        break;
+      }
+      ++reach;
+    }
+    taut.push_back(path[reach]);
+    anchor = QVector3D(path[reach].first, 0.0F, path[reach].second);
+    index = reach + 1U;
+  }
+  path = std::move(taut);
+}
+
 struct PreparedMove {
   Engine::Core::Entity* entity{nullptr};
   Engine::Core::TransformComponent* transform{nullptr};
@@ -247,6 +280,8 @@ auto MovementSystem::assign_path_to_movement(
     movement.path.emplace_back(waypoint.x(), waypoint.z());
   }
 
+  pull_path_taut(pathfinder, transform, passability_for(movement), movement.path);
+
   while (movement.has_waypoints()) {
     const auto& wp = movement.current_waypoint();
     float const dx = wp.first - transform.position.x;
@@ -280,6 +315,21 @@ void MovementSystem::assign_navigation_target(
     const Engine::Core::TransformComponent& transform,
     Engine::Core::MovementComponent& movement,
     const QVector3D& requested_target) {
+  if (movement.has_requested_goal && movement.has_target && movement.has_waypoints() &&
+      movement.remaining_waypoints() > 1U) {
+    float const moved_x = requested_target.x() - movement.requested_goal_x;
+    float const moved_z = requested_target.z() - movement.requested_goal_z;
+    if (moved_x * moved_x + moved_z * moved_z <=
+            k_route_keep_goal_shift * k_route_keep_goal_shift &&
+        NavGrid::is_world_position_walkable(requested_target)) {
+      movement.requested_goal_x = requested_target.x();
+      movement.requested_goal_z = requested_target.z();
+      movement.path.back() = {requested_target.x(), requested_target.z()};
+      movement.goal_x = requested_target.x();
+      movement.goal_y = requested_target.z();
+      return;
+    }
+  }
   movement.requested_goal_x = requested_target.x();
   movement.requested_goal_z = requested_target.z();
   movement.has_requested_goal = true;

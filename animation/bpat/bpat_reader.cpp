@@ -1,5 +1,7 @@
 #include "bpat_reader.h"
 
+#include <QMatrix3x3>
+
 #include <algorithm>
 #include <cstring>
 #include <fstream>
@@ -37,6 +39,11 @@ bool BpatBlob::validate() {
   m_socket_data = nullptr;
   m_contact_data = nullptr;
   m_contact_count = 0U;
+  m_bind_palette_data = nullptr;
+  m_bone_parent_data = nullptr;
+  m_decoded_bind_palette.clear();
+  m_decoded_inverse_bind_palette.clear();
+  m_decoded_local_poses.clear();
   m_clip_index_entries.clear();
   m_clip_index_buckets.clear();
 
@@ -127,6 +134,30 @@ bool BpatBlob::validate() {
     m_contact_data = reinterpret_cast<const BpatFrameContact*>(
         m_bytes.data() + ext->contact_data_offset);
     m_contact_count = ext->contact_entry_count;
+  }
+  if (ext->bind_palette_offset != 0U) {
+    if (!in_bounds(ext->bind_palette_offset,
+                   std::uint64_t{header->bone_count} * k_matrix_floats *
+                       sizeof(float))) {
+      m_last_error = "bind palette out of bounds";
+      return false;
+    }
+    m_bind_palette_data =
+        reinterpret_cast<const float*>(m_bytes.data() + ext->bind_palette_offset);
+  }
+  if (ext->bone_parent_offset != 0U) {
+    if (!in_bounds(ext->bone_parent_offset, header->bone_count)) {
+      m_last_error = "bone parent table out of bounds";
+      return false;
+    }
+    m_bone_parent_data = m_bytes.data() + ext->bone_parent_offset;
+    for (std::uint32_t b = 0; b < header->bone_count; ++b) {
+      std::uint8_t const parent = m_bone_parent_data[b];
+      if (parent != k_no_parent_bone && parent >= b) {
+        m_last_error = "bone parent must precede its child";
+        return false;
+      }
+    }
   }
 
   m_clip_table = reinterpret_cast<const BpatClipEntry*>(m_bytes.data() +
@@ -309,6 +340,48 @@ auto BpatBlob::frame_contacts() const noexcept -> std::span<const BpatFrameConta
   return {m_contact_data, m_contact_count};
 }
 
+auto BpatBlob::bind_palette() const noexcept -> std::span<const QMatrix4x4> {
+  return {m_decoded_bind_palette.data(), m_decoded_bind_palette.size()};
+}
+
+auto BpatBlob::inverse_bind_palette() const noexcept -> std::span<const QMatrix4x4> {
+  return {m_decoded_inverse_bind_palette.data(), m_decoded_inverse_bind_palette.size()};
+}
+
+auto BpatBlob::bone_parents() const noexcept -> std::span<const std::uint8_t> {
+  if (m_header == nullptr || m_bone_parent_data == nullptr) {
+    return {};
+  }
+  return {m_bone_parent_data, m_header->bone_count};
+}
+
+auto BpatBlob::frame_local_pose_view(std::uint32_t global_frame_index) const noexcept
+    -> std::span<const LocalBonePose> {
+  if (m_header == nullptr || global_frame_index >= m_header->frame_total ||
+      m_decoded_local_poses.empty()) {
+    return {};
+  }
+  std::size_t const off =
+      static_cast<std::size_t>(global_frame_index) * m_header->bone_count;
+  return {m_decoded_local_poses.data() + off, m_header->bone_count};
+}
+
+auto BpatBlob::palette_matrices() const noexcept -> std::span<const QMatrix4x4> {
+  if (m_decoded_palette == nullptr) {
+    return {};
+  }
+  return {m_decoded_palette->data(), m_decoded_palette->size()};
+}
+
+auto BpatBlob::bone_global_matrix(std::uint32_t global_frame_index,
+                                  std::uint32_t bone_index) const -> QMatrix4x4 {
+  auto const frame = frame_palette_view(global_frame_index);
+  if (bone_index >= frame.size() || bone_index >= m_decoded_bind_palette.size()) {
+    return {};
+  }
+  return frame[bone_index] * m_decoded_bind_palette[bone_index];
+}
+
 auto BpatBlob::socket(std::uint32_t index) const -> SocketView {
   SocketView v{};
   if (m_header == nullptr || index >= m_header->socket_count) {
@@ -339,12 +412,12 @@ auto BpatBlob::palette_matrix(std::uint32_t global_frame_index,
 auto BpatBlob::frame_palette_view(std::uint32_t global_frame_index) const
     -> std::span<const QMatrix4x4> {
   if (m_header == nullptr || global_frame_index >= m_header->frame_total ||
-      m_decoded_palette.empty()) {
+      m_decoded_palette == nullptr || m_decoded_palette->empty()) {
     return {};
   }
   std::size_t const off =
       static_cast<std::size_t>(global_frame_index) * m_header->bone_count;
-  return {m_decoded_palette.data() + off, m_header->bone_count};
+  return {m_decoded_palette->data() + off, m_header->bone_count};
 }
 
 auto BpatBlob::socket_matrix(std::uint32_t global_frame_index,
@@ -370,9 +443,62 @@ void BpatBlob::decode_palette_cache() {
   if (total == 0) {
     return;
   }
-  m_decoded_palette.assign(total, QMatrix4x4{});
+  auto const decode_column_major = [](const float* src) {
+    QMatrix4x4 m;
+    std::memcpy(m.data(), src, sizeof(float) * k_matrix_floats);
+    m.optimize();
+    return m;
+  };
+  m_decoded_palette = std::make_shared<std::vector<QMatrix4x4>>(total);
   for (std::size_t i = 0; i < total; ++i) {
-    m_decoded_palette[i] = QMatrix4x4(m_palette_data + i * k_matrix_floats);
+    (*m_decoded_palette)[i] = decode_column_major(m_palette_data + i * k_matrix_floats);
+  }
+  if (m_bind_palette_data != nullptr) {
+    m_decoded_bind_palette.assign(m_header->bone_count, QMatrix4x4{});
+    m_decoded_inverse_bind_palette.assign(m_header->bone_count, QMatrix4x4{});
+    for (std::uint32_t b = 0; b < m_header->bone_count; ++b) {
+      m_decoded_bind_palette[b] =
+          decode_column_major(m_bind_palette_data + std::size_t{b} * k_matrix_floats);
+      m_decoded_inverse_bind_palette[b] = m_decoded_bind_palette[b].inverted();
+    }
+  }
+  decode_local_poses();
+}
+
+void BpatBlob::decode_local_poses() {
+  m_decoded_local_poses.clear();
+  if (m_header == nullptr || m_bone_parent_data == nullptr ||
+      m_decoded_bind_palette.empty() || m_decoded_palette == nullptr) {
+    return;
+  }
+  std::uint32_t const bones = m_header->bone_count;
+  auto const rotation_of = [](const QMatrix4x4& matrix) {
+    QMatrix3x3 basis;
+    for (int col = 0; col < 3; ++col) {
+      QVector3D axis = matrix.column(col).toVector3D();
+      if (axis.lengthSquared() > 1.0e-8F) {
+        axis.normalize();
+      }
+      basis(0, col) = axis.x();
+      basis(1, col) = axis.y();
+      basis(2, col) = axis.z();
+    }
+    return QQuaternion::fromRotationMatrix(basis).normalized();
+  };
+  std::vector<QMatrix4x4> global(bones);
+  m_decoded_local_poses.resize(static_cast<std::size_t>(m_header->frame_total) * bones);
+  for (std::uint32_t f = 0; f < m_header->frame_total; ++f) {
+    auto const skin = frame_palette_view(f);
+    for (std::uint32_t b = 0; b < bones; ++b) {
+      global[b] = skin[b] * m_decoded_bind_palette[b];
+      std::uint8_t const parent = m_bone_parent_data[b];
+      QMatrix4x4 const local = parent == k_no_parent_bone
+                                   ? global[b]
+                                   : global[parent].inverted() * global[b];
+      auto& pose = m_decoded_local_poses[static_cast<std::size_t>(f) * bones + b];
+      pose.rotation = rotation_of(local);
+      pose.translation = local.column(3).toVector3D();
+    }
   }
 }
 

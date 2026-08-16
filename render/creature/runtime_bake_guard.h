@@ -11,7 +11,6 @@ enum class RuntimeBakeOperation : std::uint8_t {
   RiggedMeshBake,
   SnapshotMeshBake,
   SnapshotMeshLoad,
-  SkinAtlasBuild,
   SkinUboUpload,
   CreatureSubmitMiss,
   StaticArchetypeBuild

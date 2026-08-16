@@ -623,6 +623,7 @@ struct ArenaScenarioRunner::Impl {
     Engine::Core::EntityID entity_id{0};
     int soldier_index{0};
     QVector3D root_position;
+    float root_yaw_degrees{0.0F};
     float root_up_y{1.0F};
     float submitted_body_up_y{1.0F};
     float submitted_max_arm_reach{0.0F};
@@ -2811,6 +2812,7 @@ struct ArenaScenarioRunner::Impl {
           {entity_id,
            soldier.soldier_index,
            soldier.root_position,
+           soldier.root_yaw_degrees,
            soldier.root_up_y,
            soldier.submitted_body_up_y,
            soldier.submitted_max_arm_reach,
@@ -4533,6 +4535,7 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("entity_id"), static_cast<qint64>(soldier.entity_id)},
           {QStringLiteral("soldier_index"), soldier.soldier_index},
           {QStringLiteral("root_position"), json_vector(soldier.root_position)},
+          {QStringLiteral("root_yaw_degrees"), soldier.root_yaw_degrees},
           {QStringLiteral("root_up_y"), soldier.root_up_y},
           {QStringLiteral("submitted_body_up_y"), soldier.submitted_body_up_y},
           {QStringLiteral("submitted_max_arm_reach"), soldier.submitted_max_arm_reach},
@@ -4567,6 +4570,10 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
              {QStringLiteral("bpat_playback"), frame.timings.bpat_playback_ms},
              {QStringLiteral("layout_generation"),
               frame.timings.layout_generation_ms}}},
+        {QStringLiteral("gpu_ms"),
+         QJsonObject{{QStringLiteral("shadow"), frame.timings.gpu_shadow_ms},
+                     {QStringLiteral("color"), frame.timings.gpu_color_ms},
+                     {QStringLiteral("wait"), frame.timings.gpu_wait_ms}}},
         {QStringLiteral("visible_soldiers"),
          static_cast<qint64>(frame.timings.visible_soldiers)},
         {QStringLiteral("draw_calls"), static_cast<qint64>(frame.timings.draw_calls)},

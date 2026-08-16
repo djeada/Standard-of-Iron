@@ -57,20 +57,15 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
   entry->skin_atlas = std::make_shared<Render::GL::RiggedSkinAtlas>();
   entry->skin_atlas->bone_count = 2U;
   entry->skin_atlas->frame_total = 2U;
-  entry->skin_atlas->palettes.assign(
-      static_cast<std::size_t>(entry->skin_atlas->frame_total) *
-          entry->skin_atlas->bone_count,
-      QMatrix4x4{});
-
+  static std::vector<QMatrix4x4> palettes;
+  palettes.assign(4U, QMatrix4x4{});
   QMatrix4x4 f0_b0;
   f0_b0.translate(0.0F, 2.0F, 0.0F);
-  entry->skin_atlas->palettes[0] = f0_b0;
-  entry->skin_atlas->palettes[1].setToIdentity();
-
-  entry->skin_atlas->palettes[2].setToIdentity();
+  palettes[0] = f0_b0;
   QMatrix4x4 f1_b1;
   f1_b1.scale(3.0F);
-  entry->skin_atlas->palettes[3] = f1_b1;
+  palettes[3] = f1_b1;
+  entry->skin_atlas->palettes = palettes;
 
   return entry;
 }
@@ -170,8 +165,8 @@ TEST(SnapshotMeshCache, EmptySourceMeshReturnsNull) {
   empty.skin_atlas = std::make_shared<Render::GL::RiggedSkinAtlas>();
   empty.skin_atlas->bone_count = 1U;
   empty.skin_atlas->frame_total = 1U;
-  empty.skin_atlas->palettes.resize(1);
-  empty.skin_atlas->palettes[0].setToIdentity();
+  static std::vector<QMatrix4x4> const identity(1);
+  empty.skin_atlas->palettes = identity;
 
   SnapshotMeshCache cache;
   SnapshotMeshCache::Key key{};

@@ -429,6 +429,9 @@ struct ArenaRenderedFrameTimings {
   double animation_sampling_ms{0.0};
   double bpat_playback_ms{0.0};
   double layout_generation_ms{0.0};
+  double gpu_shadow_ms{0.0};
+  double gpu_color_ms{0.0};
+  double gpu_wait_ms{0.0};
   std::uint64_t visible_soldiers{0};
   std::uint64_t draw_calls{0};
   std::uint64_t prepared_batches{0};

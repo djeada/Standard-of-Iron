@@ -328,3 +328,215 @@ numbers from a different boot.
   baked mesh entry, so it stays a follow-up.
 - **Prebaked humanoid rigged meshes.** Unchanged (deliberate: humanoid archetype ×
   attachment-set combinatorics); prewarm still hides the first-sight bake.
+
+## GPU-side follow-up: what the profile actually said
+
+With the preparation pass out of the way the remaining full-LOD frame is
+render_execute, and the per-second timeline of `massed_battle_1000` is
+bimodal: about 4-6 ms while the armies march (frames 0-7 s) and 30-40 ms once
+they engage. Three things were tried against that; two stayed.
+
+### Owned-palette dedup and growable frame streams (kept)
+
+Combat is when soldiers stop playing resident BPAT frames and start carrying
+owned, blended palettes. `upload_instances` copied one 4 KB palette per command
+into the per-frame stream even when many commands shared the same blended
+result (which they do since the blend cache landed), and refused the batch when
+`instance_count × bone_count` would not fit the fixed 16 MB stream — sending
+the whole batch down the triangle-cull compute fallback for both the colour
+pass and every shadow cascade. `upload_instances` now uploads each distinct
+owned palette once and stores its slot per command, and both the palette and
+the instance stream grow (orphan-then-double, retained across frames, capped
+at 256 MB) instead of failing. Nothing about the drawn result changes.
+
+### Skinning matrices baked into BPAT (kept)
+
+The v3 palette block now holds `pose × inverse_bind` per bone, column-major, and
+the blob carries the bind palette it was baked against. `RiggedSkinAtlas`
+became a view over `BpatBlob::palette_matrices()`: no per-entry multiply, no
+per-entry copy of ~4 MB of matrices, and the atlas is rebound automatically if
+the species blob is reloaded. Everything that needed a bone's world pose (rider
+seat frame, animation diagnostics, `humanoid_preview`, `sample_palette` in the
+registry tests) goes through `BpatBlob::bone_global_matrix()`, and the contact
+helpers take skinning matrices directly. This is a load-time and memory
+change; it does not move the frame time.
+
+### Pre-skinning for the shadow cascades (implemented, measured, removed)
+
+The hypothesis was that Ultra's four cascades skin every soldier four extra
+times per frame. A compute pre-pass (`rigged_preskin.comp`) skinned each visible
+instance once into a half-float SSBO and the cascades drew from it with a
+trivial vertex shader. It worked, and it did not pay:
+
+- the cascade distance filter means each soldier is drawn in about one cascade
+  (`shadow_rigged_instanced_instances ≈ rigged_instanced_instances` in every
+  trace), so there is no multiplier to remove;
+- 2,000 soldiers × ~15,600 vertices × 8 bytes is 544 MB of GPU writes per frame
+  just to skip the second skinning of the same vertices, and the compute pass
+  cost more than the skinning it saved (march render_execute went from ~1 ms
+  to ~2 ms).
+
+The full experiment is in this branch's history for the record; the shipped
+tree does not carry it.
+
+### Interleaved A/B with the session active
+
+Two rounds of baseline (`main` + v2 blobs) against this branch, run the moment
+the desktop was unlocked (`tty7` active), `massed_battle_1000`, warmed
+`trace.jsonl` medians:
+
+| Build               |      frame p50 | march (0-6 s) |   world_submit | humanoid_preparation | render_execute |
+| ------------------- | -------------: | ------------: | -------------: | -------------------: | -------------: |
+| Baseline run 1 / 2  | 7.28 / 7.37 ms |      6 / 6 ms | 4.68 / 4.70 ms |       3.21 / 3.21 ms | 1.50 / 1.49 ms |
+| Candidate run 1 / 2 | 5.74 / 5.90 ms |      4 / 4 ms | 3.00 / 2.98 ms |       1.47 / 1.47 ms | 1.62 / 2.04 ms |
+
+Frame p50 improves 20% and the march sits at 4 ms instead of 6; both builds
+still show 25-40 ms stretches during the melee that come and go with the
+desktop's own GPU use, so the combat tail is not comparable across runs. The
+owned-palette dedup did not move the frame here — with the blend cache in place
+the palette stream never exceeded its 16 MB default (growth never triggered),
+which also retires the theory that the stream overflow was what made combat
+expensive; the expense was the lock screen.
+
+### Pose layering as local-pose slerp + FK (kept)
+
+With the desktop unlocked the melee frame is CPU-bound in `world_submit`, which
+climbed from 1.9 ms (march) to 12.9 ms (late melee) while every other phase
+stayed flat. `perf` put the time in `blend_palette_owned` and its helpers:
+every layered soldier decomposed skinning matrices into quaternions
+(`matrix_rotation_quaternion`, `QQuaternion::length`, `acosf`), inverted parent
+matrices and rebuilt globals — per stage (frame lerp, full-body blend, overlay),
+plus a per-frame `unordered_map` blend cache that allocated and freed thousands
+of nodes every frame, plus a mutex on every `ArchetypeRegistry` read.
+
+Now:
+
+- BPAT v3 carries the bone hierarchy; the reader derives each frame's local
+  bone poses (quaternion + translation relative to the parent) once at load.
+- `submit_rigged_creature` builds one `LocalPose` per soldier: sample primary
+  (frame lerp in local space), slerp in the full-body layer, slerp the
+  upper-body bones toward the overlay, then a single FK pass × inverse bind
+  into the owned palette. One computation per distinct
+  `(entry, frames, lerp/weight buckets)` combination, cached in a fixed
+  8,192-slot frame-stamped table (no per-frame allocation), shared by every
+  soldier in that combination.
+- `ArchetypeRegistry` reads are lock-free (the table is append-only; the count
+  is an acquire/release atomic); the facial-hair archetype is resolved once per
+  unit instead of per soldier.
+
+`world_submit` in late melee (frame 16 s of `massed_battle_1000`, same run
+conditions): 12.9 ms → 3.4 ms; at 12 s: 7.7 ms → 2.6 ms. The march is
+unchanged (1.6-1.9 ms). The overlay/blend anatomy tests
+(`HumanoidPrepare.CreaturePipeline*Overlay*`, `Mounted*Interpolation*`) pin the
+visual result and pass unchanged.
+
+Interleaved A/B against `main` on an idle, unlocked box (two rounds each,
+`massed_battle_1000`, warmed medians; "combat" is frames 8-16 s):
+
+| Build    |      frame p50 |      frame p95 |     combat p50 |     combat p95 |   world_submit | humanoid_preparation |
+| -------- | -------------: | -------------: | -------------: | -------------: | -------------: | -------------------: |
+| Baseline | 7.38 / 7.32 ms | 54.6 / 16.7 ms | 16.9 / 11.1 ms | 60.1 / 22.6 ms | 4.72 / 4.68 ms |       3.21 / 3.19 ms |
+| Branch   | 4.58 / 4.22 ms |   6.8 / 6.3 ms |   5.5 / 4.9 ms |   7.1 / 6.8 ms | 1.67 / 1.61 ms |       1.03 / 1.00 ms |
+
+Frame p50 −40%, combat p50 −55%, and the melee tail is gone: the branch never
+leaves single digits where the baseline sat at 40 ms for seconds at a time.
+(These are CPU frame times from before the frame fence below; with the GPU on
+the critical path the same scenario is GPU-bound at ~37 ms on this machine.)
+
+### The multi-second stalls: an unbounded GPU queue in the bench (fixed)
+
+Every trace so far carried a handful of 1-5 s frames inside `render_execute`,
+in baseline and branch alike, at random points of the battle. Timing the
+individual GL calls showed them blocking in _whatever_ call happened to be
+next — a `glBufferSubData` of 89 KB, a static-mesh `draw()`, a scatter batch —
+which is the signature of the driver finally throttling a CPU that has run
+far ahead of the GPU. The Arena batch harness renders with vsync off and never
+blocks on a swap, so once the CPU frame dropped to 4 ms against a GPU frame of
+~37 ms the driver queued frames until it ran out of room and then stalled for
+seconds. The same reason made every "frame time" in the earlier tables a CPU
+number: the GPU was never on the critical path of the measurement.
+
+`Backend::execute_scene` now keeps at most two frames in flight: it inserts a
+fence at the end of each frame and waits on the fence from two frames earlier
+before starting the next. It also brackets the shadow pass and the colour pass
+with `GL_TIMESTAMP` queries and reports `gpu_shadow_ms`, `gpu_color_ms` and the
+fence wait through `PlaybackStats`, which the Arena writes into `trace.jsonl`
+as `gpu_ms.{shadow,color,wait}`. Multi-second frames are gone (worst frame in
+`massed_battle_1000` after the change: 96 ms, from 5,020 ms), and the frame
+time now means what it says.
+
+### What the GPU actually costs at Ultra full LOD
+
+With the queue bounded, `massed_battle_1000` reads a steady 37-41 ms per frame:
+`gpu_shadow` ≈ 15-16 ms, `gpu_color` ≈ 22-24 ms, CPU waiting ≈ 33 ms. Halving
+the viewport (`QT_SCALE_FACTOR=0.5`) does not move either number, so the pass
+is vertex-bound: 4,340 rigged instances × ~15,000 vertices, skinned once for
+the colour pass and once across the cascades. Two cheap experiments against
+that were measured with the new timers and rejected:
+
+- fetching vertices through the mesh VAO (attributes) instead of the SSBO
+  pull path: `gpu_color` 22.6 → 25.8 ms, `gpu_shadow` 15.3 → 16.8 ms — slower;
+- slimming the colour vertex outputs (instance colour/material/wear read in the
+  fragment shader from the instance buffer, unused texcoord dropped):
+  22.6 → 22.1 ms — inside noise, not worth a 4.30 fragment shader.
+
+The remaining GPU levers are content decisions (vertex count of the full-LOD
+body, cascade count/resolution), not renderer work, so they are left alone. On
+the production LOD path (`campaign_scale_battle`) the GPU is 3 + 8 ms and never
+on the critical path; the ~35 ms spikes that scenario shows without `--prewarm`
+are first-sight snapshot bakes, and vanish with the campaign's prewarm
+(0 frames above 30 ms).
+
+### Measurement caveat that dominated this round
+
+Combat render_execute on this machine flips between ~2-3 ms and ~30 ms for the
+_same_ binary depending on the display state: the sessions were partly run
+with the desktop locked (`lightdm` greeter active on tty8, the game's X server
+on an inactive VT), and every configuration — baseline included — reads ~30 ms
+in that state, while the same candidate build read 2-3 ms in the two runs that
+happened with the session active. Interleaved A/B still holds within a state
+(candidate march frames 4-5 ms vs baseline 6 ms; CPU phases as in the previous
+section), but no absolute combat number from a locked-screen run should be
+quoted, and the earlier "GPU-bound at 100% utilisation" reading was taken in
+that state.
+
+## Filming the battle
+
+`tools/arena/promos/massed_battle.json` is the reel for this scenario: seven
+authored shots over one deterministic run of `massed_battle_1000` (both hosts
+from behind the blue line, the sword line advancing, the right-hand cavalry column
+going in, the sword lines meeting, the horse reaching the archers, the press
+at half speed, and a crane out over the whole field), captured at 1080p60 with
+2× supersampling and cut with the shared editorial pipeline:
+
+```bash
+build/bin/arena_app --promo-spec tools/arena/promos/massed_battle.json \
+  --promo-out artifacts/promo
+scripts/promo-edit.py --spec tools/arena/promos/massed_battle.json \
+  --clips artifacts/promo/massed_battle
+```
+
+The shot windows were read out of `trace.jsonl` rather than guessed: the sword
+lines cover the 22 m between them in ~7.5 s, the left cavalry columns cross
+each other around 3-4 s and reach the archers at ~8 s, and the melee is dense
+from ~12 s. `duration` beyond the scenario's 16 s is legal — the runner extends
+the scenario for the last shot. Cameras stay on the west (yaw 250-320) side
+for the close shots so the two colours read left/right rather than
+front/back, and every close shot uses `group_pair` focus so a wiped-out squad
+cannot leave the lens on empty grass.
+
+No shot uses `shake`, and every tracked focus carries 0.7-1.2 s of smoothing:
+handheld jitter over a mass of small figures reads as a shaky camera rather than
+as energy, and a tracked centroid that steps as soldiers fall would put that
+jitter into the lens even without it. The first cut of this reel also showed
+the cavalry columns flicking left and right on the approach; that was not the
+camera but the movement system following an 8-connected grid path cell by cell
+(a staircase of 45-degree and axis-aligned legs), fixed by pulling paths taut
+before they are followed — see "The path is pulled taut" in
+[PATHFINDING_ARCHITECTURE.md](PATHFINDING_ARCHITECTURE.md).
+
+The scenario is a performance fixture rather than a dressed capture stage, so
+terrain scatter stays on; the low-resolution framing pass
+(`--promo-spec` at 640×360, then first/middle/last frames of every clip
+tiled with ffmpeg) is what caught the two shots that opened behind a pine and
+the crane that flew above the mountain ring.

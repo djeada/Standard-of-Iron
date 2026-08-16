@@ -135,14 +135,15 @@ void ArchetypeRegistry::seed_baseline() {
 }
 
 auto ArchetypeRegistry::register_archetype(ArchetypeDescriptor desc) -> ArchetypeId {
-  std::lock_guard<std::mutex> const lock(m_mutex);
-  if (m_count >= k_max_archetypes) {
+  std::lock_guard<std::mutex> const lock(m_register_mutex);
+  std::size_t const count = m_count.load(std::memory_order_relaxed);
+  if (count >= k_max_archetypes) {
     return k_invalid_archetype;
   }
-  auto const id = static_cast<ArchetypeId>(m_count);
+  auto const id = static_cast<ArchetypeId>(count);
   desc.id = id;
-  m_table[m_count] = desc;
-  ++m_count;
+  m_table[count] = desc;
+  m_count.store(count + 1U, std::memory_order_release);
   return id;
 }
 
@@ -193,8 +194,7 @@ auto ArchetypeRegistry::register_unit_archetype(
 }
 
 auto ArchetypeRegistry::get(ArchetypeId id) const -> const ArchetypeDescriptor* {
-  std::lock_guard<std::mutex> const lock(m_mutex);
-  if (static_cast<std::size_t>(id) >= m_count) {
+  if (static_cast<std::size_t>(id) >= m_count.load(std::memory_order_acquire)) {
     return nullptr;
   }
   return &m_table[static_cast<std::size_t>(id)];

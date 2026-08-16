@@ -22,7 +22,8 @@ struct CreatureSpec;
 namespace Render::GL {
 
 struct RiggedSkinAtlas {
-  std::vector<QMatrix4x4> palettes;
+  std::shared_ptr<const std::vector<QMatrix4x4>> palette_storage;
+  std::span<const QMatrix4x4> palettes;
   std::uint32_t frame_total{0};
   std::uint32_t bone_count{0};
   GLuint palette_ubo{0};
@@ -33,7 +34,6 @@ struct RiggedMeshEntry {
   std::shared_ptr<RiggedMesh> mesh;
   std::vector<std::shared_ptr<RiggedMesh>> attachment_meshes;
 
-  std::vector<QMatrix4x4> inverse_bind;
   std::shared_ptr<RiggedSkinAtlas> skin_atlas;
 };
 
@@ -207,11 +207,6 @@ private:
   FrameStats m_frame_stats;
   bool m_has_pending_skin_ubo_uploads{false};
 };
-
-void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry& entry,
-                                    const QMatrix4x4* bpat_palettes,
-                                    std::uint32_t frame_total,
-                                    std::uint32_t bone_count);
 
 void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry& entry);
 
