@@ -19,7 +19,7 @@ void main() {
   v_radial = a_tex_coord.y;
   v_phase = 0.0;
 
-  float pulse = 1.0 + 0.015 * sin(u_time * 2.0);
+  float pulse = 1.0 + 0.006 * sin(u_time * 2.0);
   vec3 pos = vec3(a_position.xy * pulse, a_position.z);
   v_height = a_position.y * 2.0;
 

@@ -52,7 +52,7 @@ Item {
         spacing: Design.Metrics.space8
 
         Item {
-            id: medallion
+            id: indicatorFrame
 
             width: root.glyphSize + Design.Metrics.space8
             height: width

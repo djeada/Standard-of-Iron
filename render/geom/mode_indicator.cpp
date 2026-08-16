@@ -13,19 +13,18 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 
-constexpr float k_glyph_fit_radius = 0.360F;
-constexpr float k_glyph_face_depth = 0.105F;
-constexpr float k_glyph_detail_depth = 0.118F;
+constexpr float k_glyph_fit_radius = 0.380F;
+constexpr float k_glyph_face_depth = 0.072F;
+constexpr float k_glyph_detail_depth = 0.086F;
 
 constexpr GlyphBuilder::GlyphExtrusion k_glyph_extrusion{
-    .outline_depth = 0.030F,
-    .outline_width = 0.034F,
-    .back_depth = 0.030F,
+    .outline_depth = 0.018F,
+    .outline_width = 0.026F,
+    .back_depth = 0.020F,
     .face_depth = k_glyph_face_depth,
-    .shadow_depth = -0.070F,
-    .shadow_grow = 0.046F,
-    .halo_grow = 0.112F,
-    .shadow_offset = {0.008F, -0.020F},
+    .shadow_depth = -0.022F,
+    .shadow_width = 0.046F,
+    .shadow_offset = {0.012F, -0.022F},
 };
 
 struct KindStyle {
