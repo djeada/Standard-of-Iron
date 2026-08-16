@@ -374,10 +374,6 @@
         <translation>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, and the reset button in the top bar returns to your camp. Follow keeps the camera on your selection. Move the camera now.</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set the speed to half, normal or double. Space pauses too. Speed buttons stay disabled while paused - resume first. Change the speed or pause and resume now.</source>
-        <translation>The top-left buttons pause the battle and set the speed to half, normal or double. Space pauses too. Speed buttons stay disabled while paused - resume first. Change the speed or pause and resume now.</translation>
-    </message>
-    <message>
         <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
         <translation>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</translation>
     </message>
@@ -444,6 +440,10 @@
     <message>
         <source>Kill the Roman commander and take the camp</source>
         <translation>Kill the Roman commander and take the camp</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
+        <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</translation>
     </message>
 </context>
 <context>
@@ -2611,10 +2611,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Pause</translation>
     </message>
     <message>
-        <source>Resume the battle to change speed</source>
-        <translation>Resume the battle to change speed</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>Follow the selection with the camera</translation>
     </message>
@@ -2657,6 +2653,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Open the field manual (help)</source>
         <translation>Open the field manual (help)</translation>
+    </message>
+    <message>
+        <source>Battle speed %1</source>
+        <translation>Battle speed %1</translation>
+    </message>
+    <message>
+        <source>Battle speed</source>
+        <translation>Battle speed</translation>
     </message>
 </context>
 <context>
@@ -2822,10 +2826,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Pace and view</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set half, normal or double speed; Space pauses too. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
-        <translation>The top-left buttons pause the battle and set half, normal or double speed; Space pauses too. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</translation>
-    </message>
-    <message>
         <source>Field manual</source>
         <translation>Field manual</translation>
     </message>
@@ -2864,6 +2864,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Close</source>
         <translation>Close</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
+        <translation>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</translation>
     </message>
 </context>
 <context>
@@ -4070,6 +4074,14 @@ to see preview</translation>
     <message>
         <source>Winter river plain</source>
         <translation>Winter river plain</translation>
+    </message>
+    <message>
+        <source>its shortcut</source>
+        <translation>its shortcut</translation>
+    </message>
+    <message>
+        <source>Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.</source>
+        <translation>Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.</translation>
     </message>
 </context>
 <context>
@@ -5636,6 +5648,18 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Toggle first and third person</source>
         <translation>Toggle first and third person</translation>
+    </message>
+    <message>
+        <source>Speed up the battle</source>
+        <translation>Speed up the battle</translation>
+    </message>
+    <message>
+        <source>Steps through the speeds shown on the top bar</source>
+        <translation>Steps through the speeds shown on the top bar</translation>
+    </message>
+    <message>
+        <source>Slow down the battle</source>
+        <translation>Slow down the battle</translation>
     </message>
 </context>
 <context>

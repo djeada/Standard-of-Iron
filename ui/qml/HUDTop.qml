@@ -10,9 +10,9 @@ Item {
     property bool game_is_paused: false
     property real current_speed: 1
 
-    readonly property bool compact: width < 900
+    readonly property bool compact: width < 1000
     readonly property bool ultraCompact: width < 620
-    readonly property var speedOptions: [0.5, 1, 2]
+    readonly property var speedOptions: GameSpeeds.options
 
     signal pause_toggled
     signal speed_changed(real speed)
@@ -20,6 +20,18 @@ Item {
 
     function game_ready() {
         return typeof game !== 'undefined' && game !== null;
+    }
+
+    function speed_label(speed) {
+        return GameSpeeds.label(speed);
+    }
+
+    function speed_index(speed) {
+        return GameSpeeds.index_of(speed);
+    }
+
+    function speed_labels() {
+        return GameSpeeds.labels();
     }
 
     property string primaryObjective: ""
@@ -143,10 +155,9 @@ Item {
                         visible: !topRoot.compact
                         Layout.preferredWidth: Design.Metrics.space24 * 2
                         implicitWidth: Design.Metrics.space24 * 2
-                        text: modelData + "×"
-                        tone: (!topRoot.game_is_paused && topRoot.current_speed === modelData) ? "primary" : "secondary"
-                        blocked: topRoot.game_is_paused
-                        disabledReason: qsTr("Resume the battle to change speed")
+                        text: topRoot.speed_label(modelData)
+                        tone: topRoot.current_speed === modelData ? "primary" : "secondary"
+                        accessibleName: qsTr("Battle speed %1").arg(topRoot.speed_label(modelData))
                         onClicked: topRoot.speed_changed(modelData)
                     }
                 }
@@ -154,10 +165,9 @@ Item {
                 Design.IronDropdown {
                     visible: topRoot.compact
                     Layout.preferredWidth: Design.Metrics.space24 * 4
-                    model: ["0.5×", "1×", "2×"]
-                    currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
-                    blocked: topRoot.game_is_paused
-                    disabledReason: qsTr("Resume the battle to change speed")
+                    model: topRoot.speed_labels()
+                    currentIndex: topRoot.speed_index(topRoot.current_speed)
+                    accessibleName: qsTr("Battle speed")
                     onActivated: function (index) {
                         topRoot.speed_changed(topRoot.speedOptions[index]);
                     }

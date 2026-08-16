@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 
 #include "app_scene_context.h"
@@ -21,6 +22,10 @@ struct RuntimeFrameState {
   bool selection_refresh_enabled = false;
   int selection_refresh_counter = 0;
   float minimap_unit_update_accumulator = 0.0F;
+
+  float simulation_time_scale = 1.0F;
+
+  std::uint64_t dropped_simulation_ticks = 0;
 };
 
 class RuntimeFrameOrchestrator {

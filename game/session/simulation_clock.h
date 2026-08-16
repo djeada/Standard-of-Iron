@@ -20,7 +20,11 @@ public:
 
   [[nodiscard]] auto pending_ticks() const -> int { return m_pending_ticks; }
 
-  void drop_pending_ticks() { m_pending_ticks = 0; }
+  void drop_pending_ticks();
+
+  [[nodiscard]] auto dropped_ticks() const -> std::uint64_t { return m_dropped_ticks; }
+
+  auto consume_dropped_ticks() -> std::uint64_t;
 
   [[nodiscard]] auto tick() const -> std::uint64_t { return m_tick; }
   [[nodiscard]] auto tick_seconds() const -> double { return m_tick_seconds; }
@@ -40,6 +44,7 @@ private:
   double m_accumulator = 0.0;
   double m_time_scale = 1.0;
   std::uint64_t m_tick = 0;
+  std::uint64_t m_dropped_ticks = 0;
   int m_pending_ticks = 0;
   bool m_paused = false;
 };

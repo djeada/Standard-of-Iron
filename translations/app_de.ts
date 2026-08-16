@@ -374,10 +374,6 @@
         <translation>Bewege die Ansicht mit den Pfeiltasten oder WASD, oder schiebe die Maus an den Bildschirmrand. Scrolle zum Zoomen, Q und E drehen, und die Zurücksetzen-Schaltfläche in der oberen Leiste kehrt zu deinem Lager zurück. Folgen hält die Kamera auf deiner Auswahl. Bewege jetzt die Kamera.</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set the speed to half, normal or double. Space pauses too. Speed buttons stay disabled while paused - resume first. Change the speed or pause and resume now.</source>
-        <translation>Die Schaltflächen oben links pausieren die Schlacht und setzen die Geschwindigkeit auf halb, normal oder doppelt. Die Leertaste pausiert ebenfalls. Die Geschwindigkeitstasten bleiben in der Pause gesperrt – setze zuerst fort. Ändere jetzt die Geschwindigkeit oder pausiere und setze fort.</translation>
-    </message>
-    <message>
         <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
         <translation>Der Stern in der oberen Leiste zeigt dein aktuelles Ziel. Drücke Escape und wähle Ziele, um die vollständige Einweisung zu lesen: was die Mission gewinnt, was sie verliert und alle optionalen Ziele. Öffne sie jetzt und kehre dann zur Schlacht zurück.</translation>
     </message>
@@ -444,6 +440,10 @@
     <message>
         <source>Kill the Roman commander and take the camp</source>
         <translation>Töte den römischen Befehlshaber und nimm das Lager</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
+        <translation>Die Schaltflächen oben links pausieren die Schlacht und stellen die Geschwindigkeit ein, von halb bis vierfach. Die Leertaste pausiert ebenfalls, und + und - schalten durch die Geschwindigkeiten, ohne zur Leiste zu greifen. Die aktive Geschwindigkeit bleibt auch im pausierten Zustand hervorgehoben und lässt sich dort ändern. Ändere jetzt die Geschwindigkeit oder pausiere und setze die Schlacht fort.</translation>
     </message>
 </context>
 <context>
@@ -2611,10 +2611,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Pause</translation>
     </message>
     <message>
-        <source>Resume the battle to change speed</source>
-        <translation>Setze die Schlacht fort, um das Tempo zu ändern</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>Der Auswahl mit der Kamera folgen</translation>
     </message>
@@ -2657,6 +2653,14 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Open the field manual (help)</source>
         <translation>Das Feldhandbuch öffnen (Hilfe)</translation>
+    </message>
+    <message>
+        <source>Battle speed %1</source>
+        <translation>Kampfgeschwindigkeit %1</translation>
+    </message>
+    <message>
+        <source>Battle speed</source>
+        <translation>Kampfgeschwindigkeit</translation>
     </message>
 </context>
 <context>
@@ -2822,10 +2826,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Tempo und Ansicht</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set half, normal or double speed; Space pauses too. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
-        <translation>Die Schaltflächen oben links pausieren die Schlacht und setzen halbe, normale oder doppelte Geschwindigkeit; die Leertaste pausiert ebenfalls. Bewege die Kamera mit den Pfeiltasten oder WASD, oder schiebe die Maus an den Bildschirmrand; scrolle zum Zoomen, Q und E zum Drehen; die Zurücksetzen-Schaltfläche kehrt zu deinem Lager zurück und Folgen hält die Kamera auf deiner Auswahl.</translation>
-    </message>
-    <message>
         <source>Field manual</source>
         <translation>Feldhandbuch</translation>
     </message>
@@ -2864,6 +2864,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Close</source>
         <translation>Schließen</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
+        <translation>Die Schaltflächen oben links pausieren die Schlacht und stellen die Geschwindigkeit ein, von halb bis vierfach; die Leertaste pausiert ebenfalls, und + und - schalten durch die Geschwindigkeiten. Die aktive Geschwindigkeit bleibt auch im pausierten Zustand hervorgehoben und lässt sich dort ändern. Bewege die Ansicht mit den Pfeiltasten oder WASD oder schiebe die Maus an den Bildschirmrand; scrolle zum Zoomen, Q und E drehen; die Zurücksetzen-Schaltfläche kehrt zu deinem Lager zurück und Folgen hält die Kamera auf deiner Auswahl.</translation>
     </message>
 </context>
 <context>
@@ -4070,6 +4074,14 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Winter river plain</source>
         <translation>Winterliche Flussebene</translation>
+    </message>
+    <message>
+        <source>its shortcut</source>
+        <translation>das zugehörige Tastenkürzel</translation>
+    </message>
+    <message>
+        <source>Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.</source>
+        <translation>Kampftempo: Die Geschwindigkeitsschaltflächen liegen in der oberen Leiste neben der Pause, von %1 bis %2. Drücke %3 oder %4, um die Geschwindigkeit zu ändern, ohne das Feld zu verlassen.</translation>
     </message>
 </context>
 <context>
@@ -5636,6 +5648,18 @@ Weite Sicht und ein dauerhafter Anker der Siedlung</translation>
     <message>
         <source>Toggle first and third person</source>
         <translation>Zwischen Ich- und Verfolgerperspektive wechseln</translation>
+    </message>
+    <message>
+        <source>Speed up the battle</source>
+        <translation>Schlacht beschleunigen</translation>
+    </message>
+    <message>
+        <source>Steps through the speeds shown on the top bar</source>
+        <translation>Schaltet durch die in der oberen Leiste gezeigten Geschwindigkeiten</translation>
+    </message>
+    <message>
+        <source>Slow down the battle</source>
+        <translation>Schlacht verlangsamen</translation>
     </message>
 </context>
 <context>

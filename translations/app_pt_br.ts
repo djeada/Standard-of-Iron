@@ -374,10 +374,6 @@
         <translation>Mova a visão com as setas ou WASD, ou leve o mouse até a borda da tela. Role para aproximar, Q e E giram, e o botão de reinício na barra superior volta ao seu acampamento. Seguir mantém a câmera na sua seleção. Mova a câmera agora.</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set the speed to half, normal or double. Space pauses too. Speed buttons stay disabled while paused - resume first. Change the speed or pause and resume now.</source>
-        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade como metade, normal ou dobro. A barra de espaço também pausa. Os botões de velocidade ficam desativados na pausa: retome primeiro. Mude a velocidade ou pause e retome agora.</translation>
-    </message>
-    <message>
         <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
         <translation>A estrela na barra superior mostra seu objetivo atual. Pressione Escape e escolha Objetivos para ler o briefing completo: o que vence a missão, o que a perde e as metas opcionais. Abra-o agora e depois volte à batalha.</translation>
     </message>
@@ -444,6 +440,10 @@
     <message>
         <source>Kill the Roman commander and take the camp</source>
         <translation>Mate o comandante romano e tome o acampamento</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
+        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade, de metade até o quádruplo. A barra de espaço também pausa, e + e - percorrem as velocidades sem recorrer à barra. A velocidade ativa continua destacada durante a pausa e pode ser alterada ali. Mude a velocidade ou pause e retome agora.</translation>
     </message>
 </context>
 <context>
@@ -2611,10 +2611,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Pausar</translation>
     </message>
     <message>
-        <source>Resume the battle to change speed</source>
-        <translation>Retome a batalha para alterar a velocidade</translation>
-    </message>
-    <message>
         <source>Follow the selection with the camera</source>
         <translation>Seguir a seleção com a câmera</translation>
     </message>
@@ -2657,6 +2653,14 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Open the field manual (help)</source>
         <translation>Abrir o manual de campo (ajuda)</translation>
+    </message>
+    <message>
+        <source>Battle speed %1</source>
+        <translation>Velocidade de batalha %1</translation>
+    </message>
+    <message>
+        <source>Battle speed</source>
+        <translation>Velocidade de batalha</translation>
     </message>
 </context>
 <context>
@@ -2822,10 +2826,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Ritmo e visão</translation>
     </message>
     <message>
-        <source>The top-left buttons pause the battle and set half, normal or double speed; Space pauses too. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
-        <translation>Os botões no canto superior esquerdo pausam a batalha e definem velocidade metade, normal ou dobro; a barra de espaço também pausa. Mova a câmera com as setas ou WASD, ou leve o mouse até a borda da tela; role para aproximar, Q e E para girar; o botão de reinício volta ao seu acampamento e Seguir mantém a câmera na sua seleção.</translation>
-    </message>
-    <message>
         <source>Field manual</source>
         <translation>Manual de campo</translation>
     </message>
@@ -2864,6 +2864,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Close</source>
         <translation>Fechar</translation>
+    </message>
+    <message>
+        <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll to zoom, Q and E to rotate; the reset button returns to your camp and Follow keeps the camera on your selection.</source>
+        <translation>Os botões no canto superior esquerdo pausam a batalha e definem a velocidade, de metade até o quádruplo; a barra de espaço também pausa, e + e - percorrem as velocidades. A velocidade ativa continua destacada durante a pausa e pode ser alterada ali. Mova a câmera com as setas ou WASD, ou empurre o mouse até a borda da tela; role para aproximar, Q e E giram; o botão de redefinir volta ao seu acampamento e Seguir mantém a câmera na sua seleção.</translation>
     </message>
 </context>
 <context>
@@ -4070,6 +4074,14 @@ para ver a prévia</translation>
     <message>
         <source>Winter river plain</source>
         <translation>Planície fluvial de inverno</translation>
+    </message>
+    <message>
+        <source>its shortcut</source>
+        <translation>o atalho correspondente</translation>
+    </message>
+    <message>
+        <source>Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.</source>
+        <translation>Ritmo da batalha: os botões de velocidade ficam na barra superior ao lado da pausa, de %1 até %2. Pressione %3 ou %4 para mudar a velocidade sem sair do campo.</translation>
     </message>
 </context>
 <context>
@@ -5636,6 +5648,18 @@ Ampla visão e uma âncora duradoura para o assentamento</translation>
     <message>
         <source>Toggle first and third person</source>
         <translation>Alternar entre primeira e terceira pessoa</translation>
+    </message>
+    <message>
+        <source>Speed up the battle</source>
+        <translation>Acelerar a batalha</translation>
+    </message>
+    <message>
+        <source>Steps through the speeds shown on the top bar</source>
+        <translation>Percorre as velocidades mostradas na barra superior</translation>
+    </message>
+    <message>
+        <source>Slow down the battle</source>
+        <translation>Desacelerar a batalha</translation>
     </message>
 </context>
 <context>
