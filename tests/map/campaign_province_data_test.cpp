@@ -1,12 +1,17 @@
 #include <QDir>
 #include <QFile>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QPair>
 #include <QSet>
 #include <QString>
+#include <QVector>
 
+#include <cmath>
 #include <gtest/gtest.h>
+#include <numeric>
 
 namespace {
 
@@ -149,6 +154,100 @@ TEST(CampaignProvinceDataTest, EveryProvinceIsDrawableAndLabellable) {
     EXPECT_LE(label.at(0).toDouble(), 1.0) << id;
     EXPECT_GE(label.at(1).toDouble(), 0.0) << id;
     EXPECT_LE(label.at(1).toDouble(), 1.0) << id;
+  }
+}
+
+constexpr double k_weld_tolerance = 5e-5;
+
+using Cell = QPair<qint64, qint64>;
+
+auto cell_of(double u, double v) -> Cell {
+  return {static_cast<qint64>(std::floor(u / k_weld_tolerance)),
+          static_cast<qint64>(std::floor(v / k_weld_tolerance))};
+}
+
+class DisjointSet {
+public:
+  explicit DisjointSet(int count)
+      : m_parent(count) {
+    std::iota(m_parent.begin(), m_parent.end(), 0);
+  }
+
+  auto find(int index) -> int {
+    while (m_parent[index] != index) {
+      m_parent[index] = m_parent[m_parent[index]];
+      index = m_parent[index];
+    }
+    return index;
+  }
+
+  void unite(int a, int b) {
+    const int root_a = find(a);
+    const int root_b = find(b);
+    if (root_a != root_b) {
+      m_parent[root_a] = root_b;
+    }
+  }
+
+private:
+  QVector<int> m_parent;
+};
+
+auto piece_count(const QJsonArray& triangles) -> int {
+  const int count = triangles.size() / 3;
+  if (count <= 0) {
+    return 0;
+  }
+
+  QHash<Cell, QVector<int>> occupants;
+  for (int triangle = 0; triangle < count; ++triangle) {
+    for (int corner = 0; corner < 3; ++corner) {
+      const QJsonArray uv = triangles.at(triangle * 3 + corner).toArray();
+      occupants[cell_of(uv.at(0).toDouble(), uv.at(1).toDouble())].push_back(triangle);
+    }
+  }
+
+  DisjointSet pieces(count);
+  for (int triangle = 0; triangle < count; ++triangle) {
+    for (int corner = 0; corner < 3; ++corner) {
+      const QJsonArray uv = triangles.at(triangle * 3 + corner).toArray();
+      const Cell cell = cell_of(uv.at(0).toDouble(), uv.at(1).toDouble());
+      for (qint64 dx = -1; dx <= 1; ++dx) {
+        for (qint64 dy = -1; dy <= 1; ++dy) {
+          for (const int neighbour :
+               occupants.value({cell.first + dx, cell.second + dy})) {
+            pieces.unite(triangle, neighbour);
+          }
+        }
+      }
+    }
+  }
+
+  QSet<int> roots;
+  for (int triangle = 0; triangle < count; ++triangle) {
+    roots.insert(pieces.find(triangle));
+  }
+  return roots.size();
+}
+
+TEST(CampaignProvinceDataTest, EveryProvinceIsOneUnbrokenStretchOfLand) {
+  const QJsonArray provinces = generated().value(QStringLiteral("provinces")).toArray();
+  if (provinces.isEmpty()) {
+    GTEST_SKIP() << k_regenerate_hint;
+  }
+
+  for (const auto& value : provinces) {
+    const QJsonObject province = value.toObject();
+    const std::string id =
+        province.value(QStringLiteral("id")).toString().toStdString();
+    const QJsonArray triangles = province.value(QStringLiteral("triangles")).toArray();
+    ASSERT_GE(triangles.size(), 3) << id << " has no fill geometry";
+
+    EXPECT_EQ(piece_count(triangles), 1)
+        << id
+        << " is drawn as several disconnected pieces; a province must be one "
+           "contiguous stretch of land, so regenerate provinces.json with "
+           "tools/map_pipeline/provinces.py and check its exclave warnings";
   }
 }
 
