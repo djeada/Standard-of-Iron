@@ -13,6 +13,10 @@ Design.IronPanel {
 
     property int detailCap: 12
 
+    property var inspected: null
+
+    readonly property bool inspecting: unitCount <= 0 && !!inspected && inspected.valid === true
+
     readonly property bool empty: unitCount <= 0
     readonly property bool singleUnit: unitCount === 1
     readonly property bool squad: unitCount > 1 && unitCount <= detailCap
@@ -49,6 +53,47 @@ Design.IronPanel {
         return group && group.activityState ? group.activityState : Design.ActivityIcons.defaultState;
     }
 
+    function inspectHeader() {
+        if (!root.inspecting)
+            return "";
+        if (root.inspected.isOwn)
+            return root.inspected.isBuilding ? qsTr("YOUR BUILDING") : qsTr("YOUR UNIT");
+        if (root.inspected.isEnemy)
+            return root.inspected.isBuilding ? qsTr("ENEMY BUILDING") : qsTr("ENEMY UNIT");
+        return root.inspected.isBuilding ? qsTr("BUILDING") : qsTr("UNIT");
+    }
+
+    function focusTone(info) {
+        if (!info)
+            return Design.Theme.accent;
+        if (info.isEnemy)
+            return Design.Theme.danger;
+        if (info.isOwn)
+            return Design.Theme.accent;
+        return Design.Theme.textSecondary;
+    }
+
+    function focusHealthColor(info) {
+        if (!info)
+            return Design.Theme.success;
+        if (info.isEnemy)
+            return Design.Theme.danger;
+        return root.healthColor(info.healthRatio);
+    }
+
+    function attackSummary(info) {
+        if (!info)
+            return "";
+        if (info.isEnemy) {
+            if (info.attackedByLocal > 0)
+                return qsTr("Under attack by %n of your units", "", info.attackedByLocal);
+            return qsTr("Not engaged by your army");
+        }
+        if (info.attackersIncoming > 0)
+            return qsTr("Under attack by %n enemies", "", info.attackersIncoming);
+        return qsTr("Not under attack");
+    }
+
     implicitWidth: Design.Metrics.space24 * 10
     implicitHeight: body.implicitHeight + Design.Metrics.space24
 
@@ -74,7 +119,7 @@ Design.IronPanel {
                 Text {
                     id: header
 
-                    text: root.empty ? qsTr("SELECTION") : root.singleUnit ? qsTr("SELECTED UNIT") : qsTr("SELECTED FORCE")
+                    text: root.inspecting ? root.inspectHeader() : root.empty ? qsTr("SELECTION") : root.singleUnit ? qsTr("SELECTED UNIT") : qsTr("SELECTED FORCE")
                     color: Design.Theme.textSecondary
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
@@ -83,8 +128,8 @@ Design.IronPanel {
                 }
 
                 Text {
-                    visible: !root.empty
-                    text: root.singleUnit && root.groups.length > 0 ? root.groups[0].name : qsTr("%1 soldiers ready").arg(root.unitCount)
+                    visible: !root.empty || root.inspecting
+                    text: root.inspecting ? root.inspected.name : root.singleUnit && root.groups.length > 0 ? root.groups[0].name : qsTr("%1 soldiers ready").arg(root.unitCount)
                     color: Design.Theme.textPrimary
                     font.family: Design.Typography.displayFamily
                     font.pixelSize: Design.Typography.label
@@ -97,17 +142,24 @@ Design.IronPanel {
 
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                visible: !root.empty
-                tone: Design.Theme.accent
-                text: root.singleUnit ? qsTr("1 unit") : root.groups.length === 1 ? qsTr("%1 units").arg(root.unitCount) : qsTr("%1 units  ·  %2 types").arg(root.unitCount).arg(root.groups.length)
+                visible: !root.empty || root.inspecting
+                tone: root.inspecting ? root.focusTone(root.inspected) : Design.Theme.accent
+                text: root.inspecting ? (root.inspected.isEnemy ? qsTr("Enemy") : root.inspected.isOwn ? qsTr("Yours") : qsTr("Neutral")) : root.singleUnit ? qsTr("1 unit") : root.groups.length === 1 ? qsTr("%1 units").arg(root.unitCount) : qsTr("%1 units  ·  %2 types").arg(root.unitCount).arg(root.groups.length)
             }
         }
 
         Loader {
             width: parent.width
-            active: root.empty
+            active: root.empty && !root.inspecting
             visible: active
             sourceComponent: emptyView
+        }
+
+        Loader {
+            width: parent.width
+            active: root.inspecting
+            visible: active
+            sourceComponent: inspectView
         }
 
         Loader {
@@ -129,6 +181,113 @@ Design.IronPanel {
             active: root.army || root.groupedSquad
             visible: active
             sourceComponent: rosterView
+        }
+    }
+
+    Component {
+        id: inspectView
+
+        Rectangle {
+            id: inspectCard
+
+            objectName: "selectionInspectCard"
+            width: parent.width
+            height: Design.Metrics.space24 * 4
+            radius: Design.Metrics.radiusMedium
+            color: Design.Theme.backgroundDeep
+            border.width: Design.Metrics.borderThin
+            border.color: root.focusTone(root.inspected)
+
+            Rectangle {
+                id: inspectPortrait
+
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.margins: Design.Metrics.space8
+                width: height
+                radius: Design.Metrics.radiusSmall
+                color: Design.Theme.panelLeather
+                border.width: Design.Metrics.borderThin
+                border.color: root.focusTone(root.inspected)
+
+                Image {
+                    anchors.fill: parent
+                    anchors.margins: Design.Metrics.space4
+                    fillMode: Image.PreserveAspectFit
+                    source: root.iconFor(root.inspected.typeKey, root.inspected.nation, root.inspected.name)
+                    smooth: true
+                    mipmap: true
+                }
+            }
+
+            Column {
+                anchors.left: inspectPortrait.right
+                anchors.leftMargin: Design.Metrics.space12
+                anchors.right: parent.right
+                anchors.rightMargin: Design.Metrics.space12
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Design.Metrics.space4
+
+                Design.IronActivityIcon {
+                    objectName: "inspectActivity"
+                    width: parent.width
+                    activity: root.inspected.activity || Design.ActivityIcons.defaultActivity
+                    state_id: root.inspected.activityState || Design.ActivityIcons.defaultState
+                    showLabel: true
+                    iconScale: 0.85
+                }
+
+                Column {
+                    width: parent.width
+                    spacing: 2
+
+                    RowLayout {
+                        width: parent.width
+                        spacing: Design.Metrics.space8
+
+                        Text {
+                            objectName: "inspectHealthLabel"
+                            text: qsTr("HEALTH")
+                            color: Design.Theme.textPrimary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            objectName: "inspectHealthValue"
+                            text: qsTr("%1 / %2").arg(root.inspected.health).arg(root.inspected.maxHealth)
+                            color: root.focusHealthColor(root.inspected)
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                        }
+                    }
+
+                    Design.IronProgressBar {
+                        objectName: "inspectHealthBar"
+                        width: parent.width
+                        height: Design.Metrics.space12
+                        value: root.inspected.healthRatio
+                        fillColor: root.focusHealthColor(root.inspected)
+                    }
+                }
+
+                Text {
+                    objectName: "inspectAttackSummary"
+                    width: parent.width
+                    text: root.attackSummary(root.inspected)
+                    color: root.inspected.isEnemy && root.inspected.attackedByLocal > 0 ? Design.Theme.warning : Design.Theme.textSecondary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    elide: Text.ElideRight
+                }
+            }
         }
     }
 

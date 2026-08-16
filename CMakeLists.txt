@@ -593,8 +593,10 @@ add_library(
     app/core/commander_control_controller.cpp
     app/core/commander_input_adapter.cpp
     app/core/commander_mode_coordinator.cpp
+    app/core/combat_feedback.cpp
     app/core/commander_status_builder.cpp
     app/core/environment.cpp
+    app/core/focus_target.cpp
     app/core/frame_ui_coordinator.cpp
     app/core/game_engine.cpp
     app/core/game_state_restorer.cpp
@@ -714,6 +716,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDBottomCommander.qml
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgDamageNumbers.qml
+            ui/qml/CombatDamageNumbers.qml
             ui/qml/FormationPanel.qml
             ui/qml/FormationShape.qml
             ui/qml/FormationReadoutCell.qml

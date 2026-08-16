@@ -312,6 +312,7 @@ RowLayout {
         model: bottomRoot.game_ready() ? game.selected_units_model : null
         groups: bottomRoot.selection_groups
         unitCount: bottomRoot.selection_count
+        inspected: bottomRoot.game_ready() && game.activity ? game.activity.inspect_target : null
         onUnitActivated: function (unitId) {
             if (bottomRoot.game_ready() && game.select_unit_by_id)
                 game.select_unit_by_id(unitId);
@@ -330,19 +331,76 @@ RowLayout {
         spacing: Design.Metrics.space8
 
         Design.IronPanel {
+            id: commandBanner
+
+            readonly property var target: bottomRoot.game_ready() && game.activity ? game.activity.selection_target : null
+            readonly property bool showTarget: bottomRoot.selection_count > 0 && bottomRoot.current_command_mode === "normal" && !!target && target.valid === true
+
             Layout.fillWidth: true
             Layout.preferredHeight: Design.Metrics.controlHeight
             raised: bottomRoot.current_command_mode !== "normal"
-            border.color: bottomRoot.banner_tone()
-            opacity: bottomRoot.has_movable_units ? 1 : 0.6
+            border.color: showTarget ? Design.Theme.danger : bottomRoot.banner_tone()
+            opacity: bottomRoot.has_movable_units || commandBanner.showTarget ? 1 : 0.6
 
             Text {
                 anchors.centerIn: parent
+                visible: !commandBanner.showTarget
                 text: bottomRoot.command_banner_text()
                 color: bottomRoot.has_movable_units ? Design.Theme.textPrimary : Design.Theme.textDisabled
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.label
                 font.weight: bottomRoot.current_command_mode === "normal" ? Design.Typography.medium : Design.Typography.bold
+            }
+
+            RowLayout {
+                objectName: "commandBannerTarget"
+                anchors.fill: parent
+                anchors.leftMargin: Design.Metrics.space12
+                anchors.rightMargin: Design.Metrics.space12
+                visible: commandBanner.showTarget
+                spacing: Design.Metrics.space8
+
+                Text {
+                    text: qsTr("TARGET")
+                    color: Design.Theme.danger
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    font.weight: Design.Typography.bold
+                    font.letterSpacing: Design.Typography.trackingWide
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: commandBanner.showTarget ? commandBanner.target.name : ""
+                    color: Design.Theme.textPrimary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.label
+                    font.weight: Design.Typography.bold
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    visible: commandBanner.showTarget && commandBanner.target.attackedBySelection > 0
+                    text: commandBanner.showTarget ? qsTr("%n attacking", "", commandBanner.target.attackedBySelection) : ""
+                    color: Design.Theme.textSecondary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                }
+
+                Design.IronProgressBar {
+                    Layout.preferredWidth: Math.max(72, commandBanner.width * 0.22)
+                    Layout.preferredHeight: Design.Metrics.space8
+                    value: commandBanner.showTarget ? commandBanner.target.healthRatio : 0
+                    fillColor: Design.Theme.danger
+                }
+
+                Text {
+                    text: commandBanner.showTarget ? qsTr("%1%").arg(Math.round(commandBanner.target.healthRatio * 100)) : ""
+                    color: Design.Theme.danger
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    font.weight: Design.Typography.bold
+                }
             }
         }
 

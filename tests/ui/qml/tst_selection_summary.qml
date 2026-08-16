@@ -279,6 +279,100 @@ TestCase {
         summary.destroy();
     }
 
+    function makeFocus(overrides) {
+        var info = {
+            "valid": true,
+            "id": 42,
+            "name": "Enemy Archer",
+            "nation": "carthage",
+            "typeKey": "archer",
+            "ownerId": 2,
+            "isBuilding": false,
+            "isEnemy": true,
+            "isOwn": false,
+            "health": 30,
+            "maxHealth": 100,
+            "healthRatio": 0.3,
+            "activity": "attack",
+            "activityState": "active",
+            "attackedBySelection": 0,
+            "attackedByLocal": 0,
+            "attackersIncoming": 0
+        };
+        for (var key in overrides)
+            info[key] = overrides[key];
+        return info;
+    }
+
+    function test_clicking_an_enemy_shows_an_inspect_card_with_its_health() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({
+                        "attackedByLocal": 3
+                    })
+            });
+        verify(summary.inspecting, "an inspected enemy with no own selection is the inspect state");
+        var card = findChild(summary, "selectionInspectCard");
+        verify(card !== null, "inspect view should be loaded");
+        var bar = findChild(summary, "inspectHealthBar");
+        verify(bar !== null);
+        fuzzyCompare(bar.value, 0.3, 0.001, "inspect health bar must show the enemy ratio");
+        compare(bar.fillColor.toString(), Theme.danger.toString(), "enemy health reads in the danger colour regardless of ratio");
+        compare(findChild(summary, "inspectHealthValue").text, "30 / 100");
+        compare(summary.inspectHeader(), "ENEMY UNIT");
+        verify(findChild(summary, "inspectAttackSummary").text.indexOf("3") >= 0, "the card says how many of your units are attacking it");
+        summary.destroy();
+    }
+
+    function test_own_building_inspect_uses_the_friendly_header_and_health_bands() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({
+                        "name": "Barracks",
+                        "typeKey": "barracks",
+                        "isBuilding": true,
+                        "isEnemy": false,
+                        "isOwn": true,
+                        "healthRatio": 0.8,
+                        "health": 800,
+                        "maxHealth": 1000
+                    })
+            });
+        compare(summary.inspectHeader(), "YOUR BUILDING");
+        var bar = findChild(summary, "inspectHealthBar");
+        compare(bar.fillColor.toString(), summary.healthColor(0.8).toString());
+        summary.destroy();
+    }
+
+    function test_inspecting_is_dropped_when_own_units_are_selected() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 1,
+                "groups": makeGroups([{
+                            "typeKey": "swordsman",
+                            "count": 1
+                        }]),
+                "inspected": makeFocus({})
+            });
+        verify(!summary.inspecting, "own selection takes precedence over an inspect card");
+        verify(findChild(summary, "selectionInspectCard") === null);
+        summary.destroy();
+    }
+
+    function test_invalid_focus_objects_are_ignored() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({
+                        "valid": false
+                    })
+            });
+        verify(!summary.inspecting);
+        verify(summary.empty);
+        summary.destroy();
+    }
+
     Component {
         id: summaryComponent
 

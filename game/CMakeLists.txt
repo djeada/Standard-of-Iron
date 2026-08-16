@@ -283,6 +283,7 @@ add_library(
     systems/target_commitment_system.cpp
     systems/attack_range.cpp
     systems/attack_targeting.cpp
+    systems/target_focus.cpp
     systems/arrow_system.cpp
     systems/arrow_visual_profile.cpp
     systems/combat_status_effect_system.cpp

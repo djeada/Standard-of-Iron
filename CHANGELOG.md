@@ -23,6 +23,22 @@ attack.`, `That target is already gone.`, …) instead of silently doing
   nothing. Build and gather placement rejections now use the same in-HUD
   notice rather than a modal error dialog.
 
+- **Reading a fight is no longer guesswork.** Left-clicking an enemy unit or
+  any building (yours or theirs) inspects it: the selection panel shows its
+  name, health, activity and how many of your units are on it, and a bold ring
+  marks it in the world. Every target your selection is attacking carries a
+  pulsing lock ring with a sword glyph, enemies attacking your selected units
+  wear a red chevron ring, and the command banner names the current target with
+  its health bar. Hits now pop compact damage ticks in the RTS view (red for
+  damage taken, gold for damage dealt, a skull on the killing blow), coalesced
+  per target and capped so a large battle stays legible; hidden units never
+  leak numbers. Arrows and bolts flying at your army glow warm red and leave a
+  longer trail, your own volleys glow bright, and ordinary arrows now flash on
+  a connected hit and puff dust on a miss. Lock-ring pulses, chevron motion,
+  the miss puffs and the damage-tick rise all switch off under Reduced motion.
+  A new arena scenario, `combat_feedback_capture`, exercises melee, arrows,
+  misses, a wall under siege and a killing blow in one capture.
+
 ### Fixed
 
 - Right-click attacks gave no visible or audible feedback at all, and the

@@ -39,6 +39,27 @@ void ActivityViewModel::toggle_auto_gather(const QString& priority_product_type)
   m_host->toggle_auto_gather(priority_product_type);
 }
 
+void ActivityViewModel::clear_inspect_target() {
+  if (m_host == nullptr) {
+    return;
+  }
+  m_host->clear_inspect_target();
+}
+
+QVariantList ActivityViewModel::pop_combat_damage_events() {
+  return m_host != nullptr ? m_host->pop_combat_damage_events() : QVariantList{};
+}
+
+void ActivityViewModel::set_focus_targets(const QVariantMap& inspect,
+                                          const QVariantMap& target) {
+  if (m_inspect_target == inspect && m_selection_target == target) {
+    return;
+  }
+  m_inspect_target = inspect;
+  m_selection_target = target;
+  emit focus_targets_changed();
+}
+
 void ActivityViewModel::set_attack_target_hint(const QVariantMap& hint) {
   if (m_attack_target_hint == hint) {
     return;

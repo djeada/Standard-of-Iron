@@ -36,6 +36,7 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/flag.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/banner_cloth.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/attack_target_markers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geom/target_focus_rings.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/patrol_flags.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/range_rings.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/geom/formation_arrow.cpp

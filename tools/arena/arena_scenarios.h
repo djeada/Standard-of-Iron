@@ -47,6 +47,7 @@ inline constexpr char k_melee_lock_id[] = "melee_lock";
 inline constexpr char k_chase_to_attack_id[] = "chase_to_attack";
 inline constexpr char k_attack_to_chase_id[] = "attack_to_chase";
 inline constexpr char k_target_death_id[] = "target_death";
+inline constexpr char k_combat_feedback_capture_id[] = "combat_feedback_capture";
 inline constexpr char k_retargeting_id[] = "retargeting";
 inline constexpr char k_hold_guard_exit_id[] = "hold_guard_exit";
 inline constexpr char k_testudo_missile_defense_id[] = "testudo_missile_defense";
