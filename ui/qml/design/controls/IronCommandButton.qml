@@ -26,11 +26,17 @@ AbstractButton {
     property string disabledReason: ""
     property string hint: ""
 
+    property var details: []
+
+    property string statusText: ""
+
     property bool blocked: false
     readonly property bool interactive: enabled && !blocked
 
     property bool compact: width > 0 && width < minimumLabelledWidth
-    readonly property real minimumLabelledWidth: Design.Metrics.iconMedium + labelMetrics.width + hotkeyLabel.width + Design.Metrics.space24
+
+    readonly property real minimumLabelledWidth: Design.Metrics.iconMedium + labelMetrics.width + hotkeyWidth + Design.Metrics.space24
+    readonly property real hotkeyWidth: control.hotkey !== "" ? hotkeyMetrics.width + Design.Metrics.space8 : 0
 
     TextMetrics {
         id: labelMetrics
@@ -41,18 +47,31 @@ AbstractButton {
         text: control.label
     }
 
+    TextMetrics {
+        id: hotkeyMetrics
+
+        font.family: "monospace"
+        font.pixelSize: Design.Typography.caption
+        text: control.hotkey
+    }
+
     readonly property bool highlighted: active || placing
     readonly property bool showFocusRing: visualFocus || (Design.A11y.alwaysShowFocus && activeFocus)
     readonly property color stateColor: !interactive ? Design.Theme.textDisabled : placing ? Design.Theme.warning : active ? Design.Theme.accent : mixed ? Design.Theme.textSecondary : Design.Theme.borderStrong
 
     readonly property string tooltipText: control.interactive ? control.hint : control.disabledReason
 
+    readonly property alias tooltip: commandTooltip
+
+    readonly property bool hasTooltipBody: control.hint !== "" || control.statusText !== "" || (!control.interactive && control.disabledReason !== "") || (control.details && control.details.length > 0)
+
     readonly property string coverageText: (eligibleCount > 0 && activeCount > 0 && activeCount < eligibleCount) ? qsTr("%1 of %2").arg(activeCount).arg(eligibleCount) : ""
 
     implicitHeight: Math.max(Design.Metrics.commandButtonSize, Design.Metrics.minTouchTarget)
     implicitWidth: compact ? Design.Metrics.commandButtonSize + Design.Metrics.space24 : Design.Metrics.commandButtonSize * 3
     hoverEnabled: true
-    focusPolicy: Qt.NoFocus
+
+    focusPolicy: Qt.TabFocus
 
     Accessible.role: Accessible.Button
     Accessible.name: control.label
@@ -60,9 +79,22 @@ AbstractButton {
     Accessible.checkable: true
     Accessible.checked: control.active
 
-    ToolTip.text: control.compact && control.interactive && control.hint === "" ? control.label : control.tooltipText
-    ToolTip.visible: control.hovered && ToolTip.text.length > 0
-    ToolTip.delay: Design.Metrics.tooltipDelay
+    Keys.onReturnPressed: control.clicked()
+    Keys.onEnterPressed: control.clicked()
+
+    Design.IronCommandTooltip {
+        id: commandTooltip
+
+        parent: control
+        visible: (control.hovered || control.showFocusRing) && control.hasTooltipBody
+        title: control.label
+        hotkey: control.hotkey
+        summary: control.hint
+
+        details: visible ? control.details : []
+        status: control.interactive ? control.statusText : ""
+        warning: control.interactive ? "" : control.disabledReason
+    }
 
     Connections {
         function onClicked() {
@@ -118,7 +150,7 @@ AbstractButton {
     }
 
     contentItem: Item {
-        implicitWidth: control.compact ? Design.Metrics.iconMedium + hotkeyLabel.width + Design.Metrics.space16 : Design.Metrics.iconMedium + textColumn.implicitWidth + Design.Metrics.space24
+        implicitWidth: control.compact ? Design.Metrics.iconMedium + control.hotkeyWidth + Design.Metrics.space16 : Design.Metrics.iconMedium + textColumn.implicitWidth + Design.Metrics.space24
 
         Item {
             id: iconSlot
@@ -187,7 +219,7 @@ AbstractButton {
             Text {
                 width: parent.width
                 visible: text !== ""
-                text: control.placing ? qsTr("Pick a target") : control.coverageText
+                text: control.statusText !== "" ? control.statusText : (control.placing ? qsTr("Pick a target") : control.coverageText)
                 color: Design.Theme.textSecondary
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.caption

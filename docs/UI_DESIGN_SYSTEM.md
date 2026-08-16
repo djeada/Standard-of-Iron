@@ -147,6 +147,26 @@ Reduced motion collapses durations to zero rather than removing bindings, so sta
 lands in the right place. Notification dwell times are deliberately _not_ affected — that
 is reading time, not motion.
 
+A third rule applies to anything that explains itself:
+
+- **An explanation a mouse can reach, a keyboard can reach.** `IronCommandButton` takes
+  `Qt.TabFocus` and opens its `IronCommandTooltip` on `hovered || showFocusRing`, so hover,
+  Tab and controller navigation all surface the same panel. An order that cannot be given
+  keeps its tooltip: the refusal is printed under the rules rather than instead of them.
+
+## Explaining an order
+
+`IronCommandTooltip` is the panel behind every button in the order grid. It is not a
+one-line hint: it carries the order's name and hotkey, a sentence of summary, a list of
+term/text rules — scope, how to give it, how to cancel it, which troops may obey — a live
+`status` line, and a `warning` line when the selection cannot take the order.
+
+The numbers in those rules are not written by hand. `App::Core::get_action_states()` puts a
+`detail` map on each action (guard radius, hold's range and damage bonuses, the patrol
+waypoint the next click sets, the selected commander's aura radius, duration and cooldown),
+and `HUDBottom` formats that map into the rules. A balance change moves the tooltip with
+it; there is no second copy of the truth to forget.
+
 ## Faction identity
 
 `FactionTheme` maps a nation id (`roman_republic`, `carthage`, `iron_sepulcher`) to an
