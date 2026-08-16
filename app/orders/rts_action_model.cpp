@@ -402,7 +402,7 @@ auto get_status(const App::Core::ActionContext& context,
     status.enabled = status.eligible_count > 0;
     break;
   case ActionId::Formation:
-    status.enabled = status.eligible_count > 1;
+    status.enabled = status.eligible_count > 0;
     break;
   case ActionId::Heal:
     status.passive = status.eligible_count > 0;
