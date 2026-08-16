@@ -1,4 +1,4 @@
-#include "wave_view_model.h"
+#include "app/viewmodels/wave_view_model.h"
 
 namespace App::ViewModels {
 

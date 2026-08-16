@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "app/controllers/command_controller.h"
+#include "app/orders/command_controller.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"

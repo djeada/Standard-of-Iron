@@ -767,7 +767,7 @@ That is the main performance contract: changes are sparse, so updates should be 
 `game/systems/building_collision_registry.cpp`
 : Registers and unregisters solid building footprints and marks affected grid regions dirty.
 
-`app/core/production_manager.cpp`
+`app/economy/production_manager.cpp`
 : Handles construction placement, collect cursor resolution, and harvest work-position selection.
 
 ## Maintenance Rules

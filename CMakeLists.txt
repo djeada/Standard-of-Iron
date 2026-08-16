@@ -577,60 +577,85 @@ list(SORT SOI_UNIT_ICON_RESOURCES)
 add_library(
     app_core
     STATIC
-    app/controllers/action_vfx.cpp
-    app/viewmodels/save_slots_view_model.cpp
-    app/viewmodels/activity_view_model.cpp
-    app/viewmodels/economy_view_model.cpp
-    app/viewmodels/placement_view_model.cpp
-    app/viewmodels/wave_view_model.cpp
-    app/controllers/command_controller.cpp
-    app/core/ambient_state_manager.cpp
-    app/core/audio_coordinator.cpp
-    app/core/audio_resource_loader.cpp
-    app/core/weather_audio.cpp
-    app/core/camera_controller.cpp
-    app/core/campaign_manager.cpp
-    app/core/commander_camera_rig.cpp
-    app/core/commander_control_controller.cpp
-    app/core/commander_input_adapter.cpp
-    app/core/commander_mode_coordinator.cpp
-    app/core/combat_feedback.cpp
-    app/core/commander_status_builder.cpp
-    app/core/economy_overview.cpp
-    app/core/environment.cpp
-    app/core/focus_target.cpp
+    # app/core -- the composition root and the frame it drives.
     app/core/frame_ui_coordinator.cpp
     app/core/game_engine.cpp
-    app/core/game_state_restorer.cpp
-    app/core/input_command_handler.cpp
     app/core/language_manager.cpp
-    app/core/level_loader.cpp
-    app/core/level_orchestrator.cpp
-    app/core/loading_progress_tracker.cpp
-    app/core/minimap_manager.cpp
-    app/core/mission_commander_setup.cpp
-    app/core/mission_definition_view.cpp
-    app/core/mission_setup_coordinator.cpp
-    app/core/mission_wave_director.cpp
-    app/core/tutorial_director.cpp
-    app/core/order_feedback.cpp
-    app/core/order_markers.cpp
-    app/core/order_service.cpp
-    app/core/production_manager.cpp
-    app/utils/movement_utils.cpp
-    app/core/renderer_bootstrap.cpp
-    app/core/rts_action_model.cpp
     app/core/runtime_frame_orchestrator.cpp
-    app/core/save_load_coordinator.cpp
-    app/core/selection_query_service.cpp
-    app/core/skirmish_loader.cpp
-    app/core/skirmish_runtime_coordinator.cpp
-    app/core/visibility_coordinator.cpp
-    app/core/world_bootstrap.cpp
-    app/models/audio_system_proxy.cpp
-    app/models/cursor_manager.cpp
+    # app/session -- bringing one match up: world, renderer, level, skirmish.
+    app/session/environment.cpp
+    app/session/level_loader.cpp
+    app/session/level_orchestrator.cpp
+    app/session/loading_progress_tracker.cpp
+    app/session/renderer_bootstrap.cpp
+    app/session/skirmish_loader.cpp
+    app/session/skirmish_runtime_coordinator.cpp
+    app/session/world_bootstrap.cpp
+    # app/mission -- campaigns, mission scripts, waves and the tutorial.
+    app/mission/campaign_manager.cpp
+    app/mission/mission_commander_setup.cpp
+    app/mission/mission_definition_view.cpp
+    app/mission/mission_setup_coordinator.cpp
+    app/mission/mission_wave_director.cpp
+    app/mission/mission_waves.cpp
+    app/mission/tutorial_director.cpp
+    # app/commander -- the first-person control mode and its camera.
+    app/commander/commander_camera_rig.cpp
+    app/commander/commander_control_controller.cpp
+    app/commander/commander_mode_coordinator.cpp
+    app/commander/commander_status_builder.cpp
+    # app/input -- pointer and key gestures, before they become orders.
+    app/input/cursor_manager.cpp
+    app/input/hover_tracker.cpp
+    app/input/input_command_handler.cpp
+    app/input/rts_camera_controller.cpp
+    # app/orders -- gestures turned into Game::Command payloads, and the
+    # feedback the player gets back for them.
+    app/orders/action_vfx.cpp
+    app/orders/army_formation_controller.cpp
+    app/orders/command_controller.cpp
+    app/orders/movement_utils.cpp
+    app/orders/order_feedback.cpp
+    app/orders/order_issuer.cpp
+    app/orders/order_markers.cpp
+    app/orders/order_submission.cpp
+    app/orders/rts_action_model.cpp
+    # app/economy -- production, trade and the resource coach.
+    app/economy/economy_overview.cpp
+    app/economy/harvest_targeting.cpp
+    app/economy/production_manager.cpp
+    app/economy/production_readouts.cpp
+    app/economy/resource_text.cpp
+    # app/persistence -- saving and restoring a match.
+    app/persistence/game_state_restorer.cpp
+    app/persistence/save_load_coordinator.cpp
+    # app/world -- world state read back as client presentation state.
+    app/world/ambient_state_manager.cpp
+    app/world/combat_feedback.cpp
+    app/world/focus_target.cpp
+    app/world/minimap_manager.cpp
+    app/world/selection_query_service.cpp
+    app/world/unit_queries.cpp
+    app/world/visibility_coordinator.cpp
+    # app/audio -- cue routing and the QML-facing audio proxy.
+    app/audio/audio_coordinator.cpp
+    app/audio/audio_resource_loader.cpp
+    app/audio/audio_system_proxy.cpp
+    app/audio/weather_audio.cpp
+    # app/viewmodels -- the QML API, one coherent slice per model.
+    app/viewmodels/activity_view_model.cpp
+    app/viewmodels/camera_view_model.cpp
+    app/viewmodels/commander_view_model.cpp
+    app/viewmodels/economy_view_model.cpp
+    app/viewmodels/match_setup_view_model.cpp
+    app/viewmodels/minimap_view_model.cpp
+    app/viewmodels/orders_view_model.cpp
+    app/viewmodels/placement_view_model.cpp
+    app/viewmodels/production_view_model.cpp
+    app/viewmodels/save_slots_view_model.cpp
+    app/viewmodels/wave_view_model.cpp
+    # app/models -- Qt item models and image providers.
     app/models/graphics_settings_proxy.cpp
-    app/models/hover_tracker.cpp
     app/models/map_preview_image_provider.cpp
     app/models/minimap_image_provider.cpp
     app/models/selected_units_model.cpp

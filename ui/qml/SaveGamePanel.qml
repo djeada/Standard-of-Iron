@@ -37,7 +37,7 @@ Item {
                 saveListModel.load_from_game();
         }
 
-        target: typeof game !== 'undefined' ? game : null
+        target: typeof game !== 'undefined' ? game.saves : null
     }
 
     Rectangle {

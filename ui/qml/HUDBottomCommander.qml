@@ -8,7 +8,7 @@ RowLayout {
     id: bottomRoot
 
     readonly property var hs: StyleGuide.historical
-    readonly property bool fpv_mode: typeof game !== 'undefined' && game.game_mode === "rpg"
+    readonly property bool fpv_mode: typeof game !== 'undefined' && game.commander.game_mode === "rpg"
 
     property var external_status: null
     property var commander_status: default_status()
@@ -68,8 +68,8 @@ RowLayout {
     }
 
     function refresh_status() {
-        if (typeof game !== 'undefined' && game.get_controlled_commander_status) {
-            commander_status = game.get_controlled_commander_status();
+        if (typeof game !== 'undefined' && game.commander.status) {
+            commander_status = game.commander.status();
             return;
         }
         commander_status = default_status();
@@ -516,10 +516,10 @@ RowLayout {
                                 }
                                 Design.UiSound.activate();
                                 if (bottomRoot.status_value("rally_placing", false)) {
-                                    if (game.cancel_commander_flag_rally)
-                                        game.cancel_commander_flag_rally();
-                                } else if (game.commander_trigger_rally) {
-                                    game.commander_trigger_rally();
+                                    if (game.commander.cancel_flag_rally)
+                                        game.commander.cancel_flag_rally();
+                                } else if (game.commander.trigger_rally) {
+                                    game.commander.trigger_rally();
                                 }
                             }
 
@@ -552,14 +552,14 @@ RowLayout {
                             ToolTip.visible: hovered
                             ToolTip.text: auraButton.allowed ? qsTr("Temporarily empower nearby troops. Every affected soldier receives a visible glow.") : qsTr("The aura is not ready yet.")
                             onClicked: {
-                                if (typeof game === 'undefined' || !game.commander_trigger_aura)
+                                if (typeof game === 'undefined' || !game.commander.trigger_aura)
                                     return;
                                 if (!auraButton.allowed) {
                                     Design.UiSound.warning();
                                     return;
                                 }
                                 Design.UiSound.activate();
-                                game.commander_trigger_aura();
+                                game.commander.trigger_aura();
                             }
 
                             background: Rectangle {

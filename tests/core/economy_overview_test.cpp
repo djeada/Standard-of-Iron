@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "app/core/economy_overview.h"
 #include "app/core/user_settings.h"
+#include "app/economy/economy_overview.h"
 #include "app/viewmodels/economy_view_model.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"

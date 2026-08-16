@@ -7,11 +7,11 @@
 #include <optional>
 #include <vector>
 
-#include "../models/cursor_mode.h"
+#include "app/input/cursor_mode.h"
+#include "app/orders/order_markers.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
 #include "game/systems/target_focus.h"
-#include "order_markers.h"
 
 class CursorManager;
 class ProductionManager;

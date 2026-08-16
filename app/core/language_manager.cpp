@@ -1,4 +1,4 @@
-#include "language_manager.h"
+#include "app/core/language_manager.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -9,7 +9,7 @@
 #include <qtmetamacros.h>
 #include <qtranslator.h>
 
-#include "user_settings.h"
+#include "app/core/user_settings.h"
 
 namespace {
 

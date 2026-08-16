@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "app/core/commander_camera_rig.h"
+#include "app/commander/commander_camera_rig.h"
 #include "core/component.h"
 #include "scene/camera.h"
 

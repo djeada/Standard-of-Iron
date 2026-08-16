@@ -202,7 +202,7 @@ water mist is the fog colour lifted (`k_mist_water_lift`), miasma is the fog col
 hue-shifted violet (`k_mist_miasma_tint`) — at night it stays a dark cold violet
 rather than glowing.
 
-The volumes are built once per level in `app/core/skirmish_loader.cpp`
+The volumes are built once per level in `app/session/skirmish_loader.cpp`
 (`build_mist_volumes`): undead zones first (so the cap never drops them), then river
 polylines — chained back together from their authored waypoint segments and
 Douglas-Peucker-simplified so a 40-waypoint river costs a handful of capsules — then

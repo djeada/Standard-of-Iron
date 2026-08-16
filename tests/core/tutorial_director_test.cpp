@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-#include "app/core/tutorial_director.h"
+#include "app/mission/tutorial_director.h"
 
 using App::Core::TutorialDirector;
 using App::Core::TutorialObservation;

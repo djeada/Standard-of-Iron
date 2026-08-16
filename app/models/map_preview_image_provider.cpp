@@ -1,4 +1,4 @@
-#include "map_preview_image_provider.h"
+#include "app/models/map_preview_image_provider.h"
 
 #include <QMutexLocker>
 

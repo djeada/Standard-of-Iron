@@ -648,7 +648,7 @@ Timed or state-based triggers for dynamic gameplay:
 ```
 
 When a mission carrying that flag finishes loading, the engine attaches
-`App::Core::TutorialDirector` (`app/core/tutorial_director.h`), which walks the
+`App::Core::TutorialDirector` (`app/mission/tutorial_director.h`), which walks the
 player through fifteen fixed steps — selection, movement, attacking a held scouting
 party, gathering each material, building a Home, recruiting, assembling an army,
 breaking a raid, stances, the commander's aura, camera, speed, objectives and a

@@ -31,12 +31,12 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../app/core/game_engine.h"
 #include "../render/graphics_settings.h"
 #include "../render/i_render_backend.h"
 #include "../render/profiling/combat_animation_diagnostics.h"
 #include "../render/profiling/frame_continuity_analyzer.h"
 #include "../render/profiling/frame_profile.h"
+#include "app/core/game_engine.h"
 
 namespace {
 constexpr double k_runtime_benchmark_warmup_seconds = 2.0;
@@ -228,7 +228,7 @@ void GLView::GLRenderer::render() {
 
 void GLView::GLRenderer::observe_runtime_continuity() {
   if (m_continuity_probe == nullptr || m_engine == nullptr || m_engine->is_loading() ||
-      !m_engine->is_campaign_mission() || m_size.isEmpty()) {
+      !m_engine->match_setup()->is_campaign_mission() || m_size.isEmpty()) {
     return;
   }
 
@@ -337,7 +337,7 @@ void GLView::GLRenderer::observe_runtime_benchmark(
     double update_ms,
     double render_ms) {
   if (m_benchmark_seconds <= 0.0 || m_benchmark_complete || m_engine == nullptr ||
-      m_engine->is_loading() || !m_engine->is_campaign_mission()) {
+      m_engine->is_loading() || !m_engine->match_setup()->is_campaign_mission()) {
     return;
   }
 

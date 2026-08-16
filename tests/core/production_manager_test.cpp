@@ -2,10 +2,11 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "app/core/input_command_handler.h"
+#include "app/input/input_command_handler.h"
 #include "game/systems/nav_grid.h"
 #define private public
-#include "app/core/production_manager.h"
+#include "app/economy/production_manager.h"
+#include "app/economy/production_readouts.h"
 #undef private
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -431,9 +432,8 @@ TEST_F(ProductionManagerTest, DirectBuildingPlacementUsesGhostPreviewAndRotation
 }
 
 TEST_F(ProductionManagerTest, MarketplaceConstructionInfoIncludesGoldCost) {
-  ProductionManager manager(&world, &picking_service, &camera);
-
-  const QVariantMap info = manager.get_construction_info(QStringLiteral("marketplace"));
+  const QVariantMap info =
+      App::Economy::construction_info(QStringLiteral("marketplace"));
   const QVariantMap resource_costs = info.value("resource_costs").toMap();
 
   EXPECT_EQ(resource_costs.value("wood").toInt(), 60);
@@ -466,9 +466,8 @@ TEST_F(ProductionManagerTest, DirectMarketplacePlacementSpawnsAndRegistersBuildi
 TEST_F(ProductionManagerTest,
        SelectedMarketplaceStateExposesTradeRatesForOwnedSelection) {
   add_selected_production_building(Game::Units::SpawnType::Marketplace, 2.0F, 3.0F, 1);
-  ProductionManager manager(&world, &picking_service, &camera);
 
-  const QVariantMap state = manager.get_selected_marketplace_state(1);
+  const QVariantMap state = App::Economy::selected_marketplace_state(&world, 1);
   const QVariantMap buy_prices = state.value("buy_prices").toMap();
   const QVariantMap sell_prices = state.value("sell_prices").toMap();
 

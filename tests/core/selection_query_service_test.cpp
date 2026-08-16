@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "app/core/selection_query_service.h"
+#include "app/world/selection_query_service.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/selection_system.h"

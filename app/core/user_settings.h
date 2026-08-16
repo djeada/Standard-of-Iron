@@ -8,9 +8,9 @@
 #include <cmath>
 #include <optional>
 
-#include "../../game/audio/audio_constants.h"
-#include "../../game/audio/audio_settings.h"
-#include "../../render/graphics_settings.h"
+#include "game/audio/audio_constants.h"
+#include "game/audio/audio_settings.h"
+#include "render/graphics_settings.h"
 
 namespace App::Core::UserSettings {
 

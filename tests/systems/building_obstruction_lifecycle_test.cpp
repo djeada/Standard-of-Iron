@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "app/core/game_state_restorer.h"
+#include "app/persistence/game_state_restorer.h"
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"

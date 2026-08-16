@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "app/core/combat_feedback.h"
-#include "app/core/focus_target.h"
+#include "app/world/combat_feedback.h"
+#include "app/world/focus_target.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 

@@ -8,9 +8,9 @@
 #include <cstring>
 #include <limits>
 
-#include "../app/core/user_settings.h"
 #include "../game/accessibility/motion_settings.h"
 #include "../game/accessibility/team_identity.h"
+#include "app/core/user_settings.h"
 
 namespace UserSettings = App::Core::UserSettings;
 
