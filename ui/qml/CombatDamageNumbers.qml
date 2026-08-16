@@ -6,8 +6,9 @@ Item {
 
     anchors.fill: parent
 
-    property var engine: null
-    readonly property var activity: engine !== null && engine.activity ? engine.activity : null
+    property var activitySource: null
+    property var camera: null
+    readonly property var activity: activitySource
     property bool reducedMotion: Design.A11y.reducedMotion
     readonly property int maxActiveBursts: reducedMotion ? 12 : 24
 
@@ -62,11 +63,11 @@ Item {
             scale: root.reducedMotion ? 1.0 : (progress < 0.12 ? 0.8 + progress * 2.2 : Math.max(0.92, 1.06 - progress * 0.14))
 
             function refreshProjection() {
-                if (root.engine === null) {
+                if (root.camera === null) {
                     projected = false;
                     return;
                 }
-                var proj = root.engine.rpg_project_world(worldX, worldY, worldZ);
+                var proj = root.camera.project_world(worldX, worldY, worldZ);
                 projected = !!proj.valid;
                 if (!projected)
                     return;
@@ -146,7 +147,7 @@ Item {
 
     Timer {
         interval: 16
-        running: root.engine !== null && root.visible && effectLayer.children.length > 0
+        running: root.camera !== null && root.visible && effectLayer.children.length > 0
         repeat: true
         onTriggered: {
             for (var i = 0; i < effectLayer.children.length; ++i) {

@@ -34,10 +34,10 @@
 #include <vector>
 
 #include "animation/showcase_pose_manifest.h"
-#include "app/core/commander_control_controller.h"
-#include "app/core/renderer_bootstrap.h"
-#include "app/core/world_bootstrap.h"
-#include "app/utils/movement_utils.h"
+#include "app/commander/commander_control_controller.h"
+#include "app/orders/movement_utils.h"
+#include "app/session/renderer_bootstrap.h"
+#include "app/session/world_bootstrap.h"
 #include "arena_scenario.h"
 #include "arena_scenarios.h"
 #include "game/core/component.h"

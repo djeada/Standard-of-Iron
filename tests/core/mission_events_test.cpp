@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "app/core/mission_setup_coordinator.h"
+#include "app/mission/mission_setup_coordinator.h"
 
 namespace {
 

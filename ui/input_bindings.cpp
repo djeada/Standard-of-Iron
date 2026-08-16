@@ -8,7 +8,7 @@
 
 #include <array>
 
-#include "../app/core/user_settings.h"
+#include "app/core/user_settings.h"
 
 namespace UserSettings = App::Core::UserSettings;
 

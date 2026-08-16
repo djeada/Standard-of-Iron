@@ -100,7 +100,7 @@ so it should be kept in sync if a mechanic is added later.
 - `game/systems/construction_cost_catalog.cpp` — resource cost.
 - `game/systems/combat_system/structure_combat.cpp` — structure height and the
   "buildings deal no damage" attack profile.
-- `app/core/production_manager.cpp` — placement preview, spawn-type mapping, build time.
+- `app/economy/production_manager.cpp` — placement preview, spawn-type mapping, build time.
 - `ui/qml/ProductionPanel.qml`, `ui/qml/design/Icons.qml` — builder card, selection
   panel, glyph. There is deliberately no `temple.png`; the card falls back to the glyph.
 - `tools/map_editor/*` — `ToolType::Temple`, JSON schema enum, mission structure list.

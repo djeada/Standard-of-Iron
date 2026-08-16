@@ -1,4 +1,4 @@
-#include "minimap_image_provider.h"
+#include "app/models/minimap_image_provider.h"
 
 #include <QMutexLocker>
 MinimapImageProvider::MinimapImageProvider()

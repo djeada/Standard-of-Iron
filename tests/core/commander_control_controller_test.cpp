@@ -3,8 +3,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "app/core/commander_control_controller.h"
-#include "app/core/commander_mode_coordinator.h"
+#include "app/commander/commander_control_controller.h"
+#include "app/commander/commander_mode_coordinator.h"
 #include "game/audio/audio_cues.h"
 #include "game/core/component.h"
 #include "game/core/world.h"

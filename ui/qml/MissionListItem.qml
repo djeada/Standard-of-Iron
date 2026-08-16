@@ -19,8 +19,8 @@ Rectangle {
             return "";
         if (mission_data.title)
             return mission_data.title;
-        if (mission_data.mission_id && typeof game !== "undefined" && game.get_mission_definition) {
-            var definition = game.get_mission_definition(mission_data.mission_id);
+        if (mission_data.mission_id && typeof game !== "undefined" && game.setup.mission_definition) {
+            var definition = game.setup.mission_definition(mission_data.mission_id);
             if (definition && definition.title)
                 return definition.title;
         }

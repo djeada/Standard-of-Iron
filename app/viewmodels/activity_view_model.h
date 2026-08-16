@@ -5,26 +5,18 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include "app/world/combat_feedback.h"
+
+namespace Engine::Core {
+struct CombatHitEvent;
+}
+
+namespace App::Core {
+struct ClientContext;
+class ClientHost;
+} // namespace App::Core
+
 namespace App::ViewModels {
-
-class ActivityHost {
-public:
-  ActivityHost() = default;
-  ActivityHost(const ActivityHost&) = delete;
-  ActivityHost(ActivityHost&&) = delete;
-  auto operator=(const ActivityHost&) -> ActivityHost& = delete;
-  auto operator=(ActivityHost&&) -> ActivityHost& = delete;
-  virtual ~ActivityHost() = default;
-
-  virtual void ensure_initialized() = 0;
-  [[nodiscard]] virtual auto unit_activity(qulonglong unit_id) const -> QVariantMap = 0;
-  [[nodiscard]] virtual auto selection_activity_summary() const -> QVariantMap = 0;
-  virtual void toggle_repair_order() = 0;
-  virtual void confirm_repair_at(qreal sx, qreal sy) = 0;
-  virtual void toggle_auto_gather(const QString& priority_product_type) = 0;
-  virtual void clear_inspect_target() = 0;
-  [[nodiscard]] virtual auto pop_combat_damage_events() -> QVariantList = 0;
-};
 
 class ActivityViewModel : public QObject {
   Q_OBJECT
@@ -37,7 +29,9 @@ class ActivityViewModel : public QObject {
       QVariantMap selection_target READ selection_target NOTIFY focus_targets_changed)
 
 public:
-  explicit ActivityViewModel(ActivityHost* host, QObject* parent = nullptr);
+  ActivityViewModel(const App::Core::ClientContext& context,
+                    App::Core::ClientHost& host,
+                    QObject* parent = nullptr);
 
   Q_INVOKABLE [[nodiscard]] QVariantMap unit(qulonglong unit_id) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selection_summary() const;
@@ -59,15 +53,22 @@ public:
   [[nodiscard]] auto attack_target_hint() const -> QVariantMap {
     return m_attack_target_hint;
   }
-
   void set_attack_target_hint(const QVariantMap& hint);
+
+  void record_hit(const Engine::Core::CombatHitEvent& event);
+  void advance_feedback(float dt) { m_feedback.update(dt); }
 
 signals:
   void attack_target_hint_changed();
   void focus_targets_changed();
 
+  void inspect_target_cleared();
+
 private:
-  ActivityHost* m_host = nullptr;
+  const App::Core::ClientContext& m_context;
+  App::Core::ClientHost& m_host;
+
+  App::Core::CombatFeedbackStore m_feedback;
   QVariantMap m_attack_target_hint;
   QVariantMap m_inspect_target;
   QVariantMap m_selection_target;

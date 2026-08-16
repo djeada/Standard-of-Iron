@@ -19,25 +19,40 @@
 #include <optional>
 #include <vector>
 
-#include "../models/cursor_manager.h"
-#include "../models/cursor_mode.h"
-#include "../models/hover_tracker.h"
-#include "../models/selected_units_model.h"
-#include "../utils/engine_view_helpers.h"
-#include "../utils/movement_utils.h"
-#include "../viewmodels/activity_view_model.h"
-#include "../viewmodels/economy_view_model.h"
-#include "../viewmodels/placement_view_model.h"
-#include "../viewmodels/wave_view_model.h"
-#include "ambient_state_manager.h"
-#include "app_scene_context.h"
-#include "camera_controller.h"
-#include "combat_feedback.h"
-#include "commander_control_controller.h"
-#include "commander_input_adapter.h"
-#include "economy_overview.h"
-#include "entity_cache.h"
-#include "focus_target.h"
+#include "app/core/app_scene_context.h"
+#include "app/core/client_context.h"
+#include "app/core/entity_cache.h"
+#include "app/core/runtime_frame_orchestrator.h"
+#include "app/economy/economy_overview.h"
+#include "app/input/cursor_manager.h"
+#include "app/input/cursor_mode.h"
+#include "app/input/hover_tracker.h"
+#include "app/input/input_command_handler.h"
+#include "app/input/rts_camera_controller.h"
+#include "app/mission/mission_setup_coordinator.h"
+#include "app/mission/mission_wave_director.h"
+#include "app/mission/mission_waves.h"
+#include "app/mission/tutorial_director.h"
+#include "app/models/selected_units_model.h"
+#include "app/orders/movement_utils.h"
+#include "app/orders/order_feedback.h"
+#include "app/orders/order_markers.h"
+#include "app/persistence/save_load_coordinator.h"
+#include "app/session/renderer_bootstrap.h"
+#include "app/utils/engine_view_helpers.h"
+#include "app/viewmodels/activity_view_model.h"
+#include "app/viewmodels/camera_view_model.h"
+#include "app/viewmodels/commander_view_model.h"
+#include "app/viewmodels/economy_view_model.h"
+#include "app/viewmodels/match_setup_view_model.h"
+#include "app/viewmodels/minimap_view_model.h"
+#include "app/viewmodels/orders_view_model.h"
+#include "app/viewmodels/placement_view_model.h"
+#include "app/viewmodels/production_view_model.h"
+#include "app/viewmodels/wave_view_model.h"
+#include "app/world/ambient_state_manager.h"
+#include "app/world/focus_target.h"
+#include "app/world/minimap_manager.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/command/command.h"
 #include "game/command/replay.h"
@@ -52,17 +67,6 @@
 #include "game/systems/unit_activity.h"
 #include "game/util/selection_utils.h"
 #include "game/view/selection_controller.h"
-#include "input_command_handler.h"
-#include "minimap_manager.h"
-#include "mission_setup_coordinator.h"
-#include "mission_wave_director.h"
-#include "order_feedback.h"
-#include "order_markers.h"
-#include "render/entity/combat_dust_renderer.h"
-#include "renderer_bootstrap.h"
-#include "runtime_frame_orchestrator.h"
-#include "save_load_coordinator.h"
-#include "tutorial_director.h"
 
 class ProductionManager;
 class CampaignManager;
@@ -121,7 +125,6 @@ namespace Controllers {
 class CommandController;
 }
 namespace Core {
-class CommanderModeCoordinator;
 class SkirmishRuntimeCoordinator;
 class WeatherAudio;
 } // namespace Core
@@ -133,17 +136,13 @@ class AudioSystemProxy;
 class QQuickWindow;
 class LoadingProgressTracker;
 
-class GameEngine : public QObject,
-                   private App::ViewModels::PlacementHost,
-                   private App::ViewModels::ActivityHost {
+class GameEngine : public QObject, private App::Core::ClientHost {
   Q_OBJECT
 public:
   explicit GameEngine(QObject* parent = nullptr);
   ~GameEngine() override;
 
   void cleanup_opengl_resources();
-
-  Q_INVOKABLE void load_campaigns();
 
   Q_PROPERTY(QAbstractItemModel* selected_units_model READ selected_units_model NOTIFY
                  selected_units_changed)
@@ -162,12 +161,6 @@ public:
       int max_troops_per_player READ max_troops_per_player NOTIFY troop_count_changed)
   Q_PROPERTY(QVariantMap selected_player_state READ selected_player_state NOTIFY
                  selected_player_state_changed)
-  Q_PROPERTY(
-      QVariantList available_maps READ available_maps NOTIFY available_maps_changed)
-  Q_PROPERTY(bool maps_loading READ maps_loading NOTIFY maps_loading_changed)
-  Q_PROPERTY(QVariantList available_nations READ available_nations CONSTANT)
-  Q_PROPERTY(QVariantList available_campaigns READ available_campaigns NOTIFY
-                 available_campaigns_changed)
   Q_PROPERTY(int enemy_troops_defeated READ enemy_troops_defeated NOTIFY
                  enemy_troops_defeated_changed)
   Q_PROPERTY(QVariantList owner_info READ get_owner_info NOTIFY owner_info_changed)
@@ -178,7 +171,6 @@ public:
                  NOTIFY selected_player_id_changed)
   Q_PROPERTY(QString last_error READ last_error NOTIFY last_error_changed)
   Q_PROPERTY(QObject* audio_system READ audio_system CONSTANT)
-  Q_PROPERTY(QImage minimap_image READ minimap_image NOTIFY minimap_image_changed)
   Q_PROPERTY(
       bool is_spectator_mode READ is_spectator_mode NOTIFY spectator_mode_changed)
   Q_PROPERTY(bool is_loading READ is_loading NOTIFY is_loading_changed)
@@ -186,24 +178,12 @@ public:
       float loading_progress READ loading_progress NOTIFY loading_progress_changed)
   Q_PROPERTY(
       QString loading_stage_text READ loading_stage_text NOTIFY loading_stage_changed)
-  Q_PROPERTY(
-      bool is_campaign_mission READ is_campaign_mission NOTIFY campaign_mission_changed)
-
-  Q_PROPERTY(bool campaign_completed READ campaign_completed NOTIFY
-                 available_campaigns_changed)
-  Q_PROPERTY(QString control_mode READ control_mode NOTIFY control_mode_changed)
-  Q_PROPERTY(QString game_mode READ game_mode NOTIFY game_mode_changed)
-  Q_PROPERTY(bool commander_control_available READ commander_control_available NOTIFY
-                 commander_control_available_changed)
-  Q_PROPERTY(QObject* commander_input READ commander_input CONSTANT)
-  Q_PROPERTY(bool save_in_progress READ save_in_progress NOTIFY save_progress_changed)
-  Q_PROPERTY(
-      int save_progress_percent READ save_progress_percent NOTIFY save_progress_changed)
-  Q_PROPERTY(
-      QString save_progress_stage READ save_progress_stage NOTIFY save_progress_changed)
-  Q_PROPERTY(
-      QString save_progress_slot READ save_progress_slot NOTIFY save_progress_changed)
-
+  Q_PROPERTY(QObject* camera READ camera_view_model CONSTANT)
+  Q_PROPERTY(QObject* setup READ match_setup_view_model CONSTANT)
+  Q_PROPERTY(QObject* production READ production_view_model CONSTANT)
+  Q_PROPERTY(QObject* orders READ orders_view_model CONSTANT)
+  Q_PROPERTY(QObject* commander READ commander_view_model CONSTANT)
+  Q_PROPERTY(QObject* minimap READ minimap_view_model CONSTANT)
   Q_PROPERTY(QObject* saves READ save_slots_view_model CONSTANT)
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
   Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
@@ -211,85 +191,6 @@ public:
   Q_PROPERTY(QObject* economy READ economy_view_model CONSTANT)
   Q_PROPERTY(QObject* tutorial READ tutorial_view_model CONSTANT)
 
-  Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
-  Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
-  Q_INVOKABLE void on_right_double_click(qreal sx, qreal sy);
-  Q_INVOKABLE [[nodiscard]] bool on_right_press(qreal sx, qreal sy);
-  Q_INVOKABLE void on_right_move(qreal sx, qreal sy);
-  Q_INVOKABLE void on_right_release(qreal sx, qreal sy);
-  Q_INVOKABLE void on_right_drag_orient(qreal sx, qreal sy);
-  Q_INVOKABLE void on_click_select(qreal sx, qreal sy, bool additive = false);
-  Q_INVOKABLE void
-  on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2, bool additive = false);
-  Q_INVOKABLE void select_all_troops();
-  Q_INVOKABLE void select_unit_by_id(qulonglong unit_id);
-  Q_INVOKABLE void select_selected_units_by_type(const QString& unit_type);
-  Q_INVOKABLE void set_hover_at_screen(qreal sx, qreal sy);
-  Q_INVOKABLE void on_attack_click(qreal sx, qreal sy);
-  Q_INVOKABLE void on_stop_command();
-  Q_INVOKABLE void on_hold_command();
-  Q_INVOKABLE void on_gate_command();
-  Q_INVOKABLE void on_guard_command();
-  Q_INVOKABLE void on_run_command();
-  Q_INVOKABLE void on_heal_command();
-  Q_INVOKABLE void on_build_command();
-  Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
-  Q_INVOKABLE void on_civilian_delivery_click(qreal sx, qreal sy);
-
-  [[nodiscard]] bool any_selected_in_hold_mode() const;
-  [[nodiscard]] bool any_selected_in_guard_mode() const;
-  [[nodiscard]] bool any_selected_in_run_mode() const;
-  Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
-  Q_INVOKABLE void toggle_commander_control_mode();
-  Q_INVOKABLE void commander_key_down(int key, int modifiers = 0);
-  Q_INVOKABLE void commander_key_up(int key, int modifiers = 0);
-  Q_INVOKABLE void commander_primary_action();
-  Q_INVOKABLE void commander_primary_action_down();
-  Q_INVOKABLE void commander_primary_action_up();
-  Q_INVOKABLE void commander_secondary_action_down();
-  Q_INVOKABLE void commander_secondary_action_up();
-  Q_INVOKABLE void commander_trigger_aura();
-  Q_INVOKABLE void commander_trigger_rally();
-  Q_INVOKABLE void begin_commander_flag_rally();
-  Q_INVOKABLE void confirm_commander_flag_rally(qreal sx, qreal sy);
-  Q_INVOKABLE void cancel_commander_flag_rally();
-  Q_INVOKABLE void begin_barracks_rally_placement();
-  Q_INVOKABLE void confirm_barracks_rally_placement(qreal sx, qreal sy);
-  Q_INVOKABLE void cancel_barracks_rally_placement();
-  [[nodiscard]] bool is_placing_commander_rally() const;
-  [[nodiscard]] bool has_commander_rally_preview() const;
-  [[nodiscard]] QVector3D get_commander_rally_preview() const;
-  [[nodiscard]] bool has_commander_rally_flag() const;
-  [[nodiscard]] QVector3D get_commander_rally_flag_position() const;
-  Q_INVOKABLE void commander_dodge();
-  Q_INVOKABLE void commander_jump();
-  Q_INVOKABLE void commander_cycle_lock_on();
-  Q_INVOKABLE void commander_special_action();
-  Q_INVOKABLE void commander_vanguard_rush();
-  Q_INVOKABLE void commander_second_wind();
-  Q_INVOKABLE void commander_toggle_camera_mode();
-
-  void commander_toggle_weapon_stance();
-  Q_INVOKABLE void commander_mouse_move(qreal dx, qreal dy);
-  Q_INVOKABLE void
-  commander_mouse_look_at(qreal sx, qreal sy, qreal center_sx, qreal center_sy);
-  Q_INVOKABLE void commander_center_mouse(qreal center_sx, qreal center_sy);
-
-  Q_INVOKABLE void camera_move(float dx, float dz);
-  Q_INVOKABLE void camera_elevate(float dy);
-  Q_INVOKABLE void reset_camera();
-  Q_INVOKABLE void camera_zoom(float delta);
-  Q_INVOKABLE [[nodiscard]] float camera_distance() const;
-  Q_INVOKABLE void camera_yaw(float degrees);
-  Q_INVOKABLE void camera_orbit(float yaw_deg, float pitch_deg);
-  Q_INVOKABLE void camera_orbit_direction(int direction, bool shift);
-  Q_INVOKABLE void camera_follow_selection(bool enable);
-  Q_INVOKABLE void camera_set_follow_lerp(float alpha);
-  Q_INVOKABLE void
-  on_minimap_left_click(qreal mx, qreal my, qreal minimap_width, qreal minimap_height);
-  Q_INVOKABLE void
-  on_minimap_right_click(qreal mx, qreal my, qreal minimap_width, qreal minimap_height);
-  Q_INVOKABLE void start_loading_maps();
   Q_INVOKABLE void set_audio_frontend_context(const QString& context);
 
   Q_INVOKABLE void set_paused(bool paused);
@@ -324,52 +225,26 @@ public:
     }
   }
 
-  Q_INVOKABLE [[nodiscard]] bool has_selected_type(const QString& type) const;
-  Q_INVOKABLE void recruit_near_selected(const QString& unit_type);
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_home_production_state() const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_builder_production_state() const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_marketplace_state() const;
-  Q_INVOKABLE bool marketplace_buy_resource(const QString& resource_key);
-  Q_INVOKABLE bool marketplace_sell_resource(const QString& resource_key);
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_controlled_commander_status() const;
-  Q_INVOKABLE QVariantList pop_rpg_damage_events();
-  Q_INVOKABLE QVariantMap rpg_project_world(float x, float y, float z) const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap
-  get_unit_production_info(const QString& unit_type, const QString& nation_id) const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_hud_action_states() const;
-  Q_INVOKABLE [[nodiscard]] QString get_selected_units_command_mode() const;
-  Q_INVOKABLE [[nodiscard]] QString
-  get_selected_units_toggle_state(const QString& mode) const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_units_mode_availability() const;
-  Q_INVOKABLE void set_rally_at_screen(qreal sx, qreal sy);
-  Q_INVOKABLE [[nodiscard]] QVariantList available_maps() const;
-  [[nodiscard]] QVariantList available_nations() const;
-  Q_INVOKABLE [[nodiscard]] QVariantList
-  available_commanders(const QString& nation_id) const;
-  [[nodiscard]] QVariantList available_campaigns() const;
-  [[nodiscard]] bool maps_loading() const { return m_maps_loading; }
-  Q_INVOKABLE void start_skirmish(const QString& map_path,
-                                  const QVariantList& player_configs = QVariantList());
-
   void set_replay_record_path(const QString& path);
   auto start_replay(const QString& path) -> bool;
   [[nodiscard]] auto replay_playing() const -> bool;
 
   void set_replay_verify_exit(bool enabled) { m_replay_verify_exit = enabled; }
-  Q_INVOKABLE void start_campaign_mission(const QString& campaign_id);
-  Q_INVOKABLE void start_mission_file(const QString& file_path);
-  void start_tutorial();
-  Q_INVOKABLE void mark_current_mission_completed();
-  Q_INVOKABLE [[nodiscard]] QVariantMap get_current_mission_objectives() const;
-  Q_INVOKABLE [[nodiscard]] QVariantMap
-  get_mission_definition(const QString& mission_id) const;
   Q_INVOKABLE void open_settings();
-  Q_INVOKABLE void save_game_to_slot(const QString& slot_name);
-  Q_INVOKABLE void quicksave();
-  Q_INVOKABLE void autosave();
-  Q_INVOKABLE void cancel_active_save();
-  Q_INVOKABLE void load_game_from_slot(const QString& slot_name);
+  [[nodiscard]] QObject* camera_view_model() const;
+  [[nodiscard]] QObject* match_setup_view_model() const;
+  [[nodiscard]] QObject* production_view_model() const;
+  [[nodiscard]] QObject* orders_view_model() const;
+  void launch_match(const App::Core::MatchLaunch& launch);
+
+  [[nodiscard]] App::ViewModels::MatchSetupViewModel* match_setup() const {
+    return m_match_setup_view_model.get();
+  }
+  [[nodiscard]] App::ViewModels::MinimapViewModel* minimap_model() const {
+    return m_minimap_view_model.get();
+  }
+  [[nodiscard]] QObject* commander_view_model() const;
+  [[nodiscard]] QObject* minimap_view_model() const;
   [[nodiscard]] QObject* save_slots_view_model() const;
   [[nodiscard]] QObject* placement_view_model() const;
   [[nodiscard]] QObject* wave_view_model() const;
@@ -377,19 +252,9 @@ public:
   [[nodiscard]] QObject* activity_view_model() const;
   [[nodiscard]] QObject* economy_view_model() const;
 
-  [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
-  [[nodiscard]] int save_progress_percent() const { return m_save_progress_percent; }
-  [[nodiscard]] QString save_progress_stage() const { return m_save_progress_stage; }
-  [[nodiscard]] QString save_progress_slot() const { return m_save_progress_slot; }
   Q_INVOKABLE void exit_game();
   Q_INVOKABLE [[nodiscard]] QVariantList get_owner_info() const;
   [[nodiscard]] QString local_player_nation() const;
-  Q_INVOKABLE [[nodiscard]] QImage
-  generate_map_preview(const QString& map_path,
-                       const QVariantList& player_configs) const;
-
-  [[nodiscard]] QImage minimap_image() const;
-
   [[nodiscard]] bool is_spectator_mode() const { return m_level.is_spectator_mode; }
 
   [[nodiscard]] bool is_loading() const {
@@ -399,19 +264,16 @@ public:
   [[nodiscard]] float loading_progress() const;
   [[nodiscard]] QString loading_stage_text() const;
 
-  [[nodiscard]] bool is_campaign_mission() const;
   [[nodiscard]] bool release_self_test_mission_ready() const;
 
   [[nodiscard]] QString release_self_test_pending_reason() const;
-  [[nodiscard]] bool campaign_completed() const;
-  [[nodiscard]] QString control_mode() const;
-  [[nodiscard]] QString game_mode() const;
-  [[nodiscard]] bool commander_control_available() const;
-  [[nodiscard]] QObject* commander_input();
 
   QObject* audio_system();
 
-  void setWindow(QQuickWindow* w) { m_window = w; }
+  void setWindow(QQuickWindow* w) {
+    m_window = w;
+    publish_client_context();
+  }
 
   [[nodiscard]] bool consume_screenshot_request();
   void submit_frame_image(const QImage& image);
@@ -424,33 +286,6 @@ public:
   void update(float dt);
   void render(int pixel_width, int pixel_height);
   void set_input_viewport_size(qreal width, qreal height);
-
-  void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;
-  bool get_unit_type_key(Engine::Core::EntityID id, QString& type_key) const;
-  bool get_unit_info(Engine::Core::EntityID id,
-                     QString& name,
-                     int& health,
-                     int& max_health,
-                     bool& is_building,
-                     bool& alive,
-                     QString& nation) const;
-  bool get_unit_stamina_info(Engine::Core::EntityID id,
-                             float& stamina_ratio,
-                             bool& is_running,
-                             bool& can_run) const;
-  [[nodiscard]] Game::Systems::UnitActivity
-  get_unit_activity_state(Engine::Core::EntityID id) const;
-
-  [[nodiscard]] auto unit_activity(qulonglong unit_id) const -> QVariantMap override;
-  [[nodiscard]] auto selection_activity_summary() const -> QVariantMap override;
-  void toggle_repair_order() override;
-  void toggle_auto_gather(const QString& priority_product_type) override;
-  void confirm_repair_at(qreal sx, qreal sy) override;
-  void clear_inspect_target() override;
-  [[nodiscard]] auto pop_combat_damage_events() -> QVariantList override;
-
-  [[nodiscard]] bool has_patrol_preview_waypoint() const;
-  [[nodiscard]] QVector3D get_patrol_preview_waypoint() const;
 
 private:
   struct RuntimeState {
@@ -472,69 +307,14 @@ private:
   using PendingMissionWave = App::Core::PendingMissionWave;
   using PendingMissionEvent = App::Core::PendingMissionEvent;
   using MissionWaveDirector = App::Core::MissionWaveDirector;
-  enum class PlayerControlMode {
-    Rts,
-    Commander
-  };
-  enum class GameMode {
-    Rts,
-    Rpg
-  };
-  struct RightMouseGestureState {
-    QPointF press_position;
-    bool active = false;
-    bool dragged = false;
-    bool suppress_release_click = false;
-    bool double_click_handled = false;
-    bool placement_was_active_on_press = false;
-    bool started_formation_placement = false;
-
-    void reset() {
-      press_position = QPointF();
-      active = false;
-      dragged = false;
-      suppress_release_click = false;
-      double_click_handled = false;
-      placement_was_active_on_press = false;
-      started_formation_placement = false;
-    }
-  };
-  struct CameraSnapshot {
-    QVector3D position{0.0F, 0.0F, 0.0F};
-    QVector3D target{0.0F, 0.0F, 1.0F};
-    QVector3D up{0.0F, 1.0F, 0.0F};
-    bool follow_selection = false;
-    bool valid = false;
-  };
   bool screen_to_ground(const QPointF& screen_pt, QVector3D& out_world);
   bool world_to_screen(const QVector3D& world, QPointF& out_screen) const;
-  [[nodiscard]] Engine::Core::Entity* find_local_commander() const;
-  void request_enter_commander_control_mode();
-  void request_exit_commander_control_mode();
-  void enter_rts_runtime_mode();
-  void enter_commander_runtime_mode();
-  void exit_commander_runtime_mode();
-  void set_active_camera(Render::GL::Camera* camera);
-  [[nodiscard]] auto runtime_time_effect_scale(float scaled_dt) -> float;
   void note_dropped_simulation_ticks(std::uint64_t dropped, float real_dt);
   void update_active_runtime_simulation(float dt);
-  [[nodiscard]] auto
-  should_render_selected_entity(Engine::Core::EntityID id) const -> bool;
-  void render_runtime_mode_effects();
-  void update_rts_control_mode(float dt);
-  void update_commander_control_mode(float dt);
-  [[nodiscard]] Engine::Core::Entity* controlled_commander_entity();
-  void store_rts_selection();
-  void select_controlled_commander();
-  void restore_rts_selection();
-  void clear_controlled_commander_state();
-  void poll_commander_mouse_look();
-  void reset_commander_input();
   void sync_selection_flags();
   void sync_attack_targeting();
   void sync_attack_range_rings();
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
-  [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
   void sync_selected_player_state();
   void sync_economy_state();
   [[nodiscard]] auto
@@ -542,7 +322,6 @@ private:
   void reset_economy_coach();
   void sync_focus_targets();
   void sync_target_focus_markers();
-  void record_combat_hit(const Engine::Core::CombatHitEvent& e);
   [[nodiscard]] auto
   describe_focus_entity(Engine::Core::EntityID id) const -> App::Core::FocusTargetInfo;
   void sync_scatter_world_props();
@@ -563,8 +342,6 @@ private:
     QString reference;
     QVariantList player_configs;
   };
-  auto marketplace_trade(const QString& resource_key,
-                         Game::Command::TradeDirection direction) -> bool;
   void arm_replay_for_started_match();
   void finish_replay_verification_if_done();
   bool m_replay_verify_exit = false;
@@ -589,19 +366,26 @@ private:
   void activate_tutorial_if_configured();
   [[nodiscard]] auto
   build_tutorial_observation() const -> App::Core::TutorialObservation;
-  void apply_game_mode_render_policy();
   void update_loading_overlay();
   void update_cursor_position();
-  void restore_controlled_commander_direct_control_if_ready();
   void on_frame_image_captured(const QImage& image);
   void begin_save(const QString& slot_name,
                   Game::Systems::Save::SlotKind kind,
                   int autosave_retention);
   void connect_save_service_signals();
+  void save_game_to_slot(const QString& slot_name);
+  void quicksave();
+  void autosave();
+  void cancel_active_save();
+  void load_game_from_slot(const QString& slot_name);
   void restart_autosave_timer();
-  void seed_commander_rally_preview_from_view_center();
-  void seed_barracks_rally_preview_from_selection();
 
+  std::unique_ptr<App::ViewModels::CameraViewModel> m_camera_view_model;
+  std::unique_ptr<App::ViewModels::MatchSetupViewModel> m_match_setup_view_model;
+  std::unique_ptr<App::ViewModels::ProductionViewModel> m_production_view_model;
+  std::unique_ptr<App::ViewModels::OrdersViewModel> m_orders_view_model;
+  std::unique_ptr<App::ViewModels::MinimapViewModel> m_minimap_view_model;
+  std::unique_ptr<App::ViewModels::CommanderViewModel> m_commander_view_model;
   std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
@@ -609,14 +393,14 @@ private:
   std::unique_ptr<App::ViewModels::EconomyViewModel> m_economy_view_model;
   std::unique_ptr<App::Core::TutorialDirector> m_tutorial_director;
 
-  [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const override;
-  [[nodiscard]] const ViewportState& viewport() const override { return m_viewport; }
-  [[nodiscard]] int local_owner_id() const override { return m_runtime.local_owner_id; }
   void set_cursor_mode(CursorMode mode) override;
-  [[nodiscard]] InputCommandHandler* input_handler() const override;
-  [[nodiscard]] App::Controllers::CommandController*
-  command_controller() const override;
-  [[nodiscard]] ProductionManager* production_manager() const override;
+
+  void apply_game_mode_render_policy();
+  void set_active_camera(Render::GL::Camera* camera);
+  void get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out) const;
+
+  void publish_client_context();
+  App::Core::ClientContext m_client;
 
   std::unique_ptr<Game::Session::SessionContext> m_session;
   std::unique_ptr<Game::Session::ScopedSession> m_session_scope;
@@ -646,7 +430,6 @@ private:
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   App::Core::OrderMarkerStore m_order_markers;
   std::vector<Game::Systems::TargetFocusMarker> m_target_focus;
-  App::Core::CombatFeedbackStore m_combat_feedback;
   QVariantMap m_inspect_target;
   QVariantMap m_selection_target;
   QVariantMap m_attack_target_hint;
@@ -656,8 +439,8 @@ private:
   std::unique_ptr<Game::Map::MapCatalog> m_map_catalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audio_event_handler;
   std::unique_ptr<AudioCoordinator> m_audio_coordinator;
-  std::unique_ptr<App::Core::CommanderModeCoordinator> m_commander_mode;
   std::unique_ptr<App::Core::MissionSetupCoordinator> m_mission_setup;
+  App::Core::MissionWaves m_mission_waves;
   std::unique_ptr<App::Core::SaveLoadCoordinator> m_save_load_coordinator;
   std::unique_ptr<App::Core::SkirmishRuntimeCoordinator> m_skirmish_runtime;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
@@ -666,25 +449,16 @@ private:
   std::unique_ptr<VisibilityCoordinator> m_visibility_coordinator;
   std::unique_ptr<AmbientStateManager> m_ambient_state_manager;
   std::unique_ptr<InputCommandHandler> m_input_handler;
-  std::unique_ptr<CameraController> m_camera_controller;
+  std::unique_ptr<RtsCameraController> m_camera_controller;
   std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
   std::unique_ptr<ProductionManager> m_production_manager;
   std::unique_ptr<CampaignManager> m_campaign_manager;
   std::unique_ptr<SelectionQueryService> m_selection_query_service;
+  QVariantList m_catalogued_maps;
   QQuickWindow* m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
   bool m_release_self_test_mode = false;
-  bool m_follow_selection_enabled = false;
-  PlayerControlMode m_control_mode = PlayerControlMode::Rts;
-  GameMode m_game_mode = GameMode::Rts;
-  Engine::Core::EntityID m_controlled_commander_id = 0;
-  std::vector<Engine::Core::EntityID> m_saved_rts_selection_ids;
-  CameraSnapshot m_rts_camera_snapshot;
-  RightMouseGestureState m_right_mouse_gesture;
-  CommanderControlController m_commander_control;
-  Render::GL::RpgTelegraphRenderer m_rpg_telegraphs;
-  CommanderInputAdapter m_commander_input;
   Game::Systems::LevelSnapshot m_level;
   SelectedUnitsModel* m_selected_units_model = nullptr;
   int m_enemy_troops_defeated = 0;
@@ -697,8 +471,6 @@ private:
   bool m_economy_coach_available = false;
   QElapsedTimer m_economy_refresh_timer;
   std::uint64_t m_last_world_props_revision = 0;
-  QVariantList m_available_maps;
-  bool m_maps_loading = false;
   bool m_loading_overlay_active = false;
   std::atomic_bool m_loading_overlay_wait_for_first_frame{false};
   int m_loading_overlay_frames_remaining = 0;
@@ -710,8 +482,6 @@ private:
   quint64 m_active_save_job = 0;
   std::atomic_bool m_screenshot_requested{false};
   QString m_screenshot_target_slot;
-  int m_save_progress_percent = 0;
-  QString m_save_progress_stage;
   QString m_save_progress_slot;
   QTimer m_autosave_timer;
   float m_campaign_mission_elapsed = 0.0F;
@@ -743,23 +513,8 @@ private:
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
       m_mission_announcement_subscription;
 
-  struct RpgDamageEvent {
-    float wx{0.0F};
-    float wy{0.0F};
-    float wz{0.0F};
-    int damage{0};
-    float damage_ratio{0.0F};
-    int lane{0};
-    bool killing_blow{false};
-  };
-  static constexpr int k_max_rpg_damage_events = 96;
-  std::vector<RpgDamageEvent> m_rpg_damage_events;
-  std::uint32_t m_rpg_damage_event_sequence{0};
-  float m_rpg_hit_stop_timer{0.0F};
-  float m_rpg_hit_stop_total{0.10F};
   EntityCache m_entity_cache;
   RuntimeFrameOrchestrator m_frame_orchestrator;
-  std::optional<QVector3D> m_commander_rally_preview_pos;
   static constexpr float k_dropped_tick_report_interval = 5.0F;
   std::uint64_t m_dropped_simulation_ticks{0};
   float m_dropped_tick_report_cooldown{0.0F};
@@ -774,31 +529,18 @@ signals:
   void cursor_mode_changed();
   void global_cursor_changed();
   void troop_count_changed();
-  void available_maps_changed();
-  void available_campaigns_changed();
   void owner_info_changed();
   void selected_player_id_changed();
   void selected_player_state_changed();
   void last_error_changed();
-  void maps_loading_changed();
-  void minimap_image_changed();
-  void save_slots_changed();
-  void hold_mode_changed(bool active);
-  void gate_mode_changed(const QString& mode);
-  void guard_mode_changed(bool active);
-  void formation_mode_changed(bool active);
-  void run_mode_changed(bool active);
   void spectator_mode_changed();
   void is_loading_changed();
   void loading_progress_changed(float progress);
   void loading_stage_changed(QString stage_text);
-  void campaign_mission_changed();
   void control_mode_changed();
   void game_mode_changed();
   void commander_control_available_changed();
   void mission_announcement(QString text);
   void order_feedback(QString kind, bool accepted, QString message);
-  void save_progress_changed();
-  void save_completed(QString slot_name, bool success, QString error);
   void autosave_settings_changed();
 };

@@ -18,7 +18,7 @@ Rectangle {
             preview_id = "";
             return;
         }
-        if (typeof game === "undefined" || !game.generate_map_preview)
+        if (typeof game === "undefined" || !game.setup.map_preview)
             return;
         loading = true;
         try {
@@ -30,7 +30,7 @@ Rectangle {
                 hash = hash & hash;
             }
             var new_id = map_path + "_" + hash + "_" + Date.now();
-            var preview = game.generate_map_preview(map_path, player_configs);
+            var preview = game.setup.map_preview(map_path, player_configs);
             if (typeof map_preview_provider !== "undefined") {
                 map_preview_provider.set_preview_image(new_id, preview);
                 preview_id = new_id;

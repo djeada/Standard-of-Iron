@@ -3,11 +3,11 @@
 #include <numbers>
 #include <vector>
 
-#include "app/controllers/command_controller.h"
-#include "app/core/input_command_handler.h"
-#include "app/models/cursor_manager.h"
-#include "app/models/cursor_mode.h"
-#include "app/models/hover_tracker.h"
+#include "app/input/cursor_manager.h"
+#include "app/input/cursor_mode.h"
+#include "app/input/hover_tracker.h"
+#include "app/input/input_command_handler.h"
+#include "app/orders/command_controller.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
@@ -395,9 +395,9 @@ TEST_F(InputCommandHandlerTest, FormationSlotsKeepTheirMeaningAcrossSelections) 
   QPointF const ground_screen = world_to_screen(QVector3D(4.0F, 0.0F, 2.0F));
   ASSERT_TRUE(
       input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
-  ASSERT_TRUE(command_controller->is_placing_formation());
+  ASSERT_TRUE(command_controller->formation().is_placing_formation());
 
-  const QStringList mixed = command_controller->formation_intents();
+  const QStringList mixed = command_controller->formation().formation_intents();
   EXPECT_EQ(mixed.size(), 7);
   EXPECT_EQ(mixed.at(0), QStringLiteral("faction_default"));
   EXPECT_EQ(mixed.at(1), QStringLiteral("line"));
@@ -413,7 +413,7 @@ TEST_F(InputCommandHandlerTest, FormationSlotsKeepTheirMeaningAcrossSelections) 
   ASSERT_TRUE(
       input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
 
-  EXPECT_EQ(command_controller->formation_intents(), mixed);
+  EXPECT_EQ(command_controller->formation().formation_intents(), mixed);
 }
 
 TEST_F(InputCommandHandlerTest, FormationsTheSelectionCannotFieldCarryAReason) {
@@ -428,18 +428,20 @@ TEST_F(InputCommandHandlerTest, FormationsTheSelectionCannotFieldCarryAReason) {
   ASSERT_TRUE(
       input_handler->on_right_press(ground_screen.x(), ground_screen.y(), 1, viewport));
 
-  const QString reason = command_controller->formation_intent_unavailable_reason(
-      QStringLiteral("encirclement"));
+  const QString reason =
+      command_controller->formation().formation_intent_unavailable_reason(
+          QStringLiteral("encirclement"));
   EXPECT_FALSE(reason.isEmpty());
 
   EXPECT_TRUE(
-      command_controller
-          ->formation_intent_unavailable_reason(QStringLiteral("faction_default"))
+      command_controller->formation()
+          .formation_intent_unavailable_reason(QStringLiteral("faction_default"))
           .isEmpty());
 }
 
 TEST_F(InputCommandHandlerTest, DoctrineChoicesAreOfferedFromTheRegistryNotAFixedList) {
-  const QVariantList options = command_controller->formation_doctrine_options();
+  const QVariantList options =
+      command_controller->formation().formation_doctrine_options();
   ASSERT_GE(options.size(), 2);
 
   EXPECT_TRUE(options.at(0).toMap()[QStringLiteral("id")].toString().isEmpty());
@@ -467,20 +469,24 @@ TEST_F(InputCommandHandlerTest, ThePlacementArrowPointsWhereTheUnitsEndUpFacing)
   QPointF const anchor_screen = world_to_screen(anchor);
   ASSERT_TRUE(
       input_handler->on_right_press(anchor_screen.x(), anchor_screen.y(), 1, viewport));
-  ASSERT_TRUE(command_controller->is_placing_formation());
+  ASSERT_TRUE(command_controller->formation().is_placing_formation());
 
   const QVector3D orient_target(-6.0F, 0.0F, 0.0F);
   QPointF const orient_screen = world_to_screen(orient_target);
   input_handler->on_right_drag_orient(orient_screen.x(), orient_screen.y(), viewport);
 
   const QVector3D dragged =
-      orient_target - command_controller->get_formation_placement_position();
+      orient_target -
+      command_controller->formation().get_formation_placement_position();
   float const dragged_degrees =
       std::atan2(dragged.x(), dragged.z()) * 180.0F / std::numbers::pi_v<float>;
 
-  float const arrow_degrees = command_controller->get_formation_facing_degrees();
+  float const arrow_degrees =
+      command_controller->formation().get_formation_facing_degrees();
   EXPECT_NEAR(arrow_degrees, dragged_degrees, 0.5F);
-  EXPECT_NEAR(command_controller->formation_preview().facing, arrow_degrees, 0.001F);
+  EXPECT_NEAR(command_controller->formation().formation_preview().facing,
+              arrow_degrees,
+              0.001F);
 
   input_handler->on_formation_confirm();
 
@@ -504,12 +510,15 @@ TEST_F(InputCommandHandlerTest, UntouchedPlacementFacesAwayFromTheUnitsThatMarch
   ASSERT_TRUE(
       input_handler->on_right_press(anchor_screen.x(), anchor_screen.y(), 1, viewport));
 
-  const QVector3D anchor = command_controller->get_formation_placement_position();
+  const QVector3D anchor =
+      command_controller->formation().get_formation_placement_position();
   const QVector3D march(anchor.x() - 0.0F, 0.0F, anchor.z() - (-6.0F));
   float const march_degrees =
       std::atan2(march.x(), march.z()) * 180.0F / std::numbers::pi_v<float>;
 
-  EXPECT_NEAR(command_controller->get_formation_facing_degrees(), march_degrees, 0.5F);
+  EXPECT_NEAR(command_controller->formation().get_formation_facing_degrees(),
+              march_degrees,
+              0.5F);
 
   input_handler->on_formation_confirm();
 

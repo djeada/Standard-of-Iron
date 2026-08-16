@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "app/core/weather_audio.h"
+#include "app/audio/weather_audio.h"
 #include "game/map/map_definition.h"
 #include "game/systems/rain_manager.h"
 

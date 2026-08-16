@@ -95,7 +95,7 @@ teaching goal, and a spectated match has no economy to run.
 
 ## Where the numbers come from
 
-`app/core/economy_overview.cpp` is the only place that assembles them, and it reads:
+`app/economy/economy_overview.cpp` is the only place that assembles them, and it reads:
 
 - `construction_cost_info` / `construction_build_time` — what a structure costs and how
   long a builder works on it. Data-driven from `assets/data/construction/catalog.json`.

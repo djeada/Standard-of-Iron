@@ -8,7 +8,9 @@ Rectangle {
     id: productionPanel
 
     property int selection_tick: 0
-    property var game_instance: null
+    property var production: null
+    property var placement: null
+    property var player_state: null
     readonly property var hs: StyleGuide.historical
 
     signal recruit_unit(string unit_type)
@@ -112,8 +114,8 @@ Rectangle {
     }
 
     function get_unit_production_info(unit_type, nation_id) {
-        if (productionPanel.game_instance && productionPanel.game_instance.get_unit_production_info)
-            return productionPanel.game_instance.get_unit_production_info(unit_type, nation_id || "");
+        if (productionPanel.production && productionPanel.production.unit_info)
+            return productionPanel.production.unit_info(unit_type, nation_id || "");
         return {
             "cost": 50,
             "population_cost": 50,
@@ -125,8 +127,8 @@ Rectangle {
     }
 
     function get_construction_info(item_type) {
-        if (productionPanel.game_instance && productionPanel.game_instance.placement)
-            return productionPanel.game_instance.placement.get_construction_info(item_type || "");
+        if (productionPanel.production && productionPanel.placement)
+            return productionPanel.placement.get_construction_info(item_type || "");
         return {
             "build_time": 10,
             "resource_costs": {},
@@ -135,8 +137,8 @@ Rectangle {
     }
 
     function current_resources() {
-        if (productionPanel.game_instance && productionPanel.game_instance.selected_player_state && productionPanel.game_instance.selected_player_state.resources)
-            return productionPanel.game_instance.selected_player_state.resources;
+        if (productionPanel.production && productionPanel.player_state && productionPanel.player_state.resources)
+            return productionPanel.player_state.resources;
         return {};
     }
 
@@ -313,7 +315,7 @@ Rectangle {
             spacing: 8
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
 
                 width: parent.width
                 height: productionContent.height + 16
@@ -326,7 +328,7 @@ Rectangle {
                 Column {
                     id: productionContent
 
-                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_production_state) ? productionPanel.game_instance.get_selected_production_state() : productionPanel.default_production_state())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -495,7 +497,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
 
                 width: parent.width
                 height: unitGridContent.height + 16
@@ -508,7 +510,7 @@ Rectangle {
                 Column {
                     id: unitGridContent
 
-                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_production_state) ? productionPanel.game_instance.get_selected_production_state() : productionPanel.default_production_state())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -1704,7 +1706,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_home: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home")))
+                property bool has_home: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("home")))
 
                 width: parent.width
                 height: homeProductionContent.height + 16
@@ -1717,7 +1719,7 @@ Rectangle {
                 Column {
                     id: homeProductionContent
 
-                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_home_production_state) ? productionPanel.game_instance.get_selected_home_production_state() : productionPanel.default_production_state())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_home_state) ? productionPanel.production.selected_home_state() : productionPanel.default_production_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -1857,16 +1859,16 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
 
                 width: parent.width
                 height: 1
                 color: "#3B2F24"
-                visible: has_barracks || (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home"))
+                visible: has_barracks || (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("home"))
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
 
                 width: parent.width
                 height: rallyContent.height + 12
@@ -1879,7 +1881,7 @@ Rectangle {
                 Column {
                     id: rallyContent
 
-                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_production_state) ? productionPanel.game_instance.get_selected_production_state() : productionPanel.default_production_state())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
                     property bool placing_barracks_rally: typeof gameView !== 'undefined' && gameView.cursor_mode === "place_barracks_rally"
 
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -1937,15 +1939,15 @@ Rectangle {
             }
 
             Item {
-                property bool has_barracks_selected: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
-                property bool has_home_selected: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home")))
+                property bool has_barracks_selected: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
+                property bool has_home_selected: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("home")))
 
                 height: 20
                 visible: !has_barracks_selected && !has_home_selected
             }
 
             Rectangle {
-                property bool has_builder: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("builder")))
+                property bool has_builder: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("builder")))
 
                 width: parent.width
                 height: builderProductionContent.height + 16
@@ -1958,7 +1960,7 @@ Rectangle {
                 Column {
                     id: builderProductionContent
 
-                    property var builder_prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_builder_production_state) ? productionPanel.game_instance.get_selected_builder_production_state() : {
+                    property var builder_prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_builder_state) ? productionPanel.production.selected_builder_state() : {
                             "in_progress": false,
                             "build_time": 10,
                             "time_remaining": 0,
@@ -3214,7 +3216,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_marketplace_selected: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("marketplace")))
+                property bool has_marketplace_selected: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("marketplace")))
 
                 width: parent.width
                 height: marketplaceContent.height + 16
@@ -3227,7 +3229,7 @@ Rectangle {
                 Column {
                     id: marketplaceContent
 
-                    property var market_state: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_marketplace_state) ? productionPanel.game_instance.get_selected_marketplace_state() : productionPanel.default_marketplace_state())
+                    property var market_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_marketplace_state) ? productionPanel.production.selected_marketplace_state() : productionPanel.default_marketplace_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -3351,7 +3353,7 @@ Rectangle {
                                                 return;
                                             }
                                             Design.UiSound.activate();
-                                            productionPanel.game_instance.marketplace_buy_resource(resource_key);
+                                            productionPanel.production.marketplace_buy(resource_key);
                                         }
                                         ToolTip.visible: hovered
                                         ToolTip.text: qsTr("Spend %1 gold to buy %2 %3").arg(buy_price).arg(trade_quantity).arg(modelData.label.toLowerCase())
@@ -3370,7 +3372,7 @@ Rectangle {
                                                 return;
                                             }
                                             Design.UiSound.activate();
-                                            productionPanel.game_instance.marketplace_sell_resource(resource_key);
+                                            productionPanel.production.marketplace_sell(resource_key);
                                         }
                                         ToolTip.visible: hovered
                                         ToolTip.text: qsTr("Sell %1 %2 for %3 gold").arg(trade_quantity).arg(modelData.label.toLowerCase()).arg(sell_price)
@@ -3383,7 +3385,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_temple_selected: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("temple")))
+                property bool has_temple_selected: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("temple")))
 
                 width: parent.width
                 height: templeContent.height + 16
@@ -3449,11 +3451,11 @@ Rectangle {
             }
 
             Item {
-                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
-                property bool has_builder: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("builder")))
-                property bool has_home: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home")))
-                property bool has_marketplace: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("marketplace")))
-                property bool has_temple: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("temple")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
+                property bool has_builder: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("builder")))
+                property bool has_home: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("home")))
+                property bool has_marketplace: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("marketplace")))
+                property bool has_temple: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("temple")))
 
                 visible: !has_barracks && !has_builder && !has_home && !has_marketplace && !has_temple
                 width: parent.width

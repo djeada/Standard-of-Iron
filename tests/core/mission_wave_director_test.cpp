@@ -2,8 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include "app/core/mission_setup_coordinator.h"
-#include "app/core/mission_wave_director.h"
+#include "app/mission/mission_setup_coordinator.h"
+#include "app/mission/mission_wave_director.h"
+#include "app/mission/mission_waves.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 

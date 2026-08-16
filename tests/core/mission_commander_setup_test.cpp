@@ -4,7 +4,7 @@
 #include <set>
 #include <vector>
 
-#include "app/core/mission_commander_setup.h"
+#include "app/mission/mission_commander_setup.h"
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
 #include "game/systems/nation_id.h"

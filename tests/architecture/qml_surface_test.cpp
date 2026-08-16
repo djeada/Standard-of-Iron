@@ -33,15 +33,17 @@ auto count_occurrences(const fs::path& file, const std::string& needle) -> int {
   return count;
 }
 
-constexpr int k_max_invokables = 103;
+constexpr int k_max_invokables = 8;
 
-constexpr int k_max_properties = 42;
+constexpr int k_max_properties = 33;
 
 constexpr const char* k_guidance =
     "\nGameEngine is the composition root, not the UI API. New QML-facing "
     "members belong on a view model that owns that slice of the interface -- "
-    "see app/viewmodels/save_slots_view_model.h for the shape -- exposed from "
-    "GameEngine as a single CONSTANT property.\n"
+    "see app/viewmodels/camera_view_model.h for the shape: it reads the match "
+    "through App::Core::ClientContext and asks the root for an effect through "
+    "App::Core::ClientHost -- exposed from GameEngine as a single CONSTANT "
+    "property.\n"
     "If you removed members instead, lower the ceiling in this test so it keeps "
     "ratcheting down.";
 
@@ -70,9 +72,9 @@ TEST(QmlSurface, CeilingsStayTight) {
   const auto header = find_repo_root() / "app" / "core" / "game_engine.h";
   ASSERT_TRUE(fs::exists(header));
 
-  EXPECT_GE(count_occurrences(header, "Q_INVOKABLE"), k_max_invokables - 10)
+  EXPECT_GE(count_occurrences(header, "Q_INVOKABLE"), k_max_invokables - 3)
       << "members were removed; lower k_max_invokables to lock the win in";
-  EXPECT_GE(count_occurrences(header, "Q_PROPERTY"), k_max_properties - 10)
+  EXPECT_GE(count_occurrences(header, "Q_PROPERTY"), k_max_properties - 3)
       << "members were removed; lower k_max_properties to lock the win in";
 }
 

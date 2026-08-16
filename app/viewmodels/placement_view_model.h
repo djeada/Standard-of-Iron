@@ -7,39 +7,12 @@
 #include <QVariantList>
 #include <QVariantMap>
 
-#include "../models/cursor_mode.h"
-
-struct ViewportState;
-class InputCommandHandler;
-class ProductionManager;
-
-namespace App::Controllers {
-class CommandController;
-}
+namespace App::Core {
+struct ClientContext;
+class ClientHost;
+} // namespace App::Core
 
 namespace App::ViewModels {
-
-class PlacementHost {
-public:
-  PlacementHost() = default;
-  PlacementHost(const PlacementHost&) = delete;
-  PlacementHost(PlacementHost&&) = delete;
-  auto operator=(const PlacementHost&) -> PlacementHost& = delete;
-  auto operator=(PlacementHost&&) -> PlacementHost& = delete;
-  virtual ~PlacementHost() = default;
-
-  virtual void ensure_initialized() = 0;
-  [[nodiscard]] virtual auto map_input_to_viewport(qreal sx,
-                                                   qreal sy) const -> QPointF = 0;
-  [[nodiscard]] virtual auto viewport() const -> const ViewportState& = 0;
-  [[nodiscard]] virtual auto local_owner_id() const -> int = 0;
-  virtual void set_cursor_mode(CursorMode mode) = 0;
-
-  [[nodiscard]] virtual auto input_handler() const -> InputCommandHandler* = 0;
-  [[nodiscard]] virtual auto
-  command_controller() const -> App::Controllers::CommandController* = 0;
-  [[nodiscard]] virtual auto production_manager() const -> ProductionManager* = 0;
-};
 
 class PlacementViewModel : public QObject {
   Q_OBJECT
@@ -72,7 +45,9 @@ class PlacementViewModel : public QObject {
                  NOTIFY construction_preview_summary_changed)
 
 public:
-  explicit PlacementViewModel(PlacementHost& host, QObject* parent = nullptr);
+  PlacementViewModel(const App::Core::ClientContext& context,
+                     App::Core::ClientHost& host,
+                     QObject* parent = nullptr);
 
   Q_INVOKABLE void on_formation_command();
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
@@ -142,7 +117,8 @@ signals:
   void construction_preview_summary_changed();
 
 private:
-  PlacementHost& m_host;
+  const App::Core::ClientContext& m_context;
+  App::Core::ClientHost& m_host;
 };
 
 } // namespace App::ViewModels

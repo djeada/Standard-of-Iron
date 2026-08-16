@@ -1,9 +1,12 @@
-#include "runtime_frame_orchestrator.h"
+#include "app/core/runtime_frame_orchestrator.h"
 
 #include <algorithm>
 #include <cmath>
 
-#include "ambient_state_manager.h"
+#include "app/audio/weather_audio.h"
+#include "app/world/ambient_state_manager.h"
+#include "app/world/minimap_manager.h"
+#include "app/world/visibility_coordinator.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/environment_lighting.h"
@@ -13,12 +16,9 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/victory_service.h"
 #include "game/wildlife/wildlife_system.h"
-#include "minimap_manager.h"
 #include "render/ground/rain_renderer.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
-#include "visibility_coordinator.h"
-#include "weather_audio.h"
 
 namespace {
 constexpr int k_selection_refresh_interval = 15;

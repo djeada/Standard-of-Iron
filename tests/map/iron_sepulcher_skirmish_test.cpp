@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "app/core/skirmish_loader.h"
+#include "app/session/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"

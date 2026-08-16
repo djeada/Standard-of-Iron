@@ -24,7 +24,7 @@ RowLayout {
     }
 
     function update_action_states() {
-        action_states = (game_ready() && game.get_hud_action_states) ? game.get_hud_action_states() : ({});
+        action_states = (game_ready() && game.orders.action_states) ? game.orders.action_states() : ({});
     }
 
     function refresh_selection() {
@@ -131,8 +131,8 @@ RowLayout {
             "hint": qsTr("Stop all actions immediately."),
             "unavailable": qsTr("Select troops first"),
             "invoke": function () {
-                if (bottomRoot.game_ready() && game.on_stop_command)
-                    game.on_stop_command();
+                if (bottomRoot.game_ready() && game.orders.stop)
+                    game.orders.stop();
             }
         }, {
             "id": "hold",
@@ -142,8 +142,8 @@ RowLayout {
             "hint": qsTr("Hold position and defend."),
             "unavailable": qsTr("Hold is not available for the current selection"),
             "invoke": function () {
-                if (bottomRoot.game_ready() && game.on_hold_command)
-                    game.on_hold_command();
+                if (bottomRoot.game_ready() && game.orders.hold)
+                    game.orders.hold();
             }
         }, {
             "id": "build",
@@ -163,8 +163,8 @@ RowLayout {
                     bottomRoot.command_mode_changed("normal");
                     return;
                 }
-                if (game.on_build_command)
-                    game.on_build_command();
+                if (game.orders.build)
+                    game.orders.build();
             }
         }, {
             "id": "collect",
@@ -222,8 +222,8 @@ RowLayout {
             "hint": qsTr("The commander plants a rally flag; troops march to it once placed."),
             "unavailable": qsTr("Select a commander to use rally"),
             "invoke": function () {
-                if (bottomRoot.game_ready() && game.begin_commander_flag_rally)
-                    game.begin_commander_flag_rally();
+                if (bottomRoot.game_ready() && game.commander.start_flag_rally)
+                    game.commander.start_flag_rally();
             }
         }, {
             "id": "gate",
@@ -231,8 +231,8 @@ RowLayout {
             "hint": qsTr("Cycle the selected gates: automatic, held open, held shut."),
             "unavailable": qsTr("Select one of your gates to control it"),
             "invoke": function () {
-                if (bottomRoot.game_ready() && game.on_gate_command) {
-                    game.on_gate_command();
+                if (bottomRoot.game_ready() && game.orders.gate) {
+                    game.orders.gate();
                     bottomRoot.update_action_states();
                 }
             }
@@ -242,8 +242,8 @@ RowLayout {
             "hint": qsTr("Temporarily empower nearby troops. A glow marks every affected soldier."),
             "unavailable": qsTr("Select a ready commander to activate the aura"),
             "invoke": function () {
-                if (bottomRoot.game_ready() && game.commander_trigger_aura) {
-                    game.commander_trigger_aura();
+                if (bottomRoot.game_ready() && game.commander.trigger_aura) {
+                    game.commander.trigger_aura();
                     bottomRoot.update_action_states();
                 }
             }
@@ -314,12 +314,12 @@ RowLayout {
         unitCount: bottomRoot.selection_count
         inspected: bottomRoot.game_ready() && game.activity ? game.activity.inspect_target : null
         onUnitActivated: function (unitId) {
-            if (bottomRoot.game_ready() && game.select_unit_by_id)
-                game.select_unit_by_id(unitId);
+            if (bottomRoot.game_ready() && game.orders.select_unit_by_id)
+                game.orders.select_unit_by_id(unitId);
         }
         onGroupActivated: function (unitType) {
-            if (bottomRoot.game_ready() && game.select_selected_units_by_type)
-                game.select_selected_units_by_type(unitType);
+            if (bottomRoot.game_ready() && game.orders.select_by_type)
+                game.orders.select_by_type(unitType);
         }
     }
 
@@ -455,7 +455,9 @@ RowLayout {
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignTop
         selection_tick: bottomRoot.selection_tick
-        game_instance: bottomRoot.game_ready() ? game : null
+        production: bottomRoot.game_ready() ? game.production : null
+        placement: bottomRoot.game_ready() ? game.placement : null
+        player_state: bottomRoot.game_ready() ? game.selected_player_state : null
         onRecruit_unit: function (unit_type) {
             bottomRoot.recruit_unit(unit_type);
         }
@@ -463,10 +465,10 @@ RowLayout {
             if (!bottomRoot.game_ready() || typeof gameView === 'undefined')
                 return;
             if (gameView.cursor_mode === "place_barracks_rally") {
-                if (game.cancel_barracks_rally_placement)
-                    game.cancel_barracks_rally_placement();
-            } else if (game.begin_barracks_rally_placement) {
-                game.begin_barracks_rally_placement();
+                if (game.commander.cancel_barracks_rally)
+                    game.commander.cancel_barracks_rally();
+            } else if (game.commander.begin_barracks_rally) {
+                game.commander.begin_barracks_rally();
             }
         }
         onBuild_tower: {

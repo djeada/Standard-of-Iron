@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "selected_units_model.h"
+#include "app/models/selected_units_model.h"
 
 namespace App::Models {
 

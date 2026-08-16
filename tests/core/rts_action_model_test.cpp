@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "app/core/rts_action_model.h"
-#include "app/models/cursor_mode.h"
+#include "app/input/cursor_mode.h"
+#include "app/orders/rts_action_model.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/selection_system.h"

@@ -1,4 +1,4 @@
-#include "economy_view_model.h"
+#include "app/viewmodels/economy_view_model.h"
 
 #include "app/core/user_settings.h"
 
