@@ -13,10 +13,14 @@ namespace {
 constexpr int k_fog_r = 45;
 constexpr int k_fog_g = 38;
 constexpr int k_fog_b = 30;
-constexpr int k_alpha_unseen = 180;
-constexpr int k_alpha_explored = 60;
+constexpr int k_alpha_unseen = 255;
+constexpr int k_alpha_explored = 96;
 constexpr int k_alpha_visible = 0;
 constexpr int k_bilinear_scale = 256;
+
+constexpr int k_luma_r = 77;
+constexpr int k_luma_g = 151;
+constexpr int k_luma_b = 28;
 
 [[nodiscard]] auto alpha_from_cell(std::uint8_t state) noexcept -> int {
   if (state == static_cast<std::uint8_t>(VisibilityState::Visible)) {
@@ -193,10 +197,21 @@ auto MinimapFogCompositor::compose_pixel(
     return original;
   }
 
+  const int red = qRed(original);
+  const int green = qGreen(original);
+  const int blue = qBlue(original);
+
+  const int desaturation = std::min((fog_alpha * 255) / k_alpha_explored, 255);
+  const int luma = (red * k_luma_r + green * k_luma_g + blue * k_luma_b) >> 8;
+  const int keep_chroma = 255 - desaturation;
+  const int grey_r = (red * keep_chroma + luma * desaturation) / 255;
+  const int grey_g = (green * keep_chroma + luma * desaturation) / 255;
+  const int grey_b = (blue * keep_chroma + luma * desaturation) / 255;
+
   const int inverse_alpha = 255 - fog_alpha;
-  const int new_r = (qRed(original) * inverse_alpha + k_fog_r * fog_alpha) / 255;
-  const int new_g = (qGreen(original) * inverse_alpha + k_fog_g * fog_alpha) / 255;
-  const int new_b = (qBlue(original) * inverse_alpha + k_fog_b * fog_alpha) / 255;
+  const int new_r = (grey_r * inverse_alpha + k_fog_r * fog_alpha) / 255;
+  const int new_g = (grey_g * inverse_alpha + k_fog_g * fog_alpha) / 255;
+  const int new_b = (grey_b * inverse_alpha + k_fog_b * fog_alpha) / 255;
   return qRgba(new_r, new_g, new_b, 255);
 }
 

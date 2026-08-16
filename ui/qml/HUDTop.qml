@@ -14,6 +14,8 @@ Item {
     readonly property bool ultraCompact: width < 620
     readonly property var speedOptions: GameSpeeds.options
 
+    readonly property real minimapLegendHeight: fogLegend.visible ? Design.Metrics.space4 + fogLegend.implicitHeight + Design.Metrics.space8 : 0
+
     property bool camera_legend_visible: false
 
     signal pause_toggled
@@ -492,6 +494,10 @@ Item {
             MouseArea {
                 id: minimapMouse
 
+                ToolTip.visible: containsMouse
+                ToolTip.delay: Design.Metrics.tooltipDelay
+                ToolTip.text: qsTr("Left click moves the camera, right click orders selected troops.\nVisible: currently scouted, enemies shown.\nExplored: seen before, terrain only.\nUnseen: never scouted.")
+
                 function dispatch(button, x, y) {
                     if (!topRoot.game_ready())
                         return;
@@ -519,6 +525,60 @@ Item {
                 onPositionChanged: function (mouse) {
                     if (mouse.buttons & Qt.LeftButton)
                         minimapMouse.dispatch(Qt.LeftButton, mouse.x, mouse.y);
+                }
+            }
+        }
+    }
+
+    Flow {
+        id: fogLegend
+
+        readonly property color visibleSwatch: "#ff5e754c"
+        readonly property color exploredSwatch: "#ff524f4c"
+        readonly property color unseenSwatch: "#ff2d261e"
+
+        visible: minimap.visible
+        anchors.right: minimap.right
+        anchors.top: minimap.bottom
+        anchors.topMargin: Design.Metrics.space4
+        spacing: Design.Metrics.space8
+        z: 100
+
+        Repeater {
+            model: [{
+                    "swatch": fogLegend.visibleSwatch,
+                    "label": qsTr("Visible")
+                }, {
+                    "swatch": fogLegend.exploredSwatch,
+                    "label": qsTr("Explored")
+                }, {
+                    "swatch": fogLegend.unseenSwatch,
+                    "label": qsTr("Unseen")
+                }]
+
+            delegate: Row {
+                required property var modelData
+
+                spacing: Design.Metrics.space2
+
+                Rectangle {
+                    width: Design.Metrics.space8
+                    height: width
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: parent.modelData.swatch
+                    border.width: Design.Metrics.borderThin
+                    border.color: Design.Theme.borderSubtle
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: parent.modelData.label
+                    color: Design.Theme.textSecondary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    font.weight: Design.Typography.medium
+                    style: Text.Outline
+                    styleColor: Design.Theme.backgroundDeep
                 }
             }
         }
