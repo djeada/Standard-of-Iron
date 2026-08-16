@@ -1,6 +1,8 @@
 #include <cmath>
 #include <gtest/gtest.h>
+#include <string>
 
+#include "app/core/user_settings.h"
 #include "ui/edge_scroll.h"
 
 namespace {
@@ -145,6 +147,37 @@ TEST(EdgeScrollTest, AHighResolutionSurfaceStillScrollsAtItsEdges) {
   EXPECT_LT(bottom.dz, 0.0);
   EXPECT_TRUE(
       Edge::vector_at(k_wide / 2.0, k_tall / 2.0, k_wide, k_tall, 1.0, 2.0).is_zero());
+}
+
+TEST(EdgeScrollTest, TheStrongestBandStaysClearOfTheMinimap) {
+  constexpr double k_minimap_hit_area_ends_px_from_right = 25.0;
+  constexpr double k_widest_band = 24.0;
+  const double strongest = App::Core::UserSettings::kMaxEdgeScrollSensitivity;
+
+  const auto why = [](double scale) {
+    return "at interface scale " + std::to_string(scale) +
+           ": the minimap is itself a camera move, so a band reaching under it "
+           "leaves a minimap drag and edge scroll pushing the same camera. Its "
+           "hit area ends 25 logical px from the right (hudZoneMargin plus the "
+           "panel's padding), measured by hand in a running battle, and the "
+           "widest band is 24 - one pixel of headroom. See the minimap "
+           "clearance in docs/CAMERA_CONTROLS.md and re-measure the QML side.";
+  };
+
+  EXPECT_DOUBLE_EQ(Edge::horizontal_zone(strongest, 1.0), k_widest_band);
+
+  for (const double scale : {1.0, 1.5, 2.0}) {
+    EXPECT_LT(Edge::horizontal_zone(strongest, scale),
+              k_minimap_hit_area_ends_px_from_right * scale)
+        << why(scale);
+
+    const double minimap_edge =
+        k_width - (k_minimap_hit_area_ends_px_from_right * scale);
+    EXPECT_TRUE(Edge::vector_at(
+                    minimap_edge, k_height / 2.0, k_width, k_height, strongest, scale)
+                    .is_zero())
+        << why(scale);
+  }
 }
 
 TEST(EdgeScrollTest, OppositeEdgesAreMirrorImages) {

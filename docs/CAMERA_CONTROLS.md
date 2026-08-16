@@ -38,6 +38,24 @@ Scaling the band by the interface scale is what keeps a 12 px band reachable on
 a 4K panel at 200%; without it the band stays 12 physical px while every other
 target doubles.
 
+### The minimap clearance
+
+The minimap is the one HUD control that is itself a camera move, so a band
+reaching under it would leave a minimap drag and edge scroll pushing the same
+camera at once. It does not, but only just. Clicking along the minimap's right
+edge in a running battle puts the last responsive pixel 25 logical px from the
+right of the surface — `hudZoneMargin` plus the panel's own padding — while the
+widest band the settings allow is `12 * 2.0 = 24`. Both sides scale with the
+interface, so the clearance stays proportional: measured at interface scale 1.0
+the minimap stops at 1255 and the band starts at 1256, and at 1.5 it stops at
+1243 and the band starts at 1244.
+
+One logical pixel of headroom is not a margin anyone chose. Widening the base
+band, raising `kMaxEdgeScrollSensitivity` or trimming the minimap's padding
+closes it, and then a minimap drag and edge scroll fight over the camera.
+`EdgeScrollTest.TheStrongestBandStaysClearOfTheMinimap` guards the C++ half;
+the QML half is a hand measurement, so re-measure it if you touch either.
+
 ## What suppresses edge scroll
 
 `mainWindow.edge_scroll_disabled` is **derived**, never assigned:
@@ -102,6 +120,10 @@ by hand when touching anything above. Every row should behave identically.
 ### Interaction checks (any one layout)
 
 - [ ] Right-drag pans; edge scroll does **not** fight it mid-drag.
+- [ ] With **edge scroll strength at maximum**, drag the camera around by the
+      minimap: the camera goes where the minimap says and does **not** also
+      creep sideways. See "The minimap clearance" above — this passes on a
+      single pixel.
 - [ ] Right-drag, then press `Esc` / open the menu mid-drag, then return to the
       battle: edge scroll still works. (This is the regression that used to
       latch it off permanently.)
