@@ -298,6 +298,11 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("prewarm")},
       QStringLiteral("Prewarm unit templates after the scenario loads and then "
                      "forbid render-time baking, matching the campaign path."));
+  QCommandLineOption const animation_diagnostics_option(
+      QStringList{QStringLiteral("animation-diagnostics")},
+      QStringLiteral("Collect per-soldier animation diagnostics (root yaw, pose, "
+                     "cull reason) into the trace even for scenarios that "
+                     "normally leave them off for speed."));
   QCommandLineOption const profile_option(
       QStringList{QStringLiteral("profile")},
       QStringLiteral("Record detailed renderer phase timings in batch traces."));
@@ -339,6 +344,7 @@ auto main(int argc, char** argv) -> int {
                      clean_capture_option,
                      capture_orbit_option,
                      prewarm_option,
+                     animation_diagnostics_option,
                      profile_option,
                      watchdog_multiplier_option,
                      scenario_distance_option,
@@ -406,6 +412,8 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_scenario_distance_scale(
       parser.value(scenario_distance_option).toFloat());
   window.viewport()->set_prewarm_unit_templates(parser.isSet(prewarm_option));
+  window.viewport()->set_force_animation_diagnostics(
+      parser.isSet(animation_diagnostics_option));
   window.viewport()->set_capture_orbit_speed(
       parser.value(capture_orbit_option).toFloat());
   window.viewport()->set_fog_of_war_enabled(parser.isSet(fog_of_war_option));

@@ -83,12 +83,15 @@ humanoid_idle_breath_phase_for_lod(float sample_time,
                                         float phase) noexcept -> std::optional<float>;
 
 [[nodiscard]] auto
+bind_palette_for_kind(CreatureKind kind) noexcept -> std::span<const QMatrix4x4>;
+
+[[nodiscard]] auto
 palette_contact_y(CreatureKind kind,
-                  std::span<const QMatrix4x4> palette) noexcept -> float;
+                  std::span<const QMatrix4x4> skin_palette) noexcept -> float;
 
 [[nodiscard]] auto
 palette_foot_contact_y(CreatureKind kind,
-                       std::span<const QMatrix4x4> palette) noexcept -> float;
+                       std::span<const QMatrix4x4> skin_palette) noexcept -> float;
 
 [[nodiscard]] auto
 creature_kind_for_bpat_species(std::uint32_t species_id) noexcept -> CreatureKind;

@@ -104,6 +104,7 @@ struct SoldierAnimationDebugSample {
   SoldierVisualState visual_state{SoldierVisualState::Idle};
 
   QVector3D root_position{};
+  float root_yaw_degrees{0.0F};
   float root_up_y{1.0F};
   float root_scale_y{1.0F};
   float root_tilt_degrees{0.0F};

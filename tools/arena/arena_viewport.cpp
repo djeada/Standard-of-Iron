@@ -691,6 +691,9 @@ void ArenaViewport::paintGL() {
   timings.shadow_rigged_instanced_instances =
       playback_stats.shadow_rigged_instanced_instances;
   timings.shadow_rigged_single_draws = playback_stats.shadow_rigged_single_draws;
+  timings.gpu_shadow_ms = playback_stats.gpu_shadow_ms;
+  timings.gpu_color_ms = playback_stats.gpu_color_ms;
+  timings.gpu_wait_ms = playback_stats.gpu_wait_ms;
 
   bool const capture_keeps_overlays =
       m_scenario_runner != nullptr &&
@@ -3864,7 +3867,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_scenario_finished_emitted = false;
   set_force_full_creature_lod(definition->force_full_creature_lod);
   Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(
-      definition->collect_animation_diagnostics);
+      definition->collect_animation_diagnostics || m_force_animation_diagnostics);
 
   if (!m_scenario_runner->start()) {
     qWarning().noquote() << QStringLiteral(

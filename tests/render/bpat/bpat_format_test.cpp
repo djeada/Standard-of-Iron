@@ -98,7 +98,7 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
       auto const& expected = idle_palettes[(f * bone_count) + b];
       for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
-          EXPECT_FLOAT_EQ(span[(row * 4) + col], expected(row, col))
+          EXPECT_FLOAT_EQ(span[(col * 4) + row], expected(row, col))
               << "frame " << f << " bone " << b << " r" << row << " c" << col;
         }
       }

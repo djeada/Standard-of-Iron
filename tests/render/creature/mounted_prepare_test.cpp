@@ -138,14 +138,13 @@ auto rider_root_matrix(Render::Creature::ArchetypeId archetype_id,
           ? static_cast<int>(clip.frame_count - 1U)
           : static_cast<int>(normalized_phase * static_cast<float>(clip.frame_count));
   frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
-  auto const palette = blob->frame_palette_view(clip.frame_offset +
-                                                static_cast<std::uint32_t>(frame_idx));
   auto const root_index =
-      static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Root);
-  if (palette.size() <= root_index) {
+      static_cast<std::uint32_t>(Render::Humanoid::HumanoidBone::Root);
+  if (blob->bone_count() <= root_index || blob->bind_palette().empty()) {
     return std::nullopt;
   }
-  return palette[root_index];
+  return blob->bone_global_matrix(
+      clip.frame_offset + static_cast<std::uint32_t>(frame_idx), root_index);
 }
 
 TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
