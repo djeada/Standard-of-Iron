@@ -73,6 +73,36 @@ Item {
         return game.selected_player_state.resources[kind] || 0;
     }
 
+    readonly property var economy: game_ready() && game.economy ? game.economy : null
+
+    readonly property var resource_entries: {
+        var entries = economy && economy.resources ? economy.resources : [];
+        var shown = [];
+        for (var i = 0; i < entries.length; ++i) {
+            if (entries[i].relevant !== false)
+                shown.push(entries[i]);
+        }
+        if (shown.length > 0)
+            return shown;
+        var fallback = [];
+        for (var k = 0; k < EconomyGuide.resourceOrder.length; ++k) {
+            var key = EconomyGuide.resourceOrder[k];
+            fallback.push({
+                    "key": key,
+                    "amount": resource_amount(key)
+                });
+        }
+        return fallback;
+    }
+
+    function resource_status(entry) {
+        if (!entry || !entry.shortfall || entry.shortfall <= 0)
+            return "default";
+        return "warning";
+    }
+
+    signal economy_help_requested
+
     function population() {
         return game_ready() && game.selected_player_state ? (game.selected_player_state.population || 0) : 0;
     }
@@ -207,14 +237,18 @@ Item {
             }
 
             Item {
+                id: objectiveZone
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                clip: true
 
                 Row {
                     id: objectiveRow
 
                     anchors.centerIn: parent
                     spacing: Design.Metrics.space8
+                    width: Math.min(objectiveIcon.implicitWidth + spacing + objectiveText.implicitWidth, objectiveZone.width)
                     visible: topRoot.primaryObjective !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
 
                     Text {
@@ -228,8 +262,9 @@ Item {
                     }
 
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
+                        id: objectiveText
 
+                        anchors.verticalCenter: parent.verticalCenter
                         width: Math.min(implicitWidth, Math.max(0, objectiveRow.parent.width - objectiveGlyph.width - objectiveRow.spacing))
                         text: topRoot.primaryObjectiveText
                         color: Design.Theme.textSecondary
@@ -261,16 +296,25 @@ Item {
                 Layout.rightMargin: Design.Metrics.space8
 
                 Repeater {
-                    model: ["gold", "wood", "stone", "iron"]
+                    model: topRoot.resource_entries
 
                     delegate: Design.IronResourceCounter {
                         required property var modelData
 
-                        iconSource: Design.Icons.resource(modelData)
-                        label: modelData
-                        amount: topRoot.resource_amount(modelData)
+                        iconSource: Design.Icons.resource(modelData.key)
+                        iconText: Design.Icons.resourceGlyph(modelData.key)
+                        label: EconomyGuide.resource_label(modelData.key)
+                        amount: modelData.amount || 0
+                        status: topRoot.resource_status(modelData)
+                        tooltipText: EconomyGuide.resource_tooltip(modelData)
                         compact: topRoot.compact
                     }
+                }
+
+                Design.IronIconButton {
+                    iconText: Design.Icons.build
+                    tooltip: qsTr("Resource and building guide")
+                    onClicked: topRoot.economy_help_requested()
                 }
 
                 Design.IronDivider {

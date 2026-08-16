@@ -1385,6 +1385,351 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>EconomyCoach</name>
+    <message>
+        <source>Economy prompts</source>
+        <translation>Economy prompts</translation>
+    </message>
+    <message>
+        <source>Stop showing these prompts</source>
+        <translation>Stop showing these prompts</translation>
+    </message>
+    <message>
+        <source>How it works</source>
+        <translation>How it works</translation>
+    </message>
+</context>
+<context>
+    <name>EconomyGuide</name>
+    <message>
+        <source>Gold</source>
+        <translation>Gold</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Food</translation>
+    </message>
+    <message>
+        <source>Wood</source>
+        <translation>Wood</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>Stone</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>Iron</translation>
+    </message>
+    <message>
+        <source>Comes from your starting treasury, mission rewards, and selling goods at a marketplace.</source>
+        <translation>Comes from your starting treasury, mission rewards, and selling goods at a marketplace.</translation>
+    </message>
+    <message>
+        <source>Comes from your starting stores, mission rewards, and buying at a marketplace.</source>
+        <translation>Comes from your starting stores, mission rewards, and buying at a marketplace.</translation>
+    </message>
+    <message>
+        <source>Send a builder to chop a tree with Collect, or leave Auto Gather running.</source>
+        <translation>Send a builder to chop a tree with Collect, or leave Auto Gather running.</translation>
+    </message>
+    <message>
+        <source>Send a builder to a boulder with Collect, or leave Auto Gather running.</source>
+        <translation>Send a builder to a boulder with Collect, or leave Auto Gather running.</translation>
+    </message>
+    <message>
+        <source>Send a builder to an iron ore deposit with Collect, or leave Auto Gather running.</source>
+        <translation>Send a builder to an iron ore deposit with Collect, or leave Auto Gather running.</translation>
+    </message>
+    <message>
+        <source>Home</source>
+        <translation>Home</translation>
+    </message>
+    <message>
+        <source>Barracks</source>
+        <translation>Barracks</translation>
+    </message>
+    <message>
+        <source>Defense Tower</source>
+        <translation>Defense Tower</translation>
+    </message>
+    <message>
+        <source>Marketplace</source>
+        <translation>Marketplace</translation>
+    </message>
+    <message>
+        <source>Temple</source>
+        <translation>Temple</translation>
+    </message>
+    <message>
+        <source>Wall Segment</source>
+        <translation>Wall Segment</translation>
+    </message>
+    <message>
+        <source>Wall Gate</source>
+        <translation>Wall Gate</translation>
+    </message>
+    <message>
+        <source>Catapult</source>
+        <translation>Catapult</translation>
+    </message>
+    <message>
+        <source>Ballista</source>
+        <translation>Ballista</translation>
+    </message>
+    <message>
+        <source>Archer</source>
+        <translation>Archer</translation>
+    </message>
+    <message>
+        <source>Swordsman</source>
+        <translation>Swordsman</translation>
+    </message>
+    <message>
+        <source>Spearman</source>
+        <translation>Spearman</translation>
+    </message>
+    <message>
+        <source>Horse Swordsman</source>
+        <translation>Horse Swordsman</translation>
+    </message>
+    <message>
+        <source>Horse Archer</source>
+        <translation>Horse Archer</translation>
+    </message>
+    <message>
+        <source>Horse Spearman</source>
+        <translation>Horse Spearman</translation>
+    </message>
+    <message>
+        <source>Healer</source>
+        <translation>Healer</translation>
+    </message>
+    <message>
+        <source>Builder</source>
+        <translation>Builder</translation>
+    </message>
+    <message>
+        <source>Civilian</source>
+        <translation>Civilian</translation>
+    </message>
+    <message>
+        <source>Elephant</source>
+        <translation>Elephant</translation>
+    </message>
+    <message>
+        <source>Raises the population the nearest barracks can recruit from.</source>
+        <translation>Raises the population the nearest barracks can recruit from.</translation>
+    </message>
+    <message>
+        <source>Recruits troops and receives everything your builders gather.</source>
+        <translation>Recruits troops and receives everything your builders gather.</translation>
+    </message>
+    <message>
+        <source>Shoots at enemies that come near it.</source>
+        <translation>Shoots at enemies that come near it.</translation>
+    </message>
+    <message>
+        <source>Buys and sells resources for gold.</source>
+        <translation>Buys and sells resources for gold.</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground and holds a settlement together.</source>
+        <translation>Watches over a wide stretch of ground and holds a settlement together.</translation>
+    </message>
+    <message>
+        <source>Blocks enemy movement.</source>
+        <translation>Blocks enemy movement.</translation>
+    </message>
+    <message>
+        <source>Opens for your troops and allies, shut to everyone else.</source>
+        <translation>Opens for your troops and allies, shut to everyone else.</translation>
+    </message>
+    <message>
+        <source>Long-range siege engine, best against structures.</source>
+        <translation>Long-range siege engine, best against structures.</translation>
+    </message>
+    <message>
+        <source>Precise siege engine, best against units.</source>
+        <translation>Precise siege engine, best against units.</translation>
+    </message>
+    <message>
+        <source>, and %1 more</source>
+        <translation>, and %1 more</translation>
+    </message>
+    <message>
+        <source>%1 %2</source>
+        <translation>%1 %2</translation>
+    </message>
+    <message>
+        <source>No resource cost</source>
+        <translation>No resource cost</translation>
+    </message>
+    <message>
+        <source>%1 more %2</source>
+        <translation>%1 more %2</translation>
+    </message>
+    <message>
+        <source>Nobody is gathering it right now.</source>
+        <translation>Nobody is gathering it right now.</translation>
+    </message>
+    <message>
+        <source>Builders gathering it: %1</source>
+        <translation>Builders gathering it: %1</translation>
+    </message>
+    <message>
+        <source>%1 being hauled to a barracks</source>
+        <translation>%1 being hauled to a barracks</translation>
+    </message>
+    <message>
+        <source>Held in your treasury; no storage limit.</source>
+        <translation>Held in your treasury; no storage limit.</translation>
+    </message>
+    <message>
+        <source>Hauled to a barracks yard before it is credited. The yard looks full at %1.</source>
+        <translation>Hauled to a barracks yard before it is credited. The yard looks full at %1.</translation>
+    </message>
+    <message>
+        <source>Short %1 for a %2.</source>
+        <translation>Short %1 for a %2.</translation>
+    </message>
+    <message>
+        <source>%1 in store: %2</source>
+        <translation>%1 in store: %2</translation>
+    </message>
+    <message>
+        <source>Spent on: %1</source>
+        <translation>Spent on: %1</translation>
+    </message>
+    <message>
+        <source>Step 1 — Gather</source>
+        <translation>Step 1 — Gather</translation>
+    </message>
+    <message>
+        <source>Step 2 — Build</source>
+        <translation>Step 2 — Build</translation>
+    </message>
+    <message>
+        <source>Step 3 — Recruit</source>
+        <translation>Step 3 — Recruit</translation>
+    </message>
+    <message>
+        <source>Step 4 — Keep an army</source>
+        <translation>Step 4 — Keep an army</translation>
+    </message>
+    <message>
+        <source>Your settlement runs itself</source>
+        <translation>Your settlement runs itself</translation>
+    </message>
+    <message>
+        <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
+        <translation>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</translation>
+    </message>
+    <message>
+        <source>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</source>
+        <translation>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</translation>
+    </message>
+    <message>
+        <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
+        <translation>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</translation>
+    </message>
+    <message>
+        <source>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</source>
+        <translation>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</translation>
+    </message>
+    <message>
+        <source>Keep recruiting while your builders gather. Raise more Homes when population runs out.</source>
+        <translation>Keep recruiting while your builders gather. Raise more Homes when population runs out.</translation>
+    </message>
+    <message>
+        <source>Gathering, building and recruiting are all under way.</source>
+        <translation>Gathering, building and recruiting are all under way.</translation>
+    </message>
+</context>
+<context>
+    <name>EconomyHelpPanel</name>
+    <message>
+        <source>You have no builders. Recruit one at a barracks before you can gather or build.</source>
+        <translation>You have no builders. Recruit one at a barracks before you can gather or build.</translation>
+    </message>
+    <message>
+        <source>Builders: %1 (%2 idle). Placing a structure sends every selected builder to the site.</source>
+        <translation>Builders: %1 (%2 idle). Placing a structure sends every selected builder to the site.</translation>
+    </message>
+    <message>
+        <source>Recruiting draws on the manpower held by each barracks.</source>
+        <translation>Recruiting draws on the manpower held by each barracks.</translation>
+    </message>
+    <message>
+        <source>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</source>
+        <translation>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</translation>
+    </message>
+    <message>
+        <source>Needs a barracks</source>
+        <translation>Needs a barracks</translation>
+    </message>
+    <message>
+        <source>Needs a builder</source>
+        <translation>Needs a builder</translation>
+    </message>
+    <message>
+        <source>Not enough manpower at the barracks</source>
+        <translation>Not enough manpower at the barracks</translation>
+    </message>
+    <message>
+        <source>Population limit reached</source>
+        <translation>Population limit reached</translation>
+    </message>
+    <message>
+        <source>Missing %1</source>
+        <translation>Missing %1</translation>
+    </message>
+    <message>
+        <source>Economy guide</source>
+        <translation>Economy guide</translation>
+    </message>
+    <message>
+        <source>Resources and Building</source>
+        <translation>Resources and Building</translation>
+    </message>
+    <message>
+        <source>Close the economy guide</source>
+        <translation>Close the economy guide</translation>
+    </message>
+    <message>
+        <source>Gather with builders, spend what they bring on structures, recruit from a barracks, and keep both running.</source>
+        <translation>Gather with builders, spend what they bring on structures, recruit from a barracks, and keep both running.</translation>
+    </message>
+    <message>
+        <source>WHAT EACH RESOURCE IS FOR</source>
+        <translation>WHAT EACH RESOURCE IS FOR</translation>
+    </message>
+    <message>
+        <source>Spent on: %1</source>
+        <translation>Spent on: %1</translation>
+    </message>
+    <message>
+        <source>WHAT A BUILDER CAN RAISE</source>
+        <translation>WHAT A BUILDER CAN RAISE</translation>
+    </message>
+    <message>
+        <source>%1 — %2 · %3s</source>
+        <translation>%1 — %2 · %3s</translation>
+    </message>
+    <message>
+        <source>WHAT A BARRACKS CAN RECRUIT</source>
+        <translation>WHAT A BARRACKS CAN RECRUIT</translation>
+    </message>
+    <message>
+        <source>%1 — %2 population, %3 · %4s</source>
+        <translation>%1 — %2 population, %3 · %4s</translation>
+    </message>
+    <message>
+        <source>Back to the battle</source>
+        <translation>Back to the battle</translation>
+    </message>
+</context>
+<context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
@@ -2649,6 +2994,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source> (%1/%2)</source>
         <translation> (%1/%2)</translation>
+    </message>
+    <message>
+        <source>Resource and building guide</source>
+        <translation>Resource and building guide</translation>
     </message>
     <message>
         <source>Open the field manual (help)</source>
@@ -5129,48 +5478,12 @@ Opens for your troops and allies</source>
 Opens for your troops and allies</translation>
     </message>
     <message>
-        <source>wood</source>
-        <translation>wood</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>stone</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>iron</translation>
-    </message>
-    <message>
-        <source>gold</source>
-        <translation>gold</translation>
-    </message>
-    <message>
         <source>%1 %2</source>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <source>%1 wood</source>
-        <translation>%1 wood</translation>
-    </message>
-    <message>
-        <source>%1 stone</source>
-        <translation>%1 stone</translation>
-    </message>
-    <message>
-        <source>%1 iron</source>
-        <translation>%1 iron</translation>
-    </message>
-    <message>
-        <source>%1 gold</source>
-        <translation>%1 gold</translation>
-    </message>
-    <message>
         <source>Not enough available population</source>
         <translation>Not enough available population</translation>
-    </message>
-    <message>
-        <source>Not enough %1</source>
-        <translation>Not enough %1</translation>
     </message>
     <message>
         <source>Already building...</source>
@@ -5437,6 +5750,14 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Watches over a wide stretch of ground and holds a settlement together</source>
         <translation>Watches over a wide stretch of ground and holds a settlement together</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Food</translation>
+    </message>
+    <message>
+        <source>Need %1</source>
+        <translation>Need %1</translation>
     </message>
 </context>
 <context>

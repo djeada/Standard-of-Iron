@@ -26,6 +26,7 @@
 #include "../utils/engine_view_helpers.h"
 #include "../utils/movement_utils.h"
 #include "../viewmodels/activity_view_model.h"
+#include "../viewmodels/economy_view_model.h"
 #include "../viewmodels/placement_view_model.h"
 #include "../viewmodels/wave_view_model.h"
 #include "ambient_state_manager.h"
@@ -34,6 +35,7 @@
 #include "combat_feedback.h"
 #include "commander_control_controller.h"
 #include "commander_input_adapter.h"
+#include "economy_overview.h"
 #include "entity_cache.h"
 #include "focus_target.h"
 #include "game/audio/audio_event_handler.h"
@@ -206,6 +208,7 @@ public:
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
   Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
   Q_PROPERTY(QObject* activity READ activity_view_model CONSTANT)
+  Q_PROPERTY(QObject* economy READ economy_view_model CONSTANT)
   Q_PROPERTY(QObject* tutorial READ tutorial_view_model CONSTANT)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
@@ -372,6 +375,7 @@ public:
   [[nodiscard]] QObject* wave_view_model() const;
   [[nodiscard]] QObject* tutorial_view_model() const;
   [[nodiscard]] QObject* activity_view_model() const;
+  [[nodiscard]] QObject* economy_view_model() const;
 
   [[nodiscard]] bool save_in_progress() const { return m_active_save_job != 0; }
   [[nodiscard]] int save_progress_percent() const { return m_save_progress_percent; }
@@ -400,9 +404,6 @@ public:
 
   [[nodiscard]] QString release_self_test_pending_reason() const;
   [[nodiscard]] bool campaign_completed() const;
-  [[nodiscard]] bool civilian_delivery_available() const {
-    return m_civilian_delivery_available;
-  }
   [[nodiscard]] QString control_mode() const;
   [[nodiscard]] QString game_mode() const;
   [[nodiscard]] bool commander_control_available() const;
@@ -535,6 +536,10 @@ private:
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
   [[nodiscard]] bool is_action_enabled(const QString& action_id) const;
   void sync_selected_player_state();
+  void sync_economy_state();
+  [[nodiscard]] auto
+  mission_objective_resources() const -> Game::Systems::ResourceAmounts;
+  void reset_economy_coach();
   void sync_focus_targets();
   void sync_target_focus_markers();
   void record_combat_hit(const Engine::Core::CombatHitEvent& e);
@@ -601,6 +606,7 @@ private:
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
   std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
+  std::unique_ptr<App::ViewModels::EconomyViewModel> m_economy_view_model;
   std::unique_ptr<App::Core::TutorialDirector> m_tutorial_director;
 
   [[nodiscard]] QPointF map_input_to_viewport(qreal sx, qreal sy) const override;
@@ -636,7 +642,6 @@ private:
   Game::Systems::SaveLoadService* m_save_load_service = nullptr;
   std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hover_tracker;
-  bool m_civilian_delivery_available = false;
   Game::Systems::AttackTargetingHighlights m_attack_targeting;
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   App::Core::OrderMarkerStore m_order_markers;
@@ -685,6 +690,12 @@ private:
   int m_enemy_troops_defeated = 0;
   int m_selected_player_id = 1;
   QVariantMap m_selected_player_state;
+  QVariantList m_economy_resources;
+  QVariantMap m_economy_help;
+  QVariantMap m_economy_coach;
+  App::Core::EconomyCoachBaseline m_economy_coach_baseline;
+  bool m_economy_coach_available = false;
+  QElapsedTimer m_economy_refresh_timer;
   std::uint64_t m_last_world_props_revision = 0;
   QVariantList m_available_maps;
   bool m_maps_loading = false;
@@ -782,7 +793,6 @@ signals:
   void loading_progress_changed(float progress);
   void loading_stage_changed(QString stage_text);
   void campaign_mission_changed();
-  void civilian_delivery_available_changed();
   void control_mode_changed();
   void game_mode_changed();
   void commander_control_available_changed();

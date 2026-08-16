@@ -14,7 +14,6 @@
 #include "order_markers.h"
 
 class CursorManager;
-class HoverTracker;
 class ProductionManager;
 
 namespace Engine::Core {
@@ -72,14 +71,5 @@ struct SelectionPruneEffects {
 
 [[nodiscard]] auto prune_selection_action_context(const SelectionPruneContext& context)
     -> SelectionPruneEffects;
-
-struct CivilianDeliveryContext {
-  Engine::Core::World* world = nullptr;
-  HoverTracker* hover_tracker = nullptr;
-  int local_owner_id = 0;
-};
-
-[[nodiscard]] auto
-civilian_delivery_available(const CivilianDeliveryContext& context) -> bool;
 
 } // namespace App::Core::FrameUiCoordinator
