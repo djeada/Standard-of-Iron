@@ -307,6 +307,35 @@ Combat::deal_damage()
 
 when the attack connects.
 
+### Soldiers do not whip when an engagement drops
+
+`publish_formation_presentation` turns each engaged soldier toward its
+opponent's slot at 300 degrees per second. Engagement pairs are re-derived every
+tick, so in a dense press a soldier's pair can vanish for a few ticks and come
+back; the first version turned him straight back to the rank's facing the tick
+the pair dropped and out again when it returned — measured at ~6,400
+turn-and-return whips over one `massed_battle_1000` run, ±70 degrees in 0.2 s.
+An unassigned soldier now holds his last contact yaw for
+`k_contact_yaw_hold_seconds` (0.6 s) and only then turns back at
+`k_disengage_turn_degrees` (120 deg/s); `FormationSoldierPresentation::
+unassigned_seconds` carries the timer between ticks. Position already eased
+(`k_max_reposition_speed`), yaw was the only value that snapped.
+
+The formation's own facing has a related rule in `MovementSystem`
+(`heading_reference`): a formation with a movement target faces its
+**intended travel direction** — the current waypoint — not its instantaneous
+velocity, and without a target velocity steers it only above
+`k_formation_heading_min_speed` (0.4 m/s, or a quarter of the unit's speed).
+The first cut of the massed reel showed formations jammed behind their own
+front line pivoting on every shove local avoidance gave them: they were
+stopped, lurching at 0-1 m/s, and their yaw tracked whatever direction the
+last push had. The moonwalk guard (`heading_translation_scale`) measures the
+body's facing against the same reference, so a formation facing its waypoint
+still slides freely when the crowd pushes it sideways, while a body that has
+been ordered about-face still turns before it walks. Measured with
+`arena_app --animation-diagnostics` on `massed_battle_1000`: soldier
+turn-and-return whips over the run went from ~6,400 to ~1,850.
+
 ## Deterministic Visual Variation
 
 Combat visuals may appear random, but their variation should remain deterministic.

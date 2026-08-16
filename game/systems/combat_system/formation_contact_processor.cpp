@@ -24,6 +24,8 @@ using FrontMap = std::unordered_map<Engine::Core::EntityID,
 constexpr float k_target_switch_hysteresis = 0.35F;
 
 constexpr float k_max_reposition_speed = 1.8F;
+constexpr float k_contact_yaw_hold_seconds = 0.6F;
+constexpr float k_disengage_turn_degrees = 120.0F;
 
 struct PairEvaluation {
   std::uint64_t signature{0};
@@ -708,6 +710,22 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         }
       } else {
         directive.action = Engine::Core::FormationSoldierAction::FollowUnit;
+      }
+
+      bool const assigned = assignment.front != nullptr && assignment.pair != nullptr;
+      if (!assigned && previous != nullptr && directive.alive) {
+        directive.unassigned_seconds =
+            std::min(previous->unassigned_seconds + std::max(0.0F, delta_time),
+                     k_contact_yaw_hold_seconds + 1.0F);
+        if (directive.unassigned_seconds < k_contact_yaw_hold_seconds) {
+          directive.local_yaw = previous->local_yaw;
+        } else {
+          float const yaw_delta =
+              std::remainder(directive.local_yaw - previous->local_yaw, 360.0F);
+          float const max_turn = k_disengage_turn_degrees * std::max(0.0F, delta_time);
+          directive.local_yaw =
+              previous->local_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
+        }
       }
 
       if (previous != nullptr && directive.alive) {
