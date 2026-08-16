@@ -25,6 +25,7 @@
         <file alias="controls/IronIconButton.qml">ui/qml/design/controls/IronIconButton.qml</file>
         <file alias="controls/IronTabBar.qml">ui/qml/design/controls/IronTabBar.qml</file>
         <file alias="controls/IronTooltip.qml">ui/qml/design/controls/IronTooltip.qml</file>
+        <file alias="controls/IronCommandTooltip.qml">ui/qml/design/controls/IronCommandTooltip.qml</file>
         <file alias="controls/IronDialog.qml">ui/qml/design/controls/IronDialog.qml</file>
         <file alias="controls/IronDropdown.qml">ui/qml/design/controls/IronDropdown.qml</file>
         <file alias="controls/IronSlider.qml">ui/qml/design/controls/IronSlider.qml</file>
