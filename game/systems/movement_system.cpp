@@ -39,6 +39,9 @@ constexpr float k_duel_footwork_period_seconds = 9.0F;
 constexpr float k_duel_footwork_turn_degrees_per_second = 360.0F;
 constexpr float k_duel_min_reach_sq = 0.04F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
+constexpr float k_formation_heading_min_speed = 0.4F;
+constexpr float k_formation_heading_speed_fraction = 0.25F;
+constexpr float k_formation_intent_min_distance = 1.0F;
 constexpr float full_translation_heading_error_degrees = 20.0F;
 constexpr float stopped_translation_heading_error_degrees = 100.0F;
 
@@ -56,13 +59,45 @@ auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
   return std::clamp(derived, 30.0F, single_body_turn_speed);
 }
 
-auto heading_translation_scale(float yaw_degrees, float vx, float vz) -> float {
-  if (vx * vx + vz * vz <= 1.0e-5F) {
+struct HeadingReference {
+  bool valid{false};
+  float yaw{0.0F};
+};
+
+auto heading_reference(const Engine::Core::Entity& entity,
+                       const Engine::Core::TransformComponent& transform,
+                       const Engine::Core::MovementComponent& movement,
+                       const Engine::Core::UnitComponent* unit) -> HeadingReference {
+  bool const formation =
+      unit != nullptr && FormationCombat::has_formation_slots(entity);
+  if (formation && movement.get_has_target()) {
+    float const intent_x = movement.get_target_x() - transform.position.x;
+    float const intent_z = movement.get_target_y() - transform.position.z;
+    if (intent_x * intent_x + intent_z * intent_z >
+        k_formation_intent_min_distance * k_formation_intent_min_distance) {
+      return {true,
+              std::atan2(intent_x, intent_z) * 180.0F / std::numbers::pi_v<float>};
+    }
+  }
+  float const vx = movement.get_vx();
+  float const vz = movement.get_vz();
+  float const speed2 = vx * vx + vz * vz;
+  float const min_speed =
+      formation ? std::max(k_formation_heading_min_speed,
+                           unit->speed * k_formation_heading_speed_fraction)
+                : 0.0F;
+  if (speed2 <= std::max(1.0e-5F, min_speed * min_speed)) {
+    return {};
+  }
+  return {true, std::atan2(vx, vz) * 180.0F / std::numbers::pi_v<float>};
+}
+
+auto heading_translation_scale(float yaw_degrees, HeadingReference reference) -> float {
+  if (!reference.valid) {
     return 1.0F;
   }
-  float const velocity_yaw = std::atan2(vx, vz) * 180.0F / std::numbers::pi_v<float>;
   float const error =
-      std::fabs(std::fmod((velocity_yaw - yaw_degrees + 540.0F), 360.0F) - 180.0F);
+      std::fabs(std::fmod((reference.yaw - yaw_degrees + 540.0F), 360.0F) - 180.0F);
   return 1.0F - std::clamp((error - full_translation_heading_error_degrees) /
                                (stopped_translation_heading_error_degrees -
                                 full_translation_heading_error_degrees),
@@ -207,8 +242,6 @@ void finalize_orientation(Engine::Core::Entity* entity,
     return;
   }
 
-  float const speed2 =
-      movement->get_vx() * movement->get_vx() + movement->get_vz() * movement->get_vz();
   auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
   float const turn_speed =
       (unit != nullptr ? formation_turn_speed_degrees(
@@ -218,9 +251,9 @@ void finalize_orientation(Engine::Core::Entity* entity,
 
   bool const shell_holds_its_face =
       DefensiveUnitLayoutService::holds_position(*entity) && transform->has_desired_yaw;
-  if (speed2 > 1e-5F && !shell_holds_its_face) {
-    float const target_yaw = std::atan2(movement->get_vx(), movement->get_vz()) *
-                             180.0F / std::numbers::pi_v<float>;
+  auto const reference = heading_reference(*entity, *transform, *movement, unit);
+  if (reference.valid && !shell_holds_its_face) {
+    float const target_yaw = reference.yaw;
     float const current = transform->rotation.y;
     float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
     float const step =
@@ -707,7 +740,9 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float const old_z = transform->position.z;
   float const translation_scale =
       current_position_allowed
-          ? heading_translation_scale(transform->rotation.y, movement->vx, movement->vz)
+          ? heading_translation_scale(
+                transform->rotation.y,
+                heading_reference(*entity, *transform, *movement, unit))
           : 1.0F;
 
   float const translated_vx = movement->vx * translation_scale;
