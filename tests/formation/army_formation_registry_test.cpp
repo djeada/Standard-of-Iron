@@ -142,15 +142,33 @@ TEST_F(ArmyFormationRegistryTest, RemovingAMemberFreesItsSlotAndSchedulesAReplan
 }
 
 TEST_F(ArmyFormationRegistryTest, EmptyingAGroupRemovesIt) {
+
   Engine::Core::World world;
-  auto const only = add_unit(world, Game::Units::SpawnType::Knight, 0.0F);
-  auto const result = commit(world, {only});
+  auto const first = add_unit(world, Game::Units::SpawnType::Knight, 0.0F);
+  auto const second = add_unit(world, Game::Units::SpawnType::Knight, 1.0F);
+  auto const result = commit(world, {first, second});
   ASSERT_TRUE(result.valid);
 
   auto& registry = ArmyFormationRegistry::instance();
-  ASSERT_TRUE(registry.remove_member(only));
+  ASSERT_TRUE(registry.remove_member(first));
+  ASSERT_NE(registry.find(result.group_id), nullptr);
+
+  ASSERT_TRUE(registry.remove_member(second));
   EXPECT_EQ(registry.find(result.group_id), nullptr);
   EXPECT_EQ(registry.group_count(), 0U);
+}
+
+TEST_F(ArmyFormationRegistryTest, ASingleUnitOrderCommitsNoGroup) {
+
+  Engine::Core::World world;
+  auto const only = add_unit(world, Game::Units::SpawnType::Knight, 0.0F);
+  auto const result = commit(world, {only});
+  EXPECT_TRUE(result.valid);
+
+  auto& registry = ArmyFormationRegistry::instance();
+  EXPECT_EQ(registry.group_count(), 0U);
+  EXPECT_EQ(registry.group_of(only), k_invalid_group);
+  EXPECT_FALSE(registry.remove_member(only));
 }
 
 TEST_F(ArmyFormationRegistryTest, RuntimePrunesDestroyedMembers) {

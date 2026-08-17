@@ -102,6 +102,9 @@ public:
     m_mist_volumes = volumes;
     m_mist_volumes_dirty = true;
   }
+  void set_ground_fog(const Render::GroundFogSettings& fog) noexcept {
+    m_ground_fog = fog;
+  }
   [[nodiscard]] auto light_direction() const noexcept -> const QVector3D& override {
     return m_light_dir;
   }
@@ -320,6 +323,7 @@ private:
   float m_ambient_strength{0.30F};
   EnvironmentLightingState m_environment_lighting{};
   std::vector<Render::MistVolume> m_mist_volumes;
+  Render::GroundFogSettings m_ground_fog{};
   bool m_mist_volumes_dirty{false};
 
   Render::FrameBudgetConfig m_frame_budget_config;

@@ -19,4 +19,10 @@ struct MistVolume {
 
 inline constexpr int k_max_mist_volumes = 24;
 
+struct GroundFogSettings {
+  float floor_y = 0.0F;
+  float ceiling_y = 0.0F;
+  float strength = 0.0F;
+};
+
 } // namespace Render

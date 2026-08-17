@@ -95,7 +95,7 @@ void main() {
   vec3 color = albedo * illumination * cavity;
   color += sun * specular;
   color += sky * rim;
-  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color += albedo * cavity * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);

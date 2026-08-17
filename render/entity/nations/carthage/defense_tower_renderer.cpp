@@ -403,7 +403,9 @@ void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registr
                                  .archetype = &tower_archetype,
                                  .health_bar_style = &tower_health_bar_style,
                                  .draw_banner = &draw_tower_banner_for_team,
-                                 .selection = BuildingSelectionStyle{1.6F, 1.6F}});
+                                 .selection = BuildingSelectionStyle{1.6F, 1.6F},
+                                 .night_brazier_deck_y = 2.24F,
+                                 .night_brazier_offset = 0.60F});
 }
 
 } // namespace Render::GL::Carthage

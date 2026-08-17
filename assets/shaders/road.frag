@@ -189,13 +189,24 @@ void main() {
   vec3 view_dir = normalize(vec3(0.0, 0.9, 0.4));
 
   float steep = saturate_val(length(vec2(sx, sy)) * bump_strength);
-  float roughness = clamp(material_roughness + steep * 0.08, 0.18, 1.0);
-  float f0 = 0.03;
+  float wetness = environment_wetness();
+  float puddle_field = noise_2d(uv * 0.55 + vec2(13.0, 5.0)) * 0.6 +
+                       noise_2d(uv * 1.7 + vec2(-3.0, 21.0)) * 0.4;
+  float hollow = clamp(-h * 14.0 + ruts * 0.55, 0.0, 1.0);
+  float puddle = smoothstep(0.62, 0.80, puddle_field + hollow * 0.20) * wetness;
+  float damp = wetness * (0.55 + 0.45 * hollow);
+  base_color *= 1.0 - damp * 0.34 - puddle * 0.30;
+  vec3 n_wet = normalize(mix(n_final, n_geom, puddle * 0.92));
+  float roughness =
+      clamp(material_roughness + steep * 0.08 - damp * 0.30 - puddle * 0.45, 0.10, 1.0);
+  float f0 = mix(0.03, 0.05, wetness);
 
-  float spec = ggx_specular(n_final, view_dir, light_dir, roughness, f0);
+  float spec = ggx_specular(n_wet, view_dir, light_dir, roughness, f0);
 
   vec3 lit_color = base_color * soi_surface_lighting_scaled(n_final, 0.65) * ao;
-  lit_color += environment_primary_color() * spec * 0.20;
+  lit_color += environment_primary_color() * environment_primary_intensity() * spec *
+               (0.20 + damp * 0.45 + puddle * 0.9);
+  lit_color += environment_sky_color() * puddle * 0.10;
 
   float grime = (1.0 - ao) * 0.14 * (0.8 + 0.2 * noise_2d(uv * 6.0));
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
@@ -203,7 +214,7 @@ void main() {
 
   lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);
 
-  lit_color += lit_color * local_lighting(v_world_pos, normalize(v_normal));
+  lit_color += base_color * ao * local_lighting(v_world_pos, normalize(v_normal));
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
   frag_color = vec4(lit_color, u_alpha * edge_alpha);
 }

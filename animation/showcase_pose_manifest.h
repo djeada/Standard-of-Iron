@@ -16,8 +16,22 @@ enum class HumanoidShowcaseMove : std::uint8_t {
   SideAerial,
   SwordFlourish,
   SpearThrow,
+  RestSit,
+  RestSitKnees,
+  RestKneel,
+  RestSitDown,
+  RestSitKneesDown,
   Count
 };
+
+[[nodiscard]] constexpr auto
+humanoid_showcase_move_is_resting(HumanoidShowcaseMove move) noexcept -> bool {
+  return move == HumanoidShowcaseMove::RestSit ||
+         move == HumanoidShowcaseMove::RestSitKnees ||
+         move == HumanoidShowcaseMove::RestKneel ||
+         move == HumanoidShowcaseMove::RestSitDown ||
+         move == HumanoidShowcaseMove::RestSitKneesDown;
+}
 
 inline constexpr std::size_t k_humanoid_showcase_move_count =
     static_cast<std::size_t>(HumanoidShowcaseMove::Count);

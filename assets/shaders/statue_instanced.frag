@@ -61,6 +61,13 @@ void main() {
   float grime = upward * smoothstep(0.40, 0.80, grime_field);
   stone = mix(stone, vec3(0.46, 0.48, 0.40), grime * 0.22 * (1.0 - figure * 0.55));
 
+  float base_moss_field = soi_noise21_b0e82b(
+      v_world_pos.xz * 2.3 + vec2(v_local_pos.y * 3.1, v_local_pos.x * 2.7));
+  float moss_reach = 1.0 - smoothstep(0.02, 0.36 + base_moss_field * 0.30, height);
+  float base_moss =
+      moss_reach * (1.0 - figure * 0.6) * smoothstep(0.38, 0.70, base_moss_field);
+  stone = mix(stone, vec3(0.20, 0.30, 0.14), base_moss * 0.62);
+
   float splash = 1.0 - smoothstep(0.02, 0.34, height);
   float moss_field = soi_noise21_b0e82b(v_world_pos.xz * 5.4 + vec2(height * 3.1));
   stone = mix(stone,
@@ -94,7 +101,7 @@ void main() {
   vec3 color = stone * illumination * cavity;
   color += sun * specular;
   color += sky * rim;
-  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color += stone * cavity * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color /= 1.0 + max(color - vec3(0.95), vec3(0.0)) * 0.50;
   color = apply_visibility_memory(color, v_world_pos.xz);

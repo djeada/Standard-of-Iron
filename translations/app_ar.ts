@@ -1200,6 +1200,30 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>In the field</source>
         <translation>في الميدان</translation>
     </message>
+    <message>
+        <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
+        <translation>يثبّت القوات في نقطة. تخرج لملاقاة ما يقترب ثم تعود.</translation>
+    </message>
+    <message>
+        <source>Holding a spot</source>
+        <translation>تثبيت نقطة</translation>
+    </message>
+    <message>
+        <source>Reach</source>
+        <translation>المدى</translation>
+    </message>
+    <message>
+        <source>They fight what comes within 10 m of that spot, and drop a target that leaves it.</source>
+        <translation>يقاتلون ما يدخل ضمن ١٠ أمتار من تلك النقطة، ويتركون الهدف الذي يبتعد عنها.</translation>
+    </message>
+    <message>
+        <source>Release</source>
+        <translation>الإلغاء</translation>
+    </message>
+    <message>
+        <source>Press Guard again, or order a move or attack.</source>
+        <translation>اضغط حراسة مرة أخرى، أو أصدر أمر تحرّك أو هجوم.</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -2390,14 +2414,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>أمر هجوم</translation>
     </message>
     <message>
-        <source>Guard order</source>
-        <translation>أمر حراسة</translation>
-    </message>
-    <message>
-        <source>Patrol order</source>
-        <translation>أمر دورية</translation>
-    </message>
-    <message>
         <source>Medic order</source>
         <translation>أمر إسعاف</translation>
     </message>
@@ -2426,24 +2442,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>أمر التوقف</translation>
     </message>
     <message>
-        <source>Attack enemy units or buildings. Only eligible selected troops receive the order.</source>
-        <translation>هاجم وحدات العدو أو مبانيه. لا يتلقى الأمر إلا القوات المحددة المؤهلة.</translation>
-    </message>
-    <message>
         <source>Attack is not available for the current selection</source>
         <translation>الهجوم غير متاح للتحديد الحالي</translation>
     </message>
     <message>
-        <source>Guard a position. Only guard-capable troops receive the order.</source>
-        <translation>احرس موقعاً. لا يتلقى الأمر إلا القوات القادرة على الحراسة.</translation>
-    </message>
-    <message>
         <source>Guard is not available for the current selection</source>
         <translation>الحراسة غير متاحة للتحديد الحالي</translation>
-    </message>
-    <message>
-        <source>Patrol between waypoints.</source>
-        <translation>سِر دورية بين نقاط المسار.</translation>
     </message>
     <message>
         <source>Patrol is not available for the current selection</source>
@@ -2454,10 +2458,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>إسعاف</translation>
     </message>
     <message>
-        <source>Healers tend nearby allies on their own.</source>
-        <translation>المعالجون يداوون الحلفاء القريبين من تلقاء أنفسهم.</translation>
-    </message>
-    <message>
         <source>Healers automatically heal nearby allies. This is passive, not a manual order.</source>
         <translation>المعالجون يداوون الحلفاء القريبين تلقائياً. هذا سلوك تلقائي لا أمر يدوي.</translation>
     </message>
@@ -2466,24 +2466,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>حدّد وحدات المعالجين</translation>
     </message>
     <message>
-        <source>Stop all actions immediately.</source>
-        <translation>أوقف كل الأفعال فوراً.</translation>
-    </message>
-    <message>
-        <source>Hold position and defend.</source>
-        <translation>اثبت في الموضع ودافع.</translation>
-    </message>
-    <message>
-        <source>Hold is not available for the current selection</source>
-        <translation>الثبات غير متاح للتحديد الحالي</translation>
-    </message>
-    <message>
         <source>Build</source>
         <translation>بناء</translation>
-    </message>
-    <message>
-        <source>Open builder orders and place structures.</source>
-        <translation>افتح أوامر البنّاء وضع الأبنية.</translation>
     </message>
     <message>
         <source>Build is only available to builders</source>
@@ -2494,10 +2478,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>اجمع</translation>
     </message>
     <message>
-        <source>Click a tree, boulder or ore deposit. Right-click to cancel.</source>
-        <translation>انقر على شجرة أو صخرة أو منجم خام. النقر الأيمن للإلغاء.</translation>
-    </message>
-    <message>
         <source>Collect is only available to builders</source>
         <translation>الجمع متاح للبنّائين فقط</translation>
     </message>
@@ -2506,20 +2486,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>أوصِل</translation>
     </message>
     <message>
-        <source>Click a friendly barracks. Only selected civilians receive the order.</source>
-        <translation>انقر على ثكنة صديقة. لا يتلقى الأمر إلا المدنيون المحددون.</translation>
-    </message>
-    <message>
         <source>Deliver is only available to civilians</source>
         <translation>التوصيل متاح للمدنيين فقط</translation>
     </message>
     <message>
         <source>Rally</source>
         <translation>تجميع</translation>
-    </message>
-    <message>
-        <source>The commander plants a rally flag; troops march to it once placed.</source>
-        <translation>يغرس القائد راية تجميع؛ وتزحف القوات إليها بمجرد وضعها.</translation>
     </message>
     <message>
         <source>Select a commander to use rally</source>
@@ -2542,10 +2514,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>هالة</translation>
     </message>
     <message>
-        <source>Temporarily empower nearby troops. A glow marks every affected soldier.</source>
-        <translation>عزّز القوات القريبة مؤقتاً. يميّز وهجٌ كل جندي متأثر.</translation>
-    </message>
-    <message>
         <source>Select a ready commander to activate the aura</source>
         <translation>حدّد قائداً جاهزاً لتفعيل الهالة</translation>
     </message>
@@ -2558,20 +2526,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>جمع تلقائي</translation>
     </message>
     <message>
-        <source>Builders keep finding and collecting the nearest resource on their own. Any new order cancels it.</source>
-        <translation>يواصل البنّاؤون البحث عن أقرب مورد وجمعه من تلقاء أنفسهم. وأي أمر جديد يلغي ذلك.</translation>
-    </message>
-    <message>
         <source>Auto Gather is only available to builders</source>
         <translation>الجمع التلقائي متاح للبنّائين فقط</translation>
     </message>
     <message>
         <source>Repair</source>
         <translation>أصلِح</translation>
-    </message>
-    <message>
-        <source>Click a damaged building of yours. Right-click to cancel.</source>
-        <translation>انقر على مبنى متضرر من مبانيك. النقر الأيمن للإلغاء.</translation>
     </message>
     <message>
         <source>Repair is only available to builders</source>
@@ -2595,6 +2555,342 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1%</source>
         <translation>%1%</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 م</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1 ث</translation>
+    </message>
+    <message>
+        <source>Give it</source>
+        <translation>إصداره</translation>
+    </message>
+    <message>
+        <source>Press Guard, then click the ground to hold. Right-click cancels.</source>
+        <translation>اضغط حراسة، ثم انقر على الأرض المراد تثبيتها. النقر الأيمن يُلغي.</translation>
+    </message>
+    <message>
+        <source>Reach</source>
+        <translation>المدى</translation>
+    </message>
+    <message>
+        <source>They fight what comes within %1 of that spot, and drop a target that leaves it.</source>
+        <translation>يقاتلون ما يدخل ضمن %1 من تلك النقطة، ويتركون الهدف الذي يبتعد عنها.</translation>
+    </message>
+    <message>
+        <source>After</source>
+        <translation>بعدها</translation>
+    </message>
+    <message>
+        <source>They walk back to the spot when the fight ends.</source>
+        <translation>يعودون إلى النقطة عند انتهاء القتال.</translation>
+    </message>
+    <message>
+        <source>Release</source>
+        <translation>الإلغاء</translation>
+    </message>
+    <message>
+        <source>Press Guard again, or order a move or attack. Stop does not lift it.</source>
+        <translation>اضغط حراسة مرة أخرى، أو أصدر أمر تحرّك أو هجوم. التوقّف لا يرفعه.</translation>
+    </message>
+    <message>
+        <source>Troops</source>
+        <translation>القوات</translation>
+    </message>
+    <message>
+        <source>Any soldier, and the commander.</source>
+        <translation>أي جندي، والقائد.</translation>
+    </message>
+    <message>
+        <source>vs Hold</source>
+        <translation>مقابل الثبات</translation>
+    </message>
+    <message>
+        <source>Guards step out to meet the enemy; Hold never moves.</source>
+        <translation>الحراسة تخرج لملاقاة العدو؛ الثبات لا يتحرّك أبداً.</translation>
+    </message>
+    <message>
+        <source>Press Hold. There is nothing to click.</source>
+        <translation>اضغط ثبات. لا شيء للنقر عليه.</translation>
+    </message>
+    <message>
+        <source>Stance</source>
+        <translation>الوضعية</translation>
+    </message>
+    <message>
+        <source>They kneel, strike whatever reaches them, and never pursue.</source>
+        <translation>يجثون، ويضربون كل ما يصل إليهم، ولا يطاردون أبداً.</translation>
+    </message>
+    <message>
+        <source>Dug in</source>
+        <translation>مُتحصِّنون</translation>
+    </message>
+    <message>
+        <source>Archers reach %1% further and spearmen %2%; both hit %3% harder, take %4% more punishment, and braced spears break a charge.</source>
+        <translation>يزيد مدى الرماة %1% والرماحة %2%؛ ويضرب كلاهما بقوة أكبر %3%، ويتحمّلان %4% أكثر، والرماح المشرعة تكسر الهجمة.</translation>
+    </message>
+    <message>
+        <source>Press Hold again, or order a move, attack or Stop. Standing up takes a moment.</source>
+        <translation>اضغط ثبات مرة أخرى، أو أصدر أمر تحرّك أو هجوم أو توقّف. النهوض يستغرق لحظة.</translation>
+    </message>
+    <message>
+        <source>Archers and spearmen only.</source>
+        <translation>الرماة والرماحة فقط.</translation>
+    </message>
+    <message>
+        <source>vs Guard</source>
+        <translation>مقابل الحراسة</translation>
+    </message>
+    <message>
+        <source>Guard would chase; Hold trades that for reach and staying power.</source>
+        <translation>الحراسة تطارد؛ أما الثبات فيستبدل ذلك بالمدى وقوة الصمود.</translation>
+    </message>
+    <message>
+        <source>Press Patrol, left-click the first waypoint, then left-click the second. Right-click cancels.</source>
+        <translation>اضغط دورية، ثم انقر بالزر الأيسر على نقطة المسار الأولى ثم الثانية. النقر الأيمن يُلغي.</translation>
+    </message>
+    <message>
+        <source>Route</source>
+        <translation>المسار</translation>
+    </message>
+    <message>
+        <source>They march between the two points for good, attacking whatever crosses the line.</source>
+        <translation>يسيرون بين النقطتين دائماً، ويهاجمون كل ما يعبر الخط.</translation>
+    </message>
+    <message>
+        <source>Any other order, or Stop, clears the route.</source>
+        <translation>أي أمر آخر، أو التوقّف، يمسح المسار.</translation>
+    </message>
+    <message>
+        <source>Every soldier and the commander.</source>
+        <translation>كل جندي والقائد.</translation>
+    </message>
+    <message>
+        <source>Effect</source>
+        <translation>الأثر</translation>
+    </message>
+    <message>
+        <source>Nearby troops fight with steadier morale and the commander&apos;s own bonus.</source>
+        <translation>تقاتل القوات القريبة بمعنويات أثبت وبإضافة القائد الخاصة.</translation>
+    </message>
+    <message>
+        <source>%1 around the commander, and it moves with him.</source>
+        <translation>%1 حول القائد، وتتحرّك معه.</translation>
+    </message>
+    <message>
+        <source>Lasts</source>
+        <translation>المدة</translation>
+    </message>
+    <message>
+        <source>Recharge</source>
+        <translation>إعادة الشحن</translation>
+    </message>
+    <message>
+        <source>%1 once it fades. A wounded commander cannot call it.</source>
+        <translation>%1 بعد زوالها. القائد الجريح لا يستطيع استدعاءها.</translation>
+    </message>
+    <message>
+        <source>Your own living troops inside the ring; a glow marks each one.</source>
+        <translation>قواتك الحية داخل الحلقة؛ يميّز كلاً منها توهّج.</translation>
+    </message>
+    <message>
+        <source>Click waypoint 1</source>
+        <translation>انقر نقطة المسار ١</translation>
+    </message>
+    <message>
+        <source>Click waypoint 2</source>
+        <translation>انقر نقطة المسار ٢</translation>
+    </message>
+    <message>
+        <source>On patrol</source>
+        <translation>في دورية</translation>
+    </message>
+    <message>
+        <source>Active %1</source>
+        <translation>نشِطة %1</translation>
+    </message>
+    <message>
+        <source>Ready in %1</source>
+        <translation>جاهزة خلال %1</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>جاهز</translation>
+    </message>
+    <message>
+        <source>Holding a spot</source>
+        <translation>تثبيت نقطة</translation>
+    </message>
+    <message>
+        <source>Patrol: click the second waypoint</source>
+        <translation>دورية: انقر نقطة المسار الثانية</translation>
+    </message>
+    <message>
+        <source>Patrol: click the first waypoint</source>
+        <translation>دورية: انقر نقطة المسار الأولى</translation>
+    </message>
+    <message>
+        <source>Guard: click the spot to hold</source>
+        <translation>حراسة: انقر النقطة المراد تثبيتها</translation>
+    </message>
+    <message>
+        <source>Guarding a spot</source>
+        <translation>حراسة نقطة</translation>
+    </message>
+    <message>
+        <source>Send the selected troops at one enemy unit or building.</source>
+        <translation>يرسل القوات المحدّدة نحو وحدة أو مبنى معادٍ.</translation>
+    </message>
+    <message>
+        <source>Press Attack, then left-click the target. Right-click cancels. A right-click on an enemy does the same thing.</source>
+        <translation>اضغط هجوم، ثم انقر بالزر الأيسر على الهدف. النقر الأيمن يُلغي. والنقر الأيمن على عدوّ يفعل الشيء نفسه.</translation>
+    </message>
+    <message>
+        <source>Scope</source>
+        <translation>النطاق</translation>
+    </message>
+    <message>
+        <source>They chase the target until it dies or you order otherwise.</source>
+        <translation>يطاردون الهدف حتى يسقط أو تصدر أمراً آخر.</translation>
+    </message>
+    <message>
+        <source>Every fighting unit; healers and builders sit it out.</source>
+        <translation>كل وحدة مقاتلة؛ أما المعالجون والبناؤون فلا يشاركون.</translation>
+    </message>
+    <message>
+        <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
+        <translation>يثبّت القوات في نقطة. تخرج لملاقاة ما يقترب ثم تعود.</translation>
+    </message>
+    <message>
+        <source>March a beat between two points and fight whatever crosses it.</source>
+        <translation>يسير مساراً بين نقطتين ويقاتل كل ما يعبره.</translation>
+    </message>
+    <message>
+        <source>Healers tend the wounded around them on their own.</source>
+        <translation>يعالج المعالجون الجرحى من حولهم تلقائياً.</translation>
+    </message>
+    <message>
+        <source>Passive</source>
+        <translation>تلقائي</translation>
+    </message>
+    <message>
+        <source>There is nothing to press: a healer mends nearby allies whenever they are hurt.</source>
+        <translation>لا شيء للضغط عليه: يداوي المعالج الحلفاء القريبين متى أُصيبوا.</translation>
+    </message>
+    <message>
+        <source>Healers only. Keep them behind the line and they will work.</source>
+        <translation>المعالجون فقط. أبقِهم خلف الصف وسيؤدّون عملهم.</translation>
+    </message>
+    <message>
+        <source>Drop everything the selected troops are doing and stand still.</source>
+        <translation>يجعل القوات المحدّدة تترك كل شيء وتقف ساكنة.</translation>
+    </message>
+    <message>
+        <source>Clears</source>
+        <translation>يلغي</translation>
+    </message>
+    <message>
+        <source>Movement, the current target, Patrol, Hold, formation and gathering orders.</source>
+        <translation>التحرّك، والهدف الحالي، والدورية، والثبات، وأوامر التشكيل والجمع.</translation>
+    </message>
+    <message>
+        <source>Keeps</source>
+        <translation>يبقي</translation>
+    </message>
+    <message>
+        <source>Guard: press Guard again to release troops from their anchor.</source>
+        <translation>الحراسة: اضغط حراسة مرة أخرى لتحرير القوات من نقطة تثبيتها.</translation>
+    </message>
+    <message>
+        <source>Stand fast. Troops dig in where they are, hit harder and further, and never pursue.</source>
+        <translation>الصمود. تتحصّن القوات في مكانها، وتضرب بقوة ومدى أكبر، ولا تطارد أبداً.</translation>
+    </message>
+    <message>
+        <source>Hold is only available to archers and spearmen</source>
+        <translation>الثبات متاح للرماة والرماحة فقط</translation>
+    </message>
+    <message>
+        <source>Open the builder&apos;s structure list and place one.</source>
+        <translation>يفتح قائمة مباني البنّاء ويضع واحداً.</translation>
+    </message>
+    <message>
+        <source>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</source>
+        <translation>اختر مبنى، وحرّك المخطط إلى أرض مستوية خالية، ومرّر للتدوير، وانقر بالزر الأيسر للتأكيد. النقر الأيمن يُلغي.</translation>
+    </message>
+    <message>
+        <source>Builders only.</source>
+        <translation>البناؤون فقط.</translation>
+    </message>
+    <message>
+        <source>Send a builder to fell a tree, break a boulder or work an ore seam.</source>
+        <translation>يرسل بنّاءً لقطع شجرة أو تكسير صخرة أو استخراج عرق خام.</translation>
+    </message>
+    <message>
+        <source>Press Collect, then left-click the node. Right-click cancels.</source>
+        <translation>اضغط اجمع، ثم انقر بالزر الأيسر على المورد. النقر الأيمن يُلغي.</translation>
+    </message>
+    <message>
+        <source>The load only counts once it is dropped at the yard beside a barracks.</source>
+        <translation>لا تُحتسب الحمولة إلا بعد إنزالها في الساحة بجوار الثكنة.</translation>
+    </message>
+    <message>
+        <source>Builders keep finding and working the nearest resource on their own.</source>
+        <translation>يواصل البناؤون إيجاد أقرب مورد والعمل عليه تلقائياً.</translation>
+    </message>
+    <message>
+        <source>Runs until you stop it; any new order cancels it.</source>
+        <translation>يستمر حتى توقفه؛ وأي أمر جديد يلغيه.</translation>
+    </message>
+    <message>
+        <source>Send a builder to mend one of your damaged buildings.</source>
+        <translation>يرسل بنّاءً لإصلاح أحد مبانيك المتضرّرة.</translation>
+    </message>
+    <message>
+        <source>Press Repair, then left-click the damaged building. Right-click cancels.</source>
+        <translation>اضغط أصلِح، ثم انقر بالزر الأيسر على المبنى المتضرّر. النقر الأيمن يُلغي.</translation>
+    </message>
+    <message>
+        <source>Send civilians to a barracks to refill the population it recruits from.</source>
+        <translation>يرسل المدنيين إلى ثكنة لتجديد السكان الذين تجنّد منهم.</translation>
+    </message>
+    <message>
+        <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
+        <translation>اضغط أوصِل، ثم انقر بالزر الأيسر على ثكنة صديقة. النقر الأيمن يُلغي.</translation>
+    </message>
+    <message>
+        <source>Civilians only; other selected units ignore it.</source>
+        <translation>المدنيون فقط؛ أما الوحدات المحدّدة الأخرى فتتجاهله.</translation>
+    </message>
+    <message>
+        <source>The commander plants a flag and the army marches to it.</source>
+        <translation>يغرس القائد راية فيسير الجيش إليها.</translation>
+    </message>
+    <message>
+        <source>Press Rally, then left-click where the flag should stand. He walks there and plants it.</source>
+        <translation>اضغط تجميع، ثم انقر بالزر الأيسر حيث يجب أن تقف الراية. يمشي إلى هناك ويغرسها.</translation>
+    </message>
+    <message>
+        <source>Troops near the flag march in; it also steadies wavering men.</source>
+        <translation>تتقدّم القوات القريبة من الراية؛ وهي تثبّت أيضاً الرجال المتردّدين.</translation>
+    </message>
+    <message>
+        <source>Needs your commander selected.</source>
+        <translation>يتطلّب تحديد قائدك.</translation>
+    </message>
+    <message>
+        <source>Automatic gates open for your own troops and shut behind them.</source>
+        <translation>تُفتح البوابات التلقائية لقواتك وتُغلق خلفها.</translation>
+    </message>
+    <message>
+        <source>Select one of your own gates.</source>
+        <translation>اختر إحدى بواباتك.</translation>
+    </message>
+    <message>
+        <source>The commander empowers the troops around him for a while, then must recharge.</source>
+        <translation>يقوّي القائد القوات من حوله لبعض الوقت، ثم يحتاج إلى إعادة شحن.</translation>
     </message>
 </context>
 <context>
@@ -3024,14 +3320,6 @@ Unseen: never scouted.</source>
         <translation>إصدار الأوامر</translation>
     </message>
     <message>
-        <source>Stances</source>
-        <translation>المواقف</translation>
-    </message>
-    <message>
-        <source>Guard holds a spot, chases what comes near and returns. Hold stands the ground without pursuing - for archers and spearmen. Patrol walks between two points and engages what crosses the route. Stop cancels everything.</source>
-        <translation>الحراسة تتمسك بموقع وتطارد ما يقترب ثم تعود. الثبات يصمد في المكان دون مطاردة، للرماة وحاملي الرماح. الدورية تسير بين نقطتين وتشتبك مع ما يعبر الطريق. التوقف يلغي كل شيء.</translation>
-    </message>
-    <message>
         <source>Winning and losing</source>
         <translation>الفوز والخسارة</translation>
     </message>
@@ -3120,10 +3408,6 @@ Unseen: never scouted.</source>
         <translation>الهالة والتجمّع</translation>
     </message>
     <message>
-        <source>With the commander selected, Aura briefly empowers every soldier around him and then recharges. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
-        <translation>حين يكون القائد محددًا، تقوّي الهالة لفترة وجيزة كل جندي حوله ثم تُشحن من جديد. التجمّع يغرس راية يزحف إليها جيشك، وهو مفيد لإعادة قوة مبعثرة إلى الصف.</translation>
-    </message>
-    <message>
         <source>Taking direct control</source>
         <translation>تولّي التحكم المباشر</translation>
     </message>
@@ -3190,6 +3474,34 @@ Unseen: never scouted.</source>
     <message>
         <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
         <translation>يحافظ الرماحون على الخط، ويعاقب الرماة من خلفه، ويكسر الفرسان الأجنحة، ويداوي المعالجون الجرحى القريبين من تلقاء أنفسهم. انقر بالزر الأيمن واسحب مع تحديد عدة وحدات لنشرها في تشكيل يواجه اتجاه السحب؛ ويفتح أمر التشكيل المخطط نفسه حيث تقف. الركض يقايض القدرة على التحمل بالسرعة.</translation>
+    </message>
+    <message>
+        <source>Guard - hold a spot</source>
+        <translation>الحراسة — تثبيت نقطة</translation>
+    </message>
+    <message>
+        <source>Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.</source>
+        <translation>اضغط حراسة، ثم انقر بالزر الأيسر على الأرض التي يجب أن تثبت عندها القوات. يقاتلون كل ما يقترب نحو ١٠ أمتار من تلك النقطة، ويتركون ما يمرّ متجاوزاً إياها، ويعودون بعد انتهاء القتال. اضغط حراسة مرة أخرى، أو أصدر أمر تحرّك أو هجوم، لتحريرهم؛ والتوقّف وحده لا يرفعه. كل جندي يستطيع الحراسة.</translation>
+    </message>
+    <message>
+        <source>Hold - stand fast</source>
+        <translation>الثبات — الصمود</translation>
+    </message>
+    <message>
+        <source>Press Hold and the troops kneel where they stand. They never take a step, but they reach further, hit harder and take more punishment than they would on the move, and braced spears gut a cavalry charge. That is the trade: pursuit for staying power. Press Hold again, or give a move, attack or Stop order, to stand them up. Only archers and spearmen can hold.</source>
+        <translation>اضغط ثبات فتجثو القوات في مكانها. لا يخطون خطوة، لكن مداهم أبعد، وضربهم أقوى، وتحمّلهم أكبر مما هو عليه أثناء الحركة، والرماح المشرعة تمزّق هجمة الفرسان. تلك هي المقايضة: المطاردة مقابل قوة الصمود. اضغط ثبات مرة أخرى، أو أصدر أمر تحرّك أو هجوم أو توقّف، لينهضوا. الرماة والرماحة وحدهم يستطيعون الثبات.</translation>
+    </message>
+    <message>
+        <source>Patrol - walk a beat</source>
+        <translation>الدورية — قطع مسار</translation>
+    </message>
+    <message>
+        <source>Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.</source>
+        <translation>اضغط دورية، وانقر بالزر الأيسر على نقطة المسار الأولى ثم الثانية. تسير القوات بين النقطتين دائماً وتهاجم كل ما يعبر الخط — وهو مفيد لمراقبة جناح بينما تنظر إلى مكان آخر. النقر الأيمن يُلغي أثناء الضبط؛ وأي أمر آخر، أو التوقّف، يمسح المسار.</translation>
+    </message>
+    <message>
+        <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
+        <translation>عند تحديد القائد، تقوّي الهالة قواته لفترة ثم تحتاج إلى إعادة شحن — لكل قائد إضافته ونصف قطره وتوقيتاته الخاصة، ويعرضها الزر مع الوقت المتبقّي. يميّز توهّج كل جندي داخل الحلقة، وتتحرّك الحلقة معه، والقائد الجريح لا يستطيع استدعاءها. أما التجميع فيغرس راية يسير إليها جيشك — وهو مفيد لإعادة قوة متفرّقة إلى صفّ واحد.</translation>
     </message>
 </context>
 <context>
@@ -6858,14 +7170,6 @@ Wide vision and a durable settlement anchor</source>
         <translation>غارة رومانية قادمة. يعدّ متتبع الموجات تنازليًا وتحدد الخريطة المصغرة نقطة دخولها. اصطفّ قرب ثكنتك: حاملو الرماح في المقدمة، والرماة خلفهم، والقائد قريبًا لتبلغهم هالته. اكسر الغارة للمتابعة.</translation>
     </message>
     <message>
-        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
-        <translation>يمكن إخبار الجنود بكيفية التصرف. الحراسة: التمسك بموقع ومطاردة كل ما يقترب ثم العودة. الثبات: الصمود في المكان دون مطاردة، وهو الأنسب للرماة فوق تل أو على خط سور. الدورية: السير بين نقطتين والاشتباك مع كل ما يعبر الطريق. أعطِ جنودك أحد هذه الأوامر.</translation>
-    </message>
-    <message>
-        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
-        <translation>قائدك يحمل الراية. تقاتل القوات القريبة منه بمعنويات أعلى، وحين يكون محددًا يظهر أمران: الهالة تقوّي لفترة وجيزة كل جندي حوله، والتجمّع يغرس راية يزحف إليها الجيش. إن مات، انهارت صفوفك وخُسرت المهمة؛ فأبقِه خلف الرماح. فعّل الهالة الآن.</translation>
-    </message>
-    <message>
         <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
         <translation>حرّك المنظر بمفاتيح الأسهم أو WASD، أو ادفع الفأرة إلى حافة الشاشة. مرّر العجلة للتكبير، وQ وE للتدوير، وCtrl مع سهمي الأعلى والأسفل للإمالة، وHome يعيدك إلى معسكرك. المتابعة تُبقي الكاميرا على تحديدك. حرّك الكاميرا الآن.</translation>
     </message>
@@ -6940,6 +7244,14 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Kill the Roman commander and take the camp</source>
         <translation>اقتل القائد الروماني واستولِ على المعسكر</translation>
+    </message>
+    <message>
+        <source>Soldiers can be told how to behave, and the three orders are not the same. Guard: click a spot; they meet anything that comes near it, then walk back to it. Hold: they never take a step, but they reach further, hit harder and brace against a charge - archers and spearmen only. Patrol: click two waypoints and they march the beat between them, fighting whatever crosses it. Hover any of the three to read the full rules, then give one of them to your soldiers.</source>
+        <translation>يمكن إخبار الجنود كيف يتصرّفون، والأوامر الثلاثة ليست سواء. الحراسة: انقر نقطة؛ فيلاقون ما يقترب منها ثم يعودون إليها. الثبات: لا يخطون خطوة، لكن مداهم أبعد وضربهم أقوى ويتحصّنون في وجه الهجمة — للرماة والرماحة فقط. الدورية: انقر نقطتي مسار فيقطعون ما بينهما، ويقاتلون كل ما يعبره. مرّر المؤشر فوق أي منها لقراءة القواعد كاملة، ثم أصدر أحدها لجنودك.</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura empowers every soldier in a ring around him for a stretch and then recharges - the button prints the radius, how long it lasts and how long until it returns - and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
+        <translation>يحمل قائدك الراية. تقاتل القوات القريبة منه بمعنويات أعلى، وما دام محدّداً يظهر أمران: الهالة تقوّي كل جندي في حلقة حوله لفترة ثم تُعاد شحنها — ويعرض الزر نصف القطر ومدة بقائها والوقت حتى عودتها — والتجميع يغرس راية يسير إليها الجيش. إن مات انكسرت صفوفك وخسرت المهمة — أبقِه خلف الرماح. فعّل الهالة الآن.</translation>
     </message>
 </context>
 <context>

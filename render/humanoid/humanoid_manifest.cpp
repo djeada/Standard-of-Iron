@@ -114,6 +114,11 @@ enum class BakerShowcaseType : std::uint8_t {
   SideAerial,
   SwordFlourish,
   SpearThrow,
+  RestSit,
+  RestSitKnees,
+  RestKneel,
+  RestSitDown,
+  RestSitKneesDown,
 };
 enum class BakerAmbientIdleType : std::uint8_t {
   None,
@@ -137,6 +142,16 @@ auto to_showcase_move(BakerShowcaseType t) noexcept -> Animation::HumanoidShowca
     return Animation::HumanoidShowcaseMove::SwordFlourish;
   case BakerShowcaseType::SpearThrow:
     return Animation::HumanoidShowcaseMove::SpearThrow;
+  case BakerShowcaseType::RestSit:
+    return Animation::HumanoidShowcaseMove::RestSit;
+  case BakerShowcaseType::RestSitKnees:
+    return Animation::HumanoidShowcaseMove::RestSitKnees;
+  case BakerShowcaseType::RestKneel:
+    return Animation::HumanoidShowcaseMove::RestKneel;
+  case BakerShowcaseType::RestSitDown:
+    return Animation::HumanoidShowcaseMove::RestSitDown;
+  case BakerShowcaseType::RestSitKneesDown:
+    return Animation::HumanoidShowcaseMove::RestSitKneesDown;
   case BakerShowcaseType::None:
     break;
   }
@@ -778,6 +793,71 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      66U,
      30.0F,
      2.2F,
+     false},
+    {"showcase_rest_sit",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::RestSit,
+     180U,
+     30.0F,
+     6.0F,
+     true},
+    {"showcase_rest_sit_knees",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::RestSitKnees,
+     210U,
+     30.0F,
+     7.0F,
+     true},
+    {"showcase_rest_kneel",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::RestKneel,
+     150U,
+     30.0F,
+     5.0F,
+     true},
+    {"showcase_rest_sit_down",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::RestSitDown,
+     48U,
+     30.0F,
+     1.6F,
+     false},
+    {"showcase_rest_sit_knees_down",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::RestSitKneesDown,
+     51U,
+     30.0F,
+     1.7F,
      false},
     {"unarmed_jab",
      Render::GL::HumanoidMotionState::Attacking,
