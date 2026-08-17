@@ -947,6 +947,39 @@ TEST_F(CombatModeTest, AutoEngagementUsesNearestEnemyInsideGuardRadius) {
   auto* attack_target = attacker->get_component<AttackTargetComponent>();
   ASSERT_NE(attack_target, nullptr);
   EXPECT_EQ(attack_target->target_id, inside_enemy->get_id());
+  EXPECT_TRUE(attack_target->should_chase)
+      << "guard melee must close the distance inside its guard radius";
+}
+
+TEST_F(CombatModeTest, AutoEngagementKeepsGuardRangedUnitsFromChasing) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Archer;
+  auto* attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = false;
+  attack->can_ranged = true;
+  attack->range = 8.0F;
+  attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  auto* guard_mode = attacker->add_component<GuardModeComponent>();
+  guard_mode->active = true;
+  guard_mode->guard_radius = 6.0F;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(4.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::AutoEngagement auto_engagement;
+  auto_engagement.process(world.get(), query_context, 0.016F);
+
+  auto* attack_target = attacker->get_component<AttackTargetComponent>();
+  ASSERT_NE(attack_target, nullptr);
+  EXPECT_EQ(attack_target->target_id, enemy->get_id());
+  EXPECT_FALSE(attack_target->should_chase);
 }
 
 TEST_F(CombatModeTest, AutoEngagementIgnoresCloserBuildingAndTargetsEnemyUnit) {

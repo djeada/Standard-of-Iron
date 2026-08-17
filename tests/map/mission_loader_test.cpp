@@ -328,6 +328,70 @@ TEST_F(MissionLoaderTest, CrossingTheRhonePatrolForcesStayDefensive) {
   EXPECT_GT(patrol_it->personality.defense, 0.7F);
 }
 
+TEST_F(MissionLoaderTest, ParsesMissionStages) {
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(MissionLoader::load_from_json_file(
+      assetMissionPath(QStringLiteral("crossing_the_rhone.json")), mission, &error))
+      << error.toStdString();
+
+  ASSERT_FALSE(mission.stages.empty());
+
+  const auto& first = mission.stages.front();
+  EXPECT_EQ(first.type, QStringLiteral("reach_position"));
+  EXPECT_FALSE(first.title.isEmpty());
+  ASSERT_TRUE(first.target.has_value());
+  ASSERT_TRUE(first.target_radius.has_value());
+  EXPECT_GT(*first.target_radius, 0.0F);
+
+  const auto capture_it = std::find_if(
+      mission.stages.begin(), mission.stages.end(), [](const MissionStage& stage) {
+        return stage.type == QStringLiteral("capture_structures");
+      });
+  ASSERT_NE(capture_it, mission.stages.end());
+  ASSERT_EQ(capture_it->structure_types.size(), 1U);
+  EXPECT_EQ(capture_it->structure_types.front(), QStringLiteral("barracks"));
+  EXPECT_GE(capture_it->required_count, 1);
+}
+
+TEST_F(MissionLoaderTest,
+       EveryCampaignMissionAuthorsStagesThatEndOnItsVictoryCondition) {
+  for (const QString& mission_file : {QStringLiteral("crossing_the_rhone.json"),
+                                      QStringLiteral("crossing_the_alps.json"),
+                                      QStringLiteral("battle_of_ticino.json"),
+                                      QStringLiteral("battle_of_trebia.json"),
+                                      QStringLiteral("battle_of_trasimene.json"),
+                                      QStringLiteral("battle_of_cannae.json"),
+                                      QStringLiteral("campania_campaign.json"),
+                                      QStringLiteral("battle_of_zama.json")}) {
+    MissionDefinition mission;
+    QString error;
+    ASSERT_TRUE(MissionLoader::load_from_json_file(
+        assetMissionPath(mission_file), mission, &error))
+        << mission_file.toStdString() << ": " << error.toStdString();
+
+    ASSERT_FALSE(mission.stages.empty())
+        << mission_file.toStdString() << " has no stages";
+
+    const bool ends_on_a_victory_condition =
+        std::any_of(mission.victory_conditions.begin(),
+                    mission.victory_conditions.end(),
+                    [&mission](const Condition& condition) {
+                      return condition.type == mission.stages.back().type;
+                    });
+    EXPECT_TRUE(ends_on_a_victory_condition)
+        << mission_file.toStdString() << " ends on stage type "
+        << mission.stages.back().type.toStdString()
+        << ", which is not one of its victory conditions";
+
+    for (const auto& stage : mission.stages) {
+      EXPECT_FALSE(stage.id.isEmpty()) << mission_file.toStdString();
+      EXPECT_FALSE(stage.title.isEmpty()) << mission_file.toStdString();
+      EXPECT_FALSE(stage.type.isEmpty()) << mission_file.toStdString();
+    }
+  }
+}
+
 TEST_F(MissionLoaderTest, ParsesAuthoredUnitPatrolBehavior) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

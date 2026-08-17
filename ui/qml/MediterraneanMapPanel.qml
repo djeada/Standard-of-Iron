@@ -215,6 +215,17 @@ Rectangle {
         return owner_color_map.neutral;
     }
 
+    function owner_display_name(owner) {
+        var key = owner ? owner.toLowerCase() : "neutral";
+        if (key === "rome")
+            return qsTr("Rome");
+        if (key === "carthage")
+            return qsTr("Carthage");
+        if (key === "neutral" || key === "")
+            return qsTr("Neutral");
+        return owner;
+    }
+
     function apply_campaign_state() {
         if (!campaign_map_loader.item)
             return;
@@ -1168,10 +1179,9 @@ Rectangle {
             width: tooltip_layout.implicitWidth + 16
             height: tooltip_layout.implicitHeight + 16
             radius: Design.Metrics.radiusSmall
-            color: Design.Theme.panelIron
-            border.color: Design.Theme.borderStrong
+            color: "#f5f0e6"
+            border.color: "#8b7355"
             border.width: Design.Metrics.borderThin
-            opacity: 0.95
             z: 10
 
             ColumnLayout {
@@ -1188,7 +1198,7 @@ Rectangle {
                 }
 
                 Label {
-                    text: qsTr("Control: ") + root.hover_province_owner
+                    text: qsTr("Control: ") + root.owner_display_name(root.hover_province_owner)
                     color: "#4a3f32"
                     font.pixelSize: Design.Typography.label
                 }
@@ -1217,7 +1227,7 @@ Rectangle {
 
                 Label {
                     text: qsTr("Legend")
-                    color: Design.Theme.textSecondary
+                    color: "#2d241c"
                     font.pixelSize: Design.Typography.body
                     font.bold: true
                 }

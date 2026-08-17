@@ -176,12 +176,14 @@ protected:
   static void make_defensive(SessionContext& session) {
     auto* ai_system = session.world().get_system<Game::Systems::AISystem>();
     ASSERT_NE(ai_system, nullptr);
-    ai_system->set_ai_strategy(k_wave_ai,
-                               Game::Systems::AI::AIStrategy::Defensive,
-                               0.35F,
-                               0.85F,
-                               0.15F,
-                               "medium");
+    Game::Systems::AI::AIPlayerProfile profile;
+    profile.strategy = Game::Systems::AI::AIStrategy::Defensive;
+    profile.posture = Game::Systems::AI::AIPosture::Garrison;
+    profile.personality.aggression = 0.35F;
+    profile.personality.defense = 0.85F;
+    profile.personality.harassment = 0.15F;
+    profile.difficulty = "medium";
+    ai_system->set_ai_profile(k_wave_ai, profile);
   }
 
   static auto closest_wave_distance_to(SessionContext& session,
@@ -396,6 +398,58 @@ TEST_F(MissionWaveAssaultTest, WaveCannotWalkThroughAnIntactRampart) {
           << position.z() << ")";
     }
   }
+}
+
+TEST_F(MissionWaveAssaultTest, GarrisonAnswersAScoutWithAFewUnitsAndHoldsTheRest) {
+  auto& session = make_match();
+
+  const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
+  spawn(session, Game::Units::SpawnType::Barracks, k_player, camp);
+
+  const QVector3D garrison_home = world_of(k_wave_grid_x - 10, k_gate_grid_z);
+  spawn(session, Game::Units::SpawnType::Home, k_wave_ai, garrison_home, true);
+
+  std::vector<EntityID> garrison;
+  for (int i = 0; i < 8; ++i) {
+    const QVector3D position =
+        garrison_home + QVector3D(-8.0F - static_cast<float>(i % 4),
+                                  0.0F,
+                                  -2.0F + static_cast<float>(i / 4) * 4.0F);
+    const EntityID id =
+        spawn(session, Game::Units::SpawnType::Spearman, k_wave_ai, position, true);
+    ASSERT_NE(id, 0U);
+    garrison.push_back(id);
+  }
+
+  make_defensive(session);
+
+  const EntityID scout = spawn(session,
+                               Game::Units::SpawnType::Builder,
+                               k_player,
+                               garrison_home + QVector3D(-24.0F, 0.0F, 6.0F));
+  ASSERT_NE(scout, 0U);
+  auto* scout_unit = session.world().get_entity(scout)->get_component<UnitComponent>();
+  ASSERT_NE(scout_unit, nullptr);
+  scout_unit->health = scout_unit->max_health = 100000;
+
+  run_for(session, 30.0);
+
+  int responders = 0;
+  for (const auto id : garrison) {
+    auto* entity = session.world().get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+    const auto* attack_target =
+        entity->get_component<Engine::Core::AttackTargetComponent>();
+    if (attack_target != nullptr && attack_target->target_id == scout) {
+      responders++;
+    }
+  }
+
+  EXPECT_GE(responders, 1) << "no garrison unit answered a scout inside its reach";
+  EXPECT_LT(responders, static_cast<int>(garrison.size()))
+      << "the whole garrison mobilised against a single scout";
 }
 
 } // namespace

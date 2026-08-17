@@ -11,9 +11,10 @@ Item {
     property var victoryConditions: []
     property var defeatConditions: []
     property var optionalObjectives: []
+    property var stages: []
     property string victoryMode: "any"
 
-    readonly property bool hasObjectives: victoryConditions.length > 0 || defeatConditions.length > 0 || optionalObjectives.length > 0
+    readonly property bool hasObjectives: stages.length > 0 || victoryConditions.length > 0 || defeatConditions.length > 0 || optionalObjectives.length > 0
     readonly property bool requiresAllVictoryConditions: victoryMode === "all"
     readonly property string victoryHeading: victoryConditions.length > 1 ? (requiresAllVictoryConditions ? qsTr("Victory Conditions — complete all") : qsTr("Victory Conditions — complete any")) : qsTr("Victory Conditions")
 
@@ -74,6 +75,51 @@ Item {
             Design.IronDivider {
                 width: parent.width
                 visible: root.title !== "" && root.hasObjectives
+            }
+
+            Column {
+                width: scroller.availableWidth
+                spacing: Design.Metrics.space4
+                visible: root.stages.length > 0
+
+                Text {
+                    text: qsTr("Mission Steps — in order")
+                    color: Design.Theme.textSecondary
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    font.weight: Design.Typography.bold
+                }
+
+                Repeater {
+                    model: root.stages
+
+                    delegate: Design.IronObjectiveRow {
+                        id: stageRow
+
+                        required property var modelData
+
+                        readonly property int stageRequired: modelData.required === undefined ? 1 : modelData.required
+                        readonly property int stageProgress: modelData.progress === undefined ? 0 : modelData.progress
+
+                        width: scroller.availableWidth
+                        objectiveText: modelData.title || modelData.description || qsTr("Next step")
+                        objectiveState: modelData.complete ? "complete" : (modelData.active ? "current" : "pending")
+                        detail: {
+                            var parts = [];
+                            if (modelData.description && modelData.description !== modelData.title)
+                                parts.push(modelData.description);
+                            if (stageRequired > 1)
+                                parts.push(qsTr("%1 of %2").arg(stageProgress).arg(stageRequired));
+                            return parts.join(" · ");
+                        }
+                        progress: stageRequired > 1 ? stageProgress / stageRequired : -1
+                    }
+                }
+            }
+
+            Design.IronDivider {
+                width: parent.width
+                visible: root.stages.length > 0 && (root.victoryConditions.length > 0 || root.defeatConditions.length > 0)
             }
 
             Repeater {

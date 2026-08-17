@@ -1266,6 +1266,15 @@ public:
   Game::Units::SpawnType product_type{Game::Units::SpawnType::WallSegment};
 };
 
+class DismantleSiteComponent : public Component {
+public:
+  DismantleSiteComponent() = default;
+
+  float duration{1.0F};
+  float progress{0.0F};
+  int active_workers{0};
+};
+
 class GateComponent : public Component {
 public:
   enum class State : std::uint8_t {

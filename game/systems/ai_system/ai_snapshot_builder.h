@@ -8,16 +8,11 @@ class World;
 
 namespace Game::Systems::AI {
 
-class AISnapshotBuilder {
-public:
-  AISnapshotBuilder() = default;
-  ~AISnapshotBuilder() = default;
+namespace AISnapshotBuilder {
 
-  AISnapshotBuilder(const AISnapshotBuilder&) = delete;
-  auto operator=(const AISnapshotBuilder&) -> AISnapshotBuilder& = delete;
+[[nodiscard]] auto build(const Engine::Core::World& world,
+                         int ai_owner_id) -> AISnapshot;
 
-  [[nodiscard]] static auto build(const Engine::Core::World& world,
-                                  int ai_owner_id) -> AISnapshot;
-};
+} // namespace AISnapshotBuilder
 
 } // namespace Game::Systems::AI

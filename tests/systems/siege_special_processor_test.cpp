@@ -298,6 +298,24 @@ TEST_F(SiegeSpecialProcessorTest, TargetUnitRetaliatesAgainstAttackingDefenseTow
   EXPECT_EQ(intent->kind, PlayerOrderIntentKind::None);
 }
 
+TEST_F(SiegeSpecialProcessorTest, ATowerBeingDismantledHoldsItsFire) {
+  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
+  auto* enemy = make_enemy(10.0F, 0.0F, 0.0F, 2);
+  const int full_health = enemy->get_component<UnitComponent>()->health;
+
+  tower->add_component<Engine::Core::DismantleSiteComponent>();
+
+  update(0.1F);
+  resolve_projectiles();
+
+  EXPECT_EQ(enemy->get_component<UnitComponent>()->health, full_health)
+      << "a tower being taken apart is no longer a working tower";
+  auto* attack_target = enemy->get_component<AttackTargetComponent>();
+  EXPECT_TRUE((attack_target == nullptr) ||
+              (attack_target->target_id != tower->get_id()))
+      << "and nothing should be shooting back at it";
+}
+
 TEST_F(SiegeSpecialProcessorTest, MeleeLockedUnitDoesNotRetaliateAgainstTowerAttack) {
   auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy = make_enemy(10.0F, 0.0F, 0.0F, 2);

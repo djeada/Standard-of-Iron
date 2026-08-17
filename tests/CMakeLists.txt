@@ -106,6 +106,8 @@ add_executable(
     systems/resource_delivery_system_test.cpp
     systems/gather_loop_system_test.cpp
     systems/auto_gather_test.cpp
+    systems/dismantle_test.cpp
+    systems/interaction_targeting_test.cpp
     systems/settlement_life_system_test.cpp
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp
@@ -233,6 +235,7 @@ add_executable(
     campaign_tests
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
+    map/mission_stage_tracker_test.cpp
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/map_catalog_test.cpp

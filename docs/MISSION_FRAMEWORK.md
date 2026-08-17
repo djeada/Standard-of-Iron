@@ -40,6 +40,7 @@ assets/
   "ai_setups": [ ... ],
   "victory_conditions": [ ... ],
   "defeat_conditions": [ ... ],
+  "stages": [ ... ],
   "events": [ ... ]
 }
 ```
@@ -186,7 +187,8 @@ Defines AI opponents with personality and behavior:
 | `faction`            | Yes      | Faction metadata for mission/UI use                                 |
 | `color`              | Yes      | Player color                                                        |
 | `difficulty`         | No       | Execution tuning, and a wave-size multiplier; omitted means normal  |
-| `strategy`           | No       | Base strategic preset; omitted falls back to `balanced`             |
+| `strategy`           | No       | Base strategic preset; omitted falls back to `defensive`            |
+| `posture`            | No       | `garrison` (default) holds and defends; `field` may attack/expand   |
 | `team_id`            | No       | Allies AIs with the same team and prevents them fighting each other |
 | `personality`        | No       | Fine-tunes aggression / defense / harassment on top of the strategy |
 | `starting_units`     | No       | Spawns the AI with units at mission start                           |
@@ -325,7 +327,16 @@ The current AI strategy parser accepts:
 - `harasser` or `harassment`
 - `rusher` or `rush`
 
-If the string is omitted or unrecognized, the engine falls back to `balanced`.
+If the string is omitted, mission AIs fall back to `defensive`; an unrecognized string falls back to `balanced`.
+
+#### Posture values
+
+`posture` decides whether the strategy is allowed to go on the offensive at all:
+
+- `garrison` (default for missions) — the AI gathers at and defends its bases, answers enemies that come close with a small local response, and leaves the offence to scripted `waves`
+- `field` — the AI may also initiate attacks, scout, harass, capture neutral barracks and build outposts, like a skirmish opponent
+
+Skirmish AIs always run `field`. See `docs/AI_ARCHITECTURE.md` for how the posture and the local engagement layer interact.
 
 #### Difficulty values
 
@@ -617,6 +628,63 @@ Example:
 ]
 ```
 
+### Stages
+
+Victory conditions say when a mission is won. They do not say what to do first.
+`stages` is the ordered answer to "what now?" -- the HUD objective line, the
+briefing checklist, the minimap pin and the ring drawn on the ground all read
+the active stage from the same tracker, so they cannot drift apart.
+
+```json
+"stages": [
+  {
+    "id": "reach_crossing",
+    "type": "reach_position",
+    "title": "Reach the Rhone crossing",
+    "description": "Bring the column to the pontoon bridge on the near bank.",
+    "hint": "The nearest crossing is due east of camp.",
+    "target": { "x": 240.9, "z": 189.5 },
+    "target_radius": 20.0
+  },
+  {
+    "id": "take_hill_fort",
+    "type": "capture_structures",
+    "structure_types": ["barracks"],
+    "required_count": 1,
+    "title": "Seize the Roman hill fort",
+    "target": { "x": 376, "z": 44 },
+    "target_radius": 30.0
+  }
+]
+```
+
+The active stage is the first one that is not complete. A stage that completes
+stays complete, so losing a camp again never walks the player back up the list.
+
+| `type`                 | Complete when                                                              | Extra fields                                                              |
+| ---------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `reach_position`       | any of your non-commander units stands within `target_radius` of `target`  | `target`, `target_radius` (default 6)                                     |
+| `capture_structures`   | you hold `required_count` structures that started as an enemy nation's     | `structure_types`, `required_count`                                       |
+| `control_structures`   | you own `required_count` structures of those types, however you got them   | `structure_types`, `required_count`                                       |
+| `destroy_structures`   | `required_count` of the enemy structures present at mission start are gone | `structure_types`, `required_count`                                       |
+| `eliminate_commanders` | every enemy commander alive at mission start is dead                       | none; `required_count` is taken from the opposition unless you author one |
+| `accumulate_resources` | every resource kind named has been harvested in full                       | `resources`                                                               |
+| `survive_time`         | `duration` seconds of mission clock have passed                            | `duration`                                                                |
+| `survive_waves`        | `wave_count` assault phases have been cleared                              | `wave_count`                                                              |
+
+`target` is in the same coordinate space as every other authored mission
+position: grid tiles on a grid map, world units otherwise. Counting stages
+share one tally, so a run of `capture_structures` stages with `required_count`
+1, 2, 3 reads as a sequence of camps and still agrees with a
+`capture_structures` victory condition of `min_count: 3`.
+
+`title`, `description` and `hint` are player-visible and go through the
+translation catalogues -- `scripts/extract-asset-strings.py` lifts them into the
+`Missions` context. Keep `title` short: it has to fit the HUD objective line.
+
+Stages are optional. A mission without them falls back to showing its first
+victory condition on the HUD, exactly as before.
+
 ### Events
 
 Timed or state-based triggers for dynamic gameplay:
@@ -815,7 +883,7 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
 
 ### Campaign Selection
 
-The CampaignMenu displays available campaigns and their missions:
+The campaign screen displays available campaigns and their missions:
 
 1. User selects a campaign
 2. Mission list appears with:

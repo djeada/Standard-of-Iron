@@ -259,6 +259,28 @@
       "description": "Break three Roman columns before the survivors find the ford again."
     }
   ],
+  "stages": [
+    {
+      "id": "break_crossings",
+      "type": "survive_waves",
+      "wave_count": 3,
+      "title": "Break the three crossings",
+      "description": "Hold the southern bank through every Roman assault phase.",
+      "hint": "Sempronius spends his army on the ice; you only have to still be standing."
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill Sempronius and his officers",
+      "description": "Ride down the commanders once the crossings break.",
+      "hint": "The winter camp lies north across the river.",
+      "target": {
+        "x": 150,
+        "z": 40
+      },
+      "target_radius": 30.0
+    }
+  ],
   "events": [
     {
       "trigger": {

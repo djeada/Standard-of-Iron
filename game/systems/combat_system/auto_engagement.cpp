@@ -101,6 +101,9 @@ void AutoEngagement::process(Engine::Core::World*,
     }
 
     auto* nearest_enemy = find_nearest_enemy(unit, query_context, detection_range);
+    if (nearest_enemy != nullptr && melee_walled_off_from(unit, nearest_enemy)) {
+      nearest_enemy = nullptr;
+    }
 
     if (nearest_enemy != nullptr) {
       auto* attack_target = unit->get_component<Engine::Core::AttackTargetComponent>();
@@ -109,7 +112,7 @@ void AutoEngagement::process(Engine::Core::World*,
       }
       if (attack_target != nullptr) {
         attack_target->target_id = nearest_enemy->get_id();
-        attack_target->should_chase = !in_guard_mode && !shoots_without_closing;
+        attack_target->should_chase = !shoots_without_closing;
 
         m_engagement_cooldowns[unit->get_id()] = Constants::k_engagement_cooldown;
       }

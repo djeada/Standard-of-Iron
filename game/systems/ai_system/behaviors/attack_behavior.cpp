@@ -399,7 +399,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
 auto AttackBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
 
-  if (context.state == AIState::Retreating) {
+  if (context.state == AIState::Retreating ||
+      context.strategy_config.posture == AIPosture::Garrison) {
     return false;
   }
 

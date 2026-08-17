@@ -15,6 +15,8 @@ The AI is no longer a passive "units occasionally wander" layer. It now has a ch
 - plan and escort a first **forward outpost**
 - operate **several bases at once** with distinct main / production / defensive / forward roles
 - separate **style/personality** from **difficulty/execution tuning**
+- run an explicit **posture** (`Field` or `Garrison`) on top of the strategy, so campaign garrisons and skirmish opponents share one brain
+- answer nearby enemies with a bounded **local engagement** layer that never mobilises the whole army
 
 It is still intentionally lightweight: one AI brain per player, throttled updates, immutable snapshots, small force-role heuristics, and behavior modules instead of expensive per-unit thinking.
 
@@ -64,22 +66,22 @@ The expensive part is the thinking, so it is throttled and handed to a worker th
 
 Most AI code lives in `game/systems/ai_system/`.
 
-| File                             | Responsibility                                           |
-| -------------------------------- | -------------------------------------------------------- |
-| `ai_types.h`                     | Snapshot, context, strategy config, commands             |
-| `ai_snapshot_builder.cpp`        | Reads visible world state into `AISnapshot`              |
-| `ai_reasoner.cpp`                | Updates persistent AI context and state                  |
-| `ai_base_manager.cpp`            | Clusters buildings into bases, assigns base roles        |
-| `behaviors/assault_behavior.cpp` | Drives scripted assault waves, whatever the AI's posture |
-| `behaviors/chase_behavior.cpp`   | Sends a small detachment after enemies that stray close  |
-| `ai_executor.cpp`                | Runs behaviors and collects commands                     |
-| `ai_worker.cpp`                  | Background worker wrapper                                |
-| `ai_command_filter.cpp`          | Prevents duplicate/spammy commands                       |
-| `ai_command_applier.cpp`         | Applies AI commands back to the game                     |
-| `ai_strategy.cpp`                | Strategy presets, personality shaping, difficulty tuning |
-| `ai_utils.h`                     | Assignment cleanup and force-role helper functions       |
-| `behaviors/*.cpp`                | Tactical and macro behavior implementations              |
-| `game/systems/ai_system.cpp`     | Owns AI instances and update cadence                     |
+| File                                      | Responsibility                                           |
+| ----------------------------------------- | -------------------------------------------------------- |
+| `ai_types.h`                              | Snapshot, context, strategy config, commands             |
+| `ai_snapshot_builder.cpp`                 | Reads visible world state into `AISnapshot`              |
+| `ai_reasoner.cpp`                         | Updates persistent AI context and state                  |
+| `ai_base_manager.cpp`                     | Clusters buildings into bases, assigns base roles        |
+| `behaviors/assault_behavior.cpp`          | Drives scripted assault waves, whatever the AI's posture |
+| `behaviors/local_engagement_behavior.cpp` | Bounded per-cluster response to enemies that stray close |
+| `ai_executor.cpp`                         | Runs behaviors and collects commands                     |
+| `ai_worker.cpp`                           | Background worker wrapper                                |
+| `ai_command_filter.cpp`                   | Prevents duplicate/spammy commands                       |
+| `ai_command_applier.cpp`                  | Applies AI commands back to the game                     |
+| `ai_strategy.cpp`                         | Strategy presets, personality shaping, difficulty tuning |
+| `ai_utils.h`                              | Assignment cleanup and force-role helper functions       |
+| `behaviors/*.cpp`                         | Tactical and macro behavior implementations              |
+| `game/systems/ai_system.cpp`              | Owns AI instances and update cadence                     |
 
 ## What the AI knows
 
@@ -150,24 +152,24 @@ The important modern behavior is that **Defending is no longer sticky forever**.
 
 Behaviors are modular and ordered by priority.
 
-| Behavior             | Priority | Concurrent? | Current job                                                             |
-| -------------------- | -------- | ----------- | ----------------------------------------------------------------------- |
-| `RetreatBehavior`    | Critical | No          | Pull damaged armies back to safety                                      |
-| `DefendBehavior`     | Critical | No          | React to local threats, prefer reserve first                            |
-| `AssaultBehavior`    | High     | Yes         | Drive scripted wave units at the enemy whatever the AI's posture is     |
-| `ProductionBehavior` | High     | Yes         | Keep barracks producing from style-aware targets                        |
-| `BuilderBehavior`    | High     | Yes         | Build homes, barracks, towers, catapults, and outposts                  |
-| `CommanderBehavior`  | High     | Yes         | Move commanders and trigger rally ability                               |
-| `ExpandBehavior`     | High     | No          | Capture neutral barracks or escort the main force to an outpost site    |
-| `AttackBehavior`     | Normal   | No          | Main-army pushes, target chasing, blind marches to strategic objectives |
-| `ChaseBehavior`      | Normal   | Yes         | Peel a capped detachment onto enemies that wander near our troops       |
-| `HarassBehavior`     | Low      | Yes         | Raider detachment against isolated or strategic targets                 |
-| `GatherBehavior`     | Low      | No          | Assemble the main army around the rally area                            |
+| Behavior                  | Priority | Concurrent? | Current job                                                               |
+| ------------------------- | -------- | ----------- | ------------------------------------------------------------------------- |
+| `RetreatBehavior`         | Critical | No          | Pull damaged armies back to safety                                        |
+| `DefendBehavior`          | Critical | No          | React to local threats, prefer reserve first                              |
+| `AssaultBehavior`         | High     | Yes         | Drive scripted wave units at the enemy whatever the AI's posture is       |
+| `ProductionBehavior`      | High     | Yes         | Keep barracks producing from style-aware targets                          |
+| `BuilderBehavior`         | High     | Yes         | Build homes, barracks, towers, catapults, and outposts                    |
+| `CommanderBehavior`       | High     | Yes         | Move commanders and trigger rally ability                                 |
+| `ExpandBehavior`          | High     | No          | Capture neutral barracks or escort the main force to an outpost site      |
+| `LocalEngagementBehavior` | High     | Yes         | Answer each nearby enemy cluster with the closest few units, in any state |
+| `AttackBehavior`          | Normal   | No          | Main-army pushes, target chasing, blind marches to strategic objectives   |
+| `HarassBehavior`          | Low      | Yes         | Raider detachment against isolated or strategic targets                   |
+| `GatherBehavior`          | Low      | No          | Assemble the main army around the rally area                              |
 
 Three concurrency rules matter:
 
 1. **Production**, **builder**, and **commander** logic keep running during attacks and defenses.
-2. **HarassBehavior**, **ChaseBehavior** and **AssaultBehavior** can run alongside the main strategic behavior; each owns a bounded slice of the army, so none of them can empty the line.
+2. **HarassBehavior**, **LocalEngagementBehavior** and **AssaultBehavior** can run alongside the main strategic behavior; each owns a bounded slice of the army, so none of them can empty the line.
 3. Exclusive force behaviors still rely on unit claiming so they do not fight each other for the same troops.
 
 ## Force organization
@@ -285,13 +287,31 @@ The main role is sticky. It moves only when the incumbent loses all its barracks
 
 ## Posture by game mode
 
-The same behaviour set is shaped into two very different opponents by mode.
+The same behaviour set is shaped into two very different opponents by an explicit **posture** carried on `AIStrategyConfig::posture`, independent of the strategy preset:
 
-### Campaign: hold the ground, punish what comes close
+- `Field` — the AI may initiate attacks, scout, harass, capture neutral barracks and build outposts. Skirmish opponents run `Field`.
+- `Garrison` — the AI never initiates attacks or expansion and keeps no harass detachment. It gathers, defends its bases, answers what comes close through local engagement, and lets scripted assault waves do the offence. Missions default to `Garrison`; an `ai_setups` entry can opt out with `"posture": "field"`.
 
-Campaign AI players are defensive. Mission JSON authors the posture per `ai_setups` entry (`strategy`, `personality`, `difficulty`), and a mission that names no strategy now defaults to `Defensive` rather than `Balanced`.
+`AIReasoner` enforces the posture at the source: `can_initiate_attack`, `wants_expansion`, harass sizing and outpost planning all read it, and `validate_state` bounces a garrison out of `Attacking`/`Expanding` if a loaded save left it there. Strategy, personality and difficulty keep shaping _how_ the AI does what the posture allows.
 
-A defensive AI that only ever sits still is a punching bag, so `ChaseBehavior` gives it teeth without giving up the position. When an enemy unit comes within `chase_radius` of any of the AI's own troops, and no base is under attack, it peels off a _detachment_ — `min(max_chase_units, available / 3)` of the closest eligible units — and sends them after that target with chase enabled. The cap is the point: the army never abandons its post to run down a scout. Reserve, harass and assault units are never eligible, and the whole behaviour stands down the moment a base is threatened, handing those units to `DefendBehavior`.
+### Local engagement: punish what comes close, keep the line
+
+A defensive AI that only ever sits still is a punching bag, and a unit-level auto-engagement radius of one vision range is not enough of an answer. `LocalEngagementBehavior` runs concurrently in every state except `Retreating`, for both postures:
+
+1. Visible enemy units are grouped into clusters (`k_threat_cluster_radius`).
+2. For each cluster, the AI's own units within `local_response_radius` of one of its threats are candidates — reserve units included, assault and harass units excluded, and never a unit that a higher-priority behaviour (`Defend`, `Retreat`, `Attack`, `Expand`) has already claimed. Units that are unassigned or only `gathering`/`positioning` are fair game.
+3. The closest `max_local_responders` (plus anyone already in melee) form the response. If nobody is engaged yet and `TacticalUtils::assess_engagement` says the odds are bad, the group stays put rather than charging.
+4. Responders get a focus-fire attack order with chase enabled and are claimed as `local-engagement`; when their threats move away they are released, and `GatherBehavior` walks them back. Planner moves are issued as `MoveOrderKind::PlannerMove`, which — unlike a `ScriptedMove` — clears the unit's attack target, so a recall actually recalls a chasing unit.
+
+Units already fighting near a cluster (whatever sent them there) count against the cap, so a fight never snowballs one unit at a time into the whole line.
+
+The cap is the point: a scout draws two or three defenders, not the army, and a base under real attack still hands everything to `DefendBehavior`, which claims at `Critical` and cannot be stolen from.
+
+### Campaign: hold the ground
+
+Campaign missions run `Garrison`. Mission JSON authors the flavour per `ai_setups` entry (`strategy`, `personality`, `difficulty`); a mission that names no strategy defaults to `Defensive`. With more than one base, `GatherBehavior` gathers each unit at its **nearest** base rally so every garrison holds its own ground instead of collapsing onto the main base. `DefendBehavior` defends whichever base is threatened with a response proportional to the threat (`k_defenders_per_threat` per visible enemy unit, minus defenders already engaged), and it works from the base model alone: `AIBaseManager` anchors the AI on its main building cluster even without a barracks, so an AI with homes but no barracks still gathers at and defends them. Enemy buildings inside the base radius are not threats — only units and defence towers are — so a neighbouring enemy structure does not keep a garrison permanently on alert.
+
+Authored `guard` units are not part of the planner at all, so their bite is unit-level: a guard melee unit auto-engages inside its `guard_radius`, closes on the intruder, and the attack processor leashes it back to the guard position the moment the target leaves that radius.
 
 ### Assault waves: always offensive
 
@@ -314,7 +334,7 @@ Progress tracking resets whenever the objective moves more than `k_objective_dri
 
 ### Skirmish: take the map, then come home when it burns
 
-Skirmish AI players are configured `Expansionist` at setup time. That preset already carries the highest `expansion_priority`, two outpost barracks and a wide `expansion_site_distance`, so the AI spreads into forward bases and contests neutral and player-held ground instead of turtling.
+Skirmish AI players are configured `Expansionist` with the `Field` posture at setup time. That preset already carries the highest `expansion_priority`, two outpost barracks and a wide `expansion_site_distance`, so the AI spreads into forward bases and contests neutral and player-held ground instead of turtling.
 
 The counterweight is `full_recall_on_base_threat`, which only the expansionist preset sets. When any of its bases is attacked — main or outpost, tracked per base by `AIBaseManager` — `DefendBehavior` drops its usual reserve-first shortlist and its defender cap and commits every available unit to the defence. Assault units are the sole exception; they keep attacking.
 
@@ -382,7 +402,7 @@ That means a defensive AI on `hard` is still defensive; it just reacts and scale
 
 ## Mission JSON usage
 
-Mission files are the current authoring surface for AI setup. The loader reads `strategy`, `personality`, `difficulty`, `team_id`, starting spawns, and optional mission waves from `ai_setups`.
+Mission files are the current authoring surface for AI setup. The loader reads `strategy`, `posture`, `personality`, `difficulty`, `team_id`, starting spawns, and optional mission waves from `ai_setups`.
 
 ### Example: balanced frontline opponent
 
@@ -475,7 +495,8 @@ Resulting feel:
 
 ### Notes for authors
 
-- `strategy` is optional; omitted means `balanced`
+- `strategy` is optional; omitted means `defensive` in missions
+- `posture` is optional; omitted means `garrison` in missions, and `field` lets a mission AI attack and expand like a skirmish opponent
 - `personality` fields default to `0.5`
 - `difficulty` can be omitted; the AI falls back to normal execution tuning
 - `team_id` is optional; omitted AIs are auto-assigned separate enemy teams
@@ -495,7 +516,9 @@ Current AI test coverage includes:
 - strategic objective marching
 - reserve and harass role separation
 - assault-wave units staying offensive under a defensive AI
-- chase detachment sizing, and standing down when a base is attacked
+- local engagement responding with the closest few units, respecting higher-priority claims, refusing bad odds and releasing responders when threats leave
+- garrison posture never initiating attacks or expansion while the same strategy in field posture does
+- per-base gathering under garrison posture
 - expansionist full recall when a base is attacked
 - outpost planning and duplicate-order suppression
 - base clustering, stable base identity and role assignment
@@ -518,6 +541,7 @@ Relative to the original passive AI, the current system is much better at:
 - not deadlocking force ownership
 - not freezing when enemies leave vision
 - keeping a home guard
+- answering local threats without mobilising the army
 - creating distinct playstyles cheaply
 - laying real foundations for expansion
 

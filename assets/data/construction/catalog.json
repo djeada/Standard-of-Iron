@@ -1,18 +1,108 @@
 {
-  "_comment": "What a buildable costs and how long a builder works on it once at the site. Loaded at content bootstrap; the C++ table in game/systems/construction_cost_catalog.cpp is the fallback when this file is missing. Harvest tasks (cut_tree, collect_*) take build_time only. Wall costs must stay in step with WallNetworkService::k_wall_segment_wood_cost / k_wall_gate_wood_cost, which the wall preview quotes.",
+  "_comment": "What a buildable costs and how long a builder works on it once at the site. Loaded at content bootstrap; the C++ table in game/systems/construction_cost_catalog.cpp is the fallback when this file is missing. Harvest tasks (cut_tree, collect_*) take build_time only. Wall costs must stay in step with WallNetworkService::k_wall_segment_wood_cost / k_wall_gate_wood_cost, which the wall preview quotes. The optional 'dismantle' block sets whether builders may take the item down ('allowed', default true) and what share of its cost comes back ('refund', 0..1, default 0.5).",
   "items": {
-    "catapult": { "costs": { "wood": 60, "iron": 25 }, "build_time": 15 },
-    "ballista": { "costs": { "wood": 50, "iron": 30 }, "build_time": 12 },
-    "defense_tower": { "costs": { "wood": 60, "stone": 80 }, "build_time": 20 },
-    "home": { "costs": { "wood": 50, "stone": 15 }, "build_time": 10 },
-    "barracks": { "costs": { "wood": 100, "stone": 60 }, "build_time": 10 },
-    "wall_segment": { "costs": { "wood": 25 }, "build_time": 8 },
-    "wall_gate": { "costs": { "wood": 45, "stone": 20 }, "build_time": 12 },
-    "temple": { "costs": { "wood": 40, "stone": 90, "gold": 30 }, "build_time": 18 },
-    "marketplace": { "costs": { "wood": 60, "stone": 40, "gold": 50 }, "build_time": 10 },
-    "cut_tree": { "build_time": 6 },
-    "collect": { "build_time": 6 },
-    "collect_stone": { "build_time": 6 },
-    "collect_iron_ore": { "build_time": 6 }
+    "catapult": {
+      "costs": {
+        "wood": 60,
+        "iron": 25
+      },
+      "build_time": 15,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "ballista": {
+      "costs": {
+        "wood": 50,
+        "iron": 30
+      },
+      "build_time": 12,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "defense_tower": {
+      "costs": {
+        "wood": 60,
+        "stone": 80
+      },
+      "build_time": 20,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "home": {
+      "costs": {
+        "wood": 50,
+        "stone": 15
+      },
+      "build_time": 10,
+      "dismantle": {
+        "refund": 0.6
+      }
+    },
+    "barracks": {
+      "costs": {
+        "wood": 100,
+        "stone": 60
+      },
+      "build_time": 10,
+      "dismantle": {
+        "allowed": false
+      }
+    },
+    "wall_segment": {
+      "costs": {
+        "wood": 25
+      },
+      "build_time": 8,
+      "dismantle": {
+        "refund": 0.7
+      }
+    },
+    "wall_gate": {
+      "costs": {
+        "wood": 45,
+        "stone": 20
+      },
+      "build_time": 12,
+      "dismantle": {
+        "refund": 0.6
+      }
+    },
+    "temple": {
+      "costs": {
+        "wood": 40,
+        "stone": 90,
+        "gold": 30
+      },
+      "build_time": 18,
+      "dismantle": {
+        "refund": 0.4
+      }
+    },
+    "marketplace": {
+      "costs": {
+        "wood": 60,
+        "stone": 40,
+        "gold": 50
+      },
+      "build_time": 10,
+      "dismantle": {
+        "refund": 0.5
+      }
+    },
+    "cut_tree": {
+      "build_time": 6
+    },
+    "collect": {
+      "build_time": 6
+    },
+    "collect_stone": {
+      "build_time": 6
+    },
+    "collect_iron_ore": {
+      "build_time": 6
+    }
   }
 }

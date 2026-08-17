@@ -2,26 +2,24 @@
 
 #include <QString>
 
-#include <optional>
-
 #include "ai_types.h"
 
-namespace Game::Systems::AI {
+namespace Game::Systems::AI::AIStrategyFactory {
 
-class AIStrategyFactory {
-public:
-  static auto parse_strategy(const QString& strategy_str) -> AIStrategy;
+auto parse_strategy(const QString& strategy_str) -> AIStrategy;
 
-  static auto strategy_to_string(AIStrategy strategy) -> QString;
+auto parse_posture(const QString& posture_str,
+                   AIPosture fallback = AIPosture::Field) -> AIPosture;
 
-  static auto create_config(AIStrategy strategy) -> AIStrategyConfig;
+auto create_config(AIStrategy strategy) -> AIStrategyConfig;
 
-  static void apply_personality(AIStrategyConfig& config,
-                                float aggression,
-                                float defense,
-                                float harassment);
+auto create_config(const AIPlayerProfile& profile) -> AIStrategyConfig;
 
-  static void apply_difficulty(AIStrategyConfig& config, const QString& difficulty);
-};
+void apply_personality(AIStrategyConfig& config,
+                       float aggression,
+                       float defense,
+                       float harassment);
 
-} // namespace Game::Systems::AI
+void apply_difficulty(AIStrategyConfig& config, const QString& difficulty);
+
+} // namespace Game::Systems::AI::AIStrategyFactory

@@ -88,6 +88,9 @@ auto rejection_reason_text(Game::Command::Rejection rejection,
                                        "That building no longer exists.");
   case Game::Command::Rejection::NotOwnedBuilding:
     return QCoreApplication::translate("OrderFeedback", "That building is not yours.");
+  case Game::Command::Rejection::NotPermittedForSource:
+    return QCoreApplication::translate("OrderFeedback",
+                                       "That order is not available here.");
   case Game::Command::Rejection::MalformedPayload:
     return QCoreApplication::translate("OrderFeedback",
                                        "That order could not be carried out.");
@@ -178,6 +181,16 @@ auto barracks_full_reason() -> QString {
 auto no_repairs_needed_reason() -> QString {
   return QCoreApplication::translate("OrderFeedback",
                                      "That building does not need repairs.");
+}
+
+auto not_your_building_reason() -> QString {
+  return QCoreApplication::translate(
+      "OrderFeedback", "Your builders only take down your own buildings.");
+}
+
+auto building_is_protected_reason() -> QString {
+  return QCoreApplication::translate("OrderFeedback",
+                                     "That building cannot be taken down.");
 }
 
 } // namespace App::Core
