@@ -105,6 +105,26 @@ void ActivityViewModel::begin_repair_order() {
                                                               : CursorMode::Repair);
 }
 
+void ActivityViewModel::begin_dismantle_order() {
+  m_host.ensure_initialized();
+  auto* cursor = m_context.cursor;
+  if (cursor == nullptr) {
+    return;
+  }
+  m_host.set_cursor_mode(cursor->mode() == CursorMode::Dismantle
+                             ? CursorMode::Normal
+                             : CursorMode::Dismantle);
+}
+
+void ActivityViewModel::confirm_dismantle_at(qreal sx, qreal sy) {
+  if (m_context.input == nullptr || m_context.active_camera == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  m_context.input->on_builder_dismantle_click(
+      sx, sy, m_context.local_owner_id, *m_context.viewport);
+}
+
 void ActivityViewModel::confirm_repair_at(qreal sx, qreal sy) {
   if (m_context.input == nullptr || m_context.active_camera == nullptr) {
     return;
@@ -120,6 +140,15 @@ void ActivityViewModel::toggle_auto_gather(const QString& priority_product_type)
   }
   m_host.ensure_initialized();
   m_context.input->on_auto_gather_command(priority_product_type);
+}
+
+void ActivityViewModel::set_auto_gather(bool active,
+                                        const QString& priority_product_type) {
+  if (m_context.input == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  m_context.input->set_auto_gather(active, priority_product_type);
 }
 
 void ActivityViewModel::clear_inspect_target() {
@@ -229,6 +258,14 @@ void ActivityViewModel::set_attack_target_hint(const QVariantMap& hint) {
   }
   m_attack_target_hint = hint;
   emit attack_target_hint_changed();
+}
+
+void ActivityViewModel::set_interaction_target_hint(const QVariantMap& hint) {
+  if (m_interaction_target_hint == hint) {
+    return;
+  }
+  m_interaction_target_hint = hint;
+  emit interaction_target_hint_changed();
 }
 
 } // namespace App::ViewModels

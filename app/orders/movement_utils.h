@@ -43,6 +43,17 @@ auto issue_builder_repair_command(Engine::Core::World* world,
                                   int viewport_height,
                                   int local_owner_id) -> App::Core::OrderOutcome;
 
+auto issue_builder_dismantle_command(
+    Engine::Core::World* world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    Game::Systems::PickingService* picking_service,
+    Render::GL::Camera* camera,
+    qreal sx,
+    qreal sy,
+    int viewport_width,
+    int viewport_height,
+    int local_owner_id) -> App::Core::OrderOutcome;
+
 auto submit_ground_move(Engine::Core::World& world,
                         const std::vector<Engine::Core::EntityID>& units,
                         const QVector3D& destination,

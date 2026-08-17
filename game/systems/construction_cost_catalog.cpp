@@ -5,6 +5,8 @@
 #include <QJsonObject>
 #include <QLoggingCategory>
 
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <unordered_map>
 
@@ -22,6 +24,8 @@ struct CatalogEntry {
   ResourceAmounts costs;
   bool has_build_time = false;
   float build_time = 0.0F;
+  bool has_dismantle = false;
+  DismantleInfo dismantle;
 };
 
 auto loaded_catalog() -> std::unordered_map<std::string, CatalogEntry>& {
@@ -31,6 +35,14 @@ auto loaded_catalog() -> std::unordered_map<std::string, CatalogEntry>& {
 
 auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo;
 auto builtin_build_time(std::string_view item_type) -> float;
+
+auto builtin_dismantle_info(std::string_view item_type) -> DismantleInfo {
+  DismantleInfo info;
+  if (item_type == "barracks") {
+    info.allowed = false;
+  }
+  return info;
+}
 
 } // namespace
 
@@ -50,6 +62,40 @@ auto construction_build_time(std::string_view item_type) -> float {
     return it->second.build_time;
   }
   return builtin_build_time(item_type);
+}
+
+auto dismantle_info(std::string_view item_type) -> DismantleInfo {
+  const auto& catalog = loaded_catalog();
+  if (const auto it = catalog.find(std::string(item_type));
+      it != catalog.end() && it->second.has_dismantle) {
+    return it->second.dismantle;
+  }
+  return builtin_dismantle_info(item_type);
+}
+
+auto dismantle_refund(std::string_view item_type) -> ResourceAmounts {
+  const auto info = dismantle_info(item_type);
+  ResourceAmounts refund;
+  if (!info.allowed) {
+    return refund;
+  }
+
+  const float fraction = std::clamp(info.refund_fraction, 0.0F, 1.0F);
+  const auto costs = construction_cost_info(item_type).resource_costs;
+  for (const auto resource_type : k_all_resource_types) {
+    const int paid = costs.get(resource_type);
+    if (paid <= 0) {
+      continue;
+    }
+    const int given = static_cast<int>(std::floor(static_cast<float>(paid) * fraction));
+    refund.set(resource_type, std::clamp(given, 0, paid));
+  }
+  return refund;
+}
+
+auto dismantle_duration(std::string_view item_type) -> float {
+  return std::max(0.5F,
+                  construction_build_time(item_type) * k_dismantle_speed_multiplier);
 }
 
 auto load_construction_catalog(const QString& path) -> bool {
@@ -92,6 +138,25 @@ auto load_construction_catalog(const QString& path) -> bool {
           return false;
         }
         entry.costs.set(type, cost.value().toInt());
+      }
+    }
+    if (const auto dismantle = item.value(QLatin1String("dismantle"));
+        dismantle.isObject()) {
+      entry.has_dismantle = true;
+      const auto dismantle_object = dismantle.toObject();
+      if (const auto allowed = dismantle_object.value(QLatin1String("allowed"));
+          allowed.isBool()) {
+        entry.dismantle.allowed = allowed.toBool();
+      }
+      if (const auto refund = dismantle_object.value(QLatin1String("refund"));
+          refund.isDouble()) {
+        const auto fraction = static_cast<float>(refund.toDouble());
+        if (fraction < 0.0F || fraction > 1.0F) {
+          qCWarning(logger) << "construction catalog item" << it.key()
+                            << "has a dismantle refund outside 0..1";
+          return false;
+        }
+        entry.dismantle.refund_fraction = fraction;
       }
     }
     if (const auto build_time = item.value(QLatin1String("build_time"));

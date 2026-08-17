@@ -18,6 +18,7 @@ enum class Rejection : std::uint8_t {
   FriendlyTarget,
   MissingBuilding,
   NotOwnedBuilding,
+  NotPermittedForSource,
   MalformedPayload
 };
 

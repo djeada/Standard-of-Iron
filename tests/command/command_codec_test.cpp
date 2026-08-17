@@ -86,6 +86,7 @@ auto every_payload() -> std::vector<Payload> {
                                 .site = QVector3D(14.0F, 0.0F, 15.0F)});
   all.emplace_back(DeliverCivilians{.units = {22, 23}, .barracks = 24});
   all.emplace_back(RepairStructure{.units = {25}, .structure = 26});
+  all.emplace_back(DismantleStructure{.units = {27}, .structure = 28});
   all.emplace_back(PlaceWallPlan{.units = {27},
                                  .gate = true,
                                  .anchor_x = 4,
