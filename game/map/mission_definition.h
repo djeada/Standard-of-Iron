@@ -99,6 +99,7 @@ struct AISetup {
   QString difficulty;
   std::optional<int> team_id;
   std::optional<QString> strategy;
+  std::optional<QString> posture;
   AIPersonality personality;
   float wave_escalation = 0.0F;
   std::vector<UnitSetup> starting_units;
@@ -116,6 +117,22 @@ struct Condition {
   std::optional<int> min_count;
   std::optional<int> wave_count;
   std::optional<Resources> resources;
+};
+
+struct MissionStage {
+  QString id;
+  QString title;
+  QString description;
+  QString hint;
+  QString type;
+  std::vector<QString> structure_types;
+  int required_count = 1;
+  std::optional<float> duration;
+  std::optional<int> wave_count;
+  std::optional<Resources> resources;
+  std::optional<Position> target;
+  std::optional<float> target_radius;
+  std::vector<Position> route;
 };
 
 struct EventTrigger {
@@ -148,6 +165,7 @@ struct MissionDefinition {
   std::vector<Condition> victory_conditions;
   std::vector<Condition> defeat_conditions;
   std::vector<Condition> optional_objectives;
+  std::vector<MissionStage> stages;
   std::vector<GameEvent> events;
   bool include_ambient_undead = false;
   bool tutorial = false;

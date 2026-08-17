@@ -104,6 +104,59 @@
       "description": "Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade."
     }
   ],
+  "stages": [
+    {
+      "id": "reach_crossing",
+      "type": "reach_position",
+      "title": "Reach the Rhone crossing",
+      "description": "Bring the column to the pontoon bridge on the near bank.",
+      "hint": "The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.",
+      "target": {
+        "x": 240.9,
+        "z": 189.5
+      },
+      "target_radius": 20.0
+    },
+    {
+      "id": "take_hill_fort",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 1,
+      "title": "Seize the Roman hill fort",
+      "description": "Stand in the gate yard of the northern advance camp until it falls to Carthage.",
+      "hint": "A camp is taken by holding its yard, not by levelling it.",
+      "target": {
+        "x": 376,
+        "z": 44
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "take_river_town",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 2,
+      "title": "Seize the river town",
+      "description": "Take the second camp on the southern supply road.",
+      "hint": "Scipio inherits any crossing you leave behind.",
+      "target": {
+        "x": 566,
+        "z": 545
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill the Roman commanders",
+      "description": "A column without its commander stops being a column.",
+      "hint": "Enemy camps fall neutral once their commander is dead."
+    }
+  ],
   "events": [
     {
       "trigger": {

@@ -231,6 +231,63 @@
       "description": "Hold the ruins. Force the Romans to fight on two grounds at once."
     }
   ],
+  "stages": [
+    {
+      "id": "take_allied_camp",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 1,
+      "title": "Take the allied camp",
+      "description": "Turn the nearest Roman allied camp south of the field.",
+      "hint": "It is the closest camp to your hill; take it before the wings close.",
+      "target": {
+        "x": 432,
+        "z": 470
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "take_consular_town",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 2,
+      "title": "Take the consular town",
+      "description": "Seize Varro's town at the centre of the Roman line.",
+      "hint": "The centre gives way once the wings are wrapped around it.",
+      "target": {
+        "x": 524,
+        "z": 314
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "take_river_camp",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 3,
+      "title": "Take the river camp",
+      "description": "Close the encirclement on the Aufidus camp to the north.",
+      "hint": "With the river camp taken there is nowhere left for the legions to reform.",
+      "target": {
+        "x": 392,
+        "z": 88
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill the consular commanders",
+      "description": "Finish the officers inside the ring.",
+      "hint": "Their troops leave the field with them."
+    }
+  ],
   "events": [
     {
       "trigger": {

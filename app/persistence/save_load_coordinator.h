@@ -66,6 +66,7 @@ struct SaveToSlotContext {
   double play_time_seconds = 0.0;
   int autosave_retention = 0;
   QJsonObject mission_wave_state;
+  QJsonObject mission_stage_state;
 };
 
 struct SaveToSlotEffects {
@@ -92,6 +93,7 @@ struct LoadFromSlotContext {
   Game::Systems::VictoryService* victory_service = nullptr;
   std::function<void()> emit_troop_count_changed;
   std::function<void(const QJsonObject&)> restore_mission_waves;
+  std::function<void(const QJsonObject&)> restore_mission_stages;
 };
 
 struct LoadFromSlotEffects {

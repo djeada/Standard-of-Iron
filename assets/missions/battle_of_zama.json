@@ -277,6 +277,79 @@
       "description": "Raze every Roman post. Leave Scipio nothing to rally behind."
     }
   ],
+  "stages": [
+    {
+      "id": "take_north_camp",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 1,
+      "title": "Take the northern camp",
+      "description": "Turn the nearest Roman camp before the cavalry returns.",
+      "hint": "It is the closest of the four camps to your line.",
+      "target": {
+        "x": 436,
+        "z": 172
+      },
+      "target_radius": 32.0
+    },
+    {
+      "id": "take_rearguard_camp",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 2,
+      "title": "Take the rearguard camp",
+      "description": "Seize the camp guarding Scipio's rear.",
+      "hint": "Taking the rear first denies the cavalry a place to rally.",
+      "target": {
+        "x": 556,
+        "z": 636
+      },
+      "target_radius": 32.0
+    },
+    {
+      "id": "take_scipio_town",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 3,
+      "title": "Take Scipio's town",
+      "description": "Break the consular line at its centre.",
+      "hint": "The centre is the strongest camp; bring the elephants up first.",
+      "target": {
+        "x": 636,
+        "z": 396
+      },
+      "target_radius": 32.0
+    },
+    {
+      "id": "take_numidian_camp",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 4,
+      "title": "Take the Numidian camp",
+      "description": "Seize Masinissa's camp to finish the four.",
+      "hint": "The last camp lies to the north-east, beyond the consular line.",
+      "target": {
+        "x": 712,
+        "z": 196
+      },
+      "target_radius": 32.0
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill the Roman commanders",
+      "description": "End the war with the men who lead it.",
+      "hint": "The dead of the Iron Sepulcher still contest the field; keep a reserve."
+    }
+  ],
   "events": [
     {
       "trigger": {
