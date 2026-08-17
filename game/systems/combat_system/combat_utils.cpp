@@ -209,6 +209,19 @@ auto structure_separates_combatants(Engine::Core::Entity* attacker,
          Game::Systems::GateService::blocks_line(from, to);
 }
 
+auto melee_walled_off_from(Engine::Core::Entity* attacker,
+                           Engine::Core::Entity* target) -> bool {
+  if (attacker == nullptr) {
+    return false;
+  }
+  auto const* attack = attacker->get_component<Engine::Core::AttackComponent>();
+  const bool melee_only =
+      attack != nullptr &&
+      (!attack->can_ranged ||
+       attack->preferred_mode == Engine::Core::AttackComponent::CombatMode::Melee);
+  return melee_only && structure_separates_combatants(attacker, target);
+}
+
 auto is_in_range(Engine::Core::Entity* attacker,
                  Engine::Core::Entity* target,
                  float range) -> bool {
