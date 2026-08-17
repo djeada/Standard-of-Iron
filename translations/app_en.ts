@@ -1200,6 +1200,30 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>In the field</source>
         <translation>In the field</translation>
     </message>
+    <message>
+        <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
+        <translation>Anchor troops to a spot. They step out to meet what comes near, then walk back.</translation>
+    </message>
+    <message>
+        <source>Holding a spot</source>
+        <translation>Holding a spot</translation>
+    </message>
+    <message>
+        <source>Reach</source>
+        <translation>Reach</translation>
+    </message>
+    <message>
+        <source>They fight what comes within 10 m of that spot, and drop a target that leaves it.</source>
+        <translation>They fight what comes within 10 m of that spot, and drop a target that leaves it.</translation>
+    </message>
+    <message>
+        <source>Release</source>
+        <translation>Release</translation>
+    </message>
+    <message>
+        <source>Press Guard again, or order a move or attack.</source>
+        <translation>Press Guard again, or order a move or attack.</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -2390,14 +2414,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Attack order</translation>
     </message>
     <message>
-        <source>Guard order</source>
-        <translation>Guard order</translation>
-    </message>
-    <message>
-        <source>Patrol order</source>
-        <translation>Patrol order</translation>
-    </message>
-    <message>
         <source>Medic order</source>
         <translation>Medic order</translation>
     </message>
@@ -2426,24 +2442,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Stop command</translation>
     </message>
     <message>
-        <source>Attack enemy units or buildings. Only eligible selected troops receive the order.</source>
-        <translation>Attack enemy units or buildings. Only eligible selected troops receive the order.</translation>
-    </message>
-    <message>
         <source>Attack is not available for the current selection</source>
         <translation>Attack is not available for the current selection</translation>
     </message>
     <message>
-        <source>Guard a position. Only guard-capable troops receive the order.</source>
-        <translation>Guard a position. Only guard-capable troops receive the order.</translation>
-    </message>
-    <message>
         <source>Guard is not available for the current selection</source>
         <translation>Guard is not available for the current selection</translation>
-    </message>
-    <message>
-        <source>Patrol between waypoints.</source>
-        <translation>Patrol between waypoints.</translation>
     </message>
     <message>
         <source>Patrol is not available for the current selection</source>
@@ -2454,10 +2458,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Medic</translation>
     </message>
     <message>
-        <source>Healers tend nearby allies on their own.</source>
-        <translation>Healers tend nearby allies on their own.</translation>
-    </message>
-    <message>
         <source>Healers automatically heal nearby allies. This is passive, not a manual order.</source>
         <translation>Healers automatically heal nearby allies. This is passive, not a manual order.</translation>
     </message>
@@ -2466,24 +2466,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Select healer units</translation>
     </message>
     <message>
-        <source>Stop all actions immediately.</source>
-        <translation>Stop all actions immediately.</translation>
-    </message>
-    <message>
-        <source>Hold position and defend.</source>
-        <translation>Hold position and defend.</translation>
-    </message>
-    <message>
-        <source>Hold is not available for the current selection</source>
-        <translation>Hold is not available for the current selection</translation>
-    </message>
-    <message>
         <source>Build</source>
         <translation>Build</translation>
-    </message>
-    <message>
-        <source>Open builder orders and place structures.</source>
-        <translation>Open builder orders and place structures.</translation>
     </message>
     <message>
         <source>Build is only available to builders</source>
@@ -2494,10 +2478,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Collect</translation>
     </message>
     <message>
-        <source>Click a tree, boulder or ore deposit. Right-click to cancel.</source>
-        <translation>Click a tree, boulder or ore deposit. Right-click to cancel.</translation>
-    </message>
-    <message>
         <source>Collect is only available to builders</source>
         <translation>Collect is only available to builders</translation>
     </message>
@@ -2506,20 +2486,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Deliver</translation>
     </message>
     <message>
-        <source>Click a friendly barracks. Only selected civilians receive the order.</source>
-        <translation>Click a friendly barracks. Only selected civilians receive the order.</translation>
-    </message>
-    <message>
         <source>Deliver is only available to civilians</source>
         <translation>Deliver is only available to civilians</translation>
     </message>
     <message>
         <source>Rally</source>
         <translation>Rally</translation>
-    </message>
-    <message>
-        <source>The commander plants a rally flag; troops march to it once placed.</source>
-        <translation>The commander plants a rally flag; troops march to it once placed.</translation>
     </message>
     <message>
         <source>Select a commander to use rally</source>
@@ -2542,10 +2514,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Aura</translation>
     </message>
     <message>
-        <source>Temporarily empower nearby troops. A glow marks every affected soldier.</source>
-        <translation>Temporarily empower nearby troops. A glow marks every affected soldier.</translation>
-    </message>
-    <message>
         <source>Select a ready commander to activate the aura</source>
         <translation>Select a ready commander to activate the aura</translation>
     </message>
@@ -2558,20 +2526,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Auto Gather</translation>
     </message>
     <message>
-        <source>Builders keep finding and collecting the nearest resource on their own. Any new order cancels it.</source>
-        <translation>Builders keep finding and collecting the nearest resource on their own. Any new order cancels it.</translation>
-    </message>
-    <message>
         <source>Auto Gather is only available to builders</source>
         <translation>Auto Gather is only available to builders</translation>
     </message>
     <message>
         <source>Repair</source>
         <translation>Repair</translation>
-    </message>
-    <message>
-        <source>Click a damaged building of yours. Right-click to cancel.</source>
-        <translation>Click a damaged building of yours. Right-click to cancel.</translation>
     </message>
     <message>
         <source>Repair is only available to builders</source>
@@ -2591,6 +2551,342 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1%</source>
         <translation>%1%</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1s</translation>
+    </message>
+    <message>
+        <source>Give it</source>
+        <translation>Give it</translation>
+    </message>
+    <message>
+        <source>Press Guard, then click the ground to hold. Right-click cancels.</source>
+        <translation>Press Guard, then click the ground to hold. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>Reach</source>
+        <translation>Reach</translation>
+    </message>
+    <message>
+        <source>They fight what comes within %1 of that spot, and drop a target that leaves it.</source>
+        <translation>They fight what comes within %1 of that spot, and drop a target that leaves it.</translation>
+    </message>
+    <message>
+        <source>After</source>
+        <translation>After</translation>
+    </message>
+    <message>
+        <source>They walk back to the spot when the fight ends.</source>
+        <translation>They walk back to the spot when the fight ends.</translation>
+    </message>
+    <message>
+        <source>Release</source>
+        <translation>Release</translation>
+    </message>
+    <message>
+        <source>Press Guard again, or order a move or attack. Stop does not lift it.</source>
+        <translation>Press Guard again, or order a move or attack. Stop does not lift it.</translation>
+    </message>
+    <message>
+        <source>Troops</source>
+        <translation>Troops</translation>
+    </message>
+    <message>
+        <source>Any soldier, and the commander.</source>
+        <translation>Any soldier, and the commander.</translation>
+    </message>
+    <message>
+        <source>vs Hold</source>
+        <translation>vs Hold</translation>
+    </message>
+    <message>
+        <source>Guards step out to meet the enemy; Hold never moves.</source>
+        <translation>Guards step out to meet the enemy; Hold never moves.</translation>
+    </message>
+    <message>
+        <source>Press Hold. There is nothing to click.</source>
+        <translation>Press Hold. There is nothing to click.</translation>
+    </message>
+    <message>
+        <source>Stance</source>
+        <translation>Stance</translation>
+    </message>
+    <message>
+        <source>They kneel, strike whatever reaches them, and never pursue.</source>
+        <translation>They kneel, strike whatever reaches them, and never pursue.</translation>
+    </message>
+    <message>
+        <source>Dug in</source>
+        <translation>Dug in</translation>
+    </message>
+    <message>
+        <source>Archers reach %1% further and spearmen %2%; both hit %3% harder, take %4% more punishment, and braced spears break a charge.</source>
+        <translation>Archers reach %1% further and spearmen %2%; both hit %3% harder, take %4% more punishment, and braced spears break a charge.</translation>
+    </message>
+    <message>
+        <source>Press Hold again, or order a move, attack or Stop. Standing up takes a moment.</source>
+        <translation>Press Hold again, or order a move, attack or Stop. Standing up takes a moment.</translation>
+    </message>
+    <message>
+        <source>Archers and spearmen only.</source>
+        <translation>Archers and spearmen only.</translation>
+    </message>
+    <message>
+        <source>vs Guard</source>
+        <translation>vs Guard</translation>
+    </message>
+    <message>
+        <source>Guard would chase; Hold trades that for reach and staying power.</source>
+        <translation>Guard would chase; Hold trades that for reach and staying power.</translation>
+    </message>
+    <message>
+        <source>Press Patrol, left-click the first waypoint, then left-click the second. Right-click cancels.</source>
+        <translation>Press Patrol, left-click the first waypoint, then left-click the second. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>Route</source>
+        <translation>Route</translation>
+    </message>
+    <message>
+        <source>They march between the two points for good, attacking whatever crosses the line.</source>
+        <translation>They march between the two points for good, attacking whatever crosses the line.</translation>
+    </message>
+    <message>
+        <source>Any other order, or Stop, clears the route.</source>
+        <translation>Any other order, or Stop, clears the route.</translation>
+    </message>
+    <message>
+        <source>Every soldier and the commander.</source>
+        <translation>Every soldier and the commander.</translation>
+    </message>
+    <message>
+        <source>Effect</source>
+        <translation>Effect</translation>
+    </message>
+    <message>
+        <source>Nearby troops fight with steadier morale and the commander&apos;s own bonus.</source>
+        <translation>Nearby troops fight with steadier morale and the commander&apos;s own bonus.</translation>
+    </message>
+    <message>
+        <source>%1 around the commander, and it moves with him.</source>
+        <translation>%1 around the commander, and it moves with him.</translation>
+    </message>
+    <message>
+        <source>Lasts</source>
+        <translation>Lasts</translation>
+    </message>
+    <message>
+        <source>Recharge</source>
+        <translation>Recharge</translation>
+    </message>
+    <message>
+        <source>%1 once it fades. A wounded commander cannot call it.</source>
+        <translation>%1 once it fades. A wounded commander cannot call it.</translation>
+    </message>
+    <message>
+        <source>Your own living troops inside the ring; a glow marks each one.</source>
+        <translation>Your own living troops inside the ring; a glow marks each one.</translation>
+    </message>
+    <message>
+        <source>Click waypoint 1</source>
+        <translation>Click waypoint 1</translation>
+    </message>
+    <message>
+        <source>Click waypoint 2</source>
+        <translation>Click waypoint 2</translation>
+    </message>
+    <message>
+        <source>On patrol</source>
+        <translation>On patrol</translation>
+    </message>
+    <message>
+        <source>Active %1</source>
+        <translation>Active %1</translation>
+    </message>
+    <message>
+        <source>Ready in %1</source>
+        <translation>Ready in %1</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>Ready</translation>
+    </message>
+    <message>
+        <source>Holding a spot</source>
+        <translation>Holding a spot</translation>
+    </message>
+    <message>
+        <source>Patrol: click the second waypoint</source>
+        <translation>Patrol: click the second waypoint</translation>
+    </message>
+    <message>
+        <source>Patrol: click the first waypoint</source>
+        <translation>Patrol: click the first waypoint</translation>
+    </message>
+    <message>
+        <source>Guard: click the spot to hold</source>
+        <translation>Guard: click the spot to hold</translation>
+    </message>
+    <message>
+        <source>Guarding a spot</source>
+        <translation>Guarding a spot</translation>
+    </message>
+    <message>
+        <source>Send the selected troops at one enemy unit or building.</source>
+        <translation>Send the selected troops at one enemy unit or building.</translation>
+    </message>
+    <message>
+        <source>Press Attack, then left-click the target. Right-click cancels. A right-click on an enemy does the same thing.</source>
+        <translation>Press Attack, then left-click the target. Right-click cancels. A right-click on an enemy does the same thing.</translation>
+    </message>
+    <message>
+        <source>Scope</source>
+        <translation>Scope</translation>
+    </message>
+    <message>
+        <source>They chase the target until it dies or you order otherwise.</source>
+        <translation>They chase the target until it dies or you order otherwise.</translation>
+    </message>
+    <message>
+        <source>Every fighting unit; healers and builders sit it out.</source>
+        <translation>Every fighting unit; healers and builders sit it out.</translation>
+    </message>
+    <message>
+        <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
+        <translation>Anchor troops to a spot. They step out to meet what comes near, then walk back.</translation>
+    </message>
+    <message>
+        <source>March a beat between two points and fight whatever crosses it.</source>
+        <translation>March a beat between two points and fight whatever crosses it.</translation>
+    </message>
+    <message>
+        <source>Healers tend the wounded around them on their own.</source>
+        <translation>Healers tend the wounded around them on their own.</translation>
+    </message>
+    <message>
+        <source>Passive</source>
+        <translation>Passive</translation>
+    </message>
+    <message>
+        <source>There is nothing to press: a healer mends nearby allies whenever they are hurt.</source>
+        <translation>There is nothing to press: a healer mends nearby allies whenever they are hurt.</translation>
+    </message>
+    <message>
+        <source>Healers only. Keep them behind the line and they will work.</source>
+        <translation>Healers only. Keep them behind the line and they will work.</translation>
+    </message>
+    <message>
+        <source>Drop everything the selected troops are doing and stand still.</source>
+        <translation>Drop everything the selected troops are doing and stand still.</translation>
+    </message>
+    <message>
+        <source>Clears</source>
+        <translation>Clears</translation>
+    </message>
+    <message>
+        <source>Movement, the current target, Patrol, Hold, formation and gathering orders.</source>
+        <translation>Movement, the current target, Patrol, Hold, formation and gathering orders.</translation>
+    </message>
+    <message>
+        <source>Keeps</source>
+        <translation>Keeps</translation>
+    </message>
+    <message>
+        <source>Guard: press Guard again to release troops from their anchor.</source>
+        <translation>Guard: press Guard again to release troops from their anchor.</translation>
+    </message>
+    <message>
+        <source>Stand fast. Troops dig in where they are, hit harder and further, and never pursue.</source>
+        <translation>Stand fast. Troops dig in where they are, hit harder and further, and never pursue.</translation>
+    </message>
+    <message>
+        <source>Hold is only available to archers and spearmen</source>
+        <translation>Hold is only available to archers and spearmen</translation>
+    </message>
+    <message>
+        <source>Open the builder&apos;s structure list and place one.</source>
+        <translation>Open the builder&apos;s structure list and place one.</translation>
+    </message>
+    <message>
+        <source>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</source>
+        <translation>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>Builders only.</source>
+        <translation>Builders only.</translation>
+    </message>
+    <message>
+        <source>Send a builder to fell a tree, break a boulder or work an ore seam.</source>
+        <translation>Send a builder to fell a tree, break a boulder or work an ore seam.</translation>
+    </message>
+    <message>
+        <source>Press Collect, then left-click the node. Right-click cancels.</source>
+        <translation>Press Collect, then left-click the node. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>The load only counts once it is dropped at the yard beside a barracks.</source>
+        <translation>The load only counts once it is dropped at the yard beside a barracks.</translation>
+    </message>
+    <message>
+        <source>Builders keep finding and working the nearest resource on their own.</source>
+        <translation>Builders keep finding and working the nearest resource on their own.</translation>
+    </message>
+    <message>
+        <source>Runs until you stop it; any new order cancels it.</source>
+        <translation>Runs until you stop it; any new order cancels it.</translation>
+    </message>
+    <message>
+        <source>Send a builder to mend one of your damaged buildings.</source>
+        <translation>Send a builder to mend one of your damaged buildings.</translation>
+    </message>
+    <message>
+        <source>Press Repair, then left-click the damaged building. Right-click cancels.</source>
+        <translation>Press Repair, then left-click the damaged building. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>Send civilians to a barracks to refill the population it recruits from.</source>
+        <translation>Send civilians to a barracks to refill the population it recruits from.</translation>
+    </message>
+    <message>
+        <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
+        <translation>Press Deliver, then left-click a friendly barracks. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>Civilians only; other selected units ignore it.</source>
+        <translation>Civilians only; other selected units ignore it.</translation>
+    </message>
+    <message>
+        <source>The commander plants a flag and the army marches to it.</source>
+        <translation>The commander plants a flag and the army marches to it.</translation>
+    </message>
+    <message>
+        <source>Press Rally, then left-click where the flag should stand. He walks there and plants it.</source>
+        <translation>Press Rally, then left-click where the flag should stand. He walks there and plants it.</translation>
+    </message>
+    <message>
+        <source>Troops near the flag march in; it also steadies wavering men.</source>
+        <translation>Troops near the flag march in; it also steadies wavering men.</translation>
+    </message>
+    <message>
+        <source>Needs your commander selected.</source>
+        <translation>Needs your commander selected.</translation>
+    </message>
+    <message>
+        <source>Automatic gates open for your own troops and shut behind them.</source>
+        <translation>Automatic gates open for your own troops and shut behind them.</translation>
+    </message>
+    <message>
+        <source>Select one of your own gates.</source>
+        <translation>Select one of your own gates.</translation>
+    </message>
+    <message>
+        <source>The commander empowers the troops around him for a while, then must recharge.</source>
+        <translation>The commander empowers the troops around him for a while, then must recharge.</translation>
     </message>
 </context>
 <context>
@@ -3020,14 +3316,6 @@ Unseen: never scouted.</translation>
         <translation>Giving orders</translation>
     </message>
     <message>
-        <source>Stances</source>
-        <translation>Stances</translation>
-    </message>
-    <message>
-        <source>Guard holds a spot, chases what comes near and returns. Hold stands the ground without pursuing - for archers and spearmen. Patrol walks between two points and engages what crosses the route. Stop cancels everything.</source>
-        <translation>Guard holds a spot, chases what comes near and returns. Hold stands the ground without pursuing - for archers and spearmen. Patrol walks between two points and engages what crosses the route. Stop cancels everything.</translation>
-    </message>
-    <message>
         <source>Winning and losing</source>
         <translation>Winning and losing</translation>
     </message>
@@ -3116,10 +3404,6 @@ Unseen: never scouted.</translation>
         <translation>Aura and Rally</translation>
     </message>
     <message>
-        <source>With the commander selected, Aura briefly empowers every soldier around him and then recharges. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
-        <translation>With the commander selected, Aura briefly empowers every soldier around him and then recharges. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</translation>
-    </message>
-    <message>
         <source>Taking direct control</source>
         <translation>Taking direct control</translation>
     </message>
@@ -3186,6 +3470,34 @@ Unseen: never scouted.</translation>
     <message>
         <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
         <translation>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</translation>
+    </message>
+    <message>
+        <source>Guard - hold a spot</source>
+        <translation>Guard - hold a spot</translation>
+    </message>
+    <message>
+        <source>Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.</source>
+        <translation>Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.</translation>
+    </message>
+    <message>
+        <source>Hold - stand fast</source>
+        <translation>Hold - stand fast</translation>
+    </message>
+    <message>
+        <source>Press Hold and the troops kneel where they stand. They never take a step, but they reach further, hit harder and take more punishment than they would on the move, and braced spears gut a cavalry charge. That is the trade: pursuit for staying power. Press Hold again, or give a move, attack or Stop order, to stand them up. Only archers and spearmen can hold.</source>
+        <translation>Press Hold and the troops kneel where they stand. They never take a step, but they reach further, hit harder and take more punishment than they would on the move, and braced spears gut a cavalry charge. That is the trade: pursuit for staying power. Press Hold again, or give a move, attack or Stop order, to stand them up. Only archers and spearmen can hold.</translation>
+    </message>
+    <message>
+        <source>Patrol - walk a beat</source>
+        <translation>Patrol - walk a beat</translation>
+    </message>
+    <message>
+        <source>Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.</source>
+        <translation>Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.</translation>
+    </message>
+    <message>
+        <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
+        <translation>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</translation>
     </message>
 </context>
 <context>
@@ -6846,14 +7158,6 @@ Wide vision and a durable settlement anchor</translation>
         <translation>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</translation>
     </message>
     <message>
-        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
-        <translation>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</translation>
-    </message>
-    <message>
-        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
-        <translation>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</translation>
-    </message>
-    <message>
         <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
         <translation>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</translation>
     </message>
@@ -6928,6 +7232,14 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Kill the Roman commander and take the camp</source>
         <translation>Kill the Roman commander and take the camp</translation>
+    </message>
+    <message>
+        <source>Soldiers can be told how to behave, and the three orders are not the same. Guard: click a spot; they meet anything that comes near it, then walk back to it. Hold: they never take a step, but they reach further, hit harder and brace against a charge - archers and spearmen only. Patrol: click two waypoints and they march the beat between them, fighting whatever crosses it. Hover any of the three to read the full rules, then give one of them to your soldiers.</source>
+        <translation>Soldiers can be told how to behave, and the three orders are not the same. Guard: click a spot; they meet anything that comes near it, then walk back to it. Hold: they never take a step, but they reach further, hit harder and brace against a charge - archers and spearmen only. Patrol: click two waypoints and they march the beat between them, fighting whatever crosses it. Hover any of the three to read the full rules, then give one of them to your soldiers.</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura empowers every soldier in a ring around him for a stretch and then recharges - the button prints the radius, how long it lasts and how long until it returns - and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
+        <translation>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura empowers every soldier in a ring around him for a stretch and then recharges - the button prints the radius, how long it lasts and how long until it returns - and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</translation>
     </message>
 </context>
 <context>

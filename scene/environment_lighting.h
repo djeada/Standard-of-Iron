@@ -84,6 +84,13 @@ struct EnvironmentLightingState {
 };
 
 [[nodiscard]] inline auto
+environment_night_amount(const EnvironmentLightingState& state) noexcept -> float {
+  const float blueness = state.primary_color.z() - state.primary_color.x();
+  const float t = std::clamp((blueness - 0.05F) / 0.35F, 0.0F, 1.0F);
+  return t * t * (3.0F - 2.0F * t);
+}
+
+[[nodiscard]] inline auto
 interpolate_environment_lighting(const EnvironmentLightingState& from,
                                  const EnvironmentLightingState& to,
                                  float amount) noexcept -> EnvironmentLightingState {

@@ -84,6 +84,7 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   TerrainSurfaceCmd::VisibilityResources visibility_resources;
   const TerrainSurfaceCmd::HeightResources height_resources = update_height_texture();
   renderer.set_terrain_height_resources(height_resources);
+  renderer.set_ground_fog(m_ground_fog);
   if (visibility_snapshot != nullptr) {
     visibility_resources = renderer.visibility_mask();
     if (m_chunk_visibility_cache.size() != m_chunks.size()) {

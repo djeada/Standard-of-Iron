@@ -13,6 +13,9 @@ in vec3 v_local_normal;
 
 out vec4 frag_color;
 
+const vec3 k_tent_lantern_color = vec3(1.0, 0.58, 0.24);
+const float k_tent_lantern_gain = 0.55;
+
 float band(float value, float center, float half_width, float feather) {
   return 1.0 - smoothstep(half_width, half_width + feather, abs(value - center));
 }
@@ -80,8 +83,20 @@ void main() {
   vec3 color = albedo * illumination * ao;
   color += sun * specular;
   color += sky * rim;
-  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color += albedo * ao * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
+  float night = environment_night_amount();
+  if (night > 0.0) {
+    float interior = (1.0 - smoothstep(0.10, 0.62, v_local_pos.y)) *
+                     smoothstep(0.02, 0.16, v_local_pos.y);
+    float lantern_flicker =
+        0.86 + 0.14 * sin(v_world_pos.x * 3.7 + v_world_pos.z * 2.9 +
+                          soi_hash12_9f6e8e(floor(v_world_pos.xz)) * 6.2831);
+    vec3 lantern_glow = k_tent_lantern_color * canvas_mask * interior *
+                        (0.55 + 0.45 * weave) * (1.0 - base_dirt * 0.7) *
+                        (1.0 - seam * 0.5) * lantern_flicker;
+    color += lantern_glow * k_tent_lantern_gain * night;
+  }
   color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

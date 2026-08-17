@@ -94,8 +94,9 @@ void main() {
   color = clamp(color, 0.0, 1.0);
 
   float wrap = 0.28;
+  vec3 albedo = color;
   color *= environment_lighting(normal, wrap);
-  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color += albedo * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color, v_instance_alpha);
 }

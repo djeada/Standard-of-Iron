@@ -7,7 +7,8 @@
 
 TEST(LocalLightingTest, SelectsTheMostRelevantLightsDeterministically) {
   std::vector<Render::LocalLight> lights;
-  for (int i = 0; i < 12; ++i) {
+  const int candidate_count = static_cast<int>(Render::k_max_local_lights) + 4;
+  for (int i = 0; i < candidate_count; ++i) {
     Render::LocalLight light;
     light.position = QVector3D(static_cast<float>(i + 1), 0.0F, 0.0F);
     light.radius = 5.0F;
@@ -145,7 +146,8 @@ TEST(LocalLightingTest, FaderPacksActiveLightsContiguously) {
 TEST(LocalLightingTest, EqualScoresKeepInputOrderSoLightsDoNotSwap) {
 
   std::vector<Render::LocalLight> lights;
-  for (int i = 0; i < 12; ++i) {
+  const int candidate_count = static_cast<int>(Render::k_max_local_lights) + 4;
+  for (int i = 0; i < candidate_count; ++i) {
     Render::LocalLight light;
     light.position = QVector3D(0.0F, static_cast<float>(i), 0.0F);
     light.radius = 4.0F;

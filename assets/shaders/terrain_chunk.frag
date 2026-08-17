@@ -28,7 +28,12 @@ uniform float u_ambient_boost, u_rock_detail_strength;
 const float k_soi_terrain_detail_damping = 0.45;
 const float k_soi_terrain_relief_damping = 0.55;
 const float k_soi_terrain_hue_scale = 0.022;
-const float k_soi_terrain_hue_amount = 0.085;
+const float k_soi_terrain_hue_amount = 0.14;
+const float k_soi_terrain_earth_scale = 0.016;
+const float k_soi_terrain_earth_amount = 0.55;
+const vec3 k_soi_terrain_shade_moss = vec3(0.80, 0.90, 0.86);
+const float k_soi_terrain_shade_amount = 0.55;
+const float k_soi_terrain_saturation = 0.80;
 const vec3 k_soi_terrain_hue_warm = vec3(1.075, 1.010, 0.905);
 const vec3 k_soi_terrain_hue_cool = vec3(0.935, 1.005, 1.070);
 
@@ -677,10 +682,28 @@ void main() {
                        smoothstep(0.35, 0.65, hue_field));
   terrain_color *= mix(vec3(1.0), hue_shift, k_soi_terrain_hue_amount);
 
+  float earth_field = gradient_fbm(world_coord * k_soi_terrain_earth_scale +
+                                   domain_warp * 0.6 + vec2(-83.0, 29.0));
+  float worn_ground = smoothstep(0.02, 0.40, earth_field) * (1.0 - rock_mask) *
+                      (1.0 - u_snow_coverage) * (1.0 - slope * 1.5);
+  vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.42) * 0.92;
+  terrain_color =
+      mix(terrain_color, worn_color, worn_ground * k_soi_terrain_earth_amount);
+  vec3 sun_flat = normalize(
+      vec3(environment_primary_direction().x, 0.0, environment_primary_direction().z) +
+      vec3(1e-4));
+  float shade_slope =
+      clamp(dot(normal, -sun_flat), 0.0, 1.0) * smoothstep(0.03, 0.22, slope);
+  terrain_color =
+      mix(terrain_color,
+          terrain_color * k_soi_terrain_shade_moss,
+          shade_slope * k_soi_terrain_shade_amount * (1.0 - rock_mask * 0.5));
+
   vec3 gray_level = vec3(dot(terrain_color, vec3(0.299, 0.587, 0.114)));
-  float grounded_saturation = clamp(u_grass_saturation * 0.96, 0.0, 1.16);
+  float grounded_saturation =
+      clamp(u_grass_saturation * k_soi_terrain_saturation, 0.0, 1.16);
   terrain_color = mix(gray_level, terrain_color, grounded_saturation);
-  terrain_color *= vec3(1.01, 0.99, 0.99);
+  terrain_color *= vec3(0.98, 0.94, 0.90);
 
   float terrain_luma = dot(terrain_color, vec3(0.299, 0.587, 0.114));
   terrain_color =
