@@ -690,6 +690,19 @@
       }
     },
     {
+      "id": "ambient.camp_fire_night",
+      "path": "ambience/camp_fire_night.ogg",
+      "category": "ambience",
+      "volume": 0.4,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "lazy",
+      "tags": {
+        "layer": "hearth",
+        "variant": "camp_fire"
+      }
+    },
+    {
       "id": "ambient.battlefield_dry_wind_distant_march_01",
       "path": "ambience/battlefield_dry_wind_distant_march_01.ogg",
       "category": "ambience",
@@ -836,6 +849,20 @@
       "tags": {
         "layer": "weather",
         "weather": "rain"
+      }
+    },
+    {
+      "id": "ambient.night_rain",
+      "path": "ambience/night_rain.ogg",
+      "category": "ambience",
+      "volume": 0.5,
+      "priority": 1,
+      "max_instances": 1,
+      "load_policy": "lazy",
+      "tags": {
+        "layer": "weather",
+        "weather": "rain",
+        "variant": "night"
       }
     },
     {

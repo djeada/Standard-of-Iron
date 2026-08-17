@@ -1,0 +1,99 @@
+{
+  "id": "night_watch",
+  "title": "NIGHT WATCH IN THE RAIN",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "supersample": 1,
+  "shots": [
+    {
+      "name": "arrival",
+      "scenario": "ambience_night_watch",
+      "seed": 5501,
+      "start": 0.5,
+      "duration": 13.5,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.35, 0.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10.0,
+          "pitch": 10.0,
+          "yaw": 80.0,
+          "fov": 33.0,
+          "height": 0.85,
+          "ease": "linear"
+        },
+        {
+          "time": 13.5,
+          "distance": 10.0,
+          "pitch": 10.0,
+          "yaw": 80.0,
+          "fov": 33.0,
+          "height": 0.85,
+          "ease": "linear"
+        }
+      ]
+    },
+    {
+      "name": "watch",
+      "scenario": "ambience_night_watch",
+      "seed": 5501,
+      "start": 14.0,
+      "duration": 36.0,
+      "shake": 0.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.35, 0.0]
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 10.0,
+          "pitch": 10.0,
+          "yaw": 80.0,
+          "fov": 33.0,
+          "height": 0.85,
+          "ease": "linear"
+        },
+        {
+          "time": 36.0,
+          "distance": 10.0,
+          "pitch": 10.0,
+          "yaw": 80.0,
+          "fov": 33.0,
+          "height": 0.85,
+          "ease": "linear"
+        }
+      ]
+    }
+  ],
+  "ambience": {
+    "seed": 5501,
+    "gain": 1.35,
+    "beds": [
+      {
+        "file": "assets/audio/ambience/night_rain.ogg",
+        "gain": 0.72
+      },
+      {
+        "file": "assets/audio/ambience/camp_fire_night.ogg",
+        "gain": 0.95
+      },
+      {
+        "file": "assets/audio/ambience/mountain_camp_night.ogg",
+        "gain": 0.12
+      }
+    ],
+    "calls": [
+      {
+        "file": "assets/audio/sfx/wildlife/wolf_howl_distant.ogg",
+        "gain": 0.34,
+        "every": [26.0, 64.0]
+      }
+    ]
+  }
+}

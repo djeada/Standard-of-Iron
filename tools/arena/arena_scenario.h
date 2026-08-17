@@ -112,6 +112,8 @@ struct ArenaScenarioGroup {
   QStringList showcase_routine;
   float showcase_start_delay{0.0F};
   bool showcase_loop{true};
+
+  int showcase_loop_from{0};
   std::optional<QVector3D> showcase_throw_target;
   float render_scale_override{0.0F};
   QString showcase_released_renderer;
@@ -123,6 +125,8 @@ struct ArenaScenarioResourcePatch {
   QVector3D origin;
   QVector3D spacing{2.5F, 0.0F, 0.0F};
   float scale{1.0F};
+
+  bool exact{false};
 };
 
 struct ArenaScenarioOwnerTeam {

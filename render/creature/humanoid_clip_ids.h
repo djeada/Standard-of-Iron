@@ -103,5 +103,15 @@ inline constexpr std::uint16_t k_humanoid_unarmed_hook_clip =
     Animation::k_humanoid_unarmed_hook_clip;
 inline constexpr std::uint8_t k_humanoid_unarmed_variant_count =
     Animation::k_humanoid_unarmed_variant_count;
+inline constexpr std::uint16_t k_humanoid_showcase_rest_sit_clip =
+    Animation::k_humanoid_showcase_rest_sit_clip;
+inline constexpr std::uint16_t k_humanoid_showcase_rest_sit_knees_clip =
+    Animation::k_humanoid_showcase_rest_sit_knees_clip;
+inline constexpr std::uint16_t k_humanoid_showcase_rest_kneel_clip =
+    Animation::k_humanoid_showcase_rest_kneel_clip;
+inline constexpr std::uint16_t k_humanoid_showcase_rest_sit_down_clip =
+    Animation::k_humanoid_showcase_rest_sit_down_clip;
+inline constexpr std::uint16_t k_humanoid_showcase_rest_sit_knees_down_clip =
+    Animation::k_humanoid_showcase_rest_sit_knees_down_clip;
 
 } // namespace Render::Creature
