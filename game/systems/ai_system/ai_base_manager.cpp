@@ -120,7 +120,6 @@ void fill_base_from_cluster(const Cluster& cluster,
   base.defense_tower_count = 0;
   base.queued_production = 0;
   base.production_capacity = 0;
-  base.is_planned = false;
 
   const EntitySnapshot* primary = nullptr;
   const EntitySnapshot* fallback = nullptr;
@@ -181,6 +180,9 @@ void update_threat(const AISnapshot& snapshot, AIBase& base) {
 
   base.nearby_threat_count = 0;
   for (const auto& enemy : snapshot.visible_enemies) {
+    if (!is_threatening_contact(enemy)) {
+      continue;
+    }
     const float distance_sq = distance_squared(
         enemy.pos_x, 0.0F, enemy.pos_z, base.center_x, 0.0F, base.center_z);
     if (distance_sq <= radius_sq) {
@@ -429,11 +431,12 @@ void AIBaseManager::update(const AISnapshot& snapshot, AIContext& ctx) {
   }
 
   const AIBase* main = main_base(ctx);
-  if (main != nullptr && main->primary_barracks != 0) {
+  if (main != nullptr) {
     ctx.primary_barracks = main->primary_barracks;
     ctx.rally_x = main->rally_x;
     ctx.rally_z = main->rally_z;
     ctx.base_pos_x = main->center_x;
+    ctx.base_pos_y = 0.0F;
     ctx.base_pos_z = main->center_z;
     ctx.has_base_anchor = true;
     ctx.anchor_is_structural = true;
@@ -474,10 +477,6 @@ auto AIBaseManager::main_base(const AIContext& ctx) -> const AIBase* {
   return find_base(ctx, ctx.main_base_id);
 }
 
-auto AIBaseManager::forward_base(const AIContext& ctx) -> const AIBase* {
-  return find_base(ctx, ctx.forward_base_id);
-}
-
 auto AIBaseManager::base_for_position(const AIContext& ctx,
                                       float x,
                                       float z) -> const AIBase* {
@@ -496,17 +495,6 @@ auto AIBaseManager::base_for_position(const AIContext& ctx,
   return best;
 }
 
-auto AIBaseManager::base_for_building(
-    const AIContext& ctx, Engine::Core::EntityID building_id) -> const AIBase* {
-  for (const auto& base : ctx.bases) {
-    if (std::find(base.buildings.begin(), base.buildings.end(), building_id) !=
-        base.buildings.end()) {
-      return &base;
-    }
-  }
-  return nullptr;
-}
-
 auto AIBaseManager::site_is_abandoned(const AIContext& ctx,
                                       float x,
                                       float z,
@@ -521,20 +509,6 @@ auto AIBaseManager::site_is_abandoned(const AIContext& ctx,
     }
   }
   return false;
-}
-
-auto AIBaseManager::role_name(BaseRole role) -> const char* {
-  switch (role) {
-  case BaseRole::Main:
-    return "main";
-  case BaseRole::Production:
-    return "production";
-  case BaseRole::Defensive:
-    return "defensive";
-  case BaseRole::Forward:
-    return "forward";
-  }
-  return "unknown";
 }
 
 } // namespace Game::Systems::AI

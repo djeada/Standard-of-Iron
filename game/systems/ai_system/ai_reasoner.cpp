@@ -79,8 +79,13 @@ auto densest_anchor_cluster(const std::vector<AnchorCandidate>& candidates)
   return best_center;
 }
 
+auto holds_garrison(const Game::Systems::AI::AIStrategyConfig& strategy) -> bool {
+  return strategy.posture == Game::Systems::AI::AIPosture::Garrison;
+}
+
 auto can_initiate_attack(const Game::Systems::AI::AIStrategyConfig& strategy) -> bool {
-  return strategy.aggression_modifier >= k_attack_initiation_aggression_threshold;
+  return !holds_garrison(strategy) &&
+         strategy.aggression_modifier >= k_attack_initiation_aggression_threshold;
 }
 
 auto is_no_economy_nation(const Game::Systems::AI::AIContext& ctx) -> bool {
@@ -164,7 +169,7 @@ void update_expansion_site(const Game::Systems::AI::AISnapshot& snapshot,
   ctx.expansion_construction_pending = false;
   ctx.forward_plan.has_site = false;
 
-  if (!ctx.anchor_is_structural ||
+  if (!ctx.anchor_is_structural || holds_garrison(ctx.strategy_config) ||
       desired_outpost_barracks_count(ctx.strategy_config) <= 0) {
     return;
   }
@@ -292,6 +297,9 @@ auto can_build_outpost_expansion(const Game::Systems::AI::AIContext& ctx) -> boo
 }
 
 auto wants_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
+  if (holds_garrison(ctx.strategy_config)) {
+    return false;
+  }
   return can_capture_neutral_expansion(ctx) || can_build_outpost_expansion(ctx);
 }
 
@@ -413,7 +421,8 @@ auto compute_effective_reserve_units(const Game::Systems::AI::AISnapshot& snapsh
 auto compute_effective_harass_units(const Game::Systems::AI::AISnapshot& snapshot,
                                     const Game::Systems::AI::AIContext& ctx) -> int {
   if (ctx.strategy_config.harass_units <= 0 ||
-      ctx.strategy_config.harassment_range <= 0.0F) {
+      ctx.strategy_config.harassment_range <= 0.0F ||
+      holds_garrison(ctx.strategy_config)) {
     return 0;
   }
 
@@ -680,7 +689,6 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   const float previous_site_x = ctx.expansion_site_x;
   const float previous_site_z = ctx.expansion_site_z;
 
-  ctx.military_units.clear();
   ctx.buildings.clear();
   ctx.commander_ids.clear();
   ctx.primary_barracks = 0;
@@ -696,7 +704,6 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.rally_z = 0.0F;
   ctx.barracks_under_threat = false;
   ctx.nearby_threat_count = 0;
-  ctx.closest_threat_distance = std::numeric_limits<float>::infinity();
   ctx.base_pos_x = 0.0F;
   ctx.base_pos_y = 0.0F;
   ctx.base_pos_z = 0.0F;
@@ -706,9 +713,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.expansion_site_x = 0.0F;
   ctx.expansion_site_z = 0.0F;
   ctx.visible_enemy_count = 0;
-  ctx.enemy_buildings_count = 0;
   ctx.neutral_barracks_count = 0;
-  ctx.average_enemy_distance = 0.0F;
   ctx.home_count = 0;
   ctx.defense_tower_count = 0;
   ctx.wall_segment_count = 0;
@@ -767,7 +772,6 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
       continue;
     }
 
-    ctx.military_units.push_back(entity.id);
     ctx.total_units++;
 
     if (entity.is_commander) {
@@ -878,33 +882,13 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
                            : 1.0F;
 
   ctx.visible_enemy_count = static_cast<int>(snapshot.visible_enemies.size());
-  float total_enemy_dist = 0.0F;
 
   for (const auto& enemy : snapshot.visible_enemies) {
-    if (enemy.is_building) {
-      ctx.enemy_buildings_count++;
-
-      if (enemy.spawn_type == Game::Units::SpawnType::Barracks &&
-          Game::Core::is_neutral_owner(enemy.owner_id)) {
-        ctx.neutral_barracks_count++;
-      }
-    }
-
-    if (ctx.has_base_anchor) {
-      float const dist = distance(enemy.pos_x,
-                                  enemy.pos_y,
-                                  enemy.pos_z,
-                                  ctx.base_pos_x,
-                                  ctx.base_pos_y,
-                                  ctx.base_pos_z);
-      total_enemy_dist += dist;
+    if (enemy.is_building && enemy.spawn_type == Game::Units::SpawnType::Barracks &&
+        Game::Core::is_neutral_owner(enemy.owner_id)) {
+      ctx.neutral_barracks_count++;
     }
   }
-
-  ctx.average_enemy_distance =
-      (ctx.visible_enemy_count > 0)
-          ? (total_enemy_dist / static_cast<float>(ctx.visible_enemy_count))
-          : 1000.0F;
 
   if (ctx.has_base_anchor) {
 
@@ -915,6 +899,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
     const float defend_radius_sq = defend_radius * defend_radius;
 
     for (const auto& enemy : snapshot.visible_enemies) {
+      if (!is_threatening_contact(enemy)) {
+        continue;
+      }
       float const dist_sq = distance_squared(enemy.pos_x,
                                              enemy.pos_y,
                                              enemy.pos_z,
@@ -927,14 +914,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
         if (ctx.primary_barracks != 0) {
           ctx.barracks_under_threat = true;
         }
-
-        float const dist = std::sqrt(std::max(dist_sq, 0.0F));
-        ctx.closest_threat_distance = std::min(ctx.closest_threat_distance, dist);
       }
-    }
-
-    if (!ctx.barracks_under_threat) {
-      ctx.closest_threat_distance = std::numeric_limits<float>::infinity();
     }
   }
 
@@ -954,8 +934,6 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   if (ctx.last_meaningful_action_time == 0.0F) {
     ctx.last_meaningful_action_time = snapshot.game_time;
   }
-
-  ctx.last_total_units = ctx.total_units;
 }
 
 void AIReasoner::update_state_machine(const AISnapshot& snapshot,
@@ -1014,19 +992,16 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
       }
     }
     ctx.consecutive_no_progress_cycles = 0;
-    ctx.debug_info.deadlock_recoveries++;
   }
 
   if (ctx.decision_timer < 2.0F) {
     if (ctx.state != previous_state) {
       ctx.state_timer = 0.0F;
-      ctx.debug_info.state_transitions++;
     }
     return;
   }
 
   ctx.decision_timer = 0.0F;
-  ctx.debug_info.total_decisions_made++;
   previous_state = ctx.state;
 
   if (ctx.state_timer < min_state_duration &&
@@ -1189,7 +1164,6 @@ void AIReasoner::update_state_machine(const AISnapshot& snapshot,
       release_units(ctx.harass_unit_ids, ctx);
     }
     ctx.consecutive_no_progress_cycles = 0;
-    ctx.debug_info.state_transitions++;
   }
 }
 
@@ -1215,7 +1189,7 @@ void AIReasoner::validate_state(AIContext& ctx) {
     }
   }
 
-  if (is_no_economy_nation(ctx) &&
+  if ((is_no_economy_nation(ctx) || holds_garrison(ctx.strategy_config)) &&
       (ctx.state == AIState::Expanding || ctx.state == AIState::Attacking)) {
     ctx.state = has_active_local_threat(ctx) ? AIState::Defending : AIState::Gathering;
     ctx.state_timer = 0.0F;

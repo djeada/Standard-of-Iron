@@ -4,20 +4,14 @@
 
 namespace Game::Systems::AI {
 
-class AIReasoner {
-public:
-  AIReasoner() = default;
-  ~AIReasoner() = default;
+namespace AIReasoner {
 
-  AIReasoner(const AIReasoner&) = delete;
-  auto operator=(const AIReasoner&) -> AIReasoner& = delete;
+void update_context(const AISnapshot& snapshot, AIContext& ctx);
 
-  static void update_context(const AISnapshot& snapshot, AIContext& ctx);
+void update_state_machine(const AISnapshot& snapshot, AIContext& ctx, float delta_time);
 
-  static void
-  update_state_machine(const AISnapshot& snapshot, AIContext& ctx, float delta_time);
+void validate_state(AIContext& ctx);
 
-  static void validate_state(AIContext& ctx);
-};
+} // namespace AIReasoner
 
 } // namespace Game::Systems::AI

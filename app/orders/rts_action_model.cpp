@@ -29,6 +29,7 @@ enum class ActionId {
   AutoGather,
   Build,
   Repair,
+  Dismantle,
   Formation,
   Run,
   Rally,
@@ -61,6 +62,7 @@ constexpr ActionId k_all_actions[] = {ActionId::Attack,
                                       ActionId::AutoGather,
                                       ActionId::Build,
                                       ActionId::Repair,
+                                      ActionId::Dismantle,
                                       ActionId::Formation,
                                       ActionId::Run,
                                       ActionId::Rally,
@@ -91,6 +93,8 @@ auto action_to_string(ActionId action) -> QString {
     return QStringLiteral("build");
   case ActionId::Repair:
     return QStringLiteral("repair");
+  case ActionId::Dismantle:
+    return QStringLiteral("dismantle");
   case ActionId::Formation:
     return QStringLiteral("formation");
   case ActionId::Run:
@@ -140,6 +144,9 @@ auto action_from_string(const QString& action_id) -> ActionId {
   }
   if (action_id == QStringLiteral("repair")) {
     return ActionId::Repair;
+  }
+  if (action_id == QStringLiteral("dismantle")) {
+    return ActionId::Dismantle;
   }
   if (action_id == QStringLiteral("formation")) {
     return ActionId::Formation;
@@ -199,6 +206,7 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
   case ActionId::AutoGather:
   case ActionId::Build:
   case ActionId::Repair:
+  case ActionId::Dismantle:
     return (unit != nullptr) && (unit->spawn_type == Game::Units::SpawnType::Builder);
   case ActionId::Formation:
     return (unit != nullptr) && Game::Units::is_troop_spawn(unit->spawn_type);
@@ -260,6 +268,13 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
     return (builder != nullptr) &&
            builder->product_type ==
                std::string(Game::Systems::k_builder_product_repair);
+  }
+  case ActionId::Dismantle: {
+    const auto* builder =
+        entity.get_component<Engine::Core::BuilderProductionComponent>();
+    return (builder != nullptr) &&
+           builder->product_type ==
+               std::string(Game::Systems::k_builder_product_dismantle);
   }
   case ActionId::AutoGather: {
     const auto* builder =
@@ -349,10 +364,24 @@ auto aura_detail(const Engine::Core::Entity* sample) -> QVariantMap {
   return detail;
 }
 
+auto auto_gather_detail(const Engine::Core::Entity* sample) -> QVariantMap {
+  QVariantMap detail;
+  const auto* builder =
+      sample != nullptr
+          ? sample->get_component<Engine::Core::BuilderProductionComponent>()
+          : nullptr;
+  detail[QStringLiteral("priority")] =
+      builder != nullptr ? QString::fromStdString(builder->auto_gather_priority)
+                         : QString();
+  return detail;
+}
+
 auto action_detail(const App::Core::ActionContext& context,
                    ActionId action,
                    const Engine::Core::Entity* sample) -> QVariantMap {
   switch (action) {
+  case ActionId::AutoGather:
+    return auto_gather_detail(sample);
   case ActionId::Guard:
     return guard_detail(sample);
   case ActionId::Hold:
@@ -443,6 +472,8 @@ auto get_status(const App::Core::ActionContext& context,
          (context.pending_builder_construction_type == QStringLiteral("collect")));
   } else if (action == ActionId::Repair) {
     status.placing = context.cursor_mode == CursorMode::Repair;
+  } else if (action == ActionId::Dismantle) {
+    status.placing = context.cursor_mode == CursorMode::Dismantle;
   } else if (action == ActionId::Formation) {
     status.placing = context.placing_formation;
   } else if (action == ActionId::Rally) {
@@ -504,6 +535,9 @@ auto get_current_action_mode(const ActionContext& context) -> QString {
   if (get_status(context, ActionId::Repair).placing) {
     return QStringLiteral("repair");
   }
+  if (get_status(context, ActionId::Dismantle).placing) {
+    return QStringLiteral("dismantle");
+  }
   if (get_status(context, ActionId::Formation).placing) {
     return QStringLiteral("formation");
   }
@@ -555,6 +589,8 @@ auto get_mode_availability(Engine::Core::World* world) -> QVariantMap {
   result[QStringLiteral("canAutoGather")] =
       get_status(context, ActionId::AutoGather).enabled;
   result[QStringLiteral("canRepair")] = get_status(context, ActionId::Repair).enabled;
+  result[QStringLiteral("canDismantle")] =
+      get_status(context, ActionId::Dismantle).enabled;
   result[QStringLiteral("canDeliver")] = get_status(context, ActionId::Deliver).enabled;
   result[QStringLiteral("canRally")] = get_status(context, ActionId::Rally).enabled;
   result[QStringLiteral("canGate")] = get_status(context, ActionId::Gate).enabled;
@@ -611,6 +647,8 @@ auto action_id_for_cursor_mode(CursorMode mode) -> QString {
     return QStringLiteral("collect");
   case CursorMode::Repair:
     return QStringLiteral("repair");
+  case CursorMode::Dismantle:
+    return QStringLiteral("dismantle");
   case CursorMode::Normal:
     break;
   }

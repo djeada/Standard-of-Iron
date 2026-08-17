@@ -64,6 +64,9 @@ auto is_in_range(Engine::Core::Entity* attacker,
 auto structure_separates_combatants(Engine::Core::Entity* attacker,
                                     Engine::Core::Entity* target) -> bool;
 
+auto melee_walled_off_from(Engine::Core::Entity* attacker,
+                           Engine::Core::Entity* target) -> bool;
+
 auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool;
 
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool;

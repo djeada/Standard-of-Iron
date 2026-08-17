@@ -28,7 +28,8 @@ auto MarketplaceSystem::owner_has_marketplace(const Engine::Core::World& world,
     const auto* unit = building->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr && unit->owner_id == owner_id &&
         unit->spawn_type == Game::Units::SpawnType::Marketplace && unit->health > 0 &&
-        !building->has_component<Engine::Core::PendingRemovalComponent>()) {
+        !building->has_component<Engine::Core::PendingRemovalComponent>() &&
+        !building->has_component<Engine::Core::DismantleSiteComponent>()) {
       return true;
     }
   }

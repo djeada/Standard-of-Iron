@@ -130,6 +130,8 @@ auto rejection_name(Rejection rejection) -> const char* {
     return "missing-building";
   case Rejection::NotOwnedBuilding:
     return "not-owned-building";
+  case Rejection::NotPermittedForSource:
+    return "not-permitted-for-source";
   case Rejection::MalformedPayload:
     return "malformed-payload";
   }
@@ -146,6 +148,12 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
   }
 
   const int owner_id = command.owner_id;
+
+  if (command.source == Source::AI &&
+      std::holds_alternative<DismantleStructure>(command.payload)) {
+    result.rejection = Rejection::NotPermittedForSource;
+    return result;
+  }
 
   result.rejection = std::visit(
       [&](auto& payload) -> Rejection {
@@ -167,7 +175,8 @@ auto validate(Engine::Core::World& world, const Command& command) -> Validation 
           return filter_subjects(world, owner_id, payload.units)
                      ? Rejection::None
                      : Rejection::NoSubjects;
-        } else if constexpr (std::is_same_v<T, RepairStructure>) {
+        } else if constexpr (std::is_same_v<T, RepairStructure> ||
+                             std::is_same_v<T, DismantleStructure>) {
           if (const auto ruling =
                   validate_building_order(world, owner_id, payload.structure);
               ruling != Rejection::None) {

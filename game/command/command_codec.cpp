@@ -286,6 +286,10 @@ void encode(QJsonObject& o, const RepairStructure& p) {
   o["units"] = ids_to_json(p.units);
   o["structure"] = id_to_json(p.structure);
 }
+void encode(QJsonObject& o, const DismantleStructure& p) {
+  o["units"] = ids_to_json(p.units);
+  o["structure"] = id_to_json(p.structure);
+}
 void encode(QJsonObject& o, const PlaceWallPlan& p) {
   o["units"] = ids_to_json(p.units);
   o["gate"] = p.gate;
@@ -310,7 +314,7 @@ auto decode<Move>(Reader& r) -> Move {
   p.units = r.ids("units");
   p.targets = r.vecs("targets");
   p.facing_angles = r.floats("facing_angles");
-  p.kind = r.enumeration("kind", Game::Systems::MoveOrderKind::ScriptedMove);
+  p.kind = r.enumeration("kind", Game::Systems::MoveOrderKind::PlannerMove);
   p.preserve_formation_mode = r.boolean("preserve_formation_mode");
   return p;
 }
@@ -424,6 +428,10 @@ auto decode<DeliverCivilians>(Reader& r) -> DeliverCivilians {
 }
 template <>
 auto decode<RepairStructure>(Reader& r) -> RepairStructure {
+  return {.units = r.ids("units"), .structure = r.id("structure")};
+}
+template <>
+auto decode<DismantleStructure>(Reader& r) -> DismantleStructure {
   return {.units = r.ids("units"), .structure = r.id("structure")};
 }
 template <>

@@ -324,6 +324,21 @@ void InputCommandHandler::on_auto_gather_command(const QString& priority_product
   }
 }
 
+void InputCommandHandler::set_auto_gather(bool active,
+                                          const QString& priority_product_type) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (m_command_controller == nullptr) {
+    return;
+  }
+
+  auto result = m_command_controller->set_auto_gather(active, priority_product_type);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
 void InputCommandHandler::on_run_command() {
   if (m_is_spectator_mode) {
     return;
@@ -385,6 +400,24 @@ void InputCommandHandler::on_builder_repair_click(qreal sx,
   }
 
   auto result = m_command_controller->on_builder_repair_click(
+      sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
+void InputCommandHandler::on_builder_dismantle_click(qreal sx,
+                                                     qreal sy,
+                                                     int local_owner_id,
+                                                     const ViewportState& viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if ((m_command_controller == nullptr) || (m_camera == nullptr)) {
+    return;
+  }
+
+  auto result = m_command_controller->on_builder_dismantle_click(
       sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
   if (result.reset_cursor_to_normal) {
     m_cursor_manager->set_mode(CursorMode::Normal);

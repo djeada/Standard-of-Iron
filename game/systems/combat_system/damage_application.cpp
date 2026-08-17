@@ -607,6 +607,11 @@ auto can_retaliate(Engine::Core::Entity* entity,
   return entity->get_component<Engine::Core::AttackComponent>() != nullptr;
 }
 
+auto can_reach_attacker(Engine::Core::Entity* entity,
+                        Engine::Core::Entity* attacker) -> bool {
+  return !melee_walled_off_from(entity, attacker);
+}
+
 void engage_retaliation_target(Engine::Core::Entity* entity,
                                Engine::Core::EntityID attacker_id) {
   auto* attack_target = entity->get_component<Engine::Core::AttackTargetComponent>();
@@ -668,7 +673,7 @@ void alert_nearby_allies(Engine::Core::World* world,
     if (dx * dx + dz * dz > radius_sq) {
       continue;
     }
-    if (!can_retaliate(ally, ally_unit)) {
+    if (!can_retaliate(ally, ally_unit) || !can_reach_attacker(ally, attacker)) {
       continue;
     }
     if (suppresses_opportunistic_combat(ally)) {
@@ -705,7 +710,9 @@ void assign_retaliation_target_if_needed(Engine::Core::World* world,
     return;
   }
 
-  engage_retaliation_target(target, attacker->get_id());
+  if (can_reach_attacker(target, attacker)) {
+    engage_retaliation_target(target, attacker->get_id());
+  }
   alert_nearby_allies(world, target, attacker);
 }
 

@@ -234,6 +234,39 @@
       "description": "Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold."
     }
   ],
+  "stages": [
+    {
+      "id": "reach_first_pass",
+      "type": "reach_position",
+      "title": "Bring the column to the first pass",
+      "description": "Move the army up to the lower pass camp before the snow closes it.",
+      "hint": "Follow the valley floor east; the mountain peoples hold the switchbacks above.",
+      "target": {
+        "x": 116,
+        "z": 168
+      },
+      "target_radius": 24.0
+    },
+    {
+      "id": "cut_road_stores",
+      "type": "accumulate_resources",
+      "resources": {
+        "wood": 600,
+        "stone": 350,
+        "iron": 300
+      },
+      "title": "Cut the stores for the road",
+      "description": "Timber for the sledges, stone for the roadbed, iron for shoes and axles.",
+      "hint": "Set builders on the slopes; the pass is paid for in materials, not blood."
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill the mountain commanders",
+      "description": "Break the chiefs contesting the descent.",
+      "hint": "Their camps fall neutral once their commander is dead."
+    }
+  ],
   "events": [
     {
       "trigger": {

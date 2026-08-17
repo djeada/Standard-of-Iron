@@ -286,6 +286,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>Keine Missionsziele verfügbar.
 Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</translation>
     </message>
+    <message>
+        <source>Mission Steps — in order</source>
+        <translation>Einsatzschritte — der Reihe nach</translation>
+    </message>
+    <message>
+        <source>Next step</source>
+        <translation>Nächster Schritt</translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 von %2</translation>
+    </message>
 </context>
 <context>
     <name>CameraGuide</name>
@@ -590,65 +602,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Veii</source>
         <translation>Veji</translation>
-    </message>
-</context>
-<context>
-    <name>CampaignMenu</name>
-    <message>
-        <source>Campaign Missions</source>
-        <translation>Feldzugsmissionen</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← Zurück</translation>
-    </message>
-    <message>
-        <source>✓ Completed</source>
-        <translation>✓ Abgeschlossen</translation>
-    </message>
-    <message>
-        <source>Locked</source>
-        <translation>Gesperrt</translation>
-    </message>
-    <message>
-        <source>No campaign missions available</source>
-        <translation>Keine Feldzugsmissionen verfügbar</translation>
-    </message>
-    <message>
-        <source>Rome</source>
-        <translation>Rom</translation>
-    </message>
-    <message>
-        <source>Carthage</source>
-        <translation>Karthago</translation>
-    </message>
-    <message>
-        <source>Neutral</source>
-        <translation>Neutral</translation>
-    </message>
-    <message>
-        <source>Loading map…</source>
-        <translation>Karte wird geladen …</translation>
-    </message>
-    <message>
-        <source>Control: </source>
-        <translation>Kontrolle: </translation>
-    </message>
-    <message>
-        <source>Legend</source>
-        <translation>Legende</translation>
-    </message>
-    <message>
-        <source>Select a Mission</source>
-        <translation>Mission auswählen</translation>
-    </message>
-    <message>
-        <source>Mission briefing...</source>
-        <translation>Missionsbriefing …</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Abbrechen</translation>
     </message>
 </context>
 <context>
@@ -2339,6 +2292,18 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>No firing line</source>
         <translation>Keine Schusslinie</translation>
     </message>
+    <message>
+        <source>Collect</source>
+        <translation>Sammeln</translation>
+    </message>
+    <message>
+        <source>Deliver civilians</source>
+        <translation>Siedler abliefern</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Reparieren</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -2888,6 +2853,74 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>The commander empowers the troops around him for a while, then must recharge.</source>
         <translation>Der Befehlshaber stärkt die Truppen um sich für eine Weile und muss danach aufladen.</translation>
     </message>
+    <message>
+        <source>Wood only</source>
+        <translation>Nur Holz</translation>
+    </message>
+    <message>
+        <source>Stone only</source>
+        <translation>Nur Stein</translation>
+    </message>
+    <message>
+        <source>Iron only</source>
+        <translation>Nur Eisen</translation>
+    </message>
+    <message>
+        <source>Any resource</source>
+        <translation>Alle Rohstoffe</translation>
+    </message>
+    <message>
+        <source>Dismantle order</source>
+        <translation>Abbruchbefehl</translation>
+    </message>
+    <message>
+        <source>Auto</source>
+        <translation>Auto</translation>
+    </message>
+    <message>
+        <source>Pick a resource</source>
+        <translation>Rohstoff wählen</translation>
+    </message>
+    <message>
+        <source>Press again to cycle any resource, wood, stone, iron, then off.</source>
+        <translation>Erneut drücken schaltet weiter: alle Rohstoffe, Holz, Stein, Eisen, dann aus.</translation>
+    </message>
+    <message>
+        <source>Dismantle</source>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <source>Scrap</source>
+        <translation>Abriss</translation>
+    </message>
+    <message>
+        <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
+        <translation>Schickt Bauleute, eines deiner eigenen Gebäude abzutragen und einen Teil der Kosten zurückzuholen.</translation>
+    </message>
+    <message>
+        <source>Press Dismantle, then left-click your building. Right-click cancels.</source>
+        <translation>Abbrechen drücken, dann mit links auf dein Gebäude klicken. Rechtsklick bricht ab.</translation>
+    </message>
+    <message>
+        <source>Pays back</source>
+        <translation>Bringt zurück</translation>
+    </message>
+    <message>
+        <source>Part of what it cost, once the work finishes. Calling the crew off pays nothing.</source>
+        <translation>Einen Teil der Kosten, sobald die Arbeit fertig ist. Wer die Leute abzieht, bekommt nichts.</translation>
+    </message>
+    <message>
+        <source>Crew</source>
+        <translation>Trupp</translation>
+    </message>
+    <message>
+        <source>Builders only; up to three of them speed it up.</source>
+        <translation>Nur Bauleute; bis zu drei davon machen es schneller.</translation>
+    </message>
+    <message>
+        <source>Dismantle is only available to builders</source>
+        <translation>Abbrechen können nur Bauleute</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -3272,6 +3305,14 @@ Unbekannt: nie aufgeklärt.</translation>
         <source>Return the camera to your camp (%1)</source>
         <translation>Kamera zurück zu deinem Lager (%1)</translation>
     </message>
+    <message>
+        <source>All objectives complete</source>
+        <translation>Alle Ziele erfüllt</translation>
+    </message>
+    <message>
+        <source>Click to look at the objective.</source>
+        <translation>Klicken, um zum Ziel zu blicken.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -3366,10 +3407,6 @@ Unbekannt: nie aufgeklärt.</translation>
     <message>
         <source>Repair and dismantle</source>
         <translation>Reparieren und abreißen</translation>
-    </message>
-    <message>
-        <source>A damaged building can be repaired by a builder with the Repair order. Buildings you no longer need can be dismantled from their panel.</source>
-        <translation>Ein beschädigtes Gebäude kann ein Bauarbeiter mit dem Reparieren-Befehl instand setzen. Gebäude, die du nicht mehr brauchst, lassen sich über ihre Tafel abreißen.</translation>
     </message>
     <message>
         <source>Recruiting</source>
@@ -3498,6 +3535,10 @@ Unbekannt: nie aufgeklärt.</translation>
     <message>
         <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
         <translation>Ist der Befehlshaber gewählt, stärkt Aura seine Truppen eine Zeit lang und muss danach aufladen – jeder Befehlshaber bringt eigenen Bonus, Radius und Zeiten mit, und die Schaltfläche zeigt sie samt Restzeit an. Ein Leuchten markiert jeden Soldaten im Ring, der Ring wandert mit ihm, und ein verwundeter Befehlshaber kann sie nicht rufen. Sammeln pflanzt eine Fahne auf, zu der dein Heer marschiert – nützlich, um eine zerstreute Streitmacht wieder in eine Linie zu ziehen.</translation>
+    </message>
+    <message>
+        <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
+        <translation>Ein beschädigtes Gebäude kann ein Bautrupp mit dem Befehl Reparieren instand setzen. Ein Gebäude, das du nicht mehr brauchst, nimmt der Befehl Abbrechen auseinander: Bauleute wählen, Abbrechen drücken und das Gebäude anklicken. Ein Teil der Kosten kommt zurück, sobald die Arbeit fertig ist; wer den Trupp vorher abzieht, bekommt nichts.</translation>
     </message>
 </context>
 <context>
@@ -5321,6 +5362,290 @@ um die Vorschau zu sehen</translation>
         <source>Your commander falls - and every line collapses behind him.</source>
         <translation>Dein Befehlshaber fällt – und jede Linie bricht hinter ihm zusammen.</translation>
     </message>
+    <message>
+        <source>A camp is taken by holding its yard, not by levelling it.</source>
+        <translation>Ein Lager wird genommen, indem man seinen Hof hält, nicht indem man es niederreißt.</translation>
+    </message>
+    <message>
+        <source>A column without its commander stops being a column.</source>
+        <translation>Eine Kolonne ohne ihren Befehlshaber ist keine Kolonne mehr.</translation>
+    </message>
+    <message>
+        <source>Break the chiefs contesting the descent.</source>
+        <translation>Brich die Häuptlinge, die den Abstieg bestreiten.</translation>
+    </message>
+    <message>
+        <source>Break the consular line at its centre.</source>
+        <translation>Brich die konsularische Linie in ihrer Mitte.</translation>
+    </message>
+    <message>
+        <source>Break the siege camp once the assaults are spent.</source>
+        <translation>Brich das Belagerungslager, sobald die Angriffe verbraucht sind.</translation>
+    </message>
+    <message>
+        <source>Break the three assault phases</source>
+        <translation>Die drei Angriffswellen brechen</translation>
+    </message>
+    <message>
+        <source>Break the three crossings</source>
+        <translation>Die drei Übergänge brechen</translation>
+    </message>
+    <message>
+        <source>Bring the column to the first pass</source>
+        <translation>Die Kolonne zum ersten Pass führen</translation>
+    </message>
+    <message>
+        <source>Bring the column to the pontoon bridge on the near bank.</source>
+        <translation>Führe die Kolonne zur Pontonbrücke am diesseitigen Ufer.</translation>
+    </message>
+    <message>
+        <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
+        <translation>Die Reiterei ist zuerst dort; halte den Hof, bis das Feldzeichen wechselt.</translation>
+    </message>
+    <message>
+        <source>Close the encirclement on the Aufidus camp to the north.</source>
+        <translation>Schließe die Umfassung am Aufidus-Lager im Norden.</translation>
+    </message>
+    <message>
+        <source>Close the trap on the column town</source>
+        <translation>Die Falle um die Kolonnenstadt schließen</translation>
+    </message>
+    <message>
+        <source>Cut the stores for the road</source>
+        <translation>Vorräte für die Straße schlagen</translation>
+    </message>
+    <message>
+        <source>End the war with the men who lead it.</source>
+        <translation>Beende den Krieg mit den Männern, die ihn führen.</translation>
+    </message>
+    <message>
+        <source>Enemy camps fall neutral once their commander is dead.</source>
+        <translation>Feindliche Lager werden neutral, sobald ihr Befehlshaber tot ist.</translation>
+    </message>
+    <message>
+        <source>Finish the consular officers on the field.</source>
+        <translation>Mache die konsularischen Offiziere auf dem Feld nieder.</translation>
+    </message>
+    <message>
+        <source>Finish the officers inside the ring.</source>
+        <translation>Mache die Offiziere im Ring nieder.</translation>
+    </message>
+    <message>
+        <source>Flaminius must not leave the shore.</source>
+        <translation>Flaminius darf das Ufer nicht verlassen.</translation>
+    </message>
+    <message>
+        <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
+        <translation>Folge der Talsohle nach Osten; die Bergvölker halten die Kehren darüber.</translation>
+    </message>
+    <message>
+        <source>Hold the Punic quarter through every consular column.</source>
+        <translation>Halte das punische Viertel gegen jede konsularische Kolonne.</translation>
+    </message>
+    <message>
+        <source>Hold the gate yard of Scipio&apos;s forward town.</source>
+        <translation>Halte den Torhof von Scipios vorgeschobener Stadt.</translation>
+    </message>
+    <message>
+        <source>Hold the southern bank through every Roman assault phase.</source>
+        <translation>Halte das Südufer durch jede römische Angriffswelle.</translation>
+    </message>
+    <message>
+        <source>It is the closest camp to your hill; take it before the wings close.</source>
+        <translation>Es ist das nächstgelegene Lager zu deinem Hügel; nimm es, ehe sich die Flügel schließen.</translation>
+    </message>
+    <message>
+        <source>It is the closest of the four camps to your line.</source>
+        <translation>Es ist das deiner Linie nächste der vier Lager.</translation>
+    </message>
+    <message>
+        <source>Kill Sempronius and his officers</source>
+        <translation>Sempronius und seine Offiziere töten</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commanders</source>
+        <translation>Die römischen Befehlshaber töten</translation>
+    </message>
+    <message>
+        <source>Kill the consular commanders</source>
+        <translation>Die konsularischen Befehlshaber töten</translation>
+    </message>
+    <message>
+        <source>Kill the mountain commanders</source>
+        <translation>Die Häuptlinge der Berge töten</translation>
+    </message>
+    <message>
+        <source>Move the army up to the lower pass camp before the snow closes it.</source>
+        <translation>Führe das Heer zum unteren Passlager, ehe der Schnee ihn schließt.</translation>
+    </message>
+    <message>
+        <source>Nothing on the shore road survives once both ends are held.</source>
+        <translation>Nichts auf der Uferstraße überlebt, wenn beide Enden gehalten werden.</translation>
+    </message>
+    <message>
+        <source>Reach the Rhone crossing</source>
+        <translation>Den Rhone-Übergang erreichen</translation>
+    </message>
+    <message>
+        <source>Ride down the commanders once the crossings break.</source>
+        <translation>Reite die Befehlshaber nieder, sobald die Übergänge brechen.</translation>
+    </message>
+    <message>
+        <source>Scipio inherits any crossing you leave behind.</source>
+        <translation>Jeden Übergang, den du zurücklässt, erbt Scipio.</translation>
+    </message>
+    <message>
+        <source>Seize Masinissa&apos;s camp to finish the four.</source>
+        <translation>Nimm Masinissas Lager, um die vier vollzumachen.</translation>
+    </message>
+    <message>
+        <source>Seize Varro&apos;s town at the centre of the Roman line.</source>
+        <translation>Nimm Varros Stadt in der Mitte der römischen Linie.</translation>
+    </message>
+    <message>
+        <source>Seize the Roman hill fort</source>
+        <translation>Das römische Hügelkastell nehmen</translation>
+    </message>
+    <message>
+        <source>Seize the camp guarding Scipio&apos;s rear.</source>
+        <translation>Nimm das Lager, das Scipios Rücken deckt.</translation>
+    </message>
+    <message>
+        <source>Seize the river town</source>
+        <translation>Die Flussstadt nehmen</translation>
+    </message>
+    <message>
+        <source>Seize the second Roman camp on the north-east road.</source>
+        <translation>Nimm das zweite römische Lager an der Nordoststraße.</translation>
+    </message>
+    <message>
+        <source>Seize the second camp at the eastern end of the lake.</source>
+        <translation>Nimm das zweite Lager am Ostende des Sees.</translation>
+    </message>
+    <message>
+        <source>Sempronius spends his army on the ice; you only have to still be standing.</source>
+        <translation>Sempronius verbraucht sein Heer auf dem Eis; du musst nur noch stehen.</translation>
+    </message>
+    <message>
+        <source>Set builders on the slopes; the pass is paid for in materials, not blood.</source>
+        <translation>Setze Bauleute an die Hänge; der Pass wird mit Material bezahlt, nicht mit Blut.</translation>
+    </message>
+    <message>
+        <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
+        <translation>Halte den Torhof des nördlichen Vorpostenlagers, bis er an Karthago fällt.</translation>
+    </message>
+    <message>
+        <source>Take Scipio&apos;s town</source>
+        <translation>Scipios Stadt nehmen</translation>
+    </message>
+    <message>
+        <source>Take the Numidian camp</source>
+        <translation>Das numidische Lager nehmen</translation>
+    </message>
+    <message>
+        <source>Take the Roman marching town at the head of the lakeside road.</source>
+        <translation>Nimm die römische Marschstadt am Kopf der Uferstraße.</translation>
+    </message>
+    <message>
+        <source>Take the allied camp</source>
+        <translation>Das Bundesgenossenlager nehmen</translation>
+    </message>
+    <message>
+        <source>Take the consular town</source>
+        <translation>Die Konsularstadt nehmen</translation>
+    </message>
+    <message>
+        <source>Take the northern camp</source>
+        <translation>Das nördliche Lager nehmen</translation>
+    </message>
+    <message>
+        <source>Take the rearguard camp</source>
+        <translation>Das Nachhutlager nehmen</translation>
+    </message>
+    <message>
+        <source>Take the reserve camp</source>
+        <translation>Das Reservelager nehmen</translation>
+    </message>
+    <message>
+        <source>Take the river camp</source>
+        <translation>Das Flusslager nehmen</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road.</source>
+        <translation>Nimm das zweite Lager an der südlichen Nachschubstraße.</translation>
+    </message>
+    <message>
+        <source>Take the shore camp</source>
+        <translation>Das Uferlager nehmen</translation>
+    </message>
+    <message>
+        <source>Taking the rear first denies the cavalry a place to rally.</source>
+        <translation>Nimmt man zuerst den Rücken, bleibt der Reiterei kein Sammelplatz.</translation>
+    </message>
+    <message>
+        <source>The centre gives way once the wings are wrapped around it.</source>
+        <translation>Die Mitte gibt nach, sobald die Flügel sie umfassen.</translation>
+    </message>
+    <message>
+        <source>The centre is the strongest camp; bring the elephants up first.</source>
+        <translation>Die Mitte ist das stärkste Lager; führe zuerst die Elefanten heran.</translation>
+    </message>
+    <message>
+        <source>The dead of the Iron Sepulcher still contest the field; keep a reserve.</source>
+        <translation>Die Toten des Eisernen Grabmals bestreiten das Feld noch immer; halte eine Reserve bereit.</translation>
+    </message>
+    <message>
+        <source>The last camp lies to the north-east, beyond the consular line.</source>
+        <translation>Das letzte Lager liegt im Nordosten, jenseits der konsularischen Linie.</translation>
+    </message>
+    <message>
+        <source>The quarter holds when the last column is dead in the streets.</source>
+        <translation>Das Viertel hält, wenn die letzte Kolonne tot in den Gassen liegt.</translation>
+    </message>
+    <message>
+        <source>The reserve feeds the consular line; cut it and the line thins.</source>
+        <translation>Die Reserve speist die konsularische Linie; kappe sie, und die Linie dünnt aus.</translation>
+    </message>
+    <message>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
+        <translation>Der Fluss läuft von Norden nach Süden durch die Mitte des Tals; der nächste Übergang liegt genau östlich des Lagers.</translation>
+    </message>
+    <message>
+        <source>The road runs north-west along the shore; strike the head of the column first.</source>
+        <translation>Die Straße läuft nordwestlich am Ufer entlang; schlage zuerst den Kopf der Kolonne.</translation>
+    </message>
+    <message>
+        <source>The siege works stand to the east of the quarter.</source>
+        <translation>Die Belagerungswerke stehen östlich des Viertels.</translation>
+    </message>
+    <message>
+        <source>The winter camp lies north across the river.</source>
+        <translation>Das Winterlager liegt nördlich jenseits des Flusses.</translation>
+    </message>
+    <message>
+        <source>Their camps fall neutral once their commander is dead.</source>
+        <translation>Ihre Lager werden neutral, sobald ihr Befehlshaber tot ist.</translation>
+    </message>
+    <message>
+        <source>Their troops leave the field with them.</source>
+        <translation>Ihre Truppen verlassen mit ihnen das Feld.</translation>
+    </message>
+    <message>
+        <source>Timber for the sledges, stone for the roadbed, iron for shoes and axles.</source>
+        <translation>Holz für die Schlitten, Stein für den Straßenkörper, Eisen für Beschläge und Achsen.</translation>
+    </message>
+    <message>
+        <source>Turn the nearest Roman allied camp south of the field.</source>
+        <translation>Wende das nächste römische Bundesgenossenlager südlich des Feldes.</translation>
+    </message>
+    <message>
+        <source>Turn the nearest Roman camp before the cavalry returns.</source>
+        <translation>Wende das nächste römische Lager, ehe die Reiterei zurückkehrt.</translation>
+    </message>
+    <message>
+        <source>With the river camp taken there is nowhere left for the legions to reform.</source>
+        <translation>Ist das Flusslager genommen, bleibt den Legionen kein Ort mehr, sich neu zu ordnen.</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -5509,6 +5834,18 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>That building does not need repairs.</source>
         <translation>Dieses Gebäude braucht keine Reparatur.</translation>
+    </message>
+    <message>
+        <source>That order is not available here.</source>
+        <translation>Dieser Befehl steht hier nicht zur Verfügung.</translation>
+    </message>
+    <message>
+        <source>Your builders only take down your own buildings.</source>
+        <translation>Deine Bauleute reißen nur deine eigenen Gebäude ab.</translation>
+    </message>
+    <message>
+        <source>That building cannot be taken down.</source>
+        <translation>Dieses Gebäude lässt sich nicht abreißen.</translation>
     </message>
 </context>
 <context>

@@ -377,17 +377,47 @@ auto CommandController::on_auto_gather_command(const QString& priority_product_t
 
   const bool should_enable = already_gathering < static_cast<int>(builders.size());
 
+  return issue_auto_gather(builders, should_enable, priority_product_type);
+}
+
+auto CommandController::set_auto_gather(
+    bool active, const QString& priority_product_type) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  auto const builders = App::Core::filter_selected_units_for_action(
+      m_world, m_selection_system->get_selected_units(), QStringLiteral("auto_gather"));
+  if (builders.empty()) {
+    result.order = m_orders.reject(
+        App::Core::OrderKind::Gather,
+        m_selection_system->get_selected_units().empty()
+            ? App::Core::no_selection_reason()
+            : App::Core::no_eligible_units_reason(App::Core::OrderKind::Gather));
+    return result;
+  }
+
+  return issue_auto_gather(builders, active, priority_product_type);
+}
+
+auto CommandController::issue_auto_gather(
+    const std::vector<Engine::Core::EntityID>& builders,
+    bool active,
+    const QString& priority_product_type) -> CommandResult {
+  CommandResult result;
+
   result.order =
       m_orders.issue(App::Core::OrderKind::Gather,
                      Game::Command::SetAutoGather{
                          .units = builders,
-                         .active = should_enable,
+                         .active = active,
                          .priority_product_type = priority_product_type.toStdString()});
   if (!result.order.accepted()) {
     return result;
   }
 
-  emit auto_gather_changed(should_enable);
+  emit auto_gather_changed(active);
 
   result.input_consumed = true;
   result.reset_cursor_to_normal = true;
@@ -840,6 +870,44 @@ auto CommandController::on_builder_repair_click(qreal sx,
                                                                 viewport_width,
                                                                 viewport_height,
                                                                 local_owner_id));
+  result.input_consumed = result.order.accepted();
+  result.reset_cursor_to_normal = result.input_consumed;
+  return result;
+}
+
+auto CommandController::on_builder_dismantle_click(qreal sx,
+                                                   qreal sy,
+                                                   int viewport_width,
+                                                   int viewport_height,
+                                                   void* camera,
+                                                   int local_owner_id)
+    -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_picking_service == nullptr) ||
+      (camera == nullptr) || (m_world == nullptr)) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  const auto& selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    result.order =
+        m_orders.reject(App::Core::OrderKind::Build, App::Core::no_selection_reason());
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto* cam = static_cast<Render::GL::Camera*>(camera);
+  result.order =
+      m_orders.publish(App::Utils::issue_builder_dismantle_command(m_world,
+                                                                   selected,
+                                                                   m_picking_service,
+                                                                   cam,
+                                                                   sx,
+                                                                   sy,
+                                                                   viewport_width,
+                                                                   viewport_height,
+                                                                   local_owner_id));
   result.input_consumed = result.order.accepted();
   result.reset_cursor_to_normal = result.input_consumed;
   return result;

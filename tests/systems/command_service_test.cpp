@@ -192,6 +192,28 @@ TEST_F(CommandServiceTest, ContinuousAttackChaseRetargetPreservesVelocity) {
   EXPECT_FLOAT_EQ(movement->get_vz(), -0.5F);
 }
 
+TEST_F(CommandServiceTest, PlannerMoveRecallsAChasingUnitWhileScriptedMoveDoesNot) {
+  Engine::Core::World world;
+  auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(unit, nullptr);
+
+  auto* attack_target = unit->add_component<Engine::Core::AttackTargetComponent>();
+  attack_target->target_id = 42U;
+  attack_target->should_chase = true;
+
+  Game::Systems::CommandService::MoveOptions scripted;
+  scripted.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  Game::Systems::CommandService::move_unit(
+      world, unit->get_id(), QVector3D(5.0F, 0.0F, 1.0F), scripted);
+  EXPECT_NE(unit->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+
+  Game::Systems::CommandService::MoveOptions planner;
+  planner.kind = Game::Systems::MoveOrderKind::PlannerMove;
+  Game::Systems::CommandService::move_unit(
+      world, unit->get_id(), QVector3D(-5.0F, 0.0F, 1.0F), planner);
+  EXPECT_EQ(unit->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
+}
+
 TEST_F(CommandServiceTest, ArrivalStopsNavigationWalkAnimationImmediately) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Spearman);

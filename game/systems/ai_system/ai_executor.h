@@ -7,19 +7,14 @@
 
 namespace Game::Systems::AI {
 
-class AIExecutor {
-public:
-  AIExecutor() = default;
-  ~AIExecutor() = default;
+namespace AIExecutor {
 
-  AIExecutor(const AIExecutor&) = delete;
-  auto operator=(const AIExecutor&) -> AIExecutor& = delete;
+void run(const AISnapshot& snapshot,
+         AIContext& context,
+         float delta_time,
+         AIBehaviorRegistry& registry,
+         std::vector<AICommand>& out_commands);
 
-  static void run(const AISnapshot& snapshot,
-                  AIContext& context,
-                  float delta_time,
-                  AIBehaviorRegistry& registry,
-                  std::vector<AICommand>& out_commands);
-};
+} // namespace AIExecutor
 
 } // namespace Game::Systems::AI

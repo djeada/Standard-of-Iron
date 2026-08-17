@@ -13,7 +13,8 @@ auto should_record_player_move_intent(MoveOrderKind kind) -> bool {
 }
 
 auto should_clear_attack_target(MoveOrderKind kind) -> bool {
-  return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove;
+  return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove ||
+         kind == MoveOrderKind::PlannerMove;
 }
 
 auto should_clear_auxiliary_orders(MoveOrderKind kind) -> bool {
@@ -26,7 +27,8 @@ auto should_exit_hold_mode(MoveOrderKind kind) -> bool {
 
 auto should_disable_guard_mode(MoveOrderKind kind) -> bool {
   return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove ||
-         kind == MoveOrderKind::AttackChase || kind == MoveOrderKind::ScriptedMove;
+         kind == MoveOrderKind::AttackChase || kind == MoveOrderKind::ScriptedMove ||
+         kind == MoveOrderKind::PlannerMove;
 }
 
 auto should_touch_formation_mode(MoveOrderKind kind) -> bool {
@@ -306,6 +308,8 @@ auto move_order_kind_name(MoveOrderKind kind) -> const char* {
     return "recovery";
   case MoveOrderKind::ScriptedMove:
     return "scripted";
+  case MoveOrderKind::PlannerMove:
+    return "planner";
   }
   return "unknown";
 }

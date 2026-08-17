@@ -11,6 +11,7 @@
 #include "game/core/world.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/command_service.h"
+#include "game/systems/construction_cost_catalog.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/picking_service.h"
 #include "game/units/spawn_type.h"
@@ -151,6 +152,71 @@ auto issue_builder_repair_command(Engine::Core::World* world,
   request.kind = OrderKind::Repair;
   request.payload = Game::Command::RepairStructure{.units = std::move(builders),
                                                    .structure = target_id};
+  request.target = target_id;
+  return App::Core::submit_player_order(*world, local_owner_id, std::move(request));
+}
+
+auto issue_builder_dismantle_command(
+    Engine::Core::World* world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    Game::Systems::PickingService* picking_service,
+    Render::GL::Camera* camera,
+    qreal sx,
+    qreal sy,
+    int viewport_width,
+    int viewport_height,
+    int local_owner_id) -> App::Core::OrderOutcome {
+  using App::Core::OrderKind;
+  if ((world == nullptr) || selected.empty() || (picking_service == nullptr) ||
+      (camera == nullptr) || (viewport_width <= 0) || (viewport_height <= 0)) {
+    return App::Core::rejected_order(OrderKind::Build,
+                                     App::Core::no_selection_reason());
+  }
+
+  Engine::Core::EntityID const target_id = picking_service->pick_unit_first(
+      float(sx), float(sy), *world, *camera, viewport_width, viewport_height, 0);
+  auto* target_entity = target_id != 0U ? world->get_entity(target_id) : nullptr;
+  if (target_entity == nullptr ||
+      !target_entity->has_component<Engine::Core::BuildingComponent>()) {
+    return App::Core::rejected_order(
+        OrderKind::Build, App::Core::no_target_under_cursor_reason(OrderKind::Build));
+  }
+  auto* target_unit = target_entity->get_component<Engine::Core::UnitComponent>();
+  if ((target_unit == nullptr) || (target_unit->owner_id != local_owner_id) ||
+      target_unit->health <= 0) {
+    return App::Core::rejected_order_on(
+        OrderKind::Build, App::Core::not_your_building_reason(), target_id);
+  }
+  if (!Game::Systems::dismantle_info(
+           Game::Units::spawn_typeToString(target_unit->spawn_type))
+           .allowed) {
+    return App::Core::rejected_order_on(
+        OrderKind::Build, App::Core::building_is_protected_reason(), target_id);
+  }
+
+  std::vector<Engine::Core::EntityID> builders;
+  for (const auto selected_id : selected) {
+    auto* entity = world->get_entity(selected_id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    if ((unit != nullptr) && (unit->owner_id == local_owner_id) &&
+        (unit->spawn_type == Game::Units::SpawnType::Builder) &&
+        entity->has_component<Engine::Core::BuilderProductionComponent>()) {
+      builders.push_back(selected_id);
+    }
+  }
+  if (builders.empty()) {
+    return App::Core::rejected_order_on(
+        OrderKind::Build,
+        App::Core::no_eligible_units_reason(OrderKind::Build),
+        target_id);
+  }
+
+  App::Core::OrderRequest request;
+  request.kind = OrderKind::Build;
+  request.payload = Game::Command::DismantleStructure{.units = std::move(builders),
+                                                      .structure = target_id};
   request.target = target_id;
   return App::Core::submit_player_order(*world, local_owner_id, std::move(request));
 }

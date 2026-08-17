@@ -27,19 +27,11 @@ public:
 
   [[nodiscard]] static auto main_base(const AIContext& ctx) -> const AIBase*;
 
-  [[nodiscard]] static auto forward_base(const AIContext& ctx) -> const AIBase*;
-
   [[nodiscard]] static auto
   base_for_position(const AIContext& ctx, float x, float z) -> const AIBase*;
 
   [[nodiscard]] static auto
-  base_for_building(const AIContext& ctx,
-                    Engine::Core::EntityID building_id) -> const AIBase*;
-
-  [[nodiscard]] static auto
   site_is_abandoned(const AIContext& ctx, float x, float z, float game_time) -> bool;
-
-  [[nodiscard]] static auto role_name(BaseRole role) -> const char*;
 };
 
 } // namespace Game::Systems::AI

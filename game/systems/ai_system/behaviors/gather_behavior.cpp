@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -36,14 +37,46 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
       std::max(2.0F, context.macro_targets.assembly_radius * 0.35F);
   const float gather_tolerance_sq = gather_tolerance * gather_tolerance;
 
-  std::vector<const EntitySnapshot*> units_to_gather;
-  for (const auto* entity : collect_attack_force_units(snapshot, context)) {
-    const float dx = entity->pos_x - rally_point.x();
-    const float dz = entity->pos_z - rally_point.z();
-    const float dist_sq = dx * dx + dz * dz;
+  const bool garrison_per_base =
+      context.strategy_config.posture == AIPosture::Garrison &&
+      context.bases.size() > 1U;
 
-    if (dist_sq > gather_tolerance_sq) {
-      units_to_gather.push_back(entity);
+  struct GatherGroup {
+    QVector3D center;
+    std::vector<const EntitySnapshot*> units;
+  };
+  std::vector<GatherGroup> gather_groups;
+  if (garrison_per_base) {
+    gather_groups.reserve(context.bases.size());
+    for (const auto& base : context.bases) {
+      gather_groups.push_back({QVector3D(base.rally_x, 0.0F, base.rally_z), {}});
+    }
+  } else {
+    gather_groups.push_back({rally_point, {}});
+  }
+
+  for (const auto* entity : collect_attack_force_units(snapshot, context)) {
+    GatherGroup* group = &gather_groups.front();
+    if (garrison_per_base) {
+      float best_distance_sq = std::numeric_limits<float>::infinity();
+      for (auto& candidate : gather_groups) {
+        const float dist_sq = distance_squared(entity->pos_x,
+                                               0.0F,
+                                               entity->pos_z,
+                                               candidate.center.x(),
+                                               0.0F,
+                                               candidate.center.z());
+        if (dist_sq < best_distance_sq) {
+          best_distance_sq = dist_sq;
+          group = &candidate;
+        }
+      }
+    }
+
+    const float dx = entity->pos_x - group->center.x();
+    const float dz = entity->pos_z - group->center.z();
+    if (dx * dx + dz * dz > gather_tolerance_sq) {
+      group->units.push_back(entity);
     }
   }
 
@@ -107,11 +140,13 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
     out_commands.push_back(std::move(command));
   };
 
-  emit_move_command(units_to_gather,
-                    rally_point,
-                    context.macro_targets.gather_spacing,
-                    "gathering",
-                    get_priority());
+  for (const auto& group : gather_groups) {
+    emit_move_command(group.units,
+                      group.center,
+                      context.macro_targets.gather_spacing,
+                      "gathering",
+                      get_priority());
+  }
 
   if (context.anchor_is_structural && context.effective_reserve_units > 0) {
     QVector3D const reserve_center(

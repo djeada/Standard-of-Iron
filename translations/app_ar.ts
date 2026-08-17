@@ -286,6 +286,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>لا توجد أهداف للمهمة.
 قد تكون هذه مناوشة، أو أن الأهداف لم تُضبط بعد.</translation>
     </message>
+    <message>
+        <source>Mission Steps — in order</source>
+        <translation>مراحل المهمة — بالترتيب</translation>
+    </message>
+    <message>
+        <source>Next step</source>
+        <translation>الخطوة التالية</translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 من %2</translation>
+    </message>
 </context>
 <context>
     <name>CameraGuide</name>
@@ -590,65 +602,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Veii</source>
         <translation>فييي</translation>
-    </message>
-</context>
-<context>
-    <name>CampaignMenu</name>
-    <message>
-        <source>Campaign Missions</source>
-        <translation>مهام الحملة</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>→ رجوع</translation>
-    </message>
-    <message>
-        <source>✓ Completed</source>
-        <translation>✓ مكتملة</translation>
-    </message>
-    <message>
-        <source>Locked</source>
-        <translation>مقفلة</translation>
-    </message>
-    <message>
-        <source>No campaign missions available</source>
-        <translation>لا توجد مهام حملة متاحة</translation>
-    </message>
-    <message>
-        <source>Rome</source>
-        <translation>روما</translation>
-    </message>
-    <message>
-        <source>Carthage</source>
-        <translation>قرطاج</translation>
-    </message>
-    <message>
-        <source>Neutral</source>
-        <translation>محايد</translation>
-    </message>
-    <message>
-        <source>Loading map…</source>
-        <translation>جارٍ تحميل الخريطة…</translation>
-    </message>
-    <message>
-        <source>Control: </source>
-        <translation>السيطرة: </translation>
-    </message>
-    <message>
-        <source>Legend</source>
-        <translation>مفتاح الرموز</translation>
-    </message>
-    <message>
-        <source>Select a Mission</source>
-        <translation>اختر مهمة</translation>
-    </message>
-    <message>
-        <source>Mission briefing...</source>
-        <translation>إحاطة المهمة...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>إلغاء</translation>
     </message>
 </context>
 <context>
@@ -2339,6 +2292,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>No firing line</source>
         <translation>لا خط رماية</translation>
     </message>
+    <message>
+        <source>Collect</source>
+        <translation>جمع</translation>
+    </message>
+    <message>
+        <source>Deliver civilians</source>
+        <translation>تسليم المدنيين</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>إصلاح</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -2892,6 +2857,74 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>The commander empowers the troops around him for a while, then must recharge.</source>
         <translation>يقوّي القائد القوات من حوله لبعض الوقت، ثم يحتاج إلى إعادة شحن.</translation>
     </message>
+    <message>
+        <source>Wood only</source>
+        <translation>الخشب فقط</translation>
+    </message>
+    <message>
+        <source>Stone only</source>
+        <translation>الحجر فقط</translation>
+    </message>
+    <message>
+        <source>Iron only</source>
+        <translation>الحديد فقط</translation>
+    </message>
+    <message>
+        <source>Any resource</source>
+        <translation>كل الموارد</translation>
+    </message>
+    <message>
+        <source>Dismantle order</source>
+        <translation>أمر التفكيك</translation>
+    </message>
+    <message>
+        <source>Auto</source>
+        <translation>تلقائي</translation>
+    </message>
+    <message>
+        <source>Pick a resource</source>
+        <translation>اختر موردًا</translation>
+    </message>
+    <message>
+        <source>Press again to cycle any resource, wood, stone, iron, then off.</source>
+        <translation>اضغط ثانية للتنقل بين كل الموارد ثم الخشب فالحجر فالحديد ثم الإيقاف.</translation>
+    </message>
+    <message>
+        <source>Dismantle</source>
+        <translation>تفكيك</translation>
+    </message>
+    <message>
+        <source>Scrap</source>
+        <translation>هدم</translation>
+    </message>
+    <message>
+        <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
+        <translation>أرسل البنّائين لتفكيك أحد مبانيك واسترداد جزء من كلفته.</translation>
+    </message>
+    <message>
+        <source>Press Dismantle, then left-click your building. Right-click cancels.</source>
+        <translation>اضغط تفكيك ثم انقر بزر الفأرة الأيسر على مبناك. النقر الأيمن يلغي.</translation>
+    </message>
+    <message>
+        <source>Pays back</source>
+        <translation>يعيد</translation>
+    </message>
+    <message>
+        <source>Part of what it cost, once the work finishes. Calling the crew off pays nothing.</source>
+        <translation>جزءًا من كلفته عند انتهاء العمل. وسحب العمال لا يعيد شيئًا.</translation>
+    </message>
+    <message>
+        <source>Crew</source>
+        <translation>طاقم</translation>
+    </message>
+    <message>
+        <source>Builders only; up to three of them speed it up.</source>
+        <translation>البنّاؤون فقط؛ وحتى ثلاثة منهم يسرّعون العمل.</translation>
+    </message>
+    <message>
+        <source>Dismantle is only available to builders</source>
+        <translation>التفكيك متاح للبنّائين فقط</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -3276,6 +3309,14 @@ Unseen: never scouted.</source>
         <source>Return the camera to your camp (%1)</source>
         <translation>إعادة الكاميرا إلى معسكرك (%1)</translation>
     </message>
+    <message>
+        <source>All objectives complete</source>
+        <translation>اكتملت جميع الأهداف</translation>
+    </message>
+    <message>
+        <source>Click to look at the objective.</source>
+        <translation>انقر للنظر إلى الهدف.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -3370,10 +3411,6 @@ Unseen: never scouted.</source>
     <message>
         <source>Repair and dismantle</source>
         <translation>الإصلاح والتفكيك</translation>
-    </message>
-    <message>
-        <source>A damaged building can be repaired by a builder with the Repair order. Buildings you no longer need can be dismantled from their panel.</source>
-        <translation>يمكن للبنّاء إصلاح مبنى متضرر بأمر الإصلاح. ويمكن تفكيك المباني التي لم تعد تحتاجها من لوحتها.</translation>
     </message>
     <message>
         <source>Recruiting</source>
@@ -3502,6 +3539,10 @@ Unseen: never scouted.</source>
     <message>
         <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
         <translation>عند تحديد القائد، تقوّي الهالة قواته لفترة ثم تحتاج إلى إعادة شحن — لكل قائد إضافته ونصف قطره وتوقيتاته الخاصة، ويعرضها الزر مع الوقت المتبقّي. يميّز توهّج كل جندي داخل الحلقة، وتتحرّك الحلقة معه، والقائد الجريح لا يستطيع استدعاءها. أما التجميع فيغرس راية يسير إليها جيشك — وهو مفيد لإعادة قوة متفرّقة إلى صفّ واحد.</translation>
+    </message>
+    <message>
+        <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
+        <translation>المبنى المتضرر يصلحه بنّاء بأمر الإصلاح. أما المبنى الذي لم تعد بحاجة إليه فيزيله أمر التفكيك: اختر البنّائين، واضغط تفكيك، ثم انقر على المبنى. يعود جزء من كلفته عند انتهاء العمل، وسحب الطاقم قبل ذلك لا يعيد شيئًا.</translation>
     </message>
 </context>
 <context>
@@ -5333,6 +5374,290 @@ to see preview</source>
         <source>Your commander falls - and every line collapses behind him.</source>
         <translation>يسقط قائدك، فينهار كل صف من خلفه.</translation>
     </message>
+    <message>
+        <source>A camp is taken by holding its yard, not by levelling it.</source>
+        <translation>يُؤخذ المعسكر بالثبات في ساحته، لا بهدمه.</translation>
+    </message>
+    <message>
+        <source>A column without its commander stops being a column.</source>
+        <translation>الرتل بلا قائده لم يعد رتلاً.</translation>
+    </message>
+    <message>
+        <source>Break the chiefs contesting the descent.</source>
+        <translation>اكسر الزعماء الذين ينازعونك النزول.</translation>
+    </message>
+    <message>
+        <source>Break the consular line at its centre.</source>
+        <translation>اكسر الخط القنصلي من وسطه.</translation>
+    </message>
+    <message>
+        <source>Break the siege camp once the assaults are spent.</source>
+        <translation>اكسر معسكر الحصار متى نفدت الهجمات.</translation>
+    </message>
+    <message>
+        <source>Break the three assault phases</source>
+        <translation>صد موجات الهجوم الثلاث</translation>
+    </message>
+    <message>
+        <source>Break the three crossings</source>
+        <translation>صد العبورات الثلاثة</translation>
+    </message>
+    <message>
+        <source>Bring the column to the first pass</source>
+        <translation>قيادة الرتل إلى الممر الأول</translation>
+    </message>
+    <message>
+        <source>Bring the column to the pontoon bridge on the near bank.</source>
+        <translation>قُد الرتل إلى جسر العوامات على الضفة القريبة.</translation>
+    </message>
+    <message>
+        <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
+        <translation>الفرسان يصلون أولاً؛ فاحتفظ بالساحة حتى تتبدل الراية.</translation>
+    </message>
+    <message>
+        <source>Close the encirclement on the Aufidus camp to the north.</source>
+        <translation>أطبق الحصار على معسكر أوفيدوس في الشمال.</translation>
+    </message>
+    <message>
+        <source>Close the trap on the column town</source>
+        <translation>إطباق الكمين على مدينة الرتل</translation>
+    </message>
+    <message>
+        <source>Cut the stores for the road</source>
+        <translation>تجهيز مؤن الطريق</translation>
+    </message>
+    <message>
+        <source>End the war with the men who lead it.</source>
+        <translation>أنهِ الحرب بقتل من يقودونها.</translation>
+    </message>
+    <message>
+        <source>Enemy camps fall neutral once their commander is dead.</source>
+        <translation>تصير معسكرات العدو محايدة متى مات قائدها.</translation>
+    </message>
+    <message>
+        <source>Finish the consular officers on the field.</source>
+        <translation>أجهز على الضباط القنصليين في الميدان.</translation>
+    </message>
+    <message>
+        <source>Finish the officers inside the ring.</source>
+        <translation>أجهز على الضباط داخل الطوق.</translation>
+    </message>
+    <message>
+        <source>Flaminius must not leave the shore.</source>
+        <translation>لا يجوز أن يغادر فلامينيوس الشاطئ.</translation>
+    </message>
+    <message>
+        <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
+        <translation>اتبع قاع الوادي شرقًا؛ فأهل الجبال يسيطرون على المنعطفات في الأعلى.</translation>
+    </message>
+    <message>
+        <source>Hold the Punic quarter through every consular column.</source>
+        <translation>احتفظ بالحي القرطاجي أمام كل رتل قنصلي.</translation>
+    </message>
+    <message>
+        <source>Hold the gate yard of Scipio&apos;s forward town.</source>
+        <translation>احتفظ بساحة بوابة مدينة سكيبيو المتقدمة.</translation>
+    </message>
+    <message>
+        <source>Hold the southern bank through every Roman assault phase.</source>
+        <translation>احتفظ بالضفة الجنوبية خلال كل موجة هجوم رومانية.</translation>
+    </message>
+    <message>
+        <source>It is the closest camp to your hill; take it before the wings close.</source>
+        <translation>هو أقرب معسكر إلى تلّك؛ خذه قبل أن ينطبق الجناحان.</translation>
+    </message>
+    <message>
+        <source>It is the closest of the four camps to your line.</source>
+        <translation>هو أقرب المعسكرات الأربعة إلى خطك.</translation>
+    </message>
+    <message>
+        <source>Kill Sempronius and his officers</source>
+        <translation>قتل سمبرونيوس وضباطه</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commanders</source>
+        <translation>قتل القادة الرومان</translation>
+    </message>
+    <message>
+        <source>Kill the consular commanders</source>
+        <translation>قتل القادة القنصليين</translation>
+    </message>
+    <message>
+        <source>Kill the mountain commanders</source>
+        <translation>قتل زعماء الجبال</translation>
+    </message>
+    <message>
+        <source>Move the army up to the lower pass camp before the snow closes it.</source>
+        <translation>انقل الجيش إلى معسكر الممر الأدنى قبل أن يغلقه الثلج.</translation>
+    </message>
+    <message>
+        <source>Nothing on the shore road survives once both ends are held.</source>
+        <translation>لا ينجو شيء على طريق الشاطئ متى أُمسك طرفاه.</translation>
+    </message>
+    <message>
+        <source>Reach the Rhone crossing</source>
+        <translation>بلوغ معبر الرون</translation>
+    </message>
+    <message>
+        <source>Ride down the commanders once the crossings break.</source>
+        <translation>اسحق القادة ما إن تنكسر العبورات.</translation>
+    </message>
+    <message>
+        <source>Scipio inherits any crossing you leave behind.</source>
+        <translation>كل معبر تتركه خلفك يرثه سكيبيو.</translation>
+    </message>
+    <message>
+        <source>Seize Masinissa&apos;s camp to finish the four.</source>
+        <translation>استولِ على معسكر ماسينيسا لتكمل الأربعة.</translation>
+    </message>
+    <message>
+        <source>Seize Varro&apos;s town at the centre of the Roman line.</source>
+        <translation>استولِ على مدينة فارو في وسط الخط الروماني.</translation>
+    </message>
+    <message>
+        <source>Seize the Roman hill fort</source>
+        <translation>الاستيلاء على الحصن الروماني على التل</translation>
+    </message>
+    <message>
+        <source>Seize the camp guarding Scipio&apos;s rear.</source>
+        <translation>استولِ على المعسكر الذي يحرس مؤخرة سكيبيو.</translation>
+    </message>
+    <message>
+        <source>Seize the river town</source>
+        <translation>الاستيلاء على مدينة النهر</translation>
+    </message>
+    <message>
+        <source>Seize the second Roman camp on the north-east road.</source>
+        <translation>استولِ على المعسكر الروماني الثاني على الطريق الشمالي الشرقي.</translation>
+    </message>
+    <message>
+        <source>Seize the second camp at the eastern end of the lake.</source>
+        <translation>استولِ على المعسكر الثاني عند الطرف الشرقي للبحيرة.</translation>
+    </message>
+    <message>
+        <source>Sempronius spends his army on the ice; you only have to still be standing.</source>
+        <translation>يُفني سمبرونيوس جيشه على الجليد؛ وما عليك إلا أن تبقى واقفًا.</translation>
+    </message>
+    <message>
+        <source>Set builders on the slopes; the pass is paid for in materials, not blood.</source>
+        <translation>أرسل البنّائين إلى المنحدرات؛ فثمن الممر مواد لا دماء.</translation>
+    </message>
+    <message>
+        <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
+        <translation>اثبت في ساحة بوابة معسكر الطليعة الشمالي حتى يسقط بيد قرطاج.</translation>
+    </message>
+    <message>
+        <source>Take Scipio&apos;s town</source>
+        <translation>الاستيلاء على مدينة سكيبيو</translation>
+    </message>
+    <message>
+        <source>Take the Numidian camp</source>
+        <translation>الاستيلاء على المعسكر النوميدي</translation>
+    </message>
+    <message>
+        <source>Take the Roman marching town at the head of the lakeside road.</source>
+        <translation>استولِ على مدينة المسير الرومانية عند رأس طريق البحيرة.</translation>
+    </message>
+    <message>
+        <source>Take the allied camp</source>
+        <translation>الاستيلاء على معسكر الحلفاء</translation>
+    </message>
+    <message>
+        <source>Take the consular town</source>
+        <translation>الاستيلاء على المدينة القنصلية</translation>
+    </message>
+    <message>
+        <source>Take the northern camp</source>
+        <translation>الاستيلاء على المعسكر الشمالي</translation>
+    </message>
+    <message>
+        <source>Take the rearguard camp</source>
+        <translation>الاستيلاء على معسكر المؤخرة</translation>
+    </message>
+    <message>
+        <source>Take the reserve camp</source>
+        <translation>الاستيلاء على معسكر الاحتياط</translation>
+    </message>
+    <message>
+        <source>Take the river camp</source>
+        <translation>الاستيلاء على معسكر النهر</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road.</source>
+        <translation>استولِ على المعسكر الثاني على طريق الإمداد الجنوبي.</translation>
+    </message>
+    <message>
+        <source>Take the shore camp</source>
+        <translation>الاستيلاء على معسكر الشاطئ</translation>
+    </message>
+    <message>
+        <source>Taking the rear first denies the cavalry a place to rally.</source>
+        <translation>أخذ المؤخرة أولاً يحرم الفرسان موضع تجمّع.</translation>
+    </message>
+    <message>
+        <source>The centre gives way once the wings are wrapped around it.</source>
+        <translation>ينهار الوسط ما إن يلتف الجناحان حوله.</translation>
+    </message>
+    <message>
+        <source>The centre is the strongest camp; bring the elephants up first.</source>
+        <translation>الوسط أقوى المعسكرات؛ فقدِّم الفيلة أولاً.</translation>
+    </message>
+    <message>
+        <source>The dead of the Iron Sepulcher still contest the field; keep a reserve.</source>
+        <translation>لا يزال موتى القبر الحديدي ينازعون على الميدان؛ فأبقِ احتياطًا.</translation>
+    </message>
+    <message>
+        <source>The last camp lies to the north-east, beyond the consular line.</source>
+        <translation>يقع المعسكر الأخير في الشمال الشرقي، خلف الخط القنصلي.</translation>
+    </message>
+    <message>
+        <source>The quarter holds when the last column is dead in the streets.</source>
+        <translation>يصمد الحي حين يسقط آخر رتل قتيلاً في الشوارع.</translation>
+    </message>
+    <message>
+        <source>The reserve feeds the consular line; cut it and the line thins.</source>
+        <translation>الاحتياط يغذي الخط القنصلي؛ اقطعه يرقّ الخط.</translation>
+    </message>
+    <message>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
+        <translation>يجري النهر من الشمال إلى الجنوب عبر وسط الوادي؛ وأقرب معبر يقع شرق المعسكر تمامًا.</translation>
+    </message>
+    <message>
+        <source>The road runs north-west along the shore; strike the head of the column first.</source>
+        <translation>يمتد الطريق شمالاً غربًا بمحاذاة الشاطئ؛ فاضرب رأس الرتل أولاً.</translation>
+    </message>
+    <message>
+        <source>The siege works stand to the east of the quarter.</source>
+        <translation>تقوم أعمال الحصار شرق الحي.</translation>
+    </message>
+    <message>
+        <source>The winter camp lies north across the river.</source>
+        <translation>معسكر الشتاء يقع شمالاً عبر النهر.</translation>
+    </message>
+    <message>
+        <source>Their camps fall neutral once their commander is dead.</source>
+        <translation>تصير معسكراتهم محايدة متى مات قائدهم.</translation>
+    </message>
+    <message>
+        <source>Their troops leave the field with them.</source>
+        <translation>تغادر جنودهم الميدان معهم.</translation>
+    </message>
+    <message>
+        <source>Timber for the sledges, stone for the roadbed, iron for shoes and axles.</source>
+        <translation>خشب للمزالق، وحجر لسطح الطريق، وحديد للحدوات والمحاور.</translation>
+    </message>
+    <message>
+        <source>Turn the nearest Roman allied camp south of the field.</source>
+        <translation>اقلب أقرب معسكر لحلفاء روما جنوب الميدان.</translation>
+    </message>
+    <message>
+        <source>Turn the nearest Roman camp before the cavalry returns.</source>
+        <translation>اقلب أقرب معسكر روماني قبل عودة الفرسان.</translation>
+    </message>
+    <message>
+        <source>With the river camp taken there is nowhere left for the legions to reform.</source>
+        <translation>بأخذ معسكر النهر لا يبقى للفيالق موضع تعيد فيه ترتيب صفوفها.</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -5521,6 +5846,18 @@ to see preview</source>
     <message>
         <source>That building does not need repairs.</source>
         <translation>هذا المبنى لا يحتاج إلى إصلاح.</translation>
+    </message>
+    <message>
+        <source>That order is not available here.</source>
+        <translation>هذا الأمر غير متاح هنا.</translation>
+    </message>
+    <message>
+        <source>Your builders only take down your own buildings.</source>
+        <translation>بنّاؤوك لا يهدمون إلا مبانيك أنت.</translation>
+    </message>
+    <message>
+        <source>That building cannot be taken down.</source>
+        <translation>هذا المبنى لا يمكن هدمه.</translation>
     </message>
 </context>
 <context>

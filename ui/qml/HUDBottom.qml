@@ -88,6 +88,34 @@ RowLayout {
         return entry.details || [];
     }
 
+    readonly property var gatherPriorities: ["", "cut_tree", "collect_stone", "collect_iron_ore"]
+
+    function gather_priority_label(priority) {
+        if (priority === "cut_tree")
+            return qsTr("Wood only");
+        if (priority === "collect_stone")
+            return qsTr("Stone only");
+        if (priority === "collect_iron_ore")
+            return qsTr("Iron only");
+        return qsTr("Any resource");
+    }
+
+    function advance_auto_gather(state) {
+        if (!bottomRoot.game_ready() || !game.activity)
+            return;
+        var current = bottomRoot.detail_of(state).priority || "";
+        if (!state.active) {
+            game.activity.set_auto_gather(true, bottomRoot.gatherPriorities[0]);
+            return;
+        }
+        var next = bottomRoot.gatherPriorities.indexOf(current) + 1;
+        if (next >= bottomRoot.gatherPriorities.length) {
+            game.activity.set_auto_gather(false);
+            return;
+        }
+        game.activity.set_auto_gather(true, bottomRoot.gatherPriorities[next]);
+    }
+
     function command_status(entry, state) {
         var d = bottomRoot.detail_of(state);
         if (entry.id === "patrol") {
@@ -108,6 +136,8 @@ RowLayout {
                 return qsTr("Ready");
             return "";
         }
+        if (entry.id === "auto_gather" && state.active)
+            return bottomRoot.gather_priority_label(d.priority || "");
         if (entry.id === "guard" && state.active)
             return qsTr("Holding a spot");
         if (entry.id === "hold" && state.active)
@@ -160,6 +190,7 @@ RowLayout {
                 "heal": qsTr("Medic order"),
                 "build": qsTr("Engineer order"),
                 "repair": qsTr("Repair order"),
+                "dismantle": qsTr("Dismantle order"),
                 "collect": qsTr("Collection order"),
                 "deliver": qsTr("Barracks delivery"),
                 "formation": qsTr("Formation order"),
@@ -316,21 +347,23 @@ RowLayout {
         }, {
             "id": "auto_gather",
             "label": qsTr("Auto Gather"),
+            "shortLabel": qsTr("Auto"),
             "needsTroops": true,
             "hint": qsTr("Builders keep finding and working the nearest resource on their own."),
             "details": [{
                     "term": qsTr("Scope"),
                     "text": qsTr("Runs until you stop it; any new order cancels it.")
                 }, {
+                    "term": qsTr("Pick a resource"),
+                    "text": qsTr("Press again to cycle any resource, wood, stone, iron, then off.")
+                }, {
                     "term": qsTr("Troops"),
                     "text": qsTr("Builders only.")
                 }],
             "unavailable": qsTr("Auto Gather is only available to builders"),
             "invoke": function () {
-                if (bottomRoot.game_ready() && game.activity) {
-                    game.activity.toggle_auto_gather();
-                    bottomRoot.update_action_states();
-                }
+                bottomRoot.advance_auto_gather(bottomRoot.action_state("auto_gather"));
+                bottomRoot.update_action_states();
             }
         }, {
             "id": "repair",
@@ -349,6 +382,28 @@ RowLayout {
             "invoke": function () {
                 if (bottomRoot.game_ready() && game.activity)
                     game.activity.begin_repair_order();
+            }
+        }, {
+            "id": "dismantle",
+            "label": qsTr("Dismantle"),
+            "shortLabel": qsTr("Scrap"),
+            "needsTroops": true,
+            "activeFromPlacing": true,
+            "hint": qsTr("Send builders to take one of your own buildings apart and get part of its cost back."),
+            "details": [{
+                    "term": qsTr("Give it"),
+                    "text": qsTr("Press Dismantle, then left-click your building. Right-click cancels.")
+                }, {
+                    "term": qsTr("Pays back"),
+                    "text": qsTr("Part of what it cost, once the work finishes. Calling the crew off pays nothing.")
+                }, {
+                    "term": qsTr("Crew"),
+                    "text": qsTr("Builders only; up to three of them speed it up.")
+                }],
+            "unavailable": qsTr("Dismantle is only available to builders"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.activity)
+                    game.activity.begin_dismantle_order();
             }
         }, {
             "id": "deliver",
@@ -604,10 +659,13 @@ RowLayout {
                     readonly property var state: bottomRoot.action_state(modelData.id)
 
                     Layout.fillWidth: true
+
+                    Layout.preferredWidth: Design.Metrics.commandButtonSize
                     Layout.preferredHeight: Design.Metrics.commandButtonSize
 
                     actionId: modelData.id
                     label: modelData.label
+                    shortLabel: modelData.shortLabel || ""
                     hotkey: bottomRoot.hotkey_for(modelData)
                     hint: modelData.hint || ""
                     details: bottomRoot.command_details(modelData, state)

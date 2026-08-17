@@ -4,6 +4,7 @@
 #include "app/orders/rts_action_model.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/selection_system.h"
 
 namespace {
@@ -208,6 +209,32 @@ TEST(RtsActionModel, AnAutoGatheringBuilderShowsTheOrderAsActive) {
 
   EXPECT_EQ(App::Core::get_toggle_state(&world, QStringLiteral("auto_gather")),
             QStringLiteral("mixed"));
+}
+
+TEST(RtsActionModel, TheAutoGatherStateNamesTheResourceItIsFavouring) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  auto* worker = add_selected_unit(world, *selection, Game::Units::SpawnType::Builder);
+  auto* builder = worker->add_component<Engine::Core::BuilderProductionComponent>();
+  builder->auto_gather = true;
+
+  App::Core::ActionContext context;
+  context.world = &world;
+
+  auto detail = App::Core::get_action_states(context)[QStringLiteral("auto_gather")]
+                    .toMap()[QStringLiteral("detail")]
+                    .toMap();
+  EXPECT_TRUE(detail[QStringLiteral("priority")].toString().isEmpty());
+
+  builder->auto_gather_priority =
+      std::string(Game::Systems::k_builder_product_cut_tree);
+  detail = App::Core::get_action_states(context)[QStringLiteral("auto_gather")]
+               .toMap()[QStringLiteral("detail")]
+               .toMap();
+  EXPECT_EQ(detail[QStringLiteral("priority")].toString(), QStringLiteral("cut_tree"));
 }
 
 TEST(RtsActionModel, GuardQuotesTheRingItActuallyFightsIn) {
