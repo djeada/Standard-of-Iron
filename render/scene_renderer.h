@@ -264,6 +264,11 @@ public:
       m_gl_backend->set_mist_volumes(volumes);
     }
   }
+  void set_ground_fog(const Render::GroundFogSettings& fog) {
+    if (m_gl_backend != nullptr) {
+      m_gl_backend->set_ground_fog(fog);
+    }
+  }
 
   [[nodiscard]] auto render_software_preview(int width, int height) -> QImage;
 

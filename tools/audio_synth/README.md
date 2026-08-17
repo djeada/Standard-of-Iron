@@ -97,7 +97,7 @@ what this technique is best at.
 
 ## The ambience beds
 
-Twelve of the nineteen looping beds in `assets/audio/ambience` are generated
+Eight of the twenty-one looping beds in `assets/audio/ambience` are generated
 here, by `make audio-ambience`. They replaced 16 kHz ten-second clips that the
 mixer had to resample at load — which manufactured a mirror of their own noise
 across 8-16 kHz — and whose energy sat in the 2-6 kHz band the ear finds most

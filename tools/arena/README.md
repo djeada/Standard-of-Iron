@@ -180,6 +180,197 @@ arena viewport does when it spawns scenario buildings. It found real overlaps in
 the trailer chapters on its first run, so treat a PASS as meaningful only after
 you have seen it go red at least once.
 
+## Ambience scenarios
+
+`arena_ambience_scenarios.cpp` holds the long-form ambience lane: scenes staged
+to be _watched_, not reviewed. Nothing happens in them on purpose. The first is
+`ambience_night_watch` -- three soldiers resting around a camp fire in the rain
+with a flock grazing on the slope behind them, built to be captured once and
+looped out to an hour or more.
+
+```bash
+build/bin/arena_app --batch --scenario ambience_night_watch
+build/bin/arena_app --promo-spec tools/arena/promos/night_watch.json \
+  --promo-out artifacts/promo
+```
+
+Six things about this lane are not obvious and cost a render each to discover.
+
+**The camp fire is the light source, and it is a real one.** `FireCampRenderer`
+emits a flickering `Render::LocalLight` per camp, and `character_skinned.frag`
+consumes up to eight of them ranked by `intensity * radius^2 / distance^2`. A
+figure sitting within a few metres of a camp is genuinely lit by it. What
+defeats this is exposure: the `mediterranean_summer` profile already sits near
+0.90 exposure and 0.30 ambient at night, so an `exposure_override` above ~1
+lifts the whole frame into a green daylit field and the fire collapses into a
+flat orange blob. `ambience_night_watch` overrides exposure _down_ to 0.62 and
+lets the fire do the work.
+
+**A resource patch's `scale` does nothing to a camp fire on its own.**
+`FireCampRenderer` sizes the flame and its light from `WorldProp::radius` and
+`WorldProp::intensity`, neither of which `place_scenario_resource_patches` used
+to set -- so an authored fire scale was silently dropped and every arena fire
+came out at the 3.0 default radius. Patch placement now multiplies both by the
+patch scale for `FireCamp`. The flame height saturates at radius 4.5.
+
+**`suppress_terrain_scatter` also deletes every world prop.** The camp fire,
+tents, carts, weapon racks, trees and boulders are all submitted through
+`submit_scatters`, so the flag that removes the grass tufts removes the camp
+with them. Control clutter with `ground_type` and the terrain seed instead --
+`forest_mud` grows a pine canopy dense enough to skewer the fire, `soil_rocky`
+gives the open, dark ground these scenes want.
+
+**`renderer_override` needs a registered renderer, not just a loadout.** Adding
+`troops/roman/camp_rest` to the equipment catalogue is half the job; until the
+key is also listed in that nation's `k_swordsman_renderers`, the override does
+not resolve and the unit silently falls back to its troop default -- so the men
+who were meant to be unarmed came back carrying scutum and sword. Note also that
+`merge_json_loadouts` reads `assets/visuals/unit_equipment_loadouts.json`
+through `resolve_resource_path`, which finds `build/bin/assets` before the repo
+copy; a loadout edit that appears to do nothing is usually that stale copy.
+
+**Only the swordsman path honours an empty weapon slot.** The Roman spearman and
+archer renderers attach their spear, shield and bow independently of the
+loadout ids, so a resting figure authored on those troop types keeps its weapon.
+Seated groups use `Troop::Swordsman` with a weaponless loadout.
+
+**Expectations need `collect_animation_diagnostics`,** and the scenario camera
+has to frame every group that carries a `GroupIsRendered` expectation. The
+trailer-style `definition()` helper turns diagnostics off, and with it off every
+`GroupIsRendered` fails with "produced no rendered soldier observations" even
+though the promo capture reports the soldiers drawn. A tight review camera fails
+the same expectation for a different reason: a background figure outside the
+frustum is never observed.
+
+### Resting poses
+
+Sitting is authored, not runtime. `HumanoidAmbientIdle::SitDown` is a 3 s
+squat-and-rise gesture, not a pose to hold, so the lane adds three sustained
+showcase moves -- `rest_sit` (cross-legged, hands on the knees), `rest_sit_knees`
+(knees drawn up, forearms draped over them) and `rest_kneel` (down on one knee,
+reaching in to feed the fire) -- in `animation/showcase_pose_manifest.cpp`. Each
+one loops: its `t = 0` and `t = 1` keys are identical, and the frames between
+carry only breathing. Scenario groups select them through `showcase_routine`
+(`"rest_sit:6.0:0.0"`) with `showcase_loop`, the same mechanism the humanoid
+showcase uses.
+
+A routine can also open with a one-shot before it settles into its loop.
+`showcase_loop_from` is the index the routine returns to when it wraps, so
+`{"rest_sit_down:1.6:0.0", "rest_sit:6.0:0.0"}` with `showcase_loop_from = 1`
+plays the sit-down once and then breathes forever. This matters because
+`apply_showcase_clip` _clears_ `full_body_blend` -- a showcase clip is a hard
+switch with no crossfade, so a man who walks up and is then handed a seated pose
+snaps into it in one frame. `rest_sit_down` is the authored bridge from the
+neutral standing key to the `rest_sit` t=0 key. While `showcase_start_delay` is
+still counting down the routine reports itself inactive, which is what lets the
+unit walk in on its normal locomotion clips first.
+
+Showcase clips are resolved by index arithmetic --
+`humanoid_showcase_clip(move) = k_humanoid_showcase_first_clip + move - 1` --
+so a new move must be inserted into the humanoid clip table immediately after
+the existing showcase block, which renumbers `unarmed_*`, `testudo_*` and
+`carthage_shield_wall_*` after it. Update the constants in
+`animation/clip_manifest.h`, the `static_assert`s in `tools/bpat_baker/main.cpp`,
+and re-run `make bake-bpat`.
+
+**A prop cannot share a soldier's ground position.** A staged scene wants to sit
+a man on a rock; the engine will not allow it. World props repel units at
+runtime, so a boulder placed on a soldier's spot moves him a full metre out of
+it over the following seconds -- the unit spawns correctly and drifts off
+afterwards, which is why the effect is invisible in the spawn transform and
+only shows up in the rendered root. Shrinking the prop does not help. Seat a
+figure on the ground instead, and use props as furniture beside it. This is what
+`ArenaScenarioResourcePatch::exact` is for: it skips the nudge search that
+otherwise pushes an authored prop clear of its neighbours, so a staged rock
+lands exactly where the composition wants it, and snaps to the same walkable
+cell a unit would so authored coordinates agree between the two.
+
+A seated pose has to be authored at the right height, because nothing grounds
+it for you. `derive_clip_flags` withholds the ground-contact flag from every
+clip whose name starts with `showcase_`, and `resolve_entity_ground_offset` is
+0 for the humanoid, so a showcase pose's `root_y` _is_ its pelvis height above
+the terrain -- there is no foot snapping to hide an error. Grounding on the
+feet would be wrong here anyway: `palette_contact_y` measures the soles, and a
+cross-legged figure's soles are tucked halfway up its own lap. Use the engine's
+death poses as the reference for what "resting on the ground" costs -- they
+settle a body at `root_y` 0.15-0.19 -- and put a seated pelvis just above that.
+The first cut of these poses sat at 0.345 and the men floated visibly.
+
+Shape these poses with a Python twin of `resolve_humanoid_showcase_pose` rather
+than in the engine: a stick-figure of the same FK, a grid search to land a hand
+on a target joint, and a ground-clearance sweep across the cycle costs seconds,
+where a build-and-bake round trip costs twenty minutes. Confirm the result on
+the baked clip with `humanoid_preview --clip showcase_rest_sit --view side
+--report`, which also reports bone stretch.
+
+### Sound
+
+The arena records silent footage. `scripts/ambience-audio.py` builds the bed
+and muxes it on, reading an `ambience` block from the same promo spec the arena
+consumed. It exists next to `promo-edit.py` rather than inside it because the
+two want opposite things: a promo is _scored_ (one track, laid once, plus timed
+one-shots), while an ambience piece is layered and endless -- two or three beds
+looping for the whole length, and animal calls scattered thinly. A three-hour
+sleep video needs the beds looped to three hours, which `promo-edit.py` has no
+way to express.
+
+```bash
+scripts/ambience-audio.py --spec tools/arena/promos/night_watch.json \
+  --clip artifacts/promo/night_watch/01_the_watch.mp4
+```
+
+`night_watch` layers rain over a camp fire with a distant camp bed well
+underneath, and drops a distant wolf in every 26-64 s. Both `night_rain` and
+`camp_fire_night` are **recordings**, cut by `tools/audio_field/sources.py`, not
+generated: outdoor nature is the case `tools/audio_synth` explicitly does not
+claim to cover, and a synthesised first pass at both bore that out. Every bed is
+seam-sealed when built, so `-stream_loop` repeats one without a click.
+
+**Rain has to be shaped out of the hiss band.** Real rain carries most of its
+energy in 2-6 kHz -- `Source.shelf_db` exists for exactly this, and
+`AmbienceAssetsTest.NoBedIsLouderInTheHarshBandThanInItsBody` enforces it: a
+bed's 2-6 kHz band must sit at least 3 dB under its 100-800 Hz body. The
+shipped `weather_rain.ogg` measures a 2321 Hz spectral centroid on
+`tools/audio_synth/analyse.py`, and at that brightness it perceptually buries
+anything darker sharing the mix -- a camp fire under it was inaudible at equal
+RMS. `night_rain` takes the same treatment the other field beds get (highpass
+90, lowpass 3600, -7 dB shelf) and lands at 1281 Hz with its harsh band 12 dB
+under its body. Judge a bed with `analyse.py` rather than by ear.
+
+Two levelling rules worth keeping. `amix` divides by its input count unless you
+pass `normalize=0`, which otherwise drops the rain by several dB the moment a
+wolf calls. And a distant call has to be checked against the bed rather than
+authored by eye: the first pass sat 15 dB under the mix and produced no
+momentary-loudness movement at all -- inaudible, which is not the same as
+subtle. At 0.34 it lifts the momentary reading about 1.2 dB, which reads as
+something far off. The finished bed measures -16.3 LUFS with an 0.9 LU range.
+
+### Long-form output
+
+Never render the full length. `night_watch.json` is two shots against one
+continuous scenario -- `arrival` (13.5 s, from 0.5 s) and `watch` (36 s, from
+14.0 s) -- and the eight-minute cut is `arrival` plus `watch` thirteen times,
+concatenated with `ffmpeg -f concat -c copy`. Because both shots come out of the
+same encoder they concatenate without re-encoding, and because the second starts
+at exactly the scenario time the first ends on, the join between them is
+continuous rather than a cut. Only the `watch`-to-`watch` seam repeats, and with
+a locked-off camera the sole thing that changes across it is the flame shape.
+
+That structure exists for a second reason: **sustained renders have hard-crashed
+this machine.** Two crashes on 2026-08-17, one during an 8-minute capture,
+neither leaving an MCE, thermal event or driver oops in the log -- one boot did
+show an `nv_drm_handle_hotplug_event` workqueue storm doubling 4 -> 131 over
+80 s. A concurrent `-O3 -flto` build in another checkout was running at the
+time, which is the more likely trigger. Keep a capture to tens of seconds
+(49.5 s of footage renders in 31 s here), disable DPMS before a long run
+(`xset -display :0 -dpms s off`), and never background it: a killed job
+truncates its output to a stub and destroys whatever good master shared that
+path.
+
+Audio is built to the finished length regardless, so it never repeats on the
+same period as the picture. `--loop-to` extends the picture too, for the cases
+where looping a single shot is enough.
+
 ## Cinematic promo capture
 
 Arena can record finished video instead of stills. A **promo spec** is a JSON

@@ -855,6 +855,39 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
       m_post_process_pipeline->set_mist(m_mist_volumes);
       m_mist_volumes_dirty = false;
     }
+    m_post_process_pipeline->set_ground_fog(m_ground_fog);
+    {
+      const QVector3D sun_direction =
+          m_environment_lighting.primary_direction.normalized();
+      constexpr float k_sun_projection_distance = 4000.0F;
+      const QVector4D sun_clip =
+          view_proj *
+          QVector4D(cam.get_position() + sun_direction * k_sun_projection_distance,
+                    1.0F);
+      float sun_visibility = 0.0F;
+      QVector2D sun_screen(0.5F, 0.5F);
+      if (sun_clip.w() > 1e-3F) {
+        sun_screen = QVector2D(sun_clip.x() / sun_clip.w() * 0.5F + 0.5F,
+                               sun_clip.y() / sun_clip.w() * 0.5F + 0.5F);
+        const float outside_x =
+            std::max({0.0F, -sun_screen.x(), sun_screen.x() - 1.0F});
+        const float outside_y =
+            std::max({0.0F, -sun_screen.y(), sun_screen.y() - 1.0F});
+        const float outside = std::sqrt(outside_x * outside_x + outside_y * outside_y);
+        constexpr float k_sun_offscreen_reach = 0.65F;
+        const float frame_weight =
+            1.0F - std::clamp(outside / k_sun_offscreen_reach, 0.0F, 1.0F);
+        const float low_sun_weight =
+            1.0F - std::clamp((sun_direction.y() - 0.15F) / 0.55F, 0.0F, 1.0F);
+        const float cloud_weight =
+            1.0F - 0.6F * std::clamp(m_environment_lighting.cloud_cover, 0.0F, 1.0F);
+        const float intensity_weight =
+            std::clamp(m_environment_lighting.primary_intensity / 0.6F, 0.0F, 1.0F);
+        sun_visibility = frame_weight * (0.35F + 0.65F * low_sun_weight) *
+                         cloud_weight * intensity_weight;
+      }
+      m_post_process_pipeline->set_sun_screen(sun_screen, sun_visibility);
+    }
     m_post_process_pipeline->draw_sky(view_proj, cam.get_position());
   }
   const float banner_wind_strength = 0.8F + 0.2F * std::sin(m_animation_time * 0.5F);

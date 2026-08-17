@@ -9,7 +9,7 @@
 
 namespace Render {
 
-inline constexpr std::size_t k_max_local_lights = 8;
+inline constexpr std::size_t k_max_local_lights = 16;
 
 struct LocalLight {
   QVector3D position;

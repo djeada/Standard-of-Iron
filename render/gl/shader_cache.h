@@ -214,6 +214,9 @@ public:
     load(QStringLiteral("post_fxaa"),
          post_vert,
          resolve(shader_base + QStringLiteral("post_fxaa.frag")));
+    load(QStringLiteral("post_godrays"),
+         post_vert,
+         resolve(shader_base + QStringLiteral("post_godrays.frag")));
     load(QStringLiteral("sky"),
          post_vert,
          resolve(shader_base + QStringLiteral("sky.frag")));

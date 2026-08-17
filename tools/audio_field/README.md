@@ -22,7 +22,7 @@ and a cavalry charge is three separate gallop performances laid over each other.
 
 ## Ambience beds
 
-Eleven of the game's nineteen looping ambience beds are cut from field
+Thirteen of the game's twenty-one looping ambience beds are cut from
 recordings rather than generated. `sources.py` is the recipe — which recording,
 which window inside it, and what shaping — and `build_beds.py` turns that into
 the `.ogg` files in `assets/audio/ambience`.
@@ -34,6 +34,8 @@ the `.ogg` files in `assets/audio/ambience`.
 | `forest_ambush`                                 | Birds under wind in the canopy         |
 | `river_crossing`                                | Shallow river under a bridge           |
 | `mountain_camp_night`                           | Crickets over a fire                   |
+| `night_rain`                                    | Steady night rain, own recording       |
+| `camp_fire_night`                               | A hearth, close                        |
 | `weather_rain`                                  | Light steady rain, no thunder          |
 | `weather_snow`                                  | Blizzard — the wind, not the snow      |
 | `battlefield_dry_wind_distant_march_01` / `_02` | Dry wind with a column off to one side |

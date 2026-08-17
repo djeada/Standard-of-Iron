@@ -97,6 +97,7 @@
         <file>assets/shaders/post_blur.frag</file>
         <file>assets/shaders/post_composite.frag</file>
         <file>assets/shaders/post_fxaa.frag</file>
+        <file>assets/shaders/post_godrays.frag</file>
         <file>assets/shaders/sky.frag</file>
         <file>assets/shaders/ground_marker.vert</file>
         <file>assets/shaders/mode_indicator.frag</file>

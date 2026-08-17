@@ -72,6 +72,28 @@ auto default_loadouts() -> LoadoutMap {
   showcase_athlete.armor = "roman_light_armor";
   map.emplace("troops/roman/showcase_athlete", std::move(showcase_athlete));
 
+  EquipmentLoadoutIds roman_camp_rest{};
+  roman_camp_rest.greaves = "roman_greaves";
+  roman_camp_rest.helmet = "roman_light";
+  roman_camp_rest.armor = "roman_hamata_mail";
+  roman_camp_rest.shoulder = "roman_shoulder_cover";
+  map.emplace("troops/roman/camp_rest", std::move(roman_camp_rest));
+
+  EquipmentLoadoutIds roman_camp_rest_helmed{};
+  roman_camp_rest_helmed.sword = "sword_roman";
+  roman_camp_rest_helmed.helmet = "roman_montefortino";
+  roman_camp_rest_helmed.greaves = "roman_greaves";
+  roman_camp_rest_helmed.armor = "roman_hamata_mail";
+  map.emplace("troops/roman/camp_rest_helmed", std::move(roman_camp_rest_helmed));
+
+  EquipmentLoadoutIds roman_camp_rest_armed{};
+  roman_camp_rest_armed.sword = "sword_roman";
+  roman_camp_rest_armed.helmet = "roman_light";
+  roman_camp_rest_armed.greaves = "roman_greaves";
+  roman_camp_rest_armed.armor = "roman_hamata_mail";
+  roman_camp_rest_armed.shoulder = "roman_shoulder_cover";
+  map.emplace("troops/roman/camp_rest_armed", std::move(roman_camp_rest_armed));
+
   EquipmentLoadoutIds showcase_blademaster{};
   showcase_blademaster.sword = "sword_roman";
   showcase_blademaster.greaves = "roman_greaves";

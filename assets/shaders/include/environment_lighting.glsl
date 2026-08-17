@@ -65,6 +65,16 @@ float environment_wetness() {
   return u_env_shadow_softness_wetness.y;
 }
 
+float environment_night_amount() {
+  vec3 primary = environment_primary_color();
+  return smoothstep(0.05, 0.40, primary.b - primary.r);
+}
+
+float environment_low_sun_amount() {
+  return (1.0 - smoothstep(0.08, 0.50, environment_primary_direction().y)) *
+         (1.0 - environment_night_amount());
+}
+
 vec3 environment_ambient_light(vec3 normal) {
   float hemisphere = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
   return mix(environment_ground_bounce_color(), environment_sky_color(), hemisphere) *

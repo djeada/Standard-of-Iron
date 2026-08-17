@@ -24,6 +24,8 @@ struct DefenseTowerRendererConfig {
   DefenseTowerHealthStyleResolver health_bar_style;
   DefenseTowerBannerDrawer draw_banner;
   BuildingSelectionStyle selection;
+  float night_brazier_deck_y = 2.90F;
+  float night_brazier_offset = 0.62F;
 };
 
 void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,
