@@ -46,6 +46,7 @@
 #include "app/viewmodels/economy_view_model.h"
 #include "app/viewmodels/match_setup_view_model.h"
 #include "app/viewmodels/minimap_view_model.h"
+#include "app/viewmodels/mission_view_model.h"
 #include "app/viewmodels/orders_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
 #include "app/viewmodels/production_view_model.h"
@@ -58,10 +59,12 @@
 #include "game/command/replay.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
+#include "game/map/mission_stage_tracker.h"
 #include "game/session/session_context.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
 #include "game/systems/game_state_serializer.h"
+#include "game/systems/interaction_targeting.h"
 #include "game/systems/save_format.h"
 #include "game/systems/target_focus.h"
 #include "game/systems/unit_activity.h"
@@ -156,7 +159,6 @@ public:
   Q_PROPERTY(qreal global_cursor_y READ global_cursor_y NOTIFY global_cursor_changed)
   Q_PROPERTY(
       bool has_units_selected READ has_units_selected NOTIFY selected_units_changed)
-  Q_PROPERTY(int player_troop_count READ player_troop_count NOTIFY troop_count_changed)
   Q_PROPERTY(
       int max_troops_per_player READ max_troops_per_player NOTIFY troop_count_changed)
   Q_PROPERTY(QVariantMap selected_player_state READ selected_player_state NOTIFY
@@ -187,6 +189,7 @@ public:
   Q_PROPERTY(QObject* saves READ save_slots_view_model CONSTANT)
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
   Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
+  Q_PROPERTY(QObject* mission READ mission_view_model CONSTANT)
   Q_PROPERTY(QObject* activity READ activity_view_model CONSTANT)
   Q_PROPERTY(QObject* economy READ economy_view_model CONSTANT)
   Q_PROPERTY(QObject* tutorial READ tutorial_view_model CONSTANT)
@@ -248,6 +251,7 @@ public:
   [[nodiscard]] QObject* save_slots_view_model() const;
   [[nodiscard]] QObject* placement_view_model() const;
   [[nodiscard]] QObject* wave_view_model() const;
+  [[nodiscard]] QObject* mission_view_model() const;
   [[nodiscard]] QObject* tutorial_view_model() const;
   [[nodiscard]] QObject* activity_view_model() const;
   [[nodiscard]] QObject* economy_view_model() const;
@@ -313,6 +317,7 @@ private:
   void update_active_runtime_simulation(float dt);
   void sync_selection_flags();
   void sync_attack_targeting();
+  void sync_interaction_targeting(float delta_time);
   void sync_attack_range_rings();
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
   void sync_selected_player_state();
@@ -360,6 +365,10 @@ private:
   void reset_mission_runtime_state();
   void update_mission_waves(float dt);
   void publish_wave_status();
+  void configure_mission_stages();
+  void publish_mission_stages();
+  void update_mission_stages(float delta_time);
+  void restore_mission_stages(const QJsonObject& stage_state);
   void restore_mission_waves(const QJsonObject& wave_state);
   void update_mission_events();
   void update_tutorial(float real_dt);
@@ -389,6 +398,7 @@ private:
   std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
+  std::unique_ptr<App::ViewModels::MissionViewModel> m_mission_view_model;
   std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
   std::unique_ptr<App::ViewModels::EconomyViewModel> m_economy_view_model;
   std::unique_ptr<App::Core::TutorialDirector> m_tutorial_director;
@@ -427,6 +437,9 @@ private:
   std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hover_tracker;
   Game::Systems::AttackTargetingHighlights m_attack_targeting;
+  Game::Systems::InteractionTargetingHighlights m_interaction_targeting;
+  float m_interaction_targeting_accumulator = 0.0F;
+  QVariantMap m_interaction_target_hint;
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   App::Core::OrderMarkerStore m_order_markers;
   std::vector<Game::Systems::TargetFocusMarker> m_target_focus;
@@ -488,6 +501,8 @@ private:
   std::vector<PendingMissionWave> m_pending_mission_waves;
   std::vector<PendingMissionEvent> m_pending_mission_events;
   MissionWaveDirector m_mission_wave_director;
+  Game::Mission::MissionStageTracker m_mission_stage_tracker;
+  float m_mission_stage_poll_accumulator = 0.0F;
   struct TutorialFrameNotes {
     bool move_accepted = false;
     bool attack_accepted = false;

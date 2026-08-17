@@ -42,7 +42,17 @@ Item {
     property string primaryObjective: ""
     property bool primaryObjectiveCountsWaves: false
 
+    readonly property bool missionStaged: game_ready() && game.mission && game.mission.staged
+
     readonly property string primaryObjectiveText: {
+        if (missionStaged) {
+            if (game.mission.active_index < 0)
+                return qsTr("All objectives complete");
+            var staged = game.mission.active_title;
+            if (game.mission.active_required > 1)
+                staged += qsTr(" (%1/%2)").arg(game.mission.active_progress).arg(game.mission.active_required);
+            return staged;
+        }
         if (primaryObjective === "")
             return "";
         if (!primaryObjectiveCountsWaves || !game_ready() || !game.waves || !game.waves.active)
@@ -264,7 +274,7 @@ Item {
                     anchors.centerIn: parent
                     spacing: Design.Metrics.space8
                     width: Math.min(objectiveGlyph.implicitWidth + spacing + objectiveText.implicitWidth, objectiveZone.width)
-                    visible: topRoot.primaryObjective !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
+                    visible: topRoot.primaryObjectiveText !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
 
                     Text {
                         id: objectiveGlyph
@@ -287,6 +297,21 @@ Item {
                         font.pixelSize: Design.Typography.label
                         elide: Text.ElideRight
                     }
+                }
+
+                MouseArea {
+                    id: objectiveFocusArea
+
+                    anchors.fill: objectiveRow
+                    enabled: objectiveRow.visible && topRoot.missionStaged && topRoot.game_ready() && game.mission.active_has_target
+                    hoverEnabled: enabled
+                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+
+                    ToolTip.visible: containsMouse
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    ToolTip.text: topRoot.missionStaged ? (game.mission.active_hint !== "" ? game.mission.active_hint + "\n" + qsTr("Click to look at the objective.") : qsTr("Click to look at the objective.")) : ""
+
+                    onClicked: game.mission.focus_active_stage()
                 }
 
                 Design.IronBadge {
@@ -487,6 +512,60 @@ Item {
                         height: width
                         radius: width / 2
                         color: Design.Theme.danger
+                    }
+                }
+            }
+
+            Repeater {
+                id: objectivePins
+
+                model: (topRoot.game_ready() && game.mission) ? game.mission.markers : []
+
+                delegate: Item {
+                    required property var modelData
+
+                    readonly property real paintedW: minimapImage.paintedWidth
+                    readonly property real paintedH: minimapImage.paintedHeight
+
+                    visible: paintedW > 0 && paintedH > 0
+                    x: ((minimapImage.width - paintedW) / 2) + (modelData.nx || 0) * paintedW
+                    y: ((minimapImage.height - paintedH) / 2) + (modelData.ny || 0) * paintedH
+                    z: 11
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: Design.Metrics.space12
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: Design.Metrics.borderThin
+                        border.color: Design.Theme.accent
+
+                        SequentialAnimation on opacity  {
+                            running: !Design.A11y.reducedMotion
+                            loops: Animation.Infinite
+
+                            NumberAnimation {
+                                from: 1
+                                to: 0.25
+                                duration: 1100
+                                easing.type: Easing.InOutQuad
+                            }
+
+                            NumberAnimation {
+                                to: 1
+                                duration: 1100
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: Design.Metrics.space4
+                        height: width
+                        radius: width / 2
+                        color: Design.Theme.accent
                     }
                 }
             }
