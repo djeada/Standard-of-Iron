@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMatrix4x4>
+#include <QVector2D>
 #include <QVector3D>
 
 #include <array>
@@ -32,6 +33,10 @@ public:
                       float fog_end,
                       float time) noexcept;
   void set_mist(const std::vector<Render::MistVolume>& volumes);
+  void set_sun_screen(const QVector2D& sun_screen, float sun_visibility) noexcept;
+  void set_ground_fog(const Render::GroundFogSettings& fog) noexcept {
+    m_ground_fog = fog;
+  }
   void resolve_scene();
 
   [[nodiscard]] auto is_capturing() const noexcept -> bool { return m_capturing; }
@@ -63,6 +68,8 @@ private:
   static constexpr float k_vignette_strength = 0.14F;
   static constexpr float k_ground_ao_radius = 0.55F;
   static constexpr float k_ground_ao_strength = 2.40F;
+  static constexpr float k_godray_strength = 0.34F;
+  static constexpr int k_godray_divisor = 3;
 
   GL::ShaderCache* m_shader_cache;
   GL::Shader* m_bright_shader{nullptr};
@@ -70,10 +77,15 @@ private:
   GL::Shader* m_composite_shader{nullptr};
   GL::Shader* m_fxaa_shader{nullptr};
   GL::Shader* m_sky_shader{nullptr};
+  GL::Shader* m_godrays_shader{nullptr};
 
   RenderTarget m_scene{};
   RenderTarget m_composite{};
   std::array<RenderTarget, 2> m_bloom{};
+  RenderTarget m_rays{};
+  Render::GroundFogSettings m_ground_fog{};
+  QVector2D m_sun_screen{0.5F, 0.5F};
+  float m_sun_visibility{0.0F};
   unsigned int m_scene_depth{0};
   float m_near_plane{1.0F};
   float m_far_plane{200.0F};

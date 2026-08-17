@@ -13,6 +13,21 @@ is the shipping obligation, this file is how the file gets rebuilt.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
+
+RECORDINGS = Path(__file__).resolve().parent / "recordings"
+
+
+def own(name: str) -> str:
+    """A `file://` URL for a recording this project made itself.
+
+    Most layers here are fetched from an archive, which is what makes a bed
+    rebuildable anywhere. A recording the project owns has no such URL, so it
+    is committed under `tools/audio_field/recordings` and addressed locally.
+    `urllib` opens `file://` like any other scheme, so the builder needs no
+    special case.
+    """
+    return (RECORDINGS / name).as_uri()
 
 
 @dataclass(frozen=True)
@@ -155,6 +170,7 @@ in step and produce one very loud walker rather than several quiet ones.
 PD_MARK = "CC Public Domain Mark 1.0"
 CC0 = "CC0 1.0"
 PD = "Public domain"
+OWN_WORK = "Own recording (project-owned, no third-party obligation)"
 
 
 BEDS: dict[str, Bed] = {
@@ -237,6 +253,52 @@ BEDS: dict[str, Bed] = {
                 start=15.0,
                 highpass=60.0,
                 shelf_db=-6.0,
+            )
+        ],
+    ),
+    "night_rain": Bed(
+        seconds=22.0,
+        notes="Steady rain at night with close drop impacts, cut from the "
+        "project's own thunderstorm recording. It runs 16.6 s against a 22 s "
+        "bed, so the layer loops. Real rain carries most of its energy in "
+        "2-6 kHz and this one is no exception; the shelf pulls it under the "
+        "body so a camp fire can still be heard underneath it, which is the "
+        "whole reason the ambience lane wanted a second rain bed.",
+        layers=[
+            Source(
+                url=own("karlsruhe_thunderstorm_2026-07-16.ogg"),
+                origin="Own recording, Karlsruhe, 16 July 2026",
+                licence=OWN_WORK,
+                start=0.6,
+                gain=1.0,
+                highpass=90.0,
+                lowpass=3600.0,
+                shelf_db=-7.0,
+                loop_source=True,
+            )
+        ],
+    ),
+    "camp_fire_night": Bed(
+        seconds=22.0,
+        notes="A hearth close enough to hear individual cracks. The same "
+        "public-domain fireplace recording that sits under mountain_camp_night, "
+        "but forward rather than underneath. The source runs 25.5 s, so a 22 s "
+        "bed has almost no room to choose a window: this starts at 3.4 s and "
+        "runs to the end, which is the largest offset available from the 1.0 s "
+        "the other bed uses and keeps the two from cracking in unison when "
+        "they play together. The recording is quiet, so the builder applies "
+        "about 30 dB of make-up.",
+        layers=[
+            Source(
+                url=f"{COMMONS}/d/d8/Dry_grass_burning_in_open_fireplace.ogg",
+                origin="Wikimedia Commons, "
+                "File:Dry grass burning in open fireplace.ogg, by ezwa",
+                licence=PD,
+                start=3.4,
+                gain=1.0,
+                highpass=80.0,
+                lowpass=3200.0,
+                shelf_db=-4.0,
             )
         ],
     ),

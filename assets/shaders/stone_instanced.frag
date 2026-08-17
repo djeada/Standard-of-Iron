@@ -73,7 +73,7 @@ void main() {
   color += soi_rim_light(N, V);
   color += sun * (dry_spec + wet_spec);
   color += sky * rim;
-  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color += stone * crevice_ao * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);

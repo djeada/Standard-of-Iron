@@ -45,6 +45,17 @@ void main() {
   float base_stain = 1.0 - smoothstep(0.02, 0.38, v_local_pos.y);
   stone = mix(stone, stone * vec3(0.48, 0.54, 0.50), base_stain * 0.50);
 
+  vec2 sun_flat = normalize(L.xz + vec2(1e-4, 0.0));
+  float shaded_face =
+      clamp(dot(normalize(N.xz + vec2(1e-4, 0.0)), -sun_flat), 0.0, 1.0);
+  float ivy_field = soi_noise21_b0e82b(v_world_pos.xz * 1.6 + v_local_pos.xy * 3.4 +
+                                       vec2(v_local_pos.z * 2.2, 17.0));
+  float ivy_reach = 1.0 - smoothstep(0.30, 1.30 + ivy_field * 0.9, v_local_pos.y);
+  float ivy = ivy_reach * (0.35 + 0.65 * shaded_face) * vertical_face *
+              smoothstep(0.42, 0.72, ivy_field + base_stain * 0.25);
+  vec3 ivy_color = mix(vec3(0.16, 0.27, 0.12), vec3(0.30, 0.42, 0.16), pits);
+  stone = mix(stone, ivy_color, ivy * 0.78);
+
   float ndotl = max(dot(N, L), 0.0);
   float hemi = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
   vec3 sky = environment_sky_color();
@@ -57,7 +68,7 @@ void main() {
   vec3 color = stone * illumination * ao;
   color += sun * specular;
   color += sky * rim;
-  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color += stone * ao * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);

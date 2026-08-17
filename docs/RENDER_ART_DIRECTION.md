@@ -1,9 +1,10 @@
 # Render art direction
 
-The target look is the clean, cozy stylisation of _Röki_ and _The Last Campfire_:
-large flat colour fields, readable silhouettes, soft contact grounding, no crushed
-blacks and no clipped whites. This document records how the renderer gets there and
-which knob to turn when a scene reads wrong.
+The target look is cozy, ancient and a little _Diablo_: the clean flat colour fields
+and readable silhouettes of _Röki_ / _The Last Campfire_ by day, and by dusk and night
+a filmic frame where warm firelight, lantern-lit canvas and braziers carve into cool,
+deep — but never unreadable — shade. This document records how the renderer gets there
+and which knob to turn when a scene reads wrong.
 
 ## Frame structure
 
@@ -37,14 +38,37 @@ their output — the scene target is HDR and the tone curve belongs to one place
 **`assets/shaders/include/tonemap.glsl`** owns the look. It has no UBO dependency so
 the post pass and any future tool can include it:
 
-| Constant                                     | Effect                                                    |
-| -------------------------------------------- | --------------------------------------------------------- |
-| `k_soi_grade_exposure`                       | linear gain before the curve; raise to open the midtones  |
-| `k_soi_grade_white_point`                    | where the extended-Reinhard shoulder reaches 1.0          |
-| `k_soi_grade_contrast` / `k_soi_grade_pivot` | S-curve strength and its anchor                           |
-| `k_soi_grade_saturation`                     | global chroma                                             |
-| `k_soi_grade_shadow_lift`                    | cool floor under the blacks — this is what stops crushing |
-| `k_soi_grade_highlight_tint`                 | warm/cool split against the shadow lift                   |
+| Constant                                                   | Effect                                                                 |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `k_soi_grade_exposure`                                     | linear gain before the curve; raise to open the midtones               |
+| `k_soi_grade_white_point`                                  | where the filmic shoulder reaches 1.0                                  |
+| `k_soi_filmic_*`                                           | Hable curve coefficients — the toe is what gives the frame real blacks |
+| `k_soi_grade_contrast` / `k_soi_grade_pivot`               | S-curve strength and its anchor                                        |
+| `k_soi_grade_saturation`                                   | global chroma                                                          |
+| `k_soi_grade_shadow_lift`                                  | small cool floor under the blacks (kept low so the toe still bites)    |
+| `k_soi_grade_highlight_tint`                               | warm/cool split against the shadow lift                                |
+| `k_soi_grade_shadow_tone` / `k_soi_grade_highlight_tone`   | luma-weighted split tone: cold slate in shade, amber in highlights     |
+| `k_soi_grade_split_strength` / `k_soi_grade_split_balance` | how hard the split tone pulls and where shade hands over to highlight  |
+| `k_soi_night_*` / `k_soi_dusk_*`                           | time-of-day grades applied by `soi_time_of_day_grade` in the composite |
+
+The curve is calibrated so 18 % grey and the 0.3–1.0 midtones land where the old
+extended-Reinhard put them (exposure 2.15 / white 3.7 reproduce it to within a few
+thousandths); only the toe (below ~0.1) drops and the shoulder rolls off cleaner. Because
+the toe eats exactly the range moonlit and dusk scenes live in, the composite lifts
+linear radiance by `k_night_exposure_lift` / `k_dusk_exposure_lift` (keyed off
+`environment_night_amount()` / the low-sun warmth) _before_ `soi_finalize`. Measured on
+`lighting_moonlit_night` this brings mean luma back to ~29 (baseline 26) with a wider
+spread (25 vs 18), i.e. brighter _and_ more contrasty — check those two numbers again
+if you touch the toe or the lifts.
+
+`environment_night_amount()` (GLSL) and `Render::environment_night_amount()` (C++) are the
+one definition of "night": the primary light is moon-blue (`b - r`). Everything that
+switches on at night — the sky's moon and stars, the tents' lantern glow, the statue
+votives, the tower braziers, the night grade — reads it, so a new profile that keeps its
+moon blue gets the whole night dressing for free.
+
+The composite also adds film grain (`k_grain_strength`, biased into the shadows) and the
+vignette tint is warm parchment (`k_vignette_tint`) rather than the old cool one.
 
 **`assets/shaders/include/environment_lighting.glsl`** owns the _shading_ model on top
 of the existing `EnvironmentLighting` UBO. `soi_wrapped_diffuse` wraps the terminator
@@ -105,6 +129,41 @@ knob to reach for when the frame reads hue-flat. `scene/environment_lighting.h` 
 the matching defaults — `shadow_tint` and `shadow_strength` were lifted from a near-black
 `{0.16, 0.20, 0.27}` at 0.72 to `{0.30, 0.34, 0.44}` at 0.60 so cast shadows read as
 coloured shade rather than as grey slabs.
+
+## Local lights
+
+`local_lighting.glsl` carries `SOI_MAX_LOCAL_LIGHTS = 16` (was 8) so a night camp can
+hold a fire, several lit tents, tower braziers and votives at once; the C++ constant and
+the std140 block are pinned against each other by `ShaderSource.LocalLightingBlockMatchesTheUploadedStruct`.
+The falloff is a windowed inverse-square rather than `(1 - d/r)^2`, with a small wrap
+so light reaches round a tent pole, and `local_lighting_specular` adds a Blinn glint
+that metal armour and wet skin pick up from nearby fires.
+
+**Props must apply local light to their albedo, not to their lit colour.** Almost every
+prop shader used to do `color += color * local_lighting(...)`, which at night multiplied
+firelight into an already near-black surface — a campfire lit nothing but the ground
+and the soldiers. They now do `albedo * ao * local_lighting(...)`. If you add a prop
+shader, follow that form.
+
+Night light sources and where they live:
+
+- fires — `FireCampRenderer` (unchanged) and `EffectBatchCmd::Fireball/BuildingFlame`
+  (the backend turns those into lights automatically);
+- lit tents — `TentRenderer::submit` adds a flickering lantern light per visible tent
+  and `tent_instanced.frag` glows the lower canvas (`k_tent_lantern_*`);
+- statues — `StatueRenderer::submit` adds a low votive-candle light at the plinth;
+- towers — `defense_tower_renderer_common.cpp` places two small `fireball` braziers on
+  the deck (`night_brazier_deck_y` / `night_brazier_offset` in the nation config).
+
+## God rays
+
+`post_godrays.frag` is a third-resolution screen-space radial march toward the sun's
+projected position, sampling only sky pixels (depth at the far plane) so geometry
+occludes the shafts. `Backend::execute_scene` projects the primary direction, and
+fades `u_sun_visibility` by how far off-frame the sun is, how low it sits, cloud cover
+and intensity, so the pass is free at noon and lights up in low-pitch dawn/dusk shots.
+The composite adds `rays * primary_color * primary_intensity * k_godray_strength`
+into linear radiance before bloom is read, so bright shafts bloom naturally.
 
 ## Anti-aliasing
 
@@ -184,6 +243,28 @@ else) and before the tone curve, in linear radiance like the per-surface fog it
 replaced. Translucent surfaces fog by the opaque depth behind them, which at RTS
 camera angles is indistinguishable from their own distance.
 
+The fog colour is not the raw keyframe colour: `fog_color_toward` darkens it slightly
+(`k_fog_haze_tone`) and adds sun in-scatter — `pow(dot(view, sun), k_fog_inscatter_power)`
+times the primary colour, stronger when the sun is low — so the horizon towards a low sun
+goes copper while the opposite side stays cool. `k_fog_horizon_weight` / `_gain` were
+lowered from 0.72 / 0.60 so the mid-ground stops going milky; the map edge is still
+hidden by the boundary curtain and mountains, not by fog.
+
+The composite also does a cheap far-field softening: `far_softened_scene` blurs the
+scene texture with eight taps whose radius grows with the fog amount (`k_far_blur_*`),
+so distant ground goes painterly-soft while the play area stays crisp.
+
+### Valley fog
+
+Low ground pools fog. `TerrainRenderer::configure` computes a `GroundFogSettings`
+(`render/mist_volume.h`) from the height distribution — floor at the 8th percentile,
+ceiling a fraction of the relief above it, strength scaling with relief and zero on
+flat maps — and hands it to the composite every submit through
+`Renderer::set_ground_fog`. `valley_fog` in the composite fades it in below the ceiling,
+breaks it up with drifting noise, thickens it with view distance and boosts it at night,
+at dawn/dusk and in rain (`k_ground_fog_*`). Flat maps see nothing; hilly maps get mist
+in the hollows.
+
 ## Ground mist
 
 Local mist — the low white haze on river and lake banks, and the violet miasma over
@@ -222,6 +303,17 @@ Colours come from the environment UBO (`fog_color` at the horizon, `sky_color` a
 zenith, `cloud_cover` for band density), so the sky follows the same time-of-day
 keyframes as everything else in `game/map/environment_lighting.cpp`.
 
+On top of that: a hard sun disc (`k_sky_sun_disc_*`), a dusk band that warms the
+horizon towards the sun's azimuth when it is low (`k_sky_dusk_band_*`), and at night —
+by `environment_night_amount()` — the sun terms fade out and a moon disc with halo plus
+hashed stars fade in (`k_sky_moon_*`, `k_sky_star_*`).
+
+Clouds are sampled on a flat sky plane (`ray.xz / (ray.y + k_sky_cloud_plane_lift)`),
+not on the old azimuth-radial "dome" coordinates. The dome mapping put every cloud
+feature at a fixed azimuth, which drew as a vertical bright streak from horizon to
+zenith — visible in any low-pitch shot. If a streak like that reappears, this is where
+to look.
+
 Before this the sky was a flat `glClearColor`, which is what produced the hard horizon
 line where the terrain simply stopped.
 
@@ -234,8 +326,18 @@ high-frequency grain/granular/speckle terms and the relief normal amplitude. Rai
 towards 1.0 to get the old naturalistic surface back.
 
 `k_soi_terrain_hue_scale` / `k_soi_terrain_hue_amount` add a very low-frequency warm↔cool
-break across the ground so a map does not read as one flat green. Keep the amount small
-(under ~0.12); past that it stops looking like light and starts looking like paint.
+break across the ground so a map does not read as one flat green.
+
+Three more terms pull the ground away from neon lawn towards worn, ancient earth:
+`k_soi_terrain_earth_*` mixes patches of dry-grass/soil (`worn_ground`) into flat,
+non-rock ground on a very large noise; `k_soi_terrain_shade_*` cools and darkens slopes
+that face away from the sun (a moss/shade read that also makes hills model);
+`k_soi_terrain_saturation` scales the biome's grass saturation down. Turn the earth
+amount down first if a map reads muddy — it is the strongest of the three.
+
+Ruins grow ivy up their shaded faces (`ruins_instanced.frag`) and statue plinths grow
+moss (`statue_instanced.frag`); both are shader-only overgrowth keyed to local position
+and the sun's azimuth, so nothing new had to be authored.
 
 ## Known geometry fix
 
@@ -257,6 +359,15 @@ Night (0/22/24) needs three things to read as cozy rather than merely dark: moon
 that is actually blue (so firelight has something cool to contrast against), ambient
 high enough that the ground stays legible (0.30 — at 0.12 four fifths of the frame sat
 below luma 20), and a shadow tint well off black.
+
+Rain now shows on surfaces as well as in the air: `road.frag` darkens, drops roughness
+and pools puddles in ruts and hollows against `environment_wetness()`, and both
+character shaders add a wet sheen (`k_wet_sheen_*`) with a slight darkening of cloth.
+
+Characters also carry a sun-keyed rim/back-light (`k_sun_rim_*`) so a unit standing
+between the camera and a low sun separates from dark ground — the single most
+"Diablo" thing in the character shader — plus firelight glints on metal via
+`local_lighting_specular`.
 
 Afternoon (17) is defined by sun _height_, not colour. At y=0.55 it was indistinguish-
 able from noon; at y=0.24 it gets the long raking shadows that make golden hour read.

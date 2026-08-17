@@ -122,7 +122,8 @@ void ShowcaseRoutineSystem::update(Engine::Core::World* world, float delta_time)
       routine->elapsed -= step_length(done);
       ++routine->index;
       if (routine->index >= routine->steps.size()) {
-        routine->index = 0;
+
+        routine->index = std::min(routine->loop_from, routine->steps.size() - 1U);
         if (!routine->loop) {
           routine->finished = true;
           break;

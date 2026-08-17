@@ -33,7 +33,7 @@ const SwordsmanRendererProfile k_swordsman_profile{
     .apply_skin_override = false,
     .ensure_styles_registered = ensure_swordsman_styles_registered};
 
-const std::array<SwordsmanRendererRegistration, 4> k_swordsman_renderers{{
+const std::array<SwordsmanRendererRegistration, 7> k_swordsman_renderers{{
     {.renderer_key = "troops/roman/swordsman",
      .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
     {.renderer_key = "troops/roman/commanders/scipio_africanus",
@@ -41,6 +41,12 @@ const std::array<SwordsmanRendererRegistration, 4> k_swordsman_renderers{{
     {.renderer_key = "troops/roman/showcase_athlete",
      .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
     {.renderer_key = "troops/roman/showcase_blademaster",
+     .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
+    {.renderer_key = "troops/roman/camp_rest",
+     .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
+    {.renderer_key = "troops/roman/camp_rest_helmed",
+     .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
+    {.renderer_key = "troops/roman/camp_rest_armed",
      .creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset},
 }};
 

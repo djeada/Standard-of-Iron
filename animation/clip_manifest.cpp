@@ -407,6 +407,11 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_showcase_front_flip_clip:
   case k_humanoid_showcase_handstand_clip:
   case k_humanoid_showcase_side_aerial_clip:
+  case k_humanoid_showcase_rest_sit_clip:
+  case k_humanoid_showcase_rest_sit_knees_clip:
+  case k_humanoid_showcase_rest_kneel_clip:
+  case k_humanoid_showcase_rest_sit_down_clip:
+  case k_humanoid_showcase_rest_sit_knees_down_clip:
     return locomotion_markers();
   default:
     return {};

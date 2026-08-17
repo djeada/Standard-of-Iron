@@ -2104,6 +2104,8 @@ public:
   float elapsed{0.0F};
   float start_delay{0.0F};
   bool loop{true};
+
+  std::size_t loop_from{0};
   bool finished{false};
   bool active{false};
   float phase{0.0F};
