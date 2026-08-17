@@ -156,6 +156,47 @@
       "description": "Crush both Roman breakout columns before they claw through the hillside."
     }
   ],
+  "stages": [
+    {
+      "id": "close_the_trap",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 1,
+      "title": "Close the trap on the column town",
+      "description": "Take the Roman marching town at the head of the lakeside road.",
+      "hint": "The road runs north-west along the shore; strike the head of the column first.",
+      "target": {
+        "x": 72,
+        "z": 186
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "take_shore_camp",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 2,
+      "title": "Take the shore camp",
+      "description": "Seize the second camp at the eastern end of the lake.",
+      "hint": "Nothing on the shore road survives once both ends are held.",
+      "target": {
+        "x": 600,
+        "z": 138
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill the Roman commanders",
+      "description": "Flaminius must not leave the shore.",
+      "hint": "Their camps fall neutral once their commander is dead."
+    }
+  ],
   "events": [
     {
       "trigger": {

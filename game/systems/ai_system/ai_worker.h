@@ -7,15 +7,14 @@
 #include <mutex>
 #include <thread>
 
-#include "ai_executor.h"
-#include "ai_reasoner.h"
+#include "ai_behavior_registry.h"
 #include "ai_types.h"
 
 namespace Game::Systems::AI {
 
 class AIWorker {
 public:
-  AIWorker(AIReasoner& reasoner, AIExecutor& executor, AIBehaviorRegistry& registry);
+  explicit AIWorker(AIBehaviorRegistry& registry);
 
   ~AIWorker();
 
@@ -28,10 +27,6 @@ public:
 
   void drain_results(std::queue<AIResult>& out);
 
-  auto busy() const noexcept -> bool {
-    return m_worker_busy.load(std::memory_order_acquire);
-  }
-
   void wait_idle();
 
   void stop();
@@ -39,8 +34,6 @@ public:
 private:
   void worker_loop();
 
-  AIReasoner& m_reasoner;
-  AIExecutor& m_executor;
   AIBehaviorRegistry& m_registry;
 
   std::thread m_thread;

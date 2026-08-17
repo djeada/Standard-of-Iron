@@ -51,19 +51,23 @@ protected:
 
   static constexpr int k_grid_extent = 24;
 
-  static constexpr float k_grid_origin =
-      (static_cast<float>(k_grid_extent) * 0.5F) - 0.5F;
-
   static void lay_out(const std::vector<Node>& nodes) {
+    lay_out_on(k_grid_extent, nodes);
+  }
+
+  static void lay_out_on(int extent, const std::vector<Node>& nodes) {
+    const float origin = (static_cast<float>(extent) * 0.5F) - 0.5F;
     Game::Map::MapDefinition map_def;
-    map_def.grid.width = k_grid_extent;
-    map_def.grid.height = k_grid_extent;
+    map_def.grid.width = extent;
+    map_def.grid.height = extent;
     map_def.grid.tile_size = 1.0F;
+    map_def.biome.procedural_trees_enabled = false;
+    map_def.biome.procedural_boulders_enabled = false;
+    map_def.biome.procedural_iron_ore_enabled = false;
     for (const auto& node : nodes) {
 
-      map_def.world_props.push_back({.type = node.type,
-                                     .x = node.x + k_grid_origin,
-                                     .z = node.z + k_grid_origin});
+      map_def.world_props.push_back(
+          {.type = node.type, .x = node.x + origin, .z = node.z + origin});
     }
     Game::Map::TerrainService::instance().initialize(map_def);
     Game::Map::VisibilityService::instance().initialize(
@@ -426,6 +430,37 @@ TEST_F(AutoGatherTest, AHaulHomeIsStillReportedAsADelivery) {
 
   auto const activity = Game::Systems::classify_unit_activity(*worker);
   EXPECT_EQ(activity.kind, Game::Systems::ActivityKind::Deliver);
+}
+
+TEST_F(AutoGatherTest, TheNearbyPatchIsWorkedBeforeAnythingAcrossTheMap) {
+  lay_out_on(160,
+             {{.type = WorldProp::Type::PineTree, .x = 6.0F, .z = 0.0F},
+              {.type = WorldProp::Type::PineTree, .x = 60.0F, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  order_auto_gather(world, worker);
+
+  think(world);
+
+  const auto* builder = builder_of(worker);
+  ASSERT_TRUE(builder->has_task_target);
+  EXPECT_NEAR(builder->task_target_x, 6.0F, 1.5F)
+      << "the worker walked past the patch beside it";
+}
+
+TEST_F(AutoGatherTest, AStrippedNeighbourhoodSendsTheWorkerFurtherOut) {
+  const float beyond = Game::Systems::GatherLoopSystem::k_search_radius + 20.0F;
+  lay_out_on(160, {{.type = WorldProp::Type::PineTree, .x = beyond, .z = 0.0F}});
+  Engine::Core::World world;
+  auto* worker = add_builder(world, 0.0F, 0.0F);
+  order_auto_gather(world, worker);
+
+  think(world);
+
+  const auto* builder = builder_of(worker);
+  ASSERT_TRUE(builder->has_task_target)
+      << "with nothing close by the worker should still go and find the far node";
+  EXPECT_NEAR(builder->task_target_x, beyond, 1.5F);
 }
 
 TEST_F(AutoGatherTest, ACarriedLoadIsWalkedHomeBeforeTheNextNodeIsTaken) {

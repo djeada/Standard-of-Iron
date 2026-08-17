@@ -541,6 +541,11 @@ Item {
                             game.activity.confirm_repair_at(mouse.x, mouse.y);
                         return;
                     }
+                    if (game_view.cursor_mode === "dismantle") {
+                        if (typeof game !== 'undefined' && game.activity)
+                            game.activity.confirm_dismantle_at(mouse.x, mouse.y);
+                        return;
+                    }
                     if (game_view.cursor_mode === "patrol") {
                         if (typeof game !== 'undefined' && game.orders.patrol_at)
                             game.orders.patrol_at(mouse.x, mouse.y);
@@ -1291,6 +1296,70 @@ Item {
                 visible: attackTargetHint.range_text().length > 0
                 color: attackTargetHint.in_range ? Theme.successText : Theme.warningText
                 text: attackTargetHint.range_glyph() + " " + attackTargetHint.range_text()
+                font.pixelSize: Design.Typography.caption
+            }
+        }
+    }
+
+    Rectangle {
+        id: interactionTargetHint
+
+        readonly property var hint: (typeof game !== 'undefined' && game.activity && game.activity.interaction_target_hint) ? game.activity.interaction_target_hint : ({
+                "action": "none"
+            })
+
+        function action_text() {
+            switch (hint.action) {
+            case "gather":
+                return qsTr("Collect");
+            case "deliver":
+                return qsTr("Deliver civilians");
+            case "repair":
+                return qsTr("Repair");
+            }
+            return "";
+        }
+
+        function action_glyph() {
+            switch (hint.action) {
+            case "gather":
+                return Design.Icons.collect;
+            case "deliver":
+                return Design.Icons.deliver;
+            case "repair":
+                return "\u2692";
+            }
+            return "";
+        }
+
+        visible: game_view.cursor_mode === "normal" && hint.action !== "none"
+        z: 999999
+        radius: 5
+        color: "#C8141414"
+        border.color: Theme.panelBr
+        border.width: 1
+        width: interactionTargetHintRow.implicitWidth + 14
+        height: interactionTargetHintRow.implicitHeight + 8
+        x: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_x + 22), game_view.width - width) : 0
+        y: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_y + 20), game_view.height - height) : 0
+
+        Row {
+            id: interactionTargetHintRow
+
+            anchors.centerIn: parent
+            spacing: 6
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.accent
+                text: interactionTargetHint.action_glyph()
+                font.pixelSize: Design.Typography.label
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.textMain
+                text: interactionTargetHint.action_text()
                 font.pixelSize: Design.Typography.caption
             }
         }

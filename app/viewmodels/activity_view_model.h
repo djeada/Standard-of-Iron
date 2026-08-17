@@ -23,6 +23,8 @@ class ActivityViewModel : public QObject {
 
   Q_PROPERTY(QVariantMap attack_target_hint READ attack_target_hint NOTIFY
                  attack_target_hint_changed)
+  Q_PROPERTY(QVariantMap interaction_target_hint READ interaction_target_hint NOTIFY
+                 interaction_target_hint_changed)
   Q_PROPERTY(
       QVariantMap inspect_target READ inspect_target NOTIFY focus_targets_changed)
   Q_PROPERTY(
@@ -40,8 +42,12 @@ public:
 
   Q_INVOKABLE void begin_repair_order();
   Q_INVOKABLE void confirm_repair_at(qreal sx, qreal sy);
+  Q_INVOKABLE void begin_dismantle_order();
+  Q_INVOKABLE void confirm_dismantle_at(qreal sx, qreal sy);
 
   Q_INVOKABLE void toggle_auto_gather(const QString& priority_product_type = {});
+  Q_INVOKABLE void set_auto_gather(bool active,
+                                   const QString& priority_product_type = {});
 
   Q_INVOKABLE void clear_inspect_target();
   Q_INVOKABLE [[nodiscard]] QVariantList pop_combat_damage_events();
@@ -56,12 +62,17 @@ public:
     return m_attack_target_hint;
   }
   void set_attack_target_hint(const QVariantMap& hint);
+  [[nodiscard]] auto interaction_target_hint() const -> QVariantMap {
+    return m_interaction_target_hint;
+  }
+  void set_interaction_target_hint(const QVariantMap& hint);
 
   void record_hit(const Engine::Core::CombatHitEvent& event);
   void advance_feedback(float dt) { m_feedback.update(dt); }
 
 signals:
   void attack_target_hint_changed();
+  void interaction_target_hint_changed();
   void focus_targets_changed();
 
   void inspect_target_cleared();
@@ -72,6 +83,7 @@ private:
 
   App::Core::CombatFeedbackStore m_feedback;
   QVariantMap m_attack_target_hint;
+  QVariantMap m_interaction_target_hint;
   QVariantMap m_inspect_target;
   QVariantMap m_selection_target;
 };

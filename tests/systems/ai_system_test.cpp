@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <string_view>
 
 #include "game/core/component.h"
 #include "game/core/ownership_constants.h"
@@ -18,11 +19,11 @@
 #include "game/systems/ai_system/behaviors/assault_behavior.h"
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/builder_behavior.h"
-#include "game/systems/ai_system/behaviors/chase_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
 #include "game/systems/ai_system/behaviors/expand_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
 #include "game/systems/ai_system/behaviors/harass_behavior.h"
+#include "game/systems/ai_system/behaviors/local_engagement_behavior.h"
 #include "game/systems/ai_system/behaviors/production_behavior.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -2407,9 +2408,7 @@ TEST_F(AISystemTest, AssaultWaveUnitsAreTrackedSeparatelyFromTheStandingArmy) {
   Game::Systems::AI::AIReasoner::update_context(snapshot, context);
 
   EXPECT_EQ(context.assault_unit_count, 2);
-  EXPECT_TRUE(Game::Systems::AI::is_assault_unit(20, context));
-  EXPECT_TRUE(Game::Systems::AI::is_assault_unit(21, context));
-  EXPECT_FALSE(Game::Systems::AI::is_assault_unit(1, context));
+  EXPECT_EQ(context.assault_unit_ids, (std::vector<Engine::Core::EntityID>{20U, 21U}));
 
   const auto attack_force =
       Game::Systems::AI::collect_attack_force_units(snapshot, context);
@@ -2480,8 +2479,8 @@ TEST_F(AISystemTest, AssaultBehaviorEngagesTargetsItHasAlreadyReached) {
   EXPECT_TRUE(commands.front().should_chase);
 }
 
-TEST_F(AISystemTest, DefensiveAIChasesNearbyEnemiesWithOnlyADetachment) {
-  Game::Systems::AI::ChaseBehavior behavior;
+TEST_F(AISystemTest, LocalEngagementRespondsWithNearbyUnitsOnly) {
+  Game::Systems::AI::LocalEngagementBehavior behavior;
 
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
@@ -2509,10 +2508,6 @@ TEST_F(AISystemTest, DefensiveAIChasesNearbyEnemiesWithOnlyADetachment) {
   context.state = Game::Systems::AI::AIState::Gathering;
 
   ASSERT_TRUE(behavior.should_execute(snapshot, context));
-  const int detachment =
-      Game::Systems::AI::ChaseBehavior::chase_detachment_size(context);
-  ASSERT_GT(detachment, 0);
-  EXPECT_LE(detachment, context.strategy_config.max_chase_units);
 
   std::vector<Game::Systems::AI::AICommand> commands;
   behavior.execute(snapshot, context, 2.0F, commands);
@@ -2522,16 +2517,19 @@ TEST_F(AISystemTest, DefensiveAIChasesNearbyEnemiesWithOnlyADetachment) {
   EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::AttackTarget);
   EXPECT_EQ(command.target_id, 200U);
   EXPECT_TRUE(command.should_chase);
-  EXPECT_LE(static_cast<int>(command.units.size()), detachment);
+  EXPECT_LE(static_cast<int>(command.units.size()),
+            context.strategy_config.max_local_responders);
   EXPECT_LT(static_cast<int>(command.units.size()), context.total_units);
 
   for (const auto unit_id : command.units) {
     EXPECT_TRUE(unit_id == 1U || unit_id == 2U || unit_id == 3U);
+    EXPECT_EQ(std::string_view(context.assigned_units.at(unit_id).assigned_task),
+              Game::Systems::AI::LocalEngagementBehavior::k_task_name);
   }
 }
 
-TEST_F(AISystemTest, ChaseStandsDownWhenTheBaseItselfIsUnderAttack) {
-  Game::Systems::AI::ChaseBehavior behavior;
+TEST_F(AISystemTest, LocalEngagementKeepsRespondingWhileAnotherBaseIsUnderAttack) {
+  Game::Systems::AI::LocalEngagementBehavior behavior;
 
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
@@ -2553,13 +2551,100 @@ TEST_F(AISystemTest, ChaseStandsDownWhenTheBaseItselfIsUnderAttack) {
       Game::Systems::AI::AIStrategy::Defensive);
 
   Game::Systems::AI::AIReasoner::update_context(snapshot, context);
-
   ASSERT_TRUE(context.any_base_under_threat);
-  EXPECT_FALSE(behavior.should_execute(snapshot, context));
+  context.state = Game::Systems::AI::AIState::Defending;
+
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().target_id, 200U);
 }
 
-TEST_F(AISystemTest, ChaseIsDisabledWhenAStrategyDoesNotWantIt) {
-  Game::Systems::AI::ChaseBehavior behavior;
+TEST_F(AISystemTest, LocalEngagementLeavesUnitsClaimedByHigherPriorityWork) {
+  Game::Systems::AI::LocalEngagementBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_unit(1, 70.0F, 40.0F),
+      make_unit(2, 71.0F, 41.0F),
+  };
+  snapshot.visible_enemies = {make_enemy(200, 78.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.total_units = 2;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+  Game::Systems::AI::claim_units(
+      {1U}, Game::Systems::AI::BehaviorPriority::Critical, "defending", context, 7.0F);
+  Game::Systems::AI::claim_units(
+      {2U}, Game::Systems::AI::BehaviorPriority::Low, "gathering", context, 7.0F);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  ASSERT_EQ(commands.front().units.size(), 1U);
+  EXPECT_EQ(commands.front().units.front(), 2U);
+}
+
+TEST_F(AISystemTest, LocalEngagementDoesNotChargeAnOverwhelmingForce) {
+  Game::Systems::AI::LocalEngagementBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_unit(1, 70.0F, 40.0F), make_unit(2, 71.0F, 41.0F)};
+  for (Engine::Core::EntityID id = 200; id < 212; ++id) {
+    snapshot.visible_enemies.push_back(
+        make_enemy(id, 84.0F + static_cast<float>(id - 200), 40.0F));
+  }
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.total_units = 2;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+  EXPECT_TRUE(commands.empty());
+}
+
+TEST_F(AISystemTest, LocalEngagementReleasesRespondersWhenThreatsLeave) {
+  Game::Systems::AI::LocalEngagementBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_unit(1, 70.0F, 40.0F)};
+  snapshot.visible_enemies = {make_enemy(200, 76.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.total_units = 1;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+  ASSERT_EQ(commands.size(), 1U);
+  ASSERT_TRUE(context.assigned_units.contains(1U));
+
+  snapshot.visible_enemies = {make_enemy(200, 160.0F, 40.0F)};
+  snapshot.game_time = 12.0F;
+  commands.clear();
+  behavior.execute(snapshot, context, 2.0F, commands);
+  EXPECT_TRUE(commands.empty());
+  EXPECT_FALSE(context.assigned_units.contains(1U));
+}
+
+TEST_F(AISystemTest, LocalEngagementIsDisabledWhenAStrategyDoesNotWantIt) {
+  Game::Systems::AI::LocalEngagementBehavior behavior;
 
   Game::Systems::AI::AISnapshot snapshot;
   snapshot.player_id = 3;
@@ -2570,11 +2655,134 @@ TEST_F(AISystemTest, ChaseIsDisabledWhenAStrategyDoesNotWantIt) {
   Game::Systems::AI::AIContext context;
   context.player_id = 3;
   context.total_units = 1;
-  context.strategy_config.chase_radius = 0.0F;
-  context.strategy_config.max_chase_units = 0;
+  context.strategy_config.local_response_radius = 0.0F;
+  context.strategy_config.max_local_responders = 0;
 
   EXPECT_FALSE(behavior.should_execute(snapshot, context));
-  EXPECT_EQ(Game::Systems::AI::ChaseBehavior::chase_detachment_size(context), 0);
+}
+
+TEST_F(AISystemTest, GarrisonPostureNeverInitiatesAttacksOrExpansion) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 30.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F)};
+  for (Engine::Core::EntityID id = 1; id <= 12; ++id) {
+    snapshot.friendly_units.push_back(make_unit(
+        id, 36.0F + static_cast<float>(id % 4), 40.0F + static_cast<float>(id / 4)));
+  }
+  snapshot.visible_enemies = {make_enemy(200, 140.0F, 40.0F)};
+
+  Game::Systems::AI::AIPlayerProfile profile;
+  profile.strategy = Game::Systems::AI::AIStrategy::Aggressive;
+  profile.posture = Game::Systems::AI::AIPosture::Garrison;
+  profile.personality.aggression = 0.9F;
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config =
+      Game::Systems::AI::AIStrategyFactory::create_config(profile);
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.state_timer = 30.0F;
+  context.decision_timer = 30.0F;
+  context.last_meaningful_action_time = 30.0F;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  Game::Systems::AI::AIReasoner::update_state_machine(snapshot, context, 0.5F);
+  Game::Systems::AI::AIReasoner::validate_state(context);
+
+  EXPECT_NE(context.state, Game::Systems::AI::AIState::Attacking);
+  EXPECT_NE(context.state, Game::Systems::AI::AIState::Expanding);
+  EXPECT_EQ(context.effective_harass_units, 0);
+  EXPECT_FALSE(context.has_expansion_site);
+
+  context.state = Game::Systems::AI::AIState::Attacking;
+  Game::Systems::AI::AIReasoner::validate_state(context);
+  EXPECT_NE(context.state, Game::Systems::AI::AIState::Attacking);
+}
+
+TEST_F(AISystemTest, FieldPostureWithTheSameStrategyStillAttacks) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 30.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F)};
+  for (Engine::Core::EntityID id = 1; id <= 12; ++id) {
+    snapshot.friendly_units.push_back(make_unit(
+        id, 36.0F + static_cast<float>(id % 4), 40.0F + static_cast<float>(id / 4)));
+  }
+  snapshot.visible_enemies = {make_enemy(200, 140.0F, 40.0F)};
+
+  Game::Systems::AI::AIPlayerProfile profile;
+  profile.strategy = Game::Systems::AI::AIStrategy::Aggressive;
+  profile.posture = Game::Systems::AI::AIPosture::Field;
+  profile.personality.aggression = 0.9F;
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config =
+      Game::Systems::AI::AIStrategyFactory::create_config(profile);
+  context.state = Game::Systems::AI::AIState::Gathering;
+  context.state_timer = 30.0F;
+  context.decision_timer = 30.0F;
+  context.last_meaningful_action_time = 30.0F;
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  Game::Systems::AI::AIReasoner::update_state_machine(snapshot, context, 0.5F);
+
+  EXPECT_EQ(context.state, Game::Systems::AI::AIState::Attacking);
+}
+
+TEST_F(AISystemTest, PostureParsingFallsBackToTheCallerDefault) {
+  using Game::Systems::AI::AIPosture;
+  namespace AIStrategyFactory = Game::Systems::AI::AIStrategyFactory;
+  EXPECT_EQ(AIStrategyFactory::parse_posture("garrison"), AIPosture::Garrison);
+  EXPECT_EQ(AIStrategyFactory::parse_posture("Field", AIPosture::Garrison),
+            AIPosture::Field);
+  EXPECT_EQ(AIStrategyFactory::parse_posture("", AIPosture::Garrison),
+            AIPosture::Garrison);
+  EXPECT_EQ(AIStrategyFactory::parse_posture("nonsense"), AIPosture::Field);
+}
+
+TEST_F(AISystemTest, GarrisonGathersEachUnitAtItsNearestBase) {
+  Game::Systems::AI::GatherBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(51, 140.0F, 40.0F, Game::Units::SpawnType::Home),
+      make_building(52, 146.0F, 44.0F, Game::Units::SpawnType::Home),
+      make_unit(1, 60.0F, 40.0F),
+      make_unit(2, 120.0F, 40.0F),
+  };
+
+  Game::Systems::AI::AIPlayerProfile profile;
+  profile.strategy = Game::Systems::AI::AIStrategy::Defensive;
+  profile.posture = Game::Systems::AI::AIPosture::Garrison;
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config =
+      Game::Systems::AI::AIStrategyFactory::create_config(profile);
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_EQ(context.bases.size(), 2U);
+  context.state = Game::Systems::AI::AIState::Gathering;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  bool unit_two_goes_east = false;
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::MoveUnits) {
+      continue;
+    }
+    for (std::size_t i = 0; i < command.units.size(); ++i) {
+      if (command.units[i] == 2U) {
+        unit_two_goes_east = command.move_target_x[i] > 100.0F;
+      }
+    }
+  }
+  EXPECT_TRUE(unit_two_goes_east);
 }
 
 TEST_F(AISystemTest, ExpansionistSkirmishAIRecallsEveryUnitWhenItsBaseIsAttacked) {
@@ -2616,6 +2824,106 @@ TEST_F(AISystemTest, ExpansionistSkirmishAIRecallsEveryUnitWhenItsBaseIsAttacked
   EXPECT_EQ(commanded_units, 8U);
 }
 
+TEST_F(AISystemTest, DefendBehaviorAnswersASingleIntruderWithAProportionalForce) {
+  Game::Systems::AI::DefendBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F)};
+  for (Engine::Core::EntityID id = 1; id <= 8; ++id) {
+    snapshot.friendly_units.push_back(
+        make_unit(id, 30.0F + static_cast<float>(id), 40.0F));
+  }
+  snapshot.visible_enemies = {make_enemy(200, 60.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+  ASSERT_FALSE(context.strategy_config.full_recall_on_base_threat);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_TRUE(context.barracks_under_threat);
+  context.state = Game::Systems::AI::AIState::Defending;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::AttackTarget);
+  EXPECT_EQ(commands.front().units.size(), 2U);
+}
+
+TEST_F(AISystemTest, DefendBehaviorDoesNotFeedMoreUnitsIntoAFightAlreadyCovered) {
+  Game::Systems::AI::DefendBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F),
+                             make_unit(1, 58.0F, 40.0F),
+                             make_unit(2, 59.0F, 41.0F),
+                             make_unit(3, 30.0F, 40.0F),
+                             make_unit(4, 31.0F, 40.0F)};
+  snapshot.visible_enemies = {make_enemy(200, 60.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Defensive);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.state = Game::Systems::AI::AIState::Defending;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 2.0F, commands);
+
+  for (const auto& command : commands) {
+    EXPECT_NE(command.type, Game::Systems::AI::AICommandType::AttackTarget);
+  }
+}
+
+TEST_F(AISystemTest, EnemyBuildingsNearABaseAreNotCountedAsThreats) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F),
+                             make_unit(1, 38.0F, 40.0F)};
+  snapshot.visible_enemies = {make_enemy_building(200, 55.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_EQ(context.nearby_threat_count, 0);
+  EXPECT_FALSE(context.barracks_under_threat);
+  EXPECT_FALSE(context.any_base_under_threat);
+}
+
+TEST_F(AISystemTest, HomesWithoutBarracksStillAnchorTheBase) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_building(50, 40.0F, 40.0F, Game::Units::SpawnType::Home),
+      make_building(51, 46.0F, 40.0F, Game::Units::SpawnType::Home),
+      make_unit(1, 80.0F, 80.0F),
+      make_unit(2, 82.0F, 82.0F),
+      make_unit(3, 84.0F, 84.0F),
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_TRUE(context.has_base_anchor);
+  EXPECT_TRUE(context.anchor_is_structural);
+  EXPECT_EQ(context.primary_barracks, 0U);
+  EXPECT_NEAR(context.base_pos_x, 43.0F, 0.01F);
+  EXPECT_NEAR(context.base_pos_z, 40.0F, 0.01F);
+}
+
 TEST_F(AISystemTest, AssaultUnitsStayOnTheAttackWhileTheBaseIsRecalled) {
   Game::Systems::AI::DefendBehavior behavior;
 
@@ -2651,11 +2959,11 @@ TEST_F(AISystemTest, AssaultUnitsStayOnTheAttackWhileTheBaseIsRecalled) {
   }
 }
 
-TEST_F(AISystemTest, StrategyPresetsGiveCampaignDefendersChaseAndSkirmishFullRecall) {
+TEST_F(AISystemTest, StrategyPresetsGiveDefendersLocalResponseAndSkirmishFullRecall) {
   const auto defensive = Game::Systems::AI::AIStrategyFactory::create_config(
       Game::Systems::AI::AIStrategy::Defensive);
-  EXPECT_GT(defensive.chase_radius, 0.0F);
-  EXPECT_GT(defensive.max_chase_units, 0);
+  EXPECT_GT(defensive.local_response_radius, 0.0F);
+  EXPECT_GT(defensive.max_local_responders, 0);
   EXPECT_FALSE(defensive.full_recall_on_base_threat);
 
   const auto expansionist = Game::Systems::AI::AIStrategyFactory::create_config(

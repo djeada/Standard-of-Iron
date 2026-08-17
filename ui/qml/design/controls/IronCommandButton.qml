@@ -33,10 +33,17 @@ AbstractButton {
     property bool blocked: false
     readonly property bool interactive: enabled && !blocked
 
-    property bool compact: width > 0 && width < minimumLabelledWidth
+    property string shortLabel: ""
 
-    readonly property real minimumLabelledWidth: Design.Metrics.iconMedium + labelMetrics.width + hotkeyWidth + Design.Metrics.space24
-    readonly property real hotkeyWidth: control.hotkey !== "" ? hotkeyMetrics.width + Design.Metrics.space8 : 0
+    property bool compact: width > 0 && width < minimumShortWidth
+
+    readonly property bool showsShortLabel: control.shortLabel !== "" && width < minimumLabelledWidth
+    readonly property string displayLabel: control.showsShortLabel ? control.shortLabel : control.label
+
+    readonly property real labelChromeWidth: Design.Metrics.iconMedium + Design.Metrics.space8 + Design.Metrics.space8 + Design.Metrics.space4 + hotkeyWidth
+    readonly property real minimumLabelledWidth: labelChromeWidth + labelMetrics.width
+    readonly property real minimumShortWidth: control.shortLabel !== "" ? labelChromeWidth + shortLabelMetrics.width : minimumLabelledWidth
+    readonly property real hotkeyWidth: control.hotkey !== "" ? hotkeyMetrics.width + Design.Metrics.space8 + Design.Metrics.space4 : 0
 
     TextMetrics {
         id: labelMetrics
@@ -45,6 +52,15 @@ AbstractButton {
         font.pixelSize: Design.Typography.label
         font.weight: Design.Typography.medium
         text: control.label
+    }
+
+    TextMetrics {
+        id: shortLabelMetrics
+
+        font.family: Design.Typography.family
+        font.pixelSize: Design.Typography.label
+        font.weight: Design.Typography.medium
+        text: control.shortLabel
     }
 
     TextMetrics {
@@ -208,7 +224,7 @@ AbstractButton {
 
             Text {
                 width: parent.width
-                text: control.label
+                text: control.displayLabel
                 color: control.interactive ? Design.Theme.textPrimary : Design.Theme.textDisabled
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.label

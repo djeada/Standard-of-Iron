@@ -39,12 +39,6 @@ public:
                            const AIContext& context,
                            Engine::Core::EntityID current_target = 0) -> TargetScore;
 
-  static auto
-  calculate_force_strength(const std::vector<const EntitySnapshot*>& units) -> float;
-
-  static auto
-  calculate_force_strength(const std::vector<const ContactSnapshot*>& units) -> float;
-
   static auto is_target_isolated(const ContactSnapshot& target,
                                  const std::vector<const ContactSnapshot*>& all_enemies,
                                  float isolation_radius = 8.0F) -> bool;

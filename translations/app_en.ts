@@ -286,6 +286,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>No mission objectives available.
 This may be a skirmish, or objectives have not been configured.</translation>
     </message>
+    <message>
+        <source>Mission Steps — in order</source>
+        <translation>Mission Steps — in order</translation>
+    </message>
+    <message>
+        <source>Next step</source>
+        <translation>Next step</translation>
+    </message>
+    <message>
+        <source>%1 of %2</source>
+        <translation>%1 of %2</translation>
+    </message>
 </context>
 <context>
     <name>CameraGuide</name>
@@ -590,65 +602,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Veii</source>
         <translation>Veii</translation>
-    </message>
-</context>
-<context>
-    <name>CampaignMenu</name>
-    <message>
-        <source>Campaign Missions</source>
-        <translation>Campaign Missions</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← Back</translation>
-    </message>
-    <message>
-        <source>✓ Completed</source>
-        <translation>✓ Completed</translation>
-    </message>
-    <message>
-        <source>Locked</source>
-        <translation>Locked</translation>
-    </message>
-    <message>
-        <source>No campaign missions available</source>
-        <translation>No campaign missions available</translation>
-    </message>
-    <message>
-        <source>Rome</source>
-        <translation>Rome</translation>
-    </message>
-    <message>
-        <source>Carthage</source>
-        <translation>Carthage</translation>
-    </message>
-    <message>
-        <source>Neutral</source>
-        <translation>Neutral</translation>
-    </message>
-    <message>
-        <source>Loading map…</source>
-        <translation>Loading map…</translation>
-    </message>
-    <message>
-        <source>Control: </source>
-        <translation>Control: </translation>
-    </message>
-    <message>
-        <source>Legend</source>
-        <translation>Legend</translation>
-    </message>
-    <message>
-        <source>Select a Mission</source>
-        <translation>Select a Mission</translation>
-    </message>
-    <message>
-        <source>Mission briefing...</source>
-        <translation>Mission briefing...</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>Cancel</translation>
     </message>
 </context>
 <context>
@@ -2339,6 +2292,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>No firing line</source>
         <translation>No firing line</translation>
     </message>
+    <message>
+        <source>Collect</source>
+        <translation>Collect</translation>
+    </message>
+    <message>
+        <source>Deliver civilians</source>
+        <translation>Deliver civilians</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Repair</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -2888,6 +2853,74 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>The commander empowers the troops around him for a while, then must recharge.</source>
         <translation>The commander empowers the troops around him for a while, then must recharge.</translation>
     </message>
+    <message>
+        <source>Wood only</source>
+        <translation>Wood only</translation>
+    </message>
+    <message>
+        <source>Stone only</source>
+        <translation>Stone only</translation>
+    </message>
+    <message>
+        <source>Iron only</source>
+        <translation>Iron only</translation>
+    </message>
+    <message>
+        <source>Any resource</source>
+        <translation>Any resource</translation>
+    </message>
+    <message>
+        <source>Dismantle order</source>
+        <translation>Dismantle order</translation>
+    </message>
+    <message>
+        <source>Auto</source>
+        <translation>Auto</translation>
+    </message>
+    <message>
+        <source>Pick a resource</source>
+        <translation>Pick a resource</translation>
+    </message>
+    <message>
+        <source>Press again to cycle any resource, wood, stone, iron, then off.</source>
+        <translation>Press again to cycle any resource, wood, stone, iron, then off.</translation>
+    </message>
+    <message>
+        <source>Dismantle</source>
+        <translation>Dismantle</translation>
+    </message>
+    <message>
+        <source>Scrap</source>
+        <translation>Scrap</translation>
+    </message>
+    <message>
+        <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
+        <translation>Send builders to take one of your own buildings apart and get part of its cost back.</translation>
+    </message>
+    <message>
+        <source>Press Dismantle, then left-click your building. Right-click cancels.</source>
+        <translation>Press Dismantle, then left-click your building. Right-click cancels.</translation>
+    </message>
+    <message>
+        <source>Pays back</source>
+        <translation>Pays back</translation>
+    </message>
+    <message>
+        <source>Part of what it cost, once the work finishes. Calling the crew off pays nothing.</source>
+        <translation>Part of what it cost, once the work finishes. Calling the crew off pays nothing.</translation>
+    </message>
+    <message>
+        <source>Crew</source>
+        <translation>Crew</translation>
+    </message>
+    <message>
+        <source>Builders only; up to three of them speed it up.</source>
+        <translation>Builders only; up to three of them speed it up.</translation>
+    </message>
+    <message>
+        <source>Dismantle is only available to builders</source>
+        <translation>Dismantle is only available to builders</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -3272,6 +3305,14 @@ Unseen: never scouted.</translation>
         <source>Return the camera to your camp (%1)</source>
         <translation>Return the camera to your camp (%1)</translation>
     </message>
+    <message>
+        <source>All objectives complete</source>
+        <translation>All objectives complete</translation>
+    </message>
+    <message>
+        <source>Click to look at the objective.</source>
+        <translation>Click to look at the objective.</translation>
+    </message>
 </context>
 <context>
     <name>HelpPanel</name>
@@ -3366,10 +3407,6 @@ Unseen: never scouted.</translation>
     <message>
         <source>Repair and dismantle</source>
         <translation>Repair and dismantle</translation>
-    </message>
-    <message>
-        <source>A damaged building can be repaired by a builder with the Repair order. Buildings you no longer need can be dismantled from their panel.</source>
-        <translation>A damaged building can be repaired by a builder with the Repair order. Buildings you no longer need can be dismantled from their panel.</translation>
     </message>
     <message>
         <source>Recruiting</source>
@@ -3498,6 +3535,10 @@ Unseen: never scouted.</translation>
     <message>
         <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
         <translation>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</translation>
+    </message>
+    <message>
+        <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
+        <translation>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</translation>
     </message>
 </context>
 <context>
@@ -5321,6 +5362,290 @@ to see preview</translation>
         <source>Your commander falls - and every line collapses behind him.</source>
         <translation>Your commander falls - and every line collapses behind him.</translation>
     </message>
+    <message>
+        <source>A camp is taken by holding its yard, not by levelling it.</source>
+        <translation>A camp is taken by holding its yard, not by levelling it.</translation>
+    </message>
+    <message>
+        <source>A column without its commander stops being a column.</source>
+        <translation>A column without its commander stops being a column.</translation>
+    </message>
+    <message>
+        <source>Break the chiefs contesting the descent.</source>
+        <translation>Break the chiefs contesting the descent.</translation>
+    </message>
+    <message>
+        <source>Break the consular line at its centre.</source>
+        <translation>Break the consular line at its centre.</translation>
+    </message>
+    <message>
+        <source>Break the siege camp once the assaults are spent.</source>
+        <translation>Break the siege camp once the assaults are spent.</translation>
+    </message>
+    <message>
+        <source>Break the three assault phases</source>
+        <translation>Break the three assault phases</translation>
+    </message>
+    <message>
+        <source>Break the three crossings</source>
+        <translation>Break the three crossings</translation>
+    </message>
+    <message>
+        <source>Bring the column to the first pass</source>
+        <translation>Bring the column to the first pass</translation>
+    </message>
+    <message>
+        <source>Bring the column to the pontoon bridge on the near bank.</source>
+        <translation>Bring the column to the pontoon bridge on the near bank.</translation>
+    </message>
+    <message>
+        <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
+        <translation>Cavalry reaches it first; hold the yard until the standard changes.</translation>
+    </message>
+    <message>
+        <source>Close the encirclement on the Aufidus camp to the north.</source>
+        <translation>Close the encirclement on the Aufidus camp to the north.</translation>
+    </message>
+    <message>
+        <source>Close the trap on the column town</source>
+        <translation>Close the trap on the column town</translation>
+    </message>
+    <message>
+        <source>Cut the stores for the road</source>
+        <translation>Cut the stores for the road</translation>
+    </message>
+    <message>
+        <source>End the war with the men who lead it.</source>
+        <translation>End the war with the men who lead it.</translation>
+    </message>
+    <message>
+        <source>Enemy camps fall neutral once their commander is dead.</source>
+        <translation>Enemy camps fall neutral once their commander is dead.</translation>
+    </message>
+    <message>
+        <source>Finish the consular officers on the field.</source>
+        <translation>Finish the consular officers on the field.</translation>
+    </message>
+    <message>
+        <source>Finish the officers inside the ring.</source>
+        <translation>Finish the officers inside the ring.</translation>
+    </message>
+    <message>
+        <source>Flaminius must not leave the shore.</source>
+        <translation>Flaminius must not leave the shore.</translation>
+    </message>
+    <message>
+        <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
+        <translation>Follow the valley floor east; the mountain peoples hold the switchbacks above.</translation>
+    </message>
+    <message>
+        <source>Hold the Punic quarter through every consular column.</source>
+        <translation>Hold the Punic quarter through every consular column.</translation>
+    </message>
+    <message>
+        <source>Hold the gate yard of Scipio&apos;s forward town.</source>
+        <translation>Hold the gate yard of Scipio&apos;s forward town.</translation>
+    </message>
+    <message>
+        <source>Hold the southern bank through every Roman assault phase.</source>
+        <translation>Hold the southern bank through every Roman assault phase.</translation>
+    </message>
+    <message>
+        <source>It is the closest camp to your hill; take it before the wings close.</source>
+        <translation>It is the closest camp to your hill; take it before the wings close.</translation>
+    </message>
+    <message>
+        <source>It is the closest of the four camps to your line.</source>
+        <translation>It is the closest of the four camps to your line.</translation>
+    </message>
+    <message>
+        <source>Kill Sempronius and his officers</source>
+        <translation>Kill Sempronius and his officers</translation>
+    </message>
+    <message>
+        <source>Kill the Roman commanders</source>
+        <translation>Kill the Roman commanders</translation>
+    </message>
+    <message>
+        <source>Kill the consular commanders</source>
+        <translation>Kill the consular commanders</translation>
+    </message>
+    <message>
+        <source>Kill the mountain commanders</source>
+        <translation>Kill the mountain commanders</translation>
+    </message>
+    <message>
+        <source>Move the army up to the lower pass camp before the snow closes it.</source>
+        <translation>Move the army up to the lower pass camp before the snow closes it.</translation>
+    </message>
+    <message>
+        <source>Nothing on the shore road survives once both ends are held.</source>
+        <translation>Nothing on the shore road survives once both ends are held.</translation>
+    </message>
+    <message>
+        <source>Reach the Rhone crossing</source>
+        <translation>Reach the Rhone crossing</translation>
+    </message>
+    <message>
+        <source>Ride down the commanders once the crossings break.</source>
+        <translation>Ride down the commanders once the crossings break.</translation>
+    </message>
+    <message>
+        <source>Scipio inherits any crossing you leave behind.</source>
+        <translation>Scipio inherits any crossing you leave behind.</translation>
+    </message>
+    <message>
+        <source>Seize Masinissa&apos;s camp to finish the four.</source>
+        <translation>Seize Masinissa&apos;s camp to finish the four.</translation>
+    </message>
+    <message>
+        <source>Seize Varro&apos;s town at the centre of the Roman line.</source>
+        <translation>Seize Varro&apos;s town at the centre of the Roman line.</translation>
+    </message>
+    <message>
+        <source>Seize the Roman hill fort</source>
+        <translation>Seize the Roman hill fort</translation>
+    </message>
+    <message>
+        <source>Seize the camp guarding Scipio&apos;s rear.</source>
+        <translation>Seize the camp guarding Scipio&apos;s rear.</translation>
+    </message>
+    <message>
+        <source>Seize the river town</source>
+        <translation>Seize the river town</translation>
+    </message>
+    <message>
+        <source>Seize the second Roman camp on the north-east road.</source>
+        <translation>Seize the second Roman camp on the north-east road.</translation>
+    </message>
+    <message>
+        <source>Seize the second camp at the eastern end of the lake.</source>
+        <translation>Seize the second camp at the eastern end of the lake.</translation>
+    </message>
+    <message>
+        <source>Sempronius spends his army on the ice; you only have to still be standing.</source>
+        <translation>Sempronius spends his army on the ice; you only have to still be standing.</translation>
+    </message>
+    <message>
+        <source>Set builders on the slopes; the pass is paid for in materials, not blood.</source>
+        <translation>Set builders on the slopes; the pass is paid for in materials, not blood.</translation>
+    </message>
+    <message>
+        <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
+        <translation>Stand in the gate yard of the northern advance camp until it falls to Carthage.</translation>
+    </message>
+    <message>
+        <source>Take Scipio&apos;s town</source>
+        <translation>Take Scipio&apos;s town</translation>
+    </message>
+    <message>
+        <source>Take the Numidian camp</source>
+        <translation>Take the Numidian camp</translation>
+    </message>
+    <message>
+        <source>Take the Roman marching town at the head of the lakeside road.</source>
+        <translation>Take the Roman marching town at the head of the lakeside road.</translation>
+    </message>
+    <message>
+        <source>Take the allied camp</source>
+        <translation>Take the allied camp</translation>
+    </message>
+    <message>
+        <source>Take the consular town</source>
+        <translation>Take the consular town</translation>
+    </message>
+    <message>
+        <source>Take the northern camp</source>
+        <translation>Take the northern camp</translation>
+    </message>
+    <message>
+        <source>Take the rearguard camp</source>
+        <translation>Take the rearguard camp</translation>
+    </message>
+    <message>
+        <source>Take the reserve camp</source>
+        <translation>Take the reserve camp</translation>
+    </message>
+    <message>
+        <source>Take the river camp</source>
+        <translation>Take the river camp</translation>
+    </message>
+    <message>
+        <source>Take the second camp on the southern supply road.</source>
+        <translation>Take the second camp on the southern supply road.</translation>
+    </message>
+    <message>
+        <source>Take the shore camp</source>
+        <translation>Take the shore camp</translation>
+    </message>
+    <message>
+        <source>Taking the rear first denies the cavalry a place to rally.</source>
+        <translation>Taking the rear first denies the cavalry a place to rally.</translation>
+    </message>
+    <message>
+        <source>The centre gives way once the wings are wrapped around it.</source>
+        <translation>The centre gives way once the wings are wrapped around it.</translation>
+    </message>
+    <message>
+        <source>The centre is the strongest camp; bring the elephants up first.</source>
+        <translation>The centre is the strongest camp; bring the elephants up first.</translation>
+    </message>
+    <message>
+        <source>The dead of the Iron Sepulcher still contest the field; keep a reserve.</source>
+        <translation>The dead of the Iron Sepulcher still contest the field; keep a reserve.</translation>
+    </message>
+    <message>
+        <source>The last camp lies to the north-east, beyond the consular line.</source>
+        <translation>The last camp lies to the north-east, beyond the consular line.</translation>
+    </message>
+    <message>
+        <source>The quarter holds when the last column is dead in the streets.</source>
+        <translation>The quarter holds when the last column is dead in the streets.</translation>
+    </message>
+    <message>
+        <source>The reserve feeds the consular line; cut it and the line thins.</source>
+        <translation>The reserve feeds the consular line; cut it and the line thins.</translation>
+    </message>
+    <message>
+        <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
+        <translation>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</translation>
+    </message>
+    <message>
+        <source>The road runs north-west along the shore; strike the head of the column first.</source>
+        <translation>The road runs north-west along the shore; strike the head of the column first.</translation>
+    </message>
+    <message>
+        <source>The siege works stand to the east of the quarter.</source>
+        <translation>The siege works stand to the east of the quarter.</translation>
+    </message>
+    <message>
+        <source>The winter camp lies north across the river.</source>
+        <translation>The winter camp lies north across the river.</translation>
+    </message>
+    <message>
+        <source>Their camps fall neutral once their commander is dead.</source>
+        <translation>Their camps fall neutral once their commander is dead.</translation>
+    </message>
+    <message>
+        <source>Their troops leave the field with them.</source>
+        <translation>Their troops leave the field with them.</translation>
+    </message>
+    <message>
+        <source>Timber for the sledges, stone for the roadbed, iron for shoes and axles.</source>
+        <translation>Timber for the sledges, stone for the roadbed, iron for shoes and axles.</translation>
+    </message>
+    <message>
+        <source>Turn the nearest Roman allied camp south of the field.</source>
+        <translation>Turn the nearest Roman allied camp south of the field.</translation>
+    </message>
+    <message>
+        <source>Turn the nearest Roman camp before the cavalry returns.</source>
+        <translation>Turn the nearest Roman camp before the cavalry returns.</translation>
+    </message>
+    <message>
+        <source>With the river camp taken there is nowhere left for the legions to reform.</source>
+        <translation>With the river camp taken there is nowhere left for the legions to reform.</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -5509,6 +5834,18 @@ to see preview</translation>
     <message>
         <source>That building does not need repairs.</source>
         <translation>That building does not need repairs.</translation>
+    </message>
+    <message>
+        <source>That order is not available here.</source>
+        <translation>That order is not available here.</translation>
+    </message>
+    <message>
+        <source>Your builders only take down your own buildings.</source>
+        <translation>Your builders only take down your own buildings.</translation>
+    </message>
+    <message>
+        <source>That building cannot be taken down.</source>
+        <translation>That building cannot be taken down.</translation>
     </message>
 </context>
 <context>

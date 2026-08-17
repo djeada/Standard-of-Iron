@@ -14,7 +14,8 @@ enum class MoveOrderKind : std::uint8_t {
   AttackChase,
   GuardReturn,
   RecoveryMove,
-  ScriptedMove
+  ScriptedMove,
+  PlannerMove
 };
 
 class OrderService {

@@ -76,6 +76,11 @@ inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
   return !entity.is_building && entity.spawn_type != Game::Units::SpawnType::Builder;
 }
 
+inline auto is_threatening_contact(const ContactSnapshot& contact) -> bool {
+  return !contact.is_building ||
+         contact.spawn_type == Game::Units::SpawnType::DefenseTower;
+}
+
 inline auto has_troop_contact(const std::vector<ContactSnapshot>& contacts) -> bool {
   return std::any_of(
       contacts.begin(), contacts.end(), [](const ContactSnapshot& contact) {
@@ -103,13 +108,6 @@ inline auto is_harass_unit(Engine::Core::EntityID unit_id,
   return std::find(context.harass_unit_ids.begin(),
                    context.harass_unit_ids.end(),
                    unit_id) != context.harass_unit_ids.end();
-}
-
-inline auto is_assault_unit(Engine::Core::EntityID unit_id,
-                            const AIContext& context) -> bool {
-  return std::find(context.assault_unit_ids.begin(),
-                   context.assault_unit_ids.end(),
-                   unit_id) != context.assault_unit_ids.end();
 }
 
 inline auto collect_attack_force_units(const AISnapshot& snapshot,

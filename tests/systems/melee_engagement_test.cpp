@@ -6,6 +6,7 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
@@ -49,6 +50,7 @@ protected:
   }
 
   void TearDown() override {
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
     Game::Systems::OwnerRegistry::instance().clear();
@@ -325,4 +327,112 @@ TEST_F(MeleeEngagementTest, SiegingUnitDropsTheWallForAnEnemySoldierInReach) {
 
   EXPECT_TRUE(switched_to_soldier)
       << "besieger kept hitting the barracks with an enemy soldier on top of it";
+}
+
+TEST_F(MeleeEngagementTest, GuardMeleeClosesOnIntrudersButHoldsItsLeash) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* guard = spawn(world,
+                      Game::Units::SpawnType::Spearman,
+                      2,
+                      QVector3D(0.0F, 0.0F, 0.0F),
+                      Game::Systems::NationID::Carthage);
+  ASSERT_NE(guard, nullptr);
+  auto* guard_unit = guard->get_component<UnitComponent>();
+  ASSERT_NE(guard_unit, nullptr);
+  guard_unit->health = guard_unit->max_health = 100000;
+  auto* guard_mode = guard->add_component<Engine::Core::GuardModeComponent>();
+  guard_mode->active = true;
+  guard_mode->has_guard_target = true;
+  guard_mode->guard_position_x = 0.0F;
+  guard_mode->guard_position_z = 0.0F;
+  guard_mode->guard_radius = 8.0F;
+
+  auto* far_intruder = spawn(world,
+                             Game::Units::SpawnType::Knight,
+                             1,
+                             QVector3D(11.0F, 0.0F, 0.0F),
+                             Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(far_intruder, nullptr);
+  auto* far_unit = far_intruder->get_component<UnitComponent>();
+  ASSERT_NE(far_unit, nullptr);
+  far_unit->health = far_unit->max_health = 100000;
+  far_intruder->add_component<Engine::Core::HoldModeComponent>()->active = true;
+
+  for (int tick = 0; tick < 60; ++tick) {
+    world.update(0.05F);
+  }
+  EXPECT_LT(guard->get_component<TransformComponent>()->position.x, 1.0F)
+      << "guard left its post for an enemy outside the guard radius";
+
+  auto* near_intruder = spawn(world,
+                              Game::Units::SpawnType::Knight,
+                              1,
+                              QVector3D(5.0F, 0.0F, 0.0F),
+                              Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(near_intruder, nullptr);
+  auto* near_unit = near_intruder->get_component<UnitComponent>();
+  ASSERT_NE(near_unit, nullptr);
+  near_unit->health = near_unit->max_health = 100000;
+  near_intruder->add_component<Engine::Core::HoldModeComponent>()->active = true;
+
+  bool struck = false;
+  for (int tick = 0; tick < 200 && !struck; ++tick) {
+    world.update(0.05F);
+    const auto* presentation = guard->get_component<CreaturePresentationComponent>();
+    struck = struck || (presentation != nullptr && presentation->is_attacking);
+  }
+  EXPECT_TRUE(struck) << "guard never closed on an intruder inside its radius";
+  EXPECT_GT(guard->get_component<TransformComponent>()->position.x, 1.0F);
+}
+
+TEST_F(MeleeEngagementTest, BesiegerShotOverTheWallKeepsBreachingInsteadOfChasing) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* besieger = spawn(world,
+                         Game::Units::SpawnType::Spearman,
+                         2,
+                         QVector3D(0.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::Carthage);
+  ASSERT_NE(besieger, nullptr);
+  auto* besieger_unit = besieger->get_component<UnitComponent>();
+  ASSERT_NE(besieger_unit, nullptr);
+  besieger_unit->health = besieger_unit->max_health = 100000;
+  (void)besieger->add_component<Engine::Core::AIControlledComponent>();
+
+  auto* wall = spawn(world,
+                     Game::Units::SpawnType::WallSegment,
+                     1,
+                     QVector3D(4.0F, 0.0F, 0.0F),
+                     Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(wall, nullptr);
+  auto* wall_unit = wall->get_component<UnitComponent>();
+  ASSERT_NE(wall_unit, nullptr);
+  wall_unit->health = wall_unit->max_health = 100000;
+
+  auto* archer = spawn(world,
+                       Game::Units::SpawnType::Archer,
+                       1,
+                       QVector3D(9.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(archer, nullptr);
+  archer->add_component<Engine::Core::HoldModeComponent>()->active = true;
+
+  order_attack(*besieger, *wall);
+
+  bool took_damage = false;
+  for (int tick = 0; tick < 400; ++tick) {
+    world.update(0.05F);
+    took_damage = took_damage || besieger_unit->health < besieger_unit->max_health;
+    const auto* attack_target =
+        besieger->get_component<Engine::Core::AttackTargetComponent>();
+    ASSERT_TRUE(attack_target == nullptr ||
+                attack_target->target_id != archer->get_id())
+        << "besieger dropped the wall to chase an archer it cannot reach at tick "
+        << tick;
+  }
+  EXPECT_TRUE(took_damage) << "the archer never shot the besieger, test is vacuous";
+  EXPECT_LT(besieger->get_component<TransformComponent>()->position.x, 4.0F);
 }
