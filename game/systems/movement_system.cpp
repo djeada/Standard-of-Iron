@@ -128,11 +128,6 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
          Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
 }
 
-auto melee_turn_speed_degrees(const Engine::Core::UnitComponent& unit) -> float {
-  return Game::Units::is_cavalry(unit.spawn_type) ? 90.0F
-                                                  : desired_yaw_turn_speed_degrees;
-}
-
 void apply_desired_yaw(Engine::Core::TransformComponent* transform,
                        float delta_time,
                        float turn_speed_degrees) {

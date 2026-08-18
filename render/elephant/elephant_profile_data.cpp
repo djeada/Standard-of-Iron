@@ -59,39 +59,6 @@ inline auto darken(const QVector3D& c, float k) -> QVector3D {
   return c * k;
 }
 
-inline auto lerp3(const QVector3D& a, const QVector3D& b, float t) -> QVector3D {
-  return {a.x() + (b.x() - a.x()) * t,
-          a.y() + (b.y() - a.y()) * t,
-          a.z() + (b.z() - a.z()) * t};
-}
-
-inline auto bezier(const QVector3D& p0,
-                   const QVector3D& p1,
-                   const QVector3D& p2,
-                   float t) -> QVector3D {
-  float const u = 1.0F - t;
-  return p0 * (u * u) + p1 * (2.0F * u * t) + p2 * (t * t);
-}
-
-constexpr float k_skin_highlight_base = 0.50F;
-constexpr float k_skin_vertical_factor = 0.30F;
-constexpr float k_skin_longitudinal_factor = 0.15F;
-constexpr float k_skin_seed_factor = 0.10F;
-constexpr float k_skin_bright_factor = 1.06F;
-constexpr float k_skin_shadow_factor = 0.88F;
-
-inline auto skin_gradient(const QVector3D& skin,
-                          float vertical_factor,
-                          float longitudinal_factor,
-                          float seed) -> QVector3D {
-  float const highlight = saturate(
-      k_skin_highlight_base + vertical_factor * k_skin_vertical_factor -
-      longitudinal_factor * k_skin_longitudinal_factor + seed * k_skin_seed_factor);
-  QVector3D const bright = lighten(skin, k_skin_bright_factor);
-  QVector3D const shadow = darken(skin, k_skin_shadow_factor);
-  return shadow * (1.0F - highlight) + bright * highlight;
-}
-
 } // namespace
 
 auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {

@@ -10,6 +10,8 @@
 #include <QLoggingCategory>
 #include <QVariant>
 
+#include <utility>
+
 #include "../formation/formation_roles.h"
 #include "troop_catalog.h"
 #include "troop_config.h"
@@ -80,7 +82,7 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
 [[nodiscard]] auto read_string_array(const QJsonObject& obj,
                                      const char* key) -> std::vector<std::string> {
   std::vector<std::string> values;
-  for (const auto& entry : ensure_array(obj.value(key))) {
+  for (const auto entry : ensure_array(obj.value(key))) {
     if (entry.isString()) {
       values.push_back(entry.toString().toStdString());
     }
@@ -183,7 +185,7 @@ auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
   auto& catalog = TroopCatalog::instance();
   catalog.reset_to_defaults();
 
-  for (const QJsonValue& value : troops) {
+  for (const QJsonValue value : troops) {
     const QJsonObject troop_obj = ensure_object(value);
     const QString troop_id = troop_obj.value("id").toString();
     if (troop_id.isEmpty()) {
@@ -282,7 +284,7 @@ auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
     catalog.register_class(std::move(troop_class));
   }
 
-  for (const QJsonValue& value : ensure_array(root.value(k_ability_list_key))) {
+  for (const QJsonValue value : ensure_array(root.value(k_ability_list_key))) {
     const QJsonObject ability_obj = ensure_object(value);
     AbilityDefinition ability;
     ability.id = read_string(ability_obj, "id", {});

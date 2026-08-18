@@ -8,6 +8,7 @@
 #include <QTextStream>
 
 #include <cstdio>
+#include <utility>
 #include <vector>
 
 #include "balance_fixture.h"

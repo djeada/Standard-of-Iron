@@ -4,6 +4,7 @@
 #include <cmath>
 #include <numbers>
 #include <numeric>
+#include <utility>
 
 namespace Game::Audio {
 

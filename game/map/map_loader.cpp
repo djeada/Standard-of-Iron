@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "json_keys.h"
@@ -306,7 +307,7 @@ void read_victory_config(const QJsonObject& obj, VictoryConfig& out) {
   if (obj.contains("key_structures") && obj.value("key_structures").isArray()) {
     out.key_structures.clear();
     auto arr = obj.value("key_structures").toArray();
-    for (const auto& val : arr) {
+    for (const auto val : arr) {
       out.key_structures.push_back(val.toString());
     }
   }
@@ -318,7 +319,7 @@ void read_victory_config(const QJsonObject& obj, VictoryConfig& out) {
   if (obj.contains("defeat_conditions") && obj.value("defeat_conditions").isArray()) {
     out.defeat_conditions.clear();
     auto arr = obj.value("defeat_conditions").toArray();
-    for (const auto& val : arr) {
+    for (const auto val : arr) {
       out.defeat_conditions.push_back(val.toString());
     }
   }
@@ -330,7 +331,7 @@ void read_victory_config(const QJsonObject& obj, VictoryConfig& out) {
   if (obj.contains("undead_objectives") && obj.value("undead_objectives").isArray()) {
     out.undead_objectives.clear();
     const auto arr = obj.value("undead_objectives").toArray();
-    for (const auto& val : arr) {
+    for (const auto val : arr) {
       if (!val.isObject()) {
         continue;
       }
@@ -425,7 +426,7 @@ void read_wildlife_species(const QJsonObject& obj,
 
   if (obj.value(WILDLIFE_WAVES).isArray()) {
     out.waves.clear();
-    for (const auto& value : obj.value(WILDLIFE_WAVES).toArray()) {
+    for (const auto value : obj.value(WILDLIFE_WAVES).toArray()) {
       if (!value.isObject()) {
         continue;
       }
@@ -451,7 +452,7 @@ void read_wildlife_species(const QJsonObject& obj,
     return;
   }
   out.spawn_areas.clear();
-  for (const auto& value : obj.value(WILDLIFE_SPAWN_AREAS).toArray()) {
+  for (const auto value : obj.value(WILDLIFE_SPAWN_AREAS).toArray()) {
     if (!value.isObject()) {
       continue;
     }
@@ -507,7 +508,7 @@ void read_wildlife_config(const QJsonObject& obj,
 void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
   out.clear();
   out.reserve(arr.size());
-  for (const auto& spawn_val : arr) {
+  for (const auto spawn_val : arr) {
     auto spawn_obj = spawn_val.toObject();
     UnitSpawn spawn;
     const QString type_str = spawn_obj.value(TYPE).toString();
@@ -545,7 +546,7 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
     const QJsonArray patrol_waypoints =
         spawn_obj.value(QStringLiteral("patrol_waypoints")).toArray();
     spawn.patrol_waypoints.reserve(patrol_waypoints.size());
-    for (const auto& waypoint_val : patrol_waypoints) {
+    for (const auto waypoint_val : patrol_waypoints) {
       const QJsonObject waypoint_obj = waypoint_val.toObject();
       spawn.patrol_waypoints.emplace_back(float(waypoint_obj.value(X).toDouble(0.0)),
                                           0.0F,
@@ -559,7 +560,7 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
 void append_fire_camps_as_world_props(const QJsonArray& arr,
                                       std::vector<WorldProp>& out) {
   out.reserve(out.size() + arr.size());
-  for (const auto& camp_val : arr) {
+  for (const auto camp_val : arr) {
     auto camp_obj = camp_val.toObject();
     WorldProp fire_camp;
     fire_camp.type = WorldProp::Type::FireCamp;
@@ -576,7 +577,7 @@ void append_fire_camps_as_world_props(const QJsonArray& arr,
 
 void append_world_props(const QJsonArray& arr, std::vector<WorldProp>& out) {
   out.reserve(out.size() + arr.size());
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     auto obj = val.toObject();
     const QString type_str = obj.value(JsonKeys::TYPE).toString();
     WorldProp prop;
@@ -616,7 +617,7 @@ void read_forests(const QJsonArray& arr, std::vector<Forest>& out) {
   out.clear();
   out.reserve(arr.size());
   int next_forest_index = 1;
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     auto obj = val.toObject();
     Forest forest;
     forest.id = obj.value(ID).toString().trimmed();
@@ -666,7 +667,7 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
   out.clear();
   out.reserve(arr.size());
   int next_zone_index = 1;
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     auto obj = val.toObject();
     UndeadZone zone;
     zone.id = obj.value(ID).toString().trimmed();
@@ -692,7 +693,7 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
 
     if (obj.contains(AWAKEN_ON) && obj.value(AWAKEN_ON).isArray()) {
       const auto awaken_on = obj.value(AWAKEN_ON).toArray();
-      for (const auto& trigger_value : awaken_on) {
+      for (const auto trigger_value : awaken_on) {
         QString const trigger = trigger_value.toString().trimmed().toLower();
         if (!trigger.isEmpty()) {
           zone.awaken_on.push_back(trigger);
@@ -710,7 +711,7 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
 
     if (obj.contains(WAVES) && obj.value(WAVES).isArray()) {
       const auto waves = obj.value(WAVES).toArray();
-      for (const auto& wave_value : waves) {
+      for (const auto wave_value : waves) {
         auto wave_obj = wave_value.toObject();
         UndeadWave wave;
         wave.trigger =
@@ -779,7 +780,7 @@ void read_terrain(const QJsonArray& arr,
   constexpr double default_terrain_radius = 5.0;
   constexpr double default_terrain_height = 2.0;
 
-  for (const auto& terrain_val : arr) {
+  for (const auto terrain_val : arr) {
     auto terrain_obj = terrain_val.toObject();
     TerrainFeature feature;
 
@@ -827,7 +828,7 @@ void read_terrain(const QJsonArray& arr,
 
     if (terrain_obj.contains("entrances") && terrain_obj.value("entrances").isArray()) {
       auto entrance_arr = terrain_obj.value("entrances").toArray();
-      for (const auto& entrance_val : entrance_arr) {
+      for (const auto entrance_val : entrance_arr) {
         auto entrance_obj = entrance_val.toObject();
         const float entrance_x = float(entrance_obj.value("x").toDouble(0.0));
         const float entrance_z = float(entrance_obj.value("z").toDouble(0.0));
@@ -936,28 +937,27 @@ void read_rivers(const QJsonArray& arr,
         (z - (grid.height * grid_center_offset - grid_center_offset)) * tile);
   };
 
-  for (const auto& river_val : arr) {
+  for (const auto river_val : arr) {
     const auto river_obj = river_val.toObject();
     const float width = float(river_obj.value("width").toDouble(default_river_width));
     const bool authored_height = river_obj.contains("height");
     const float height = float(river_obj.value("height").toDouble(0.0));
 
     std::vector<QVector3D> points;
-    auto append_point =
-        [&points, duplicate_point_epsilon_sq](const std::optional<QVector3D>& point) {
-          if (!point.has_value()) {
-            return;
-          }
-          if (!points.empty() &&
-              (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
-            return;
-          }
-          points.push_back(*point);
-        };
+    auto append_point = [&points](const std::optional<QVector3D>& point) {
+      if (!point.has_value()) {
+        return;
+      }
+      if (!points.empty() &&
+          (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
+        return;
+      }
+      points.push_back(*point);
+    };
 
     append_point(point_to_world(river_obj.value("start")));
     if (river_obj.value(ROAD_WAYPOINTS).isArray()) {
-      for (const auto& waypoint : river_obj.value(ROAD_WAYPOINTS).toArray()) {
+      for (const auto waypoint : river_obj.value(ROAD_WAYPOINTS).toArray()) {
         append_point(point_to_world(waypoint));
       }
     }
@@ -992,7 +992,7 @@ void read_lakes(const QJsonArray& arr,
   constexpr float min_tile_size = 0.0001F;
   constexpr float default_lake_size = 8.0F;
 
-  for (const auto& lake_value : arr) {
+  for (const auto lake_value : arr) {
     const auto lake_obj = lake_value.toObject();
     Lake lake;
     const float authored_x = float(lake_obj.value("x").toDouble(0.0));
@@ -1084,27 +1084,26 @@ void read_roads(const QJsonArray& arr,
         (z - (grid.height * grid_center_offset - grid_center_offset)) * tile);
   };
 
-  for (const auto& road_val : arr) {
+  for (const auto road_val : arr) {
     const auto road_obj = road_val.toObject();
     const float width = float(road_obj.value("width").toDouble(default_road_width));
     const QString style = road_obj.value("style").toString("default");
 
     std::vector<QVector3D> points;
-    auto append_point =
-        [&points, duplicate_point_epsilon_sq](const std::optional<QVector3D>& point) {
-          if (!point.has_value()) {
-            return;
-          }
-          if (!points.empty() &&
-              (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
-            return;
-          }
-          points.push_back(*point);
-        };
+    auto append_point = [&points](const std::optional<QVector3D>& point) {
+      if (!point.has_value()) {
+        return;
+      }
+      if (!points.empty() &&
+          (points.back() - *point).lengthSquared() < duplicate_point_epsilon_sq) {
+        return;
+      }
+      points.push_back(*point);
+    };
 
     append_point(point_to_world(road_obj.value("start")));
     if (road_obj.value(ROAD_WAYPOINTS).isArray()) {
-      for (const auto& waypoint : road_obj.value(ROAD_WAYPOINTS).toArray()) {
+      for (const auto waypoint : road_obj.value(ROAD_WAYPOINTS).toArray()) {
         append_point(point_to_world(waypoint));
       }
     }
@@ -1135,7 +1134,7 @@ void read_bridges(const QJsonArray& arr,
   constexpr double default_bridge_width = k_min_bridge_width;
   constexpr double default_bridge_height = 0.5;
 
-  for (const auto& bridge_val : arr) {
+  for (const auto bridge_val : arr) {
     auto bridge_obj = bridge_val.toObject();
     Bridge bridge;
 
@@ -1292,7 +1291,7 @@ void read_fog_zones(const QJsonArray& arr,
   constexpr float grid_center_offset = 0.5F;
   constexpr float min_tile_size = 0.0001F;
 
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     auto obj = val.toObject();
     FogZone zone;
 

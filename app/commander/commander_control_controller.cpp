@@ -185,8 +185,6 @@ auto is_walkable_at(float x, float z) -> bool {
 constexpr float k_fpv_walk_speed_scale = 1.25F;
 
 constexpr float k_fov_hip = 68.0F;
-constexpr float k_fov_aim = 48.0F;
-
 constexpr float k_strike_step_reach = 1.45F;
 constexpr float k_strike_acquisition_bonus = 0.55F;
 
@@ -1490,8 +1488,6 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   auto const* aim_state =
       commander->get_component<Engine::Core::RpgCommanderAimComponent>();
-  bool const bow_stance =
-      aim_state != nullptr && aim_state->stance == Engine::Core::FpvWeaponStance::Bow;
   bool const drawing_bow = aim_state != nullptr && aim_state->is_drawing();
 
   if (cmd_comp != nullptr && cmd_comp->flag_rally_in_progress &&
@@ -1698,7 +1694,6 @@ auto CommanderControlController::update(Engine::Core::World& world,
 
   if (m_dodge_state == DodgeState::Rolling) {
     constexpr float k_dodge_speed = 6.5F;
-    constexpr float k_dodge_roll_duration = 0.22F;
     const float roll_dt = std::min(dt, m_dodge_timer);
     m_dodge_timer -= dt;
 

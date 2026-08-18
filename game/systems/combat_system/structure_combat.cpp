@@ -212,8 +212,11 @@ auto structure_attack_profile(const Engine::Core::Entity* attacker)
   case SpawnType::Barracks:
   case SpawnType::Home:
   case SpawnType::WallSegment:
+  case SpawnType::WallGate:
   case SpawnType::Marketplace:
   case SpawnType::Temple:
+  case SpawnType::Sheep:
+  case SpawnType::Wolf:
     profile.damage_multiplier = 0.0F;
     profile.minimum_damage = 0;
     break;

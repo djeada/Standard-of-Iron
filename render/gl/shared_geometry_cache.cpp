@@ -1,5 +1,7 @@
 #include "render/gl/shared_geometry_cache.h"
 
+#include <utility>
+
 #include "render/gl/mesh.h"
 
 namespace Render::GL {

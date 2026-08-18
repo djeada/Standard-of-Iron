@@ -197,8 +197,6 @@ cylinder_between_fast(const Vec3& a, const Vec3& b, float radius) noexcept -> Ma
   const float len_sq = dx * dx + dy * dy + dz * dz;
 
   constexpr float k_epsilon_sq = 1e-12F;
-  constexpr float k_rad_to_deg = 57.2957795131F;
-
   Vec3 const center((a.x + b.x) * 0.5F, (a.y + b.y) * 0.5F, (a.z + b.z) * 0.5F);
 
   if (len_sq < k_epsilon_sq) {

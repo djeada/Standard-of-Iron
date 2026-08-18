@@ -236,7 +236,7 @@ auto ProductionService::get_selected_barracks_state(
   }
   out_state = {};
   out_state.has_barracks = true;
-  if (auto* unit = e->get_component<Engine::Core::UnitComponent>()) {
+  if (e->get_component<Engine::Core::UnitComponent>() != nullptr) {
     out_state.nation_id = resolve_nation_id(owner_id);
   } else {
     out_state.nation_id = NationRegistry::instance().default_nation_id();
@@ -269,7 +269,7 @@ auto ProductionService::get_selected_home_state(
 
   out_state = {};
   out_state.has_home = true;
-  if (auto* unit = e->get_component<Engine::Core::UnitComponent>()) {
+  if (e->get_component<Engine::Core::UnitComponent>() != nullptr) {
     out_state.nation_id = resolve_nation_id(owner_id);
   } else {
     out_state.nation_id = NationRegistry::instance().default_nation_id();

@@ -8049,8 +8049,6 @@ TEST(HumanoidPrepare, AmbientIdleContextSelectsCorrectIdleClipVariant) {
   using Render::GL::AmbientIdleType;
 
   auto const archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
-  auto& registry = Render::Creature::ArchetypeRegistry::instance();
-
   Render::GL::HumanoidAnimationContext idle_no_ambient{};
   idle_no_ambient.ambient_idle_type = AmbientIdleType::None;
   auto const no_ambient = humanoid_bpat_playback_for_anim(

@@ -32,17 +32,8 @@ constexpr std::chrono::milliseconds k_min_job_interval{50};
 constexpr std::uint8_t k_current_visible_marker = 0x80U;
 constexpr std::uint64_t k_rally_flag_visibility_tag = 0x8000000000000000ULL;
 
-auto in_bounds_static(int grid_x, int grid_z, int width, int height) -> bool {
-  return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
-}
-
 auto index_static(int grid_x, int grid_z, int width) -> int {
   return grid_z * width + grid_x;
-}
-
-auto world_to_grid_static(float world_coord, float half, float tile_size) -> int {
-  const float grid_coord = world_coord / tile_size + half;
-  return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
 
 auto rally_flag_visibility_id(std::uint64_t commander_id) -> std::uint64_t {

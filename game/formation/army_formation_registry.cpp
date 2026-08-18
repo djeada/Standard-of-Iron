@@ -311,7 +311,7 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
 void ArmyFormationRegistry::from_json(const QJsonObject& root) {
   clear();
   auto const groups = root["groups"].toArray();
-  for (const auto& value : groups) {
+  for (const auto value : groups) {
     auto const obj = value.toObject();
     ArmyFormation formation;
     formation.id = static_cast<FormationGroupID>(obj["id"].toVariant().toULongLong());
@@ -332,11 +332,11 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     formation.moves_pending = obj["moves_pending"].toBool(false);
     formation.options = options_from_json(obj["options"].toObject());
 
-    for (const auto& member : obj["members"].toArray()) {
+    for (const auto member : obj["members"].toArray()) {
       formation.members.push_back(
           static_cast<EntityID>(member.toVariant().toULongLong()));
     }
-    for (const auto& slot : obj["slot_list"].toArray()) {
+    for (const auto slot : obj["slot_list"].toArray()) {
       formation.slot_list.push_back(slot_from_json(slot.toObject()));
     }
 

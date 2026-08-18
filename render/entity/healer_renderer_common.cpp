@@ -137,8 +137,6 @@ private:
   std::string_view m_renderer_key;
   std::string_view m_style_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
-  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
-  mutable bool m_visual_spec_baked{false};
 
   void apply_palette_overrides(const HealerStyleConfig& style,
                                const QVector3D& team_tint,

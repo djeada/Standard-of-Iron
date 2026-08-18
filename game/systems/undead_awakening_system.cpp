@@ -130,7 +130,7 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
 }
 
 void UndeadAwakeningSystem::restore_state(const QJsonArray& state) {
-  for (const auto& value : state) {
+  for (const auto value : state) {
     auto const obj = value.toObject();
     RuntimeZone* zone = find_zone_mutable(obj.value(QStringLiteral("id")).toString());
     if (zone == nullptr) {
@@ -159,7 +159,7 @@ void UndeadAwakeningSystem::restore_state(const QJsonArray& state) {
     zone->active_spawn_ids.clear();
     const auto ids = obj.value(QStringLiteral("active_spawn_ids")).toArray();
     zone->active_spawn_ids.reserve(ids.size());
-    for (const auto& id_value : ids) {
+    for (const auto id_value : ids) {
       zone->active_spawn_ids.push_back(
           static_cast<Engine::Core::EntityID>(id_value.toInt()));
     }

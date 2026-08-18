@@ -110,25 +110,6 @@ auto near_vec3(const QVector3D& lhs,
   return (lhs - rhs).length() <= eps;
 }
 
-auto has_mesh_center_near_axis(const std::vector<RecordedMesh>& meshes,
-                               float seam_position,
-                               bool use_x_axis,
-                               float tolerance,
-                               float min_center_y) -> bool {
-  for (const RecordedMesh& mesh : meshes) {
-    const QVector3D center = mesh.model.column(3).toVector3D();
-    if (center.y() < min_center_y) {
-      continue;
-    }
-
-    const float axis_value = use_x_axis ? center.x() : center.z();
-    if (std::abs(axis_value - seam_position) <= tolerance) {
-      return true;
-    }
-  }
-  return false;
-}
-
 auto has_mesh_spanning_axis(const std::vector<RecordedMesh>& meshes,
                             float seam_position,
                             bool use_x_axis,
@@ -159,10 +140,6 @@ auto has_mesh_spanning_axis(const std::vector<RecordedMesh>& meshes,
     }
   }
   return false;
-}
-
-auto axis_scale_of(const QMatrix4x4& model, int column) -> float {
-  return model.column(column).toVector3D().length();
 }
 
 auto count_meshes_with_color(const std::vector<RecordedMesh>& meshes,

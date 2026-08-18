@@ -5,6 +5,7 @@
 #include <QSet>
 #include <QString>
 
+#include <algorithm>
 #include <chrono>
 #include <gtest/gtest.h>
 #include <string>
@@ -23,7 +24,7 @@ auto load_catalog_ids() -> QSet<QString> {
   const QJsonArray cues = document.object().value(QStringLiteral("cues")).toArray();
 
   QSet<QString> ids;
-  for (const QJsonValue& value : cues) {
+  for (const QJsonValue value : cues) {
     ids.insert(value.toObject().value(QStringLiteral("id")).toString());
   }
   return ids;
@@ -66,14 +67,14 @@ TEST(AudioCueCatalogTest, EveryCueResolvesToAManifestTrackThatExists) {
                               .toArray();
   ASSERT_FALSE(cues.isEmpty());
 
-  for (const QJsonValue& value : cues) {
+  for (const QJsonValue value : cues) {
     const QJsonObject cue = value.toObject();
     const QString cue_id = cue.value(QStringLiteral("id")).toString();
     const QJsonArray resources = cue.value(QStringLiteral("resources")).toArray();
     EXPECT_FALSE(resources.isEmpty())
         << "cue bound to nothing: " << cue_id.toStdString();
 
-    for (const QJsonValue& resource : resources) {
+    for (const QJsonValue resource : resources) {
       const QString resource_id = resource.toString();
       EXPECT_TRUE(AudioResourceLoader::has_manifest_entry(resource_id))
           << cue_id.toStdString() << " points at unknown resource "
@@ -220,7 +221,7 @@ TEST(AudioProvenanceTest, EveryEffectDeclaresWhereItCameFrom) {
   QStringList unknown;
   int effects = 0;
 
-  for (const QJsonValue& value : tracks) {
+  for (const QJsonValue value : tracks) {
     const QJsonObject track = value.toObject();
     if (track.value(QStringLiteral("category")).toString() != QStringLiteral("sfx")) {
       continue;

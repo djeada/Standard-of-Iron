@@ -67,7 +67,6 @@ auto closest_pair_distance(const std::vector<SoldierOffset>& offsets) -> float {
 auto rank_curvature(const std::vector<SoldierOffset>& offsets,
                     int cols,
                     int rank) -> float {
-  float sum = 0.0F;
   int count = 0;
   float min_z = std::numeric_limits<float>::max();
   float max_z = std::numeric_limits<float>::lowest();
@@ -75,7 +74,6 @@ auto rank_curvature(const std::vector<SoldierOffset>& offsets,
     if (static_cast<int>(i) / cols != rank) {
       continue;
     }
-    sum += offsets[i].offset_z;
     min_z = std::min(min_z, offsets[i].offset_z);
     max_z = std::max(max_z, offsets[i].offset_z);
     ++count;

@@ -17,27 +17,6 @@ namespace {
 namespace Creature = Render::Creature;
 using HP = Render::GL::HumanProportions;
 
-constexpr auto bi(HumanoidBone b) noexcept -> Creature::BoneIndex {
-  return static_cast<Creature::BoneIndex>(b);
-}
-
-auto frame_local(const Render::GL::AttachmentFrame& f,
-                 const QVector3D& local) noexcept -> QVector3D {
-  return f.origin + f.right * local.x() * f.radius + f.up * local.y() * f.radius +
-         f.forward * local.z() * f.radius;
-}
-
-auto frame_from_matrix(const QMatrix4x4& m,
-                       float radius) noexcept -> Render::GL::AttachmentFrame {
-  Render::GL::AttachmentFrame frame;
-  frame.origin = m.column(3).toVector3D();
-  frame.right = m.column(0).toVector3D();
-  frame.up = m.column(1).toVector3D();
-  frame.forward = m.column(2).toVector3D();
-  frame.radius = radius;
-  return frame;
-}
-
 } // namespace
 
 void compute_humanoid_body_metrics(const Render::GL::HumanoidPose& pose,

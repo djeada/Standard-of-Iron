@@ -29,12 +29,6 @@ constexpr float k_single_body_strike_share = 0.55F;
 
 constexpr float k_engagement_close_slack = 0.25F;
 
-auto is_mounted(Game::Units::SpawnType spawn_type) noexcept -> bool {
-  using Game::Units::SpawnType;
-  return spawn_type == SpawnType::MountedKnight ||
-         spawn_type == SpawnType::HorseArcher || spawn_type == SpawnType::HorseSpearman;
-}
-
 auto resolve_layout_id(const Engine::Core::UnitComponent& unit,
                        const Game::Formation::FormationDoctrineId& doctrine,
                        Game::Formation::UnitLayoutState state) noexcept

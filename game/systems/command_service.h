@@ -12,7 +12,7 @@
 namespace Engine::Core {
 class World;
 using EntityID = std::uint64_t;
-struct MovementComponent;
+class MovementComponent;
 } // namespace Engine::Core
 
 namespace Game::Systems {

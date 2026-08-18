@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <initializer_list>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -38,32 +39,15 @@ constexpr int MAX_CATAPULTS = 5;
 
 constexpr float MAP_EDGE_PADDING = 5.0F;
 
-constexpr float GRID_CENTER_OFFSET = 0.5F;
-
-void clamp_to_map_bounds(float& x, float& z) {
-  auto& terrain = Game::Map::TerrainService::instance();
-  if (!terrain.is_initialized()) {
+void clamp_to_map_bounds(const AISnapshot& snapshot, float& x, float& z) {
+  if (!snapshot.has_map_bounds) {
     return;
   }
 
-  const Game::Map::TerrainHeightMap* hm = terrain.get_height_map();
-  if (hm == nullptr) {
-    return;
-  }
-
-  const float tile = hm->get_tile_size();
-  const int w = hm->get_width();
-  const int h = hm->get_height();
-  if (w <= 0 || h <= 0) {
-    return;
-  }
-
-  const float half_w = w * GRID_CENTER_OFFSET - GRID_CENTER_OFFSET;
-  const float half_h = h * GRID_CENTER_OFFSET - GRID_CENTER_OFFSET;
-  const float min_x = -half_w * tile + MAP_EDGE_PADDING;
-  const float max_x = half_w * tile - MAP_EDGE_PADDING;
-  const float min_z = -half_h * tile + MAP_EDGE_PADDING;
-  const float max_z = half_h * tile - MAP_EDGE_PADDING;
+  const float min_x = snapshot.map_min_x + MAP_EDGE_PADDING;
+  const float max_x = snapshot.map_max_x - MAP_EDGE_PADDING;
+  const float min_z = snapshot.map_min_z + MAP_EDGE_PADDING;
+  const float max_z = snapshot.map_max_z - MAP_EDGE_PADDING;
 
   x = std::clamp(x, min_x, max_x);
   z = std::clamp(z, min_z, max_z);
@@ -389,7 +373,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     }
   }
 
-  clamp_to_map_bounds(construction_x, construction_z);
+  clamp_to_map_bounds(snapshot, construction_x, construction_z);
 
   if (!available_builders.empty()) {
     AICommand command;

@@ -10,6 +10,7 @@
 #include <QLoggingCategory>
 
 #include <algorithm>
+#include <utility>
 
 #include "../units/troop_catalog.h"
 
@@ -66,7 +67,7 @@ auto read_role_mask(const QJsonObject& obj,
                     const QString& source) -> RoleTagSet {
   RoleTagSet mask = 0U;
   auto const array = obj.value(QLatin1String(key)).toArray();
-  for (const auto& entry : array) {
+  for (const auto entry : array) {
     auto const text = entry.toString();
     if (auto parsed = try_parse_role_tag(text)) {
       mask |= to_mask(*parsed);
@@ -192,7 +193,7 @@ auto parse_intent_template(ArmyFormationIntent intent,
 
   auto const lines = obj.value(QStringLiteral("lines")).toArray();
   tmpl.lines.reserve(static_cast<std::size_t>(lines.size()));
-  for (const auto& entry : lines) {
+  for (const auto entry : lines) {
     tmpl.lines.push_back(parse_line_rule(entry.toObject(), report, source));
   }
 

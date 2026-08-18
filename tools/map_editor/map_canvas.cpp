@@ -21,6 +21,7 @@
 #include <memory>
 #include <numbers>
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "canvas_input.h"
@@ -1213,7 +1214,7 @@ void MapCanvas::draw_terrain_entrances(QPainter& painter, const TerrainElement& 
 
   painter.save();
   painter.setRenderHint(QPainter::Antialiasing, true);
-  for (const QJsonValue& entrance_value : elem.entrances) {
+  for (const QJsonValue entrance_value : elem.entrances) {
     const QJsonObject entrance = entrance_value.toObject();
     if (!entrance.contains(MapJsonKeys::x) || !entrance.contains(MapJsonKeys::z)) {
       continue;
@@ -1707,11 +1708,11 @@ void MapCanvas::draw_mission_overlays(QPainter& painter) {
   painter.save();
   const QJsonArray ai_setups = m_mission_data->array(QStringLiteral("ai_setups"));
   int owner_id = 2;
-  for (const QJsonValue& ai_value : ai_setups) {
+  for (const QJsonValue ai_value : ai_setups) {
     const QJsonObject ai = ai_value.toObject();
     const QString ai_id = ai.value(QStringLiteral("id")).toString();
 
-    for (const QJsonValue& wave_value : ai.value(QStringLiteral("waves")).toArray()) {
+    for (const QJsonValue wave_value : ai.value(QStringLiteral("waves")).toArray()) {
       const QJsonObject wave = wave_value.toObject();
       const QJsonObject entry = wave.value(QStringLiteral("entry_point")).toObject();
       const QPoint pos =
@@ -1754,13 +1755,13 @@ void MapCanvas::draw_mission_overlays(QPainter& painter) {
                        label);
     };
 
-    for (const QJsonValue& unit_value :
+    for (const QJsonValue unit_value :
          ai.value(QStringLiteral("starting_units")).toArray()) {
       const QJsonObject unit = unit_value.toObject();
       draw_setup_marker(
           unit, ai_id + QStringLiteral(": ") + unit.value("type").toString(), false);
     }
-    for (const QJsonValue& building_value :
+    for (const QJsonValue building_value :
          ai.value(QStringLiteral("starting_buildings")).toArray()) {
       const QJsonObject building = building_value.toObject();
       draw_setup_marker(building,
@@ -1776,7 +1777,7 @@ void MapCanvas::draw_mission_overlays(QPainter& painter) {
   const QStringList objective_keys = {QStringLiteral("victory_conditions"),
                                       QStringLiteral("optional_objectives")};
   for (const QString& key : objective_keys) {
-    for (const QJsonValue& condition_value : m_mission_data->array(key)) {
+    for (const QJsonValue condition_value : m_mission_data->array(key)) {
       const QJsonObject condition = condition_value.toObject();
       const QString zone_id = condition.value(QStringLiteral("zone_id")).toString();
       if (zone_id.isEmpty()) {

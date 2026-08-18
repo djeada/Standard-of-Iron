@@ -51,17 +51,6 @@ auto peak_of(const std::vector<float>& pcm) -> float {
   return peak;
 }
 
-auto rms_of(const std::vector<float>& pcm) -> float {
-  if (pcm.empty()) {
-    return 0.0F;
-  }
-  double energy = 0.0;
-  for (const float sample : pcm) {
-    energy += double(sample) * double(sample);
-  }
-  return static_cast<float>(std::sqrt(energy / double(pcm.size())));
-}
-
 auto tone_magnitude(const std::vector<float>& pcm, float frequency_hz) -> float {
   const std::size_t frames = pcm.size() / CHANNELS;
   double real = 0.0;

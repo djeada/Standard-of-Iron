@@ -78,24 +78,6 @@ auto soldier_key(Engine::Core::EntityID entity_id, int soldier_index) -> std::ui
          static_cast<std::uint32_t>(std::max(0, soldier_index));
 }
 
-auto trigger_name(ScenarioTriggerKind kind) -> QString {
-  switch (kind) {
-  case ScenarioTriggerKind::AtTime:
-    return QStringLiteral("AtTime");
-  case ScenarioTriggerKind::GroupDestroyed:
-    return QStringLiteral("GroupDestroyed");
-  case ScenarioTriggerKind::FirstContact:
-    return QStringLiteral("FirstContact");
-  case ScenarioTriggerKind::GroupsWithinDistance:
-    return QStringLiteral("GroupsWithinDistance");
-  case ScenarioTriggerKind::GroupEnteredArea:
-    return QStringLiteral("GroupEnteredArea");
-  case ScenarioTriggerKind::PreviousStepComplete:
-    return QStringLiteral("PreviousStepComplete");
-  }
-  return QStringLiteral("Unknown");
-}
-
 auto command_name(ScenarioCommandKind kind) -> QString {
   switch (kind) {
   case ScenarioCommandKind::Stand:
@@ -158,188 +140,6 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgMove");
   case ScenarioCommandKind::ReloadUndeadZoneState:
     return QStringLiteral("ReloadUndeadZoneState");
-  }
-  return QStringLiteral("Unknown");
-}
-
-auto expectation_name(ArenaExpectationKind kind) -> QString {
-  switch (kind) {
-  case ArenaExpectationKind::AllGroupsRespondWithin:
-    return QStringLiteral("AllGroupsRespondWithin");
-  case ArenaExpectationKind::NoEligibleTroopIdleDuringCombat:
-    return QStringLiteral("NoEligibleTroopIdleDuringCombat");
-  case ArenaExpectationKind::NoPoseOscillation:
-    return QStringLiteral("NoPoseOscillation");
-  case ArenaExpectationKind::NoRootTeleport:
-    return QStringLiteral("NoRootTeleport");
-  case ArenaExpectationKind::NoUnexpectedFallPose:
-    return QStringLiteral("NoUnexpectedFallPose");
-  case ArenaExpectationKind::NoLimbOverextension:
-    return QStringLiteral("NoLimbOverextension");
-  case ArenaExpectationKind::NoRenderVisibilityChurn:
-    return QStringLiteral("NoRenderVisibilityChurn");
-  case ArenaExpectationKind::UnitsClearOfBuildings:
-    return QStringLiteral("UnitsClearOfBuildings");
-  case ArenaExpectationKind::FullCreatureDetailOnly:
-    return QStringLiteral("FullCreatureDetailOnly");
-  case ArenaExpectationKind::NoFullscreenFlash:
-    return QStringLiteral("NoFullscreenFlash");
-  case ArenaExpectationKind::MovementIsContinuous:
-    return QStringLiteral("MovementIsContinuous");
-  case ArenaExpectationKind::FormationOrderPreserved:
-    return QStringLiteral("FormationOrderPreserved");
-  case ArenaExpectationKind::FormationEngagementIsStable:
-    return QStringLiteral("FormationEngagementIsStable");
-  case ArenaExpectationKind::FormationBodyOverlapObserved:
-    return QStringLiteral("FormationBodyOverlapObserved");
-  case ArenaExpectationKind::CombatIndicatorIsContinuous:
-    return QStringLiteral("CombatIndicatorIsContinuous");
-  case ArenaExpectationKind::AllLivingSoldiersFight:
-    return QStringLiteral("AllLivingSoldiersFight");
-  case ArenaExpectationKind::MovementAnimationObserved:
-    return QStringLiteral("MovementAnimationObserved");
-  case ArenaExpectationKind::AttackAnimationObserved:
-    return QStringLiteral("AttackAnimationObserved");
-  case ArenaExpectationKind::DefensiveUnitLayoutLocked:
-    return QStringLiteral("DefensiveUnitLayoutLocked");
-  case ArenaExpectationKind::HoldPoseMaintained:
-    return QStringLiteral("HoldPoseMaintained");
-  case ArenaExpectationKind::RepeatedAttackAnimationObserved:
-    return QStringLiteral("RepeatedAttackAnimationObserved");
-  case ArenaExpectationKind::AttackHasVisibleContact:
-    return QStringLiteral("AttackHasVisibleContact");
-  case ArenaExpectationKind::ProjectileFlightObserved:
-    return QStringLiteral("ProjectileFlightObserved");
-  case ArenaExpectationKind::ProjectileImpactObserved:
-    return QStringLiteral("ProjectileImpactObserved");
-  case ArenaExpectationKind::ProjectileImpactSynchronized:
-    return QStringLiteral("ProjectileImpactSynchronized");
-  case ArenaExpectationKind::GroupHealthUnchanged:
-    return QStringLiteral("GroupHealthUnchanged");
-  case ArenaExpectationKind::GroupHealthReduced:
-    return QStringLiteral("GroupHealthReduced");
-  case ArenaExpectationKind::StructureDamageCueObserved:
-    return QStringLiteral("StructureDamageCueObserved");
-  case ArenaExpectationKind::StructureFacadeContactObserved:
-    return QStringLiteral("StructureFacadeContactObserved");
-  case ArenaExpectationKind::StructureFireObserved:
-    return QStringLiteral("StructureFireObserved");
-  case ArenaExpectationKind::NoStructureFireObserved:
-    return QStringLiteral("NoStructureFireObserved");
-  case ArenaExpectationKind::FlamingProjectileObserved:
-    return QStringLiteral("FlamingProjectileObserved");
-  case ArenaExpectationKind::NoFlamingProjectileObserved:
-    return QStringLiteral("NoFlamingProjectileObserved");
-  case ArenaExpectationKind::AttackRecoveryObserved:
-    return QStringLiteral("AttackRecoveryObserved");
-  case ArenaExpectationKind::NoActiveCombatAtEnd:
-    return QStringLiteral("NoActiveCombatAtEnd");
-  case ArenaExpectationKind::HitReactionObserved:
-    return QStringLiteral("HitReactionObserved");
-  case ArenaExpectationKind::DeathAnimationObserved:
-    return QStringLiteral("DeathAnimationObserved");
-  case ArenaExpectationKind::LaunchedCasualtyObserved:
-    return QStringLiteral("LaunchedCasualtyObserved");
-  case ArenaExpectationKind::NoLaunchedCasualtyObserved:
-    return QStringLiteral("NoLaunchedCasualtyObserved");
-  case ArenaExpectationKind::ChargeImpactPrecedesMeleeLock:
-    return QStringLiteral("ChargeImpactPrecedesMeleeLock");
-  case ArenaExpectationKind::TargetRetakenAfterDeath:
-    return QStringLiteral("TargetRetakenAfterDeath");
-  case ArenaExpectationKind::BotIssuesUsefulCommand:
-    return QStringLiteral("BotIssuesUsefulCommand");
-  case ArenaExpectationKind::FrameBudget:
-    return QStringLiteral("FrameBudget");
-  case ArenaExpectationKind::RangeIndicatorObserved:
-    return QStringLiteral("RangeIndicatorObserved");
-  case ArenaExpectationKind::RangeIndicatorCountAtMost:
-    return QStringLiteral("RangeIndicatorCountAtMost");
-  case ArenaExpectationKind::GroupIsRendered:
-    return QStringLiteral("GroupIsRendered");
-  case ArenaExpectationKind::GroupExists:
-    return QStringLiteral("GroupExists");
-  case ArenaExpectationKind::GroupDestroyed:
-    return QStringLiteral("GroupDestroyed");
-  case ArenaExpectationKind::GroupReachedDestination:
-    return QStringLiteral("GroupReachedDestination");
-  case ArenaExpectationKind::GroupHeldOutsideDestination:
-    return QStringLiteral("GroupHeldOutsideDestination");
-  case ArenaExpectationKind::GateOpenedObserved:
-    return QStringLiteral("GateOpenedObserved");
-  case ArenaExpectationKind::GateRemainedClosed:
-    return QStringLiteral("GateRemainedClosed");
-  case ArenaExpectationKind::BridgeTraversalObserved:
-    return QStringLiteral("BridgeTraversalObserved");
-  case ArenaExpectationKind::BridgeCenterlineAligned:
-    return QStringLiteral("BridgeCenterlineAligned");
-  case ArenaExpectationKind::ElevationGainObserved:
-    return QStringLiteral("ElevationGainObserved");
-  case ArenaExpectationKind::OwnerCompletesConstruction:
-    return QStringLiteral("OwnerCompletesConstruction");
-  case ArenaExpectationKind::OwnerHarvestsResource:
-    return QStringLiteral("OwnerHarvestsResource");
-  case ArenaExpectationKind::CommanderAuraActivated:
-    return QStringLiteral("CommanderAuraActivated");
-  case ArenaExpectationKind::CommanderAuraBuffObserved:
-    return QStringLiteral("CommanderAuraBuffObserved");
-  case ArenaExpectationKind::CommanderAuraExpired:
-    return QStringLiteral("CommanderAuraExpired");
-  case ArenaExpectationKind::NoCommanderAuraBuffObserved:
-    return QStringLiteral("NoCommanderAuraBuffObserved");
-  case ArenaExpectationKind::ExactRpgTargetObserved:
-    return QStringLiteral("ExactRpgTargetObserved");
-  case ArenaExpectationKind::RpgDamageContactObserved:
-    return QStringLiteral("RpgDamageContactObserved");
-  case ArenaExpectationKind::RpgBlockContactObserved:
-    return QStringLiteral("RpgBlockContactObserved");
-  case ArenaExpectationKind::RpgDodgeContactObserved:
-    return QStringLiteral("RpgDodgeContactObserved");
-  case ArenaExpectationKind::RpgDodgeWindowObserved:
-    return QStringLiteral("RpgDodgeWindowObserved");
-  case ArenaExpectationKind::RpgHealthReduced:
-    return QStringLiteral("RpgHealthReduced");
-  case ArenaExpectationKind::RpgHealthUnchanged:
-    return QStringLiteral("RpgHealthUnchanged");
-  case ArenaExpectationKind::RpgWalkObserved:
-    return QStringLiteral("RpgWalkObserved");
-  case ArenaExpectationKind::RpgRunObserved:
-    return QStringLiteral("RpgRunObserved");
-  case ArenaExpectationKind::RpgLocomotionAnimationMatched:
-    return QStringLiteral("RpgLocomotionAnimationMatched");
-  case ArenaExpectationKind::RpgStrikeAnimationMatched:
-    return QStringLiteral("RpgStrikeAnimationMatched");
-  case ArenaExpectationKind::RpgSwingCadenceWithin:
-    return QStringLiteral("RpgSwingCadenceWithin");
-  case ArenaExpectationKind::RpgTravelObserved:
-    return QStringLiteral("RpgTravelObserved");
-  case ArenaExpectationKind::RpgFormationSurvivesLensGap:
-    return QStringLiteral("RpgFormationSurvivesLensGap");
-  case ArenaExpectationKind::RpgApproachWithin:
-    return QStringLiteral("RpgApproachWithin");
-  case ArenaExpectationKind::UndeadZoneDormantBefore:
-    return QStringLiteral("UndeadZoneDormantBefore");
-  case ArenaExpectationKind::UndeadZoneAwakened:
-    return QStringLiteral("UndeadZoneAwakened");
-  case ArenaExpectationKind::UndeadZoneCleared:
-    return QStringLiteral("UndeadZoneCleared");
-  case ArenaExpectationKind::UndeadZoneShrineStands:
-    return QStringLiteral("UndeadZoneShrineStands");
-  case ArenaExpectationKind::UndeadZoneShrineDestroyed:
-    return QStringLiteral("UndeadZoneShrineDestroyed");
-  case ArenaExpectationKind::WildlifeGrazingObserved:
-    return QStringLiteral("WildlifeGrazingObserved");
-  case ArenaExpectationKind::WildlifeFleeObserved:
-    return QStringLiteral("WildlifeFleeObserved");
-  case ArenaExpectationKind::WildlifeHuntObserved:
-    return QStringLiteral("WildlifeHuntObserved");
-  case ArenaExpectationKind::WildlifeBirdsScattered:
-    return QStringLiteral("WildlifeBirdsScattered");
-  case ArenaExpectationKind::WildlifeBirdFlyoverObserved:
-    return QStringLiteral("WildlifeBirdFlyoverObserved");
-  case ArenaExpectationKind::WildlifePopulationHeld:
-    return QStringLiteral("WildlifePopulationHeld");
-  case ArenaExpectationKind::WildlifeCasualtyObserved:
-    return QStringLiteral("WildlifeCasualtyObserved");
   }
   return QStringLiteral("Unknown");
 }
@@ -2782,6 +2582,12 @@ struct ArenaScenarioRunner::Impl {
           break;
         case Engine::Core::FormationSoldierAction::MeleeFollowThrough:
           declared_action = QStringLiteral("melee_follow_through");
+          break;
+        case Engine::Core::FormationSoldierAction::MeleeGuard:
+          declared_action = QStringLiteral("melee_guard");
+          break;
+        case Engine::Core::FormationSoldierAction::MeleeReposition:
+          declared_action = QStringLiteral("melee_reposition");
           break;
         }
       }

@@ -40,12 +40,6 @@ struct CarthageElephantPalette {
   QVector3D team{0.8F, 0.9F, 1.0F};
 };
 
-inline auto make_palette(const QVector3D& team) -> CarthageElephantPalette {
-  CarthageElephantPalette p;
-  p.team = clamp_vec_01(team);
-  return p;
-}
-
 class CarthageElephantRenderer : public ElephantRendererBase {
 public:
   CarthageElephantRenderer() = default;

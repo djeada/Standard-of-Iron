@@ -100,7 +100,7 @@ void validateAgainstMap(const QString& file_path,
   std::set<int> orphaned_owners;
 
   const QJsonArray structures = map_document.object().value("structures").toArray();
-  for (const auto& value : structures) {
+  for (const auto value : structures) {
     const QJsonObject structure = value.toObject();
     if (structure.value("type").toString().trimmed().toLower() !=
         QLatin1String("barracks")) {

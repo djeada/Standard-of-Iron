@@ -66,6 +66,75 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Fixed
 
+- **Twelve switches were silently ignoring enum values that had been added
+  since they were written.** Each listed every case it knew about and had no
+  `default`, so a newer enumerator quietly took the fallthrough: elephants were
+  excluded from run mode, the three commander attack actions got no baked
+  weapon trace and no sword animation, nine of the newer terrain props were
+  never given an animation time, wildlife had no formation profile, and the map
+  editor's Gate tool had no name in the status bar. Every case is now spelled
+  out, keeping today's behaviour, and an unhandled enumerator is a build error
+  from here on. Gates and wildlife also join the structures that deal no
+  structure damage, which is what the rest of that switch already said.
+
+- **A command-line `--quality` override wrote its value into a copy and threw
+  it away.** The real assignment happened twenty lines later through a
+  `const_cast` on a getter's return; the copy above it did nothing.
+  `GraphicsSettings` has a `set_shader_quality` now, and the `const_cast` is
+  gone.
+
+- **The healer renderer kept a second copy of its base class's visual-spec
+  cache.** It redeclared both members, so it baked into its own pair while the
+  base's stayed empty — the other four renderers of that shape correctly use
+  the inherited ones. Removed, along with a `sizeof`-sized pile of smaller dead
+  code the newly promoted warnings found: two accumulators in the biome
+  renderer that cost four array reads per terrain sample and were never read, a
+  dropped shade in the Carthaginian light armour, an unused shader-cache field,
+  a dead `operator==`, and eleven lambda captures that captured nothing.
+
+    A hundred and fifty-three range-for loops over `QJsonArray` bound `const
+auto&` to a temporary, because that iterator yields `QJsonValue` by value:
+    they read as a reference into the array while quietly constructing a copy
+    per iteration. All of them now say `const auto`, and the diagnostic is an
+    error.
+
+- **A finished AI decision no longer reads a nation that has been freed.** An
+  AI job runs on a worker thread and holds raw pointers into the global
+  registries for as long as it takes: its context points at a `Nation` inside
+  `NationRegistry`, and the production behaviour walks that nation's troop
+  list. The job outlives the test body that started it, so a fixture holding
+  its world as a member and clearing the registries in teardown freed the
+  nation under a thread still reading it. AddressSanitizer caught it as a
+  heap-use-after-free in `ProductionBehavior::execute`, and it is a plausible
+  cause of the weekly sanitizer and coverage lanes going red on a suite that
+  passes without instrumentation: a use-after-free read returns whatever is
+  there now.
+
+    The game already observes the ordering — `SkirmishLoader` stops the AI
+    workers before it touches global state — so the fixture now does the same
+    through `tests/support/ai_quiesce.h`, which explains the contract for the
+    next fixture that keeps a world alive across teardown.
+
+- **The Windows build compiles again, and a Linux gate now says when it will
+  not.** `game/audio/cue_ids.h` declared a `std::array` of every audio cue
+  without including `<array>`. libstdc++ and libc++ both hand that header out
+  as a side effect of including something else, so the file built in every
+  Linux and macOS lane; MSVC's standard library does not, and the first Weekly
+  packaging run failed on it two days after it was written. Ninety more files
+  were leaning on the same courtesy for `<utility>`, `<cstddef>`,
+  `<algorithm>` and a dozen others, and now spell out what they use.
+
+    A fourth portability pass reads the include graph rather than compiling
+    anything, because no compiler on a Linux machine can see this class of
+    break — both of the standard libraries here leak the header that MSVC
+    withholds. It runs on every pull request, which is where a Windows problem
+    has to be caught: Windows and macOS are only built weekly. The Clang and
+    libc++ pass that `CONTRIBUTING.md` has described for months but that no
+    workflow ever ran now runs in the weekly lint job, which already builds
+    what it needs. And the six ECS component types that were forward-declared
+    as `struct` and defined as `class` were reconciled: the same divergence one
+    step further along, since the Microsoft ABI mangles the two apart.
+
 - **Commanders can be chosen again on the skirmish screen.** The screen looked
   for the commander list on a property that no longer exists, so every lookup
   came back empty and both seats were stuck on a placeholder called

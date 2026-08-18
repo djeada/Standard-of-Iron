@@ -73,7 +73,6 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   Q_UNUSED(resources);
 
-  auto* backend = renderer.backend();
   const bool use_visibility = renderer.static_world_visibility_filter_enabled();
   const auto* visibility_snapshot =
       use_visibility ? renderer.submission_visibility().snapshot() : nullptr;

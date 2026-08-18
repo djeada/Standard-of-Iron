@@ -26,13 +26,20 @@ Three passes:
           constants that MSVC's <cmath> does not define, filenames Windows
           cannot create, and paths that overflow MAX_PATH once unpacked.
 
+  includes Reads the include graph and requires every file to include the
+          standard headers it uses.  MSVC's standard library does not hand out
+          <array> or <utility> as a side effect of including something else,
+          the way libstdc++ and libc++ do, so this is the one class of Windows
+          break that no compiler on a Linux machine can reproduce -- the apple
+          pass above cannot see it either, because libc++ leaks the header too.
+
 The compiler warning set that belongs to a real build lives in CMakeLists.txt
 behind SOI_STRICT_WARNINGS, not here, so that `make portability` and CI agree
 with what an actual strict build enforces.
 
 Usage:
     python3 scripts/check-portability.py [--build-dir build] [--require-all]
-                                         [--only apple,glsl,windows]
+                                         [--only apple,glsl,windows,includes]
 
 --require-all turns a missing clang/libc++/glslangValidator into a failure
 instead of a skip.  CI passes it; a developer running this locally without the
@@ -67,17 +74,29 @@ CLANG_FLAGS = [
     "-Werror=dangling-gsl",
     "-Werror=inconsistent-missing-override",
     "-Werror=nan-infinity-disabled",
-    "-Wno-switch",
+    "-Werror=mismatched-tags",
+    "-Werror=range-loop-bind-reference",
+    "-Werror=shadow-field",
+    "-Werror=unused-private-field",
+    "-Werror=deprecated-copy-with-dtor",
+    "-Werror=conditional-uninitialized",
+    "-Werror=loop-analysis",
+    "-Werror=self-assign",
+    "-Werror=unreachable-code",
+    "-Werror=header-hygiene",
+    "-Werror=cast-qual",
+    "-Werror=suggest-override",
+    "-Werror=newline-eof",
+    "-Werror=switch",
+    "-Werror=extra-semi",
+    "-Werror=implicit-fallthrough",
+    "-Werror=old-style-cast",
+    "-Werror=unused-lambda-capture",
+    "-Werror=unused-variable",
+    "-Werror=unused-function",
+    "-Werror=unused-const-variable",
     "-Wno-missing-field-initializers",
     "-Wno-unused-parameter",
-    "-Wno-unused-variable",
-    "-Wno-unused-function",
-    "-Wno-unused-private-field",
-    "-Wno-unused-lambda-capture",
-    "-Wno-unused-local-typedef",
-    "-Wno-mismatched-tags",
-    "-Wno-shadow-field",
-    "-Wno-range-loop-bind-reference",
     "-Wno-unknown-warning-option",
     "-Wno-unused-command-line-argument",
 ]
@@ -181,6 +200,615 @@ def resolve_shader_includes(source, include_dir, already):
                     continue
         out.append(line)
     return "\n".join(out)
+
+
+STD_FACILITIES = (
+    ("<array>", ("array",), ("array",)),
+    ("<span>", ("span",), ("span",)),
+    ("<vector>", ("vector",), ("vector",)),
+    ("<deque>", ("deque",), ("deque",)),
+    ("<list>", ("list",), ("list",)),
+    ("<set>", ("set", "multiset"), ("set",)),
+    ("<map>", ("map", "multimap"), ("map",)),
+    ("<unordered_map>", ("unordered_map", "unordered_multimap"), ("unordered_map",)),
+    ("<unordered_set>", ("unordered_set", "unordered_multiset"), ("unordered_set",)),
+    (
+        "<string>",
+        ("string", "to_string", "stoi", "stof", "stod", "stoul", "getline"),
+        ("string",),
+    ),
+    ("<string_view>", ("string_view",), ("string_view",)),
+    (
+        "<optional>",
+        ("optional", "nullopt", "nullopt_t", "make_optional"),
+        ("optional",),
+    ),
+    (
+        "<variant>",
+        ("variant", "visit", "get_if", "holds_alternative", "monostate"),
+        ("variant",),
+    ),
+    (
+        "<tuple>",
+        ("tuple", "make_tuple", "tie", "apply", "tuple_size", "tuple_element"),
+        ("tuple",),
+    ),
+    (
+        "<utility>",
+        (
+            "pair",
+            "make_pair",
+            "move",
+            "forward",
+            "exchange",
+            "as_const",
+            "swap",
+            "declval",
+        ),
+        ("utility",),
+    ),
+    (
+        "<memory>",
+        (
+            "unique_ptr",
+            "shared_ptr",
+            "weak_ptr",
+            "make_unique",
+            "make_shared",
+            "enable_shared_from_this",
+            "static_pointer_cast",
+            "dynamic_pointer_cast",
+            "addressof",
+            "destroy_at",
+            "uninitialized_copy",
+        ),
+        ("memory",),
+    ),
+    (
+        "<functional>",
+        (
+            "function",
+            "bind",
+            "ref",
+            "cref",
+            "hash",
+            "less",
+            "greater",
+            "invoke",
+            "reference_wrapper",
+            "plus",
+            "identity",
+        ),
+        ("functional",),
+    ),
+    (
+        "<algorithm>",
+        (
+            "sort",
+            "stable_sort",
+            "partial_sort",
+            "find",
+            "find_if",
+            "find_if_not",
+            "min",
+            "max",
+            "minmax",
+            "clamp",
+            "copy",
+            "copy_if",
+            "copy_n",
+            "fill",
+            "fill_n",
+            "any_of",
+            "all_of",
+            "none_of",
+            "count",
+            "count_if",
+            "transform",
+            "remove",
+            "remove_if",
+            "lower_bound",
+            "upper_bound",
+            "binary_search",
+            "for_each",
+            "reverse",
+            "unique",
+            "min_element",
+            "max_element",
+            "minmax_element",
+            "rotate",
+            "shuffle",
+            "partition",
+            "stable_partition",
+            "nth_element",
+            "generate",
+            "equal",
+            "swap_ranges",
+            "set_difference",
+            "set_intersection",
+            "search",
+            "adjacent_find",
+            "clamp",
+        ),
+        ("algorithm",),
+    ),
+    (
+        "<numeric>",
+        (
+            "accumulate",
+            "iota",
+            "inner_product",
+            "partial_sum",
+            "reduce",
+            "transform_reduce",
+            "gcd",
+            "lcm",
+            "midpoint",
+        ),
+        ("numeric",),
+    ),
+    (
+        "<cmath>",
+        (
+            "sqrt",
+            "cbrt",
+            "sin",
+            "cos",
+            "tan",
+            "asin",
+            "acos",
+            "atan",
+            "atan2",
+            "pow",
+            "exp",
+            "exp2",
+            "log",
+            "log2",
+            "log10",
+            "fabs",
+            "floor",
+            "ceil",
+            "round",
+            "lround",
+            "trunc",
+            "fmod",
+            "hypot",
+            "isfinite",
+            "isnan",
+            "isinf",
+            "copysign",
+            "signbit",
+            "nextafter",
+            "lerp",
+        ),
+        ("cmath",),
+    ),
+    (
+        "<cstdint>",
+        (
+            "int8_t",
+            "int16_t",
+            "int32_t",
+            "int64_t",
+            "uint8_t",
+            "uint16_t",
+            "uint32_t",
+            "uint64_t",
+            "intptr_t",
+            "uintptr_t",
+            "intmax_t",
+            "uintmax_t",
+        ),
+        ("cstdint",),
+    ),
+    (
+        "<cstddef>",
+        ("size_t", "ptrdiff_t", "byte", "nullptr_t", "max_align_t"),
+        ("cstddef", "cstdint", "cstdio", "cstring", "cstdlib", "ctime"),
+    ),
+    (
+        "<cstring>",
+        (
+            "memcpy",
+            "memmove",
+            "memset",
+            "memcmp",
+            "strlen",
+            "strcmp",
+            "strncmp",
+            "strcpy",
+            "strncpy",
+            "strchr",
+            "strstr",
+        ),
+        ("cstring",),
+    ),
+    (
+        "<cstdlib>",
+        (
+            "malloc",
+            "free",
+            "calloc",
+            "realloc",
+            "atoi",
+            "atof",
+            "strtol",
+            "strtod",
+            "exit",
+            "abort",
+            "getenv",
+            "qsort",
+            "rand",
+            "srand",
+            "div",
+            "labs",
+        ),
+        ("cstdlib",),
+    ),
+    (
+        "<cstdio>",
+        (
+            "printf",
+            "fprintf",
+            "sprintf",
+            "snprintf",
+            "sscanf",
+            "fopen",
+            "fclose",
+            "fread",
+            "fwrite",
+            "fputs",
+            "fgets",
+            "FILE",
+            "stderr",
+            "stdout",
+            "perror",
+        ),
+        ("cstdio",),
+    ),
+    ("<limits>", ("numeric_limits",), ("limits",)),
+    (
+        "<type_traits>",
+        (
+            "is_same",
+            "is_same_v",
+            "enable_if",
+            "enable_if_t",
+            "decay",
+            "decay_t",
+            "remove_reference",
+            "remove_reference_t",
+            "remove_cv",
+            "remove_cv_t",
+            "remove_cvref_t",
+            "conditional",
+            "conditional_t",
+            "underlying_type",
+            "underlying_type_t",
+            "void_t",
+            "common_type",
+            "common_type_t",
+            "is_base_of",
+            "is_base_of_v",
+            "is_integral",
+            "is_integral_v",
+            "is_floating_point",
+            "is_floating_point_v",
+            "is_enum",
+            "is_enum_v",
+            "is_pointer",
+            "is_pointer_v",
+            "is_trivially_copyable",
+            "is_trivially_copyable_v",
+            "is_convertible",
+            "is_convertible_v",
+            "is_invocable",
+            "is_invocable_v",
+            "true_type",
+            "false_type",
+            "integral_constant",
+            "add_pointer_t",
+            "make_signed_t",
+            "make_unsigned_t",
+        ),
+        ("type_traits",),
+    ),
+    (
+        "<atomic>",
+        (
+            "atomic",
+            "atomic_flag",
+            "memory_order",
+            "memory_order_relaxed",
+            "memory_order_acquire",
+            "memory_order_release",
+            "memory_order_seq_cst",
+            "atomic_thread_fence",
+        ),
+        ("atomic",),
+    ),
+    (
+        "<mutex>",
+        (
+            "mutex",
+            "recursive_mutex",
+            "lock_guard",
+            "unique_lock",
+            "scoped_lock",
+            "once_flag",
+            "call_once",
+            "defer_lock",
+            "adopt_lock",
+        ),
+        ("mutex",),
+    ),
+    ("<shared_mutex>", ("shared_mutex", "shared_lock"), ("shared_mutex",)),
+    (
+        "<condition_variable>",
+        ("condition_variable", "condition_variable_any"),
+        ("condition_variable",),
+    ),
+    ("<thread>", ("thread", "jthread", "this_thread"), ("thread",)),
+    ("<chrono>", ("chrono",), ("chrono",)),
+    (
+        "<random>",
+        (
+            "mt19937",
+            "mt19937_64",
+            "random_device",
+            "uniform_int_distribution",
+            "uniform_real_distribution",
+            "normal_distribution",
+            "bernoulli_distribution",
+            "discrete_distribution",
+            "seed_seq",
+            "default_random_engine",
+            "minstd_rand",
+            "shuffle_order_engine",
+        ),
+        ("random",),
+    ),
+    ("<filesystem>", ("filesystem",), ("filesystem",)),
+    (
+        "<sstream>",
+        ("ostringstream", "istringstream", "stringstream", "wstringstream"),
+        ("sstream",),
+    ),
+    ("<ostream>", ("ostream", "endl", "flush"), ("ostream", "iostream", "sstream")),
+    ("<istream>", ("istream",), ("istream", "iostream", "sstream")),
+    ("<iostream>", ("cout", "cerr", "cin", "clog"), ("iostream",)),
+    ("<iomanip>", ("setprecision", "setw", "setfill"), ("iomanip",)),
+    (
+        "<ios>",
+        ("hex", "dec", "oct", "fixed", "scientific", "boolalpha", "showpoint"),
+        ("ios", "iomanip", "iostream", "ostream", "istream", "sstream", "fstream"),
+    ),
+    ("<fstream>", ("ifstream", "ofstream", "fstream"), ("fstream",)),
+    (
+        "<iterator>",
+        (
+            "begin",
+            "end",
+            "cbegin",
+            "cend",
+            "rbegin",
+            "rend",
+            "size",
+            "data",
+            "distance",
+            "advance",
+            "next",
+            "prev",
+            "back_inserter",
+            "front_inserter",
+            "inserter",
+            "iterator_traits",
+        ),
+        ("iterator", "array", "vector", "string", "map", "set", "span"),
+    ),
+    ("<initializer_list>", ("initializer_list",), ("initializer_list",)),
+    ("<bitset>", ("bitset",), ("bitset",)),
+    (
+        "<stdexcept>",
+        (
+            "runtime_error",
+            "logic_error",
+            "invalid_argument",
+            "out_of_range",
+            "length_error",
+            "domain_error",
+            "overflow_error",
+        ),
+        ("stdexcept",),
+    ),
+    (
+        "<exception>",
+        (
+            "exception",
+            "terminate",
+            "current_exception",
+            "rethrow_exception",
+            "exception_ptr",
+        ),
+        ("exception", "stdexcept"),
+    ),
+    ("<charconv>", ("from_chars", "to_chars", "chars_format"), ("charconv",)),
+    (
+        "<bit>",
+        (
+            "bit_cast",
+            "popcount",
+            "countl_zero",
+            "countr_zero",
+            "has_single_bit",
+            "bit_width",
+            "rotl",
+            "rotr",
+            "endian",
+        ),
+        ("bit",),
+    ),
+    ("<ranges>", ("ranges",), ("ranges",)),
+    ("<numbers>", ("numbers",), ("numbers",)),
+    ("<format>", ("format", "format_to", "vformat"), ("format",)),
+    (
+        "<ctime>",
+        ("time_t", "tm", "localtime", "gmtime", "strftime", "mktime", "difftime"),
+        ("ctime",),
+    ),
+)
+
+
+INCLUDE_ROOTS = ("", "game")
+
+BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
+LINE_COMMENT = re.compile(r"//[^\n]*")
+RAW_STRING = re.compile(r'R"([^(]*)\((.*?)\)\1"', re.DOTALL)
+STRING_LITERAL = re.compile(r'"(?:[^"\\\n]|\\.)*"')
+CHAR_LITERAL = re.compile(r"'(?:[^'\\\n]|\\.)*'")
+INCLUDE_LINE = re.compile(r'^\s*#\s*include\s*([<"])([^">]+)[>"]', re.MULTILINE)
+
+
+def strip_noncode(text):
+    """Blank out comments and literals, keeping line numbers intact."""
+
+    def blank(match):
+        return re.sub(r"[^\n]", " ", match.group(0))
+
+    for pattern in (
+        BLOCK_COMMENT,
+        RAW_STRING,
+        LINE_COMMENT,
+        STRING_LITERAL,
+        CHAR_LITERAL,
+    ):
+        text = pattern.sub(blank, text)
+    return text
+
+
+def parse_includes(text):
+    """The angle-bracket and quoted includes a file spells for itself."""
+    angled, quoted = set(), []
+    for kind, name in INCLUDE_LINE.findall(text):
+        if kind == "<":
+            angled.add(name)
+        else:
+            quoted.append(name)
+    return angled, quoted
+
+
+def resolve_quoted(rel, name):
+    """Repo-relative path of a `#include "..."`, or None if it is not ours.
+
+    Searched the way the compiler searches: the including file's own directory
+    first (where a target's -I${CMAKE_CURRENT_SOURCE_DIR} would land it), then
+    INCLUDE_ROOTS -- the repo root, which every target adds, and game/, which
+    the game and test targets add.
+    """
+    base = Path(rel).parent
+    for root in INCLUDE_ROOTS:
+        for candidate in ((base / name), (Path(root) / name) if root else Path(name)):
+            resolved = os.path.normpath(candidate.as_posix())
+            if not resolved.startswith("..") and (ROOT / resolved).is_file():
+                return resolved
+    return None
+
+
+def build_include_index(sources):
+    """Per file: the standard headers it includes and the first-party ones."""
+    index = {}
+    for rel in sources:
+        text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
+        angled, quoted = parse_includes(text)
+        index[rel] = (
+            angled,
+            [r for r in (resolve_quoted(rel, name) for name in quoted) if r],
+        )
+    return index
+
+
+def reachable_standard_headers(rel, index, cache):
+    """Standard headers reachable through a file's own first-party includes.
+
+    Qt and third-party headers are deliberately not followed: relying on
+    <QString> to hand you <string> is the same bet as relying on libstdc++ to
+    hand you <array>, and it is the bet that fails on the other toolchain.
+    """
+    if rel in cache:
+        return cache[rel]
+    cache[rel] = set()
+    angled, quoted = index.get(rel, (set(), []))
+    result = set(angled)
+    for dependency in quoted:
+        if dependency in index:
+            result |= reachable_standard_headers(dependency, index, cache)
+    cache[rel] = result
+    return result
+
+
+def missing_includes(sources):
+    """(file, line, std::name, header) for every unincluded facility used.
+
+    Reads STD_FACILITIES, whose entries are (header to name in the report, the
+    std:: names that need it, the headers that count as providing them). That
+    third field is wider than the first wherever the standard actually says so
+    -- <ostream> arrives with <iostream>, std::hex is <ios> and every stream
+    header includes it -- and is a single entry wherever it does not, because
+    "MSVC happens to include it today" is the assumption this pass exists to
+    stop.
+
+    Only names spelled with an explicit `std::` are searched for, so an
+    unqualified `size_t`, or a `sort()` of our own, never registers, and
+    comments and literals are blanked first so that prose about std::array is
+    not mistaken for a use of it.
+    """
+    index = build_include_index(sources)
+    cache = {}
+    findings = []
+    for rel in sources:
+        text = strip_noncode((ROOT / rel).read_text(encoding="utf-8", errors="replace"))
+        if "std::" not in text:
+            continue
+        available = reachable_standard_headers(rel, index, cache)
+        for header, names, accepted in STD_FACILITIES:
+            if available & set(accepted):
+                continue
+            pattern = re.compile(r"\bstd::(" + "|".join(names) + r")\b")
+            match = pattern.search(text)
+            if match is None:
+                continue
+            line = text.count("\n", 0, match.start()) + 1
+            findings.append((rel, line, f"std::{match.group(1)}", header))
+    return findings
+
+
+def check_includes():
+    """Every file must include the standard headers it uses itself.
+
+    MSVC's standard library does not hand out <array>, <span> or <optional> as
+    a side effect of including something else, the way libstdc++ and libc++ do.
+    A file that names std::array without including <array> therefore builds in
+    every Linux and macOS lane and fails only on Windows, where it is a hard
+    error and not a warning -- and no compiler on this machine can see it,
+    because both of the standard libraries here leak the header.  This pass
+    reads the include graph instead of compiling anything, so it is the same
+    answer on any machine.
+
+    A first-party header in the include chain counts: what must not count is a
+    standard header arriving through another standard header.
+    """
+    sources = [
+        f
+        for f in tracked_files()
+        if f.endswith((".cpp", ".h", ".hpp", ".cc")) and not f.startswith(SKIP_PREFIXES)
+    ]
+    findings = missing_includes(sources)
+    errors = [
+        f"{rel}:{line}: uses {name} without {header}; MSVC's standard library "
+        "does not provide it transitively"
+        for rel, line, name, header in findings
+    ]
+    return errors, [f"{len(sources)} sources checked for unincluded standard headers"]
 
 
 def check_apple(build_dir, require):
@@ -359,7 +987,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build-dir", default="build")
     parser.add_argument("--require-all", action="store_true")
-    parser.add_argument("--only", default="apple,glsl,windows")
+    parser.add_argument("--only", default="apple,glsl,windows,includes")
     args = parser.parse_args()
 
     selected = {name.strip() for name in args.only.split(",") if name.strip()}
@@ -378,6 +1006,11 @@ def main():
     if "windows" in selected:
         print("[windows] MSVC and NTFS source lint")
         errors, notes = check_windows()
+        failures += report(errors, notes)
+
+    if "includes" in selected:
+        print("[includes] standard headers spelled out  (MSVC's leaner stdlib)")
+        errors, notes = check_includes()
         failures += report(errors, notes)
 
     print()

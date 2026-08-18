@@ -26,8 +26,6 @@ auto TerrainPipeline::initialize() -> bool {
     return false;
   }
 
-  auto* gl = QOpenGLContext::currentContext()->extraFunctions();
-
   m_grass_shader = m_shader_cache->get("grass_instanced");
   m_ground_shader = m_shader_cache->get("ground_plane");
   m_terrain_shader = m_shader_cache->get("terrain_chunk");

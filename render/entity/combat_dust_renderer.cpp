@@ -144,7 +144,6 @@ void render_blood_stains(Renderer* renderer,
     return;
   }
 
-  float const animation_time = renderer->get_animation_time();
   auto& visibility = Render::GL::CameraVisibility::instance();
   auto const& world_view = renderer->world_view();
   auto fog_snapshot =
@@ -880,7 +879,6 @@ constexpr QVector3D k_warning_orange{1.0F, 0.55F, 0.08F};
 constexpr QVector3D k_stagger_violet{0.72F, 0.42F, 1.0F};
 constexpr QVector3D k_flash_white{1.0F, 0.85F, 0.45F};
 constexpr QVector3D k_lock_gold{1.0F, 0.82F, 0.10F};
-constexpr QVector3D k_lock_white{1.0F, 1.0F, 0.95F};
 constexpr QVector3D k_aim_cyan{0.16F, 0.92F, 1.0F};
 constexpr QVector3D k_contact_red{1.0F, 0.18F, 0.08F};
 

@@ -2,6 +2,7 @@
 
 #include <QString>
 
+#include <cstdint>
 #include <optional>
 #include <string>
 

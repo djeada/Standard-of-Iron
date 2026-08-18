@@ -35,8 +35,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   }
   m_production_timer = 0.0F;
 
-  auto& nation_registry = Game::Systems::NationRegistry::instance();
-  const auto* nation = nation_registry.get_nation_for_player(context.player_id);
+  const auto* nation = context.nation;
 
   if (nation == nullptr) {
     return;
