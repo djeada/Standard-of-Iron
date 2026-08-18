@@ -1286,7 +1286,7 @@
       "gain": 0.85
     },
     {
-      "file": "assets/audio/ambience/weather_rain.ogg",
+      "file": "assets/audio/ambience/storm.ogg",
       "at": 84.23,
       "gain": 0.5
     },
