@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QStringList>
 #include <QVariantList>
 
 #include <cstddef>
@@ -56,6 +57,29 @@ struct TutorialObservation {
   int enemy_commanders_alive = 0;
 };
 
+enum class TutorialFocusTarget {
+  None,
+  OwnTroops,
+  Builders,
+  EnemyScouts,
+  Timber,
+  StoneAndIron,
+  Barracks,
+  Commander,
+  WaveEntry,
+  EnemyCamp,
+};
+
+struct TutorialFocus {
+  QStringList actions;
+  QString region;
+  TutorialFocusTarget target = TutorialFocusTarget::None;
+
+  [[nodiscard]] auto operator==(const TutorialFocus& other) const -> bool {
+    return actions == other.actions && region == other.region && target == other.target;
+  }
+};
+
 enum class TutorialStepId {
   SelectTroops,
   MoveTroops,
@@ -99,6 +123,11 @@ class TutorialDirector : public QObject {
   Q_PROPERTY(bool step_complete READ step_complete NOTIFY state_changed)
   Q_PROPERTY(bool holds_mission_clock READ holds_mission_clock NOTIFY state_changed)
   Q_PROPERTY(QVariantList steps READ steps NOTIFY state_changed)
+  Q_PROPERTY(QStringList focus_actions READ focus_actions NOTIFY state_changed)
+  Q_PROPERTY(QString focus_region READ focus_region NOTIFY state_changed)
+  Q_PROPERTY(QString focus_target READ focus_target NOTIFY state_changed)
+  Q_PROPERTY(QVariantList focus_points READ focus_points NOTIFY focus_points_changed)
+  Q_PROPERTY(bool has_focus_point READ has_focus_point NOTIFY focus_points_changed)
 
 public:
   explicit TutorialDirector(QObject* parent = nullptr);
@@ -133,11 +162,23 @@ public:
   [[nodiscard]] auto step_complete() const -> bool { return m_step_complete; }
   [[nodiscard]] auto holds_mission_clock() const -> bool;
   [[nodiscard]] auto steps() const -> QVariantList;
+  [[nodiscard]] auto focus_actions() const -> QStringList { return m_focus.actions; }
+  [[nodiscard]] auto focus_region() const -> QString { return m_focus.region; }
+  [[nodiscard]] auto focus_target() const -> QString;
+  [[nodiscard]] auto focus_target_id() const -> TutorialFocusTarget {
+    return m_focus.target;
+  }
+  [[nodiscard]] auto focus_points() const -> QVariantList { return m_focus_points; }
+  [[nodiscard]] auto has_focus_point() const -> bool {
+    return !m_focus_points.isEmpty();
+  }
+  void set_focus_points(const QVariantList& points);
 
   [[nodiscard]] static auto step_id_name(TutorialStepId id) -> QString;
   [[nodiscard]] static auto step_title(TutorialStepId id) -> QString;
   [[nodiscard]] static auto step_body(TutorialStepId id) -> QString;
   [[nodiscard]] static auto step_objective(TutorialStepId id) -> QString;
+  [[nodiscard]] static auto focus_target_name(TutorialFocusTarget target) -> QString;
 
 signals:
   void start_requested();
@@ -145,6 +186,7 @@ signals:
   void step_changed();
   void step_completed(int index);
   void tutorial_finished();
+  void focus_points_changed();
 
 private:
   struct Baseline {
@@ -166,7 +208,12 @@ private:
                               qreal& progress,
                               QString& progress_text) const -> bool;
   [[nodiscard]] auto hint_for(const TutorialObservation& observation) const -> QString;
-  void publish(qreal progress, const QString& progress_text, const QString& hint);
+  [[nodiscard]] auto
+  focus_for(const TutorialObservation& observation) const -> TutorialFocus;
+  void publish(qreal progress,
+               const QString& progress_text,
+               const QString& hint,
+               const TutorialFocus& focus);
 
   bool m_active = false;
   bool m_finished = false;
@@ -180,6 +227,8 @@ private:
   qreal m_progress = -1.0;
   QString m_progress_text;
   QString m_hint;
+  TutorialFocus m_focus;
+  QVariantList m_focus_points;
 };
 
 } // namespace Game::Mission

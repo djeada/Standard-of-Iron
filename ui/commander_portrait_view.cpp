@@ -1,13 +1,18 @@
 #include "commander_portrait_view.h"
 
+#include <QMatrix4x4>
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
+#include <QPointF>
 #include <QVector3D>
+#include <QtMath>
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 
+#include "animation/rig/humanoid_proportions.h"
 #include "animation/showcase_pose_manifest.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -17,22 +22,32 @@
 #include "game/units/factory.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
+#include "render/creature/pipeline/creature_bone_probe.h"
 #include "render/graphics_settings.h"
+#include "render/humanoid/skeleton.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
 
 namespace {
 
-constexpr float k_camera_height = 1.34F;
-constexpr float k_camera_distance = 2.02F;
-constexpr float k_camera_side = 0.62F;
-constexpr float k_target_height = 1.22F;
 constexpr float k_field_of_view = 32.0F;
+
+constexpr float k_bust_distance = 1.16F;
+constexpr QVector3D k_bust_direction = QVector3D(0.30F, 0.09F, 0.95F);
+
+constexpr float k_bust_drop = 0.075F;
+
+constexpr float k_default_focus_height = 1.31F;
+
+constexpr float k_focus_tau = 0.30F;
 
 constexpr float k_body_yaw_degrees = 14.0F;
 
 constexpr float k_max_frame_seconds = 0.1F;
+
+constexpr float k_head_radius = Render::GL::HumanProportions::HEAD_RADIUS;
+constexpr float k_cranium_rise = k_head_radius * 0.06F;
 
 auto portrait_lighting() -> Render::EnvironmentLightingState {
   Render::EnvironmentLightingState lighting;
@@ -81,6 +96,7 @@ public:
     if (view == nullptr) {
       return;
     }
+    m_item = view;
     const QString troop_type = view->troop_type();
     const QString pose = view->pose();
     m_speaking = view->speaking();
@@ -102,7 +118,17 @@ private:
   auto ensure_scene() -> bool;
   void apply_pose();
 
+  void measure_face_anchor(const QMatrix4x4& head_world);
+  void post_face_anchor();
+  [[nodiscard]] auto advance_focus(float delta) -> QVector3D;
+
   QSize m_size;
+  CommanderPortraitView* m_item = nullptr;
+  CommanderPortraitView::FaceAnchor m_face{};
+  CommanderPortraitView::FaceAnchor m_published{};
+  QVector3D m_focus{0.0F, k_default_focus_height, 0.0F};
+  QVector3D m_focus_target{0.0F, k_default_focus_height, 0.0F};
+  bool m_focus_settled = false;
   QString m_troop_type;
   QString m_pose;
   bool m_speaking = false;
@@ -121,6 +147,9 @@ private:
 };
 
 void CommanderPortraitView::PortraitRenderer::release_scene() {
+  m_focus = QVector3D(0.0F, k_default_focus_height, 0.0F);
+  m_focus_target = m_focus;
+  m_focus_settled = false;
   m_unit.reset();
   m_world.reset();
   m_factory.reset();
@@ -232,6 +261,96 @@ void CommanderPortraitView::PortraitRenderer::apply_pose() {
   m_pose_dirty = false;
 }
 
+void CommanderPortraitView::PortraitRenderer::measure_face_anchor(
+    const QMatrix4x4& head_world) {
+  m_face = {};
+  if (m_camera == nullptr || m_size.width() <= 0 || m_size.height() <= 0) {
+    return;
+  }
+
+  const auto width = static_cast<qreal>(m_size.width());
+  const auto height = static_cast<qreal>(m_size.height());
+
+  const QVector3D centre = head_world.map(QVector3D(0.0F, k_cranium_rise, 0.0F));
+  const QVector3D above =
+      head_world.map(QVector3D(0.0F, k_cranium_rise + k_head_radius, 0.0F));
+
+  QPointF centre_screen;
+  QPointF above_screen;
+  if (!m_camera->world_to_screen(centre, width, height, centre_screen) ||
+      !m_camera->world_to_screen(above, width, height, above_screen)) {
+    return;
+  }
+
+  const qreal dx = above_screen.x() - centre_screen.x();
+  const qreal dy = above_screen.y() - centre_screen.y();
+  const qreal up_length = std::hypot(dx, dy);
+  if (!(up_length > 0.5)) {
+    return;
+  }
+
+  const QVector3D origin = head_world.map(QVector3D(0.0F, 0.0F, 0.0F));
+  auto axis = [&](const QVector3D& local) {
+    QVector3D const world = head_world.map(local) - origin;
+    return world.lengthSquared() > 1.0e-12F ? world.normalized() : world;
+  };
+  const QVector3D head_right = axis(QVector3D(1.0F, 0.0F, 0.0F));
+  const QVector3D head_up = axis(QVector3D(0.0F, 1.0F, 0.0F));
+  const QVector3D head_forward = axis(QVector3D(0.0F, 0.0F, 1.0F));
+
+  QVector3D view_dir = centre - m_camera->get_position();
+  if (view_dir.lengthSquared() <= 1.0e-12F) {
+    return;
+  }
+  view_dir.normalize();
+
+  m_face.valid = true;
+  m_face.x = centre_screen.x() / width;
+  m_face.y = centre_screen.y() / height;
+  m_face.radius = up_length / height;
+
+  m_face.roll = qRadiansToDegrees(std::atan2(dx, -dy));
+  m_face.turn = QVector3D::dotProduct(head_right, view_dir);
+  m_face.tilt = QVector3D::dotProduct(head_up, view_dir);
+  m_face.facing = -QVector3D::dotProduct(head_forward, view_dir);
+}
+
+auto CommanderPortraitView::PortraitRenderer::advance_focus(float delta) -> QVector3D {
+  if (!m_focus_settled) {
+    m_focus = m_focus_target;
+    m_focus_settled = true;
+    return m_focus;
+  }
+  float const alpha = delta > 0.0F ? 1.0F - std::exp(-delta / k_focus_tau) : 0.0F;
+  m_focus += (m_focus_target - m_focus) * alpha;
+  return m_focus;
+}
+
+void CommanderPortraitView::PortraitRenderer::post_face_anchor() {
+  if (m_item == nullptr) {
+    return;
+  }
+
+  constexpr qreal k_epsilon = 1.0e-4;
+  auto same = [](qreal lhs, qreal rhs) {
+    return std::abs(lhs - rhs) < k_epsilon;
+  };
+  if (m_published.valid == m_face.valid && same(m_published.x, m_face.x) &&
+      same(m_published.y, m_face.y) && same(m_published.radius, m_face.radius) &&
+      same(m_published.roll, m_face.roll) && same(m_published.turn, m_face.turn) &&
+      same(m_published.tilt, m_face.tilt) && same(m_published.facing, m_face.facing)) {
+    return;
+  }
+  m_published = m_face;
+
+  auto* item = m_item;
+  const auto anchor = m_face;
+  QMetaObject::invokeMethod(
+      item,
+      [item, anchor]() { item->publish_face_anchor(anchor); },
+      Qt::QueuedConnection);
+}
+
 void CommanderPortraitView::PortraitRenderer::render() {
   const auto now = std::chrono::steady_clock::now();
   float delta = 0.0F;
@@ -243,6 +362,8 @@ void CommanderPortraitView::PortraitRenderer::render() {
 
   if (!m_speaking) {
 
+    m_face = {};
+    post_face_anchor();
     release_scene();
     return;
   }
@@ -257,8 +378,9 @@ void CommanderPortraitView::PortraitRenderer::render() {
   const float aspect = m_size.height() > 0 ? static_cast<float>(m_size.width()) /
                                                  static_cast<float>(m_size.height())
                                            : 1.0F;
-  m_camera->look_at(QVector3D(k_camera_side, k_camera_height, k_camera_distance),
-                    QVector3D(0.0F, k_target_height, 0.0F),
+  const QVector3D focus = advance_focus(delta);
+  m_camera->look_at(focus + (k_bust_direction.normalized() * k_bust_distance),
+                    focus,
                     QVector3D(0.0F, 1.0F, 0.0F));
   m_camera->set_perspective(k_field_of_view, aspect, 0.05F, 40.0F);
 
@@ -270,9 +392,29 @@ void CommanderPortraitView::PortraitRenderer::render() {
   m_renderer->set_local_owner_id(1);
   m_renderer->set_force_full_creature_lod(true);
   m_renderer->update_animation_time(delta);
+  Render::Creature::Pipeline::BoneProbe head_probe{};
+  head_probe.entity_id = static_cast<std::uint32_t>(m_entity);
+  head_probe.instance_index = 0U;
+  head_probe.bone_index =
+      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
+
   m_renderer->begin_frame();
-  m_renderer->render_world(m_world.get());
+  {
+    Render::Creature::Pipeline::ScopedBoneProbe const probe_scope(&head_probe);
+    m_renderer->render_world(m_world.get());
+  }
   m_renderer->end_frame();
+
+  if (head_probe.resolved) {
+    measure_face_anchor(head_probe.world);
+  } else {
+    m_face = {};
+  }
+  if (head_probe.resolved) {
+    QVector3D const head = head_probe.world.map(QVector3D(0.0F, k_cranium_rise, 0.0F));
+    m_focus_target = QVector3D(head.x(), head.y() - k_bust_drop, head.z());
+  }
+  post_face_anchor();
 
   update();
 }
@@ -287,6 +429,22 @@ CommanderPortraitView::~CommanderPortraitView() = default;
 auto CommanderPortraitView::createRenderer() const
     -> QQuickFramebufferObject::Renderer* {
   return new PortraitRenderer();
+}
+
+void CommanderPortraitView::publish_face_anchor(const FaceAnchor& anchor) {
+  constexpr qreal k_epsilon = 1.0e-4;
+  auto same = [](qreal lhs, qreal rhs) {
+    return std::abs(lhs - rhs) < k_epsilon;
+  };
+
+  if (m_face.valid == anchor.valid && same(m_face.x, anchor.x) &&
+      same(m_face.y, anchor.y) && same(m_face.radius, anchor.radius) &&
+      same(m_face.roll, anchor.roll) && same(m_face.turn, anchor.turn) &&
+      same(m_face.tilt, anchor.tilt) && same(m_face.facing, anchor.facing)) {
+    return;
+  }
+  m_face = anchor;
+  emit face_anchor_changed();
 }
 
 void CommanderPortraitView::set_troop_type(const QString& value) {

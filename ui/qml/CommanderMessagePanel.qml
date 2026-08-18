@@ -184,6 +184,15 @@ Item {
                             }
                         }
                     }
+
+                    CommanderFaceOverlay {
+                        id: face
+
+                        anchorSource: portrait
+                        pose: messageRoot.speakerPose
+                        accent: messageRoot.accent
+                        talking: messageRoot.showing && messageRoot.revealed < fullText.length
+                    }
                 }
             }
 

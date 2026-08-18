@@ -148,6 +148,16 @@ void GLView::notify_renderer_ready() {
 
 namespace {
 
+struct FrameGate {
+  GameEngine* engine = nullptr;
+
+  ~FrameGate() {
+    if (engine != nullptr) {
+      engine->end_render_frame();
+    }
+  }
+};
+
 auto render_thread_cpu_ms() -> double {
   timespec now{};
   if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now) != 0) {
@@ -221,6 +231,14 @@ void GLView::GLRenderer::render() {
         }
       }
     }
+
+    if (!m_engine->try_begin_render_frame()) {
+
+      update();
+      return;
+    }
+    const FrameGate frame_gate{m_engine};
+
     m_engine->ensure_initialized();
     if (!m_engine->renderer_initialized()) {
       qCritical() << "GLRenderer::render() - gameplay renderer initialization failed";

@@ -1,4 +1,6 @@
 #include <QSet>
+#include <QStringList>
+#include <QVariantList>
 #include <QVariantMap>
 
 #include <gtest/gtest.h>
@@ -333,4 +335,102 @@ TEST(TutorialDirectorTest, StartAsksTheEngineToLaunchTheMission) {
   EXPECT_EQ(requests, 1);
   EXPECT_FALSE(director.active())
       << "the director only becomes active once the mission has loaded";
+}
+
+TEST(TutorialDirectorTest, EveryStepPointsAtSomethingUntilItIsDone) {
+  TutorialDirector director;
+  director.begin();
+
+  QSet<QString> unpointed;
+  for (int i = 0; i < TutorialDirector::step_count(); ++i) {
+    director.advance(running(), 0.2F);
+    const bool points_somewhere = !director.focus_actions().isEmpty() ||
+                                  !director.focus_region().isEmpty() ||
+                                  !director.focus_target().isEmpty();
+    if (!points_somewhere) {
+      unpointed.insert(director.step_id());
+    }
+    director.skip_step();
+  }
+
+  EXPECT_TRUE(unpointed.isEmpty())
+      << "a step with nothing to point at leaves a new player hunting: "
+      << unpointed.values().join(QStringLiteral(", ")).toStdString();
+}
+
+TEST(TutorialDirectorTest, FocusFollowsWhatTheStepStillNeeds) {
+  TutorialDirector director;
+  director.begin();
+
+  director.advance(running(), 0.2F);
+  EXPECT_EQ(director.focus_target(), QStringLiteral("own_troops"))
+      << "with nothing selected, the ring belongs on the troops themselves";
+
+  while (director.step() != TutorialStepId::GatherWood) {
+    director.skip_step();
+  }
+
+  TutorialObservation o = running();
+  director.advance(o, 0.2F);
+  EXPECT_EQ(director.focus_target(), QStringLiteral("builders"))
+      << "no builder selected: point at the builders, not at the trees";
+  EXPECT_TRUE(director.focus_actions().isEmpty());
+
+  o.selected_builder_count = 1;
+  director.advance(o, 0.2F);
+  EXPECT_EQ(director.focus_target(), QStringLiteral("timber"));
+  EXPECT_TRUE(director.focus_actions().contains(QStringLiteral("collect")));
+
+  while (director.step() != TutorialStepId::RecruitSoldier) {
+    director.skip_step();
+  }
+  o = running();
+  o.selected_barracks_count = 1;
+  director.advance(o, 0.2F);
+  EXPECT_EQ(director.focus_region(), QStringLiteral("production"));
+
+  while (director.step() != TutorialStepId::Commander) {
+    director.skip_step();
+  }
+  o = running();
+  director.advance(o, 0.2F);
+  EXPECT_EQ(director.focus_target(), QStringLiteral("commander"));
+  o.commander_selected = true;
+  director.advance(o, 0.2F);
+  EXPECT_EQ(director.focus_actions(), QStringList{QStringLiteral("aura")});
+  EXPECT_TRUE(director.focus_target().isEmpty());
+}
+
+TEST(TutorialDirectorTest, FocusPointsAreDroppedWhenTheTargetChanges) {
+  TutorialDirector director;
+  director.begin();
+  director.advance(running(), 0.2F);
+  ASSERT_EQ(director.focus_target(), QStringLiteral("own_troops"));
+
+  QVariantMap point;
+  point["world_x"] = 12.0;
+  point["world_z"] = 34.0;
+  director.set_focus_points(QVariantList{point});
+  EXPECT_TRUE(director.has_focus_point());
+
+  TutorialObservation o = running();
+  o.selected_troop_count = 1;
+  director.advance(o, 0.2F);
+  director.advance(running(), 10.0F);
+  ASSERT_EQ(director.step(), TutorialStepId::MoveTroops);
+  EXPECT_FALSE(director.has_focus_point())
+      << "stale world rings must not survive the step they belonged to";
+}
+
+TEST(TutorialDirectorTest, CompletedStepStopsPointing) {
+  TutorialDirector director;
+  director.begin();
+
+  TutorialObservation o = running();
+  o.selected_troop_count = 1;
+  director.advance(o, 0.2F);
+  ASSERT_TRUE(director.step_complete());
+  EXPECT_TRUE(director.focus_actions().isEmpty());
+  EXPECT_TRUE(director.focus_region().isEmpty());
+  EXPECT_TRUE(director.focus_target().isEmpty());
 }

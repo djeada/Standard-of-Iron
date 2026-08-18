@@ -77,14 +77,15 @@ TestCase {
     }
 
     function test_every_outcome_names_itself() {
-        var kinds = ["victory", "defeat", "campaign"];
+        var kinds = ["victory", "defeat", "campaign", "training"];
         var headlines = [];
         var subtitles = [];
         for (var i = 0; i < kinds.length; ++i) {
             var overlay = makeOverlay({
                     "victoryState": kinds[i] === "defeat" ? "defeat" : "victory",
                     "isCampaignMission": kinds[i] === "campaign",
-                    "campaignCompleted": kinds[i] === "campaign"
+                    "campaignCompleted": kinds[i] === "campaign",
+                    "isTutorial": kinds[i] === "training"
                 });
             compare(overlay.outcomeKind, kinds[i]);
             verify(overlay.headline.length > 0, kinds[i] + " has no headline");
@@ -95,6 +96,35 @@ TestCase {
             subtitles.push(overlay.subtitle);
             overlay.destroy();
         }
+    }
+
+    function test_a_finished_tutorial_offers_the_campaign() {
+        var overlay = makeOverlay({
+                "victoryState": "victory",
+                "isTutorial": true
+            });
+        compare(overlay.outcomeKind, "training");
+        verify(overlay.secondaryAction.length > 0, "a finished tutorial must say where to go next");
+        var spy = spyComponent.createObject(testCase, {
+                "target": overlay,
+                "signalName": "secondaryRequested"
+            });
+        var banner = findChild(overlay, "outcomeBanner");
+        banner.item.secondaryActivated();
+        compare(spy.count, 1);
+        verify(!overlay.showingSummary, "the campaign shortcut must not open the battle report");
+        spy.destroy();
+        overlay.destroy();
+    }
+
+    function test_a_lost_tutorial_is_still_a_defeat() {
+        var overlay = makeOverlay({
+                "victoryState": "defeat",
+                "isTutorial": true
+            });
+        compare(overlay.outcomeKind, "defeat");
+        compare(overlay.secondaryAction, "");
+        overlay.destroy();
     }
 
     function test_the_banner_shows_until_the_report_is_asked_for() {

@@ -43,6 +43,7 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_camera_motion_scale(UserSettings::load_ui_camera_motion_scale())
     , m_damage_numbers(UserSettings::load_ui_damage_numbers())
     , m_camera_legend_seen(UserSettings::load_ui_camera_legend_seen())
+    , m_tutorial_completed(UserSettings::load_ui_tutorial_completed())
     , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity()) {
 
   Game::Accessibility::TeamIdentity::set_palette_variant_from_mode(
@@ -230,6 +231,16 @@ void UiPreferences::set_camera_legend_seen(bool seen) {
   m_camera_legend_seen = seen;
   UserSettings::save_ui_camera_legend_seen(seen);
   emit camera_legend_seen_changed();
+}
+
+void UiPreferences::set_tutorial_completed(bool completed) {
+  if (completed == m_tutorial_completed) {
+    return;
+  }
+
+  m_tutorial_completed = completed;
+  UserSettings::save_ui_tutorial_completed(completed);
+  emit tutorial_completed_changed();
 }
 
 void UiPreferences::set_damage_numbers(bool enabled) {

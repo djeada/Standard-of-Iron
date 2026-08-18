@@ -7,6 +7,7 @@ Design.IronOutcomeOverlay {
     id: victoryOverlay
 
     signal return_to_main_menu_requested
+    signal campaign_requested
 
     function game_ready() {
         return typeof game !== 'undefined' && game !== null;
@@ -26,11 +27,16 @@ Design.IronOutcomeOverlay {
 
     held: victoryOverlay.game_ready() && game.commander_message && game.commander_message.holds_outcome
     victoryState: victoryOverlay.victory_state()
+    isTutorial: victoryOverlay.game_ready() && !!game.tutorial && game.tutorial.finished
     isCampaignMission: victoryOverlay.game_ready() && game.setup.is_campaign_mission
     campaignCompleted: victoryOverlay.game_ready() && game.setup.campaign_completed === true
     factionId: victoryOverlay.game_ready() ? game.local_player_nation : ""
 
     onReportRequested: battleSummary.show()
+    onSecondaryRequested: {
+        victoryOverlay.reset();
+        victoryOverlay.campaign_requested();
+    }
 
     Connections {
         function onVictory_state_changed() {

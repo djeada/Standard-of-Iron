@@ -744,7 +744,7 @@ auto main(int argc, char* argv[]) -> int {
     QCommandLineOption const screenshot_view_opt(
         "screenshot-view",
         "Surface to capture: menu | skirmish | campaign | settings | load | save "
-        "| briefing | hud | rpg.",
+        "| briefing | hud | rpg | commander | tutorial.",
         "view",
         "menu");
     QCommandLineOption const screenshot_delay_opt(
