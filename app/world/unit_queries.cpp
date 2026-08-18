@@ -43,8 +43,9 @@ auto describe_unit(const Engine::Core::World* world,
 
   if (const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
       troop_type.has_value()) {
-    const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-        unit->nation_id, *troop_type);
+    const auto& profile =
+        Game::Systems::TroopProfileService::instance().get_profile_ref(unit->nation_id,
+                                                                       *troop_type);
     out.name = Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
   } else {
     out.name =

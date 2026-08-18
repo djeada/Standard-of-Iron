@@ -94,6 +94,7 @@ public:
     GL::Shader::UniformHandle tile_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle macro_noise_scale{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle detail_noise_scale{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle noise_octaves{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle slope_rock_threshold{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle slope_rock_sharpness{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_blend_height{GL::Shader::InvalidUniform};

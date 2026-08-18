@@ -1,5 +1,7 @@
 #pragma once
 
+class QOpenGLDebugLogger;
+
 #include <QPointer>
 #include <QQuickFramebufferObject>
 #include <QString>
@@ -61,6 +63,12 @@ private:
     std::vector<double> m_benchmark_frame_work_ms;
     std::vector<double> m_benchmark_update_ms;
     std::vector<double> m_benchmark_render_ms;
+    std::vector<double> m_benchmark_thread_cpu_ms;
+    std::unique_ptr<QOpenGLDebugLogger> m_gl_debug_logger;
+    bool m_gl_debug_checked = false;
+    std::vector<double> m_benchmark_gpu_shadow_ms;
+    std::vector<double> m_benchmark_gpu_color_ms;
+    std::vector<double> m_benchmark_gpu_wait_ms;
     std::vector<double> m_benchmark_wall_interval_ms;
     std::uint64_t m_benchmark_draw_calls = 0;
     std::uint64_t m_benchmark_visible_soldiers = 0;
@@ -69,7 +77,8 @@ private:
     void observe_runtime_continuity();
     void observe_runtime_benchmark(std::chrono::steady_clock::time_point frame_start,
                                    double update_ms,
-                                   double render_ms);
+                                   double render_ms,
+                                   double thread_cpu_ms);
     void finish_runtime_benchmark();
   };
 };

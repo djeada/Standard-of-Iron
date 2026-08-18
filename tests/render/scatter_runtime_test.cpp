@@ -78,6 +78,7 @@ TEST(ScatterRuntimeTest, DryGrassColorKeepsContrastOnMediterraneanSoil) {
   EXPECT_LT(Render::Ground::color_luminance(adjusted),
             Render::Ground::color_luminance(soil) - 0.055F);
   EXPECT_LT(adjusted.y(), yellow_blade.y());
+  EXPECT_GT(adjusted.y(), adjusted.x() + 0.01F);
 }
 
 TEST(ScatterRuntimeTest, GreenGrassBladesSitDeeperThanTheGroundTheyGrowFrom) {

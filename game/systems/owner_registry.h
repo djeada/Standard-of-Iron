@@ -84,10 +84,16 @@ public:
   void from_json(const QJsonObject& json);
 
 private:
+  void rebuild_team_lookup();
+
+  static constexpr int k_max_cached_owner_id = 64;
+
   int m_next_owner_id = 1;
   int m_local_player_id = 1;
   std::vector<OwnerInfo> m_owners;
   std::unordered_map<int, size_t> m_owner_id_to_index;
+
+  std::array<int, k_max_cached_owner_id + 1> m_team_by_owner_id{};
 };
 
 } // namespace Game::Systems

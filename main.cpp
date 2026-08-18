@@ -600,6 +600,19 @@ auto main(int argc, char* argv[]) -> int {
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
   fmt.setSamples(0);
   fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+  if (qEnvironmentVariableIntValue("SOI_GL_DEBUG") != 0) {
+    fmt.setOption(QSurfaceFormat::DebugContext);
+    qInfo() << "OpenGL debug context requested by SOI_GL_DEBUG";
+  }
+  if (qEnvironmentVariableIsSet("SOI_SWAP_INTERVAL")) {
+    bool interval_ok = false;
+    const int interval =
+        qEnvironmentVariableIntValue("SOI_SWAP_INTERVAL", &interval_ok);
+    if (interval_ok && interval >= 0) {
+      fmt.setSwapInterval(interval);
+      qInfo() << "Swap interval overridden by SOI_SWAP_INTERVAL:" << interval;
+    }
+  }
 
   QSurfaceFormat::setDefaultFormat(fmt);
   qInfo() << "Surface format configured: preferred OpenGL" << fmt.majorVersion() << "."

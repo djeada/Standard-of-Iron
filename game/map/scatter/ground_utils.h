@@ -140,7 +140,7 @@ inline auto grass_blade_toning(Game::Map::GroundType ground_type) -> GrassBladeT
   case Game::Map::GroundType::GrassDry:
   default:
 
-    return {{0.34F, 0.35F, 0.16F}, 0.26F, 0.15F, 1.08F};
+    return {{0.18F, 0.34F, 0.12F}, 0.24F, 0.15F, 1.14F};
   }
 }
 

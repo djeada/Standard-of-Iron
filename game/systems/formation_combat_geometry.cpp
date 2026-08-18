@@ -201,6 +201,13 @@ auto formation_seed(const Engine::Core::Entity& entity) noexcept -> std::uint32_
 
 auto resolve_definition(const Engine::Core::UnitComponent& unit)
     -> FormationDefinition {
+  if (auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
+      unit.uses_nation_formation_profile && troop_type) {
+    auto const& profile =
+        TroopProfileService::instance().get_profile_ref(unit.nation_id, *troop_type);
+    return resolve_definition(unit, profile);
+  }
+
   FormationDefinition definition;
   definition.total_count =
       Game::Units::TroopConfig::instance().get_individuals_per_unit(unit.spawn_type);
@@ -211,13 +218,6 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit)
   definition.doctrine = Game::Formation::default_doctrine_for_nation(unit.nation_id);
   definition.layout =
       resolve_layout_id(unit, definition.doctrine, definition.layout_state);
-
-  if (auto troop_type = Game::Units::spawn_typeToTroopType(unit.spawn_type);
-      unit.uses_nation_formation_profile && troop_type) {
-    auto const profile =
-        TroopProfileService::instance().get_profile(unit.nation_id, *troop_type);
-    return resolve_definition(unit, profile);
-  }
 
   if (unit.render_individuals_per_unit_override > 0) {
     definition.total_count = unit.render_individuals_per_unit_override;

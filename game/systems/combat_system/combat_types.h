@@ -27,6 +27,9 @@ inline constexpr float k_high_ground_height_threshold = 0.5F;
 inline constexpr float k_optimal_range_factor = 0.85F;
 inline constexpr float k_optimal_range_buffer = 0.5F;
 inline constexpr float k_new_command_threshold = 0.25F;
+
+inline constexpr float k_reference_frames_per_second = 60.0F;
+inline constexpr float k_max_chase_threshold_scale = 8.0F;
 inline constexpr float k_arrow_spread_min = -1.2F;
 inline constexpr float k_arrow_spread_max = 1.2F;
 inline constexpr float k_arrow_vertical_spread_factor = 3.5F;

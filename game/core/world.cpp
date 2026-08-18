@@ -589,10 +589,20 @@ void publish_creature_presentation_frame(World& world) {
 
 template <typename ComponentType>
 void copy_snapshot_component(const Entity& source, Entity& destination) {
-  if (auto const* component = source.get_component<ComponentType>()) {
-    static_assert(std::is_copy_constructible_v<ComponentType>);
-    destination.add_component<ComponentType>(*component);
+  auto const* component = source.get_component<ComponentType>();
+  if (component == nullptr) {
+    if (destination.get_component<ComponentType>() != nullptr) {
+      destination.remove_component<ComponentType>();
+    }
+    return;
   }
+  static_assert(std::is_copy_constructible_v<ComponentType>);
+  static_assert(std::is_copy_assignable_v<ComponentType>);
+  if (auto* existing = destination.get_component<ComponentType>()) {
+    *existing = *component;
+    return;
+  }
+  destination.add_component<ComponentType>(*component);
 }
 
 void copy_render_components(const Entity& source, Entity& destination) {
@@ -705,6 +715,8 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
                          entity.has_component<CatapultLoadingComponent>();
   return !moving && !active_creature && !active_combat && !transient;
 }
+
+constexpr std::uint64_t k_render_signature_unstable = 0ULL;
 
 auto render_entity_signature(const Entity& entity) -> std::uint64_t {
   std::uint64_t signature = 0xcbf29ce484222325ULL;
@@ -1098,20 +1110,28 @@ void World::publish_render_snapshot() {
       continue;
     }
     Entity const& source = *slot.entity;
-    std::uint64_t signature = render_entity_signature(source);
-    if (!render_entity_is_stable(source)) {
-      render_hash_combine(signature, m_render_publish_revision);
-    }
     Entity* destination = snapshot->resolve(source.get_id());
-    bool const reusable = destination != nullptr &&
-                          snapshot->m_render_entity_signatures[index] == signature;
-    if (!reusable) {
-      if (snapshot_slot.entity != nullptr) {
-        snapshot->destroy_entity(snapshot_slot.entity->get_id());
+
+    bool const stable = render_entity_is_stable(source);
+    std::uint64_t signature = k_render_signature_unstable;
+    bool reusable = false;
+    if (destination != nullptr && stable) {
+      signature = render_entity_signature(source);
+      if (signature == k_render_signature_unstable) {
+        signature = 1ULL;
       }
-      destination = snapshot->create_entity_with_id(source.get_id());
+      reusable = snapshot->m_render_entity_signatures[index] == signature;
+    }
+
+    if (!reusable) {
       if (destination == nullptr) {
-        continue;
+        if (snapshot_slot.entity != nullptr) {
+          snapshot->destroy_entity(snapshot_slot.entity->get_id());
+        }
+        destination = snapshot->create_entity_with_id(source.get_id());
+        if (destination == nullptr) {
+          continue;
+        }
       }
       copy_render_components(source, *destination);
       snapshot->m_render_entity_signatures[index] = signature;

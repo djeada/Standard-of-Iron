@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -242,6 +243,10 @@ private:
   std::uint64_t m_authored_world_props_revision{0};
   std::uint64_t m_world_props_revision{0};
   std::uint64_t m_navigation_topology_revision{0};
+
+  mutable std::unordered_map<std::uint64_t, QVector3D> m_prop_surface_cache;
+  mutable std::uint64_t m_prop_surface_cache_revision{0};
+  mutable bool m_prop_surface_cache_valid{false};
 };
 
 } // namespace Game::Map

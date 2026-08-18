@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <gtest/gtest.h>
+#include <memory>
 #include <vector>
 
 #include "game/core/component.h"
@@ -178,6 +179,72 @@ TEST(WorldPresentationTest, PublishesDetachedDoubleBufferedRenderWorlds) {
   EXPECT_NE(second.get(), first.get());
   EXPECT_FLOAT_EQ(
       second->get_entity(id)->get_component<TransformComponent>()->position.x, 9.0F);
+}
+
+TEST(WorldPresentationTest, MovingEntitiesAreRefreshedNotRebuiltEveryFrame) {
+  World world;
+  world.request_render_snapshots();
+  auto* entity = world.create_entity();
+  auto* transform = entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+  entity->add_component<Engine::Core::RenderableComponent>();
+  auto* movement = entity->add_component<Engine::Core::MovementComponent>();
+  movement->set_manual_velocity(1.0F, 0.0F);
+  EntityID const id = entity->get_id();
+
+  world.update(1.0F / 60.0F);
+
+  auto destroyed = std::make_shared<int>(0);
+  {
+    auto snapshot = world.acquire_render_snapshot();
+    ASSERT_NE(snapshot, nullptr);
+    ASSERT_NE(snapshot->get_entity(id), nullptr);
+    snapshot->add_entity_destroyed_observer([destroyed](EntityID) { ++(*destroyed); });
+  }
+
+  transform->position.x = 7.0F;
+
+  world.update(1.0F / 60.0F);
+  world.update(1.0F / 60.0F);
+
+  EXPECT_EQ(*destroyed, 0)
+      << "a moving unit must be refreshed in place, not torn down and rebuilt";
+
+  auto later = world.acquire_render_snapshot();
+  ASSERT_NE(later, nullptr);
+  auto* later_entity = later->get_entity(id);
+  ASSERT_NE(later_entity, nullptr);
+  EXPECT_FLOAT_EQ(later_entity->get_component<TransformComponent>()->position.x, 7.0F)
+      << "reusing the snapshot entity must still publish the new transform";
+}
+
+TEST(WorldPresentationTest, SnapshotDropsComponentsTheSourceNoLongerHas) {
+  World world;
+  world.request_render_snapshots();
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+  entity->add_component<Engine::Core::RenderableComponent>();
+  auto* movement = entity->add_component<Engine::Core::MovementComponent>();
+  movement->set_manual_velocity(1.0F, 0.0F);
+  entity->add_component<Engine::Core::HoldModeComponent>()->active = true;
+  EntityID const id = entity->get_id();
+
+  world.update(1.0F / 60.0F);
+  ASSERT_NE(world.acquire_render_snapshot()->get_entity(id), nullptr);
+  ASSERT_NE(world.acquire_render_snapshot()
+                ->get_entity(id)
+                ->get_component<Engine::Core::HoldModeComponent>(),
+            nullptr);
+
+  entity->remove_component<Engine::Core::HoldModeComponent>();
+  world.update(1.0F / 60.0F);
+  world.update(1.0F / 60.0F);
+
+  auto later = world.acquire_render_snapshot();
+  EXPECT_EQ(later->get_entity(id)->get_component<Engine::Core::HoldModeComponent>(),
+            nullptr)
+      << "a component removed from the unit must not linger in the snapshot";
 }
 
 TEST(WorldPresentationTest, RenderSnapshotCarriesWildlifeActionState) {

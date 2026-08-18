@@ -55,8 +55,10 @@ public:
   [[nodiscard]] auto has_pending() const -> bool;
 
 private:
-  void setup_instance_attributes();
-  auto upload_instances(const MeshInstanceGpu* data, std::size_t count) -> std::size_t;
+  void setup_instance_attributes(std::size_t byte_offset);
+  auto upload_instances(const MeshInstanceGpu* data,
+                        std::size_t count,
+                        std::size_t& byte_offset) -> std::size_t;
 
   bool m_initialized{false};
 
@@ -68,6 +70,8 @@ private:
   std::size_t m_instance_capacity{0};
 
   GLuint m_instance_buffer{0};
+  std::size_t m_ring_capacity_bytes{0};
+  std::size_t m_ring_offset_bytes{0};
 
   InstanceDrawGuard m_draw_guard{"MeshInstancingPipeline"};
 };

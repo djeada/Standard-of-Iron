@@ -828,6 +828,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         assets/shaders/include/visibility_mask.glsl
         assets/shaders/include/noise.glsl
         assets/shaders/directional_shadow_depth.vert
+        assets/shaders/directional_shadow_depth_instanced.vert
         assets/shaders/directional_shadow_rigged.vert
         assets/shaders/directional_shadow_depth.frag
             assets/shaders/basic.frag

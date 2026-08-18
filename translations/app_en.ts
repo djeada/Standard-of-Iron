@@ -192,34 +192,14 @@
     </message>
 </context>
 <context>
-    <name>BattleSummary</name>
-    <message>
-        <source>SCORE</source>
-        <translation>SCORE</translation>
-    </message>
-    <message>
-        <source>YOU</source>
-        <translation>YOU</translation>
-    </message>
+    <name>BattleReportLayout</name>
     <message>
         <source>Return to Menu</source>
         <translation>Return to Menu</translation>
     </message>
     <message>
-        <source>Victory Secured</source>
-        <translation>Victory Secured</translation>
-    </message>
-    <message>
-        <source>Army Broken</source>
-        <translation>Army Broken</translation>
-    </message>
-    <message>
-        <source>Held the Field</source>
-        <translation>Held the Field</translation>
-    </message>
-    <message>
-        <source>Routed</source>
-        <translation>Routed</translation>
+        <source>Close Report</source>
+        <translation>Close Report</translation>
     </message>
     <message>
         <source>Kills</source>
@@ -230,20 +210,44 @@
         <translation>Losses</translation>
     </message>
     <message>
-        <source>Units trained</source>
-        <translation>Units trained</translation>
+        <source>Trained</source>
+        <translation>Trained</translation>
     </message>
     <message>
         <source>Villages</source>
         <translation>Villages</translation>
     </message>
     <message>
-        <source>Play time</source>
-        <translation>Play time</translation>
+        <source>Held the Field</source>
+        <translation>Held the Field</translation>
     </message>
     <message>
-        <source>Back</source>
-        <translation>Back</translation>
+        <source>Routed</source>
+        <translation>Routed</translation>
+    </message>
+    <message>
+        <source>YOUR COMMAND</source>
+        <translation>YOUR COMMAND</translation>
+    </message>
+    <message>
+        <source>ARMIES OF THE FIELD</source>
+        <translation>ARMIES OF THE FIELD</translation>
+    </message>
+    <message>
+        <source>Score</source>
+        <translation>Score</translation>
+    </message>
+    <message>
+        <source>Army</source>
+        <translation>Army</translation>
+    </message>
+    <message>
+        <source>YOU</source>
+        <translation>YOU</translation>
+    </message>
+    <message>
+        <source>Esc closes the report</source>
+        <translation>Esc closes the report</translation>
     </message>
 </context>
 <context>
@@ -5656,6 +5660,21 @@ to see preview</translation>
     <message>
         <source>Testudo</source>
         <translation>Testudo</translation>
+    </message>
+</context>
+<context>
+    <name>Numerals</name>
+    <message>
+        <source>%1h %2m</source>
+        <translation>%1h %2m</translation>
+    </message>
+    <message>
+        <source>%1m %2s</source>
+        <translation>%1m %2s</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1s</translation>
     </message>
 </context>
 <context>
