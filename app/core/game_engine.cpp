@@ -43,6 +43,7 @@
 #include <qvectornd.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <map>
 #include <memory>
@@ -50,6 +51,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <thread>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -553,6 +555,46 @@ void GameEngine::finish_replay_verification_if_done() {
     QCoreApplication::exit(0);
   }
   m_replay_verify_exit = false;
+}
+
+namespace {
+
+constexpr auto k_render_frame_wait_budget = std::chrono::milliseconds(2000);
+constexpr auto k_render_frame_wait_poll = std::chrono::microseconds(250);
+
+} // namespace
+
+GameEngine::WorldFreeze::WorldFreeze(GameEngine& engine)
+    : m_engine(engine) {
+  m_engine.m_world_freeze_depth.fetch_add(1);
+
+  const auto deadline = std::chrono::steady_clock::now() + k_render_frame_wait_budget;
+  while (m_engine.m_render_frame_active.load()) {
+    if (std::chrono::steady_clock::now() >= deadline) {
+      qWarning() << "GameEngine: the render thread did not finish its frame within"
+                 << static_cast<int>(k_render_frame_wait_budget.count())
+                 << "ms; rebuilding the world anyway";
+      break;
+    }
+    std::this_thread::sleep_for(k_render_frame_wait_poll);
+  }
+}
+
+GameEngine::WorldFreeze::~WorldFreeze() {
+  m_engine.m_world_freeze_depth.fetch_sub(1);
+}
+
+auto GameEngine::try_begin_render_frame() -> bool {
+  m_render_frame_active.store(true);
+  if (m_world_freeze_depth.load() > 0) {
+    m_render_frame_active.store(false);
+    return false;
+  }
+  return true;
+}
+
+void GameEngine::end_render_frame() {
+  m_render_frame_active.store(false);
 }
 
 void GameEngine::update(float dt) {
@@ -1165,6 +1207,8 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
                                          const QVariantList& player_configs,
                                          bool set_skirmish_context) {
 
+  auto world_freeze = std::make_shared<WorldFreeze>(*this);
+
   clear_error();
   reset_preload_interaction_state();
   reset_mission_runtime_state();
@@ -1211,7 +1255,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   } else {
     AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
   }
-  QTimer::singleShot(50, this, [this, map_path, player_configs]() {
+  QTimer::singleShot(50, this, [this, map_path, player_configs, world_freeze]() {
     if (!m_world || !m_renderer || (m_camera == nullptr) || !m_skirmish_runtime) {
       set_error(tr("Cannot start skirmish: renderer not initialized"));
       m_runtime.loading = false;
@@ -1930,6 +1974,8 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
     return;
   }
 
+  const WorldFreeze world_freeze(*this);
+
   if (m_commander_view_model->active()) {
     m_commander_view_model->exit_mode();
   }
@@ -2603,6 +2649,7 @@ void GameEngine::update_tutorial(float real_dt) {
   }
   const float elapsed = m_tutorial_observe_accumulator;
   m_tutorial_observe_accumulator = 0.0F;
+  const QVariantMap wave_status = m_mission_waves.status();
   m_tutorial_director->advance(
       App::Mission::observe_tutorial_frame(
           {.world = m_world,
@@ -2612,9 +2659,40 @@ void GameEngine::update_tutorial(float real_dt) {
            .enemy_troops_defeated = m_enemy_troops_defeated,
            .mission_running = m_runtime.initialized && !is_loading(),
            .placement = m_placement_view_model.get(),
-           .wave_status = m_mission_waves.status()}),
+           .wave_status = wave_status}),
       elapsed);
   m_tutorial_notes.reset();
+  publish_tutorial_focus_points(wave_status);
+}
+
+void GameEngine::publish_tutorial_focus_points(const QVariantMap& wave_status) {
+  if (!m_tutorial_director) {
+    return;
+  }
+  QVariantList points = App::Mission::resolve_tutorial_focus_points(
+      {.world = m_world,
+       .local_owner_id = m_runtime.local_owner_id,
+       .target = m_tutorial_director->focus_target_id(),
+       .wave_alerts = wave_status.value(QStringLiteral("alerts")).toList()});
+
+  if (!points.isEmpty() && m_minimap_manager && m_minimap_manager->has_minimap()) {
+    const float world_width = m_minimap_manager->get_world_width();
+    const float world_height = m_minimap_manager->get_world_height();
+    for (auto& value : points) {
+      QVariantMap point = value.toMap();
+      const auto [nx, ny] =
+          Game::Map::Minimap::world_to_pixel(point.value("world_x").toFloat(),
+                                             point.value("world_z").toFloat(),
+                                             world_width,
+                                             world_height,
+                                             1.0F,
+                                             1.0F);
+      point["nx"] = std::clamp(nx, 0.0F, 1.0F);
+      point["ny"] = std::clamp(ny, 0.0F, 1.0F);
+      value = point;
+    }
+  }
+  m_tutorial_director->set_focus_points(points);
 }
 
 auto GameEngine::activity_view_model() const -> QObject* {

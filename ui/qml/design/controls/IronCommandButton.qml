@@ -31,6 +31,8 @@ AbstractButton {
     property string statusText: ""
 
     property bool blocked: false
+
+    property bool spotlit: false
     readonly property bool interactive: enabled && !blocked
 
     property string shortLabel: ""
@@ -98,6 +100,11 @@ AbstractButton {
 
     Keys.onReturnPressed: control.clicked()
     Keys.onEnterPressed: control.clicked()
+
+    Design.IronSpotlight {
+        active: control.spotlit
+        cornerRadius: Design.Metrics.radiusMedium
+    }
 
     Design.IronCommandTooltip {
         id: commandTooltip

@@ -32,6 +32,8 @@ class UiPreferences : public QObject {
                  damage_numbers_changed)
   Q_PROPERTY(bool cameraLegendSeen READ camera_legend_seen WRITE set_camera_legend_seen
                  NOTIFY camera_legend_seen_changed)
+  Q_PROPERTY(bool tutorialCompleted READ tutorial_completed WRITE set_tutorial_completed
+                 NOTIFY tutorial_completed_changed)
   Q_PROPERTY(qreal screenEffectIntensity READ screen_effect_intensity WRITE
                  set_screen_effect_intensity NOTIFY screen_effect_intensity_changed)
   Q_PROPERTY(QStringList colorVisionModes READ color_vision_modes CONSTANT)
@@ -63,6 +65,7 @@ public:
   }
   [[nodiscard]] auto damage_numbers() const -> bool { return m_damage_numbers; }
   [[nodiscard]] auto camera_legend_seen() const -> bool { return m_camera_legend_seen; }
+  [[nodiscard]] auto tutorial_completed() const -> bool { return m_tutorial_completed; }
   [[nodiscard]] auto screen_effect_intensity() const -> qreal {
     return m_screen_effect_intensity;
   }
@@ -86,6 +89,7 @@ public:
   void set_camera_motion_scale(qreal scale);
   void set_damage_numbers(bool enabled);
   void set_camera_legend_seen(bool seen);
+  void set_tutorial_completed(bool completed);
   void set_screen_effect_intensity(qreal intensity);
 
   Q_INVOKABLE void reset_to_defaults();
@@ -102,6 +106,7 @@ signals:
   void camera_motion_scale_changed();
   void damage_numbers_changed();
   void camera_legend_seen_changed();
+  void tutorial_completed_changed();
   void screen_effect_intensity_changed();
 
 private:
@@ -120,6 +125,7 @@ private:
   qreal m_camera_motion_scale;
   bool m_damage_numbers;
   bool m_camera_legend_seen;
+  bool m_tutorial_completed;
   qreal m_screen_effect_intensity;
 };
 
