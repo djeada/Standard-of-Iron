@@ -541,6 +541,8 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
         pick_new_errand = true;
       }
       break;
+    case SettlementErrand::Fleeing:
+      break;
     }
 
     if (!pick_new_errand) {

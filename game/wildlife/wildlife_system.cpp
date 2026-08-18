@@ -32,20 +32,7 @@ namespace Game::Wildlife {
 namespace {
 
 constexpr float k_two_pi = 6.28318530718F;
-constexpr float k_herd_cohesion_radius = 3.6F;
-constexpr float k_herd_max_spread = 7.5F;
-constexpr float k_pack_cohesion_radius = 5.5F;
-constexpr float k_flee_distance_min = 7.0F;
-constexpr float k_flee_distance_max = 11.0F;
-constexpr float k_graze_chance = 0.55F;
-constexpr float k_graze_dwell_min = 3.0F;
-constexpr float k_graze_dwell_max = 8.5F;
-constexpr float k_alarm_duration = 3.5F;
-constexpr float k_wolf_detect_multiplier = 1.4F;
 constexpr float k_wolf_bite_range = 1.35F;
-constexpr float k_pack_approach_spacing = 1.1F;
-constexpr float k_wolf_avoid_base_strength = 2.5F;
-constexpr float k_civilian_standoff = 3.0F;
 constexpr float k_civilian_threat_strength = 0.3F;
 constexpr float k_civilian_quarry_preference = 0.5F;
 constexpr int k_pack_gang_size = 3;
@@ -58,7 +45,6 @@ constexpr float k_wolf_bite_blood_chance = 0.34F;
 constexpr float k_wolf_bite_blood_spread = 0.55F;
 constexpr float k_move_reissue_epsilon = 0.75F;
 constexpr float k_troop_threat_strength = 1.0F;
-constexpr float k_sheep_flee_strength_threshold = 0.5F;
 constexpr float k_spawn_scatter = 3.2F;
 constexpr int k_open_point_attempts = 8;
 
@@ -1223,13 +1209,13 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
   m_elapsed = static_cast<float>(state.value("elapsed").toDouble(0.0));
 
   m_released_waves.clear();
-  for (const auto& value : state.value("released_waves").toArray()) {
+  for (const auto value : state.value("released_waves").toArray()) {
     m_released_waves.push_back(value.toBool(false));
   }
 
   m_groups.clear();
   const QJsonArray groups = state.value("groups").toArray();
-  for (const auto& value : groups) {
+  for (const auto value : groups) {
     const QJsonObject group_obj = value.toObject();
     GroupState group;
     group.id = static_cast<std::uint16_t>(group_obj.value("id").toInt(0));
@@ -1256,7 +1242,7 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
 
   BirdPopulation population;
   const QJsonArray flocks = state.value("flocks").toArray();
-  for (const auto& value : flocks) {
+  for (const auto value : flocks) {
     const QJsonObject flock_obj = value.toObject();
     Flock flock;
     flock.home_x = static_cast<float>(flock_obj.value("home_x").toDouble(0.0));
@@ -1282,7 +1268,7 @@ void WildlifeSystem::restore_state(const QJsonObject& state) {
   }
 
   const QJsonArray birds = state.value("birds").toArray();
-  for (const auto& value : birds) {
+  for (const auto value : birds) {
     const QJsonObject bird_obj = value.toObject();
     Bird bird;
     bird.x = static_cast<float>(bird_obj.value("x").toDouble(0.0));

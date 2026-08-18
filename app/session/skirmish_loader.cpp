@@ -277,7 +277,7 @@ auto SkirmishLoader::start(const QString& map_path,
         }
 
         const QJsonArray entries = obj[key].toArray();
-        for (const auto& entry_val : entries) {
+        for (const auto entry_val : entries) {
           if (!entry_val.isObject()) {
             continue;
           }

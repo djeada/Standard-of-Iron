@@ -59,43 +59,6 @@ rand_between(uint32_t seed, uint32_t salt, float min_val, float max_val) -> floa
   return min_val + (max_val - min_val) * t;
 }
 
-inline auto darken(const QVector3D& c, float k) -> QVector3D {
-  return c * k;
-}
-
-constexpr float k_coat_highlight_base = 0.55F;
-constexpr float k_coat_vertical_factor = 0.35F;
-constexpr float k_coat_longitudinal_factor = 0.20F;
-constexpr float k_coat_seed_factor = 0.08F;
-constexpr float k_coat_bright_factor = 1.08F;
-constexpr float k_coat_shadow_factor = 0.86F;
-
-inline auto coat_gradient(const QVector3D& coat,
-                          float vertical_factor,
-                          float longitudinal_factor,
-                          float seed) -> QVector3D {
-  float const highlight = saturate(
-      k_coat_highlight_base + vertical_factor * k_coat_vertical_factor -
-      longitudinal_factor * k_coat_longitudinal_factor + seed * k_coat_seed_factor);
-  QVector3D const bright = lighten(coat, k_coat_bright_factor);
-  QVector3D const shadow = darken(coat, k_coat_shadow_factor);
-  return shadow * (1.0F - highlight) + bright * highlight;
-}
-
-inline auto lerp3(const QVector3D& a, const QVector3D& b, float t) -> QVector3D {
-  return {a.x() + (b.x() - a.x()) * t,
-          a.y() + (b.y() - a.y()) * t,
-          a.z() + (b.z() - a.z()) * t};
-}
-
-inline auto bezier(const QVector3D& p0,
-                   const QVector3D& p1,
-                   const QVector3D& p2,
-                   float t) -> QVector3D {
-  float const u = 1.0F - t;
-  return p0 * (u * u) + p1 * (2.0F * u * t) + p2 * (t * t);
-}
-
 } // namespace
 
 auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {

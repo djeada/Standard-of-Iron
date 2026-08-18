@@ -144,6 +144,10 @@ auto animation_state_name(Render::Creature::AnimationStateId state) noexcept -> 
     return "RpgSwordThrust";
   case A::RpgSwordFinisher:
     return "RpgSwordFinisher";
+  case A::WildlifeTense:
+    return "WildlifeTense";
+  case A::WildlifeStartle:
+    return "WildlifeStartle";
   case A::Count:
     return "Count";
   }

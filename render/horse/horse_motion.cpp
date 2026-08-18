@@ -251,7 +251,6 @@ constexpr float k_idle_breathing_primary_freq = 0.4F;
 constexpr float k_idle_breathing_secondary_freq = 0.15F;
 constexpr float k_idle_breathing_primary_weight = 0.6F;
 constexpr float k_idle_breathing_secondary_weight = 0.4F;
-constexpr float k_idle_phase_speed = 0.15F;
 constexpr float k_gait_transition_duration = 0.3F;
 
 auto to_animation_gait_type(GaitType gait) noexcept -> Animation::HorseGaitType {

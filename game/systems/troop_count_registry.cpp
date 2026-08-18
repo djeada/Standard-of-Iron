@@ -52,7 +52,6 @@ void TroopCountRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event) 
 
   int const production_cost =
       Game::Units::TroopConfig::instance().get_production_cost(event.spawn_type);
-  int old_count = m_troop_counts[event.owner_id];
   m_troop_counts[event.owner_id] -= production_cost;
   if (m_troop_counts[event.owner_id] < 0) {
     m_troop_counts[event.owner_id] = 0;

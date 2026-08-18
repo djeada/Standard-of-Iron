@@ -112,8 +112,6 @@ void ArmorLightCarthageRenderer::submit(const ArmorLightCarthageConfig&,
   }
 
   QVector3D const leather_color = QVector3D(0.76F, 0.70F, 0.54F);
-  QVector3D const leather_shadow =
-      saturate_color(leather_color * QVector3D(0.90F, 0.90F, 0.90F));
   QVector3D const leather_highlight =
       saturate_color(leather_color * QVector3D(1.08F, 1.05F, 1.02F));
   QVector3D const metal_color = QVector3D(0.84F, 0.70F, 0.38F);

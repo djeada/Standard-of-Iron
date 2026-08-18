@@ -7,6 +7,7 @@
 #include <complex>
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Game::Audio::Mastering {
@@ -31,7 +32,6 @@ constexpr float ZONE_AIR_HI_HZ = 12000.0F;
 
 constexpr float RIDGE_LO_HZ = 1500.0F;
 constexpr float RIDGE_HI_HZ = 12000.0F;
-constexpr float RIDGE_HOT_DB = 6.0F;
 constexpr float RIDGE_HOT_RATIO = 1.9952623F;
 constexpr float RIDGE_MIN_HOT_FRACTION = 0.5F;
 constexpr float RIDGE_MIN_EXCESS_DB = 5.0F;
@@ -188,13 +188,6 @@ auto make_highpass(float frequency_hz, float q, int sample_rate) -> Biquad {
                    1.0F + alpha,
                    -2.0F * cos_omega,
                    1.0F - alpha);
-}
-
-void run_biquad(std::vector<float>& signal, const Biquad& coefficients) {
-  BiquadState state;
-  for (float& sample : signal) {
-    sample = state.process(coefficients, sample);
-  }
 }
 
 void fft_in_place(std::vector<std::complex<float>>& data) {

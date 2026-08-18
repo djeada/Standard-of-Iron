@@ -295,7 +295,7 @@ auto read_entrance_specs(const QJsonArray& entrances,
                          QJsonArray* out_invalid) -> QVector<EntranceSpec> {
   QVector<EntranceSpec> specs;
   specs.reserve(entrances.size());
-  for (const QJsonValue& entrance_value : entrances) {
+  for (const QJsonValue entrance_value : entrances) {
     if (!entrance_value.isObject()) {
       out_invalid->append(entrance_value);
       continue;

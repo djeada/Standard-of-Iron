@@ -21,8 +21,7 @@ constexpr GLuint k_instance_model_col2_loc = 5;
 constexpr GLuint k_instance_color_alpha_loc = 6;
 } // namespace
 
-MeshInstancingPipeline::MeshInstancingPipeline(GL::ShaderCache* shader_cache)
-    : m_shader_cache(shader_cache) {
+MeshInstancingPipeline::MeshInstancingPipeline(GL::ShaderCache*) {
   m_instances.reserve(k_initial_capacity);
 }
 

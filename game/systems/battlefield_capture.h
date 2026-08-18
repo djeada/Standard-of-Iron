@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <utility>

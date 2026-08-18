@@ -69,11 +69,7 @@ using namespace Render::GL::ColorIndex;
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
-namespace {
-
-const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
-
-} // namespace
+namespace {}
 
 Backend::Backend() = default;
 Backend::Backend(ShaderQuality quality)
@@ -906,17 +902,14 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
                                   banner_wind_strength,
                                   polygon_offset_enabled};
 
-  std::size_t frame_rigged_commands = 0;
   m_rigged_drawn_this_frame = 0;
 
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
     const PreparedBatch& prepared = prepared_batches[batch_index];
     const std::size_t i = prepared.start;
-    const std::size_t batch_end = prepared.end();
     const auto& cmd = queue.get_sorted(i);
     if (prepared.type == DrawCmdType::RiggedCreature) {
-      frame_rigged_commands += prepared.count;
     }
     switch (draw_cmd_type(cmd)) {
     case DrawCmdType::Cylinder:

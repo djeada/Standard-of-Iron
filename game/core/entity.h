@@ -6,6 +6,7 @@
 #include <memory>
 #include <type_traits>
 #include <typeindex>
+#include <utility>
 #include <vector>
 
 #include "component_pool.h"
@@ -38,7 +39,12 @@ constexpr auto generation_of(EntityID id) -> std::uint32_t {
 
 class Component {
 public:
+  Component() = default;
   virtual ~Component() = default;
+  Component(const Component&) = default;
+  auto operator=(const Component&) -> Component& = default;
+  Component(Component&&) = default;
+  auto operator=(Component&&) -> Component& = default;
 };
 
 using ComponentChangeCallback =

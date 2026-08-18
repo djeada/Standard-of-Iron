@@ -5,7 +5,9 @@
 #include <QVector3D>
 #include <QVector4D>
 
+#include <algorithm>
 #include <cmath>
+#include <string>
 #include <vector>
 
 namespace CampaignMapRender {

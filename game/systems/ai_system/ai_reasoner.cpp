@@ -676,10 +676,7 @@ namespace Game::Systems::AI {
 
 void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
 
-  if (ctx.nation == nullptr) {
-    ctx.nation =
-        Game::Systems::NationRegistry::instance().get_nation_for_player(ctx.player_id);
-  }
+  ctx.nation = snapshot.nation.get();
 
   const auto alive_ids = cleanup_dead_units(snapshot, ctx, snapshot.game_time);
 
@@ -727,7 +724,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.outpost_barracks_count = 0;
   ctx.outpost_home_count = 0;
   ctx.expansion_construction_pending = false;
-  ctx.max_troops_per_player = Game::GameConfig::instance().get_max_troops_per_player();
+  if (snapshot.max_troops_per_player > 0) {
+    ctx.max_troops_per_player = snapshot.max_troops_per_player;
+  }
 
   constexpr float attack_record_timeout = 10.0F;
   auto it = ctx.buildings_under_attack.begin();

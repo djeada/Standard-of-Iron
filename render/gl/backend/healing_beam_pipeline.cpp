@@ -4,6 +4,7 @@
 #include <QMatrix4x4>
 #include <QOpenGLContext>
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 
@@ -19,13 +20,7 @@ namespace Render::GL::BackendPipelines {
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
-namespace {
-
-auto check_gl_error(const char* operation) -> bool {
-  return BackendPipelines::check_gl_error("HealingBeamPipeline", operation);
-}
-
-} // namespace
+namespace {}
 
 auto HealingBeamPipeline::initialize() -> bool {
   if (m_shader_cache == nullptr) {

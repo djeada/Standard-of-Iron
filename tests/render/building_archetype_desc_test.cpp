@@ -52,10 +52,6 @@ public:
   void mode_indicator(const QMatrix4x4&, int, const QVector3D&, float) override {}
 };
 
-auto fake_mesh(int id) -> Render::GL::Mesh* {
-  return reinterpret_cast<Render::GL::Mesh*>(static_cast<intptr_t>(id));
-}
-
 TEST(BuildingArchetypeDesc, FiltersPartsByBuildingStateMask) {
   using namespace Render::GL;
 

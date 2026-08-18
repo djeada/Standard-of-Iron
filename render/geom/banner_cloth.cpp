@@ -1,12 +1,11 @@
 #include "banner_cloth.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace Render::Geom {
 
-namespace {
-constexpr float k_pi = 3.14159265358979F;
-}
+namespace {}
 
 auto BannerCloth::generate_banner_transform(const QVector3D& center,
                                             float half_width,

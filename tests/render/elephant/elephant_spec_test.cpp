@@ -96,12 +96,6 @@ Render::GL::ElephantDimensions make_dims() {
   return d;
 }
 
-Render::GL::ElephantVariant make_variant() {
-  Render::GL::ElephantVariant v{};
-  v.skin_color = QVector3D(0.45F, 0.40F, 0.38F);
-  return v;
-}
-
 Render::GL::ElephantGait make_gait() {
   Render::GL::ElephantGait g{};
   g.cycle_time = 1.2F;

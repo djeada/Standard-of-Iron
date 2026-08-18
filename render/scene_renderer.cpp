@@ -515,6 +515,15 @@ void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {
     submitted.firecamp.time = m_accumulated_time;
     break;
   case TerrainScatterCmd::Species::Stone:
+  case TerrainScatterCmd::Species::Tent:
+  case TerrainScatterCmd::Species::SupplyCart:
+  case TerrainScatterCmd::Species::WeaponRack:
+  case TerrainScatterCmd::Species::Ruins:
+  case TerrainScatterCmd::Species::DeadTree:
+  case TerrainScatterCmd::Species::IronOre:
+  case TerrainScatterCmd::Species::MagicShrine:
+  case TerrainScatterCmd::Species::AbandonedHome:
+  case TerrainScatterCmd::Species::Statue:
     break;
   }
   m_active_queue->submit(std::move(submitted));

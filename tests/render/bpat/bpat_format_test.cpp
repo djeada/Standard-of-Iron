@@ -4,6 +4,7 @@
 #include <cstring>
 #include <gtest/gtest.h>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"

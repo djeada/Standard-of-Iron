@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
+#include <initializer_list>
 #include <numbers>
 
 #include "animation/bpat/bpat_format.h"
@@ -91,8 +92,7 @@ void use_single_body_combat_geometry(std::initializer_list<Entity*> entities) {
 TEST_F(CombatModeTest, NoAttackModeWhenMovingNearEnemy) {
 
   auto* attacker = world->create_entity();
-  auto* attacker_transform =
-      attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
   attacker_unit->render_individuals_per_unit_override = 1;
@@ -102,7 +102,7 @@ TEST_F(CombatModeTest, NoAttackModeWhenMovingNearEnemy) {
   attacker_attack->preferred_mode = AttackComponent::CombatMode::Auto;
 
   auto* enemy = world->create_entity();
-  auto* enemy_transform = enemy->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
+  enemy->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
   auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
   enemy_unit->render_individuals_per_unit_override = 1;
@@ -116,8 +116,7 @@ TEST_F(CombatModeTest, NoAttackModeWhenMovingNearEnemy) {
 TEST_F(CombatModeTest, AttackModeTriggersWhenEngaged) {
 
   auto* attacker = world->create_entity();
-  auto* attacker_transform =
-      attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
   auto* attacker_attack = attacker->add_component<AttackComponent>();
@@ -128,7 +127,7 @@ TEST_F(CombatModeTest, AttackModeTriggersWhenEngaged) {
   attacker_attack->range = 10.0F;
 
   auto* enemy = world->create_entity();
-  auto* enemy_transform = enemy->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
+  enemy->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
   auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
 
@@ -386,8 +385,7 @@ TEST_F(CombatModeTest, HoldModeSpearmanStillLocksEnemyInMelee) {
 TEST_F(CombatModeTest, BuildingsExcludedFromCombatMode) {
 
   auto* attacker = world->create_entity();
-  auto* attacker_transform =
-      attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
   auto* attacker_attack = attacker->add_component<AttackComponent>();
@@ -398,8 +396,7 @@ TEST_F(CombatModeTest, BuildingsExcludedFromCombatMode) {
   attacker_attack->range = 10.0F;
 
   auto* building = world->create_entity();
-  auto* building_transform =
-      building->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
+  building->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
   auto* building_unit = building->add_component<UnitComponent>(500, 500, 0.0F, 12.0F);
   building_unit->owner_id = 2;
   building->add_component<BuildingComponent>();
@@ -416,8 +413,7 @@ TEST_F(CombatModeTest, BuildingsExcludedFromCombatMode) {
 TEST_F(CombatModeTest, RangedUnitUsesRangedModeWhenNotEngaged) {
 
   auto* attacker = world->create_entity();
-  auto* attacker_transform =
-      attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
   auto* attacker_attack = attacker->add_component<AttackComponent>();
@@ -426,7 +422,7 @@ TEST_F(CombatModeTest, RangedUnitUsesRangedModeWhenNotEngaged) {
   attacker_attack->preferred_mode = AttackComponent::CombatMode::Auto;
 
   auto* enemy = world->create_entity();
-  auto* enemy_transform = enemy->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
+  enemy->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
   auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
 

@@ -2202,18 +2202,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
 <context>
     <name>GameEngine</name>
     <message>
-        <source>wood</source>
-        <translation>madeira</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>pedra</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>ferro</translation>
-    </message>
-    <message>
         <source>Maximum troop limit reached. Cannot produce more units.</source>
         <translation>Limite máximo de tropas atingido. Não é possível produzir mais unidades.</translation>
     </message>

@@ -55,7 +55,6 @@ struct AABB {
     return mx.x() >= mn.x() && mx.y() >= mn.y() && mx.z() >= mn.z();
   }
   [[nodiscard]] auto extents() const noexcept -> QVector3D { return mx - mn; }
-  [[nodiscard]] auto center() const noexcept -> QVector3D { return (mn + mx) * 0.5F; }
 };
 
 auto bone_matrix_from_frame(const Render::GL::AttachmentFrame& f) -> QMatrix4x4 {
@@ -124,16 +123,6 @@ void expect_aabb_close(const AABB& a, const AABB& b, float eps) {
   EXPECT_NEAR(a.mx.x(), b.mx.x(), eps);
   EXPECT_NEAR(a.mx.y(), b.mx.y(), eps);
   EXPECT_NEAR(a.mx.z(), b.mx.z(), eps);
-}
-
-void expect_aabb_extent_close(const AABB& a, const AABB& b, float eps) {
-  ASSERT_TRUE(a.valid()) << "legacy AABB is empty";
-  ASSERT_TRUE(b.valid()) << "baked AABB is empty";
-  const QVector3D ae = a.extents();
-  const QVector3D be = b.extents();
-  EXPECT_NEAR(ae.x(), be.x(), eps);
-  EXPECT_NEAR(ae.y(), be.y(), eps);
-  EXPECT_NEAR(ae.z(), be.z(), eps);
 }
 
 auto make_test_head_frame() -> Render::GL::AttachmentFrame {

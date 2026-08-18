@@ -16,7 +16,7 @@
 
 namespace Engine::Core {
 class Entity;
-struct CombatHitEvent;
+class CombatHitEvent;
 } // namespace Engine::Core
 
 namespace App::Core {

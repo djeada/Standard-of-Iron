@@ -167,8 +167,9 @@ endif()
 #
 #   * ERRORS are the diagnostics that indicate real divergence between
 #     compilers -- unspecified evaluation order, dangling references, missing
-#     returns, disabled NaN handling. Every one of these is at zero, so the
-#     gate is meaningful: a new hit is a regression, not a backlog item.
+#     returns, disabled NaN handling, class/struct tags that the Microsoft ABI
+#     mangles apart. Every one of these is at zero, so the gate is meaningful:
+#     a new hit is a regression, not a backlog item.
 #   * The rest stay warnings. There are ~2,700 of them (mostly -Wswitch and
 #     -Wmissing-field-initializers) and they are stylistic, not portability
 #     signal. Promoting them would drown the ones that matter.
@@ -184,11 +185,18 @@ if(SOI_STRICT_WARNINGS)
             /we4715 # Not all control paths return a value
             /we4172 # Returning the address of a local
             /we4239 # Non-standard binding of a temporary to a reference
+            /we4099 # Type declared 'struct' in one place and 'class' in another
+            /we4062 # Enumerator not handled in a switch with no default
+            /we4456 # Declaration shadows a local
+            /we4457 # Declaration shadows a function parameter
+            /we4458 # Declaration shadows a class member
+            /we4700 # Local used without being initialised
+            /we4702 # Unreachable code
+            /we4189 # Local variable initialised but not referenced
+            /we4505 # Unreferenced local function
             /wd4100 # Unreferenced formal parameter
-            /wd4189 # Local variable initialised but not referenced
             /wd4244 # Narrowing conversion
             /wd4267 # size_t narrowing
-            /wd4505 # Unreferenced local function
         )
     else()
         add_compile_options(-Wall -Wextra)
@@ -202,11 +210,15 @@ if(SOI_STRICT_WARNINGS)
             -Werror=return-type
             -Werror=sign-compare
             -Werror=range-loop-construct
-            -Wno-switch
+            -Werror=switch
+            -Werror=extra-semi
+            -Werror=implicit-fallthrough
+            -Werror=old-style-cast
+            -Werror=unused-local-typedefs
+            -Werror=unused-variable
+            -Werror=unused-function
             -Wno-missing-field-initializers
             -Wno-unused-parameter
-            -Wno-unused-variable
-            -Wno-unused-function
         )
         if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             add_compile_options(
@@ -219,18 +231,37 @@ if(SOI_STRICT_WARNINGS)
                 # -fno-finite-math-only and silently deletes the isfinite
                 # guards again. See the floating point note above.
                 -Werror=nan-infinity-disabled
-                -Wno-unused-private-field
-                -Wno-unused-lambda-capture
-                -Wno-unused-local-typedef
-                -Wno-mismatched-tags
-                -Wno-shadow-field
-                -Wno-range-loop-bind-reference
+                # class/struct has to agree across declarations: the Microsoft
+                # ABI mangles the two differently, so a type forward-declared
+                # one way and defined the other is a Windows linker error that
+                # nothing on this platform can produce. Clang is the only
+                # compiler here that says so.
+                -Werror=mismatched-tags
+                # A range-for whose loop variable binds to a temporary is
+                # reading a per-iteration copy while looking like a reference
+                # into the container. Every one of these was `const auto&` over
+                # a QJsonArray, whose iterator yields QJsonValue by value.
+                -Werror=range-loop-bind-reference
+                -Werror=shadow-field
+                -Werror=unused-lambda-capture
+                -Werror=unused-const-variable
+                -Werror=unused-private-field
+                -Werror=deprecated-copy-with-dtor
+                -Werror=conditional-uninitialized
+                -Werror=loop-analysis
+                -Werror=self-assign
+                -Werror=unreachable-code
+                -Werror=header-hygiene
+                -Werror=cast-qual
+                -Werror=suggest-override
+                -Werror=newline-eof
             )
         else()
             add_compile_options(
                 -Werror=sequence-point
-                -Wno-unused-but-set-variable
-                -Wno-unused-local-typedefs
+                -Werror=unused-but-set-variable
+                -Werror=unused-const-variable=1
+                -Werror=suggest-override
             )
             if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13)
                 add_compile_options(-Werror=dangling-reference)

@@ -174,7 +174,7 @@ auto parse_troop_formation_profile(const QJsonObject& formation_object,
   bool touched = false;
 
   std::vector<std::string> roles;
-  for (const auto& entry : formation_object.value(QLatin1String("roles")).toArray()) {
+  for (const auto entry : formation_object.value(QLatin1String("roles")).toArray()) {
     auto const text = entry.toString().trimmed();
     if (!text.isEmpty()) {
       roles.push_back(text.toLower().toStdString());
@@ -188,7 +188,7 @@ auto parse_troop_formation_profile(const QJsonObject& formation_object,
   auto const army_roles = formation_object.value(QLatin1String("army_roles")).toArray();
   if (!army_roles.isEmpty()) {
     out.army_roles.clear();
-    for (const auto& entry : army_roles) {
+    for (const auto entry : army_roles) {
       if (auto parsed = try_parse_army_role(entry.toString())) {
         out.army_roles.push_back(*parsed);
       }

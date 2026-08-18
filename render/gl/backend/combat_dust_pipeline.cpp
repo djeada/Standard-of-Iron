@@ -22,10 +22,6 @@ using namespace Render::GL::ComponentCount;
 
 namespace {
 
-auto check_gl_error(const char* operation) -> bool {
-  return BackendPipelines::check_gl_error("CombatDustPipeline", operation);
-}
-
 constexpr float k_min_dust_intensity = 0.01F;
 
 struct EffectRenderState {
@@ -243,8 +239,6 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
   std::vector<DustVertex> vertices;
   std::vector<unsigned int> indices;
 
-  constexpr int rings = 6;
-  constexpr int segments = 16;
   constexpr float pi = std::numbers::pi_v<float>;
 
   constexpr int height_levels = 8;

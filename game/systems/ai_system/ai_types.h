@@ -3,6 +3,7 @@
 #include <QString>
 
 #include <cstdint>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -156,6 +157,15 @@ struct AISnapshot {
   std::vector<ResourceNodeSnapshot> resource_nodes;
   ResourceAmounts resources;
   bool has_resource_snapshot = false;
+
+  std::shared_ptr<const Game::Systems::Nation> nation;
+  int max_troops_per_player = 0;
+
+  bool has_map_bounds = false;
+  float map_min_x = 0.0F;
+  float map_max_x = 0.0F;
+  float map_min_z = 0.0F;
+  float map_max_z = 0.0F;
 
   float game_time = 0.0F;
 };

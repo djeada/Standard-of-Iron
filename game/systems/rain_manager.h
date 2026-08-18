@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <utility>
 
 #include "game/map/map_definition.h"
 

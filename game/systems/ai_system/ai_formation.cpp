@@ -61,8 +61,8 @@ auto facing_towards(const std::vector<Game::Formation::ArmyFormationMember>& mem
 
 } // namespace
 
-auto doctrine_for_player(int player_id) -> Game::Formation::FormationDoctrineId {
-  const auto* nation = NationRegistry::instance().get_nation_for_player(player_id);
+auto doctrine_for_nation(const Game::Systems::Nation* nation)
+    -> Game::Formation::FormationDoctrineId {
   if (nation != nullptr && !nation->doctrine.empty()) {
     return nation->doctrine;
   }
@@ -72,7 +72,7 @@ auto doctrine_for_player(int player_id) -> Game::Formation::FormationDoctrineId 
 auto plan_ai_formation(const AIFormationRequest& request,
                        const std::vector<const EntitySnapshot*>& units)
     -> std::vector<QVector3D> {
-  auto const doctrine = doctrine_for_player(request.player_id);
+  auto const doctrine = doctrine_for_nation(request.nation);
   auto const members = build_members(units, doctrine);
 
   Game::Formation::ArmyFormationRequest plan_request;

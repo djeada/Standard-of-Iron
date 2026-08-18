@@ -391,8 +391,6 @@ constexpr float k_plot_margin = 1.2F;
 constexpr float k_max_building_half = 2.0F;
 constexpr float k_row_pitch = 6.4F;
 constexpr float k_col_pitch = 6.4F;
-constexpr float k_cross_street_pitch = 19.2F;
-
 [[nodiscard]] auto first_row_offset() -> float {
   return k_street_half_width + k_plot_margin + k_max_building_half;
 }

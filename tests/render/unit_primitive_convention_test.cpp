@@ -1,5 +1,6 @@
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <string_view>

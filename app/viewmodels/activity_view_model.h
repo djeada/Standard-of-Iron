@@ -8,7 +8,7 @@
 #include "app/world/combat_feedback.h"
 
 namespace Engine::Core {
-struct CombatHitEvent;
+class CombatHitEvent;
 }
 
 namespace App::Core {

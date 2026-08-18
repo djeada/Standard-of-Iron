@@ -69,7 +69,7 @@ auto CampaignLoader::load_from_json_file(const QString& file_path,
 
   if (root.contains("missions")) {
     const QJsonArray missions = root["missions"].toArray();
-    for (const auto& mission_val : missions) {
+    for (const auto mission_val : missions) {
       out_campaign.missions.push_back(parse_campaign_mission(mission_val.toObject()));
     }
   }

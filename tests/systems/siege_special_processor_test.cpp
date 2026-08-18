@@ -129,7 +129,7 @@ protected:
 };
 
 TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyInRange) {
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
+  make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy = make_enemy(10.0F, 0.0F, 0.0F, 2);
 
   update(0.1F);
@@ -143,7 +143,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyInRange) {
 }
 
 TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackEnemyOutOfRange) {
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
+  make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy = make_enemy(25.0F, 0.0F, 0.0F, 2);
 
   update(0.1F);
@@ -173,7 +173,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackAlly) {
   OwnerRegistry::instance().set_owner_team(1, 1);
   OwnerRegistry::instance().set_owner_team(2, 1);
 
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
+  make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* ally = make_enemy(10.0F, 0.0F, 0.0F, 2);
 
   update(0.1F);
@@ -185,7 +185,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackAlly) {
 }
 
 TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackEnemyBeyondHeightDifference) {
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1, 18.0F, 4.0F);
+  make_tower(0.0F, 0.0F, 0.0F, 1, 18.0F, 4.0F);
   auto* enemy = make_enemy(10.0F, 10.0F, 0.0F, 2);
 
   update(0.1F);
@@ -197,7 +197,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackEnemyBeyondHeightDifference)
 }
 
 TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyWithinHeightDifference) {
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1, 18.0F, 4.0F);
+  make_tower(0.0F, 0.0F, 0.0F, 1, 18.0F, 4.0F);
   make_enemy(10.0F, 2.0F, 0.0F, 2);
 
   update(0.1F);
@@ -206,7 +206,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerAttacksEnemyWithinHeightDifference) {
 }
 
 TEST_F(SiegeSpecialProcessorTest, TowerFiresVolleyOfTwoArrows) {
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
+  make_tower(0.0F, 0.0F, 0.0F, 1);
   make_enemy(10.0F, 0.0F, 0.0F, 2);
 
   update(0.1F);
@@ -215,7 +215,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerFiresVolleyOfTwoArrows) {
 }
 
 TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackBuildingEntities) {
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
+  make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* enemy_building = world->create_entity();
   enemy_building->add_component<TransformComponent>(5.0F, 0.0F, 0.0F);
   auto* unit = enemy_building->add_component<UnitComponent>(1000, 1000, 0.0F, 20.0F);
@@ -229,7 +229,7 @@ TEST_F(SiegeSpecialProcessorTest, TowerDoesNotAttackBuildingEntities) {
 }
 
 TEST_F(SiegeSpecialProcessorTest, TowerTargetsNearestEnemy) {
-  auto* tower = make_tower(0.0F, 0.0F, 0.0F, 1);
+  make_tower(0.0F, 0.0F, 0.0F, 1);
   auto* far_enemy = make_enemy(15.0F, 0.0F, 0.0F, 2);
   auto* near_enemy = make_enemy(5.0F, 0.0F, 0.0F, 2);
 

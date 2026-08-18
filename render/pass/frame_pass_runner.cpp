@@ -1,5 +1,8 @@
 #include "frame_pass_runner.h"
 
+#include <cstddef>
+#include <utility>
+
 namespace Render::Pass {
 
 void FramePassRunner::add(std::unique_ptr<IFramePass> pass) {

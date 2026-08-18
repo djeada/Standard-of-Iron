@@ -8,8 +8,6 @@
 using namespace Engine::Core;
 using namespace Game::Systems;
 
-constexpr float k_patrol_detection_range_sq = 25.0F;
-
 class PatrolSystemTest : public ::testing::Test {
 protected:
   void SetUp() override {
@@ -29,11 +27,11 @@ protected:
 TEST_F(PatrolSystemTest, PatrollingUnitIgnoresEnemyBuildings) {
 
   auto* unit = world->create_entity();
-  auto* transform = unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
 
   auto* unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit_comp->owner_id = 1;
-  auto* movement = unit->add_component<MovementComponent>();
+  unit->add_component<MovementComponent>();
   auto* patrol = unit->add_component<PatrolComponent>();
 
   patrol->waypoints.push_back({10.0F, 0.0F});
@@ -42,8 +40,7 @@ TEST_F(PatrolSystemTest, PatrollingUnitIgnoresEnemyBuildings) {
   patrol->current_waypoint = 0;
 
   auto* enemy_building = world->create_entity();
-  auto* enemy_transform =
-      enemy_building->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  enemy_building->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
 
   auto* enemy_unit_comp =
       enemy_building->add_component<UnitComponent>(100, 100, 0.0F, 10.0F);
@@ -60,11 +57,11 @@ TEST_F(PatrolSystemTest, PatrollingUnitIgnoresEnemyBuildings) {
 TEST_F(PatrolSystemTest, PatrollingUnitAttacksEnemyTroops) {
 
   auto* unit = world->create_entity();
-  auto* transform = unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
 
   auto* unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit_comp->owner_id = 1;
-  auto* movement = unit->add_component<MovementComponent>();
+  unit->add_component<MovementComponent>();
   auto* patrol = unit->add_component<PatrolComponent>();
 
   patrol->waypoints.push_back({10.0F, 0.0F});
@@ -73,8 +70,7 @@ TEST_F(PatrolSystemTest, PatrollingUnitAttacksEnemyTroops) {
   patrol->current_waypoint = 0;
 
   auto* enemy_troop = world->create_entity();
-  auto* enemy_transform =
-      enemy_troop->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  enemy_troop->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
 
   auto* enemy_unit_comp =
       enemy_troop->add_component<UnitComponent>(100, 100, 1.0F, 10.0F);
@@ -92,11 +88,11 @@ TEST_F(PatrolSystemTest, PatrollingUnitAttacksEnemyTroops) {
 TEST_F(PatrolSystemTest, PatrollingUnitIgnoresFriendlyUnits) {
 
   auto* unit = world->create_entity();
-  auto* transform = unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
 
   auto* unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit_comp->owner_id = 1;
-  auto* movement = unit->add_component<MovementComponent>();
+  unit->add_component<MovementComponent>();
   auto* patrol = unit->add_component<PatrolComponent>();
 
   patrol->waypoints.push_back({10.0F, 0.0F});
@@ -105,8 +101,7 @@ TEST_F(PatrolSystemTest, PatrollingUnitIgnoresFriendlyUnits) {
   patrol->current_waypoint = 0;
 
   auto* friendly_unit = world->create_entity();
-  auto* friendly_transform =
-      friendly_unit->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  friendly_unit->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
 
   auto* friendly_unit_comp =
       friendly_unit->add_component<UnitComponent>(100, 100, 1.0F, 10.0F);
@@ -122,11 +117,11 @@ TEST_F(PatrolSystemTest, PatrollingUnitIgnoresFriendlyUnits) {
 TEST_F(PatrolSystemTest, PatrollingUnitIgnoresDeadEnemies) {
 
   auto* unit = world->create_entity();
-  auto* transform = unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
 
   auto* unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   unit_comp->owner_id = 1;
-  auto* movement = unit->add_component<MovementComponent>();
+  unit->add_component<MovementComponent>();
   auto* patrol = unit->add_component<PatrolComponent>();
 
   patrol->waypoints.push_back({10.0F, 0.0F});
@@ -135,8 +130,7 @@ TEST_F(PatrolSystemTest, PatrollingUnitIgnoresDeadEnemies) {
   patrol->current_waypoint = 0;
 
   auto* dead_enemy = world->create_entity();
-  auto* enemy_transform =
-      dead_enemy->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  dead_enemy->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
 
   auto* enemy_unit_comp = dead_enemy->add_component<UnitComponent>(0, 100, 1.0F, 10.0F);
   enemy_unit_comp->owner_id = 2;

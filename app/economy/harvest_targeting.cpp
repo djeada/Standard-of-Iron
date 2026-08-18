@@ -169,6 +169,7 @@ auto harvest_target_kind_for_cell_value(
     return HarvestTargetKind::IronOre;
   case Game::Systems::Pathfinding::CellValue::Walkable:
   case Game::Systems::Pathfinding::CellValue::Blocked:
+  case Game::Systems::Pathfinding::CellValue::Forest:
     break;
   }
   return std::nullopt;

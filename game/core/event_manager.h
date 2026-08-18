@@ -46,7 +46,7 @@ public:
     std::lock_guard<std::mutex> const lock(m_mutex);
 
     SubscriptionHandle const handle = m_next_handle++;
-    auto wrapper = [handler, handle](const void* event) {
+    auto wrapper = [handler](const void* event) {
       handler(*static_cast<const T*>(event));
     };
     HandlerEntry const entry{handle, wrapper};

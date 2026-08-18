@@ -7,10 +7,15 @@
 #include "../../formation/army_formation_service.h"
 #include "ai_types.h"
 
+namespace Game::Systems {
+struct Nation;
+}
+
 namespace Game::Systems::AI {
 
 struct AIFormationRequest {
   int player_id{0};
+  const Game::Systems::Nation* nation{nullptr};
   QVector3D anchor;
   float spacing{2.0F};
   Game::Formation::ArmyFormationIntent intent{
@@ -20,8 +25,8 @@ struct AIFormationRequest {
   bool resolve_terrain{true};
 };
 
-[[nodiscard]] auto
-doctrine_for_player(int player_id) -> Game::Formation::FormationDoctrineId;
+[[nodiscard]] auto doctrine_for_nation(const Game::Systems::Nation* nation)
+    -> Game::Formation::FormationDoctrineId;
 
 [[nodiscard]] auto plan_ai_formation(const AIFormationRequest& request,
                                      const std::vector<const EntitySnapshot*>& units)

@@ -475,8 +475,6 @@ TEST_F(MountedPoseControllerTest, FullRidingSequence) {
   EXPECT_TRUE(approx_equal(pose.pelvis_pos, mount.seat_position));
 
   controller.riding_idle(mount);
-  QVector3D const idle_hands = pose.hand_l;
-
   controller.hold_reins(mount, 0.5F, 0.5F, 0.3F, 0.3F);
   controller.riding_charging(mount, 1.0F);
 

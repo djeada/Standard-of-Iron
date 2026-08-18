@@ -160,10 +160,7 @@ void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
   const auto& terrain_cache = ctx.terrain_cache;
   const float tile_safe = ctx.tile_safe;
   const int chunk_size = ctx.chunk_size;
-  const std::size_t cluster_count_per_chunk = ctx.cluster_count_per_chunk;
   const auto& add_grass_blade = ctx.add_grass_blade;
-  const auto& quad_section = ctx.quad_section;
-
   for (int chunk_z = 0; chunk_z < m_height - 1; chunk_z += chunk_size) {
     int const chunk_max_z = std::min(chunk_z + chunk_size, m_height - 1);
     for (int chunk_x = 0; chunk_x < m_width - 1; chunk_x += chunk_size) {
@@ -171,8 +168,6 @@ void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
 
       int flat_count = 0;
       int hill_count = 0;
-      int mountain_count = 0;
-      float chunk_height_sum = 0.0F;
       float chunk_slope_sum = 0.0F;
       int sample_count = 0;
 
@@ -184,33 +179,23 @@ void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
           Game::Map::TerrainType const t3 =
               terrain_cache.get_terrain_type_at(x + 1, z + 1);
 
-          if (t0 == Game::Map::TerrainType::Mountain ||
+          bool const unusable =
+              t0 == Game::Map::TerrainType::Mountain ||
               t1 == Game::Map::TerrainType::Mountain ||
               t2 == Game::Map::TerrainType::Mountain ||
               t3 == Game::Map::TerrainType::Mountain ||
               Game::Map::is_water_terrain(t0) || Game::Map::is_water_terrain(t1) ||
-              Game::Map::is_water_terrain(t2) || Game::Map::is_water_terrain(t3)) {
-            mountain_count++;
-          } else if (t0 == Game::Map::TerrainType::Hill ||
-                     t1 == Game::Map::TerrainType::Hill ||
-                     t2 == Game::Map::TerrainType::Hill ||
-                     t3 == Game::Map::TerrainType::Hill) {
-            hill_count++;
-          } else {
-            flat_count++;
+              Game::Map::is_water_terrain(t2) || Game::Map::is_water_terrain(t3);
+          if (!unusable) {
+            if (t0 == Game::Map::TerrainType::Hill ||
+                t1 == Game::Map::TerrainType::Hill ||
+                t2 == Game::Map::TerrainType::Hill ||
+                t3 == Game::Map::TerrainType::Hill) {
+              hill_count++;
+            } else {
+              flat_count++;
+            }
           }
-
-          int const idx0 = z * m_width + x;
-          int const idx1 = idx0 + 1;
-          int const idx2 = (z + 1) * m_width + x;
-          int const idx3 = idx2 + 1;
-
-          float const quad_height = (m_height_data[static_cast<size_t>(idx0)] +
-                                     m_height_data[static_cast<size_t>(idx1)] +
-                                     m_height_data[static_cast<size_t>(idx2)] +
-                                     m_height_data[static_cast<size_t>(idx3)]) *
-                                    0.25F;
-          chunk_height_sum += quad_height;
 
           float const slope0 = terrain_cache.get_slope_at(x, z);
           float const slope1 = terrain_cache.get_slope_at(x + 1, z);
@@ -311,8 +296,6 @@ void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
 void BiomeRenderer::scatter_background_grass(const GrassScatterContext& ctx) {
   const auto& scatter_profile = ctx.scatter_profile;
   const auto& terrain_cache = ctx.terrain_cache;
-  const float tile_safe = ctx.tile_safe;
-  const std::size_t background_blades_per_cell = ctx.background_blades_per_cell;
   const auto& add_grass_blade = ctx.add_grass_blade;
 
   const float background_density =
