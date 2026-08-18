@@ -1,11 +1,10 @@
 #include "command_executor_common.h"
-
 #include "render/graphics_settings.h"
 
 namespace {
 
-[[nodiscard]] auto terrain_noise_octaves_for_quality(Render::ShaderQuality quality)
-    -> int {
+[[nodiscard]] auto
+terrain_noise_octaves_for_quality(Render::ShaderQuality quality) -> int {
   switch (quality) {
   case Render::ShaderQuality::Full:
     return 5;
@@ -252,9 +251,10 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
                        single.params.detail_noise_scale);
   }
   if (pipeline.m_terrain_uniforms.noise_octaves != Shader::InvalidUniform) {
-    shader.set_uniform(pipeline.m_terrain_uniforms.noise_octaves,
-                       terrain_noise_octaves_for_quality(
-                           Render::GraphicsSettings::instance().features().shader_quality));
+    shader.set_uniform(
+        pipeline.m_terrain_uniforms.noise_octaves,
+        terrain_noise_octaves_for_quality(
+            Render::GraphicsSettings::instance().features().shader_quality));
   }
   if (pipeline.m_terrain_uniforms.slope_rock_threshold != Shader::InvalidUniform) {
     shader.set_uniform(pipeline.m_terrain_uniforms.slope_rock_threshold,

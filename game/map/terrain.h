@@ -446,7 +446,6 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
 
   case GroundType::GrassDry:
 
-    // Keep Mediterranean grass visibly green against the warm, sandy soil.
     settings.grass_primary = QVector3D(0.27F, 0.44F, 0.20F);
     settings.grass_secondary = QVector3D(0.38F, 0.53F, 0.24F);
     settings.grass_dry = QVector3D(0.50F, 0.50F, 0.27F);

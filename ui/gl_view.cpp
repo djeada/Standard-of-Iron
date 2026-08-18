@@ -11,8 +11,6 @@
 #include <QJsonObject>
 #include <QMetaObject>
 #include <QOpenGLContext>
-
-#include <ctime>
 #include <QOpenGLDebugLogger>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
@@ -29,6 +27,7 @@
 #include <qtmetamacros.h>
 
 #include <algorithm>
+#include <ctime>
 #include <deque>
 #include <exception>
 #include <numeric>
@@ -447,7 +446,8 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
        average_wall > 0.0 ? 1000.0 / average_wall : 0.0},
       {QStringLiteral("update_ms_average"), average_ms(m_benchmark_update_ms)},
       {QStringLiteral("thread_cpu_ms_average"), average_ms(m_benchmark_thread_cpu_ms)},
-      {QStringLiteral("thread_cpu_ms_p95"), percentile_ms(m_benchmark_thread_cpu_ms, 0.95)},
+      {QStringLiteral("thread_cpu_ms_p95"),
+       percentile_ms(m_benchmark_thread_cpu_ms, 0.95)},
       {QStringLiteral("render_ms_average"), average_ms(m_benchmark_render_ms)},
       {QStringLiteral("gpu_shadow_ms_average"), average_ms(m_benchmark_gpu_shadow_ms)},
       {QStringLiteral("gpu_color_ms_average"), average_ms(m_benchmark_gpu_color_ms)},

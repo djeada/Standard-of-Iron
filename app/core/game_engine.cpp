@@ -2375,6 +2375,7 @@ void GameEngine::exit_game() {
 auto GameEngine::get_owner_info() const -> QVariantList {
   QVariantList result;
   const auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  const auto& nations = m_session->nations();
   const auto& owners = owner_registry.get_all_owners();
 
   for (const auto& owner : owners) {
@@ -2400,8 +2401,7 @@ auto GameEngine::get_owner_info() const -> QVariantList {
     owner_map["color"] =
         QColor::fromRgbF(owner.color[0], owner.color[1], owner.color[2]);
 
-    const auto* owner_nation =
-        Game::Systems::NationRegistry::instance().get_nation_for_player(owner.owner_id);
+    const auto* owner_nation = nations.get_nation_for_player(owner.owner_id);
     owner_map["nation"] =
         owner_nation != nullptr
             ? QString::fromStdString(
