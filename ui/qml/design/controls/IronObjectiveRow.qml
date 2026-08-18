@@ -10,8 +10,8 @@ Item {
 
     property real progress: -1
 
-    readonly property string marker: objectiveState === "complete" ? "✓" : objectiveState === "failed" ? "✕" : objectiveState === "optional" ? Design.Icons.objective : "◇"
-    readonly property color tone: objectiveState === "complete" ? Design.Theme.success : objectiveState === "failed" ? Design.Theme.danger : objectiveState === "optional" ? Design.Theme.accent : Design.Theme.textSecondary
+    readonly property string marker: objectiveState === "complete" ? "✓" : objectiveState === "failed" ? "✕" : objectiveState === "current" ? "▶" : objectiveState === "optional" ? Design.Icons.objective : "◇"
+    readonly property color tone: objectiveState === "complete" ? Design.Theme.success : objectiveState === "failed" ? Design.Theme.danger : objectiveState === "current" || objectiveState === "optional" ? Design.Theme.accent : Design.Theme.textSecondary
 
     implicitHeight: body.implicitHeight + Design.Metrics.space16
     implicitWidth: Design.Metrics.space24 * 10
@@ -24,7 +24,7 @@ Item {
         anchors.fill: parent
         radius: Design.Metrics.radiusSmall
         color: Design.Theme.panelIron
-        border.width: Design.Metrics.borderThin
+        border.width: root.objectiveState === "current" ? Design.Metrics.borderFocus : Design.Metrics.borderThin
         border.color: root.tone
         opacity: root.objectiveState === "complete" ? 0.7 : 1
     }

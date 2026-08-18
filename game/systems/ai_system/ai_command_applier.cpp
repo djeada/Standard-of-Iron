@@ -16,6 +16,7 @@
 #include "../../map/terrain_service.h"
 #include "../../session/session_context.h"
 #include "../../units/troop_config.h"
+#include "../combat_system/combat_utils.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
 #include "../owner_queries.h"
@@ -70,7 +71,7 @@ void AICommandApplier::apply(Engine::Core::World& world,
       }
 
       Game::Command::Move move;
-      move.kind = MoveOrderKind::ScriptedMove;
+      move.kind = MoveOrderKind::PlannerMove;
       move.units = command.units;
       move.targets.reserve(command.units.size());
       for (std::size_t idx = 0; idx < command.units.size(); ++idx) {
@@ -85,9 +86,22 @@ void AICommandApplier::apply(Engine::Core::World& world,
         break;
       }
 
+      auto* target = world.get_entity(command.target_id);
+      std::vector<Engine::Core::EntityID> attackers;
+      attackers.reserve(command.units.size());
+      for (const auto unit_id : command.units) {
+        if (!Game::Systems::Combat::melee_walled_off_from(world.get_entity(unit_id),
+                                                          target)) {
+          attackers.push_back(unit_id);
+        }
+      }
+      if (attackers.empty()) {
+        break;
+      }
+
       submit(world,
              ai_owner_id,
-             Game::Command::AttackTarget{.units = command.units,
+             Game::Command::AttackTarget{.units = std::move(attackers),
                                          .target = command.target_id,
                                          .should_chase = command.should_chase});
       break;

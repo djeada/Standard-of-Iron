@@ -479,6 +479,10 @@ void process_defense_tower(Engine::Core::World* world,
     return;
   }
 
+  if (tower->has_component<Engine::Core::DismantleSiteComponent>()) {
+    return;
+  }
+
   auto* attack = tower->get_component<Engine::Core::AttackComponent>();
   if (attack == nullptr) {
     return;

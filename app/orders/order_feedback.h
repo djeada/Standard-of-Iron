@@ -71,5 +71,7 @@ struct OrderOutcome {
 [[nodiscard]] auto no_ground_under_cursor_reason() -> QString;
 [[nodiscard]] auto barracks_full_reason() -> QString;
 [[nodiscard]] auto no_repairs_needed_reason() -> QString;
+[[nodiscard]] auto not_your_building_reason() -> QString;
+[[nodiscard]] auto building_is_protected_reason() -> QString;
 
 } // namespace App::Core

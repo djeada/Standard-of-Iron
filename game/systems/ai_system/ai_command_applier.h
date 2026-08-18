@@ -10,17 +10,12 @@ class World;
 
 namespace Game::Systems::AI {
 
-class AICommandApplier {
-public:
-  AICommandApplier() = default;
-  ~AICommandApplier() = default;
+namespace AICommandApplier {
 
-  AICommandApplier(const AICommandApplier&) = delete;
-  auto operator=(const AICommandApplier&) -> AICommandApplier& = delete;
+void apply(Engine::Core::World& world,
+           int ai_owner_id,
+           const std::vector<AICommand>& commands);
 
-  static void apply(Engine::Core::World& world,
-                    int ai_owner_id,
-                    const std::vector<AICommand>& commands);
-};
+} // namespace AICommandApplier
 
 } // namespace Game::Systems::AI

@@ -4,6 +4,8 @@
 #include <QStringList>
 #include <QVariantList>
 
+#include <algorithm>
+
 #include "app/mission/mission_commander_setup.h"
 #include "game/map/mission_loader.h"
 #include "game/units/commander_catalog.h"
@@ -83,6 +85,30 @@ auto build_condition_list(const std::vector<Game::Mission::Condition>& condition
       cond["resources"] = resources;
     }
     list.append(cond);
+  }
+  return list;
+}
+
+auto build_stage_list(const std::vector<Game::Mission::MissionStage>& stages)
+    -> QVariantList {
+  QVariantList list;
+  int index = 0;
+  for (const auto& stage : stages) {
+    QVariantMap entry;
+    entry["id"] = stage.id.isEmpty() ? QStringLiteral("stage_%1").arg(index) : stage.id;
+    entry["index"] = index;
+    entry["type"] = stage.type;
+    entry["title"] = Game::Util::tr_asset(Game::Util::k_missions_context, stage.title);
+    entry["description"] =
+        Game::Util::tr_asset(Game::Util::k_missions_context, stage.description);
+    entry["hint"] = Game::Util::tr_asset(Game::Util::k_missions_context, stage.hint);
+    entry["required"] = std::max(1, stage.required_count);
+    if (stage.target.has_value()) {
+      entry["target_x"] = stage.target->x;
+      entry["target_z"] = stage.target->z;
+    }
+    list.append(entry);
+    ++index;
   }
   return list;
 }
@@ -262,6 +288,9 @@ auto build_ai_setup_map(const Game::Mission::AISetup& setup,
   if (setup.strategy.has_value()) {
     map["strategy"] = setup.strategy.value();
   }
+  if (setup.posture.has_value()) {
+    map["posture"] = setup.posture.value();
+  }
 
   map["personality"] = build_personality_map(setup.personality);
   map["starting_units"] = build_unit_setup_list(setup.starting_units);
@@ -327,6 +356,7 @@ auto build_mission_definition_map(const Game::Mission::MissionDefinition& missio
   result["victory_conditions"] = build_condition_list(mission.victory_conditions);
   result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
   result["optional_objectives"] = build_condition_list(mission.optional_objectives);
+  result["stages"] = build_stage_list(mission.stages);
 
   return result;
 }
@@ -341,6 +371,7 @@ auto build_mission_objectives_map(const Game::Mission::MissionDefinition& missio
   result["victory_conditions"] = build_condition_list(mission.victory_conditions);
   result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
   result["optional_objectives"] = build_condition_list(mission.optional_objectives);
+  result["stages"] = build_stage_list(mission.stages);
   return result;
 }
 

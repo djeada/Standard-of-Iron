@@ -26,6 +26,7 @@
 #include "render/geom/arrow.h"
 #include "render/geom/attack_target_markers.h"
 #include "render/geom/formation_arrow.h"
+#include "render/geom/interaction_target_markers.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/projectile_renderer.h"
 #include "render/geom/range_rings.h"
@@ -85,11 +86,59 @@ void render_attack_targeting(
   Render::GL::render_attack_target_markers(renderer, resources, visuals);
 }
 
+auto glyph_for_interaction(const Game::Systems::InteractionTargetMarker& marker)
+    -> Game::Systems::ActivityKind {
+  using Game::Systems::ActivityKind;
+  switch (marker.action) {
+  case Game::Systems::InteractionAction::Deliver:
+    return ActivityKind::Deliver;
+  case Game::Systems::InteractionAction::Repair:
+    return ActivityKind::Repair;
+  case Game::Systems::InteractionAction::Gather:
+    break;
+  case Game::Systems::InteractionAction::None:
+    return ActivityKind::Idle;
+  }
+
+  if (Game::Map::is_boulder_world_prop_type(marker.prop_type)) {
+    return ActivityKind::MineStone;
+  }
+  if (Game::Map::is_iron_ore_world_prop_type(marker.prop_type)) {
+    return ActivityKind::MineIron;
+  }
+  return ActivityKind::ChopWood;
+}
+
+void render_interaction_targeting(
+    Render::GL::Renderer* renderer,
+    Render::GL::ResourceManager* resources,
+    const Game::Systems::InteractionTargetingHighlights& targeting) {
+  if (targeting.markers.empty()) {
+    return;
+  }
+
+  std::vector<Render::GL::InteractionTargetMarkerVisual> visuals;
+  visuals.reserve(targeting.markers.size());
+  for (const auto& marker : targeting.markers) {
+    visuals.push_back(
+        {.position = QVector3D(marker.world_x, marker.world_y, marker.world_z),
+         .radius = marker.radius,
+         .hovered = marker.hovered,
+         .action = glyph_for_interaction(marker)});
+  }
+  Render::GL::render_interaction_target_markers(renderer, resources, visuals);
+}
+
 constexpr float k_order_marker_base_radius = 0.9F;
 constexpr float k_order_marker_shrink = 0.35F;
 constexpr float k_order_marker_thickness = 0.12F;
 constexpr float k_order_marker_lift = 0.04F;
 constexpr float k_order_marker_alpha = 0.95F;
+
+constexpr float k_objective_marker_radius = 2.4F;
+constexpr float k_objective_marker_thickness = 0.22F;
+constexpr float k_objective_marker_lift = 0.05F;
+constexpr QVector3D k_objective_marker_color{0.95F, 0.76F, 0.36F};
 
 const QVector3D k_order_move_color(0.55F, 0.95F, 0.55F);
 const QVector3D k_order_attack_color(1.0F, 0.32F, 0.22F);
@@ -168,6 +217,33 @@ void render_target_focus(Render::GL::Renderer* renderer,
   Render::GL::TargetFocusStyle style;
   style.reduced_motion = Game::Accessibility::MotionSettings::reduced_motion();
   Render::GL::render_target_focus_rings(renderer, resources, visuals, style);
+}
+
+void render_objective_marker(Render::GL::Renderer* renderer,
+                             const QVector3D& position) {
+  if (renderer == nullptr) {
+    return;
+  }
+  const auto& terrain = renderer->world_view().terrain_or_empty();
+  const QVector3D grounded =
+      terrain.resolve_surface_world_position(position.x(), position.z(), 0.0F, 0.0F);
+
+  Render::GL::GroundMarkerCmd ring;
+  ring.center =
+      QVector3D(position.x(), grounded.y() + k_objective_marker_lift, position.z());
+  ring.outer_radius = k_objective_marker_radius;
+  ring.thickness = k_objective_marker_thickness;
+  ring.color = k_objective_marker_color;
+  ring.alpha = 0.85F;
+  ring.focused = true;
+  renderer->ground_marker(ring);
+
+  Render::GL::GroundMarkerCmd inner = ring;
+  inner.outer_radius = k_objective_marker_radius * 0.45F;
+  inner.thickness = k_objective_marker_thickness * 0.7F;
+  inner.alpha = 0.6F;
+  inner.focused = false;
+  renderer->ground_marker(inner);
 }
 
 void render_order_markers(Render::GL::Renderer* renderer,
@@ -258,6 +334,10 @@ void render_effects(const RenderEffectsContext& context,
     render_attack_targeting(context.renderer, res, *context.attack_targeting);
   }
 
+  if (context.interaction_targeting != nullptr) {
+    render_interaction_targeting(context.renderer, res, *context.interaction_targeting);
+  }
+
   if (context.attack_range_rings != nullptr) {
     Render::GL::render_attack_range_rings(
         context.renderer, res, *context.attack_range_rings);
@@ -269,6 +349,10 @@ void render_effects(const RenderEffectsContext& context,
 
   if (context.order_markers != nullptr) {
     render_order_markers(context.renderer, *context.order_markers);
+  }
+
+  if (context.objective_marker.has_value()) {
+    render_objective_marker(context.renderer, *context.objective_marker);
   }
 
   std::optional<QVector3D> preview_waypoint;

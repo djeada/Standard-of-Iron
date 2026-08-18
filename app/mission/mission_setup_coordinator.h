@@ -10,6 +10,7 @@
 
 #include "app/core/entity_cache.h"
 #include "game/map/mission_definition.h"
+#include "game/map/mission_stage_tracker.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/nation_id.h"
 
@@ -17,6 +18,10 @@ class CampaignManager;
 
 namespace Engine::Core {
 class World;
+}
+
+namespace Game::Map {
+struct MapDefinition;
 }
 
 namespace App::Core {
@@ -53,6 +58,14 @@ struct PendingMissionWave {
     return {entry_world_position};
   }
 };
+
+[[nodiscard]] auto
+mission_position_to_world(const Game::Mission::Position& position,
+                          const Game::Map::MapDefinition* map_def,
+                          const Game::Systems::LevelSnapshot& level) -> QVector3D;
+
+[[nodiscard]] auto make_mission_position_to_world(
+    const Game::Systems::LevelSnapshot& level) -> Game::Mission::MissionPositionToWorld;
 
 struct PendingMissionEvent {
   float trigger_time = 0.0F;

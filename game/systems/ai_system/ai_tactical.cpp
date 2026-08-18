@@ -159,38 +159,6 @@ auto TacticalUtils::select_focus_fire_target(
   return best_target;
 }
 
-auto TacticalUtils::calculate_force_strength(
-    const std::vector<const EntitySnapshot*>& units) -> float {
-
-  float strength = 0.0F;
-  for (const auto* unit : units) {
-    if (unit->max_health > 0) {
-      float const health_ratio =
-          static_cast<float>(unit->health) / static_cast<float>(unit->max_health);
-      strength += health_ratio;
-    } else {
-      strength += 1.0F;
-    }
-  }
-  return strength;
-}
-
-auto TacticalUtils::calculate_force_strength(
-    const std::vector<const ContactSnapshot*>& units) -> float {
-
-  float strength = 0.0F;
-  for (const auto* unit : units) {
-    if (unit->max_health > 0) {
-      float const health_ratio =
-          static_cast<float>(unit->health) / static_cast<float>(unit->max_health);
-      strength += health_ratio;
-    } else {
-      strength += 1.0F;
-    }
-  }
-  return strength;
-}
-
 auto TacticalUtils::is_target_isolated(
     const ContactSnapshot& target,
     const std::vector<const ContactSnapshot*>& all_enemies,

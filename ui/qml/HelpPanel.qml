@@ -57,7 +57,7 @@ Item {
             "body": qsTr("Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.")
         }, {
             "heading": qsTr("Repair and dismantle"),
-            "body": qsTr("A damaged building can be repaired by a builder with the Repair order. Buildings you no longer need can be dismantled from their panel.")
+            "body": qsTr("A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.")
         }]
 
     readonly property var army_sections: [{

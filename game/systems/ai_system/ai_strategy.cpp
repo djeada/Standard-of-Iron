@@ -40,6 +40,8 @@ void clamp_style_targets(AIStrategyConfig& config) {
       std::clamp(config.expansion_site_distance, 18.0F, 40.0F);
   config.proactive_attack_size =
       std::max(config.proactive_attack_size, config.reactive_attack_size);
+  config.local_response_radius = std::clamp(config.local_response_radius, 0.0F, 60.0F);
+  config.max_local_responders = std::clamp(config.max_local_responders, 0, 8);
 }
 
 } // namespace
@@ -72,26 +74,30 @@ auto AIStrategyFactory::parse_strategy(const QString& strategy_str) -> AIStrateg
   return AIStrategy::Balanced;
 }
 
-auto AIStrategyFactory::strategy_to_string(AIStrategy strategy) -> QString {
-  switch (strategy) {
-  case AIStrategy::Aggressive:
-    return "Aggressive";
-  case AIStrategy::Defensive:
-    return "Defensive";
-  case AIStrategy::Expansionist:
-    return "Expansionist";
-  case AIStrategy::Economic:
-    return "Economic";
-  case AIStrategy::Harasser:
-    return "Harasser";
-  case AIStrategy::Rusher:
-    return "Rusher";
-  case AIStrategy::SepulcherDefense:
-    return "SepulcherDefense";
-  case AIStrategy::Balanced:
-  default:
-    return "Balanced";
+auto AIStrategyFactory::parse_posture(const QString& posture_str,
+                                      AIPosture fallback) -> AIPosture {
+  const QString lower = posture_str.trimmed().toLower();
+  if (lower == "garrison" || lower == "hold" || lower == "defend") {
+    return AIPosture::Garrison;
   }
+  if (lower == "field" || lower == "open" || lower == "expand") {
+    return AIPosture::Field;
+  }
+  return fallback;
+}
+
+auto AIStrategyFactory::create_config(const AIPlayerProfile& profile)
+    -> AIStrategyConfig {
+  AIStrategyConfig config = create_config(profile.strategy);
+  config.posture = profile.posture;
+  apply_personality(config,
+                    profile.personality.aggression,
+                    profile.personality.defense,
+                    profile.personality.harassment);
+  if (!profile.difficulty.isEmpty()) {
+    apply_difficulty(config, profile.difficulty);
+  }
+  return config;
 }
 
 auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
@@ -126,8 +132,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.attack_formation_spacing = 2.2F;
     config.scouting_distance = 48.0F;
     config.reserve_hold_radius = 6.5F;
-    config.chase_radius = 24.0F;
-    config.max_chase_units = 4;
+    config.local_response_radius = 24.0F;
+    config.max_local_responders = 4;
     config.expansion_site_distance = 32.0F;
     break;
 
@@ -158,8 +164,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.attack_formation_spacing = 3.0F;
     config.scouting_distance = 36.0F;
     config.reserve_hold_radius = 11.5F;
-    config.chase_radius = 22.0F;
-    config.max_chase_units = 3;
+    config.local_response_radius = 22.0F;
+    config.max_local_responders = 3;
     config.expansion_site_distance = 22.0F;
     break;
 
@@ -190,8 +196,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.attack_formation_spacing = 2.5F;
     config.scouting_distance = 44.0F;
     config.reserve_hold_radius = 8.5F;
-    config.chase_radius = 20.0F;
-    config.max_chase_units = 3;
+    config.local_response_radius = 20.0F;
+    config.max_local_responders = 3;
     config.full_recall_on_base_threat = true;
     config.expansion_site_distance = 34.0F;
     break;
@@ -225,8 +231,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 40.0F;
     config.reserve_hold_radius = 10.0F;
     config.expansion_site_distance = 28.0F;
-    config.chase_radius = 20.0F;
-    config.max_chase_units = 2;
+    config.local_response_radius = 20.0F;
+    config.max_local_responders = 2;
     break;
 
   case AIStrategy::Harasser:
@@ -257,8 +263,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 60.0F;
     config.reserve_hold_radius = 5.5F;
     config.expansion_site_distance = 30.0F;
-    config.chase_radius = 18.0F;
-    config.max_chase_units = 2;
+    config.local_response_radius = 18.0F;
+    config.max_local_responders = 2;
     break;
 
   case AIStrategy::Rusher:
@@ -289,8 +295,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 52.0F;
     config.reserve_hold_radius = 5.0F;
     config.expansion_site_distance = 24.0F;
-    config.chase_radius = 20.0F;
-    config.max_chase_units = 3;
+    config.local_response_radius = 20.0F;
+    config.max_local_responders = 3;
     break;
 
   case AIStrategy::SepulcherDefense:
@@ -320,8 +326,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 22.0F;
     config.reserve_hold_radius = 10.0F;
     config.expansion_site_distance = 0.0F;
-    config.chase_radius = 26.0F;
-    config.max_chase_units = 4;
+    config.local_response_radius = 26.0F;
+    config.max_local_responders = 4;
     break;
 
   case AIStrategy::Balanced:
@@ -353,8 +359,8 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.scouting_distance = 40.0F;
     config.reserve_hold_radius = 8.0F;
     config.expansion_site_distance = 28.0F;
-    config.chase_radius = 24.0F;
-    config.max_chase_units = 3;
+    config.local_response_radius = 24.0F;
+    config.max_local_responders = 3;
     break;
   }
 
@@ -383,8 +389,8 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
   }
 
   if (aggression > 0.65F) {
-    config.max_chase_units += 1;
-    config.chase_radius += 4.0F;
+    config.max_local_responders += 1;
+    config.local_response_radius += 4.0F;
     config.desired_barracks_count += 1;
     config.desired_assembly_size -= 1;
     config.reactive_attack_size = std::max(1, config.reactive_attack_size - 1);
@@ -395,7 +401,7 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
     config.expansion_site_distance += 4.0F;
   }
   if (defense > 0.65F) {
-    config.max_chase_units = std::max(1, config.max_chase_units - 1);
+    config.max_local_responders = std::max(1, config.max_local_responders - 1);
     config.target_builder_count += 1;
     config.desired_defense_tower_count += 1;
     config.desired_wall_segment_count += 1;
@@ -423,13 +429,10 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig& config,
     config.harass_units = 0;
   }
 
-  config.aggression_modifier =
-      std::max(0.3F, std::min(3.0F, config.aggression_modifier));
-  config.defense_modifier = std::max(0.3F, std::min(3.0F, config.defense_modifier));
-  config.retreat_threshold = std::max(0.05F, std::min(0.60F, config.retreat_threshold));
-  config.harassment_range = std::max(0.0F, std::min(100.0F, config.harassment_range));
-  config.chase_radius = std::max(0.0F, std::min(60.0F, config.chase_radius));
-  config.max_chase_units = std::clamp(config.max_chase_units, 0, 8);
+  config.aggression_modifier = std::clamp(config.aggression_modifier, 0.3F, 3.0F);
+  config.defense_modifier = std::clamp(config.defense_modifier, 0.3F, 3.0F);
+  config.retreat_threshold = std::clamp(config.retreat_threshold, 0.05F, 0.60F);
+  config.harassment_range = std::clamp(config.harassment_range, 0.0F, 100.0F);
   clamp_style_targets(config);
 }
 
