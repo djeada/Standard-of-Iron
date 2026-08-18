@@ -179,6 +179,22 @@
         <source>%1 (%2 units)</source>
         <translation>%1 (%2 units)</translation>
     </message>
+    <message>
+        <source>Harvesting grain</source>
+        <translation>Harvesting grain</translation>
+    </message>
+    <message>
+        <source>Reaping a ripe farm for food.</source>
+        <translation>Reaping a ripe farm for food.</translation>
+    </message>
+    <message>
+        <source>Butchering</source>
+        <translation>Butchering</translation>
+    </message>
+    <message>
+        <source>Slaughtering a sheep for food.</source>
+        <translation>Slaughtering a sheep for food.</translation>
+    </message>
 </context>
 <context>
     <name>ArmyFormationController</name>
@@ -1287,10 +1303,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Comes from your starting treasury, mission rewards, and selling goods at a marketplace.</translation>
     </message>
     <message>
-        <source>Comes from your starting stores, mission rewards, and buying at a marketplace.</source>
-        <translation>Comes from your starting stores, mission rewards, and buying at a marketplace.</translation>
-    </message>
-    <message>
         <source>Send a builder to chop a tree with Collect, or leave Auto Gather running.</source>
         <translation>Send a builder to chop a tree with Collect, or leave Auto Gather running.</translation>
     </message>
@@ -1377,10 +1389,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Elephant</source>
         <translation>Elephant</translation>
-    </message>
-    <message>
-        <source>Raises the population the nearest barracks can recruit from.</source>
-        <translation>Raises the population the nearest barracks can recruit from.</translation>
     </message>
     <message>
         <source>Recruits troops and receives everything your builders gather.</source>
@@ -1487,10 +1495,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</translation>
     </message>
     <message>
-        <source>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</source>
-        <translation>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</translation>
-    </message>
-    <message>
         <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
         <translation>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</translation>
     </message>
@@ -1499,12 +1503,32 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</translation>
     </message>
     <message>
-        <source>Keep recruiting while your builders gather. Raise more Homes when population runs out.</source>
-        <translation>Keep recruiting while your builders gather. Raise more Homes when population runs out.</translation>
-    </message>
-    <message>
         <source>Gathering, building and recruiting are all under way.</source>
         <translation>Gathering, building and recruiting are all under way.</translation>
+    </message>
+    <message>
+        <source>Send a builder to reap a ripe farm or slaughter a sheep with Collect, or leave Auto Gather running. Recruiting a civilian at a home spends it.</source>
+        <translation>Send a builder to reap a ripe farm or slaughter a sheep with Collect, or leave Auto Gather running. Recruiting a civilian at a home spends it.</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>Farm</translation>
+    </message>
+    <message>
+        <source>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</source>
+        <translation>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</translation>
+    </message>
+    <message>
+        <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
+        <translation>Grows grain in cycles. A builder reaps it for food once it ripens.</translation>
+    </message>
+    <message>
+        <source>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</source>
+        <translation>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</translation>
+    </message>
+    <message>
+        <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
+        <translation>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</translation>
     </message>
 </context>
 <context>
@@ -1520,10 +1544,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Recruiting draws on the manpower held by each barracks.</source>
         <translation>Recruiting draws on the manpower held by each barracks.</translation>
-    </message>
-    <message>
-        <source>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</source>
-        <translation>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
@@ -1588,6 +1608,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Back to the battle</source>
         <translation>Back to the battle</translation>
+    </message>
+    <message>
+        <source>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</source>
+        <translation>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</translation>
+    </message>
+    <message>
+        <source>Needs a home</source>
+        <translation>Needs a home</translation>
     </message>
 </context>
 <context>
@@ -1654,6 +1682,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Temple</source>
         <translation>Temple</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>Farm</translation>
     </message>
 </context>
 <context>
@@ -2296,6 +2328,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Repair</source>
         <translation>Repair</translation>
     </message>
+    <message>
+        <source>Harvest grain</source>
+        <translation>Harvest grain</translation>
+    </message>
+    <message>
+        <source>Slaughter sheep</source>
+        <translation>Slaughter sheep</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -2778,10 +2818,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Builders only.</translation>
     </message>
     <message>
-        <source>Send a builder to fell a tree, break a boulder or work an ore seam.</source>
-        <translation>Send a builder to fell a tree, break a boulder or work an ore seam.</translation>
-    </message>
-    <message>
         <source>Press Collect, then left-click the node. Right-click cancels.</source>
         <translation>Press Collect, then left-click the node. Right-click cancels.</translation>
     </message>
@@ -2874,10 +2910,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Pick a resource</translation>
     </message>
     <message>
-        <source>Press again to cycle any resource, wood, stone, iron, then off.</source>
-        <translation>Press again to cycle any resource, wood, stone, iron, then off.</translation>
-    </message>
-    <message>
         <source>Dismantle</source>
         <translation>Dismantle</translation>
     </message>
@@ -2912,6 +2944,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Dismantle is only available to builders</source>
         <translation>Dismantle is only available to builders</translation>
+    </message>
+    <message>
+        <source>Food first</source>
+        <translation>Food first</translation>
+    </message>
+    <message>
+        <source>Send a builder to fell a tree, break a boulder, work an ore seam, reap a ripe farm or slaughter a sheep.</source>
+        <translation>Send a builder to fell a tree, break a boulder, work an ore seam, reap a ripe farm or slaughter a sheep.</translation>
+    </message>
+    <message>
+        <source>Press again to cycle any resource, wood, stone, iron, food, then off.</source>
+        <translation>Press again to cycle any resource, wood, stone, iron, food, then off.</translation>
     </message>
 </context>
 <context>
@@ -3377,10 +3421,6 @@ Unseen: never scouted.</translation>
         <translation>Costs</translation>
     </message>
     <message>
-        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost a little wood and iron plus population.</source>
-        <translation>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost a little wood and iron plus population.</translation>
-    </message>
-    <message>
         <source>Placing a structure</source>
         <translation>Placing a structure</translation>
     </message>
@@ -3391,10 +3431,6 @@ Unseen: never scouted.</translation>
     <message>
         <source>What each building does</source>
         <translation>What each building does</translation>
-    </message>
-    <message>
-        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</translation>
     </message>
     <message>
         <source>Repair and dismantle</source>
@@ -3411,10 +3447,6 @@ Unseen: never scouted.</translation>
     <message>
         <source>Population</source>
         <translation>Population</translation>
-    </message>
-    <message>
-        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -3531,6 +3563,26 @@ Unseen: never scouted.</translation>
     <message>
         <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
         <translation>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Food</translation>
+    </message>
+    <message>
+        <source>Food feeds your settlement: every civilian recruited at a Home costs it. A Farm grows grain in cycles; when the field turns gold a builder reaps it with Collect and hauls the grain home, and the field is sown again. Builders can also slaughter a sheep for a smaller haul. Auto Gather set to food keeps a builder working the farms.</source>
+        <translation>Food feeds your settlement: every civilian recruited at a Home costs it. A Farm grows grain in cycles; when the field turns gold a builder reaps it with Collect and hauls the grain home, and the field is sown again. Builders can also slaughter a sheep for a smaller haul. Auto Gather set to food keeps a builder working the farms.</translation>
+    </message>
+    <message>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</source>
+        <translation>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</translation>
+    </message>
+    <message>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</translation>
+    </message>
+    <message>
+        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</translation>
     </message>
 </context>
 <context>
@@ -5931,8 +5983,8 @@ to see preview</translation>
 <context>
     <name>ProductionManager</name>
     <message>
-        <source>Select a tree, boulder, or iron ore deposit.</source>
-        <translation>Select a tree, boulder, or iron ore deposit.</translation>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Select a tree, boulder, ore deposit, ripe farm or sheep.</translation>
     </message>
     <message>
         <source>Select a tree to chop.</source>
@@ -6214,10 +6266,6 @@ Use Deliver mode, then click a friendly barracks to add 50 available population.
         <translation>BUILDER CONSTRUCTION</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, and iron</source>
-        <translation>Build siege weapons, structures, and gather wood, stone, and iron</translation>
-    </message>
-    <message>
         <source>Select a structure to build</source>
         <translation>Select a structure to build</translation>
     </message>
@@ -6410,6 +6458,70 @@ Wide vision and a durable settlement anchor</translation>
     <message>
         <source>Need %1</source>
         <translation>Need %1</translation>
+    </message>
+    <message>
+        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
+        <translation>Build siege weapons, structures, and gather wood, stone, iron, and food</translation>
+    </message>
+    <message>
+        <source>Harvest Grain</source>
+        <translation>Harvest Grain</translation>
+    </message>
+    <message>
+        <source>Slaughter Sheep</source>
+        <translation>Slaughter Sheep</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>Farm</translation>
+    </message>
+    <message>
+        <source>Build Farm
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Build Farm
+%1
+Cost: %2
+Build time: %3s</translation>
+    </message>
+    <message>
+        <source>Grows grain in cycles
+Builders reap it for the food that recruits civilians</source>
+        <translation>Grows grain in cycles
+Builders reap it for the food that recruits civilians</translation>
+    </message>
+    <message>
+        <source>FARM</source>
+        <translation>FARM</translation>
+    </message>
+    <message>
+        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
+        <translation>Grain ripens every %1s and a builder reaps %2 food from it</translation>
+    </message>
+    <message>
+        <source>Ripe</source>
+        <translation>Ripe</translation>
+    </message>
+    <message>
+        <source>%1% grown · %2s</source>
+        <translation>%1% grown · %2s</translation>
+    </message>
+    <message>
+        <source>Select your farm to see its crop.</source>
+        <translation>Select your farm to see its crop.</translation>
+    </message>
+    <message>
+        <source>A builder is on its way to harvest.</source>
+        <translation>A builder is on its way to harvest.</translation>
+    </message>
+    <message>
+        <source>Send a builder with Collect, or leave Auto Gather running.</source>
+        <translation>Send a builder with Collect, or leave Auto Gather running.</translation>
+    </message>
+    <message>
+        <source>Harvested %1 times so far.</source>
+        <translation>Harvested %1 times so far.</translation>
     </message>
 </context>
 <context>

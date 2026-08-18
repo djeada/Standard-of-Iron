@@ -15,6 +15,7 @@
 #include "../systems/combat_rules.h"
 #include "../systems/command_service.h"
 #include "../systems/construction_cost_catalog.h"
+#include "../systems/food_targets.h"
 #include "../systems/gate_service.h"
 #include "../systems/marketplace_system.h"
 #include "../systems/order_service.h"
@@ -232,7 +233,7 @@ void apply_auto_gather(World& world, const SetAutoGather& order) {
 
     builder->auto_gather = true;
     builder->auto_gather_priority =
-        Game::Systems::is_harvest_builder_product(order.priority_product_type)
+        Game::Systems::is_gather_builder_product(order.priority_product_type)
             ? order.priority_product_type
             : std::string{};
 
@@ -469,9 +470,53 @@ void apply_start_construction(World& world,
   }
 }
 
+auto worker_position_or(const Entity& worker, const QVector3D& fallback) -> QVector3D;
+
+void apply_start_food_harvest(World& world, int owner_id, const StartHarvest& order) {
+  auto target =
+      Game::Systems::resolve_food_target(world, order.resource_target, owner_id);
+  if (!target.has_value() || target->product_type != order.construction_type) {
+    return;
+  }
+
+  bool assigned = false;
+  for (const EntityID id : order.units) {
+    auto [entity, builder] = builder_of(world, id, owner_id);
+    if (builder == nullptr) {
+      continue;
+    }
+    if (assigned) {
+      builder->has_construction_site = false;
+      builder->product_type.clear();
+      release_task_target(*builder);
+      continue;
+    }
+    if (Game::Systems::food_target_claimed(world, target->id, id)) {
+      return;
+    }
+    Game::Systems::OrderService::clear_builder_task(entity);
+    Game::Systems::OrderService::clear_builder_gather_order(entity);
+    const QVector3D work_position = Game::Systems::food_work_position(
+        world,
+        id,
+        worker_position_or(*entity, QVector3D(target->x, 0.0F, target->z)),
+        *target);
+    Game::Systems::assign_food_task(
+        *builder,
+        entity->get_component<Engine::Core::MovementComponent>(),
+        *target,
+        work_position);
+    assigned = true;
+  }
+}
+
 void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) {
   if (order.units.empty() || order.construction_type.empty() ||
       order.resource_target == Engine::Core::NULL_ENTITY) {
+    return;
+  }
+  if (Game::Systems::is_food_builder_product(order.construction_type)) {
+    apply_start_food_harvest(world, owner_id, order);
     return;
   }
   auto& terrain = Game::Map::TerrainService::instance();

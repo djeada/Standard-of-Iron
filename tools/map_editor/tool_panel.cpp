@@ -78,6 +78,8 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place a marketplace building and assign it to a player.";
   case ToolType::Temple:
     return "Place a temple building and assign it to a player.";
+  case ToolType::Farm:
+    return "Place a farm and assign it to a player.";
   case ToolType::Wall:
     return "Draw a wall run between two points. Runs snap to the 2-cell wall "
            "lattice and stay axis aligned, and they break around any gate they "
@@ -536,6 +538,13 @@ void ToolPanel::setup_ui() {
                   "\u25B3",
                   "Place a temple and assign a player.",
                   ToolType::Temple);
+  add_tool_button(structures_layout,
+                  3,
+                  0,
+                  "Farm",
+                  "\u2618",
+                  "Place a farm and assign a player.",
+                  ToolType::Farm);
 
   layout->addWidget(structures_group);
 

@@ -23,6 +23,7 @@
 #include "game/render_bridge/picking_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/construction_cost_catalog.h"
+#include "game/systems/food_targets.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -72,7 +73,40 @@ constexpr float k_wall_preview_rotation_step_degrees = 90.0F;
 struct ConstructionPointerHit {
   QVector3D world_position;
   std::uint64_t harvest_target_id = 0;
+  Engine::Core::EntityID food_target_id = 0;
 };
+
+auto resolve_food_target_hit(Engine::Core::World* world,
+                             int owner_id,
+                             const Render::GL::Camera& camera,
+                             const ViewportState& viewport,
+                             const QPointF& screen_point)
+    -> std::optional<ConstructionPointerHit> {
+  if (world == nullptr || viewport.width <= 0 || viewport.height <= 0) {
+    return std::nullopt;
+  }
+  const Engine::Core::EntityID picked = Game::Systems::PickingService::pick_unit_first(
+      static_cast<float>(screen_point.x()),
+      static_cast<float>(screen_point.y()),
+      *world,
+      camera,
+      viewport.width,
+      viewport.height,
+      0);
+  if (picked == 0) {
+    return std::nullopt;
+  }
+  const auto target = Game::Systems::resolve_food_target(*world, picked, owner_id);
+  if (!target.has_value() || Game::Systems::food_target_claimed(*world, picked)) {
+    return std::nullopt;
+  }
+  return ConstructionPointerHit{
+      .world_position =
+          Game::Map::TerrainService::instance().resolve_surface_world_position(
+              target->x, target->z),
+      .harvest_target_id = 0,
+      .food_target_id = picked};
+}
 
 auto normalize_rotation_degrees(float angle) -> float {
   while (angle < 0.0F) {
@@ -95,7 +129,7 @@ auto is_previewable_structure_item(const QString& item_type) -> bool {
          item_type == QStringLiteral("barracks") ||
          item_type == QStringLiteral("home") ||
          item_type == QStringLiteral("marketplace") ||
-         item_type == QStringLiteral("temple");
+         item_type == QStringLiteral("temple") || item_type == QStringLiteral("farm");
 }
 
 auto item_supports_preview_rotation(const QString& item_type) -> bool {
@@ -208,6 +242,13 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
   }
 
   if (is_harvest_construction_item(item_type)) {
+    if (App::Economy::is_collect_item(item_type)) {
+      if (auto food_hit =
+              resolve_food_target_hit(world, owner_id, camera, viewport, screen_point);
+          food_hit.has_value()) {
+        return food_hit;
+      }
+    }
     const CrewClaims claims = crew_claims(world, crew);
     auto resolved_target = resolve_harvest_target_at_position(item_type, hit, claims);
     if (!resolved_target.has_value()) {
@@ -261,6 +302,7 @@ void ProductionManager::start_building_placement(const QString& building_type,
   m_wall_preview_rotation_y = 0.0F;
   m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
+  m_pending_food_target_id = 0;
   clear_preview_entities();
   clear_construction_preview_summary();
   m_wall_preview_segments.clear();
@@ -313,6 +355,7 @@ void ProductionManager::reset_transient_state() {
   m_wall_preview_rotation_y = 0.0F;
   m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
+  m_pending_food_target_id = 0;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   clear_construction_preview_summary();
@@ -362,6 +405,7 @@ void ProductionManager::on_construction_mouse_move(qreal sx,
 
   if (resolved_hit.has_value()) {
     m_pending_harvest_target_id = resolved_hit->harvest_target_id;
+    m_pending_food_target_id = resolved_hit->food_target_id;
     m_construction_placement_position = resolved_hit->world_position;
     update_non_wall_construction_preview(resolved_hit->world_position);
     return;
@@ -369,6 +413,7 @@ void ProductionManager::on_construction_mouse_move(qreal sx,
 
   clear_non_wall_construction_preview();
   m_pending_harvest_target_id = 0;
+  m_pending_food_target_id = 0;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
 }
@@ -419,6 +464,7 @@ void ProductionManager::on_construction_pointer_released(
                                            screen_point);
       if (resolved_hit.has_value()) {
         m_pending_harvest_target_id = resolved_hit->harvest_target_id;
+        m_pending_food_target_id = resolved_hit->food_target_id;
         m_construction_placement_position = resolved_hit->world_position;
         update_non_wall_construction_preview(m_construction_placement_position);
       }
@@ -495,6 +541,67 @@ void ProductionManager::on_construction_confirm() {
     return;
   }
 
+  if (m_pending_food_target_id != 0 &&
+      is_harvest_construction_item(m_pending_construction_type)) {
+    const int owner_id = pending_construction_owner_id();
+    const auto target = Game::Systems::resolve_food_target(
+        *m_world, m_pending_food_target_id, owner_id);
+    if (!target.has_value() ||
+        Game::Systems::food_target_claimed(*m_world, m_pending_food_target_id)) {
+      set_construction_preview_valid(false);
+      emit construction_placement_rejected(QCoreApplication::translate(
+          "ProductionManager", "That resource is already assigned."));
+      return;
+    }
+
+    std::vector<Engine::Core::EntityID> crew = m_pending_construction_builders;
+    std::stable_sort(crew.begin(), crew.end(), [&](auto lhs, auto rhs) {
+      auto distance_to = [&](Engine::Core::EntityID id) {
+        auto* entity = m_world->get_entity(id);
+        auto* transform =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::TransformComponent>()
+                : nullptr;
+        if (transform == nullptr) {
+          return std::numeric_limits<float>::infinity();
+        }
+        float const dx = transform->position.x - target->x;
+        float const dz = transform->position.z - target->z;
+        return dx * dx + dz * dz;
+      };
+      return distance_to(lhs) < distance_to(rhs);
+    });
+    {
+      App::Core::OrderRequest request;
+      request.kind = App::Core::OrderKind::Gather;
+      request.payload = Game::Command::StartHarvest{
+          .units = std::move(crew),
+          .construction_type = std::string(target->product_type),
+          .resource_target = target->id,
+          .site = QVector3D(target->x, 0.0F, target->z)};
+      request.has_destination = true;
+      request.destination = QVector3D(target->x, 0.0F, target->z);
+      emit order_feedback(
+          App::Core::submit_player_order(*m_world, owner_id, std::move(request)));
+    }
+
+    m_is_placing_construction = false;
+    m_is_direct_building_placement = false;
+    m_active_placement_owner_id = 0;
+    m_active_placement_nation_id = Game::Systems::NationID::RomanRepublic;
+    m_pending_construction_type.clear();
+    m_pending_building_type.clear();
+    m_pending_construction_builders.clear();
+    m_construction_preview_rotation_y = 0.0F;
+    m_pending_harvest_target_id = 0;
+    m_pending_food_target_id = 0;
+    clear_preview_entities();
+    set_construction_preview_active(false);
+    set_construction_preview_valid(false);
+    emit placing_construction_changed();
+    return;
+  }
+
   if (is_harvest_construction_item(m_pending_construction_type)) {
     HarvestPlacement const placement =
         evaluate_harvest_placement(m_world,
@@ -548,6 +655,7 @@ void ProductionManager::on_construction_confirm() {
     m_pending_construction_builders.clear();
     m_construction_preview_rotation_y = 0.0F;
     m_pending_harvest_target_id = 0;
+    m_pending_food_target_id = 0;
     clear_preview_entities();
     set_construction_preview_active(false);
     set_construction_preview_valid(false);
@@ -600,6 +708,7 @@ void ProductionManager::on_construction_confirm() {
   m_wall_preview_rotation_y = 0.0F;
   m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
+  m_pending_food_target_id = 0;
   clear_preview_entities();
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
@@ -628,6 +737,7 @@ void ProductionManager::on_construction_cancel() {
   m_wall_preview_rotation_y = 0.0F;
   m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
+  m_pending_food_target_id = 0;
   set_construction_preview_active(false);
   set_construction_preview_valid(false);
   emit placing_construction_changed();
@@ -662,6 +772,7 @@ void ProductionManager::start_builder_construction(const QString& item_type) {
   m_wall_preview_rotation_y = 0.0F;
   m_wall_preview_rotation_explicit = false;
   m_pending_harvest_target_id = 0;
+  m_pending_food_target_id = 0;
   m_active_placement_owner_id = pending_construction_owner_id();
   m_active_placement_nation_id = pending_construction_nation_id();
 
@@ -720,7 +831,13 @@ void ProductionManager::update_non_wall_construction_preview(
   }
 
   set_construction_preview_active(true);
-  if (is_harvest_construction_item(m_pending_construction_type)) {
+  if (m_pending_food_target_id != 0 &&
+      is_harvest_construction_item(m_pending_construction_type)) {
+    set_construction_preview_valid(
+        Game::Systems::resolve_food_target(
+            *m_world, m_pending_food_target_id, pending_construction_owner_id())
+            .has_value());
+  } else if (is_harvest_construction_item(m_pending_construction_type)) {
     HarvestPlacement const placement =
         evaluate_harvest_placement(m_world,
                                    m_pending_construction_builders,
@@ -740,6 +857,7 @@ void ProductionManager::update_non_wall_construction_preview(
 
 void ProductionManager::clear_non_wall_construction_preview() {
   m_pending_harvest_target_id = 0;
+  m_pending_food_target_id = 0;
   clear_preview_entities();
   set_construction_preview_active(false);
 }

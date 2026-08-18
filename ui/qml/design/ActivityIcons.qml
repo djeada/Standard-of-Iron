@@ -77,6 +77,18 @@ QtObject {
                 "hint": qsTr("Working an ore deposit for iron."),
                 "resource": "iron"
             },
+            "harvest_grain": {
+                "icon": "harvest_grain",
+                "label": qsTr("Harvesting grain"),
+                "hint": qsTr("Reaping a ripe farm for food."),
+                "resource": "food"
+            },
+            "slaughter_sheep": {
+                "icon": "slaughter_sheep",
+                "label": qsTr("Butchering"),
+                "hint": qsTr("Slaughtering a sheep for food."),
+                "resource": "food"
+            },
             "auto_gather": {
                 "icon": "auto_gather",
                 "label": qsTr("Auto gathering"),

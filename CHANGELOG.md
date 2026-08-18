@@ -11,6 +11,35 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Farms, and food that means something.** Both nations can raise a **Farm**
+  (40 wood, 10 stone) that grows grain in sixty-second cycles — furrows, sprouts,
+  green stalks, then a golden field — and a builder reaps it with **Collect** for
+  60 food, after which it sows itself again. Builders can also **slaughter a
+  sheep** for 35 food; the animal is held still while they work and the herd
+  respawns on the map's own timer. Both loads are hauled to the barracks yard,
+  which now stacks grain sacks, and a carrying builder shoulders a sheaf. Reaping
+  starts a standing round like felling does, except that a farmer waits by a green
+  field for the next crop instead of walking off. **Auto Gather** treats ripe farms
+  as nodes and gained a _Food first_ setting. Ripe farms and sheep light up as
+  interaction targets, the Farm card and a crop readout sit in the production
+  panel, and the map editor and arena know the building.
+
+    Food is what civilians eat: **recruiting a civilian at a Home costs 20 food**,
+    so homes turn food into manpower and farms keep that running. The rest of the
+    economy was rebalanced around it so gathering matters again — troops cost
+    roughly a third of a wood trip and a third of an iron trip apiece (archer 12
+    wood; swordsman 12 wood, 10 iron; cavalry 20–22 wood, 10–14 iron), builders
+    cost 10 wood, and the AI keeps a wood and iron reserve for recruiting instead
+    of gathering only for buildings. The full table is in
+    [docs/FOOD_AND_FARMS.md](docs/FOOD_AND_FARMS.md).
+
+- **Builders work like builders.** Construction no longer borrows the sword-swing
+  clip: the humanoid bake gained dedicated hammer, saw, chisel, kneeling-chisel and
+  sickle work loops, and the tool in a builder's hand follows the job — a mallet at
+  the tree line, a chisel at the quarry and the ore seam, a sickle in the field, and
+  the seeded hammer/saw/chisel mix on a building site. Cornered builders now fight
+  with the mallet in hand instead of bare fists.
+
 - **The camera says what it does, and every command takes two keys.** Bindings
   hold a primary and an alternate chord at once, so panning answers to the
   arrow keys _and_ to `WASD` with neither being second-class; each has its own

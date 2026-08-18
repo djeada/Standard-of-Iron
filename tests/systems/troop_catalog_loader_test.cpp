@@ -90,13 +90,24 @@ TEST(TroopCatalogLoader, ProductionResourceCostsLoadForEconomyUnits) {
   ASSERT_NE(archer, nullptr);
   ASSERT_NE(builder, nullptr);
 
+  auto const* civilian =
+      Game::Units::TroopCatalog::instance().get_class(Game::Units::TroopType::Civilian);
+  ASSERT_NE(civilian, nullptr);
+
   EXPECT_EQ(archer->production.resource_costs.get(Game::Systems::ResourceType::Wood),
-            6);
+            12);
   EXPECT_EQ(archer->production.resource_costs.get(Game::Systems::ResourceType::Stone),
             0);
   EXPECT_EQ(builder->production.resource_costs.get(Game::Systems::ResourceType::Wood),
+            10);
+  EXPECT_EQ(builder->production.resource_costs.get(Game::Systems::ResourceType::Food),
             0);
-  EXPECT_TRUE(builder->production.resource_costs.empty());
+
+  EXPECT_EQ(civilian->production.resource_costs.get(Game::Systems::ResourceType::Food),
+            20)
+      << "civilians are the one recruit that eats: food is what a home spends";
+  EXPECT_EQ(civilian->production.resource_costs.get(Game::Systems::ResourceType::Wood),
+            0);
 }
 
 TEST(TroopCatalogLoader, IronSepulcherTroopsLoadFromCatalog) {

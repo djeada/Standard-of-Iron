@@ -1,10 +1,14 @@
 #include "app/economy/production_readouts.h"
 
+#include <algorithm>
+
 #include "app/economy/resource_text.h"
 #include "app/economy/unit_profile.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/construction_cost_catalog.h"
+#include "game/systems/food_targets.h"
+#include "game/systems/harvest_yields.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
@@ -101,6 +105,56 @@ auto selected_builder_state(Engine::Core::World* world) -> QVariantMap {
     }
   }
 
+  return m;
+}
+
+auto selected_farm_state(Engine::Core::World* world,
+                         int local_owner_id) -> QVariantMap {
+  QVariantMap m;
+  m["has_farm"] = false;
+  m["nation_id"] = "";
+  m["growth"] = 0.0;
+  m["ripe"] = false;
+  m["seconds_to_ripe"] = 0.0;
+  m["cycle_seconds"] = static_cast<double>(Game::Systems::k_farm_growth_cycle_seconds);
+  m["yield"] = Game::Systems::k_harvest_grain_food_reward;
+  m["harvests"] = 0;
+  m["claimed"] = false;
+
+  if (world == nullptr) {
+    return m;
+  }
+
+  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return m;
+  }
+
+  for (auto id : selection_system->get_selected_units()) {
+    auto* e = world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+    auto* unit = e->get_component<Engine::Core::UnitComponent>();
+    auto* farm = e->get_component<Engine::Core::FarmComponent>();
+    if (unit == nullptr || farm == nullptr ||
+        unit->spawn_type != Game::Units::SpawnType::Farm ||
+        unit->owner_id != local_owner_id) {
+      continue;
+    }
+
+    m["has_farm"] = true;
+    m["nation_id"] =
+        QString::fromStdString(Game::Systems::nation_id_to_string(unit->nation_id));
+    m["growth"] = static_cast<double>(std::clamp(farm->growth, 0.0F, 1.0F));
+    m["ripe"] = farm->ripe();
+    m["seconds_to_ripe"] = static_cast<double>(
+        std::max(0.0F, (1.0F - farm->growth) * farm->cycle_seconds));
+    m["cycle_seconds"] = static_cast<double>(farm->cycle_seconds);
+    m["harvests"] = farm->harvests;
+    m["claimed"] = Game::Systems::food_target_claimed(*world, id);
+    return m;
+  }
   return m;
 }
 

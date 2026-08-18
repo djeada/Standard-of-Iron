@@ -112,7 +112,10 @@ TEST_F(EconomyOverviewTest, FoodIsReportedAndStaysRelevantWhileTheMissionHoldsIt
   ASSERT_FALSE(food.isEmpty());
   EXPECT_EQ(food.value(QStringLiteral("amount")).toInt(), 380);
   EXPECT_TRUE(food.value(QStringLiteral("relevant")).toBool());
-  EXPECT_FALSE(food.value(QStringLiteral("gatherable")).toBool());
+  EXPECT_TRUE(food.value(QStringLiteral("gatherable")).toBool())
+      << "farms and sheep make food something a builder brings home";
+  EXPECT_EQ(food.value(QStringLiteral("yield_per_trip")).toInt(),
+            Game::Systems::k_harvest_grain_food_reward);
 }
 
 TEST_F(EconomyOverviewTest, AResourceAMissionObjectiveAsksForIsNeverHidden) {

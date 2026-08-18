@@ -5731,31 +5731,56 @@ TEST(HumanoidPrepare, ConstructionVariantTableMapsFourRolesToExpectedRequests) {
         .variant_stride = k_variant_table.variant_stride,
         .variant_is_seed_based = k_variant_table.variant_is_seed_based,
     });
+    ASSERT_NE(role, Animation::HumanoidConstructionRole::None);
 
-    switch (role) {
-    case Animation::HumanoidConstructionRole::Hammer:
-      EXPECT_EQ(req.state, AnimationStateId::AttackSword);
-      EXPECT_EQ(req.clip_variant, 0U);
-      break;
-    case Animation::HumanoidConstructionRole::Saw:
-      EXPECT_EQ(req.state, AnimationStateId::AttackSword);
-      EXPECT_EQ(req.clip_variant, 1U);
-      break;
-    case Animation::HumanoidConstructionRole::Chisel:
-      EXPECT_EQ(req.state, AnimationStateId::AttackSword);
-      EXPECT_EQ(req.clip_variant, 2U);
-      break;
-    case Animation::HumanoidConstructionRole::KneelingChisel:
+    EXPECT_EQ(req.clip_id, Animation::humanoid_construction_clip_for_role(role))
+        << "a constructing soldier plays the dedicated work clip for its role, never a "
+           "sword swing";
+    EXPECT_EQ(req.clip_variant, 0U);
+    EXPECT_GE(req.phase, 0.0F);
+    EXPECT_LT(req.phase, 1.0F) << "the work clip loops on the jittered work cycle";
+    if (role == Animation::HumanoidConstructionRole::KneelingChisel) {
       EXPECT_EQ(req.state, AnimationStateId::Hold);
-      EXPECT_EQ(req.clip_variant, 0U);
-      EXPECT_GT(req.phase, 0.99F);
-      break;
-    case Animation::HumanoidConstructionRole::None:
-    default:
-      FAIL() << "unexpected construction role";
-      break;
+    } else {
+      EXPECT_EQ(req.state, AnimationStateId::AttackSword);
     }
   }
+}
+
+TEST(HumanoidPrepare, TheWorkJobPicksTheToolAndTheClip) {
+  EXPECT_EQ(
+      Animation::humanoid_construction_role_for_job(Animation::HumanoidWorkJob::Reap),
+      Animation::HumanoidConstructionRole::Reap);
+  EXPECT_EQ(
+      Animation::humanoid_construction_role_for_job(Animation::HumanoidWorkJob::Chop),
+      Animation::HumanoidConstructionRole::Hammer);
+  EXPECT_EQ(
+      Animation::humanoid_construction_role_for_job(Animation::HumanoidWorkJob::Quarry),
+      Animation::HumanoidConstructionRole::KneelingChisel);
+  EXPECT_EQ(Animation::humanoid_construction_role_for_job(
+                Animation::HumanoidWorkJob::Butcher),
+            Animation::HumanoidConstructionRole::KneelingChisel);
+  EXPECT_EQ(
+      Animation::humanoid_construction_role_for_job(Animation::HumanoidWorkJob::Build),
+      Animation::HumanoidConstructionRole::None)
+      << "building keeps the seeded mix of hammer, saw and chisel crews";
+
+  EXPECT_EQ(Animation::resolve_humanoid_construction_role({
+                .seed = 7U,
+                .variant_table_can_select_roles = true,
+                .variant_stride = 5U,
+                .variant_is_seed_based = true,
+                .job = Animation::HumanoidWorkJob::Reap,
+            }),
+            Animation::HumanoidConstructionRole::Reap);
+  EXPECT_EQ(Animation::humanoid_construction_variant_for_role(
+                Animation::HumanoidConstructionRole::Reap),
+            4U);
+  EXPECT_EQ(Animation::humanoid_construction_clip_for_role(
+                Animation::HumanoidConstructionRole::Reap),
+            Animation::k_humanoid_construct_reap_clip);
+  EXPECT_LT(Animation::k_humanoid_construct_reap_clip,
+            Animation::k_humanoid_clip_count);
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
@@ -5770,6 +5795,64 @@ TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
 
   EXPECT_NE(roman_idle, roman_constructing);
   EXPECT_NE(carthage_idle, carthage_constructing);
+}
+
+auto render_builder_rigged_meshes(const char* renderer_id,
+                                  Game::Systems::NationID nation_id,
+                                  bool attacking)
+    -> std::vector<const Render::GL::RiggedMesh*> {
+  Render::GL::clear_humanoid_caches();
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto renderer = registry.get(renderer_id);
+  EXPECT_TRUE(static_cast<bool>(renderer));
+  if (!renderer) {
+    return {};
+  }
+
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+  ctx.animation_time = 0.5F;
+
+  Engine::Core::Entity entity(1);
+  auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  EXPECT_NE(unit, nullptr);
+  if (unit == nullptr) {
+    return {};
+  }
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->nation_id = nation_id;
+  Render::GL::AnimationInputs anim{};
+  anim.time = ctx.animation_time;
+  if (attacking) {
+    anim.is_attacking = true;
+    anim.is_melee = true;
+    anim.combat_phase = Render::GL::CombatAnimPhase::Strike;
+    anim.combat_phase_progress = 0.5F;
+    anim.attack_family = Engine::Core::CombatAttackFamily::None;
+  }
+  ctx.animation_override = &anim;
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+  return sink.rigged_meshes;
+}
+
+TEST(HumanoidPrepare, BuiltInBuildersFightWithTheMalletInHand) {
+  for (auto const [renderer_id, nation] :
+       {std::pair{"troops/roman/builder", Game::Systems::NationID::RomanRepublic},
+        std::pair{"troops/carthage/builder", Game::Systems::NationID::Carthage}}) {
+    auto const idle = render_builder_rigged_meshes(renderer_id, nation, false);
+    auto const fighting = render_builder_rigged_meshes(renderer_id, nation, true);
+    ASSERT_FALSE(idle.empty()) << renderer_id;
+    ASSERT_FALSE(fighting.empty()) << renderer_id;
+    EXPECT_NE(idle.front(), fighting.front())
+        << renderer_id
+        << ": a builder in melee swings the mallet archetype, not the bare idle body";
+  }
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersUseMixedConstructionToolSets) {

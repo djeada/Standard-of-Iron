@@ -1078,6 +1078,17 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
       try_contact_bite(*world, animal, *wildlife);
     }
 
+    if (wildlife->held_timer > 0.0F) {
+      wildlife->held_timer -= delta_time;
+      if (auto* movement =
+              animal.entity->get_component<Engine::Core::MovementComponent>();
+          movement != nullptr && movement->get_has_target()) {
+        movement->stop();
+      }
+      wildlife->think_cooldown = std::max(wildlife->think_cooldown, 0.25F);
+      continue;
+    }
+
     release_if_stalled(animal, *wildlife, delta_time);
 
     wildlife->think_cooldown -= delta_time;

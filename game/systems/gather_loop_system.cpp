@@ -13,6 +13,7 @@
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
 #include "builder_product_types.h"
+#include "food_targets.h"
 #include "nav_grid.h"
 #include "owner_registry.h"
 #include "pathfinding.h"
@@ -90,7 +91,13 @@ struct Candidate {
   Game::Map::WorldPropTarget target;
   float distance_sq{0.0F};
   bool matches_priority{false};
+  std::optional<FoodTarget> food;
 };
+
+auto owner_of(const Engine::Core::Entity& worker) -> int {
+  const auto* unit = worker.get_component<Engine::Core::UnitComponent>();
+  return unit != nullptr ? unit->owner_id : 0;
+}
 
 auto node_is_hidden_by_fog(const Engine::Core::Entity& worker,
                            float x,
@@ -107,7 +114,8 @@ auto node_is_hidden_by_fog(const Engine::Core::Entity& worker,
   return !visibility.is_explored_world(x, z);
 }
 
-auto rank_nearby_nodes(const Engine::Core::Entity& worker,
+auto rank_nearby_nodes(Engine::Core::World& world,
+                       const Engine::Core::Entity& worker,
                        const Engine::Core::BuilderProductionComponent& builder,
                        float from_x,
                        float from_z,
@@ -141,6 +149,29 @@ auto rank_nearby_nodes(const Engine::Core::Entity& worker,
         .distance_sq = distance_sq,
         .matches_priority =
             !priority.empty() && harvest_product_for(prop.type) == priority});
+  }
+
+  bool const food_priority = priority == k_builder_product_harvest_grain ||
+                             priority == k_builder_product_slaughter_sheep;
+  auto consider_food = [&](std::string_view product) {
+    if (auto const food = find_food_target_near(
+            world, product, owner_of(worker), from_x, from_z, radius, worker.get_id());
+        food.has_value()) {
+      float const dx = food->x - from_x;
+      float const dz = food->z - from_z;
+      candidates.push_back(
+          Candidate{.target = {.id = 0,
+                               .type = Game::Map::WorldProp::Type::PineTree,
+                               .x = food->x,
+                               .z = food->z},
+                    .distance_sq = (dx * dx) + (dz * dz),
+                    .matches_priority = food_priority,
+                    .food = food});
+    }
+  };
+  consider_food(k_builder_product_harvest_grain);
+  if (food_priority) {
+    consider_food(k_builder_product_slaughter_sheep);
   }
 
   auto const closest_first = [](const Candidate& a, const Candidate& b) {
@@ -220,16 +251,30 @@ void assign_node(Engine::Core::BuilderProductionComponent& builder,
   movement.set_rest_position(work_position.x(), work_position.z());
 }
 
-auto claim_from(Engine::Core::Entity& worker,
+auto claim_from(Engine::Core::World& world,
+                Engine::Core::Entity& worker,
                 Engine::Core::BuilderProductionComponent& builder,
                 Engine::Core::TransformComponent& transform,
                 Engine::Core::MovementComponent& movement,
                 float radius) -> bool {
   auto& terrain = Game::Map::TerrainService::instance();
   auto const candidates = rank_nearby_nodes(
-      worker, builder, transform.position.x, transform.position.z, radius);
+      world, worker, builder, transform.position.x, transform.position.z, radius);
 
   for (const auto& candidate : candidates) {
+    if (candidate.food.has_value()) {
+      if (food_target_claimed(world, candidate.food->id, worker.get_id())) {
+        continue;
+      }
+      QVector3D const work_position = food_work_position(
+          world,
+          worker.get_id(),
+          QVector3D(transform.position.x, 0.0F, transform.position.z),
+          *candidate.food);
+      assign_food_task(builder, &movement, *candidate.food, work_position);
+      return true;
+    }
+
     if (!node_is_workable(
             candidate.target, transform.position.x, transform.position.z)) {
       continue;
@@ -253,16 +298,21 @@ auto claim_from(Engine::Core::Entity& worker,
   return false;
 }
 
-auto take_next_auto_gather_node(Engine::Core::Entity& worker,
+auto take_next_auto_gather_node(Engine::Core::World& world,
+                                Engine::Core::Entity& worker,
                                 Engine::Core::BuilderProductionComponent& builder,
                                 Engine::Core::TransformComponent& transform,
                                 Engine::Core::MovementComponent& movement) -> bool {
-  if (claim_from(
-          worker, builder, transform, movement, GatherLoopSystem::k_search_radius)) {
+  if (claim_from(world,
+                 worker,
+                 builder,
+                 transform,
+                 movement,
+                 GatherLoopSystem::k_search_radius)) {
     return true;
   }
 
-  return claim_from(worker, builder, transform, movement, 0.0F);
+  return claim_from(world, worker, builder, transform, movement, 0.0F);
 }
 
 } // namespace
@@ -295,7 +345,7 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (builder->has_gather_order &&
-        !is_harvest_builder_product(builder->gather_product_type)) {
+        !is_gather_builder_product(builder->gather_product_type)) {
       builder->clear_gather_order();
       if (!builder->auto_gather) {
         continue;
@@ -313,10 +363,41 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (builder->auto_gather) {
-      if (!take_next_auto_gather_node(*entity, *builder, *transform, *movement)) {
+      if (!take_next_auto_gather_node(
+              *world, *entity, *builder, *transform, *movement)) {
 
         builder->report_fault(Engine::Core::BuilderTaskFault::TargetLost,
                               k_think_interval);
+      }
+      continue;
+    }
+
+    if (is_food_builder_product(builder->gather_product_type)) {
+      auto const food = find_food_target_near(*world,
+                                              builder->gather_product_type,
+                                              unit->owner_id,
+                                              builder->gather_anchor_x,
+                                              builder->gather_anchor_z,
+                                              k_search_radius,
+                                              entity->get_id());
+      if (food.has_value()) {
+        QVector3D const work_position = food_work_position(
+            *world,
+            entity->get_id(),
+            QVector3D(transform->position.x, 0.0F, transform->position.z),
+            *food);
+        assign_food_task(*builder, movement, *food, work_position);
+        continue;
+      }
+      bool const crop_still_growing =
+          builder->gather_product_type == k_builder_product_harvest_grain &&
+          owner_has_farm_near(*world,
+                              unit->owner_id,
+                              builder->gather_anchor_x,
+                              builder->gather_anchor_z,
+                              k_search_radius);
+      if (!crop_still_growing) {
+        builder->clear_gather_order();
       }
       continue;
     }

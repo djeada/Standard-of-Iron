@@ -55,6 +55,7 @@ enum class ToolType {
   Home,
   Marketplace,
   Temple,
+  Farm,
   Wall,
   Gate,
   Eraser

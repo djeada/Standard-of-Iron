@@ -14,6 +14,9 @@ namespace App::Economy {
 
 [[nodiscard]] auto selected_builder_state(Engine::Core::World* world) -> QVariantMap;
 
+[[nodiscard]] auto selected_farm_state(Engine::Core::World* world,
+                                       int local_owner_id) -> QVariantMap;
+
 [[nodiscard]] auto selected_marketplace_state(Engine::Core::World* world,
                                               int local_owner_id) -> QVariantMap;
 

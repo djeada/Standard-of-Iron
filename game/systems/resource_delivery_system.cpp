@@ -113,10 +113,12 @@ void sync_stockpile_displays(Engine::Core::World* world, float delta_time) {
     float const wood_target = target_for(ResourceType::Wood);
     float const stone_target = target_for(ResourceType::Stone);
     float const iron_target = target_for(ResourceType::Iron);
+    float const food_target = target_for(ResourceType::Food);
 
     approach_fill(stockpile->wood_fill, wood_target, delta_time);
     approach_fill(stockpile->stone_fill, stone_target, delta_time);
     approach_fill(stockpile->iron_fill, iron_target, delta_time);
+    approach_fill(stockpile->food_fill, food_target, delta_time);
 
     if (stockpile->deposit_flash > 0.0F) {
       stockpile->deposit_flash = std::max(0.0F, stockpile->deposit_flash - delta_time);

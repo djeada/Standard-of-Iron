@@ -153,6 +153,8 @@ auto building_display_name(Game::Units::SpawnType type) -> QString {
     return QCoreApplication::translate("FocusTarget", "Marketplace");
   case Game::Units::SpawnType::Temple:
     return QCoreApplication::translate("FocusTarget", "Temple");
+  case Game::Units::SpawnType::Farm:
+    return QCoreApplication::translate("FocusTarget", "Farm");
   default:
     break;
   }

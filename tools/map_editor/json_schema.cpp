@@ -247,6 +247,7 @@ auto structure_schema(const QString& sub_type) -> JsonSchema {
                       "home",
                       "marketplace",
                       "temple",
+                      "farm",
                       "wall_gate"}),
       grid_x_field(),
       grid_z_field(),

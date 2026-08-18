@@ -22,6 +22,8 @@ struct ArchetypeVariantTable {
   std::uint8_t variant_stride{0U};
   bool variant_is_seed_based{false};
 
+  std::uint8_t seed_variant_limit{0U};
+
   std::array<VisualArchetypeId, k_max_visual_variants> archetype_for_variant{};
   std::array<StateId, k_max_visual_variants> state_for_variant{};
 
@@ -34,6 +36,9 @@ struct VariantTableResolveInputs {
   std::uint32_t seed{0U};
   std::uint8_t variant_index_hint{0U};
   bool has_variant_index_hint{false};
+
+  std::uint8_t forced_variant_index{0U};
+  bool has_forced_variant_index{false};
 };
 
 struct VariantTableResolution {

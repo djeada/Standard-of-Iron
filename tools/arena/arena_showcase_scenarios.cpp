@@ -282,6 +282,10 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
                   Game::Units::SpawnType::Home,
                   {-14.0F, 0.0F, 10.0F},
                   180.0F),
+        structure(QStringLiteral("camp_farm"),
+                  Game::Units::SpawnType::Farm,
+                  {22.0F, 0.0F, 1.0F},
+                  0.0F),
 
         worker(QStringLiteral("camp_builders"),
                Troop::Builder,
@@ -314,9 +318,31 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
                {-8.0F, 0.0F, 22.0F},
                3,
                false),
+        worker(
+            QStringLiteral("reapers"), Troop::Builder, {20.0F, 0.0F, 6.0F}, 1, false),
+        worker(
+            QStringLiteral("butchers"), Troop::Builder, {22.0F, 0.0F, -8.0F}, 1, false),
     };
 
+    activity.wildlife = Game::Wildlife::default_settings();
+    activity.wildlife.enabled = true;
+    activity.wildlife.seed = 20260818U;
+    activity.wildlife.wolves.enabled = false;
+    activity.wildlife.wolves.group_count = 0;
+    activity.wildlife.sheep.enabled = true;
+    activity.wildlife.sheep.group_count = 1;
+    activity.wildlife.sheep.group_size_min = 4;
+    activity.wildlife.sheep.group_size_max = 4;
+    activity.wildlife.sheep.roam_radius = 4.0F;
+    activity.wildlife.sheep.spawn_areas = {{20.0F, -11.0F, 2.5F}};
+    activity.wildlife.birds.enabled = false;
+    activity.wildlife.birds.group_count = 0;
+
     activity.steps = {
+        targeted_step(
+            0.5F, Command::SetFarmGrowth, QStringLiteral("camp_farm"), {}, {}, 100),
+        harvest_step(3.0F, QStringLiteral("reapers"), QStringLiteral("grain")),
+        harvest_step(5.0F, QStringLiteral("butchers"), QStringLiteral("sheep")),
         harvest_step(3.0F, QStringLiteral("foresters"), QStringLiteral("tree")),
         harvest_step(3.0F, QStringLiteral("quarriers"), QStringLiteral("boulder")),
         harvest_step(3.0F, QStringLiteral("miners"), QStringLiteral("iron_ore")),
@@ -362,6 +388,7 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
         expect(Expect::GroupIsRendered, QStringLiteral("miners")),
         expect(Expect::GroupIsRendered, QStringLiteral("repair_crew")),
         expect(Expect::GroupIsRendered, QStringLiteral("carriers")),
+        expect(Expect::GroupIsRendered, QStringLiteral("reapers")),
         expect(Expect::MovementAnimationObserved, QStringLiteral("carriers")),
         expect(Expect::FrameBudget, {}, 33.34F, 0.5F),
     };

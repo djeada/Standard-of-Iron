@@ -6,7 +6,7 @@
       "production": {
         "cost": 50,
         "resource_costs": {
-          "wood": 6
+          "wood": 12
         },
         "build_time": 5.0,
         "priority": 10,
@@ -59,8 +59,8 @@
       "production": {
         "cost": 90,
         "resource_costs": {
-          "wood": 10,
-          "iron": 4
+          "wood": 12,
+          "iron": 10
         },
         "build_time": 7.0,
         "priority": 10,
@@ -116,8 +116,8 @@
       "production": {
         "cost": 75,
         "resource_costs": {
-          "wood": 8,
-          "iron": 2
+          "wood": 12,
+          "iron": 6
         },
         "build_time": 6.0,
         "priority": 5,
@@ -173,8 +173,8 @@
       "production": {
         "cost": 145,
         "resource_costs": {
-          "wood": 16,
-          "iron": 10
+          "wood": 20,
+          "iron": 14
         },
         "build_time": 10.0,
         "priority": 15,
@@ -227,8 +227,8 @@
       "production": {
         "cost": 120,
         "resource_costs": {
-          "wood": 18,
-          "iron": 8
+          "wood": 22,
+          "iron": 10
         },
         "build_time": 9.0,
         "priority": 12,
@@ -283,8 +283,8 @@
       "production": {
         "cost": 135,
         "resource_costs": {
-          "wood": 18,
-          "iron": 9
+          "wood": 22,
+          "iron": 12
         },
         "build_time": 9.5,
         "priority": 13,
@@ -338,8 +338,8 @@
       "production": {
         "cost": 75,
         "resource_costs": {
-          "wood": 6,
-          "stone": 2
+          "wood": 8,
+          "stone": 4
         },
         "build_time": 7.0,
         "priority": 8,
@@ -656,8 +656,8 @@
       "production": {
         "cost": 350,
         "resource_costs": {
-          "wood": 24,
-          "iron": 16
+          "wood": 30,
+          "iron": 20
         },
         "build_time": 20.0,
         "priority": 2,
@@ -974,6 +974,9 @@
       "display_name": "Builder",
       "production": {
         "cost": 60,
+        "resource_costs": {
+          "wood": 10
+        },
         "build_time": 6.0,
         "priority": 4,
         "is_melee": true
@@ -1023,6 +1026,9 @@
       "display_name": "Civilian",
       "production": {
         "cost": 8,
+        "resource_costs": {
+          "food": 20
+        },
         "build_time": 5.0,
         "priority": 1,
         "is_melee": true

@@ -28,6 +28,7 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_home_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_builder_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_marketplace_state() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap selected_farm_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap unit_info(const QString& unit_type,
                                                   const QString& nation_id) const;
 
