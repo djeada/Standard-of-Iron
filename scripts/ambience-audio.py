@@ -14,7 +14,7 @@ The layer list lives in the same promo spec the arena consumed, under an
     "ambience": {
       "seed": 5501,
       "beds": [
-        {"file": "assets/audio/ambience/night_rain.ogg",        "gain": 0.85},
+        {"file": "assets/audio/ambience/storm.ogg",             "gain": 0.85},
         {"file": "assets/audio/ambience/camp_fire_night.ogg",   "gain": 0.60},
         {"file": "assets/audio/ambience/mountain_camp_night.ogg", "gain": 0.16}
       ],

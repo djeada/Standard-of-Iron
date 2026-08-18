@@ -320,7 +320,7 @@ scripts/ambience-audio.py --spec tools/arena/promos/night_watch.json \
 ```
 
 `night_watch` layers rain over a camp fire with a distant camp bed well
-underneath, and drops a distant wolf in every 26-64 s. Both `night_rain` and
+underneath, and drops a distant wolf in every 26-64 s. `storm` and
 `camp_fire_night` are **recordings**, cut by `tools/audio_field/sources.py`, not
 generated: outdoor nature is the case `tools/audio_synth` explicitly does not
 claim to cover, and a synthesised first pass at both bore that out. Every bed is
@@ -330,10 +330,10 @@ seam-sealed when built, so `-stream_loop` repeats one without a click.
 energy in 2-6 kHz -- `Source.shelf_db` exists for exactly this, and
 `AmbienceAssetsTest.NoBedIsLouderInTheHarshBandThanInItsBody` enforces it: a
 bed's 2-6 kHz band must sit at least 3 dB under its 100-800 Hz body. The
-shipped `weather_rain.ogg` measures a 2321 Hz spectral centroid on
+shipped `storm.ogg` measures a 1281 Hz spectral centroid on
 `tools/audio_synth/analyse.py`, and at that brightness it perceptually buries
 anything darker sharing the mix -- a camp fire under it was inaudible at equal
-RMS. `night_rain` takes the same treatment the other field beds get (highpass
+RMS. `storm` takes the same treatment the other field beds get (highpass
 90, lowpass 3600, -7 dB shelf) and lands at 1281 Hz with its harsh band 12 dB
 under its body. Judge a bed with `analyse.py` rather than by ear.
 
