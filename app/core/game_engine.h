@@ -298,6 +298,23 @@ public:
   void render(int pixel_width, int pixel_height);
   void set_input_viewport_size(qreal width, qreal height);
 
+  [[nodiscard]] auto try_begin_render_frame() -> bool;
+  void end_render_frame();
+
+  class WorldFreeze {
+  public:
+    explicit WorldFreeze(GameEngine& engine);
+    ~WorldFreeze();
+
+    WorldFreeze(const WorldFreeze&) = delete;
+    auto operator=(const WorldFreeze&) -> WorldFreeze& = delete;
+    WorldFreeze(WorldFreeze&&) = delete;
+    auto operator=(WorldFreeze&&) -> WorldFreeze& = delete;
+
+  private:
+    GameEngine& m_engine;
+  };
+
 private:
   struct RuntimeState {
     bool initialized = false;
@@ -383,6 +400,7 @@ private:
   void restore_mission_stages(const QJsonObject& stage_state);
   void restore_mission_waves(const QJsonObject& wave_state);
   void update_tutorial(float real_dt);
+  void publish_tutorial_focus_points(const QVariantMap& wave_status);
   void activate_tutorial_if_configured();
   void update_loading_overlay();
   void update_cursor_position();
@@ -496,6 +514,9 @@ private:
   std::uint64_t m_last_world_props_revision = 0;
   bool m_loading_overlay_active = false;
   std::atomic_bool m_loading_overlay_wait_for_first_frame{false};
+
+  std::atomic<int> m_world_freeze_depth{0};
+  std::atomic<bool> m_render_frame_active{false};
   int m_loading_overlay_frames_remaining = 0;
   qint64 m_loading_overlay_last_frame_ms = 0;
   qint64 m_loading_overlay_min_duration_ms = 0;

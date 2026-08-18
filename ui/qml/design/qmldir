@@ -44,6 +44,7 @@ IronResourceCounter 1.0 controls/IronResourceCounter.qml
 IronInspectorSection 1.0 controls/IronInspectorSection.qml
 IronCheckBox 1.0 controls/IronCheckBox.qml
 IronSelectionSummary 1.0 controls/IronSelectionSummary.qml
+IronSpotlight 1.0 controls/IronSpotlight.qml
 
 IronNotification 1.0 overlays/IronNotification.qml
 NotificationHost 1.0 overlays/NotificationHost.qml

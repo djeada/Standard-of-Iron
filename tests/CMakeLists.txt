@@ -420,6 +420,7 @@ add_executable(
     render/creature/baked_attachment_world_position_test.cpp
     render/creature/baked_horse_attachment_world_position_test.cpp
     render/creature/render_request_batch_parity_test.cpp
+    render/creature/creature_bone_probe_test.cpp
     render/creature/template_prewarm_regression_test.cpp
     render/software/software_rasterizer_test.cpp
     render/software/software_backend_integration_test.cpp

@@ -13,6 +13,9 @@ Item {
     readonly property bool compact: width < 1000
     readonly property bool ultraCompact: width < 620
     readonly property var speedOptions: GameSpeeds.options
+    readonly property var tutorial: (typeof game !== 'undefined' && game && game.tutorial) ? game.tutorial : null
+    readonly property string tutorialFocusRegion: (topRoot.tutorial && topRoot.tutorial.active) ? topRoot.tutorial.focus_region : ""
+    readonly property var tutorialFocusPoints: (topRoot.tutorial && topRoot.tutorial.active) ? topRoot.tutorial.focus_points : []
 
     readonly property real minimapLegendHeight: fogLegend.visible ? Design.Metrics.space4 + fogLegend.implicitHeight + Design.Metrics.space8 : 0
 
@@ -179,10 +182,62 @@ Item {
                 spacing: Design.Metrics.space8
                 Layout.alignment: Qt.AlignVCenter
 
-                Design.IronIconButton {
-                    iconText: topRoot.game_is_paused ? Design.Icons.play : Design.Icons.pause
-                    tooltip: topRoot.game_is_paused ? qsTr("Resume") : qsTr("Pause")
-                    onClicked: topRoot.pause_toggled()
+                Item {
+                    id: speedZone
+
+                    Layout.fillHeight: true
+                    implicitWidth: speedGroup.implicitWidth
+                    implicitHeight: speedGroup.implicitHeight
+
+                    RowLayout {
+                        id: speedGroup
+
+                        anchors.fill: parent
+                        spacing: Design.Metrics.space8
+
+                        Design.IronIconButton {
+                            iconText: topRoot.game_is_paused ? Design.Icons.play : Design.Icons.pause
+                            tooltip: topRoot.game_is_paused ? qsTr("Resume") : qsTr("Pause")
+                            onClicked: topRoot.pause_toggled()
+                        }
+
+                        Design.IronDivider {
+                            vertical: true
+                            Layout.fillHeight: true
+                            visible: !topRoot.ultraCompact
+                        }
+
+                        Repeater {
+                            model: topRoot.speedOptions
+
+                            delegate: Design.IronButton {
+                                required property var modelData
+
+                                visible: !topRoot.compact
+                                Layout.preferredWidth: Design.Metrics.space24 * 2
+                                implicitWidth: Design.Metrics.space24 * 2
+                                text: topRoot.speed_label(modelData)
+                                tone: topRoot.current_speed === modelData ? "primary" : "secondary"
+                                accessibleName: qsTr("Battle speed %1").arg(topRoot.speed_label(modelData))
+                                onClicked: topRoot.speed_changed(modelData)
+                            }
+                        }
+
+                        Design.IronDropdown {
+                            visible: topRoot.compact
+                            Layout.preferredWidth: Design.Metrics.space24 * 4
+                            model: topRoot.speed_labels()
+                            currentIndex: topRoot.speed_index(topRoot.current_speed)
+                            accessibleName: qsTr("Battle speed")
+                            onActivated: function (index) {
+                                topRoot.speed_changed(topRoot.speedOptions[index]);
+                            }
+                        }
+                    }
+
+                    Design.IronSpotlight {
+                        active: topRoot.tutorialFocusRegion === "speed"
+                    }
                 }
 
                 Design.IronDivider {
@@ -191,67 +246,53 @@ Item {
                     visible: !topRoot.ultraCompact
                 }
 
-                Repeater {
-                    model: topRoot.speedOptions
+                Item {
+                    id: cameraZone
 
-                    delegate: Design.IronButton {
-                        required property var modelData
-
-                        visible: !topRoot.compact
-                        Layout.preferredWidth: Design.Metrics.space24 * 2
-                        implicitWidth: Design.Metrics.space24 * 2
-                        text: topRoot.speed_label(modelData)
-                        tone: topRoot.current_speed === modelData ? "primary" : "secondary"
-                        accessibleName: qsTr("Battle speed %1").arg(topRoot.speed_label(modelData))
-                        onClicked: topRoot.speed_changed(modelData)
-                    }
-                }
-
-                Design.IronDropdown {
-                    visible: topRoot.compact
-                    Layout.preferredWidth: Design.Metrics.space24 * 4
-                    model: topRoot.speed_labels()
-                    currentIndex: topRoot.speed_index(topRoot.current_speed)
-                    accessibleName: qsTr("Battle speed")
-                    onActivated: function (index) {
-                        topRoot.speed_changed(topRoot.speedOptions[index]);
-                    }
-                }
-
-                Design.IronDivider {
-                    vertical: true
                     Layout.fillHeight: true
-                    visible: !topRoot.ultraCompact
-                }
+                    implicitWidth: cameraGroup.implicitWidth
+                    implicitHeight: cameraGroup.implicitHeight
 
-                Design.IronIconButton {
-                    iconText: Design.Icons.follow
-                    tooltip: qsTr("Follow the selection with the camera")
-                    checkable: true
-                    tone: checked ? "primary" : "secondary"
-                    onToggled: {
-                        if (topRoot.game_ready() && game.camera.follow_selection)
-                            game.camera.follow_selection(checked);
+                    RowLayout {
+                        id: cameraGroup
+
+                        anchors.fill: parent
+                        spacing: Design.Metrics.space8
+
+                        Design.IronIconButton {
+                            iconText: Design.Icons.follow
+                            tooltip: qsTr("Follow the selection with the camera")
+                            checkable: true
+                            tone: checked ? "primary" : "secondary"
+                            onToggled: {
+                                if (topRoot.game_ready() && game.camera.follow_selection)
+                                    game.camera.follow_selection(checked);
+                            }
+                        }
+
+                        Design.IronIconButton {
+                            iconText: Design.Icons.reset
+                            tooltip: qsTr("Return the camera to your camp (%1)").arg(InputBindings.display_shortcut_for("rts.camera_reset"))
+                            onClicked: {
+                                if (topRoot.game_ready() && game.camera.reset)
+                                    game.camera.reset();
+                            }
+                        }
+
+                        Design.IronIconButton {
+                            iconText: Design.Icons.objective
+                            tooltip: topRoot.camera_legend_visible ? qsTr("Hide the camera controls") : qsTr("Show how to move the camera")
+                            accessibleName: qsTr("Camera controls")
+                            checkable: true
+                            checked: topRoot.camera_legend_visible
+                            tone: checked ? "primary" : "secondary"
+                            onToggled: topRoot.camera_legend_toggled()
+                        }
                     }
-                }
 
-                Design.IronIconButton {
-                    iconText: Design.Icons.reset
-                    tooltip: qsTr("Return the camera to your camp (%1)").arg(InputBindings.display_shortcut_for("rts.camera_reset"))
-                    onClicked: {
-                        if (topRoot.game_ready() && game.camera.reset)
-                            game.camera.reset();
+                    Design.IronSpotlight {
+                        active: topRoot.tutorialFocusRegion === "camera"
                     }
-                }
-
-                Design.IronIconButton {
-                    iconText: Design.Icons.objective
-                    tooltip: topRoot.camera_legend_visible ? qsTr("Hide the camera controls") : qsTr("Show how to move the camera")
-                    accessibleName: qsTr("Camera controls")
-                    checkable: true
-                    checked: topRoot.camera_legend_visible
-                    tone: checked ? "primary" : "secondary"
-                    onToggled: topRoot.camera_legend_toggled()
                 }
 
                 Design.IronIconButton {
@@ -312,6 +353,12 @@ Item {
                     ToolTip.text: topRoot.missionStaged ? (game.mission.active_hint !== "" ? game.mission.active_hint + "\n" + qsTr("Click to look at the objective.") : qsTr("Click to look at the objective.")) : ""
 
                     onClicked: game.mission.focus_active_stage()
+                }
+
+                Design.IronSpotlight {
+                    target: objectiveRow
+                    active: topRoot.tutorialFocusRegion === "objective" && objectiveRow.visible
+                    cornerRadius: Design.Metrics.radiusSmall
                 }
 
                 Design.IronBadge {
@@ -573,6 +620,57 @@ Item {
                         height: width
                         radius: width / 2
                         color: Design.Theme.accent
+                    }
+                }
+            }
+
+            Repeater {
+                id: tutorialPins
+
+                model: topRoot.tutorialFocusPoints
+
+                delegate: Item {
+                    id: tutorialPin
+
+                    required property var modelData
+
+                    readonly property real paintedW: minimapImage.paintedWidth
+                    readonly property real paintedH: minimapImage.paintedHeight
+
+                    property real pulse: 1
+
+                    SequentialAnimation on pulse  {
+                        running: tutorialPin.visible && !Design.A11y.reducedMotion
+                        loops: Animation.Infinite
+
+                        NumberAnimation {
+                            from: 1
+                            to: 0.25
+                            duration: 900
+                            easing.type: Easing.InOutQuad
+                        }
+
+                        NumberAnimation {
+                            to: 1
+                            duration: 900
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                    visible: paintedW > 0 && paintedH > 0 && modelData.nx !== undefined
+                    x: ((minimapImage.width - paintedW) / 2) + (modelData.nx || 0) * paintedW
+                    y: ((minimapImage.height - paintedH) / 2) + (modelData.ny || 0) * paintedH
+                    z: 13
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: Design.Metrics.space12
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: Design.Metrics.borderFocus
+                        border.color: Design.Theme.focus
+                        opacity: tutorialPin.pulse
                     }
                 }
             }

@@ -47,6 +47,7 @@
         <file alias="controls/IronInspectorSection.qml">ui/qml/design/controls/IronInspectorSection.qml</file>
         <file alias="controls/IronCheckBox.qml">ui/qml/design/controls/IronCheckBox.qml</file>
         <file alias="controls/IronSelectionSummary.qml">ui/qml/design/controls/IronSelectionSummary.qml</file>
+        <file alias="controls/IronSpotlight.qml">ui/qml/design/controls/IronSpotlight.qml</file>
         <file alias="overlays/IronNotification.qml">ui/qml/design/overlays/IronNotification.qml</file>
         <file alias="overlays/NotificationHost.qml">ui/qml/design/overlays/NotificationHost.qml</file>
         <file alias="layouts/GameShell.qml">ui/qml/design/layouts/GameShell.qml</file>
