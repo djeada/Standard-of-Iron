@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../game_config.h"
 #include "../../map/terrain_service.h"
 #include "../nation_registry.h"
 #include "../owner_queries.h"
@@ -77,6 +79,14 @@ auto is_visible_to_sources(const Engine::Core::TransformComponent& transform,
 
 namespace Game::Systems::AI {
 
+void AISnapshotBuilder::attach_nation(AISnapshot& snapshot, int ai_owner_id) {
+  const auto* nation =
+      Game::Systems::NationRegistry::instance().get_nation_for_player(ai_owner_id);
+  if (nation != nullptr) {
+    snapshot.nation = std::make_shared<const Game::Systems::Nation>(*nation);
+  }
+}
+
 auto AISnapshotBuilder::build(const Engine::Core::World& world,
                               int ai_owner_id) -> AISnapshot {
   AISnapshot snapshot;
@@ -102,6 +112,22 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   auto friendlies = world.get_units_owned_by(ai_owner_id);
   const auto* nation =
       Game::Systems::NationRegistry::instance().get_nation_for_player(ai_owner_id);
+  attach_nation(snapshot, ai_owner_id);
+  snapshot.max_troops_per_player =
+      Game::GameConfig::instance().get_max_troops_per_player();
+  if (const auto* height_map =
+          terrain_service.is_initialized() ? terrain_service.get_height_map() : nullptr;
+      height_map != nullptr && height_map->get_width() > 0 &&
+      height_map->get_height() > 0) {
+    const float tile = height_map->get_tile_size();
+    const float half_w = static_cast<float>(height_map->get_width()) * 0.5F - 0.5F;
+    const float half_h = static_cast<float>(height_map->get_height()) * 0.5F - 0.5F;
+    snapshot.has_map_bounds = true;
+    snapshot.map_min_x = -half_w * tile;
+    snapshot.map_max_x = half_w * tile;
+    snapshot.map_min_z = -half_h * tile;
+    snapshot.map_max_z = half_h * tile;
+  }
   const auto vision_sources = collect_vision_sources(friendlies);
   snapshot.friendly_units.reserve(friendlies.size());
 

@@ -424,6 +424,23 @@ auto should_auto_engage_melee(Engine::Core::Entity* unit) -> bool {
     return true;
 
   case Game::Units::SpawnType::Barracks:
+  case Game::Units::SpawnType::Elephant:
+  case Game::Units::SpawnType::RomanLegionOrganizer:
+  case Game::Units::SpawnType::RomanVeteranConsul:
+  case Game::Units::SpawnType::RomanFieldCommander:
+  case Game::Units::SpawnType::CarthageSpearCommander:
+  case Game::Units::SpawnType::CarthageBowCommander:
+  case Game::Units::SpawnType::CarthageSwordCommander:
+  case Game::Units::SpawnType::Civilian:
+  case Game::Units::SpawnType::Builder:
+  case Game::Units::SpawnType::DefenseTower:
+  case Game::Units::SpawnType::Home:
+  case Game::Units::SpawnType::WallSegment:
+  case Game::Units::SpawnType::WallGate:
+  case Game::Units::SpawnType::Marketplace:
+  case Game::Units::SpawnType::Temple:
+  case Game::Units::SpawnType::Sheep:
+  case Game::Units::SpawnType::Wolf:
     return false;
   }
 

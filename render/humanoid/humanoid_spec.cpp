@@ -168,8 +168,6 @@ constexpr auto make_full_deltoid(bool left) noexcept -> Creature::PrimitiveInsta
 }
 
 constexpr float k_upper_arm_half = HP::UPPER_ARM_LEN * 0.5F;
-constexpr float k_fore_arm_half = HP::FORE_ARM_LEN * 0.5F;
-
 constexpr auto
 make_limb_segment(std::string_view name,
                   HumanoidBone segment_bone,
@@ -356,8 +354,6 @@ constexpr auto make_full_nose() noexcept -> Creature::PrimitiveInstance {
 }
 
 constexpr float k_upper_leg_half = HP::UPPER_LEG_LEN * 0.5F;
-constexpr float k_lower_leg_half = HP::LOWER_LEG_LEN * 0.5F;
-
 constexpr auto
 make_full_thigh_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   return make_limb_segment(left ? "humanoid_full_thigh_l_top"
@@ -682,24 +678,6 @@ constexpr auto make_skeleton_collar(bool left) noexcept -> Creature::PrimitiveIn
   return p;
 }
 
-constexpr auto make_skeleton_ribcage_mass(bool left, bool back) noexcept
-    -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? (back ? "skeleton_ribcage_back_l" : "skeleton_ribcage_front_l")
-                      : (back ? "skeleton_ribcage_back_r" : "skeleton_ribcage_front_r");
-  p.shape = Creature::PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = bone(HumanoidBone::Chest);
-  float const side = left ? -1.0F : 1.0F;
-  float const y = back ? -HP::TORSO_TOP_R * 0.16F : HP::TORSO_TOP_R * 0.18F;
-  float const z = back ? -HP::TORSO_TOP_R * 0.22F : HP::TORSO_TOP_R * 0.28F;
-  p.params.head_offset = QVector3D(side * HP::TORSO_TOP_R * 0.50F, y, z);
-  p.params.half_extents = QVector3D(
-      HP::TORSO_TOP_R * 0.28F, HP::TORSO_TOP_R * 0.18F, HP::TORSO_TOP_R * 0.14F);
-  p.color_role = Skin;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
 constexpr auto make_skeleton_abdomen_bar(const char* name, float y, float z) noexcept
     -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
@@ -725,22 +703,6 @@ constexpr auto make_skeleton_sternum() noexcept -> Creature::PrimitiveInstance {
   p.params.tail_bone = bone(HumanoidBone::Spine);
   p.params.tail_offset = QVector3D(0.0F, -0.18F, 0.022F);
   p.params.radius = HP::NECK_RADIUS * 0.24F;
-  p.color_role = Skin;
-  p.lod_mask = Creature::k_lod_full;
-  return p;
-}
-
-constexpr auto
-make_skeleton_torso_joint(const char* name,
-                          HumanoidBone anchor,
-                          const QVector3D& offset,
-                          float radius) noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = name;
-  p.shape = Creature::PrimitiveShape::Sphere;
-  p.params.anchor_bone = bone(anchor);
-  p.params.head_offset = offset;
-  p.params.radius = radius;
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;

@@ -437,6 +437,7 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::Temple:
   case SpawnType::Sheep:
   case SpawnType::Wolf:
+  case SpawnType::Elephant:
     return false;
   }
   return false;

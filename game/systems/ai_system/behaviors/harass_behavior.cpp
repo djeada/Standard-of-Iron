@@ -170,6 +170,7 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
       QVector3D const attack_center(visible_target->pos_x, 0.0F, visible_target->pos_z);
       AIFormationRequest formation_request;
       formation_request.player_id = context.player_id;
+      formation_request.nation = context.nation;
       formation_request.anchor = attack_center;
       formation_request.spacing =
           std::max(1.5F, context.strategy_config.attack_formation_spacing * 0.8F);
@@ -230,6 +231,7 @@ void HarassBehavior::execute(const AISnapshot& snapshot,
   QVector3D const move_center(target_center_x, 0.0F, target_center_z);
   AIFormationRequest formation_request;
   formation_request.player_id = context.player_id;
+  formation_request.nation = context.nation;
   formation_request.anchor = move_center;
   formation_request.spacing = std::max(1.4F, context.strategy_config.gather_spacing);
   formation_request.intent = Game::Formation::ArmyFormationIntent::Line;

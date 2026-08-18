@@ -24,10 +24,6 @@ namespace {
 struct CellKey {
   int cx;
   int cz;
-
-  auto operator==(const CellKey& other) const -> bool {
-    return cx == other.cx && cz == other.cz;
-  }
 };
 
 auto to_cell(float x, float z, float inv_cell_size) -> CellKey {

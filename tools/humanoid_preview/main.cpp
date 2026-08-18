@@ -10,6 +10,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <limits>
@@ -52,8 +53,6 @@ enum class Bone : std::size_t {
   FootR,
   Count
 };
-
-constexpr std::size_t k_bone_count = static_cast<std::size_t>(Bone::Count);
 
 struct Segment {
   Bone from;

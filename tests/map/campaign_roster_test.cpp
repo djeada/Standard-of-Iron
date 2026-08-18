@@ -121,7 +121,7 @@ auto map_json_for(const Game::Mission::MissionDefinition& mission) -> QJsonObjec
 }
 
 auto player_has_barracks(const QJsonObject& map) -> bool {
-  for (const auto& value : map.value(QStringLiteral("structures")).toArray()) {
+  for (const auto value : map.value(QStringLiteral("structures")).toArray()) {
     const QJsonObject structure = value.toObject();
     if (structure.value(QStringLiteral("player_id")).toInt() == 1 &&
         structure.value(QStringLiteral("type")).toString() ==

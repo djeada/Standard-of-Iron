@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <utility>
 
 namespace MapEditor {
 
@@ -392,7 +393,7 @@ auto edit_wave_dialog(const QJsonArray& ai_setups,
 
   layout->addWidget(new QLabel(QStringLiteral("Composition"), &dialog));
   auto* composition = new QListWidget(&dialog);
-  for (const QJsonValue& value : initial.value("composition").toArray()) {
+  for (const QJsonValue value : initial.value("composition").toArray()) {
     const QJsonObject item = value.toObject();
     auto* row = new QListWidgetItem(QStringLiteral("%1 × %2")
                                         .arg(item.value("count").toInt())
@@ -871,7 +872,7 @@ void MissionPanel::sync_weather() {
 
 void MissionPanel::refresh_ai_table() {
   m_ai_table->setRowCount(0);
-  for (const QJsonValue& value : m_mission_data->array("ai_setups")) {
+  for (const QJsonValue value : m_mission_data->array("ai_setups")) {
     const QJsonObject ai = value.toObject();
     set_row(m_ai_table,
             m_ai_table->rowCount(),
@@ -1022,7 +1023,7 @@ void MissionPanel::remove_force(int row) {
 void MissionPanel::refresh_condition_tables() {
   const auto fill = [this](const QString& key, QTableWidget* target) {
     target->setRowCount(0);
-    for (const QJsonValue& value : m_mission_data->array(key)) {
+    for (const QJsonValue value : m_mission_data->array(key)) {
       const QJsonObject condition = value.toObject();
       set_row(target,
               target->rowCount(),
@@ -1075,7 +1076,7 @@ void MissionPanel::refresh_waves_table() {
     for (qsizetype wave_index = 0; wave_index < waves.size(); ++wave_index) {
       const QJsonObject wave = waves[wave_index].toObject();
       QStringList composition;
-      for (const QJsonValue& entry_value : wave.value("composition").toArray()) {
+      for (const QJsonValue entry_value : wave.value("composition").toArray()) {
         const QJsonObject entry = entry_value.toObject();
         composition.append(QStringLiteral("%1×%2")
                                .arg(entry.value("count").toInt())
@@ -1148,7 +1149,7 @@ void MissionPanel::remove_wave(int row) {
 
 void MissionPanel::refresh_phases_table() {
   m_phases_table->setRowCount(0);
-  for (const QJsonValue& value : m_mission_data->array("events")) {
+  for (const QJsonValue value : m_mission_data->array("events")) {
     const QJsonObject event = value.toObject();
     const QJsonObject trigger = event.value("trigger").toObject();
     const QJsonArray actions = event.value("actions").toArray();

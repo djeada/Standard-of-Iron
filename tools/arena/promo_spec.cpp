@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace Arena::Promo {
 namespace {
@@ -280,7 +281,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
     return std::nullopt;
   }
 
-  for (const QJsonValue& shot_value : shots) {
+  for (const QJsonValue shot_value : shots) {
     const QJsonObject shot_object = shot_value.toObject();
     Shot shot;
     shot.name = shot_object.value(QStringLiteral("name")).toString();
@@ -348,7 +349,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
       }
       return std::nullopt;
     }
-    for (const QJsonValue& key_value : keys) {
+    for (const QJsonValue key_value : keys) {
       const QJsonObject key_object = key_value.toObject();
       CameraKey key;
       key.time =

@@ -110,7 +110,6 @@ namespace {
 
 constexpr int k_local_owner_id = 1;
 constexpr int k_enemy_owner_id = 2;
-constexpr int k_all_owners_filter = 0;
 constexpr int k_terrain_width = 128;
 constexpr int k_terrain_height = 128;
 constexpr float k_terrain_tile_size = 1.0F;

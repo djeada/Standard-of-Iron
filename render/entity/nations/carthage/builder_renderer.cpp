@@ -540,15 +540,6 @@ auto carthage_civilian_sash_contribution_attachments(std::uint8_t base_role)
       static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest), base_role)};
 }
 
-auto carthage_headwrap_fill_role_colors(QVector3D* out,
-                                        std::size_t max) -> std::uint32_t {
-  if (max < k_carthage_headwrap_role_count) {
-    return 0U;
-  }
-  out[0] = QVector3D(0.60F, 0.54F, 0.43F);
-  return k_carthage_headwrap_role_count;
-}
-
 auto carthage_robes_fill_role_colors(const HumanoidPalette& palette,
                                      QVector3D* out,
                                      std::size_t max) -> std::uint32_t {
@@ -583,47 +574,6 @@ auto carthage_robes_extra_role_colors(const void* variant_void,
   const auto& variant = *static_cast<const HumanoidVariant*>(variant_void);
   return base_count + carthage_robes_fill_role_colors(
                           variant.palette, out + base_count, max_count - base_count);
-}
-
-auto carthage_tool_belt_fill_role_colors(const HumanoidPalette& palette,
-                                         QVector3D* out,
-                                         std::size_t max) -> std::uint32_t {
-  if (max < Render::GL::k_tool_belt_role_count) {
-    return 0U;
-  }
-  out[0] = palette.leather;
-  out[1] = palette.leather_dark;
-  out[2] = palette.metal;
-  out[3] = palette.metal * 0.90F;
-  out[4] = palette.wood;
-  return Render::GL::k_tool_belt_role_count;
-}
-
-auto carthage_work_apron_fill_role_colors(const HumanoidPalette& palette,
-                                          QVector3D* out,
-                                          std::size_t max) -> std::uint32_t {
-  if (max < Render::GL::k_work_apron_role_count) {
-    return 0U;
-  }
-  QVector3D const apron = palette.leather * 0.74F + palette.cloth * 0.26F;
-  for (std::uint32_t i = 0; i < 7U; ++i) {
-    float const t = static_cast<float>(i) / 6.0F * 0.18F;
-    out[i] = apron * (1.0F - t);
-  }
-  out[7] = apron * 0.82F;
-  out[8] = palette.leather_dark;
-  return Render::GL::k_work_apron_role_count;
-}
-
-auto carthage_arm_guards_fill_role_colors(const HumanoidPalette& palette,
-                                          QVector3D* out,
-                                          std::size_t max) -> std::uint32_t {
-  if (max < Render::GL::k_arm_guards_role_count) {
-    return 0U;
-  }
-  out[0] = palette.leather_dark;
-  out[1] = palette.leather_dark * 0.80F + palette.metal * 0.20F;
-  return Render::GL::k_arm_guards_role_count;
 }
 
 auto carthage_hammer_fill_role_colors(const HumanoidPalette& palette,
@@ -782,111 +732,6 @@ void ensure_carthage_civilian_equipment_contributions_registered() {
     return true;
   }();
   (void)registered;
-}
-
-auto carthage_builder_tool_base_role_byte() -> std::uint8_t {
-  static const auto base_role = static_cast<std::uint8_t>(
-      Render::Humanoid::k_humanoid_role_count + 1U +
-      Render::GL::k_tool_belt_role_count + Render::GL::k_work_apron_role_count +
-      Render::GL::k_arm_guards_role_count + k_carthage_headwrap_role_count +
-      k_carthage_robes_role_count);
-  return base_role;
-}
-
-auto carthage_builder_common_attachments()
-    -> const std::array<Render::Creature::StaticAttachmentSpec, 13>& {
-  static const auto k_pelvis_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Pelvis);
-  static const auto k_chest_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-  static const auto k_head_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
-  static const auto k_elbow_l_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ForearmL);
-  static const auto k_elbow_r_bone =
-      static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ForearmR);
-  static const auto k_tool_belt_base_role_byte =
-      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count + 1U);
-  static const auto k_work_apron_base_role_byte = static_cast<std::uint8_t>(
-      k_tool_belt_base_role_byte + Render::GL::k_tool_belt_role_count);
-  static const auto k_arm_guards_base_role_byte = static_cast<std::uint8_t>(
-      k_work_apron_base_role_byte + Render::GL::k_work_apron_role_count);
-  static const auto k_headwrap_base_role_byte = static_cast<std::uint8_t>(
-      k_arm_guards_base_role_byte + Render::GL::k_arm_guards_role_count);
-  static const auto k_robes_base_role_byte = static_cast<std::uint8_t>(
-      k_headwrap_base_role_byte + k_carthage_headwrap_role_count);
-  static const std::array<Render::Creature::StaticAttachmentSpec, 6> k_tool_belt_specs =
-      Render::GL::tool_belt_make_static_attachments(k_pelvis_bone,
-                                                    k_tool_belt_base_role_byte);
-  static const std::array<Render::Creature::StaticAttachmentSpec, 3>
-      k_work_apron_specs = Render::GL::work_apron_make_static_attachments(
-          k_pelvis_bone, k_chest_bone, k_work_apron_base_role_byte);
-  static const std::array<Render::Creature::StaticAttachmentSpec, 2>
-      k_arm_guards_specs = Render::GL::arm_guards_make_static_attachments(
-          k_elbow_l_bone, k_elbow_r_bone, k_arm_guards_base_role_byte);
-  static const Render::Creature::StaticAttachmentSpec k_headwrap_spec =
-      carthage_headwrap_make_static_attachment(k_head_bone, k_headwrap_base_role_byte);
-  static const Render::Creature::StaticAttachmentSpec k_robes_spec =
-      carthage_robes_make_static_attachment(k_chest_bone, k_robes_base_role_byte);
-  static const std::array<Render::Creature::StaticAttachmentSpec, 13> k_attachments{
-      k_tool_belt_specs[0],
-      k_tool_belt_specs[1],
-      k_tool_belt_specs[2],
-      k_tool_belt_specs[3],
-      k_tool_belt_specs[4],
-      k_tool_belt_specs[5],
-      k_work_apron_specs[0],
-      k_work_apron_specs[1],
-      k_work_apron_specs[2],
-      k_arm_guards_specs[0],
-      k_arm_guards_specs[1],
-      k_headwrap_spec,
-      k_robes_spec};
-  return k_attachments;
-}
-
-auto carthage_builder_attachments_with_tool(
-    const Render::Creature::StaticAttachmentSpec& tool_spec)
-    -> std::array<Render::Creature::StaticAttachmentSpec, 14> {
-  std::array<Render::Creature::StaticAttachmentSpec, 14> attachments{};
-  auto const& common = carthage_builder_common_attachments();
-  for (std::size_t i = 0; i < common.size(); ++i) {
-    attachments[i] = common[i];
-  }
-  attachments.back() = tool_spec;
-  return attachments;
-}
-
-auto carthage_builder_extra_role_colors(const void* variant_void,
-                                        QVector3D* out,
-                                        std::uint32_t base_count,
-                                        std::size_t max_count) -> std::uint32_t {
-  if (variant_void == nullptr || max_count <= base_count) {
-    return base_count;
-  }
-  const auto& v = *static_cast<const HumanoidVariant*>(variant_void);
-  auto count = base_count;
-  count +=
-      carthage_tool_belt_fill_role_colors(v.palette, out + count, max_count - count);
-  if (max_count <= count) {
-    return count;
-  }
-  count +=
-      carthage_work_apron_fill_role_colors(v.palette, out + count, max_count - count);
-  if (max_count <= count) {
-    return count;
-  }
-  count +=
-      carthage_arm_guards_fill_role_colors(v.palette, out + count, max_count - count);
-  if (max_count <= count) {
-    return count;
-  }
-  count += carthage_headwrap_fill_role_colors(out + count, max_count - count);
-  if (max_count <= count) {
-    return count;
-  }
-  count += carthage_robes_fill_role_colors(v.palette, out + count, max_count - count);
-  return count;
 }
 
 auto carthage_builder_hammer_unit_archetype() -> Render::Creature::ArchetypeId {

@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 
 #include <algorithm>
+#include <initializer_list>
 #include <utility>
 
 #include "game/util/asset_text.h"

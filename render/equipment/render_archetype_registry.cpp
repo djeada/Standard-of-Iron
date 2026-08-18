@@ -1,5 +1,8 @@
 #include "render_archetype_registry.h"
 
+#include <cstddef>
+#include <utility>
+
 namespace Render::GL {
 
 auto RenderArchetypeRegistry::instance() -> RenderArchetypeRegistry& {

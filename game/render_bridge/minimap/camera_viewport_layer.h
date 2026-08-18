@@ -4,6 +4,7 @@
 #include <QRectF>
 
 #include <cstdint>
+#include <utility>
 
 class QPainter;
 

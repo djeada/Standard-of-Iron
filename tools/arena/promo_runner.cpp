@@ -264,8 +264,6 @@ public:
     return true;
   }
 
-  [[nodiscard]] auto failed() const noexcept -> bool { return m_failed; }
-
 private:
   [[nodiscard]] auto current_shot() const -> const Shot& {
     return m_spec.shots[m_passes[m_pass_index].shots[m_slot_index]];

@@ -75,7 +75,6 @@ auto affected_units(const Payload& payload)
     -> const std::vector<Engine::Core::EntityID>* {
   return std::visit(
       [](const auto& value) -> const std::vector<Engine::Core::EntityID>* {
-        using T = std::decay_t<decltype(value)>;
         if constexpr (requires { value.units; }) {
           return &value.units;
         } else {

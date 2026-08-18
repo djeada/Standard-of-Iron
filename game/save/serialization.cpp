@@ -902,7 +902,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     movement->clear_path();
     const auto path_array = movement_obj["path"].toArray();
     movement->path.reserve(path_array.size());
-    for (const auto& value : path_array) {
+    for (const auto value : path_array) {
       const auto waypoint_obj = value.toObject();
       movement->path.emplace_back(static_cast<float>(waypoint_obj["x"].toDouble()),
                                   static_cast<float>(waypoint_obj["y"].toDouble()));
@@ -1134,7 +1134,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     patrol->waypoints.clear();
     const auto waypoints_array = patrol_obj["waypoints"].toArray();
     patrol->waypoints.reserve(waypoints_array.size());
-    for (const auto& value : waypoints_array) {
+    for (const auto value : waypoints_array) {
       const auto waypoint_obj = value.toObject();
       patrol->waypoints.emplace_back(static_cast<float>(waypoint_obj["x"].toDouble()),
                                      static_cast<float>(waypoint_obj["y"].toDouble()));
@@ -1176,7 +1176,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     production->production_queue.clear();
     const auto queue_array = production_obj["queue"].toArray();
     production->production_queue.reserve(queue_array.size());
-    for (const auto& value : queue_array) {
+    for (const auto value : queue_array) {
       production->production_queue.push_back(
           Game::Units::troop_typeFromString(value.toString().toStdString()));
     }
@@ -1437,7 +1437,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     auto* stomp_impact = entity->add_component<ElephantStompImpactComponent>();
     stomp_impact->impacts.clear();
     stomp_impact->impacts.reserve(impacts_array.size());
-    for (const auto& value : impacts_array) {
+    for (const auto value : impacts_array) {
       const auto impact_obj = value.toObject();
       ElephantStompImpactComponent::ImpactRecord impact{};
       impact.x = static_cast<float>(impact_obj["x"].toDouble(0.0));
@@ -1518,7 +1518,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     if (builder_obj.contains("queued_construction_site_ids")) {
       const auto queued_sites = builder_obj["queued_construction_site_ids"].toArray();
       builder->queued_construction_site_ids.reserve(queued_sites.size());
-      for (const auto& value : queued_sites) {
+      for (const auto value : queued_sites) {
         builder->queued_construction_site_ids.push_back(
             static_cast<EntityID>(value.toVariant().toULongLong()));
       }
@@ -2059,7 +2059,7 @@ void Serialization::deserialize_terrain(
   if (json.contains("heights")) {
     const auto heights_array = json["heights"].toArray();
     heights.reserve(heights_array.size());
-    for (const auto& val : heights_array) {
+    for (const auto val : heights_array) {
       heights.push_back(static_cast<float>(val.toDouble(0.0)));
     }
   }
@@ -2068,7 +2068,7 @@ void Serialization::deserialize_terrain(
   if (json.contains("terrain_types")) {
     const auto types_array = json["terrain_types"].toArray();
     terrain_types.reserve(types_array.size());
-    for (const auto& val : types_array) {
+    for (const auto val : types_array) {
       terrain_types.push_back(static_cast<Game::Map::TerrainType>(val.toInt(0)));
     }
   }
@@ -2078,7 +2078,7 @@ void Serialization::deserialize_terrain(
     const auto rivers_array = json["rivers"].toArray();
     rivers.reserve(rivers_array.size());
     const Game::Map::RiverSegment default_river{};
-    for (const auto& val : rivers_array) {
+    for (const auto val : rivers_array) {
       const auto river_obj = val.toObject();
       Game::Map::RiverSegment river;
       river.start = QVector3D(static_cast<float>(river_obj["startX"].toDouble(0.0)),
@@ -2098,7 +2098,7 @@ void Serialization::deserialize_terrain(
     const auto bridges_array = json["bridges"].toArray();
     bridges.reserve(bridges_array.size());
     const Game::Map::Bridge default_bridge{};
-    for (const auto& val : bridges_array) {
+    for (const auto val : bridges_array) {
       const auto bridge_obj = val.toObject();
       Game::Map::Bridge bridge;
       bridge.start = QVector3D(static_cast<float>(bridge_obj["startX"].toDouble(0.0)),
@@ -2121,7 +2121,7 @@ void Serialization::deserialize_terrain(
     const auto lakes_array = json["lakes"].toArray();
     lakes.reserve(lakes_array.size());
     const Game::Map::Lake defaults{};
-    for (const auto& value : lakes_array) {
+    for (const auto value : lakes_array) {
       const auto lake_obj = value.toObject();
       Game::Map::Lake lake;
       lake.center = QVector3D(static_cast<float>(lake_obj["centerX"].toDouble(0.0)),
@@ -2140,7 +2140,7 @@ void Serialization::deserialize_terrain(
     const auto roads_array = json["roads"].toArray();
     roads.reserve(roads_array.size());
     const Game::Map::RoadSegment default_road{};
-    for (const auto& val : roads_array) {
+    for (const auto val : roads_array) {
       const auto road_obj = val.toObject();
       Game::Map::RoadSegment road;
       road.start = QVector3D(static_cast<float>(road_obj["startX"].toDouble(0.0)),
@@ -2164,7 +2164,7 @@ void Serialization::deserialize_terrain(
         }
         const auto world_props_array = json_value.toArray();
         out_world_props.reserve(out_world_props.size() + world_props_array.size());
-        for (const auto& val : world_props_array) {
+        for (const auto val : world_props_array) {
           const auto world_prop_obj = val.toObject();
           Game::Map::WorldProp world_prop;
           if (!Game::Map::world_prop_type_from_string(world_prop_obj["type"].toString(),
@@ -2193,7 +2193,7 @@ void Serialization::deserialize_terrain(
   if (json.contains("firecamps")) {
     const auto fire_camps_array = json["firecamps"].toArray();
     world_props.reserve(world_props.size() + fire_camps_array.size());
-    for (const auto& val : fire_camps_array) {
+    for (const auto val : fire_camps_array) {
       const auto fire_camp_obj = val.toObject();
       Game::Map::WorldProp fire_camp;
       fire_camp.type = Game::Map::WorldProp::Type::FireCamp;
@@ -2255,7 +2255,7 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
 void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
   auto world_obj = doc.object();
   auto entities_array = world_obj["entities"].toArray();
-  for (const auto& value : entities_array) {
+  for (const auto value : entities_array) {
     auto entity_obj = value.toObject();
     const auto entity_id =
         static_cast<EntityID>(entity_obj["id"].toVariant().toULongLong());

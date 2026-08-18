@@ -10,6 +10,7 @@
 #include <QJsonValue>
 
 #include <algorithm>
+#include <utility>
 
 namespace Balance {
 
@@ -85,7 +86,7 @@ auto parse_side(const QJsonObject& obj,
     return false;
   }
 
-  for (const QJsonValue& value : groups) {
+  for (const QJsonValue value : groups) {
     const QJsonObject group_obj = value.toObject();
     FixtureGroup group;
     const QString troop_text = group_obj.value("troop").toString();

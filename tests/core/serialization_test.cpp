@@ -1107,7 +1107,7 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   unit->max_health = 100;
 
   auto* movement = entity->add_component<MovementComponent>();
-  auto* intent = entity->add_component<PlayerOrderIntentComponent>();
+  entity->add_component<PlayerOrderIntentComponent>();
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_target_x(*movement, 100.0F);
 

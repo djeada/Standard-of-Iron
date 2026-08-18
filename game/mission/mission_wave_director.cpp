@@ -438,7 +438,7 @@ void MissionWaveDirector::restore(const QJsonObject& state) {
     wave.cleared = entry.value("cleared").toBool(false);
     wave.cleared_at = static_cast<float>(entry.value("cleared_at").toDouble(-1.0));
     wave.spawned_entity_ids.clear();
-    for (const auto& id_value : entry.value("spawned_entity_ids").toArray()) {
+    for (const auto id_value : entry.value("spawned_entity_ids").toArray()) {
       wave.spawned_entity_ids.push_back(
           static_cast<Engine::Core::EntityID>(id_value.toDouble(0.0)));
     }

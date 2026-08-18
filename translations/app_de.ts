@@ -2202,18 +2202,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
 <context>
     <name>GameEngine</name>
     <message>
-        <source>wood</source>
-        <translation>Holz</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>Stein</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>Eisen</translation>
-    </message>
-    <message>
         <source>Maximum troop limit reached. Cannot produce more units.</source>
         <translation>Maximale Truppenzahl erreicht. Es können keine weiteren Einheiten ausgebildet werden.</translation>
     </message>

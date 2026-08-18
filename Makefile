@@ -584,7 +584,7 @@ translations-check:
 
 BUILD_STRICT_DIR := build-strict
 
-## Run the macOS (clang + libc++), GLSL and Windows portability passes.
+## Run the macOS (clang + libc++), GLSL, Windows and include-graph passes.
 portability-lint:
 	@echo "$(BOLD)$(BLUE)Checking cross-platform portability...$(RESET)"
 	@$(PYTHON) scripts/check-portability.py --build-dir $(BUILD_DIR)
@@ -613,6 +613,9 @@ quality:
 	@echo "$(BOLD)$(BLUE)Checking QML typography...$(RESET)"
 	@$(PYTHON) scripts/check-typography.py
 	@$(PYTHON) scripts/validate_qrc_resources.py
+# The include-graph pass needs no compiler either, and it is the only thing
+# that sees a missing <array> before the weekly Windows build does.
+	@$(PYTHON) scripts/check-portability.py --only includes
 	@echo "$(GREEN)✓ Quality checks passed$(RESET)"
 
 ## Full local pre-push gate: quality + build + tests + content validation.

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -29,7 +30,7 @@ auto normalize_json_value(const QJsonValue& value) -> QJsonValue;
 
 auto normalize_json_array(const QJsonArray& array) -> QJsonArray {
   QJsonArray normalized;
-  for (const QJsonValue& value : array) {
+  for (const QJsonValue value : array) {
     normalized.append(normalize_json_value(value));
   }
   return normalized;
@@ -198,7 +199,7 @@ struct OrderedSpawnEntry {
 auto waypoints_from_json(const QJsonArray& array) -> QVector<QPointF> {
   QVector<QPointF> waypoints;
   waypoints.reserve(array.size());
-  for (const QJsonValue& value : array) {
+  for (const QJsonValue value : array) {
     const QJsonArray point = value.toArray();
     if (point.size() < 2) {
       continue;
@@ -760,7 +761,7 @@ bool MapData::save_to_json(const QString& file_path, QString* out_error) const {
 }
 
 void MapData::parse_terrain_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     QJsonObject obj = val.toObject();
     TerrainElement elem;
     elem.type = obj[MapJsonKeys::type].toString();
@@ -789,7 +790,7 @@ void MapData::parse_terrain_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_lakes_array(const QJsonArray& arr) {
-  for (const auto& value : arr) {
+  for (const auto value : arr) {
     const QJsonObject obj = value.toObject();
     TerrainElement elem;
     elem.type = QStringLiteral("lake");
@@ -815,7 +816,7 @@ void MapData::parse_lakes_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_world_props_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     QJsonObject obj = val.toObject();
     WorldPropElement elem;
     elem.type = obj[MapJsonKeys::type].toString(QStringLiteral("firecamp"));
@@ -842,7 +843,7 @@ void MapData::parse_world_props_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_legacy_firecamps_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     QJsonObject obj = val.toObject();
     WorldPropElement elem;
     elem.type = QStringLiteral("firecamp");
@@ -860,7 +861,7 @@ void MapData::parse_legacy_firecamps_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_rivers_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     QJsonObject obj = val.toObject();
     LinearElement elem;
     elem.type = "river";
@@ -880,7 +881,7 @@ void MapData::parse_rivers_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_roads_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     QJsonObject obj = val.toObject();
     LinearElement elem;
     elem.type = "road";
@@ -902,7 +903,7 @@ void MapData::parse_roads_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_bridges_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     QJsonObject obj = val.toObject();
     LinearElement elem;
     elem.type = "bridge";
@@ -922,7 +923,7 @@ void MapData::parse_bridges_array(const QJsonArray& arr) {
 }
 
 void MapData::parse_structures_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     QJsonObject obj = val.toObject();
     const QString type = normalizedSpawnType(obj);
     if (type == QStringLiteral("wall_segment")) {
@@ -1497,7 +1498,7 @@ void MapData::remove_undead_zone(int index) {
 }
 
 void MapData::parse_undead_zones_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     const QJsonObject obj = val.toObject();
     UndeadZoneElement elem;
     elem.id = obj["id"].toString();
@@ -1566,7 +1567,7 @@ void MapData::remove_fog_zone(int index) {
 }
 
 void MapData::parse_fog_zones_array(const QJsonArray& arr) {
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     const QJsonObject obj = val.toObject();
     FogZoneElement elem;
     elem.x = static_cast<float>(obj[MapJsonKeys::x].toDouble());
@@ -1596,7 +1597,7 @@ auto wildlife_species_label(const QString& species) -> QString {
 
 void MapData::parse_forests_array(const QJsonArray& arr) {
   m_forests.clear();
-  for (const auto& val : arr) {
+  for (const auto val : arr) {
     const QJsonObject obj = val.toObject();
     ForestElement elem;
     elem.id = obj["id"].toString();
@@ -1695,7 +1696,7 @@ void MapData::parse_wildlife_object(const QJsonObject& obj) {
     QJsonObject species_obj = m_wildlife.value(species).toObject();
     const QJsonArray areas =
         species_obj.value(MapJsonKeys::wildlife_spawn_areas).toArray();
-    for (const QJsonValue& value : areas) {
+    for (const QJsonValue value : areas) {
       if (!value.isObject()) {
         continue;
       }

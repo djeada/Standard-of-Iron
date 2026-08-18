@@ -169,17 +169,6 @@ PrimitiveInstance make_leg_capsule() {
   return p;
 }
 
-PrimitiveInstance make_horn_cone() {
-  PrimitiveInstance p;
-  p.debug_name = "horn";
-  p.shape = PrimitiveShape::Cone;
-  p.params.anchor_bone = 2;
-  p.params.tail_bone = 3;
-  p.params.radius = 0.05F;
-  p.color = {1.0F, 1.0F, 1.0F};
-  return p;
-}
-
 PrimitiveInstance make_chest_box() {
   PrimitiveInstance p;
   p.debug_name = "chestplate";

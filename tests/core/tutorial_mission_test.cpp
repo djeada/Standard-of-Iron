@@ -25,6 +25,7 @@
 #include "game/units/spawn_type.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
+#include "tests/support/ai_quiesce.h"
 
 namespace {
 
@@ -81,6 +82,7 @@ protected:
   }
 
   void TearDown() override {
+    TestSupport::quiesce_ai(m_world);
     Game::Map::TerrainService::instance().clear();
     Game::Map::VisibilityService::instance().reset();
     Game::Systems::GlobalStatsRegistry::instance().clear();

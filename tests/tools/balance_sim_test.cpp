@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 #include <set>
+#include <utility>
 
 #include "tools/balance_sim/balance_fixture.h"
 #include "tools/balance_sim/balance_report.h"

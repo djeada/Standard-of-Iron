@@ -8,6 +8,7 @@
 #include <QVariantMap>
 
 #include <algorithm>
+#include <utility>
 
 namespace Ui::IconArt {
 

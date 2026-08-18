@@ -2,6 +2,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "game/systems/building_collision_registry.h"

@@ -61,7 +61,7 @@ auto create_unit_cylinder_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
     idx.push_back(a);
   }
 
-  int base_top = (int)v.size();
+  int base_top = static_cast<int>(v.size());
   v.push_back({{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
@@ -79,7 +79,7 @@ auto create_unit_cylinder_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
     idx.push_back(base_top + i + 1);
   }
 
-  int base_bot = (int)v.size();
+  int base_bot = static_cast<int>(v.size());
   v.push_back({{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
@@ -248,9 +248,9 @@ auto create_unit_cone_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
     idx.push_back(i + 1);
   }
 
-  int base_center = (int)v.size();
+  int base_center = static_cast<int>(v.size());
   v.push_back({{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
-  int const base_start = (int)v.size();
+  int const base_start = static_cast<int>(v.size());
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
@@ -308,7 +308,7 @@ auto create_capsule_mesh(int radial_segments,
     }
   }
 
-  int base_top = (int)verts.size();
+  int base_top = static_cast<int>(verts.size());
   verts.push_back(
       {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
@@ -327,7 +327,7 @@ auto create_capsule_mesh(int radial_segments,
     idx.push_back(base_top + i + 1);
   }
 
-  int base_bot = (int)verts.size();
+  int base_bot = static_cast<int>(verts.size());
   verts.push_back(
       {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
@@ -347,11 +347,6 @@ auto create_capsule_mesh(int radial_segments,
   }
 
   return std::make_unique<Mesh>(verts, idx);
-}
-
-auto simple_hash(float seed) -> float {
-  float const x = std::sin(seed * k_micro_noise_frequency) * k_micro_noise_scale;
-  return x - std::floor(x);
 }
 
 auto create_unit_torso_mesh(int radial_segments,
@@ -645,7 +640,7 @@ auto create_unit_torso_mesh(int radial_segments,
 
   {
 
-    int base_top = (int)v.size();
+    int base_top = static_cast<int>(v.size());
     float const t_top = 1.0F;
     float const t_top_s = invert_profile ? (1.0F - t_top) : t_top;
     QVector3D const c_top(x_offset_at(t_top_s), y_max, z_offset_at(t_top_s));
@@ -673,7 +668,7 @@ auto create_unit_torso_mesh(int radial_segments,
     float const ts_apex = invert_profile ? (1.0F - t_apex) : t_apex;
     float const apex_y = y_min - k_shoulder_dome_height;
 
-    int const apex_idx = (int)v.size();
+    int const apex_idx = static_cast<int>(v.size());
     QVector3D const apex(x_offset_at(ts_apex), apex_y, z_offset_at(ts_apex));
     v.push_back(
         {{apex.x(), apex.y(), apex.z()}, {0, -1, 0}, {k_uv_center, k_uv_center}});

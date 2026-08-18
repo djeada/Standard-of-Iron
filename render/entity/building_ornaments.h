@@ -249,7 +249,6 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
   const float relief = depth * 0.55F;
 
   for (float const side : {-1.0F, 1.0F}) {
-    std::size_t feather_index = 0;
     for (auto const& feather : k_eagle_wing) {
       desc.add_rotated_box(point(side * feather.horizontal, feather.vertical, relief),
                            size(feather.half_length, feather.half_thickness, relief),
@@ -262,7 +261,6 @@ inline void add_eagle_silhouette(BuildingArchetypeDesc& desc,
           facade_rotation(plane, side * feather.sweep_degrees),
           bronze,
           states);
-      ++feather_index;
     }
 
     desc.add_rotated_box(point(side * 0.085F, 0.115F, depth),

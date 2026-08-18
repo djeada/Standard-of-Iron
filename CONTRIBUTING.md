@@ -119,39 +119,61 @@ at the point a release tag is already cut.
 Two targets close most of that gap without leaving Linux:
 
 ```bash
-make portability-lint    # three static passes, a couple of minutes
+make portability-lint    # four static passes, a couple of minutes
 make portability-build   # full compile with the warnings promoted to errors
 ```
 
-`make portability-lint` runs `scripts/check-portability.py`, which is three
+`make portability-lint` runs `scripts/check-portability.py`, which is four
 passes:
 
-| Pass      | Stands in for          | Finds                                                                                               |
-| --------- | ---------------------- | --------------------------------------------------------------------------------------------------- |
-| `apple`   | AppleClang + libc++    | Includes that only libstdc++ provides transitively; unsequenced modification; dangling references   |
-| `glsl`    | Apple's GLSL front end | Shaders Mesa accepts and a spec-literal compiler rejects - a missing object on screen, not a crash  |
-| `windows` | MSVC and NTFS          | Math constants MSVC's `<cmath>` hides; filenames Windows cannot create; `MAX_PATH`; case collisions |
+| Pass       | Stands in for          | Finds                                                                                               |
+| ---------- | ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `apple`    | AppleClang + libc++    | Headers libstdc++ leaks and libc++ does not; unsequenced modification; dangling references          |
+| `glsl`     | Apple's GLSL front end | Shaders Mesa accepts and a spec-literal compiler rejects - a missing object on screen, not a crash  |
+| `windows`  | MSVC and NTFS          | Math constants MSVC's `<cmath>` hides; filenames Windows cannot create; `MAX_PATH`; case collisions |
+| `includes` | MSVC's leaner stdlib   | Files using `std::array` and friends without including the header; no compiler here can see these   |
 
 It needs `clang`, `libc++-dev` and `glslang-tools`. Passes whose tool is
 missing are skipped locally; CI passes `--require-all`, so there a missing
 tool is a failure rather than a silent gap.
 
+`includes` is the odd one out: it compiles nothing and reads the include graph
+instead. It has to, because the thing it looks for is invisible to every
+compiler on a Linux machine. libstdc++ and libc++ both hand out `<array>` as a
+side effect of including something else and MSVC does not, so a file that names
+`std::array` without including `<array>` builds green in all three Linux and
+macOS lanes and is a hard error on Windows. That is what broke the first Weekly
+run (2026-08-17): one header, two days after it was written, found by a
+packaging job nobody watches. A first-party header in the chain counts as
+providing what it includes; a standard header arriving through another standard
+header does not.
+
 `make portability-build` configures a separate `build-strict/` tree with
 `-DSOI_STRICT_WARNINGS=ON`. That option is defined in `CMakeLists.txt` and
-splits its diagnostics deliberately: the ones that indicate genuine divergence
-between compilers are **errors** and are all at zero, so a new hit is a
-regression; the roughly 2,700 stylistic warnings (mostly `-Wswitch` and
-`-Wmissing-field-initializers`) stay warnings, because promoting them would
-bury the signal.
+splits its diagnostics deliberately: everything that indicates a real defect or
+a divergence between compilers is a **hard error** and sits at zero, so a new
+hit is a regression rather than a backlog item. That set has been ratcheted as
+each class was cleared, and now covers unhandled switch enumerators, range-for
+loops binding to a temporary, shadowed fields, uninitialised conditionals, dead
+stores, old-style casts, `class`/`struct` tag mismatches and missing overrides.
 
-In CI, `glsl` and `windows` run in the `portability` job of `quality.yml`, which
-needs no compiler. `apple` runs in the pull-request test job, which already has
-a configured tree - and specifically there rather than in `build-linux.yml`,
-because that job is on ubuntu-22.04 for AppImage glibc reasons and
-`-Wnan-infinity-disabled` needs Clang 18. An unknown `-Werror=` name is only a
-warning to Clang, so on an older one the fast-math guard would appear to pass
-without ever being checked; `check-portability.py` refuses to run rather than
-report a green it did not earn.
+What deliberately stays a warning: `-Wmissing-field-initializers` (184 sites,
+value-initialisation is well defined), `-Wshorten-64-to-32` (94, mostly
+`EntityID` packed into a GPU-side `uint32`, each needing its own judgement) and
+the `-Wunused-variable`/`-function`/`-parameter` family. Promoting those would
+bury the signal rather than add any.
+
+In CI, `glsl`, `windows` and `includes` run in the `portability` job of
+`quality.yml` on every pull request, because they need no compiler and finish
+in a minute. `apple` needs a configured tree and costs about 118 CPU minutes -
+half an hour of a four-core runner - so it runs in the whole-project lint job
+of `weekly.yml`, which already builds `soi_test_binaries` for clang-tidy and
+has the budget for it. Not in `build-linux.yml`: that job is on ubuntu-22.04
+for AppImage glibc reasons and `-Wnan-infinity-disabled` needs Clang 18. An
+unknown `-Werror=` name is only a warning to Clang, so on an older one the
+fast-math guard would appear to pass without ever being checked;
+`check-portability.py` refuses to run rather than report a green it did not
+earn.
 
 ## Continuous Integration
 
@@ -162,10 +184,8 @@ the point at which every supported platform must actually ship.
 **Pull requests** (`.github/workflows/pr.yml`) run two jobs in parallel:
 
 - `quality` - formatting, linting, quality markers and the static content
-  validators, plus the compiler-free half of the portability gate (GLSL and
-  Windows). No compiler, fails in about a minute.
-- The `test` job below also runs the `apple` portability pass, reparsing every
-  translation unit with Clang and libc++.
+  validators, plus the compiler-free half of the portability gate (GLSL,
+  Windows and includes). No compiler, fails in about a minute.
 - `test` - Linux configure and build of the test targets only
   (`soi_test_binaries`, `content_validator`), then unit tests, content
   validation, the validator integration tests, and advisory clang-tidy over
@@ -173,9 +193,9 @@ the point at which every supported platform must actually ship.
   not built here.
 
 **Weekly** (`.github/workflows/weekly.yml`, Mondays at 01:00 UTC) runs the
-whole-project clang-tidy pass, AddressSanitizer and UndefinedBehaviorSanitizer
-lanes, a coverage report, and a full build, renderer self-test and packaging
-dry run on Linux, macOS and Windows. This is what catches platform-specific
+whole-project clang-tidy pass and the `apple` portability pass, AddressSanitizer
+and UndefinedBehaviorSanitizer lanes, a coverage report, and a full build,
+renderer self-test and packaging dry run on Linux, macOS and Windows. This is what catches platform-specific
 breakage between releases. Run the same clang-tidy pass locally with
 `make lint-deep`.
 
@@ -256,11 +276,29 @@ make run-headless
 
 ## Testing
 
-Run tests (when implemented):
-
 ```bash
 make test
 ```
+
+Both `make test` and all four CI workflows call `scripts/run-tests.sh`, so there
+is one answer to what running the tests means. A suite listed there but missing
+from the build directory is an error rather than a skip.
+
+### Global state and the AI workers
+
+An AI job runs on a worker thread and holds raw pointers into the global
+registries for as long as it takes: its context points at a `Nation` inside
+`NationRegistry`, and the production behaviour walks that nation's troop list.
+The job outlives the test body that submitted it.
+
+A fixture that holds its `World` as a member and clears those registries in
+`TearDown` therefore frees the nation under a thread still reading it -
+AddressSanitizer caught exactly that as a heap-use-after-free in
+`ProductionBehavior::execute`. Call `TestSupport::quiesce_ai(world)` from
+`tests/support/ai_quiesce.h` first; it stops and joins the workers, which is
+the ordering the game itself observes in `App::Core::SkirmishLoader`. A fixture
+whose `World` is a local inside the test body gets this for free, because the
+`World` is destroyed at the end of the body and `~AISystem` joins.
 
 ## Code Style Guidelines
 

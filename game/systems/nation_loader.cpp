@@ -100,7 +100,7 @@ read_bool(const QJsonObject& obj, const char* key, bool fallback) -> bool {
   std::vector<std::string> values;
   const QJsonArray array = ensure_array(obj.value(key));
   values.reserve(array.size());
-  for (const auto& entry : array) {
+  for (const auto entry : array) {
     if (entry.isString()) {
       values.push_back(entry.toString().toStdString());
     }
@@ -157,7 +157,7 @@ parse_doctrine_id(const QJsonObject& obj) -> std::optional<FormationDoctrineId> 
       read_string(obj, "display_name", QString::fromStdString(profile.id))
           .toStdString();
 
-  for (const auto& troop : ensure_array(obj.value("eligible_troops"))) {
+  for (const auto troop : ensure_array(obj.value("eligible_troops"))) {
     const auto parsed =
         Game::Units::try_parse_troop_type(troop.toString().toStdString());
     if (parsed.has_value()) {
@@ -494,7 +494,7 @@ auto NationLoader::load_from_file(const QString& path) -> std::optional<Nation> 
       read_bool(root, "selectable_in_skirmish", nation.selectable_in_skirmish);
 
   const QJsonArray troops = ensure_array(root.value(k_nation_troops_key));
-  for (const auto& value : troops) {
+  for (const auto value : troops) {
     const QJsonObject troop_obj = ensure_object(value);
     if (!build_troop_entry(troop_obj, nation)) {
       qCWarning(nation_loader_logger())

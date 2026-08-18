@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 namespace Game::Audio {
 
 namespace Cue {

@@ -23,10 +23,6 @@ inline auto saturate(const QVector3D& c) -> QVector3D {
 }
 } // namespace
 
-static auto clamp01(const QVector3D& c) -> QVector3D {
-  return saturate(c);
-}
-
 void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
 

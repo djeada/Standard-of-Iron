@@ -142,8 +142,6 @@ TEST_F(PoseControllerCompatibilityTest, KneelProducesSimilarPoseToExistingCode) 
 
 TEST_F(PoseControllerCompatibilityTest, LeanProducesReasonableUpperBodyDisplacement) {
 
-  using HP = HumanProportions;
-
   QVector3D const original_shoulder_l = pose.shoulder_l;
   QVector3D const original_shoulder_r = pose.shoulder_r;
   QVector3D const original_head = pose.head_pos;

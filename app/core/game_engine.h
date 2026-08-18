@@ -83,9 +83,9 @@ class AudioCoordinator;
 namespace Engine::Core {
 class World;
 using EntityID = std::uint64_t;
-struct MovementComponent;
-struct TransformComponent;
-struct RenderableComponent;
+class MovementComponent;
+class TransformComponent;
+class RenderableComponent;
 } // namespace Engine::Core
 
 namespace Render::GL {
@@ -162,7 +162,6 @@ public:
   Q_PROPERTY(qreal global_cursor_y READ global_cursor_y NOTIFY global_cursor_changed)
   Q_PROPERTY(
       bool has_units_selected READ has_units_selected NOTIFY selected_units_changed)
-  Q_PROPERTY(int player_troop_count READ player_troop_count NOTIFY troop_count_changed)
   Q_PROPERTY(
       int max_troops_per_player READ max_troops_per_player NOTIFY troop_count_changed)
   Q_PROPERTY(QVariantMap selected_player_state READ selected_player_state NOTIFY

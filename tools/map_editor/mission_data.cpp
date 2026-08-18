@@ -305,7 +305,7 @@ QStringList MissionData::validate() const {
       if (composition.isEmpty()) {
         errors.append(wave_context + QStringLiteral(" requires at least one troop."));
       }
-      for (const QJsonValue& entry_value : composition) {
+      for (const QJsonValue entry_value : composition) {
         const QJsonObject entry = entry_value.toObject();
         if (!contains(supported_troops(), entry.value("type").toString()) ||
             entry.value("count").toInt(0) < 1) {
@@ -342,7 +342,7 @@ QStringList MissionData::validate() const {
       errors.append(
           QStringLiteral("Battlefield phase %1 requires a message.").arg(i + 1));
     }
-    for (const QJsonValue& action_value : actions) {
+    for (const QJsonValue action_value : actions) {
       const QJsonObject action = action_value.toObject();
       if (action.value("type").toString() != "show_message" ||
           action.value("text").toString().trimmed().isEmpty()) {

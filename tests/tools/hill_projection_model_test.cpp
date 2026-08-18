@@ -17,7 +17,7 @@ auto contains_cell(const QVector<QPoint>& cells, const QPoint& cell) -> bool {
 }
 
 auto contains_point(const QJsonArray& entrances, double x, double z) -> bool {
-  for (const QJsonValue& value : entrances) {
+  for (const QJsonValue value : entrances) {
     const QJsonObject obj = value.toObject();
     if (!obj.contains(MapJsonKeys::x) || !obj.contains(MapJsonKeys::z)) {
       continue;

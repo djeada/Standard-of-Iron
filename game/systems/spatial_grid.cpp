@@ -84,8 +84,6 @@ void SpatialGrid::get_entities_in_range(
   int const cells_to_check = static_cast<int>(std::ceil(range * m_inv_cell_size));
   CellKey const center = to_cell_key(x, z);
 
-  float const range_sq = range * range;
-
   for (int dx = -cells_to_check; dx <= cells_to_check; ++dx) {
     for (int dz = -cells_to_check; dz <= cells_to_check; ++dz) {
       CellKey const key{center.x + dx, center.z + dz};

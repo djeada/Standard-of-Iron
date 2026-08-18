@@ -12,6 +12,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <numeric>
+#include <string>
 
 namespace {
 
@@ -38,7 +39,7 @@ auto read_json(const QString& relative) -> QJsonObject {
 
 auto ids_of(const QJsonObject& root, const QString& array_key) -> QSet<QString> {
   QSet<QString> ids;
-  for (const auto& value : root.value(array_key).toArray()) {
+  for (const auto value : root.value(array_key).toArray()) {
     const QString id = value.toObject().value(QStringLiteral("id")).toString();
     if (!id.isEmpty()) {
       ids.insert(id);
@@ -102,7 +103,7 @@ TEST(CampaignProvinceDataTest, EveryProvinceIsOwnedByExactlyOnePower) {
       QStringLiteral("rome"), QStringLiteral("carthage"), QStringLiteral("neutral")};
 
   QSet<QString> assigned;
-  for (const auto& value : entries) {
+  for (const auto value : entries) {
     const QJsonObject entry = value.toObject();
     const QString id = entry.value(QStringLiteral("id")).toString();
     const QString owner = entry.value(QStringLiteral("owner")).toString();
@@ -128,7 +129,7 @@ TEST(CampaignProvinceDataTest, EveryProvinceIsDrawableAndLabellable) {
     GTEST_SKIP() << k_regenerate_hint;
   }
 
-  for (const auto& value : provinces) {
+  for (const auto value : provinces) {
     const QJsonObject province = value.toObject();
     const std::string id =
         province.value(QStringLiteral("id")).toString().toStdString();
@@ -137,7 +138,7 @@ TEST(CampaignProvinceDataTest, EveryProvinceIsDrawableAndLabellable) {
     EXPECT_GE(triangles.size(), 3) << id << " has no fill geometry";
     EXPECT_EQ(triangles.size() % 3, 0) << id << " has a partial triangle";
 
-    for (const auto& point : triangles) {
+    for (const auto point : triangles) {
       const QJsonArray uv = point.toArray();
       ASSERT_EQ(uv.size(), 2) << id << " has a malformed vertex";
       const double u = uv.at(0).toDouble();
@@ -236,7 +237,7 @@ TEST(CampaignProvinceDataTest, EveryProvinceIsOneUnbrokenStretchOfLand) {
     GTEST_SKIP() << k_regenerate_hint;
   }
 
-  for (const auto& value : provinces) {
+  for (const auto value : provinces) {
     const QJsonObject province = value.toObject();
     const std::string id =
         province.value(QStringLiteral("id")).toString().toStdString();

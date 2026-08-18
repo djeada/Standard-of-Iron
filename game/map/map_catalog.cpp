@@ -185,7 +185,7 @@ auto MapCatalog::available_maps() -> QVariantList {
         for (const char* collection : {SPAWNS, STRUCTURES}) {
           if (obj.contains(collection) && obj[collection].isArray()) {
             QJsonArray const entries = obj[collection].toArray();
-            for (const QJsonValue& entry_val : entries) {
+            for (const QJsonValue entry_val : entries) {
               if (entry_val.isObject()) {
                 QJsonObject entry = entry_val.toObject();
                 if (entry.contains(PLAYER_ID)) {
@@ -344,7 +344,7 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
       for (const char* collection : {SPAWNS, STRUCTURES}) {
         if (obj.contains(collection) && obj[collection].isArray()) {
           QJsonArray const entries = obj[collection].toArray();
-          for (const QJsonValue& entry_val : entries) {
+          for (const QJsonValue entry_val : entries) {
             if (entry_val.isObject()) {
               QJsonObject entry = entry_val.toObject();
               if (entry.contains(PLAYER_ID)) {

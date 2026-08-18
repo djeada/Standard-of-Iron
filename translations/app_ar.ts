@@ -2202,18 +2202,6 @@ This may be a skirmish, or objectives have not been configured.</source>
 <context>
     <name>GameEngine</name>
     <message>
-        <source>wood</source>
-        <translation>خشب</translation>
-    </message>
-    <message>
-        <source>stone</source>
-        <translation>حجر</translation>
-    </message>
-    <message>
-        <source>iron</source>
-        <translation>حديد</translation>
-    </message>
-    <message>
         <source>Maximum troop limit reached. Cannot produce more units.</source>
         <translation>بلغت الحد الأقصى للقوات. لا يمكن إنتاج وحدات أخرى.</translation>
     </message>

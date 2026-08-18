@@ -194,16 +194,16 @@ auto AudioEventHandler::initialize() -> bool {
 
   m_audio_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::AudioTriggerEvent>(
-          [this](const Engine::Core::AudioTriggerEvent& event) {
+          [](const Engine::Core::AudioTriggerEvent& event) {
             on_audio_trigger(event);
           });
 
   m_audio_cue_sub = Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent>(
-      [this](const Engine::Core::AudioCueEvent& event) { on_audio_cue(event); });
+      [](const Engine::Core::AudioCueEvent& event) { on_audio_cue(event); });
 
   m_music_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>(
-          [this](const Engine::Core::MusicTriggerEvent& event) {
+          [](const Engine::Core::MusicTriggerEvent& event) {
             on_music_trigger(event);
           });
 

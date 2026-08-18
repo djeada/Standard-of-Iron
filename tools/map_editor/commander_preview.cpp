@@ -18,7 +18,7 @@ using Game::Map::WeightedSpawnPoint;
 auto setup_positions(const QJsonArray& entries) -> std::vector<WeightedSpawnPoint> {
   std::vector<WeightedSpawnPoint> points;
   points.reserve(static_cast<std::size_t>(entries.size()));
-  for (const QJsonValue& value : entries) {
+  for (const QJsonValue value : entries) {
     const QJsonObject entry = value.toObject();
     const QJsonObject position = entry.value(QStringLiteral("position")).toObject();
     if (position.isEmpty()) {
@@ -137,7 +137,7 @@ auto derive_mission_commanders(const MapData& map, const QJsonObject& mission_ro
   const QJsonArray ai_setups =
       mission_root.value(QStringLiteral("ai_setups")).toArray();
   int owner_id = k_first_ai_owner_id;
-  for (const QJsonValue& ai_value : ai_setups) {
+  for (const QJsonValue ai_value : ai_setups) {
     const QJsonObject ai_setup = ai_value.toObject();
     QString label = ai_setup.value(QStringLiteral("id")).toString();
     if (label.isEmpty()) {

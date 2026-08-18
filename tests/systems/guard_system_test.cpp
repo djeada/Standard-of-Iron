@@ -33,7 +33,7 @@ protected:
 TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
 
   auto* guard = world->create_entity();
-  auto* guard_transform = guard->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  guard->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* guard_unit = guard->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   guard_unit->owner_id = 1;
   auto* guard_movement = guard->add_component<MovementComponent>();
@@ -74,15 +74,14 @@ TEST_F(GuardSystemTest, GuardFollowsMovingEntity) {
 TEST_F(GuardSystemTest, GuardDoesNotFollowSmallMovements) {
 
   auto* guard = world->create_entity();
-  auto* guard_transform = guard->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
+  guard->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
   auto* guard_unit = guard->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   guard_unit->owner_id = 1;
   auto* guard_movement = guard->add_component<MovementComponent>();
   auto* guard_mode = guard->add_component<GuardModeComponent>();
 
   auto* guarded = world->create_entity();
-  auto* guarded_transform =
-      guarded->add_component<TransformComponent>(5.5F, 0.0F, 5.5F);
+  guarded->add_component<TransformComponent>(5.5F, 0.0F, 5.5F);
   auto* guarded_unit = guarded->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   guarded_unit->owner_id = 1;
 
@@ -100,15 +99,14 @@ TEST_F(GuardSystemTest, GuardDoesNotFollowSmallMovements) {
 TEST_F(GuardSystemTest, GuardDoesNotFollowWhileAttacking) {
 
   auto* guard = world->create_entity();
-  auto* guard_transform = guard->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  guard->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto* guard_unit = guard->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   guard_unit->owner_id = 1;
   auto* guard_movement = guard->add_component<MovementComponent>();
   auto* guard_mode = guard->add_component<GuardModeComponent>();
 
   auto* guarded = world->create_entity();
-  auto* guarded_transform =
-      guarded->add_component<TransformComponent>(20.0F, 0.0F, 20.0F);
+  guarded->add_component<TransformComponent>(20.0F, 0.0F, 20.0F);
   auto* guarded_unit = guarded->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   guarded_unit->owner_id = 1;
 
@@ -137,7 +135,7 @@ TEST_F(GuardSystemTest, GuardDoesNotFollowWhileAttacking) {
 TEST_F(GuardSystemTest, GuardReturnsToPositionWhenGuardingLocation) {
 
   auto* guard = world->create_entity();
-  auto* guard_transform = guard->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
+  guard->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
   auto* guard_unit = guard->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   guard_unit->owner_id = 1;
   auto* guard_movement = guard->add_component<MovementComponent>();
@@ -161,7 +159,7 @@ TEST_F(GuardSystemTest, GuardReturnsToPositionWhenGuardingLocation) {
 TEST_F(GuardSystemTest, GuardDoesNotMoveWhenAlreadyAtPosition) {
 
   auto* guard = world->create_entity();
-  auto* guard_transform = guard->add_component<TransformComponent>(10.0F, 0.0F, 10.0F);
+  guard->add_component<TransformComponent>(10.0F, 0.0F, 10.0F);
   auto* guard_unit = guard->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   guard_unit->owner_id = 1;
   auto* guard_movement = guard->add_component<MovementComponent>();

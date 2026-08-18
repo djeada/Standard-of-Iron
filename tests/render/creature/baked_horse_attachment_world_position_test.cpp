@@ -281,8 +281,6 @@ TEST(BakedHorseAttachmentWorldPosition, ScaleBardingChestMatchesLegacySubmit) {
 
   Render::GL::HorseVariant variant{};
   variant.tack_color = QVector3D(0.55F, 0.45F, 0.25F);
-  Render::GL::HorseAnimationContext anim{};
-
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
   Render::GL::append_horse_attachment_archetype(
@@ -306,8 +304,6 @@ TEST(BakedHorseAttachmentWorldPosition, ScaleBardingBarrelMatchesLegacySubmit) {
   ctx.model = QMatrix4x4{};
   Render::GL::HorseVariant variant{};
   variant.tack_color = QVector3D(0.55F, 0.45F, 0.25F);
-  Render::GL::HorseAnimationContext anim{};
-
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
   Render::GL::append_horse_attachment_archetype(
@@ -331,8 +327,6 @@ TEST(BakedHorseAttachmentWorldPosition, LeatherBardingChestMatchesLegacySubmit) 
   ctx.model = QMatrix4x4{};
   Render::GL::HorseVariant variant{};
   variant.saddle_color = QVector3D(0.45F, 0.32F, 0.18F);
-  Render::GL::HorseAnimationContext anim{};
-
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
   Render::GL::append_horse_attachment_archetype(

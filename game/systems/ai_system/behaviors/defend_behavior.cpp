@@ -360,6 +360,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
   QVector3D const defend_pos(defend_pos_x, defend_pos_y, defend_pos_z);
   AIFormationRequest formation_request;
   formation_request.player_id = context.player_id;
+  formation_request.nation = context.nation;
   formation_request.anchor = defend_pos;
   formation_request.spacing = 3.0F;
   formation_request.intent = Game::Formation::ArmyFormationIntent::Defensive;

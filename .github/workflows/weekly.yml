@@ -73,7 +73,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             ninja-build libgl1-mesa-dev libegl1 ffmpeg \
-            "clang-tidy-${CLANG_TIDY_VERSION%%.*}"
+            "clang-tidy-${CLANG_TIDY_VERSION%%.*}" \
+            clang libc++-dev libc++abi-dev
           echo "CLANG_TIDY=clang-tidy-${CLANG_TIDY_VERSION%%.*}" >> "$GITHUB_ENV"
 
       - name: ccache
@@ -131,6 +132,28 @@ jobs:
           name: clang-tidy-log
           path: clang-tidy.log
           retention-days: 30
+
+      # The macOS stand-in: every translation unit reparsed with Clang and
+      # libc++, which are the two things AppleClang is that GCC and libstdc++
+      # are not. Syntax-only, so nothing links and Qt built against libstdc++
+      # raises no ABI question -- but it needs the compile database and the
+      # generated moc headers, which the two steps above have already made.
+      #
+      # It is here rather than on pull requests because it costs ~118 CPU
+      # minutes, which is half an hour of a four-core runner, and the pull
+      # request lane is deliberately cheap. The compiler-free portability
+      # passes -- including the include-graph one that catches the class of
+      # break that failed this workflow on 2026-08-17 -- do run on every pull
+      # request, in quality.yml.
+      #
+      # `if: always()` so a red clang-tidy above does not hide a portability
+      # regression here; --require-all so a missing clang fails the job rather
+      # than skipping the pass and reporting a green it did not earn.
+      - name: Portability (Clang + libc++)
+        if: always()
+        run: |
+          python scripts/check-portability.py --only apple \
+            --build-dir build --require-all
 
   # ---------------------------------------------------------------------
   # Sanitizer lanes. Tests only - the renderer needs a GPU context that a

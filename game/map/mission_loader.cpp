@@ -38,7 +38,7 @@ auto MissionLoader::parse_unit_setup(const QJsonObject& obj) -> UnitSetup {
   unit.guard_radius = static_cast<float>(obj["guard_radius"].toDouble(10.0));
 
   const QJsonArray patrol_waypoints = obj["patrol_waypoints"].toArray();
-  for (const auto& waypoint_val : patrol_waypoints) {
+  for (const auto waypoint_val : patrol_waypoints) {
     unit.patrol_waypoints.push_back(parse_position(waypoint_val.toObject()));
   }
   return unit;
@@ -79,12 +79,12 @@ auto MissionLoader::parse_player_setup(const QJsonObject& obj) -> PlayerSetup {
   warn_on_authored_commander(obj, QStringLiteral("player_setup"));
 
   const QJsonArray units = obj["starting_units"].toArray();
-  for (const auto& unit_val : units) {
+  for (const auto unit_val : units) {
     setup.starting_units.push_back(parse_unit_setup(unit_val.toObject()));
   }
 
   const QJsonArray buildings = obj["starting_buildings"].toArray();
-  for (const auto& building_val : buildings) {
+  for (const auto building_val : buildings) {
     setup.starting_buildings.push_back(parse_building_setup(building_val.toObject()));
   }
 
@@ -127,7 +127,7 @@ auto MissionLoader::parse_wave(const QJsonObject& obj) -> Wave {
   wave.entry_point = parse_position(obj["entry_point"].toObject());
 
   const QJsonArray entry_points = obj["entry_points"].toArray();
-  for (const auto& point_val : entry_points) {
+  for (const auto point_val : entry_points) {
     wave.entry_points.push_back(parse_position(point_val.toObject()));
   }
 
@@ -147,7 +147,7 @@ auto MissionLoader::parse_wave(const QJsonObject& obj) -> Wave {
   }
 
   const QJsonArray composition = obj["composition"].toArray();
-  for (const auto& comp_val : composition) {
+  for (const auto comp_val : composition) {
     wave.composition.push_back(parse_wave_composition(comp_val.toObject()));
   }
 
@@ -183,21 +183,21 @@ auto MissionLoader::parse_ai_setup(const QJsonObject& obj) -> AISetup {
 
   if (obj.contains("starting_units")) {
     const QJsonArray units = obj["starting_units"].toArray();
-    for (const auto& unit_val : units) {
+    for (const auto unit_val : units) {
       setup.starting_units.push_back(parse_unit_setup(unit_val.toObject()));
     }
   }
 
   if (obj.contains("starting_buildings")) {
     const QJsonArray buildings = obj["starting_buildings"].toArray();
-    for (const auto& building_val : buildings) {
+    for (const auto building_val : buildings) {
       setup.starting_buildings.push_back(parse_building_setup(building_val.toObject()));
     }
   }
 
   if (obj.contains("waves")) {
     const QJsonArray waves = obj["waves"].toArray();
-    for (const auto& wave_val : waves) {
+    for (const auto wave_val : waves) {
       setup.waves.push_back(parse_wave(wave_val.toObject()));
     }
   }
@@ -224,7 +224,7 @@ auto MissionLoader::parse_condition(const QJsonObject& obj) -> Condition {
 
   if (obj.contains("structure_types") && obj["structure_types"].isArray()) {
     const QJsonArray types = obj["structure_types"].toArray();
-    for (const auto& type_val : types) {
+    for (const auto type_val : types) {
       cond.structure_types.push_back(type_val.toString());
     }
   }
@@ -254,7 +254,7 @@ auto MissionLoader::parse_stage(const QJsonObject& obj) -> MissionStage {
 
   if (obj.contains("structure_types") && obj["structure_types"].isArray()) {
     const QJsonArray types = obj["structure_types"].toArray();
-    for (const auto& type_val : types) {
+    for (const auto type_val : types) {
       stage.structure_types.push_back(type_val.toString());
     }
   } else if (obj.contains("structure_type")) {
@@ -285,7 +285,7 @@ auto MissionLoader::parse_stage(const QJsonObject& obj) -> MissionStage {
 
   if (obj.contains("route") && obj["route"].isArray()) {
     const QJsonArray route = obj["route"].toArray();
-    for (const auto& point_val : route) {
+    for (const auto point_val : route) {
       stage.route.push_back(parse_position(point_val.toObject()));
     }
   }
@@ -320,7 +320,7 @@ auto MissionLoader::parse_game_event(const QJsonObject& obj) -> GameEvent {
   event.trigger = parse_event_trigger(obj["trigger"].toObject());
 
   const QJsonArray actions = obj["actions"].toArray();
-  for (const auto& action_val : actions) {
+  for (const auto action_val : actions) {
     event.actions.push_back(parse_event_action(action_val.toObject()));
   }
 
@@ -385,7 +385,7 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
 
   if (root.contains("ai_setups")) {
     const QJsonArray ai_setups = root["ai_setups"].toArray();
-    for (const auto& ai_val : ai_setups) {
+    for (const auto ai_val : ai_setups) {
       out_mission.ai_setups.push_back(parse_ai_setup(ai_val.toObject()));
     }
   }
@@ -396,35 +396,35 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
 
   if (root.contains("victory_conditions")) {
     const QJsonArray victory = root["victory_conditions"].toArray();
-    for (const auto& cond_val : victory) {
+    for (const auto cond_val : victory) {
       out_mission.victory_conditions.push_back(parse_condition(cond_val.toObject()));
     }
   }
 
   if (root.contains("defeat_conditions")) {
     const QJsonArray defeat = root["defeat_conditions"].toArray();
-    for (const auto& cond_val : defeat) {
+    for (const auto cond_val : defeat) {
       out_mission.defeat_conditions.push_back(parse_condition(cond_val.toObject()));
     }
   }
 
   if (root.contains("optional_objectives")) {
     const QJsonArray optional = root["optional_objectives"].toArray();
-    for (const auto& cond_val : optional) {
+    for (const auto cond_val : optional) {
       out_mission.optional_objectives.push_back(parse_condition(cond_val.toObject()));
     }
   }
 
   if (root.contains("stages")) {
     const QJsonArray stages = root["stages"].toArray();
-    for (const auto& stage_val : stages) {
+    for (const auto stage_val : stages) {
       out_mission.stages.push_back(parse_stage(stage_val.toObject()));
     }
   }
 
   if (root.contains("events")) {
     const QJsonArray events = root["events"].toArray();
-    for (const auto& event_val : events) {
+    for (const auto event_val : events) {
       out_mission.events.push_back(parse_game_event(event_val.toObject()));
     }
   }

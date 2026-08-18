@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace Game::Mission {
 
@@ -132,7 +133,7 @@ void WaveArchetypeCatalog::apply_overlay() {
   }
 
   const QJsonArray archetypes = doc.object().value("archetypes").toArray();
-  for (const auto& value : archetypes) {
+  for (const auto value : archetypes) {
     const QJsonObject obj = value.toObject();
     const QString id = obj.value("id").toString().trimmed().toLower();
     if (id.isEmpty()) {
@@ -143,7 +144,7 @@ void WaveArchetypeCatalog::apply_overlay() {
     archetype.id = id;
     archetype.label = obj.value("label").toString();
     const QJsonArray composition = obj.value("composition").toArray();
-    for (const auto& comp_value : composition) {
+    for (const auto comp_value : composition) {
       const QJsonObject comp_obj = comp_value.toObject();
       WaveComposition comp;
       comp.type = comp_obj.value("type").toString().trimmed().toLower();

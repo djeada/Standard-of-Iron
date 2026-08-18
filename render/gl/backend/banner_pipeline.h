@@ -1,11 +1,13 @@
 #pragma once
 
+#include <memory>
+
 #include "pipeline_interface.h"
+#include "render/gl/mesh.h"
 #include "render/gl/shader.h"
 
 namespace Render::GL {
 class ShaderCache;
-class Mesh;
 
 namespace BackendPipelines {
 

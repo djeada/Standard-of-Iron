@@ -103,6 +103,10 @@ public:
     return m_features;
   }
 
+  void set_shader_quality(ShaderQuality quality) noexcept {
+    m_features.shader_quality = quality;
+  }
+
   [[nodiscard]] auto batching_config() const noexcept -> const BatchingConfig& {
     return m_batching_config;
   }

@@ -26,7 +26,6 @@ struct RenderBounds {
                 std::numeric_limits<float>::lowest(),
                 std::numeric_limits<float>::lowest()};
 
-  [[nodiscard]] auto width() const -> float { return max.x() - min.x(); }
   [[nodiscard]] auto height() const -> float { return max.y() - min.y(); }
   [[nodiscard]] auto depth() const -> float { return max.z() - min.z(); }
 };

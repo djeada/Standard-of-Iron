@@ -444,17 +444,6 @@ auto has_valid_melee_lock(Engine::Core::Entity* entity,
   return is_valid_enemy_unit(unit, target, true);
 }
 
-auto is_large_melee_anchor(Engine::Core::Entity* entity) -> bool {
-  if (entity == nullptr) {
-    return false;
-  }
-
-  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-  return entity->has_component<Engine::Core::BuildingComponent>() ||
-         entity->has_component<Engine::Core::ElephantComponent>() ||
-         ((unit != nullptr) && unit->spawn_type == Game::Units::SpawnType::Elephant);
-}
-
 auto is_ranged_mode(Engine::Core::AttackComponent* attack_comp) -> bool {
   return (attack_comp != nullptr) && attack_comp->can_ranged &&
          attack_comp->current_mode == Engine::Core::AttackComponent::CombatMode::Ranged;
