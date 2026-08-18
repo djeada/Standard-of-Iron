@@ -585,6 +585,34 @@ void HumanoidPoseController::construction_saw(float work_phase) {
   grasp_two_handed(to_qvec(sample.grip_center), sample.hand_separation);
 }
 
+void HumanoidPoseController::construction_hammer(float work_phase) {
+  using HP = HumanProportions;
+
+  auto const sample = Animation::resolve_humanoid_construction_pose({
+      .kind = Animation::HumanoidConstructionPoseKind::Hammer,
+      .work_phase = work_phase,
+      .jitter_seed = m_anim_ctx.jitter_seed,
+      .shoulder_y = HP::SHOULDER_Y,
+  });
+  apply_construction_body_deltas(m_pose, sample);
+  place_hand_at(Side::Left, to_qvec(sample.left_hand));
+  place_hand_at(Side::Right, to_qvec(sample.right_hand));
+}
+
+void HumanoidPoseController::construction_reap(float work_phase) {
+  using HP = HumanProportions;
+
+  auto const sample = Animation::resolve_humanoid_construction_pose({
+      .kind = Animation::HumanoidConstructionPoseKind::Reap,
+      .work_phase = work_phase,
+      .jitter_seed = m_anim_ctx.jitter_seed,
+      .shoulder_y = HP::SHOULDER_Y,
+  });
+  apply_construction_body_deltas(m_pose, sample);
+  place_hand_at(Side::Left, to_qvec(sample.left_hand));
+  place_hand_at(Side::Right, to_qvec(sample.right_hand));
+}
+
 void HumanoidPoseController::construction_chisel(float work_phase, bool kneeling) {
   using HP = HumanProportions;
 

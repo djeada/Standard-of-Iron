@@ -7,6 +7,7 @@
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QPainter>
+#include <QString>
 #include <QVector3D>
 #include <QVector4D>
 
@@ -173,6 +174,8 @@ auto make_view_projection(const Bounds& bounds,
   return proj * view_mat;
 }
 
+float g_farm_growth = 1.0F;
+
 auto render_building(EntityRendererRegistry& registry,
                      Render::GL::ResourceManager* resources,
                      const std::string& nation,
@@ -206,6 +209,11 @@ auto render_building(EntityRendererRegistry& registry,
     stockpile->wood_fill = 0.75F;
     stockpile->stone_fill = 0.6F;
     stockpile->iron_fill = 0.85F;
+    stockpile->food_fill = 0.5F;
+  }
+  if (type == "farm") {
+    auto* farm = entity.add_component<Engine::Core::FarmComponent>();
+    farm->growth = g_farm_growth;
   }
 
   DrawContext ctx;
@@ -267,6 +275,8 @@ auto main(int argc, char** argv) -> int {
       filter = argv[++i];
     } else if (arg == "--states") {
       show_states = true;
+    } else if (arg == "--growth" && i + 1 < argc) {
+      g_farm_growth = QString::fromLatin1(argv[++i]).toFloat();
     } else {
       out_dir = arg;
     }
@@ -279,8 +289,9 @@ auto main(int argc, char** argv) -> int {
   Render::GL::ResourceManager resources;
 
   std::vector<std::string> types = {
-      "home", "barracks", "defense_tower", "marketplace", "temple", "wall"};
+      "home", "farm", "barracks", "defense_tower", "marketplace", "temple", "wall"};
   std::vector<std::string> keys = {"home",
+                                   "farm",
                                    "barracks",
                                    "defense_tower",
                                    "marketplace",

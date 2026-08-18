@@ -439,6 +439,7 @@ auto should_auto_engage_melee(Engine::Core::Entity* unit) -> bool {
   case Game::Units::SpawnType::WallGate:
   case Game::Units::SpawnType::Marketplace:
   case Game::Units::SpawnType::Temple:
+  case Game::Units::SpawnType::Farm:
   case Game::Units::SpawnType::Sheep:
   case Game::Units::SpawnType::Wolf:
     return false;

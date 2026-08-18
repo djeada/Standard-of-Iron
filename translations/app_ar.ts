@@ -179,6 +179,22 @@
         <source>%1 (%2 units)</source>
         <translation>%1 (%2 وحدة)</translation>
     </message>
+    <message>
+        <source>Harvesting grain</source>
+        <translation>يحصد الحبوب</translation>
+    </message>
+    <message>
+        <source>Reaping a ripe farm for food.</source>
+        <translation>يحصد مزرعة ناضجة للحصول على الطعام.</translation>
+    </message>
+    <message>
+        <source>Butchering</source>
+        <translation>يذبح</translation>
+    </message>
+    <message>
+        <source>Slaughtering a sheep for food.</source>
+        <translation>يذبح خروفًا للحصول على الطعام.</translation>
+    </message>
 </context>
 <context>
     <name>ArmyFormationController</name>
@@ -1287,10 +1303,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>يأتي من خزينتك الأولية ومن مكافآت المهمة ومن بيع البضائع في السوق.</translation>
     </message>
     <message>
-        <source>Comes from your starting stores, mission rewards, and buying at a marketplace.</source>
-        <translation>يأتي من مخزونك الأولي ومن مكافآت المهمة ومن الشراء في السوق.</translation>
-    </message>
-    <message>
         <source>Send a builder to chop a tree with Collect, or leave Auto Gather running.</source>
         <translation>أرسل بنّاءً ليقطع شجرة بأمر «اجمع»، أو اترك «جمع تلقائي» يعمل.</translation>
     </message>
@@ -1377,10 +1389,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Elephant</source>
         <translation>فيل حرب</translation>
-    </message>
-    <message>
-        <source>Raises the population the nearest barracks can recruit from.</source>
-        <translation>يرفع التعداد الذي تجنّد منه أقرب ثكنة.</translation>
     </message>
     <message>
         <source>Recruits troops and receives everything your builders gather.</source>
@@ -1487,10 +1495,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>جنّد بنّاءً في ثكنة ثم أرسله ليجمع الخشب أو الحجر أو الحديد.</translation>
     </message>
     <message>
-        <source>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</source>
-        <translation>اختر بنّاءً، اضغط «اجمع»، ثم انقر على شجرة أو صخرة أو منجم. سينقل الحمولة إلى ساحة ثكنة ثم يعود لجلب المزيد.</translation>
-    </message>
-    <message>
         <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
         <translation>بعد اختيار بنّاء، اضغط «بناء» وضع منزلًا لرفع تعدادك، أو ثكنة للتجنيد منها.</translation>
     </message>
@@ -1499,12 +1503,32 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>اختر ثكنة وجنّد القوات. كل وحدة تكلّف تعدادًا وموارد، وكلاهما مبيّن على بطاقتها.</translation>
     </message>
     <message>
-        <source>Keep recruiting while your builders gather. Raise more Homes when population runs out.</source>
-        <translation>واصل التجنيد بينما يجمع بنّاؤوك. ابنِ منازل إضافية عندما ينفد التعداد.</translation>
-    </message>
-    <message>
         <source>Gathering, building and recruiting are all under way.</source>
         <translation>الجمع والبناء والتجنيد جارية كلها.</translation>
+    </message>
+    <message>
+        <source>Send a builder to reap a ripe farm or slaughter a sheep with Collect, or leave Auto Gather running. Recruiting a civilian at a home spends it.</source>
+        <translation>أرسل بنّاءً لحصاد مزرعة ناضجة أو ذبح خروف بأمر جمع، أو اترك الجمع التلقائي يعمل. تجنيد مدني في منزل يستهلكه.</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>مزرعة</translation>
+    </message>
+    <message>
+        <source>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</source>
+        <translation>يربّي المدنيين الذين يحملون القوى البشرية إلى أقرب ثكنة. كل واحد يكلف طعامًا.</translation>
+    </message>
+    <message>
+        <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
+        <translation>تزرع الحبوب في دورات. يحصدها البنّاء طعامًا عندما تنضج.</translation>
+    </message>
+    <message>
+        <source>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</source>
+        <translation>اختر بنّاءً، واضغط جمع، وانقر على شجرة أو صخرة أو منجم خام أو مزرعة ناضجة أو خروف. يحمل الحمولة إلى ساحة الثكنة ثم يعود لجلب المزيد.</translation>
+    </message>
+    <message>
+        <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
+        <translation>واصل التجنيد بينما يجمع بنّاؤوك. ابنِ المنازل والمزارع عندما ينفد السكان أو الطعام.</translation>
     </message>
 </context>
 <context>
@@ -1520,10 +1544,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Recruiting draws on the manpower held by each barracks.</source>
         <translation>يستهلك التجنيد الأفراد المتاحين في كل ثكنة.</translation>
-    </message>
-    <message>
-        <source>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</source>
-        <translation>التعداد %1 / %2. يضيف المنزل %3 إلى أقرب ثكنة، ويضيف إدخال مدني إليها %4.</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
@@ -1588,6 +1608,14 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Back to the battle</source>
         <translation>عُد إلى المعركة</translation>
+    </message>
+    <message>
+        <source>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</source>
+        <translation>السكان %1 / %2. يربّي المنزل مدنيين مقابل %3 طعام لكل واحد؛ إدخال مدني إلى ثكنة يضيف %4 قوى بشرية. تنضج المزارع كل %5 ثانية ويعطي الخروف %6 طعام.</translation>
+    </message>
+    <message>
+        <source>Needs a home</source>
+        <translation>يحتاج إلى منزل</translation>
     </message>
 </context>
 <context>
@@ -1654,6 +1682,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Temple</source>
         <translation>معبد</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>مزرعة</translation>
     </message>
 </context>
 <context>
@@ -2296,6 +2328,14 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Repair</source>
         <translation>إصلاح</translation>
     </message>
+    <message>
+        <source>Harvest grain</source>
+        <translation>حصاد الحبوب</translation>
+    </message>
+    <message>
+        <source>Slaughter sheep</source>
+        <translation>ذبح خروف</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -2782,10 +2822,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>البناؤون فقط.</translation>
     </message>
     <message>
-        <source>Send a builder to fell a tree, break a boulder or work an ore seam.</source>
-        <translation>يرسل بنّاءً لقطع شجرة أو تكسير صخرة أو استخراج عرق خام.</translation>
-    </message>
-    <message>
         <source>Press Collect, then left-click the node. Right-click cancels.</source>
         <translation>اضغط اجمع، ثم انقر بالزر الأيسر على المورد. النقر الأيمن يُلغي.</translation>
     </message>
@@ -2878,10 +2914,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>اختر موردًا</translation>
     </message>
     <message>
-        <source>Press again to cycle any resource, wood, stone, iron, then off.</source>
-        <translation>اضغط ثانية للتنقل بين كل الموارد ثم الخشب فالحجر فالحديد ثم الإيقاف.</translation>
-    </message>
-    <message>
         <source>Dismantle</source>
         <translation>تفكيك</translation>
     </message>
@@ -2916,6 +2948,18 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Dismantle is only available to builders</source>
         <translation>التفكيك متاح للبنّائين فقط</translation>
+    </message>
+    <message>
+        <source>Food first</source>
+        <translation>الطعام أولًا</translation>
+    </message>
+    <message>
+        <source>Send a builder to fell a tree, break a boulder, work an ore seam, reap a ripe farm or slaughter a sheep.</source>
+        <translation>أرسل بنّاءً لقطع شجرة أو تكسير صخرة أو استخراج عرق خام أو حصاد مزرعة ناضجة أو ذبح خروف.</translation>
+    </message>
+    <message>
+        <source>Press again to cycle any resource, wood, stone, iron, food, then off.</source>
+        <translation>اضغط مرة أخرى للتبديل بين أي مورد، الخشب، الحجر، الحديد، الطعام، ثم الإيقاف.</translation>
     </message>
 </context>
 <context>
@@ -3381,10 +3425,6 @@ Unseen: never scouted.</source>
         <translation>التكاليف</translation>
     </message>
     <message>
-        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost a little wood and iron plus population.</source>
-        <translation>تعرض كل بطاقة، سواء لمجنّد أو لمبنى، سعرها. البطاقة الرمادية تعني نقص شيء ما؛ مرّر المؤشر فوقها لتقرأ ما هو. تكلف المنازل 50 خشبًا و15 حجرًا، والثكنة 100 خشب و60 حجرًا، وبرج الدفاع 60 خشبًا و80 حجرًا؛ ويكلف الجنود قليلًا من الخشب والحديد إضافة إلى السكان.</translation>
-    </message>
-    <message>
         <source>Placing a structure</source>
         <translation>وضع منشأة</translation>
     </message>
@@ -3395,10 +3435,6 @@ Unseen: never scouted.</source>
     <message>
         <source>What each building does</source>
         <translation>ما يفعله كل مبنى</translation>
-    </message>
-    <message>
-        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>الثكنات تجنّد الجنود وتضم ساحة مخزونك. المنازل تربّي العائلات والمدنيين. أبراج الدفاع ترمي كل ما في مداها. الأسواق تتاجر. المعابد تقوّي المعنويات. الأسوار والبوابات تشكّل الميدان؛ والبوابات تُفتح لقواتك أنت.</translation>
     </message>
     <message>
         <source>Repair and dismantle</source>
@@ -3415,10 +3451,6 @@ Unseen: never scouted.</source>
     <message>
         <source>Population</source>
         <translation>السكان</translation>
-    </message>
-    <message>
-        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>تبدأ الثكنة برصيد من السكان تنفقه على كل مجنّد. تعيد المنازل ملأه: كل منزل يربّي عائلات مع الوقت، ويمكن تجنيد مدني هناك وإرساله إلى الثكنة بأمر التسليم فينمو الرصيد. يعرض الشريط العلوي جيشك مقابل الحد الأقصى الكلي للخريطة.</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -3535,6 +3567,26 @@ Unseen: never scouted.</source>
     <message>
         <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
         <translation>المبنى المتضرر يصلحه بنّاء بأمر الإصلاح. أما المبنى الذي لم تعد بحاجة إليه فيزيله أمر التفكيك: اختر البنّائين، واضغط تفكيك، ثم انقر على المبنى. يعود جزء من كلفته عند انتهاء العمل، وسحب الطاقم قبل ذلك لا يعيد شيئًا.</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>طعام</translation>
+    </message>
+    <message>
+        <source>Food feeds your settlement: every civilian recruited at a Home costs it. A Farm grows grain in cycles; when the field turns gold a builder reaps it with Collect and hauls the grain home, and the field is sown again. Builders can also slaughter a sheep for a smaller haul. Auto Gather set to food keeps a builder working the farms.</source>
+        <translation>الطعام يغذي مستوطنتك: كل مدني يُجنَّد في منزل يكلف طعامًا. تزرع المزرعة الحبوب في دورات؛ عندما يصفرّ الحقل يحصده بنّاء بأمر جمع ويحمل الحبوب إلى الديار، ثم يُزرع الحقل من جديد. يمكن للبنّائين أيضًا ذبح خروف مقابل حمولة أصغر. الجمع التلقائي على الطعام يُبقي بنّاءً يعمل في المزارع.</translation>
+    </message>
+    <message>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</source>
+        <translation>كل بطاقة - مجنّد أو مبنى - تعرض سعرها. البطاقة الرمادية تعني نقص شيء ما؛ مرّر المؤشر فوقها لقراءة ما ينقص. تكلف المنازل 50 خشبًا و15 حجرًا، والمزرعة 40 خشبًا و10 أحجار، والثكنة 100 خشب و60 حجرًا، وبرج الدفاع 60 خشبًا و80 حجرًا؛ يكلف الجنود خشبًا وحديدًا بالإضافة إلى السكان، ويكلف المدنيون طعامًا.</translation>
+    </message>
+    <message>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>تجنّد الثكنات الجنود وتضم ساحة مخزونك. تربّي المنازل العائلات والمدنيين. تزرع المزارع الحبوب التي يحصدها البنّاؤون طعامًا. ترمي أبراج الدفاع كل ما في مداها. تتاجر الأسواق. تقوّي المعابد المعنويات. تشكّل الأسوار والبوابات الميدان؛ وتُفتح البوابات لقواتك.</translation>
+    </message>
+    <message>
+        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>تبدأ الثكنة بمخزون من السكان وتنفقه على كل مجنّد. تعيد المنازل ملأه: كل منزل يربّي العائلات مع الوقت، ويمكن تجنيد مدني هناك مقابل طعام وإرساله إلى الثكنة بأمر تسليم، فينمو المخزون. يعرض الشريط العلوي جيشك مقابل الحد الأقصى للخريطة.</translation>
     </message>
 </context>
 <context>
@@ -5943,8 +5995,8 @@ to see preview</source>
 <context>
     <name>ProductionManager</name>
     <message>
-        <source>Select a tree, boulder, or iron ore deposit.</source>
-        <translation>اختر شجرة أو صخرة أو منجم خام حديد.</translation>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>اختر شجرة أو صخرة أو منجم خام أو مزرعة ناضجة أو خروفًا.</translation>
     </message>
     <message>
         <source>Select a tree to chop.</source>
@@ -6226,10 +6278,6 @@ Use Deliver mode, then click a friendly barracks to add 50 available population.
         <translation>أعمال البناء</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, and iron</source>
-        <translation>ابنِ آلات الحصار والمنشآت، واجمع الخشب والحجر والحديد</translation>
-    </message>
-    <message>
         <source>Select a structure to build</source>
         <translation>اختر بناءً لتشييده</translation>
     </message>
@@ -6422,6 +6470,70 @@ Wide vision and a durable settlement anchor</source>
     <message>
         <source>Need %1</source>
         <translation>تحتاج: %1</translation>
+    </message>
+    <message>
+        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
+        <translation>ابنِ أسلحة الحصار والمنشآت، واجمع الخشب والحجر والحديد والطعام</translation>
+    </message>
+    <message>
+        <source>Harvest Grain</source>
+        <translation>حصاد الحبوب</translation>
+    </message>
+    <message>
+        <source>Slaughter Sheep</source>
+        <translation>ذبح خروف</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>مزرعة</translation>
+    </message>
+    <message>
+        <source>Build Farm
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>بناء مزرعة
+%1
+التكلفة: %2
+مدة البناء: %3 ث</translation>
+    </message>
+    <message>
+        <source>Grows grain in cycles
+Builders reap it for the food that recruits civilians</source>
+        <translation>تزرع الحبوب في دورات
+يحصدها البنّاؤون طعامًا لتجنيد المدنيين</translation>
+    </message>
+    <message>
+        <source>FARM</source>
+        <translation>مزرعة</translation>
+    </message>
+    <message>
+        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
+        <translation>تنضج الحبوب كل %1 ثانية ويحصد البنّاء منها %2 طعام</translation>
+    </message>
+    <message>
+        <source>Ripe</source>
+        <translation>ناضج</translation>
+    </message>
+    <message>
+        <source>%1% grown · %2s</source>
+        <translation>نما %1٪ · %2 ث</translation>
+    </message>
+    <message>
+        <source>Select your farm to see its crop.</source>
+        <translation>اختر مزرعتك لرؤية محصولها.</translation>
+    </message>
+    <message>
+        <source>A builder is on its way to harvest.</source>
+        <translation>بنّاء في طريقه للحصاد.</translation>
+    </message>
+    <message>
+        <source>Send a builder with Collect, or leave Auto Gather running.</source>
+        <translation>أرسل بنّاءً بأمر جمع، أو اترك الجمع التلقائي يعمل.</translation>
+    </message>
+    <message>
+        <source>Harvested %1 times so far.</source>
+        <translation>حُصدت %1 مرة حتى الآن.</translation>
     </message>
 </context>
 <context>

@@ -13,7 +13,8 @@ enum class BuildingType : std::uint8_t {
   DefenseTower,
   Home,
   Marketplace,
-  Temple
+  Temple,
+  Farm
 };
 
 inline auto building_type_to_q_string(BuildingType type) -> QString {
@@ -28,6 +29,8 @@ inline auto building_type_to_q_string(BuildingType type) -> QString {
     return QStringLiteral("marketplace");
   case BuildingType::Temple:
     return QStringLiteral("temple");
+  case BuildingType::Farm:
+    return QStringLiteral("farm");
   }
 
   return QStringLiteral("barracks");
@@ -57,6 +60,10 @@ inline auto try_parse_building_type(const QString& value, BuildingType& out) -> 
   }
   if (lowered == QStringLiteral("temple")) {
     out = BuildingType::Temple;
+    return true;
+  }
+  if (lowered == QStringLiteral("farm")) {
+    out = BuildingType::Farm;
     return true;
   }
   return false;

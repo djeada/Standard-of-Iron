@@ -143,6 +143,7 @@ private:
   int m_construction_preview_valid_segment_count = 0;
   int m_construction_preview_total_cost = 0;
   std::uint64_t m_pending_harvest_target_id = 0;
+  Engine::Core::EntityID m_pending_food_target_id = 0;
 
   bool m_wall_drag_active = false;
   bool m_wall_drag_anchor_set = false;

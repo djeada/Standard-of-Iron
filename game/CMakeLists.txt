@@ -172,6 +172,7 @@ add_library(
     units/home.cpp
     units/marketplace.cpp
     units/temple.cpp
+    units/farm.cpp
     units/wall_segment.cpp
     units/wall_gate.cpp
     units/sheep.cpp
@@ -232,6 +233,8 @@ add_library(
     systems/civilian_delivery_system.cpp
     systems/resource_delivery_system.cpp
     systems/gather_loop_system.cpp
+    systems/farm_system.cpp
+    systems/food_targets.cpp
     systems/capture_system.cpp
     systems/marketplace_system.cpp
     systems/nation_collapse_service.cpp

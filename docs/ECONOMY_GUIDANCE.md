@@ -37,9 +37,10 @@ spent on something buildable, **a mission objective asks for it**, or it can be 
 a marketplace they own. In practice every resource on a normal map is relevant; the flag
 exists so a mode that genuinely does not use one does not have to show a permanent zero.
 
-The objective clause is the one that is easy to miss. Food is spent on nothing today, so
-a mission whose victory condition is _accumulate 400 food_ would otherwise hide the very
-counter the player is playing against while it still reads zero. `GameEngine` collects
+The objective clause is the one that is easy to miss. Before food had a source and a use
+(see [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md)), a mission whose victory condition was
+_accumulate 400 food_ would otherwise have hidden the very counter the player was playing
+against while it still read zero. `GameEngine` collects
 the `accumulate_resources` amounts from the mission's victory conditions and optional
 objectives and passes them in as `objective_resources`.
 
@@ -104,7 +105,8 @@ teaching goal, and a spectated match has no economy to run.
 - `NationRegistry` — which units the player's nation can actually recruit, so the guide
   never advertises an elephant to Rome.
 - `PlayerResourceRegistry` — current stores, and `get_harvested_all` for the gather step.
-- `harvest_yields.h` — what one trip to a tree, boulder or ore seam is worth.
+- `harvest_yields.h` — what one trip to a tree, boulder, ore seam, ripe farm or sheep is
+  worth.
 - The world itself — builders, what each is doing, what they are carrying, and which
   buildings the player owns.
 
@@ -127,5 +129,7 @@ to gain from doing that at frame rate.
   yards, carried loads, and why a gathered log is not credited where it is cut.
 - [SETTLEMENT_LIFE.md](SETTLEMENT_LIFE.md) — the standing gather order that keeps a
   worker running its own round.
+- [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md) — the farm, the two food jobs, the civilians that
+  eat, and the balance table.
 - [UI_DESIGN_SYSTEM.md](UI_DESIGN_SYSTEM.md) — the components the three surfaces are
   built from.

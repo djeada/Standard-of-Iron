@@ -33,6 +33,8 @@ constexpr std::array k_kind_names = std::to_array<KindName>({
     {ActivityKind::ChopWood, "chop_wood"},
     {ActivityKind::MineStone, "mine_stone"},
     {ActivityKind::MineIron, "mine_iron"},
+    {ActivityKind::HarvestGrain, "harvest_grain"},
+    {ActivityKind::SlaughterSheep, "slaughter_sheep"},
     {ActivityKind::AutoGather, "auto_gather"},
     {ActivityKind::Deliver, "deliver"},
     {ActivityKind::Heal, "heal"},
@@ -142,6 +144,12 @@ auto activity_for_builder_product(std::string_view product_type) -> ActivityKind
   }
   if (product_type == k_builder_product_collect_iron_ore) {
     return ActivityKind::MineIron;
+  }
+  if (product_type == k_builder_product_harvest_grain) {
+    return ActivityKind::HarvestGrain;
+  }
+  if (product_type == k_builder_product_slaughter_sheep) {
+    return ActivityKind::SlaughterSheep;
   }
   if (product_type == k_builder_product_repair) {
     return ActivityKind::Repair;

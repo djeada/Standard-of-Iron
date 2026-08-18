@@ -6278,6 +6278,20 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                  {15.0F, 0.0F, 2.5F},
                  {},
                  180.0F),
+        building(QStringLiteral("showcase_roman_farm"),
+                 Game::Units::SpawnType::Farm,
+                 Nation::RomanRepublic,
+                 1,
+                 1,
+                 {21.5F, 0.0F, -5.0F}),
+        building(QStringLiteral("showcase_punic_farm"),
+                 Game::Units::SpawnType::Farm,
+                 Nation::Carthage,
+                 2,
+                 1,
+                 {21.5F, 0.0F, 2.5F},
+                 {},
+                 180.0F),
         building(QStringLiteral("showcase_roman_wall"),
                  Game::Units::SpawnType::WallSegment,
                  Nation::RomanRepublic,
@@ -6313,8 +6327,15 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                QStringLiteral("showcase_punic_tower"),
                                QStringLiteral("showcase_roman_temple"),
                                QStringLiteral("showcase_punic_temple"),
+                               QStringLiteral("showcase_roman_farm"),
+                               QStringLiteral("showcase_punic_farm"),
                                QStringLiteral("showcase_roman_wall"),
                                QStringLiteral("showcase_punic_wall")});
+    for (auto const* farm : {"showcase_roman_farm", "showcase_punic_farm"}) {
+      auto ripen = at(0.5F, Command::SetFarmGrowth, QString::fromLatin1(farm));
+      ripen.value = 100;
+      s.steps.push_back(std::move(ripen));
+    }
     result.push_back(std::move(s));
   }
 

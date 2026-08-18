@@ -46,6 +46,8 @@ constexpr std::array<KindStyle, k_indicator_kind_count> k_kind_styles = {{
     {IndicatorKind::ChopWood, {0.66F, 0.90F, 0.26F}, true},
     {IndicatorKind::MineStone, {0.80F, 0.82F, 0.86F}, true},
     {IndicatorKind::MineIron, {0.56F, 0.66F, 0.92F}, true},
+    {IndicatorKind::HarvestGrain, {0.96F, 0.80F, 0.32F}, true},
+    {IndicatorKind::SlaughterSheep, {0.94F, 0.62F, 0.50F}, true},
     {IndicatorKind::AutoGather, {0.86F, 0.94F, 0.44F}, true},
     {IndicatorKind::Deliver, {0.94F, 0.78F, 0.94F}, true},
     {IndicatorKind::Heal, {0.72F, 1.00F, 0.72F}, true},
@@ -260,6 +262,41 @@ void build_mine_iron(GlyphBuilder& builder) {
   builder.bar({-0.22F, -0.175F}, {0.04F, -0.175F}, 0.036F);
 }
 
+void build_harvest_grain(GlyphBuilder& builder) {
+
+  builder.begin_glyph();
+  builder.bar({-0.24F, -0.34F}, {-0.06F, 0.06F}, 0.070F);
+  builder.bar({0.06F, -0.36F}, {0.14F, 0.02F}, 0.070F);
+  builder.bar({0.30F, -0.34F}, {0.32F, 0.04F}, 0.070F);
+  for (float const x : {-0.06F, 0.14F, 0.32F}) {
+    builder.disc({x, 0.14F}, 0.085F, 12);
+    builder.disc({x - 0.07F, 0.05F}, 0.060F, 10);
+    builder.disc({x + 0.07F, 0.05F}, 0.060F, 10);
+    builder.disc({x - 0.05F, 0.22F}, 0.050F, 10);
+    builder.disc({x + 0.05F, 0.22F}, 0.050F, 10);
+    builder.tri({x - 0.03F, 0.24F}, {x + 0.03F, 0.24F}, {x, 0.36F});
+  }
+  builder.bar({-0.30F, -0.30F}, {0.38F, -0.30F}, 0.040F);
+  builder.end_glyph(k_glyph_extrusion);
+}
+
+void build_slaughter_sheep(GlyphBuilder& builder) {
+  const std::array<QVector2D, 5> haunch = {{
+      {-0.32F, -0.30F},
+      {0.20F, -0.30F},
+      {0.32F, -0.06F},
+      {0.12F, 0.12F},
+      {-0.30F, 0.02F},
+  }};
+  builder.begin_glyph();
+  builder.convex(haunch);
+  builder.bar({0.20F, 0.06F}, {0.40F, 0.30F}, 0.090F);
+  builder.disc({0.42F, 0.32F}, 0.075F, 12);
+  builder.bar({-0.34F, 0.36F}, {-0.06F, 0.08F}, 0.052F);
+  builder.bar({-0.40F, 0.30F}, {-0.28F, 0.42F}, 0.048F);
+  builder.end_glyph(k_glyph_extrusion);
+}
+
 void build_auto_gather(GlyphBuilder& builder) {
   const std::array<QVector2D, 4> pile = {{
       {-0.26F, -0.36F},
@@ -439,6 +476,12 @@ auto build_indicator_glyph(IndicatorKind kind) -> GlyphBuilder {
     break;
   case IndicatorKind::MineIron:
     build_mine_iron(builder);
+    break;
+  case IndicatorKind::HarvestGrain:
+    build_harvest_grain(builder);
+    break;
+  case IndicatorKind::SlaughterSheep:
+    build_slaughter_sheep(builder);
     break;
   case IndicatorKind::AutoGather:
     build_auto_gather(builder);

@@ -94,6 +94,10 @@ auto glyph_for_interaction(const Game::Systems::InteractionTargetMarker& marker)
     return ActivityKind::Deliver;
   case Game::Systems::InteractionAction::Repair:
     return ActivityKind::Repair;
+  case Game::Systems::InteractionAction::Harvest:
+    return ActivityKind::HarvestGrain;
+  case Game::Systems::InteractionAction::Slaughter:
+    return ActivityKind::SlaughterSheep;
   case Game::Systems::InteractionAction::Gather:
     break;
   case Game::Systems::InteractionAction::None:

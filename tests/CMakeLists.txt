@@ -108,6 +108,7 @@ add_executable(
     systems/construction_cost_catalog_test.cpp
     systems/resource_delivery_system_test.cpp
     systems/gather_loop_system_test.cpp
+    systems/food_economy_test.cpp
     systems/auto_gather_test.cpp
     systems/dismantle_test.cpp
     systems/interaction_targeting_test.cpp

@@ -23,6 +23,7 @@ inline constexpr float k_stockpile_depot_arrival_radius = 4.50F;
 inline constexpr int k_stockpile_wood_display_cap = 640;
 inline constexpr int k_stockpile_stone_display_cap = 480;
 inline constexpr int k_stockpile_iron_display_cap = 480;
+inline constexpr int k_stockpile_food_display_cap = 400;
 
 inline constexpr float k_stockpile_deposit_flash_seconds = 1.1F;
 
@@ -59,6 +60,8 @@ struct StockpilePoint {
     return k_stockpile_stone_display_cap;
   case ResourceType::Iron:
     return k_stockpile_iron_display_cap;
+  case ResourceType::Food:
+    return k_stockpile_food_display_cap;
   default:
     return k_stockpile_wood_display_cap;
   }

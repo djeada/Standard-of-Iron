@@ -20,6 +20,8 @@ enum class InteractionAction : std::uint8_t {
   Gather,
   Deliver,
   Repair,
+  Harvest,
+  Slaughter,
 };
 
 struct InteractionTargetMarker {

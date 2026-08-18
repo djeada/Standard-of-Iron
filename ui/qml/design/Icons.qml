@@ -185,6 +185,7 @@ QtObject {
             "house": "\u2302",
             "marketplace": "\u25C7",
             "temple": "\u25B3",
+            "farm": "\u2618",
             "sheep": "\u2663",
             "wolf": "\u2660",
             "commander": "\u265B"

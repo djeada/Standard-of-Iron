@@ -19,6 +19,8 @@ struct StockpileYardStyle {
   QVector3D timber_dark{0.29F, 0.19F, 0.11F};
   QVector3D ore{0.30F, 0.29F, 0.31F};
   QVector3D ore_rust{0.44F, 0.27F, 0.16F};
+  QVector3D sack{0.80F, 0.70F, 0.50F};
+  QVector3D grain{0.90F, 0.76F, 0.40F};
 };
 
 void draw_barracks_stockpile(const DrawContext& ctx,

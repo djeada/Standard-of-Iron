@@ -231,6 +231,7 @@ void apply_presentation_sample(
   anim.healing_target_dz = presentation.healing_target_dz;
   anim.is_constructing = presentation.is_constructing;
   anim.construction_progress = presentation.construction_progress;
+  anim.construction_job = presentation.construction_job;
   anim.is_dying = presentation.is_dying;
   anim.is_dead = presentation.is_dead;
   anim.death_progress = presentation.death_progress;
