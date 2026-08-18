@@ -326,6 +326,47 @@
       ]
     }
   ],
+  "commander_messages": [
+    {
+      "id": "cannae_scipio_open",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "cannae_scipio_victory",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "cannae_scipio_defeat",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
   "include_ambient_undead": false,
   "theme": "The battlefield becomes a closing iron tomb.",
   "victory_mode": "all"

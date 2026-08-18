@@ -951,6 +951,16 @@ auto submit_snapshot_creature(
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
 
+  for (const auto& attachment_mesh : snap->attachment_meshes) {
+    if (attachment_mesh == nullptr || attachment_mesh->index_count() == 0U) {
+      continue;
+    }
+    auto attachment_cmd = cmd;
+    attachment_cmd.mesh = attachment_mesh.get();
+    attachment_cmd.shadow_mesh = nullptr;
+    out.rigged(std::move(attachment_cmd));
+  }
+
   out.rigged(std::move(cmd));
   return true;
 }

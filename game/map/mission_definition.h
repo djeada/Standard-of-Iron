@@ -135,6 +135,50 @@ struct MissionStage {
   std::vector<Position> route;
 };
 
+enum class CommanderMessageTrigger {
+  MissionStart,
+  MissionVictory,
+  MissionDefeat,
+  StructureCaptured,
+  CommanderDefeated
+};
+
+struct CommanderMessageCondition {
+
+  std::optional<int> owner_id;
+  bool owner_is_local = false;
+
+  std::optional<int> by_owner_id;
+  bool by_owner_is_local = false;
+
+  std::optional<QString> subject_type;
+
+  std::optional<QString> nation;
+
+  std::optional<Position> at;
+  std::optional<float> radius;
+};
+
+inline constexpr float k_default_commander_message_seconds = 9.0F;
+
+struct CommanderMessage {
+  QString id;
+
+  QString speaker;
+
+  QString pose;
+  QString text;
+  QString voice_cue;
+
+  CommanderMessageTrigger trigger = CommanderMessageTrigger::MissionStart;
+  CommanderMessageCondition condition;
+
+  float delay = 0.0F;
+  float duration = k_default_commander_message_seconds;
+  int priority = 0;
+  bool once = true;
+};
+
 struct EventTrigger {
   QString type;
   std::optional<float> time;
@@ -167,6 +211,7 @@ struct MissionDefinition {
   std::vector<Condition> optional_objectives;
   std::vector<MissionStage> stages;
   std::vector<GameEvent> events;
+  std::vector<CommanderMessage> commander_messages;
   bool include_ambient_undead = false;
   bool tutorial = false;
 };

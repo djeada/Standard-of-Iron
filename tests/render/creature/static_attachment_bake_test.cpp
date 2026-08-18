@@ -1,5 +1,3 @@
-
-
 #include <QMatrix4x4>
 #include <QVector3D>
 
@@ -7,18 +5,27 @@
 #include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <memory>
 #include <span>
+#include <utility>
+#include <vector>
 
+#include "render/creature/archetype_registry.h"
 #include "render/creature/part_graph.h"
-#include "render/creature/skeleton.h"
+#include "render/creature/pipeline/creature_asset.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
+#include "render/equipment/attachment_builder.h"
+#include "render/equipment/generated_equipment.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/skeleton.h"
 #include "render/render_archetype.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/rigged_mesh_cache.h"
+#include "render/snapshot_mesh_cache.h"
 #include "render/static_attachment_spec.h"
 
 namespace {
@@ -36,6 +43,12 @@ struct OneBoneGraph {
   SkeletonTopology topology{std::span<const BoneDef>{bones}, {}};
   PartGraph graph{};
   std::array<BoneWorldMatrix, 1> bind_pose{QMatrix4x4{}};
+};
+
+class RuntimeBakeGuardReset {
+public:
+  RuntimeBakeGuardReset() { Render::Creature::set_runtime_bake_forbidden(false); }
+  ~RuntimeBakeGuardReset() { Render::Creature::set_runtime_bake_forbidden(false); }
 };
 
 auto make_simple_archetype() -> const RenderArchetype& {
@@ -204,7 +217,6 @@ TEST(StaticAttachmentBake, AttachmentsHashKeysCacheEntries) {
 }
 
 TEST(StaticAttachmentBake, AttachmentsCoexistWithPrimitiveGraph) {
-
   std::array<PrimitiveInstance, 1> prims{};
   prims[0].debug_name = "sphere";
   prims[0].shape = PrimitiveShape::Sphere;
@@ -240,6 +252,189 @@ TEST(StaticAttachmentBake, AttachmentsCoexistWithPrimitiveGraph) {
   for (std::size_t i = 0; i < sphere_n; ++i) {
     EXPECT_EQ(baked.vertices[i].color_role, 6U);
   }
+}
+
+auto head_attachment() -> StaticAttachmentSpec {
+
+  static const auto archetype = [] {
+    const std::array<Render::GL::GeneratedEquipmentPrimitive, 1> primitives{{
+        Render::GL::generated_sphere(QVector3D(0.0F, 0.0F, 1.4F), 0.30F, 0U),
+    }};
+    return Render::GL::build_generated_equipment_archetype("test/head_marker",
+                                                           primitives);
+  }();
+
+  const auto bind_palette = Render::Humanoid::humanoid_bind_palette();
+  const auto& bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  return Render::Equipment::build_static_attachment({
+      .archetype = &archetype,
+      .socket_bone_index =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head),
+      .bind_radius = bind_frames.head.radius,
+      .bind_socket_transform =
+          bind_palette[static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Head)],
+  });
+}
+
+TEST(StaticAttachmentBake, TheGeneratedArchetypeActuallyHasDrawsAndBoneRoom) {
+  const std::array<Render::GL::GeneratedEquipmentPrimitive, 1> primitives{{
+      Render::GL::generated_sphere(QVector3D(0.0F, 0.0F, 1.4F), 0.30F, 0U),
+  }};
+  const auto archetype =
+      Render::GL::build_generated_equipment_archetype("test/probe", primitives);
+  const auto& slice = archetype.lods[0];
+  EXPECT_FALSE(slice.draws.empty()) << "the builder produced no draws at all";
+  std::size_t verts = 0;
+  for (const auto& draw : slice.draws) {
+    if (draw.mesh != nullptr) {
+      verts += draw.mesh->get_vertices().size();
+    }
+  }
+  EXPECT_GT(verts, 0U) << "the draws carry no vertices";
+
+  const auto bind = Render::Humanoid::humanoid_bind_palette();
+  const auto spec = head_attachment();
+  EXPECT_LT(static_cast<std::size_t>(spec.socket_bone_index), bind.size())
+      << "the head bone is outside the bind pose, so the baker skips it";
+}
+
+TEST(StaticAttachmentBake, GeneratedGeometryReachesTheBakedMesh) {
+  const RuntimeBakeGuardReset guard;
+  RiggedMeshCache cache;
+  const auto& spec = Render::Humanoid::humanoid_creature_spec();
+  const auto bind = Render::Humanoid::humanoid_bind_palette();
+
+  const auto* bare = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  ASSERT_NE(bare, nullptr);
+  ASSERT_NE(bare->mesh, nullptr);
+  const auto bare_vertices = bare->mesh->vertex_count();
+  ASSERT_GT(bare_vertices, 0U);
+
+  const std::array<StaticAttachmentSpec, 1> attachments{{head_attachment()}};
+  ASSERT_NE(attachments[0].archetype, nullptr);
+
+  const auto* attached =
+      cache.get_or_bake(spec, CreatureLOD::Full, bind, 0, attachments);
+  ASSERT_NE(attached, nullptr);
+  ASSERT_NE(attached->mesh, nullptr);
+
+  EXPECT_NE(attached, bare) << "an attachment changes the key, so it must not hit the "
+                               "cache entry baked without one";
+
+  EXPECT_EQ(attached->mesh->vertex_count(), bare_vertices)
+      << "the body mesh is shared and must not change";
+  ASSERT_FALSE(attached->attachment_meshes.empty())
+      << "the attachment's geometry never made it into a baked mesh";
+  std::size_t attachment_vertices = 0;
+  for (const auto& mesh : attached->attachment_meshes) {
+    ASSERT_NE(mesh, nullptr);
+    attachment_vertices += mesh->vertex_count();
+  }
+  EXPECT_GT(attachment_vertices, 0U);
+}
+
+TEST(StaticAttachmentBake, PrehashedLookupSeesTheAttachmentToo) {
+  const RuntimeBakeGuardReset guard;
+  RiggedMeshCache cache;
+  const auto& spec = Render::Humanoid::humanoid_creature_spec();
+  const auto bind = Render::Humanoid::humanoid_bind_palette();
+
+  const auto* bare = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  ASSERT_NE(bare, nullptr);
+  const auto bare_vertices = bare->mesh->vertex_count();
+
+  const std::array<StaticAttachmentSpec, 1> attachments{{head_attachment()}};
+  const auto hash =
+      Render::Creature::static_attachments_hash(attachments.data(), attachments.size());
+
+  const auto* attached = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0, attachments, hash, 1U, 0U);
+  ASSERT_NE(attached, nullptr);
+  ASSERT_FALSE(attached->attachment_meshes.empty())
+      << "the prehashed path dropped the attachment";
+  EXPECT_GT(attached->attachment_meshes.front()->vertex_count(), 0U);
+  EXPECT_GT(bare_vertices, 0U);
+}
+
+TEST(StaticAttachmentBake, DerivedArchetypeCarriesItsAttachmentIntoTheRenderHandle) {
+  const RuntimeBakeGuardReset guard;
+  auto& registry = Render::Creature::ArchetypeRegistry::instance();
+
+  const auto base_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+  const auto* base_desc = registry.get(base_id);
+  ASSERT_NE(base_desc, nullptr);
+  const auto base_count = base_desc->bake_attachment_count;
+  ASSERT_LT(base_count, Render::Creature::ArchetypeDescriptor::k_max_bake_attachments);
+
+  Render::Creature::ArchetypeDescriptor desc = *base_desc;
+  desc.debug_name = "test/derived_with_marker";
+  desc.bake_attachments[desc.bake_attachment_count++] = head_attachment();
+  const auto derived_id = registry.register_archetype(desc);
+  ASSERT_NE(derived_id, Render::Creature::k_invalid_archetype);
+
+  const auto* derived_desc = registry.get(derived_id);
+  ASSERT_NE(derived_desc, nullptr);
+  EXPECT_EQ(derived_desc->bake_attachment_count, base_count + 1);
+  EXPECT_EQ(derived_desc->attachments_view().size(),
+            static_cast<std::size_t>(base_count + 1));
+
+  bool created = false;
+  const auto handle_id =
+      Render::Creature::Pipeline::CreatureRenderAssetHandleRegistry::instance()
+          .get_or_create(
+              Render::Creature::Pipeline::k_humanoid_sword_asset, derived_id, &created);
+  ASSERT_NE(handle_id, Render::Creature::k_invalid_creature_render_asset_handle)
+      << "the handle registry refused a derived archetype";
+
+  const auto* handle =
+      Render::Creature::Pipeline::CreatureRenderAssetHandleRegistry::instance().get(
+          handle_id);
+  ASSERT_NE(handle, nullptr);
+  EXPECT_TRUE(handle->has_static_attachments);
+  EXPECT_EQ(handle->attachments.size(), static_cast<std::size_t>(base_count + 1));
+  ASSERT_FALSE(handle->attachments.empty());
+  EXPECT_NE(handle->attachments.back().archetype, nullptr)
+      << "the handle's attachment lost its geometry archetype";
+}
+
+TEST(StaticAttachmentBake, SnapshotKeepsTheAttachmentsTheBodyCameWith) {
+  const RuntimeBakeGuardReset guard;
+
+  const std::vector<Render::GL::RiggedVertex> body_vertices(24);
+  const std::vector<std::uint32_t> body_indices{0U, 1U, 2U};
+  const std::vector<Render::GL::RiggedVertex> attachment_vertices(9);
+  const std::vector<std::uint32_t> attachment_indices{0U, 1U, 2U};
+
+  Render::GL::RiggedMeshEntry source;
+  source.mesh = std::make_shared<Render::GL::RiggedMesh>(body_vertices, body_indices);
+  source.attachment_meshes.push_back(std::make_shared<Render::GL::RiggedMesh>(
+      attachment_vertices, attachment_indices));
+
+  auto palettes = std::make_shared<std::vector<QMatrix4x4>>(
+      std::vector<QMatrix4x4>(Render::Humanoid::k_bone_count));
+  source.skin_atlas = std::make_shared<Render::GL::RiggedSkinAtlas>();
+  source.skin_atlas->palette_storage = palettes;
+  source.skin_atlas->palettes = *palettes;
+  source.skin_atlas->frame_total = 1U;
+  source.skin_atlas->bone_count =
+      static_cast<std::uint32_t>(Render::Humanoid::k_bone_count);
+
+  Render::GL::SnapshotMeshCache cache;
+  Render::GL::SnapshotMeshCache::Key key{};
+  key.archetype = 1U;
+  key.clip_id = 7U;
+
+  const auto* snap = cache.get_or_bake(key, source, 0U);
+  ASSERT_NE(snap, nullptr);
+  ASSERT_NE(snap->mesh, nullptr);
+  EXPECT_EQ(snap->mesh->vertex_count(), body_vertices.size());
+
+  ASSERT_EQ(snap->attachment_meshes.size(), source.attachment_meshes.size())
+      << "the snapshot dropped the body's attachments";
+  ASSERT_NE(snap->attachment_meshes.front(), nullptr);
+  EXPECT_EQ(snap->attachment_meshes.front()->vertex_count(),
+            attachment_vertices.size());
+  EXPECT_EQ(snap->attachment_meshes.front()->index_count(), attachment_indices.size());
 }
 
 } // namespace

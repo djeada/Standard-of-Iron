@@ -80,6 +80,47 @@
   ],
   "optional_objectives": [],
   "events": [],
+  "commander_messages": [
+    {
+      "id": "tutorial_marcellus_open",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "tutorial_marcellus_victory",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "tutorial_marcellus_defeat",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
   "include_ambient_undead": false,
   "theme": "Learn the trade of war before Rome comes looking for you."
 }
