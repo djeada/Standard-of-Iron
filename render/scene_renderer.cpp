@@ -242,6 +242,12 @@ void Renderer::end_frame() {
 
       m_backend->execute(render_queue, *m_camera);
     }
+    if (m_gl_backend != nullptr) {
+      const auto& stats = m_gl_backend->last_playback_stats();
+      profile.gpu_shadow_ms = stats.gpu_shadow_ms;
+      profile.gpu_color_ms = stats.gpu_color_ms;
+      profile.gpu_wait_ms = stats.gpu_wait_ms;
+    }
     constexpr double k_frame_budget_ms = 16.67;
     profile.budget_headroom_ms =
         k_frame_budget_ms - static_cast<double>(profile.total_us()) / 1000.0;

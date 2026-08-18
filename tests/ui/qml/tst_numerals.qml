@@ -94,6 +94,38 @@ TestCase {
         compare(Numerals.clock(754), "N:XII:XXXIV");
     }
 
+    function test_a_figure_beyond_the_legible_ceiling_turns_arabic() {
+        compare(Numerals.legible(3999), "MMMCMXCIX");
+        compare(Numerals.legible(4000), "4\u00a0000");
+        compare(Numerals.legible(1284000), "1\u00a0284\u00a0000");
+    }
+
+    function test_grouped_figures_break_into_threes() {
+        compare(Numerals.grouped(7), "7");
+        compare(Numerals.grouped(910), "910");
+        compare(Numerals.grouped(7910), "7\u00a0910");
+        compare(Numerals.grouped(-19260), "-19\u00a0260");
+    }
+
+    function test_a_column_turns_arabic_as_soon_as_one_figure_does() {
+        verify(!Numerals.needsArabic([1, 100, 3999]));
+        verify(Numerals.needsArabic([1, 100, 4000]));
+        verify(!Numerals.needsArabic([]));
+        verify(!Numerals.needsArabic(null));
+    }
+
+    function test_tally_follows_the_system_it_is_handed() {
+        compare(Numerals.tally(12, false), "XII");
+        compare(Numerals.tally(12, true), "12");
+    }
+
+    function test_a_span_names_its_units() {
+        compare(Numerals.span(0), "Ns");
+        compare(Numerals.span(34), "XXXIVs");
+        compare(Numerals.span(754), "XIIm XXXIVs");
+        compare(Numerals.span(3661), "Ih Im");
+    }
+
     function test_non_numeric_input_yields_empty_text() {
         compare(Numerals.roman("not a number"), "");
     }

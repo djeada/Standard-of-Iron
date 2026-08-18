@@ -165,6 +165,8 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrain_shader->uniform_handle("u_macro_noise_scale");
   m_terrain_uniforms.detail_noise_scale =
       m_terrain_shader->optional_uniform_handle("u_detail_noise_scale");
+  m_terrain_uniforms.noise_octaves =
+      m_terrain_shader->optional_uniform_handle("u_noise_octaves");
   m_terrain_uniforms.slope_rock_threshold =
       m_terrain_shader->uniform_handle("u_slope_rock_threshold");
   m_terrain_uniforms.slope_rock_sharpness =

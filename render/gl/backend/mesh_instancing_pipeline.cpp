@@ -4,6 +4,7 @@
 #include <QOpenGLContext>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 
 #include "render/gl/mesh.h"
@@ -14,6 +15,8 @@ namespace Render::GL::BackendPipelines {
 namespace {
 constexpr std::size_t k_initial_capacity = 512;
 constexpr std::size_t k_max_instances_per_batch = 8192;
+
+constexpr std::size_t k_ring_instances = 4U * k_max_instances_per_batch;
 
 constexpr GLuint k_instance_model_col0_loc = 3;
 constexpr GLuint k_instance_model_col1_loc = 4;
@@ -48,12 +51,14 @@ auto MeshInstancingPipeline::initialize() -> bool {
     return false;
   }
 
-  m_instance_capacity = k_initial_capacity;
+  m_instance_capacity = k_max_instances_per_batch;
+  m_ring_capacity_bytes = k_ring_instances * sizeof(MeshInstanceGpu);
+  m_ring_offset_bytes = 0;
   glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
   glBufferData(GL_ARRAY_BUFFER,
-               static_cast<GLsizeiptr>(m_instance_capacity * sizeof(MeshInstanceGpu)),
+               static_cast<GLsizeiptr>(m_ring_capacity_bytes),
                nullptr,
-               GL_DYNAMIC_DRAW);
+               GL_STREAM_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_initialized = true;
@@ -75,6 +80,8 @@ void MeshInstancingPipeline::shutdown() {
 
   m_instances.clear();
   m_instance_capacity = 0;
+  m_ring_capacity_bytes = 0;
+  m_ring_offset_bytes = 0;
   m_current_mesh = nullptr;
   m_current_shader = nullptr;
   m_current_texture = nullptr;
@@ -159,23 +166,7 @@ void MeshInstancingPipeline::flush() {
 
   const std::size_t count = m_instances.size();
 
-  const std::size_t required = std::min(count, k_max_instances_per_batch);
-  if (required > m_instance_capacity) {
-    std::size_t new_capacity = std::max<std::size_t>(m_instance_capacity, 1);
-    while (new_capacity < required) {
-      new_capacity *= 2;
-    }
-    new_capacity = std::min(new_capacity, k_max_instances_per_batch);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
-    glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(new_capacity * sizeof(MeshInstanceGpu)),
-                 nullptr,
-                 GL_DYNAMIC_DRAW);
-    m_instance_capacity = new_capacity;
-  }
-
-  if (m_instance_capacity == 0) {
+  if (m_instance_capacity == 0 || m_ring_capacity_bytes == 0) {
     m_instances.clear();
     return;
   }
@@ -185,17 +176,18 @@ void MeshInstancingPipeline::flush() {
     return;
   }
 
-  setup_instance_attributes();
-
   if (m_current_texture != nullptr) {
     m_current_texture->bind(0);
   }
 
   for (std::size_t offset = 0; offset < count; offset += m_instance_capacity) {
     const std::size_t chunk = std::min(count - offset, m_instance_capacity);
-    const std::size_t resident = upload_instances(m_instances.data() + offset, chunk);
+    std::size_t byte_offset = 0;
+    const std::size_t resident =
+        upload_instances(m_instances.data() + offset, chunk, byte_offset);
     const std::size_t drawable = m_draw_guard.clamp(chunk, resident);
     if (drawable > 0) {
+      setup_instance_attributes(byte_offset);
       m_current_mesh->draw_instanced_raw(drawable);
     }
   }
@@ -224,57 +216,82 @@ auto MeshInstancingPipeline::has_pending() const -> bool {
 }
 
 auto MeshInstancingPipeline::upload_instances(const MeshInstanceGpu* data,
-                                              std::size_t count) -> std::size_t {
+                                              std::size_t count,
+                                              std::size_t& byte_offset) -> std::size_t {
+  byte_offset = 0;
   if (data == nullptr || count == 0 || count > m_instance_capacity ||
       m_instance_buffer == 0) {
     return 0;
   }
 
-  const auto upload_size = static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu));
-
-  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
-  void* mapped = glMapBufferRange(
-      GL_ARRAY_BUFFER, 0, upload_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-  if (mapped != nullptr) {
-    std::memcpy(mapped, data, static_cast<std::size_t>(upload_size));
-    glUnmapBuffer(GL_ARRAY_BUFFER);
-  } else {
-    glBufferSubData(GL_ARRAY_BUFFER, 0, upload_size, data);
+  const std::size_t upload_bytes = count * sizeof(MeshInstanceGpu);
+  if (upload_bytes > m_ring_capacity_bytes) {
+    return 0;
   }
 
+  glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  if (m_ring_offset_bytes + upload_bytes > m_ring_capacity_bytes) {
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(m_ring_capacity_bytes),
+                 nullptr,
+                 GL_STREAM_DRAW);
+    m_ring_offset_bytes = 0;
+  }
+
+  void* mapped = glMapBufferRange(GL_ARRAY_BUFFER,
+                                  static_cast<GLintptr>(m_ring_offset_bytes),
+                                  static_cast<GLsizeiptr>(upload_bytes),
+                                  GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT |
+                                      GL_MAP_UNSYNCHRONIZED_BIT);
+  if (mapped != nullptr) {
+    std::memcpy(mapped, data, upload_bytes);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+  } else {
+    glBufferSubData(GL_ARRAY_BUFFER,
+                    static_cast<GLintptr>(m_ring_offset_bytes),
+                    static_cast<GLsizeiptr>(upload_bytes),
+                    data);
+  }
+
+  byte_offset = m_ring_offset_bytes;
+  m_ring_offset_bytes += upload_bytes;
   return count;
 }
 
-void MeshInstancingPipeline::setup_instance_attributes() {
+void MeshInstancingPipeline::setup_instance_attributes(std::size_t byte_offset) {
   glBindBuffer(GL_ARRAY_BUFFER, m_instance_buffer);
+  const auto base = static_cast<std::uintptr_t>(byte_offset);
 
   const auto stride = static_cast<GLsizei>(sizeof(MeshInstanceGpu));
 
   glEnableVertexAttribArray(k_instance_model_col0_loc);
-  glVertexAttribPointer(k_instance_model_col0_loc,
-                        4,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        stride,
-                        reinterpret_cast<void*>(offsetof(MeshInstanceGpu, model_col0)));
+  glVertexAttribPointer(
+      k_instance_model_col0_loc,
+      4,
+      GL_FLOAT,
+      GL_FALSE,
+      stride,
+      reinterpret_cast<void*>(base + offsetof(MeshInstanceGpu, model_col0)));
   glVertexAttribDivisor(k_instance_model_col0_loc, 1);
 
   glEnableVertexAttribArray(k_instance_model_col1_loc);
-  glVertexAttribPointer(k_instance_model_col1_loc,
-                        4,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        stride,
-                        reinterpret_cast<void*>(offsetof(MeshInstanceGpu, model_col1)));
+  glVertexAttribPointer(
+      k_instance_model_col1_loc,
+      4,
+      GL_FLOAT,
+      GL_FALSE,
+      stride,
+      reinterpret_cast<void*>(base + offsetof(MeshInstanceGpu, model_col1)));
   glVertexAttribDivisor(k_instance_model_col1_loc, 1);
 
   glEnableVertexAttribArray(k_instance_model_col2_loc);
-  glVertexAttribPointer(k_instance_model_col2_loc,
-                        4,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        stride,
-                        reinterpret_cast<void*>(offsetof(MeshInstanceGpu, model_col2)));
+  glVertexAttribPointer(
+      k_instance_model_col2_loc,
+      4,
+      GL_FLOAT,
+      GL_FALSE,
+      stride,
+      reinterpret_cast<void*>(base + offsetof(MeshInstanceGpu, model_col2)));
   glVertexAttribDivisor(k_instance_model_col2_loc, 1);
 
   glEnableVertexAttribArray(k_instance_color_alpha_loc);
@@ -284,7 +301,7 @@ void MeshInstancingPipeline::setup_instance_attributes() {
       GL_FLOAT,
       GL_FALSE,
       stride,
-      reinterpret_cast<void*>(offsetof(MeshInstanceGpu, color_alpha)));
+      reinterpret_cast<void*>(base + offsetof(MeshInstanceGpu, color_alpha)));
   glVertexAttribDivisor(k_instance_color_alpha_loc, 1);
 }
 

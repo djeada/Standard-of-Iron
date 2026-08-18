@@ -23,42 +23,44 @@ void CaptureSystem::update(Engine::Core::World* world, float delta_time) {
   process_barrack_capture(world, delta_time);
 }
 
-auto CaptureSystem::count_nearby_troops(Engine::Core::World* world,
+void CaptureSystem::tally_nearby_troops(const std::vector<Engine::Core::Entity*>& units,
                                         float barrack_x,
                                         float barrack_z,
-                                        int owner_id,
-                                        float radius) -> int {
-  int total_troops = 0;
-  auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
+                                        float radius,
+                                        std::vector<OwnerTroopTally>& out) {
+  out.clear();
+  float const radius_sq = radius * radius;
 
-  for (auto* e : entities) {
-    auto* unit = e->get_component<Engine::Core::UnitComponent>();
-    auto* transform = e->get_component<Engine::Core::TransformComponent>();
+  for (auto* entity : units) {
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
 
     if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0) {
       continue;
     }
-
-    if (unit->owner_id != owner_id) {
-      continue;
-    }
-
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       continue;
     }
 
     float const dx = transform->position.x - barrack_x;
     float const dz = transform->position.z - barrack_z;
-    float const dist_sq = dx * dx + dz * dz;
-
-    if (dist_sq <= radius * radius) {
-      int const production_cost =
-          Game::Units::TroopConfig::instance().get_production_cost(unit->spawn_type);
-      total_troops += production_cost;
+    if ((dx * dx) + (dz * dz) > radius_sq) {
+      continue;
     }
-  }
 
-  return total_troops;
+    int const production_cost =
+        Game::Units::TroopConfig::instance().get_production_cost(unit->spawn_type);
+
+    auto tally = std::find_if(
+        out.begin(), out.end(), [owner_id = unit->owner_id](const OwnerTroopTally& t) {
+          return t.owner_id == owner_id;
+        });
+    if (tally == out.end()) {
+      out.push_back({unit->owner_id, production_cost});
+      continue;
+    }
+    tally->troops += production_cost;
+  }
 }
 
 void CaptureSystem::transfer_barrack_ownership(Engine::Core::World*,
@@ -115,6 +117,14 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
   constexpr int troop_advantage_multiplier = 3;
 
   auto barracks = world->get_entities_with<Engine::Core::BuildingComponent>();
+  if (barracks.empty()) {
+    return;
+  }
+
+  std::vector<Engine::Core::Entity*> units;
+  world->resolve_entities_into(world->entities_with<Engine::Core::UnitComponent>(),
+                               units);
+  std::vector<OwnerTroopTally> tallies;
 
   for (auto* barrack : barracks) {
     auto* unit = barrack->get_component<Engine::Core::UnitComponent>();
@@ -140,32 +150,23 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
     int max_enemy_troops = 0;
     int capturing_player_id = -1;
 
-    auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
-    std::vector<int> player_ids;
-    for (auto* e : entities) {
-      auto* u = e->get_component<Engine::Core::UnitComponent>();
-      if ((u != nullptr) && u->owner_id != barrack_owner_id &&
-          !Game::Core::is_neutral_owner(u->owner_id)) {
-        if (std::find(player_ids.begin(), player_ids.end(), u->owner_id) ==
-            player_ids.end()) {
-          player_ids.push_back(u->owner_id);
-        }
-      }
-    }
-
-    for (int const player_id : player_ids) {
-      int const troop_count =
-          count_nearby_troops(world, barrack_x, barrack_z, player_id, capture_radius);
-      if (troop_count > max_enemy_troops) {
-        max_enemy_troops = troop_count;
-        capturing_player_id = player_id;
-      }
-    }
+    tally_nearby_troops(units, barrack_x, barrack_z, capture_radius, tallies);
 
     int defender_troops = 0;
-    if (!Game::Core::is_neutral_owner(barrack_owner_id)) {
-      defender_troops = count_nearby_troops(
-          world, barrack_x, barrack_z, barrack_owner_id, capture_radius);
+    for (const auto& tally : tallies) {
+      if (tally.owner_id == barrack_owner_id) {
+        if (!Game::Core::is_neutral_owner(barrack_owner_id)) {
+          defender_troops = tally.troops;
+        }
+        continue;
+      }
+      if (Game::Core::is_neutral_owner(tally.owner_id)) {
+        continue;
+      }
+      if (tally.troops > max_enemy_troops) {
+        max_enemy_troops = tally.troops;
+        capturing_player_id = tally.owner_id;
+      }
     }
 
     bool const can_capture =

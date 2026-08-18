@@ -121,9 +121,9 @@ Existing maps without the `groundType` property will continue to work exactly as
 - **Rock High:** Light gray (0.68, 0.69, 0.73)
 
 ### grass_dry
-- **Grass Primary:** Dry yellow-green (0.55, 0.52, 0.30)
-- **Grass Secondary:** Tan-green (0.62, 0.58, 0.35)
-- **Grass Dry:** Golden (0.75, 0.68, 0.42)
+- **Grass Primary:** Muted olive green (0.27, 0.44, 0.20)
+- **Grass Secondary:** Soft olive green (0.38, 0.53, 0.24)
+- **Grass Dry:** Dry olive green (0.50, 0.50, 0.27)
 - **Soil Color:** Sandy brown (0.45, 0.38, 0.28)
 - **Rock Low:** Warm gray (0.58, 0.55, 0.50)
 - **Rock High:** Light warm gray (0.72, 0.70, 0.65)

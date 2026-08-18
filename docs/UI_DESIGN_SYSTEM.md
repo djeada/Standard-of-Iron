@@ -327,6 +327,54 @@ The compact surfaces are the selection summary — an info button and a three-st
 both gated on the readout knowing the unit, so wildlife offers nothing rather than an
 empty panel — and `RecruitCard.qml`, the one card the recruit grid repeats.
 
+## The battle report
+
+`BattleReportLayout` is the after-action screen, opened from the outcome banner's
+**Battle Report** action. `BattleSummary.qml` is the only part that knows about `game`:
+it reads `owner_info` and `get_player_stats`, and hands the layout a plain array of
+armies. That split is why the report can be rendered and asserted in
+`design_system_qml_tests` without a running match.
+
+The screen is a scoreboard, not a stack of per-player cards. Cards forced a reader to
+scan sideways to compare two numbers, and they could not survive more than two players
+without running off the viewport. One table, one row per army, ranked by score, puts
+every comparison on a single horizontal line:
+
+- a **commander strip** — four tiles for the local army, each with a meter reading the
+  value against the best army in that column, so "did I lead the field" is one glance;
+- the **table**, with the local row raised, badged `YOU` and outlined, and every row
+  carrying a faction-coloured stripe plus a score-share gradient behind it;
+- a pinned footer, so the actions are reachable no matter how long the field is.
+
+Two things give way when there is no room, in this order: the optional columns
+(`Trained`, `Villages`) fold away below a narrow sheet width, and the commander strip
+drops below a shallow viewport, because every figure in it is repeated in the table row.
+The decision is taken from the viewport and the army count alone — never from the laid
+out content — so it cannot oscillate against the layout it feeds.
+
+### Roman numerals have a legibility ceiling
+
+`Numerals.roman` will spell any figure up to 19999, and for a score that reads
+`MMMMMMMMMMMMMMMMMMMCCLX` — twenty-three glyphs that overran the card, the sibling card
+and most of the screen. The ceiling that matters is not the one where the algorithm
+stops, it is the one where a reader stops counting M's:
+
+- `Numerals.legibleRomanMax` is **3999**, the last figure the subtractive notation writes
+  without repeating a glyph four times.
+- `Numerals.legible(value)` writes roman below the ceiling and grouped arabic above it.
+- `Numerals.needsArabic(values)` asks the question for a whole column, and
+  `Numerals.tally(value, arabic)` writes one cell in the answer. **A column of figures is
+  compared, so all of its cells use one system** — a table that mixed `CXLVIII` and
+  `12 300` in one column would be worse than either.
+- Group separators are non-breaking spaces, so a grouped figure never wraps mid-number.
+- `Numerals.span(seconds)` is the duration form. The colon form (`Numerals.clock`) turns
+  a play time into `N:XXX:XXXIV`, which reads as three unrelated numerals; `span` names
+  the units instead — `XXXm XXXIVs`.
+
+Counts the player actually accumulates in a match — kills, losses, recruits, villages —
+stay roman in every ordinary game. The score, which multiplies them, is the figure that
+crosses the ceiling, and it is the one that turns arabic.
+
 ## Iconography
 
 `Icons` is the only place an icon is named. It holds two families that are not
@@ -443,6 +491,11 @@ the component belongs in the library first.
   by shape as well as by colour; unknown ids degrade to idle
 - `tst_selection_summary.qml` — the presentation switches at the right army size
 - `tst_campaign_flow.qml` — objective states, briefing sections, outcome kinds
+- `tst_battle_report.qml` — no figure ever spills its cell, a column keeps one numeral
+  system, the sheet stays inside every viewport and scale, and the report folds its
+  optional columns and its commander strip in that order
+- `tst_battle_summary.qml` — the `game` → armies mapping: neutrals excluded, ranking,
+  verdicts, the local commander's colour and faction, and a match it cannot read
 
 They run headless via `ctest -R design_system_qml`, and from `make test`.
 

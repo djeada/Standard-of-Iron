@@ -291,4 +291,80 @@ TEST_F(MissionStageTrackerTest, RestoreKeepsFinishedStepsFinishedAfterALoad) {
   EXPECT_EQ(reloaded.active_index(), 1);
 }
 
+TEST_F(MissionStageTrackerTest, ReportsWhoHoldsTheSettlementAtACaptureTarget) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::MissionStage capture;
+  capture.id = QStringLiteral("take_village");
+  capture.type = QStringLiteral("capture_structures");
+  capture.structure_types = {QStringLiteral("barracks")};
+  capture.required_count = 1;
+  capture.target = Game::Mission::Position{200.0F, 200.0F};
+  mission.stages = {capture};
+
+  auto& world = this->world();
+  auto* village = spawn_unit(
+      world, k_enemy_owner, Game::Units::SpawnType::Barracks, 204.0F, 197.0F);
+  village->add_component<Engine::Core::BuildingComponent>();
+
+  Game::Mission::MissionStageTracker tracker;
+  tracker.configure(mission, k_local_owner, identity_to_world());
+  tracker.update(session(), {});
+
+  ASSERT_EQ(tracker.stages().size(), 1U);
+  EXPECT_TRUE(tracker.stages()[0].target_structure_present)
+      << "a capture target standing on a village must report that village";
+  EXPECT_FALSE(tracker.stages()[0].target_structure_is_local);
+
+  village->get_component<Engine::Core::UnitComponent>()->owner_id = k_local_owner;
+  EXPECT_TRUE(tracker.update(session(), {}));
+  EXPECT_TRUE(tracker.stages()[0].target_structure_present);
+  EXPECT_TRUE(tracker.stages()[0].target_structure_is_local)
+      << "taking the village must show on the stage that pins it";
+}
+
+TEST_F(MissionStageTrackerTest, IgnoresStructuresFarFromTheCaptureTarget) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::MissionStage capture;
+  capture.id = QStringLiteral("take_village");
+  capture.type = QStringLiteral("capture_structures");
+  capture.structure_types = {QStringLiteral("barracks")};
+  capture.target = Game::Mission::Position{200.0F, 200.0F};
+  mission.stages = {capture};
+
+  auto& world = this->world();
+  auto* distant = spawn_unit(
+      world, k_enemy_owner, Game::Units::SpawnType::Barracks, 400.0F, 400.0F);
+  distant->add_component<Engine::Core::BuildingComponent>();
+
+  Game::Mission::MissionStageTracker tracker;
+  tracker.configure(mission, k_local_owner, identity_to_world());
+  tracker.update(session(), {});
+
+  EXPECT_FALSE(tracker.stages()[0].target_structure_present)
+      << "a camp on the far side of the map is not the settlement this stage names";
+}
+
+TEST_F(MissionStageTrackerTest, StagesWithoutATargetReportNoSettlement) {
+  Game::Mission::MissionDefinition mission;
+
+  Game::Mission::MissionStage capture;
+  capture.id = QStringLiteral("capture_any");
+  capture.type = QStringLiteral("capture_structures");
+  capture.structure_types = {QStringLiteral("barracks")};
+  mission.stages = {capture};
+
+  auto& world = this->world();
+  auto* village =
+      spawn_unit(world, k_enemy_owner, Game::Units::SpawnType::Barracks, 5.0F, 5.0F);
+  village->add_component<Engine::Core::BuildingComponent>();
+
+  Game::Mission::MissionStageTracker tracker;
+  tracker.configure(mission, k_local_owner, identity_to_world());
+  tracker.update(session(), {});
+
+  EXPECT_FALSE(tracker.stages()[0].target_structure_present);
+}
+
 } // namespace

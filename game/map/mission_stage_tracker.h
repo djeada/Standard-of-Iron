@@ -27,6 +27,9 @@ struct StageStatus {
   bool complete = false;
   bool active = false;
   bool has_target = false;
+
+  bool target_structure_present = false;
+  bool target_structure_is_local = false;
   QVector3D target;
   std::vector<QVector3D> route;
 };

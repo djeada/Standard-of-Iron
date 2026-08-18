@@ -9,7 +9,7 @@ TestCase {
 
     readonly property var shippedNations: ["roman_republic", "carthage", "iron_sepulcher"]
 
-    readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "build", "heal", "collect", "rally", "deliver", "aura"]
+    readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "build", "heal", "collect", "rally", "deliver", "aura", "stop", "run", "gate", "auto_gather", "repair", "dismantle"]
 
     function test_every_hud_command_has_art_and_a_glyph() {
         for (var i = 0; i < hudCommands.length; ++i) {
@@ -25,7 +25,7 @@ TestCase {
     }
 
     function test_every_resource_and_status_readout_has_art() {
-        var resources = ["gold", "wood", "stone", "iron"];
+        var resources = ["gold", "food", "wood", "stone", "iron"];
         for (var i = 0; i < resources.length; ++i)
             verify(Icons.resource(resources[i]).toString() !== "", resources[i] + " has no icon");
         var statuses = ["population", "human", "ai", "defeated"];

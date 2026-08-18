@@ -62,6 +62,10 @@ struct FrameProfile {
   std::uint64_t triangles{0};
   std::uint64_t instances{0};
 
+  double gpu_shadow_ms{0.0};
+  double gpu_color_ms{0.0};
+  double gpu_wait_ms{0.0};
+
   double budget_headroom_ms{16.67};
   double average_frame_ms{0.0};
   double p95_frame_ms{0.0};
@@ -88,6 +92,9 @@ struct FrameProfile {
     draw_calls = 0;
     triangles = 0;
     instances = 0;
+    gpu_shadow_ms = 0.0;
+    gpu_color_ms = 0.0;
+    gpu_wait_ms = 0.0;
     budget_headroom_ms = 16.67;
   }
 

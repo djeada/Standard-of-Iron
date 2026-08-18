@@ -178,18 +178,25 @@ auto should_queue_chase_command(Engine::Core::Entity* attacker,
                                 Engine::Core::Entity* target,
                                 Engine::Core::TransformComponent* attacker_transform,
                                 Engine::Core::MovementComponent* movement,
-                                const QVector3D& desired_pos) -> bool {
+                                const QVector3D& desired_pos,
+                                float delta_time) -> bool {
   if ((attacker == nullptr) || (target == nullptr) || (attacker_transform == nullptr) ||
       (movement == nullptr)) {
     return false;
   }
 
+  if (!movement->get_has_target() && !movement->has_waypoints()) {
+    return true;
+  }
+
   QVector3D const planned_target(movement->get_goal_x(), 0.0F, movement->get_goal_y());
 
-  float const threshold_sq =
-      Constants::k_new_command_threshold * Constants::k_new_command_threshold;
-  return (!movement->get_has_target() && !movement->has_waypoints()) ||
-         (planned_target - desired_pos).lengthSquared() > threshold_sq;
+  float const frame_scale =
+      std::clamp(delta_time * Constants::k_reference_frames_per_second,
+                 1.0F,
+                 Constants::k_max_chase_threshold_scale);
+  float const threshold = Constants::k_new_command_threshold * frame_scale;
+  return (planned_target - desired_pos).lengthSquared() > threshold * threshold;
 }
 
 void stop_unit_movement(Engine::Core::Entity* unit,
@@ -458,7 +465,7 @@ auto get_base_max_health(const Engine::Core::UnitComponent* unit)
   if (!troop_type_opt) {
     return std::nullopt;
   }
-  auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+  auto const& profile = Game::Systems::TroopProfileService::instance().get_profile_ref(
       unit->nation_id, *troop_type_opt);
   return profile.combat.max_health;
 }
@@ -1501,7 +1508,8 @@ void process_attacks(Engine::Core::World* world,
                                                   target,
                                                   attacker_transform,
                                                   movement,
-                                                  desired_pos)) {
+                                                  desired_pos,
+                                                  delta_time)) {
               chase_move_intents.push_back({attacker->get_id(), desired_pos});
             }
           }

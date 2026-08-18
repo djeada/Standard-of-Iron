@@ -66,6 +66,9 @@ public:
     std::size_t shadow_rigged_instanced_draws{0};
     std::size_t shadow_rigged_instanced_instances{0};
     std::size_t shadow_rigged_single_draws{0};
+    std::size_t shadow_static_single_draws{0};
+    std::size_t shadow_static_instanced_draws{0};
+    std::size_t shadow_static_instanced_instances{0};
     double gpu_shadow_ms{0.0};
     double gpu_color_ms{0.0};
     double gpu_wait_ms{0.0};
@@ -308,8 +311,11 @@ private:
   struct ShadowStaticCaster {
     Mesh* mesh = nullptr;
     const QMatrix4x4* model = nullptr;
+    QVector3D world_center;
+    float world_radius = 0.0F;
   };
   std::vector<ShadowStaticCaster> m_shadow_static_casters;
+  std::vector<const ShadowStaticCaster*> m_shadow_cascade_casters;
 
   std::size_t m_rigged_drawn_this_frame = 0;
   PlaybackStats m_last_playback_stats{};
@@ -317,7 +323,11 @@ private:
   std::array<QMatrix4x4, k_max_shadow_cascades> m_directional_shadow_matrices{};
   std::array<float, k_max_shadow_cascades> m_directional_shadow_splits{};
   Shader* m_directional_shadow_depth_shader = nullptr;
+  Shader* m_directional_shadow_depth_instanced_shader = nullptr;
   Shader* m_directional_shadow_rigged_shader = nullptr;
+  Shader::UniformHandle m_shadow_depth_light_vp = Shader::InvalidUniform;
+  Shader::UniformHandle m_shadow_depth_model = Shader::InvalidUniform;
+  Shader::UniformHandle m_shadow_depth_instanced_light_vp = Shader::InvalidUniform;
 
   QVector3D m_light_dir{0.65F, 0.50F, 0.40F};
   float m_ambient_strength{0.30F};
@@ -330,13 +340,23 @@ private:
   Render::FrameTimeTracker m_frame_tracker;
 
   static constexpr std::size_t k_frames_in_flight = 2;
+  static constexpr std::size_t k_gpu_breakdown_marks = 48;
   struct FrameGpuTiming {
     GLsync fence{nullptr};
-    std::array<GLuint, 3> timestamps{0U, 0U, 0U};
+    std::array<GLuint, 4> timestamps{0U, 0U, 0U, 0U};
+    std::array<GLuint, k_gpu_breakdown_marks> marks{};
+    std::array<std::uint8_t, k_gpu_breakdown_marks> mark_types{};
+    std::size_t mark_count{0};
     bool pending{false};
   };
+  bool m_gpu_breakdown_enabled{false};
+  std::array<double, 32> m_gpu_breakdown_ms{};
+  double m_gpu_breakdown_post_ms{0.0};
+  std::size_t m_gpu_breakdown_frames{0};
+  void gpu_breakdown_mark(FrameGpuTiming& slot, std::uint8_t type);
   std::array<FrameGpuTiming, k_frames_in_flight> m_frame_timings{};
   std::size_t m_frame_timing_slot{0};
+  FrameGpuTiming* m_active_frame_timing{nullptr};
   void wait_for_frame_slot(FrameGpuTiming& slot);
   ShaderQuality m_shader_quality{ShaderQuality::Full};
 };

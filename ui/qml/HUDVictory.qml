@@ -44,6 +44,10 @@ Design.IronOutcomeOverlay {
         id: battleSummary
 
         anchors.fill: parent
+        outcome: victoryOverlay.outcomeKind
+        factionId: victoryOverlay.factionId
+        headline: victoryOverlay.headline
+        subtitle: victoryOverlay.subtitle
         on_close: function () {
             victoryOverlay.showingSummary = false;
         }

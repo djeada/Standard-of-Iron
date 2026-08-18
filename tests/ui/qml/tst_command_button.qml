@@ -47,6 +47,23 @@ TestCase {
         button.destroy();
     }
 
+    function test_icon_only_mode_keeps_the_full_tooltip_label_and_hotkey() {
+        var button = makeButton({
+                "actionId": "patrol",
+                "label": "Patrol",
+                "iconOnly": true,
+                "hotkey": "P",
+                "width": 200,
+                "height": 48
+            });
+        verify(button.compact);
+        verify(!button.showsShortLabel);
+        compare(button.tooltip.title, "Patrol");
+        compare(button.tooltip.hotkey, "P");
+        compare(button.Accessible.name, "Patrol");
+        button.destroy();
+    }
+
     function test_a_partial_selection_states_the_split() {
         var button = makeButton({
                 "actionId": "attack",
