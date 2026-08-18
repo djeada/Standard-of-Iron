@@ -85,6 +85,7 @@
 #include "app/session/skirmish_runtime_coordinator.h"
 #include "app/session/world_bootstrap.h"
 #include "app/utils/engine_view_helpers.h"
+#include "app/viewmodels/commander_message_view_model.h"
 #include "app/viewmodels/save_slots_view_model.h"
 #include "app/world/ambient_state_manager.h"
 #include "app/world/minimap_manager.h"
@@ -293,6 +294,16 @@ void GameEngine::build_client_and_view_models() {
           &GameEngine::load_game_from_slot);
 
   m_wave_view_model = std::make_unique<App::ViewModels::WaveViewModel>(this);
+  m_commander_message_view_model =
+      std::make_unique<App::ViewModels::CommanderMessageViewModel>(this);
+  connect(m_commander_message_view_model.get(),
+          &App::ViewModels::CommanderMessageViewModel::dismiss_requested,
+          this,
+          [this]() {
+            if (m_commander_message_director.dismiss_active()) {
+              publish_commander_message();
+            }
+          });
   m_economy_view_model = std::make_unique<App::ViewModels::EconomyViewModel>(this);
   m_economy_refresh_timer.start();
   m_tutorial_director = std::make_unique<Game::Mission::TutorialDirector>(this);

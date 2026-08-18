@@ -2923,6 +2923,17 @@
         "species": "wolf",
         "source": "field"
       }
+    },
+    {
+      "id": "sfx.alert.commander_message",
+      "path": "sfx/alerts/commander_message.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 600,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
     }
   ]
 }

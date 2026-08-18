@@ -1167,6 +1167,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
         }
       }
     }
+
     bool const transient_recovery_override =
         (soldier_render_anim.is_attacking != anim_ctx.inputs.is_attacking) ||
         (soldier_render_anim.combat_phase != anim_ctx.inputs.combat_phase) ||

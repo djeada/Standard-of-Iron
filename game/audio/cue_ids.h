@@ -53,6 +53,7 @@ inline constexpr const char* k_alert_enemy_reinforcements =
 inline constexpr const char* k_alert_objective_complete = "alert.objective_complete";
 inline constexpr const char* k_alert_objective_failed = "alert.objective_failed";
 inline constexpr const char* k_alert_unit_lost = "alert.unit_lost";
+inline constexpr const char* k_alert_commander_message = "alert.commander_message";
 
 inline constexpr const char* k_combat_hit_sword = "combat.hit.sword";
 inline constexpr const char* k_combat_hit_spear = "combat.hit.spear";
@@ -103,7 +104,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 86> k_all = {
+inline constexpr std::array<const char*, 87> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -145,6 +146,7 @@ inline constexpr std::array<const char*, 86> k_all = {
     k_alert_objective_complete,
     k_alert_objective_failed,
     k_alert_unit_lost,
+    k_alert_commander_message,
     k_combat_hit_sword,
     k_combat_hit_spear,
     k_combat_hit_arrow,

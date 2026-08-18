@@ -208,7 +208,7 @@ Item {
         anchors.top: topPanel.bottom
         anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
 
-        visible: hud.camera_legend_visible && !hud.commander_rpg_mode
+        visible: hud.camera_legend_visible && !hud.commander_rpg_mode && !commanderMessage.showing
         onDismissed: hud.camera_legend_visible = false
         onOpen_settings_requested: {
             hud.camera_legend_visible = false;
@@ -298,6 +298,17 @@ Item {
         activitySource: typeof game !== 'undefined' ? game.activity : null
         camera: typeof game !== 'undefined' ? game.camera : null
         visible: !hud.commander_rpg_mode && Design.A11y.damageNumbers
+    }
+
+    CommanderMessagePanel {
+        id: commanderMessage
+
+        anchors.right: parent.right
+        anchors.rightMargin: Design.Metrics.hudZoneMargin
+        anchors.top: topPanel.bottom
+        anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
+
+        z: 200
     }
 
     HUDVictory {

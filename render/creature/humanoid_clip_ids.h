@@ -114,4 +114,9 @@ inline constexpr std::uint16_t k_humanoid_showcase_rest_sit_down_clip =
 inline constexpr std::uint16_t k_humanoid_showcase_rest_sit_knees_down_clip =
     Animation::k_humanoid_showcase_rest_sit_knees_down_clip;
 
+inline constexpr std::uint16_t k_humanoid_taunt_dismissive_clip =
+    Animation::k_humanoid_taunt_dismissive_clip;
+inline constexpr std::uint16_t k_humanoid_taunt_cynical_clip =
+    Animation::k_humanoid_taunt_cynical_clip;
+
 } // namespace Render::Creature

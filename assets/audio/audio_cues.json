@@ -512,6 +512,18 @@
       "wanted": "Low mournful drum tap or a single dull bell. Rate limited, so it must survive being heard often."
     },
     {
+      "id": "alert.commander_message",
+      "description": "An enemy commander opens a message to the player and the portrait panel slides in.",
+      "category": "sfx",
+      "volume": 0.9,
+      "priority": 7,
+      "cooldown_ms": 600,
+      "resources": [
+        "sfx.alert.commander_message"
+      ],
+      "wanted": "A herald's horn heard from another camp, dark and close-mouthed, then the dry turn of a wax tablet. Under 1.5 s. It announces a speaker; it must not sound like a victory fanfare."
+    },
+    {
       "id": "combat.hit.sword",
       "description": "Sword or gladius lands on a shield or body.",
       "category": "sfx",

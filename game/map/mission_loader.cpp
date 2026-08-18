@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonValue>
 
 namespace Game::Mission {
 
@@ -327,6 +328,106 @@ auto MissionLoader::parse_game_event(const QJsonObject& obj) -> GameEvent {
   return event;
 }
 
+namespace {
+
+auto parse_commander_message_trigger(const QString& value,
+                                     CommanderMessageTrigger& out) -> bool {
+  const QString lowered = value.trimmed().toLower();
+  if (lowered == QStringLiteral("mission_start")) {
+    out = CommanderMessageTrigger::MissionStart;
+    return true;
+  }
+  if (lowered == QStringLiteral("mission_victory")) {
+    out = CommanderMessageTrigger::MissionVictory;
+    return true;
+  }
+  if (lowered == QStringLiteral("mission_defeat")) {
+    out = CommanderMessageTrigger::MissionDefeat;
+    return true;
+  }
+  if (lowered == QStringLiteral("structure_captured")) {
+    out = CommanderMessageTrigger::StructureCaptured;
+    return true;
+  }
+  if (lowered == QStringLiteral("commander_defeated")) {
+    out = CommanderMessageTrigger::CommanderDefeated;
+    return true;
+  }
+  return false;
+}
+
+void parse_commander_message_owner(const QJsonValue& value,
+                                   std::optional<int>& out_owner,
+                                   bool& out_is_local) {
+  if (value.isUndefined() || value.isNull()) {
+    return;
+  }
+  if (value.isString()) {
+    const QString name = value.toString().trimmed().toLower();
+    if (name == QStringLiteral("player") || name == QStringLiteral("local")) {
+      out_is_local = true;
+      return;
+    }
+    bool parsed = false;
+    const int owner = name.toInt(&parsed);
+    if (parsed) {
+      out_owner = owner;
+      return;
+    }
+    qWarning() << "Unknown commander message owner" << value.toString() << "- ignoring";
+    return;
+  }
+  out_owner = value.toInt();
+}
+
+} // namespace
+
+auto MissionLoader::parse_commander_message(const QJsonObject& obj)
+    -> CommanderMessage {
+  CommanderMessage message;
+  message.id = obj["id"].toString();
+  message.speaker = obj["speaker"].toString();
+  message.pose = obj["pose"].toString();
+  message.text = obj["text"].toString();
+  message.voice_cue = obj["voice_cue"].toString();
+
+  const QJsonObject trigger = obj["trigger"].toObject();
+  const QString trigger_type = trigger["type"].toString();
+  if (!parse_commander_message_trigger(trigger_type, message.trigger)) {
+    qWarning() << "Unknown commander message trigger" << trigger_type << "in message"
+               << message.id << "- defaulting to mission_start";
+  }
+
+  parse_commander_message_owner(trigger["owner_id"],
+                                message.condition.owner_id,
+                                message.condition.owner_is_local);
+  parse_commander_message_owner(trigger["by_owner_id"],
+                                message.condition.by_owner_id,
+                                message.condition.by_owner_is_local);
+
+  if (trigger.contains("structure_type")) {
+    message.condition.subject_type = trigger["structure_type"].toString();
+  } else if (trigger.contains("unit_type")) {
+    message.condition.subject_type = trigger["unit_type"].toString();
+  }
+  if (trigger.contains("nation")) {
+    message.condition.nation = trigger["nation"].toString();
+  }
+  if (trigger.contains("at")) {
+    message.condition.at = parse_position(trigger["at"].toObject());
+  }
+  if (trigger.contains("radius")) {
+    message.condition.radius = static_cast<float>(trigger["radius"].toDouble());
+  }
+
+  message.delay = static_cast<float>(trigger["delay"].toDouble(message.delay));
+  message.duration = static_cast<float>(obj["duration"].toDouble(message.duration));
+  message.priority = obj["priority"].toInt(message.priority);
+  message.once = obj["once"].toBool(message.once);
+
+  return message;
+}
+
 auto MissionLoader::load_from_json_file(const QString& file_path,
                                         MissionDefinition& out_mission,
                                         QString* error_msg) -> bool {
@@ -426,6 +527,14 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
     const QJsonArray events = root["events"].toArray();
     for (const auto event_val : events) {
       out_mission.events.push_back(parse_game_event(event_val.toObject()));
+    }
+  }
+
+  if (root.contains("commander_messages")) {
+    const QJsonArray messages = root["commander_messages"].toArray();
+    for (const auto& message_val : messages) {
+      out_mission.commander_messages.push_back(
+          parse_commander_message(message_val.toObject()));
     }
   }
 

@@ -247,6 +247,7 @@ add_executable(
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
     map/mission_stage_tracker_test.cpp
+    map/commander_message_director_test.cpp
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/map_catalog_test.cpp
@@ -390,6 +391,7 @@ add_executable(
     render/creature/creature_visual_definition_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
     render/creature/rigged_mesh_cache_test.cpp
+    render/creature/static_attachment_bake_test.cpp
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp
     render/creature/combat_visual_state_test.cpp

@@ -28,6 +28,7 @@ private:
   static auto parse_event_trigger(const QJsonObject& obj) -> EventTrigger;
   static auto parse_event_action(const QJsonObject& obj) -> EventAction;
   static auto parse_game_event(const QJsonObject& obj) -> GameEvent;
+  static auto parse_commander_message(const QJsonObject& obj) -> CommanderMessage;
 };
 
 } // namespace Game::Mission

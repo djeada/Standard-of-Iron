@@ -572,6 +572,7 @@ void GameEngine::update(float dt) {
 
   update_mission_waves(dt * simulation_time_scale);
   update_mission_stages(dt * simulation_time_scale);
+  update_commander_messages(dt * simulation_time_scale);
 
   RuntimeFrameState frame_state{
       .local_owner_id = m_runtime.local_owner_id,
@@ -1350,6 +1351,7 @@ void GameEngine::apply_mission_setup() {
   m_mission_waves.bind_after_setup(
       mission_wave_binding(), std::move(waves), std::move(events));
   configure_mission_stages();
+  m_commander_message_director.notify_mission_start();
   if (effects.rebuild_entity_cache) {
     GameStateRestorer::rebuild_entity_cache(
         m_world, m_entity_cache, m_runtime.local_owner_id);
@@ -1385,6 +1387,12 @@ void GameEngine::configure_mission_victory_conditions() {
       }
       m_runtime.victory_state = state;
       emit victory_state_changed();
+
+      if (state == "victory") {
+        m_commander_message_director.notify_victory();
+      } else if (state == "defeat") {
+        m_commander_message_director.notify_defeat();
+      }
 
       if (state == "victory" && !m_campaign_manager->current_campaign_id().isEmpty()) {
         m_match_setup_view_model->mark_current_mission_completed();
@@ -1471,6 +1479,7 @@ void GameEngine::reset_mission_runtime_state() {
   m_mission_waves.reset();
   m_mission_stage_tracker.clear();
   m_mission_stage_poll_accumulator = 0.0F;
+  m_commander_message_director.clear();
   m_interaction_targeting = {};
   m_interaction_targeting_accumulator = 0.0F;
   m_interaction_target_hint.clear();
@@ -1479,6 +1488,9 @@ void GameEngine::reset_mission_runtime_state() {
   }
   if (m_mission_view_model) {
     m_mission_view_model->clear();
+  }
+  if (m_commander_message_view_model) {
+    m_commander_message_view_model->clear();
   }
   Game::Systems::PlayerResourceRegistry::instance().clear();
   sync_selected_player_state();
@@ -1560,6 +1572,78 @@ void GameEngine::configure_mission_stages() {
          .cleared_wave_count = m_mission_waves.director().cleared_wave_count()});
   }
   publish_mission_stages();
+  configure_commander_messages();
+}
+
+void GameEngine::configure_commander_messages() {
+  m_commander_message_director.clear();
+  publish_commander_message();
+
+  if (m_campaign_manager == nullptr ||
+      !m_campaign_manager->current_mission_definition().has_value()) {
+    return;
+  }
+
+  m_commander_message_director.configure(
+      *m_campaign_manager->current_mission_definition(),
+      m_runtime.local_owner_id,
+      Game::Mission::make_mission_position_to_world(m_level));
+
+  m_commander_message_director.set_structure_position_lookup(
+      [this](Engine::Core::EntityID id) -> std::optional<QVector3D> {
+        if (m_world == nullptr) {
+          return std::nullopt;
+        }
+        auto* entity = m_world->get_entity(id);
+        if (entity == nullptr) {
+          return std::nullopt;
+        }
+        const auto* transform =
+            entity->get_component<Engine::Core::TransformComponent>();
+        if (transform == nullptr) {
+          return std::nullopt;
+        }
+        return QVector3D(
+            transform->position.x, transform->position.y, transform->position.z);
+      });
+}
+
+void GameEngine::update_commander_messages(float delta_time) {
+  if (!m_commander_message_director.has_messages()) {
+    return;
+  }
+  if (m_commander_message_director.update(delta_time)) {
+    publish_commander_message();
+  }
+}
+
+void GameEngine::publish_commander_message() {
+  if (!m_commander_message_view_model) {
+    return;
+  }
+  if (!m_commander_message_director.has_active()) {
+    m_commander_message_view_model->clear();
+    return;
+  }
+
+  const auto& cue = m_commander_message_director.active();
+  QVariantMap message;
+  message["id"] = cue.id;
+  message["speaker_id"] = cue.speaker_id;
+  message["speaker_name"] =
+      Game::Util::tr_asset(Game::Util::k_commanders_context, cue.speaker_name);
+  message["speaker_role"] =
+      Game::Util::tr_asset(Game::Util::k_commanders_context, cue.speaker_role);
+  message["nation"] = cue.nation;
+  message["pose"] = cue.pose;
+  message["text"] = Game::Util::tr_asset(Game::Util::k_missions_context, cue.text);
+  message["duration"] = cue.duration;
+  message["holds_outcome"] = cue.holds_outcome;
+  m_commander_message_view_model->set_message(message);
+
+  if (!cue.voice_cue.isEmpty()) {
+    Game::Audio::play_cue(cue.voice_cue.toStdString());
+  }
 }
 
 void GameEngine::restore_mission_stages(const QJsonObject& stage_state) {
@@ -1788,7 +1872,8 @@ void GameEngine::begin_save(const QString& slot_name,
            .play_time_seconds = m_mission_waves.elapsed(),
            .autosave_retention = autosave_retention,
            .mission_wave_state = m_mission_waves.director().serialize(),
-           .mission_stage_state = m_mission_stage_tracker.serialize()});
+           .mission_stage_state = m_mission_stage_tracker.serialize(),
+           .commander_message_state = m_commander_message_director.serialize()});
   if (!effects.queued) {
     set_error(effects.error);
     return;
@@ -1883,6 +1968,11 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
            .restore_mission_stages =
                [this](const QJsonObject& stage_state) {
                  restore_mission_stages(stage_state);
+               },
+           .restore_commander_messages =
+               [this](const QJsonObject& message_state) {
+                 m_commander_message_director.restore(message_state);
+                 publish_commander_message();
                }});
   if (!effects.success) {
     set_error(effects.error);
@@ -2456,6 +2546,10 @@ auto GameEngine::placement_view_model() const -> QObject* {
 
 auto GameEngine::wave_view_model() const -> QObject* {
   return m_wave_view_model.get();
+}
+
+auto GameEngine::commander_message_view_model() const -> QObject* {
+  return m_commander_message_view_model.get();
 }
 
 auto GameEngine::mission_view_model() const -> QObject* {
