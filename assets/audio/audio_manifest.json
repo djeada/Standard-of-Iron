@@ -852,8 +852,8 @@
       }
     },
     {
-      "id": "ambient.night_rain",
-      "path": "ambience/night_rain.ogg",
+      "id": "ambient.storm",
+      "path": "ambience/storm.ogg",
       "category": "ambience",
       "volume": 0.5,
       "priority": 1,
@@ -861,8 +861,7 @@
       "load_policy": "lazy",
       "tags": {
         "layer": "weather",
-        "weather": "rain",
-        "variant": "night"
+        "weather": "storm"
       }
     },
     {

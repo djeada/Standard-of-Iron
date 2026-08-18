@@ -256,17 +256,16 @@ BEDS: dict[str, Bed] = {
             )
         ],
     ),
-    "night_rain": Bed(
+    "storm": Bed(
         seconds=22.0,
-        notes="Steady rain at night with close drop impacts, cut from the "
+        notes="Steady storm rain with close drop impacts, cut from the "
         "project's own thunderstorm recording. It runs 16.6 s against a 22 s "
         "bed, so the layer loops. Real rain carries most of its energy in "
         "2-6 kHz and this one is no exception; the shelf pulls it under the "
-        "body so a camp fire can still be heard underneath it, which is the "
-        "whole reason the ambience lane wanted a second rain bed.",
+        "body so a camp fire can still be heard underneath it.",
         layers=[
             Source(
-                url=own("karlsruhe_thunderstorm_2026-07-16.ogg"),
+                url=own("storm.ogg"),
                 origin="Own recording, Karlsruhe, 16 July 2026",
                 licence=OWN_WORK,
                 start=0.6,

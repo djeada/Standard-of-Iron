@@ -76,7 +76,7 @@
     "gain": 1.35,
     "beds": [
       {
-        "file": "assets/audio/ambience/night_rain.ogg",
+        "file": "assets/audio/ambience/storm.ogg",
         "gain": 0.72
       },
       {

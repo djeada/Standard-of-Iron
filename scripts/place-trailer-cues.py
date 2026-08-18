@@ -75,7 +75,7 @@ CUES: list[tuple[str, float, str, float]] = [
     ("siege_range", 1.60, SFX + "combat/stone_impact_01.ogg", 0.85),
     ("wall_falls", -0.20, SFX + "combat/elephant_charge_carthage.ogg", 0.95),
     ("wall_falls", 2.10, SFX + "build/building_destroyed.ogg", 0.85),
-    ("storm_charge", 0.10, AMB + "weather_rain.ogg", 0.50),
+    ("storm_charge", 0.10, AMB + "storm.ogg", 0.50),
     ("storm_charge", 0.70, SFX + "combat/roman_cavalry_charge.ogg", 0.85),
     ("lines_collide", -0.20, SFX + "combat/roman_shield_wall_impact.ogg", 1.00),
     ("lines_collide", 1.40, SFX + "combat/battlefield_crowd_chaos.ogg", 0.62),
