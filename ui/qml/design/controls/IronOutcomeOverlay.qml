@@ -7,6 +7,7 @@ Item {
     property string victoryState: ""
     property bool isCampaignMission: false
     property bool campaignCompleted: false
+    property bool isTutorial: false
 
     default property alias detail: detailHost.data
 
@@ -17,11 +18,15 @@ Item {
 
     property bool manuallyHidden: false
 
+    property bool held: false
+
     readonly property bool decided: root.victoryState !== ""
 
     readonly property string outcomeKind: {
         if (root.victoryState !== "victory")
             return "defeat";
+        if (root.isTutorial)
+            return "training";
         return (root.isCampaignMission && root.campaignCompleted) ? "campaign" : "victory";
     }
 
@@ -29,6 +34,8 @@ Item {
         switch (root.outcomeKind) {
         case "campaign":
             return qsTr("The Campaign is Won");
+        case "training":
+            return qsTr("Training Complete");
         case "victory":
             return qsTr("Victory Secured");
         }
@@ -39,13 +46,18 @@ Item {
         switch (root.outcomeKind) {
         case "campaign":
             return qsTr("Every mission has fallen to your standard.");
+        case "training":
+            return qsTr("You can run an army now. The Barcid Road is waiting.");
         case "victory":
             return qsTr("Enemy command has fallen.");
         }
         return qsTr("Your command has collapsed.");
     }
 
+    property string secondaryAction: root.outcomeKind === "training" ? qsTr("March the Campaign") : ""
+
     signal reportRequested
+    signal secondaryRequested
 
     function reset() {
         root.showingSummary = false;
@@ -65,7 +77,7 @@ Item {
     }
 
     anchors.fill: parent
-    visible: !root.manuallyHidden && root.decided
+    visible: !root.manuallyHidden && root.decided && !root.held
     z: 100
 
     onVictoryStateChanged: root.onOutcomeChanged()
@@ -88,10 +100,12 @@ Item {
             headline: root.headline
             subtitle: root.subtitle
             primaryAction: root.primaryAction
+            secondaryAction: root.secondaryAction
             onPrimaryActivated: {
                 root.showingSummary = true;
                 root.reportRequested();
             }
+            onSecondaryActivated: root.secondaryRequested()
         }
     }
 

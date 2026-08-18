@@ -2,7 +2,7 @@
   "app/audio": 2,
   "app/commander": 9,
   "app/core": 19,
-  "app/economy": 19,
+  "app/economy": 15,
   "app/mission": 2,
   "app/orders": 2,
   "app/persistence": 8,

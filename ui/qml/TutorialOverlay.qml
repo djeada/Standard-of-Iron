@@ -18,6 +18,23 @@ Item {
     signal pause_requested
     signal help_requested
 
+    readonly property bool can_show_target: tutorial !== null && tutorial.has_focus_point
+
+    function look_at_focus() {
+        if (!root.can_show_target || typeof game === 'undefined' || !game.camera || !game.camera.look_at_world)
+            return;
+        var points = root.tutorial.focus_points;
+        if (!points || points.length === 0)
+            return;
+        var sum_x = 0;
+        var sum_z = 0;
+        for (var i = 0; i < points.length; ++i) {
+            sum_x += points[i].world_x || 0;
+            sum_z += points[i].world_z || 0;
+        }
+        game.camera.look_at_world(sum_x / points.length, sum_z / points.length);
+    }
+
     visible: active
     implicitWidth: panelWidth
     implicitHeight: collapsed ? collapsedBar.implicitHeight : Math.min(card.implicitHeight, max_height)
@@ -225,6 +242,14 @@ Item {
                         tone: root.game_is_paused ? "primary" : "secondary"
                         implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
                         onClicked: root.pause_requested()
+                    }
+
+                    Design.IronButton {
+                        text: qsTr("Show me")
+                        tone: "secondary"
+                        implicitWidth: Math.max(88, contentItem.implicitWidth + Design.Metrics.space16)
+                        visible: root.can_show_target && !root.tutorial.step_complete
+                        onClicked: root.look_at_focus()
                     }
 
                     Design.IronButton {

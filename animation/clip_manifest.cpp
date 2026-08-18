@@ -483,11 +483,20 @@ auto authored_humanoid_clip_markers(
 }
 
 auto humanoid_showcase_clip(std::uint8_t showcase_move) noexcept -> std::uint16_t {
-  if (showcase_move == 0U || showcase_move > k_humanoid_showcase_clip_count) {
+  if (showcase_move == 0U) {
     return k_unmapped_clip;
   }
-  return static_cast<std::uint16_t>(k_humanoid_showcase_first_clip + showcase_move -
-                                    1U);
+  if (showcase_move <= k_humanoid_showcase_clip_count) {
+    return static_cast<std::uint16_t>(k_humanoid_showcase_first_clip + showcase_move -
+                                      1U);
+  }
+
+  const std::uint8_t taunt_ordinal =
+      static_cast<std::uint8_t>(showcase_move - k_humanoid_showcase_clip_count - 1U);
+  if (taunt_ordinal < k_humanoid_taunt_clip_count) {
+    return static_cast<std::uint16_t>(k_humanoid_taunt_first_clip + taunt_ordinal);
+  }
+  return k_unmapped_clip;
 }
 
 auto authored_generic_clip_markers(std::string_view clip_name) noexcept -> ClipMarkers {

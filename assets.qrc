@@ -14,6 +14,7 @@
         <file>assets/shaders/include/rigged_gpu_skin.glsl</file>
         <file>assets/shaders/include/activity_indicator.glsl</file>
         <file>assets/shaders/directional_shadow_depth.vert</file>
+        <file>assets/shaders/directional_shadow_depth_instanced.vert</file>
         <file>assets/shaders/directional_shadow_rigged.vert</file>
         <file>assets/shaders/directional_shadow_depth.frag</file>
         <file>assets/shaders/basic.frag</file>
@@ -165,6 +166,7 @@
              executable ~10 MB it never read. -->
         <file>assets/audio/audio_cues.json</file>
         <file>assets/audio/audio_manifest.json</file>
+        <file>assets/audio/sfx/alerts/commander_message.ogg</file>
         <file>assets/audio/sfx/alerts/enemy_reinforcements_warning.ogg</file>
         <file>assets/audio/sfx/alerts/enemy_spotted_horn.ogg</file>
         <file>assets/audio/sfx/alerts/low_resources_click.ogg</file>
@@ -389,6 +391,17 @@
         <file>assets/visuals/icons/catapult_cartaghe.png</file>
         <file>assets/visuals/icons/ballista_rome.png</file>
         <file>assets/visuals/icons/ballista_cartaghe.png</file>
+        <file>assets/visuals/icons/roman_legion_organizer_rome.png</file>
+        <file>assets/visuals/icons/roman_veteran_consul_rome.png</file>
+        <file>assets/visuals/icons/roman_field_commander_rome.png</file>
+        <file>assets/visuals/icons/carthage_spear_commander_cartaghe.png</file>
+        <file>assets/visuals/icons/carthage_bow_commander_cartaghe.png</file>
+        <file>assets/visuals/icons/carthage_sword_commander_cartaghe.png</file>
+        <file>assets/visuals/icons/skeleton_swordsman.png</file>
+        <file>assets/visuals/icons/skeleton_archer.png</file>
+        <file>assets/visuals/icons/grave_priest.png</file>
+        <file>assets/visuals/icons/sheep.png</file>
+        <file>assets/visuals/icons/wolf.png</file>
         <file>assets/visuals/icons/elephant_cartaghe.png</file>
         <file>assets/visuals/icons/builder_rome.png</file>
         <file>assets/visuals/icons/builder_cartaghe.png</file>
@@ -397,9 +410,13 @@
         <file>assets/visuals/icons/wall_cartaghe.png</file>
         <file>assets/visuals/icons/house_rome.png</file>
         <file>assets/visuals/icons/house_cartaghe.png</file>
+        <file>assets/visuals/icons/barracks_rome.png</file>
+        <file>assets/visuals/icons/barracks_cartaghe.png</file>
         <file>assets/visuals/icons/marketplace.png</file>
         <file>assets/visuals/icons/defense_tower_rome.png</file>
         <file>assets/visuals/icons/defense_tower_cartaghe.png</file>
+        <file>assets/visuals/icons/temple_rome.png</file>
+        <file>assets/visuals/icons/temple_cartaghe.png</file>
         <file>assets/visuals/icons/attack_mode.png</file>
         <file>assets/visuals/icons/defend_mode.png</file>
         <file>assets/visuals/icons/hold_mode.png</file>
@@ -411,6 +428,12 @@
         <file>assets/visuals/icons/rally_mode.png</file>
         <file>assets/visuals/icons/deliver_mode.png</file>
         <file>assets/visuals/icons/aura_mode.png</file>
+        <file>assets/visuals/icons/stop_mode.png</file>
+        <file>assets/visuals/icons/run_mode.png</file>
+        <file>assets/visuals/icons/gate_mode.png</file>
+        <file>assets/visuals/icons/auto_gather_mode.png</file>
+        <file>assets/visuals/icons/repair_mode.png</file>
+        <file>assets/visuals/icons/dismantle_mode.png</file>
         <file>assets/visuals/icons/gold.png</file>
         <file>assets/visuals/icons/food.png</file>
         <file>assets/visuals/icons/wood.png</file>

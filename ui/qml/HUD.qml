@@ -35,6 +35,7 @@ Item {
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
     signal return_to_main_menu_requested
+    signal campaign_requested
     signal hud_became_visible
     signal help_requested
 
@@ -208,7 +209,7 @@ Item {
         anchors.top: topPanel.bottom
         anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
 
-        visible: hud.camera_legend_visible && !hud.commander_rpg_mode
+        visible: hud.camera_legend_visible && !hud.commander_rpg_mode && !commanderMessage.showing
         onDismissed: hud.camera_legend_visible = false
         onOpen_settings_requested: {
             hud.camera_legend_visible = false;
@@ -291,6 +292,18 @@ Item {
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked && Design.A11y.damageNumbers
     }
 
+    TutorialFocusOverlay {
+        id: tutorialFocusOverlay
+
+        anchors.fill: parent
+        camera: typeof game !== 'undefined' ? game.camera : null
+        points: (typeof game !== 'undefined' && game.tutorial && game.tutorial.active) ? game.tutorial.focus_points : []
+        topInset: topPanel.height
+        bottomInset: bottomPanel.height
+        z: 1
+        visible: !hud.commander_rpg_mode && points.length > 0
+    }
+
     CombatDamageNumbers {
         id: combatDamageNumbers
 
@@ -300,12 +313,26 @@ Item {
         visible: !hud.commander_rpg_mode && Design.A11y.damageNumbers
     }
 
+    CommanderMessagePanel {
+        id: commanderMessage
+
+        anchors.right: parent.right
+        anchors.rightMargin: Design.Metrics.hudZoneMargin
+        anchors.top: topPanel.bottom
+        anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
+
+        z: 200
+    }
+
     HUDVictory {
         id: hudVictory
 
         anchors.fill: parent
         onReturn_to_main_menu_requested: {
             hud.return_to_main_menu_requested();
+        }
+        onCampaign_requested: {
+            hud.campaign_requested();
         }
 
         Connections {

@@ -4,12 +4,14 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMetaObject>
 #include <QOpenGLContext>
+#include <QOpenGLDebugLogger>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QOpenGLFunctions>
@@ -25,6 +27,7 @@
 #include <qtmetamacros.h>
 
 #include <algorithm>
+#include <ctime>
 #include <deque>
 #include <exception>
 #include <numeric>
@@ -143,6 +146,29 @@ void GLView::notify_renderer_ready() {
   emit renderer_ready();
 }
 
+namespace {
+
+struct FrameGate {
+  GameEngine* engine = nullptr;
+
+  ~FrameGate() {
+    if (engine != nullptr) {
+      engine->end_render_frame();
+    }
+  }
+};
+
+auto render_thread_cpu_ms() -> double {
+  timespec now{};
+  if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now) != 0) {
+    return 0.0;
+  }
+  return static_cast<double>(now.tv_sec) * 1000.0 +
+         static_cast<double>(now.tv_nsec) / 1.0e6;
+}
+
+} // namespace
+
 GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engine)
     : m_view(std::move(view))
     , m_engine(std::move(engine)) {
@@ -178,6 +204,41 @@ void GLView::GLRenderer::render() {
   }
 
   try {
+    if (!m_gl_debug_checked) {
+      m_gl_debug_checked = true;
+      if (qEnvironmentVariableIntValue("SOI_GL_DEBUG") != 0 &&
+          ctx->hasExtension(QByteArrayLiteral("GL_KHR_debug"))) {
+        m_gl_debug_logger = std::make_unique<QOpenGLDebugLogger>();
+        if (m_gl_debug_logger->initialize()) {
+          QObject::connect(
+              m_gl_debug_logger.get(),
+              &QOpenGLDebugLogger::messageLogged,
+              m_gl_debug_logger.get(),
+              [](const QOpenGLDebugMessage& message) {
+                static QHash<GLuint, int> seen;
+                const int count = ++seen[message.id()];
+                if (count <= 3 || (count % 1000) == 0) {
+                  qWarning().noquote() << "GLDEBUG#" << message.id() << "x" << count
+                                       << message.message();
+                }
+              },
+              Qt::DirectConnection);
+          m_gl_debug_logger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
+          qInfo() << "GLDEBUG logging started";
+        } else {
+          qWarning() << "GLDEBUG: logger failed to initialize";
+          m_gl_debug_logger.reset();
+        }
+      }
+    }
+
+    if (!m_engine->try_begin_render_frame()) {
+
+      update();
+      return;
+    }
+    const FrameGate frame_gate{m_engine};
+
     m_engine->ensure_initialized();
     if (!m_engine->renderer_initialized()) {
       qCritical() << "GLRenderer::render() - gameplay renderer initialization failed";
@@ -193,17 +254,20 @@ void GLView::GLRenderer::render() {
     m_last_frame_time = now;
 
     auto const frame_work_start = std::chrono::steady_clock::now();
+    const double thread_cpu_start_ms = render_thread_cpu_ms();
     m_engine->update(dt);
     auto const update_end = std::chrono::steady_clock::now();
     m_engine->render(m_size.width(), m_size.height());
     auto const render_end = std::chrono::steady_clock::now();
+    const double thread_cpu_end_ms = render_thread_cpu_ms();
 
     observe_runtime_continuity();
     observe_runtime_benchmark(
         frame_work_start,
         std::chrono::duration<double, std::milli>(update_end - frame_work_start)
             .count(),
-        std::chrono::duration<double, std::milli>(render_end - update_end).count());
+        std::chrono::duration<double, std::milli>(render_end - update_end).count(),
+        thread_cpu_end_ms - thread_cpu_start_ms);
 
     if (m_engine->consume_screenshot_request()) {
       if (auto* fbo = framebufferObject()) {
@@ -335,7 +399,8 @@ void GLView::GLRenderer::observe_runtime_continuity() {
 void GLView::GLRenderer::observe_runtime_benchmark(
     std::chrono::steady_clock::time_point frame_start,
     double update_ms,
-    double render_ms) {
+    double render_ms,
+    double thread_cpu_ms) {
   if (m_benchmark_seconds <= 0.0 || m_benchmark_complete || m_engine == nullptr ||
       m_engine->is_loading() || !m_engine->match_setup()->is_campaign_mission()) {
     return;
@@ -357,6 +422,7 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   m_benchmark_frame_work_ms.push_back(update_ms + render_ms);
   m_benchmark_update_ms.push_back(update_ms);
   m_benchmark_render_ms.push_back(render_ms);
+  m_benchmark_thread_cpu_ms.push_back(thread_cpu_ms);
   m_benchmark_wall_interval_ms.push_back(
       std::chrono::duration<double, std::milli>(frame_start -
                                                 m_benchmark_previous_frame_time)
@@ -366,6 +432,9 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   auto const& profile = Render::Profiling::global_profile();
   m_benchmark_draw_calls += profile.draw_calls;
   m_benchmark_visible_soldiers += profile.visible_soldiers;
+  m_benchmark_gpu_shadow_ms.push_back(profile.gpu_shadow_ms);
+  m_benchmark_gpu_color_ms.push_back(profile.gpu_color_ms);
+  m_benchmark_gpu_wait_ms.push_back(profile.gpu_wait_ms);
 
   if (ready_seconds >= k_runtime_benchmark_warmup_seconds + m_benchmark_seconds) {
     finish_runtime_benchmark();
@@ -394,7 +463,13 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
       {QStringLiteral("presented_fps"),
        average_wall > 0.0 ? 1000.0 / average_wall : 0.0},
       {QStringLiteral("update_ms_average"), average_ms(m_benchmark_update_ms)},
+      {QStringLiteral("thread_cpu_ms_average"), average_ms(m_benchmark_thread_cpu_ms)},
+      {QStringLiteral("thread_cpu_ms_p95"),
+       percentile_ms(m_benchmark_thread_cpu_ms, 0.95)},
       {QStringLiteral("render_ms_average"), average_ms(m_benchmark_render_ms)},
+      {QStringLiteral("gpu_shadow_ms_average"), average_ms(m_benchmark_gpu_shadow_ms)},
+      {QStringLiteral("gpu_color_ms_average"), average_ms(m_benchmark_gpu_color_ms)},
+      {QStringLiteral("gpu_wait_ms_average"), average_ms(m_benchmark_gpu_wait_ms)},
       {QStringLiteral("draw_calls_average"),
        sample_count > 0.0 ? static_cast<double>(m_benchmark_draw_calls) / sample_count
                           : 0.0},

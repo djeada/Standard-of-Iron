@@ -208,34 +208,14 @@
     </message>
 </context>
 <context>
-    <name>BattleSummary</name>
-    <message>
-        <source>SCORE</source>
-        <translation>PUNTUACIÓN</translation>
-    </message>
-    <message>
-        <source>YOU</source>
-        <translation>TÚ</translation>
-    </message>
+    <name>BattleReportLayout</name>
     <message>
         <source>Return to Menu</source>
         <translation>Volver al menú</translation>
     </message>
     <message>
-        <source>Victory Secured</source>
-        <translation>Victoria asegurada</translation>
-    </message>
-    <message>
-        <source>Army Broken</source>
-        <translation>Ejército quebrado</translation>
-    </message>
-    <message>
-        <source>Held the Field</source>
-        <translation>Campo mantenido</translation>
-    </message>
-    <message>
-        <source>Routed</source>
-        <translation>Derrotado</translation>
+        <source>Close Report</source>
+        <translation>Cerrar informe</translation>
     </message>
     <message>
         <source>Kills</source>
@@ -246,20 +226,44 @@
         <translation>Bajas propias</translation>
     </message>
     <message>
-        <source>Units trained</source>
-        <translation>Unidades adiestradas</translation>
+        <source>Trained</source>
+        <translation>Adiestradas</translation>
     </message>
     <message>
         <source>Villages</source>
         <translation>Aldeas</translation>
     </message>
     <message>
-        <source>Play time</source>
-        <translation>Tiempo de juego</translation>
+        <source>Held the Field</source>
+        <translation>Campo mantenido</translation>
     </message>
     <message>
-        <source>Back</source>
-        <translation>Atrás</translation>
+        <source>Routed</source>
+        <translation>Derrotado</translation>
+    </message>
+    <message>
+        <source>YOUR COMMAND</source>
+        <translation>TU MANDO</translation>
+    </message>
+    <message>
+        <source>ARMIES OF THE FIELD</source>
+        <translation>EJÉRCITOS DEL CAMPO</translation>
+    </message>
+    <message>
+        <source>Score</source>
+        <translation>Puntuación</translation>
+    </message>
+    <message>
+        <source>Army</source>
+        <translation>Ejército</translation>
+    </message>
+    <message>
+        <source>YOU</source>
+        <translation>TÚ</translation>
+    </message>
+    <message>
+        <source>Esc closes the report</source>
+        <translation>Esc cierra el informe</translation>
     </message>
 </context>
 <context>
@@ -5708,6 +5712,21 @@ para ver la vista previa</translation>
     <message>
         <source>Testudo</source>
         <translation>Testudo</translation>
+    </message>
+</context>
+<context>
+    <name>Numerals</name>
+    <message>
+        <source>%1h %2m</source>
+        <translation>%1 h %2 min</translation>
+    </message>
+    <message>
+        <source>%1m %2s</source>
+        <translation>%1 min %2 s</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1 s</translation>
     </message>
 </context>
 <context>

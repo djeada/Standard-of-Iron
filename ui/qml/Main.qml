@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Window 2.15
 import StandardOfIron 1.0
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
 
 ApplicationWindow {
@@ -17,6 +18,7 @@ ApplicationWindow {
 
     property bool capture_view_ready: false
     property bool capture_view_settled: false
+    property bool capture_tutorial_requested: false
 
     function show_view(name) {
         mainWindow.suppress_modals = true;
@@ -31,9 +33,20 @@ ApplicationWindow {
         save_game_panel.visible = (name === "save");
         objectivesPanel.visible = (name === "briefing");
         help_panel.visible = (name === "help");
-        if (name === "hud" || name === "rpg") {
+        commander_preview.visible = (name === "commander");
+        if (name === "hud" || name === "rpg" || name === "tutorial") {
             mainWindow.game_started = true;
             mainWindow.menu_visible = false;
+        }
+        if (name === "tutorial") {
+            var tutorial = (typeof game !== 'undefined') ? game.tutorial : null;
+            if (tutorial && !mainWindow.capture_tutorial_requested) {
+                mainWindow.capture_tutorial_requested = true;
+                mainWindow.start_tutorial();
+            }
+            mainWindow.capture_view_ready = !!tutorial && tutorial.active && !game.is_loading;
+            mainWindow.sync_audio_context();
+            return;
         }
         if (name === "rpg") {
             mainWindow.game_paused = false;
@@ -158,6 +171,11 @@ ApplicationWindow {
         }
         onReturn_to_main_menu_requested: {
             mainWindow.menu_visible = true;
+        }
+        onCampaign_requested: {
+            mainWindow.menu_visible = false;
+            campaign_screen.visible = true;
+            mainWindow.sync_audio_context();
         }
         onHelp_requested: mainWindow.open_help(false)
         onCamera_settings_requested: mainWindow.show_view("settings")
@@ -543,6 +561,41 @@ ApplicationWindow {
         }
     }
 
+    Item {
+        id: commander_preview
+
+        anchors.fill: parent
+        z: 40
+        visible: false
+
+        readonly property QtObject stub: QtObject {
+            property bool active: true
+            property string message_id: "preview"
+            property string speaker_name: "Marcus Claudius Marcellus"
+            property string speaker_role: "Roman field commander"
+            property string nation: "roman_republic"
+            property string speaker_id: "roman_field_commander"
+            property string pose: "dismissive"
+            property string text: qsTr("A new standard in the valley, and nobody under it who has held a spear more than twice.")
+            property real duration: 9.0
+            property bool holds_outcome: false
+
+            function dismiss() {
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: Design.Theme.backgroundDeep
+        }
+
+        CommanderMessagePanel {
+            anchors.centerIn: parent
+            scale: 2.0
+            source: commander_preview.stub
+        }
+    }
+
     SaveProgressOverlay {
         id: save_progress_overlay
 
@@ -677,6 +730,14 @@ ApplicationWindow {
             if (game)
                 game.clear_error();
         }
+    }
+
+    Connections {
+        function onTutorial_finished() {
+            Core.UiPreferences.tutorialCompleted = true;
+        }
+
+        target: (typeof game !== 'undefined' && game) ? game.tutorial : null
     }
 
     Connections {

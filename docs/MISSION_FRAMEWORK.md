@@ -706,6 +706,148 @@ Timed or state-based triggers for dynamic gameplay:
 ]
 ```
 
+### Commander messages
+
+An enemy commander can speak to the player mid-battle: a portrait panel below the
+minimap, a subtitle, and a herald cue. Missions author the lines and say what
+they answer to under a top-level `commander_messages` array.
+
+```json
+"commander_messages": [
+  {
+    "id": "scipio_rhone_open",
+    "speaker": "roman_veteran_consul",
+    "pose": "dismissive",
+    "trigger": { "type": "mission_start", "delay": 2.5 },
+    "text": "So. The Barcid crawls down to the Rhone...",
+    "voice_cue": "alert.commander_message",
+    "duration": 13.0,
+    "priority": 100
+  }
+]
+```
+
+| Field       | Meaning                                                                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`        | Stable name. Saves record which lines are spent by id.                                                                                                             |
+| `speaker`   | A commander troop type (`game/units/commander_catalog.cpp`). The display name, battlefield role and nation come from the catalogue, so a line never restates them. |
+| `portrait`  | Art stem under `assets/visuals/`. Optional -- without a matching file the panel falls back to the speaker's nation mark.                                           |
+| `text`      | The line. Extracted for translation, so write it in English and never bake it into art.                                                                            |
+| `voice_cue` | Cue id played when the panel opens. Optional.                                                                                                                      |
+| `duration`  | Seconds the panel holds. Defaults to nine.                                                                                                                         |
+| `priority`  | Higher wins when two lines are ready at once; the loser waits its turn.                                                                                            |
+| `once`      | Defaults to `true`. Set `false` for a line that may repeat.                                                                                                        |
+
+`trigger.type` is one of:
+
+| Trigger              | Fires when                                                     |
+| -------------------- | -------------------------------------------------------------- |
+| `mission_start`      | The mission's forces are placed and the battle begins.         |
+| `mission_victory`    | The victory service resolves the mission as won.               |
+| `mission_defeat`     | The victory service resolves the mission as lost.              |
+| `structure_captured` | A barrack changes hands (`BarrackCapturedEvent`).              |
+| `commander_defeated` | A commander dies (`UnitDiedEvent` for a catalogued commander). |
+
+Every shipped mission authors at least these three -- `mission_start`,
+`mission_victory` and `mission_defeat` -- and
+`MissionAssetRulesTest.EveryMissionOpensAndClosesInACommandersVoice` fails the
+build if a new one does not.
+
+The two closing lines **hold the outcome banner**. `IronOutcomeOverlay` takes a
+`held` flag, `HUDVictory` binds it to `game.commander_message.holds_outcome`, and
+the banner -- with the Battle Report button on it, and the report behind that --
+stays off screen until the line has finished or the player clicks it away. So the
+commander who just lost gets the last word before the summary appears, and a
+player in a hurry is one click from the report either way.
+
+Every trigger takes `delay` (seconds of battle time before the line shows, so it
+never runs down behind a loading screen or a pause). The two event triggers also
+take filters, and a line fires only when all of them match:
+
+| Filter           | Applies to           | Meaning                                                                                                        |
+| ---------------- | -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `owner_id`       | both                 | Who owned the camp, or the fallen commander. `"player"` means the local player.                                |
+| `by_owner_id`    | both                 | Who took it, or who landed the kill. `"player"` likewise.                                                      |
+| `structure_type` | `structure_captured` | Restricts to one building type.                                                                                |
+| `unit_type`      | `commander_defeated` | Restricts to one commander troop type.                                                                         |
+| `nation`         | `commander_defeated` | The fallen commander's nation, read from the catalogue.                                                        |
+| `at` + `radius`  | `structure_captured` | Mission-space position of the camp this line is about. Without it, any camp matching the owner filters counts. |
+
+So "the village that belongs to owner 3 is taken by the player" is:
+
+```json
+"trigger": { "type": "structure_captured", "owner_id": 3, "by_owner_id": "player" }
+```
+
+The portrait is not a painting. `ui/commander_portrait_view.h` is a
+`QQuickFramebufferObject` that draws the real commander -- the same model the
+battle draws -- with the game's own renderer, in a one-entity world of its own.
+The body language comes from `taunt_dismissive` and `taunt_cynical`, two moves
+authored in `animation/showcase_pose_manifest.cpp` and baked into every humanoid
+BPAT profile by `bpat_baker` at build time; the runtime only picks a clip and a
+phase, which is why a talking head costs less than one soldier in a battle. The
+scene is built on the first frame a line appears and torn down when it closes,
+so an idle portrait holds no world, no renderer and no GPU resources.
+
+Adding a taunt costs 2,104 bytes per frame in each of the six humanoid bake
+profiles -- the two shipped ones come to about 2 MB across the set. That is the
+price of a commander of any profile being able to play them; a portrait-only
+species would be cheaper but could not pose a spear or bow commander correctly.
+
+`Game::Mission::CommanderMessageDirector` (`game/mission/commander_message_director.h`)
+holds the rules and subscribes to the event bus. It owns no world and no renderer:
+the client hands it a position lookup for the `at` filter and calls `update()` on
+the simulation tick, which is why the dwell timer stops with a paused battle.
+`GameEngine` republishes the active line to `game.commander_message`, which
+`ui/qml/CommanderMessagePanel.qml` reads.
+
+The panel sits **below** the minimap rather than over it, because the lines that
+fire while a camp is changing hands are exactly the ones a player needs the map
+for. End-of-mission lines draw above the outcome overlay, so the loser gets the
+last word over the victory banner.
+
+The portrait is framed as a **bust**, and the framing follows the head rather than
+sitting at a fixed height: commander archetypes differ by up to eight percent in
+proportion scaling, which at this distance is the difference between a portrait
+and a cropped chin. Each frame the portrait asks the renderer where the head it
+just drew ended up, then eases the camera onto it.
+
+### The painted face
+
+The humanoid rig has a jaw and a nose and no features at all, and giving it any
+would mean re-baking every clip in every profile. So the speaking face is
+**painted over** the portrait instead: `ui/qml/CommanderFaceOverlay.qml` draws
+eyes, brows, a nose and a mouth on a small `Canvas`, and rides the head through
+an anchor the portrait publishes -- position, one head radius, screen roll, and
+how far the head is turned and tilted away from the camera. The paint squashes
+with the projection and fades out through the profile, so it never lands on the
+back of a head. The model is untouched.
+
+The anchor is measured, not re-derived. `Render::Creature::Pipeline::BoneProbe`
+(`render/creature/pipeline/creature_bone_probe.h`) is a thread-local pointer the
+portrait installs for the duration of one `render_world`; the creature pipeline
+fills it with the head bone's world transform for the instance it is submitting,
+taken from the same baked frame it skins with. Re-posing the rig on the UI side
+would have had to reproduce the per-soldier variation and the renderer's
+proportion scaling, and would drift from what was actually drawn.
+
+Two things the drawing does on purpose. It is spread to about 1.3 head radii,
+because every commander is drawn wearing a helmet wider than the skull inside it
+and painting to the skull leaves a small face rattling around in a large one. And
+it sits **above** the portrait's vignette, because the vignette is there to push
+the portrait behind the text while the face is the one part meant to hold the eye.
+
+The mouth is tied to the panel's typewriter, so it moves for exactly as long as
+the line is still arriving and closes when it stops -- no lip track is authored.
+Blinks and eye saccades are ambient and stop under reduced motion, along with the
+mouth.
+
+`--screenshot-view commander` opens the panel on its own against a stand-in view
+model, which is the only way to look at this without playing a mission to a
+trigger. Note that the screenshot harness does not advance QML animations: it is
+the surface to review framing, anchoring and placement on, not motion. Motion is
+covered by `tests/ui/qml/tst_commander_face.qml`.
+
 ### The tutorial mission
 
 `assets/missions/tutorial.json` is the guided first battle behind the main menu's
@@ -716,7 +858,7 @@ Timed or state-based triggers for dynamic gameplay:
 ```
 
 When a mission carrying that flag finishes loading, the engine attaches
-`App::Core::TutorialDirector` (`app/mission/tutorial_director.h`), which walks the
+`Game::Mission::TutorialDirector` (`game/mission/tutorial_director.h`), which walks the
 player through fifteen fixed steps — selection, movement, attacking a held scouting
 party, gathering each material, building a Home, recruiting, assembling an army,
 breaking a raid, stances, the commander's aura, camera, speed, objectives and a
@@ -739,6 +881,33 @@ Two things about the mission are load-bearing for the director:
 The map it uses, `assets/maps/map_tutorial.json`, declares
 `"skirmish_hidden": true`; `MapCatalog` skips such maps so a scripted stage never
 appears as a free-play choice.
+
+#### Pointing at what a step is talking about
+
+Prose alone leaves a first-time player hunting a dense HUD for the button a step
+names, so every step also publishes a _focus_: what to ring, and where.
+
+- `focus_actions` is a list of command-grid ids (`collect`, `build`, `aura`, …).
+  `HUDBottom` passes `spotlit` to the matching `IronCommandButton`, which draws a
+  `Design.IronSpotlight` ring around it.
+- `focus_region` names a HUD zone — `production`, `speed`, `camera`, `objective`,
+  `waves` — and the panel or button group in `HUDTop`/`HUDBottom` rings itself.
+- `focus_target` names something on the field (`own_troops`, `builders`,
+  `enemy_scouts`, `timber`, `stone_and_iron`, `barracks`, `commander`,
+  `wave_entry`, `enemy_camp`). The director only names the target; the app layer
+  resolves it to world positions in `App::Mission::resolve_tutorial_focus_points`
+  (units come from the world, harvest nodes from `TerrainService::world_props()`,
+  the wave entry from the live wave alerts) and pushes them back through
+  `set_focus_points`, adding minimap coordinates. `TutorialFocusOverlay.qml`
+  projects each point through the live camera and rings it, `HUDTop` pins them on
+  the minimap, and the card's **Show me** button pans the camera to their centre
+  via `CameraViewModel::look_at_world`.
+
+The focus is recomputed from the same observation as the hint, so it follows what
+the step still needs: _Fell timber_ rings the builders while none is selected, and
+switches to the Collect button and the nearest pines once one is. A completed step
+publishes an empty focus, and changing target drops the stale world points so
+rings never outlive the step that placed them.
 
 ## Campaign Configuration
 

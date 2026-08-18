@@ -20,7 +20,9 @@
 #include "../../game/systems/building_collision_registry.h"
 #include "game/formation/formation_data_loader.h"
 #include "game/session/session_context.h"
+#include "game/units/commander_catalog.h"
 #include "game/units/troop_catalog_loader.h"
+#include "game/units/troop_type.h"
 
 namespace {
 
@@ -279,6 +281,38 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
         !condition.duration.has_value()) {
       result.addError(
           QString("Mission %1: time_limit is missing 'duration'").arg(file_path));
+    }
+  }
+
+  std::set<QString> message_ids;
+  for (const auto& message : mission.commander_messages) {
+    if (message.id.trimmed().isEmpty()) {
+      result.addError(
+          QString("Mission %1: a commander message has no 'id'").arg(file_path));
+    } else if (!message_ids.insert(message.id).second) {
+      result.addError(QString("Mission %1: two commander messages share the id '%2'; "
+                              "saves record spent lines by id")
+                          .arg(file_path, message.id));
+    }
+
+    if (message.text.trimmed().isEmpty()) {
+      result.addError(QString("Mission %1: commander message '%2' has no text")
+                          .arg(file_path, message.id));
+    }
+
+    Game::Units::TroopType speaker{};
+    if (!Game::Units::try_parse_troop_type(message.speaker, speaker) ||
+        Game::Units::commander_definition(speaker) == nullptr) {
+      result.addError(
+          QString("Mission %1: commander message '%2' names speaker '%3', which is not "
+                  "a commander in the catalogue")
+              .arg(file_path, message.id, message.speaker));
+    }
+
+    if (message.duration <= 0.0F) {
+      result.addError(QString("Mission %1: commander message '%2' holds for %3 seconds")
+                          .arg(file_path, message.id)
+                          .arg(static_cast<double>(message.duration)));
     }
   }
 

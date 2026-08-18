@@ -89,6 +89,13 @@ RowLayout {
     }
 
     readonly property var gatherPriorities: ["", "cut_tree", "collect_stone", "collect_iron_ore", "harvest_grain"]
+    readonly property var tutorial: (typeof game !== 'undefined' && game && game.tutorial) ? game.tutorial : null
+    readonly property var tutorialFocusActions: (bottomRoot.tutorial && bottomRoot.tutorial.active) ? bottomRoot.tutorial.focus_actions : []
+    readonly property string tutorialFocusRegion: (bottomRoot.tutorial && bottomRoot.tutorial.active) ? bottomRoot.tutorial.focus_region : ""
+
+    function tutorial_spotlights(actionId) {
+        return bottomRoot.tutorialFocusActions.indexOf(actionId) >= 0;
+    }
 
     function gather_priority_label(priority) {
         if (priority === "cut_tree")
@@ -668,6 +675,7 @@ RowLayout {
                     actionId: modelData.id
                     label: modelData.label
                     shortLabel: modelData.shortLabel || ""
+                    iconOnly: true
                     hotkey: bottomRoot.hotkey_for(modelData)
                     hint: modelData.hint || ""
                     details: bottomRoot.command_details(modelData, state)
@@ -682,6 +690,8 @@ RowLayout {
                     eligibleCount: state.eligibleCount
                     activeCount: state.activeCount
 
+                    spotlit: bottomRoot.tutorial_spotlights(modelData.id)
+
                     onClicked: bottomRoot.invoke_command(modelData)
                 }
             }
@@ -693,6 +703,12 @@ RowLayout {
         Layout.preferredWidth: Math.max(280, bottomRoot.width * 0.32)
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignTop
+
+        Design.IronSpotlight {
+            active: bottomRoot.tutorialFocusRegion === "production"
+            inset: -Design.Metrics.space4
+            cornerRadius: Design.Metrics.radiusMedium
+        }
         selection_tick: bottomRoot.selection_tick
         production: bottomRoot.game_ready() ? game.production : null
         placement: bottomRoot.game_ready() ? game.placement : null

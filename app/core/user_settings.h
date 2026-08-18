@@ -38,6 +38,7 @@ inline constexpr char kUiDamageNumbersKey[] = "ui/damage_numbers";
 inline constexpr char kUiScreenEffectsKey[] = "ui/screen_effect_intensity";
 inline constexpr char kUiEconomyCoachKey[] = "ui/economy_coach";
 inline constexpr char kUiCameraLegendSeenKey[] = "ui/camera_legend_seen";
+inline constexpr char kUiTutorialCompletedKey[] = "ui/tutorial_completed";
 inline constexpr char kInputBindingsGroup[] = "input/bindings";
 
 inline constexpr int kDefaultAutosaveSlotCount = 3;
@@ -385,6 +386,14 @@ inline auto load_ui_camera_legend_seen() -> bool {
 
 inline void save_ui_camera_legend_seen(bool seen) {
   Detail::save_bool(kUiCameraLegendSeenKey, seen);
+}
+
+inline auto load_ui_tutorial_completed() -> bool {
+  return Detail::load_bool(kUiTutorialCompletedKey, false);
+}
+
+inline void save_ui_tutorial_completed(bool completed) {
+  Detail::save_bool(kUiTutorialCompletedKey, completed);
 }
 
 inline auto load_ui_economy_coach() -> bool {

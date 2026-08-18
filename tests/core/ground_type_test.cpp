@@ -86,9 +86,15 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsGrassDry) {
   apply_ground_type_defaults(settings, GroundType::GrassDry);
 
   EXPECT_EQ(settings.ground_type, GroundType::GrassDry);
-  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.54F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.56F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.30F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.27F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.44F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.20F);
+  EXPECT_FLOAT_EQ(settings.grass_secondary.x(), 0.38F);
+  EXPECT_FLOAT_EQ(settings.grass_secondary.y(), 0.53F);
+  EXPECT_FLOAT_EQ(settings.grass_secondary.z(), 0.24F);
+  EXPECT_FLOAT_EQ(settings.grass_dry.x(), 0.50F);
+  EXPECT_FLOAT_EQ(settings.grass_dry.y(), 0.50F);
+  EXPECT_FLOAT_EQ(settings.grass_dry.z(), 0.27F);
   EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.06F);
 
   EXPECT_FLOAT_EQ(settings.crack_intensity, 0.65F);

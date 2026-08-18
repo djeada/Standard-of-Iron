@@ -1505,6 +1505,228 @@ constexpr std::array<ShowcaseKey, 6> k_rest_sit_knees_down_keys{{
      {126.0F, -5.0F, 15.0F, 105.0F}},
 }};
 
+constexpr std::array<ShowcaseKey, 7> k_taunt_dismissive_keys{{
+    {0.0F,
+     0.0F,
+     0.975F,
+     0.0F,
+     0.0F,
+     -2.0F,
+     0.0F,
+     0.0F,
+     -3.0F,
+     -6.0F,
+     -6.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {4.0F, 7.0F, 0.0F, 16.0F},
+     {6.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {0.20F,
+     0.0F,
+     0.978F,
+     0.0F,
+     0.0F,
+     -3.0F,
+     0.0F,
+     0.0F,
+     -4.0F,
+     -20.0F,
+     -14.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {46.0F, 13.0F, 4.0F, 64.0F},
+     {6.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {0.33F,
+     0.0F,
+     0.980F,
+     0.0F,
+     0.0F,
+     -3.0F,
+     0.0F,
+     0.0F,
+     -4.0F,
+     -18.0F,
+     -17.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {52.0F, 24.0F, -34.0F, 34.0F},
+     {7.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {0.44F,
+     0.0F,
+     0.978F,
+     0.0F,
+     0.0F,
+     -2.0F,
+     0.0F,
+     0.0F,
+     -3.0F,
+     -12.0F,
+     -16.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {34.0F, 33.0F, -46.0F, 26.0F},
+     {7.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {0.60F,
+     0.0F,
+     0.976F,
+     0.0F,
+     0.0F,
+     -2.0F,
+     0.0F,
+     0.0F,
+     -3.0F,
+     -6.0F,
+     -12.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {16.0F, 17.0F, -16.0F, 34.0F},
+     {6.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {0.78F,
+     0.0F,
+     0.975F,
+     0.0F,
+     0.0F,
+     -2.0F,
+     0.0F,
+     0.0F,
+     -3.0F,
+     -4.0F,
+     -8.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {7.0F, 10.0F, -2.0F, 18.0F},
+     {6.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+    {1.0F,
+     0.0F,
+     0.975F,
+     0.0F,
+     0.0F,
+     -2.0F,
+     0.0F,
+     0.0F,
+     -3.0F,
+     -7.0F,
+     -6.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {4.0F, 7.0F, 0.0F, 16.0F},
+     {6.0F, 9.0F, 0.0F, 20.0F},
+     {20.0F, 9.0F, 0.0F, 40.0F},
+     {12.0F, 4.0F, 0.0F, 22.0F}},
+}};
+
+constexpr std::array<ShowcaseKey, 5> k_taunt_cynical_keys{{
+    {0.0F,
+     0.0F,
+     0.970F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -3.0F,
+     -5.0F,
+     6.0F,
+     -11.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 15.0F, 0.0F, 26.0F},
+     {5.0F, 8.0F, 0.0F, 14.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.25F,
+     0.0F,
+     0.972F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -3.0F,
+     -5.0F,
+     -8.0F,
+     -13.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {3.0F, 16.0F, 0.0F, 28.0F},
+     {5.0F, 8.0F, 0.0F, 15.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.5F,
+     0.0F,
+     0.969F,
+     0.0F,
+     -6.0F,
+     -4.0F,
+     0.0F,
+     -3.0F,
+     -5.0F,
+     8.0F,
+     -10.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 14.0F, 0.0F, 25.0F},
+     {5.0F, 8.0F, 0.0F, 14.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {0.75F,
+     0.0F,
+     0.972F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -3.0F,
+     -5.0F,
+     -6.0F,
+     -12.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {3.0F, 16.0F, 0.0F, 28.0F},
+     {5.0F, 8.0F, 0.0F, 15.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+    {1.0F,
+     0.0F,
+     0.970F,
+     0.0F,
+     -5.0F,
+     -4.0F,
+     0.0F,
+     -3.0F,
+     -5.0F,
+     6.0F,
+     -11.0F,
+     0.0F,
+     0.0F,
+     0.0F,
+     {2.0F, 15.0F, 0.0F, 26.0F},
+     {5.0F, 8.0F, 0.0F, 14.0F},
+     {23.0F, 12.0F, 0.0F, 46.0F},
+     {10.0F, 3.0F, 0.0F, 18.0F}},
+}};
+
 [[nodiscard]] auto
 keys_for(HumanoidShowcaseMove move) noexcept -> std::span<const ShowcaseKey> {
   switch (move) {
@@ -1530,6 +1752,10 @@ keys_for(HumanoidShowcaseMove move) noexcept -> std::span<const ShowcaseKey> {
     return k_rest_sit_down_keys;
   case HumanoidShowcaseMove::RestSitKneesDown:
     return k_rest_sit_knees_down_keys;
+  case HumanoidShowcaseMove::TauntDismissive:
+    return k_taunt_dismissive_keys;
+  case HumanoidShowcaseMove::TauntCynical:
+    return k_taunt_cynical_keys;
   case HumanoidShowcaseMove::None:
   case HumanoidShowcaseMove::Count:
     break;
@@ -1621,6 +1847,10 @@ auto humanoid_showcase_move_name(HumanoidShowcaseMove move) noexcept
     return "showcase_rest_sit_down";
   case HumanoidShowcaseMove::RestSitKneesDown:
     return "showcase_rest_sit_knees_down";
+  case HumanoidShowcaseMove::TauntDismissive:
+    return "showcase_taunt_dismissive";
+  case HumanoidShowcaseMove::TauntCynical:
+    return "showcase_taunt_cynical";
   case HumanoidShowcaseMove::None:
   case HumanoidShowcaseMove::Count:
     break;
@@ -1665,6 +1895,10 @@ auto humanoid_showcase_move_duration(HumanoidShowcaseMove move) noexcept -> floa
     return 1.6F;
   case HumanoidShowcaseMove::RestSitKneesDown:
     return 1.7F;
+  case HumanoidShowcaseMove::TauntDismissive:
+    return 2.4F;
+  case HumanoidShowcaseMove::TauntCynical:
+    return 3.2F;
   case HumanoidShowcaseMove::None:
   case HumanoidShowcaseMove::Count:
     break;
@@ -1697,6 +1931,8 @@ auto humanoid_showcase_root_travel(HumanoidShowcaseMove move,
   case HumanoidShowcaseMove::RestKneel:
   case HumanoidShowcaseMove::RestSitDown:
   case HumanoidShowcaseMove::RestSitKneesDown:
+  case HumanoidShowcaseMove::TauntDismissive:
+  case HumanoidShowcaseMove::TauntCynical:
   case HumanoidShowcaseMove::None:
   case HumanoidShowcaseMove::Count:
     break;
@@ -1719,6 +1955,8 @@ auto humanoid_showcase_release_phase(HumanoidShowcaseMove move) noexcept -> floa
   case HumanoidShowcaseMove::RestKneel:
   case HumanoidShowcaseMove::RestSitDown:
   case HumanoidShowcaseMove::RestSitKneesDown:
+  case HumanoidShowcaseMove::TauntDismissive:
+  case HumanoidShowcaseMove::TauntCynical:
   case HumanoidShowcaseMove::None:
   case HumanoidShowcaseMove::Count:
     break;

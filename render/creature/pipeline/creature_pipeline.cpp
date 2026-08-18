@@ -18,6 +18,7 @@
 #include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "creature_asset.h"
+#include "creature_bone_probe.h"
 #include "game/map/terrain_service.h"
 #include "preparation_common.h"
 #include "render/bone_palette_arena.h"
@@ -526,6 +527,45 @@ auto contact_y_for_playback(const ResolvedRequestPlayback& playback) noexcept ->
   return current * (1.0F - frame_lerp) + next * frame_lerp;
 }
 
+auto bone_global_at(const ResolvedRequestPlayback& playback,
+                    std::uint16_t bone_index) -> QMatrix4x4 {
+  QMatrix4x4 const current =
+      playback.blob->bone_global_matrix(playback.global_frame, bone_index);
+  float const frame_lerp = std::clamp(playback.frame_lerp, 0.0F, 1.0F);
+  if (frame_lerp <= 1.0e-4F || playback.next_global_frame == playback.global_frame) {
+    return current;
+  }
+  QMatrix4x4 const next =
+      playback.blob->bone_global_matrix(playback.next_global_frame, bone_index);
+
+  QMatrix4x4 blended;
+  const float* a = current.constData();
+  const float* b = next.constData();
+  float* out = blended.data();
+  for (int i = 0; i < 16; ++i) {
+    out[i] = a[i] * (1.0F - frame_lerp) + b[i] * frame_lerp;
+  }
+  return blended;
+}
+
+void resolve_bone_probe(const Render::Creature::CreatureRenderRequest& req,
+                        const QMatrix4x4& draw_world,
+                        const ResolvedRequestPlayback& playback) {
+  auto* probe = active_bone_probe();
+  if (probe == nullptr || probe->resolved) {
+    return;
+  }
+  if (probe->entity_id != req.entity_id ||
+      probe->instance_index != req.instance_index) {
+    return;
+  }
+  if (!playback.valid() || probe->bone_index >= playback.blob->bone_count()) {
+    return;
+  }
+  probe->world = draw_world * bone_global_at(playback, probe->bone_index);
+  probe->resolved = true;
+}
+
 void attach_owned_palette(
     Render::GL::RiggedCreatureCmd& cmd,
     std::shared_ptr<
@@ -951,6 +991,16 @@ auto submit_snapshot_creature(
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
 
+  for (const auto& attachment_mesh : snap->attachment_meshes) {
+    if (attachment_mesh == nullptr || attachment_mesh->index_count() == 0U) {
+      continue;
+    }
+    auto attachment_cmd = cmd;
+    attachment_cmd.mesh = attachment_mesh.get();
+    attachment_cmd.shadow_mesh = nullptr;
+    out.rigged(std::move(attachment_cmd));
+  }
+
   out.rigged(std::move(cmd));
   return true;
 }
@@ -1058,6 +1108,8 @@ auto CreaturePipeline::submit_requests(
         draw_world = adjusted;
       }
     }
+    resolve_bone_probe(req, draw_world, primary);
+
     const bool prebaked_lowpoly_required =
         req.lod == CreatureLOD::Minimal && handle->requires_prebaked_minimal_snapshot;
     if (req.full_body_blend.active() && full_body.valid()) {

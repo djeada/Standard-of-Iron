@@ -41,6 +41,7 @@
 #include "app/utils/engine_view_helpers.h"
 #include "app/viewmodels/activity_view_model.h"
 #include "app/viewmodels/camera_view_model.h"
+#include "app/viewmodels/commander_message_view_model.h"
 #include "app/viewmodels/commander_view_model.h"
 #include "app/viewmodels/economy_view_model.h"
 #include "app/viewmodels/match_setup_view_model.h"
@@ -59,6 +60,7 @@
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
 #include "game/map/mission_stage_tracker.h"
+#include "game/mission/commander_message_director.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
 #include "game/mission/mission_waves.h"
@@ -193,6 +195,7 @@ public:
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
   Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
   Q_PROPERTY(QObject* mission READ mission_view_model CONSTANT)
+  Q_PROPERTY(QObject* commander_message READ commander_message_view_model CONSTANT)
   Q_PROPERTY(QObject* activity READ activity_view_model CONSTANT)
   Q_PROPERTY(QObject* economy READ economy_view_model CONSTANT)
   Q_PROPERTY(QObject* tutorial READ tutorial_view_model CONSTANT)
@@ -254,6 +257,7 @@ public:
   [[nodiscard]] QObject* save_slots_view_model() const;
   [[nodiscard]] QObject* placement_view_model() const;
   [[nodiscard]] QObject* wave_view_model() const;
+  [[nodiscard]] QObject* commander_message_view_model() const;
   [[nodiscard]] QObject* mission_view_model() const;
   [[nodiscard]] QObject* tutorial_view_model() const;
   [[nodiscard]] QObject* activity_view_model() const;
@@ -293,6 +297,23 @@ public:
   void update(float dt);
   void render(int pixel_width, int pixel_height);
   void set_input_viewport_size(qreal width, qreal height);
+
+  [[nodiscard]] auto try_begin_render_frame() -> bool;
+  void end_render_frame();
+
+  class WorldFreeze {
+  public:
+    explicit WorldFreeze(GameEngine& engine);
+    ~WorldFreeze();
+
+    WorldFreeze(const WorldFreeze&) = delete;
+    auto operator=(const WorldFreeze&) -> WorldFreeze& = delete;
+    WorldFreeze(WorldFreeze&&) = delete;
+    auto operator=(WorldFreeze&&) -> WorldFreeze& = delete;
+
+  private:
+    GameEngine& m_engine;
+  };
 
 private:
   struct RuntimeState {
@@ -371,11 +392,15 @@ private:
   [[nodiscard]] auto mission_wave_binding() -> App::Mission::MissionWaveBinding;
   void publish_wave_status();
   void configure_mission_stages();
+  void configure_commander_messages();
+  void update_commander_messages(float delta_time);
+  void publish_commander_message();
   void publish_mission_stages();
   void update_mission_stages(float delta_time);
   void restore_mission_stages(const QJsonObject& stage_state);
   void restore_mission_waves(const QJsonObject& wave_state);
   void update_tutorial(float real_dt);
+  void publish_tutorial_focus_points(const QVariantMap& wave_status);
   void activate_tutorial_if_configured();
   void update_loading_overlay();
   void update_cursor_position();
@@ -400,6 +425,8 @@ private:
   std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
+  std::unique_ptr<App::ViewModels::CommanderMessageViewModel>
+      m_commander_message_view_model;
   std::unique_ptr<App::ViewModels::MissionViewModel> m_mission_view_model;
   std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
   std::unique_ptr<App::ViewModels::EconomyViewModel> m_economy_view_model;
@@ -487,6 +514,9 @@ private:
   std::uint64_t m_last_world_props_revision = 0;
   bool m_loading_overlay_active = false;
   std::atomic_bool m_loading_overlay_wait_for_first_frame{false};
+
+  std::atomic<int> m_world_freeze_depth{0};
+  std::atomic<bool> m_render_frame_active{false};
   int m_loading_overlay_frames_remaining = 0;
   qint64 m_loading_overlay_last_frame_ms = 0;
   qint64 m_loading_overlay_min_duration_ms = 0;
@@ -499,6 +529,7 @@ private:
   QString m_save_progress_slot;
   QTimer m_autosave_timer;
   Game::Mission::MissionStageTracker m_mission_stage_tracker;
+  Game::Mission::CommanderMessageDirector m_commander_message_director;
   float m_mission_stage_poll_accumulator = 0.0F;
   App::Mission::MissionWaveRuntime m_mission_waves;
   App::Mission::TutorialFrameNotes m_tutorial_notes;

@@ -291,7 +291,7 @@ Item {
 
                         Text {
                             width: parent.width
-                            text: qsTr("The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. Steps can be paused, skipped and replayed at any time.")
+                            text: qsTr("The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.")
                             color: Design.Theme.textPrimary
                             font.family: Design.Typography.family
                             font.pixelSize: Design.Typography.body

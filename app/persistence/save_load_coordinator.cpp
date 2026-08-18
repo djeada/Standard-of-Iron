@@ -110,6 +110,9 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   if (!context.mission_stage_state.isEmpty()) {
     metadata["mission_stages"] = context.mission_stage_state;
   }
+  if (!context.commander_message_state.isEmpty()) {
+    metadata["commander_messages"] = context.commander_message_state;
+  }
 
   Game::Systems::SaveRequest request;
   request.slot_name = context.slot;
@@ -220,6 +223,9 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   }
   if (context.restore_mission_stages) {
     context.restore_mission_stages(metadata.value("mission_stages").toObject());
+  }
+  if (context.restore_commander_messages) {
+    context.restore_commander_messages(metadata.value("commander_messages").toObject());
   }
 
   AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);

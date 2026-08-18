@@ -21,8 +21,16 @@ enum class HumanoidShowcaseMove : std::uint8_t {
   RestKneel,
   RestSitDown,
   RestSitKneesDown,
+  TauntDismissive,
+  TauntCynical,
   Count
 };
+
+[[nodiscard]] constexpr auto
+humanoid_showcase_move_is_taunt(HumanoidShowcaseMove move) noexcept -> bool {
+  return move == HumanoidShowcaseMove::TauntDismissive ||
+         move == HumanoidShowcaseMove::TauntCynical;
+}
 
 [[nodiscard]] constexpr auto
 humanoid_showcase_move_is_resting(HumanoidShowcaseMove move) noexcept -> bool {

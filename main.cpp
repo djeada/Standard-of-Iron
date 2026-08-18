@@ -150,6 +150,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "render/i_render_backend.h"
 #include "render/profiling/profiling_hud.h"
 #include "ui/campaign_map_view.h"
+#include "ui/commander_portrait_view.h"
 #include "ui/edge_scroll.h"
 #include "ui/game_speeds.h"
 #include "ui/gl_view.h"
@@ -599,6 +600,19 @@ auto main(int argc, char* argv[]) -> int {
   fmt.setStencilBufferSize(k_stencil_buffer_bits);
   fmt.setSamples(0);
   fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+  if (qEnvironmentVariableIntValue("SOI_GL_DEBUG") != 0) {
+    fmt.setOption(QSurfaceFormat::DebugContext);
+    qInfo() << "OpenGL debug context requested by SOI_GL_DEBUG";
+  }
+  if (qEnvironmentVariableIsSet("SOI_SWAP_INTERVAL")) {
+    bool interval_ok = false;
+    const int interval =
+        qEnvironmentVariableIntValue("SOI_SWAP_INTERVAL", &interval_ok);
+    if (interval_ok && interval >= 0) {
+      fmt.setSwapInterval(interval);
+      qInfo() << "Swap interval overridden by SOI_SWAP_INTERVAL:" << interval;
+    }
+  }
 
   QSurfaceFormat::setDefaultFormat(fmt);
   qInfo() << "Surface format configured: preferred OpenGL" << fmt.majorVersion() << "."
@@ -730,7 +744,7 @@ auto main(int argc, char* argv[]) -> int {
     QCommandLineOption const screenshot_view_opt(
         "screenshot-view",
         "Surface to capture: menu | skirmish | campaign | settings | load | save "
-        "| briefing | hud | rpg.",
+        "| briefing | hud | rpg | commander | tutorial.",
         "view",
         "menu");
     QCommandLineOption const screenshot_delay_opt(
@@ -942,6 +956,8 @@ auto main(int argc, char* argv[]) -> int {
   engine->addImportPath("qrc:/");
   qInfo() << "Registering QML types...";
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
+  qmlRegisterType<CommanderPortraitView>(
+      "StandardOfIron", 1, 0, "CommanderPortraitView");
   qmlRegisterType<CampaignMapView>("StandardOfIron", 1, 0, "CampaignMapView");
 
   qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme", &Theme::create);

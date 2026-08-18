@@ -60,7 +60,13 @@ QtObject {
             "collect": "collect_mode.png",
             "rally": "rally_mode.png",
             "deliver": "deliver_mode.png",
-            "aura": "aura_mode.png"
+            "aura": "aura_mode.png",
+            "stop": "stop_mode.png",
+            "run": "run_mode.png",
+            "gate": "gate_mode.png",
+            "auto_gather": "auto_gather_mode.png",
+            "repair": "repair_mode.png",
+            "dismantle": "dismantle_mode.png"
         })
 
     readonly property var commandGlyphs: ({
@@ -116,9 +122,11 @@ QtObject {
             "civilian": "builder",
             "catapult": "catapult",
             "ballista": "ballista",
+            "barracks": "barracks",
             "defense_tower": "defense_tower",
             "home": "house",
             "house": "house",
+            "temple": "temple",
             "wall": "wall",
             "wall_segment": "wall",
             "wall_gate": "wall"
@@ -126,7 +134,18 @@ QtObject {
 
     readonly property var unitArtShared: ({
             "elephant": "elephant_cartaghe.png",
-            "marketplace": "marketplace.png"
+            "marketplace": "marketplace.png",
+            "roman_legion_organizer": "roman_legion_organizer_rome.png",
+            "roman_veteran_consul": "roman_veteran_consul_rome.png",
+            "roman_field_commander": "roman_field_commander_rome.png",
+            "carthage_spear_commander": "carthage_spear_commander_cartaghe.png",
+            "carthage_bow_commander": "carthage_bow_commander_cartaghe.png",
+            "carthage_sword_commander": "carthage_sword_commander_cartaghe.png",
+            "skeleton_swordsman": "skeleton_swordsman.png",
+            "skeleton_archer": "skeleton_archer.png",
+            "grave_priest": "grave_priest.png",
+            "sheep": "sheep.png",
+            "wolf": "wolf.png"
         })
 
     readonly property var unitArtNeutral: ({
@@ -147,6 +166,16 @@ QtObject {
             "builder": "\u2692",
             "catapult": "\u25CE",
             "ballista": "\u25C8",
+            "roman_legion_organizer": "\u265B",
+            "roman_veteran_consul": "\u265B",
+            "roman_field_commander": "\u265B",
+            "carthage_spear_commander": "\u265B",
+            "carthage_bow_commander": "\u265B",
+            "carthage_sword_commander": "\u265B",
+            "barracks": "\u2691",
+            "skeleton_swordsman": "\u2694",
+            "skeleton_archer": "\u279C",
+            "grave_priest": "\u271A",
             "elephant": "\u25C6",
             "defense_tower": "\u265C",
             "wall": "\u25AC",
@@ -157,6 +186,8 @@ QtObject {
             "marketplace": "\u25C7",
             "temple": "\u25B3",
             "farm": "\u2618",
+            "sheep": "\u2663",
+            "wolf": "\u2660",
             "commander": "\u265B"
         })
 

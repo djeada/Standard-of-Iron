@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <initializer_list>
 
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/resource_types.h"
@@ -131,7 +132,7 @@ void TutorialDirector::end() {
   m_step_complete = false;
   m_index = 0;
   std::fill(m_done.begin(), m_done.end(), false);
-  publish(-1.0, {}, {});
+  publish(-1.0, {}, {}, {});
   emit state_changed();
   emit step_changed();
 }
@@ -142,7 +143,7 @@ void TutorialDirector::stop() {
   }
   m_active = false;
   m_step_complete = false;
-  publish(-1.0, {}, {});
+  publish(-1.0, {}, {}, {});
   emit state_changed();
 }
 
@@ -180,6 +181,11 @@ void TutorialDirector::enter_step(std::size_t index, bool from_replay) {
   m_progress = -1.0;
   m_progress_text.clear();
   m_hint.clear();
+  m_focus = TutorialFocus{};
+  if (!m_focus_points.isEmpty()) {
+    m_focus_points.clear();
+    emit focus_points_changed();
+  }
   emit step_changed();
   emit state_changed();
 }
@@ -232,15 +238,61 @@ void TutorialDirector::continue_step() {
 
 void TutorialDirector::publish(qreal progress,
                                const QString& progress_text,
-                               const QString& hint) {
+                               const QString& hint,
+                               const TutorialFocus& focus) {
   const bool changed = !qFuzzyCompare(1.0 + m_progress, 1.0 + progress) ||
-                       m_progress_text != progress_text || m_hint != hint;
+                       m_progress_text != progress_text || m_hint != hint ||
+                       !(m_focus == focus);
+  const bool target_changed = m_focus.target != focus.target;
   m_progress = progress;
   m_progress_text = progress_text;
   m_hint = hint;
+  m_focus = focus;
+  if (target_changed && !m_focus_points.isEmpty()) {
+    m_focus_points.clear();
+    emit focus_points_changed();
+  }
   if (changed) {
     emit state_changed();
   }
+}
+
+void TutorialDirector::set_focus_points(const QVariantList& points) {
+  if (m_focus_points == points) {
+    return;
+  }
+  m_focus_points = points;
+  emit focus_points_changed();
+}
+
+auto TutorialDirector::focus_target() const -> QString {
+  return focus_target_name(m_focus.target);
+}
+
+auto TutorialDirector::focus_target_name(TutorialFocusTarget target) -> QString {
+  switch (target) {
+  case TutorialFocusTarget::None:
+    return {};
+  case TutorialFocusTarget::OwnTroops:
+    return QStringLiteral("own_troops");
+  case TutorialFocusTarget::Builders:
+    return QStringLiteral("builders");
+  case TutorialFocusTarget::EnemyScouts:
+    return QStringLiteral("enemy_scouts");
+  case TutorialFocusTarget::Timber:
+    return QStringLiteral("timber");
+  case TutorialFocusTarget::StoneAndIron:
+    return QStringLiteral("stone_and_iron");
+  case TutorialFocusTarget::Barracks:
+    return QStringLiteral("barracks");
+  case TutorialFocusTarget::Commander:
+    return QStringLiteral("commander");
+  case TutorialFocusTarget::WaveEntry:
+    return QStringLiteral("wave_entry");
+  case TutorialFocusTarget::EnemyCamp:
+    return QStringLiteral("enemy_camp");
+  }
+  return {};
 }
 
 void TutorialDirector::advance(const TutorialObservation& observation, float real_dt) {
@@ -275,7 +327,7 @@ void TutorialDirector::advance(const TutorialObservation& observation, float rea
   QString progress_text;
   const bool completed = evaluate(observation, progress, progress_text);
   if (completed) {
-    publish(1.0, progress_text, {});
+    publish(1.0, progress_text, {}, {});
     mark_step_complete();
     if (step() == TutorialStepId::Assault) {
 
@@ -283,7 +335,7 @@ void TutorialDirector::advance(const TutorialObservation& observation, float rea
     }
     return;
   }
-  publish(progress, progress_text, hint_for(observation));
+  publish(progress, progress_text, hint_for(observation), focus_for(observation));
 }
 
 auto TutorialDirector::evaluate(const TutorialObservation& o,
@@ -505,6 +557,92 @@ auto TutorialDirector::hint_for(const TutorialObservation& o) const -> QString {
   case TutorialStepId::GameSpeed:
   case TutorialStepId::Objectives:
     return {};
+  }
+  return {};
+}
+
+auto TutorialDirector::focus_for(const TutorialObservation& o) const -> TutorialFocus {
+  const auto actions = [](std::initializer_list<const char*> ids) -> QStringList {
+    QStringList list;
+    for (const auto* id : ids) {
+      list.append(QString::fromLatin1(id));
+    }
+    return list;
+  };
+
+  switch (step()) {
+  case TutorialStepId::SelectTroops:
+    return {{}, {}, TutorialFocusTarget::OwnTroops};
+
+  case TutorialStepId::MoveTroops:
+    if (o.selected_troop_count == 0) {
+      return {{}, {}, TutorialFocusTarget::OwnTroops};
+    }
+    return {};
+
+  case TutorialStepId::AttackScouts:
+    if (o.selected_troop_count == 0) {
+      return {{}, {}, TutorialFocusTarget::OwnTroops};
+    }
+    return {actions({"attack"}), {}, TutorialFocusTarget::EnemyScouts};
+
+  case TutorialStepId::GatherWood:
+    if (o.selected_builder_count == 0) {
+      return {{}, {}, TutorialFocusTarget::Builders};
+    }
+    return {actions({"collect", "auto_gather"}), {}, TutorialFocusTarget::Timber};
+
+  case TutorialStepId::GatherStoneAndIron:
+    if (o.selected_builder_count == 0) {
+      return {{}, {}, TutorialFocusTarget::Builders};
+    }
+    return {actions({"collect", "auto_gather"}), {}, TutorialFocusTarget::StoneAndIron};
+
+  case TutorialStepId::BuildHome:
+    if (o.selected_builder_count == 0) {
+      return {{}, {}, TutorialFocusTarget::Builders};
+    }
+    if (o.construction_preview_active) {
+      return {};
+    }
+    return {actions({"build"}), {}, TutorialFocusTarget::None};
+
+  case TutorialStepId::RecruitSoldier:
+  case TutorialStepId::AssembleArmy:
+    if (o.selected_barracks_count == 0) {
+      return {{}, {}, TutorialFocusTarget::Barracks};
+    }
+    return {{}, QStringLiteral("production"), TutorialFocusTarget::None};
+
+  case TutorialStepId::DefendCamp:
+    if (o.wave_live) {
+      return {};
+    }
+    return {{}, QStringLiteral("waves"), TutorialFocusTarget::WaveEntry};
+
+  case TutorialStepId::Stances:
+    if (o.selected_troop_count == 0) {
+      return {{}, {}, TutorialFocusTarget::OwnTroops};
+    }
+    return {actions({"guard", "hold", "patrol"}), {}, TutorialFocusTarget::None};
+
+  case TutorialStepId::Commander:
+    if (!o.commander_selected) {
+      return {{}, {}, TutorialFocusTarget::Commander};
+    }
+    return {actions({"aura"}), {}, TutorialFocusTarget::None};
+
+  case TutorialStepId::Camera:
+    return {{}, QStringLiteral("camera"), TutorialFocusTarget::None};
+
+  case TutorialStepId::GameSpeed:
+    return {{}, QStringLiteral("speed"), TutorialFocusTarget::None};
+
+  case TutorialStepId::Objectives:
+    return {{}, QStringLiteral("objective"), TutorialFocusTarget::None};
+
+  case TutorialStepId::Assault:
+    return {{}, {}, TutorialFocusTarget::EnemyCamp};
   }
   return {};
 }

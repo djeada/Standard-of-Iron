@@ -508,6 +508,7 @@ add_library(
     soi_mission_runtime
     STATIC
     mission/campaign_manager.cpp
+    mission/commander_message_director.cpp
     mission/mission_setup_coordinator.cpp
     mission/mission_wave_director.cpp
     mission/mission_waves.cpp

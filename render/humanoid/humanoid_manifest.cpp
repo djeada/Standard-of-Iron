@@ -127,6 +127,8 @@ enum class BakerShowcaseType : std::uint8_t {
   RestKneel,
   RestSitDown,
   RestSitKneesDown,
+  TauntDismissive,
+  TauntCynical,
 };
 enum class BakerAmbientIdleType : std::uint8_t {
   None,
@@ -150,6 +152,10 @@ auto to_showcase_move(BakerShowcaseType t) noexcept -> Animation::HumanoidShowca
     return Animation::HumanoidShowcaseMove::SwordFlourish;
   case BakerShowcaseType::SpearThrow:
     return Animation::HumanoidShowcaseMove::SpearThrow;
+  case BakerShowcaseType::TauntDismissive:
+    return Animation::HumanoidShowcaseMove::TauntDismissive;
+  case BakerShowcaseType::TauntCynical:
+    return Animation::HumanoidShowcaseMove::TauntCynical;
   case BakerShowcaseType::RestSit:
     return Animation::HumanoidShowcaseMove::RestSit;
   case BakerShowcaseType::RestSitKnees:
@@ -1010,6 +1016,32 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      16U,
      24.0F,
      1.8F,
+     true},
+    {"showcase_taunt_dismissive",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::TauntDismissive,
+     72U,
+     30.0F,
+     2.4F,
+     false},
+    {"showcase_taunt_cynical",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::TauntCynical,
+     96U,
+     30.0F,
+     3.2F,
      true},
     {"construct_hammer",
      Render::GL::HumanoidMotionState::Idle,

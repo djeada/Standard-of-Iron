@@ -115,6 +115,7 @@ add_executable(
     systems/settlement_life_system_test.cpp
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp
+    systems/capture_system_test.cpp
     systems/undead_awakening_system_test.cpp
     architecture/layering_test.cpp
     architecture/module_boundary_test.cpp
@@ -248,6 +249,7 @@ add_executable(
     map/mission_loader_test.cpp
     map/mission_asset_rules_test.cpp
     map/mission_stage_tracker_test.cpp
+    map/commander_message_director_test.cpp
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/map_catalog_test.cpp
@@ -391,6 +393,7 @@ add_executable(
     render/creature/creature_visual_definition_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
     render/creature/rigged_mesh_cache_test.cpp
+    render/creature/static_attachment_bake_test.cpp
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp
     render/creature/combat_visual_state_test.cpp
@@ -418,6 +421,7 @@ add_executable(
     render/creature/baked_attachment_world_position_test.cpp
     render/creature/baked_horse_attachment_world_position_test.cpp
     render/creature/render_request_batch_parity_test.cpp
+    render/creature/creature_bone_probe_test.cpp
     render/creature/template_prewarm_regression_test.cpp
     render/software/software_rasterizer_test.cpp
     render/software/software_backend_integration_test.cpp
@@ -477,12 +481,14 @@ add_executable(
     core/runtime_frame_orchestrator_test.cpp
     core/game_speed_test.cpp
     core/camera_framing_test.cpp
+    core/mission_objective_markers_test.cpp
     controllers/command_controller_test.cpp
     ui/preferences_test.cpp
     ui/input_bindings_test.cpp
     ui/edge_scroll_test.cpp
     ui/team_identity_test.cpp
     ui/selection_grouping_test.cpp
+    ui/selected_units_model_test.cpp
     ui/icon_art_test.cpp
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp

@@ -58,6 +58,11 @@ auto TroopProfileService::find_profile(
 
 auto TroopProfileService::get_profile(NationID nation_id,
                                       Game::Units::TroopType type) -> TroopProfile {
+  return get_profile_ref(nation_id, type);
+}
+
+auto TroopProfileService::get_profile_ref(
+    NationID nation_id, Game::Units::TroopType type) -> const TroopProfile& {
   auto& nation_cache = m_cache[nation_id];
   auto cached = nation_cache.find(type);
   if (cached != nation_cache.end()) {
@@ -82,15 +87,14 @@ auto TroopProfileService::get_profile(NationID nation_id,
         fallback.max_units_per_row = catalog_class.max_units_per_row;
         fallback.doctrine = "rome";
         apply_archer_range_bonus(type, fallback);
-        return fallback;
+        return nation_cache.emplace(type, std::move(fallback)).first->second;
       }
       nation = &all.front();
     }
   }
 
   TroopProfile profile = build_profile(*nation, type);
-  nation_cache.emplace(type, profile);
-  return profile;
+  return nation_cache.emplace(type, std::move(profile)).first->second;
 }
 
 auto TroopProfileService::build_profile(const Nation& nation,

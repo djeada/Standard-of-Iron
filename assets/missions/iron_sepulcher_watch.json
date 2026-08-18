@@ -40,13 +40,54 @@
   "defeat_conditions": [
     {
       "type": "lose_commander",
-      "description": "The commander falls — the vigil ends. And the dead keep walking."
+      "description": "The commander falls \u2014 the vigil ends. And the dead keep walking."
     },
     {
       "type": "only_commander_remaining",
-      "description": "Stand your ground. The last soldier alone is not a force — he is a sacrifice."
+      "description": "Stand your ground. The last soldier alone is not a force \u2014 he is a sacrifice."
     }
   ],
   "events": [],
+  "commander_messages": [
+    {
+      "id": "sepulcher_fabius_open",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "sepulcher_fabius_victory",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "The lights are out and the ground is quiet. Count them twice and burn what will burn. Whatever was in there stood here before Rome and will stand here after it. Tonight it simply has other business.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "sepulcher_fabius_defeat",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "They are getting up again. Do not look at the faces; you will know some of them. Fall back to the road, keep walking, and do not stop to bury anything. It does not stay buried here.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
   "theme": "The dead do not rest here. Neither will you."
 }
