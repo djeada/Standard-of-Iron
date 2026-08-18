@@ -346,7 +346,7 @@ void CommanderMessageDirector::restore(const QJsonObject& state) {
   for (auto& rule : m_rules) {
     rule.fired = false;
   }
-  for (const auto& value : fired) {
+  for (const auto value : fired) {
     const QString id = value.toString();
     for (auto& rule : m_rules) {
       if (rule.authored.id == id) {
