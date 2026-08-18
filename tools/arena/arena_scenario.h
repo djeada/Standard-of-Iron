@@ -80,6 +80,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   DeliverToStructure,
   HarvestResource,
   AbandonWork,
+  SetFarmGrowth,
 
   ReloadUndeadZoneState,
 };

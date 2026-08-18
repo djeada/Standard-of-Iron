@@ -622,6 +622,8 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     builder_obj["at_construction_site"] = builder->at_construction_site;
     builder_obj["construction_site_entity_id"] =
         static_cast<qint64>(builder->construction_site_entity_id);
+    builder_obj["structure_task_entity_id"] =
+        static_cast<qint64>(builder->structure_task_entity_id);
     QJsonArray queued_sites;
     for (const auto site_id : builder->queued_construction_site_ids) {
       queued_sites.append(static_cast<qint64>(site_id));
@@ -745,6 +747,14 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
         static_cast<double>(home->family_generation_interval);
     home_obj["family_manpower_value"] = home->family_manpower_value;
     entity_obj["home"] = home_obj;
+  }
+
+  if (const auto* farm = entity->get_component<FarmComponent>()) {
+    QJsonObject farm_obj;
+    farm_obj["growth"] = static_cast<double>(farm->growth);
+    farm_obj["cycle_seconds"] = static_cast<double>(farm->cycle_seconds);
+    farm_obj["harvests"] = farm->harvests;
+    entity_obj["farm"] = farm_obj;
   }
 
   if (const auto* delivery = entity->get_component<CivilianDeliveryComponent>()) {
@@ -1515,6 +1525,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     builder->at_construction_site = builder_obj["at_construction_site"].toBool(false);
     builder->construction_site_entity_id = static_cast<EntityID>(
         builder_obj["construction_site_entity_id"].toVariant().toULongLong());
+    builder->structure_task_entity_id = static_cast<EntityID>(
+        builder_obj["structure_task_entity_id"].toVariant().toULongLong());
     if (builder_obj.contains("queued_construction_site_ids")) {
       const auto queued_sites = builder_obj["queued_construction_site_ids"].toArray();
       builder->queued_construction_site_ids.reserve(queued_sites.size());
@@ -1665,6 +1677,14 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     home->family_generation_interval =
         static_cast<float>(home_obj["family_generation_interval"].toDouble(12.0));
     home->family_manpower_value = home_obj["family_manpower_value"].toInt(8);
+  }
+
+  if (json.contains("farm")) {
+    const auto farm_obj = json["farm"].toObject();
+    auto* farm = entity->add_component<FarmComponent>();
+    farm->growth = static_cast<float>(farm_obj["growth"].toDouble(0.0));
+    farm->cycle_seconds = static_cast<float>(farm_obj["cycle_seconds"].toDouble(60.0));
+    farm->harvests = farm_obj["harvests"].toInt(0);
   }
 
   if (json.contains("civilian_delivery")) {

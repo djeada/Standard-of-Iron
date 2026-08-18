@@ -127,6 +127,23 @@ auto build_catalog() -> std::vector<Art> {
        fill(QStringLiteral("M7.4 17.8 L8.9 19.3 L7.4 20.8 L5.9 19.3 Z"), Tone::Ember),
        fill(QStringLiteral("M13.6 17.6 L15 19 L13.6 20.4 L12.2 19 Z"), Tone::Ember)});
 
+  add("harvest_grain",
+      {line(QStringLiteral("M6 21.6 L8.6 9.4"), Tone::Timber, 1.6F),
+       line(QStringLiteral("M12 21.6 L12.6 8.6"), Tone::Timber, 1.6F),
+       line(QStringLiteral("M18 21.6 L16.4 9.4"), Tone::Timber, 1.6F),
+       fill(QStringLiteral("M8.6 9.6 L10.4 6.4 L8.6 2.6 L6.8 6.4 Z"), Tone::Ember),
+       fill(QStringLiteral("M12.6 8.8 L14.4 5.6 L12.6 1.8 L10.8 5.6 Z"), Tone::Ember),
+       fill(QStringLiteral("M16.4 9.6 L18.2 6.4 L16.4 2.6 L14.6 6.4 Z"), Tone::Ember),
+       line(QStringLiteral("M3.4 20 L20.6 20"), Tone::Ink, 1.1F)});
+
+  add("slaughter_sheep",
+      {fill(QStringLiteral("M4.2 18.6 L6.2 11.4 L14.6 10.2 L18.8 13.6 L16.4 18.6 Z"),
+            Tone::Ember),
+       fill(QStringLiteral("M14.6 10.2 L17.4 5.6 L20.6 6.4 L18.8 13.6 Z"), Tone::Ember),
+       line(QStringLiteral("M3.2 5.2 L11.8 13.8"), Tone::Metal, 2.4F),
+       fill(QStringLiteral("M2.2 3.4 L6.4 3.2 L4.4 6.6 Z"), Tone::Metal),
+       line(QStringLiteral("M6.6 18.6 L16.4 18.6"), Tone::Ink, 1.1F)});
+
   add("auto_gather",
       {pick_head(),
        pick_haft(),
@@ -225,6 +242,15 @@ auto build_catalog() -> std::vector<Art> {
        fill(QStringLiteral("M14.8 13.2 L16.2 14.6 L14.8 16 L13.4 14.6 Z"),
             Tone::Ember)});
 
+  add("food",
+      {line(QStringLiteral("M8.4 20.6 L10.2 9.8"), Tone::Timber, 1.5F),
+       line(QStringLiteral("M12 20.6 L12 8.6"), Tone::Timber, 1.5F),
+       line(QStringLiteral("M15.6 20.6 L13.8 9.8"), Tone::Timber, 1.5F),
+       fill(QStringLiteral("M10.2 10 L11.8 6.8 L10.2 3.4 L8.6 6.8 Z"), Tone::Ember),
+       fill(QStringLiteral("M12 8.8 L13.6 5.6 L12 2.2 L10.4 5.6 Z"), Tone::Ember),
+       fill(QStringLiteral("M13.8 10 L15.4 6.8 L13.8 3.4 L12.2 6.8 Z"), Tone::Ember),
+       line(QStringLiteral("M6.2 15.2 L17.8 15.2"), Tone::Ink, 1.1F)});
+
   add("gold",
       {fill(QStringLiteral("M4.4 12.6 L19.6 12.6 L19.6 18.4 L4.4 18.4 Z"), Tone::Gold),
        fill(QStringLiteral("M7.2 6.6 L16.8 6.6 L16.8 12.2 L7.2 12.2 Z"), Tone::Gold),
@@ -256,6 +282,7 @@ auto aliases() -> const QHash<QString, QString>& {
       {QStringLiteral("cut_tree"), QStringLiteral("chop_wood")},
       {QStringLiteral("collect_stone"), QStringLiteral("mine_stone")},
       {QStringLiteral("collect_iron_ore"), QStringLiteral("mine_iron")},
+      {QStringLiteral("harvest_grain"), QStringLiteral("harvest_grain")},
       {QStringLiteral("repair_structure"), QStringLiteral("repair")},
       {QStringLiteral("dismantle_structure"), QStringLiteral("dismantle")},
       {QStringLiteral("unavailable"), QStringLiteral("blocked")},

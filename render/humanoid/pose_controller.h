@@ -45,6 +45,8 @@ public:
   void spear_thrust_from_hold(float attack_phase, float hold_depth);
   void construction_saw(float work_phase);
   void construction_chisel(float work_phase, bool kneeling);
+  void construction_hammer(float work_phase);
+  void construction_reap(float work_phase);
   void sword_slash(float attack_phase);
   void combat_sword_slash_variant(float attack_phase,
                                   std::uint8_t variant,

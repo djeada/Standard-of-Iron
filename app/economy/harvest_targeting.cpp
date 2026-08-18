@@ -365,8 +365,8 @@ auto is_harvest_construction_item(const QString& item_type) -> bool {
 }
 
 auto generic_collect_failure_reason() -> QString {
-  return QCoreApplication::translate("ProductionManager",
-                                     "Select a tree, boulder, or iron ore deposit.");
+  return QCoreApplication::translate(
+      "ProductionManager", "Select a tree, boulder, ore deposit, ripe farm or sheep.");
 }
 
 auto crew_claims(Engine::Core::World* world,

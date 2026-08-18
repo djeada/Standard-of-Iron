@@ -39,6 +39,9 @@ constexpr int MAX_CATAPULTS = 5;
 
 constexpr float MAP_EDGE_PADDING = 5.0F;
 
+constexpr int k_recruit_wood_reserve = 80;
+constexpr int k_recruit_iron_reserve = 50;
+
 void clamp_to_map_bounds(const AISnapshot& snapshot, float& x, float& z) {
   if (!snapshot.has_map_bounds) {
     return;
@@ -148,6 +151,20 @@ auto harvest_type_for_resource(ResourceType resource) -> const char* {
   default:
     return nullptr;
   }
+}
+
+auto recruit_reserve_shortfall(const AISnapshot& snapshot) -> ResourceType {
+  if (!snapshot.has_resource_snapshot) {
+    return ResourceType::Count;
+  }
+  const int wood_deficit =
+      k_recruit_wood_reserve - snapshot.resources.get(ResourceType::Wood);
+  const int iron_deficit =
+      k_recruit_iron_reserve - snapshot.resources.get(ResourceType::Iron);
+  if (wood_deficit <= 0 && iron_deficit <= 0) {
+    return ResourceType::Count;
+  }
+  return iron_deficit > wood_deficit ? ResourceType::Iron : ResourceType::Wood;
 }
 
 auto node_matches_resource(const ResourceNodeSnapshot& node,
@@ -317,20 +334,26 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       building_to_construct = candidate;
     }
 
-    if (building_to_construct == nullptr) {
-      return;
-    }
-
-    const auto costs = construction_cost_info(building_to_construct).resource_costs;
     ResourceType missing_resource = ResourceType::Count;
-    int largest_deficit = 0;
-    if (snapshot.has_resource_snapshot) {
-      for (const ResourceType type : k_all_resource_types) {
-        const int deficit = costs.get(type) - snapshot.resources.get(type);
-        if (deficit > largest_deficit && harvest_type_for_resource(type) != nullptr) {
-          missing_resource = type;
-          largest_deficit = deficit;
+    if (building_to_construct == nullptr) {
+      missing_resource = recruit_reserve_shortfall(snapshot);
+      if (missing_resource == ResourceType::Count) {
+        return;
+      }
+    } else {
+      const auto costs = construction_cost_info(building_to_construct).resource_costs;
+      int largest_deficit = 0;
+      if (snapshot.has_resource_snapshot) {
+        for (const ResourceType type : k_all_resource_types) {
+          const int deficit = costs.get(type) - snapshot.resources.get(type);
+          if (deficit > largest_deficit && harvest_type_for_resource(type) != nullptr) {
+            missing_resource = type;
+            largest_deficit = deficit;
+          }
         }
+      }
+      if (missing_resource == ResourceType::Count) {
+        missing_resource = recruit_reserve_shortfall(snapshot);
       }
     }
 
@@ -416,6 +439,10 @@ auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
   }
 
   if (exposed_secondary_base(context) != nullptr) {
+    return true;
+  }
+
+  if (recruit_reserve_shortfall(snapshot) != ResourceType::Count) {
     return true;
   }
 

@@ -10,6 +10,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
+#include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
@@ -32,6 +33,8 @@ TEST(CivilianDeliverySystemTest, HomeRecruitsCivilianUsingHomeManpowerPool) {
   home_prod->max_units = 3;
   home_prod->manpower_available = 8;
   home_prod->villager_cost = 8;
+  Game::Systems::PlayerResourceRegistry::instance().set(
+      1, Game::Systems::ResourceType::Food, 40);
 
   const std::vector<Engine::Core::EntityID> selected = {home->get_id()};
   auto result = Game::Systems::ProductionService::start_production(
@@ -62,6 +65,8 @@ TEST(CivilianDeliverySystemTest, HomeCannotRecruitMoreThanThreeCivilians) {
   home_prod->in_progress = true;
   home_prod->manpower_available = 8;
   home_prod->villager_cost = 8;
+  Game::Systems::PlayerResourceRegistry::instance().set(
+      1, Game::Systems::ResourceType::Food, 40);
 
   const std::vector<Engine::Core::EntityID> selected = {home->get_id()};
   auto result = Game::Systems::ProductionService::start_production(

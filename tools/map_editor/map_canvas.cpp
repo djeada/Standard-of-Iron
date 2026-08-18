@@ -1857,6 +1857,9 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   case ToolType::Temple:
     type = "temple";
     break;
+  case ToolType::Farm:
+    type = "farm";
+    break;
   default:
     break;
   }
@@ -1906,7 +1909,7 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
                type == QStringLiteral("defense_tower") ||
                type == QStringLiteral("home") ||
                type == QStringLiteral("marketplace") ||
-               type == QStringLiteral("temple")) {
+               type == QStringLiteral("temple") || type == QStringLiteral("farm")) {
       draw_element(painter, type, widget_pos, m_current_player_id);
     } else {
       draw_element(painter, type, widget_pos);
@@ -1945,6 +1948,9 @@ void MapCanvas::draw_element(QPainter& painter,
   } else if (type == "temple") {
     fill_color = player_color_for_editor(player_id);
     symbol = "\u03A9";
+  } else if (type == "farm") {
+    fill_color = player_color_for_editor(player_id);
+    symbol = "F";
   } else {
     fill_color = QColor(128, 128, 128);
     symbol = "?";
@@ -1970,7 +1976,8 @@ void MapCanvas::draw_element(QPainter& painter,
                      Qt::AlignCenter,
                      symbol);
     if ((type == "barracks" || type == "village" || type == "defense_tower" ||
-         type == "home" || type == "marketplace" || type == "temple") &&
+         type == "home" || type == "marketplace" || type == "temple" ||
+         type == "farm") &&
         player_id >= 0 && labels_visible()) {
       QString const player_text = player_id == 0 ? "N" : QString::number(player_id);
       font.setPointSize(8);
@@ -3065,7 +3072,7 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
              m_current_tool == ToolType::DefenseTower ||
              m_current_tool == ToolType::Home ||
              m_current_tool == ToolType::Marketplace ||
-             m_current_tool == ToolType::Temple) {
+             m_current_tool == ToolType::Temple || m_current_tool == ToolType::Farm) {
     StructureElement elem;
     switch (m_current_tool) {
     case ToolType::Barracks:
@@ -3085,6 +3092,9 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
       break;
     case ToolType::Temple:
       elem.type = "temple";
+      break;
+    case ToolType::Farm:
+      elem.type = "farm";
       break;
     default:
       break;

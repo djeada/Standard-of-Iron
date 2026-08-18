@@ -105,7 +105,7 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
   production->produced_count = 500;
   production->manpower_available = 40;
   Game::Systems::PlayerResourceRegistry::instance().set(
-      1, Game::Systems::ResourceType::Wood, 6);
+      1, Game::Systems::ResourceType::Wood, 12);
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
 
@@ -153,7 +153,7 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
   EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientResources);
   EXPECT_FALSE(production->in_progress);
 
-  resources.set(1, Game::Systems::ResourceType::Wood, 6);
+  resources.set(1, Game::Systems::ResourceType::Wood, 12);
 
   result = Game::Systems::ProductionService::start_production(
       world,

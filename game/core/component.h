@@ -1771,7 +1771,39 @@ public:
   float wood_fill{0.0F};
   float stone_fill{0.0F};
   float iron_fill{0.0F};
+  float food_fill{0.0F};
   float deposit_flash{0.0F};
+};
+
+inline constexpr int k_farm_growth_stage_count = 5;
+
+class FarmComponent : public Component {
+public:
+  FarmComponent() = default;
+
+  float growth{0.0F};
+  float cycle_seconds{60.0F};
+  int harvests{0};
+
+  [[nodiscard]] auto ripe() const noexcept -> bool { return growth >= 1.0F; }
+
+  [[nodiscard]] auto growth_stage() const noexcept -> int {
+    if (growth >= 1.0F) {
+      return k_farm_growth_stage_count - 1;
+    }
+    float const clamped = growth < 0.0F ? 0.0F : growth;
+    int const stage =
+        static_cast<int>(clamped * static_cast<float>(k_farm_growth_stage_count - 1));
+    return stage < 0
+               ? 0
+               : (stage > k_farm_growth_stage_count - 2 ? k_farm_growth_stage_count - 2
+                                                        : stage);
+  }
+
+  void reset_after_harvest() {
+    growth = 0.0F;
+    ++harvests;
+  }
 };
 
 enum class SettlementErrand : std::uint8_t {
@@ -1842,6 +1874,7 @@ public:
   static constexpr float k_flinch_animation_seconds = 0.55F;
   float bite_timer{0.0F};
   float flinch_timer{0.0F};
+  float held_timer{0.0F};
   int watched_health{-1};
 
   static constexpr float k_stall_release_seconds = 1.5F;
@@ -2045,6 +2078,7 @@ public:
   float healing_target_dz{0.0F};
   bool is_constructing{false};
   float construction_progress{0.0F};
+  std::uint8_t construction_job{0};
   bool is_dying{false};
   bool is_dead{false};
   float death_progress{0.0F};

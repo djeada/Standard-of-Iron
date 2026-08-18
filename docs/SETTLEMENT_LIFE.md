@@ -202,7 +202,10 @@ approaches from, so it stands beside the tree it is felling.
   which is what hauling a load home is — does not count, or the round would end on its
   own first trip.
 - **An exhausted area.** No unreserved node of the right kind within the search radius of
-  the anchor, and the order is dropped rather than left re-scanning forever.
+  the anchor, and the order is dropped rather than left re-scanning forever. A farm round
+  is the one exception: while a friendly farm still stands near the anchor the worker
+  waits for the next crop instead of retiring — see
+  [FOOD_AND_FARMS.md](FOOD_AND_FARMS.md).
 
 A **builder job in between does not end the round**. Borrow a woodcutter to raise a
 house or mend a wall and it goes back to the tree line when the job is done, because

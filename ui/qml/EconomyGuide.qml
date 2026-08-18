@@ -27,7 +27,7 @@ QtObject {
         case "gold":
             return qsTr("Comes from your starting treasury, mission rewards, and selling goods at a marketplace.");
         case "food":
-            return qsTr("Comes from your starting stores, mission rewards, and buying at a marketplace.");
+            return qsTr("Send a builder to reap a ripe farm or slaughter a sheep with Collect, or leave Auto Gather running. Recruiting a civilian at a home spends it.");
         case "wood":
             return qsTr("Send a builder to chop a tree with Collect, or leave Auto Gather running.");
         case "stone":
@@ -42,6 +42,8 @@ QtObject {
         switch (key) {
         case "home":
             return qsTr("Home");
+        case "farm":
+            return qsTr("Farm");
         case "barracks":
             return qsTr("Barracks");
         case "defense_tower":
@@ -85,7 +87,9 @@ QtObject {
     function item_purpose(key) {
         switch (key) {
         case "home":
-            return qsTr("Raises the population the nearest barracks can recruit from.");
+            return qsTr("Raises civilians, who carry manpower to the nearest barracks. Each one costs food.");
+        case "farm":
+            return qsTr("Grows grain in cycles. A builder reaps it for food once it ripens.");
         case "barracks":
             return qsTr("Recruits troops and receives everything your builders gather.");
         case "defense_tower":
@@ -206,13 +210,13 @@ QtObject {
         case "gather":
             if (!state || (state.builder_count || 0) <= 0)
                 return qsTr("Recruit a builder at a barracks, then send it to collect wood, stone or iron.");
-            return qsTr("Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.");
+            return qsTr("Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.");
         case "build":
             return qsTr("With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.");
         case "recruit":
             return qsTr("Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.");
         case "army":
-            return qsTr("Keep recruiting while your builders gather. Raise more Homes when population runs out.");
+            return qsTr("Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.");
         }
         return qsTr("Gathering, building and recruiting are all under way.");
     }

@@ -34,8 +34,9 @@ namespace {
 using Game::Systems::ResourceAmounts;
 using Game::Systems::ResourceType;
 
-constexpr std::array<std::string_view, 8> k_buildable_items = {
+constexpr std::array<std::string_view, 9> k_buildable_items = {
     "home",
+    "farm",
     "defense_tower",
     "marketplace",
     "temple",
@@ -57,6 +58,8 @@ struct OwnerScan {
   int home_count = 0;
   int marketplace_count = 0;
   int temple_count = 0;
+  int farm_count = 0;
+  int ripe_farm_count = 0;
   int building_count = 0;
   int barracks_manpower = 0;
   bool barracks_producing = false;
@@ -105,6 +108,13 @@ auto scan_owner(Engine::Core::World* world, int owner_id) -> OwnerScan {
       case Game::Units::SpawnType::Temple:
         ++scan.temple_count;
         break;
+      case Game::Units::SpawnType::Farm:
+        ++scan.farm_count;
+        if (const auto* farm = entity->get_component<Engine::Core::FarmComponent>();
+            farm != nullptr && farm->ripe()) {
+          ++scan.ripe_farm_count;
+        }
+        break;
       default:
         break;
       }
@@ -123,7 +133,8 @@ auto scan_owner(Engine::Core::World* world, int owner_id) -> OwnerScan {
     }
 
     const bool busy = builder->in_progress || builder->has_construction_site ||
-                      builder->has_task_target;
+                      builder->has_task_target ||
+                      builder->structure_task_entity_id != 0;
     if (const auto resource =
             Game::Systems::resource_for_harvest_product(builder->product_type);
         resource.has_value() && busy) {
@@ -203,6 +214,21 @@ struct UnitItem {
   int individuals_per_unit = 1;
 };
 
+auto civilian_item(Game::Systems::NationID nation_id) -> UnitItem {
+  const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+      nation_id, Game::Units::TroopType::Civilian);
+  UnitItem entry;
+  entry.item.key = QString::fromStdString(
+      Game::Units::troop_typeToString(Game::Units::TroopType::Civilian));
+  entry.item.display_name =
+      Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
+  entry.item.costs = profile.production.resource_costs;
+  entry.population_cost = profile.production.cost;
+  entry.build_time = profile.production.build_time;
+  entry.individuals_per_unit = profile.individuals_per_unit;
+  return entry;
+}
+
 auto unit_items(const Game::Systems::NationRegistry* nations,
                 Game::Systems::NationID nation_id) -> std::vector<UnitItem> {
   std::vector<UnitItem> items;
@@ -273,7 +299,9 @@ auto build_resource_overview(const EconomyOverviewRequest& request) -> QVariantL
     }
     note_shortfall(item, available, shortfall, shortfall_item);
   }
-  for (const auto& unit : unit_items(request.nations, request.nation_id)) {
+  auto units = unit_items(request.nations, request.nation_id);
+  units.push_back(civilian_item(request.nation_id));
+  for (const auto& unit : units) {
     for (const ResourceType type : Game::Systems::k_all_resource_types) {
       if (unit.item.costs.get(type) > 0) {
         used_by[Game::Systems::resource_type_index(type)].push_back(unit.item.key);
@@ -356,6 +384,25 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
     units.push_back(entry);
   }
 
+  {
+    const UnitItem civilian = civilian_item(request.nation_id);
+    QVariantMap entry;
+    entry["unit_type"] = civilian.item.key;
+    entry["display_name"] = civilian.item.display_name;
+    entry["population_cost"] = civilian.population_cost;
+    entry["resource_costs"] = costs_to_map(civilian.item.costs);
+    entry["build_time"] = static_cast<double>(civilian.build_time);
+    entry["individuals_per_unit"] = civilian.individuals_per_unit;
+    const QVariantMap missing = missing_to_map(civilian.item.costs, available);
+    entry["missing"] = missing;
+    entry["affordable"] = missing.isEmpty();
+    entry["prerequisite"] = QStringLiteral("home");
+    entry["prerequisite_met"] = scan.home_count > 0;
+    entry["manpower_met"] = true;
+    entry["population_met"] = true;
+    units.push_back(entry);
+  }
+
   QVariantMap harvest_yields;
   for (const ResourceType type : Game::Systems::k_all_resource_types) {
     if (Game::Systems::is_gatherable_resource(type)) {
@@ -375,6 +422,13 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
   help["home_count"] = scan.home_count;
   help["marketplace_count"] = scan.marketplace_count;
   help["temple_count"] = scan.temple_count;
+  help["farm_count"] = scan.farm_count;
+  help["ripe_farm_count"] = scan.ripe_farm_count;
+  help["farm_cycle_seconds"] =
+      static_cast<double>(Game::Systems::k_farm_growth_cycle_seconds);
+  help["sheep_yield"] = Game::Systems::k_slaughter_sheep_food_reward;
+  help["civilian_food_cost"] =
+      civilian_item(request.nation_id).item.costs.get(ResourceType::Food);
   help["barracks_manpower"] = scan.barracks_manpower;
   help["population"] = troop_count;
   help["population_cap"] = request.population_cap;

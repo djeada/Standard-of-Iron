@@ -897,7 +897,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Build siege weapons, structures, and gather wood, stone, and iron")
+                        text: qsTr("Build siege weapons, structures, and gather wood, stone, iron, and food")
                         color: "#8D7146"
                         font.pixelSize: Design.Typography.caption
                     }
@@ -971,6 +971,14 @@ Rectangle {
                             } else if (label === "collect_iron_ore") {
                                 is_collection_task = true;
                                 label = qsTr("Collect Iron Ore");
+                            } else if (label === "harvest_grain") {
+                                is_collection_task = true;
+                                label = qsTr("Harvest Grain");
+                            } else if (label === "slaughter_sheep") {
+                                is_collection_task = true;
+                                label = qsTr("Slaughter Sheep");
+                            } else if (label === "farm") {
+                                label = qsTr("Farm");
                             } else if (label === "wall_segment") {
                                 label = qsTr("Wall Segment");
                             } else if (label === "wall_gate") {
@@ -1528,6 +1536,146 @@ Rectangle {
                                 anchors.fill: parent
                                 color: "#F4E7C8"
                                 opacity: builderHomeMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
+
+                            Behavior on scale  {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            id: builderFarmCard
+
+                            property var construction_info: productionPanel.get_construction_info("farm")
+                            property var card_state: productionPanel.construction_card_state(builderProductionContent.builder_prod, construction_info)
+                            property bool is_enabled: card_state.enabled
+                            property bool is_hovered: builderFarmMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: productionPanel.recruit_card_color(is_enabled, is_hovered)
+                            border.color: productionPanel.recruit_card_border(is_enabled, is_hovered)
+                            border.width: is_hovered && is_enabled ? 2 : 1
+                            opacity: is_enabled ? 1 : 0.5
+                            scale: is_hovered && is_enabled ? 1.025 : 1
+
+                            Image {
+                                id: builderFarmIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                source: productionPanel.unit_icon_source("farm")
+                                visible: status === Image.Ready
+                                opacity: parent.is_enabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: builderFarmIcon.status !== Image.Ready
+                                text: Design.Icons.unitGlyph("farm")
+                                color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
+                                font.pixelSize: Design.Typography.glyph
+                                opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 24
+                                text: qsTr("Farm")
+                                color: parent.is_enabled ? "#D4B57C" : "#6B5231"
+                                font.pixelSize: Design.Typography.caption
+                                font.bold: true
+                            }
+
+                            Flow {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 4
+                                spacing: 4
+
+                                Repeater {
+                                    model: productionPanel.cost_entries(0, builderFarmCard.construction_info.resource_costs || {}, false)
+
+                                    delegate: Rectangle {
+                                        width: farmCostRow.implicitWidth + 8
+                                        height: farmCostRow.implicitHeight + 6
+                                        radius: 8
+                                        color: builderFarmCard.is_enabled ? "#cc2a1d12" : "#991f150d"
+                                        border.color: builderFarmCard.is_enabled ? hs.bronze : "#8C6A3E"
+                                        border.width: 1
+
+                                        Row {
+                                            id: farmCostRow
+
+                                            anchors.centerIn: parent
+                                            spacing: 3
+
+                                            Image {
+                                                width: Design.A11y.scaled(9)
+                                                height: Design.A11y.scaled(9)
+                                                fillMode: Image.PreserveAspectFit
+                                                smooth: true
+                                                source: productionPanel.cost_icon_source(modelData.key)
+                                            }
+
+                                            Text {
+                                                text: modelData.amount
+                                                color: builderFarmCard.is_enabled ? Theme.textMain : Theme.textDim
+                                                font.pixelSize: Design.Typography.caption
+                                                font.bold: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: builderFarmMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.is_enabled) {
+                                        Design.UiSound.activate();
+                                        productionPanel.builder_construction("farm");
+                                    } else {
+                                        Design.UiSound.warning();
+                                    }
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && parent.is_enabled)
+                                        Design.UiSound.hover();
+                                }
+                                cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Farm\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Grows grain in cycles\nBuilders reap it for the food that recruits civilians")).arg(productionPanel.format_cost_summary(0, builderFarmCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderFarmCard.construction_info.build_time || 10).toFixed(0)) : builderFarmCard.card_state.reason
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#F4E7C8"
+                                opacity: builderFarmMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 
@@ -2348,14 +2496,130 @@ Rectangle {
                 }
             }
 
+            Rectangle {
+                property bool has_farm_selected: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("farm")))
+
+                width: parent.width
+                height: farmContent.height + 16
+                color: "#120D09"
+                radius: 6
+                border.color: hs.bronzeDeep
+                border.width: 1
+                visible: has_farm_selected
+
+                Column {
+                    id: farmContent
+
+                    property var farm_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_farm_state) ? productionPanel.production.selected_farm_state() : ({
+                                "has_farm": false,
+                                "growth": 0,
+                                "ripe": false,
+                                "seconds_to_ripe": 0,
+                                "cycle_seconds": 60,
+                                "yield": 0,
+                                "harvests": 0,
+                                "claimed": false
+                            }))
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.margins: 8
+                    spacing: 8
+                    width: parent.width - 16
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 6
+
+                        Image {
+                            id: farmHeaderIcon
+
+                            width: 18
+                            height: 18
+                            source: productionPanel.unit_icon_source("farm")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            visible: status === Image.Ready
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: farmHeaderIcon.visible ? qsTr("FARM") : Design.Icons.unitGlyph("farm") + " " + qsTr("FARM")
+                            color: hs.bronze
+                            font.pixelSize: Design.Typography.caption
+                            font.bold: true
+                        }
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Grain ripens every %1s and a builder reaps %2 food from it").arg(Math.round(farmContent.farm_state.cycle_seconds || 0)).arg(farmContent.farm_state.yield || 0)
+                        color: "#8D7146"
+                        font.pixelSize: Design.Typography.caption
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        width: parent.width
+                    }
+
+                    Rectangle {
+                        width: parent.width - 20
+                        height: Math.max(Design.A11y.scaled(20), Design.Typography.label + 6)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        radius: 10
+                        color: "#120D09"
+                        border.color: "#2F251D"
+                        border.width: 2
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: 2
+                            height: parent.height - 4
+                            width: Math.max(0, (parent.width - 4) * Math.min(1, Math.max(0, farmContent.farm_state.growth || 0)))
+                            color: farmContent.farm_state.ripe ? "#D9A441" : "#7F9A5F"
+                            radius: 8
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: farmContent.farm_state.ripe ? qsTr("Ripe") : qsTr("%1% grown \u00b7 %2s").arg(Math.round((farmContent.farm_state.growth || 0) * 100)).arg(Math.ceil(farmContent.farm_state.seconds_to_ripe || 0))
+                            color: "#F4E7C8"
+                            font.pixelSize: Design.Typography.caption
+                            font.bold: true
+                            style: Text.Outline
+                            styleColor: "#120D09"
+                        }
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: {
+                            if (!farmContent.farm_state.has_farm)
+                                return qsTr("Select your farm to see its crop.");
+                            if (farmContent.farm_state.claimed)
+                                return qsTr("A builder is on its way to harvest.");
+                            if (farmContent.farm_state.ripe)
+                                return qsTr("Send a builder with Collect, or leave Auto Gather running.");
+                            return qsTr("Harvested %1 times so far.").arg(farmContent.farm_state.harvests || 0);
+                        }
+                        color: farmContent.farm_state.ripe ? "#D9A441" : "#F4E7C8"
+                        font.pixelSize: Design.Typography.caption
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        width: parent.width
+                    }
+                }
+            }
+
             Item {
                 property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
                 property bool has_builder: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("builder")))
                 property bool has_home: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("home")))
                 property bool has_marketplace: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("marketplace")))
                 property bool has_temple: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("temple")))
+                property bool has_farm: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("farm")))
 
-                visible: !has_barracks && !has_builder && !has_home && !has_marketplace && !has_temple
+                visible: !has_barracks && !has_builder && !has_home && !has_marketplace && !has_temple && !has_farm
                 width: parent.width
                 height: 200
 

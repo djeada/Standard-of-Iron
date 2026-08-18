@@ -19,13 +19,21 @@ namespace {
     return {false, 0U};
   }
 
+  auto const max_idx = static_cast<std::size_t>(inputs.table->variant_stride) - 1U;
+  if (inputs.has_forced_variant_index) {
+    return {true, std::min<std::size_t>(inputs.forced_variant_index, max_idx)};
+  }
+
   if (inputs.table->variant_is_seed_based) {
-    return {true,
-            seeded_visual_variant_index(inputs.seed, inputs.table->variant_stride)};
+    auto const seed_stride =
+        (inputs.table->seed_variant_limit > 0U &&
+         inputs.table->seed_variant_limit < inputs.table->variant_stride)
+            ? inputs.table->seed_variant_limit
+            : inputs.table->variant_stride;
+    return {true, seeded_visual_variant_index(inputs.seed, seed_stride)};
   }
 
   if (inputs.has_variant_index_hint) {
-    auto const max_idx = static_cast<std::size_t>(inputs.table->variant_stride) - 1U;
     return {true, std::min<std::size_t>(inputs.variant_index_hint, max_idx)};
   }
 

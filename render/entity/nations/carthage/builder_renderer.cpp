@@ -16,6 +16,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 #include "animation/rig/humanoid_proportions.h"
 #include "builder_style.h"
@@ -95,6 +96,9 @@ constexpr std::uint32_t k_carthage_robes_role_count = 2U;
 constexpr std::uint32_t k_carthage_hammer_role_count = 2U;
 constexpr std::uint32_t k_carthage_saw_role_count = 4U;
 constexpr std::uint32_t k_carthage_chisel_role_count = 2U;
+constexpr std::uint32_t k_carthage_sickle_role_count = 2U;
+constexpr std::uint8_t k_sickle_wood_slot = 0U;
+constexpr std::uint8_t k_sickle_metal_slot = 1U;
 constexpr std::uint32_t k_carthage_civilian_sash_role_count = 2U;
 constexpr std::uint32_t k_civilian_pack_role_count = 3U;
 
@@ -425,6 +429,36 @@ auto carthage_saw_archetype() -> const RenderArchetype& {
   return arch;
 }
 
+auto carthage_sickle_archetype() -> const RenderArchetype& {
+  static const RenderArchetype arch = []() {
+    constexpr float k_arc_cx = 0.085F;
+    constexpr float k_arc_cy = 0.045F;
+    constexpr float k_arc_r = 0.090F;
+    constexpr std::array<float, 6> k_angles{
+        180.0F, 148.0F, 116.0F, 84.0F, 52.0F, 20.0F};
+    std::vector<GeneratedEquipmentPrimitive> prims;
+    prims.push_back(generated_cylinder(QVector3D(0.0F, -0.16F, 0.01F),
+                                       QVector3D(0.0F, 0.03F, 0.01F),
+                                       0.016F,
+                                       k_sickle_wood_slot));
+    prims.push_back(
+        generated_sphere(QVector3D(0.0F, -0.165F, 0.01F), 0.02F, k_sickle_wood_slot));
+    for (std::size_t i = 0; i + 1 < k_angles.size(); ++i) {
+      auto point = [&](float degrees) {
+        float const rad = degrees * 3.14159265F / 180.0F;
+        return QVector3D(k_arc_cx + k_arc_r * std::cos(rad),
+                         k_arc_cy + k_arc_r * std::sin(rad),
+                         0.01F);
+      };
+      float const taper = 0.011F - 0.0016F * static_cast<float>(i);
+      prims.push_back(generated_cylinder(
+          point(k_angles[i]), point(k_angles[i + 1]), taper, k_sickle_metal_slot));
+    }
+    return build_generated_equipment_archetype("carthage_builder_sickle", prims);
+  }();
+  return arch;
+}
+
 auto carthage_chisel_archetype() -> const RenderArchetype& {
   static const RenderArchetype arch = []() {
     std::array<GeneratedEquipmentPrimitive, 4> const prims{{
@@ -598,6 +632,17 @@ auto carthage_saw_fill_role_colors(const HumanoidPalette& palette,
   out[2] = palette.metal * 0.62F;
   out[3] = palette.leather_dark;
   return k_carthage_saw_role_count;
+}
+
+auto carthage_sickle_fill_role_colors(const HumanoidPalette& palette,
+                                      QVector3D* out,
+                                      std::size_t max) -> std::uint32_t {
+  if (max < k_carthage_sickle_role_count) {
+    return 0U;
+  }
+  out[0] = palette.wood;
+  out[1] = palette.metal * 0.90F;
+  return k_carthage_sickle_role_count;
 }
 
 auto carthage_chisel_fill_role_colors(const HumanoidPalette& palette,
@@ -817,13 +862,49 @@ auto carthage_builder_chisel_unit_archetype() -> Render::Creature::ArchetypeId {
   return k_archetype;
 }
 
+auto carthage_builder_sickle_unit_archetype() -> Render::Creature::ArchetypeId {
+  static constexpr std::array<std::uint8_t, 2> k_slots{k_sickle_wood_slot,
+                                                       k_sickle_metal_slot};
+  static const auto k_tool_spec = carthage_tool_make_static_attachment(
+      carthage_sickle_archetype(),
+      Render::Creature::ArchetypeRegistry::instance()
+          .get(carthage_builder_idle_archetype())
+          ->role_count,
+      k_slots);
+  static const auto k_archetype = register_builder_tool_variant_archetype(
+      "troops/carthage/builder/construction_sickle",
+      carthage_builder_idle_archetype(),
+      k_tool_spec,
+      +[](const void* variant_void,
+          QVector3D* out,
+          std::uint32_t base_count,
+          std::size_t max_count) -> std::uint32_t {
+        if (variant_void == nullptr || max_count <= base_count) {
+          return base_count;
+        }
+        const auto& v = *static_cast<const HumanoidVariant*>(variant_void);
+        return base_count + carthage_sickle_fill_role_colors(
+                                v.palette, out + base_count, max_count - base_count);
+      },
+      static_cast<std::uint8_t>(k_carthage_sickle_role_count));
+  return k_archetype;
+}
+
 auto carthage_builder_variant_table()
     -> const Render::Creature::ArchetypeVariantTable& {
   static const Render::Creature::ArchetypeVariantTable k_table = []() {
     Render::Creature::ArchetypeVariantTable t{};
     t.variant_trigger_pose = Render::Creature::PoseIntent::Construct;
-    t.variant_stride = 4;
+    t.variant_stride = 5;
+
+    t.archetype_for_pose[static_cast<std::size_t>(
+        Render::Creature::PoseIntent::AttackMelee)] =
+        carthage_builder_hammer_unit_archetype();
+    t.state_for_pose[static_cast<std::size_t>(
+        Render::Creature::PoseIntent::AttackMelee)] =
+        Render::Creature::AnimationStateId::AttackSword;
     t.variant_is_seed_based = true;
+    t.seed_variant_limit = 4;
 
     t.archetype_for_variant[0] = carthage_builder_hammer_unit_archetype();
     t.state_for_variant[0] = Render::Creature::AnimationStateId::AttackSword;
@@ -835,7 +916,10 @@ auto carthage_builder_variant_table()
     t.state_for_variant[2] = Render::Creature::AnimationStateId::AttackSword;
 
     t.archetype_for_variant[3] = carthage_builder_chisel_unit_archetype();
-    t.state_for_variant[3] = Render::Creature::AnimationStateId::Hold;
+    t.state_for_variant[3] = Render::Creature::AnimationStateId::AttackSword;
+
+    t.archetype_for_variant[4] = carthage_builder_sickle_unit_archetype();
+    t.state_for_variant[4] = Render::Creature::AnimationStateId::AttackSword;
     return t;
   }();
   return k_table;
@@ -1033,6 +1117,8 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry& registry) {
   ar.register_archetype("carthage_builder_saw", [] { (void)carthage_saw_archetype(); });
   ar.register_archetype("carthage_builder_chisel",
                         [] { (void)carthage_chisel_archetype(); });
+  ar.register_archetype("carthage_builder_sickle",
+                        [] { (void)carthage_sickle_archetype(); });
 }
 
 void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {

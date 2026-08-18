@@ -85,6 +85,10 @@ auto ProductionViewModel::selected_marketplace_state() const -> QVariantMap {
                                                   m_context.local_owner_id);
 }
 
+auto ProductionViewModel::selected_farm_state() const -> QVariantMap {
+  return App::Economy::selected_farm_state(m_context.world, m_context.local_owner_id);
+}
+
 auto ProductionViewModel::unit_info(const QString& unit_type,
                                     const QString& nation_id) const -> QVariantMap {
   return App::Economy::unit_production_info(unit_type, nation_id);

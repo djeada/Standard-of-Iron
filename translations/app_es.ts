@@ -179,6 +179,22 @@
         <source>%1 (%2 units)</source>
         <translation>%1 (%2 unidades)</translation>
     </message>
+    <message>
+        <source>Harvesting grain</source>
+        <translation>Cosechando grano</translation>
+    </message>
+    <message>
+        <source>Reaping a ripe farm for food.</source>
+        <translation>Siega una granja madura para obtener comida.</translation>
+    </message>
+    <message>
+        <source>Butchering</source>
+        <translation>Sacrificando</translation>
+    </message>
+    <message>
+        <source>Slaughtering a sheep for food.</source>
+        <translation>Sacrifica una oveja para obtener comida.</translation>
+    </message>
 </context>
 <context>
     <name>ArmyFormationController</name>
@@ -1287,10 +1303,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Procede de tu tesoro inicial, de las recompensas de misión y de vender mercancías en un mercado.</translation>
     </message>
     <message>
-        <source>Comes from your starting stores, mission rewards, and buying at a marketplace.</source>
-        <translation>Procede de tus reservas iniciales, de las recompensas de misión y de comprar en un mercado.</translation>
-    </message>
-    <message>
         <source>Send a builder to chop a tree with Collect, or leave Auto Gather running.</source>
         <translation>Envía a un constructor a talar un árbol con Recoger, o deja activa la Recolección automática.</translation>
     </message>
@@ -1377,10 +1389,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Elephant</source>
         <translation>Elefante de guerra</translation>
-    </message>
-    <message>
-        <source>Raises the population the nearest barracks can recruit from.</source>
-        <translation>Aumenta la población de la que puede reclutar el cuartel más cercano.</translation>
     </message>
     <message>
         <source>Recruits troops and receives everything your builders gather.</source>
@@ -1487,10 +1495,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Recluta un constructor en un cuartel y envíalo a recoger madera, piedra o hierro.</translation>
     </message>
     <message>
-        <source>Select a builder, press Collect, and click a tree, boulder or ore deposit. It hauls the load to a barracks yard, then goes back for more.</source>
-        <translation>Selecciona un constructor, pulsa Recoger y haz clic en un árbol, una roca o un yacimiento. Llevará la carga al patio de un cuartel y volverá a por más.</translation>
-    </message>
-    <message>
         <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
         <translation>Con un constructor seleccionado, pulsa Construir y coloca una Casa para aumentar tu población, o un Cuartel para reclutar.</translation>
     </message>
@@ -1499,12 +1503,32 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Selecciona un cuartel y recluta tropas. Cada una cuesta población y recursos, ambos indicados en su ficha.</translation>
     </message>
     <message>
-        <source>Keep recruiting while your builders gather. Raise more Homes when population runs out.</source>
-        <translation>Sigue reclutando mientras tus constructores recogen. Levanta más Casas cuando se te acabe la población.</translation>
-    </message>
-    <message>
         <source>Gathering, building and recruiting are all under way.</source>
         <translation>La recogida, la construcción y el reclutamiento ya están en marcha.</translation>
+    </message>
+    <message>
+        <source>Send a builder to reap a ripe farm or slaughter a sheep with Collect, or leave Auto Gather running. Recruiting a civilian at a home spends it.</source>
+        <translation>Envía un constructor a segar una granja madura o a sacrificar una oveja con Recolectar, o deja activa la Recolección automática. Reclutar un civil en una casa la consume.</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>Granja</translation>
+    </message>
+    <message>
+        <source>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</source>
+        <translation>Cría civiles, que llevan efectivos al cuartel más cercano. Cada uno cuesta comida.</translation>
+    </message>
+    <message>
+        <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
+        <translation>Cultiva grano por ciclos. Un constructor lo siega para obtener comida cuando madura.</translation>
+    </message>
+    <message>
+        <source>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</source>
+        <translation>Selecciona un constructor, pulsa Recolectar y haz clic en un árbol, una roca, un yacimiento, una granja madura o una oveja. Lleva la carga al patio de un cuartel y vuelve a por más.</translation>
+    </message>
+    <message>
+        <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
+        <translation>Sigue reclutando mientras tus constructores recolectan. Levanta casas y granjas cuando se agoten la población o la comida.</translation>
     </message>
 </context>
 <context>
@@ -1520,10 +1544,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Recruiting draws on the manpower held by each barracks.</source>
         <translation>Reclutar consume los efectivos disponibles en cada cuartel.</translation>
-    </message>
-    <message>
-        <source>Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.</source>
-        <translation>Población %1 / %2. Una Casa suma %3 al cuartel más cercano; llevar un civil a uno suma %4.</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
@@ -1588,6 +1608,14 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Back to the battle</source>
         <translation>Volver a la batalla</translation>
+    </message>
+    <message>
+        <source>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</source>
+        <translation>Población %1 / %2. Una casa cría civiles por %3 de comida cada uno; llevar un civil a un cuartel añade %4 efectivos. Las granjas maduran cada %5 s y una oveja rinde %6 de comida.</translation>
+    </message>
+    <message>
+        <source>Needs a home</source>
+        <translation>Necesita una casa</translation>
     </message>
 </context>
 <context>
@@ -1654,6 +1682,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Temple</source>
         <translation>Templo</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>Granja</translation>
     </message>
 </context>
 <context>
@@ -2296,6 +2328,14 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Repair</source>
         <translation>Reparar</translation>
     </message>
+    <message>
+        <source>Harvest grain</source>
+        <translation>Cosechar grano</translation>
+    </message>
+    <message>
+        <source>Slaughter sheep</source>
+        <translation>Sacrificar oveja</translation>
+    </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
@@ -2778,10 +2818,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Solo constructores.</translation>
     </message>
     <message>
-        <source>Send a builder to fell a tree, break a boulder or work an ore seam.</source>
-        <translation>Envía a un constructor a talar un árbol, romper una roca o explotar una veta de mineral.</translation>
-    </message>
-    <message>
         <source>Press Collect, then left-click the node. Right-click cancels.</source>
         <translation>Pulsa Recoger y haz clic izquierdo en el recurso. Clic derecho cancela.</translation>
     </message>
@@ -2874,10 +2910,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Elige un recurso</translation>
     </message>
     <message>
-        <source>Press again to cycle any resource, wood, stone, iron, then off.</source>
-        <translation>Púlsalo otra vez para pasar por cualquier recurso, madera, piedra, hierro y apagado.</translation>
-    </message>
-    <message>
         <source>Dismantle</source>
         <translation>Desmontar</translation>
     </message>
@@ -2912,6 +2944,18 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Dismantle is only available to builders</source>
         <translation>Desmontar solo está disponible para constructores</translation>
+    </message>
+    <message>
+        <source>Food first</source>
+        <translation>Comida primero</translation>
+    </message>
+    <message>
+        <source>Send a builder to fell a tree, break a boulder, work an ore seam, reap a ripe farm or slaughter a sheep.</source>
+        <translation>Envía un constructor a talar un árbol, romper una roca, trabajar una veta de mineral, segar una granja madura o sacrificar una oveja.</translation>
+    </message>
+    <message>
+        <source>Press again to cycle any resource, wood, stone, iron, food, then off.</source>
+        <translation>Pulsa de nuevo para alternar entre cualquier recurso, madera, piedra, hierro, comida y apagado.</translation>
     </message>
 </context>
 <context>
@@ -3377,10 +3421,6 @@ Sin ver: nunca explorado.</translation>
         <translation>Costes</translation>
     </message>
     <message>
-        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost a little wood and iron plus population.</source>
-        <translation>Cada tarjeta, de recluta o de edificio, indica su precio. Una tarjeta gris significa que falta algo; pasa el ratón para leer qué. Las casas cuestan 50 de madera y 15 de piedra, un cuartel 100 de madera y 60 de piedra, una torre defensiva 60 de madera y 80 de piedra; los soldados cuestan un poco de madera y hierro más población.</translation>
-    </message>
-    <message>
         <source>Placing a structure</source>
         <translation>Colocar una estructura</translation>
     </message>
@@ -3391,10 +3431,6 @@ Sin ver: nunca explorado.</translation>
     <message>
         <source>What each building does</source>
         <translation>Qué hace cada edificio</translation>
-    </message>
-    <message>
-        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>Los cuarteles reclutan soldados y albergan tu patio de almacenamiento. Las casas crían familias y civiles. Las torres defensivas disparan a todo lo que esté a su alcance. Los mercados comercian. Los templos fortalecen la moral. Las murallas y puertas dan forma al campo; las puertas se abren para tus propias tropas.</translation>
     </message>
     <message>
         <source>Repair and dismantle</source>
@@ -3411,10 +3447,6 @@ Sin ver: nunca explorado.</translation>
     <message>
         <source>Population</source>
         <translation>Población</translation>
-    </message>
-    <message>
-        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>Un cuartel empieza con una reserva de población y la gasta en cada recluta. Las casas la reponen: cada casa cría familias con el tiempo, allí se puede reclutar a un civil y enviarlo al cuartel con Entregar, y la reserva crece. La barra superior muestra tu ejército frente al límite total del mapa.</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -3531,6 +3563,26 @@ Sin ver: nunca explorado.</translation>
     <message>
         <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
         <translation>Un edificio dañado puede repararlo un constructor con la orden Reparar. Un edificio que ya no necesitas se retira con la orden Desmontar: elige a tus constructores, pulsa Desmontar y haz clic en el edificio. Parte de lo que costó vuelve cuando el trabajo termina, y retirar a la cuadrilla antes no da nada.</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Comida</translation>
+    </message>
+    <message>
+        <source>Food feeds your settlement: every civilian recruited at a Home costs it. A Farm grows grain in cycles; when the field turns gold a builder reaps it with Collect and hauls the grain home, and the field is sown again. Builders can also slaughter a sheep for a smaller haul. Auto Gather set to food keeps a builder working the farms.</source>
+        <translation>La comida alimenta tu asentamiento: cada civil reclutado en una casa la cuesta. Una granja cultiva grano por ciclos; cuando el campo se vuelve dorado, un constructor lo siega con Recolectar, lleva el grano a casa y el campo se siembra de nuevo. Los constructores también pueden sacrificar una oveja por una carga menor. La Recolección automática en comida mantiene a un constructor trabajando las granjas.</translation>
+    </message>
+    <message>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</source>
+        <translation>Cada tarjeta, recluta o edificio, indica su precio. Una tarjeta gris significa que falta algo; pasa el cursor para leer qué. Las casas cuestan 50 de madera y 15 de piedra, una granja 40 de madera y 10 de piedra, un cuartel 100 de madera y 60 de piedra, una torre defensiva 60 de madera y 80 de piedra; los soldados cuestan madera y hierro más población, y los civiles cuestan comida.</translation>
+    </message>
+    <message>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>Los cuarteles reclutan soldados y albergan tu patio de reservas. Las casas crían familias y civiles. Las granjas cultivan grano que los constructores siegan para obtener comida. Las torres defensivas disparan a todo lo que esté a su alcance. Los mercados comercian. Los templos refuerzan la moral. Muros y puertas dan forma al campo; las puertas se abren para tus propias tropas.</translation>
+    </message>
+    <message>
+        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>Un cuartel empieza con una reserva de población y la gasta en cada recluta. Las casas la rellenan: cada casa cría familias con el tiempo, allí se puede reclutar un civil por comida y enviarlo al cuartel con Entregar, y la reserva crece. La barra superior muestra tu ejército frente al límite total del mapa.</translation>
     </message>
 </context>
 <context>
@@ -5931,8 +5983,8 @@ para ver la vista previa</translation>
 <context>
     <name>ProductionManager</name>
     <message>
-        <source>Select a tree, boulder, or iron ore deposit.</source>
-        <translation>Selecciona un árbol, una roca o un yacimiento de hierro.</translation>
+        <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
+        <translation>Selecciona un árbol, una roca, un yacimiento, una granja madura o una oveja.</translation>
     </message>
     <message>
         <source>Select a tree to chop.</source>
@@ -6214,10 +6266,6 @@ Usa el modo Entregar y luego haz clic en un cuartel aliado para añadir 50 de po
         <translation>CONSTRUCCIÓN</translation>
     </message>
     <message>
-        <source>Build siege weapons, structures, and gather wood, stone, and iron</source>
-        <translation>Construye armas de asedio y estructuras, y recolecta madera, piedra y hierro</translation>
-    </message>
-    <message>
         <source>Select a structure to build</source>
         <translation>Selecciona una estructura para construirla</translation>
     </message>
@@ -6410,6 +6458,70 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
     <message>
         <source>Need %1</source>
         <translation>Necesitas: %1</translation>
+    </message>
+    <message>
+        <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
+        <translation>Construye armas de asedio y estructuras, y recolecta madera, piedra, hierro y comida</translation>
+    </message>
+    <message>
+        <source>Harvest Grain</source>
+        <translation>Cosechar grano</translation>
+    </message>
+    <message>
+        <source>Slaughter Sheep</source>
+        <translation>Sacrificar oveja</translation>
+    </message>
+    <message>
+        <source>Farm</source>
+        <translation>Granja</translation>
+    </message>
+    <message>
+        <source>Build Farm
+%1
+Cost: %2
+Build time: %3s</source>
+        <translation>Construir granja
+%1
+Coste: %2
+Tiempo de construcción: %3 s</translation>
+    </message>
+    <message>
+        <source>Grows grain in cycles
+Builders reap it for the food that recruits civilians</source>
+        <translation>Cultiva grano por ciclos
+Los constructores lo siegan para la comida que recluta civiles</translation>
+    </message>
+    <message>
+        <source>FARM</source>
+        <translation>GRANJA</translation>
+    </message>
+    <message>
+        <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
+        <translation>El grano madura cada %1 s y un constructor cosecha %2 de comida</translation>
+    </message>
+    <message>
+        <source>Ripe</source>
+        <translation>Maduro</translation>
+    </message>
+    <message>
+        <source>%1% grown · %2s</source>
+        <translation>%1 % crecido · %2 s</translation>
+    </message>
+    <message>
+        <source>Select your farm to see its crop.</source>
+        <translation>Selecciona tu granja para ver su cosecha.</translation>
+    </message>
+    <message>
+        <source>A builder is on its way to harvest.</source>
+        <translation>Un constructor va de camino a cosechar.</translation>
+    </message>
+    <message>
+        <source>Send a builder with Collect, or leave Auto Gather running.</source>
+        <translation>Envía un constructor con Recolectar o deja activa la Recolección automática.</translation>
+    </message>
+    <message>
+        <source>Harvested %1 times so far.</source>
+        <translation>Cosechada %1 veces hasta ahora.</translation>
     </message>
 </context>
 <context>

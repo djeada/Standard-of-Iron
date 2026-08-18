@@ -32,14 +32,17 @@ Item {
         var used = root.count("population");
         if (cap <= 0)
             return qsTr("Recruiting draws on the manpower held by each barracks.");
-        return qsTr("Population %1 / %2. A Home adds %3 to the nearest barracks; walking a civilian into one adds %4.").arg(used).arg(cap).arg(root.count("home_population_bonus")).arg(root.count("civilian_delivery_grant"));
+        return qsTr("Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.").arg(used).arg(cap).arg(root.count("civilian_food_cost")).arg(root.count("civilian_delivery_grant")).arg(root.count("farm_cycle_seconds")).arg(root.count("sheep_yield"));
     }
 
     function blocked_reason(entry, kind) {
         if (!entry)
             return "";
-        if (entry.prerequisite_met === false)
+        if (entry.prerequisite_met === false) {
+            if (entry.prerequisite === "home")
+                return qsTr("Needs a home");
             return kind === "unit" ? qsTr("Needs a barracks") : qsTr("Needs a builder");
+        }
         if (kind === "unit" && entry.manpower_met === false)
             return qsTr("Not enough manpower at the barracks");
         if (kind === "unit" && entry.population_met === false)

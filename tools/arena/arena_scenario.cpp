@@ -31,6 +31,7 @@
 #include "game/systems/combat_system/structure_fire.h"
 #include "game/systems/command_service.h"
 #include "game/systems/defensive_unit_layout_service.h"
+#include "game/systems/food_targets.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
@@ -136,6 +137,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("HarvestResource");
   case ScenarioCommandKind::AbandonWork:
     return QStringLiteral("AbandonWork");
+  case ScenarioCommandKind::SetFarmGrowth:
+    return QStringLiteral("SetFarmGrowth");
   case ScenarioCommandKind::RpgMove:
     return QStringLiteral("RpgMove");
   case ScenarioCommandKind::ReloadUndeadZoneState:
@@ -1148,9 +1151,61 @@ struct ArenaScenarioRunner::Impl {
       arm_response(step.group, command_name(step.command));
       break;
     }
+    case ScenarioCommandKind::SetFarmGrowth:
+      for (auto entity_id : step_entities(step)) {
+        auto* entity = world.get_entity(entity_id);
+        auto* farm = entity != nullptr
+                         ? entity->get_component<Engine::Core::FarmComponent>()
+                         : nullptr;
+        if (farm != nullptr) {
+          farm->growth =
+              std::clamp(static_cast<float>(step.value) / 100.0F, 0.0F, 1.0F);
+        }
+      }
+      break;
     case ScenarioCommandKind::HarvestResource: {
       auto& terrain = Game::Map::TerrainService::instance();
       const QString kind = step.resource_kind;
+      if (kind == QStringLiteral("grain") || kind == QStringLiteral("sheep")) {
+        const std::string_view product =
+            kind == QStringLiteral("grain")
+                ? Game::Systems::k_builder_product_harvest_grain
+                : Game::Systems::k_builder_product_slaughter_sheep;
+        for (auto entity_id : ids(step.group)) {
+          auto* entity = world.get_entity(entity_id);
+          auto* transform =
+              entity != nullptr
+                  ? entity->get_component<Engine::Core::TransformComponent>()
+                  : nullptr;
+          if (transform == nullptr) {
+            continue;
+          }
+          const int owner_id = owner_of(world, entity_id);
+          const auto target =
+              Game::Systems::find_food_target_near(world,
+                                                   product,
+                                                   owner_id,
+                                                   transform->position.x,
+                                                   transform->position.z,
+                                                   0.0F,
+                                                   entity_id);
+          if (!target.has_value()) {
+            continue;
+          }
+          Game::Command::dispatch(
+              world,
+              Game::Command::Command{
+                  .source = Game::Command::Source::Script,
+                  .owner_id = owner_id,
+                  .payload = Game::Command::StartHarvest{
+                      .units = {entity_id},
+                      .construction_type = std::string(product),
+                      .resource_target = target->id,
+                      .site = QVector3D(target->x, 0.0F, target->z)}});
+        }
+        arm_response(step.group, command_name(step.command));
+        break;
+      }
       const auto matches = [&kind](Game::Map::WorldProp::Type type) {
         if (kind == QStringLiteral("tree")) {
           return Game::Map::is_tree_world_prop_type(type);
@@ -1909,9 +1964,7 @@ struct ArenaScenarioRunner::Impl {
         entity->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder != nullptr && builder->construction_complete &&
         !latched_builder_completions.contains(entity_id)) {
-      if (builder->product_type == "cut_tree" ||
-          builder->product_type == "collect_stone" ||
-          builder->product_type == "collect_iron_ore") {
+      if (Game::Systems::is_gather_builder_product(builder->product_type)) {
         completed_harvest_by_owner[unit->owner_id]++;
       }
       latched_builder_completions.insert(entity_id);

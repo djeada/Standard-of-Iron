@@ -94,7 +94,8 @@ auto shared_guard_shield_pose(
 auto resolve_construction_role(
     const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
     std::uint32_t inst_seed,
-    bool force_single_soldier) noexcept -> ConstructionRole;
+    bool force_single_soldier,
+    std::uint8_t construction_job) noexcept -> ConstructionRole;
 
 void apply_spec_pose_layer(
     const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,

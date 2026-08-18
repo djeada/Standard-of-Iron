@@ -215,6 +215,11 @@ auto builtin_cost_info(std::string_view item_type) -> ConstructionCostInfo {
     info.resource_costs.set(ResourceType::Stone, 15);
     return info;
   }
+  if (item_type == "farm") {
+    info.resource_costs.set(ResourceType::Wood, 40);
+    info.resource_costs.set(ResourceType::Stone, 10);
+    return info;
+  }
   if (item_type == "barracks") {
     info.resource_costs.set(ResourceType::Wood, 100);
     info.resource_costs.set(ResourceType::Stone, 60);
@@ -269,6 +274,15 @@ auto builtin_build_time(std::string_view item_type) -> float {
   if (item_type == "cut_tree" || item_type == "collect" ||
       item_type == "collect_stone" || item_type == "collect_iron_ore") {
     return 6.0F;
+  }
+  if (item_type == "harvest_grain") {
+    return 5.0F;
+  }
+  if (item_type == "slaughter_sheep") {
+    return 4.0F;
+  }
+  if (item_type == "farm") {
+    return 8.0F;
   }
   return 10.0F;
 }

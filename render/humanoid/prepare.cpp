@@ -89,7 +89,8 @@ auto shared_guard_shield_pose(
 auto resolve_construction_role(
     const Render::Creature::Pipeline::UnitVisualSpec& visual_spec,
     std::uint32_t inst_seed,
-    bool force_single_soldier) noexcept -> ConstructionRole {
+    bool force_single_soldier,
+    std::uint8_t construction_job) noexcept -> ConstructionRole {
   auto const* variant_table = visual_spec.animation_manifest.variant_table;
   return Animation::resolve_humanoid_construction_role({
       .seed = inst_seed,
@@ -102,6 +103,7 @@ auto resolve_construction_role(
                             : std::uint8_t{0U},
       .variant_is_seed_based =
           variant_table != nullptr && variant_table->variant_is_seed_based,
+      .job = static_cast<Animation::HumanoidWorkJob>(construction_job),
   });
 }
 

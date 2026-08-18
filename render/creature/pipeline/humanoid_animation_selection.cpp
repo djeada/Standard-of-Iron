@@ -69,6 +69,22 @@ void apply_authored_action_clip(
   selection.clip_variant = 0U;
 }
 
+void apply_construction_clip(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.is_constructing || anim.inputs.is_attacking ||
+      anim.inputs.is_mounted || anim.inputs.is_dying || anim.inputs.is_dead) {
+    return;
+  }
+  auto const role = anim.construction_role == Animation::HumanoidConstructionRole::None
+                        ? Animation::HumanoidConstructionRole::Hammer
+                        : anim.construction_role;
+  selection.clip_id = Animation::humanoid_construction_clip_for_role(role);
+  selection.clip_variant = 0U;
+  selection.phase =
+      humanoid_phase_for_state(anim, Render::Creature::AnimationStateId::AttackSword);
+}
+
 void apply_showcase_clip(HumanoidAnimationSelection& selection,
                          const Render::GL::HumanoidAnimationContext& anim) noexcept {
   if (!anim.inputs.has_showcase_clip ||
@@ -252,6 +268,10 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
       selection.resolved_archetype, anim, selection.state);
 
   if (spec.animation_manifest.variant_table != nullptr) {
+    auto const job_role = Animation::humanoid_construction_role_for_job(
+        static_cast<Animation::HumanoidWorkJob>(anim.inputs.construction_job));
+    bool const job_forces_tool = anim.inputs.is_constructing &&
+                                 job_role != Animation::HumanoidConstructionRole::None;
     auto const override = Animation::resolve_archetype_variant_override({
         .table = spec.animation_manifest.variant_table,
         .pose_intent = selection.pose.intent,
@@ -260,6 +280,9 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
             variant != nullptr ? static_cast<std::uint8_t>(variant->facial_hair.style)
                                : std::uint8_t{0U},
         .has_variant_index_hint = variant != nullptr,
+        .forced_variant_index =
+            Animation::humanoid_construction_variant_for_role(job_role),
+        .has_forced_variant_index = job_forces_tool,
     });
 
     if (override.archetype_changed) {
@@ -279,6 +302,7 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
 
   apply_named_sword_attack_state(selection, anim);
   update_clip_id(selection);
+  apply_construction_clip(selection, anim);
   apply_authored_action_clip(selection, anim);
   apply_role_specific_combat_clip(selection, spec, anim);
   apply_showcase_clip(selection, anim);
