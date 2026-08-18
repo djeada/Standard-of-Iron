@@ -34,9 +34,9 @@ the `.ogg` files in `assets/audio/ambience`.
 | `forest_ambush`                                 | Birds under wind in the canopy         |
 | `river_crossing`                                | Shallow river under a bridge           |
 | `mountain_camp_night`                           | Crickets over a fire                   |
-| `night_rain`                                    | Steady night rain, own recording       |
-| `camp_fire_night`                               | A hearth, close                        |
+| `storm`                                         | Steady storm rain, own recording       |
 | `weather_rain`                                  | Light steady rain, no thunder          |
+| `camp_fire_night`                               | A hearth, close                        |
 | `weather_snow`                                  | Blizzard — the wind, not the snow      |
 | `battlefield_dry_wind_distant_march_01` / `_02` | Dry wind with a column off to one side |
 | `desert_army_march`                             | Carthage moving, under a sandstorm     |
