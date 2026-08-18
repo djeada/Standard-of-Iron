@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QVariantList>
 #include <QVariantMap>
 
 #include "game/mission/tutorial_director.h"
@@ -42,7 +43,18 @@ struct TutorialObservationInputs {
   QVariantMap wave_status;
 };
 
+struct TutorialFocusInputs {
+
+  Engine::Core::World* world = nullptr;
+  int local_owner_id = 1;
+  Game::Mission::TutorialFocusTarget target = Game::Mission::TutorialFocusTarget::None;
+  QVariantList wave_alerts;
+};
+
 [[nodiscard]] auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
     -> Game::Mission::TutorialObservation;
+
+[[nodiscard]] auto
+resolve_tutorial_focus_points(const TutorialFocusInputs& inputs) -> QVariantList;
 
 } // namespace App::Mission

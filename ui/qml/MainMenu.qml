@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
 
@@ -17,6 +18,7 @@ Item {
     readonly property var hs: StyleGuide.historical
     readonly property int command_row_spacing: commandList.height < menuModel.count * 70 ? 4 : 9
     readonly property int command_row_height: Math.max(60, Math.min(root.narrow ? 62 : 70, Math.floor((commandList.height - command_row_spacing * (menuModel.count - 1)) / Math.max(1, menuModel.count))))
+    readonly property bool tutorial_pending: !Core.UiPreferences.tutorialCompleted
     readonly property color ink: "#0B0806"
     readonly property color bronze: hs.bronze
 
@@ -524,6 +526,17 @@ Item {
                 Layout.fillHeight: true
                 model: menuModel
                 currentIndex: 0
+
+                Component.onCompleted: {
+                    if (!root.tutorial_pending)
+                        return;
+                    for (var i = 0; i < menuModel.count; ++i) {
+                        if (menuModel.get(i).idStr === "tutorial") {
+                            commandList.currentIndex = i;
+                            return;
+                        }
+                    }
+                }
                 spacing: root.command_row_spacing
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
@@ -694,21 +707,23 @@ Item {
                             }
 
                             Rectangle {
+                                readonly property bool recommends_tutorial: commandItem.idStr === "tutorial" && root.tutorial_pending
+
                                 Layout.alignment: Qt.AlignVCenter
                                 Layout.preferredHeight: 20
                                 Layout.preferredWidth: detailLabel.implicitWidth + 16
                                 radius: 2
-                                color: commandItem.selected ? "#AA2C1811" : "transparent"
+                                color: recommends_tutorial ? "#AA3E4A1E" : (commandItem.selected ? "#AA2C1811" : "transparent")
                                 border.width: 1
-                                border.color: commandItem.selected ? Qt.rgba(0.91, 0.79, 0.55, 0.6) : Qt.rgba(0.65, 0.49, 0.28, 0.32)
+                                border.color: recommends_tutorial ? Theme.accentBright : (commandItem.selected ? Qt.rgba(0.91, 0.79, 0.55, 0.6) : Qt.rgba(0.65, 0.49, 0.28, 0.32))
                                 visible: commandItem.width > 400
 
                                 Text {
                                     id: detailLabel
 
                                     anchors.centerIn: parent
-                                    text: qsTr(commandItem.detail).toUpperCase()
-                                    color: commandItem.selected ? Theme.accentBright : Theme.textDim
+                                    text: (parent.recommends_tutorial ? qsTr("Start here") : qsTr(commandItem.detail)).toUpperCase()
+                                    color: parent.recommends_tutorial || commandItem.selected ? Theme.accentBright : Theme.textDim
                                     font.pixelSize: Design.Typography.caption
                                     font.bold: true
                                     font.letterSpacing: 1.4

@@ -806,6 +806,48 @@ fire while a camp is changing hands are exactly the ones a player needs the map
 for. End-of-mission lines draw above the outcome overlay, so the loser gets the
 last word over the victory banner.
 
+The portrait is framed as a **bust**, and the framing follows the head rather than
+sitting at a fixed height: commander archetypes differ by up to eight percent in
+proportion scaling, which at this distance is the difference between a portrait
+and a cropped chin. Each frame the portrait asks the renderer where the head it
+just drew ended up, then eases the camera onto it.
+
+### The painted face
+
+The humanoid rig has a jaw and a nose and no features at all, and giving it any
+would mean re-baking every clip in every profile. So the speaking face is
+**painted over** the portrait instead: `ui/qml/CommanderFaceOverlay.qml` draws
+eyes, brows, a nose and a mouth on a small `Canvas`, and rides the head through
+an anchor the portrait publishes -- position, one head radius, screen roll, and
+how far the head is turned and tilted away from the camera. The paint squashes
+with the projection and fades out through the profile, so it never lands on the
+back of a head. The model is untouched.
+
+The anchor is measured, not re-derived. `Render::Creature::Pipeline::BoneProbe`
+(`render/creature/pipeline/creature_bone_probe.h`) is a thread-local pointer the
+portrait installs for the duration of one `render_world`; the creature pipeline
+fills it with the head bone's world transform for the instance it is submitting,
+taken from the same baked frame it skins with. Re-posing the rig on the UI side
+would have had to reproduce the per-soldier variation and the renderer's
+proportion scaling, and would drift from what was actually drawn.
+
+Two things the drawing does on purpose. It is spread to about 1.3 head radii,
+because every commander is drawn wearing a helmet wider than the skull inside it
+and painting to the skull leaves a small face rattling around in a large one. And
+it sits **above** the portrait's vignette, because the vignette is there to push
+the portrait behind the text while the face is the one part meant to hold the eye.
+
+The mouth is tied to the panel's typewriter, so it moves for exactly as long as
+the line is still arriving and closes when it stops -- no lip track is authored.
+Blinks and eye saccades are ambient and stop under reduced motion, along with the
+mouth.
+
+`--screenshot-view commander` opens the panel on its own against a stand-in view
+model, which is the only way to look at this without playing a mission to a
+trigger. Note that the screenshot harness does not advance QML animations: it is
+the surface to review framing, anchoring and placement on, not motion. Motion is
+covered by `tests/ui/qml/tst_commander_face.qml`.
+
 ### The tutorial mission
 
 `assets/missions/tutorial.json` is the guided first battle behind the main menu's
@@ -816,7 +858,7 @@ last word over the victory banner.
 ```
 
 When a mission carrying that flag finishes loading, the engine attaches
-`App::Core::TutorialDirector` (`app/mission/tutorial_director.h`), which walks the
+`Game::Mission::TutorialDirector` (`game/mission/tutorial_director.h`), which walks the
 player through fifteen fixed steps — selection, movement, attacking a held scouting
 party, gathering each material, building a Home, recruiting, assembling an army,
 breaking a raid, stances, the commander's aura, camera, speed, objectives and a
@@ -839,6 +881,33 @@ Two things about the mission are load-bearing for the director:
 The map it uses, `assets/maps/map_tutorial.json`, declares
 `"skirmish_hidden": true`; `MapCatalog` skips such maps so a scripted stage never
 appears as a free-play choice.
+
+#### Pointing at what a step is talking about
+
+Prose alone leaves a first-time player hunting a dense HUD for the button a step
+names, so every step also publishes a _focus_: what to ring, and where.
+
+- `focus_actions` is a list of command-grid ids (`collect`, `build`, `aura`, …).
+  `HUDBottom` passes `spotlit` to the matching `IronCommandButton`, which draws a
+  `Design.IronSpotlight` ring around it.
+- `focus_region` names a HUD zone — `production`, `speed`, `camera`, `objective`,
+  `waves` — and the panel or button group in `HUDTop`/`HUDBottom` rings itself.
+- `focus_target` names something on the field (`own_troops`, `builders`,
+  `enemy_scouts`, `timber`, `stone_and_iron`, `barracks`, `commander`,
+  `wave_entry`, `enemy_camp`). The director only names the target; the app layer
+  resolves it to world positions in `App::Mission::resolve_tutorial_focus_points`
+  (units come from the world, harvest nodes from `TerrainService::world_props()`,
+  the wave entry from the live wave alerts) and pushes them back through
+  `set_focus_points`, adding minimap coordinates. `TutorialFocusOverlay.qml`
+  projects each point through the live camera and rings it, `HUDTop` pins them on
+  the minimap, and the card's **Show me** button pans the camera to their centre
+  via `CameraViewModel::look_at_world`.
+
+The focus is recomputed from the same observation as the hint, so it follows what
+the step still needs: _Fell timber_ rings the builders while none is selected, and
+switches to the Collect button and the nearest pines once one is. A completed step
+publishes an empty focus, and changing target drops the stale world points so
+rings never outlive the step that placed them.
 
 ## Campaign Configuration
 

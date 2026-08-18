@@ -103,6 +103,9 @@ TestCase {
                 "tag": "IronSelectionSummary",
                 "qml": "IronSelectionSummary {}"
             }, {
+                "tag": "IronSpotlight",
+                "qml": "IronSpotlight {}"
+            }, {
                 "tag": "IronNotification",
                 "qml": "IronNotification { message: \"Ready\" }"
             }, {

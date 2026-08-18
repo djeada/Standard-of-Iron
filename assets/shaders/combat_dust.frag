@@ -7,6 +7,7 @@ in vec2 v_texcoord;
 in vec3 v_local_pos;
 in float v_intensity;
 in float v_alpha;
+in float v_lick;
 
 out vec4 frag_color;
 
@@ -119,14 +120,24 @@ void main() {
         (unit_flame ? (0.96 + 0.06 * radius_factor) : (1.02 + 0.10 * radius_factor));
 
     float edge_soften =
-        inv_smoothstep(unit_flame ? 0.06 : 0.15, unit_flame ? 0.50 : 1.15, axis_radius);
+        inv_smoothstep(unit_flame ? 0.03 : 0.15, unit_flame ? 0.42 : 1.15, axis_radius);
     float height_fade =
         1.0 -
-        smoothstep(unit_flame ? 0.76 : 0.76, unit_flame ? 0.99 : 1.04, flame_height);
+        smoothstep(unit_flame ? 0.58 : 0.72, unit_flame ? 0.97 : 1.04, flame_height);
 
     float tongues = smoothstep(0.18, 0.72, body_noise * 0.55 + curl_noise * 0.45);
-    float flame_alpha = v_alpha * edge_soften * height_fade * mix(0.35, 1.0, tongues) *
-                        (0.86 + 0.14 * curl_noise) * (unit_flame ? 0.72 : 1.0);
+
+    float solidity = 1.0 - smoothstep(0.04, unit_flame ? 0.40 : 0.62, flame_height);
+    float cut = mix(tongues * tongues * (unit_flame ? tongues : 1.0),
+                    1.0,
+                    solidity * (unit_flame ? 0.80 : 0.92));
+
+    float lick_fade =
+        1.0 -
+        smoothstep(mix(0.34, 0.86, v_lick), mix(0.62, 1.05, v_lick), flame_height);
+
+    float flame_alpha = v_alpha * edge_soften * height_fade * cut * lick_fade *
+                        (0.86 + 0.14 * curl_noise) * (unit_flame ? 0.66 : 1.0);
 
     color = clamp(color, 0.0, 2.8);
     frag_color = vec4(color, clamp(flame_alpha, 0.0, 1.0));
@@ -218,16 +229,20 @@ void main() {
 
     float caller_heat =
         dot(u_dust_color, vec3(0.30, 0.55, 0.15)) + 0.35 * u_dust_color.b;
+    float feed = 1.0 - smoothstep(-0.75, 0.55, shell_dir.y);
     float temperature = clamp(core * (0.52 + 0.48 * body) + 0.24 * detail - 0.16 +
-                                  (caller_heat - 0.52) * 0.58,
+                                  (caller_heat - 0.52) * 0.58 + 0.14 * feed,
                               0.0,
                               1.0);
     color = soi_fire_ramp(temperature);
 
     color *= mix(1.0, 0.74 + 0.48 * detail, smoothstep(0.32, 0.88, temperature));
 
-    float soot_mask = (1.0 - core) * smoothstep(0.22, 0.78, soot_noise) *
+    float crown = smoothstep(-0.10, 0.95, shell_dir.y);
+    float soot_mask = (1.0 - core * 0.75) * smoothstep(0.22, 0.78, soot_noise) *
+                      mix(0.35, 1.35, crown) *
                       (1.0 - 0.55 * smoothstep(0.55, 0.95, temperature));
+    soot_mask = clamp(soot_mask, 0.0, 1.0);
     color = mix(color, vec3(0.045, 0.035, 0.032), soot_mask * 0.92);
 
     float sparks = pow(max(detail - 0.68, 0.0) * 3.4, 2.4);

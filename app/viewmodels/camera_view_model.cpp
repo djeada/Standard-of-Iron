@@ -1,9 +1,12 @@
 #include "app/viewmodels/camera_view_model.h"
 
+#include <QVector3D>
+
 #include "app/core/client_context.h"
 #include "app/input/input_command_handler.h"
 #include "app/input/rts_camera_controller.h"
 #include "app/utils/engine_view_helpers.h"
+#include "scene/camera.h"
 
 namespace App::ViewModels {
 
@@ -73,6 +76,19 @@ void CameraViewModel::reset() {
   }
   camera->reset(m_context.local_owner_id, *m_context.level);
   emit distance_changed();
+}
+
+void CameraViewModel::look_at_world(float x, float z) {
+  m_host.ensure_initialized();
+  auto* camera = m_context.active_camera;
+  if (camera == nullptr) {
+    return;
+  }
+  const QVector3D target(x, 0.0F, z);
+  const QVector3D offset = camera->get_position() - camera->get_target();
+  camera->look_at(target + offset, target, camera->get_up_vector());
+  set_following_selection(false);
+  emit moved();
 }
 
 void CameraViewModel::follow_selection(bool enable) {
