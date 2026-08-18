@@ -1,5 +1,6 @@
 #include "home_renderer_common.h"
 
+#include "../entity_appearance.h"
 #include "game/core/component.h"
 
 namespace Render::GL {
@@ -20,7 +21,7 @@ void register_home_renderer_variant(EntityRendererRegistry& registry,
           return;
         }
 
-        const QVector3D team(r->color[0], r->color[1], r->color[2]);
+        const QVector3D team = Render::entity_color(*ctx.entity);
         const auto palette_slots = config.palette_slots(team);
         submit_building_instance(
             out, ctx, config.archetype(resolve_building_state(ctx)), palette_slots);

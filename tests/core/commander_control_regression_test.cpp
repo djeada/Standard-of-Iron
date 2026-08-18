@@ -178,7 +178,9 @@ TEST(CommanderControlRegressionTest,
 TEST(CommanderControlRegressionTest,
      GameEngineInitializesRtsRuntimeStateDuringConstruction) {
   const auto root = find_repo_root();
-  const auto engine_source = app_source(root, "game_engine.cpp");
+
+  const auto engine_source = app_source(root, "game_engine.cpp") +
+                             app_source(root, "game_engine_composition.cpp");
   const auto commander_source = app_source(root, "commander_view_model.cpp");
   ASSERT_FALSE(engine_source.empty());
   ASSERT_FALSE(commander_source.empty());

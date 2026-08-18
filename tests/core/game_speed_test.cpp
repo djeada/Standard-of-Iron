@@ -5,7 +5,7 @@
 
 #include "app/core/game_speed.h"
 #include "game/core/world.h"
-#include "game/systems/game_state_serializer.h"
+#include "game/render_bridge/game_state_serializer.h"
 
 namespace {
 

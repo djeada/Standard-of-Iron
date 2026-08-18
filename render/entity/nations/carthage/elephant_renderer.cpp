@@ -5,6 +5,7 @@
 
 #include <cmath>
 
+#include "../../../entity_appearance.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/visuals/team_colors.h"
@@ -75,8 +76,8 @@ void register_elephant_renderer(EntityRendererRegistry& registry) {
         }
 
         QVector3D team_color{0.4F, 0.2F, 0.6F};
-        if (auto* r = p.entity->get_component<Engine::Core::RenderableComponent>()) {
-          team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
+        if (p.entity->get_component<Engine::Core::RenderableComponent>() != nullptr) {
+          team_color = Render::entity_color(*p.entity);
         }
 
         uint32_t seed = 0U;

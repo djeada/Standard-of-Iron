@@ -4,7 +4,7 @@
 #include "app/input/input_command_handler.h"
 #include "app/viewmodels/camera_view_model.h"
 #include "app/world/minimap_manager.h"
-#include "game/map/minimap/minimap_utils.h"
+#include "game/render_bridge/minimap/minimap_utils.h"
 #include "scene/camera.h"
 
 namespace App::ViewModels {

@@ -5,13 +5,13 @@
 
 #include <vector>
 
-#include "app/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_setup_coordinator.h"
 
 namespace Engine::Core {
 class World;
 }
 
-namespace App::Core {
+namespace Game::Mission {
 
 [[nodiscard]] auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
     -> std::vector<PendingMissionWave>;
@@ -37,4 +37,4 @@ public:
                            const PendingMissionWave& wave) const -> MissionWaveEffects;
 };
 
-} // namespace App::Core
+} // namespace Game::Mission

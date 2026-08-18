@@ -1,4 +1,4 @@
-#include "app/mission/mission_commander_setup.h"
+#include "game/mission/mission_commander_setup.h"
 
 #include <QDebug>
 
@@ -13,7 +13,7 @@
 #include "game/units/troop_type.h"
 #include "utils/resource_utils.h"
 
-namespace App::Core {
+namespace Game::Mission {
 namespace {
 
 using WeightedPosition = Game::Map::WeightedSpawnPoint;
@@ -152,4 +152,4 @@ auto resolve_commander_position(
   return {.position = fallback, .space = CommanderPositionSpace::Mission};
 }
 
-} // namespace App::Core
+} // namespace Game::Mission

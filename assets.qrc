@@ -363,7 +363,6 @@
         <file>assets/campaigns/second_punic_war.json</file>
 
         <!-- Visual config -->
-        <file>assets/visuals/unit_visuals.json</file>
         <file>assets/visuals/unit_equipment_loadouts.json</file>
         <file>assets/visuals/emblems/rome.png</file>
         <file>assets/visuals/emblems/cartaghe.png</file>

@@ -3,11 +3,11 @@
 
 #include <gtest/gtest.h>
 
-#include "app/mission/tutorial_director.h"
+#include "game/mission/tutorial_director.h"
 
-using App::Core::TutorialDirector;
-using App::Core::TutorialObservation;
-using App::Core::TutorialStepId;
+using Game::Mission::TutorialDirector;
+using Game::Mission::TutorialObservation;
+using Game::Mission::TutorialStepId;
 
 namespace {
 
@@ -61,7 +61,7 @@ TEST(TutorialDirectorTest, StepsFollowTheTeachingOrderAndFinishOnVictory) {
   o.enemy_troops_defeated = 5;
   director.advance(o, 0.2F);
   EXPECT_FALSE(director.step_complete());
-  o.enemy_troops_defeated = 5 + App::Core::k_tutorial_scout_count;
+  o.enemy_troops_defeated = 5 + Game::Mission::k_tutorial_scout_count;
   ASSERT_TRUE(complete_with(director, o));
   EXPECT_EQ(director.step(), TutorialStepId::GatherWood);
 
@@ -69,16 +69,16 @@ TEST(TutorialDirectorTest, StepsFollowTheTeachingOrderAndFinishOnVictory) {
   o.harvested_wood = 10;
   director.advance(o, 0.2F);
   EXPECT_FALSE(director.step_complete());
-  o.harvested_wood = 10 + App::Core::k_tutorial_wood_target;
+  o.harvested_wood = 10 + Game::Mission::k_tutorial_wood_target;
   ASSERT_TRUE(complete_with(director, o));
   EXPECT_EQ(director.step(), TutorialStepId::GatherStoneAndIron);
 
   director.advance(running(), 0.2F);
   o = running();
-  o.harvested_stone = App::Core::k_tutorial_stone_target;
+  o.harvested_stone = Game::Mission::k_tutorial_stone_target;
   director.advance(o, 0.2F);
   EXPECT_FALSE(director.step_complete()) << "stone alone is not enough";
-  o.harvested_iron = App::Core::k_tutorial_iron_target;
+  o.harvested_iron = Game::Mission::k_tutorial_iron_target;
   ASSERT_TRUE(complete_with(director, o));
   EXPECT_EQ(director.step(), TutorialStepId::BuildHome);
 
@@ -98,7 +98,7 @@ TEST(TutorialDirectorTest, StepsFollowTheTeachingOrderAndFinishOnVictory) {
   EXPECT_EQ(director.step(), TutorialStepId::AssembleArmy);
 
   o = running();
-  o.soldier_count = App::Core::k_tutorial_army_size;
+  o.soldier_count = Game::Mission::k_tutorial_army_size;
   ASSERT_TRUE(complete_with(director, o));
   EXPECT_EQ(director.step(), TutorialStepId::DefendCamp);
 
@@ -195,7 +195,7 @@ TEST(TutorialDirectorTest, SkipReplayContinueAndRestartMoveTheStepPointer) {
   director.advance(o, 0.2F);
   EXPECT_FALSE(director.step_complete())
       << "after a replay the kills before the replay do not count";
-  o.enemy_troops_defeated = 2 + App::Core::k_tutorial_scout_count;
+  o.enemy_troops_defeated = 2 + Game::Mission::k_tutorial_scout_count;
   director.advance(o, 0.2F);
   EXPECT_TRUE(director.step_complete());
 

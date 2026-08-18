@@ -9,9 +9,9 @@
 #include "app/orders/movement_utils.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
-#include "game/systems/picking_service.h"
+#include "game/render_bridge/picking_service.h"
+#include "game/render_bridge/selection_controller.h"
 #include "game/systems/selection_system.h"
-#include "game/view/selection_controller.h"
 #include "scene/camera.h"
 
 InputCommandHandler::InputCommandHandler(

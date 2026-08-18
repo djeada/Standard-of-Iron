@@ -8,10 +8,9 @@
 #include <optional>
 #include <vector>
 
-#include "app/core/entity_cache.h"
 #include "game/map/mission_definition.h"
 #include "game/map/mission_stage_tracker.h"
-#include "game/systems/game_state_serializer.h"
+#include "game/systems/match_snapshot.h"
 #include "game/systems/nation_id.h"
 
 class CampaignManager;
@@ -20,11 +19,7 @@ namespace Engine::Core {
 class World;
 }
 
-namespace Game::Map {
-struct MapDefinition;
-}
-
-namespace App::Core {
+namespace Game::Mission {
 
 struct PendingMissionWave {
   int owner_id = 0;
@@ -91,7 +86,6 @@ struct MissionSetupApplyContext {
   int& selected_player_id;
   int local_owner_id;
   std::vector<PendingMissionWave>& pending_waves;
-  EntityCache& entity_cache;
 };
 
 struct MissionSetupEffects {
@@ -99,6 +93,8 @@ struct MissionSetupEffects {
   bool center_camera_on_local_forces = false;
   bool troop_count_changed = false;
   bool owner_info_changed = false;
+
+  bool rebuild_entity_cache = false;
 };
 
 struct SkirmishCommanderSetupContext {
@@ -133,4 +129,4 @@ public:
       const QVariantList& player_configs) const -> SkirmishCommanderSetupEffects;
 };
 
-} // namespace App::Core
+} // namespace Game::Mission

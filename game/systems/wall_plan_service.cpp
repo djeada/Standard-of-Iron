@@ -6,7 +6,6 @@
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
-#include "../visuals/team_colors.h"
 #include "construction_cost_catalog.h"
 #include "nation_registry.h"
 #include "nav_grid.h"
@@ -144,7 +143,6 @@ auto WallPlanService::commit(Engine::Core::World& world,
   resources.spend(request.owner_id, total_cost);
 
   const auto nation_id = nation_of(request.owner_id);
-  const QVector3D team_color = Game::Visuals::team_colorForOwner(request.owner_id);
   const std::string product = item_type(request);
   const float build_time = construction_build_time(product);
 
@@ -158,7 +156,7 @@ auto WallPlanService::commit(Engine::Core::World& world,
       continue;
     }
     auto* transform = entity->add_component<Engine::Core::TransformComponent>();
-    auto* renderable = entity->add_component<Engine::Core::RenderableComponent>("", "");
+    auto* renderable = entity->add_component<Engine::Core::RenderableComponent>();
     auto* wall = entity->add_component<Engine::Core::WallSegmentComponent>();
     auto* site = entity->add_component<Engine::Core::WallConstructionSiteComponent>();
     if (transform == nullptr || renderable == nullptr || wall == nullptr ||
@@ -174,16 +172,12 @@ auto WallPlanService::commit(Engine::Core::World& world,
     transform->scale = {1.0F, 1.0F, 1.0F};
 
     renderable->visible = false;
-    renderable->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
     renderable->renderer_id =
         (request.gate ? WallNetworkService::resolve_gate_appearance(
                             nation_id, segment.connection_mask, segment.rotation_y)
                       : WallNetworkService::resolve_appearance(nation_id,
                                                                segment.connection_mask))
             .renderer_id;
-    renderable->color[0] = team_color.x();
-    renderable->color[1] = team_color.y();
-    renderable->color[2] = team_color.z();
 
     wall->grid_x = segment.grid_x;
     wall->grid_z = segment.grid_z;

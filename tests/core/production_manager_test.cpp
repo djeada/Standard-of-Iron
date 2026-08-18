@@ -12,10 +12,10 @@
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
+#include "game/render_bridge/picking_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/pathfinding.h"
-#include "game/systems/picking_service.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/selection_system.h"
@@ -128,7 +128,7 @@ protected:
     }
 
     wall->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
-    wall->add_component<Engine::Core::RenderableComponent>("mesh", "texture");
+    wall->add_component<Engine::Core::RenderableComponent>();
     auto* unit = wall->add_component<Engine::Core::UnitComponent>(800, 800, 0.0F, 0.0F);
     auto* building = wall->add_component<Engine::Core::BuildingComponent>();
     auto* wall_segment = wall->add_component<Engine::Core::WallSegmentComponent>();

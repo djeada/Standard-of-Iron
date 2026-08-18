@@ -2,6 +2,7 @@
 set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/scene_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene_walk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity_appearance.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/bird_flock_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wildlife_rig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wildlife/wildlife_gait.cpp

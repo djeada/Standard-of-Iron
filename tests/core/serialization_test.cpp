@@ -902,46 +902,30 @@ TEST_F(SerializationTest, HomeComponentRoundTrip) {
 
 TEST_F(SerializationTest, RenderableComponentSerialization) {
   auto* entity = world->create_entity();
-  auto* renderable =
-      entity->add_component<RenderableComponent>("mesh.obj", "texture.png");
+  auto* renderable = entity->add_component<RenderableComponent>();
 
-  renderable->mesh_path = "models/archer.obj";
-  renderable->texture_path = "textures/archer_diffuse.png";
   renderable->renderer_id = "archer_renderer";
   renderable->visible = true;
-  renderable->mesh = RenderableComponent::MeshKind::Capsule;
-  renderable->color = {0.8F, 0.2F, 0.5F};
 
   QJsonObject json = Serialization::serialize_entity(entity);
 
   ASSERT_TRUE(json.contains("renderable"));
   QJsonObject renderable_obj = json["renderable"].toObject();
 
-  EXPECT_EQ(renderable_obj["mesh_path"].toString(), QString("models/archer.obj"));
-  EXPECT_EQ(renderable_obj["texture_path"].toString(),
-            QString("textures/archer_diffuse.png"));
   EXPECT_EQ(renderable_obj["renderer_id"].toString(), QString("archer_renderer"));
   EXPECT_TRUE(renderable_obj["visible"].toBool());
-  EXPECT_EQ(renderable_obj["mesh"].toInt(),
-            static_cast<int>(RenderableComponent::MeshKind::Capsule));
 
-  ASSERT_TRUE(renderable_obj.contains("color"));
-  QJsonArray color = renderable_obj["color"].toArray();
-  EXPECT_EQ(color.size(), 3);
-  EXPECT_FLOAT_EQ(color[0].toDouble(), 0.8);
-  EXPECT_FLOAT_EQ(color[1].toDouble(), 0.2);
-  EXPECT_FLOAT_EQ(color[2].toDouble(), 0.5);
+  EXPECT_FALSE(renderable_obj.contains("mesh"));
+  EXPECT_FALSE(renderable_obj.contains("mesh_path"));
+  EXPECT_FALSE(renderable_obj.contains("texture_path"));
+  EXPECT_FALSE(renderable_obj.contains("color"));
 }
 
 TEST_F(SerializationTest, RenderableComponentRoundTrip) {
   auto* original_entity = world->create_entity();
-  auto* renderable =
-      original_entity->add_component<RenderableComponent>("test.obj", "test.png");
-  renderable->mesh_path = "models/building.obj";
-  renderable->texture_path = "textures/building.png";
+  auto* renderable = original_entity->add_component<RenderableComponent>();
+  renderable->renderer_id = "building_renderer";
   renderable->visible = false;
-  renderable->mesh = RenderableComponent::MeshKind::Quad;
-  renderable->color = {1.0F, 0.5F, 0.25F};
 
   QJsonObject const json = Serialization::serialize_entity(original_entity);
 
@@ -950,13 +934,34 @@ TEST_F(SerializationTest, RenderableComponentRoundTrip) {
 
   auto* deserialized = new_entity->get_component<RenderableComponent>();
   ASSERT_NE(deserialized, nullptr);
-  EXPECT_EQ(deserialized->mesh_path, "models/building.obj");
-  EXPECT_EQ(deserialized->texture_path, "textures/building.png");
+  EXPECT_EQ(deserialized->renderer_id, "building_renderer");
   EXPECT_FALSE(deserialized->visible);
-  EXPECT_EQ(deserialized->mesh, RenderableComponent::MeshKind::Quad);
-  EXPECT_FLOAT_EQ(deserialized->color[0], 1.0F);
-  EXPECT_FLOAT_EQ(deserialized->color[1], 0.5F);
-  EXPECT_FLOAT_EQ(deserialized->color[2], 0.25F);
+}
+
+TEST_F(SerializationTest, RenderableComponentIgnoresLegacyDrawData) {
+  QJsonObject legacy_renderable;
+  legacy_renderable["mesh_path"] = "models/building.obj";
+  legacy_renderable["texture_path"] = "textures/building.png";
+  legacy_renderable["renderer_id"] = "building_renderer";
+  legacy_renderable["visible"] = true;
+  legacy_renderable["mesh"] = 1;
+  QJsonArray legacy_color;
+  legacy_color.append(1.0);
+  legacy_color.append(0.5);
+  legacy_color.append(0.25);
+  legacy_renderable["color"] = legacy_color;
+
+  QJsonObject legacy_entity;
+  legacy_entity["id"] = 1;
+  legacy_entity["renderable"] = legacy_renderable;
+
+  auto* entity = world->create_entity();
+  Serialization::deserialize_entity(entity, legacy_entity);
+
+  auto* deserialized = entity->get_component<RenderableComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->renderer_id, "building_renderer");
+  EXPECT_TRUE(deserialized->visible);
 }
 
 TEST_F(SerializationTest, AttackTargetComponentSerialization) {
@@ -1094,7 +1099,7 @@ TEST_F(SerializationTest, CompleteEntityWithAllComponents) {
   transform->position.y = 10.0F;
   transform->position.z = 30.0F;
 
-  auto* renderable = entity->add_component<RenderableComponent>("mesh.obj", "tex.png");
+  auto* renderable = entity->add_component<RenderableComponent>();
   renderable->visible = true;
 
   auto* unit = entity->add_component<UnitComponent>();
@@ -2117,7 +2122,7 @@ TEST_F(SerializationTest, ElephantStompImpactComponentRoundTrip) {
 TEST_F(SerializationTest, WallConstructionSiteRoundTrips) {
   auto* entity = world->create_entity();
   entity->add_component<TransformComponent>(4.0F, 0.0F, 6.0F);
-  auto* renderable = entity->add_component<RenderableComponent>("mesh", "texture");
+  auto* renderable = entity->add_component<RenderableComponent>();
   renderable->renderer_id = "troops/roman/wall_segment_end";
 
   auto* wall = entity->add_component<WallSegmentComponent>();
@@ -2150,7 +2155,7 @@ TEST_F(SerializationTest, WallConstructionSiteRoundTrips) {
 TEST_F(SerializationTest, SerializeWorldSkipsConstructionPreviewEntities) {
   auto* preview = world->create_entity();
   preview->add_component<TransformComponent>(2.0F, 0.0F, 2.0F);
-  preview->add_component<RenderableComponent>("mesh", "texture");
+  preview->add_component<RenderableComponent>();
   preview->add_component<ConstructionPreviewComponent>();
 
   auto* wall = world->create_entity();

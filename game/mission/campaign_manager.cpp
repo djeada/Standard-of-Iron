@@ -1,4 +1,4 @@
-#include "app/mission/campaign_manager.h"
+#include "game/mission/campaign_manager.h"
 
 #include <QCoreApplication>
 #include <QDebug>

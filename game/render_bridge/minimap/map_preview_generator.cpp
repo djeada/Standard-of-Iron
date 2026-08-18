@@ -10,8 +10,8 @@
 
 #include <cmath>
 
+#include "../../map/map_loader.h"
 #include "../../units/spawn_type.h"
-#include "../map_loader.h"
 #include "minimap_generator.h"
 #include "minimap_utils.h"
 

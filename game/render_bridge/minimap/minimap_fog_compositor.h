@@ -6,7 +6,7 @@
 #include <limits>
 #include <vector>
 
-#include "../visibility_service.h"
+#include "../../map/visibility_service.h"
 
 namespace Game::Map::Minimap {
 

@@ -6,7 +6,7 @@
 #include <memory>
 #include <utility>
 
-#include "../map_definition.h"
+#include "../../map/map_definition.h"
 
 class QPainter;
 

@@ -10,13 +10,13 @@
 #include <utility>
 #include <vector>
 
+#include "../map/explored_mask_codec.h"
+#include "../map/terrain_service.h"
+#include "../map/visibility_service.h"
+#include "../systems/nation_id.h"
+#include "../systems/nation_registry.h"
+#include "../util/json_vec_utils.h"
 #include "game/game_config.h"
-#include "game/map/explored_mask_codec.h"
-#include "game/map/terrain_service.h"
-#include "game/map/visibility_service.h"
-#include "game/systems/nation_id.h"
-#include "game/systems/nation_registry.h"
-#include "game/util/json_vec_utils.h"
 #include "scene/camera.h"
 
 namespace Game::Systems {

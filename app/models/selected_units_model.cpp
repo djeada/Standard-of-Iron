@@ -5,7 +5,7 @@
 
 #include "app/core/client_context.h"
 #include "app/world/unit_queries.h"
-#include "game/view/selection_controller.h"
+#include "game/render_bridge/selection_controller.h"
 
 SelectedUnitsModel::SelectedUnitsModel(const App::Core::ClientContext& context,
                                        QObject* parent)

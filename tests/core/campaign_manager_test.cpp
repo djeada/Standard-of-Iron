@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "app/mission/campaign_manager.h"
+#include "game/mission/campaign_manager.h"
 #include "game/systems/save_load_service.h"
 
 namespace {

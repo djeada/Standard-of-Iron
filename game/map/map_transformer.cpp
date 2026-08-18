@@ -29,7 +29,6 @@
 #include "map/map_definition.h"
 #include "terrain_service.h"
 #include "units/unit.h"
-#include "visuals/visual_catalog.h"
 
 namespace Game::Map {
 
@@ -182,7 +181,6 @@ void apply_authored_unit_behavior(Engine::Core::Entity& entity,
 
 auto spawn_map_unit(const Game::Units::SpawnParams& params,
                     Engine::Core::World& world,
-                    const Game::Visuals::VisualCatalog* visuals,
                     std::vector<Engine::Core::EntityID>* runtime_unit_ids = nullptr)
     -> Engine::Core::Entity* {
   if (!s_registry) {
@@ -205,18 +203,6 @@ auto spawn_map_unit(const Game::Units::SpawnParams& params,
   Engine::Core::Entity* e = world.get_entity(obj->id());
   if (e == nullptr) {
     return nullptr;
-  }
-
-  if (auto* r = e->get_component<Engine::Core::RenderableComponent>()) {
-    if (visuals != nullptr) {
-      Game::Visuals::VisualDef defv;
-      if (visuals->lookup(Game::Units::spawn_typeToString(params.spawn_type), defv)) {
-        Game::Visuals::apply_to_renderable(defv, *r);
-      }
-    }
-    if (r->color[0] == 0.0F && r->color[1] == 0.0F && r->color[2] == 0.0F) {
-      r->color[0] = r->color[1] = r->color[2] = 1.0F;
-    }
   }
 
   return e;
@@ -252,9 +238,7 @@ void MapTransformer::clear_player_team_overrides() {
 }
 
 auto MapTransformer::apply_to_world(const MapDefinition& def,
-                                    Engine::Core::World& world,
-                                    const Game::Visuals::VisualCatalog* visuals)
-    -> MapRuntime {
+                                    Engine::Core::World& world) -> MapRuntime {
   MapRuntime rt;
   rt.unit_ids.reserve(def.spawns.size());
 
@@ -321,7 +305,6 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
       auto team_it = player_id_to_team.find(player_id);
       if (team_it != player_id_to_team.end()) {
         final_team_id = team_it->second;
-      } else {
       }
     }
     owner_registry.set_owner_team(player_id, final_team_id);
@@ -385,7 +368,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     sp.max_population = s.max_population;
     sp.nation_id = resolve_nation_id_for_map_owner(effective_player_id, s.nation);
 
-    e = spawn_map_unit(sp, world, visuals, &rt.unit_ids);
+    e = spawn_map_unit(sp, world, &rt.unit_ids);
     if (e == nullptr) {
       continue;
     }
@@ -413,7 +396,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
       sp.position = point->position;
 
       sp.rotation_y = structure.rotation;
-      spawn_map_unit(sp, world, visuals);
+      spawn_map_unit(sp, world);
       continue;
     }
 
@@ -441,7 +424,7 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
       sp.position = QVector3D(runtime_grid_to_world(segment.x, def.grid.width),
                               0.0F,
                               runtime_grid_to_world(segment.z, def.grid.height));
-      spawn_map_unit(sp, world, visuals);
+      spawn_map_unit(sp, world);
     }
   }
 

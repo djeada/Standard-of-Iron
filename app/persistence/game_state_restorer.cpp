@@ -11,15 +11,9 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
-#include "game/systems/building_collision_registry.h"
-#include "game/systems/game_state_serializer.h"
-#include "game/systems/gate_service.h"
-#include "game/systems/global_stats_registry.h"
+#include "game/systems/match_snapshot.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/pathfinding.h"
-#include "game/systems/troop_count_registry.h"
-#include "game/systems/wall_network_service.h"
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "render/ground/biome_renderer.h"
@@ -70,90 +64,6 @@ void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
         entity_cache.enemy_barracks_alive = true;
       }
     }
-  }
-}
-
-void GameStateRestorer::rebuild_registries_after_load(
-    Engine::Core::World* world,
-    int& selected_player_id,
-    Game::Systems::LevelSnapshot& level,
-    int local_owner_id) {
-  if (world == nullptr) {
-    return;
-  }
-
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-
-  auto& troops = Game::Systems::TroopCountRegistry::instance();
-  troops.rebuild_from_world(*world);
-
-  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-  stats_registry.rebuild_from_world(*world);
-
-  const auto& all_owners = owner_registry.get_all_owners();
-  for (const auto& owner : all_owners) {
-    if (owner.type == Game::Systems::OwnerType::Player ||
-        owner.type == Game::Systems::OwnerType::AI) {
-      stats_registry.mark_game_start(owner.owner_id);
-    }
-  }
-
-  rebuild_building_collisions(world);
-
-  level.player_unit_id = 0;
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto* entity : units) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-    if (unit->owner_id == local_owner_id) {
-      level.player_unit_id = entity->get_id();
-      break;
-    }
-  }
-
-  if (selected_player_id != local_owner_id) {
-    selected_player_id = local_owner_id;
-  }
-}
-
-void GameStateRestorer::rebuild_building_collisions(Engine::Core::World* world) {
-  auto& registry = Game::Systems::BuildingCollisionRegistry::instance();
-  registry.clear();
-  if (world == nullptr) {
-    return;
-  }
-
-  auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
-  for (auto* entity : buildings) {
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((transform == nullptr) || (unit == nullptr)) {
-      continue;
-    }
-
-    if (unit->health <= 0 ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
-
-      continue;
-    }
-
-    registry.register_building(entity->get_id(),
-                               Game::Units::spawn_typeToString(unit->spawn_type),
-                               transform->position.x,
-                               transform->position.z,
-                               unit->owner_id);
-
-    if (entity->has_component<Engine::Core::GateComponent>()) {
-      Game::Systems::GateService::mark_gate_footprint_navigable(entity->get_id());
-    }
-  }
-
-  Game::Systems::WallNetworkService::refresh_world(*world);
-
-  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
-    pathfinder->mark_navigation_grid_dirty();
   }
 }
 

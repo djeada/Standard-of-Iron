@@ -87,7 +87,6 @@ add_library(
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     visuals/building_asset_key.cpp
-    visuals/visual_catalog.cpp
     systems/building_collision_registry.cpp
     systems/building_line_of_sight.cpp
     systems/global_stats_registry.cpp
@@ -351,6 +350,12 @@ add_library(
     systems/showcase_routine_system.cpp
     systems/undead_awakening_system.cpp
     systems/victory_service.cpp
+    # Rebuilding the registries that are derived from world contents rather than
+    # stored with them. It was in app/persistence, which meant the mission code
+    # that needs it depended on the client -- the one edge that kept
+    # app/mission/ out of game/. It is not in the save stack either: a mission
+    # setup needs it and never touches a save file.
+    systems/world_restore.cpp
 )
 
 target_include_directories(game_sim PUBLIC .)
@@ -400,9 +405,16 @@ add_library(soi_campaign STATIC map/campaign_loader.cpp)
 target_include_directories(soi_campaign PUBLIC .)
 target_link_libraries(soi_campaign PUBLIC game_sim)
 
-# Mission content: the mission file, its victory rules, its wave archetypes, and
-# the catalogue that indexes maps, missions and campaigns together. The
-# catalogue is what makes this depend on soi_campaign.
+# ---- soi_missions: reading mission content ------------------------------------
+#
+# The mission file, its victory rules, its wave archetypes, the catalogue that
+# indexes maps, missions and campaigns together, the commander each side is
+# given, and the view of a definition the menus read. The catalogue is what
+# makes this depend on soi_campaign.
+#
+# It links no AI and no save database on purpose. Reading a mission must not
+# require a match to be running or a save slot to exist, and this link line is
+# what says so -- see the campaign_tests comment in tests/CMakeLists.txt.
 add_library(
     soi_missions
     STATIC
@@ -411,9 +423,14 @@ add_library(
     map/mission_victory_rules.cpp
     map/wave_archetype_catalog.cpp
     map/map_catalog.cpp
+    mission/mission_commander_setup.cpp
+    mission/mission_definition_view.cpp
+    mission/tutorial_director.cpp
 )
 target_include_directories(soi_missions PUBLIC .)
 target_link_libraries(soi_missions PUBLIC game_sim soi_campaign)
+# TutorialDirector reports step changes with signals.
+set_target_properties(soi_missions PROPERTIES AUTOMOC ON)
 
 # The save stack: what a snapshot contains, how it is encoded, and the SQL
 # database it lands in. It reads the campaign to record progress.
@@ -470,6 +487,33 @@ add_library(
 target_include_directories(soi_ai PUBLIC .)
 target_link_libraries(soi_ai PUBLIC game_sim)
 
+# ---- soi_mission_runtime: running a mission in a live world -------------------
+#
+# Spawning the forces a definition names, configuring its AI opponents, building
+# and firing its attack waves, and recording campaign progress.
+#
+# This was app/mission/ until the layering audit. Nothing in it names a
+# renderer, a camera, a QML type or a view model: it is world manipulation, and
+# the two edges that held it behind the client boundary were a HUD counter
+# struct it wrote directly and the registry rebuild in app/persistence. Both
+# were inverted first, so the move needed no new abstraction.
+#
+# soi_persistence because a campaign records which missions are complete, and
+# soi_ai because a definition names its opponents with a strategy and a
+# personality. Neither names a mission, so both edges are one-way.
+add_library(
+    soi_mission_runtime
+    STATIC
+    mission/campaign_manager.cpp
+    mission/mission_setup_coordinator.cpp
+    mission/mission_wave_director.cpp
+    mission/mission_waves.cpp
+)
+target_include_directories(soi_mission_runtime PUBLIC .)
+target_link_libraries(soi_mission_runtime PUBLIC soi_missions soi_persistence soi_ai)
+# CampaignManager reports campaign and mission changes with signals.
+set_target_properties(soi_mission_runtime PROPERTIES AUTOMOC ON)
+
 # The composition root for the ECS systems: which systems a running match owns
 # and in what order they tick, plus the headless capture harness that drives
 # them.
@@ -482,25 +526,32 @@ add_library(soi_runtime STATIC systems/runtime_system_registry.cpp systems/battl
 target_include_directories(soi_runtime PUBLIC .)
 target_link_libraries(soi_runtime PUBLIC game_sim soi_ai)
 
-# Presentation-facing gameplay services.
+# ---- game_view: the render bridge --------------------------------------------
 #
-# These need a camera to do their job -- unprojecting a click, framing the
-# minimap, writing the camera into a save. They consume the kernel; the kernel
-# never consumes them.
+# Presentation-facing gameplay services: the ones that need a camera to do their
+# job -- unprojecting a click, framing the minimap, writing the camera into a
+# save. They consume the kernel; the kernel never consumes them, and neither
+# does render_gl.
+#
+# The sources were spread across game/view/, five loose files in game/systems/
+# and game/map/minimap/, so the only place the module was visible as one thing
+# was this list and a hand-kept set in tests/architecture/layering_test.cpp.
+# They are one directory now, named after the module -- which is also the name
+# scripts/module_rules.json and docs/ARCHITECTURE.md already used for it.
 add_library(
     game_view
     STATIC
-    view/selection_controller.cpp
-    systems/camera_controller.cpp
-    systems/camera_follow_system.cpp
-    systems/camera_service.cpp
-    systems/picking_service.cpp
-    systems/game_state_serializer.cpp
-    map/minimap/minimap_generator.cpp
-    map/minimap/map_preview_generator.cpp
-    map/minimap/minimap_fog_compositor.cpp
-    map/minimap/unit_layer.cpp
-    map/minimap/camera_viewport_layer.cpp
+    render_bridge/selection_controller.cpp
+    render_bridge/camera_controller.cpp
+    render_bridge/camera_follow_system.cpp
+    render_bridge/camera_service.cpp
+    render_bridge/picking_service.cpp
+    render_bridge/game_state_serializer.cpp
+    render_bridge/minimap/minimap_generator.cpp
+    render_bridge/minimap/map_preview_generator.cpp
+    render_bridge/minimap/minimap_fog_compositor.cpp
+    render_bridge/minimap/unit_layer.cpp
+    render_bridge/minimap/camera_viewport_layer.cpp
 )
 
 target_include_directories(game_view PUBLIC .)
@@ -513,7 +564,15 @@ target_link_libraries(game_view PUBLIC game_sim scene_core)
 add_library(game_systems INTERFACE)
 target_link_libraries(
     game_systems
-    INTERFACE game_sim game_view soi_ai soi_runtime soi_missions soi_campaign soi_persistence
+    INTERFACE
+        game_sim
+        game_view
+        soi_ai
+        soi_runtime
+        soi_missions
+        soi_mission_runtime
+        soi_campaign
+        soi_persistence
 )
 
 # The names the architecture is described by, mapped onto the targets that

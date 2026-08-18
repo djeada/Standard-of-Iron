@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace App::Core {
+namespace Game::Mission {
 
 struct TutorialObservation {
   bool mission_running = false;
@@ -182,4 +182,4 @@ private:
   QString m_hint;
 };
 
-} // namespace App::Core
+} // namespace Game::Mission

@@ -39,7 +39,8 @@ game_sim                    the session, the command pipeline, match-level syste
      |
      +-- soi_ai             the computer opponent
      |        |
-     |        +-- soi_runtime      which systems a match owns and in what order they tick
+     |        +-- soi_runtime           which systems a match owns and in what order they tick
+     |        +-- soi_mission_runtime   running a mission: forces, waves, campaign progress
      |
      +-- game_view          gameplay services that need a camera
      |
@@ -135,12 +136,52 @@ enforced three ways:
 `Qt::Gui` is present for the value types (`QVector3D`, `QImage`). It brings in no
 windowing or GL usage of our own.
 
+The kernel holds no draw data. `RenderableComponent` carries a `renderer_id` and
+a `visible` flag — that an entity is drawn, and which asset draws it — and
+nothing about how it looks. It used to carry a mesh kind, a mesh path, a texture
+path and an RGB triple, which is why twenty unit factories, the capture system
+and the wall planner all set appearance at spawn and on ownership change, and
+why every save file recorded it. The renderer derives what it needs from the
+owner and the spawn type instead (`render/entity_appearance.h`). The mesh kind
+went entirely: the only values production code ever assigned resolved to the same
+primitive, so it selected nothing.
+
 `game/formation/` holds the two formation layers. They are deliberately
 separate: `UnitLayoutSystem` owns soldier offsets inside a single troop entity
 and is the only thing the renderer reads, while `ArmyFormationPlanner` and
 `ArmyFormationRegistry` own multi-unit deployment and are the only things
 player commands and AI reach for. See
 [docs/FORMATION_ARCHITECTURE.md](FORMATION_ARCHITECTURE.md).
+
+### `soi_mission_runtime` — running a mission
+
+Setting a mission up, spawning the forces its definition names, configuring its
+AI opponents, building and firing its attack waves, and recording campaign
+progress. `TutorialDirector` is not here: it reads mission content and reports
+step changes, so it stayed in `soi_missions` with the rest of the read side.
+
+It lived in `app/mission/` until a layering audit asked what in it was actually
+a client concern. Nothing was: no file named a renderer, a camera, a QML type or
+a view model. Two edges held it there, and both were inverted rather than
+tolerated:
+
+- `MissionSetupCoordinator` wrote the client's HUD counters directly as a side
+  effect of setting a mission up. It reports `rebuild_entity_cache` now and the
+  client recomputes them, which is the same shape the view models use.
+- The registry rebuild a load or a setup needs lived in `app/persistence`. It is
+  `game/systems/world_restore.h` now — not in the save stack either, because a
+  mission setup needs it and never touches a save file.
+
+It sits above `soi_persistence` and `soi_ai`: a definition names its opponents
+with a strategy and a personality, and a campaign records which missions are
+complete. Neither module names a mission, so both edges are one-way. _Reading_
+mission content needs neither, which is why that half stayed in `soi_missions`
+below — and why `campaign_tests` can still check the shipped files without a
+match running.
+
+What stayed in `app/mission/` is the part that only makes sense with a player
+watching: turning wave effects into announcements, cues and a HUD refresh, and
+reading the frame the tutorial director is advanced through.
 
 ### `render_gl` — the renderer draws the match it was handed
 
@@ -180,12 +221,20 @@ cache at load now, and the read side is `find_profile`, which is `const`.
 ### `game_view` — camera-facing gameplay services
 
 Picking, the camera services, the minimap layers, the selection controller and
-the save metadata writer. These need to unproject or to frame something, so they
-consume the kernel and link `scene_core`. Nothing in the kernel may depend on
-them.
+the save metadata writer, all under `game/render_bridge/`. These need to
+unproject or to frame something, so they consume the kernel and link
+`scene_core`. Nothing in the kernel may depend on them, and neither does
+`render_gl`.
 
 The split runs through `SelectionSystem` (kernel: which entity ids are selected)
-and `SelectionController` (view: turning a click into that state).
+and `SelectionController` (view: turning a click into that state). Selection is
+not simulation state in any other sense: it is never serialised, and the renderer
+receives an id set rather than reading a component.
+
+The sources used to be spread across `game/view/`, `game/map/minimap/` and five
+loose files in `game/systems/`, so the module was only visible by reading the
+CMake target and a hand-kept list in `tests/architecture/layering_test.cpp`. One
+directory now, named after the module, and that list is a directory prefix.
 
 ## The session
 
@@ -361,7 +410,8 @@ write fails.
 
 The suite is nine binaries, split by link surface rather than by convenience.
 `simulation_tests` links the kernel; `combat_balance_tests` adds
-`soi_runtime`; `ai_tests` adds `soi_ai`; `campaign_tests` adds `soi_missions`;
+`soi_runtime`; `ai_tests` adds `soi_ai`; `campaign_tests` adds `soi_missions`
+and `soi_mission_runtime`;
 `persistence_tests` adds `soi_persistence`; `render_tests` adds `render_gl`;
 `app_tests` adds `app_core` and `ui_shell`; `arena_tests` links the arena
 harness; and `tools_tests` links the editor and balance harnesses with no
@@ -387,20 +437,20 @@ list and `soi_test_binaries` drift apart.
 `CMakeLists.txt` lists the sources in the same grouping so the build file reads
 as a table of contents:
 
-| directory         | what lives there                                                |
-| ----------------- | --------------------------------------------------------------- |
-| `app/core`        | the composition root, the client context, the frame it drives   |
-| `app/session`     | bringing one match up: world, renderer, level, skirmish         |
-| `app/mission`     | campaigns, mission scripts, waves, the tutorial                 |
-| `app/commander`   | the first-person control mode and its camera                    |
-| `app/input`       | pointer and key gestures, before they become orders             |
-| `app/orders`      | gestures turned into `Game::Command` payloads, and the feedback |
-| `app/economy`     | production, trade, the resource coach                           |
-| `app/persistence` | saving and restoring a match                                    |
-| `app/world`       | world state read back as client presentation state              |
-| `app/audio`       | cue routing and the QML-facing audio proxy                      |
-| `app/viewmodels`  | the QML API, one coherent slice per model                       |
-| `app/models`      | Qt item models and image providers                              |
+| directory         | what lives there                                                 |
+| ----------------- | ---------------------------------------------------------------- |
+| `app/core`        | the composition root, the client context, the frame it drives    |
+| `app/session`     | bringing one match up: world, renderer, level, skirmish          |
+| `app/mission`     | the client half of a mission: wave effects, tutorial observation |
+| `app/commander`   | the first-person control mode and its camera                     |
+| `app/input`       | pointer and key gestures, before they become orders              |
+| `app/orders`      | gestures turned into `Game::Command` payloads, and the feedback  |
+| `app/economy`     | production, trade, the resource coach                            |
+| `app/persistence` | saving and restoring a match                                     |
+| `app/world`       | world state read back as client presentation state               |
+| `app/audio`       | cue routing and the QML-facing audio proxy                       |
+| `app/viewmodels`  | the QML API, one coherent slice per model                        |
+| `app/models`      | Qt item models and image providers                               |
 
 ### The composition root and its slices
 
@@ -460,7 +510,7 @@ merely moved:
   through `command_controller.formation()`, and the shared act is
   `App::Orders::OrderIssuer`.
 - `MissionSetupCoordinator` set a mission up _and_ ran its attack waves.
-  Waves are `app/mission/mission_waves.h`.
+  Waves are `game/mission/mission_waves.h`.
 
 ## Known limitations
 

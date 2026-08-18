@@ -9,7 +9,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/mission_definition.h"
 
-namespace App::Core {
+namespace Game::Mission {
 
 struct ExistingOwnerSpawnAnchor {
   Game::Mission::Position position;
@@ -42,4 +42,4 @@ commander_troops_for_map(const QString& map_path) -> std::map<int, QString>;
     const std::vector<ExistingOwnerSpawnAnchor>& existing_owner_spawns,
     const Game::Mission::Position& fallback) -> ResolvedCommanderPosition;
 
-} // namespace App::Core
+} // namespace Game::Mission

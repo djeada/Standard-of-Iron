@@ -11,11 +11,11 @@
 #include "../core/world.h"
 #include "../game_config.h"
 #include "../map/visibility_service.h"
+#include "../systems/selection_system.h"
+#include "../units/spawn_type.h"
 #include "camera_controller.h"
 #include "camera_follow_system.h"
 #include "scene/camera.h"
-#include "selection_system.h"
-#include "units/spawn_type.h"
 
 namespace Game::Systems {
 

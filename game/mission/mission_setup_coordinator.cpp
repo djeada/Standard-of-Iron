@@ -1,4 +1,4 @@
-#include "app/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_setup_coordinator.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -16,10 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include "app/mission/campaign_manager.h"
-#include "app/mission/mission_commander_setup.h"
-#include "app/mission/mission_waves.h"
-#include "app/persistence/game_state_restorer.h"
 #include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -28,19 +24,22 @@
 #include "game/map/map_transformer.h"
 #include "game/map/mission_context.h"
 #include "game/map/wave_archetype_catalog.h"
+#include "game/mission/campaign_manager.h"
+#include "game/mission/mission_commander_setup.h"
+#include "game/mission/mission_waves.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/world_restore.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
-#include "game/visuals/team_colors.h"
 #include "utils/resource_utils.h"
 
-namespace App::Core {
+namespace Game::Mission {
 namespace {
 
 constexpr float k_skirmish_aggression = 0.6F;
@@ -172,20 +171,6 @@ auto MissionSetupCoordinator::apply_mission_setup(
     return mission_position_to_world(pos, map_loaded ? &map_def : nullptr, ctx.level);
   };
 
-  auto apply_team_color = [&](Engine::Core::Entity* entity, int owner_id) {
-    if (entity == nullptr) {
-      return;
-    }
-    auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
-    if (renderable == nullptr) {
-      return;
-    }
-    const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
-    renderable->color[0] = team_color.x();
-    renderable->color[1] = team_color.y();
-    renderable->color[2] = team_color.z();
-  };
-
   auto parse_color = [](const QString& color_name, std::array<float, 3>& out) -> bool {
     if (color_name.isEmpty()) {
       return false;
@@ -301,8 +286,6 @@ auto MissionSetupCoordinator::apply_mission_setup(
           continue;
         }
         auto* entity = ctx.world.get_entity(unit->id());
-        apply_team_color(entity, owner_id);
-
         if (entity == nullptr) {
           continue;
         }
@@ -370,7 +353,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
     }
   };
 
-  const auto map_commanders = App::Core::commander_troops_by_owner(map_def);
+  const auto map_commanders = Game::Mission::commander_troops_by_owner(map_def);
 
   auto verify_owner_commander = [&](int owner_id, const QString& force_label) {
     for (auto* entity :
@@ -422,7 +405,6 @@ auto MissionSetupCoordinator::apply_mission_setup(
                        << building_setup.type << "for owner" << owner_id;
             continue;
           }
-          apply_team_color(ctx.world.get_entity(unit->id()), owner_id);
         }
       };
 
@@ -495,18 +477,6 @@ auto MissionSetupCoordinator::apply_mission_setup(
                              std::make_move_iterator(built.end()));
   }
 
-  auto entities = ctx.world.get_entities_with<Engine::Core::UnitComponent>();
-  for (auto* entity : entities) {
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-    apply_team_color(entity, unit->owner_id);
-  }
-
   if (auto* ai_system = ctx.world.get_system<Game::Systems::AISystem>()) {
     ai_system->reinitialize();
 
@@ -530,13 +500,13 @@ auto MissionSetupCoordinator::apply_mission_setup(
     }
   }
 
-  int const prev_selected_player = ctx.selected_player_id;
-  GameStateRestorer::rebuild_registries_after_load(
-      &ctx.world, ctx.selected_player_id, ctx.level, ctx.local_owner_id);
-  GameStateRestorer::rebuild_entity_cache(
-      &ctx.world, ctx.entity_cache, ctx.local_owner_id);
+  const auto restored =
+      Game::Persistence::rebuild_registries_after_load(&ctx.world, ctx.local_owner_id);
+  ctx.level.player_unit_id = restored.player_unit_id;
+  effects.rebuild_entity_cache = true;
 
-  if (ctx.selected_player_id != prev_selected_player) {
+  if (ctx.selected_player_id != ctx.local_owner_id) {
+    ctx.selected_player_id = ctx.local_owner_id;
     effects.selected_player_changed = true;
   }
 
@@ -606,22 +576,8 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
                << ctx.level.map_path << "-" << map_error;
   }
 
-  auto apply_team_color = [&](Engine::Core::Entity* entity, int owner_id) {
-    if (entity == nullptr) {
-      return;
-    }
-    auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
-    if (renderable == nullptr) {
-      return;
-    }
-    const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
-    renderable->color[0] = team_color.x();
-    renderable->color[1] = team_color.y();
-    renderable->color[2] = team_color.z();
-  };
-
   auto existing_owner_spawn_anchors = [&](int owner_id) {
-    std::vector<App::Core::ExistingOwnerSpawnAnchor> anchors;
+    std::vector<Game::Mission::ExistingOwnerSpawnAnchor> anchors;
     auto entities = ctx.world.get_entities_with<Engine::Core::UnitComponent>();
     anchors.reserve(entities.size());
     for (auto* entity : entities) {
@@ -689,7 +645,7 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
             ? std::optional<QString>(config.value("commanderTroop").toString())
             : std::nullopt;
     const QString commander_troop =
-        App::Core::resolve_commander_troop(nation_key, configured_commander);
+        Game::Mission::resolve_commander_troop(nation_key, configured_commander);
     if (commander_troop.isEmpty()) {
       continue;
     }
@@ -730,22 +686,22 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       }
     }
 
-    App::Core::ResolvedCommanderPosition commander_position;
+    Game::Mission::ResolvedCommanderPosition commander_position;
     if (has_existing_position) {
       commander_position = {.position = {existing_position.x(), existing_position.z()},
-                            .space = App::Core::CommanderPositionSpace::World};
+                            .space = Game::Mission::CommanderPositionSpace::World};
     } else {
       const auto anchors = existing_owner_spawn_anchors(owner_id);
       if (!anchors.empty()) {
         commander_position =
-            App::Core::resolve_commander_position({}, {}, anchors, {0.0F, 0.0F});
+            Game::Mission::resolve_commander_position({}, {}, anchors, {0.0F, 0.0F});
       } else if (const auto fallback = map_spawn_fallback(owner_id);
                  fallback.has_value()) {
         commander_position = {.position = fallback.value(),
-                              .space = App::Core::CommanderPositionSpace::World};
+                              .space = Game::Mission::CommanderPositionSpace::World};
       } else {
         commander_position = {.position = {0.0F, 0.0F},
-                              .space = App::Core::CommanderPositionSpace::World};
+                              .space = Game::Mission::CommanderPositionSpace::World};
       }
     }
 
@@ -766,8 +722,6 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     for (const auto id : existing_commanders) {
       ctx.world.destroy_entity(id);
     }
-
-    apply_team_color(ctx.world.get_entity(unit->id()), owner_id);
   }
 
   apply_skirmish_ai_strategies(ctx.world, processed_owner_ids, ctx.local_owner_id);
@@ -775,4 +729,4 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
   return effects;
 }
 
-} // namespace App::Core
+} // namespace Game::Mission
