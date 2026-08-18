@@ -1200,6 +1200,30 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>In the field</source>
         <translation>En el campo</translation>
     </message>
+    <message>
+        <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
+        <translation>Ancla a las tropas en un punto. Salen al encuentro de lo que se acerca y luego regresan.</translation>
+    </message>
+    <message>
+        <source>Holding a spot</source>
+        <translation>Mantiene un punto</translation>
+    </message>
+    <message>
+        <source>Reach</source>
+        <translation>Alcance</translation>
+    </message>
+    <message>
+        <source>They fight what comes within 10 m of that spot, and drop a target that leaves it.</source>
+        <translation>Combaten lo que entre a 10 m de ese punto y sueltan al objetivo que se aleja.</translation>
+    </message>
+    <message>
+        <source>Release</source>
+        <translation>Liberar</translation>
+    </message>
+    <message>
+        <source>Press Guard again, or order a move or attack.</source>
+        <translation>Pulsa Guardia otra vez, u ordena moverse o atacar.</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -2390,14 +2414,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Orden de ataque</translation>
     </message>
     <message>
-        <source>Guard order</source>
-        <translation>Orden de protección</translation>
-    </message>
-    <message>
-        <source>Patrol order</source>
-        <translation>Orden de patrulla</translation>
-    </message>
-    <message>
         <source>Medic order</source>
         <translation>Orden de sanidad</translation>
     </message>
@@ -2426,24 +2442,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Comando de alto</translation>
     </message>
     <message>
-        <source>Attack enemy units or buildings. Only eligible selected troops receive the order.</source>
-        <translation>Ataca unidades o edificios enemigos. Solo reciben la orden las tropas seleccionadas aptas.</translation>
-    </message>
-    <message>
         <source>Attack is not available for the current selection</source>
         <translation>Atacar no está disponible para la selección actual</translation>
     </message>
     <message>
-        <source>Guard a position. Only guard-capable troops receive the order.</source>
-        <translation>Protege una posición. Solo reciben la orden las tropas capaces de proteger.</translation>
-    </message>
-    <message>
         <source>Guard is not available for the current selection</source>
         <translation>Proteger no está disponible para la selección actual</translation>
-    </message>
-    <message>
-        <source>Patrol between waypoints.</source>
-        <translation>Patrulla entre puntos de ruta.</translation>
     </message>
     <message>
         <source>Patrol is not available for the current selection</source>
@@ -2454,10 +2458,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Sanidad</translation>
     </message>
     <message>
-        <source>Healers tend nearby allies on their own.</source>
-        <translation>Los sanadores atienden a los aliados cercanos por sí solos.</translation>
-    </message>
-    <message>
         <source>Healers automatically heal nearby allies. This is passive, not a manual order.</source>
         <translation>Los sanadores curan automáticamente a los aliados cercanos. Es algo pasivo, no una orden manual.</translation>
     </message>
@@ -2466,24 +2466,8 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Selecciona unidades sanadoras</translation>
     </message>
     <message>
-        <source>Stop all actions immediately.</source>
-        <translation>Detén todas las acciones de inmediato.</translation>
-    </message>
-    <message>
-        <source>Hold position and defend.</source>
-        <translation>Mantén la posición y defiende.</translation>
-    </message>
-    <message>
-        <source>Hold is not available for the current selection</source>
-        <translation>Mantener no está disponible para la selección actual</translation>
-    </message>
-    <message>
         <source>Build</source>
         <translation>Construir</translation>
-    </message>
-    <message>
-        <source>Open builder orders and place structures.</source>
-        <translation>Abre las órdenes de constructor y coloca estructuras.</translation>
     </message>
     <message>
         <source>Build is only available to builders</source>
@@ -2494,10 +2478,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Recoger</translation>
     </message>
     <message>
-        <source>Click a tree, boulder or ore deposit. Right-click to cancel.</source>
-        <translation>Haz clic en un árbol, una roca o un yacimiento. Clic derecho para cancelar.</translation>
-    </message>
-    <message>
         <source>Collect is only available to builders</source>
         <translation>Recolectar solo está disponible para los constructores</translation>
     </message>
@@ -2506,20 +2486,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Entregar</translation>
     </message>
     <message>
-        <source>Click a friendly barracks. Only selected civilians receive the order.</source>
-        <translation>Haz clic en un cuartel aliado. Solo reciben la orden los civiles seleccionados.</translation>
-    </message>
-    <message>
         <source>Deliver is only available to civilians</source>
         <translation>Entregar solo está disponible para los civiles</translation>
     </message>
     <message>
         <source>Rally</source>
         <translation>Reunir</translation>
-    </message>
-    <message>
-        <source>The commander plants a rally flag; troops march to it once placed.</source>
-        <translation>El comandante planta una bandera de reunión; las tropas marchan hacia ella una vez colocada.</translation>
     </message>
     <message>
         <source>Select a commander to use rally</source>
@@ -2542,10 +2514,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Aura</translation>
     </message>
     <message>
-        <source>Temporarily empower nearby troops. A glow marks every affected soldier.</source>
-        <translation>Potencia temporalmente a las tropas cercanas. Un resplandor marca a cada soldado afectado.</translation>
-    </message>
-    <message>
         <source>Select a ready commander to activate the aura</source>
         <translation>Selecciona un comandante preparado para activar el aura</translation>
     </message>
@@ -2558,20 +2526,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Recolección automática</translation>
     </message>
     <message>
-        <source>Builders keep finding and collecting the nearest resource on their own. Any new order cancels it.</source>
-        <translation>Los constructores siguen buscando y recogiendo el recurso más cercano por sí solos. Cualquier orden nueva lo cancela.</translation>
-    </message>
-    <message>
         <source>Auto Gather is only available to builders</source>
         <translation>La recolección automática solo está disponible para los constructores</translation>
     </message>
     <message>
         <source>Repair</source>
         <translation>Reparar</translation>
-    </message>
-    <message>
-        <source>Click a damaged building of yours. Right-click to cancel.</source>
-        <translation>Haz clic en un edificio tuyo dañado. Clic derecho para cancelar.</translation>
     </message>
     <message>
         <source>Repair is only available to builders</source>
@@ -2591,6 +2551,342 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>%1%</source>
         <translation>%1 %</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1 s</translation>
+    </message>
+    <message>
+        <source>Give it</source>
+        <translation>Darla</translation>
+    </message>
+    <message>
+        <source>Press Guard, then click the ground to hold. Right-click cancels.</source>
+        <translation>Pulsa Guardia y haz clic en el suelo que se debe mantener. Clic derecho cancela.</translation>
+    </message>
+    <message>
+        <source>Reach</source>
+        <translation>Alcance</translation>
+    </message>
+    <message>
+        <source>They fight what comes within %1 of that spot, and drop a target that leaves it.</source>
+        <translation>Combaten lo que entre a %1 de ese punto y sueltan al objetivo que se aleja.</translation>
+    </message>
+    <message>
+        <source>After</source>
+        <translation>Después</translation>
+    </message>
+    <message>
+        <source>They walk back to the spot when the fight ends.</source>
+        <translation>Vuelven al punto cuando termina el combate.</translation>
+    </message>
+    <message>
+        <source>Release</source>
+        <translation>Liberar</translation>
+    </message>
+    <message>
+        <source>Press Guard again, or order a move or attack. Stop does not lift it.</source>
+        <translation>Pulsa Guardia otra vez, u ordena moverse o atacar. Detener no lo levanta.</translation>
+    </message>
+    <message>
+        <source>Troops</source>
+        <translation>Tropas</translation>
+    </message>
+    <message>
+        <source>Any soldier, and the commander.</source>
+        <translation>Cualquier soldado, y el comandante.</translation>
+    </message>
+    <message>
+        <source>vs Hold</source>
+        <translation>frente a Mantener</translation>
+    </message>
+    <message>
+        <source>Guards step out to meet the enemy; Hold never moves.</source>
+        <translation>Guardia sale al encuentro del enemigo; Mantener nunca se mueve.</translation>
+    </message>
+    <message>
+        <source>Press Hold. There is nothing to click.</source>
+        <translation>Pulsa Mantener. No hay nada que clicar.</translation>
+    </message>
+    <message>
+        <source>Stance</source>
+        <translation>Postura</translation>
+    </message>
+    <message>
+        <source>They kneel, strike whatever reaches them, and never pursue.</source>
+        <translation>Se arrodillan, golpean a lo que les alcanza y nunca persiguen.</translation>
+    </message>
+    <message>
+        <source>Dug in</source>
+        <translation>Atrincherados</translation>
+    </message>
+    <message>
+        <source>Archers reach %1% further and spearmen %2%; both hit %3% harder, take %4% more punishment, and braced spears break a charge.</source>
+        <translation>Los arqueros alcanzan un %1% más y los lanceros un %2%; ambos golpean un %3% más fuerte, aguantan un %4% más, y las lanzas afirmadas rompen una carga.</translation>
+    </message>
+    <message>
+        <source>Press Hold again, or order a move, attack or Stop. Standing up takes a moment.</source>
+        <translation>Pulsa Mantener otra vez, u ordena moverse, atacar o Detener. Levantarse lleva un momento.</translation>
+    </message>
+    <message>
+        <source>Archers and spearmen only.</source>
+        <translation>Solo arqueros y lanceros.</translation>
+    </message>
+    <message>
+        <source>vs Guard</source>
+        <translation>frente a Guardia</translation>
+    </message>
+    <message>
+        <source>Guard would chase; Hold trades that for reach and staying power.</source>
+        <translation>Guardia perseguiría; Mantener cambia eso por alcance y resistencia.</translation>
+    </message>
+    <message>
+        <source>Press Patrol, left-click the first waypoint, then left-click the second. Right-click cancels.</source>
+        <translation>Pulsa Patrulla, haz clic izquierdo en el primer punto de ruta y luego en el segundo. Clic derecho cancela.</translation>
+    </message>
+    <message>
+        <source>Route</source>
+        <translation>Ruta</translation>
+    </message>
+    <message>
+        <source>They march between the two points for good, attacking whatever crosses the line.</source>
+        <translation>Marchan entre los dos puntos de forma permanente, atacando todo lo que cruce la línea.</translation>
+    </message>
+    <message>
+        <source>Any other order, or Stop, clears the route.</source>
+        <translation>Cualquier otra orden, o Detener, borra la ruta.</translation>
+    </message>
+    <message>
+        <source>Every soldier and the commander.</source>
+        <translation>Todos los soldados y el comandante.</translation>
+    </message>
+    <message>
+        <source>Effect</source>
+        <translation>Efecto</translation>
+    </message>
+    <message>
+        <source>Nearby troops fight with steadier morale and the commander&apos;s own bonus.</source>
+        <translation>Las tropas cercanas combaten con una moral más firme y el bono propio del comandante.</translation>
+    </message>
+    <message>
+        <source>%1 around the commander, and it moves with him.</source>
+        <translation>%1 alrededor del comandante, y se mueve con él.</translation>
+    </message>
+    <message>
+        <source>Lasts</source>
+        <translation>Dura</translation>
+    </message>
+    <message>
+        <source>Recharge</source>
+        <translation>Recarga</translation>
+    </message>
+    <message>
+        <source>%1 once it fades. A wounded commander cannot call it.</source>
+        <translation>%1 una vez se desvanece. Un comandante herido no puede invocarla.</translation>
+    </message>
+    <message>
+        <source>Your own living troops inside the ring; a glow marks each one.</source>
+        <translation>Tus propias tropas vivas dentro del anillo; un brillo marca a cada una.</translation>
+    </message>
+    <message>
+        <source>Click waypoint 1</source>
+        <translation>Clic en el punto 1</translation>
+    </message>
+    <message>
+        <source>Click waypoint 2</source>
+        <translation>Clic en el punto 2</translation>
+    </message>
+    <message>
+        <source>On patrol</source>
+        <translation>De patrulla</translation>
+    </message>
+    <message>
+        <source>Active %1</source>
+        <translation>Activa %1</translation>
+    </message>
+    <message>
+        <source>Ready in %1</source>
+        <translation>Lista en %1</translation>
+    </message>
+    <message>
+        <source>Ready</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Holding a spot</source>
+        <translation>Mantiene un punto</translation>
+    </message>
+    <message>
+        <source>Patrol: click the second waypoint</source>
+        <translation>Patrulla: clic en el segundo punto</translation>
+    </message>
+    <message>
+        <source>Patrol: click the first waypoint</source>
+        <translation>Patrulla: clic en el primer punto</translation>
+    </message>
+    <message>
+        <source>Guard: click the spot to hold</source>
+        <translation>Guardia: clic en el punto a mantener</translation>
+    </message>
+    <message>
+        <source>Guarding a spot</source>
+        <translation>Guardando un punto</translation>
+    </message>
+    <message>
+        <source>Send the selected troops at one enemy unit or building.</source>
+        <translation>Envía a las tropas seleccionadas contra una unidad o edificio enemigo.</translation>
+    </message>
+    <message>
+        <source>Press Attack, then left-click the target. Right-click cancels. A right-click on an enemy does the same thing.</source>
+        <translation>Pulsa Ataque y haz clic izquierdo en el objetivo. Clic derecho cancela. Un clic derecho sobre un enemigo hace lo mismo.</translation>
+    </message>
+    <message>
+        <source>Scope</source>
+        <translation>Alcance</translation>
+    </message>
+    <message>
+        <source>They chase the target until it dies or you order otherwise.</source>
+        <translation>Persiguen al objetivo hasta que muera o des otra orden.</translation>
+    </message>
+    <message>
+        <source>Every fighting unit; healers and builders sit it out.</source>
+        <translation>Toda unidad de combate; sanadores y constructores quedan fuera.</translation>
+    </message>
+    <message>
+        <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
+        <translation>Ancla a las tropas en un punto. Salen al encuentro de lo que se acerca y luego regresan.</translation>
+    </message>
+    <message>
+        <source>March a beat between two points and fight whatever crosses it.</source>
+        <translation>Recorre un trayecto entre dos puntos y combate todo lo que lo cruce.</translation>
+    </message>
+    <message>
+        <source>Healers tend the wounded around them on their own.</source>
+        <translation>Los sanadores atienden solos a los heridos a su alrededor.</translation>
+    </message>
+    <message>
+        <source>Passive</source>
+        <translation>Pasivo</translation>
+    </message>
+    <message>
+        <source>There is nothing to press: a healer mends nearby allies whenever they are hurt.</source>
+        <translation>No hay nada que pulsar: un sanador cura a los aliados cercanos cuando resultan heridos.</translation>
+    </message>
+    <message>
+        <source>Healers only. Keep them behind the line and they will work.</source>
+        <translation>Solo sanadores. Mantenlos tras la línea y trabajarán.</translation>
+    </message>
+    <message>
+        <source>Drop everything the selected troops are doing and stand still.</source>
+        <translation>Hace que las tropas seleccionadas lo dejen todo y se queden quietas.</translation>
+    </message>
+    <message>
+        <source>Clears</source>
+        <translation>Cancela</translation>
+    </message>
+    <message>
+        <source>Movement, the current target, Patrol, Hold, formation and gathering orders.</source>
+        <translation>Movimiento, el objetivo actual, Patrulla, Mantener, formación y órdenes de recolección.</translation>
+    </message>
+    <message>
+        <source>Keeps</source>
+        <translation>Conserva</translation>
+    </message>
+    <message>
+        <source>Guard: press Guard again to release troops from their anchor.</source>
+        <translation>Guardia: pulsa Guardia otra vez para soltar a las tropas de su ancla.</translation>
+    </message>
+    <message>
+        <source>Stand fast. Troops dig in where they are, hit harder and further, and never pursue.</source>
+        <translation>Resistir. Las tropas se atrincheran donde están, golpean más fuerte y lejos, y nunca persiguen.</translation>
+    </message>
+    <message>
+        <source>Hold is only available to archers and spearmen</source>
+        <translation>Mantener solo está disponible para arqueros y lanceros</translation>
+    </message>
+    <message>
+        <source>Open the builder&apos;s structure list and place one.</source>
+        <translation>Abre la lista de estructuras del constructor y coloca una.</translation>
+    </message>
+    <message>
+        <source>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</source>
+        <translation>Elige una estructura, lleva el contorno a suelo llano y despejado, usa la rueda para girar y confirma con clic izquierdo. Clic derecho cancela.</translation>
+    </message>
+    <message>
+        <source>Builders only.</source>
+        <translation>Solo constructores.</translation>
+    </message>
+    <message>
+        <source>Send a builder to fell a tree, break a boulder or work an ore seam.</source>
+        <translation>Envía a un constructor a talar un árbol, romper una roca o explotar una veta de mineral.</translation>
+    </message>
+    <message>
+        <source>Press Collect, then left-click the node. Right-click cancels.</source>
+        <translation>Pulsa Recoger y haz clic izquierdo en el recurso. Clic derecho cancela.</translation>
+    </message>
+    <message>
+        <source>The load only counts once it is dropped at the yard beside a barracks.</source>
+        <translation>La carga solo cuenta una vez descargada en el patio junto a un cuartel.</translation>
+    </message>
+    <message>
+        <source>Builders keep finding and working the nearest resource on their own.</source>
+        <translation>Los constructores siguen buscando y explotando por su cuenta el recurso más cercano.</translation>
+    </message>
+    <message>
+        <source>Runs until you stop it; any new order cancels it.</source>
+        <translation>Continúa hasta que lo detengas; cualquier orden nueva lo cancela.</translation>
+    </message>
+    <message>
+        <source>Send a builder to mend one of your damaged buildings.</source>
+        <translation>Envía a un constructor a reparar uno de tus edificios dañados.</translation>
+    </message>
+    <message>
+        <source>Press Repair, then left-click the damaged building. Right-click cancels.</source>
+        <translation>Pulsa Reparar y haz clic izquierdo en el edificio dañado. Clic derecho cancela.</translation>
+    </message>
+    <message>
+        <source>Send civilians to a barracks to refill the population it recruits from.</source>
+        <translation>Envía civiles a un cuartel para reponer la población de la que recluta.</translation>
+    </message>
+    <message>
+        <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
+        <translation>Pulsa Entregar y haz clic izquierdo en un cuartel aliado. Clic derecho cancela.</translation>
+    </message>
+    <message>
+        <source>Civilians only; other selected units ignore it.</source>
+        <translation>Solo civiles; las demás unidades seleccionadas lo ignoran.</translation>
+    </message>
+    <message>
+        <source>The commander plants a flag and the army marches to it.</source>
+        <translation>El comandante planta una bandera y el ejército marcha hacia ella.</translation>
+    </message>
+    <message>
+        <source>Press Rally, then left-click where the flag should stand. He walks there and plants it.</source>
+        <translation>Pulsa Reunir y haz clic izquierdo donde deba estar la bandera. Él va hasta allí y la planta.</translation>
+    </message>
+    <message>
+        <source>Troops near the flag march in; it also steadies wavering men.</source>
+        <translation>Las tropas cercanas a la bandera acuden; también afirma a los hombres que flaquean.</translation>
+    </message>
+    <message>
+        <source>Needs your commander selected.</source>
+        <translation>Requiere tener seleccionado a tu comandante.</translation>
+    </message>
+    <message>
+        <source>Automatic gates open for your own troops and shut behind them.</source>
+        <translation>Las puertas automáticas se abren para tus propias tropas y se cierran tras ellas.</translation>
+    </message>
+    <message>
+        <source>Select one of your own gates.</source>
+        <translation>Selecciona una de tus propias puertas.</translation>
+    </message>
+    <message>
+        <source>The commander empowers the troops around him for a while, then must recharge.</source>
+        <translation>El comandante potencia a las tropas a su alrededor un tiempo y luego debe recargar.</translation>
     </message>
 </context>
 <context>
@@ -3020,14 +3316,6 @@ Sin ver: nunca explorado.</translation>
         <translation>Dar órdenes</translation>
     </message>
     <message>
-        <source>Stances</source>
-        <translation>Posturas</translation>
-    </message>
-    <message>
-        <source>Guard holds a spot, chases what comes near and returns. Hold stands the ground without pursuing - for archers and spearmen. Patrol walks between two points and engages what crosses the route. Stop cancels everything.</source>
-        <translation>Guardia sostiene un punto, persigue lo que se acerca y vuelve. Mantener aguanta la posición sin perseguir: para arqueros y lanceros. Patrulla camina entre dos puntos y se enfrenta a lo que cruce la ruta. Detener lo cancela todo.</translation>
-    </message>
-    <message>
         <source>Winning and losing</source>
         <translation>Ganar y perder</translation>
     </message>
@@ -3116,10 +3404,6 @@ Sin ver: nunca explorado.</translation>
         <translation>Aura y Reunión</translation>
     </message>
     <message>
-        <source>With the commander selected, Aura briefly empowers every soldier around him and then recharges. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
-        <translation>Con el comandante seleccionado, Aura potencia brevemente a todos los soldados a su alrededor y luego se recarga. Reunión planta una bandera hacia la que marcha tu ejército: útil para volver a formar en línea una fuerza dispersa.</translation>
-    </message>
-    <message>
         <source>Taking direct control</source>
         <translation>Tomar el control directo</translation>
     </message>
@@ -3186,6 +3470,34 @@ Sin ver: nunca explorado.</translation>
     <message>
         <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
         <translation>Los lanceros mantienen una línea, los arqueros castigan desde detrás, la caballería rompe los flancos, los sanadores curan por su cuenta a los heridos cercanos. Con varias unidades seleccionadas, haz clic derecho y arrastra para desplegarlas en una formación orientada hacia el arrastre; la orden Formación abre el mismo planificador donde están. Correr cambia resistencia por velocidad.</translation>
+    </message>
+    <message>
+        <source>Guard - hold a spot</source>
+        <translation>Guardia: mantener un punto</translation>
+    </message>
+    <message>
+        <source>Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.</source>
+        <translation>Pulsa Guardia y haz clic izquierdo en el suelo que las tropas deben mantener. Combaten todo lo que se acerque a unos 10 m de ese punto, sueltan a lo que pase de largo y regresan cuando termina el combate. Pulsa Guardia otra vez, o da una orden de movimiento o ataque, para soltarlas; Detener por sí solo no lo levanta. Cualquier soldado puede guardar.</translation>
+    </message>
+    <message>
+        <source>Hold - stand fast</source>
+        <translation>Mantener: resistir</translation>
+    </message>
+    <message>
+        <source>Press Hold and the troops kneel where they stand. They never take a step, but they reach further, hit harder and take more punishment than they would on the move, and braced spears gut a cavalry charge. That is the trade: pursuit for staying power. Press Hold again, or give a move, attack or Stop order, to stand them up. Only archers and spearmen can hold.</source>
+        <translation>Pulsa Mantener y las tropas se arrodillan donde están. No dan un paso, pero alcanzan más lejos, golpean más fuerte y aguantan más que en movimiento, y las lanzas afirmadas destrozan una carga de caballería. Ese es el intercambio: persecución por resistencia. Pulsa Mantener otra vez, o da una orden de movimiento, ataque o Detener, para levantarlas. Solo arqueros y lanceros pueden mantener.</translation>
+    </message>
+    <message>
+        <source>Patrol - walk a beat</source>
+        <translation>Patrulla: recorrer un trayecto</translation>
+    </message>
+    <message>
+        <source>Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.</source>
+        <translation>Pulsa Patrulla, haz clic izquierdo en el primer punto de ruta y luego en el segundo. Las tropas marchan entre los dos puntos de forma permanente y atacan todo lo que cruce la línea: útil para vigilar un flanco mientras miras a otra parte. El clic derecho cancela mientras la defines; cualquier otra orden, o Detener, borra la ruta.</translation>
+    </message>
+    <message>
+        <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
+        <translation>Con el comandante seleccionado, Aura potencia a sus tropas un tiempo y luego debe recargar: cada comandante aporta su propio bono, radio y tiempos, y el botón los muestra junto con el tiempo restante. Un brillo marca a cada soldado dentro del anillo, el anillo viaja con él y un comandante herido no puede invocarla. Reunir planta una bandera hacia la que marcha tu ejército: útil para volver a formar una fuerza dispersa.</translation>
     </message>
 </context>
 <context>
@@ -6846,14 +7158,6 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
         <translation>Se acerca un asalto romano. El contador de oleadas lleva la cuenta atrás y el minimapa marca su punto de entrada. Fórmate cerca de tu cuartel: lanceros delante, arqueros detrás y el comandante cerca para que su aura los alcance. Rechaza el asalto para continuar.</translation>
     </message>
     <message>
-        <source>Soldiers can be told how to behave. Guard: hold a spot and chase anything that comes near, then return. Hold: stand your ground and do not pursue - best for archers on a hill or a wall line. Patrol: walk between two points and engage whatever crosses the route. Give one of these orders to your soldiers.</source>
-        <translation>A los soldados se les puede indicar cómo comportarse. Guardia: sostener un punto, perseguir todo lo que se acerque y volver. Mantener: aguantar la posición sin perseguir, ideal para arqueros en una colina o una línea de muralla. Patrulla: caminar entre dos puntos y enfrentarse a lo que cruce la ruta. Da una de estas órdenes a tus soldados.</translation>
-    </message>
-    <message>
-        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura briefly empowers every soldier around him, and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
-        <translation>Tu comandante porta el estandarte. Las tropas cercanas luchan con más moral, y mientras está seleccionado aparecen dos órdenes: Aura potencia brevemente a todos los soldados a su alrededor, y Reunión planta una bandera hacia la que marcha el ejército. Si muere, tus líneas se rompen y la misión se pierde: mantenlo detrás de las lanzas. Activa el Aura ahora.</translation>
-    </message>
-    <message>
         <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
         <translation>Mueve la vista con las flechas o WASD, o lleva el ratón al borde de la pantalla. Desplaza la rueda para acercar, Q y E giran, Ctrl con las flechas arriba y abajo inclina, y Home vuelve a tu campamento. Seguir mantiene la cámara sobre tu selección. Mueve la cámara ahora.</translation>
     </message>
@@ -6928,6 +7232,14 @@ Amplia visión y un ancla duradera para el asentamiento</translation>
     <message>
         <source>Kill the Roman commander and take the camp</source>
         <translation>Mata al comandante romano y toma el campamento</translation>
+    </message>
+    <message>
+        <source>Soldiers can be told how to behave, and the three orders are not the same. Guard: click a spot; they meet anything that comes near it, then walk back to it. Hold: they never take a step, but they reach further, hit harder and brace against a charge - archers and spearmen only. Patrol: click two waypoints and they march the beat between them, fighting whatever crosses it. Hover any of the three to read the full rules, then give one of them to your soldiers.</source>
+        <translation>A los soldados se les puede indicar cómo comportarse, y las tres órdenes no son iguales. Guardia: haz clic en un punto; salen al paso de lo que se acerque y luego regresan a él. Mantener: no dan un paso, pero alcanzan más lejos, golpean más fuerte y se afirman ante una carga: solo arqueros y lanceros. Patrulla: marca dos puntos de ruta y recorren el trayecto entre ellos, combatiendo lo que lo cruce. Pasa el cursor por cualquiera de las tres para leer las reglas completas y luego da una de ellas a tus soldados.</translation>
+    </message>
+    <message>
+        <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura empowers every soldier in a ring around him for a stretch and then recharges - the button prints the radius, how long it lasts and how long until it returns - and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
+        <translation>Tu comandante porta el estandarte. Las tropas cercanas combaten con mayor moral y, mientras esté seleccionado, aparecen dos órdenes: Aura potencia a cada soldado en un anillo a su alrededor durante un tiempo y luego recarga —el botón muestra el radio, cuánto dura y cuánto falta para que vuelva— y Reunir planta una bandera hacia la que marcha el ejército. Si muere, tus líneas se rompen y la misión se pierde: mantenlo tras las lanzas. Activa el Aura ahora.</translation>
     </message>
 </context>
 <context>

@@ -7,12 +7,13 @@
 
 #include "app/audio/audio_coordinator.h"
 #include "app/audio/audio_resource_loader.h"
-#include "app/mission/campaign_manager.h"
 #include "app/persistence/game_state_restorer.h"
 #include "app/world/visibility_coordinator.h"
 #include "game/core/world.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
+#include "game/mission/campaign_manager.h"
+#include "game/render_bridge/game_state_serializer.h"
 #include "game/save/serialization.h"
 #include "game/session/deterministic_rng.h"
 #include "game/session/session_context.h"
@@ -22,6 +23,7 @@
 #include "game/systems/save_load_service.h"
 #include "game/systems/undead_awakening_system.h"
 #include "game/systems/victory_service.h"
+#include "game/systems/world_restore.h"
 #include "game/units/factory.h"
 #include "game/wildlife/wildlife_system.h"
 #include "render/scene_renderer.h"
@@ -179,11 +181,10 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   Game::Map::MapTransformer::setFactoryRegistry(unit_registry);
   qInfo() << "Factory registry reinitialized after loading saved game";
 
-  GameStateRestorer::rebuild_registries_after_load(
-      &context.world,
-      context.selected_player_id,
-      context.level,
-      context.runtime_snapshot.local_owner_id);
+  const auto restored = Game::Persistence::rebuild_registries_after_load(
+      &context.world, context.runtime_snapshot.local_owner_id);
+  context.level.player_unit_id = restored.player_unit_id;
+  context.selected_player_id = context.runtime_snapshot.local_owner_id;
   GameStateRestorer::rebuild_entity_cache(
       &context.world, context.entity_cache, context.runtime_snapshot.local_owner_id);
   if (!context.level.map_path.isEmpty()) {

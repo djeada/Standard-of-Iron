@@ -7,9 +7,9 @@
 #include <memory>
 #include <vector>
 
-#include "game/map/minimap/minimap_fog_compositor.h"
-#include "game/map/minimap/unit_layer.h"
 #include "game/map/visibility_service.h"
+#include "game/render_bridge/minimap/minimap_fog_compositor.h"
+#include "game/render_bridge/minimap/unit_layer.h"
 
 namespace Game::Map {
 struct MapDefinition;

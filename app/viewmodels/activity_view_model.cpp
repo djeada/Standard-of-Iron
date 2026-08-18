@@ -16,9 +16,9 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
-#include "game/systems/game_state_serializer.h"
+#include "game/render_bridge/selection_controller.h"
+#include "game/systems/match_snapshot.h"
 #include "game/systems/selection_system.h"
-#include "game/view/selection_controller.h"
 
 namespace App::ViewModels {
 namespace {

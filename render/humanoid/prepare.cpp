@@ -1,3 +1,4 @@
+#include "../entity_appearance.h"
 #include "prepare_internal.h"
 
 namespace Render::GL {
@@ -15,9 +16,9 @@ auto HumanoidRendererBase::resolve_team_tint(const DrawContext& ctx) -> QVector3
   }
 
   if ((unit != nullptr) && unit->owner_id > 0) {
-    tunic = Game::Visuals::team_colorForOwner(unit->owner_id);
+    tunic = Render::team_color(unit->owner_id);
   } else if (rc != nullptr) {
-    tunic = QVector3D(rc->color[0], rc->color[1], rc->color[2]);
+    tunic = Render::entity_color(*ctx.entity);
   }
 
   return tunic;

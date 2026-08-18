@@ -580,8 +580,15 @@ add_library(
     # app/core -- the composition root and the frame it drives.
     app/core/frame_ui_coordinator.cpp
     app/core/game_engine.cpp
+    app/core/game_engine_composition.cpp
     app/core/language_manager.cpp
+    app/core/match_presentation_sync.cpp
     app/core/runtime_frame_orchestrator.cpp
+    # app/mission -- the client's half of running a mission. The mission logic
+    # itself is game/mission (soi_mission_runtime); what is left here is reading
+    # the frame the tutorial director is about to be advanced through.
+    app/mission/mission_wave_runtime.cpp
+    app/mission/tutorial_observation.cpp
     # app/session -- bringing one match up: world, renderer, level, skirmish.
     app/session/environment.cpp
     app/session/level_loader.cpp
@@ -591,14 +598,6 @@ add_library(
     app/session/skirmish_loader.cpp
     app/session/skirmish_runtime_coordinator.cpp
     app/session/world_bootstrap.cpp
-    # app/mission -- campaigns, mission scripts, waves and the tutorial.
-    app/mission/campaign_manager.cpp
-    app/mission/mission_commander_setup.cpp
-    app/mission/mission_definition_view.cpp
-    app/mission/mission_setup_coordinator.cpp
-    app/mission/mission_wave_director.cpp
-    app/mission/mission_waves.cpp
-    app/mission/tutorial_director.cpp
     # app/commander -- the first-person control mode and its camera.
     app/commander/commander_camera_rig.cpp
     app/commander/commander_control_controller.cpp
@@ -687,6 +686,7 @@ target_link_libraries(
         soi_ai
         soi_runtime
         soi_missions
+        soi_mission_runtime
         soi_campaign
         soi_persistence
         audio_system
@@ -838,7 +838,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_mountain.json
             assets/campaigns/second_punic_war.json
             assets/campaign_map/campaign_state.json
-            assets/visuals/unit_visuals.json
             assets/visuals/unit_equipment_loadouts.json
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png

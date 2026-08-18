@@ -4,6 +4,7 @@
 #include <cmath>
 #include <unordered_map>
 
+#include "../../entity_appearance.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 
@@ -92,10 +93,8 @@ auto resolve_draw_state(const DrawContext& ctx, float top_speed) -> DrawState {
 
   state.seed = static_cast<std::uint32_t>(ctx.entity->get_id() * 2654435761ULL) | 1U;
 
-  if (const auto* renderable =
-          ctx.entity->get_component<Engine::Core::RenderableComponent>()) {
-    state.coat =
-        QVector3D(renderable->color[0], renderable->color[1], renderable->color[2]);
+  if (ctx.entity->get_component<Engine::Core::RenderableComponent>() != nullptr) {
+    state.coat = Render::entity_color(*ctx.entity);
   }
   float const variation = 0.9F + (hash_unit_float(state.seed, 7U) * 0.18F);
   state.coat = tinted(state.coat, variation);

@@ -48,10 +48,9 @@ void Barracks::init(const SpawnParams& params) {
 
   if (params.ai_controlled) {
     e->add_component<Engine::Core::AIControlledComponent>();
-  } else {
   }
 
-  m_r = add_building_renderable(*e, m_u->owner_id, nation_id, m_type_string);
+  m_r = add_building_renderable(*e, nation_id, m_type_string);
 
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);

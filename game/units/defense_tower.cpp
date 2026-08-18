@@ -47,7 +47,7 @@ void DefenseTower::init(const SpawnParams& params) {
     e->add_component<Engine::Core::AIControlledComponent>();
   }
 
-  m_r = add_building_renderable(*e, m_u->owner_id, nation_id, m_type_string);
+  m_r = add_building_renderable(*e, nation_id, m_type_string);
 
   m_atk = e->add_component<Engine::Core::AttackComponent>();
   m_atk->range = 18.0F;

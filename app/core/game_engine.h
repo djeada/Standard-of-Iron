@@ -22,6 +22,7 @@
 #include "app/core/app_scene_context.h"
 #include "app/core/client_context.h"
 #include "app/core/entity_cache.h"
+#include "app/core/match_presentation_sync.h"
 #include "app/core/runtime_frame_orchestrator.h"
 #include "app/economy/economy_overview.h"
 #include "app/input/cursor_manager.h"
@@ -29,10 +30,8 @@
 #include "app/input/hover_tracker.h"
 #include "app/input/input_command_handler.h"
 #include "app/input/rts_camera_controller.h"
-#include "app/mission/mission_setup_coordinator.h"
-#include "app/mission/mission_wave_director.h"
-#include "app/mission/mission_waves.h"
-#include "app/mission/tutorial_director.h"
+#include "app/mission/mission_wave_runtime.h"
+#include "app/mission/tutorial_observation.h"
 #include "app/models/selected_units_model.h"
 #include "app/orders/movement_utils.h"
 #include "app/orders/order_feedback.h"
@@ -58,15 +57,19 @@
 #include "game/command/replay.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
+#include "game/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_wave_director.h"
+#include "game/mission/mission_waves.h"
+#include "game/mission/tutorial_director.h"
+#include "game/render_bridge/selection_controller.h"
 #include "game/session/session_context.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
-#include "game/systems/game_state_serializer.h"
+#include "game/systems/match_snapshot.h"
 #include "game/systems/save_format.h"
 #include "game/systems/target_focus.h"
 #include "game/systems/unit_activity.h"
 #include "game/util/selection_utils.h"
-#include "game/view/selection_controller.h"
 
 class ProductionManager;
 class CampaignManager;
@@ -304,9 +307,9 @@ private:
     int selection_refresh_counter = 0;
     float minimap_unit_update_accumulator = 0.0F;
   };
-  using PendingMissionWave = App::Core::PendingMissionWave;
-  using PendingMissionEvent = App::Core::PendingMissionEvent;
-  using MissionWaveDirector = App::Core::MissionWaveDirector;
+  using PendingMissionWave = Game::Mission::PendingMissionWave;
+  using PendingMissionEvent = Game::Mission::PendingMissionEvent;
+  using MissionWaveDirector = Game::Mission::MissionWaveDirector;
   bool screen_to_ground(const QPointF& screen_pt, QVector3D& out_world);
   bool world_to_screen(const QVector3D& world, QPointF& out_screen) const;
   void note_dropped_simulation_ticks(std::uint64_t dropped, float real_dt);
@@ -314,6 +317,8 @@ private:
   void sync_selection_flags();
   void sync_attack_targeting();
   void sync_attack_range_rings();
+  [[nodiscard]] auto
+  attack_sync_context() const -> App::Core::PresentationSync::SelectionAttackContext;
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
   void sync_selected_player_state();
   void sync_economy_state();
@@ -328,10 +333,9 @@ private:
   QAbstractItemModel* selected_units_model();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event);
   void on_unit_died(const Engine::Core::UnitDiedEvent& event);
-  void rebuild_entity_cache();
-  void rebuild_registries_after_load();
-  void rebuild_building_collisions();
-  void restore_environment_from_metadata(const QJsonObject& metadata);
+
+  void build_client_and_view_models();
+  void build_services_and_controllers();
   void update_cursor(Qt::CursorShape new_cursor);
   void set_error(const QString& error_message);
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
@@ -359,13 +363,11 @@ private:
   void reset_preload_interaction_state();
   void reset_mission_runtime_state();
   void update_mission_waves(float dt);
+  [[nodiscard]] auto mission_wave_binding() -> App::Mission::MissionWaveBinding;
   void publish_wave_status();
   void restore_mission_waves(const QJsonObject& wave_state);
-  void update_mission_events();
   void update_tutorial(float real_dt);
   void activate_tutorial_if_configured();
-  [[nodiscard]] auto
-  build_tutorial_observation() const -> App::Core::TutorialObservation;
   void update_loading_overlay();
   void update_cursor_position();
   void on_frame_image_captured(const QImage& image);
@@ -391,7 +393,7 @@ private:
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
   std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
   std::unique_ptr<App::ViewModels::EconomyViewModel> m_economy_view_model;
-  std::unique_ptr<App::Core::TutorialDirector> m_tutorial_director;
+  std::unique_ptr<Game::Mission::TutorialDirector> m_tutorial_director;
 
   void set_cursor_mode(CursorMode mode) override;
 
@@ -439,8 +441,7 @@ private:
   std::unique_ptr<Game::Map::MapCatalog> m_map_catalog;
   std::unique_ptr<Game::Audio::AudioEventHandler> m_audio_event_handler;
   std::unique_ptr<AudioCoordinator> m_audio_coordinator;
-  std::unique_ptr<App::Core::MissionSetupCoordinator> m_mission_setup;
-  App::Core::MissionWaves m_mission_waves;
+  std::unique_ptr<Game::Mission::MissionSetupCoordinator> m_mission_setup;
   std::unique_ptr<App::Core::SaveLoadCoordinator> m_save_load_coordinator;
   std::unique_ptr<App::Core::SkirmishRuntimeCoordinator> m_skirmish_runtime;
   std::unique_ptr<App::Models::AudioSystemProxy> m_audio_systemProxy;
@@ -484,25 +485,8 @@ private:
   QString m_screenshot_target_slot;
   QString m_save_progress_slot;
   QTimer m_autosave_timer;
-  float m_campaign_mission_elapsed = 0.0F;
-  std::vector<PendingMissionWave> m_pending_mission_waves;
-  std::vector<PendingMissionEvent> m_pending_mission_events;
-  MissionWaveDirector m_mission_wave_director;
-  struct TutorialFrameNotes {
-    bool move_accepted = false;
-    bool attack_accepted = false;
-    bool hold_accepted = false;
-    bool guard_accepted = false;
-    bool patrol_accepted = false;
-    bool gather_accepted = false;
-    bool build_accepted = false;
-    bool speed_changed = false;
-    bool camera_used = false;
-    QString last_rejection_reason;
-
-    void reset() { *this = TutorialFrameNotes{}; }
-  };
-  TutorialFrameNotes m_tutorial_notes;
+  App::Mission::MissionWaveRuntime m_mission_waves;
+  App::Mission::TutorialFrameNotes m_tutorial_notes;
   float m_tutorial_observe_accumulator = 0.0F;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;

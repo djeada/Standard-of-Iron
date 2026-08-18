@@ -97,6 +97,7 @@
         <file>assets/shaders/post_blur.frag</file>
         <file>assets/shaders/post_composite.frag</file>
         <file>assets/shaders/post_fxaa.frag</file>
+        <file>assets/shaders/post_godrays.frag</file>
         <file>assets/shaders/sky.frag</file>
         <file>assets/shaders/ground_marker.vert</file>
         <file>assets/shaders/mode_indicator.frag</file>
@@ -362,7 +363,6 @@
         <file>assets/campaigns/second_punic_war.json</file>
 
         <!-- Visual config -->
-        <file>assets/visuals/unit_visuals.json</file>
         <file>assets/visuals/unit_equipment_loadouts.json</file>
         <file>assets/visuals/emblems/rome.png</file>
         <file>assets/visuals/emblems/cartaghe.png</file>

@@ -1,7 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "map/minimap/minimap_utils.h"
+#include "render_bridge/minimap/minimap_utils.h"
 
 using namespace Game::Map::Minimap;
 

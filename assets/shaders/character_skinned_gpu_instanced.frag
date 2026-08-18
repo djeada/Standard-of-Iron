@@ -35,6 +35,13 @@ const float k_readable_wear_far = 0.30;
 const float k_readable_grime_far = 0.20;
 const float k_readable_blood_far = 0.75;
 const float k_readable_shadow_floor = 0.60;
+const float k_sun_rim_power = 2.4;
+const float k_sun_rim_wrap = 0.35;
+const float k_sun_rim_gain = 0.10;
+const float k_sun_rim_backlight_gain = 0.32;
+const float k_wet_sheen_gloss = 0.55;
+const float k_wet_sheen_power = 14.0;
+const vec3 k_wet_darken = vec3(0.78, 0.80, 0.82);
 const int k_wildlife_material = 7;
 const float k_wildlife_belly_y = 0.26;
 const float k_wildlife_back_span = 0.40;
@@ -263,10 +270,24 @@ vec3 shade_readable_character(
   float rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 3.0);
   color += sky_color * rim * mix(k_readable_rim_near, k_readable_rim_far, zoom);
 
+  float back_facing = clamp(dot(-view_dir, light_dir), 0.0, 1.0);
+  float sun_rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), k_sun_rim_power) *
+                  clamp(dot(surface_normal, light_dir) + k_sun_rim_wrap, 0.0, 1.0);
+  color += sun_color * environment_primary_intensity() * sun_rim *
+           (k_sun_rim_gain + k_sun_rim_backlight_gain * back_facing);
+
+  float wetness = environment_wetness();
+  vec3 half_vector = normalize(light_dir + view_dir);
   if (material_id == 2) {
-    vec3 half_vector = normalize(light_dir + view_dir);
     float metal_glint = pow(max(dot(surface_normal, half_vector), 0.0), 28.0);
     color += sun_color * metal_glint * 0.18 * environment_primary_intensity();
+    color += local_lighting_specular(world_position, surface_normal, view_dir, 1.0);
+  } else if (wetness > 0.0) {
+    float sheen = pow(max(dot(surface_normal, half_vector), 0.0), k_wet_sheen_power);
+    color += sun_color * sheen * 0.10 * wetness * environment_primary_intensity();
+    color += local_lighting_specular(
+        world_position, surface_normal, view_dir, wetness * k_wet_sheen_gloss);
+    color = mix(color, color * k_wet_darken, wetness * 0.5);
   }
   return clamp(color, 0.0, 1.0);
 }

@@ -1,5 +1,6 @@
 #include "siege_renderer_common.h"
 
+#include "../entity_appearance.h"
 #include "game/core/component.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
@@ -30,9 +31,9 @@ void register_siege_renderer_variant(EntityRendererRegistry& registry,
 
         QVector3D team_color = config.default_team;
         if (ctx.entity != nullptr) {
-          if (auto* r =
-                  ctx.entity->get_component<Engine::Core::RenderableComponent>()) {
-            team_color = QVector3D(r->color[0], r->color[1], r->color[2]);
+          if (ctx.entity->get_component<Engine::Core::RenderableComponent>() !=
+              nullptr) {
+            team_color = Render::entity_color(*ctx.entity);
           }
         }
 

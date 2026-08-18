@@ -327,11 +327,11 @@ int main(int argc, char** argv) {
   static_assert(Render::Creature::k_humanoid_rpg_sword_overhead_clip == 33U);
   static_assert(Render::Creature::k_humanoid_rpg_sword_thrust_clip == 34U);
   static_assert(Render::Creature::k_humanoid_rpg_sword_finisher_clip == 35U);
-  static_assert(Render::Creature::k_humanoid_testudo_first_clip == 48U);
+  static_assert(Render::Creature::k_humanoid_testudo_first_clip == 53U);
   static_assert(Render::Creature::k_humanoid_testudo_rear_clip ==
                 Render::Creature::k_humanoid_testudo_first_clip +
                     Render::Creature::k_humanoid_testudo_clip_count - 1U);
-  static_assert(Render::Creature::k_humanoid_carthage_shield_wall_first_clip == 53U);
+  static_assert(Render::Creature::k_humanoid_carthage_shield_wall_first_clip == 58U);
   static_assert(Render::Creature::k_humanoid_carthage_shield_wall_right_clip ==
                 Render::Creature::k_humanoid_carthage_shield_wall_first_clip +
                     Render::Creature::k_humanoid_carthage_shield_wall_clip_count - 1U);

@@ -133,7 +133,7 @@ void main() {
   color += magic_color * crystal_spec;
   color += glow;
 
-  color += color * local_lighting(v_world_pos, normalize(v_normal));
+  color += albedo * ao * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);

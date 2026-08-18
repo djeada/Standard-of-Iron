@@ -102,7 +102,7 @@ protected:
     auto* transform = entity->add_component<TransformComponent>();
     transform->position.x = center.x();
     transform->position.z = center.z();
-    entity->add_component<Engine::Core::RenderableComponent>("", "");
+    entity->add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity->add_component<UnitComponent>(4000, 4000, 0.0F, 0.0F);
     unit->owner_id = k_defender;
     unit->spawn_type = spawn_type;

@@ -7,6 +7,7 @@
 #include <tuple>
 #include <utility>
 
+#include "arena_ambience_scenarios.h"
 #include "arena_formation_scenarios.h"
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
@@ -9854,6 +9855,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(trailer.begin()),
                   std::make_move_iterator(trailer.end()));
+    auto ambience = build_ambience_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(ambience.begin()),
+                  std::make_move_iterator(ambience.end()));
     return values;
   }();
   return catalog;

@@ -217,6 +217,25 @@
       "spear": "spear",
       "greaves": "roman_greaves",
       "armor": "roman_light_armor"
+    },
+    "troops/roman/camp_rest": {
+      "helmet": "roman_light",
+      "greaves": "roman_greaves",
+      "armor": "roman_hamata_mail",
+      "shoulder": "roman_shoulder_cover"
+    },
+    "troops/roman/camp_rest_helmed": {
+      "sword": "sword_roman",
+      "helmet": "roman_montefortino",
+      "greaves": "roman_greaves",
+      "armor": "roman_hamata_mail"
+    },
+    "troops/roman/camp_rest_armed": {
+      "sword": "sword_roman",
+      "helmet": "roman_light",
+      "greaves": "roman_greaves",
+      "armor": "roman_hamata_mail",
+      "shoulder": "roman_shoulder_cover"
     }
   }
 }

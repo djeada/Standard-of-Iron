@@ -20,13 +20,13 @@
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
+#include "game/render_bridge/picking_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
-#include "game/systems/picking_service.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
@@ -40,7 +40,6 @@
 #include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/util/asset_text.h"
-#include "game/visuals/team_colors.h"
 #include "scene/camera.h"
 
 ProductionManager::ProductionManager(Engine::Core::World* world,
@@ -864,11 +863,8 @@ void ProductionManager::append_preview_entity(const QString& item_type,
   transform->rotation = {0.0F, rotation_y, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
 
-  auto* renderable =
-      Game::Units::add_building_renderable(*entity,
-                                           pending_construction_owner_id(),
-                                           pending_construction_nation_id(),
-                                           item_type.toStdString());
+  auto* renderable = Game::Units::add_building_renderable(
+      *entity, pending_construction_nation_id(), item_type.toStdString());
   if (renderable == nullptr) {
     m_world->destroy_entity(entity->get_id());
     return;
@@ -911,7 +907,6 @@ void ProductionManager::rebuild_wall_preview_entities() {
   auto& terrain_service = Game::Map::TerrainService::instance();
   const int owner_id = pending_construction_owner_id();
   const auto nation_id = pending_construction_nation_id();
-  const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
 
   for (const auto& segment : m_wall_preview_segments) {
     auto* entity = m_world->create_entity();
@@ -920,7 +915,7 @@ void ProductionManager::rebuild_wall_preview_entities() {
     }
 
     auto* transform = entity->add_component<Engine::Core::TransformComponent>();
-    auto* renderable = entity->add_component<Engine::Core::RenderableComponent>("", "");
+    auto* renderable = entity->add_component<Engine::Core::RenderableComponent>();
     auto* preview = entity->add_component<Engine::Core::ConstructionPreviewComponent>();
     if (transform == nullptr || renderable == nullptr || preview == nullptr) {
       m_world->destroy_entity(entity->get_id());
@@ -938,16 +933,12 @@ void ProductionManager::rebuild_wall_preview_entities() {
     transform->scale = {1.0F, 1.0F, 1.0F};
 
     renderable->visible = false;
-    renderable->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
     renderable->renderer_id =
         (gate_mode ? Game::Systems::WallNetworkService::resolve_gate_appearance(
                          nation_id, segment.connection_mask, segment.rotation_y)
                    : Game::Systems::WallNetworkService::resolve_appearance(
                          nation_id, segment.connection_mask))
             .renderer_id;
-    renderable->color[0] = team_color.x();
-    renderable->color[1] = team_color.y();
-    renderable->color[2] = team_color.z();
 
     preview->owner_id = owner_id;
     preview->nation_id = nation_id;

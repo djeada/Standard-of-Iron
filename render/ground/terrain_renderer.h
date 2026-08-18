@@ -16,6 +16,7 @@
 #include "render/gl/mesh.h"
 #include "render/gl/texture.h"
 #include "render/i_render_pass.h"
+#include "render/mist_volume.h"
 #include "render/world_chunk.h"
 
 namespace Render::GL {
@@ -41,6 +42,8 @@ public:
 
 private:
   void build_meshes();
+  [[nodiscard]] static auto
+  compute_ground_fog(const std::vector<float>& heights) -> Render::GroundFogSettings;
 
   [[nodiscard]] auto compute_hill_entry_weights(
       const std::vector<float>& height_data) const -> std::vector<float>;
@@ -166,6 +169,7 @@ private:
   std::vector<float> m_height_data;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
+  Render::GroundFogSettings m_ground_fog{};
   std::unique_ptr<Texture> m_height_texture;
   bool m_height_texture_dirty = true;
   std::vector<ChunkMesh> m_chunks;

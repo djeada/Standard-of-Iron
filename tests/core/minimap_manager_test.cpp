@@ -13,11 +13,11 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "map/map_definition.h"
-#include "map/minimap/minimap_utils.h"
 #include "map/render_visibility_rules.h"
 #include "map/visibility_service.h"
+#include "render_bridge/game_state_serializer.h"
+#include "render_bridge/minimap/minimap_utils.h"
 #include "scene/camera.h"
-#include "systems/game_state_serializer.h"
 
 using namespace Game::Map;
 

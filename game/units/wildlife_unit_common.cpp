@@ -1,29 +1,11 @@
 #include "wildlife_unit_common.h"
 
-#include <QVector3D>
-
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/ownership_constants.h"
 #include "../systems/troop_profile_service.h"
 
 namespace Game::Units {
-
-namespace {
-
-auto coat_color(Game::Wildlife::Species species) -> QVector3D {
-  switch (species) {
-  case Game::Wildlife::Species::Sheep:
-    return {0.88F, 0.86F, 0.80F};
-  case Game::Wildlife::Species::Wolf:
-    return {0.47F, 0.43F, 0.39F};
-  case Game::Wildlife::Species::Bird:
-    return {0.32F, 0.30F, 0.33F};
-  }
-  return {0.8F, 0.8F, 0.8F};
-}
-
-} // namespace
 
 auto setup_wildlife_unit(Engine::Core::Entity& entity,
                          const SpawnParams& params,
@@ -41,13 +23,9 @@ auto setup_wildlife_unit(Engine::Core::Entity& entity,
   out.transform->scale = {scale, scale, scale};
   out.transform->rotation.y = params.rotation_y;
 
-  out.renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  out.renderable = entity.add_component<Engine::Core::RenderableComponent>();
   out.renderable->visible = true;
   out.renderable->renderer_id = profile.visuals.renderer_id;
-  QVector3D const color = coat_color(species);
-  out.renderable->color[0] = color.x();
-  out.renderable->color[1] = color.y();
-  out.renderable->color[2] = color.z();
 
   out.unit = entity.add_component<Engine::Core::UnitComponent>();
   out.unit->spawn_type = spawn_typeFromTroopType(troop_type);

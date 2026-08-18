@@ -4,28 +4,28 @@
 #include <set>
 #include <vector>
 
-#include "app/mission/mission_commander_setup.h"
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
+#include "game/mission/mission_commander_setup.h"
 #include "game/systems/nation_id.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_type.h"
 #include "utils/resource_utils.h"
 
 TEST(MissionCommanderSetupTest, FallsBackToHannibalForCarthage) {
-  EXPECT_EQ(App::Core::resolve_commander_troop("carthage", std::nullopt),
+  EXPECT_EQ(Game::Mission::resolve_commander_troop("carthage", std::nullopt),
             QStringLiteral("carthage_sword_commander"));
 }
 
 TEST(MissionCommanderSetupTest, KeepsConfiguredCommanderWhenPresent) {
-  EXPECT_EQ(App::Core::resolve_commander_troop(
+  EXPECT_EQ(Game::Mission::resolve_commander_troop(
                 "carthage", QStringLiteral("carthage_bow_commander")),
             QStringLiteral("carthage_bow_commander"));
 }
 
 TEST(MissionCommanderSetupTest, FallsBackWhenConfiguredCommanderBelongsToOtherNation) {
-  EXPECT_EQ(App::Core::resolve_commander_troop("carthage",
-                                               QStringLiteral("roman_veteran_consul")),
+  EXPECT_EQ(Game::Mission::resolve_commander_troop(
+                "carthage", QStringLiteral("roman_veteran_consul")),
             QStringLiteral("carthage_sword_commander"));
 }
 
@@ -35,15 +35,15 @@ TEST(MissionCommanderSetupTest, PrefersAuthoredTroopPositions) {
       {.type = "archer", .count = 1, .position = {16.0F, 26.0F}}};
 
   const auto resolved =
-      App::Core::resolve_commander_position(units, {}, {}, {90.0F, 90.0F});
+      Game::Mission::resolve_commander_position(units, {}, {}, {90.0F, 90.0F});
 
-  EXPECT_EQ(resolved.space, App::Core::CommanderPositionSpace::Mission);
+  EXPECT_EQ(resolved.space, Game::Mission::CommanderPositionSpace::Mission);
   EXPECT_FLOAT_EQ(resolved.position.x, 12.0F);
   EXPECT_FLOAT_EQ(resolved.position.z, 22.0F);
 }
 
 TEST(MissionCommanderSetupTest, UsesExistingWorldTroopsWhenMissionHasNoSpawns) {
-  std::vector<App::Core::ExistingOwnerSpawnAnchor> existing_spawns = {
+  std::vector<Game::Mission::ExistingOwnerSpawnAnchor> existing_spawns = {
       {{-64.5F, -36.5F}, false},
       {{-64.5F, -32.5F}, false},
       {{-68.5F, -34.5F}, false},
@@ -55,17 +55,17 @@ TEST(MissionCommanderSetupTest, UsesExistingWorldTroopsWhenMissionHasNoSpawns) {
       {{-69.5F, -34.5F}, false},
   };
 
-  const auto resolved =
-      App::Core::resolve_commander_position({}, {}, existing_spawns, {68.0F, 70.0F});
+  const auto resolved = Game::Mission::resolve_commander_position(
+      {}, {}, existing_spawns, {68.0F, 70.0F});
 
-  EXPECT_EQ(resolved.space, App::Core::CommanderPositionSpace::World);
+  EXPECT_EQ(resolved.space, Game::Mission::CommanderPositionSpace::World);
   EXPECT_FLOAT_EQ(resolved.position.x, -66.8333359F);
   EXPECT_FLOAT_EQ(resolved.position.z, -34.9444427F);
 }
 
 TEST(MissionCommanderSetupTest,
      UsesLocalWorldClusterWhenExistingSpawnsAreSpreadAcrossMap) {
-  std::vector<App::Core::ExistingOwnerSpawnAnchor> existing_spawns = {
+  std::vector<Game::Mission::ExistingOwnerSpawnAnchor> existing_spawns = {
       {{32.5F, 57.5F}, false},
       {{36.5F, 57.5F}, false},
       {{35.5F, 61.5F}, false},
@@ -73,10 +73,10 @@ TEST(MissionCommanderSetupTest,
       {{67.5F, 57.5F}, false},
   };
 
-  const auto resolved =
-      App::Core::resolve_commander_position({}, {}, existing_spawns, {132.0F, 80.0F});
+  const auto resolved = Game::Mission::resolve_commander_position(
+      {}, {}, existing_spawns, {132.0F, 80.0F});
 
-  EXPECT_EQ(resolved.space, App::Core::CommanderPositionSpace::World);
+  EXPECT_EQ(resolved.space, Game::Mission::CommanderPositionSpace::World);
   EXPECT_FLOAT_EQ(resolved.position.x, 34.8333321F);
   EXPECT_FLOAT_EQ(resolved.position.z, 58.8333321F);
 }
@@ -144,7 +144,7 @@ TEST(MissionCommanderSetupTest, EveryCampaignForceHasExactlyOneMapCommander) {
   ASSERT_FALSE(missions.empty());
 
   for (const auto& mission : missions) {
-    const auto commanders = App::Core::commander_troops_for_map(mission.map_path);
+    const auto commanders = Game::Mission::commander_troops_for_map(mission.map_path);
     const std::size_t force_count = 1 + mission.ai_setups.size();
 
     for (std::size_t index = 0; index < force_count; ++index) {
@@ -161,7 +161,7 @@ TEST(MissionCommanderSetupTest, EveryCampaignForceHasExactlyOneMapCommander) {
 
 TEST(MissionCommanderSetupTest, CampaignCommandersMatchTheirForcesNation) {
   for (const auto& mission : campaign_missions()) {
-    const auto commanders = App::Core::commander_troops_for_map(mission.map_path);
+    const auto commanders = Game::Mission::commander_troops_for_map(mission.map_path);
 
     std::vector<QString> nations{mission.player_setup.nation};
     for (const auto& ai_setup : mission.ai_setups) {
@@ -192,7 +192,7 @@ TEST(MissionCommanderSetupTest, CampaignCommandersMatchTheirForcesNation) {
 
 TEST(MissionCommanderSetupTest, CampaignCommandersAreUniqueUntilThePoolRunsOut) {
   for (const auto& mission : campaign_missions()) {
-    const auto commanders = App::Core::commander_troops_for_map(mission.map_path);
+    const auto commanders = Game::Mission::commander_troops_for_map(mission.map_path);
 
     std::map<Game::Systems::NationID, std::vector<QString>> by_nation;
     for (const auto& [owner_id, troop] : commanders) {

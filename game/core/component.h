@@ -81,27 +81,8 @@ public:
 
 class RenderableComponent : public Component {
 public:
-  enum class MeshKind {
-    None,
-    Quad,
-    Plane,
-    Cube,
-    Capsule,
-    Ring
-  };
-
-  RenderableComponent(std::string mesh_path, std::string texture_path)
-      : mesh_path(std::move(mesh_path))
-      , texture_path(std::move(texture_path)) {
-    color.fill(1.0F);
-  }
-
-  std::string mesh_path;
-  std::string texture_path;
   std::string renderer_id;
   bool visible{true};
-  MeshKind mesh{MeshKind::Cube};
-  std::array<float, 3> color{};
 };
 
 class UnitComponent : public Component {
@@ -2104,6 +2085,8 @@ public:
   float elapsed{0.0F};
   float start_delay{0.0F};
   bool loop{true};
+
+  std::size_t loop_from{0};
   bool finished{false};
   bool active{false};
   float phase{0.0F};

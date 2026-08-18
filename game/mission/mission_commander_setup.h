@@ -1,0 +1,45 @@
+#pragma once
+
+#include <QString>
+
+#include <map>
+#include <optional>
+#include <vector>
+
+#include "game/map/map_definition.h"
+#include "game/map/mission_definition.h"
+
+namespace Game::Mission {
+
+struct ExistingOwnerSpawnAnchor {
+  Game::Mission::Position position;
+  bool is_building = false;
+};
+
+enum class CommanderPositionSpace {
+  Mission,
+  World,
+};
+
+struct ResolvedCommanderPosition {
+  Game::Mission::Position position;
+  CommanderPositionSpace space = CommanderPositionSpace::Mission;
+};
+
+[[nodiscard]] auto
+resolve_commander_troop(const QString& nation,
+                        const std::optional<QString>& configured_commander) -> QString;
+
+[[nodiscard]] auto commander_troops_by_owner(const Game::Map::MapDefinition& map)
+    -> std::map<int, QString>;
+
+[[nodiscard]] auto
+commander_troops_for_map(const QString& map_path) -> std::map<int, QString>;
+
+[[nodiscard]] auto resolve_commander_position(
+    const std::vector<Game::Mission::UnitSetup>& units,
+    const std::vector<Game::Mission::BuildingSetup>& buildings,
+    const std::vector<ExistingOwnerSpawnAnchor>& existing_owner_spawns,
+    const Game::Mission::Position& fallback) -> ResolvedCommanderPosition;
+
+} // namespace Game::Mission

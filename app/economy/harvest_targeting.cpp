@@ -9,10 +9,10 @@
 #include "app/input/input_command_handler.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/render_bridge/picking_service.h"
 #include "game/systems/harvest_yields.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
-#include "game/systems/picking_service.h"
 #include "scene/camera.h"
 
 namespace App::Economy {

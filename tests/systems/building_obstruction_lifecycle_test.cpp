@@ -4,10 +4,10 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "app/persistence/game_state_restorer.h"
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "game/systems/world_restore.h"
 #include "map/terrain_service.h"
 #include "session/session_context.h"
 #include "systems/building_collision_registry.h"
@@ -68,7 +68,7 @@ protected:
                      int health = 400) -> Entity* {
     auto* entity = world.create_entity();
     entity->add_component<TransformComponent>(x, 0.0F, z);
-    entity->add_component<RenderableComponent>("mesh", "texture");
+    entity->add_component<RenderableComponent>();
     auto* unit = entity->add_component<UnitComponent>(health, health, 0.0F, 0.0F);
     unit->owner_id = owner_id;
     unit->spawn_type = spawn_type;
@@ -314,7 +314,7 @@ TEST_F(BuildingObstructionLifecycleTest, ReloadDoesNotRestoreDestroyedStructures
   authored.emplace_back(2.0F, 0.0F, 2.0F, 2.0F, 0, 0U);
   BuildingCollisionRegistry::instance().set_authored_obstacles(std::move(authored));
 
-  GameStateRestorer::rebuild_building_collisions(&world);
+  Game::Persistence::rebuild_building_collisions(&world);
 
   EXPECT_FALSE(BuildingCollisionRegistry::instance().is_point_in_building(2.0F, 0.0F));
   EXPECT_TRUE(cell_is_walkable(2.0F, 0.0F));

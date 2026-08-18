@@ -4,7 +4,7 @@
 #include <QQuickWindow>
 #include <QVector3D>
 
-#include "game/systems/picking_service.h"
+#include "game/render_bridge/picking_service.h"
 #include "scene/camera.h"
 
 namespace App::Utils {

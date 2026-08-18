@@ -39,13 +39,6 @@ public:
                                     MinimapManager* minimap_manager,
                                     VisibilityCoordinator* visibility_coordinator);
 
-  static void rebuild_registries_after_load(Engine::Core::World* world,
-                                            int& selected_player_id,
-                                            Game::Systems::LevelSnapshot& level,
-                                            int local_owner_id);
-
-  static void rebuild_building_collisions(Engine::Core::World* world);
-
   static void rebuild_entity_cache(Engine::Core::World* world,
                                    EntityCache& entity_cache,
                                    int local_owner_id);

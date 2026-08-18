@@ -33,6 +33,7 @@
 #include "entity/building_render_common.h"
 #include "entity/carried_load_renderer.h"
 #include "entity/registry.h"
+#include "entity_appearance.h"
 #include "equipment/equipment_registry.h"
 #include "equipment/render_archetype_registry.h"
 #include "game/accessibility/team_identity.h"
@@ -249,34 +250,6 @@ auto stable_combat_creature_lod(const Engine::Core::UnitComponent* unit,
 
   return distance_sq <= full_distance * full_distance ? HumanoidLOD::Full
                                                       : HumanoidLOD::Minimal;
-}
-
-auto resolve_fallback_mesh(ResourceManager* res,
-                           Engine::Core::RenderableComponent* renderable) -> Mesh* {
-  Mesh* mesh_to_draw = nullptr;
-  switch (renderable->mesh) {
-  case Engine::Core::RenderableComponent::MeshKind::Quad:
-    mesh_to_draw = (res != nullptr) ? res->quad() : nullptr;
-    break;
-  case Engine::Core::RenderableComponent::MeshKind::Plane:
-    mesh_to_draw = (res != nullptr) ? res->ground() : nullptr;
-    break;
-  case Engine::Core::RenderableComponent::MeshKind::Cube:
-    mesh_to_draw = (res != nullptr) ? res->unit() : nullptr;
-    break;
-  case Engine::Core::RenderableComponent::MeshKind::Capsule:
-  case Engine::Core::RenderableComponent::MeshKind::Ring:
-  case Engine::Core::RenderableComponent::MeshKind::None:
-  default:
-    break;
-  }
-  if ((mesh_to_draw == nullptr) && (res != nullptr)) {
-    mesh_to_draw = res->unit();
-  }
-  if ((mesh_to_draw == nullptr) && (res != nullptr)) {
-    mesh_to_draw = res->quad();
-  }
-  return mesh_to_draw;
 }
 
 } // namespace
@@ -951,10 +924,8 @@ void Renderer::submit_unit_entry(
     return;
   }
 
-  Mesh* mesh_to_draw = resolve_fallback_mesh(ctx.resources, entry.renderable);
-  QVector3D const color = QVector3D(entry.renderable->color[0],
-                                    entry.renderable->color[1],
-                                    entry.renderable->color[2]);
+  Mesh* mesh_to_draw = (ctx.resources != nullptr) ? ctx.resources->unit() : nullptr;
+  QVector3D const color = Render::entity_color(*entry.entity);
 
   if (entry.selected || entry.hovered) {
     enqueue_selection_ring(
@@ -1051,10 +1022,8 @@ void Renderer::submit_non_unit_entry(const RenderEntry& entry,
     return;
   }
 
-  Mesh* mesh_to_draw = resolve_fallback_mesh(res, entry.renderable);
-  QVector3D const color = QVector3D(entry.renderable->color[0],
-                                    entry.renderable->color[1],
-                                    entry.renderable->color[2]);
+  Mesh* mesh_to_draw = (res != nullptr) ? res->unit() : nullptr;
+  QVector3D const color = Render::entity_color(*entry.entity);
 
   if (entry.selected || entry.hovered) {
     enqueue_selection_ring(

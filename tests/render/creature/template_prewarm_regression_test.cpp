@@ -134,11 +134,10 @@ void add_test_unit(Engine::Core::Entity& entity,
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
 
-  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
   renderable->renderer_id = renderer_id;
   renderable->visible = true;
-  renderable->color = {1.0F, 1.0F, 1.0F};
 }
 
 TEST(TemplatePrewarmRegression, PassIntentFromCtxDetectsPrewarm) {

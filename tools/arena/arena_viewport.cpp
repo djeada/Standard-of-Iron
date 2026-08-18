@@ -50,10 +50,11 @@
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/render_bridge/camera_service.h"
+#include "game/render_bridge/picking_service.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/camera_service.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
@@ -62,7 +63,6 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/picking_service.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
@@ -2461,6 +2461,10 @@ void ArenaViewport::place_scenario_resource_patches(
       const QVector3D wanted = scenario_origin + patch.origin + patch.spacing * index;
 
       std::optional<QVector3D> spot;
+      if (patch.exact) {
+
+        spot = App::Utils::snap_to_walkable_ground(wanted);
+      }
       for (std::size_t ring = 0; ring < k_nudge_rings.size() && !spot.has_value();
            ++ring) {
         float const reach = k_nudge_rings.at(ring);
@@ -2491,6 +2495,10 @@ void ArenaViewport::place_scenario_resource_patches(
       prop.x = grid_position.x();
       prop.z = grid_position.y();
       prop.scale = patch.scale;
+      if (type == Game::Map::WorldProp::Type::FireCamp) {
+        prop.radius *= patch.scale;
+        prop.intensity *= patch.scale;
+      }
       prop.persistent = true;
       m_world_props.push_back(prop);
     }
@@ -3709,6 +3717,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     if (!group.showcase_routine.isEmpty() && entity != nullptr) {
       auto* routine = entity->add_component<Engine::Core::ShowcaseRoutineComponent>();
       routine->loop = group.showcase_loop;
+      routine->loop_from =
+          static_cast<std::size_t>(std::max(0, group.showcase_loop_from));
       routine->start_delay = group.showcase_start_delay;
       for (const QString& entry : group.showcase_routine) {
         QStringList const parts = entry.split(QLatin1Char(':'));

@@ -38,6 +38,7 @@ auto PostProcessPipeline::initialize() -> bool {
   m_composite_shader = m_shader_cache->get(QStringLiteral("post_composite"));
   m_fxaa_shader = m_shader_cache->get(QStringLiteral("post_fxaa"));
   m_sky_shader = m_shader_cache->get(QStringLiteral("sky"));
+  m_godrays_shader = m_shader_cache->get(QStringLiteral("post_godrays"));
 
   if (m_bright_shader == nullptr || m_blur_shader == nullptr ||
       m_composite_shader == nullptr || m_fxaa_shader == nullptr) {
@@ -153,6 +154,13 @@ auto PostProcessPipeline::ensure_targets(int width, int height) -> bool {
     release_targets();
     return false;
   }
+  if (!create_color_target(m_rays,
+                           std::max(width / k_godray_divisor, 1),
+                           std::max(height / k_godray_divisor, 1),
+                           k_format_rgba8)) {
+    release_targets();
+    return false;
+  }
 
   return true;
 }
@@ -170,6 +178,7 @@ void PostProcessPipeline::release_targets() {
 
   drop(m_scene);
   drop(m_composite);
+  drop(m_rays);
   for (auto& target : m_bloom) {
     drop(target);
   }
@@ -194,6 +203,12 @@ void PostProcessPipeline::set_atmosphere(const QMatrix4x4& inverse_view_projecti
   m_fog_start = fog_start;
   m_fog_end = fog_end;
   m_mist_time = time;
+}
+
+void PostProcessPipeline::set_sun_screen(const QVector2D& sun_screen,
+                                         float sun_visibility) noexcept {
+  m_sun_screen = sun_screen;
+  m_sun_visibility = std::clamp(sun_visibility, 0.0F, 1.0F);
 }
 
 void PostProcessPipeline::set_mist(const std::vector<Render::MistVolume>& volumes) {
@@ -307,6 +322,20 @@ void PostProcessPipeline::resolve_scene() {
   blur_bloom_once();
   blur_bloom_once();
 
+  const bool rays_enabled = m_godrays_shader != nullptr && m_rays.fbo != 0;
+  if (rays_enabled) {
+    glBindFramebuffer(GL_FRAMEBUFFER, m_rays.fbo);
+    glViewport(0, 0, m_rays.width, m_rays.height);
+    m_godrays_shader->use();
+    m_godrays_shader->set_uniform("u_depth", 0);
+    m_godrays_shader->set_uniform("u_depth_range",
+                                  QVector2D(m_near_plane, m_far_plane));
+    m_godrays_shader->set_uniform("u_sun_screen", m_sun_screen);
+    m_godrays_shader->set_uniform("u_sun_visibility", m_sun_visibility);
+    glBindTexture(GL_TEXTURE_2D, m_scene_depth);
+    draw_fullscreen();
+  }
+
   glBindFramebuffer(GL_FRAMEBUFFER, m_composite.fbo);
   glViewport(0, 0, m_composite.width, m_composite.height);
   m_composite_shader->use();
@@ -315,6 +344,9 @@ void PostProcessPipeline::resolve_scene() {
   m_composite_shader->set_uniform("u_bloom_intensity", k_bloom_intensity);
   m_composite_shader->set_uniform("u_vignette_strength", k_vignette_strength);
   m_composite_shader->set_uniform("u_depth", 2);
+  m_composite_shader->set_uniform("u_rays", 3);
+  m_composite_shader->set_uniform("u_godray_strength",
+                                  rays_enabled ? k_godray_strength : 0.0F);
   m_composite_shader->set_uniform("u_depth_range",
                                   QVector2D(m_near_plane, m_far_plane));
   m_composite_shader->set_uniform(
@@ -327,6 +359,10 @@ void PostProcessPipeline::resolve_scene() {
   m_composite_shader->set_uniform("u_camera_position", m_camera_position);
   m_composite_shader->set_uniform("u_fog_range", QVector2D(m_fog_start, m_fog_end));
   m_composite_shader->set_uniform("u_time", m_mist_time);
+  m_composite_shader->set_uniform(
+      "u_ground_fog",
+      QVector4D(
+          m_ground_fog.floor_y, m_ground_fog.ceiling_y, m_ground_fog.strength, 0.0F));
   if (m_mist_dirty) {
     const int mist_count = static_cast<int>(m_mist_volumes.size());
     m_composite_shader->set_uniform("u_mist_count", mist_count);
@@ -345,6 +381,8 @@ void PostProcessPipeline::resolve_scene() {
     }
     m_mist_dirty = false;
   }
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D, rays_enabled ? m_rays.color : 0);
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, m_scene_depth);
   glActiveTexture(GL_TEXTURE1);
@@ -366,6 +404,8 @@ void PostProcessPipeline::resolve_scene() {
   glBindTexture(GL_TEXTURE_2D, m_composite.color);
   draw_fullscreen();
 
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D, 0);
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, 0);
   glActiveTexture(GL_TEXTURE1);
