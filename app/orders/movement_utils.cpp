@@ -9,11 +9,11 @@
 #include "game/command/command.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/render_bridge/picking_service.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/picking_service.h"
 #include "game/units/spawn_type.h"
 #include "scene/camera.h"
 

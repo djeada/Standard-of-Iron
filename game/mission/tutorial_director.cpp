@@ -1,4 +1,4 @@
-#include "app/mission/tutorial_director.h"
+#include "game/mission/tutorial_director.h"
 
 #include <QVariantMap>
 
@@ -8,7 +8,7 @@
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/resource_types.h"
 
-namespace App::Core {
+namespace Game::Mission {
 
 namespace {
 
@@ -714,4 +714,4 @@ auto TutorialDirector::step_objective(TutorialStepId id) -> QString {
   return {};
 }
 
-} // namespace App::Core
+} // namespace Game::Mission

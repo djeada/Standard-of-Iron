@@ -2282,7 +2282,7 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
 
   auto* target = world->create_entity();
   target->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
-  target->add_component<RenderableComponent>("mesh", "tex");
+  target->add_component<RenderableComponent>();
   auto* movement = target->add_component<MovementComponent>();
   MovementTestAccess::set_has_target(*movement, true);
   MovementTestAccess::set_vx(*movement, 1.0F);
@@ -2607,7 +2607,7 @@ TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldBeforeRemoval) {
   auto* target = world->create_entity();
   auto target_id = target->get_id();
   target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  target->add_component<RenderableComponent>("mesh", "tex");
+  target->add_component<RenderableComponent>();
   target->add_component<UnitComponent>(0, 100, 1.0F, 12.0F);
   auto* death = target->add_component<DeathAnimationComponent>();
   death->profile = DeathSequenceProfile::Infantry;
@@ -3126,7 +3126,7 @@ TEST_F(CombatModeTest, BuildingDeathsDoNotCreateBloodStains) {
 
   auto* building = world->create_entity();
   building->add_component<TransformComponent>(4.0F, 0.0F, 1.0F);
-  building->add_component<RenderableComponent>("mesh", "tex");
+  building->add_component<RenderableComponent>();
   auto* building_unit = building->add_component<UnitComponent>(40, 40, 0.0F, 12.0F);
   building_unit->owner_id = 2;
   building->add_component<BuildingComponent>();

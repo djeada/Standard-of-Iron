@@ -11,10 +11,10 @@
 #include "app/orders/command_controller.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
+#include "game/render_bridge/selection_controller.h"
 #include "game/session/session_context.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/resource_types.h"
-#include "game/view/selection_controller.h"
 
 namespace App::ViewModels {
 namespace {

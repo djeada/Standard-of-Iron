@@ -1,7 +1,5 @@
 #include "civilian.h"
 
-#include <qvectornd.h>
-
 #include <memory>
 
 #include "../core/component.h"
@@ -10,21 +8,6 @@
 #include "../systems/troop_profile_service.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
-
-static inline auto team_color(int owner_id) -> QVector3D {
-  switch (owner_id) {
-  case 1:
-    return {0.20F, 0.55F, 1.00F};
-  case 2:
-    return {1.00F, 0.30F, 0.30F};
-  case 3:
-    return {0.20F, 0.80F, 0.40F};
-  case 4:
-    return {1.00F, 0.80F, 0.20F};
-  default:
-    return {0.8F, 0.9F, 1.0F};
-  }
-}
 
 namespace Game::Units {
 
@@ -52,7 +35,7 @@ void Civilian::init(const SpawnParams& params) {
   float const scale = profile.visuals.render_scale;
   m_t->scale = {scale, scale, scale};
 
-  m_r = e->add_component<Engine::Core::RenderableComponent>("", "");
+  m_r = e->add_component<Engine::Core::RenderableComponent>();
   m_r->visible = true;
   m_r->renderer_id = profile.visuals.renderer_id;
 
@@ -69,11 +52,6 @@ void Civilian::init(const SpawnParams& params) {
   if (params.ai_controlled) {
     e->add_component<Engine::Core::AIControlledComponent>();
   }
-
-  QVector3D const tc = team_color(m_u->owner_id);
-  m_r->color[0] = tc.x();
-  m_r->color[1] = tc.y();
-  m_r->color[2] = tc.z();
 
   m_mv = e->add_component<Engine::Core::MovementComponent>();
   if (m_mv != nullptr) {

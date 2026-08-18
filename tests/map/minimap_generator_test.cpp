@@ -8,9 +8,9 @@
 
 #include "map/map_definition.h"
 #include "map/map_loader.h"
-#include "map/minimap/map_preview_generator.h"
-#include "map/minimap/minimap_generator.h"
-#include "map/minimap/minimap_utils.h"
+#include "render_bridge/minimap/map_preview_generator.h"
+#include "render_bridge/minimap/minimap_generator.h"
+#include "render_bridge/minimap/minimap_utils.h"
 
 using namespace Game::Map;
 using namespace Game::Map::Minimap;

@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <memory>
 
-#include "../visuals/visual_catalog.h"
 #include "map_definition.h"
 
 namespace Engine::Core {
@@ -23,10 +22,8 @@ struct MapRuntime {
 
 class MapTransformer {
 public:
-  static auto
-  apply_to_world(const MapDefinition& def,
-                 Engine::Core::World& world,
-                 const Game::Visuals::VisualCatalog* visuals = nullptr) -> MapRuntime;
+  static auto apply_to_world(const MapDefinition& def,
+                             Engine::Core::World& world) -> MapRuntime;
 
   static void setFactoryRegistry(std::shared_ptr<Game::Units::UnitFactoryRegistry> reg);
   static auto

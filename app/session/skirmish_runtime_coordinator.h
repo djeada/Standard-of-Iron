@@ -10,7 +10,7 @@
 #include "app/core/app_scene_context.h"
 #include "app/core/entity_cache.h"
 #include "game/map/mission_definition.h"
-#include "game/systems/game_state_serializer.h"
+#include "game/systems/match_snapshot.h"
 
 class LoadingProgressTracker;
 class MinimapManager;

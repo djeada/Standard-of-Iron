@@ -1181,7 +1181,7 @@ auto add_owned_unit(Engine::Core::World& world,
   transform->position = {x, 0.0F, 0.0F};
   if (Game::Units::is_building_spawn(spawn_type)) {
     entity->add_component<Engine::Core::BuildingComponent>();
-    entity->add_component<Engine::Core::RenderableComponent>("", "");
+    entity->add_component<Engine::Core::RenderableComponent>();
   }
   return entity;
 }

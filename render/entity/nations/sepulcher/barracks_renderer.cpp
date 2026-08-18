@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include "../../../entity_appearance.h"
 #include "game/core/component.h"
 #include "render/entity/barracks_flag_renderer.h"
 #include "render/entity/building_decay.h"
@@ -88,8 +89,7 @@ void register_barracks_renderer(EntityRendererRegistry& registry) {
           unit = get_unit_cube();
         }
         Texture* white = ctx.resources->white();
-        const QVector3D team(
-            renderable->color[0], renderable->color[1], renderable->color[2]);
+        const QVector3D team = Render::entity_color(*ctx.entity);
 
         BarracksFlagRenderer::ClothBannerResources cloth;
         if (ctx.backend != nullptr) {

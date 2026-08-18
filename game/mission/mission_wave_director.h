@@ -9,7 +9,7 @@
 #include <set>
 #include <vector>
 
-#include "app/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_setup_coordinator.h"
 #include "game/systems/mission_wave_query.h"
 #include "game/systems/resource_types.h"
 
@@ -17,7 +17,7 @@ namespace Engine::Core {
 class World;
 }
 
-namespace App::Core {
+namespace Game::Mission {
 
 class MissionWaveDirector : public Game::Systems::MissionWaveQuery {
 public:
@@ -66,4 +66,4 @@ private:
   QVariantMap m_last_status;
 };
 
-} // namespace App::Core
+} // namespace Game::Mission

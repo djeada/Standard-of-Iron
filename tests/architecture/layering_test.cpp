@@ -103,20 +103,7 @@ auto quoted_includes(const fs::path& file) -> std::vector<std::string> {
 }
 
 auto is_view_layer(const std::string& relative) -> bool {
-  static const std::set<std::string> files{
-      "game/systems/camera_controller.cpp",
-      "game/systems/camera_controller.h",
-      "game/systems/camera_follow_system.cpp",
-      "game/systems/camera_follow_system.h",
-      "game/systems/camera_service.cpp",
-      "game/systems/camera_service.h",
-      "game/systems/picking_service.cpp",
-      "game/systems/picking_service.h",
-      "game/systems/game_state_serializer.cpp",
-      "game/systems/game_state_serializer.h",
-  };
-  return files.contains(relative) || relative.rfind("game/view/", 0) == 0 ||
-         relative.rfind("game/map/minimap/", 0) == 0;
+  return relative.rfind("game/render_bridge/", 0) == 0;
 }
 
 const std::set<std::string>& render_files_using_game_systems() {
@@ -263,8 +250,8 @@ TEST(ArchitectureLayering, SimulationKernelDoesNotDependOnACamera) {
 
   EXPECT_TRUE(offenders.empty())
       << "the simulation kernel gained a view dependency. Either move the file "
-         "into game/view/ (and into the game_view target), or keep the camera "
-         "out of it:\n  "
+         "into game/render_bridge/ (and into the game_view target), or keep the "
+         "camera out of it:\n  "
       << [&] {
            std::string joined;
            for (const auto& entry : offenders) {

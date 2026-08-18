@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "app/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_setup_coordinator.h"
 
 namespace {
 
@@ -25,7 +25,7 @@ TEST(MissionEventsTest, TimerEventsBecomeScheduledBriefingLines) {
   mission.events.push_back(make_timer_event(60.0F, QStringLiteral("Second line")));
   mission.events.push_back(make_timer_event(20.0F, QStringLiteral("First line")));
 
-  const auto pending = App::Core::build_pending_mission_events(mission);
+  const auto pending = Game::Mission::build_pending_mission_events(mission);
 
   ASSERT_EQ(pending.size(), 2U);
   EXPECT_EQ(pending[0].trigger_time, 20.0F);
@@ -58,7 +58,7 @@ TEST(MissionEventsTest, UnsupportedTriggersAndActionsAreSkipped) {
 
   mission.events.push_back(make_timer_event(30.0F, QStringLiteral("Kept")));
 
-  const auto pending = App::Core::build_pending_mission_events(mission);
+  const auto pending = Game::Mission::build_pending_mission_events(mission);
 
   ASSERT_EQ(pending.size(), 1U);
   EXPECT_EQ(pending[0].text, QStringLiteral("Kept"));
@@ -69,7 +69,7 @@ TEST(MissionEventsTest, EmptyMessagesAreDropped) {
   mission.id = "blank";
   mission.events.push_back(make_timer_event(5.0F, QString()));
 
-  EXPECT_TRUE(App::Core::build_pending_mission_events(mission).empty());
+  EXPECT_TRUE(Game::Mission::build_pending_mission_events(mission).empty());
 }
 
 TEST(MissionEventsTest, ShippedMissionsOnlyUseSupportedEventShapes) {
@@ -78,6 +78,6 @@ TEST(MissionEventsTest, ShippedMissionsOnlyUseSupportedEventShapes) {
   mission.events.push_back(make_timer_event(1.0F, QStringLiteral("a")));
   mission.events.push_back(make_timer_event(2.0F, QStringLiteral("b")));
 
-  const auto pending = App::Core::build_pending_mission_events(mission);
+  const auto pending = Game::Mission::build_pending_mission_events(mission);
   EXPECT_EQ(pending.size(), mission.events.size());
 }

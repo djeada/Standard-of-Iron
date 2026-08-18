@@ -74,7 +74,6 @@
         "game/units/troop_catalog",
         "game/units/commander_catalog",
         "game/visuals/building_asset_key",
-        "game/visuals/visual_catalog",
         "game/units/troop_catalog_loader"
       ],
       "may_use": ["domain_types", "components"]
@@ -115,7 +114,6 @@
     "world": {
       "targets": ["soi_world"],
       "paths": ["game/map/"],
-      "excluded_paths": ["game/map/minimap/"],
       "excluded_files": [
         "game/map/mission_loader.cpp",
         "game/map/mission_loader.h",
@@ -364,6 +362,27 @@
     },
     "missions": {
       "targets": ["soi_missions"],
+      "_comment": [
+        "Reading mission content, and resolving what it names against a map: the",
+        "mission file, its victory rules, its wave archetypes, the catalogue that",
+        "indexes maps and campaigns, the commander each side is given, and the view",
+        "of a definition the menus read.",
+        "",
+        "It links no AI and no save database on purpose. Reading a mission must not",
+        "require a match to be running or a save slot to exist, and that is what",
+        "keeps campaign_tests able to check the shipped files on their own."
+      ],
+      "paths": ["game/mission/"],
+      "excluded_files": [
+        "game/mission/campaign_manager.cpp",
+        "game/mission/campaign_manager.h",
+        "game/mission/mission_setup_coordinator.cpp",
+        "game/mission/mission_setup_coordinator.h",
+        "game/mission/mission_waves.cpp",
+        "game/mission/mission_waves.h",
+        "game/mission/mission_wave_director.cpp",
+        "game/mission/mission_wave_director.h"
+      ],
       "files": [
         "game/map/mission_loader",
         "game/map/mission_stage_tracker",
@@ -436,6 +455,52 @@
         "session"
       ]
     },
+    "mission_runtime": {
+      "targets": ["soi_mission_runtime"],
+      "_comment": [
+        "Running a mission in a live world: spawning the forces a definition names,",
+        "configuring its AI opponents, building and firing its attack waves, and",
+        "recording campaign progress.",
+        "",
+        "This was app/mission/ until the layering audit. None of it names a renderer,",
+        "a camera, a QML type or a view model -- it is world manipulation, and the two",
+        "edges that held it behind the client boundary were a HUD counter struct it",
+        "wrote directly and the registry rebuild in app/persistence. Both were",
+        "inverted first (MissionSetupEffects, game/systems/world_restore.h).",
+        "",
+        "It sits above persistence and ai because a mission definition names its",
+        "opponents with a strategy and a personality, and a campaign records which",
+        "missions are complete. Neither module names a mission, so both edges are",
+        "one-way. Reading a mission needs neither, which is why that half stayed in",
+        "'missions' below."
+      ],
+      "files": [
+        "game/mission/campaign_manager",
+        "game/mission/mission_setup_coordinator",
+        "game/mission/mission_waves",
+        "game/mission/mission_wave_director"
+      ],
+      "may_use": [
+        "domain_types",
+        "components",
+        "unit_catalog",
+        "registries",
+        "world",
+        "navigation",
+        "units",
+        "formations",
+        "movement",
+        "economy",
+        "combat",
+        "wildlife",
+        "simulation",
+        "session",
+        "campaign",
+        "missions",
+        "persistence",
+        "ai"
+      ]
+    },
     "runtime": {
       "targets": ["soi_runtime"],
       "files": [
@@ -462,14 +527,7 @@
     },
     "render_bridge": {
       "targets": ["game_view"],
-      "paths": ["game/view/", "game/map/minimap/"],
-      "files": [
-        "game/systems/camera_controller",
-        "game/systems/camera_follow_system",
-        "game/systems/camera_service",
-        "game/systems/picking_service",
-        "game/systems/game_state_serializer"
-      ],
+      "paths": ["game/render_bridge/"],
       "may_use": [
         "domain_types",
         "components",
@@ -485,6 +543,16 @@
         "wildlife",
         "simulation",
         "session"
+      ],
+      "_comment": [
+        "Picking, the camera services, the minimap layers, the selection controller and",
+        "the save metadata writer. These need to unproject or to frame something, so",
+        "they consume the kernel and link scene_core. Nothing in the kernel may depend",
+        "on them, and neither may render_gl.",
+        "",
+        "It was five loose files in game/systems/ plus game/view/ and",
+        "game/map/minimap/, which meant the module could only be seen by reading three",
+        "lists. One directory now, so 'paths' is the whole description."
       ]
     },
     "audio": {

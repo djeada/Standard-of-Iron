@@ -5,8 +5,8 @@
 #include <cmath>
 
 #include "game/core/world.h"
-#include "game/systems/camera_service.h"
-#include "game/systems/game_state_serializer.h"
+#include "game/render_bridge/camera_service.h"
+#include "game/systems/match_snapshot.h"
 #include "scene/camera.h"
 
 RtsCameraController::RtsCameraController(Render::GL::Camera* camera,

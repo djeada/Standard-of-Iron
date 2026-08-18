@@ -59,7 +59,7 @@ protected:
                  int health = 800) -> Entity* {
     auto* wall = world.create_entity();
     wall->add_component<TransformComponent>(x, y, z);
-    wall->add_component<RenderableComponent>("mesh", "texture");
+    wall->add_component<RenderableComponent>();
     auto* unit = wall->add_component<UnitComponent>(health, 800, 0.0F, 0.0F);
     unit->owner_id = owner_id;
     unit->spawn_type = Game::Units::SpawnType::WallSegment;
@@ -81,7 +81,7 @@ protected:
     auto* site = world.create_entity();
     auto* transform = site->add_component<TransformComponent>(x, 0.0F, z);
     transform->rotation.y = 0.0F;
-    auto* renderable = site->add_component<RenderableComponent>("mesh", "texture");
+    auto* renderable = site->add_component<RenderableComponent>();
     renderable->visible = false;
     auto* wall = site->add_component<WallSegmentComponent>();
     auto snapped = WallNetworkService::snap_world_position(x, z);
@@ -99,7 +99,7 @@ protected:
   make_tower(Engine::Core::World& world, float x, float z, int owner_id) -> Entity* {
     auto* tower = world.create_entity();
     tower->add_component<TransformComponent>(x, 0.0F, z);
-    tower->add_component<RenderableComponent>("mesh", "texture");
+    tower->add_component<RenderableComponent>();
     auto* unit = tower->add_component<UnitComponent>(2000, 2000, 0.0F, 20.0F);
     unit->owner_id = owner_id;
     unit->spawn_type = Game::Units::SpawnType::DefenseTower;

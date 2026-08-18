@@ -6,11 +6,11 @@
 #include <optional>
 
 #include "app/core/client_context.h"
-#include "app/mission/campaign_manager.h"
-#include "app/mission/mission_commander_setup.h"
-#include "app/mission/mission_definition_view.h"
 #include "game/map/map_catalog.h"
-#include "game/map/minimap/map_preview_generator.h"
+#include "game/mission/campaign_manager.h"
+#include "game/mission/mission_commander_setup.h"
+#include "game/mission/mission_definition_view.h"
+#include "game/render_bridge/minimap/map_preview_generator.h"
 #include "game/session/session_context.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
@@ -115,7 +115,7 @@ auto MatchSetupViewModel::commanders_for_nation(const QString& nation_id) const
   const auto parsed = Game::Systems::nation_id_from_string(nation_id.toStdString());
   const auto nation = parsed.value_or(m_context.session->nations().default_nation_id());
   const QString default_troop =
-      App::Core::resolve_commander_troop(nation_id, std::nullopt);
+      Game::Mission::resolve_commander_troop(nation_id, std::nullopt);
 
   auto definitions = Game::Units::commander_definitions_for_nation(nation);
   std::stable_sort(

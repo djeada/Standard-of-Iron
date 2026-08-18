@@ -1,4 +1,4 @@
-#include "app/mission/mission_wave_director.h"
+#include "game/mission/mission_wave_director.h"
 
 #include <QDebug>
 #include <QJsonArray>
@@ -9,12 +9,12 @@
 #include <limits>
 #include <set>
 
-#include "app/mission/mission_waves.h"
-#include "game/audio/audio_cues.h"
+#include "game/audio/cue_ids.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/mission/mission_waves.h"
 
-namespace App::Core {
+namespace Game::Mission {
 
 namespace {
 
@@ -467,4 +467,4 @@ auto MissionWaveDirector::cleared_wave_count() const -> int {
   return cleared;
 }
 
-} // namespace App::Core
+} // namespace Game::Mission

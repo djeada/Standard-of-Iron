@@ -13,11 +13,11 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
+#include "../render_bridge/picking_service.h"
 #include "../systems/command_service.h"
-#include "../systems/picking_service.h"
+#include "../units/spawn_type.h"
 #include "../util/selection_utils.h"
 #include "scene/camera.h"
-#include "units/spawn_type.h"
 
 namespace Game::Systems {
 

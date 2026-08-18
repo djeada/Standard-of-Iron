@@ -48,7 +48,6 @@
 #include "game/systems/wall_network_service.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
-#include "game/visuals/team_colors.h"
 #include "render/ground/ambient_fog_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -444,21 +443,6 @@ auto SkirmishLoader::start(const QString& map_path,
         const int blue = color_hex.mid(5, 2).toInt(&conversion_ok, hex_base);
         owner_registry.set_owner_color(
             player_id, red / color_scale, green / color_scale, blue / color_scale);
-      }
-    }
-
-    auto entities = m_world.get_entities_with<Engine::Core::UnitComponent>();
-    pump_events();
-    std::unordered_map<int, int> owner_entity_count;
-    for (auto* entity : entities) {
-      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
-      if ((unit != nullptr) && (renderable != nullptr)) {
-        const QVector3D team_color = Game::Visuals::team_colorForOwner(unit->owner_id);
-        renderable->color[0] = team_color.x();
-        renderable->color[1] = team_color.y();
-        renderable->color[2] = team_color.z();
-        owner_entity_count[unit->owner_id]++;
       }
     }
   }

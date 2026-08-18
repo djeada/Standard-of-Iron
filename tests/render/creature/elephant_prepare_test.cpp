@@ -273,7 +273,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -316,7 +316,7 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
@@ -622,7 +622,7 @@ TEST(ElephantPrepare, FullTemplatePrewarmBypassesSnapshotCache) {
   transform->position = {0.0F, 0.0F, 0.0F};
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
-  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};

@@ -158,7 +158,7 @@ TEST(WorldPresentationTest, PublishesDetachedDoubleBufferedRenderWorlds) {
   auto* transform = entity->add_component<TransformComponent>();
   transform->position.x = 4.0F;
   entity->add_component<UnitComponent>();
-  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  entity->add_component<Engine::Core::RenderableComponent>();
   EntityID const id = entity->get_id();
 
   world.update(1.0F / 60.0F);
@@ -186,7 +186,7 @@ TEST(WorldPresentationTest, RenderSnapshotCarriesWildlifeActionState) {
   auto* entity = world.create_entity();
   entity->add_component<TransformComponent>();
   entity->add_component<UnitComponent>();
-  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  entity->add_component<Engine::Core::RenderableComponent>();
   auto* wildlife = entity->add_component<Engine::Core::WildlifeComponent>();
   wildlife->species = Game::Wildlife::Species::Wolf;
   wildlife->behavior = Game::Wildlife::Behavior::Stalk;
@@ -334,7 +334,7 @@ TEST(RenderSnapshotTest, CarriesTheUnitLayoutStateTheRendererDrawsFrom) {
   auto* entity = world.create_entity();
   entity->add_component<TransformComponent>();
   entity->add_component<UnitComponent>();
-  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  entity->add_component<Engine::Core::RenderableComponent>();
   auto* layout = entity->add_component<Engine::Core::UnitLayoutStateComponent>();
   layout->state = 1U;
   layout->phase = 1U;
@@ -361,7 +361,7 @@ TEST(RenderSnapshotTest, RefreshesWhenTheUnitLayoutStateChanges) {
   auto* entity = world.create_entity();
   entity->add_component<TransformComponent>();
   entity->add_component<UnitComponent>();
-  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  entity->add_component<Engine::Core::RenderableComponent>();
   auto* layout = entity->add_component<Engine::Core::UnitLayoutStateComponent>();
   layout->layout_id = 20U;
   layout->state = 0U;
