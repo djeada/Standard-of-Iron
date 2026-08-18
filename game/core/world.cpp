@@ -6,12 +6,15 @@
 #include <memory>
 #include <mutex>
 #include <numbers>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../../animation/action_manifest.h"
+#include "../../animation/clip_manifest.h"
 #include "../formation/unit_layout_state.h"
+#include "../systems/builder_product_types.h"
 #include "../systems/unit_activity.h"
 #include "component.h"
 #include "core/entity.h"
@@ -334,6 +337,24 @@ to_animation_phase(CombatAnimationState phase) noexcept -> Animation::CombatPhas
   return Animation::CombatAttackFamily::None;
 }
 
+auto builder_work_job(std::string_view product_type) -> std::uint8_t {
+  using Animation::HumanoidWorkJob;
+  if (product_type == Game::Systems::k_builder_product_cut_tree) {
+    return static_cast<std::uint8_t>(HumanoidWorkJob::Chop);
+  }
+  if (product_type == Game::Systems::k_builder_product_collect_stone ||
+      product_type == Game::Systems::k_builder_product_collect_iron_ore) {
+    return static_cast<std::uint8_t>(HumanoidWorkJob::Quarry);
+  }
+  if (product_type == Game::Systems::k_builder_product_harvest_grain) {
+    return static_cast<std::uint8_t>(HumanoidWorkJob::Reap);
+  }
+  if (product_type == Game::Systems::k_builder_product_slaughter_sheep) {
+    return static_cast<std::uint8_t>(HumanoidWorkJob::Butcher);
+  }
+  return static_cast<std::uint8_t>(HumanoidWorkJob::Build);
+}
+
 void publish_creature_presentation_entity(Entity* entity, World* world) {
   if (entity == nullptr) {
     return;
@@ -380,12 +401,14 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
         .variant = death->sequence_variant,
     };
   }
+  std::uint8_t construction_job = 0;
   if (builder != nullptr && builder->in_progress) {
     action_inputs.construction = {
         .active = true,
         .build_time = builder->build_time,
         .time_remaining = builder->time_remaining,
     };
+    construction_job = builder_work_job(builder->product_type);
   } else if (auto const* resident =
                  entity->get_component<SettlementResidentComponent>();
 
@@ -471,10 +494,12 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
   next.hit_recoil_z = action.hit_recoil_z;
   next.is_constructing = action.is_constructing;
   next.construction_progress = action.construction_progress;
+  next.construction_job = construction_job;
 
   if (action.is_in_melee_lock) {
     next.is_constructing = false;
     next.construction_progress = 0.0F;
+    next.construction_job = 0;
   }
   next.is_dying = action.is_dying;
   next.is_dead = action.is_dead;
@@ -566,6 +591,7 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
       presentation->is_melee != next.is_melee ||
       presentation->combat_phase != next.combat_phase ||
       presentation->is_hit_reacting != next.is_hit_reacting ||
+      presentation->construction_job != next.construction_job ||
       presentation->is_dying != next.is_dying ||
       presentation->is_dead != next.is_dead ||
       presentation->guard_requested != next.guard_requested ||
@@ -648,6 +674,7 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<GateComponent>(source, destination);
   copy_snapshot_component<StockpileComponent>(source, destination);
   copy_snapshot_component<ResourceCarryComponent>(source, destination);
+  copy_snapshot_component<FarmComponent>(source, destination);
 }
 
 void render_hash_combine(std::uint64_t& seed, std::uint64_t value) {
@@ -729,6 +756,9 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_combine(
         signature,
         static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+  }
+  if (auto const* farm = entity.get_component<FarmComponent>()) {
+    render_hash_combine(signature, static_cast<std::uint64_t>(farm->growth_stage()));
   }
   if (auto const* gate = entity.get_component<GateComponent>()) {
 

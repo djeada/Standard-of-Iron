@@ -212,11 +212,17 @@ TEST(NationLoader, ProfilesPreserveConfiguredResourceCostsAcrossNations) {
       Game::Systems::NationID::RomanRepublic, Game::Units::TroopType::Builder);
 
   EXPECT_EQ(
-      roman_archer.production.resource_costs.get(Game::Systems::ResourceType::Wood), 6);
+      roman_archer.production.resource_costs.get(Game::Systems::ResourceType::Wood),
+      12);
   EXPECT_EQ(
       carthage_archer.production.resource_costs.get(Game::Systems::ResourceType::Wood),
-      6);
-  EXPECT_TRUE(roman_builder.production.resource_costs.empty());
+      12);
+  EXPECT_EQ(
+      roman_builder.production.resource_costs.get(Game::Systems::ResourceType::Wood),
+      10);
+  EXPECT_EQ(
+      roman_builder.production.resource_costs.get(Game::Systems::ResourceType::Food),
+      0);
 }
 
 TEST(NationLoader, IronSepulcherRoundTripsNationId) {

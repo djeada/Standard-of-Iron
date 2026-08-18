@@ -1316,6 +1316,10 @@ Item {
                 return qsTr("Deliver civilians");
             case "repair":
                 return qsTr("Repair");
+            case "harvest":
+                return qsTr("Harvest grain");
+            case "slaughter":
+                return qsTr("Slaughter sheep");
             }
             return "";
         }
@@ -1328,6 +1332,10 @@ Item {
                 return Design.Icons.deliver;
             case "repair":
                 return "\u2692";
+            case "harvest":
+                return Design.Icons.collect;
+            case "slaughter":
+                return Design.Icons.collect;
             }
             return "";
         }

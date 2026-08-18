@@ -1,5 +1,5 @@
 {
-  "_comment": "What a buildable costs and how long a builder works on it once at the site. Loaded at content bootstrap; the C++ table in game/systems/construction_cost_catalog.cpp is the fallback when this file is missing. Harvest tasks (cut_tree, collect_*) take build_time only. Wall costs must stay in step with WallNetworkService::k_wall_segment_wood_cost / k_wall_gate_wood_cost, which the wall preview quotes. The optional 'dismantle' block sets whether builders may take the item down ('allowed', default true) and what share of its cost comes back ('refund', 0..1, default 0.5).",
+  "_comment": "What a buildable costs and how long a builder works on it once at the site. Loaded at content bootstrap; the C++ table in game/systems/construction_cost_catalog.cpp is the fallback when this file is missing. Harvest tasks (cut_tree, collect_*, harvest_grain, slaughter_sheep) take build_time only. Wall costs must stay in step with WallNetworkService::k_wall_segment_wood_cost / k_wall_gate_wood_cost, which the wall preview quotes. The optional 'dismantle' block sets whether builders may take the item down ('allowed', default true) and what share of its cost comes back ('refund', 0..1, default 0.5).",
   "items": {
     "catapult": {
       "costs": {
@@ -39,6 +39,16 @@
       "build_time": 10,
       "dismantle": {
         "refund": 0.6
+      }
+    },
+    "farm": {
+      "costs": {
+        "wood": 40,
+        "stone": 10
+      },
+      "build_time": 8,
+      "dismantle": {
+        "refund": 0.5
       }
     },
     "barracks": {
@@ -103,6 +113,12 @@
     },
     "collect_iron_ore": {
       "build_time": 6
+    },
+    "harvest_grain": {
+      "build_time": 5
+    },
+    "slaughter_sheep": {
+      "build_time": 4
     }
   }
 }

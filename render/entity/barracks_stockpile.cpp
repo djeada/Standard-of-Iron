@@ -458,6 +458,65 @@ void draw_ore_load(ISubmitter& out,
   }
 }
 
+void draw_food_load(ISubmitter& out,
+                    const Yard& yard,
+                    const StockpileYardStyle& style,
+                    float fill,
+                    float flash) {
+  if (fill <= 0.01F) {
+    return;
+  }
+
+  constexpr float k_sack_x = k_yard_east_x - 0.32F;
+  constexpr float k_sack_z = k_stockpile_center_z - 0.66F;
+  constexpr float k_sack_half_x = 0.115F;
+  constexpr float k_sack_half_y = 0.085F;
+  constexpr float k_sack_half_z = 0.095F;
+  constexpr std::array<std::array<float, 3>, 6> k_sack_spots{{
+      {-0.13F, 0.0F, -0.11F},
+      {0.13F, 0.0F, -0.11F},
+      {0.0F, 0.0F, 0.09F},
+      {-0.07F, 1.0F, -0.02F},
+      {0.09F, 1.0F, 0.0F},
+      {0.01F, 2.0F, -0.01F},
+  }};
+  int const sacks = std::clamp(static_cast<int>(std::lround(fill * 6.4F)),
+                               1,
+                               static_cast<int>(k_sack_spots.size()));
+  for (int i = 0; i < sacks; ++i) {
+    auto const seed = static_cast<std::uint32_t>(613 + (i * 47));
+    float const layer = k_sack_spots.at(i).at(1);
+    QVector3D const centre(k_sack_x + k_sack_spots.at(i).at(0),
+                           k_ground + k_sack_half_y + (layer * k_sack_half_y * 1.85F),
+                           k_sack_z + k_sack_spots.at(i).at(2));
+    box(out,
+        yard,
+        centre,
+        QVector3D(k_sack_half_x, k_sack_half_y, k_sack_half_z),
+        (rand01(seed) - 0.5F) * 30.0F,
+        brighten(tint(style.sack, 0.90F + (rand01(seed * 3U) * 0.18F)), flash * 0.3F));
+    if (!yard.detailed) {
+      continue;
+    }
+    submit_building_cylinder(out,
+                             yard.frame,
+                             centre + QVector3D(0.0F, k_sack_half_y, 0.0F),
+                             centre + QVector3D(0.0F, k_sack_half_y + 0.05F, 0.0F),
+                             0.032F,
+                             tint(style.timber_dark, 1.1F),
+                             yard.white);
+  }
+
+  if (yard.detailed && sacks >= 3) {
+    box(out,
+        yard,
+        QVector3D(k_sack_x - 0.30F, k_ground + 0.03F, k_sack_z + 0.06F),
+        QVector3D(0.05F, 0.03F, 0.05F),
+        20.0F,
+        brighten(style.grain, flash * 0.3F));
+  }
+}
+
 void draw_barrel(ISubmitter& out,
                  const Yard& yard,
                  const StockpileYardStyle& style,
@@ -552,7 +611,9 @@ void draw_barracks_stockpile(const DrawContext& ctx,
                             &decayed.timber,
                             &decayed.timber_dark,
                             &decayed.ore,
-                            &decayed.ore_rust}) {
+                            &decayed.ore_rust,
+                            &decayed.sack,
+                            &decayed.grain}) {
       *slot = decayed_color(*slot, state, ++seed);
     }
   }
@@ -590,6 +651,7 @@ void draw_barracks_stockpile(const DrawContext& ctx,
   draw_timber_load(out, yard, decayed, stockpile->wood_fill, flash);
   draw_stone_load(out, yard, decayed, stockpile->stone_fill, flash);
   draw_ore_load(out, yard, decayed, stockpile->iron_fill, flash);
+  draw_food_load(out, yard, decayed, stockpile->food_fill, flash);
 }
 
 } // namespace Render::GL

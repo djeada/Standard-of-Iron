@@ -1246,6 +1246,100 @@ auto resolve_humanoid_construction_pose(
     return sample;
   }
 
+  if (inputs.kind == HumanoidConstructionPoseKind::Hammer) {
+
+    PoseVec3 const rest_pos{0.16F, shoulder_y - 0.30F, 0.36F};
+    PoseVec3 const wind_pos{0.20F, shoulder_y + 0.30F, -0.06F};
+    PoseVec3 const apex_pos{0.14F, shoulder_y + 0.38F, 0.10F};
+    PoseVec3 const strike_pos{0.10F, shoulder_y - 0.36F, 0.50F};
+    PoseVec3 const bounce_pos{0.12F, shoulder_y - 0.24F, 0.44F};
+    PoseVec3 const brace_pos{-0.14F, shoulder_y - 0.34F, 0.42F};
+
+    sample.left_hand = brace_pos;
+    float torso_lean = 0.04F;
+    float shoulder_r_drop = 0.0F;
+    float head_drop = 0.0F;
+
+    if (work_phase < 0.30F) {
+      float const t = work_phase / 0.30F;
+      float const ease_t = smoothstep(t);
+      sample.right_hand = lerp(rest_pos, wind_pos, ease_t);
+      torso_lean = 0.04F - 0.06F * ease_t;
+      shoulder_r_drop = -0.05F * ease_t;
+      head_drop = -0.02F * ease_t;
+    } else if (work_phase < 0.40F) {
+      float const t = (work_phase - 0.30F) / 0.10F;
+      sample.right_hand = lerp(wind_pos, apex_pos, smoothstep(t));
+      torso_lean = -0.02F;
+      shoulder_r_drop = -0.06F;
+      head_drop = -0.02F;
+    } else if (work_phase < 0.56F) {
+      float const t = (work_phase - 0.40F) / 0.16F;
+      float const ease_t = t * t;
+      sample.right_hand = lerp(apex_pos, strike_pos, ease_t);
+      torso_lean = -0.02F + 0.14F * ease_t;
+      shoulder_r_drop = -0.06F + 0.11F * ease_t;
+      head_drop = -0.02F + 0.06F * ease_t;
+    } else if (work_phase < 0.66F) {
+      float const t = (work_phase - 0.56F) / 0.10F;
+      sample.right_hand = lerp(strike_pos, bounce_pos, ease_out(t));
+      torso_lean = 0.12F - 0.03F * t;
+      shoulder_r_drop = 0.05F - 0.02F * t;
+      head_drop = 0.04F;
+    } else {
+      float const t = (work_phase - 0.66F) / 0.34F;
+      float const ease_t = smoothstep(t);
+      sample.right_hand = lerp(bounce_pos, rest_pos, ease_t);
+      torso_lean = 0.09F - 0.05F * ease_t;
+      shoulder_r_drop = 0.03F - 0.03F * ease_t;
+      head_drop = 0.04F - 0.04F * ease_t;
+    }
+
+    sample.shoulder_l_z_delta += torso_lean * 0.7F;
+    sample.shoulder_r_z_delta += torso_lean;
+    sample.neck_z_delta += torso_lean * 0.7F;
+    sample.head_z_delta += torso_lean * 0.6F;
+    sample.shoulder_r_y_delta += shoulder_r_drop;
+    sample.shoulder_l_y_delta -= 0.015F;
+    sample.head_y_delta -= head_drop;
+    sample.foot_l_z_delta -= 0.06F;
+    sample.foot_r_z_delta += 0.05F;
+    sample.knee_l_z_delta -= 0.03F;
+    sample.knee_r_z_delta += 0.025F;
+    return sample;
+  }
+
+  if (inputs.kind == HumanoidConstructionPoseKind::Reap) {
+
+    float const two_pi = 2.0F * std::numbers::pi_v<float>;
+    float const cycle = work_phase * two_pi;
+    float const sweep = std::sin(cycle);
+    float const lift = std::max(0.0F, -std::cos(cycle));
+
+    sample.right_hand = {0.02F + sweep * 0.30F,
+                         shoulder_y - 0.62F + lift * 0.14F,
+                         0.42F + (1.0F - std::abs(sweep)) * 0.10F - lift * 0.08F};
+    sample.left_hand = {
+        -0.24F + sweep * 0.06F, shoulder_y - 0.56F + lift * 0.05F, 0.40F};
+
+    float const lean = 0.16F + std::abs(sweep) * 0.02F;
+    sample.shoulder_l_z_delta += lean * 0.85F;
+    sample.shoulder_r_z_delta += lean;
+    sample.neck_z_delta += lean * 0.75F;
+    sample.head_z_delta += lean * 0.65F;
+    sample.shoulder_l_y_delta -= 0.06F;
+    sample.shoulder_r_y_delta -= 0.06F + std::abs(sweep) * 0.02F;
+    sample.head_y_delta -= 0.05F;
+    sample.pelvis_x_delta += sweep * 0.02F;
+    sample.shoulder_l_x_delta += sweep * 0.04F;
+    sample.shoulder_r_x_delta += sweep * 0.05F;
+    sample.foot_l_z_delta += 0.05F;
+    sample.foot_r_z_delta -= 0.04F;
+    sample.knee_l_z_delta += 0.03F;
+    sample.knee_r_z_delta -= 0.02F;
+    return sample;
+  }
+
   bool const kneeling = inputs.kind == HumanoidConstructionPoseKind::KneelingChisel;
   PoseVec3 const brace_pos{
       -0.05F, shoulder_y + (kneeling ? -0.19F : -0.14F), kneeling ? 0.54F : 0.48F};

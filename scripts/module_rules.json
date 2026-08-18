@@ -227,6 +227,8 @@
         "game/systems/resource_delivery_system",
         "game/systems/civilian_delivery_system",
         "game/systems/gather_loop_system",
+        "game/systems/farm_system",
+        "game/systems/food_targets",
         "game/systems/marketplace_system",
         "game/systems/capture_system",
         "game/systems/nation_collapse_service"

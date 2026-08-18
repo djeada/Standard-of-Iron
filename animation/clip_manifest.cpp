@@ -268,8 +268,65 @@ auto humanoid_construction_role_for_variant_index(std::uint8_t variant_index) no
   }
 }
 
+auto humanoid_construction_role_for_job(HumanoidWorkJob job) noexcept
+    -> HumanoidConstructionRole {
+  switch (job) {
+  case HumanoidWorkJob::Chop:
+    return HumanoidConstructionRole::Hammer;
+  case HumanoidWorkJob::Quarry:
+    return HumanoidConstructionRole::KneelingChisel;
+  case HumanoidWorkJob::Reap:
+    return HumanoidConstructionRole::Reap;
+  case HumanoidWorkJob::Butcher:
+    return HumanoidConstructionRole::KneelingChisel;
+  case HumanoidWorkJob::Build:
+    break;
+  }
+  return HumanoidConstructionRole::None;
+}
+
+auto humanoid_construction_variant_for_role(HumanoidConstructionRole role) noexcept
+    -> std::uint8_t {
+  switch (role) {
+  case HumanoidConstructionRole::Saw:
+    return 1U;
+  case HumanoidConstructionRole::Chisel:
+    return 2U;
+  case HumanoidConstructionRole::KneelingChisel:
+    return 3U;
+  case HumanoidConstructionRole::Reap:
+    return 4U;
+  case HumanoidConstructionRole::Hammer:
+  case HumanoidConstructionRole::None:
+    break;
+  }
+  return 0U;
+}
+
+auto humanoid_construction_clip_for_role(HumanoidConstructionRole role) noexcept
+    -> std::uint16_t {
+  switch (role) {
+  case HumanoidConstructionRole::Saw:
+    return k_humanoid_construct_saw_clip;
+  case HumanoidConstructionRole::Chisel:
+    return k_humanoid_construct_chisel_clip;
+  case HumanoidConstructionRole::KneelingChisel:
+    return k_humanoid_construct_kneel_chisel_clip;
+  case HumanoidConstructionRole::Reap:
+    return k_humanoid_construct_reap_clip;
+  case HumanoidConstructionRole::Hammer:
+  case HumanoidConstructionRole::None:
+    break;
+  }
+  return k_humanoid_construct_hammer_clip;
+}
+
 auto resolve_humanoid_construction_role(
     const HumanoidConstructionRoleInputs& inputs) noexcept -> HumanoidConstructionRole {
+  if (auto const job_role = humanoid_construction_role_for_job(inputs.job);
+      job_role != HumanoidConstructionRole::None) {
+    return job_role;
+  }
   if (inputs.force_single_soldier || !inputs.variant_table_can_select_roles ||
       inputs.variant_stride == 0U || !inputs.variant_is_seed_based) {
     return HumanoidConstructionRole::Hammer;
@@ -293,6 +350,7 @@ auto requested_humanoid_clip_variant(const HumanoidClipVariantInputs& inputs) no
       return 1U;
     case HumanoidConstructionRole::Chisel:
     case HumanoidConstructionRole::KneelingChisel:
+    case HumanoidConstructionRole::Reap:
       return 2U;
     case HumanoidConstructionRole::None:
       break;
@@ -356,6 +414,12 @@ auto authored_humanoid_clip_markers(
   case k_humanoid_unarmed_cross_clip:
   case k_humanoid_unarmed_hook_clip:
     return unarmed_markers();
+  case k_humanoid_construct_hammer_clip:
+  case k_humanoid_construct_saw_clip:
+  case k_humanoid_construct_chisel_clip:
+  case k_humanoid_construct_kneel_chisel_clip:
+  case k_humanoid_construct_reap_clip:
+    return locomotion_markers();
   case k_humanoid_attack_sword_a_clip:
   case k_humanoid_attack_sword_b_clip:
   case k_humanoid_attack_sword_c_clip:

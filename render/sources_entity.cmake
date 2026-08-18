@@ -65,6 +65,9 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/temple_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/temple_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/farm_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/farm_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/roman/wall_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/nations/carthage/wall_renderer.cpp
@@ -80,6 +83,7 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/home_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/marketplace_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/temple_renderer_common.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity/farm_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/defense_tower_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_stockpile.cpp

@@ -936,7 +936,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     ConstructionRole construction_role = ConstructionRole::None;
     if (soldier_render_anim.is_constructing) {
       construction_role =
-          resolve_construction_role(visual_spec, inst_seed, ctx.force_single_soldier);
+          resolve_construction_role(visual_spec,
+                                    inst_seed,
+                                    ctx.force_single_soldier,
+                                    soldier_render_anim.construction_job);
     }
 
     HumanoidAnimationContext anim_ctx{};

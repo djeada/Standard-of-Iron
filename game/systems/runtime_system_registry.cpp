@@ -17,6 +17,7 @@
 #include "commander_system.h"
 #include "dismantle_system.h"
 #include "engagement_slot_system.h"
+#include "farm_system.h"
 #include "formation_move_dispatch_system.h"
 #include "gate_system.h"
 #include "gather_loop_system.h"
@@ -69,6 +70,7 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<ProductionSystem>());
   world.add_system(std::make_unique<DismantleSystem>());
   world.add_system(std::make_unique<HomeSystem>());
+  world.add_system(std::make_unique<FarmSystem>());
   world.add_system(std::make_unique<CivilianDeliverySystem>());
   world.add_system(std::make_unique<ResourceDeliverySystem>());
   world.add_system(std::make_unique<GatherLoopSystem>());

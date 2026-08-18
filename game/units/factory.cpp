@@ -10,6 +10,7 @@
 #include "civilian.h"
 #include "defense_tower.h"
 #include "elephant.h"
+#include "farm.h"
 #include "grave_priest.h"
 #include "healer.h"
 #include "home.h"
@@ -208,6 +209,11 @@ void register_built_in_units(UnitFactoryRegistry& reg) {
   reg.register_factory(SpawnType::Temple,
                        [](Engine::Core::World& world, const SpawnParams& params) {
                          return Temple::Create(world, params);
+                       });
+
+  reg.register_factory(SpawnType::Farm,
+                       [](Engine::Core::World& world, const SpawnParams& params) {
+                         return Farm::Create(world, params);
                        });
 
   reg.register_factory(SpawnType::Sheep,

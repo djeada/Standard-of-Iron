@@ -40,6 +40,10 @@ constexpr QVector3D k_stone_dark{0.44F, 0.42F, 0.38F};
 constexpr QVector3D k_ore{0.30F, 0.29F, 0.31F};
 constexpr QVector3D k_ore_rust{0.44F, 0.27F, 0.16F};
 constexpr QVector3D k_basket{0.55F, 0.43F, 0.25F};
+constexpr QVector3D k_straw{0.84F, 0.68F, 0.32F};
+constexpr QVector3D k_straw_dark{0.62F, 0.47F, 0.20F};
+constexpr QVector3D k_grain_head{0.92F, 0.78F, 0.40F};
+constexpr QVector3D k_twine{0.36F, 0.24F, 0.12F};
 
 auto rand01(std::uint32_t seed) -> float {
   std::uint32_t value = seed + 0x9E3779B9U;
@@ -65,8 +69,10 @@ auto heaviest_carried(const Engine::Core::ResourceCarryComponent& carry)
     -> ResourceType {
   ResourceType heaviest = ResourceType::Wood;
   int best = -1;
-  for (ResourceType const type :
-       {ResourceType::Wood, ResourceType::Stone, ResourceType::Iron}) {
+  for (ResourceType const type : {ResourceType::Wood,
+                                  ResourceType::Stone,
+                                  ResourceType::Iron,
+                                  ResourceType::Food}) {
     int const amount = carry.amounts.get(type);
     if (amount > best) {
       best = amount;
@@ -208,6 +214,55 @@ void draw_ore_basket(ISubmitter& out,
   }
 }
 
+void draw_sheaf(ISubmitter& out,
+                const QMatrix4x4& frame,
+                std::uint32_t seed,
+                bool detailed) {
+
+  Mesh* const cylinder = get_unit_cylinder(10);
+  constexpr float k_half_length = 0.36F;
+  QVector3D const left(-k_half_length, k_carry_height + 0.02F, k_carry_forward);
+  QVector3D const right(k_half_length, k_carry_height + 0.06F, k_carry_forward);
+  out.mesh(cylinder,
+           Render::Geom::cylinder_between(frame, left, right, 0.105F),
+           tint(k_straw, 0.92F + (rand01(seed) * 0.16F)));
+  out.mesh(cylinder,
+           Render::Geom::cylinder_between(
+               frame,
+               QVector3D(-0.02F, k_carry_height + 0.04F, k_carry_forward),
+               QVector3D(0.02F, k_carry_height + 0.04F, k_carry_forward),
+               0.112F),
+           k_twine);
+  if (!detailed) {
+    return;
+  }
+  Mesh* const cube = get_unit_cube();
+  constexpr std::array<std::array<float, 3>, 5> k_heads{{{0.30F, 0.10F, -0.06F},
+                                                         {0.34F, 0.02F, 0.05F},
+                                                         {0.36F, 0.12F, 0.03F},
+                                                         {-0.32F, 0.06F, -0.05F},
+                                                         {-0.35F, 0.11F, 0.04F}}};
+  for (std::size_t i = 0; i < k_heads.size(); ++i) {
+    auto const head_seed = static_cast<std::uint32_t>(seed + 23U + (i * 29U));
+    put(out,
+        cube,
+        frame,
+        QVector3D(k_heads.at(i).at(0),
+                  k_carry_height + k_heads.at(i).at(1),
+                  k_carry_forward + k_heads.at(i).at(2)),
+        QVector3D(0.055F, 0.018F, 0.018F),
+        QVector3D(0.0F, 0.0F, jitter(head_seed, 18.0F)),
+        tint(k_grain_head, 0.92F + (rand01(head_seed) * 0.16F)));
+  }
+  put(out,
+      cube,
+      frame,
+      QVector3D(0.0F, k_carry_height - 0.07F, k_carry_forward),
+      QVector3D(0.30F, 0.02F, 0.06F),
+      QVector3D(),
+      k_straw_dark);
+}
+
 void draw_load(ISubmitter& out,
                const QMatrix4x4& frame,
                ResourceType type,
@@ -219,6 +274,9 @@ void draw_load(ISubmitter& out,
     return;
   case ResourceType::Iron:
     draw_ore_basket(out, frame, seed, detailed);
+    return;
+  case ResourceType::Food:
+    draw_sheaf(out, frame, seed, detailed);
     return;
   default:
     draw_log(out, frame, seed, detailed);

@@ -62,7 +62,25 @@ enum class HumanoidConstructionRole : std::uint8_t {
   Saw,
   Chisel,
   KneelingChisel,
+  Reap,
 };
+
+enum class HumanoidWorkJob : std::uint8_t {
+  Build = 0,
+  Chop,
+  Quarry,
+  Reap,
+  Butcher,
+};
+
+[[nodiscard]] auto humanoid_construction_clip_for_role(
+    HumanoidConstructionRole role) noexcept -> std::uint16_t;
+
+[[nodiscard]] auto humanoid_construction_role_for_job(HumanoidWorkJob job) noexcept
+    -> HumanoidConstructionRole;
+
+[[nodiscard]] auto humanoid_construction_variant_for_role(
+    HumanoidConstructionRole role) noexcept -> std::uint8_t;
 
 struct HumanoidConstructionRoleInputs {
   std::uint32_t seed{0U};
@@ -70,6 +88,7 @@ struct HumanoidConstructionRoleInputs {
   bool variant_table_can_select_roles{false};
   std::uint8_t variant_stride{0U};
   bool variant_is_seed_based{false};
+  HumanoidWorkJob job{HumanoidWorkJob::Build};
 };
 
 enum class StateId : std::uint8_t {
@@ -180,9 +199,17 @@ inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_first_clip = 58U;
 inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_front_clip = 58U;
 inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_left_clip = 59U;
 inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_right_clip = 60U;
+
+inline constexpr std::uint16_t k_humanoid_construct_first_clip = 61U;
+inline constexpr std::uint16_t k_humanoid_construct_hammer_clip = 61U;
+inline constexpr std::uint16_t k_humanoid_construct_saw_clip = 62U;
+inline constexpr std::uint16_t k_humanoid_construct_chisel_clip = 63U;
+inline constexpr std::uint16_t k_humanoid_construct_kneel_chisel_clip = 64U;
+inline constexpr std::uint16_t k_humanoid_construct_reap_clip = 65U;
+inline constexpr std::uint8_t k_humanoid_construct_clip_count = 5U;
 inline constexpr std::uint8_t k_humanoid_carthage_shield_wall_clip_count = 3U;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 61U;
+inline constexpr std::uint16_t k_humanoid_clip_count = 66U;
 
 inline constexpr float k_humanoid_idle_breath_cycle_time = 8.0F;
 inline constexpr std::uint32_t k_humanoid_idle_breath_frames = 90U;

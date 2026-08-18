@@ -8,6 +8,7 @@
 #include "catapult_renderer.h"
 #include "defense_tower_renderer.h"
 #include "elephant_renderer.h"
+#include "farm_renderer.h"
 #include "home_renderer.h"
 #include "marketplace_renderer.h"
 #include "nations/carthage/archer_renderer.h"
@@ -130,6 +131,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
 
   register_marketplace_renderer(registry);
   register_temple_renderer(registry);
+  register_farm_renderer(registry);
 
   Wildlife::register_sheep_renderer(registry);
   Wildlife::register_wolf_renderer(registry);

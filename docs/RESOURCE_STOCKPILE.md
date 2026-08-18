@@ -26,6 +26,7 @@ building's own unrotated frame, and shared by gameplay and rendering:
 | `k_stockpile_wood_display_cap`      | 640         | Wood that draws the timber stack at full  |
 | `k_stockpile_stone_display_cap`     | 480         | Stone that fills the block courses        |
 | `k_stockpile_iron_display_cap`      | 480         | Iron that fills the ore bin               |
+| `k_stockpile_food_display_cap`      | 400         | Food that stacks the grain sacks full     |
 
 `game/systems/resource_stockpile.h` owns these numbers and the yaw rotation that turns
 them into world space, so a rotated barracks keeps its yard on the same side of the
@@ -50,7 +51,8 @@ nation's building model happens to be scaled.
   Carthaginian sandstone.
 - Worn flagstones inside the ring (dropped at distance, with the rest of the detail LOD).
 - Three piles on the inner half — stacked round logs, dressed stone blocks, and an ore
-  heap with ingots — leaving the outer strip clear as the apron haulers walk onto.
+  heap with ingots — leaving the outer strip clear as the apron haulers walk onto, and a
+  stack of grain sacks on the east side that grows with the food store.
 
 Pile heights come from `StockpileComponent`, a presentation-only component the delivery
 system refreshes each tick from the owner's current stores. Piles therefore grow as the
@@ -69,7 +71,7 @@ but its empty frame: bare stakes, an empty bin.
 
 `render/entity/carried_load_renderer.cpp` draws what a worker is carrying, so the walk home
 is legible without reading the activity badge: a log across the chest for wood, a dressed
-block for stone, a basket of ore for iron. It reads the same `ResourceCarryComponent` the
+block for stone, a basket of ore for iron, a bound sheaf for food. It reads the same `ResourceCarryComponent` the
 delivery system does, picks the heaviest resource in the load, and places one load per
 living soldier using the unit's shared formation layout, so a whole work gang hauls
 together. It is submitted during the scene walk beside the bird flocks — nothing is added

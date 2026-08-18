@@ -7,6 +7,7 @@
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
+#include "food_targets.h"
 #include "nav_grid.h"
 
 namespace Game::Systems {
@@ -97,7 +98,50 @@ auto building_action(const InteractionTargetingRequest& request,
     return InteractionAction::Repair;
   }
 
+  if (request.has_builders && unit.spawn_type == Game::Units::SpawnType::Farm &&
+      farm_is_harvestable(entity, request.local_owner_id) &&
+      !food_target_claimed(*request.world, entity.get_id())) {
+    return InteractionAction::Harvest;
+  }
+
   return InteractionAction::None;
+}
+
+constexpr float k_sheep_marker_radius = 0.7F;
+
+void collect_sheep(const InteractionTargetingRequest& request,
+                   float max_distance_sq,
+                   std::vector<Scored>& out) {
+  for (auto* entity :
+       request.world->get_entities_with<Engine::Core::WildlifeComponent>()) {
+    if (entity == nullptr || !sheep_is_slaughterable(*entity) ||
+        food_target_claimed(*request.world, entity->get_id())) {
+      continue;
+    }
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (transform == nullptr) {
+      continue;
+    }
+    const float dx = transform->position.x - request.anchor_x;
+    const float dz = transform->position.z - request.anchor_z;
+    const float distance_sq = (dx * dx) + (dz * dz);
+    if (distance_sq > max_distance_sq) {
+      continue;
+    }
+    if (!target_is_visible(
+            request.visibility, transform->position.x, transform->position.z)) {
+      continue;
+    }
+
+    InteractionTargetMarker marker;
+    marker.entity_id = entity->get_id();
+    marker.action = InteractionAction::Slaughter;
+    marker.world_x = transform->position.x;
+    marker.world_y = transform->position.y;
+    marker.world_z = transform->position.z;
+    marker.radius = k_sheep_marker_radius;
+    out.push_back({marker, distance_sq});
+  }
 }
 
 void collect_buildings(const InteractionTargetingRequest& request,
@@ -158,6 +202,7 @@ auto collect_interaction_target_highlights(const InteractionTargetingRequest& re
   std::vector<Scored> candidates;
   if (request.has_builders) {
     collect_resource_nodes(request, max_distance_sq, candidates);
+    collect_sheep(request, max_distance_sq, candidates);
   }
   collect_buildings(request, max_distance_sq, candidates);
 
@@ -219,6 +264,10 @@ auto interaction_action_key(InteractionAction action) -> std::string_view {
     return "deliver";
   case InteractionAction::Repair:
     return "repair";
+  case InteractionAction::Harvest:
+    return "harvest";
+  case InteractionAction::Slaughter:
+    return "slaughter";
   case InteractionAction::None:
     break;
   }

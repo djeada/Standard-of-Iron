@@ -1110,6 +1110,9 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::Temple:
     tool_name = "Temple";
     break;
+  case ToolType::Farm:
+    tool_name = "Farm";
+    break;
   case ToolType::Wall:
     tool_name = "Wall (click start, then end)";
     break;

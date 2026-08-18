@@ -48,6 +48,14 @@ enum class BakerAttackType : std::uint8_t {
   SpearFromHold,
   BowFromHold,
 };
+enum class BakerWorkType : std::uint8_t {
+  None,
+  Hammer,
+  Saw,
+  Chisel,
+  KneelingChisel,
+  Reap,
+};
 enum class BakerHoldType : std::uint8_t {
   None,
   Spear,
@@ -192,6 +200,7 @@ struct HumanoidClipSpec {
   float fps{};
   float cycle_time{};
   bool loops{};
+  BakerWorkType work_type{BakerWorkType::None};
 };
 
 [[nodiscard]] auto is_rpg_sword_clip(const HumanoidClipSpec& clip) noexcept -> bool {
@@ -1002,6 +1011,76 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      24.0F,
      1.8F,
      true},
+    {"construct_hammer",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.0F,
+     true,
+     BakerWorkType::Hammer},
+    {"construct_saw",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.0F,
+     true,
+     BakerWorkType::Saw},
+    {"construct_chisel",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.0F,
+     true,
+     BakerWorkType::Chisel},
+    {"construct_kneel_chisel",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.0F,
+     true,
+     BakerWorkType::KneelingChisel},
+    {"construct_reap",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.0F,
+     true,
+     BakerWorkType::Reap},
 }};
 
 struct HumanoidSocketSpec {
@@ -1769,7 +1848,36 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       break;
     }
 
-    if (clip.showcase_type != BakerShowcaseType::None) {
+    if (clip.work_type != BakerWorkType::None) {
+      gait.cycle_phase = 0.0F;
+      Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+          0U, 0.0F, gait, variation, pose);
+      Render::GL::HumanoidAnimationContext anim_ctx{};
+      anim_ctx.gait = gait;
+      anim_ctx.gait.state = Render::GL::HumanoidMotionState::Idle;
+      anim_ctx.inputs.is_constructing = true;
+      Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+      switch (clip.work_type) {
+      case BakerWorkType::Hammer:
+        ctrl.construction_hammer(phase);
+        break;
+      case BakerWorkType::Saw:
+        ctrl.construction_saw(phase);
+        break;
+      case BakerWorkType::Chisel:
+        ctrl.construction_chisel(phase, false);
+        break;
+      case BakerWorkType::KneelingChisel:
+        ctrl.kneel(0.875F);
+        ctrl.construction_chisel(phase, true);
+        break;
+      case BakerWorkType::Reap:
+        ctrl.construction_reap(phase);
+        break;
+      case BakerWorkType::None:
+        break;
+      }
+    } else if (clip.showcase_type != BakerShowcaseType::None) {
       gait.cycle_phase = 0.0F;
       Render::GL::HumanoidRendererBase::compute_locomotion_pose(
           0U, 0.0F, gait, variation, pose);
@@ -1820,6 +1928,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
   }
 
   if (clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||
+      clip.work_type != BakerWorkType::None ||
       clip.attack_type == BakerAttackType::Unarmed ||
       clip.attack_type == BakerAttackType::Sword ||
       clip.attack_type == BakerAttackType::BowMelee ||

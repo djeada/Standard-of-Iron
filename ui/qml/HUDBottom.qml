@@ -88,7 +88,7 @@ RowLayout {
         return entry.details || [];
     }
 
-    readonly property var gatherPriorities: ["", "cut_tree", "collect_stone", "collect_iron_ore"]
+    readonly property var gatherPriorities: ["", "cut_tree", "collect_stone", "collect_iron_ore", "harvest_grain"]
 
     function gather_priority_label(priority) {
         if (priority === "cut_tree")
@@ -97,6 +97,8 @@ RowLayout {
             return qsTr("Stone only");
         if (priority === "collect_iron_ore")
             return qsTr("Iron only");
+        if (priority === "harvest_grain")
+            return qsTr("Food first");
         return qsTr("Any resource");
     }
 
@@ -320,7 +322,7 @@ RowLayout {
             "label": qsTr("Collect"),
             "needsTroops": true,
             "activeFromPlacing": true,
-            "hint": qsTr("Send a builder to fell a tree, break a boulder or work an ore seam."),
+            "hint": qsTr("Send a builder to fell a tree, break a boulder, work an ore seam, reap a ripe farm or slaughter a sheep."),
             "details": [{
                     "term": qsTr("Give it"),
                     "text": qsTr("Press Collect, then left-click the node. Right-click cancels.")
@@ -355,7 +357,7 @@ RowLayout {
                     "text": qsTr("Runs until you stop it; any new order cancels it.")
                 }, {
                     "term": qsTr("Pick a resource"),
-                    "text": qsTr("Press again to cycle any resource, wood, stone, iron, then off.")
+                    "text": qsTr("Press again to cycle any resource, wood, stone, iron, food, then off.")
                 }, {
                     "term": qsTr("Troops"),
                     "text": qsTr("Builders only.")

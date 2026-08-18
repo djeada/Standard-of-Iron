@@ -409,7 +409,7 @@ QStringList MissionData::supported_troops() {
 }
 
 QStringList MissionData::supported_structures() {
-  return {"barracks", "defense_tower", "home", "marketplace", "temple"};
+  return {"barracks", "defense_tower", "home", "marketplace", "temple", "farm"};
 }
 
 QStringList MissionData::supported_victory_conditions() {

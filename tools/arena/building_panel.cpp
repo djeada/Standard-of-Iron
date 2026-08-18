@@ -63,6 +63,7 @@ BuildingPanel::BuildingPanel(QWidget* parent)
   m_building_box->addItem(QStringLiteral("Home"), QStringLiteral("home"));
   m_building_box->addItem(QStringLiteral("Marketplace"), QStringLiteral("marketplace"));
   m_building_box->addItem(QStringLiteral("Temple"), QStringLiteral("temple"));
+  m_building_box->addItem(QStringLiteral("Farm"), QStringLiteral("farm"));
 
   spawn_form->addRow("Side", m_owner_box);
   spawn_form->addRow("Nation", m_nation_box);

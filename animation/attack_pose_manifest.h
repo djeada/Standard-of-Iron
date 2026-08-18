@@ -26,6 +26,8 @@ enum class HumanoidConstructionPoseKind : std::uint8_t {
   Saw,
   Chisel,
   KneelingChisel,
+  Hammer,
+  Reap,
 };
 
 struct HumanoidWeaponAttackPoseInputs {

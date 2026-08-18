@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <optional>
 
 #include "../core/component.h"
 #include "../core/event_manager.h"
@@ -19,6 +20,7 @@
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "construction_cost_catalog.h"
+#include "food_targets.h"
 #include "harvest_yields.h"
 #include "nation_registry.h"
 #include "nav_grid.h"
@@ -318,6 +320,127 @@ auto apply_structure_repair_tick(Engine::Core::World* world,
   return true;
 }
 
+auto food_target_position(Engine::Core::World* world,
+                          const Engine::Core::BuilderProductionComponent* builder)
+    -> std::optional<QVector3D> {
+  if (world == nullptr || builder == nullptr ||
+      builder->structure_task_entity_id == 0) {
+    return std::nullopt;
+  }
+  auto* target = world->get_entity(builder->structure_task_entity_id);
+  const auto* transform =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (transform == nullptr) {
+    return std::nullopt;
+  }
+  return QVector3D(transform->position.x, 0.0F, transform->position.z);
+}
+
+auto food_target_still_valid(Engine::Core::World* world,
+                             const Engine::Core::Entity* worker,
+                             const Engine::Core::BuilderProductionComponent* builder)
+    -> bool {
+  if (world == nullptr || worker == nullptr || builder == nullptr) {
+    return false;
+  }
+  auto* target = world->get_entity(builder->structure_task_entity_id);
+  if (target == nullptr) {
+    return false;
+  }
+  if (builder->product_type == k_builder_product_harvest_grain) {
+    const auto* unit = worker->get_component<Engine::Core::UnitComponent>();
+    return unit != nullptr && farm_is_harvestable(*target, unit->owner_id);
+  }
+  return sheep_is_slaughterable(*target);
+}
+
+void abandon_food_task(Engine::Core::BuilderProductionComponent* builder,
+                       Engine::Core::BuilderTaskFault fault) {
+  builder->in_progress = false;
+  builder->time_remaining = 0.0F;
+  builder->construction_complete = false;
+  builder->has_construction_site = false;
+  builder->at_construction_site = false;
+  builder->bypass_movement_active = false;
+  builder->structure_task_entity_id = 0;
+  clear_builder_task_target(builder, false);
+  builder->report_fault(fault);
+}
+
+void hold_sheep_still(Engine::Core::World* world,
+                      const Engine::Core::BuilderProductionComponent* builder) {
+  auto* sheep = world->get_entity(builder->structure_task_entity_id);
+  if (sheep == nullptr) {
+    return;
+  }
+  if (auto* wildlife = sheep->get_component<Engine::Core::WildlifeComponent>()) {
+    wildlife->held_timer = std::max(wildlife->held_timer, 0.75F);
+  }
+  if (auto* movement = sheep->get_component<Engine::Core::MovementComponent>()) {
+    if (movement->get_has_target()) {
+      movement->stop();
+    }
+  }
+}
+
+void slaughter_sheep(Engine::Core::World* world,
+                     Engine::Core::Entity* worker,
+                     Engine::Core::EntityID sheep_id) {
+  auto* sheep = world->get_entity(sheep_id);
+  auto* unit =
+      sheep != nullptr ? sheep->get_component<Engine::Core::UnitComponent>() : nullptr;
+  if (unit == nullptr) {
+    return;
+  }
+  unit->health = 0;
+  if (auto* movement = sheep->get_component<Engine::Core::MovementComponent>()) {
+    movement->stop();
+  }
+  auto* death =
+      Engine::Core::get_or_add_component<Engine::Core::DeathAnimationComponent>(*sheep);
+  if (death != nullptr) {
+    death->profile = Engine::Core::DeathSequenceProfile::Horse;
+    death->state = Engine::Core::DeathSequenceState::Dying;
+    death->state_time = 0.0F;
+    death->state_duration = 1.2F;
+    death->dead_hold_duration = 1.0F;
+    death->sequence_variant = 0U;
+  }
+  const auto* worker_unit = worker != nullptr
+                                ? worker->get_component<Engine::Core::UnitComponent>()
+                                : nullptr;
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::UnitDiedEvent(sheep_id,
+                                  unit->owner_id,
+                                  unit->spawn_type,
+                                  worker != nullptr ? worker->get_id() : 0,
+                                  worker_unit != nullptr ? worker_unit->owner_id : 0));
+}
+
+auto complete_food_harvest(Engine::Core::World* world,
+                           Engine::Core::Entity* worker,
+                           Engine::Core::BuilderProductionComponent* builder) -> bool {
+  if (!food_target_still_valid(world, worker, builder)) {
+    return false;
+  }
+  auto* target = world->get_entity(builder->structure_task_entity_id);
+  int reward = 0;
+  if (builder->product_type == k_builder_product_harvest_grain) {
+    auto* crop = target->get_component<Engine::Core::FarmComponent>();
+    if (crop == nullptr) {
+      return false;
+    }
+    crop->reset_after_harvest();
+    reward = k_harvest_grain_food_reward;
+  } else {
+    slaughter_sheep(world, worker, target->get_id());
+    reward = k_slaughter_sheep_food_reward;
+  }
+  load_onto_hauler(worker, ResourceType::Food, reward);
+  return true;
+}
+
 } // namespace
 
 void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
@@ -467,6 +590,53 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       assign_next_wall_site(world, e, builder_prod);
     }
 
+    if (is_food_builder_product(builder_prod->product_type) &&
+        builder_prod->structure_task_entity_id != 0 &&
+        (builder_prod->has_construction_site || builder_prod->in_progress)) {
+      if (!food_target_still_valid(world, e, builder_prod)) {
+        abandon_food_task(builder_prod, Engine::Core::BuilderTaskFault::TargetLost);
+        continue;
+      }
+      if (builder_prod->product_type == k_builder_product_slaughter_sheep &&
+          transform != nullptr) {
+        auto const sheep_position = food_target_position(world, builder_prod);
+        if (sheep_position.has_value()) {
+          float const dx = sheep_position->x() - transform->position.x;
+          float const dz = sheep_position->z() - transform->position.z;
+          float const dist_sq = dx * dx + dz * dz;
+          if (dist_sq <= k_sheep_work_reach * k_sheep_work_reach) {
+            hold_sheep_still(world, builder_prod);
+            if (!builder_prod->at_construction_site) {
+              builder_prod->construction_site_x = transform->position.x;
+              builder_prod->construction_site_z = transform->position.z;
+            }
+          } else {
+            QVector3D const work_position = food_work_position(
+                *world,
+                e->get_id(),
+                QVector3D(transform->position.x, 0.0F, transform->position.z),
+                FoodTarget{.id = builder_prod->structure_task_entity_id,
+                           .product_type = k_builder_product_slaughter_sheep,
+                           .x = sheep_position->x(),
+                           .z = sheep_position->z()});
+            builder_prod->construction_site_x = work_position.x();
+            builder_prod->construction_site_z = work_position.z();
+            builder_prod->task_target_x = sheep_position->x();
+            builder_prod->task_target_z = sheep_position->z();
+            if (builder_prod->at_construction_site) {
+              builder_prod->at_construction_site = false;
+              builder_prod->in_progress = false;
+              builder_prod->has_construction_site = true;
+            }
+            builder_prod->bypass_movement_active = false;
+            if (movement != nullptr) {
+              movement->set_rest_position(work_position.x(), work_position.z());
+            }
+          }
+        }
+      }
+    }
+
     if (builder_prod->has_construction_site && !builder_prod->at_construction_site) {
       if (transform != nullptr) {
         float const dx = builder_prod->construction_site_x - transform->position.x;
@@ -582,7 +752,21 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       auto* t = e->get_component<Engine::Core::TransformComponent>();
       auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
-        if (is_harvest_builder_product(builder_prod->product_type)) {
+        if (is_food_builder_product(builder_prod->product_type)) {
+          float const anchor_x = builder_prod->task_target_x;
+          float const anchor_z = builder_prod->task_target_z;
+          if (complete_food_harvest(world, e, builder_prod)) {
+            if (!e->has_component<Engine::Core::AIControlledComponent>()) {
+              builder_prod->has_gather_order = true;
+              builder_prod->gather_product_type = builder_prod->product_type;
+              builder_prod->gather_anchor_x = anchor_x;
+              builder_prod->gather_anchor_z = anchor_z;
+            }
+          } else {
+            builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
+          }
+          builder_prod->structure_task_entity_id = 0;
+        } else if (is_harvest_builder_product(builder_prod->product_type)) {
           bool const harvested =
               builder_prod->has_task_target &&
               Game::Map::TerrainService::instance().harvest_world_prop(
