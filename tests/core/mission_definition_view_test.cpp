@@ -6,8 +6,8 @@
 
 #include <gtest/gtest.h>
 
-#include "app/mission/mission_definition_view.h"
 #include "game/map/campaign_loader.h"
+#include "game/mission/mission_definition_view.h"
 
 TEST(MissionDefinitionViewTest, ReadsPlayerCommanderFromTheMissionMap) {
   Game::Mission::MissionDefinition mission;

@@ -3,30 +3,25 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/units/building_spawn_setup.h"
-#include "game/visuals/team_colors.h"
 
 namespace {
 
-TEST(BuildingSpawnSetup, AssignsCanonicalRendererKeyAndTeamColor) {
+TEST(BuildingSpawnSetup, AssignsCanonicalRendererKey) {
   Engine::Core::Entity entity(1);
 
   auto* renderable = Game::Units::add_building_renderable(
-      entity, 3, Game::Systems::NationID::Carthage, "barracks");
+      entity, Game::Systems::NationID::Carthage, "barracks");
   ASSERT_NE(renderable, nullptr);
 
   EXPECT_EQ(renderable->renderer_id, "troops/carthage/barracks");
-
-  QVector3D const expected = Game::Visuals::team_colorForOwner(3);
-  EXPECT_FLOAT_EQ(renderable->color[0], expected.x());
-  EXPECT_FLOAT_EQ(renderable->color[1], expected.y());
-  EXPECT_FLOAT_EQ(renderable->color[2], expected.z());
+  EXPECT_TRUE(renderable->visible);
 }
 
 TEST(BuildingSpawnSetup, EnsuresBuildingComponentTracksOriginalNation) {
   Engine::Core::Entity entity(2);
 
   auto* renderable = Game::Units::add_building_renderable(
-      entity, 1, Game::Systems::NationID::RomanRepublic, "home");
+      entity, Game::Systems::NationID::RomanRepublic, "home");
   ASSERT_NE(renderable, nullptr);
 
   auto* building = entity.get_component<Engine::Core::BuildingComponent>();

@@ -12,11 +12,11 @@
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
 #include "game/map/terrain_service.h"
+#include "game/render_bridge/picking_service.h"
+#include "game/render_bridge/selection_controller.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/nav_grid.h"
-#include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
-#include "game/view/selection_controller.h"
 #include "scene/camera.h"
 
 namespace {

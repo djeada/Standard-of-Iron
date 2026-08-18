@@ -54,7 +54,7 @@ protected:
   auto make_wall(World& world, float x, float z, int owner_id) -> Entity* {
     auto* entity = world.create_entity();
     entity->add_component<TransformComponent>(x, 0.0F, z);
-    entity->add_component<RenderableComponent>("mesh", "texture");
+    entity->add_component<RenderableComponent>();
     auto* unit = entity->add_component<UnitComponent>(800, 800, 0.0F, 0.0F);
     unit->owner_id = owner_id;
     unit->spawn_type = Game::Units::SpawnType::WallSegment;
@@ -71,7 +71,7 @@ protected:
   auto make_gate(World& world, float x, float z, int owner_id) -> Entity* {
     auto* entity = world.create_entity();
     entity->add_component<TransformComponent>(x, 0.0F, z);
-    entity->add_component<RenderableComponent>("mesh", "texture");
+    entity->add_component<RenderableComponent>();
     auto* unit = entity->add_component<UnitComponent>(700, 700, 0.0F, 0.0F);
     unit->owner_id = owner_id;
     unit->spawn_type = Game::Units::SpawnType::WallGate;

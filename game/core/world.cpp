@@ -737,14 +737,8 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_combine(signature, static_cast<std::uint64_t>(gate->manual_mode));
   }
   if (auto const* renderable = entity.get_component<RenderableComponent>()) {
-    render_hash_combine(signature, std::hash<std::string>{}(renderable->mesh_path));
-    render_hash_combine(signature, std::hash<std::string>{}(renderable->texture_path));
     render_hash_combine(signature, std::hash<std::string>{}(renderable->renderer_id));
     render_hash_combine(signature, renderable->visible ? 1U : 0U);
-    render_hash_combine(signature, static_cast<std::uint64_t>(renderable->mesh));
-    for (float const channel : renderable->color) {
-      render_hash_float(signature, channel);
-    }
   }
   if (auto const* layout = entity.get_component<UnitLayoutStateComponent>()) {
     render_hash_combine(signature, layout->state);

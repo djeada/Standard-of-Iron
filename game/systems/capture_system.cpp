@@ -13,7 +13,6 @@
 #include "../systems/nation_registry.h"
 #include "../systems/troop_profile_service.h"
 #include "../units/troop_config.h"
-#include "../visuals/team_colors.h"
 #include "building_collision_registry.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
@@ -76,11 +75,6 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World*,
 
   int const previous_owner_id = unit->owner_id;
   unit->owner_id = new_owner_id;
-
-  QVector3D const tc = Game::Visuals::team_colorForOwner(new_owner_id);
-  renderable->color[0] = tc.x();
-  renderable->color[1] = tc.y();
-  renderable->color[2] = tc.z();
 
   Game::Systems::BuildingCollisionRegistry::instance().update_building_owner(
       barrack->get_id(), new_owner_id);

@@ -106,22 +106,6 @@ auto projectile_kind_from_string(const QString& value)
   return Game::Systems::ProjectileKind::Arrow;
 }
 
-auto serialize_color(const std::array<float, 3>& color) -> QJsonArray {
-  QJsonArray array;
-  array.append(color[0]);
-  array.append(color[1]);
-  array.append(color[2]);
-  return array;
-}
-
-void deserialize_color(const QJsonArray& array, std::array<float, 3>& color) {
-  if (array.size() >= 3) {
-    color[0] = static_cast<float>(array.at(0).toDouble());
-    color[1] = static_cast<float>(array.at(1).toDouble());
-    color[2] = static_cast<float>(array.at(2).toDouble());
-  }
-}
-
 } // namespace
 
 auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
@@ -146,14 +130,10 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
 
   if (const auto* renderable = entity->get_component<RenderableComponent>()) {
     QJsonObject renderable_obj;
-    renderable_obj["mesh_path"] = QString::fromStdString(renderable->mesh_path);
-    renderable_obj["texture_path"] = QString::fromStdString(renderable->texture_path);
     if (!renderable->renderer_id.empty()) {
       renderable_obj["renderer_id"] = QString::fromStdString(renderable->renderer_id);
     }
     renderable_obj["visible"] = renderable->visible;
-    renderable_obj["mesh"] = static_cast<int>(renderable->mesh);
-    renderable_obj["color"] = serialize_color(renderable->color);
     entity_obj["renderable"] = renderable_obj;
   }
 
@@ -860,17 +840,10 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
 
   if (json.contains("renderable")) {
     const auto renderable_obj = json["renderable"].toObject();
-    auto* renderable = entity->add_component<RenderableComponent>("", "");
-    renderable->mesh_path = renderable_obj["mesh_path"].toString().toStdString();
-    renderable->texture_path = renderable_obj["texture_path"].toString().toStdString();
+    auto* renderable = entity->add_component<RenderableComponent>();
+
     renderable->renderer_id = renderable_obj["renderer_id"].toString().toStdString();
     renderable->visible = renderable_obj["visible"].toBool(true);
-    renderable->mesh =
-        static_cast<RenderableComponent::MeshKind>(renderable_obj["mesh"].toInt(
-            static_cast<int>(RenderableComponent::MeshKind::Cube)));
-    if (renderable_obj.contains("color")) {
-      deserialize_color(renderable_obj["color"].toArray(), renderable->color);
-    }
   }
 
   if (json.contains("unit")) {

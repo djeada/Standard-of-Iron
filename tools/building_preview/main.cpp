@@ -178,7 +178,7 @@ auto render_building(EntityRendererRegistry& registry,
                      const std::string& nation,
                      const std::string& type,
                      const std::string& key_suffix,
-                     const QVector3D& team_color,
+                     int preview_owner_id,
                      const QVector3D& eye_dir,
                      const QVector3D& light_dir,
                      float health_ratio,
@@ -193,11 +193,11 @@ auto render_building(EntityRendererRegistry& registry,
   }
 
   Engine::Core::Entity entity(1);
-  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>(
-      std::string{}, std::string{});
-  renderable->color = {team_color.x(), team_color.y(), team_color.z()};
+  entity.add_component<Engine::Core::RenderableComponent>();
   entity.add_component<Engine::Core::TransformComponent>();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
+
+  unit->owner_id = preview_owner_id;
   unit->health = static_cast<int>(static_cast<float>(unit->max_health) * health_ratio);
   unit->nation_id = (nation == "carthage") ? Game::Systems::NationID::Carthage
                                            : Game::Systems::NationID::RomanRepublic;
@@ -299,7 +299,7 @@ auto main(int argc, char** argv) -> int {
     keys = f_keys;
   }
   const std::vector<std::string> nations = {"roman", "carthage"};
-  const QVector3D team_color(0.30F, 0.55F, 0.95F);
+  constexpr int k_preview_owner_id = 1;
 
   struct View {
     const char* name;
@@ -353,7 +353,7 @@ auto main(int argc, char** argv) -> int {
                                           nation,
                                           types[r],
                                           keys[r],
-                                          team_color,
+                                          k_preview_owner_id,
                                           view.dir,
                                           view.light,
                                           view.health,

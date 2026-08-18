@@ -21,7 +21,6 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
-#include "game/visuals/visual_catalog.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "utils/resource_utils.h"
@@ -39,21 +38,6 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
   LevelLoadResult res;
 
   auto& owners = Game::Systems::OwnerRegistry::instance();
-
-  Game::Visuals::VisualCatalog visual_catalog;
-  const QString visuals_path = Utils::Resources::resolve_resource_path(
-      QStringLiteral(":/assets/visuals/unit_visuals.json"));
-  bool visuals_loaded = false;
-  if (QFile::exists(visuals_path)) {
-    QString visuals_err;
-    visuals_loaded = visual_catalog.load_from_json_file(visuals_path, &visuals_err);
-    if (!visuals_loaded && !visuals_err.isEmpty()) {
-      qWarning() << "LevelLoader: Visual catalog parse failed:" << visuals_err;
-    }
-  } else {
-    qInfo() << "LevelLoader: unit visuals catalog not found at" << visuals_path
-            << "- continuing without overrides.";
-  }
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*unit_reg);
@@ -93,9 +77,7 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
     res.max_troops_per_player = def.max_troops_per_player;
     res.victory_config = def.victory;
 
-    const Game::Visuals::VisualCatalog* catalog_ptr =
-        visuals_loaded ? &visual_catalog : nullptr;
-    auto rt = Game::Map::MapTransformer::apply_to_world(def, world, catalog_ptr);
+    auto rt = Game::Map::MapTransformer::apply_to_world(def, world);
     if (!rt.unit_ids.empty()) {
       res.player_unit_id = rt.unit_ids.front();
     } else {

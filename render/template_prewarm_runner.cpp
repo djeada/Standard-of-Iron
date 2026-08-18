@@ -45,7 +45,6 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_catalog.h"
 #include "game/units/troop_config.h"
-#include "game/visuals/team_colors.h"
 #include "geom/mode_indicator.h"
 #include "gl/backend.h"
 #include "gl/buffer.h"
@@ -121,13 +120,9 @@ void populate_template_prewarm_entity(Engine::Core::Entity& entity,
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
 
-  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>("", "");
+  auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   renderable->renderer_id = renderer_id;
   renderable->visible = true;
-  QVector3D const team_color = Game::Visuals::team_colorForOwner(owner_id);
-  renderable->color[0] = team_color.x();
-  renderable->color[1] = team_color.y();
-  renderable->color[2] = team_color.z();
 }
 
 auto make_template_prewarm_draw_context(Renderer& renderer,

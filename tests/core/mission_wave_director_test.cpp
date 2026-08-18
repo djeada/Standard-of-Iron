@@ -2,16 +2,16 @@
 
 #include <gtest/gtest.h>
 
-#include "app/mission/mission_setup_coordinator.h"
-#include "app/mission/mission_wave_director.h"
-#include "app/mission/mission_waves.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_wave_director.h"
+#include "game/mission/mission_waves.h"
 
 namespace {
 
-using App::Core::MissionWaveDirector;
-using App::Core::PendingMissionWave;
+using Game::Mission::MissionWaveDirector;
+using Game::Mission::PendingMissionWave;
 
 auto make_wave(const QString& ai_id,
                int phase,
@@ -347,7 +347,7 @@ TEST(MissionWaveBuild, AuthoredPhasesGroupWavesAcrossAis) {
   }
 
   Game::Systems::LevelSnapshot level;
-  const auto waves = App::Core::build_pending_mission_waves(
+  const auto waves = Game::Mission::build_pending_mission_waves(
       {.mission = mission,
        .mission_difficulty = QStringLiteral("normal"),
        .level = level});
@@ -387,28 +387,28 @@ TEST(MissionWaveBuild, DifficultyAndEscalationScaleWaveSize) {
     mission.ai_setups.push_back(ai);
 
     Game::Systems::LevelSnapshot level;
-    return App::Core::build_pending_mission_waves(
+    return Game::Mission::build_pending_mission_waves(
         {.mission = mission, .mission_difficulty = mission_difficulty, .level = level});
   };
 
   const auto baseline = build(QStringLiteral("normal"), QStringLiteral("normal"), 0.0F);
   ASSERT_EQ(baseline.size(), 2U);
-  EXPECT_EQ(App::Core::wave_unit_total(baseline[0]), 10);
-  EXPECT_EQ(App::Core::wave_unit_total(baseline[1]), 10);
+  EXPECT_EQ(Game::Mission::wave_unit_total(baseline[0]), 10);
+  EXPECT_EQ(Game::Mission::wave_unit_total(baseline[1]), 10);
 
   const auto harder = build(QStringLiteral("normal"), QStringLiteral("hard"), 0.0F);
-  EXPECT_GT(App::Core::wave_unit_total(harder[0]),
-            App::Core::wave_unit_total(baseline[0]));
+  EXPECT_GT(Game::Mission::wave_unit_total(harder[0]),
+            Game::Mission::wave_unit_total(baseline[0]));
 
   const auto easier = build(QStringLiteral("easy"), QStringLiteral("normal"), 0.0F);
-  EXPECT_LT(App::Core::wave_unit_total(easier[0]),
-            App::Core::wave_unit_total(baseline[0]));
+  EXPECT_LT(Game::Mission::wave_unit_total(easier[0]),
+            Game::Mission::wave_unit_total(baseline[0]));
 
   const auto escalating =
       build(QStringLiteral("normal"), QStringLiteral("normal"), 0.5F);
-  EXPECT_EQ(App::Core::wave_unit_total(escalating[0]), 10);
-  EXPECT_GT(App::Core::wave_unit_total(escalating[1]),
-            App::Core::wave_unit_total(escalating[0]));
+  EXPECT_EQ(Game::Mission::wave_unit_total(escalating[0]), 10);
+  EXPECT_GT(Game::Mission::wave_unit_total(escalating[1]),
+            Game::Mission::wave_unit_total(escalating[0]));
 }
 
 TEST(MissionWaveBuild, ArchetypesExpandOnTopOfTheAuthoredComposition) {
@@ -428,12 +428,12 @@ TEST(MissionWaveBuild, ArchetypesExpandOnTopOfTheAuthoredComposition) {
   mission.ai_setups.push_back(ai);
 
   Game::Systems::LevelSnapshot level;
-  const auto waves = App::Core::build_pending_mission_waves(
+  const auto waves = Game::Mission::build_pending_mission_waves(
       {.mission = mission,
        .mission_difficulty = QStringLiteral("normal"),
        .level = level});
 
   ASSERT_EQ(waves.size(), 1U);
   EXPECT_GT(waves[0].composition.size(), 1U);
-  EXPECT_GT(App::Core::wave_unit_total(waves[0]), 2);
+  EXPECT_GT(Game::Mission::wave_unit_total(waves[0]), 2);
 }

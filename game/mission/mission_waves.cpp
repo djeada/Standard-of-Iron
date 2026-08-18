@@ -1,4 +1,4 @@
-#include "app/mission/mission_waves.h"
+#include "game/mission/mission_waves.h"
 
 #include <QCoreApplication>
 #include <QDebug>
@@ -15,10 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "app/mission/campaign_manager.h"
-#include "app/mission/mission_commander_setup.h"
-#include "app/mission/mission_setup_coordinator.h"
-#include "app/persistence/game_state_restorer.h"
 #include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -27,6 +23,9 @@
 #include "game/map/map_transformer.h"
 #include "game/map/mission_context.h"
 #include "game/map/wave_archetype_catalog.h"
+#include "game/mission/campaign_manager.h"
+#include "game/mission/mission_commander_setup.h"
+#include "game/mission/mission_setup_coordinator.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/command_service.h"
@@ -36,10 +35,9 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
-#include "game/visuals/team_colors.h"
 #include "utils/resource_utils.h"
 
-namespace App::Core {
+namespace Game::Mission {
 
 auto classify_wave_direction(const QVector3D& entry_point) -> QString {
   const float x = entry_point.x();
@@ -344,13 +342,6 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
           assault->march_target_x = wave.defense_reference_world_position.x();
           assault->march_target_z = wave.defense_reference_world_position.z();
         }
-        auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
-        if (renderable != nullptr) {
-          const QVector3D team_color = Game::Visuals::team_colorForOwner(wave.owner_id);
-          renderable->color[0] = team_color.x();
-          renderable->color[1] = team_color.y();
-          renderable->color[2] = team_color.z();
-        }
         if (comp.elite) {
           auto* unit_component = entity->get_component<Engine::Core::UnitComponent>();
           if (unit_component != nullptr) {
@@ -510,4 +501,4 @@ auto build_pending_mission_events(const Game::Mission::MissionDefinition& missio
   return events;
 }
 
-} // namespace App::Core
+} // namespace Game::Mission

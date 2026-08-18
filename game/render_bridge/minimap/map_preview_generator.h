@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "../map_definition.h"
+#include "../../map/map_definition.h"
 
 namespace Game::Map::Minimap {
 

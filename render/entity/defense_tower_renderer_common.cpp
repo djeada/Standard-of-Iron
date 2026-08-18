@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 
+#include "../entity_appearance.h"
 #include "game/core/component.h"
 #include "render/scene_renderer.h"
 
@@ -71,7 +72,7 @@ void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,
           return;
         }
 
-        const QVector3D team(r->color[0], r->color[1], r->color[2]);
+        const QVector3D team = Render::entity_color(*ctx.entity);
         const BuildingState state = resolve_building_state(ctx);
         submit_building_instance(out, ctx, config.archetype(state));
         config.draw_banner(ctx, out, team, state);

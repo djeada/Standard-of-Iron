@@ -4,7 +4,7 @@
 
 #include "game/camera_framing.h"
 #include "game/game_config.h"
-#include "game/systems/camera_service.h"
+#include "game/render_bridge/camera_service.h"
 #include "scene/camera.h"
 
 namespace {

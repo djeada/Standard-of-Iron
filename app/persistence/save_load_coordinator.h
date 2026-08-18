@@ -11,7 +11,7 @@
 #include "app/core/entity_cache.h"
 #include "app/input/cursor_mode.h"
 #include "game/map/mission_context.h"
-#include "game/systems/game_state_serializer.h"
+#include "game/systems/match_snapshot.h"
 #include "game/systems/save_format.h"
 
 class AudioCoordinator;

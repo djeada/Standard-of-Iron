@@ -1,4 +1,4 @@
-#include "app/mission/mission_definition_view.h"
+#include "game/mission/mission_definition_view.h"
 
 #include <QFileInfo>
 #include <QStringList>
@@ -6,8 +6,8 @@
 
 #include <algorithm>
 
-#include "app/mission/mission_commander_setup.h"
 #include "game/map/mission_loader.h"
+#include "game/mission/mission_commander_setup.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_type.h"
 #include "game/util/asset_text.h"
@@ -341,7 +341,7 @@ auto build_mission_definition_map(const Game::Mission::MissionDefinition& missio
     result["terrain_type"] = mission.terrain_type.value();
   }
 
-  const auto map_commanders = App::Core::commander_troops_for_map(mission.map_path);
+  const auto map_commanders = Game::Mission::commander_troops_for_map(mission.map_path);
   result["player_setup"] = build_player_setup_map(mission.player_setup, map_commanders);
 
   QVariantList ai_setups;

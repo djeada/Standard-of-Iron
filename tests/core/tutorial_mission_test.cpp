@@ -6,20 +6,19 @@
 #include <map>
 #include <vector>
 
-#include "app/core/entity_cache.h"
-#include "app/mission/campaign_manager.h"
-#include "app/mission/mission_definition_view.h"
-#include "app/mission/mission_setup_coordinator.h"
-#include "app/mission/mission_waves.h"
-#include "app/mission/tutorial_director.h"
 #include "app/session/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/mission/campaign_manager.h"
+#include "game/mission/mission_definition_view.h"
+#include "game/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_waves.h"
+#include "game/mission/tutorial_director.h"
 #include "game/systems/default_content.h"
-#include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/match_snapshot.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/runtime_system_registry.h"
@@ -78,8 +77,7 @@ protected:
                                              .level = m_level,
                                              .selected_player_id = selected_player_id,
                                              .local_owner_id = k_local_owner,
-                                             .pending_waves = m_pending_waves,
-                                             .entity_cache = m_entity_cache});
+                                             .pending_waves = m_pending_waves});
   }
 
   void TearDown() override {
@@ -112,11 +110,10 @@ protected:
   Render::GL::Renderer m_renderer{Render::ShaderQuality::None};
   Render::GL::Camera m_camera;
   CampaignManager m_campaign;
-  App::Core::MissionSetupCoordinator m_coordinator;
-  App::Core::MissionWaves m_waves;
+  Game::Mission::MissionSetupCoordinator m_coordinator;
+  Game::Mission::MissionWaves m_waves;
   Game::Systems::LevelSnapshot m_level;
-  EntityCache m_entity_cache;
-  std::vector<App::Core::PendingMissionWave> m_pending_waves;
+  std::vector<Game::Mission::PendingMissionWave> m_pending_waves;
 };
 
 } // namespace
@@ -153,7 +150,7 @@ TEST_F(TutorialMissionTest, ThePlayerStartsWithWhatTheFirstStepsNeed) {
   }
   EXPECT_GE(builders, 2) << "the gather steps put one builder on each material";
   EXPECT_GE(soldiers, 3) << "the select, move and attack steps need soldiers";
-  EXPECT_LT(soldiers, App::Core::k_tutorial_army_size)
+  EXPECT_LT(soldiers, Game::Mission::k_tutorial_army_size)
       << "the army step must ask for recruits, not be met on arrival";
   EXPECT_EQ(barracks, 1) << "gathered loads are dropped at the barracks yard";
   EXPECT_EQ(homes, 0) << "the build step raises the first Home";
@@ -172,7 +169,7 @@ TEST_F(TutorialMissionTest, TheScoutingPartyWaitsToBeAttacked) {
       scouts.push_back(entity);
     }
   }
-  ASSERT_GE(static_cast<int>(scouts.size()), App::Core::k_tutorial_scout_count);
+  ASSERT_GE(static_cast<int>(scouts.size()), Game::Mission::k_tutorial_scout_count);
 
   std::vector<QVector3D> start;
   for (auto* scout : scouts) {

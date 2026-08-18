@@ -1,9 +1,6 @@
 #pragma once
 
-#include <QByteArray>
-#include <QJsonObject>
 #include <QString>
-#include <QVector3D>
 
 #include <cstdint>
 #include <vector>
@@ -13,12 +10,7 @@
 #include "resource_types.h"
 
 namespace Engine::Core {
-class World;
 using EntityID = std::uint64_t;
-} // namespace Engine::Core
-
-namespace Render::GL {
-class Camera;
 }
 
 namespace Game::Systems {
@@ -58,29 +50,6 @@ struct RuntimeSnapshot {
   std::uint64_t simulation_tick = 0;
   std::uint64_t rng_seed = 0;
   std::uint64_t rng_draw_count = 0;
-};
-
-class GameStateSerializer {
-public:
-  static auto build_metadata(const Engine::Core::World& world,
-                             const Render::GL::Camera* camera,
-                             const LevelSnapshot& level,
-                             const RuntimeSnapshot& runtime) -> QJsonObject;
-
-  static void restore_camera_from_metadata(const QJsonObject& metadata,
-                                           Render::GL::Camera* camera,
-                                           int viewport_width,
-                                           int viewport_height);
-
-  static void restore_runtime_from_metadata(const QJsonObject& metadata,
-                                            RuntimeSnapshot& runtime);
-
-  static void restore_level_from_metadata(const QJsonObject& metadata,
-                                          LevelSnapshot& level);
-
-  static void restore_player_nations_from_metadata(const QJsonObject& metadata);
-
-  static void restore_visibility_from_metadata(const QJsonObject& metadata);
 };
 
 } // namespace Game::Systems

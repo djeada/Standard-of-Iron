@@ -4,8 +4,8 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../systems/selection_system.h"
 #include "scene/camera.h"
-#include "selection_system.h"
 
 namespace Game::Systems {
 

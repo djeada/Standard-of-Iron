@@ -60,7 +60,7 @@ void Home::init(const SpawnParams& params) {
     e->add_component<Engine::Core::AIControlledComponent>();
   }
 
-  m_r = add_building_renderable(*e, m_u->owner_id, nation_id, m_type_string);
+  m_r = add_building_renderable(*e, nation_id, m_type_string);
 
   auto* home_comp = e->add_component<Engine::Core::HomeComponent>();
   if (home_comp != nullptr) {

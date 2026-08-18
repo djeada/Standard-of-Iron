@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "app/input/cursor_mode.h"
-#include "game/view/selection_controller.h"
+#include "game/render_bridge/selection_controller.h"
 
 class CommanderControlController;
 class ProductionManager;

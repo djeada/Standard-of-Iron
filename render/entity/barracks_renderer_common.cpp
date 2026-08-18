@@ -1,5 +1,6 @@
 #include "barracks_renderer_common.h"
 
+#include "../entity_appearance.h"
 #include "game/core/component.h"
 #include "render/gl/backend.h"
 #include "render/gl/primitives.h"
@@ -29,7 +30,7 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
           unit = get_unit_cube();
         }
         Texture* white = ctx.resources->white();
-        const QVector3D team(r->color[0], r->color[1], r->color[2]);
+        const QVector3D team = Render::entity_color(*ctx.entity);
 
         BarracksFlagRenderer::ClothBannerResources cloth;
         if (ctx.backend != nullptr) {
