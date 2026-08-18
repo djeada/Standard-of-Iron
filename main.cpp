@@ -150,6 +150,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "render/i_render_backend.h"
 #include "render/profiling/profiling_hud.h"
 #include "ui/campaign_map_view.h"
+#include "ui/commander_portrait_view.h"
 #include "ui/edge_scroll.h"
 #include "ui/game_speeds.h"
 #include "ui/gl_view.h"
@@ -942,6 +943,8 @@ auto main(int argc, char* argv[]) -> int {
   engine->addImportPath("qrc:/");
   qInfo() << "Registering QML types...";
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
+  qmlRegisterType<CommanderPortraitView>(
+      "StandardOfIron", 1, 0, "CommanderPortraitView");
   qmlRegisterType<CampaignMapView>("StandardOfIron", 1, 0, "CampaignMapView");
 
   qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme", &Theme::create);

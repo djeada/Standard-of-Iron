@@ -269,6 +269,107 @@ TEST_F(MissionLoaderTest, ParsesAccumulateResourcesAndVictoryMode) {
   EXPECT_FLOAT_EQ(*mission.defeat_conditions[0].duration, 420.0F);
 }
 
+TEST_F(MissionLoaderTest, ParsesCommanderMessages) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  temp_file.write(R"({
+      "id": "taunt_mission",
+      "title": "Taunt Mission",
+      "map_path": ":/assets/maps/map_forest.json",
+      "commander_messages": [
+        {
+          "id": "open",
+          "speaker": "roman_veteran_consul",
+          "pose": "dismissive",
+          "trigger": {"type": "mission_start", "delay": 2.5},
+          "text": "Cross where you like.",
+          "voice_cue": "alert.commander_message",
+          "duration": 13.0,
+          "priority": 100
+        },
+        {
+          "id": "town_lost",
+          "speaker": "roman_veteran_consul",
+          "trigger": {
+            "type": "structure_captured",
+            "owner_id": 3,
+            "by_owner_id": "player",
+            "structure_type": "barracks",
+            "at": {"x": 566, "z": 545},
+            "radius": 24.0
+          },
+          "text": "You have the river town.",
+          "once": false
+        },
+        {
+          "id": "consul_down",
+          "speaker": "roman_field_commander",
+          "trigger": {
+            "type": "commander_defeated",
+            "nation": "roman_republic",
+            "by_owner_id": "player"
+          },
+          "text": "You killed a consul."
+        }
+      ]
+    })");
+  temp_file.flush();
+
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error))
+      << error.toStdString();
+
+  ASSERT_EQ(mission.commander_messages.size(), 3);
+
+  const auto& open = mission.commander_messages[0];
+  EXPECT_EQ(open.id, "open");
+  EXPECT_EQ(open.speaker, "roman_veteran_consul");
+  EXPECT_EQ(open.pose, "dismissive");
+  EXPECT_EQ(open.trigger, CommanderMessageTrigger::MissionStart);
+  EXPECT_FLOAT_EQ(open.delay, 2.5F);
+  EXPECT_FLOAT_EQ(open.duration, 13.0F);
+  EXPECT_EQ(open.priority, 100);
+  EXPECT_TRUE(open.once);
+
+  const auto& capture = mission.commander_messages[1];
+  EXPECT_EQ(capture.trigger, CommanderMessageTrigger::StructureCaptured);
+  ASSERT_TRUE(capture.condition.owner_id.has_value());
+  EXPECT_EQ(*capture.condition.owner_id, 3);
+  EXPECT_FALSE(capture.condition.owner_is_local);
+  EXPECT_TRUE(capture.condition.by_owner_is_local);
+  EXPECT_FALSE(capture.condition.by_owner_id.has_value());
+  ASSERT_TRUE(capture.condition.subject_type.has_value());
+  EXPECT_EQ(*capture.condition.subject_type, "barracks");
+  ASSERT_TRUE(capture.condition.at.has_value());
+  EXPECT_FLOAT_EQ(capture.condition.at->x, 566.0F);
+  ASSERT_TRUE(capture.condition.radius.has_value());
+  EXPECT_FLOAT_EQ(*capture.condition.radius, 24.0F);
+  EXPECT_FALSE(capture.once);
+
+  const auto& death = mission.commander_messages[2];
+  EXPECT_EQ(death.trigger, CommanderMessageTrigger::CommanderDefeated);
+  ASSERT_TRUE(death.condition.nation.has_value());
+  EXPECT_EQ(*death.condition.nation, "roman_republic");
+  EXPECT_FLOAT_EQ(death.duration, k_default_commander_message_seconds);
+}
+
+TEST_F(MissionLoaderTest, CommanderMessagesAreAbsentWhenTheMissionAuthorsNone) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  temp_file.write(createTestMission().toUtf8());
+  temp_file.flush();
+
+  MissionDefinition mission;
+  QString error;
+  ASSERT_TRUE(
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
+
+  EXPECT_TRUE(mission.commander_messages.empty());
+}
+
 TEST_F(MissionLoaderTest, VictoryModeDefaultsToAnyWhenOmitted) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

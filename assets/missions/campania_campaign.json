@@ -606,6 +606,47 @@
       ]
     }
   ],
+  "commander_messages": [
+    {
+      "id": "campania_fabius_open",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "You have a walled town, an orchard, and a very great many mouths. I have the roads. I am not going to fight you. I am going to stand between you and every granary in Campania until winter explains my position better than I can.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "campania_fabius_victory",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "campania_fabius_defeat",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "There. No battle, no glory, no monument: a town with nothing left in it and a road with my army standing on it. They will call me the Delayer. Let them. Your dead will not care what I am called.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
   "include_ambient_undead": false,
   "victory_mode": "all"
 }

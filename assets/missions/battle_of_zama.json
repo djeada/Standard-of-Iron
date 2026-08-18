@@ -412,6 +412,47 @@
       ]
     }
   ],
+  "commander_messages": [
+    {
+      "id": "zama_scipio_open",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "zama_scipio_victory",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "zama_scipio_defeat",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "It is finished. Carthage will have terms, and the terms will be her fleet burned in her own harbour where she can watch it. You were the better general. It has not turned out to matter.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
   "include_ambient_undead": true,
   "theme": "Two worlds collide on open sand. A third has been waiting underneath it."
 }

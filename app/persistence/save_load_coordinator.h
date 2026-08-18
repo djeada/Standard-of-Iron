@@ -67,6 +67,7 @@ struct SaveToSlotContext {
   int autosave_retention = 0;
   QJsonObject mission_wave_state;
   QJsonObject mission_stage_state;
+  QJsonObject commander_message_state;
 };
 
 struct SaveToSlotEffects {
@@ -94,6 +95,7 @@ struct LoadFromSlotContext {
   std::function<void()> emit_troop_count_changed;
   std::function<void(const QJsonObject&)> restore_mission_waves;
   std::function<void(const QJsonObject&)> restore_mission_stages;
+  std::function<void(const QJsonObject&)> restore_commander_messages;
 };
 
 struct LoadFromSlotEffects {

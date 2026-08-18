@@ -259,6 +259,47 @@
       ]
     }
   ],
+  "commander_messages": [
+    {
+      "id": "ticino_scipio_open",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "ticino_scipio_victory",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Hold the field, then. My horse is dead, my son is dragging me off it by the arm, and I find I can still count. You have won a ford. Italy is nine hundred miles long.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "ticino_scipio_defeat",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
   "include_ambient_undead": false,
   "theme": "Hannibal's riders descend through river fog to trap Roman scouts before they escape across a torch-lit bridge.",
   "victory_mode": "all"

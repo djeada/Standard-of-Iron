@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "creature/pipeline/creature_asset.h"
 #include "creature/render_request.h"
@@ -28,6 +29,8 @@ namespace Render::GL {
 
 struct SnapshotMeshEntry {
   std::unique_ptr<RiggedMesh> mesh;
+
+  std::vector<std::unique_ptr<RiggedMesh>> attachment_meshes;
 };
 
 class SnapshotMeshCache {

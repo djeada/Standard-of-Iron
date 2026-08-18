@@ -399,6 +399,23 @@ def state_commander_exit():
     return lowpass(out, 6000.0)
 
 
+def alert_commander_message():
+    """A horn from a camp that is not yours, then a wax tablet turned over.
+
+    It has to read as someone about to speak rather than as an outcome, so the
+    horn is low, dark and unresolved -- no rising third the way the objective
+    fanfares end -- and a voiced murmur sits under the tail at the edge of
+    hearing.
+    """
+    out = silence(seconds(1.45))
+    out = place(out, gain_of(inst.horn(147.0, 0.62, 921, brightness=0.4), 0.85), 0.0)
+    out = place(out, gain_of(inst.horn(110.0, 0.78, 922, brightness=0.3), 0.5), 0.26)
+    out = place(out, gain_of(inst.paper(0.34, 923, density=90), 0.5), 0.6)
+    murmur = lowpass(gain_of(inst.shout(0.5, 924, freq=118.0), 0.12), 900.0)
+    out = place(out, murmur, 0.78)
+    return lowpass(tail(out, 0.5, 0.16), 2600.0)
+
+
 RECIPES: dict[str, Recipe] = {
     "ui.hover": Recipe("sfx/ui/hover_brush.ogg", -26.0, ui_hover, 1, takes=3),
     "ui.click": Recipe("sfx/ui/click_confirm.ogg", -14.0, ui_click, 1, takes=3),
@@ -480,6 +497,9 @@ RECIPES: dict[str, Recipe] = {
         "sfx/alerts/objective_failed.ogg", -7.0, alert_objective_failed, 3
     ),
     "alert.unit_lost": Recipe("sfx/alerts/unit_lost.ogg", -16.0, alert_unit_lost, 2),
+    "alert.commander_message": Recipe(
+        "sfx/alerts/commander_message.ogg", -12.0, alert_commander_message, 3
+    ),
     "state.pause": Recipe("sfx/state/pause.ogg", -12.0, state_pause, 1),
     "state.resume": Recipe("sfx/state/resume.ogg", -12.0, state_resume, 1),
     "state.speed_change": Recipe(
