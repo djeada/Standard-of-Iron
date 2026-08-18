@@ -23,6 +23,8 @@ Item {
         return (mission_objectives && mission_objectives[key]) ? mission_objectives[key] : [];
     }
 
+    readonly property var stage_list: (game_ready() && game.mission && game.mission.staged) ? game.mission.stages : objective_list("stages")
+
     anchors.fill: parent
     z: 10
     focus: true
@@ -99,6 +101,7 @@ Item {
                 victoryConditions: root.objective_list("victory_conditions")
                 defeatConditions: root.objective_list("defeat_conditions")
                 optionalObjectives: root.objective_list("optional_objectives")
+                stages: root.stage_list
                 victoryMode: root.mission_objectives && root.mission_objectives.victory_mode ? root.mission_objectives.victory_mode : "any"
             }
 

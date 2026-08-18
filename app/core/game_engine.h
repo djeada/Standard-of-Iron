@@ -45,6 +45,7 @@
 #include "app/viewmodels/economy_view_model.h"
 #include "app/viewmodels/match_setup_view_model.h"
 #include "app/viewmodels/minimap_view_model.h"
+#include "app/viewmodels/mission_view_model.h"
 #include "app/viewmodels/orders_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
 #include "app/viewmodels/production_view_model.h"
@@ -57,6 +58,7 @@
 #include "game/command/replay.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
+#include "game/map/mission_stage_tracker.h"
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
 #include "game/mission/mission_waves.h"
@@ -65,6 +67,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/attack_range.h"
 #include "game/systems/attack_targeting.h"
+#include "game/systems/interaction_targeting.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/save_format.h"
 #include "game/systems/target_focus.h"
@@ -190,6 +193,7 @@ public:
   Q_PROPERTY(QObject* saves READ save_slots_view_model CONSTANT)
   Q_PROPERTY(QObject* placement READ placement_view_model CONSTANT)
   Q_PROPERTY(QObject* waves READ wave_view_model CONSTANT)
+  Q_PROPERTY(QObject* mission READ mission_view_model CONSTANT)
   Q_PROPERTY(QObject* activity READ activity_view_model CONSTANT)
   Q_PROPERTY(QObject* economy READ economy_view_model CONSTANT)
   Q_PROPERTY(QObject* tutorial READ tutorial_view_model CONSTANT)
@@ -251,6 +255,7 @@ public:
   [[nodiscard]] QObject* save_slots_view_model() const;
   [[nodiscard]] QObject* placement_view_model() const;
   [[nodiscard]] QObject* wave_view_model() const;
+  [[nodiscard]] QObject* mission_view_model() const;
   [[nodiscard]] QObject* tutorial_view_model() const;
   [[nodiscard]] QObject* activity_view_model() const;
   [[nodiscard]] QObject* economy_view_model() const;
@@ -316,6 +321,7 @@ private:
   void update_active_runtime_simulation(float dt);
   void sync_selection_flags();
   void sync_attack_targeting();
+  void sync_interaction_targeting(float delta_time);
   void sync_attack_range_rings();
   [[nodiscard]] auto
   attack_sync_context() const -> App::Core::PresentationSync::SelectionAttackContext;
@@ -365,6 +371,10 @@ private:
   void update_mission_waves(float dt);
   [[nodiscard]] auto mission_wave_binding() -> App::Mission::MissionWaveBinding;
   void publish_wave_status();
+  void configure_mission_stages();
+  void publish_mission_stages();
+  void update_mission_stages(float delta_time);
+  void restore_mission_stages(const QJsonObject& stage_state);
   void restore_mission_waves(const QJsonObject& wave_state);
   void update_tutorial(float real_dt);
   void activate_tutorial_if_configured();
@@ -391,6 +401,7 @@ private:
   std::unique_ptr<App::ViewModels::SaveSlotsViewModel> m_save_slots_view_model;
   std::unique_ptr<App::ViewModels::PlacementViewModel> m_placement_view_model;
   std::unique_ptr<App::ViewModels::WaveViewModel> m_wave_view_model;
+  std::unique_ptr<App::ViewModels::MissionViewModel> m_mission_view_model;
   std::unique_ptr<App::ViewModels::ActivityViewModel> m_activity_view_model;
   std::unique_ptr<App::ViewModels::EconomyViewModel> m_economy_view_model;
   std::unique_ptr<Game::Mission::TutorialDirector> m_tutorial_director;
@@ -429,6 +440,9 @@ private:
   std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hover_tracker;
   Game::Systems::AttackTargetingHighlights m_attack_targeting;
+  Game::Systems::InteractionTargetingHighlights m_interaction_targeting;
+  float m_interaction_targeting_accumulator = 0.0F;
+  QVariantMap m_interaction_target_hint;
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   App::Core::OrderMarkerStore m_order_markers;
   std::vector<Game::Systems::TargetFocusMarker> m_target_focus;
@@ -485,6 +499,8 @@ private:
   QString m_screenshot_target_slot;
   QString m_save_progress_slot;
   QTimer m_autosave_timer;
+  Game::Mission::MissionStageTracker m_mission_stage_tracker;
+  float m_mission_stage_poll_accumulator = 0.0F;
   App::Mission::MissionWaveRuntime m_mission_waves;
   App::Mission::TutorialFrameNotes m_tutorial_notes;
   float m_tutorial_observe_accumulator = 0.0F;

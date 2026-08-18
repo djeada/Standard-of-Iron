@@ -180,6 +180,47 @@
       "description": "Seal the road. Let no scout cross the Ticino alive."
     }
   ],
+  "stages": [
+    {
+      "id": "take_consular_town",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 1,
+      "title": "Take the consular town",
+      "description": "Hold the gate yard of Scipio's forward town.",
+      "hint": "Cavalry reaches it first; hold the yard until the standard changes.",
+      "target": {
+        "x": 430,
+        "z": 300
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "take_reserve_camp",
+      "type": "capture_structures",
+      "structure_types": [
+        "barracks"
+      ],
+      "required_count": 2,
+      "title": "Take the reserve camp",
+      "description": "Seize the second Roman camp on the north-east road.",
+      "hint": "The reserve feeds the consular line; cut it and the line thins.",
+      "target": {
+        "x": 600,
+        "z": 168
+      },
+      "target_radius": 30.0
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill the Roman commanders",
+      "description": "Finish the consular officers on the field.",
+      "hint": "Their troops leave the field with them."
+    }
+  ],
   "events": [
     {
       "trigger": {

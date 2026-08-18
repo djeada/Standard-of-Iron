@@ -202,6 +202,36 @@ TEST_F(CommandControllerTest, AutoGatherCarriesThePreferredResourceThrough) {
   EXPECT_EQ(production->auto_gather_priority, std::string("collect_iron_ore"));
 }
 
+TEST_F(CommandControllerTest, TheGatherPriorityCanBeChangedWithoutStoppingTheOrder) {
+  auto* builder = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(builder, nullptr);
+  builder->add_component<Engine::Core::BuilderProductionComponent>();
+  selection_system->select_unit(builder->get_id());
+
+  ASSERT_TRUE(command_controller->set_auto_gather(true).input_consumed);
+  const auto* production =
+      builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_TRUE(production->auto_gather);
+  EXPECT_TRUE(production->auto_gather_priority.empty());
+
+  EXPECT_TRUE(command_controller->set_auto_gather(true, QStringLiteral("collect_stone"))
+                  .input_consumed);
+  EXPECT_TRUE(production->auto_gather)
+      << "changing which resource to favour must not call the workers off";
+  EXPECT_EQ(production->auto_gather_priority, std::string("collect_stone"));
+
+  EXPECT_TRUE(command_controller->set_auto_gather(false).input_consumed);
+  EXPECT_FALSE(production->auto_gather);
+}
+
+TEST_F(CommandControllerTest, SettingAutoGatherNeedsBuildersLikeTheToggleDoes) {
+  auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  selection_system->select_unit(archer->get_id());
+
+  EXPECT_FALSE(command_controller->set_auto_gather(true).input_consumed);
+}
+
 TEST_F(CommandControllerTest, AutoGatherIgnoresASelectionWithoutBuilders) {
   auto* archer = create_unit(-3.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
   ASSERT_NE(archer, nullptr);

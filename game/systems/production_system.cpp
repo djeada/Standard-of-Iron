@@ -250,14 +250,10 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
     return false;
   }
 
-  const auto refund =
+  grant_resources(
+      site->owner_id,
       construction_cost_info(Game::Units::spawn_typeToString(site->product_type))
-          .resource_costs;
-  for (const auto resource_type : k_all_resource_types) {
-    if (const int amount = refund.get(resource_type); amount > 0) {
-      PlayerResourceRegistry::instance().add(site->owner_id, resource_type, amount);
-    }
-  }
+          .resource_costs);
   world->destroy_entity(site_entity->get_id());
   builder->construction_site_entity_id = 0;
   builder->has_construction_site = false;
@@ -329,10 +325,15 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
   }
+
   auto entities = world->get_entities_with<Engine::Core::ProductionComponent>();
   for (auto* e : entities) {
     auto* prod = e->get_component<Engine::Core::ProductionComponent>();
     if (prod == nullptr) {
+      continue;
+    }
+
+    if (e->has_component<Engine::Core::DismantleSiteComponent>()) {
       continue;
     }
 
@@ -538,6 +539,23 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         }
       }
     }
+    if (builder_prod->product_type == k_builder_product_dismantle) {
+      if (builder_prod->structure_task_entity_id != 0 &&
+          world->get_entity(builder_prod->structure_task_entity_id) != nullptr) {
+        builder_prod->time_remaining = builder_prod->build_time;
+        continue;
+      }
+
+      builder_prod->in_progress = false;
+      builder_prod->time_remaining = 0.0F;
+      builder_prod->construction_complete = true;
+      builder_prod->has_construction_site = false;
+      builder_prod->at_construction_site = false;
+      builder_prod->structure_task_entity_id = 0;
+      clear_builder_task_target(builder_prod, false);
+      continue;
+    }
+
     if (builder_prod->time_remaining <= 0.0F &&
         builder_prod->product_type == k_builder_product_repair) {
       if (apply_structure_repair_tick(world, builder_prod)) {

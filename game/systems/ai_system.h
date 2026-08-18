@@ -5,16 +5,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 
 #include "../core/event_manager.h"
 #include "../core/system.h"
 #include "ai_system/ai_behavior_registry.h"
-#include "ai_system/ai_command_applier.h"
 #include "ai_system/ai_command_filter.h"
-#include "ai_system/ai_executor.h"
-#include "ai_system/ai_reasoner.h"
-#include "ai_system/ai_snapshot_builder.h"
-#include "ai_system/ai_strategy.h"
 #include "ai_system/ai_types.h"
 #include "ai_system/ai_worker.h"
 
@@ -35,7 +31,6 @@ public:
   void shutdown_workers();
 
   void set_update_interval(float interval) { m_update_interval = interval; }
-  float get_update_interval() const { return m_update_interval; }
   [[nodiscard]] auto ai_player_count() const -> std::size_t {
     return m_ai_instances.size();
   }
@@ -49,12 +44,7 @@ public:
     return m_applied_command_count;
   }
 
-  void set_ai_strategy(int player_id,
-                       AI::AIStrategy strategy,
-                       float aggression = 0.5F,
-                       float defense = 0.5F,
-                       float harassment = 0.5F,
-                       const QString& difficulty = {});
+  void set_ai_profile(int player_id, const AI::AIPlayerProfile& profile);
 
 private:
   struct AIInstance {
@@ -66,6 +56,8 @@ private:
 
     bool job_pending = false;
     std::uint64_t job_due_update = 0;
+
+    std::unordered_map<Engine::Core::EntityID, float> unmerged_building_attacks;
   };
 
   static constexpr std::uint64_t k_decision_latency_updates = 6;
@@ -73,10 +65,6 @@ private:
 
   std::vector<AIInstance> m_ai_instances;
 
-  AI::AISnapshotBuilder m_snapshot_builder;
-  AI::AIReasoner m_reasoner;
-  AI::AIExecutor m_executor;
-  AI::AICommandApplier m_applier;
   AI::AICommandFilter m_command_filter;
 
   float m_total_game_time = 0.0F;
@@ -92,6 +80,8 @@ private:
   static void populate_behavior_registry(AI::AIBehaviorRegistry& registry);
 
   void process_results(Engine::Core::World& world);
+
+  static void merge_building_attacks(const AIInstance& ai, AI::AIContext& context);
 
   void on_building_attacked(const Engine::Core::BuildingAttackedEvent& event);
 };

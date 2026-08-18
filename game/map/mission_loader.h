@@ -24,6 +24,7 @@ private:
   static auto parse_wave(const QJsonObject& obj) -> Wave;
   static auto parse_ai_setup(const QJsonObject& obj) -> AISetup;
   static auto parse_condition(const QJsonObject& obj) -> Condition;
+  static auto parse_stage(const QJsonObject& obj) -> MissionStage;
   static auto parse_event_trigger(const QJsonObject& obj) -> EventTrigger;
   static auto parse_event_action(const QJsonObject& obj) -> EventAction;
   static auto parse_game_event(const QJsonObject& obj) -> GameEvent;

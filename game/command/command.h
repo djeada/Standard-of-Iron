@@ -163,6 +163,11 @@ struct RepairStructure {
   Engine::Core::EntityID structure = Engine::Core::NULL_ENTITY;
 };
 
+struct DismantleStructure {
+  std::vector<Engine::Core::EntityID> units;
+  Engine::Core::EntityID structure = Engine::Core::NULL_ENTITY;
+};
+
 struct StartHarvest {
   std::vector<Engine::Core::EntityID> units;
   std::string construction_type;
@@ -190,6 +195,7 @@ using Payload = std::variant<Move,
                              StartHarvest,
                              DeliverCivilians,
                              RepairStructure,
+                             DismantleStructure,
                              PlaceWallPlan,
                              PlaceBuilding>;
 

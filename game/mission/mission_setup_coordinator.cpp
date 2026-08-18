@@ -10,6 +10,7 @@
 #include <array>
 #include <cmath>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -56,6 +57,46 @@ auto is_scenario_controlled_behavior(Game::Mission::UnitBehavior behavior) -> bo
 }
 
 } // namespace
+
+auto mission_position_to_world(const Game::Mission::Position& position,
+                               const Game::Map::MapDefinition* map_def,
+                               const Game::Systems::LevelSnapshot& level) -> QVector3D {
+  float world_x = position.x;
+  float world_z = position.z;
+  if (map_def != nullptr) {
+    if (map_def->coordSystem == Game::Map::CoordSystem::Grid) {
+      const float tile = std::max(0.0001F, map_def->grid.tile_size);
+      world_x = (position.x - (map_def->grid.width * 0.5F - 0.5F)) * tile;
+      world_z = (position.z - (map_def->grid.height * 0.5F - 0.5F)) * tile;
+    }
+  } else {
+    const float tile = std::max(0.0001F, level.tile_size);
+    world_x = (position.x - (level.grid_width * 0.5F - 0.5F)) * tile;
+    world_z = (position.z - (level.grid_height * 0.5F - 0.5F)) * tile;
+  }
+  return {world_x, 0.0F, world_z};
+}
+
+auto make_mission_position_to_world(const Game::Systems::LevelSnapshot& level)
+    -> Game::Mission::MissionPositionToWorld {
+  auto map_def = std::make_shared<Game::Map::MapDefinition>();
+  bool map_loaded = false;
+  if (!level.map_path.isEmpty()) {
+    QString map_error;
+    const QString resolved = Utils::Resources::resolve_resource_path(level.map_path);
+    map_loaded =
+        Game::Map::MapLoader::load_from_json_file(resolved, *map_def, &map_error);
+    if (!map_loaded) {
+      qWarning() << "Mission stages: failed to load map definition for"
+                 << level.map_path << "-" << map_error;
+    }
+  }
+
+  return [map_def, map_loaded, level](const Game::Mission::Position& position) {
+    return mission_position_to_world(
+        position, map_loaded ? map_def.get() : nullptr, level);
+  };
+}
 
 auto MissionSetupCoordinator::apply_mission_setup(
     const MissionSetupApplyContext& ctx) const -> MissionSetupEffects {
@@ -126,19 +167,8 @@ auto MissionSetupCoordinator::apply_mission_setup(
     return nation_registry.default_nation_id();
   };
 
-  auto mission_position_to_world = [&](const Game::Mission::Position& pos) {
-    float world_x = pos.x;
-    float world_z = pos.z;
-    if (map_loaded && map_def.coordSystem == Game::Map::CoordSystem::Grid) {
-      const float tile = std::max(0.0001F, map_def.grid.tile_size);
-      world_x = (pos.x - (map_def.grid.width * 0.5F - 0.5F)) * tile;
-      world_z = (pos.z - (map_def.grid.height * 0.5F - 0.5F)) * tile;
-    } else if (!map_loaded) {
-      const float tile = std::max(0.0001F, ctx.level.tile_size);
-      world_x = (pos.x - (ctx.level.grid_width * 0.5F - 0.5F)) * tile;
-      world_z = (pos.z - (ctx.level.grid_height * 0.5F - 0.5F)) * tile;
-    }
-    return QVector3D(world_x, 0.0F, world_z);
+  auto position_to_world = [&](const Game::Mission::Position& pos) {
+    return mission_position_to_world(pos, map_loaded ? &map_def : nullptr, ctx.level);
   };
 
   auto parse_color = [](const QString& color_name, std::array<float, 3>& out) -> bool {
@@ -226,7 +256,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
       const int count = std::max(1, unit_setup.count);
       const int grid =
           static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
-      const QVector3D base_pos = mission_position_to_world(unit_setup.position);
+      const QVector3D base_pos = position_to_world(unit_setup.position);
       float base_tile_size = ctx.level.tile_size;
       if (map_loaded && map_def.coordSystem == Game::Map::CoordSystem::Grid) {
         base_tile_size = map_def.grid.tile_size;
@@ -291,7 +321,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
           waypoints.reserve(unit_setup.patrol_waypoints.size() + 1U);
           waypoints.emplace_back(pos.x(), pos.z());
           for (const auto& authored_waypoint : unit_setup.patrol_waypoints) {
-            const QVector3D waypoint = mission_position_to_world(authored_waypoint);
+            const QVector3D waypoint = position_to_world(authored_waypoint);
             waypoints.emplace_back(waypoint.x(), waypoint.z());
           }
 
@@ -359,7 +389,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
             continue;
           }
 
-          const QVector3D pos = mission_position_to_world(building_setup.position);
+          const QVector3D pos = position_to_world(building_setup.position);
 
           Game::Units::SpawnParams sp;
           sp.position = pos;
@@ -452,19 +482,20 @@ auto MissionSetupCoordinator::apply_mission_setup(
 
     int ai_id = 2;
     for (const auto& ai_setup : mission.ai_setups) {
-      Game::Systems::AI::AIStrategy strategy = Game::Systems::AI::AIStrategy::Defensive;
-
+      Game::Systems::AI::AIPlayerProfile profile;
+      profile.strategy = Game::Systems::AI::AIStrategy::Defensive;
       if (ai_setup.strategy.has_value()) {
-        strategy = Game::Systems::AI::AIStrategyFactory::parse_strategy(
+        profile.strategy = Game::Systems::AI::AIStrategyFactory::parse_strategy(
             ai_setup.strategy.value());
       }
+      profile.posture = Game::Systems::AI::AIStrategyFactory::parse_posture(
+          ai_setup.posture.value_or(QString()), Game::Systems::AI::AIPosture::Garrison);
+      profile.personality.aggression = ai_setup.personality.aggression;
+      profile.personality.defense = ai_setup.personality.defense;
+      profile.personality.harassment = ai_setup.personality.harassment;
+      profile.difficulty = ai_setup.difficulty;
 
-      ai_system->set_ai_strategy(ai_id,
-                                 strategy,
-                                 ai_setup.personality.aggression,
-                                 ai_setup.personality.defense,
-                                 ai_setup.personality.harassment,
-                                 ai_setup.difficulty);
+      ai_system->set_ai_profile(ai_id, profile);
       ai_id++;
     }
   }
@@ -501,11 +532,13 @@ void apply_skirmish_ai_strategies(Engine::Core::World& world,
       continue;
     }
 
-    ai_system->set_ai_strategy(owner_id,
-                               Game::Systems::AI::AIStrategy::Expansionist,
-                               k_skirmish_aggression,
-                               k_skirmish_defense,
-                               k_skirmish_harassment);
+    Game::Systems::AI::AIPlayerProfile profile;
+    profile.strategy = Game::Systems::AI::AIStrategy::Expansionist;
+    profile.posture = Game::Systems::AI::AIPosture::Field;
+    profile.personality.aggression = k_skirmish_aggression;
+    profile.personality.defense = k_skirmish_defense;
+    profile.personality.harassment = k_skirmish_harassment;
+    ai_system->set_ai_profile(owner_id, profile);
   }
 }
 

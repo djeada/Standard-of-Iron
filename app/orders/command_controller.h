@@ -73,6 +73,9 @@ public:
 
   auto
   on_auto_gather_command(const QString& priority_product_type = {}) -> CommandResult;
+  [[nodiscard]] auto
+  set_auto_gather(bool active,
+                  const QString& priority_product_type = {}) -> CommandResult;
   auto on_run_command() -> CommandResult;
   void enable_run_mode_for_selected();
   void disable_run_mode_for_selected();
@@ -93,6 +96,12 @@ public:
                                int viewport_height,
                                void* camera,
                                int local_owner_id) -> CommandResult;
+  auto on_builder_dismantle_click(qreal sx,
+                                  qreal sy,
+                                  int viewport_width,
+                                  int viewport_height,
+                                  void* camera,
+                                  int local_owner_id) -> CommandResult;
   auto on_patrol_click(qreal sx,
                        qreal sy,
                        int viewport_width,
@@ -142,6 +151,10 @@ signals:
   void formation_preview_changed();
 
 private:
+  auto issue_auto_gather(const std::vector<Engine::Core::EntityID>& builders,
+                         bool active,
+                         const QString& priority_product_type) -> CommandResult;
+
   Engine::Core::World* m_world;
   Game::Systems::SelectionSystem* m_selection_system;
   Game::Systems::PickingService* m_picking_service;

@@ -26,6 +26,33 @@ struct CatalogGuard {
   ~CatalogGuard() { Game::Systems::reset_construction_catalog(); }
 };
 
+TEST(ConstructionCostCatalogTest, TheShippedCatalogDrivesTheDismantleRules) {
+  CatalogGuard guard;
+  const auto root = repo_root();
+  ASSERT_FALSE(root.empty()) << "run from the repo or the build tree";
+  const auto path = QString::fromStdString(
+      (root / "assets" / "data" / "construction" / "catalog.json").string());
+  ASSERT_TRUE(Game::Systems::load_construction_catalog(path));
+
+  EXPECT_FALSE(Game::Systems::dismantle_info("barracks").allowed)
+      << "the seat of a force must stay protected";
+  EXPECT_TRUE(Game::Systems::dismantle_info("defense_tower").allowed);
+
+  const auto cost = Game::Systems::construction_cost_info("home").resource_costs;
+  const auto refund = Game::Systems::dismantle_refund("home");
+  EXPECT_GT(refund.get(Game::Systems::ResourceType::Wood), 0);
+  for (const auto resource_type : Game::Systems::k_all_resource_types) {
+    EXPECT_LE(refund.get(resource_type), cost.get(resource_type));
+  }
+
+  EXPECT_TRUE(Game::Systems::dismantle_refund("barracks").empty())
+      << "a building that cannot be taken down pays nothing";
+
+  EXPECT_LT(Game::Systems::dismantle_duration("defense_tower"),
+            Game::Systems::construction_build_time("defense_tower"))
+      << "taking a building down should be quicker than raising it";
+}
+
 TEST(ConstructionCostCatalogTest, ShippedCatalogLoadsAndAgreesWithTheWallConstants) {
   CatalogGuard guard;
   const auto root = repo_root();

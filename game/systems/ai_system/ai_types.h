@@ -32,6 +32,11 @@ enum class AIStrategy {
   SepulcherDefense
 };
 
+enum class AIPosture {
+  Field,
+  Garrison
+};
+
 enum class AIState {
   Idle,
   Gathering,
@@ -170,6 +175,7 @@ struct AIStrategyConfig {
   };
 
   AIStrategy strategy = AIStrategy::Balanced;
+  AIPosture posture = AIPosture::Field;
   PersonalityInputs personality;
   DifficultyTuning difficulty;
 
@@ -191,7 +197,7 @@ struct AIStrategyConfig {
   int proactive_attack_size = 4;
   int reserve_units = 0;
   int harass_units = 0;
-  int max_chase_units = 0;
+  int max_local_responders = 0;
   bool full_recall_on_base_threat = false;
   int desired_outpost_barracks_count = 0;
   int outpost_home_target = 0;
@@ -201,7 +207,14 @@ struct AIStrategyConfig {
   float scouting_distance = 40.0F;
   float reserve_hold_radius = 8.0F;
   float expansion_site_distance = 28.0F;
-  float chase_radius = 0.0F;
+  float local_response_radius = 0.0F;
+};
+
+struct AIPlayerProfile {
+  AIStrategy strategy = AIStrategy::Balanced;
+  AIPosture posture = AIPosture::Field;
+  AIStrategyConfig::PersonalityInputs personality;
+  QString difficulty;
 };
 
 struct AIBase {
@@ -226,8 +239,6 @@ struct AIBase {
   int nearby_threat_count = 0;
   bool under_threat = false;
   float last_threat_time = -1000.0F;
-
-  bool is_planned = false;
 };
 
 struct ForwardBasePlan {
@@ -256,14 +267,12 @@ struct AIContext {
 
   AIStrategyConfig strategy_config;
 
-  std::vector<Engine::Core::EntityID> military_units;
   std::vector<Engine::Core::EntityID> buildings;
   std::vector<Engine::Core::EntityID> commander_ids;
   Engine::Core::EntityID primary_barracks = 0;
 
   float rally_x = 0.0F;
   float rally_z = 0.0F;
-  int target_priority = 0;
 
   int total_units = 0;
   int idle_units = 0;
@@ -271,7 +280,6 @@ struct AIContext {
   float average_health = 1.0F;
   bool barracks_under_threat = false;
   int nearby_threat_count = 0;
-  float closest_threat_distance = 0.0F;
 
   float base_pos_x = 0.0F;
   float base_pos_y = 0.0F;
@@ -304,9 +312,7 @@ struct AIContext {
   int damaged_units_count = 0;
 
   int visible_enemy_count = 0;
-  int enemy_buildings_count = 0;
   int neutral_barracks_count = 0;
-  float average_enemy_distance = 0.0F;
 
   int home_count = 0;
   int defense_tower_count = 0;
@@ -347,18 +353,7 @@ struct AIContext {
 
   int consecutive_no_progress_cycles = 0;
   float last_meaningful_action_time = 0.0F;
-  int last_total_units = 0;
   float max_state_duration = 60.0F;
-
-  struct DebugInfo {
-    int total_decisions_made = 0;
-    int total_commands_issued = 0;
-    int state_transitions = 0;
-    int deadlock_recoveries = 0;
-    float last_update_time = 0.0F;
-    float total_cpu_time = 0.0F;
-  };
-  DebugInfo debug_info;
 };
 
 struct AICommand {

@@ -189,6 +189,9 @@
 
 namespace {
 
+constexpr float k_mission_stage_poll_seconds = 0.25F;
+constexpr float k_interaction_targeting_interval = 0.1F;
+
 auto marketplace_trade_resource_from_key(QStringView key)
     -> std::optional<Game::Systems::ResourceType> {
   if (key == QLatin1String("wood")) {
@@ -615,6 +618,7 @@ void GameEngine::update(float dt) {
   }
 
   update_mission_waves(dt * simulation_time_scale);
+  update_mission_stages(dt * simulation_time_scale);
 
   RuntimeFrameState frame_state{
       .local_owner_id = m_runtime.local_owner_id,
@@ -651,6 +655,7 @@ void GameEngine::update(float dt) {
   sync_selected_player_state();
   sync_economy_state();
   sync_attack_targeting();
+  sync_interaction_targeting(dt);
   sync_attack_range_rings();
   sync_focus_targets();
   sync_target_focus_markers();
@@ -711,7 +716,9 @@ void GameEngine::render(int pixel_width, int pixel_height) {
        .attack_targeting = &m_attack_targeting,
        .attack_range_rings = &m_attack_range_rings,
        .order_markers = &m_order_markers.markers(),
-       .target_focus = &m_target_focus},
+       .target_focus = &m_target_focus,
+       .interaction_targeting = &m_interaction_targeting,
+       .objective_marker = m_mission_stage_tracker.active_target()},
       [this]() { m_commander_view_model->render_effects(); });
   m_renderer->end_frame();
 
@@ -981,6 +988,91 @@ void GameEngine::sync_attack_targeting() {
       m_activity_view_model.get(),
       [view_model = m_activity_view_model.get(), hint = result.hint]() {
         view_model->set_attack_target_hint(hint);
+      },
+      Qt::QueuedConnection);
+}
+
+void GameEngine::sync_interaction_targeting(float delta_time) {
+  m_interaction_targeting_accumulator += delta_time;
+  if (m_interaction_targeting_accumulator < k_interaction_targeting_interval) {
+    return;
+  }
+  m_interaction_targeting_accumulator = 0.0F;
+
+  Game::Systems::InteractionTargetingHighlights highlights;
+  QVariantMap hint;
+  hint[QStringLiteral("action")] = QStringLiteral("none");
+
+  if ((m_world != nullptr) && !m_level.is_spectator_mode) {
+    std::vector<Engine::Core::EntityID> selection;
+    if (auto* selection_system =
+            m_world->get_system<Game::Systems::SelectionSystem>()) {
+      selection = selection_system->get_selected_units();
+    }
+
+    Game::Systems::InteractionTargetingRequest request;
+    request.world = m_world;
+    request.local_owner_id = m_runtime.local_owner_id;
+
+    for (const auto id : selection) {
+      auto* entity = m_world->get_entity(id);
+      const auto* unit = entity != nullptr
+                             ? entity->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (unit == nullptr || unit->owner_id != m_runtime.local_owner_id ||
+          unit->health <= 0) {
+        continue;
+      }
+      if (unit->spawn_type == Game::Units::SpawnType::Builder) {
+        request.has_builders = true;
+      } else if (unit->spawn_type == Game::Units::SpawnType::Civilian) {
+        request.has_civilians = true;
+      }
+    }
+
+    if (request.has_builders || request.has_civilians) {
+      auto& visibility = Game::Map::VisibilityService::instance();
+      const auto snapshot =
+          visibility.is_initialized() ? visibility.snapshot_ptr() : nullptr;
+
+      request.hovered_entity_id =
+          m_hover_tracker ? m_hover_tracker->get_last_hovered_entity() : 0;
+      if (m_camera != nullptr) {
+        const QVector3D anchor = m_camera->get_target();
+        request.anchor_x = anchor.x();
+        request.anchor_z = anchor.z();
+      }
+      request.max_distance = Game::Systems::k_interaction_highlight_max_distance;
+      request.max_markers = Game::Systems::k_interaction_highlight_max_markers;
+      request.visibility = snapshot.get();
+
+      QVector3D ground;
+      if (screen_to_ground(QPointF(m_runtime.last_cursor_x, m_runtime.last_cursor_y),
+                           ground)) {
+        request.has_hovered_ground = true;
+        request.hovered_ground_x = ground.x();
+        request.hovered_ground_z = ground.z();
+      }
+
+      highlights = Game::Systems::collect_interaction_target_highlights(request);
+
+      const auto action_key =
+          Game::Systems::interaction_action_key(highlights.hovered_action);
+      hint[QStringLiteral("action")] = QString::fromLatin1(
+          action_key.data(), static_cast<qsizetype>(action_key.size()));
+    }
+  }
+
+  m_interaction_targeting = std::move(highlights);
+
+  if ((m_activity_view_model == nullptr) || (m_interaction_target_hint == hint)) {
+    return;
+  }
+  m_interaction_target_hint = hint;
+  QMetaObject::invokeMethod(
+      m_activity_view_model.get(),
+      [view_model = m_activity_view_model.get(), hint]() {
+        view_model->set_interaction_target_hint(hint);
       },
       Qt::QueuedConnection);
 }
@@ -1304,6 +1396,7 @@ void GameEngine::apply_mission_setup() {
   }
   m_mission_waves.bind_after_setup(
       mission_wave_binding(), std::move(waves), std::move(events));
+  configure_mission_stages();
   if (effects.rebuild_entity_cache) {
     GameStateRestorer::rebuild_entity_cache(
         m_world, m_entity_cache, m_runtime.local_owner_id);
@@ -1423,8 +1516,16 @@ void GameEngine::reset_mission_runtime_state() {
   m_tutorial_observe_accumulator = 0.0F;
   m_runtime.minimap_unit_update_accumulator = 0.0F;
   m_mission_waves.reset();
+  m_mission_stage_tracker.clear();
+  m_mission_stage_poll_accumulator = 0.0F;
+  m_interaction_targeting = {};
+  m_interaction_targeting_accumulator = 0.0F;
+  m_interaction_target_hint.clear();
   if (m_wave_view_model) {
     m_wave_view_model->clear();
+  }
+  if (m_mission_view_model) {
+    m_mission_view_model->clear();
   }
   Game::Systems::PlayerResourceRegistry::instance().clear();
   sync_selected_player_state();
@@ -1471,6 +1572,7 @@ void GameEngine::update_mission_waves(float dt) {
 
 void GameEngine::restore_mission_waves(const QJsonObject& wave_state) {
   m_mission_waves.restore(mission_wave_binding(), wave_state);
+  configure_mission_stages();
   publish_wave_status();
 }
 
@@ -1480,6 +1582,106 @@ auto GameEngine::mission_wave_binding() -> App::Mission::MissionWaveBinding {
           .campaign = m_campaign_manager.get(),
           .victory_service = m_victory_service.get(),
           .local_owner_id = m_runtime.local_owner_id};
+}
+
+void GameEngine::configure_mission_stages() {
+  m_mission_stage_tracker.clear();
+  m_mission_stage_poll_accumulator = 0.0F;
+
+  if (m_campaign_manager == nullptr ||
+      !m_campaign_manager->current_mission_definition().has_value()) {
+    publish_mission_stages();
+    return;
+  }
+
+  const auto& mission = *m_campaign_manager->current_mission_definition();
+  m_mission_stage_tracker.configure(
+      mission,
+      m_runtime.local_owner_id,
+      Game::Mission::make_mission_position_to_world(m_level));
+
+  if (m_session && m_mission_stage_tracker.has_stages()) {
+    m_mission_stage_tracker.update(
+        *m_session,
+        {.elapsed_seconds = m_mission_waves.elapsed(),
+         .cleared_wave_count = m_mission_waves.director().cleared_wave_count()});
+  }
+  publish_mission_stages();
+}
+
+void GameEngine::restore_mission_stages(const QJsonObject& stage_state) {
+  m_mission_stage_tracker.restore(stage_state);
+  publish_mission_stages();
+}
+
+void GameEngine::update_mission_stages(float delta_time) {
+  if (!m_mission_stage_tracker.has_stages() || !m_session) {
+    return;
+  }
+
+  m_mission_stage_poll_accumulator += delta_time;
+  if (m_mission_stage_poll_accumulator < k_mission_stage_poll_seconds) {
+    return;
+  }
+  m_mission_stage_poll_accumulator = 0.0F;
+
+  const bool changed = m_mission_stage_tracker.update(
+      *m_session,
+      {.elapsed_seconds = m_mission_waves.elapsed(),
+       .cleared_wave_count = m_mission_waves.director().cleared_wave_count()});
+  if (changed) {
+    publish_mission_stages();
+  }
+}
+
+void GameEngine::publish_mission_stages() {
+  if (!m_mission_view_model) {
+    return;
+  }
+  if (!m_mission_stage_tracker.has_stages()) {
+    m_mission_view_model->clear();
+    return;
+  }
+
+  const bool has_minimap = m_minimap_manager && m_minimap_manager->has_minimap();
+  const float world_width = has_minimap ? m_minimap_manager->get_world_width() : 0.0F;
+  const float world_height = has_minimap ? m_minimap_manager->get_world_height() : 0.0F;
+
+  QVariantList stages;
+  int index = 0;
+  for (const auto& status : m_mission_stage_tracker.stages()) {
+    QVariantMap entry;
+    entry["id"] = status.id;
+    entry["index"] = index;
+    entry["type"] = status.type;
+    entry["title"] = Game::Util::tr_asset(Game::Util::k_missions_context, status.title);
+    entry["description"] =
+        Game::Util::tr_asset(Game::Util::k_missions_context, status.description);
+    entry["hint"] = Game::Util::tr_asset(Game::Util::k_missions_context, status.hint);
+    entry["progress"] = status.progress;
+    entry["required"] = status.required;
+    entry["complete"] = status.complete;
+    entry["active"] = status.active;
+    entry["has_target"] = status.has_target;
+    if (status.has_target) {
+      entry["world_x"] = status.target.x();
+      entry["world_z"] = status.target.z();
+      if (has_minimap) {
+        const auto [nx, ny] = Game::Map::Minimap::world_to_pixel(status.target.x(),
+                                                                 status.target.z(),
+                                                                 world_width,
+                                                                 world_height,
+                                                                 1.0F,
+                                                                 1.0F);
+        entry["nx"] = std::clamp(nx, 0.0F, 1.0F);
+        entry["ny"] = std::clamp(ny, 0.0F, 1.0F);
+      }
+    }
+    stages.append(entry);
+    ++index;
+  }
+
+  m_mission_view_model->set_stages(stages);
 }
 
 void GameEngine::publish_wave_status() {
@@ -1632,7 +1834,8 @@ void GameEngine::begin_save(const QString& slot_name,
            .kind = kind,
            .play_time_seconds = m_mission_waves.elapsed(),
            .autosave_retention = autosave_retention,
-           .mission_wave_state = m_mission_waves.director().serialize()});
+           .mission_wave_state = m_mission_waves.director().serialize(),
+           .mission_stage_state = m_mission_stage_tracker.serialize()});
   if (!effects.queued) {
     set_error(effects.error);
     return;
@@ -1723,6 +1926,10 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
            .restore_mission_waves =
                [this](const QJsonObject& wave_state) {
                  restore_mission_waves(wave_state);
+               },
+           .restore_mission_stages =
+               [this](const QJsonObject& stage_state) {
+                 restore_mission_stages(stage_state);
                }});
   if (!effects.success) {
     set_error(effects.error);
@@ -2296,6 +2503,10 @@ auto GameEngine::placement_view_model() const -> QObject* {
 
 auto GameEngine::wave_view_model() const -> QObject* {
   return m_wave_view_model.get();
+}
+
+auto GameEngine::mission_view_model() const -> QObject* {
+  return m_mission_view_model.get();
 }
 
 auto GameEngine::tutorial_view_model() const -> QObject* {

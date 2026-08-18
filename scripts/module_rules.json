@@ -117,6 +117,8 @@
       "excluded_files": [
         "game/map/mission_loader.cpp",
         "game/map/mission_loader.h",
+        "game/map/mission_stage_tracker.cpp",
+        "game/map/mission_stage_tracker.h",
         "game/map/mission_victory_rules.cpp",
         "game/map/mission_victory_rules.h",
         "game/map/wave_archetype_catalog.cpp",
@@ -383,6 +385,7 @@
       ],
       "files": [
         "game/map/mission_loader",
+        "game/map/mission_stage_tracker",
         "game/map/mission_victory_rules",
         "game/map/wave_archetype_catalog",
         "game/map/map_catalog"

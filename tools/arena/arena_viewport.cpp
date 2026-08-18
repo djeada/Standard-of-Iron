@@ -3901,10 +3901,11 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
         if (!group.ai_controlled) {
           continue;
         }
-        const auto strategy = group.nation_id == Game::Systems::NationID::Carthage
-                                  ? Game::Systems::AI::AIStrategy::Economic
-                                  : Game::Systems::AI::AIStrategy::Defensive;
-        ai_system->set_ai_strategy(group.owner_id, strategy);
+        Game::Systems::AI::AIPlayerProfile profile;
+        profile.strategy = group.nation_id == Game::Systems::NationID::Carthage
+                               ? Game::Systems::AI::AIStrategy::Economic
+                               : Game::Systems::AI::AIStrategy::Defensive;
+        ai_system->set_ai_profile(group.owner_id, profile);
       }
     }
   }

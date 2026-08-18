@@ -510,6 +510,28 @@
       "description": "Between assaults, seize the eastern Roman siege camp."
     }
   ],
+  "stages": [
+    {
+      "id": "break_assaults",
+      "type": "survive_waves",
+      "wave_count": 3,
+      "title": "Break the three assault phases",
+      "description": "Hold the Punic quarter through every consular column.",
+      "hint": "The quarter holds when the last column is dead in the streets."
+    },
+    {
+      "id": "kill_commanders",
+      "type": "eliminate_commanders",
+      "title": "Kill the Roman commanders",
+      "description": "Break the siege camp once the assaults are spent.",
+      "hint": "The siege works stand to the east of the quarter.",
+      "target": {
+        "x": 566,
+        "z": 300
+      },
+      "target_radius": 30.0
+    }
+  ],
   "events": [
     {
       "trigger": {

@@ -649,6 +649,7 @@ add_library(
     app/viewmodels/economy_view_model.cpp
     app/viewmodels/match_setup_view_model.cpp
     app/viewmodels/minimap_view_model.cpp
+    app/viewmodels/mission_view_model.cpp
     app/viewmodels/orders_view_model.cpp
     app/viewmodels/placement_view_model.cpp
     app/viewmodels/production_view_model.cpp
@@ -742,7 +743,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/MapListPanel.qml
             ui/qml/PlayerListItem.qml
             ui/qml/PlayerConfigPanel.qml
-            ui/qml/CampaignMenu.qml
             ui/qml/CampaignScreen.qml
             ui/qml/MissionListItem.qml
             ui/qml/MissionDetailPanel.qml

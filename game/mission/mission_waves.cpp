@@ -392,18 +392,7 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
   }
 
   auto to_world = [&](const Game::Mission::Position& pos) {
-    float world_x = pos.x;
-    float world_z = pos.z;
-    if (map_loaded && map_def.coordSystem == Game::Map::CoordSystem::Grid) {
-      const float tile = std::max(0.0001F, map_def.grid.tile_size);
-      world_x = (pos.x - (map_def.grid.width * 0.5F - 0.5F)) * tile;
-      world_z = (pos.z - (map_def.grid.height * 0.5F - 0.5F)) * tile;
-    } else if (!map_loaded) {
-      const float tile = std::max(0.0001F, ctx.level.tile_size);
-      world_x = (pos.x - (ctx.level.grid_width * 0.5F - 0.5F)) * tile;
-      world_z = (pos.z - (ctx.level.grid_height * 0.5F - 0.5F)) * tile;
-    }
-    return QVector3D(world_x, 0.0F, world_z);
+    return mission_position_to_world(pos, map_loaded ? &map_def : nullptr, ctx.level);
   };
 
   auto& nation_registry = Game::Systems::NationRegistry::instance();

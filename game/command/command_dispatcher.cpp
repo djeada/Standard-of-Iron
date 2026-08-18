@@ -646,6 +646,79 @@ void apply_repair_structure(World& world, int owner_id, const RepairStructure& o
   }
 }
 
+void apply_dismantle_structure(World& world,
+                               int owner_id,
+                               const DismantleStructure& order) {
+  auto* structure = world.get_entity(order.structure);
+  if (structure == nullptr ||
+      !structure->has_component<Engine::Core::BuildingComponent>()) {
+    return;
+  }
+  const auto* structure_unit = structure->get_component<Engine::Core::UnitComponent>();
+  const auto* structure_transform =
+      structure->get_component<Engine::Core::TransformComponent>();
+  if (structure_unit == nullptr || structure_transform == nullptr ||
+      structure_unit->health <= 0 || structure_unit->owner_id != owner_id) {
+    return;
+  }
+
+  const std::string structure_key =
+      Game::Units::spawn_typeToString(structure_unit->spawn_type);
+  if (!Game::Systems::dismantle_info(structure_key).allowed) {
+    return;
+  }
+
+  const QVector3D structure_position(
+      structure_transform->position.x, 0.0F, structure_transform->position.z);
+
+  Move move;
+  move.kind = Game::Systems::MoveOrderKind::ScriptedMove;
+  for (const EntityID id : order.units) {
+    auto [entity, builder] = builder_of(world, id, owner_id);
+    if (builder == nullptr) {
+      continue;
+    }
+    const QVector3D work_position =
+        Game::Systems::CommandService::structure_work_position(
+            worker_position_or(*entity, structure_position),
+            structure_position,
+            structure_key,
+            Game::Systems::CommandService::get_unit_radius(world, id));
+
+    Game::Systems::OrderService::clear_builder_task(entity);
+    Game::Systems::OrderService::clear_builder_gather_order(entity);
+    builder->product_type = std::string(Game::Systems::k_builder_product_dismantle);
+    builder->build_time = Game::Systems::dismantle_duration(structure_key);
+    builder->time_remaining = builder->build_time;
+    builder->structure_task_entity_id = order.structure;
+    builder->has_construction_site = true;
+    builder->construction_site_x = work_position.x();
+    builder->construction_site_z = work_position.z();
+    builder->construction_site_rotation_y = 0.0F;
+    builder->at_construction_site = false;
+    builder->in_progress = false;
+    builder->construction_complete = false;
+    builder->bypass_movement_active = false;
+    builder->clear_fault();
+
+    move.units.push_back(id);
+    move.targets.push_back(work_position);
+  }
+
+  if (move.units.empty()) {
+    return;
+  }
+
+  auto* site = structure->get_component<Engine::Core::DismantleSiteComponent>();
+  if (site == nullptr) {
+    site = structure->add_component<Engine::Core::DismantleSiteComponent>();
+    site->duration = Game::Systems::dismantle_duration(structure_key);
+    site->progress = 0.0F;
+  }
+
+  apply_move(world, move);
+}
+
 void apply_place_wall_plan(World& world, int owner_id, const PlaceWallPlan& order) {
   std::vector<EntityID> crew;
   for (const EntityID id : order.units) {
@@ -721,6 +794,8 @@ void dispatch(World& world, const Command& command) {
           apply_deliver_civilians(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, RepairStructure>) {
           apply_repair_structure(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, DismantleStructure>) {
+          apply_dismantle_structure(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, PlaceWallPlan>) {
           apply_place_wall_plan(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, PlaceBuilding>) {

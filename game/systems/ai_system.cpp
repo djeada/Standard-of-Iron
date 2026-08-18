@@ -8,23 +8,23 @@
 #include <utility>
 
 #include "../core/world.h"
+#include "ai_system/ai_command_applier.h"
+#include "ai_system/ai_snapshot_builder.h"
 #include "ai_system/ai_strategy.h"
 #include "ai_system/behaviors/assault_behavior.h"
 #include "ai_system/behaviors/attack_behavior.h"
 #include "ai_system/behaviors/builder_behavior.h"
-#include "ai_system/behaviors/chase_behavior.h"
 #include "ai_system/behaviors/commander_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
 #include "ai_system/behaviors/harass_behavior.h"
+#include "ai_system/behaviors/local_engagement_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
 #include "core/event_manager.h"
 #include "nation_registry.h"
 #include "owner_registry.h"
-#include "systems/ai_system/ai_command_applier.h"
-#include "systems/ai_system/ai_snapshot_builder.h"
 #include "systems/ai_system/ai_types.h"
 #include "systems/ai_system/ai_worker.h"
 
@@ -82,7 +82,7 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
   registry.register_behavior(std::make_unique<AI::HarassBehavior>());
   registry.register_behavior(std::make_unique<AI::AttackBehavior>());
-  registry.register_behavior(std::make_unique<AI::ChaseBehavior>());
+  registry.register_behavior(std::make_unique<AI::LocalEngagementBehavior>());
   registry.register_behavior(std::make_unique<AI::GatherBehavior>());
 }
 
@@ -121,8 +121,7 @@ void AISystem::initialize_ai_players() {
     instance.context.state = AI::AIState::Idle;
     instance.behavior_registry = std::make_unique<AI::AIBehaviorRegistry>();
     populate_behavior_registry(*instance.behavior_registry);
-    instance.worker = std::make_unique<AI::AIWorker>(
-        m_reasoner, m_executor, *instance.behavior_registry);
+    instance.worker = std::make_unique<AI::AIWorker>(*instance.behavior_registry);
     instance.update_timer =
         initial_ai_update_timer(index, ai_owner_ids.size(), m_update_interval);
     apply_nation_default_strategy(instance.context);
@@ -133,20 +132,10 @@ void AISystem::initialize_ai_players() {
 
 AISystem::~AISystem() = default;
 
-void AISystem::set_ai_strategy(int player_id,
-                               AI::AIStrategy strategy,
-                               float aggression,
-                               float defense,
-                               float harassment,
-                               const QString& difficulty) {
+void AISystem::set_ai_profile(int player_id, const AI::AIPlayerProfile& profile) {
   for (auto& ai : m_ai_instances) {
     if (ai.context.player_id == player_id) {
-      ai.context.strategy_config = AI::AIStrategyFactory::create_config(strategy);
-      AI::AIStrategyFactory::apply_personality(
-          ai.context.strategy_config, aggression, defense, harassment);
-      if (!difficulty.isEmpty()) {
-        AI::AIStrategyFactory::apply_difficulty(ai.context.strategy_config, difficulty);
-      }
+      ai.context.strategy_config = AI::AIStrategyFactory::create_config(profile);
       break;
     }
   }
@@ -189,6 +178,7 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
     job.context = ai.context;
     job.context.nation = nullptr;
     job.delta_time = ai.update_timer;
+    merge_building_attacks(ai, job.context);
 
     if (ai.worker->try_submit(std::move(job))) {
       ai.update_timer = 0.0F;
@@ -215,6 +205,8 @@ void AISystem::process_results(Engine::Core::World& world) {
       auto& result = results.front();
 
       ai.context = result.context;
+      merge_building_attacks(ai, ai.context);
+      ai.unmerged_building_attacks.clear();
 
       auto filtered_commands =
           m_command_filter.filter(result.commands, m_total_game_time);
@@ -230,15 +222,21 @@ void AISystem::process_results(Engine::Core::World& world) {
   }
 }
 
+void AISystem::merge_building_attacks(const AIInstance& ai, AI::AIContext& context) {
+  for (const auto& [building_id, time] : ai.unmerged_building_attacks) {
+    auto& recorded = context.buildings_under_attack[building_id];
+    recorded = std::max(recorded, time);
+    context.last_local_threat_time = std::max(context.last_local_threat_time, time);
+    if (building_id == context.primary_barracks) {
+      context.barracks_under_threat = true;
+    }
+  }
+}
+
 void AISystem::on_building_attacked(const Engine::Core::BuildingAttackedEvent& event) {
   for (auto& ai : m_ai_instances) {
     if (ai.context.player_id == event.owner_id) {
-      ai.context.buildings_under_attack[event.building_id] = m_total_game_time;
-      ai.context.last_local_threat_time = m_total_game_time;
-
-      if (event.building_id == ai.context.primary_barracks) {
-        ai.context.barracks_under_threat = true;
-      }
+      ai.unmerged_building_attacks[event.building_id] = m_total_game_time;
       break;
     }
   }

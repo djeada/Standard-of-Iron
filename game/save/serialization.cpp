@@ -659,6 +659,13 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     entity_obj["wall_construction_site"] = site_obj;
   }
 
+  if (const auto* site = entity->get_component<DismantleSiteComponent>()) {
+    QJsonObject site_obj;
+    site_obj["duration"] = static_cast<double>(site->duration);
+    site_obj["progress"] = static_cast<double>(site->progress);
+    entity_obj["dismantle_site"] = site_obj;
+  }
+
   if (const auto* gate = entity->get_component<GateComponent>()) {
     QJsonObject gate_obj;
     gate_obj["state"] = static_cast<int>(gate->state);
@@ -1553,6 +1560,13 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
             site_obj["product_type"].toString("wall_segment").toStdString())) {
       site->product_type = *product;
     }
+  }
+
+  if (json.contains("dismantle_site")) {
+    const auto site_obj = json["dismantle_site"].toObject();
+    auto* site = entity->add_component<DismantleSiteComponent>();
+    site->duration = static_cast<float>(site_obj["duration"].toDouble(1.0));
+    site->progress = static_cast<float>(site_obj["progress"].toDouble(0.0));
   }
 
   if (json.contains("gate")) {

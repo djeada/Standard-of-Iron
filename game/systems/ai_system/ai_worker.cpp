@@ -15,12 +15,8 @@
 
 namespace Game::Systems::AI {
 
-AIWorker::AIWorker(AIReasoner& reasoner,
-                   AIExecutor& executor,
-                   AIBehaviorRegistry& registry)
-    : m_reasoner(reasoner)
-    , m_executor(executor)
-    , m_registry(registry) {
+AIWorker::AIWorker(AIBehaviorRegistry& registry)
+    : m_registry(registry) {
 
   m_thread = std::thread(&AIWorker::worker_loop, this);
 }
@@ -100,11 +96,10 @@ void AIWorker::worker_loop() {
       AIResult result;
       result.context = job.context;
 
-      Game::Systems::AI::AIReasoner::update_context(job.snapshot, result.context);
-      Game::Systems::AI::AIReasoner::update_state_machine(
-          job.snapshot, result.context, job.delta_time);
-      Game::Systems::AI::AIReasoner::validate_state(result.context);
-      Game::Systems::AI::AIExecutor::run(
+      AIReasoner::update_context(job.snapshot, result.context);
+      AIReasoner::update_state_machine(job.snapshot, result.context, job.delta_time);
+      AIReasoner::validate_state(result.context);
+      AIExecutor::run(
           job.snapshot, result.context, job.delta_time, m_registry, result.commands);
       result.context.nation = nullptr;
 

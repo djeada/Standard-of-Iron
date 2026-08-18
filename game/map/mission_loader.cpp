@@ -171,6 +171,10 @@ auto MissionLoader::parse_ai_setup(const QJsonObject& obj) -> AISetup {
     setup.strategy = obj["strategy"].toString();
   }
 
+  if (obj.contains("posture")) {
+    setup.posture = obj["posture"].toString();
+  }
+
   if (obj.contains("personality")) {
     setup.personality = parse_ai_personality(obj["personality"].toObject());
   }
@@ -238,6 +242,55 @@ auto MissionLoader::parse_condition(const QJsonObject& obj) -> Condition {
   }
 
   return cond;
+}
+
+auto MissionLoader::parse_stage(const QJsonObject& obj) -> MissionStage {
+  MissionStage stage;
+  stage.id = obj["id"].toString();
+  stage.title = obj["title"].toString();
+  stage.description = obj["description"].toString();
+  stage.hint = obj["hint"].toString();
+  stage.type = obj["type"].toString();
+
+  if (obj.contains("structure_types") && obj["structure_types"].isArray()) {
+    const QJsonArray types = obj["structure_types"].toArray();
+    for (const auto& type_val : types) {
+      stage.structure_types.push_back(type_val.toString());
+    }
+  } else if (obj.contains("structure_type")) {
+    stage.structure_types.push_back(obj["structure_type"].toString());
+  }
+
+  stage.required_count = obj["required_count"].toInt(stage.required_count);
+
+  if (obj.contains("duration")) {
+    stage.duration = static_cast<float>(obj["duration"].toDouble());
+  }
+
+  if (obj.contains("wave_count")) {
+    stage.wave_count = obj["wave_count"].toInt();
+  }
+
+  if (obj.contains("resources")) {
+    stage.resources = parse_resources(obj["resources"].toObject());
+  }
+
+  if (obj.contains("target")) {
+    stage.target = parse_position(obj["target"].toObject());
+  }
+
+  if (obj.contains("target_radius")) {
+    stage.target_radius = static_cast<float>(obj["target_radius"].toDouble());
+  }
+
+  if (obj.contains("route") && obj["route"].isArray()) {
+    const QJsonArray route = obj["route"].toArray();
+    for (const auto& point_val : route) {
+      stage.route.push_back(parse_position(point_val.toObject()));
+    }
+  }
+
+  return stage;
 }
 
 auto MissionLoader::parse_event_trigger(const QJsonObject& obj) -> EventTrigger {
@@ -359,6 +412,13 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
     const QJsonArray optional = root["optional_objectives"].toArray();
     for (const auto& cond_val : optional) {
       out_mission.optional_objectives.push_back(parse_condition(cond_val.toObject()));
+    }
+  }
+
+  if (root.contains("stages")) {
+    const QJsonArray stages = root["stages"].toArray();
+    for (const auto& stage_val : stages) {
+      out_mission.stages.push_back(parse_stage(stage_val.toObject()));
     }
   }
 

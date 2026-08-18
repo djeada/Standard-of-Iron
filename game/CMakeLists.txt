@@ -337,6 +337,8 @@ add_library(
     session/session_context.cpp
     session/world_digest.cpp
     systems/default_content.cpp
+    systems/dismantle_system.cpp
+    systems/interaction_targeting.cpp
     systems/structure_placement_service.cpp
     systems/wall_plan_service.cpp
     systems/cleanup_system.cpp
@@ -417,6 +419,7 @@ add_library(
     soi_missions
     STATIC
     map/mission_loader.cpp
+    map/mission_stage_tracker.cpp
     map/mission_victory_rules.cpp
     map/wave_archetype_catalog.cpp
     map/map_catalog.cpp
@@ -474,7 +477,7 @@ add_library(
     systems/ai_system/behaviors/harass_behavior.cpp
     systems/ai_system/behaviors/assault_behavior.cpp
     systems/ai_system/behaviors/attack_behavior.cpp
-    systems/ai_system/behaviors/chase_behavior.cpp
+    systems/ai_system/behaviors/local_engagement_behavior.cpp
     systems/ai_system/behaviors/defend_behavior.cpp
     systems/ai_system/behaviors/retreat_behavior.cpp
     systems/ai_system/behaviors/expand_behavior.cpp

@@ -110,9 +110,11 @@ auto node_is_hidden_by_fog(const Engine::Core::Entity& worker,
 auto rank_nearby_nodes(const Engine::Core::Entity& worker,
                        const Engine::Core::BuilderProductionComponent& builder,
                        float from_x,
-                       float from_z) -> std::vector<Candidate> {
+                       float from_z,
+                       float radius) -> std::vector<Candidate> {
   auto const& terrain = Game::Map::TerrainService::instance();
   std::string_view const priority = builder.auto_gather_priority;
+  float const radius_sq = radius > 0.0F ? radius * radius : 0.0F;
 
   std::vector<Candidate> candidates;
   for (const auto& prop : terrain.world_props()) {
@@ -122,16 +124,21 @@ auto rank_nearby_nodes(const Engine::Core::Entity& worker,
     }
 
     auto const position = terrain.world_prop_world_position(prop);
+    float const dx = position.x() - from_x;
+    float const dz = position.z() - from_z;
+    float const distance_sq = (dx * dx) + (dz * dz);
+    if (radius_sq > 0.0F && distance_sq > radius_sq) {
+      continue;
+    }
+
     if (node_is_hidden_by_fog(worker, position.x(), position.z())) {
       continue;
     }
 
-    float const dx = position.x() - from_x;
-    float const dz = position.z() - from_z;
     candidates.push_back(Candidate{
         .target =
             {.id = prop.id, .type = prop.type, .x = position.x(), .z = position.z()},
-        .distance_sq = (dx * dx) + (dz * dz),
+        .distance_sq = distance_sq,
         .matches_priority =
             !priority.empty() && harvest_product_for(prop.type) == priority});
   }
@@ -213,13 +220,14 @@ void assign_node(Engine::Core::BuilderProductionComponent& builder,
   movement.set_rest_position(work_position.x(), work_position.z());
 }
 
-auto take_next_auto_gather_node(Engine::Core::Entity& worker,
-                                Engine::Core::BuilderProductionComponent& builder,
-                                Engine::Core::TransformComponent& transform,
-                                Engine::Core::MovementComponent& movement) -> bool {
+auto claim_from(Engine::Core::Entity& worker,
+                Engine::Core::BuilderProductionComponent& builder,
+                Engine::Core::TransformComponent& transform,
+                Engine::Core::MovementComponent& movement,
+                float radius) -> bool {
   auto& terrain = Game::Map::TerrainService::instance();
-  auto const candidates =
-      rank_nearby_nodes(worker, builder, transform.position.x, transform.position.z);
+  auto const candidates = rank_nearby_nodes(
+      worker, builder, transform.position.x, transform.position.z, radius);
 
   for (const auto& candidate : candidates) {
     if (!node_is_workable(
@@ -243,6 +251,18 @@ auto take_next_auto_gather_node(Engine::Core::Entity& worker,
   }
 
   return false;
+}
+
+auto take_next_auto_gather_node(Engine::Core::Entity& worker,
+                                Engine::Core::BuilderProductionComponent& builder,
+                                Engine::Core::TransformComponent& transform,
+                                Engine::Core::MovementComponent& movement) -> bool {
+  if (claim_from(
+          worker, builder, transform, movement, GatherLoopSystem::k_search_radius)) {
+    return true;
+  }
+
+  return claim_from(worker, builder, transform, movement, 0.0F);
 }
 
 } // namespace

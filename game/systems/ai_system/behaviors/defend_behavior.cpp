@@ -22,6 +22,8 @@ namespace Game::Systems::AI {
 
 namespace {
 
+constexpr int k_defenders_per_threat = 2;
+
 auto select_defended_base(const AIContext& context) -> const AIBase* {
   const AIBase* best = nullptr;
 
@@ -43,6 +45,18 @@ auto select_defended_base(const AIContext& context) -> const AIBase* {
   return AIBaseManager::main_base(context);
 }
 
+auto has_defensible_ground(const AIContext& context) -> bool {
+  return context.primary_barracks != 0 || context.anchor_is_structural ||
+         !context.bases.empty();
+}
+
+auto active_threat_count(const AIContext& context, const AIBase* defended_base) -> int {
+  const int base_threats = (defended_base != nullptr)
+                               ? defended_base->nearby_threat_count
+                               : context.nearby_threat_count;
+  return base_threats + static_cast<int>(context.buildings_under_attack.size());
+}
+
 } // namespace
 
 void DefendBehavior::execute(const AISnapshot& snapshot,
@@ -58,8 +72,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
   }
   m_defend_timer = 0.0F;
 
-  if (context.primary_barracks == 0 &&
-      (!context.has_base_anchor || !context.anchor_is_structural)) {
+  if (!has_defensible_ground(context)) {
     return;
   }
 
@@ -118,7 +131,6 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
   sort_by_distance(engaged_defenders);
 
   const std::size_t total_available = ready_defenders.size() + engaged_defenders.size();
-  std::size_t desired_count = total_available;
 
   const bool base_is_attacked = context.barracks_under_threat ||
                                 context.any_base_under_threat ||
@@ -126,17 +138,21 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
   const bool full_recall =
       base_is_attacked && context.strategy_config.full_recall_on_base_threat;
 
-  if (base_is_attacked) {
-
+  const auto quiet_defenders = static_cast<std::size_t>(
+      std::max(2.0F, 6.0F * context.strategy_config.defense_modifier));
+  std::size_t desired_count = quiet_defenders;
+  if (full_recall) {
     desired_count = total_available;
-  } else {
-
-    const auto max_defenders = static_cast<std::size_t>(
-        std::max(2.0F, 6.0F * context.strategy_config.defense_modifier));
-    desired_count = std::min<std::size_t>(desired_count, max_defenders);
+  } else if (base_is_attacked) {
+    desired_count = static_cast<std::size_t>(
+        std::max(1, active_threat_count(context, defended_base)) *
+        k_defenders_per_threat);
   }
+  desired_count = std::min(desired_count, total_available);
+  const std::size_t ready_wanted =
+      desired_count - std::min(desired_count, engaged_defenders.size());
 
-  if (ready_defenders.empty()) {
+  if (ready_defenders.empty() || ready_wanted == 0) {
     return;
   }
 
@@ -165,8 +181,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
       selected = ready_defenders;
     }
 
-    const std::size_t ready_count = std::min(desired_count, selected.size());
-    selected.resize(ready_count);
+    selected.resize(std::min(ready_wanted, selected.size()));
     return selected;
   };
 
@@ -175,7 +190,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     return;
   }
 
-  if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
+  if (base_is_attacked) {
 
     std::vector<const ContactSnapshot*> nearby_threats;
     nearby_threats.reserve(snapshot.visible_enemies.size());
@@ -200,15 +215,29 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
 
     if (!nearby_threats.empty()) {
 
-      const auto reserve_ready_count = static_cast<std::size_t>(
-          std::count_if(selected_ready_defenders.begin(),
-                        selected_ready_defenders.end(),
-                        [&](const EntitySnapshot* unit) {
-                          return is_reserved_unit(unit->id, context);
+      const auto nearby_threat_units = static_cast<std::size_t>(
+          std::count_if(nearby_threats.begin(),
+                        nearby_threats.end(),
+                        [](const ContactSnapshot* contact) {
+                          return is_threatening_contact(*contact);
                         }));
-      if ((nearby_threats.size() > reserve_ready_count) &&
-          (selected_ready_defenders.size() < ready_defenders.size())) {
-        selected_ready_defenders = ready_defenders;
+      const std::size_t threat_wanted =
+          nearby_threat_units * k_defenders_per_threat -
+          std::min(nearby_threat_units * k_defenders_per_threat,
+                   engaged_defenders.size());
+      const std::size_t wanted_defenders =
+          full_recall
+              ? ready_defenders.size()
+              : std::min(ready_defenders.size(), std::max(ready_wanted, threat_wanted));
+      for (const auto* unit : ready_defenders) {
+        if (selected_ready_defenders.size() >= wanted_defenders) {
+          break;
+        }
+        if (std::find(selected_ready_defenders.begin(),
+                      selected_ready_defenders.end(),
+                      unit) == selected_ready_defenders.end()) {
+          selected_ready_defenders.push_back(unit);
+        }
       }
 
       auto target_info =
@@ -245,8 +274,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
           return;
         }
       }
-    } else if (context.barracks_under_threat ||
-               !context.buildings_under_attack.empty()) {
+    } else {
 
       const ContactSnapshot* closest_threat = nullptr;
       float closest_dist_sq = std::numeric_limits<float>::max();
@@ -408,8 +436,7 @@ auto DefendBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
   (void)snapshot;
 
-  if (context.primary_barracks == 0 &&
-      (!context.has_base_anchor || !context.anchor_is_structural)) {
+  if (!has_defensible_ground(context)) {
     return false;
   }
 
