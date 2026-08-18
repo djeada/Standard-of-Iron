@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 #include "map_json_keys.h"
 
@@ -24,7 +25,7 @@ auto translated_entrances(const QJsonArray& entrances,
                           float dx,
                           float dz) -> QJsonArray {
   QJsonArray moved;
-  for (const QJsonValue& value : entrances) {
+  for (const QJsonValue value : entrances) {
     if (!value.isObject()) {
       moved.append(value);
       continue;

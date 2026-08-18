@@ -2,6 +2,7 @@
 #include <QVector3D>
 
 #include <gtest/gtest.h>
+#include <initializer_list>
 
 #include "core/component.h"
 #include "core/entity.h"

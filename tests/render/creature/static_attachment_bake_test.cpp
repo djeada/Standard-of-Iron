@@ -30,8 +30,6 @@ using Render::GL::RenderArchetypeLod;
 using Render::GL::RiggedMeshCache;
 using Render::GL::RiggedVertex;
 
-constexpr float k_eps = 1e-4F;
-
 struct OneBoneGraph {
   static constexpr BoneIndex k_bone_a = 0;
   std::array<BoneDef, 1> bones{BoneDef{"A", k_invalid_bone}};
@@ -207,8 +205,6 @@ TEST(StaticAttachmentBake, AttachmentsHashKeysCacheEntries) {
 
 TEST(StaticAttachmentBake, AttachmentsCoexistWithPrimitiveGraph) {
 
-  std::array<BoneDef, 1> bones{BoneDef{"A", k_invalid_bone}};
-  SkeletonTopology topology{std::span<const BoneDef>{bones}, {}};
   std::array<PrimitiveInstance, 1> prims{};
   prims[0].debug_name = "sphere";
   prims[0].shape = PrimitiveShape::Sphere;

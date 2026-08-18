@@ -233,7 +233,7 @@ TEST_F(CampaignContentIntegrationTest, EveryAuthoredSettlementStandsOnGroundItCa
     const QJsonObject root = QJsonDocument::fromJson(source.readAll()).object();
 
     std::map<int, std::vector<QPointF>> authored_by_player;
-    for (const auto& value : root.value(QStringLiteral("structures")).toArray()) {
+    for (const auto value : root.value(QStringLiteral("structures")).toArray()) {
       const QJsonObject entry_obj = value.toObject();
       if (!entry_obj.value(QStringLiteral("authored")).toBool() ||
           !entry_obj.contains(QStringLiteral("x"))) {

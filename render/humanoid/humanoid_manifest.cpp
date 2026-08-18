@@ -1057,40 +1057,6 @@ auto blend_vec(const QVector3D& from, const QVector3D& to, float t) -> QVector3D
   return from * (1.0F - t) + to * t;
 }
 
-auto blend_attachment_frame(const Render::GL::AttachmentFrame& from,
-                            const Render::GL::AttachmentFrame& to,
-                            float t) -> Render::GL::AttachmentFrame {
-  Render::GL::AttachmentFrame blended = from;
-  blended.origin = blend_vec(from.origin, to.origin, t);
-  blended.right = blend_vec(from.right, to.right, t);
-  blended.up = blend_vec(from.up, to.up, t);
-  blended.forward = blend_vec(from.forward, to.forward, t);
-  blended.radius = from.radius * (1.0F - t) + to.radius * t;
-  blended.depth = from.depth * (1.0F - t) + to.depth * t;
-  return blended;
-}
-
-auto blend_body_frames(const Render::GL::BodyFrames& from,
-                       const Render::GL::BodyFrames& to,
-                       float t) -> Render::GL::BodyFrames {
-  Render::GL::BodyFrames blended = from;
-  blended.head = blend_attachment_frame(from.head, to.head, t);
-  blended.torso = blend_attachment_frame(from.torso, to.torso, t);
-  blended.back = blend_attachment_frame(from.back, to.back, t);
-  blended.waist = blend_attachment_frame(from.waist, to.waist, t);
-  blended.shoulder_l = blend_attachment_frame(from.shoulder_l, to.shoulder_l, t);
-  blended.shoulder_r = blend_attachment_frame(from.shoulder_r, to.shoulder_r, t);
-  blended.hand_l = blend_attachment_frame(from.hand_l, to.hand_l, t);
-  blended.hand_r = blend_attachment_frame(from.hand_r, to.hand_r, t);
-  blended.grip_l = blend_attachment_frame(from.grip_l, to.grip_l, t);
-  blended.grip_r = blend_attachment_frame(from.grip_r, to.grip_r, t);
-  blended.foot_l = blend_attachment_frame(from.foot_l, to.foot_l, t);
-  blended.foot_r = blend_attachment_frame(from.foot_r, to.foot_r, t);
-  blended.shin_l = blend_attachment_frame(from.shin_l, to.shin_l, t);
-  blended.shin_r = blend_attachment_frame(from.shin_r, to.shin_r, t);
-  return blended;
-}
-
 auto normalized_or(const QVector3D& value, const QVector3D& fallback) -> QVector3D {
   QVector3D out = value;
   if (out.lengthSquared() <= 1.0e-6F) {

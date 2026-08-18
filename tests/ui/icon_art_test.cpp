@@ -4,6 +4,7 @@
 #include <QRectF>
 #include <QSet>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 
 #include "game/systems/unit_activity.h"

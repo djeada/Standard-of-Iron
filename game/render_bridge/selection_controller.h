@@ -4,6 +4,7 @@
 #include <QString>
 
 #include <functional>
+#include <utility>
 #include <vector>
 
 #include "../core/entity.h"

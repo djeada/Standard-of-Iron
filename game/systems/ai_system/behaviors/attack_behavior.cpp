@@ -141,6 +141,7 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
       QVector3D const scout_center(scout_x, 0.0F, scout_z);
       AIFormationRequest formation_request;
       formation_request.player_id = context.player_id;
+      formation_request.nation = context.nation;
       formation_request.anchor = scout_center;
       formation_request.spacing = context.strategy_config.attack_formation_spacing;
       formation_request.intent = select_ai_intent(snapshot, context, false, false);
@@ -252,6 +253,7 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
           QVector3D const attack_center(attack_pos_x, 0.0F, attack_pos_z);
           AIFormationRequest formation_request;
           formation_request.player_id = context.player_id;
+          formation_request.nation = context.nation;
           formation_request.anchor = attack_center;
           formation_request.spacing = context.strategy_config.attack_formation_spacing;
           formation_request.intent = select_ai_intent(snapshot, context, false, false);
@@ -359,6 +361,7 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
     QVector3D const attack_center(target_snapshot->pos_x, 0.0F, target_snapshot->pos_z);
     AIFormationRequest formation_request;
     formation_request.player_id = context.player_id;
+    formation_request.nation = context.nation;
     formation_request.anchor = attack_center;
     formation_request.spacing = context.strategy_config.attack_formation_spacing;
     formation_request.intent = select_ai_intent(snapshot, context, false, true);

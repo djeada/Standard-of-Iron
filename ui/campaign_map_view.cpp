@@ -792,7 +792,7 @@ void main() {
     std::vector<LineSpan> spans;
     int cursor = 0;
 
-    for (const auto& line_val : lines) {
+    for (const auto line_val : lines) {
       const QJsonArray line = line_val.toArray();
       if (line.isEmpty()) {
         continue;
@@ -800,7 +800,7 @@ void main() {
 
       const int start = cursor;
       int count = 0;
-      for (const auto& pt_val : line) {
+      for (const auto pt_val : line) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -863,7 +863,7 @@ void main() {
     std::vector<ProvinceSpan> spans;
     int cursor = 0;
 
-    for (const auto& prov_val : provinces) {
+    for (const auto prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
       const QString province_id = prov.value("id").toString();
       const QJsonArray tri = prov.value("triangles").toArray();
@@ -873,7 +873,7 @@ void main() {
 
       const int start = cursor;
       int count = 0;
-      for (const auto& pt_val : tri) {
+      for (const auto pt_val : tri) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -943,7 +943,7 @@ void main() {
     std::vector<LineSpan> spans;
     int cursor = 0;
 
-    for (const auto& line_val : lines) {
+    for (const auto line_val : lines) {
       const QJsonArray line = line_val.toArray();
       if (line.isEmpty()) {
         continue;
@@ -951,7 +951,7 @@ void main() {
 
       const int start = cursor;
       int count = 0;
-      for (const auto& pt_val : line) {
+      for (const auto pt_val : line) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -1006,7 +1006,7 @@ void main() {
     }
 
     const QJsonArray lines = doc.object().value("lines").toArray();
-    for (const auto& line_val : lines) {
+    for (const auto line_val : lines) {
       const QJsonArray line = line_val.toArray();
       if (line.isEmpty()) {
         continue;
@@ -1014,7 +1014,7 @@ void main() {
 
       std::vector<QVector2D> raw_points;
       raw_points.reserve(static_cast<size_t>(line.size()));
-      for (const auto& pt_val : line) {
+      for (const auto pt_val : line) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
@@ -1056,11 +1056,11 @@ void main() {
     }
 
     const QJsonArray provinces = doc.object().value("provinces").toArray();
-    for (const auto& prov_val : provinces) {
+    for (const auto prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
       const QJsonArray cities = prov.value("cities").toArray();
 
-      for (const auto& city_val : cities) {
+      for (const auto city_val : cities) {
         const QJsonObject city = city_val.toObject();
         const QJsonArray uv = city.value("uv").toArray();
         if (uv.size() < 2) {
@@ -1527,7 +1527,7 @@ void main() {
     }
 
     const QJsonArray provinces = doc.object().value("provinces").toArray();
-    for (const auto& prov_val : provinces) {
+    for (const auto prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
       const QString name = prov.value("name").toString();
       const QJsonArray label_uv = prov.value("label_uv").toArray();
@@ -2486,7 +2486,7 @@ void CampaignMapView::load_provinces_for_hit_test() {
   }
 
   const QJsonArray provinces = doc.object().value("provinces").toArray();
-  for (const auto& prov_val : provinces) {
+  for (const auto prov_val : provinces) {
     const QJsonObject prov = prov_val.toObject();
     const QJsonArray tri = prov.value("triangles").toArray();
     if (tri.isEmpty()) {
@@ -2499,7 +2499,7 @@ void CampaignMapView::load_provinces_for_hit_test() {
     province.owner = prov.value("owner").toString();
     province.triangles.reserve(static_cast<size_t>(tri.size()));
 
-    for (const auto& pt_val : tri) {
+    for (const auto pt_val : tri) {
       const QJsonArray pt = pt_val.toArray();
       if (pt.size() < 2) {
         continue;
@@ -2566,7 +2566,7 @@ void CampaignMapView::load_province_labels() {
   }
 
   const QJsonArray provinces = doc.object().value("provinces").toArray();
-  for (const auto& prov_val : provinces) {
+  for (const auto prov_val : provinces) {
     const QJsonObject prov = prov_val.toObject();
     QVariantMap entry;
     const QString province_name = prov.value("name").toString();
@@ -2589,7 +2589,7 @@ void CampaignMapView::load_province_labels() {
     const QJsonArray cities = prov.value("cities").toArray();
     QVariantList city_list;
     city_list.reserve(cities.size());
-    for (const auto& city_val : cities) {
+    for (const auto city_val : cities) {
       const QJsonObject city = city_val.toObject();
       const QString name = city.value("name").toString();
       const QJsonArray uv = city.value("uv").toArray();
@@ -2859,12 +2859,12 @@ void CampaignMapView::load_hannibal_paths() {
   }
 
   const QJsonArray lines = doc.object().value("lines").toArray();
-  for (const auto& line_val : lines) {
+  for (const auto line_val : lines) {
     const QJsonArray line = line_val.toArray();
     std::vector<QVector2D> path;
     path.reserve(static_cast<size_t>(line.size()));
 
-    for (const auto& pt_val : line) {
+    for (const auto pt_val : line) {
       const QJsonArray pt = pt_val.toArray();
       if (pt.size() < 2) {
         continue;

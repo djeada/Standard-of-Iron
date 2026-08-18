@@ -192,53 +192,6 @@ namespace {
 constexpr float k_mission_stage_poll_seconds = 0.25F;
 constexpr float k_interaction_targeting_interval = 0.1F;
 
-auto marketplace_trade_resource_from_key(QStringView key)
-    -> std::optional<Game::Systems::ResourceType> {
-  if (key == QLatin1String("wood")) {
-    return Game::Systems::ResourceType::Wood;
-  }
-  if (key == QLatin1String("stone")) {
-    return Game::Systems::ResourceType::Stone;
-  }
-  if (key == QLatin1String("iron")) {
-    return Game::Systems::ResourceType::Iron;
-  }
-  return std::nullopt;
-}
-
-auto marketplace_trade_resource_label(QStringView key) -> QString {
-  if (key == QLatin1String("wood")) {
-    return QCoreApplication::translate("GameEngine", "wood");
-  }
-  if (key == QLatin1String("stone")) {
-    return QCoreApplication::translate("GameEngine", "stone");
-  }
-  if (key == QLatin1String("iron")) {
-    return QCoreApplication::translate("GameEngine", "iron");
-  }
-  return key.toString();
-}
-
-auto build_available_commander_entry(const Game::Units::CommanderDefinition& definition,
-                                     bool is_default) -> QVariantMap {
-  QVariantMap entry;
-  entry["id"] = QString::fromStdString(definition.id);
-  entry["troop"] =
-      QString::fromStdString(Game::Units::troop_typeToString(definition.troop_type));
-  entry["display_name"] =
-      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.display_name);
-  entry["battlefield_role"] = Game::Util::tr_asset(Game::Util::k_commanders_context,
-                                                   definition.battlefield_role);
-  entry["bonus_summary"] =
-      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.bonus_summary);
-  entry["passive_aura"] =
-      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.passive_aura);
-  entry["rally_ability"] =
-      Game::Util::tr_asset(Game::Util::k_commanders_context, definition.rally_ability);
-  entry["is_default"] = is_default;
-  return entry;
-}
-
 auto build_resource_map(int owner_id) -> QVariantMap {
   QVariantMap resources;
   Game::Systems::ResourceAmounts const amounts =

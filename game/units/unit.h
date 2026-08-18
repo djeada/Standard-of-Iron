@@ -15,11 +15,11 @@ namespace Engine::Core {
 class World;
 class Entity;
 using EntityID = std::uint64_t;
-struct TransformComponent;
-struct RenderableComponent;
-struct UnitComponent;
-struct MovementComponent;
-struct AttackComponent;
+class TransformComponent;
+class RenderableComponent;
+class UnitComponent;
+class MovementComponent;
+class AttackComponent;
 } // namespace Engine::Core
 
 namespace Game::Units {

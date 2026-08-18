@@ -2,6 +2,7 @@
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
+#include <limits>
 
 #include "app/core/user_settings.h"
 #include "game/accessibility/motion_settings.h"

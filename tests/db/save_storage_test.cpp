@@ -8,6 +8,7 @@
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
+#include <memory>
 #include <numbers>
 
 #include "systems/save_format.h"

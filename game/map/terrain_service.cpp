@@ -7,6 +7,7 @@
 #include <cmath>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "../core/ambient_session.h"

@@ -1,5 +1,7 @@
 #include "instance_coalescer.h"
 
+#include <utility>
+
 #include "render/draw_commands.h"
 
 namespace Render::Pipeline {

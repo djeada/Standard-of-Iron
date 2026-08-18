@@ -12,6 +12,8 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 
+#include <utility>
+
 #include "hill_projection_model.h"
 #include "hill_projection_widget.h"
 #include "map_json_keys.h"

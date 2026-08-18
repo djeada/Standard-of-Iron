@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "game/map/render_visibility_rules.h"

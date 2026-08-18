@@ -989,8 +989,6 @@ TEST_F(HumanoidPoseControllerTest, KneelWithDepthMultiplierLowersTorso) {
 }
 
 TEST_F(HumanoidPoseControllerTest, KneelEntryProgressPartialKneel) {
-  using HP = HumanProportions;
-
   float const full_kneel_depth = 1.0F;
 
   HumanoidPose full_pose = pose;
@@ -1011,8 +1009,6 @@ TEST_F(HumanoidPoseControllerTest, KneelEntryProgressPartialKneel) {
 }
 
 TEST_F(HumanoidPoseControllerTest, KneelExitProgressReturnsTowardsStanding) {
-  using HP = HumanProportions;
-
   float const kneel_depth = 1.0F;
   float const standing_pelvis_y = pose.pelvis_pos.y();
 

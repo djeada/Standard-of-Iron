@@ -192,6 +192,9 @@ void reset_humanoid_animation_state(
   case Game::Systems::CombatActions::CombatActionId::RtsBowShot:
   case Game::Systems::CombatActions::CombatActionId::RtsElephantStomp:
   case Game::Systems::CombatActions::CombatActionId::None:
+  case Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust:
+  case Game::Systems::CombatActions::CombatActionId::RtsCommanderCut:
+  case Game::Systems::CombatActions::CombatActionId::RtsCommanderShot:
     break;
   case Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead:
     return Animation::SwordAttackAnimation::RpgOverhead;

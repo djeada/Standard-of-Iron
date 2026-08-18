@@ -556,7 +556,6 @@ auto main(int argc, char** argv) -> int {
     auto start_next = std::make_shared<std::function<void()>>();
     *start_next = [state,
                    viewport,
-                   &app,
                    start_next,
                    capture_interval,
                    duration,
@@ -738,7 +737,6 @@ auto main(int argc, char** argv) -> int {
   auto start_next = std::make_shared<std::function<void()>>();
   *start_next = [state,
                  viewport,
-                 &app,
                  start_next,
                  fps,
                  seed,

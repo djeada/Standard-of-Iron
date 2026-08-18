@@ -34,7 +34,6 @@ namespace Game::Systems {
 
 namespace {
 
-constexpr auto k_cut_tree_product_type = k_builder_product_cut_tree;
 constexpr auto k_collect_stone_product_type = k_builder_product_collect_stone;
 constexpr auto k_collect_iron_ore_product_type = k_builder_product_collect_iron_ore;
 
@@ -350,7 +349,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     const auto nation_id = resolve_nation_id(owner_id);
     const auto current_profile =
         TroopProfileService::instance().get_profile(nation_id, prod->product_type);
-    int const individuals_per_unit = current_profile.individuals_per_unit;
     int const production_cost = current_profile.production.cost;
     int const capacity_increment =
         production_count_increment(unit_comp, production_cost);

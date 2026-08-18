@@ -345,9 +345,6 @@ void TerrainRenderer::finish_chunk_section(const TerrainMeshBuild& build,
   const float nh_chunk = (chunk.average_height - min_h) / height_range;
   const float avg_slope =
       (section.stat_count > 0) ? (section.slope_sum / float(section.stat_count)) : 0.0F;
-  const float roughness = (section.stat_count > 0)
-                              ? (section.height_var_sum / float(section.stat_count))
-                              : 0.0F;
   const float avg_curvature =
       (section.curvature_count > 0)
           ? (section.curvature_sum / float(section.curvature_count))
@@ -469,8 +466,6 @@ void TerrainRenderer::emit_terrain_chunk(const TerrainMeshBuild& build,
   const auto& height_data = build.height_data;
   const auto& feature_foot_weight = build.feature_foot_weight;
   const auto& entry_weight = build.entry_weight;
-  const auto& surface_profile = build.surface_profile;
-  const auto& climate_profile = build.climate_profile;
   const auto& sample_height_at = build.sample_height_at;
   const auto& sample_entry_at = build.sample_entry_at;
   const auto& sample_feature_foot_at = build.sample_feature_foot_at;
@@ -479,9 +474,6 @@ void TerrainRenderer::emit_terrain_chunk(const TerrainMeshBuild& build,
   const auto& quad_section = build.quad_section;
   const float half_width = build.half_width;
   const float half_height = build.half_height;
-  const float min_h = build.min_h;
-  const float height_range = build.height_range;
-
   auto expand_bounds = [](SectionData& section, const QVector3D& position) {
     section.bounds_min.setX(std::min(section.bounds_min.x(), position.x()));
     section.bounds_min.setY(std::min(section.bounds_min.y(), position.y()));

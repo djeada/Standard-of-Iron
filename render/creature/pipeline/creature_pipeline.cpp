@@ -969,33 +969,6 @@ void bump_lod_counters(CreatureLOD lod, SubmitStats& stats) {
   }
 }
 
-auto resolve_blob_palette(std::uint32_t species_id,
-                          BpatPlayback playback,
-                          const Render::Creature::Bpat::BpatBlob*& out_blob,
-                          std::uint32_t& out_global_frame) noexcept
-    -> std::span<const QMatrix4x4> {
-  out_blob = nullptr;
-  out_global_frame = 0U;
-  if (playback.clip_id == k_invalid_bpat_clip) {
-    return {};
-  }
-  if (species_id == 0xFFFFFFFFU) {
-    return {};
-  }
-  const auto* blob = Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
-  if (blob == nullptr || playback.clip_id >= blob->clip_count()) {
-    return {};
-  }
-  auto const clip = blob->clip(playback.clip_id);
-  if (clip.frame_count == 0U) {
-    return {};
-  }
-  std::uint32_t const wrapped = playback.frame_in_clip % clip.frame_count;
-  out_global_frame = clip.frame_offset + wrapped;
-  out_blob = blob;
-  return blob->frame_palette_view(out_global_frame);
-}
-
 } // namespace
 
 auto CreaturePipeline::submit_requests(
@@ -1033,7 +1006,6 @@ auto CreaturePipeline::submit_requests(
       return;
     }
 
-    const auto species_kind = handle->archetype->species;
     auto const primary = resolve_request_playback(*handle,
                                                   req.creature_asset_id,
                                                   req.archetype,
@@ -1088,9 +1060,6 @@ auto CreaturePipeline::submit_requests(
     }
     const bool prebaked_lowpoly_required =
         req.lod == CreatureLOD::Minimal && handle->requires_prebaked_minimal_snapshot;
-    bool const has_dynamic_layers =
-        (req.full_body_blend.active() && full_body.valid()) ||
-        (req.upper_body_overlay.active() && overlay.valid());
     if (req.full_body_blend.active() && full_body.valid()) {
       ++stats.full_body_blend_requests;
     }

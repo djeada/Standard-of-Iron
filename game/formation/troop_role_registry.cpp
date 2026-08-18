@@ -1,6 +1,8 @@
 #include "troop_role_registry.h"
 
 #include <algorithm>
+#include <initializer_list>
+#include <utility>
 
 namespace Game::Formation {
 
@@ -153,6 +155,10 @@ auto default_troop_formation_profile(TroopType troop) -> TroopFormationProfile {
     profile.unit_layout = "command_retinue";
     profile.defensive_layout = "command_retinue";
     profile.marching_layout = "command_retinue";
+    break;
+
+  case TroopType::Sheep:
+  case TroopType::Wolf:
     break;
   }
 

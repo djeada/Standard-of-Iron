@@ -858,8 +858,6 @@ auto main(int argc, char* argv[]) -> int {
     }
     if (requested.has_value()) {
       auto& gfx = Render::GraphicsSettings::instance();
-      auto features = gfx.features();
-      features.shader_quality = *requested;
 
       switch (*requested) {
       case Render::ShaderQuality::None:
@@ -879,7 +877,7 @@ auto main(int argc, char* argv[]) -> int {
         break;
       }
 
-      const_cast<Render::GraphicsFeatures&>(gfx.features()).shader_quality = *requested;
+      gfx.set_shader_quality(*requested);
     }
   }
 
@@ -1131,7 +1129,7 @@ auto main(int argc, char* argv[]) -> int {
   QObject::connect(window,
                    &QQuickWindow::sceneGraphInitialized,
                    window,
-                   [window, renderer_self_test, release_self_test, &app]() {
+                   [window, renderer_self_test, release_self_test]() {
                      qInfo() << "Scene graph initialized!";
                      if (auto* renderer_interface = window->rendererInterface()) {
                        const auto api = renderer_interface->graphicsApi();
@@ -1190,15 +1188,14 @@ auto main(int argc, char* argv[]) -> int {
           *renderer_ready = true;
           window->update();
         });
-    QObject::connect(
-        window, &QQuickWindow::frameSwapped, &app, [&app, renderer_ready]() {
-          if (!*renderer_ready) {
-            return;
-          }
-          qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
-                     "frame rendered and presented";
-          QGuiApplication::exit(0);
-        });
+    QObject::connect(window, &QQuickWindow::frameSwapped, &app, [renderer_ready]() {
+      if (!*renderer_ready) {
+        return;
+      }
+      qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
+                 "frame rendered and presented";
+      QGuiApplication::exit(0);
+    });
 
     if (!root_obj->setProperty("game_started", true) ||
         !root_obj->setProperty("menu_visible", false)) {
@@ -1208,7 +1205,7 @@ auto main(int argc, char* argv[]) -> int {
     window->show();
     window->update();
 
-    QTimer::singleShot(30000, &app, [&app]() {
+    QTimer::singleShot(30000, &app, []() {
       qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - no gameplay frame was "
                      "presented within 30 seconds";
       QGuiApplication::exit(10);

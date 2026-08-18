@@ -47,11 +47,6 @@ auto rider_mount_frame(const MountedAttachmentFrame& mount) noexcept -> QMatrix4
   return local;
 }
 
-auto rider_state_for_anim(const HumanoidAnimationContext& anim) noexcept
-    -> Render::Creature::AnimationStateId {
-  return Render::Creature::Pipeline::humanoid_state_for_anim(anim);
-}
-
 auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
                           Render::Creature::Pipeline::CreatureAssetId asset_id,
                           const HumanoidAnimationContext& anim) noexcept

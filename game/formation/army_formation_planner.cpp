@@ -25,8 +25,6 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_deg_to_rad = k_pi / 180.0F;
-constexpr float k_rad_to_deg = 180.0F / k_pi;
-
 struct Bounds {
   bool valid{false};
   float min_x{0.0F};

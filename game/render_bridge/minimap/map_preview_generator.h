@@ -6,6 +6,7 @@
 #include <QVariantList>
 
 #include <memory>
+#include <utility>
 
 #include "../../map/map_definition.h"
 

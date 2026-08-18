@@ -122,7 +122,7 @@ TEST(ModuleBoundaries, EveryModuleNamesNeighboursThatExist) {
         spec.value("paths").toArray().size() + spec.value("files").toArray().size();
     EXPECT_GT(claims, 0) << "module " << name.toStdString() << " claims no files";
 
-    for (const auto& entry : spec.value("may_use").toArray()) {
+    for (const auto entry : spec.value("may_use").toArray()) {
       const auto neighbour = entry.toString();
       EXPECT_TRUE(names.contains(neighbour))
           << "module " << name.toStdString() << " may_use names "
@@ -152,7 +152,7 @@ TEST(ModuleBoundaries, EveryModuleIsBackedByACmakeTargetTheLinkerEnforces) {
         << "module " << name.toStdString()
         << " names no CMake target. Every module is shipped by a static library so "
            "that a wrong-way edge is a link error, not just a script finding.";
-    for (const auto& target : targets) {
+    for (const auto target : targets) {
       EXPECT_TRUE(libraries.count(target.toString()) > 0)
           << "module " << name.toStdString() << " says it is built into "
           << target.toString().toStdString()

@@ -2,6 +2,7 @@
 #include <QString>
 
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "systems/save_storage.h"
 

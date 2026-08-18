@@ -2,6 +2,7 @@
 #include <QSet>
 
 #include <gtest/gtest.h>
+#include <initializer_list>
 
 #include "core/component.h"
 #include "core/event_manager.h"

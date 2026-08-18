@@ -88,7 +88,6 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
   (void)polygon_offset_enabled;
 
   const std::size_t i = prepared.start;
-  const std::size_t batch_end = prepared.end();
   const auto& cmd = queue.get_sorted(i);
   switch (cmd.index()) {
   case TerrainScatterCmdIndex: {

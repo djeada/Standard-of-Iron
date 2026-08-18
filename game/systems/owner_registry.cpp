@@ -316,7 +316,7 @@ void OwnerRegistry::from_json(const QJsonObject& json) {
 
   const auto owners_array = json["owners"].toArray();
   m_owners.reserve(owners_array.size());
-  for (const auto& value : owners_array) {
+  for (const auto value : owners_array) {
     const auto owner_obj = value.toObject();
     OwnerInfo info;
     info.owner_id = owner_obj["owner_id"].toInt();

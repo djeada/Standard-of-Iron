@@ -115,7 +115,6 @@ void AISystem::initialize_ai_players() {
 
   for (std::size_t index = 0; index < ai_owner_ids.size(); ++index) {
     uint32_t const player_id = ai_owner_ids[index];
-    int const team_id = registry.get_owner_team(player_id);
     AIInstance instance;
     instance.context.player_id = player_id;
     instance.context.state = AI::AIState::Idle;

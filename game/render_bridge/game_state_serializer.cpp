@@ -43,7 +43,7 @@ void owner_resources_from_json(const QJsonArray& rows_array,
                                std::vector<OwnerResourceState>& out_rows) {
   out_rows.clear();
   out_rows.reserve(rows_array.size());
-  for (const auto& value : rows_array) {
+  for (const auto value : rows_array) {
     const auto row_obj = value.toObject();
     OwnerResourceState row;
     row.owner_id = row_obj.value("owner_id").toInt(0);
@@ -304,7 +304,7 @@ void GameStateSerializer::restore_player_nations_from_metadata(
   std::vector<std::pair<int, NationID>> assignments;
   const auto nations_array = metadata.value("player_nations").toArray();
   assignments.reserve(nations_array.size());
-  for (const auto& value : nations_array) {
+  for (const auto value : nations_array) {
     const auto nation_obj = value.toObject();
     NationID nation_id{};
     if (!try_parse_nation_id(nation_obj.value("nation").toString(), nation_id)) {

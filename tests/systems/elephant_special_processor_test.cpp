@@ -96,7 +96,7 @@ TEST_F(ElephantSpecialProcessorTest,
 }
 
 TEST_F(ElephantSpecialProcessorTest, TrampleLaunchesInfantryCasualties) {
-  auto* elephant = add_elephant(*world, 1);
+  add_elephant(*world, 1);
   auto* enemy = add_unit(*world, Game::Units::SpawnType::Spearman, 2, 1.0F, 0.0F);
   auto* enemy_unit = enemy->get_component<UnitComponent>();
   ASSERT_NE(enemy_unit, nullptr);

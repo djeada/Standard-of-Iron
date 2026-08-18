@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include <filesystem>
+#include <utility>
 
 namespace Render::Creature::Bpat {
 

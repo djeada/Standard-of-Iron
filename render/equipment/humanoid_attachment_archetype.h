@@ -5,6 +5,7 @@
 
 #include "animation/rig/instance_transform.h"
 #include "equipment_submit.h"
+#include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/static_attachment_spec.h"
 

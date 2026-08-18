@@ -235,7 +235,7 @@ void SnapshotMeshWriter::append_clip_vertices(
   assert(!m_clips.empty() && "add_clip() before append_clip_vertices()");
   auto& pending = m_clips.back();
   assert(!pending.vertices_appended && "vertices already appended for clip");
-  std::size_t const expected =
+  [[maybe_unused]] std::size_t const expected =
       static_cast<std::size_t>(m_vertex_count) * pending.desc.frame_count;
   assert(frame_vertices.size() == expected &&
          "frame_vertices.size() must equal vertex_count * frame_count");

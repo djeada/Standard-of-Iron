@@ -5,6 +5,8 @@
 #include <QPainterPath>
 #include <QPixmap>
 
+#include <algorithm>
+
 namespace MapEditor {
 
 namespace {

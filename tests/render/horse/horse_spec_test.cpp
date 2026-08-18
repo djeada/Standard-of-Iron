@@ -88,13 +88,6 @@ Render::GL::HorseDimensions make_horse_dims() {
   return d;
 }
 
-Render::GL::HorseVariant make_horse_variant() {
-  Render::GL::HorseVariant v{};
-  v.coat_color = QVector3D(0.55F, 0.35F, 0.20F);
-  v.hoof_color = QVector3D(0.10F, 0.08F, 0.05F);
-  return v;
-}
-
 Render::GL::HorseGait make_horse_gait() {
   Render::GL::HorseGait g{};
   g.cycle_time = 1.0F;

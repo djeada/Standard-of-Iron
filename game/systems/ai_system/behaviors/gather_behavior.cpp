@@ -91,6 +91,7 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
 
     AIFormationRequest formation_request;
     formation_request.player_id = context.player_id;
+    formation_request.nation = context.nation;
     formation_request.anchor = center;
     formation_request.spacing = spacing;
     formation_request.intent = Game::Formation::ArmyFormationIntent::FactionDefault;

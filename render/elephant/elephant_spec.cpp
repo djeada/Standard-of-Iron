@@ -26,8 +26,6 @@ using Render::Creature::PrimitiveInstance;
 using Render::Creature::SkeletonTopology;
 
 constexpr std::array<Render::Creature::SocketDef, 0> k_elephant_sockets{};
-constexpr std::uint8_t k_role_skin = 1;
-
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_rear_stride_scale = 0.58F;
 constexpr float k_rear_backward_stride_damping = 0.60F;
@@ -463,30 +461,6 @@ void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions& dims
 namespace Render::Elephant {
 
 namespace {
-
-auto build_baseline_pose() noexcept -> ElephantSpecPose {
-  Render::GL::ElephantDimensions const dims = Render::GL::make_elephant_dimensions(0U);
-  Render::GL::ElephantGait const gait{};
-  ElephantSpecPose pose{};
-  make_elephant_spec_pose_animated(dims, gait, ElephantPoseMotion{}, pose);
-  return pose;
-}
-
-auto baseline_pose() noexcept -> const ElephantSpecPose& {
-  static const ElephantSpecPose pose = build_baseline_pose();
-  return pose;
-}
-
-auto build_elephant_bind_palette() noexcept
-    -> std::array<QMatrix4x4, k_elephant_bone_count> {
-  std::array<QMatrix4x4, k_elephant_bone_count> out{};
-  BonePalette tmp{};
-  evaluate_elephant_skeleton(baseline_pose(), tmp);
-  for (std::size_t i = 0; i < k_elephant_bone_count; ++i) {
-    out[i] = tmp[i];
-  }
-  return out;
-}
 
 auto static_minimal_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
   static const auto compiled =

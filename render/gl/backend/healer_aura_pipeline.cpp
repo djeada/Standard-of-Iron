@@ -18,13 +18,7 @@ namespace Render::GL::BackendPipelines {
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
-namespace {
-
-auto check_gl_error(const char* operation) -> bool {
-  return BackendPipelines::check_gl_error("HealerAuraPipeline", operation);
-}
-
-} // namespace
+namespace {}
 
 auto HealerAuraPipeline::initialize() -> bool {
   if (m_shader_cache == nullptr) {

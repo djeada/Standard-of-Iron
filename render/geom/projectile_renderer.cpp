@@ -830,7 +830,6 @@ void render_projectiles(Renderer* renderer,
     }
 
     const QVector3D delta = projectile->get_end() - projectile->get_start();
-    const float dist = std::max(0.001F, delta.length());
     QVector3D pos = projectile->get_start() + delta * projectile->get_progress();
 
     float const h = projectile->get_arc_height() * 4.0F * projectile->get_progress() *

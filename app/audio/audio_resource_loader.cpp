@@ -220,7 +220,7 @@ void cache_manifest_locked() {
   registry.entries.clear();
   registry.lookup.clear();
 
-  for (const QJsonValue& value : tracks) {
+  for (const QJsonValue value : tracks) {
     if (!value.isObject()) {
       continue;
     }
@@ -243,7 +243,7 @@ void cache_manifest_locked() {
         QDir(registry.manifest_dir).filePath(entry.path));
 
     const QJsonArray aliases = track_object.value(QStringLiteral("aliases")).toArray();
-    for (const QJsonValue& alias_value : aliases) {
+    for (const QJsonValue alias_value : aliases) {
       const QString alias = alias_value.toString().trimmed();
       if (!alias.isEmpty()) {
         entry.aliases.push_back(alias);
@@ -408,7 +408,7 @@ void AudioResourceLoader::load_audio_cues() {
 
   int bound_count = 0;
   int silent_count = 0;
-  for (const QJsonValue& value : cues) {
+  for (const QJsonValue value : cues) {
     if (!value.isObject()) {
       continue;
     }
@@ -434,7 +434,7 @@ void AudioResourceLoader::load_audio_cues() {
 
     const QJsonArray resources =
         cue_object.value(QStringLiteral("resources")).toArray();
-    for (const QJsonValue& resource_value : resources) {
+    for (const QJsonValue resource_value : resources) {
       const QString resource_id = resource_value.toString().trimmed();
       if (resource_id.isEmpty()) {
         continue;

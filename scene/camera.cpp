@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <utility>
 
 namespace Render::GL {
 
@@ -134,14 +136,6 @@ inline auto calculate_dynamic_margin(float base_margin,
                                         k_pitch_factor_max);
 
   return base_margin * height_factor * pitch_factor;
-}
-
-inline auto smooth_approach(float current, float target, float smoothness) -> float {
-  if (std::abs(current - target) < k_tiny) {
-    return target;
-  }
-
-  return current + (target - current) * std::clamp(1.0F - smoothness, 0.01F, 0.99F);
 }
 
 } // namespace

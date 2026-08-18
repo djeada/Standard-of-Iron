@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <map>
 #include <set>
+#include <utility>
 #include <vector>
 
 #include "game/map/campaign_loader.h"

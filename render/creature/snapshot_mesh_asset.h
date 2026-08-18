@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iosfwd>
+#include <ostream>
 #include <span>
 #include <string>
 #include <string_view>

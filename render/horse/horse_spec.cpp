@@ -29,7 +29,6 @@ using Render::Creature::PrimitiveInstance;
 using Render::Creature::SkeletonTopology;
 
 constexpr std::array<Render::Creature::SocketDef, 0> k_horse_sockets{};
-constexpr std::uint8_t k_role_coat = 1;
 constexpr std::uint8_t k_role_hoof = 4;
 constexpr std::uint8_t k_role_mane = 5;
 constexpr std::uint8_t k_role_tail = 6;

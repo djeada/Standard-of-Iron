@@ -192,6 +192,9 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::RtsSpearThrust:
     case CombatActionId::RtsBowShot:
     case CombatActionId::RtsElephantStomp:
+    case CombatActionId::RtsCommanderThrust:
+    case CombatActionId::RtsCommanderCut:
+    case CombatActionId::RtsCommanderShot:
       break;
     }
   } else if (definition.weapon_family == WeaponFamily::Spear) {
@@ -229,6 +232,9 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::RtsSwordStrike:
     case CombatActionId::RtsBowShot:
     case CombatActionId::RtsElephantStomp:
+    case CombatActionId::RtsCommanderThrust:
+    case CombatActionId::RtsCommanderCut:
+    case CombatActionId::RtsCommanderShot:
       break;
     }
   }

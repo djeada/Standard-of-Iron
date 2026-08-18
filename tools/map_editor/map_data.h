@@ -8,7 +8,9 @@
 #include <QVector2D>
 #include <QVector>
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 #include <variant>
 #include <vector>
 

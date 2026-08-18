@@ -8,6 +8,7 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace Render::Software {

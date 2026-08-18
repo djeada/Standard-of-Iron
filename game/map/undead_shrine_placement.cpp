@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <numbers>
+#include <utility>
 
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"

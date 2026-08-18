@@ -54,7 +54,7 @@ TEST(MissionAssetRulesTest, CurrentMissionsDeclareCommanderDefeatRules) {
 
     bool has_lose_commander = false;
     bool has_only_commander_remaining = false;
-    for (const auto& value : defeat_conditions) {
+    for (const auto value : defeat_conditions) {
       const QString type = value.toObject().value("type").toString();
       has_lose_commander =
           has_lose_commander || type == QStringLiteral("lose_commander");
@@ -82,7 +82,7 @@ TEST(MissionAssetRulesTest, CurrentMapsDeclareCommanderDefeatRules) {
     const QJsonArray defeat_conditions = victory.value("defeat_conditions").toArray();
     bool has_no_commander = false;
     bool has_only_commander_remaining = false;
-    for (const auto& value : defeat_conditions) {
+    for (const auto value : defeat_conditions) {
       const QString type = value.toString();
       has_no_commander = has_no_commander || type == QStringLiteral("no_commander");
       has_only_commander_remaining = has_only_commander_remaining ||
@@ -101,7 +101,7 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesAuthoredLocalAiRoles) {
   ASSERT_FALSE(spawns.isEmpty());
 
   auto find_spawn = [&](const QString& id) -> QJsonObject {
-    for (const auto& value : spawns) {
+    for (const auto value : spawns) {
       const QJsonObject spawn = value.toObject();
       if (spawn.value("id").toString() == id) {
         return spawn;
@@ -127,7 +127,7 @@ TEST(MissionAssetRulesTest, CrossingRhoneUsesAuthoredLocalAiRoles) {
   EXPECT_GE(signal_guard.value("patrol_waypoints").toArray().size(), 2);
 
   int local_role_count = 0;
-  for (const auto& value : spawns) {
+  for (const auto value : spawns) {
     const QJsonObject spawn = value.toObject();
     if (spawn.contains("behavior")) {
       ++local_role_count;
@@ -141,7 +141,7 @@ TEST(MissionAssetRulesTest, OffensivePlayerCampsUseAuthoredMinimalStructures) {
     const QJsonObject root =
         load_json_object(asset_dir_path(QStringLiteral("maps/%1").arg(map_name)));
     QHash<QString, int> counts;
-    for (const auto& value : root.value("structures").toArray()) {
+    for (const auto value : root.value("structures").toArray()) {
       const QJsonObject structure = value.toObject();
       if (structure.value("player_id").toInt() == 1) {
         ++counts[structure.value("type").toString()];
@@ -289,7 +289,7 @@ TEST(MissionAssetRulesTest, CaptureObjectivesMatchEnemyOwnedBarracks) {
         }
       }
     }
-    for (const auto& value : map.value("structures").toArray()) {
+    for (const auto value : map.value("structures").toArray()) {
       const QJsonObject structure = value.toObject();
       if (structure.value("type").toString() != QStringLiteral("barracks")) {
         continue;

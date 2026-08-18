@@ -1113,6 +1113,9 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::Wall:
     tool_name = "Wall (click start, then end)";
     break;
+  case ToolType::Gate:
+    tool_name = "Gate (click a wall run, or off it to place free-standing)";
+    break;
   case ToolType::UndeadZone:
     tool_name = "Undead Zone";
     break;
@@ -1140,6 +1143,10 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::TroopGravePriest:
   case ToolType::TroopCivilian:
   case ToolType::TroopBuilder:
+  case ToolType::Forest:
+  case ToolType::WildlifeSheep:
+  case ToolType::WildlifeWolves:
+  case ToolType::WildlifeBirds:
     break;
   }
 

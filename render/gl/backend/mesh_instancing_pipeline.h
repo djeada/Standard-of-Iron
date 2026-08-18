@@ -58,7 +58,6 @@ private:
   void setup_instance_attributes();
   auto upload_instances(const MeshInstanceGpu* data, std::size_t count) -> std::size_t;
 
-  GL::ShaderCache* m_shader_cache{nullptr};
   bool m_initialized{false};
 
   Mesh* m_current_mesh{nullptr};
