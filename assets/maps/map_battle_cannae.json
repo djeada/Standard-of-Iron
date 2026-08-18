@@ -1,19 +1,19 @@
 {
     "biome": {
         "grass_dry": [
-            0.7000000000000001,
-            0.6,
-            0.34
+            0.52,
+            0.51,
+            0.27
         ],
         "grass_primary": [
-            0.47000000000000003,
-            0.48,
-            0.24
+            0.28,
+            0.45,
+            0.2
         ],
         "grass_secondary": [
-            0.58,
+            0.4,
             0.54,
-            0.29
+            0.25
         ],
         "ground_irregularity_enabled": true,
         "ground_type": "grass_dry",

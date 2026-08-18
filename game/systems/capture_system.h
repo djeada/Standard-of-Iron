@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "../core/entity.h"
 #include "../core/system.h"
 
@@ -18,12 +20,17 @@ public:
                                          int new_owner_id);
 
 private:
+  struct OwnerTroopTally {
+    int owner_id{0};
+    int troops{0};
+  };
+
   static void process_barrack_capture(Engine::Core::World* world, float delta_time);
-  static auto count_nearby_troops(Engine::Core::World* world,
+  static void tally_nearby_troops(const std::vector<Engine::Core::Entity*>& units,
                                   float barrack_x,
                                   float barrack_z,
-                                  int owner_id,
-                                  float radius) -> int;
+                                  float radius,
+                                  std::vector<OwnerTroopTally>& out);
 };
 
 } // namespace Game::Systems

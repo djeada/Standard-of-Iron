@@ -192,34 +192,14 @@
     </message>
 </context>
 <context>
-    <name>BattleSummary</name>
-    <message>
-        <source>SCORE</source>
-        <translation>PONTUAÇÃO</translation>
-    </message>
-    <message>
-        <source>YOU</source>
-        <translation>VOCÊ</translation>
-    </message>
+    <name>BattleReportLayout</name>
     <message>
         <source>Return to Menu</source>
         <translation>Voltar ao menu</translation>
     </message>
     <message>
-        <source>Victory Secured</source>
-        <translation>Vitória garantida</translation>
-    </message>
-    <message>
-        <source>Army Broken</source>
-        <translation>Exército destroçado</translation>
-    </message>
-    <message>
-        <source>Held the Field</source>
-        <translation>Manteve o campo</translation>
-    </message>
-    <message>
-        <source>Routed</source>
-        <translation>Debandado</translation>
+        <source>Close Report</source>
+        <translation>Fechar relatório</translation>
     </message>
     <message>
         <source>Kills</source>
@@ -230,20 +210,44 @@
         <translation>Perdas</translation>
     </message>
     <message>
-        <source>Units trained</source>
-        <translation>Unidades treinadas</translation>
+        <source>Trained</source>
+        <translation>Treinadas</translation>
     </message>
     <message>
         <source>Villages</source>
         <translation>Vilarejos</translation>
     </message>
     <message>
-        <source>Play time</source>
-        <translation>Tempo de jogo</translation>
+        <source>Held the Field</source>
+        <translation>Manteve o campo</translation>
     </message>
     <message>
-        <source>Back</source>
-        <translation>Voltar</translation>
+        <source>Routed</source>
+        <translation>Debandado</translation>
+    </message>
+    <message>
+        <source>YOUR COMMAND</source>
+        <translation>SEU COMANDO</translation>
+    </message>
+    <message>
+        <source>ARMIES OF THE FIELD</source>
+        <translation>EXÉRCITOS DO CAMPO</translation>
+    </message>
+    <message>
+        <source>Score</source>
+        <translation>Pontuação</translation>
+    </message>
+    <message>
+        <source>Army</source>
+        <translation>Exército</translation>
+    </message>
+    <message>
+        <source>YOU</source>
+        <translation>VOCÊ</translation>
+    </message>
+    <message>
+        <source>Esc closes the report</source>
+        <translation>Esc fecha o relatório</translation>
     </message>
 </context>
 <context>
@@ -5656,6 +5660,21 @@ para ver a prévia</translation>
     <message>
         <source>Testudo</source>
         <translation>Testudo</translation>
+    </message>
+</context>
+<context>
+    <name>Numerals</name>
+    <message>
+        <source>%1h %2m</source>
+        <translation>%1 h %2 min</translation>
+    </message>
+    <message>
+        <source>%1m %2s</source>
+        <translation>%1 min %2 s</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1 s</translation>
     </message>
 </context>
 <context>

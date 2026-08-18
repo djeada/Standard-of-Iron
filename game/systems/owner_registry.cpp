@@ -72,6 +72,16 @@ void OwnerRegistry::clear() {
   m_owner_id_to_index.clear();
   m_next_owner_id = 1;
   m_local_player_id = 1;
+  rebuild_team_lookup();
+}
+
+void OwnerRegistry::rebuild_team_lookup() {
+  m_team_by_owner_id.fill(0);
+  for (const auto& owner : m_owners) {
+    if (owner.owner_id >= 0 && owner.owner_id <= k_max_cached_owner_id) {
+      m_team_by_owner_id[static_cast<std::size_t>(owner.owner_id)] = owner.team_id;
+    }
+  }
 }
 
 auto OwnerRegistry::register_owner(OwnerType type, const std::string& name) -> int {
@@ -87,6 +97,7 @@ auto OwnerRegistry::register_owner(OwnerType type, const std::string& name) -> i
   size_t const index = m_owners.size();
   m_owners.push_back(info);
   m_owner_id_to_index[owner_id] = index;
+  rebuild_team_lookup();
 
   return owner_id;
 }
@@ -109,6 +120,7 @@ void OwnerRegistry::register_owner_with_id(int owner_id,
   size_t const index = m_owners.size();
   m_owners.push_back(info);
   m_owner_id_to_index[owner_id] = index;
+  rebuild_team_lookup();
 
   if (owner_id >= m_next_owner_id) {
     m_next_owner_id = owner_id + 1;
@@ -183,10 +195,14 @@ void OwnerRegistry::set_owner_team(int owner_id, int team_id) {
   auto it = m_owner_id_to_index.find(owner_id);
   if (it != m_owner_id_to_index.end()) {
     m_owners[it->second].team_id = team_id;
+    rebuild_team_lookup();
   }
 }
 
 auto OwnerRegistry::get_owner_team(int owner_id) const -> int {
+  if (owner_id >= 0 && owner_id <= k_max_cached_owner_id) {
+    return m_team_by_owner_id[static_cast<std::size_t>(owner_id)];
+  }
   auto it = m_owner_id_to_index.find(owner_id);
   if (it == m_owner_id_to_index.end()) {
     return 0;
@@ -339,6 +355,8 @@ void OwnerRegistry::from_json(const QJsonObject& json) {
       m_next_owner_id = owner.owner_id + 1;
     }
   }
+
+  rebuild_team_lookup();
 }
 
 } // namespace Game::Systems

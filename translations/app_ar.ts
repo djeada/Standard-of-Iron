@@ -192,34 +192,14 @@
     </message>
 </context>
 <context>
-    <name>BattleSummary</name>
-    <message>
-        <source>SCORE</source>
-        <translation>النتيجة</translation>
-    </message>
-    <message>
-        <source>YOU</source>
-        <translation>أنت</translation>
-    </message>
+    <name>BattleReportLayout</name>
     <message>
         <source>Return to Menu</source>
         <translation>العودة إلى القائمة</translation>
     </message>
     <message>
-        <source>Victory Secured</source>
-        <translation>تحقق النصر</translation>
-    </message>
-    <message>
-        <source>Army Broken</source>
-        <translation>تحطّم الجيش</translation>
-    </message>
-    <message>
-        <source>Held the Field</source>
-        <translation>صمد في الميدان</translation>
-    </message>
-    <message>
-        <source>Routed</source>
-        <translation>اندحر</translation>
+        <source>Close Report</source>
+        <translation>إغلاق التقرير</translation>
     </message>
     <message>
         <source>Kills</source>
@@ -230,20 +210,44 @@
         <translation>الخسائر</translation>
     </message>
     <message>
-        <source>Units trained</source>
-        <translation>الوحدات المدرَّبة</translation>
+        <source>Trained</source>
+        <translation>المدرَّبة</translation>
     </message>
     <message>
         <source>Villages</source>
         <translation>القرى</translation>
     </message>
     <message>
-        <source>Play time</source>
-        <translation>زمن اللعب</translation>
+        <source>Held the Field</source>
+        <translation>صمد في الميدان</translation>
     </message>
     <message>
-        <source>Back</source>
-        <translation>رجوع</translation>
+        <source>Routed</source>
+        <translation>اندحر</translation>
+    </message>
+    <message>
+        <source>YOUR COMMAND</source>
+        <translation>قيادتك</translation>
+    </message>
+    <message>
+        <source>ARMIES OF THE FIELD</source>
+        <translation>جيوش الميدان</translation>
+    </message>
+    <message>
+        <source>Score</source>
+        <translation>النتيجة</translation>
+    </message>
+    <message>
+        <source>Army</source>
+        <translation>الجيش</translation>
+    </message>
+    <message>
+        <source>YOU</source>
+        <translation>أنت</translation>
+    </message>
+    <message>
+        <source>Esc closes the report</source>
+        <translation>Esc يغلق التقرير</translation>
     </message>
 </context>
 <context>
@@ -5668,6 +5672,21 @@ to see preview</source>
     <message>
         <source>Testudo</source>
         <translation>السلحفاة</translation>
+    </message>
+</context>
+<context>
+    <name>Numerals</name>
+    <message>
+        <source>%1h %2m</source>
+        <translation>%1 س %2 د</translation>
+    </message>
+    <message>
+        <source>%1m %2s</source>
+        <translation>%1 د %2 ث</translation>
+    </message>
+    <message>
+        <source>%1s</source>
+        <translation>%1 ث</translation>
     </message>
 </context>
 <context>

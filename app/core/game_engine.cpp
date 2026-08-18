@@ -1,6 +1,7 @@
 #include "app/core/game_engine.h"
 
 #include <QBuffer>
+#include <QColor>
 #include <QCoreApplication>
 #include <QCursor>
 #include <QDebug>
@@ -1700,6 +1701,8 @@ void GameEngine::publish_mission_stages() {
     entry["complete"] = status.complete;
     entry["active"] = status.active;
     entry["has_target"] = status.has_target;
+    entry["target_structure_present"] = status.target_structure_present;
+    entry["target_structure_is_local"] = status.target_structure_is_local;
     if (status.has_target) {
       entry["world_x"] = status.target.x();
       entry["world_z"] = status.target.z();
@@ -2394,6 +2397,16 @@ auto GameEngine::get_owner_info() const -> QVariantList {
     }
     owner_map["type"] = type_str;
     owner_map["isLocal"] = (owner.owner_id == m_runtime.local_owner_id);
+    owner_map["color"] =
+        QColor::fromRgbF(owner.color[0], owner.color[1], owner.color[2]);
+
+    const auto* owner_nation =
+        Game::Systems::NationRegistry::instance().get_nation_for_player(owner.owner_id);
+    owner_map["nation"] =
+        owner_nation != nullptr
+            ? QString::fromStdString(
+                  Game::Systems::nation_id_to_string(owner_nation->id))
+            : QString();
     owner_map["state"] =
         build_player_state_map(owner.owner_id, m_level.max_troops_per_player);
 

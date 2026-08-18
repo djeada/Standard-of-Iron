@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -19,11 +20,15 @@ namespace {
 
 constexpr float k_default_reach_radius = 6.0F;
 
+constexpr float k_target_structure_match_radius = 30.0F;
+
 struct StageTally {
   int local_owned_structures = 0;
   int local_captured_structures = 0;
   int enemy_structures = 0;
   int local_units_in_range = 0;
+  float target_structure_distance_sq = std::numeric_limits<float>::max();
+  bool target_structure_is_local = false;
 };
 
 auto matches_type(const std::vector<QString>& wanted, const QString& type) -> bool {
@@ -220,6 +225,18 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
       } else if (is_enemy) {
         tally.enemy_structures += 1;
       }
+
+      if (m_stages[i].has_target && transform != nullptr && (is_local || is_enemy)) {
+        const float dx = transform->position.x - rule.target.x();
+        const float dz = transform->position.z - rule.target.z();
+        const float distance_sq = (dx * dx) + (dz * dz);
+        if (distance_sq <=
+                k_target_structure_match_radius * k_target_structure_match_radius &&
+            distance_sq < tally.target_structure_distance_sq) {
+          tally.target_structure_distance_sq = distance_sq;
+          tally.target_structure_is_local = is_local;
+        }
+      }
     }
   }
 
@@ -296,6 +313,17 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
       status.progress = progress;
       status.required = required;
       status.complete = complete;
+      changed = true;
+    }
+
+    const bool structure_present =
+        tally.target_structure_distance_sq < std::numeric_limits<float>::max();
+    const bool structure_is_local =
+        structure_present && tally.target_structure_is_local;
+    if (structure_present != status.target_structure_present ||
+        structure_is_local != status.target_structure_is_local) {
+      status.target_structure_present = structure_present;
+      status.target_structure_is_local = structure_is_local;
       changed = true;
     }
   }

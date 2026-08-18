@@ -56,6 +56,7 @@ uniform vec2 u_height_texel_size;
 uniform vec2 u_height_uv_scale, u_height_uv_offset;
 uniform float u_height_tex_to_world;
 
+uniform int u_noise_octaves;
 uniform float u_screen_toe_mul;
 uniform float u_screen_toe_clamp;
 uniform vec3 u_camera_pos;
@@ -88,11 +89,18 @@ float gradient_noise(vec2 p) {
 float gradient_fbm(vec2 p) {
   float value = 0.0;
   float amplitude = 0.54;
+  float footprint = max(length(fwidth(p)), 1e-6);
   mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
-  for (int i = 0; i < 5; ++i) {
-    value += gradient_noise(p) * amplitude;
+  int octaves = clamp(u_noise_octaves, 1, 5);
+  for (int i = 0; i < octaves; ++i) {
+    float fade = 1.0 - smoothstep(0.30, 0.85, footprint);
+    if (fade <= 0.001) {
+      break;
+    }
+    value += gradient_noise(p) * amplitude * fade;
     p = octave_rotation * p * 2.03 + vec2(7.1, -3.8);
     amplitude *= 0.49;
+    footprint *= 2.03;
   }
   return value;
 }
