@@ -165,6 +165,7 @@
              executable ~10 MB it never read. -->
         <file>assets/audio/audio_cues.json</file>
         <file>assets/audio/audio_manifest.json</file>
+        <file>assets/audio/sfx/alerts/commander_message.ogg</file>
         <file>assets/audio/sfx/alerts/enemy_reinforcements_warning.ogg</file>
         <file>assets/audio/sfx/alerts/enemy_spotted_horn.ogg</file>
         <file>assets/audio/sfx/alerts/low_resources_click.ogg</file>

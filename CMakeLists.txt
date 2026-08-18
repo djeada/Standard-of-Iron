@@ -676,6 +676,7 @@ add_library(
     # app/viewmodels -- the QML API, one coherent slice per model.
     app/viewmodels/activity_view_model.cpp
     app/viewmodels/camera_view_model.cpp
+    app/viewmodels/commander_message_view_model.cpp
     app/viewmodels/commander_view_model.cpp
     app/viewmodels/economy_view_model.cpp
     app/viewmodels/match_setup_view_model.cpp
@@ -733,6 +734,7 @@ add_library(soi_app ALIAS app_core)
 qt6_add_executable(standard_of_iron
     main.cpp
     ui/campaign_map_view.cpp
+    ui/commander_portrait_view.cpp
     ui/gl_view.cpp
     ${SOI_ASSET_STRINGS_CPP}
 )
@@ -806,6 +808,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/LoadGamePanel.qml
             ui/qml/SaveProgressOverlay.qml
             ui/qml/ObjectivesPanel.qml
+            ui/qml/CommanderMessagePanel.qml
             ui/qml/HelpPanel.qml
             ui/qml/TutorialOverlay.qml
             ui/qml/SettingsPanel.qml

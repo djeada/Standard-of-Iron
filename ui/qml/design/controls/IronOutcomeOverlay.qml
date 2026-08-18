@@ -17,6 +17,8 @@ Item {
 
     property bool manuallyHidden: false
 
+    property bool held: false
+
     readonly property bool decided: root.victoryState !== ""
 
     readonly property string outcomeKind: {
@@ -65,7 +67,7 @@ Item {
     }
 
     anchors.fill: parent
-    visible: !root.manuallyHidden && root.decided
+    visible: !root.manuallyHidden && root.decided && !root.held
     z: 100
 
     onVictoryStateChanged: root.onOutcomeChanged()

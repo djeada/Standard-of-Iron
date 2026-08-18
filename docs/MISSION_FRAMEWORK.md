@@ -706,6 +706,106 @@ Timed or state-based triggers for dynamic gameplay:
 ]
 ```
 
+### Commander messages
+
+An enemy commander can speak to the player mid-battle: a portrait panel below the
+minimap, a subtitle, and a herald cue. Missions author the lines and say what
+they answer to under a top-level `commander_messages` array.
+
+```json
+"commander_messages": [
+  {
+    "id": "scipio_rhone_open",
+    "speaker": "roman_veteran_consul",
+    "pose": "dismissive",
+    "trigger": { "type": "mission_start", "delay": 2.5 },
+    "text": "So. The Barcid crawls down to the Rhone...",
+    "voice_cue": "alert.commander_message",
+    "duration": 13.0,
+    "priority": 100
+  }
+]
+```
+
+| Field       | Meaning                                                                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`        | Stable name. Saves record which lines are spent by id.                                                                                                             |
+| `speaker`   | A commander troop type (`game/units/commander_catalog.cpp`). The display name, battlefield role and nation come from the catalogue, so a line never restates them. |
+| `portrait`  | Art stem under `assets/visuals/`. Optional -- without a matching file the panel falls back to the speaker's nation mark.                                           |
+| `text`      | The line. Extracted for translation, so write it in English and never bake it into art.                                                                            |
+| `voice_cue` | Cue id played when the panel opens. Optional.                                                                                                                      |
+| `duration`  | Seconds the panel holds. Defaults to nine.                                                                                                                         |
+| `priority`  | Higher wins when two lines are ready at once; the loser waits its turn.                                                                                            |
+| `once`      | Defaults to `true`. Set `false` for a line that may repeat.                                                                                                        |
+
+`trigger.type` is one of:
+
+| Trigger              | Fires when                                                     |
+| -------------------- | -------------------------------------------------------------- |
+| `mission_start`      | The mission's forces are placed and the battle begins.         |
+| `mission_victory`    | The victory service resolves the mission as won.               |
+| `mission_defeat`     | The victory service resolves the mission as lost.              |
+| `structure_captured` | A barrack changes hands (`BarrackCapturedEvent`).              |
+| `commander_defeated` | A commander dies (`UnitDiedEvent` for a catalogued commander). |
+
+Every shipped mission authors at least these three -- `mission_start`,
+`mission_victory` and `mission_defeat` -- and
+`MissionAssetRulesTest.EveryMissionOpensAndClosesInACommandersVoice` fails the
+build if a new one does not.
+
+The two closing lines **hold the outcome banner**. `IronOutcomeOverlay` takes a
+`held` flag, `HUDVictory` binds it to `game.commander_message.holds_outcome`, and
+the banner -- with the Battle Report button on it, and the report behind that --
+stays off screen until the line has finished or the player clicks it away. So the
+commander who just lost gets the last word before the summary appears, and a
+player in a hurry is one click from the report either way.
+
+Every trigger takes `delay` (seconds of battle time before the line shows, so it
+never runs down behind a loading screen or a pause). The two event triggers also
+take filters, and a line fires only when all of them match:
+
+| Filter           | Applies to           | Meaning                                                                                                        |
+| ---------------- | -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `owner_id`       | both                 | Who owned the camp, or the fallen commander. `"player"` means the local player.                                |
+| `by_owner_id`    | both                 | Who took it, or who landed the kill. `"player"` likewise.                                                      |
+| `structure_type` | `structure_captured` | Restricts to one building type.                                                                                |
+| `unit_type`      | `commander_defeated` | Restricts to one commander troop type.                                                                         |
+| `nation`         | `commander_defeated` | The fallen commander's nation, read from the catalogue.                                                        |
+| `at` + `radius`  | `structure_captured` | Mission-space position of the camp this line is about. Without it, any camp matching the owner filters counts. |
+
+So "the village that belongs to owner 3 is taken by the player" is:
+
+```json
+"trigger": { "type": "structure_captured", "owner_id": 3, "by_owner_id": "player" }
+```
+
+The portrait is not a painting. `ui/commander_portrait_view.h` is a
+`QQuickFramebufferObject` that draws the real commander -- the same model the
+battle draws -- with the game's own renderer, in a one-entity world of its own.
+The body language comes from `taunt_dismissive` and `taunt_cynical`, two moves
+authored in `animation/showcase_pose_manifest.cpp` and baked into every humanoid
+BPAT profile by `bpat_baker` at build time; the runtime only picks a clip and a
+phase, which is why a talking head costs less than one soldier in a battle. The
+scene is built on the first frame a line appears and torn down when it closes,
+so an idle portrait holds no world, no renderer and no GPU resources.
+
+Adding a taunt costs 2,104 bytes per frame in each of the six humanoid bake
+profiles -- the two shipped ones come to about 2 MB across the set. That is the
+price of a commander of any profile being able to play them; a portrait-only
+species would be cheaper but could not pose a spear or bow commander correctly.
+
+`Game::Mission::CommanderMessageDirector` (`game/mission/commander_message_director.h`)
+holds the rules and subscribes to the event bus. It owns no world and no renderer:
+the client hands it a position lookup for the `at` filter and calls `update()` on
+the simulation tick, which is why the dwell timer stops with a paused battle.
+`GameEngine` republishes the active line to `game.commander_message`, which
+`ui/qml/CommanderMessagePanel.qml` reads.
+
+The panel sits **below** the minimap rather than over it, because the lines that
+fire while a camp is changing hands are exactly the ones a player needs the map
+for. End-of-mission lines draw above the outcome overlay, so the loser gets the
+last word over the victory banner.
+
 ### The tutorial mission
 
 `assets/missions/tutorial.json` is the guided first battle behind the main menu's

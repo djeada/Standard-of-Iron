@@ -235,6 +235,47 @@
       ]
     }
   ],
+  "commander_messages": [
+    {
+      "id": "trasimene_marcellus_open",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "trasimene_marcellus_victory",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "trasimene_marcellus_defeat",
+      "speaker": "roman_field_commander",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
   "include_ambient_undead": false,
   "theme": "Legions march in column through the shoreline corridor \u2014 and the hills swallow them whole.",
   "victory_mode": "all"

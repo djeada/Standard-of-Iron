@@ -195,6 +195,77 @@
       ]
     }
   ],
+  "commander_messages": [
+    {
+      "id": "scipio_rhone_open",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.5
+      },
+      "text": "So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.",
+      "voice_cue": "alert.commander_message",
+      "duration": 13.0,
+      "priority": 100
+    },
+    {
+      "id": "scipio_river_town_lost",
+      "speaker": "roman_veteran_consul",
+      "pose": "cynical",
+      "trigger": {
+        "type": "structure_captured",
+        "owner_id": 3,
+        "by_owner_id": "player",
+        "delay": 1.5
+      },
+      "text": "You have the river town. My congratulations - you now own three hundred mouths, two wells, and a temple whose god has lately been asking after Carthage by name. Feed them. I shall come back in the spring and count what is left.",
+      "voice_cue": "alert.commander_message",
+      "duration": 12.0,
+      "priority": 60
+    },
+    {
+      "id": "marcellus_consul_fallen",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "commander_defeated",
+        "nation": "roman_republic",
+        "by_owner_id": "player",
+        "delay": 2.0
+      },
+      "text": "You killed a consul. Good. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse. He will be missed - briefly, and only by his creditors.",
+      "voice_cue": "alert.commander_message",
+      "duration": 11.0,
+      "priority": 90
+    },
+    {
+      "id": "scipio_rhone_victory",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.",
+      "voice_cue": "alert.commander_message",
+      "duration": 12.0,
+      "priority": 120
+    },
+    {
+      "id": "scipio_rhone_defeat",
+      "speaker": "roman_veteran_consul",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected.",
+      "voice_cue": "alert.commander_message",
+      "duration": 12.0,
+      "priority": 120
+    }
+  ],
   "include_ambient_undead": false,
   "theme": "The river is wide, the far bank is guarded, and every minute standing still costs blood.",
   "victory_mode": "all"

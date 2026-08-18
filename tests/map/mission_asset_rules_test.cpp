@@ -67,6 +67,45 @@ TEST(MissionAssetRulesTest, CurrentMissionsDeclareCommanderDefeatRules) {
   }
 }
 
+TEST(MissionAssetRulesTest, EveryMissionOpensAndClosesInACommandersVoice) {
+  QDir const missions_dir(asset_dir_path(QStringLiteral("missions")));
+  ASSERT_TRUE(missions_dir.exists()) << missions_dir.path().toStdString();
+
+  const QStringList files = missions_dir.entryList({"*.json"}, QDir::Files, QDir::Name);
+  ASSERT_FALSE(files.isEmpty());
+
+  for (const QString& file_name : files) {
+    Game::Mission::MissionDefinition mission;
+    QString error;
+    ASSERT_TRUE(Game::Mission::MissionLoader::load_from_json_file(
+        missions_dir.absoluteFilePath(file_name), mission, &error))
+        << file_name.toStdString() << ": " << error.toStdString();
+
+    bool has_start = false;
+    bool has_victory = false;
+    bool has_defeat = false;
+    for (const auto& message : mission.commander_messages) {
+      switch (message.trigger) {
+      case Game::Mission::CommanderMessageTrigger::MissionStart:
+        has_start = true;
+        break;
+      case Game::Mission::CommanderMessageTrigger::MissionVictory:
+        has_victory = true;
+        break;
+      case Game::Mission::CommanderMessageTrigger::MissionDefeat:
+        has_defeat = true;
+        break;
+      default:
+        break;
+      }
+    }
+
+    EXPECT_TRUE(has_start) << file_name.toStdString() << ": no mission_start line";
+    EXPECT_TRUE(has_victory) << file_name.toStdString() << ": no mission_victory line";
+    EXPECT_TRUE(has_defeat) << file_name.toStdString() << ": no mission_defeat line";
+  }
+}
+
 TEST(MissionAssetRulesTest, CurrentMapsDeclareCommanderDefeatRules) {
   QDir const maps_dir(asset_dir_path(QStringLiteral("maps")));
   ASSERT_TRUE(maps_dir.exists()) << maps_dir.path().toStdString();

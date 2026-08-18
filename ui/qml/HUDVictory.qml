@@ -24,6 +24,7 @@ Design.IronOutcomeOverlay {
         victoryOverlay.forceHide();
     }
 
+    held: victoryOverlay.game_ready() && game.commander_message && game.commander_message.holds_outcome
     victoryState: victoryOverlay.victory_state()
     isCampaignMission: victoryOverlay.game_ready() && game.setup.is_campaign_mission
     campaignCompleted: victoryOverlay.game_ready() && game.setup.campaign_completed === true

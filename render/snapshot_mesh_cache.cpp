@@ -101,6 +101,22 @@ auto SnapshotMeshCache::get_or_bake(const Key& key,
       {frame_palette, static_cast<std::size_t>(source.skin_atlas->bone_count)});
 
   SnapshotMeshEntry entry = build_entry(std::move(baked), src_indices);
+
+  const std::span<const QMatrix4x4> palette_span{
+      frame_palette, static_cast<std::size_t>(source.skin_atlas->bone_count)};
+  for (const auto& attachment : source.attachment_meshes) {
+    if (attachment == nullptr || attachment->get_indices().empty() ||
+        attachment->get_vertices().empty()) {
+      continue;
+    }
+    auto baked_attachment =
+        bake_snapshot_vertices(attachment->get_vertices(), palette_span);
+    entry.attachment_meshes.push_back(std::make_unique<RiggedMesh>(
+        std::move(baked_attachment),
+        std::vector<std::uint32_t>(attachment->get_indices().begin(),
+                                   attachment->get_indices().end())));
+  }
+
   auto [it, _ok] = m_entries.emplace(key, std::move(entry));
   ++m_frame_stats.bakes;
   return &it->second;
