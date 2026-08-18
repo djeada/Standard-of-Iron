@@ -666,6 +666,7 @@ RowLayout {
                     actionId: modelData.id
                     label: modelData.label
                     shortLabel: modelData.shortLabel || ""
+                    iconOnly: true
                     hotkey: bottomRoot.hotkey_for(modelData)
                     hint: modelData.hint || ""
                     details: bottomRoot.command_details(modelData, state)

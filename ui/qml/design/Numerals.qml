@@ -6,6 +6,8 @@ QtObject {
 
     readonly property string zeroGlyph: "N"
     readonly property int maxRoman: 19999
+    readonly property int legibleRomanMax: 3999
+    readonly property string groupSeparator: "\u00a0"
 
     readonly property var romanSteps: [{
             "value": 1000,
@@ -68,6 +70,57 @@ QtObject {
             }
         }
         return text;
+    }
+
+    function grouped(value) {
+        var number = Math.round(Number(value));
+        if (!isFinite(number))
+            return "";
+        var sign = number < 0 ? "-" : "";
+        var digits = String(Math.abs(number));
+        var text = "";
+        for (var i = 0; i < digits.length; ++i) {
+            if (i > 0 && (digits.length - i) % 3 === 0)
+                text += root.groupSeparator;
+            text += digits.charAt(i);
+        }
+        return sign + text;
+    }
+
+    function legible(value) {
+        var number = Math.round(Number(value));
+        if (!isFinite(number))
+            return "";
+        if (Math.abs(number) > root.legibleRomanMax)
+            return root.grouped(number);
+        return root.roman(number);
+    }
+
+    function tally(value, arabic) {
+        return arabic ? root.grouped(value) : root.roman(value);
+    }
+
+    function needsArabic(values) {
+        if (!values)
+            return false;
+        for (var i = 0; i < values.length; ++i) {
+            var number = Math.round(Number(values[i]));
+            if (isFinite(number) && Math.abs(number) > root.legibleRomanMax)
+                return true;
+        }
+        return false;
+    }
+
+    function span(seconds) {
+        var total = Math.max(0, Math.floor(Number(seconds) || 0));
+        var hours = Math.floor(total / 3600);
+        var minutes = Math.floor((total % 3600) / 60);
+        var rest = total % 60;
+        if (hours > 0)
+            return qsTr("%1h %2m").arg(root.roman(hours)).arg(root.roman(minutes));
+        if (minutes > 0)
+            return qsTr("%1m %2s").arg(root.roman(minutes)).arg(root.roman(rest));
+        return qsTr("%1s").arg(root.roman(rest));
     }
 
     function ordinal(index) {

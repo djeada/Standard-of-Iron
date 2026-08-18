@@ -268,9 +268,22 @@ auto Backend::initialize() -> bool {
   m_directional_shadow_depth_shader = m_shader_cache->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_depth.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
+  m_gpu_breakdown_enabled = qEnvironmentVariableIntValue("SOI_GPU_BREAKDOWN") != 0;
+  m_directional_shadow_depth_instanced_shader = m_shader_cache->get_or_load(
+      QStringLiteral(":/assets/shaders/directional_shadow_depth_instanced.vert"),
+      QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
   m_directional_shadow_rigged_shader = m_shader_cache->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_rigged.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
+  if (m_directional_shadow_depth_shader != nullptr) {
+    m_shadow_depth_light_vp =
+        m_directional_shadow_depth_shader->uniform_handle("u_light_vp");
+    m_shadow_depth_model = m_directional_shadow_depth_shader->uniform_handle("u_model");
+  }
+  if (m_directional_shadow_depth_instanced_shader != nullptr) {
+    m_shadow_depth_instanced_light_vp =
+        m_directional_shadow_depth_instanced_shader->uniform_handle("u_light_vp");
+  }
   if (m_directional_shadow_rigged_shader != nullptr) {
     (void)m_directional_shadow_rigged_shader->bind_uniform_block(
         "BonePalette", k_bone_palette_binding_point);
@@ -407,6 +420,13 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
   m_directional_shadow_cascades = cascades;
 }
 
+namespace {
+
+constexpr float k_shadow_min_caster_texels = 0.75F;
+constexpr std::size_t k_shadow_min_instanced_run = 2;
+
+} // namespace
+
 void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& cam) {
   const auto& settings = Render::GraphicsSettings::instance().directional_shadows();
   const bool enabled = settings.enabled &&
@@ -506,44 +526,48 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(2.0F, 4.0F);
 
-  const auto render_static_mesh = [&](Mesh* mesh,
-                                      const QMatrix4x4& model,
-                                      const QMatrix4x4& light_vp,
-                                      float cascade_near_distance,
-                                      float cascade_distance) {
+  const auto add_static_caster = [this](Mesh* mesh, const QMatrix4x4& model) {
     if (mesh == nullptr) {
       return;
     }
-    const QVector3D world_center = model.map(mesh->bounds_center());
+    ShadowStaticCaster caster;
+    caster.mesh = mesh;
+    caster.model = &model;
+    caster.world_center = model.map(mesh->bounds_center());
     const float scale = std::max({model.column(0).toVector3D().length(),
                                   model.column(1).toVector3D().length(),
                                   model.column(2).toVector3D().length()});
-    const float world_radius = mesh->bounds_radius() * scale;
-    const float camera_distance = (world_center - cam.get_position()).length();
-    if (camera_distance > cascade_distance + world_radius ||
-        camera_distance + world_radius < cascade_near_distance) {
-      return;
-    }
-    m_directional_shadow_depth_shader->use();
-    m_directional_shadow_depth_shader->set_uniform("u_light_vp", light_vp);
-    m_directional_shadow_depth_shader->set_uniform("u_model", model);
-    mesh->draw();
+    caster.world_radius = mesh->bounds_radius() * scale;
+    m_shadow_static_casters.push_back(caster);
   };
 
   m_shadow_static_casters.clear();
   for (const auto& item : queue.items()) {
     if (const auto* mesh = std::get_if<MeshCmd>(&item)) {
       if (mesh->alpha >= k_opaque_threshold && mesh->shader != m_shadow_shader) {
-        m_shadow_static_casters.push_back({mesh->mesh, &mesh->model});
+        add_static_caster(mesh->mesh, mesh->model);
       }
     } else if (const auto* part = std::get_if<DrawPartCmd>(&item)) {
       if (part->alpha >= k_opaque_threshold) {
-        m_shadow_static_casters.push_back({part->mesh, &part->world});
+        add_static_caster(part->mesh, part->world);
       }
     } else if (const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item)) {
-      m_shadow_static_casters.push_back({terrain->mesh, &terrain->model});
+      add_static_caster(terrain->mesh, terrain->model);
     }
   }
+  std::sort(m_shadow_static_casters.begin(),
+            m_shadow_static_casters.end(),
+            [](const ShadowStaticCaster& lhs, const ShadowStaticCaster& rhs) {
+              return lhs.mesh < rhs.mesh;
+            });
+
+  static const bool shadow_instancing_allowed =
+      qEnvironmentVariableIntValue("SOI_SHADOW_INSTANCING") != 0 ||
+      !qEnvironmentVariableIsSet("SOI_SHADOW_INSTANCING");
+  const bool can_instance_shadow_casters =
+      shadow_instancing_allowed && m_mesh_instancing_pipeline != nullptr &&
+      m_mesh_instancing_pipeline->is_initialized() &&
+      m_directional_shadow_depth_instanced_shader != nullptr;
 
   float cascade_near = near_distance;
   for (int cascade = 0; cascade < cascade_count; ++cascade) {
@@ -584,9 +608,68 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_directional_shadow_texture, 0, cascade);
     glClear(GL_DEPTH_BUFFER_BIT);
 
+    const float min_caster_radius = world_texel * k_shadow_min_caster_texels;
+    m_shadow_cascade_casters.clear();
     for (const auto& caster : m_shadow_static_casters) {
-      render_static_mesh(
-          caster.mesh, *caster.model, light_vp, cascade_near, cascade_far);
+      if (caster.world_radius < min_caster_radius) {
+        continue;
+      }
+      const float camera_distance = (caster.world_center - cam.get_position()).length();
+      if (camera_distance > cascade_far + caster.world_radius ||
+          camera_distance + caster.world_radius < cascade_near) {
+        continue;
+      }
+      const QVector3D relative = caster.world_center - center;
+      const float reach = radius + caster.world_radius;
+      if (std::abs(QVector3D::dotProduct(relative, light_right)) > reach ||
+          std::abs(QVector3D::dotProduct(relative, stable_up)) > reach) {
+        continue;
+      }
+      m_shadow_cascade_casters.push_back(&caster);
+    }
+
+    Shader* bound_depth_shader = nullptr;
+    const auto bind_depth_shader = [&](Shader* shader,
+                                       Shader::UniformHandle light_vp_handle) {
+      if (bound_depth_shader == shader) {
+        return;
+      }
+      shader->use();
+      shader->set_uniform(light_vp_handle, light_vp);
+      bound_depth_shader = shader;
+    };
+
+    for (std::size_t index = 0; index < m_shadow_cascade_casters.size();) {
+      Mesh* const mesh = m_shadow_cascade_casters[index]->mesh;
+      std::size_t run_end = index + 1;
+      while (run_end < m_shadow_cascade_casters.size() &&
+             m_shadow_cascade_casters[run_end]->mesh == mesh) {
+        ++run_end;
+      }
+      const std::size_t run = run_end - index;
+
+      if (can_instance_shadow_casters && run >= k_shadow_min_instanced_run) {
+        bind_depth_shader(m_directional_shadow_depth_instanced_shader,
+                          m_shadow_depth_instanced_light_vp);
+        m_mesh_instancing_pipeline->begin_batch(
+            mesh, m_directional_shadow_depth_instanced_shader, nullptr);
+        for (std::size_t j = index; j < run_end; ++j) {
+          m_mesh_instancing_pipeline->accumulate(
+              *m_shadow_cascade_casters[j]->model, QVector3D(1.0F, 1.0F, 1.0F), 1.0F);
+        }
+        m_mesh_instancing_pipeline->flush();
+        m_last_playback_stats.shadow_static_instanced_draws += 1;
+        m_last_playback_stats.shadow_static_instanced_instances += run;
+      } else {
+        bind_depth_shader(m_directional_shadow_depth_shader, m_shadow_depth_light_vp);
+        for (std::size_t j = index; j < run_end; ++j) {
+          m_directional_shadow_depth_shader->set_uniform(
+              m_shadow_depth_model, *m_shadow_cascade_casters[j]->model);
+          mesh->draw();
+          m_last_playback_stats.shadow_static_single_draws += 1;
+        }
+      }
+      index = run_end;
     }
 
     const auto draw_single_rigged_shadow = [&](const RiggedCreatureCmd& rigged) {
@@ -804,14 +887,71 @@ void Backend::wait_for_frame_slot(FrameGpuTiming& slot) {
   m_last_playback_stats.gpu_wait_ms = std::chrono::duration<double, std::milli>(
                                           std::chrono::steady_clock::now() - wait_start)
                                           .count();
-  std::array<GLuint64, 3> ticks{};
+  std::array<GLuint64, 4> ticks{};
   for (std::size_t i = 0; i < ticks.size(); ++i) {
-    glGetQueryObjectui64v(slot.timestamps[i], GL_QUERY_RESULT, &ticks[i]);
+    if (slot.timestamps[i] != 0U) {
+      glGetQueryObjectui64v(slot.timestamps[i], GL_QUERY_RESULT, &ticks[i]);
+    }
   }
   m_last_playback_stats.gpu_shadow_ms =
       static_cast<double>(ticks[1] - ticks[0]) / 1.0e6;
   m_last_playback_stats.gpu_color_ms = static_cast<double>(ticks[2] - ticks[1]) / 1.0e6;
+  if (ticks[3] >= ticks[2]) {
+    m_gpu_breakdown_post_ms += static_cast<double>(ticks[3] - ticks[2]) / 1.0e6;
+  }
+
+  if (m_gpu_breakdown_enabled && slot.mark_count > 0) {
+    GLuint64 previous = ticks[1];
+    for (std::size_t i = 0; i < slot.mark_count; ++i) {
+      GLuint64 tick = 0;
+      glGetQueryObjectui64v(slot.marks[i], GL_QUERY_RESULT, &tick);
+      const std::uint8_t type = slot.mark_types[i];
+      if (type < m_gpu_breakdown_ms.size() && tick >= previous) {
+        m_gpu_breakdown_ms[type] += static_cast<double>(tick - previous) / 1.0e6;
+      }
+      previous = tick;
+    }
+    ++m_gpu_breakdown_frames;
+    if (m_gpu_breakdown_frames >= 120) {
+      QString report = QStringLiteral("SOI_GPU_BREAKDOWN per frame:");
+      for (std::size_t type = 0; type < m_gpu_breakdown_ms.size(); ++type) {
+        if (m_gpu_breakdown_ms[type] <= 0.0) {
+          continue;
+        }
+        report += QStringLiteral(" %1=%2ms")
+                      .arg(type)
+                      .arg(m_gpu_breakdown_ms[type] /
+                               static_cast<double>(m_gpu_breakdown_frames),
+                           0,
+                           'f',
+                           3);
+        m_gpu_breakdown_ms[type] = 0.0;
+      }
+      report += QStringLiteral(" post=%1ms")
+                    .arg(m_gpu_breakdown_post_ms /
+                             static_cast<double>(m_gpu_breakdown_frames),
+                         0,
+                         'f',
+                         3);
+      m_gpu_breakdown_post_ms = 0.0;
+      qInfo().noquote() << report;
+      m_gpu_breakdown_frames = 0;
+    }
+  }
+  slot.mark_count = 0;
   slot.pending = false;
+}
+
+void Backend::gpu_breakdown_mark(FrameGpuTiming& slot, std::uint8_t type) {
+  if (!m_gpu_breakdown_enabled || slot.mark_count >= k_gpu_breakdown_marks) {
+    return;
+  }
+  if (slot.marks[slot.mark_count] == 0U) {
+    glGenQueries(1, &slot.marks[slot.mark_count]);
+  }
+  slot.mark_types[slot.mark_count] = type;
+  glQueryCounter(slot.marks[slot.mark_count], GL_TIMESTAMP);
+  ++slot.mark_count;
 }
 
 void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
@@ -904,12 +1044,23 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
 
   m_rigged_drawn_this_frame = 0;
 
+  int breakdown_last_type = -1;
   std::size_t batch_index = 0;
   while (batch_index < prepared_batches.size()) {
     const PreparedBatch& prepared = prepared_batches[batch_index];
     const std::size_t i = prepared.start;
     const auto& cmd = queue.get_sorted(i);
     if (prepared.type == DrawCmdType::RiggedCreature) {
+    }
+    if (m_gpu_breakdown_enabled) {
+      const int type = static_cast<int>(draw_cmd_type(cmd));
+      if (type != breakdown_last_type) {
+        if (breakdown_last_type >= 0) {
+          gpu_breakdown_mark(frame_timing,
+                             static_cast<std::uint8_t>(breakdown_last_type));
+        }
+        breakdown_last_type = type;
+      }
     }
     switch (draw_cmd_type(cmd)) {
     case DrawCmdType::Cylinder:
@@ -990,9 +1141,11 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   if (m_rigged_cull_pipeline) {
     m_rigged_cull_pipeline->end_frame();
   }
+  if (breakdown_last_type >= 0) {
+    gpu_breakdown_mark(frame_timing, static_cast<std::uint8_t>(breakdown_last_type));
+  }
   glQueryCounter(frame_timing.timestamps[2], GL_TIMESTAMP);
-  frame_timing.fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-  frame_timing.pending = frame_timing.fence != nullptr;
+  m_active_frame_timing = &frame_timing;
 
   m_frame_tracker.mark_complete();
   m_frame_tracker.end_frame();
@@ -1002,6 +1155,12 @@ void Backend::execute(const DrawQueue& queue, const Camera& cam) {
   execute_scene(queue, cam);
   if (m_post_process_pipeline != nullptr) {
     m_post_process_pipeline->resolve_scene();
+  }
+  if (m_active_frame_timing != nullptr) {
+    glQueryCounter(m_active_frame_timing->timestamps[3], GL_TIMESTAMP);
+    m_active_frame_timing->fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    m_active_frame_timing->pending = m_active_frame_timing->fence != nullptr;
+    m_active_frame_timing = nullptr;
   }
 }
 

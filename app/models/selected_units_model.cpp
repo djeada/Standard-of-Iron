@@ -120,10 +120,23 @@ void SelectedUnitsModel::refresh() {
   if (m_context.selection == nullptr) {
     return;
   }
-  std::vector<Engine::Core::EntityID> ids;
-  m_context.selection->get_selected_unit_ids(ids);
+  std::vector<Engine::Core::EntityID> selected;
+  m_context.selection->get_selected_unit_ids(selected);
 
-  if (ids.size() == m_ids.size() && std::equal(ids.begin(), ids.end(), m_ids.begin())) {
+  std::vector<Engine::Core::EntityID> living;
+  living.reserve(selected.size());
+  for (const auto id : selected) {
+    App::World::UnitDescription unit;
+    if (!App::World::describe_unit(m_context.world, id, unit)) {
+      continue;
+    }
+    if (unit.is_building || !unit.alive) {
+      continue;
+    }
+    living.push_back(id);
+  }
+
+  if (living == m_ids) {
     if (!m_ids.empty()) {
       const QModelIndex first = index(0, 0);
       const QModelIndex last = index(static_cast<int>(m_ids.size()) - 1, 0);
@@ -142,16 +155,6 @@ void SelectedUnitsModel::refresh() {
   }
 
   beginResetModel();
-  m_ids.clear();
-  for (const auto id : ids) {
-    App::World::UnitDescription unit;
-    if (!App::World::describe_unit(m_context.world, id, unit)) {
-      continue;
-    }
-    if (unit.is_building || !unit.alive) {
-      continue;
-    }
-    m_ids.push_back(id);
-  }
+  m_ids = std::move(living);
   endResetModel();
 }

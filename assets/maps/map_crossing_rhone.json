@@ -9,19 +9,19 @@
             0.05
         ],
         "grass_dry": [
-            0.66,
-            0.5700000000000001,
-            0.34
+            0.52,
+            0.5,
+            0.27
         ],
         "grass_primary": [
-            0.42,
-            0.52,
-            0.25
+            0.3,
+            0.46,
+            0.21
         ],
         "grass_secondary": [
-            0.56,
-            0.58,
-            0.3
+            0.42,
+            0.55,
+            0.25
         ],
         "ground_irregularity_enabled": true,
         "ground_type": "grass_dry",

@@ -284,7 +284,28 @@ auto TerrainService::world_prop_world_position(const WorldProp& prop,
                                                float fallback_y) const -> QVector3D {
   auto const [world_x, world_z] =
       world_prop_world_xz(m_height_map.get(), m_coord_system, prop);
-  return resolve_surface_world_position(world_x, world_z, world_y_offset, fallback_y);
+
+  if (m_height_map == nullptr || prop.id == 0) {
+    return resolve_surface_world_position(world_x, world_z, world_y_offset, fallback_y);
+  }
+
+  if (!m_prop_surface_cache_valid ||
+      m_prop_surface_cache_revision != m_world_props_revision) {
+    m_prop_surface_cache.clear();
+    m_prop_surface_cache_revision = m_world_props_revision;
+    m_prop_surface_cache_valid = true;
+  }
+
+  auto entry = m_prop_surface_cache.find(prop.id);
+  if (entry == m_prop_surface_cache.end()) {
+    entry =
+        m_prop_surface_cache
+            .emplace(prop.id,
+                     resolve_surface_world_position(world_x, world_z, 0.0F, fallback_y))
+            .first;
+  }
+
+  return {entry->second.x(), entry->second.y() + world_y_offset, entry->second.z()};
 }
 
 namespace {
@@ -342,6 +363,8 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
 } // namespace
 
 void TerrainService::initialize(const MapDefinition& map_def) {
+  m_prop_surface_cache.clear();
+  m_prop_surface_cache_valid = false;
   m_height_map = std::make_unique<TerrainHeightMap>(
       map_def.grid.width, map_def.grid.height, map_def.grid.tile_size);
 
@@ -371,6 +394,8 @@ void TerrainService::initialize(const MapDefinition& map_def) {
 
 void TerrainService::clear() {
   m_height_map.reset();
+  m_prop_surface_cache.clear();
+  m_prop_surface_cache_valid = false;
   m_terrain_field.clear();
   m_biome_settings = BiomeSettings();
   m_coord_system = CoordSystem::Grid;
@@ -932,6 +957,8 @@ void TerrainService::restore_from_serialized(
     const std::vector<WorldProp>& world_props,
     const std::vector<WorldProp>& authored_world_props,
     const std::vector<Lake>& lakes) {
+  m_prop_surface_cache.clear();
+  m_prop_surface_cache_valid = false;
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
   m_height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes);
   m_biome_settings = biome;

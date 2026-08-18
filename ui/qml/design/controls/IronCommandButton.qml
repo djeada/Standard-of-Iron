@@ -34,10 +34,11 @@ AbstractButton {
     readonly property bool interactive: enabled && !blocked
 
     property string shortLabel: ""
+    property bool iconOnly: false
 
-    property bool compact: width > 0 && width < minimumShortWidth
+    readonly property bool compact: control.iconOnly || (width > 0 && width < minimumShortWidth)
 
-    readonly property bool showsShortLabel: control.shortLabel !== "" && width < minimumLabelledWidth
+    readonly property bool showsShortLabel: !control.iconOnly && control.shortLabel !== "" && width < minimumLabelledWidth
     readonly property string displayLabel: control.showsShortLabel ? control.shortLabel : control.label
 
     readonly property real labelChromeWidth: Design.Metrics.iconMedium + Design.Metrics.space8 + Design.Metrics.space8 + Design.Metrics.space4 + hotkeyWidth

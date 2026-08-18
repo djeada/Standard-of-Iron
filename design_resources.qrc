@@ -52,6 +52,7 @@
         <file alias="layouts/GameShell.qml">ui/qml/design/layouts/GameShell.qml</file>
         <file alias="layouts/BriefingLayout.qml">ui/qml/design/layouts/BriefingLayout.qml</file>
         <file alias="layouts/OutcomeLayout.qml">ui/qml/design/layouts/OutcomeLayout.qml</file>
+        <file alias="layouts/BattleReportLayout.qml">ui/qml/design/layouts/BattleReportLayout.qml</file>
         <file alias="layouts/ToolShell.qml">ui/qml/design/layouts/ToolShell.qml</file>
     </qresource>
 </RCC>

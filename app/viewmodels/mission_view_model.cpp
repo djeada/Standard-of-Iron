@@ -9,6 +9,15 @@
 
 namespace App::ViewModels {
 
+namespace {
+
+auto stage_holds_an_enemy_settlement(const QVariantMap& stage) -> bool {
+  return stage.value("target_structure_present").toBool() &&
+         !stage.value("target_structure_is_local").toBool();
+}
+
+} // namespace
+
 MissionViewModel::MissionViewModel(const App::Core::ClientContext& context,
                                    App::Core::ClientHost& host,
                                    CameraViewModel& camera,
@@ -24,20 +33,40 @@ void MissionViewModel::set_stages(const QVariantList& stages) {
   m_markers.clear();
   m_active_index = -1;
 
+  bool settlements_left_to_take = false;
   for (int i = 0; i < m_stages.size(); ++i) {
     const QVariantMap stage = m_stages.at(i).toMap();
-    if (m_active_index < 0 && !stage.value("complete").toBool()) {
+    const bool complete = stage.value("complete").toBool();
+    if (m_active_index < 0 && !complete) {
       m_active_index = i;
     }
-
-    if (i == m_active_index && stage.value("has_target").toBool() &&
-        stage.contains("nx")) {
-      QVariantMap marker;
-      marker["nx"] = stage.value("nx");
-      marker["ny"] = stage.value("ny");
-      marker["title"] = stage.value("title");
-      m_markers.append(marker);
+    if (!complete && stage_holds_an_enemy_settlement(stage)) {
+      settlements_left_to_take = true;
     }
+  }
+
+  for (int i = 0; i < m_stages.size(); ++i) {
+    const QVariantMap stage = m_stages.at(i).toMap();
+    if (!stage.value("has_target").toBool() || !stage.contains("nx")) {
+      continue;
+    }
+    if (stage.value("target_structure_is_local").toBool()) {
+      continue;
+    }
+
+    const bool is_active = i == m_active_index;
+    const bool is_a_settlement_still_to_take =
+        settlements_left_to_take && stage_holds_an_enemy_settlement(stage);
+    if (!is_active && !is_a_settlement_still_to_take) {
+      continue;
+    }
+
+    QVariantMap marker;
+    marker["nx"] = stage.value("nx");
+    marker["ny"] = stage.value("ny");
+    marker["title"] = stage.value("title");
+    marker["active"] = is_active;
+    m_markers.append(marker);
   }
 
   emit stages_changed();

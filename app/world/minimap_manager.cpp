@@ -42,6 +42,12 @@ bool MinimapManager::consume_dirty_flag() {
   return was_dirty;
 }
 
+namespace {
+
+constexpr int k_hud_minimap_max_dimension = 320;
+
+} // namespace
+
 void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
 
   Game::Map::Minimap::MinimapOrientation::instance().set_yaw_degrees(
@@ -50,6 +56,7 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
   Game::Map::Minimap::MinimapGenerator::Config config;
   config.structure_bake =
       Game::Map::Minimap::MinimapGenerator::StructureBake::LandmarksOnly;
+  config.max_image_dimension = k_hud_minimap_max_dimension;
   Game::Map::Minimap::MinimapGenerator generator(config);
   m_minimap_base_image = generator.generate(map_def);
   if (!m_minimap_base_image.isNull() &&

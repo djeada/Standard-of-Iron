@@ -522,47 +522,54 @@ Item {
                 model: (topRoot.game_ready() && game.mission) ? game.mission.markers : []
 
                 delegate: Item {
+                    id: objectivePin
+
                     required property var modelData
 
                     readonly property real paintedW: minimapImage.paintedWidth
                     readonly property real paintedH: minimapImage.paintedHeight
+                    readonly property bool current: modelData.active !== false
+
+                    property real pulse: 1
+
+                    SequentialAnimation on pulse  {
+                        running: objectivePin.current && !Design.A11y.reducedMotion
+                        loops: Animation.Infinite
+
+                        NumberAnimation {
+                            from: 1
+                            to: 0.25
+                            duration: 1100
+                            easing.type: Easing.InOutQuad
+                        }
+
+                        NumberAnimation {
+                            to: 1
+                            duration: 1100
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
 
                     visible: paintedW > 0 && paintedH > 0
+                    opacity: objectivePin.current ? 1 : 0.6
                     x: ((minimapImage.width - paintedW) / 2) + (modelData.nx || 0) * paintedW
                     y: ((minimapImage.height - paintedH) / 2) + (modelData.ny || 0) * paintedH
-                    z: 11
+                    z: objectivePin.current ? 12 : 11
 
                     Rectangle {
                         anchors.centerIn: parent
-                        width: Design.Metrics.space12
+                        width: objectivePin.current ? Design.Metrics.space12 : Design.Metrics.space8
                         height: width
                         radius: width / 2
                         color: "transparent"
                         border.width: Design.Metrics.borderThin
                         border.color: Design.Theme.accent
-
-                        SequentialAnimation on opacity  {
-                            running: !Design.A11y.reducedMotion
-                            loops: Animation.Infinite
-
-                            NumberAnimation {
-                                from: 1
-                                to: 0.25
-                                duration: 1100
-                                easing.type: Easing.InOutQuad
-                            }
-
-                            NumberAnimation {
-                                to: 1
-                                duration: 1100
-                                easing.type: Easing.InOutQuad
-                            }
-                        }
+                        opacity: objectivePin.current ? objectivePin.pulse : 1
                     }
 
                     Rectangle {
                         anchors.centerIn: parent
-                        width: Design.Metrics.space4
+                        width: objectivePin.current ? Design.Metrics.space4 : Design.Metrics.space2
                         height: width
                         radius: width / 2
                         color: Design.Theme.accent

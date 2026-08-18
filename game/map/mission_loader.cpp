@@ -532,7 +532,7 @@ auto MissionLoader::load_from_json_file(const QString& file_path,
 
   if (root.contains("commander_messages")) {
     const QJsonArray messages = root["commander_messages"].toArray();
-    for (const auto& message_val : messages) {
+    for (const auto message_val : messages) {
       out_mission.commander_messages.push_back(
           parse_commander_message(message_val.toObject()));
     }
