@@ -62,6 +62,7 @@ auto ProductionViewModel::has_selected_type(const QString& type) const -> bool {
 
 void ProductionViewModel::recruit_near_selected(const QString& unit_type) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.commands != nullptr) {
     m_context.commands->recruit_near_selected(unit_type, m_context.local_owner_id);
   }
@@ -105,6 +106,7 @@ auto ProductionViewModel::marketplace_sell(const QString& resource_key) -> bool 
 auto ProductionViewModel::trade(const QString& resource_key,
                                 Game::Command::TradeDirection direction) -> bool {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.world == nullptr || m_context.session == nullptr) {
     return false;
   }
@@ -147,6 +149,7 @@ auto ProductionViewModel::trade(const QString& resource_key,
 
 void ProductionViewModel::set_rally_at_screen(qreal sx, qreal sy) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.production != nullptr && m_context.viewport != nullptr) {
     m_context.production->set_rally_at_screen(
         sx, sy, m_context.local_owner_id, *m_context.viewport);

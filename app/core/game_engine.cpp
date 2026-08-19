@@ -228,6 +228,7 @@ GameEngine::GameEngine(QObject* parent)
 }
 
 GameEngine::~GameEngine() {
+  stop_simulation_thread();
 
   m_autosave_timer.stop();
   if (m_save_load_service != nullptr) {
@@ -348,13 +349,27 @@ void GameEngine::apply_game_mode_render_policy() {
 void GameEngine::set_active_camera(Render::GL::Camera* camera) {
   m_camera = camera;
   publish_client_context();
+  sync_render_camera();
   if (m_renderer != nullptr) {
-    m_renderer->set_camera(m_camera);
+    m_renderer->set_camera(&m_render_camera);
     if (m_viewport.width > 0 && m_viewport.height > 0) {
       m_renderer->set_viewport(m_viewport.width, m_viewport.height);
     }
   }
-  Render::GL::CameraVisibility::instance().set_camera(m_camera);
+  Render::GL::CameraVisibility::instance().set_camera(&m_render_camera);
+}
+
+void GameEngine::sync_render_camera() {
+  if (m_camera == nullptr) {
+    return;
+  }
+  if (m_viewport.width > 0 && m_viewport.height > 0) {
+    float const aspect =
+        static_cast<float>(m_viewport.width) / static_cast<float>(m_viewport.height);
+    m_camera->set_perspective(
+        m_camera->get_fov(), aspect, m_camera->get_near(), m_camera->get_far());
+  }
+  m_render_camera = *m_camera;
 }
 
 void GameEngine::update_cursor(Qt::CursorShape new_cursor) {
@@ -527,7 +542,6 @@ void GameEngine::update_active_runtime_simulation(float dt) {
   }
 
   m_world->update(dt);
-  m_camera_view_model->update_follow();
   finish_replay_verification_if_done();
 }
 
@@ -562,6 +576,8 @@ namespace {
 
 constexpr auto k_render_frame_wait_budget = std::chrono::milliseconds(2000);
 constexpr auto k_render_frame_wait_poll = std::chrono::microseconds(250);
+constexpr auto k_simulation_tick_period = std::chrono::microseconds(16667);
+constexpr float k_simulation_max_frame_seconds = 0.1F;
 
 } // namespace
 
@@ -570,9 +586,11 @@ GameEngine::WorldFreeze::WorldFreeze(GameEngine& engine)
   m_engine.m_world_freeze_depth.fetch_add(1);
 
   const auto deadline = std::chrono::steady_clock::now() + k_render_frame_wait_budget;
-  while (m_engine.m_render_frame_active.load()) {
+  while (m_engine.m_render_frame_active.load() ||
+         m_engine.m_simulation_tick_active.load()) {
     if (std::chrono::steady_clock::now() >= deadline) {
-      qWarning() << "GameEngine: the render thread did not finish its frame within"
+      qWarning() << "GameEngine: the render or simulation thread did not finish "
+                    "its frame within"
                  << static_cast<int>(k_render_frame_wait_budget.count())
                  << "ms; rebuilding the world anyway";
       break;
@@ -598,7 +616,97 @@ void GameEngine::end_render_frame() {
   m_render_frame_active.store(false);
 }
 
-void GameEngine::update(float dt) {
+auto GameEngine::try_begin_simulation_tick() -> bool {
+  m_simulation_tick_active.store(true);
+  if (m_world_freeze_depth.load() > 0) {
+    m_simulation_tick_active.store(false);
+    return false;
+  }
+  return true;
+}
+
+void GameEngine::end_simulation_tick() {
+  m_simulation_tick_active.store(false);
+}
+
+void GameEngine::start_simulation_thread() {
+  if (m_simulation_thread != nullptr) {
+    return;
+  }
+  m_simulation_thread_running.store(true, std::memory_order_release);
+  m_simulation_thread.reset(QThread::create([this]() { run_simulation_thread(); }));
+  m_simulation_thread->setObjectName(QStringLiteral("SoISimulation"));
+  m_simulation_thread->start();
+  qInfo() << "GameEngine: simulation thread started";
+}
+
+void GameEngine::stop_simulation_thread() {
+  if (m_simulation_thread == nullptr) {
+    return;
+  }
+  m_simulation_thread_running.store(false, std::memory_order_release);
+  m_simulation_thread->wait();
+  m_simulation_thread.reset();
+  qInfo() << "GameEngine: simulation thread stopped";
+}
+
+void GameEngine::run_simulation_thread() {
+  auto next_tick = std::chrono::steady_clock::now();
+  auto last_tick = next_tick;
+  while (m_simulation_thread_running.load(std::memory_order_acquire)) {
+    std::this_thread::sleep_until(next_tick);
+    auto const now = std::chrono::steady_clock::now();
+    next_tick += k_simulation_tick_period;
+    if (next_tick < now) {
+      next_tick = now + k_simulation_tick_period;
+    }
+    float const dt = std::min(std::chrono::duration<float>(now - last_tick).count(),
+                              k_simulation_max_frame_seconds);
+    last_tick = now;
+
+    const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+    if (!try_begin_simulation_tick()) {
+      continue;
+    }
+    auto const tick_start = std::chrono::steady_clock::now();
+    simulate(dt);
+    auto const tick_end = std::chrono::steady_clock::now();
+    end_simulation_tick();
+    m_simulation_tick_us.fetch_add(
+        static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(tick_end - tick_start)
+                .count()),
+        std::memory_order_acq_rel);
+  }
+}
+
+void GameEngine::simulate(float dt) {
+  if (m_runtime.loading) {
+    return;
+  }
+
+  float simulation_time_scale = 0.0F;
+  if (!m_runtime.paused) {
+    simulation_time_scale =
+        m_runtime.time_scale * m_commander_view_model->time_effect_scale(
+                                   dt * m_runtime.time_scale, m_runtime.paused);
+  }
+  m_simulation_time_scale.store(simulation_time_scale, std::memory_order_release);
+
+  update_mission_waves(dt * simulation_time_scale);
+  update_mission_stages(dt * simulation_time_scale);
+  update_commander_messages(dt * simulation_time_scale);
+
+  RuntimeFrameState frame_state{.simulation_time_scale = simulation_time_scale};
+  m_frame_orchestrator.advance_simulation(
+      scene_context(), frame_state, dt, [this](float step_dt) {
+        update_active_runtime_simulation(step_dt);
+      });
+  note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
+}
+
+void GameEngine::update_presentation(float dt) {
+  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
   if (m_runtime.loading) {
     return;
   }
@@ -607,16 +715,8 @@ void GameEngine::update(float dt) {
   m_order_markers.update(dt, m_world);
   m_activity_view_model->advance_feedback(dt);
 
-  float simulation_time_scale = 0.0F;
-  if (!m_runtime.paused) {
-    simulation_time_scale =
-        m_runtime.time_scale * m_commander_view_model->time_effect_scale(
-                                   dt * m_runtime.time_scale, m_runtime.paused);
-  }
-
-  update_mission_waves(dt * simulation_time_scale);
-  update_mission_stages(dt * simulation_time_scale);
-  update_commander_messages(dt * simulation_time_scale);
+  const float simulation_time_scale =
+      m_simulation_time_scale.load(std::memory_order_acquire);
 
   RuntimeFrameState frame_state{
       .local_owner_id = m_runtime.local_owner_id,
@@ -635,20 +735,24 @@ void GameEngine::update(float dt) {
             emit selected_units_data_changed();
           }};
 
-  m_frame_orchestrator.update(
-      scene_context(),
-      frame_state,
-      m_entity_cache,
-      (!m_runtime.paused && !m_runtime.loading) ? m_ambient_state_manager.get()
-                                                : nullptr,
-      m_runtime.victory_state,
-      dt,
-      callbacks,
-      [this](float step_dt) { update_active_runtime_simulation(step_dt); });
+  m_frame_orchestrator.update(scene_context(),
+                              frame_state,
+                              m_entity_cache,
+                              (!m_runtime.paused && !m_runtime.loading)
+                                  ? m_ambient_state_manager.get()
+                                  : nullptr,
+                              m_runtime.victory_state,
+                              dt,
+                              callbacks,
+                              {});
   m_runtime.selection_refresh_counter = frame_state.selection_refresh_counter;
   m_runtime.minimap_unit_update_accumulator =
       frame_state.minimap_unit_update_accumulator;
-  note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
+  if (m_commander_view_model->active()) {
+    m_commander_view_model->update_camera_presentation(dt);
+  } else {
+    m_camera_view_model->update_follow();
+  }
   {
     Render::Profiling::AccumulatorScope const sync_scope(
         &Render::Profiling::global_profile().view_model_sync_us);
@@ -664,30 +768,48 @@ void GameEngine::update(float dt) {
   }
 }
 
+void GameEngine::update(float dt) {
+  simulate(dt);
+  update_presentation(dt);
+}
+
 void GameEngine::render(int pixel_width, int pixel_height) {
   if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading) {
     return;
   }
 
-  Render::GL::CameraVisibility::instance().set_camera(m_camera);
-
   if (pixel_width > 0 && pixel_height > 0) {
     m_viewport.width = pixel_width;
     m_viewport.height = pixel_height;
-    m_renderer->set_viewport(pixel_width, pixel_height);
   }
 
-  if (auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>()) {
-    const auto& sel = selection_system->get_selected_units();
-    std::vector<Engine::Core::EntityID> ids;
-    ids.reserve(sel.size());
-    for (const auto id : sel) {
-      if (!m_commander_view_model->should_render_selected_entity(id)) {
-        continue;
+  {
+    const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+    sync_render_camera();
+    if (auto* selection_system =
+            m_world->get_system<Game::Systems::SelectionSystem>()) {
+      const auto& sel = selection_system->get_selected_units();
+      m_scratch_selected_ids.clear();
+      m_scratch_selected_ids.reserve(sel.size());
+      for (const auto id : sel) {
+        if (!m_commander_view_model->should_render_selected_entity(id)) {
+          continue;
+        }
+        m_scratch_selected_ids.push_back(id);
       }
-      ids.push_back(id);
+
+      if (m_scratch_selected_ids != m_selected_render_ids) {
+        m_selected_render_ids = m_scratch_selected_ids;
+        m_renderer->set_selected_entities(m_selected_render_ids);
+      }
     }
-    m_renderer->set_selected_entities(ids);
+    m_world->ensure_render_snapshot();
+  }
+
+  m_renderer->set_camera(&m_render_camera);
+  Render::GL::CameraVisibility::instance().set_camera(&m_render_camera);
+  if (m_viewport.width > 0 && m_viewport.height > 0) {
+    m_renderer->set_viewport(m_viewport.width, m_viewport.height);
   }
 
   m_renderer->set_world_view(m_session != nullptr
@@ -709,19 +831,23 @@ void GameEngine::render(int pixel_width, int pixel_height) {
   }
 
   m_renderer->render_world(m_world);
-  App::Core::FrameUiCoordinator::render_effects(
-      {.renderer = m_renderer.get(),
-       .world = m_world,
-       .command_controller = m_command_controller.get(),
-       .local_owner_id = m_runtime.local_owner_id,
-       .commander_rally_preview_pos = m_commander_view_model->rally_preview_position(),
-       .attack_targeting = &m_attack_targeting,
-       .attack_range_rings = &m_attack_range_rings,
-       .order_markers = &m_order_markers.markers(),
-       .target_focus = &m_target_focus,
-       .interaction_targeting = &m_interaction_targeting,
-       .objective_marker = m_mission_stage_tracker.active_target()},
-      [this]() { m_commander_view_model->render_effects(); });
+  {
+    const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+    App::Core::FrameUiCoordinator::render_effects(
+        {.renderer = m_renderer.get(),
+         .world = m_world,
+         .command_controller = m_command_controller.get(),
+         .local_owner_id = m_runtime.local_owner_id,
+         .commander_rally_preview_pos =
+             m_commander_view_model->rally_preview_position(),
+         .attack_targeting = &m_attack_targeting,
+         .attack_range_rings = &m_attack_range_rings,
+         .order_markers = &m_order_markers.markers(),
+         .target_focus = &m_target_focus,
+         .interaction_targeting = &m_interaction_targeting,
+         .objective_marker = m_mission_stage_tracker.active_target()},
+        [this]() { m_commander_view_model->render_effects(); });
+  }
   m_renderer->end_frame();
 
   update_loading_overlay();

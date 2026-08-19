@@ -268,8 +268,12 @@ TEST(RuntimeFrameOrchestratorTest, MovingUnitMarkersUpdateAtMinimapCadence) {
     ++minimap_notifications;
   }};
 
+  const auto step_world = [&world](float step) {
+    world.update(step);
+  };
+
   orchestrator.update(
-      scene, state, entity_cache, nullptr, QString(), 0.016F, callbacks, [](float) {});
+      scene, state, entity_cache, nullptr, QString(), 0.016F, callbacks, step_world);
   EXPECT_EQ(minimap_notifications, 1);
 
   auto* transform = unit->get_component<Engine::Core::TransformComponent>();
@@ -278,12 +282,12 @@ TEST(RuntimeFrameOrchestratorTest, MovingUnitMarkersUpdateAtMinimapCadence) {
 
   for (int frame = 0; frame < 3; ++frame) {
     orchestrator.update(
-        scene, state, entity_cache, nullptr, QString(), 0.01F, callbacks, [](float) {});
+        scene, state, entity_cache, nullptr, QString(), 0.01F, callbacks, step_world);
   }
   EXPECT_EQ(minimap_notifications, 1);
 
   orchestrator.update(
-      scene, state, entity_cache, nullptr, QString(), 0.01F, callbacks, [](float) {});
+      scene, state, entity_cache, nullptr, QString(), 0.01F, callbacks, step_world);
   EXPECT_EQ(minimap_notifications, 2);
 }
 
