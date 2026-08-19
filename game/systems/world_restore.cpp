@@ -3,7 +3,6 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
-#include "../systems/gate_service.h"
 #include "../systems/global_stats_registry.h"
 #include "../systems/nav_grid.h"
 #include "../systems/owner_registry.h"
@@ -80,10 +79,6 @@ void rebuild_building_collisions(Engine::Core::World* world) {
                                transform->position.x,
                                transform->position.z,
                                unit->owner_id);
-
-    if (entity->has_component<Engine::Core::GateComponent>()) {
-      Game::Systems::GateService::mark_gate_footprint_navigable(entity->get_id());
-    }
   }
 
   Game::Systems::WallNetworkService::refresh_world(*world);

@@ -14,6 +14,7 @@
 #include "systems/owner_registry.h"
 #include "systems/pathfinding.h"
 #include "systems/wall_network_service.h"
+#include "systems/world_restore.h"
 #include "units/spawn_type.h"
 #include "units/troop_config.h"
 #include "units/troop_type.h"
@@ -32,7 +33,10 @@ protected:
   void SetUp() override {
     BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
-    NavGrid::initialize(32, 32);
+
+    // Odd extents put the cell centres on integers, which is where wall
+    // placement snaps gates in a real map.
+    NavGrid::initialize(33, 33);
 
     auto& owners = OwnerRegistry::instance();
     owners.clear();
@@ -109,6 +113,16 @@ protected:
   }
 };
 
+auto walkable_cells_across(const Point& gate_cell) -> std::vector<int> {
+  std::vector<int> walkable;
+  for (int offset = -4; offset <= 4; ++offset) {
+    if (NavGrid::is_grid_walkable(Point(gate_cell.x + offset, gate_cell.y))) {
+      walkable.push_back(offset);
+    }
+  }
+  return walkable;
+}
+
 void expect_passage_on_gate(const NavigationPassage& passage,
                             const Entity& gate_entity) {
   const auto* transform = gate_entity.get_component<TransformComponent>();
@@ -143,16 +157,23 @@ TEST_F(GateSystemTest, GatehouseIsSolidAcrossThreeCellsAndOpensOnlyInTheMiddle) 
   WallNetworkService::refresh_world(world);
   const auto& passages = BuildingCollisionRegistry::instance().navigation_passages();
   ASSERT_EQ(passages.size(), 1U);
-  EXPECT_FLOAT_EQ(passages.front().width, GateComponent::k_passage_half_width * 2.0F);
+  EXPECT_FLOAT_EQ(passages.front().width, GateService::lane_half_width() * 2.0F);
   EXPECT_LT(passages.front().width, footprint->width);
+
+  EXPECT_EQ(walkable_cells_across(NavGrid::world_to_grid(0.0F, 0.0F)),
+            std::vector<int>{0});
 }
 
-TEST_F(GateSystemTest, GateOpeningIsWideEnoughForTheLargestUnit) {
+TEST_F(GateSystemTest, SingleFileLaneKeepsTheLargestUnitClearOfTheJambs) {
 
   const float elephant_width =
       Game::Units::TroopConfig::instance().get_selection_ring_size(
           Game::Units::TroopType::Elephant);
+
   EXPECT_GT(GateComponent::k_passage_half_width * 2.0F, elephant_width * 1.5F);
+
+  const float widest_reach = GateService::lane_half_width() + (elephant_width * 0.5F);
+  EXPECT_LT(widest_reach, GateComponent::k_passage_half_width);
 }
 
 TEST_F(GateSystemTest, OpensForOwnerTroopInRange) {
@@ -355,6 +376,21 @@ TEST_F(GateSystemTest, GateAcrossAVerticalRunTurnsToFaceIt) {
   WallNetworkService::refresh_world(world);
 
   EXPECT_FLOAT_EQ(gate_entity->get_component<TransformComponent>()->rotation.y, 90.0F);
+}
+
+TEST_F(GateSystemTest, AReloadedGateKeepsItsSingleFileLane) {
+  World world;
+  make_wall(world, -4.0F, 0.0F, k_gate_owner);
+  make_wall(world, 4.0F, 0.0F, k_gate_owner);
+  make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  WallNetworkService::refresh_world(world);
+
+  const Point gate_cell = NavGrid::world_to_grid(0.0F, 0.0F);
+  ASSERT_EQ(walkable_cells_across(gate_cell), std::vector<int>{0});
+
+  Game::Persistence::rebuild_building_collisions(&world);
+
+  EXPECT_EQ(walkable_cells_across(gate_cell), std::vector<int>{0});
 }
 
 TEST_F(GateSystemTest, ManualModeSurvivesASaveRoundTrip) {
