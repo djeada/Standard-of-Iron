@@ -827,8 +827,11 @@ TEST_F(CombatModeTest, CombatQueryContextSkipsRemovedAndDeadSpatialEntries) {
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
 
-  EXPECT_EQ(query_context.entities_by_id.count(removed_enemy->get_id()), 0U);
-  EXPECT_EQ(query_context.entities_by_id.count(dead_enemy->get_id()), 0U);
+  EXPECT_EQ(query_context.find_entity(removed_enemy->get_id()), nullptr);
+  EXPECT_EQ(query_context.find_entity(dead_enemy->get_id()), nullptr);
+  EXPECT_EQ(query_context.find_entity(valid_enemy->get_id()), valid_enemy);
+  EXPECT_TRUE(query_context.hostile(1, 2));
+  EXPECT_FALSE(query_context.hostile(2, 2));
   EXPECT_FALSE(std::any_of(query_context.units.begin(),
                            query_context.units.end(),
                            [removed_enemy, dead_enemy](Entity* entity) {

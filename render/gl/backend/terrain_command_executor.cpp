@@ -374,6 +374,37 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
       shader.set_uniform(pipeline.m_terrain_uniforms.height_to_world, height.to_world);
     }
   }
+  const bool field_ready = height.enabled && height.field_texture != nullptr;
+  if (pipeline.m_terrain_uniforms.has_field_texture != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_field_texture,
+                       field_ready ? 1 : 0);
+  }
+  if (field_ready) {
+    height.field_texture->bind(TextureUnit::terrain_fields);
+    if (pipeline.m_terrain_uniforms.field_texture != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.field_texture,
+                         TextureUnit::terrain_fields);
+    }
+  }
+
+  const bool atlas_ready = height.noise_atlas != 0U;
+  if (pipeline.m_terrain_uniforms.has_noise_atlas != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_noise_atlas,
+                       atlas_ready ? 1 : 0);
+  }
+  if (atlas_ready) {
+    glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_noise_atlas);
+    glBindTexture(GL_TEXTURE_2D, height.noise_atlas);
+    glActiveTexture(GL_TEXTURE0);
+    if (pipeline.m_terrain_uniforms.noise_atlas != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas,
+                         TextureUnit::terrain_noise_atlas);
+    }
+    if (pipeline.m_terrain_uniforms.noise_atlas_world_size != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas_world_size,
+                         height.noise_atlas_world_size);
+    }
+  }
   set_camera_uniform(shader, pipeline.m_terrain_uniforms, camera_position);
 }
 

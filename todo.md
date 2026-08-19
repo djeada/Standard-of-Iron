@@ -44,28 +44,60 @@ each, roughly 135 noise evaluations; about fifteen of the calls are functions of
 never changes during a match. These may be the better half of the win: 23
 dependent taps thrash the texture cache in a way arithmetic does not.
 
-- [ ] Tag every `gradient_fbm` / `gradient_noise` call as bakeable or per-pixel,
-      by frequency. Keep grain, granular, speck, rock detail and cracks
-      procedural: they need per-pixel resolution.
+Half of this is **done** (18 Aug 2026): the height-map neighbourhood queries are
+baked. The noise half is not.
+
+- [x] Bake sky openness and curvature. Done on the **CPU**, not in an offscreen
+      GL pass -- `m_height_data` is already a `std::vector<float>`, so there is
+      nothing to read back and no need to share GLSL.
+      `TerrainRenderer::bake_terrain_fields()` writes both into the two channels
+      of an `RG16F` texture at one texel per tile; `terrain_chunk.frag` reads
+      `u_field_tex` once instead of 23 dependent taps.
+- [x] Validate. Mean brightness identical on Zama, Crossing the Alps and the
+      mountain map; 0.008% of pixels differ by more than 8/255 on the two hilly
+      maps; ambient occlusion still reads in the gullies and at the cliff feet.
+- [x] Re-measure. Terrain surface (draw type 8) 6.20 ms to 5.75 ms, six
+      interleaved arena runs each: **about 7%**, not the hoped-for 60%.
+
+The remaining, larger half is the 27 `gradient_fbm` calls:
+
+- [x] Tag every `gradient_fbm` / `gradient_noise` call as bakeable or per-pixel,
+      by frequency. **Done** -- the full table is in RENDERING_ARCHITECTURE.md.
+      It shrinks the prize: `rock_coord`, `rill_coord` and `relief_coord` are all
+      `mix(world_coord, wall_coord, wall_blend)` or projections onto
+      `normal.xz`, so `rock_detail`, `rock_grain`, `rock_strata`, `bedding`,
+      `scrub_field`, `rill_field`, `rill_shifted` and the three
+      `relief_octave()` calls **move with the shading normal and cannot go into
+      a world-space texture at all** -- not for the resolution reason this plan
+      gave. Nineteen fields are genuinely bakeable, and they are the five-octave
+      `gradient_fbm` ones, so they are still the expensive part.
+- [ ] Sixteen of those nineteen sit at or below 0.4 cycles/tile and fit one
+      atlas at 1 texel/tile. `fleck_field` (1.15), `tussock` (0.90) and
+      `graze_drift` (0.77) would force 4 texels/tile on their own -- leave them
+      procedural for the first cut.
 - [ ] Add a one-time offscreen bake at map load that renders the bakeable fields
       into a world-space texture atlas, four fields per RGBA texture, 2-4
       texels/m (Zama at 800x800 tiles gives 1600-3200 square per texture, so
       three or four textures).
-- [ ] Bake sky openness and curvature as two further channels of the same atlas.
-      They are cheaper to bake than the noise (the height map is already
-      resident) and they invalidate on the same event: a new map.
-- [ ] The bake must use the **same** GLSL functions as the runtime shader, so the
-      values match; share them through `assets/shaders/include/`.
+- [x] The bake must use the **same** GLSL functions as the runtime shader, so the
+      values match; share them through `assets/shaders/include/`. **Done** --
+      `assets/shaders/include/terrain_noise.glsl` now holds the hash, value
+      noise, gradient noise, fbm and cellular helpers, and `terrain_chunk.frag`
+      calls them through thin wrappers. The fbm takes its octave count and
+      footprint as arguments rather than reading `u_noise_octaves` and calling
+      `fwidth` itself, which is exactly what a bake pass needs: it passes a
+      footprint of 0 to get every octave. Verified behaviour-preserving -- the
+      extraction moves the Zama arena frame by mean 1.94/255, which is _below_
+      the 2.28 run-to-run noise floor of the same binary rendered twice.
 - [ ] Swap the tagged calls for texture samples in the fragment shader.
-- [ ] Validate: `arena_app --batch --scenario roman_marching_camp` and a hillside
-      plus a plain screenshot compared before/after. Expect a small diff from
-      bilinear filtering; confirm no banding on slopes, no shimmer when the
-      camera moves, and that ambient occlusion still reads in gullies and at
-      cliff feet, which is what sky openness drives.
-- [ ] Re-measure with `SOI_GPU_BREAKDOWN=1` (terrain is draw-command type 8).
 
-Expected: terrain 2.5 ms to under 1 ms, roughly a 20% shorter GPU frame here and
-much more on weak GPUs. Bounded, no gameplay risk.
+Watch out: `gradient_fbm` fades its octaves by `fwidth(p)`, so it is a function
+of the screen footprint as well as the world position and is **not** the pure
+function of world position this plan assumed. A bake has to fix the octave count
+and let the baked texture's mip chain do the distance fade instead.
+
+Revised expectation: the 23 dependent taps were worth 7%, not the better half.
+The noise is where the remaining cost is.
 
 ### Not worth baking: fog
 
@@ -84,7 +116,40 @@ occlusion, godrays, blur and FXAA. The fog batch itself (draw-command type 5) is
   nothing: two evaluations, not 135.
 - Distance fog is analytic, a range function with no noise at all.
 
+## 1b. A crash blocks long Zama runs
+
+Found while validating the above, and **pre-existing at `ed7d5b71`** -- reproduced
+in a clean detached-worktree build, so it is not from any of this work. Roughly
+half of all Zama runs longer than ~15 s segfault on the render thread:
+
+```
+Thread "QSGRenderThread" SIGSEGV
+Render::GL::VertexArray::bind            render/gl/buffer.cpp:108
+Render::GL::Mesh::prepare_draw           render/gl/mesh.cpp:107
+MeshInstancingPipeline::flush            render/gl/backend/mesh_instancing_pipeline.cpp:174
+Backend::render_directional_shadows
+Backend::execute_scene                   render/gl/backend.cpp:987
+```
+
+`MeshInstancingPipeline::m_current_mesh` is a bare `Mesh*`. `flush()` null-checks
+it, which a freed pointer passes, and then faults reading the `m_vao` unique_ptr
+inside the dead Mesh. The draw queue is double-buffered, so a Mesh submitted into
+queue N can be destroyed before queue N is played back.
+
+- [ ] Give the pipeline ownership, or a generation-checked handle, instead of a
+      bare `Mesh*`. Item 2 will widen this window, not close it.
+
 ## 2. Move the simulation off the render thread
+
+Measured on Zama, Ultra, 176 soldiers, with the fixed instruments (two runs):
+`present` 22.4/26.5 ms -- the thread is blocked on the compositor for most of the
+frame -- then `sim` 2.40/2.32, `play` 2.26/0.47, `submit` 0.69/1.28, `shadow`
+0.45/0.41, `minimap` 0.23, `snapshot` 0.16, `collect` 0.09, `sort` 0.07,
+`view_model_sync` 0.03. `World::update` is 2.09/2.00 of the sim, 87% of it.
+
+So of ~5-6 ms of render-thread CPU, about 2.5 ms -- the sim plus the minimap --
+does not belong on that thread at all. At 1x the thread is not saturated; at 4x
+the orchestrator runs up to 8 sim steps per frame and that is where it bites.
 
 89% of process cycles are on `QSGRenderThread` with 20 cores idle. Sim rate and
 frame rate are the same number, so every hitch in a game system is a dropped
@@ -96,10 +161,40 @@ floor. Budget a week, not a day.
       thread should consume the last published snapshot and never touch the live
       world.
 - [ ] Stage one: audit and fix everything that reads the live world off the sim
-      thread. Known callers are `GameEngine::update`'s frame orchestrator,
-      `MinimapManager::update_units`, the HUD view models,
-      `SelectedUnitsModel`, picking, and `ActivityViewModel`. Put the boundary in
-      and prove it holds before moving any threading.
+      thread. **Started 18 Aug 2026.**
+    - [x] `MinimapManager::update_units` reads the published snapshot now, not the
+          live world. The orchestrator acquires it and hands it over, so the
+          manager itself stays snapshot-agnostic.
+          `RuntimeFrameOrchestratorTest.MinimapReadsThePublishedSnapshotNotTheLiveWorld`
+          proves it: an unpublished live-world write does not change the minimap
+          image, and publishing it does.
+    - [ ] `SelectedUnitsModel::refresh` is connected with `Qt::AutoConnection`
+          from a signal emitted on the render thread, so it already runs on the
+          GUI thread and reads `ClientContext::world` live. That is a cross-thread
+          live-world read **today**, before any threading work. It is blocked on
+          the snapshot: it needs `UnitComponent`, `StaminaComponent` and
+          `BuildingComponent` (all copied) plus the ten components
+          `classify_unit_activity()` reads, of which
+          **`CivilianDeliveryComponent` is not in `copy_render_components`**.
+          Converting without adding it would silently drop the civilian
+          "delivering" activity. Add the component _with_ the conversion, never
+          before it -- a copy nothing reads is pure cost on every sim step.
+    - [ ] `ActivityViewModel` mixes both: `record_hit` is a read, but
+          `clear_inspect_target` mutates the selection system. This has to be
+          classified per call site, not per file; a blanket swap would be wrong.
+    - [ ] Still to audit: picking, the HUD view models, and the input path.
+          `InputCommandHandler`, `CommandController`, `ProductionManager` and
+          `ArmyFormationController` each hold a raw `Engine::Core::World*` and are
+          driven from QML on the GUI thread, so they mutate the live world while
+          the sim runs on the render thread. `World::update` holds
+          `m_entity_mutex` for its whole duration and the structural `World::`
+          calls take it too, so the entity registry is serialised -- but direct
+          component-field writes through `Entity::get_component<T>()` are covered
+          by nothing at all.
+    - [ ] Land the boundary as a type rather than a convention: a const-only read
+          view that holds the snapshot's `shared_ptr` alive for the duration of
+          the read. Then ratchet the count of remaining live-world reads down, the
+          way the `game_sim` module map already ratchets inbound edges.
 - [ ] Stage two: run `World::update` on its own thread at a fixed step.
 - [ ] Watch out for replay determinism (`scripts/check-replay-determinism.sh`)
       and for the sim already being frame-rate dependent.
@@ -108,39 +203,63 @@ floor. Budget a week, not a day.
 
 ## 3. Cheaper items, worth doing alongside
 
-- [ ] **Per-cascade shadow resolution.** 4 x 4096 squared is 64 M texels cleared
-      and drawn every frame (~2.1 ms). The two far cascades gain nothing from 4096. Separate textures at 4096/4096/2048/2048 should cut roughly 40% with
-      no visible change. This is the Ultra preset's own choice, so it needs a
-      sign-off before changing.
-- [ ] **Combat spatial queries.** `is_valid_enemy_of_owner` is still ~2% and
-      `rebuild_combat_query_context` rebuilds a hash map every tick. Caching
-      per-pair hostility for the tick and reusing the grid should trim the sim
-      another 10-15%.
-- [ ] **Presets that scale the right axis.** High currently culls 79% of the
-      visible army for about 9% of frame time. Now that Low and Medium have
-      terrain octave counts, wire the other real costs to the presets too:
-      cascade count and resolution. Let High keep the soldiers.
+- [x] **Per-cascade shadow resolution.** Signed off and done. Cascades 0-1 stay
+      at the preset resolution, 2-3 drop to half, in a second texture array:
+      67 M texels to 42 M at Ultra. Arena frames are pixel-identical to
+      `ed7d5b71`. `SOI_SHADOW_CASCADE_SPLIT=0` bisects it.
+      **The depth bias must scale with the texel size** or the far cascades
+      shadow-acne themselves black; see RENDERING_ARCHITECTURE.md.
+      Still unmeasured on Ultra: every Zama benchmark attempt since has been
+      too contended to reach 30 frames.
+- [x] **Combat spatial queries.** `entities_by_id` (an `unordered_map` cleared
+      and refilled every tick) is now a stamped table indexed by
+      `Handle::index_of`, so the per-tick rebuild allocates nothing and lookup
+      is an array index. `find_nearest_enemy` reads a precomputed
+      `CandidateRecord` -- building and wildlife flags, plus a per-owner-pair
+      hostility table -- instead of four component fetches and an
+      `OwnerRegistry::instance()` call per candidate. Health, pending-removal
+      and owner are still read live, so a unit that dies mid-tick stops being a
+      target exactly as before. `SpatialGrid::clear()` keeps its cell vectors so
+      the grid stops reallocating them every tick. Replay determinism passes.
+- [x] **Presets that scale the right axis.** Already true at `ed7d5b71`:
+      `apply_preset` sets `cascade_count` and `resolution` per preset (Low off,
+      Medium 2x1024, High 3x2048, Ultra 4x4096) and
+      `ensure_directional_shadow_resources` honours both. Nothing to do.
 
 ## 4. Fix the instruments
 
 They cost more time than any single optimisation on this pass.
 
-- [ ] `FrameProfile` covers about 12% of the real frame: its phases totalled
-      1.3 ms of an 11 ms frame, and cull, submit and present read 0.00 ms
-      throughout. Extend the scopes to cover the simulation, the render snapshot
-      and the shadow pass.
-- [ ] `profiling_hud` is registered as a QML context property in `main.cpp` and
-      no QML file references it, so the overlay cannot be switched on in-game.
-      Wire it to a QML overlay behind a key binding.
-- [ ] The benchmark hardcodes `"graphics_preset": "ultra"` into its report
-      regardless of the actual preset, and will happily report a one-frame run
-      (`--benchmark-seconds 35` on Zama produced `frames: 1`). Make it refuse to
-      report fewer than N frames and read the real preset.
-- [ ] Setting `SOI_RUNTIME_BENCHMARK_SECONDS` also enables the continuity probe,
-      which does a full-framebuffer `glReadPixels` plus a QImage allocation every
-      frame on campaign missions. Separate the two switches.
+**Done, 18 Aug 2026.** All four, plus a fifth found on the way.
+
+- [x] The phases now tile the whole render-thread frame -- `sim`, `snapshot`,
+      `collect`, `submit`, `sort`, `shadow`, `play`, `present` -- so
+      `total_us()` is the frame interval, not 12% of it. `PhaseScope` is
+      self-exclusive, so `shadow` nested in `play` counts once. There is
+      deliberately no `cull` phase: culling is inline in every entity renderer,
+      so the only honest place to attribute it is `submit`, and a permanent
+      0.00 ms line kept suggesting culling was free.
+- [x] `ui/qml/ProfilingOverlay.qml` mounts above every other layer in
+      `Main.qml`; **F10** toggles it, `SOI_PROFILING_HUD=1` starts it on.
+- [x] The benchmark reads the real preset from `GraphicsSettings::quality()` and
+      reports `valid: false` with an `error` below 30 frames instead of
+      statistics. It also emits a `render_thread_stages` object: per-phase
+      averages plus `world / visibility / minimap / weather_lighting / victory /
+view_model_sync`, which is the inventory item 2 needs.
+- [x] The continuity probe is its own switch, `SOI_RUNTIME_CONTINUITY=1`.
+- [x] **Also fixed:** the benchmark armed its window on the first non-loading
+      frame and never re-armed, so when loading resumed the measured window
+      elapsed during the load -- that is the real cause of `frames: 1`, not the
+      window length. It now re-arms and discards samples whenever
+      `is_loading()` goes true.
 
 ## Measuring on this machine
+
+**The box has been shared throughout this pass.** `/proc/loadavg` sat between 8
+and 40 for most of it because another session was building and running tests, so
+every `--benchmark-seconds` run on Zama returned 1-4 frames and the new refusal
+correctly marked them `valid: false`. The arena's `SOI_GPU_BREAKDOWN=1` numbers
+above were taken at load 2.6-3.7, which is the only window that was usable.
 
 The box is shared and the numbers move by more than most real changes do. The
 same Zama scene measured anywhere from 2.2 to 60 ms of "CPU work" depending on
@@ -171,6 +290,27 @@ SOI_SHADOW_INSTANCING=0  # bisect the shadow-pass instancing path
 `massed_battle_2000` and `seven_ai_scale`. This pass only measured the campaign
 battles, a skirmish and three arena scenarios. The massed-battle set is where
 the sim cost should dominate, and it is the right acceptance test for item 2.
+
+**First baseline taken, 18 Aug 2026** -- `massed_battle_1000`, Ultra, 240 frames
+at load 0.65, `SOI_GPU_BREAKDOWN=1`, two consecutive reports:
+
+```
+4=0.025ms  6=0.241ms  8=3.645ms  14=19.097ms  post=0.223ms
+4=0.021ms  6=0.227ms  8=3.240ms  14=18.693ms  post=0.217ms
+```
+
+Type 14 is `RiggedCreature`. **At 1000 units the frame is dominated by the
+rigged soldiers at ~19 ms, with terrain a distant second at ~3.4 ms** -- the
+reverse of the 176-soldier campaign battles this plan was written from, where
+terrain was the largest single cost.
+
+That reframes the priorities above. Item 1's remaining noise bake is worth ~3 ms
+of GPU at best in a massed battle; the rigged-creature path is worth six times
+that. Before spending the week on item 2, measure whether the 19 ms is
+vertex-skinning, overdraw or state changes -- `SOI_SHADOW_INSTANCING=0` and the
+`rigged_cull` compute path are the two switches to bisect with. The scenario
+passed with no issues, so the cascade split and the field bake are both clean at
+1000 units.
 
 ```bash
 build/bin/arena_app --batch --scenario massed_battle_1000 \

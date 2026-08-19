@@ -59,6 +59,18 @@ auto format_overlay(const FrameProfile& profile) -> std::string {
 
   std::snprintf(line,
                 sizeof(line),
+                "world %5.2f  vis %5.2f  minimap %5.2f  weather %5.2f  victory %5.2f  "
+                "vm %5.2f ms\n",
+                static_cast<double>(profile.world_update_us) / 1000.0,
+                static_cast<double>(profile.visibility_update_us) / 1000.0,
+                static_cast<double>(profile.minimap_update_us) / 1000.0,
+                static_cast<double>(profile.weather_lighting_us) / 1000.0,
+                static_cast<double>(profile.victory_update_us) / 1000.0,
+                static_cast<double>(profile.view_model_sync_us) / 1000.0);
+  out += line;
+
+  std::snprintf(line,
+                sizeof(line),
                 "combat %5.2f  sample %5.2f  prep %5.2f  bpat %5.2f  cache %5.2f  "
                 "layout %5.2f ms\n",
                 static_cast<double>(profile.combat_state_update_us) / 1000.0,

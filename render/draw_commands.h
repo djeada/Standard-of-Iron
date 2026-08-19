@@ -132,6 +132,9 @@ struct RainBatchCmd {
 struct TerrainSurfaceCmd {
   struct HeightResources {
     Texture* texture = nullptr;
+    Texture* field_texture = nullptr;
+    unsigned int noise_atlas = 0U;
+    QVector2D noise_atlas_world_size{0.0F, 0.0F};
     QVector2D texel_size{0.0F, 0.0F};
     QVector2D uv_scale{0.0F, 0.0F};
     QVector2D uv_offset{0.5F, 0.5F};

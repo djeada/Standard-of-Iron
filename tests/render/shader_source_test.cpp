@@ -428,7 +428,9 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   ASSERT_FALSE(frag.empty());
   const auto flat = collapse_whitespace(frag);
 
-  EXPECT_NE(flat.find("float meadow_field = clamp("), std::string::npos);
+  EXPECT_NE(flat.find("float meadow_field = (u_has_noise_atlas == 1) ? baked_noise.a "
+                      ": clamp("),
+            std::string::npos);
   EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
   EXPECT_NE(flat.find("float drainage_field ="), std::string::npos);
@@ -454,6 +456,40 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("u_soil_blend_height - soil_width"), std::string::npos);
   EXPECT_NE(flat.find("u_soil_roughness * 0.48"), std::string::npos);
   EXPECT_NE(flat.find("if (u_has_height_tex == 1)"), std::string::npos);
+}
+
+TEST(ShaderSource, TerrainReadsTheBakedNoiseAtlasWithAProceduralFallback) {
+  const auto root = find_repo_root();
+  const auto frag = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  const auto bake = read_text(root / "assets" / "shaders" / "terrain_field_bake.frag");
+  ASSERT_FALSE(frag.empty());
+  ASSERT_FALSE(bake.empty());
+
+  const auto flat = collapse_whitespace(frag);
+  const auto flat_bake = collapse_whitespace(bake);
+
+  for (const auto* uniform : {"uniform int u_has_noise_atlas;",
+                              "uniform sampler2D u_noise_atlas;",
+                              "uniform vec2 u_noise_atlas_world_size;"}) {
+    EXPECT_NE(frag.find(uniform), std::string::npos);
+  }
+
+  EXPECT_NE(flat.find("#include \"terrain_noise.glsl\""), std::string::npos);
+  EXPECT_NE(flat_bake.find("#include \"terrain_noise.glsl\""), std::string::npos);
+
+  EXPECT_NE(flat.find("baked_noise = texture(u_noise_atlas, atlas_uv);"),
+            std::string::npos);
+
+  for (const auto* field : {"float regional_field = (u_has_noise_atlas == 1) ? "
+                            "baked_noise.r : clamp(",
+                            "float soil_field = (u_has_noise_atlas == 1) ? "
+                            "baked_noise.g : clamp(",
+                            "float moisture_field = (u_has_noise_atlas == 1) ? "
+                            "baked_noise.b : clamp(",
+                            "float meadow_field = (u_has_noise_atlas == 1) ? "
+                            "baked_noise.a : clamp("}) {
+    EXPECT_NE(flat.find(field), std::string::npos);
+  }
 }
 
 TEST(ShaderSource, AlpineSnowPatchesRenderAcrossTerrain) {

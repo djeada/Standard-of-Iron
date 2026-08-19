@@ -120,6 +120,11 @@ public:
     GL::Shader::UniformHandle screen_toe_clamp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle has_height_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_field_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_noise_atlas{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle noise_atlas{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle noise_atlas_world_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle field_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_texel_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_uv_scale{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_uv_offset{GL::Shader::InvalidUniform};

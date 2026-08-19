@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "render/gl/mesh.h"
+#include "render/gl/shader.h"
 
 namespace Render::GL {
 
@@ -34,6 +35,8 @@ void TerrainRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
   m_biome_settings = biome_settings;
   m_noise_seed = biome_settings.seed;
   m_height_texture_dirty = true;
+  m_terrain_fields_dirty = true;
+  m_noise_atlas_dirty = true;
   m_ground_fog = compute_ground_fog(m_height_data);
   build_meshes();
 }

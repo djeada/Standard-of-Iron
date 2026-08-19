@@ -22,12 +22,12 @@ auto besieging_structure(Engine::Core::Entity* unit,
     return false;
   }
 
-  auto it = query_context.entities_by_id.find(attack_target->target_id);
-  if (it == query_context.entities_by_id.end()) {
+  const CandidateRecord* record = query_context.find_record(attack_target->target_id);
+  if (record == nullptr) {
     return false;
   }
 
-  return is_building(it->second);
+  return record->is_building;
 }
 
 } // namespace

@@ -603,6 +603,13 @@ ApplicationWindow {
         z: 30
     }
 
+    ProfilingOverlay {
+        id: profiling_overlay
+
+        anchors.fill: parent
+        z: 40
+    }
+
     Item {
         id: edge_scroll_overlay
 

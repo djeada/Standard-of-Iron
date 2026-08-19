@@ -26,8 +26,7 @@ namespace {
 [[nodiscard]] auto get_entity_from_query_context(
     const CombatQueryContext& query_context,
     Engine::Core::EntityID entity_id) -> Engine::Core::Entity* {
-  auto const it = query_context.entities_by_id.find(entity_id);
-  return (it != query_context.entities_by_id.end()) ? it->second : nullptr;
+  return query_context.find_entity(entity_id);
 }
 
 [[nodiscard]] auto
