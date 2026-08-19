@@ -210,6 +210,7 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     Render::Creature::BakeInput body_input{};
     body_input.graph = &Render::Creature::part_graph_for(manifest.creature_spec(), lod);
     body_input.bind_pose = bind_palette;
+    body_input.lod = lod;
     auto const body = Render::Creature::bake_rigged_mesh_cpu(body_input);
     if (body.vertices.empty() || body.indices.empty()) {
       std::cerr << "[bpat_baker] warning: " << manifest.species_name
@@ -239,6 +240,7 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
   mesh_input.graph = &Render::Creature::part_graph_for(
       manifest.creature_spec(), Render::Creature::CreatureLOD::Minimal);
   mesh_input.bind_pose = bind_palette;
+  mesh_input.lod = Render::Creature::CreatureLOD::Minimal;
   auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
   snapshot::SnapshotMeshWriter snapshot_writer(
       manifest.species_id,

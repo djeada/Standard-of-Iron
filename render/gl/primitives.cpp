@@ -834,29 +834,31 @@ auto get_unit_cube() -> Mesh* {
 }
 
 auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh* {
-  (void)lat_segments;
-  (void)lon_segments;
+  lat_segments = std::max(lat_segments, 3);
+  lon_segments = std::max(lon_segments, 3);
+  std::uint64_t const variant = (static_cast<std::uint64_t>(lat_segments) << 32U) |
+                                static_cast<std::uint64_t>(lon_segments);
   return SharedGeometryCache::instance().get_or_build(
-      geometry_key("gl/unit_sphere"), [] {
-        return create_unit_sphere_mesh(k_default_latitude_segments,
-                                       k_default_radial_segments);
+      geometry_key("gl/unit_sphere", variant), [lat_segments, lon_segments] {
+        return create_unit_sphere_mesh(lat_segments, lon_segments);
       });
 }
 
 auto get_unit_cone(int radial_segments) -> Mesh* {
-  (void)radial_segments;
-  return SharedGeometryCache::instance().get_or_build(geometry_key("gl/unit_cone"), [] {
-    return create_unit_cone_mesh(k_default_radial_segments);
-  });
+  radial_segments = std::max(radial_segments, 3);
+  return SharedGeometryCache::instance().get_or_build(
+      geometry_key("gl/unit_cone", static_cast<std::uint64_t>(radial_segments)),
+      [radial_segments] { return create_unit_cone_mesh(radial_segments); });
 }
 
 auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh* {
-  (void)radial_segments;
-  (void)height_segments;
+  radial_segments = std::max(radial_segments, 3);
+  height_segments = std::max(height_segments, 1);
+  std::uint64_t const variant = (static_cast<std::uint64_t>(radial_segments) << 32U) |
+                                static_cast<std::uint64_t>(height_segments);
   return SharedGeometryCache::instance().get_or_build(
-      geometry_key("gl/unit_capsule"), [] {
-        return create_capsule_mesh(k_default_radial_segments,
-                                   k_default_capsule_height_segments);
+      geometry_key("gl/unit_capsule", variant), [radial_segments, height_segments] {
+        return create_capsule_mesh(radial_segments, height_segments);
       });
 }
 

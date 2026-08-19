@@ -3,13 +3,16 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <span>
 #include <string_view>
 
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/primitive_geometry.h"
 #include "render/creature/spec.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/skeleton.h"
@@ -160,6 +163,7 @@ TEST(HumanoidSpecTest, SpecReferenceIsStable) {
 #include "animation/rig/humanoid_proportions.h"
 #include "render/creature/part_graph.h"
 #include "render/geom/transforms.h"
+#include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/humanoid_math.h"
 
@@ -252,7 +256,7 @@ auto find_primitive(std::span<const PrimitiveInstance> primitives,
 
 } // namespace
 
-TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
+TEST(HumanoidSpecTest, MinimalLodDrawsAWholeBody) {
   CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
@@ -265,12 +269,43 @@ TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
   auto stats = Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, identity, sub);
 
-  EXPECT_EQ(stats.submitted, 1U);
   EXPECT_EQ(stats.skipped_invalid, 0U);
-  EXPECT_EQ(sub.parts.size(), 1U);
+  EXPECT_EQ(stats.submitted, s.lod_minimal.primitives.size());
+  EXPECT_EQ(sub.parts.size(), s.lod_minimal.primitives.size());
   EXPECT_EQ(sub.mesh_calls, 0U);
-  ASSERT_FALSE(sub.parts.empty());
-  EXPECT_EQ(sub.parts[0].mesh, Render::GL::get_unit_capsule());
+
+  for (auto const* name : {"humanoid_full_cranium",
+                           "humanoid_full_chest",
+                           "humanoid_full_pelvis_block",
+                           "humanoid_minimal_upper_arm_l",
+                           "humanoid_minimal_upper_arm_r",
+                           "humanoid_minimal_forearm_l",
+                           "humanoid_minimal_forearm_r",
+                           "humanoid_minimal_thigh_l",
+                           "humanoid_minimal_thigh_r",
+                           "humanoid_minimal_calf_l",
+                           "humanoid_minimal_calf_r",
+                           "humanoid_full_foot_l",
+                           "humanoid_full_foot_r"}) {
+    EXPECT_NE(find_primitive(s.lod_minimal.primitives, name), nullptr)
+        << "minimal body is missing " << name;
+  }
+}
+
+TEST(HumanoidSpecTest, MinimalLodIsCheaperThanTheFullBody) {
+  CreatureSpec const& s = humanoid_creature_spec();
+
+  EXPECT_LT(s.lod_minimal.primitives.size(), s.lod_full.primitives.size());
+
+  auto const* chest = find_primitive(s.lod_minimal.primitives, "humanoid_full_chest");
+  ASSERT_NE(chest, nullptr);
+  auto* full_mesh = Render::Creature::primitive_unit_mesh(*chest, CreatureLOD::Full);
+  auto* minimal_mesh =
+      Render::Creature::primitive_unit_mesh(*chest, CreatureLOD::Minimal);
+  ASSERT_NE(full_mesh, nullptr);
+  ASSERT_NE(minimal_mesh, nullptr);
+  EXPECT_NE(full_mesh, minimal_mesh);
+  EXPECT_LT(minimal_mesh->get_indices().size(), full_mesh->get_indices().size());
 }
 
 TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
@@ -496,7 +531,7 @@ TEST(HumanoidSpecTest, SkeletonProportionLayerSeatsSkullCloserToRibCage) {
   EXPECT_LT(after, before - 0.08F);
 }
 
-TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
+TEST(HumanoidSpecTest, MinimalLodSpansHeadToFootInUprightPose) {
   CreatureSpec const& s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
@@ -508,55 +543,26 @@ TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
   RecordingSubmitter sub;
   Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, identity, sub);
-  ASSERT_EQ(sub.parts.size(), 1U);
-  QMatrix4x4 const& v2_model = sub.parts[0].model;
+  ASSERT_FALSE(sub.parts.empty());
 
-  QVector3D const expected_top = pose.head_pos + QVector3D(0.0F, HP::HEAD_RADIUS, 0.0F);
-  QVector3D const expected_bot = pose.foot_l;
-  QMatrix4x4 const expected_model = Render::Geom::capsule_between(
-      identity, expected_top, expected_bot, HP::TORSO_TOP_R);
-
-  const float* a = v2_model.constData();
-  const float* b = expected_model.constData();
-  for (int i = 0; i < 16; ++i) {
-    EXPECT_NEAR(a[i], b[i], 1.0e-4F) << "model[" << i << "] mismatch";
+  float lowest = std::numeric_limits<float>::max();
+  float highest = std::numeric_limits<float>::lowest();
+  float leftmost = std::numeric_limits<float>::max();
+  float rightmost = std::numeric_limits<float>::lowest();
+  for (auto const& part : sub.parts) {
+    for (float const y : {0.5F, -0.5F}) {
+      QVector3D const endpoint = part.model.map(QVector3D(0.0F, y, 0.0F));
+      lowest = std::min(lowest, endpoint.y());
+      highest = std::max(highest, endpoint.y());
+      leftmost = std::min(leftmost, endpoint.x());
+      rightmost = std::max(rightmost, endpoint.x());
+    }
   }
-}
 
-TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
-
-  CreatureSpec const& s = humanoid_creature_spec();
-  HumanoidPose const pose = make_upright_pose();
-
-  std::array<QMatrix4x4, k_bone_count> palette;
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
-  std::span<const QMatrix4x4> const palette_view(palette);
-
-  QMatrix4x4 const identity;
-  RecordingSubmitter sub;
-  Render::Creature::submit_creature(
-      s, palette_view, CreatureLOD::Minimal, identity, sub);
-  ASSERT_EQ(sub.parts.size(), 1U);
-  QMatrix4x4 const& v2_model = sub.parts[0].model;
-
-  QVector3D const ep_a = v2_model.map(QVector3D(0.0F, 0.5F, 0.0F));
-  QVector3D const ep_b = v2_model.map(QVector3D(0.0F, -0.5F, 0.0F));
-  QVector3D const expected_head_crown =
-      pose.head_pos + QVector3D(0.0F, HP::HEAD_RADIUS, 0.0F);
-  QVector3D const expected_foot = pose.foot_l;
-
-  auto near = [](const QVector3D& a, const QVector3D& b) {
-    return (a - b).lengthSquared() < 1.0e-7F;
-  };
-  bool const matched = (near(ep_a, expected_head_crown) && near(ep_b, expected_foot)) ||
-                       (near(ep_b, expected_head_crown) && near(ep_a, expected_foot));
-  EXPECT_TRUE(matched) << "Endpoints (" << ep_a.x() << "," << ep_a.y() << ","
-                       << ep_a.z() << ") and (" << ep_b.x() << "," << ep_b.y() << ","
-                       << ep_b.z() << ") don't cover head_crown=("
-                       << expected_head_crown.x() << "," << expected_head_crown.y()
-                       << "," << expected_head_crown.z() << ") and foot=("
-                       << expected_foot.x() << "," << expected_foot.y() << ","
-                       << expected_foot.z() << ")";
+  EXPECT_LE(lowest, pose.foot_l.y() + 0.05F);
+  EXPECT_GE(highest, pose.head_pos.y() - 0.05F);
+  EXPECT_LE(leftmost, pose.hand_l.x() + 0.05F);
+  EXPECT_GE(rightmost, pose.hand_r.x() - 0.05F);
 }
 
 TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
@@ -572,20 +578,22 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
   QMatrix4x4 const identity;
   Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, identity, base_sub);
-  ASSERT_EQ(base_sub.parts.size(), 1U);
+  ASSERT_FALSE(base_sub.parts.empty());
 
   QMatrix4x4 world;
   world.translate(10.0F, 0.0F, 0.0F);
   RecordingSubmitter moved_sub;
   Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Minimal, world, moved_sub);
-  ASSERT_EQ(moved_sub.parts.size(), 1U);
+  ASSERT_EQ(moved_sub.parts.size(), base_sub.parts.size());
 
-  for (float const y : {0.5F, -0.5F}) {
-    QVector3D const base = base_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
-    QVector3D const moved = moved_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
-    EXPECT_NEAR(moved.x() - base.x(), 10.0F, 1.0e-4F);
-    EXPECT_NEAR(moved.y() - base.y(), 0.0F, 1.0e-4F);
-    EXPECT_NEAR(moved.z() - base.z(), 0.0F, 1.0e-4F);
+  for (std::size_t i = 0; i < base_sub.parts.size(); ++i) {
+    for (float const y : {0.5F, -0.5F}) {
+      QVector3D const base = base_sub.parts[i].model.map(QVector3D(0.0F, y, 0.0F));
+      QVector3D const moved = moved_sub.parts[i].model.map(QVector3D(0.0F, y, 0.0F));
+      EXPECT_NEAR(moved.x() - base.x(), 10.0F, 1.0e-4F);
+      EXPECT_NEAR(moved.y() - base.y(), 0.0F, 1.0e-4F);
+      EXPECT_NEAR(moved.z() - base.z(), 0.0F, 1.0e-4F);
+    }
   }
 }

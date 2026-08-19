@@ -87,6 +87,9 @@ public:
 
 public:
   void set_scenario_distance_scale(float scale) { m_scenario_distance_scale = scale; }
+  void set_graphics_quality_override(Render::GraphicsQuality quality) {
+    m_graphics_quality_override = quality;
+  }
 
 public slots:
   void regenerate_terrain();
@@ -380,6 +383,7 @@ private:
   Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
   float m_environment_hour = 13.0F;
   std::optional<float> m_environment_hour_override;
+  std::optional<Render::GraphicsQuality> m_graphics_quality_override;
   QString m_lighting_profile = QStringLiteral("mediterranean_summer");
   Game::Map::EnvironmentDefinition m_environment_definition;
   Game::Map::EnvironmentClock m_environment_clock;
