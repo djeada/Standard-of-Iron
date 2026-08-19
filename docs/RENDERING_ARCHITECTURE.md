@@ -784,6 +784,82 @@ Every layer runs through `band_limit(footprint, frequency)`, which fades a frequ
 
 Shading uses the height texture for more than normals. `terrain_sky_openness()` walks six directions at three radii and keeps the steepest horizon in each, which gives a sky-occlusion term for hollows and cliff feet. Open ground still measures some horizon, so it is remapped through `smoothstep(0.35, 0.92, ...)` before use -- otherwise the whole map would darken slightly rather than just the sheltered parts. That same sheltered term feeds drainage, exposure and snow drift, so hollows are damper, less scoured, and collect more snow.
 
+Both that walk and `compute_curvature()` are pure functions of a height map that
+never changes during a match -- together 23 dependent texture taps per pixel,
+which thrash the texture cache in a way arithmetic does not. They are baked
+instead. `TerrainRenderer::bake_terrain_fields()` evaluates the same formulas on
+the CPU straight out of `m_height_data` at map load, one texel per tile, and
+uploads them as the two channels of an `RG16F` texture; the fragment shader
+reads `u_field_tex` once and skips both functions. The bake is on the CPU rather
+than in an offscreen GL pass only because the height data is already there in
+`std::vector<float>` form -- there is nothing to read back.
+
+Baking at height-map resolution is not a compromise. The openness walk steps in
+units of _texels_ (radii 1.5, 4 and 9) and the curvature stencil is +/-2 texels,
+so neither field carries detail finer than the grid it is sampled from; the
+bilinear filter that reads the baked texture is smoother than evaluating per
+pixel, not coarser. Measured against a clean build of `ed7d5b71`: identical mean
+brightness on Zama, Crossing the Alps and the mountain map, with 0.008% of
+pixels differing by more than 8/255 on the two hilly maps, and terrain-surface
+GPU time (draw-command type 8, `SOI_GPU_BREAKDOWN=1`) down from 6.20 ms to
+5.75 ms averaged over six interleaved arena runs -- about 7%.
+
+The larger half of the terrain shader's cost is still the `gradient_fbm` calls,
+and those are **not** baked. Two things have to be understood before attempting
+it, because neither is what the plan assumed.
+
+First, `gradient_fbm` fades its octaves by `fwidth(p)`, so it is a function of
+the screen footprint as well as the world position. A bake has to fix the octave
+count and let the baked texture's own mip chain do the distance fade instead.
+
+Second, and more limiting: **a third of the noise in this shader is not a
+function of world position at all.** Three coordinate systems are in play, and
+only one of them is bakeable.
+
+| Coordinate     | Derived from                                  | Bakeable |
+| -------------- | --------------------------------------------- | -------- |
+| `world_coord`  | `v_world_pos.xz / tile_size + u_noise_offset` | yes      |
+| `rock_coord`   | `mix(world_coord, wall_coord, wall_blend)`    | no       |
+| `rill_coord`   | projected onto `flow_down = normal.xz`        | no       |
+| `relief_coord` | `mix(world_coord, wall_coord, wall_blend)`    | no       |
+
+`wall_blend` is a `smoothstep` of the slope and `wall_coord` picks its axis from
+`step(abs(normal.x), abs(normal.z))`, so everything in the rock, rill and relief
+families moves with the shading normal. `rock_detail`, `rock_grain`,
+`rock_strata`, `bedding`, `scrub_field`, `rill_field`, `rill_shifted` and the
+three `relief_octave()` calls are all off the table -- not because they need
+per-pixel resolution, which is the reason the plan gave, but because a
+world-space texture cannot represent them.
+
+What is left is bakeable, and it is the expensive part -- these are `gradient_fbm`
+at five octaves each, where the un-bakeable detail noise is mostly single-octave
+`gradient_noise`. Frequencies are cycles per tile at the default
+`macro_scale` 0.035 / `detail_scale` 0.14:
+
+| Field               | Frequency | Field              | Frequency |
+| ------------------- | --------- | ------------------ | --------- |
+| `domain_warp` (x2)  | 0.015     | `grass_weave`      | 0.16      |
+| `earth_field`       | 0.016     | `rock_breakup`     | 0.19      |
+| `regional_field`    | 0.020     | `snow_edge_noise`  | 0.19      |
+| `hue_field`         | 0.022     | `mosaic_field`     | 0.24      |
+| `meadow_field`      | 0.037     | `sward_drift`      | 0.30      |
+| `moisture_field`    | 0.063     | `mosaic_warp` (x2) | 0.31      |
+| `thatch_field`      | 0.091     | `alpine_snow_*`    | 0.10-0.32 |
+| `material_patch`    | 0.098     | `surface_detail`   | 0.39      |
+| `alpine_snow_large` | 0.10      | `graze_drift`      | 0.77      |
+| `soil_field`        | 0.168     | `tussock`          | 0.90      |
+|                     |           | `fleck_field`      | 1.15      |
+
+`fleck_field` at 1.15 cycles/tile sets the bake resolution: Nyquist wants 2.3
+texels/tile, so 4 texels/tile with a mip chain. Everything else is an order of
+magnitude coarser, so the cheap first cut is the sixteen fields at or below
+0.4 cycles/tile in one atlas at 1 texel/tile, leaving `tussock`, `graze_drift`
+and `fleck_field` procedural.
+
+Keep grain, granular and speck procedural regardless: at 1.5, 4.3 and 12.9
+cycles/tile they are per-pixel detail and already band-limited by
+`band_limit(coord_footprint, ...)`.
+
 ## Fog of war: three states, one mask
 
 The player sees the battlefield in three states, and all of them are driven by a
@@ -1073,9 +1149,81 @@ phase scopes take no clock samples, so `animation_sampling`,
 `humanoid_preparation`, `bpat_playback` and `layout_generation` read 0.000 ms.
 Turn the HUD on before drawing any conclusion from those numbers.
 
+Switch the HUD on in-game with **F10**, or start with `SOI_PROFILING_HUD=1` to
+have it enabled from the first frame. `ui/qml/ProfilingOverlay.qml` is mounted
+at the top of `Main.qml` above every other layer; without it the
+`profiling_hud` context property registered in `main.cpp` has no reader and the
+overlay cannot be switched on at all.
+
+The phases tile the whole render-thread frame, and `total_us()` is therefore the
+wall-clock frame interval, not a fraction of it:
+
+| Phase      | Scope                                                              |
+| ---------- | ------------------------------------------------------------------ |
+| `sim`      | `GameEngine::update(dt)`, scoped in `GLView::GLRenderer::render()` |
+| `snapshot` | `request_render_snapshots()` + `acquire_render_snapshot()`         |
+| `collect`  | `Renderer::begin_frame()`                                          |
+| `submit`   | `Renderer::render_world()` less the snapshot handoff               |
+| `sort`     | `DrawQueue::sort_for_batching()`                                   |
+| `shadow`   | `Backend::render_directional_shadows()` CPU time                   |
+| `play`     | `Backend::execute()` less the shadow pass                          |
+| `present`  | the gap between one `render()` returning and the next starting     |
+
+`PhaseScope` is self-exclusive: a nested scope subtracts its own elapsed time
+from its parent, so `shadow` inside `play` and `snapshot` inside `submit` are
+each counted once. `present` is the compositor and vsync wait; when it dominates
+the frame is not CPU-bound and none of the other phases are worth optimising.
+
+There is deliberately no `cull` phase. Culling is not a span — every entity
+renderer tests visibility inline as it submits, so the only honest place to
+attribute it is `submit`. The enum used to carry a `Culling` entry that read
+0.00 ms in every frame ever recorded, which repeatedly suggested culling was
+free.
+
+A frame is opened by whichever of `GLView::GLRenderer::render()` or
+`Renderer::begin_frame()` runs first and is closed by `Renderer::end_frame()`.
+The guard exists so the `sim` phase, which is recorded before the renderer is
+entered, survives into the same frame's report instead of being reset away.
+
+### The runtime benchmark
+
+`SOI_RUNTIME_BENCHMARK_SECONDS` (or `--benchmark-seconds`) measures the directly
+started mission after a two-second warm-up and writes the JSON report named by
+`--benchmark-output`. The report carries `graphics_preset` read from
+`GraphicsSettings::instance().quality()` — it is not assumed to be Ultra — and a
+`valid` flag. A run that collects fewer than 30 measured frames reports
+`valid: false` with an `error` instead of statistics, because a handful of
+frames on a loaded box produces numbers that look like measurements and are not.
+
+The frame-continuity probe is a separate switch, `SOI_RUNTIME_CONTINUITY=1`. It
+does a full-framebuffer `glReadPixels` plus a `QImage` allocation every frame on
+campaign missions, so leaving it coupled to the benchmark meant the benchmark
+was measuring the probe. Its `continuity_*` fields only appear in the report
+when it ran.
+
 The Arena's `render_execute` bucket is sampled straight after `Renderer::end_frame()`, so
 it covers queue sort plus backend execution — it is not animation playback. It was called
 `playback` for a while, which sent at least one investigation in the wrong direction.
+
+### Cascade resolutions are split
+
+The directional shadow cascades do not all live in one texture. Cascades 0 and 1
+go into a `GL_TEXTURE_2D_ARRAY` at the preset's `resolution`; cascades 2 and 3
+go into a second array at half that, which cuts the texels cleared and drawn
+every frame by about 37% at Ultra (4x4096 squared is 67 M texels; 2x4096 plus
+2x2048 is 42 M). `near_cascade_split()` only splits when the preset asks for more
+than two cascades above 512, so Low and Medium are untouched.
+`SOI_SHADOW_CASCADE_SPLIT=0` turns it off to bisect against.
+
+The far cascades sample `u_directional_shadow_map_far`;
+`u_shadow_camera_position.w` carries the near-cascade count and `u_shadow_bias.w`
+the far texel size, both previously padding. **The depth bias has to scale with
+the texel size** -- `sample_shadow_cascade()` multiplies it by
+`texel / u_shadow_params.z`. Without that the halved far cascades quantise depth
+twice as coarsely across a slope, the fixed bias no longer clears it, and every
+distant surface shadows itself: mean frame brightness on the Zama terrain view
+fell from 62 to 25 and the whole map read as being in shade. With the scaling in
+place the arena frames are pixel-identical to a clean build of `ed7d5b71`.
 
 `Backend::execute_scene` keeps at most two frames in flight: it fences the end of every
 frame and waits on the fence from two frames back before starting the next, so a CPU

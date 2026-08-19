@@ -11,7 +11,8 @@ public:
     RGB,
     RGBA,
     Depth,
-    R32F
+    R32F,
+    RG16F
   };
 
   enum class Filter {

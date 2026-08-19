@@ -25,6 +25,7 @@ class Renderer;
 class ResourceManager;
 class Mesh;
 class Texture;
+class Shader;
 
 class TerrainRenderer : public IRenderPass {
 public:
@@ -128,6 +129,8 @@ private:
                             std::size_t& total_triangles);
 
   auto update_height_texture() -> TerrainSurfaceCmd::HeightResources;
+  void bake_terrain_fields();
+  void bake_terrain_noise_atlas();
   [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
 
   [[nodiscard]] auto get_terrain_color(Game::Map::TerrainType type,
@@ -172,6 +175,15 @@ private:
   Render::GroundFogSettings m_ground_fog{};
   std::unique_ptr<Texture> m_height_texture;
   bool m_height_texture_dirty = true;
+  std::unique_ptr<Texture> m_terrain_field_texture;
+  std::vector<float> m_terrain_field_data;
+  bool m_terrain_fields_dirty = true;
+  std::unique_ptr<Shader> m_noise_bake_shader;
+  unsigned int m_noise_atlas_texture = 0U;
+  unsigned int m_noise_atlas_fbo = 0U;
+  unsigned int m_noise_atlas_vao = 0U;
+  int m_noise_atlas_size = 0;
+  bool m_noise_atlas_dirty = true;
   std::vector<ChunkMesh> m_chunks;
   std::vector<ChunkVisibilityCacheEntry> m_chunk_visibility_cache;
   Game::Map::BiomeSettings m_biome_settings;

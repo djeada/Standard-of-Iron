@@ -734,6 +734,13 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>CommanderMessagePanel</name>
+    <message>
+        <source>Click to dismiss</source>
+        <translation>Click to dismiss</translation>
+    </message>
+</context>
+<context>
     <name>CommanderSystem</name>
     <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
@@ -3377,6 +3384,10 @@ Unseen: never scouted.</translation>
         <translation>Controls</translation>
     </message>
     <message>
+        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.</source>
+        <translation>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.</translation>
+    </message>
+    <message>
         <source>Tutorial</source>
         <translation>Tutorial</translation>
     </message>
@@ -3491,10 +3502,6 @@ Unseen: never scouted.</translation>
     <message>
         <source>unbound</source>
         <translation>unbound</translation>
-    </message>
-    <message>
-        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. Steps can be paused, skipped and replayed at any time.</source>
-        <translation>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. Steps can be paused, skipped and replayed at any time.</translation>
     </message>
     <message>
         <source>%1. %2</source>
@@ -3637,8 +3644,16 @@ Unseen: never scouted.</translation>
         <translation>Battle Report</translation>
     </message>
     <message>
+        <source>March the Campaign</source>
+        <translation>March the Campaign</translation>
+    </message>
+    <message>
         <source>The Campaign is Won</source>
         <translation>The Campaign is Won</translation>
+    </message>
+    <message>
+        <source>Training Complete</source>
+        <translation>Training Complete</translation>
     </message>
     <message>
         <source>Victory Secured</source>
@@ -3655,6 +3670,10 @@ Unseen: never scouted.</translation>
     <message>
         <source>Enemy command has fallen.</source>
         <translation>Enemy command has fallen.</translation>
+    </message>
+    <message>
+        <source>You can run an army now. The Barcid Road is waiting.</source>
+        <translation>You can run an army now. The Barcid Road is waiting.</translation>
     </message>
     <message>
         <source>Your command has collapsed.</source>
@@ -4073,6 +4092,10 @@ This action cannot be undone.</translation>
 <context>
     <name>Main</name>
     <message>
+        <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>
+        <translation>A new standard in the valley, and nobody under it who has held a spear more than twice.</translation>
+    </message>
+    <message>
         <source>Standard of Iron - RTS Game</source>
         <translation>Standard of Iron - RTS Game</translation>
     </message>
@@ -4130,6 +4153,10 @@ This action cannot be undone.</translation>
     <message>
         <source>March through the Second Punic War</source>
         <translation>March through the Second Punic War</translation>
+    </message>
+    <message>
+        <source>Start here</source>
+        <translation>Start here</translation>
     </message>
     <message>
         <source>War Map</source>
@@ -4983,12 +5010,24 @@ to see preview</translation>
         <translation>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</translation>
     </message>
     <message>
+        <source>A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.</source>
+        <translation>A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.</translation>
+    </message>
+    <message>
         <source>A commander alone cannot defend a city quarter.</source>
         <translation>A commander alone cannot defend a city quarter.</translation>
     </message>
     <message>
         <source>A general alone on a dead field is just the last corpse standing.</source>
         <translation>A general alone on a dead field is just the last corpse standing.</translation>
+    </message>
+    <message>
+        <source>A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.</source>
+        <translation>A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.</translation>
+    </message>
+    <message>
+        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</source>
+        <translation>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</translation>
     </message>
     <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
@@ -5039,6 +5078,10 @@ to see preview</translation>
         <translation>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</translation>
     </message>
     <message>
+        <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
+        <translation>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</translation>
+    </message>
+    <message>
         <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
         <translation>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</translation>
     </message>
@@ -5079,6 +5122,10 @@ to see preview</translation>
         <translation>Drive the dead from the shrine. Salt the earth where they stood.</translation>
     </message>
     <message>
+        <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
+        <translation>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</translation>
+    </message>
+    <message>
         <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
         <translation>Endure both waves from the depths. Do not flinch when the ground tears open.</translation>
     </message>
@@ -5091,8 +5138,16 @@ to see preview</translation>
         <translation>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</translation>
     </message>
     <message>
+        <source>Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.</source>
+        <translation>Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.</translation>
+    </message>
+    <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
         <translation>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</translation>
+    </message>
+    <message>
+        <source>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</source>
+        <translation>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</translation>
     </message>
     <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
@@ -5109,6 +5164,10 @@ to see preview</translation>
     <message>
         <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
         <translation>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</translation>
+    </message>
+    <message>
+        <source>Hold the field, then. My horse is dead, my son is dragging me off it by the arm, and I find I can still count. You have won a ford. Italy is nine hundred miles long.</source>
+        <translation>Hold the field, then. My horse is dead, my son is dragging me off it by the arm, and I find I can still count. You have won a ford. Italy is nine hundred miles long.</translation>
     </message>
     <message>
         <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
@@ -5135,6 +5194,14 @@ to see preview</translation>
         <translation>Iron Sepulcher Watch</translation>
     </message>
     <message>
+        <source>It is finished. Carthage will have terms, and the terms will be her fleet burned in her own harbour where she can watch it. You were the better general. It has not turned out to matter.</source>
+        <translation>It is finished. Carthage will have terms, and the terms will be her fleet burned in her own harbour where she can watch it. You were the better general. It has not turned out to matter.</translation>
+    </message>
+    <message>
+        <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.</source>
+        <translation>Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.</translation>
+    </message>
+    <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
         <translation>Lose the river camp and the cold takes what the Romans couldn&apos;t.</translation>
     </message>
@@ -5145,6 +5212,10 @@ to see preview</translation>
     <message>
         <source>Lose your camp and the tempo dies with it.</source>
         <translation>Lose your camp and the tempo dies with it.</translation>
+    </message>
+    <message>
+        <source>Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.</source>
+        <translation>Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.</translation>
     </message>
     <message>
         <source>No living formation remains to hold the gates.</source>
@@ -5179,6 +5250,26 @@ to see preview</translation>
         <translation>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</translation>
     </message>
     <message>
+        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
+        <translation>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</translation>
+    </message>
+    <message>
+        <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
+        <translation>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</translation>
+    </message>
+    <message>
+        <source>So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty.</source>
+        <translation>So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty.</translation>
+    </message>
+    <message>
+        <source>So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you.</source>
+        <translation>So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you.</translation>
+    </message>
+    <message>
+        <source>So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.</source>
+        <translation>So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.</translation>
+    </message>
+    <message>
         <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
         <translation>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</translation>
     </message>
@@ -5189,6 +5280,10 @@ to see preview</translation>
     <message>
         <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
         <translation>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</translation>
+    </message>
+    <message>
+        <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
+        <translation>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</translation>
     </message>
     <message>
         <source>The Campanian Vigil</source>
@@ -5219,8 +5314,68 @@ to see preview</translation>
         <translation>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</translation>
     </message>
     <message>
+        <source>The lights are out and the ground is quiet. Count them twice and burn what will burn. Whatever was in there stood here before Rome and will stand here after it. Tonight it simply has other business.</source>
+        <translation>The lights are out and the ground is quiet. Count them twice and burn what will burn. Whatever was in there stood here before Rome and will stand here after it. Tonight it simply has other business.</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</source>
+        <translation>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</translation>
+    </message>
+    <message>
+        <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
+        <translation>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</translation>
+    </message>
+    <message>
+        <source>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</source>
+        <translation>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</translation>
+    </message>
+    <message>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</translation>
+    </message>
+    <message>
+        <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
+        <translation>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</translation>
+    </message>
+    <message>
+        <source>There. No battle, no glory, no monument: a town with nothing left in it and a road with my army standing on it. They will call me the Delayer. Let them. Your dead will not care what I am called.</source>
+        <translation>There. No battle, no glory, no monument: a town with nothing left in it and a road with my army standing on it. They will call me the Delayer. Let them. Your dead will not care what I am called.</translation>
+    </message>
+    <message>
+        <source>There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected.</source>
+        <translation>There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected.</translation>
+    </message>
+    <message>
+        <source>There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain.</source>
+        <translation>There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain.</translation>
+    </message>
+    <message>
+        <source>They are getting up again. Do not look at the faces; you will know some of them. Fall back to the road, keep walking, and do not stop to bury anything. It does not stay buried here.</source>
+        <translation>They are getting up again. Do not look at the faces; you will know some of them. Fall back to the road, keep walking, and do not stop to bury anything. It does not stay buried here.</translation>
+    </message>
+    <message>
+        <source>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</source>
+        <translation>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</translation>
+    </message>
+    <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
         <translation>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</translation>
+    </message>
+    <message>
+        <source>You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by.</source>
+        <translation>You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by.</translation>
+    </message>
+    <message>
+        <source>You have a walled town, an orchard, and a very great many mouths. I have the roads. I am not going to fight you. I am going to stand between you and every granary in Campania until winter explains my position better than I can.</source>
+        <translation>You have a walled town, an orchard, and a very great many mouths. I have the roads. I am not going to fight you. I am going to stand between you and every granary in Campania until winter explains my position better than I can.</translation>
+    </message>
+    <message>
+        <source>You have the river town. My congratulations - you now own three hundred mouths, two wells, and a temple whose god has lately been asking after Carthage by name. Feed them. I shall come back in the spring and count what is left.</source>
+        <translation>You have the river town. My congratulations - you now own three hundred mouths, two wells, and a temple whose god has lately been asking after Carthage by name. Feed them. I shall come back in the spring and count what is left.</translation>
+    </message>
+    <message>
+        <source>You killed a consul. Good. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse. He will be missed - briefly, and only by his creditors.</source>
+        <translation>You killed a consul. Good. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse. He will be missed - briefly, and only by his creditors.</translation>
     </message>
     <message>
         <source>Your camp falls — the field goes with it.</source>
@@ -7700,6 +7855,10 @@ Builders reap it for the food that recruits civilians</translation>
 </context>
 <context>
     <name>TutorialOverlay</name>
+    <message>
+        <source>Show me</source>
+        <translation>Show me</translation>
+    </message>
     <message>
         <source>Tutorial</source>
         <translation>Tutorial</translation>

@@ -142,4 +142,51 @@ TEST(FrameProfileTest, PhaseNameMatchesEnum) {
   EXPECT_STREQ(Render::Profiling::phase_name(Phase::Collection), "collect");
   EXPECT_STREQ(Render::Profiling::phase_name(Phase::Playback), "play");
   EXPECT_STREQ(Render::Profiling::phase_name(Phase::Present), "present");
+  EXPECT_STREQ(Render::Profiling::phase_name(Phase::Simulation), "sim");
+  EXPECT_STREQ(Render::Profiling::phase_name(Phase::Snapshot), "snapshot");
+  EXPECT_STREQ(Render::Profiling::phase_name(Phase::Shadow), "shadow");
+}
+
+TEST(FrameProfileTest, NestedScopesDoNotDoubleCount) {
+  FrameProfile p;
+  p.enabled = true;
+  {
+    PhaseScope const outer(&p, Phase::Playback);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    PhaseScope const inner(&p, Phase::Shadow);
+    std::this_thread::sleep_for(std::chrono::milliseconds(4));
+  }
+  auto const play_us = p.phase_us[static_cast<std::size_t>(Phase::Playback)];
+  auto const shadow_us = p.phase_us[static_cast<std::size_t>(Phase::Shadow)];
+  EXPECT_GE(shadow_us, 3000U);
+  EXPECT_GE(play_us, 1000U);
+  EXPECT_LT(play_us, shadow_us);
+  EXPECT_EQ(p.total_us(), play_us + shadow_us);
+}
+
+TEST(FrameProfileTest, BeginFrameResetsAndAdvancesIndex) {
+  FrameProfile p;
+  p.enabled = true;
+  p.add_phase_us(Phase::Sort, 500);
+  p.begin_frame();
+  EXPECT_TRUE(p.frame_open);
+  EXPECT_EQ(p.frame_index, 1U);
+  EXPECT_EQ(p.total_us(), 0U);
+  p.add_phase_us(Phase::Sort, 700);
+  p.end_frame();
+  EXPECT_FALSE(p.frame_open);
+  EXPECT_EQ(p.phase_us[static_cast<std::size_t>(Phase::Sort)], 700U);
+}
+
+TEST(FrameProfileTest, SimulationPhaseSurvivesARendererOpenedFrame) {
+  FrameProfile p;
+  p.enabled = true;
+  p.begin_frame();
+  p.add_phase_us(Phase::Simulation, 4000);
+  if (!p.frame_open) {
+    p.begin_frame();
+  }
+  p.add_phase_us(Phase::Collection, 1000);
+  EXPECT_EQ(p.phase_us[static_cast<std::size_t>(Phase::Simulation)], 4000U);
+  EXPECT_EQ(p.total_us(), 5000U);
 }

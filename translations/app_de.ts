@@ -734,6 +734,13 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>CommanderMessagePanel</name>
+    <message>
+        <source>Click to dismiss</source>
+        <translation>Zum Schließen klicken</translation>
+    </message>
+</context>
+<context>
     <name>CommanderSystem</name>
     <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
@@ -3377,6 +3384,10 @@ Unbekannt: nie aufgeklärt.</translation>
         <translation>Steuerung</translation>
     </message>
     <message>
+        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.</source>
+        <translation>Das Tutorial ist eine geführte erste Schlacht auf einer kleinen Wiese. Jeder Schritt nennt ein Ziel, sagt dir, wann es erreicht ist, und erklärt, warum ein Befehl verweigert wird. Es zeigt auch hin: Die Schaltfläche, von der ein Schritt spricht, leuchtet in der Befehlsleiste auf, und was du beachten sollst, wird auf dem Feld umringt und auf der Übersichtskarte markiert – drücke Zeig es mir, um die Kamera darauf zu schwenken. Schritte lassen sich jederzeit anhalten, überspringen und wiederholen.</translation>
+    </message>
+    <message>
         <source>Tutorial</source>
         <translation>Tutorial</translation>
     </message>
@@ -3491,10 +3502,6 @@ Unbekannt: nie aufgeklärt.</translation>
     <message>
         <source>unbound</source>
         <translation>nicht belegt</translation>
-    </message>
-    <message>
-        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. Steps can be paused, skipped and replayed at any time.</source>
-        <translation>Das Tutorial ist eine geführte erste Schlacht auf einer kleinen Wiese. Jeder Schritt nennt ein Ziel, sagt dir, wann es erreicht ist, und erklärt, warum ein Befehl abgelehnt wird. Schritte können jederzeit pausiert, übersprungen und wiederholt werden.</translation>
     </message>
     <message>
         <source>%1. %2</source>
@@ -3637,8 +3644,16 @@ Unbekannt: nie aufgeklärt.</translation>
         <translation>Schlachtbericht</translation>
     </message>
     <message>
+        <source>March the Campaign</source>
+        <translation>Zum Feldzug aufbrechen</translation>
+    </message>
+    <message>
         <source>The Campaign is Won</source>
         <translation>Der Feldzug ist gewonnen</translation>
+    </message>
+    <message>
+        <source>Training Complete</source>
+        <translation>Ausbildung abgeschlossen</translation>
     </message>
     <message>
         <source>Victory Secured</source>
@@ -3655,6 +3670,10 @@ Unbekannt: nie aufgeklärt.</translation>
     <message>
         <source>Enemy command has fallen.</source>
         <translation>Die feindliche Führung ist gefallen.</translation>
+    </message>
+    <message>
+        <source>You can run an army now. The Barcid Road is waiting.</source>
+        <translation>Du kannst jetzt ein Heer führen. Die Barkidenstraße wartet.</translation>
     </message>
     <message>
         <source>Your command has collapsed.</source>
@@ -4073,6 +4092,10 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
 <context>
     <name>Main</name>
     <message>
+        <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>
+        <translation>Ein neues Feldzeichen im Tal, und niemand darunter, der schon mehr als zweimal einen Speer gehalten hat.</translation>
+    </message>
+    <message>
         <source>Standard of Iron - RTS Game</source>
         <translation>Standard of Iron – Echtzeit-Strategiespiel</translation>
     </message>
@@ -4130,6 +4153,10 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
     <message>
         <source>March through the Second Punic War</source>
         <translation>Ziehe durch den Zweiten Punischen Krieg</translation>
+    </message>
+    <message>
+        <source>Start here</source>
+        <translation>Hier beginnen</translation>
     </message>
     <message>
         <source>War Map</source>
@@ -4983,12 +5010,24 @@ um die Vorschau zu sehen</translation>
         <translation>Eine breit angelegte Flussoperation mit Fähren, bewaldeten Umwegen, Brückenköpfen und befestigten Nachschubvierteln; das Eiserne Grabmal besetzt eine vermeidbare Ruine an der Südflanke.</translation>
     </message>
     <message>
+        <source>A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.</source>
+        <translation>Ein Lager, und niemand mehr, der darin steht. Steh auf. Darin liegt keine Schande. Die Schande läge darin, es im selben Tal ein zweites Mal zu tun.</translation>
+    </message>
+    <message>
         <source>A commander alone cannot defend a city quarter.</source>
         <translation>Ein Befehlshaber allein kann kein Stadtviertel halten.</translation>
     </message>
     <message>
         <source>A general alone on a dead field is just the last corpse standing.</source>
         <translation>Ein Feldherr allein auf totem Feld ist nur die letzte Leiche, die noch steht.</translation>
+    </message>
+    <message>
+        <source>A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.</source>
+        <translation>Ein neues Feldzeichen im Tal, und niemand darunter, der schon mehr als zweimal einen Speer gehalten hat. Mein Vorposten hat Befehl, nach dir zu sehen. Versuche, noch zu stehen, wenn sie eintreffen; das macht den Bericht erst lesenswert.</translation>
+    </message>
+    <message>
+        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</source>
+        <translation>Afrika also, und wir beide, und kein Fluss, hinter dem man stehen könnte. Ich kenne das Maß deiner Elefanten, und ich habe deine Numider. Was immer du vorhast, tu es dort, wo ich es sehen kann. Sechzehn Jahre habe ich darauf gewartet, auf demselben Feld zu stehen wie du.</translation>
     </message>
     <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
@@ -5039,6 +5078,10 @@ um die Vorschau zu sehen</translation>
         <translation>Räumt den Pass, ehe der Berg ihn schließt. Jede verlorene Stunde bedeutet mehr Männer, die der Kälte anheimfallen.</translation>
     </message>
     <message>
+        <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
+        <translation>Kaltes Wasser und ein früher Aufbruch, und mein Amtsgenosse ist mit beidem höchst zufrieden. Er hat die Männer im Fluss, noch ehe sie ihren Brei bekamen. Ich sagte, was ich dachte, und wurde überstimmt; also werde ich hier stehen und zusehen, wie dein Hinterhalt seine Rechnung aufmacht.</translation>
+    </message>
+    <message>
         <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
         <translation>Setzt über, ehe die römischen Läufer ihre Besatzung erreichen. Jede Sekunde des Wartens nährt die Klinge.</translation>
     </message>
@@ -5079,6 +5122,10 @@ um die Vorschau zu sehen</translation>
         <translation>Vertreibt die Toten aus dem Schrein. Salzt die Erde, auf der sie standen.</translation>
     </message>
     <message>
+        <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
+        <translation>Achtzigtausend. Mir wäre lieber, du hörtest die Zahl, als dass du sie sähest, denn sie zu sehen kostet den halben Vormittag. Varro führt heute den Befehl, und Varro glaubt daran, vorwärtszugehen. Stell dich hin, wohin es dir beliebt.</translation>
+    </message>
+    <message>
         <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
         <translation>Übersteht beide Wellen aus der Tiefe. Zuckt nicht zurück, wenn der Boden aufreißt.</translation>
     </message>
@@ -5091,8 +5138,16 @@ um die Vorschau zu sehen</translation>
         <translation>Führt die Umfassung aus und nehmt dann alle drei römischen Lager, ehe die Reserven die Linie wiederherstellen können.</translation>
     </message>
     <message>
+        <source>Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.</source>
+        <translation>Fünfzehntausend im Flachwasser, und die Auguren werden sagen, die heiligen Hühner hätten uns gewarnt. Töte einen Konsul, und Rom wählt bis zum Markttag einen neuen. Das ist unser Kunststück: Wir sind kein einzelner Mann.</translation>
+    </message>
+    <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
         <translation>Letzte Schlacht in Afrika: Nehmt Scipios Linie die Wucht, übersteht die numidische Reiterei und nehmt alle vier römischen Lager, während Ihr beide Erhebungen der Toten brecht.</translation>
+    </message>
+    <message>
+        <source>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</source>
+        <translation>Gut. Sempronius reitet nach Rom, um seinen Vormittag zu erklären. Eine halbe Legion ist aus jenem Wasser gestiegen und weitergegangen, und im Frühjahr wird sie dir mit trockenen Füßen und langem Gedächtnis wieder begegnen.</translation>
     </message>
     <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
@@ -5109,6 +5164,10 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
         <translation>Hannibals Meisterstück wird zu einer langgezogenen operativen Schlacht statt zu einem einzigen frontalen Zusammenstoß.</translation>
+    </message>
+    <message>
+        <source>Hold the field, then. My horse is dead, my son is dragging me off it by the arm, and I find I can still count. You have won a ford. Italy is nine hundred miles long.</source>
+        <translation>Dann behalte das Feld. Mein Pferd ist tot, mein Sohn zerrt mich am Arm davon, und ich stelle fest, dass ich noch zählen kann. Du hast eine Furt gewonnen. Italien ist neunhundert Meilen lang.</translation>
     </message>
     <message>
         <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
@@ -5135,6 +5194,14 @@ um die Vorschau zu sehen</translation>
         <translation>Wacht am Eisernen Grabmal</translation>
     </message>
     <message>
+        <source>It is finished. Carthage will have terms, and the terms will be her fleet burned in her own harbour where she can watch it. You were the better general. It has not turned out to matter.</source>
+        <translation>Es ist vorbei. Karthago wird Bedingungen erhalten, und die Bedingung wird sein, dass ihre Flotte im eigenen Hafen verbrennt, wo sie zusehen kann. Du warst der bessere Feldherr. Es hat sich als unerheblich erwiesen.</translation>
+    </message>
+    <message>
+        <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.</source>
+        <translation>Dann behalte Capua. Ich komme nach der Ernte wieder, und nach der übernächsten. Ich habe drei Konsuln begraben, die es eilig hatten. Geduld ist billiger, und sie verlangt keinen Triumphzug.</translation>
+    </message>
+    <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
         <translation>Verliert Ihr das Flusslager, holt sich die Kälte, was die Römer nicht bekamen.</translation>
     </message>
@@ -5145,6 +5212,10 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Lose your camp and the tempo dies with it.</source>
         <translation>Verliert Ihr Euer Lager, stirbt das Tempo mit ihm.</translation>
+    </message>
+    <message>
+        <source>Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.</source>
+        <translation>Nebel auf einer Seestraße. Flaminius meint, eine Marschsäule bewege sich schneller, als ein Hinterhalt sich schließen kann, und er ist Konsul, also muss er recht haben. Genieße die nächste Stunde. Ich werde derjenige sein, der den Bericht darüber schreibt.</translation>
     </message>
     <message>
         <source>No living formation remains to hold the gates.</source>
@@ -5179,6 +5250,26 @@ um die Vorschau zu sehen</translation>
         <translation>Nehmt die beiden Flussforts. Lasst Scipios Heer keinen Übergang zurück.</translation>
     </message>
     <message>
+        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
+        <translation>Sechzig Mann und ein Heiligtum, an dem die Leute hier nach Einbruch der Dunkelheit nicht vorbeigehen. Mein Befehl lautet: untersuchen. Mir wäre lieber, ich brennte es nieder und schriebe, wir hätten untersucht, aber der Senat liest mit.</translation>
+    </message>
+    <message>
+        <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
+        <translation>Die Mitte gab also nach und die Flügel nicht. Das war gut gemacht, und ich sage es, und ich war mittendrin. Rom hat ein Heer verloren und einen Ring für jeden Ritter darin. Rom hat noch nichts verloren, worauf es ankäme.</translation>
+    </message>
+    <message>
+        <source>So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty.</source>
+        <translation>Du bist also auf der anderen Seite herabgestiegen. Weniger, und zu Fuß, und man sagt mir, du habest den Tross oben im Schnee gelassen, samt den Männern, die ihn trugen. Italien wartet. Italien ist nicht leer.</translation>
+    </message>
+    <message>
+        <source>So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you.</source>
+        <translation>Du bist also doch aus den Felsen herabgekommen. Weniger, als man mir gemeldet hat, und grauer. Nun gut. Der Ticinus ist seicht, das Land dahinter gehört uns, und ich habe reichlich Zeit, mich in dir zu irren.</translation>
+    </message>
+    <message>
+        <source>So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.</source>
+        <translation>So also. Der Barkide kriecht zur Rhone hinab. Setze über, wo es dir beliebt – der Fluss ist nicht wählerisch, wessen Knochen er behält, und Rom hat sehr viel Geduld und sehr viele Schaufeln. Meine Feldmesser schreiten dein Grab bereits ab. Man sagt mir, der Boden hier trinke gut.</translation>
+    </message>
+    <message>
         <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
         <translation>Lasst den Hinterhalt zuschnappen und nehmt beide römischen Feldlager binnen zwanzig Minuten, ehe der Nebel sich hebt und eine Kohorte aus dem Becken entkommt.</translation>
     </message>
@@ -5189,6 +5280,10 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
         <translation>Nehmt das Brückenlager und das östliche Reservequartier, ehe die römischen Späher im Nebel verschwinden.</translation>
+    </message>
+    <message>
+        <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
+        <translation>Dann nimm die Übergänge. Nimm die ganze kalte Länge der Straße nach Norden und jeden Stein, der darauf liegt. Rom verliert keine Provinzen – es verleiht sie, gegen Zinsen, und man sagt mir, die Eintreiber auf dieser Straße tragen überhaupt kein Gesicht.</translation>
     </message>
     <message>
         <source>The Campanian Vigil</source>
@@ -5219,8 +5314,68 @@ um die Vorschau zu sehen</translation>
         <translation>Die letzte Auseinandersetzung führt Karthago gegen drei abgestimmte römische Kommandos – bis ein Heer des Eisernen Grabmals aus der vernachlässigten Flanke des Schlachtfelds angreift.</translation>
     </message>
     <message>
+        <source>The lights are out and the ground is quiet. Count them twice and burn what will burn. Whatever was in there stood here before Rome and will stand here after it. Tonight it simply has other business.</source>
+        <translation>Die Lichter sind erloschen und der Boden ist still. Zählt sie zweimal und verbrennt, was brennen will. Was auch immer dort drinnen war, stand hier vor Rom und wird hier nach Rom stehen. Heute Nacht hat es schlicht anderes zu tun.</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</source>
+        <translation>Der Nebel hob sich für dich ein wenig zu früh. Das kommt vor. Der See behält, was man ihm gegeben hat, und das Ding unter dem Altar am Ufer ist nicht wählerisch, wem es gehört.</translation>
+    </message>
+    <message>
+        <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
+        <translation>Der Pass behält sie also. Ein Rat an den, der dies liest: Folge nicht den Lichtern auf dem Schneefeld. Was in dieser Höhe eine Laterne trägt, hat schon vor langer Zeit aufgehört, ein Hirte zu sein.</translation>
+    </message>
+    <message>
+        <source>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</source>
+        <translation>Der Fluss behält, was man ihm gibt. Deine Elefanten gingen hinein, und nicht alle kamen wieder heraus, und die Trebia ist kein großer Fluss. Rom hat nie einen großen gebraucht.</translation>
+    </message>
+    <message>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>Die Späher kommen also nicht zurück. Nun – jeder fängt irgendwo an, und du hast damit angefangen, elf Männer zu töten, die auf ihr Mittagessen warteten. Beim nächsten Mal schickt Rom jemanden, der zählt.</translation>
+    </message>
+    <message>
+        <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
+        <translation>Dann hält es eben noch ein wenig länger. Geh heim zu deinem Senat und erzähle ihnen, wie ein Römer aus der Nähe aussieht. Ich werde im Frühjahr hier sein, und im Frühjahr darauf, und ich bin jünger als du.</translation>
+    </message>
+    <message>
+        <source>There. No battle, no glory, no monument: a town with nothing left in it and a road with my army standing on it. They will call me the Delayer. Let them. Your dead will not care what I am called.</source>
+        <translation>So. Keine Schlacht, kein Ruhm, kein Denkmal: eine Stadt, in der nichts mehr ist, und eine Straße, auf der mein Heer steht. Man wird mich den Zauderer nennen. Sollen sie. Deinen Toten ist es gleich, wie ich heiße.</translation>
+    </message>
+    <message>
+        <source>There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected.</source>
+        <translation>So. Setz dich zu den anderen in den Schlamm. Man sagt mir, die Männer, die auf dieser Straße sterben, bleiben nicht liegen, wo man sie hinlegt – dass sie sich um die dritte Nachtwache erheben und ohne ihre Offiziere weiter nach Norden marschieren. Fahr nur fort. Man erwartet dich.</translation>
+    </message>
+    <message>
+        <source>There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain.</source>
+        <translation>So. Dafür war der Fluss da. Lass deine Wundärzte rasch arbeiten und sag dem, was von deinem Tross übrig ist, dass der Heimweg wieder den Berg hinaufführt.</translation>
+    </message>
+    <message>
+        <source>They are getting up again. Do not look at the faces; you will know some of them. Fall back to the road, keep walking, and do not stop to bury anything. It does not stay buried here.</source>
+        <translation>Sie stehen wieder auf. Sieh ihnen nicht ins Gesicht; du wirst manche davon kennen. Zieht euch auf die Straße zurück, geht weiter und haltet nicht an, um etwas zu begraben. Hier bleibt nichts begraben.</translation>
+    </message>
+    <message>
+        <source>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</source>
+        <translation>Man sagt mir, du habest im Oktober ein Heer in die Alpen geführt, mit Elefanten. Ich habe aufgehört, dich zu verfolgen. Der Berg ist ein gründlicherer Offizier als ich, und er verlangt keinen Sold.</translation>
+    </message>
+    <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
         <translation>Zwanzig Minuten, ehe der Nebel sich hebt. Entkommt eine Kohorte aus dem Becken, erfährt Rom, wie die Falle geschnitten ist.</translation>
+    </message>
+    <message>
+        <source>You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by.</source>
+        <translation>Du hast uns gebogen, und wir sind nicht gebrochen, und das ist der einzige Satz, den irgendwer brauchen wird. Sammle deine Toten vom Aufidus. Der Fluss fließt hier langsam; sie werden lange brauchen, um vorbeizuziehen.</translation>
+    </message>
+    <message>
+        <source>You have a walled town, an orchard, and a very great many mouths. I have the roads. I am not going to fight you. I am going to stand between you and every granary in Campania until winter explains my position better than I can.</source>
+        <translation>Du hast eine ummauerte Stadt, einen Obstgarten und sehr viele Mäuler. Ich habe die Straßen. Ich werde nicht gegen dich kämpfen. Ich werde zwischen dir und jedem Kornspeicher Kampaniens stehen, bis der Winter meine Lage besser erklärt, als ich es kann.</translation>
+    </message>
+    <message>
+        <source>You have the river town. My congratulations - you now own three hundred mouths, two wells, and a temple whose god has lately been asking after Carthage by name. Feed them. I shall come back in the spring and count what is left.</source>
+        <translation>Dir gehört die Stadt am Fluss. Meinen Glückwunsch – du besitzt nun dreihundert Mäuler, zwei Brunnen und einen Tempel, dessen Gott sich neuerdings namentlich nach Karthago erkundigt. Ernähre sie. Im Frühjahr komme ich wieder und zähle, was übrig ist.</translation>
+    </message>
+    <message>
+        <source>You killed a consul. Good. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse. He will be missed - briefly, and only by his creditors.</source>
+        <translation>Du hast einen Konsul getötet. Gut. Rom hält vierzig weitere in Schränken in der Stadt bereit, und ich verspreche dir: Die noch in den Schränken sind, sind schlimmer. Man wird ihn vermissen – kurz, und nur seine Gläubiger.</translation>
     </message>
     <message>
         <source>Your camp falls — the field goes with it.</source>
@@ -7700,6 +7855,10 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
 </context>
 <context>
     <name>TutorialOverlay</name>
+    <message>
+        <source>Show me</source>
+        <translation>Zeig es mir</translation>
+    </message>
     <message>
         <source>Tutorial</source>
         <translation>Tutorial</translation>

@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
-#include <unordered_map>
 #include <vector>
 
 #include "../../core/entity.h"
@@ -15,15 +15,51 @@ class UnitComponent;
 
 namespace Game::Systems::Combat {
 
+struct CandidateRecord {
+  std::uint32_t stamp{0};
+  Engine::Core::EntityID id{0};
+  Engine::Core::Entity* entity{nullptr};
+  int owner_id{0};
+  bool is_building{false};
+  bool is_wildlife{false};
+};
+
 struct CombatQueryContext {
   CombatQueryContext();
 
   void clear();
 
+  void record_candidate(Engine::Core::Entity* entity, int owner_id, bool building);
+
+  [[nodiscard]] auto
+  find_record(Engine::Core::EntityID entity_id) const -> const CandidateRecord*;
+
+  [[nodiscard]] auto
+  find_entity(Engine::Core::EntityID entity_id) const -> Engine::Core::Entity*;
+
+  [[nodiscard]] auto hostile(int attacker_owner_id, int target_owner_id) const -> bool;
+
   std::vector<Engine::Core::Entity*> units;
-  std::unordered_map<Engine::Core::EntityID, Engine::Core::Entity*> entities_by_id;
   Game::Systems::SpatialGrid unit_grid;
   mutable std::vector<Engine::Core::EntityID> nearby_unit_ids;
+
+private:
+  static constexpr int k_max_cached_owner_id = 64;
+  static constexpr std::size_t k_owner_axis =
+      static_cast<std::size_t>(k_max_cached_owner_id) + 1U;
+  static constexpr std::uint8_t k_hostility_unknown = 0U;
+  static constexpr std::uint8_t k_hostility_hostile = 1U;
+  static constexpr std::uint8_t k_hostility_friendly = 2U;
+
+  friend void rebuild_combat_query_context(Engine::Core::World* world,
+                                           CombatQueryContext& query_context);
+
+  void rebuild_hostility_table();
+
+  std::vector<CandidateRecord> m_records;
+  std::uint32_t m_stamp{0};
+  std::vector<std::uint8_t> m_hostility;
+  std::vector<int> m_present_owner_ids;
 };
 
 auto build_combat_query_context(Engine::Core::World* world) -> CombatQueryContext;

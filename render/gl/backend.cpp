@@ -54,6 +54,7 @@
 #include "render/local_lighting.h"
 #include "render/material.h"
 #include "render/primitive_batch.h"
+#include "render/profiling/frame_profile.h"
 #include "render/rain_gpu.h"
 #include "render/rigged_mesh.h"
 #include "render_constants.h"
@@ -377,32 +378,31 @@ void Backend::release_directional_shadow_resources() {
     glDeleteTextures(1, &m_directional_shadow_texture);
     m_directional_shadow_texture = 0;
   }
+  if (m_directional_shadow_far_texture != 0) {
+    glDeleteTextures(1, &m_directional_shadow_far_texture);
+    m_directional_shadow_far_texture = 0;
+  }
   if (m_directional_shadow_fbo != 0) {
     glDeleteFramebuffers(1, &m_directional_shadow_fbo);
     m_directional_shadow_fbo = 0;
   }
   m_directional_shadow_resolution = 0;
+  m_directional_shadow_far_resolution = 0;
   m_directional_shadow_cascades = 0;
+  m_directional_shadow_near_cascades = 0;
 }
 
-void Backend::ensure_directional_shadow_resources(int resolution, int cascades) {
-  resolution = std::clamp(resolution, 512, 4096);
-  cascades = std::clamp(cascades, 1, 4);
-  if (m_directional_shadow_texture != 0 &&
-      m_directional_shadow_resolution == resolution &&
-      m_directional_shadow_cascades == cascades) {
-    return;
-  }
+namespace {
 
-  release_directional_shadow_resources();
-  glGenTextures(1, &m_directional_shadow_texture);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
+auto allocate_shadow_array(GLuint& texture, int resolution, int layers) -> void {
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
   glTexImage3D(GL_TEXTURE_2D_ARRAY,
                0,
                GL_DEPTH_COMPONENT24,
                resolution,
                resolution,
-               cascades,
+               layers,
                0,
                GL_DEPTH_COMPONENT,
                GL_FLOAT,
@@ -414,10 +414,47 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
   const GLfloat border[] = {1.0F, 1.0F, 1.0F, 1.0F};
   glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border);
   glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+}
+
+auto near_cascade_split(int cascades, int resolution) -> int {
+  static const bool split_allowed =
+      qEnvironmentVariableIntValue("SOI_SHADOW_CASCADE_SPLIT") != 0 ||
+      !qEnvironmentVariableIsSet("SOI_SHADOW_CASCADE_SPLIT");
+  if (!split_allowed || cascades <= 2 || resolution <= 512) {
+    return cascades;
+  }
+  return 2;
+}
+
+} // namespace
+
+void Backend::ensure_directional_shadow_resources(int resolution, int cascades) {
+  resolution = std::clamp(resolution, 512, 4096);
+  cascades = std::clamp(cascades, 1, 4);
+  const int near_cascades = near_cascade_split(cascades, resolution);
+  const int far_cascades = cascades - near_cascades;
+  const int far_resolution = far_cascades > 0 ? std::max(512, resolution / 2) : 0;
+
+  if (m_directional_shadow_texture != 0 &&
+      m_directional_shadow_resolution == resolution &&
+      m_directional_shadow_cascades == cascades &&
+      m_directional_shadow_near_cascades == near_cascades &&
+      m_directional_shadow_far_resolution == far_resolution) {
+    return;
+  }
+
+  release_directional_shadow_resources();
+  allocate_shadow_array(m_directional_shadow_texture, resolution, near_cascades);
+  if (far_cascades > 0) {
+    allocate_shadow_array(
+        m_directional_shadow_far_texture, far_resolution, far_cascades);
+  }
 
   glGenFramebuffers(1, &m_directional_shadow_fbo);
   m_directional_shadow_resolution = resolution;
+  m_directional_shadow_far_resolution = far_resolution;
   m_directional_shadow_cascades = cascades;
+  m_directional_shadow_near_cascades = near_cascades;
 }
 
 namespace {
@@ -517,7 +554,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   glBindFramebuffer(GL_FRAMEBUFFER, m_directional_shadow_fbo);
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
-  glViewport(0, 0, m_directional_shadow_resolution, m_directional_shadow_resolution);
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -590,8 +626,10 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       radius = std::max(radius, (value - center).length());
     }
     radius = std::ceil(radius * 16.0F) / 16.0F;
-    const float world_texel =
-        (radius * 2.0F) / static_cast<float>(m_directional_shadow_resolution);
+    const bool far_cascade = cascade >= m_directional_shadow_near_cascades;
+    const int cascade_resolution = far_cascade ? m_directional_shadow_far_resolution
+                                               : m_directional_shadow_resolution;
+    const float world_texel = (radius * 2.0F) / static_cast<float>(cascade_resolution);
     center -= light_right *
               std::fmod(QVector3D::dotProduct(center, light_right), world_texel);
     center -=
@@ -604,8 +642,13 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     const QMatrix4x4 light_vp = light_projection * light_view;
     m_directional_shadow_matrices[cascade] = light_vp;
 
+    glViewport(0, 0, cascade_resolution, cascade_resolution);
     glFramebufferTextureLayer(
-        GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_directional_shadow_texture, 0, cascade);
+        GL_FRAMEBUFFER,
+        GL_DEPTH_ATTACHMENT,
+        far_cascade ? m_directional_shadow_far_texture : m_directional_shadow_texture,
+        0,
+        far_cascade ? cascade - m_directional_shadow_near_cascades : cascade);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     const float min_caster_radius = world_texel * k_shadow_min_caster_texels;
@@ -717,7 +760,7 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
               m_rigged_cull_pipeline->last_stats().draw_calls;
           continue;
         }
-        auto const extent = static_cast<float>(m_directional_shadow_resolution);
+        auto const extent = static_cast<float>(cascade_resolution);
         if (visible_rigged.size() >=
                 BackendPipelines::RiggedCullPipeline::minimum_instances() &&
             m_rigged_cull_pipeline->draw_shadow(visible_rigged.data(),
@@ -788,6 +831,11 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   block.cascade_count = static_cast<float>(cascade_count);
   block.shadow_map_texel_size =
       1.0F / static_cast<float>(m_directional_shadow_resolution);
+  block.far_shadow_map_texel_size =
+      m_directional_shadow_far_resolution > 0
+          ? 1.0F / static_cast<float>(m_directional_shadow_far_resolution)
+          : block.shadow_map_texel_size;
+  block.near_cascade_count = static_cast<float>(m_directional_shadow_near_cascades);
   const int weather_softening = m_environment_lighting.shadow_softness > 0.65F ? 1 : 0;
   block.pcf_radius =
       static_cast<float>(std::clamp(settings.pcf_radius + weather_softening, 1, 3));
@@ -811,6 +859,10 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
   glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map_far);
+  glBindTexture(GL_TEXTURE_2D_ARRAY,
+                m_directional_shadow_far_texture != 0 ? m_directional_shadow_far_texture
+                                                      : m_directional_shadow_texture);
   glActiveTexture(GL_TEXTURE0);
 }
 
@@ -980,7 +1032,11 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   const QMatrix4x4 projection = cam.get_projection_matrix();
   const QMatrix4x4 view_proj = projection * view;
   upload_frame_uniform_buffers(view_proj, queue, cam);
-  render_directional_shadows(queue, cam);
+  {
+    Render::Profiling::PhaseScope const shadow_scope(
+        &Render::Profiling::global_profile(), Render::Profiling::Phase::Shadow);
+    render_directional_shadows(queue, cam);
+  }
   glQueryCounter(frame_timing.timestamps[1], GL_TIMESTAMP);
   if (m_post_process_pipeline != nullptr && m_post_process_pipeline->is_capturing()) {
     m_post_process_pipeline->set_depth_range(cam.get_near(), cam.get_far());
