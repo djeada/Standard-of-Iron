@@ -33,6 +33,8 @@ struct DirectionalShadowBlock {
   float depth_bias = 0.0F;
   float normal_bias = 0.0F;
   float cascade_blend = 0.0F;
+  float far_shadow_map_texel_size = 0.0F;
+  float near_cascade_count = 0.0F;
 
   [[nodiscard]] auto packed_std140() const noexcept -> Packed {
     Packed packed{};
@@ -55,12 +57,12 @@ struct DirectionalShadowBlock {
     packed[cursor++] = camera_position.x();
     packed[cursor++] = camera_position.y();
     packed[cursor++] = camera_position.z();
-    packed[cursor++] = 1.0F;
+    packed[cursor++] = near_cascade_count;
 
     packed[cursor++] = depth_bias;
     packed[cursor++] = normal_bias;
     packed[cursor++] = cascade_blend;
-    packed[cursor++] = 0.0F;
+    packed[cursor++] = far_shadow_map_texel_size;
 
     return packed;
   }

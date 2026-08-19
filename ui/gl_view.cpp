@@ -27,6 +27,8 @@
 #include <qtmetamacros.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <ctime>
 #include <deque>
 #include <exception>
@@ -43,6 +45,7 @@
 
 namespace {
 constexpr double k_runtime_benchmark_warmup_seconds = 2.0;
+constexpr std::size_t k_runtime_benchmark_min_frames = 30;
 constexpr std::uint64_t k_visibility_churn_window_frames = 120U;
 constexpr std::uint32_t k_visibility_churn_threshold = 4U;
 
@@ -180,6 +183,9 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
   }
   m_benchmark_output = qEnvironmentVariable("SOI_RUNTIME_BENCHMARK_OUTPUT");
   if (m_benchmark_seconds > 0.0) {
+    Render::Profiling::global_profile().enabled = true;
+  }
+  if (qEnvironmentVariableIntValue("SOI_RUNTIME_CONTINUITY") != 0) {
     m_continuity_probe = std::make_unique<RuntimeContinuityProbe>();
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(true);
   }
@@ -255,10 +261,26 @@ void GLView::GLRenderer::render() {
 
     auto const frame_work_start = std::chrono::steady_clock::now();
     const double thread_cpu_start_ms = render_thread_cpu_ms();
-    m_engine->update(dt);
+
+    auto& profile = Render::Profiling::global_profile();
+    profile.begin_frame();
+    if (m_last_render_end.time_since_epoch().count() != 0) {
+      profile.add_phase_us(Render::Profiling::Phase::Present,
+                           static_cast<std::uint64_t>(
+                               std::chrono::duration_cast<std::chrono::microseconds>(
+                                   frame_work_start - m_last_render_end)
+                                   .count()));
+    }
+
+    {
+      Render::Profiling::PhaseScope const simulation_scope(
+          &profile, Render::Profiling::Phase::Simulation);
+      m_engine->update(dt);
+    }
     auto const update_end = std::chrono::steady_clock::now();
     m_engine->render(m_size.width(), m_size.height());
     auto const render_end = std::chrono::steady_clock::now();
+    m_last_render_end = render_end;
     const double thread_cpu_end_ms = render_thread_cpu_ms();
 
     observe_runtime_continuity();
@@ -402,7 +424,29 @@ void GLView::GLRenderer::observe_runtime_benchmark(
     double render_ms,
     double thread_cpu_ms) {
   if (m_benchmark_seconds <= 0.0 || m_benchmark_complete || m_engine == nullptr ||
-      m_engine->is_loading() || !m_engine->match_setup()->is_campaign_mission()) {
+      !m_engine->match_setup()->is_campaign_mission()) {
+    return;
+  }
+
+  if (m_engine->is_loading()) {
+    m_benchmark_ready_time = {};
+    m_benchmark_frame_work_ms.clear();
+    m_benchmark_update_ms.clear();
+    m_benchmark_render_ms.clear();
+    m_benchmark_thread_cpu_ms.clear();
+    m_benchmark_wall_interval_ms.clear();
+    m_benchmark_gpu_shadow_ms.clear();
+    m_benchmark_gpu_color_ms.clear();
+    m_benchmark_gpu_wait_ms.clear();
+    m_benchmark_phase_us.fill(0);
+    m_benchmark_draw_calls = 0;
+    m_benchmark_visible_soldiers = 0;
+    m_benchmark_world_us = 0;
+    m_benchmark_visibility_us = 0;
+    m_benchmark_minimap_us = 0;
+    m_benchmark_weather_us = 0;
+    m_benchmark_victory_us = 0;
+    m_benchmark_view_model_us = 0;
     return;
   }
 
@@ -435,6 +479,15 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   m_benchmark_gpu_shadow_ms.push_back(profile.gpu_shadow_ms);
   m_benchmark_gpu_color_ms.push_back(profile.gpu_color_ms);
   m_benchmark_gpu_wait_ms.push_back(profile.gpu_wait_ms);
+  for (std::size_t i = 0; i < profile.phase_us.size(); ++i) {
+    m_benchmark_phase_us[i] += profile.phase_us[i];
+  }
+  m_benchmark_world_us += profile.world_update_us;
+  m_benchmark_visibility_us += profile.visibility_update_us;
+  m_benchmark_minimap_us += profile.minimap_update_us;
+  m_benchmark_weather_us += profile.weather_lighting_us;
+  m_benchmark_victory_us += profile.victory_update_us;
+  m_benchmark_view_model_us += profile.view_model_sync_us;
 
   if (ready_seconds >= k_runtime_benchmark_warmup_seconds + m_benchmark_seconds) {
     finish_runtime_benchmark();
@@ -447,13 +500,42 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
   }
   m_benchmark_complete = true;
 
+  const QString preset = QString::fromLatin1(
+      Render::graphics_quality_key(Render::GraphicsSettings::instance().quality()));
+  const std::size_t frame_count = m_benchmark_frame_work_ms.size();
+  if (frame_count < k_runtime_benchmark_min_frames) {
+    QJsonObject const refusal{
+        {QStringLiteral("valid"), false},
+        {QStringLiteral("graphics_preset"), preset},
+        {QStringLiteral("measured_seconds"), m_benchmark_seconds},
+        {QStringLiteral("frames"), static_cast<qint64>(frame_count)},
+        {QStringLiteral("minimum_frames"),
+         static_cast<qint64>(k_runtime_benchmark_min_frames)},
+        {QStringLiteral("error"),
+         QStringLiteral("too few frames to report; the run never reached a steady "
+                        "frame rate")}};
+    const QByteArray refusal_json =
+        QJsonDocument(refusal).toJson(QJsonDocument::Indented);
+    qWarning().noquote() << "SOI_RUNTIME_BENCHMARK" << refusal_json;
+    if (!m_benchmark_output.isEmpty()) {
+      QFile output(m_benchmark_output);
+      if (output.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        output.write(refusal_json);
+      }
+    }
+    QMetaObject::invokeMethod(
+        QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+    return;
+  }
+
   const double average_work = average_ms(m_benchmark_frame_work_ms);
   const double average_wall = average_ms(m_benchmark_wall_interval_ms);
-  const double sample_count = static_cast<double>(m_benchmark_frame_work_ms.size());
+  const double sample_count = static_cast<double>(frame_count);
   QJsonObject report{
-      {QStringLiteral("graphics_preset"), QStringLiteral("ultra")},
+      {QStringLiteral("valid"), true},
+      {QStringLiteral("graphics_preset"), preset},
       {QStringLiteral("measured_seconds"), m_benchmark_seconds},
-      {QStringLiteral("frames"), static_cast<qint64>(m_benchmark_frame_work_ms.size())},
+      {QStringLiteral("frames"), static_cast<qint64>(frame_count)},
       {QStringLiteral("cpu_work_ms_average"), average_work},
       {QStringLiteral("cpu_work_ms_p95"),
        percentile_ms(m_benchmark_frame_work_ms, 0.95)},
@@ -478,11 +560,34 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
            ? static_cast<double>(m_benchmark_visible_soldiers) / sample_count
            : 0.0}};
 
-  QJsonArray continuity_issues;
+  auto stage_ms = [sample_count](std::uint64_t total_us) {
+    return sample_count > 0.0 ? static_cast<double>(total_us) / sample_count / 1000.0
+                              : 0.0;
+  };
+  QJsonObject render_thread_stages{
+      {QStringLiteral("world_ms_average"), stage_ms(m_benchmark_world_us)},
+      {QStringLiteral("visibility_ms_average"), stage_ms(m_benchmark_visibility_us)},
+      {QStringLiteral("minimap_ms_average"), stage_ms(m_benchmark_minimap_us)},
+      {QStringLiteral("weather_lighting_ms_average"), stage_ms(m_benchmark_weather_us)},
+      {QStringLiteral("victory_ms_average"), stage_ms(m_benchmark_victory_us)},
+      {QStringLiteral("view_model_sync_ms_average"),
+       stage_ms(m_benchmark_view_model_us)}};
+  for (std::size_t i = 0; i < m_benchmark_phase_us.size(); ++i) {
+    render_thread_stages.insert(
+        QStringLiteral("phase_%1_ms_average")
+            .arg(QString::fromLatin1(Render::Profiling::phase_name(
+                static_cast<Render::Profiling::Phase>(i)))),
+        stage_ms(m_benchmark_phase_us[i]));
+  }
+  report.insert(QStringLiteral("render_thread_stages"), render_thread_stages);
+
   if (m_continuity_probe != nullptr) {
+    QJsonArray continuity_issues;
     for (const auto& issue : m_continuity_probe->issues) {
       continuity_issues.push_back(issue);
     }
+    report.insert(QStringLiteral("continuity_issues"), continuity_issues);
+    report.insert(QStringLiteral("continuity_passed"), continuity_issues.isEmpty());
     report.insert(QStringLiteral("frame_continuity_samples"),
                   static_cast<qint64>(
                       m_continuity_probe->framebuffer_analyzer.observed_frames()));
@@ -494,8 +599,6 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
     report.insert(QStringLiteral("ultra_lod_culls"),
                   static_cast<qint64>(m_continuity_probe->ultra_lod_culls));
   }
-  report.insert(QStringLiteral("continuity_issues"), continuity_issues);
-  report.insert(QStringLiteral("continuity_passed"), continuity_issues.isEmpty());
 
   const QByteArray json = QJsonDocument(report).toJson(QJsonDocument::Indented);
   qInfo().noquote() << "SOI_RUNTIME_BENCHMARK" << json;

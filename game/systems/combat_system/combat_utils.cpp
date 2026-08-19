@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -21,8 +22,7 @@ constexpr float k_combat_query_cell_size = 15.0F;
 auto get_entity_from_query_context(const CombatQueryContext& query_context,
                                    Engine::Core::EntityID entity_id)
     -> Engine::Core::Entity* {
-  auto const it = query_context.entities_by_id.find(entity_id);
-  return (it != query_context.entities_by_id.end()) ? it->second : nullptr;
+  return query_context.find_entity(entity_id);
 }
 } // namespace
 
@@ -32,9 +32,97 @@ CombatQueryContext::CombatQueryContext()
 
 void CombatQueryContext::clear() {
   units.clear();
-  entities_by_id.clear();
   unit_grid.clear();
   nearby_unit_ids.clear();
+  m_present_owner_ids.clear();
+
+  if (m_stamp == std::numeric_limits<std::uint32_t>::max()) {
+    m_records.clear();
+    m_stamp = 0;
+  }
+  ++m_stamp;
+}
+
+void CombatQueryContext::record_candidate(Engine::Core::Entity* entity,
+                                          int owner_id,
+                                          bool building) {
+  if (entity == nullptr) {
+    return;
+  }
+  const Engine::Core::EntityID id = entity->get_id();
+  const std::size_t index = Engine::Core::Handle::index_of(id);
+  if (index >= m_records.size()) {
+    m_records.resize(index + 1U);
+  }
+  m_records[index] = CandidateRecord{
+      .stamp = m_stamp,
+      .id = id,
+      .entity = entity,
+      .owner_id = owner_id,
+      .is_building = building,
+      .is_wildlife = entity->has_component<Engine::Core::WildlifeComponent>()};
+
+  if (std::find(m_present_owner_ids.begin(), m_present_owner_ids.end(), owner_id) ==
+      m_present_owner_ids.end()) {
+    m_present_owner_ids.push_back(owner_id);
+  }
+}
+
+auto CombatQueryContext::find_record(Engine::Core::EntityID entity_id) const
+    -> const CandidateRecord* {
+  const std::size_t index = Engine::Core::Handle::index_of(entity_id);
+  if (index >= m_records.size()) {
+    return nullptr;
+  }
+  const CandidateRecord& record = m_records[index];
+  if (record.stamp != m_stamp || record.id != entity_id) {
+    return nullptr;
+  }
+  return &record;
+}
+
+auto CombatQueryContext::find_entity(Engine::Core::EntityID entity_id) const
+    -> Engine::Core::Entity* {
+  const CandidateRecord* record = find_record(entity_id);
+  return record != nullptr ? record->entity : nullptr;
+}
+
+void CombatQueryContext::rebuild_hostility_table() {
+  m_hostility.assign(k_owner_axis * k_owner_axis, 0U);
+  const auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  for (const int attacker : m_present_owner_ids) {
+    if (attacker < 0 || attacker > k_max_cached_owner_id) {
+      continue;
+    }
+    for (const int target : m_present_owner_ids) {
+      if (target < 0 || target > k_max_cached_owner_id) {
+        continue;
+      }
+      const bool is_hostile =
+          attacker != target && !owner_registry.are_allies(attacker, target);
+      m_hostility[static_cast<std::size_t>(attacker) * k_owner_axis +
+                  static_cast<std::size_t>(target)] =
+          static_cast<std::uint8_t>(is_hostile ? k_hostility_hostile
+                                               : k_hostility_friendly);
+    }
+  }
+}
+
+auto CombatQueryContext::hostile(int attacker_owner_id,
+                                 int target_owner_id) const -> bool {
+  if (attacker_owner_id >= 0 && attacker_owner_id <= k_max_cached_owner_id &&
+      target_owner_id >= 0 && target_owner_id <= k_max_cached_owner_id &&
+      !m_hostility.empty()) {
+    const std::uint8_t cached =
+        m_hostility[static_cast<std::size_t>(attacker_owner_id) * k_owner_axis +
+                    static_cast<std::size_t>(target_owner_id)];
+    if (cached != k_hostility_unknown) {
+      return cached == k_hostility_hostile;
+    }
+  }
+  return attacker_owner_id != target_owner_id &&
+         !Game::Systems::OwnerRegistry::instance().are_allies(attacker_owner_id,
+                                                              target_owner_id);
 }
 
 auto build_combat_query_context(Engine::Core::World* world) -> CombatQueryContext {
@@ -52,7 +140,6 @@ void rebuild_combat_query_context(Engine::Core::World* world,
 
   auto const world_units = world->get_entities_with<Engine::Core::UnitComponent>();
   query_context.units.reserve(world_units.size());
-  query_context.entities_by_id.reserve(world_units.size());
 
   for (auto* entity : world_units) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
@@ -63,10 +150,11 @@ void rebuild_combat_query_context(Engine::Core::World* world,
       continue;
     }
 
+    const bool building = is_building(entity);
     query_context.units.push_back(entity);
-    query_context.entities_by_id.emplace(entity->get_id(), entity);
+    query_context.record_candidate(entity, unit->owner_id, building);
 
-    if (is_building(entity)) {
+    if (building) {
       continue;
     }
 
@@ -76,6 +164,8 @@ void rebuild_combat_query_context(Engine::Core::World* world,
           entity->get_id(), transform->position.x, transform->position.z);
     }
   }
+
+  query_context.rebuild_hostility_table();
 }
 
 auto is_unit_in_hold_mode(Engine::Core::Entity* entity) -> bool {
@@ -358,19 +448,34 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
   query_context.unit_grid.get_entities_in_range(
       unit_transform->position.x, unit_transform->position.z, max_range, nearby_ids);
 
+  const int attacker_owner_id = unit_comp->owner_id;
+
   for (auto target_id : nearby_ids) {
     if (scan_iterations != nullptr) {
       *scan_iterations += 1;
     }
-    auto* target = get_entity_from_query_context(query_context, target_id);
-    if (target == nullptr) {
-      continue;
-    }
-    if (target == unit) {
+    const CandidateRecord* record = query_context.find_record(target_id);
+    if (record == nullptr || record->is_building) {
       continue;
     }
 
-    if (!is_auto_acquirable_enemy(unit_comp, target, false)) {
+    auto* target = record->entity;
+    if (target == unit) {
+      continue;
+    }
+    if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
+    if ((target_unit == nullptr) || (target_unit->health <= 0)) {
+      continue;
+    }
+    if (!query_context.hostile(attacker_owner_id, target_unit->owner_id)) {
+      continue;
+    }
+
+    if (record->is_wildlife && is_passive_wildlife(target)) {
       continue;
     }
 

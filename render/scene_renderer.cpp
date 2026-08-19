@@ -182,8 +182,9 @@ void Renderer::shutdown() {
 
 void Renderer::begin_frame() {
   auto& profile = Render::Profiling::global_profile();
-  profile.reset();
-  profile.frame_index += 1;
+  if (!profile.frame_open) {
+    profile.begin_frame();
+  }
   Render::Profiling::CombatAnimationDiagnostics::instance().begin_frame(
       profile.frame_index);
   Render::Profiling::PhaseScope const collect_scope(
@@ -223,6 +224,7 @@ void Renderer::begin_frame() {
 
 void Renderer::end_frame() {
   if (m_paused.load()) {
+    Render::Profiling::global_profile().end_frame();
     return;
   }
   if (m_backend && (m_camera != nullptr)) {
@@ -253,6 +255,7 @@ void Renderer::end_frame() {
         k_frame_budget_ms - static_cast<double>(profile.total_us()) / 1000.0;
     profile.finish_frame_sample();
   }
+  Render::Profiling::global_profile().end_frame();
 }
 
 void Renderer::set_camera(Camera* camera) {

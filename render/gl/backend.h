@@ -305,8 +305,11 @@ private:
   GLuint m_directional_shadow_ubo{0};
   GLuint m_directional_shadow_fbo{0};
   GLuint m_directional_shadow_texture{0};
+  GLuint m_directional_shadow_far_texture{0};
   int m_directional_shadow_resolution{0};
+  int m_directional_shadow_far_resolution{0};
   int m_directional_shadow_cascades{0};
+  int m_directional_shadow_near_cascades{0};
 
   struct ShadowStaticCaster {
     Mesh* mesh = nullptr;

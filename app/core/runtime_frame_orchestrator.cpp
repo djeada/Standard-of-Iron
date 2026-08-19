@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
 #include "app/audio/weather_audio.h"
 #include "app/world/ambient_state_manager.h"
@@ -17,6 +18,7 @@
 #include "game/systems/victory_service.h"
 #include "game/wildlife/wildlife_system.h"
 #include "render/ground/rain_renderer.h"
+#include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 
@@ -78,17 +80,23 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
                                  : Game::Session::SessionContext::active();
 
     session.clock().set_time_scale(time_scale);
-    session.advance(static_cast<double>(frame_seconds),
-                    simulation_step_budget(time_scale),
-                    [&](float step) {
-                      simulation_step(step);
-                      if (scene.environment_clock != nullptr) {
-                        scene.environment_clock->update(step, false);
-                      }
-                    });
+    {
+      Render::Profiling::AccumulatorScope const world_scope(
+          &Render::Profiling::global_profile().world_update_us);
+      session.advance(static_cast<double>(frame_seconds),
+                      simulation_step_budget(time_scale),
+                      [&](float step) {
+                        simulation_step(step);
+                        if (scene.environment_clock != nullptr) {
+                          scene.environment_clock->update(step, false);
+                        }
+                      });
+    }
     state.dropped_simulation_ticks = session.clock().consume_dropped_ticks();
 
     if (scene.visibility_coordinator != nullptr) {
+      Render::Profiling::AccumulatorScope const visibility_scope(
+          &Render::Profiling::global_profile().visibility_update_us);
       scene.visibility_coordinator->update(
           *scene.world,
           state.local_owner_id,
@@ -98,14 +106,20 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     }
 
     if (scene.minimap_manager != nullptr) {
+      Render::Profiling::AccumulatorScope const minimap_scope(
+          &Render::Profiling::global_profile().minimap_update_us);
       auto* selection_system =
           scene.world->get_system<Game::Systems::SelectionSystem>();
       state.minimap_unit_update_accumulator += std::max(dt, 0.0F);
       const bool unit_update_due =
           state.minimap_unit_update_accumulator >= k_minimap_unit_update_interval;
       if (unit_update_due || scene.minimap_manager->unit_overlay_stale()) {
+        const std::shared_ptr<Engine::Core::World> minimap_snapshot =
+            scene.world->acquire_render_snapshot();
         scene.minimap_manager->update_units(
-            scene.world, selection_system, state.local_owner_id);
+            minimap_snapshot != nullptr ? minimap_snapshot.get() : scene.world,
+            selection_system,
+            state.local_owner_id);
         if (unit_update_due) {
           state.minimap_unit_update_accumulator = std::fmod(
               state.minimap_unit_update_accumulator, k_minimap_unit_update_interval);
@@ -124,6 +138,8 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   }
 
   if (scene.rain_manager != nullptr) {
+    Render::Profiling::AccumulatorScope const weather_scope(
+        &Render::Profiling::global_profile().weather_lighting_us);
     scene.rain_manager->update(dt);
     if (scene.weather_audio != nullptr) {
       scene.weather_audio->update(scene.rain_manager);
@@ -141,6 +157,8 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   }
 
   if (scene.environment_clock != nullptr && scene.renderer != nullptr) {
+    Render::Profiling::AccumulatorScope const lighting_scope(
+        &Render::Profiling::global_profile().weather_lighting_us);
     Game::Map::WeatherLightingInput weather;
     if (scene.rain_manager != nullptr && scene.rain_manager->is_enabled()) {
       const float intensity = scene.rain_manager->get_intensity();
@@ -156,6 +174,8 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   }
 
   if (scene.victory_service != nullptr && scene.world != nullptr) {
+    Render::Profiling::AccumulatorScope const victory_scope(
+        &Render::Profiling::global_profile().victory_update_us);
     scene.victory_service->update(*scene.world, dt);
   }
 

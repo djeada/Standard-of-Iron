@@ -6,10 +6,14 @@ class QOpenGLDebugLogger;
 #include <QQuickFramebufferObject>
 #include <QString>
 
+#include <array>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "render/profiling/frame_profile.h"
 
 class GameEngine;
 
@@ -54,6 +58,7 @@ private:
     bool m_ready_reported = false;
     QSize m_size;
     std::chrono::steady_clock::time_point m_last_frame_time{};
+    std::chrono::steady_clock::time_point m_last_render_end{};
     struct RuntimeContinuityProbe;
     std::chrono::steady_clock::time_point m_benchmark_ready_time{};
     std::chrono::steady_clock::time_point m_benchmark_previous_frame_time{};
@@ -72,6 +77,15 @@ private:
     std::vector<double> m_benchmark_wall_interval_ms;
     std::uint64_t m_benchmark_draw_calls = 0;
     std::uint64_t m_benchmark_visible_soldiers = 0;
+    std::array<std::uint64_t,
+               static_cast<std::size_t>(Render::Profiling::Phase::_Count)>
+        m_benchmark_phase_us{};
+    std::uint64_t m_benchmark_world_us = 0;
+    std::uint64_t m_benchmark_visibility_us = 0;
+    std::uint64_t m_benchmark_minimap_us = 0;
+    std::uint64_t m_benchmark_weather_us = 0;
+    std::uint64_t m_benchmark_victory_us = 0;
+    std::uint64_t m_benchmark_view_model_us = 0;
     std::unique_ptr<RuntimeContinuityProbe> m_continuity_probe;
 
     void observe_runtime_continuity();

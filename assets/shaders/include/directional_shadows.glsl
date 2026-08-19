@@ -10,6 +10,7 @@ layout(std140) uniform DirectionalShadows {
 };
 
 uniform sampler2DArray u_directional_shadow_map;
+uniform sampler2DArray u_directional_shadow_map_far;
 
 vec3 environment_primary_direction();
 vec3 environment_shadow_tint();
@@ -25,8 +26,14 @@ float sample_shadow_cascade(vec3 world_position, vec3 normal, int cascade) {
     return 0.0;
   }
 
+  int near_cascade_count = int(u_shadow_camera_position.w + 0.5);
+  bool in_far_atlas = cascade >= near_cascade_count;
+  float layer = float(in_far_atlas ? cascade - near_cascade_count : cascade);
+  float texel = in_far_atlas ? u_shadow_bias.w : u_shadow_params.z;
+
   float slope = 1.0 - max(dot(normalize(normal), environment_primary_direction()), 0.0);
-  float bias = u_shadow_bias.x + slope * u_shadow_bias.y;
+  float texel_ratio = texel / max(u_shadow_params.z, 1e-8);
+  float bias = (u_shadow_bias.x + slope * u_shadow_bias.y) * texel_ratio;
   int radius = clamp(int(u_shadow_params.w + 0.5), 1, 3);
   float blocked = 0.0;
   float samples = 0.0;
@@ -34,9 +41,10 @@ float sample_shadow_cascade(vec3 world_position, vec3 normal, int cascade) {
     for (int x = -3; x <= 3; ++x) {
       if (abs(x) > radius || abs(y) > radius)
         continue;
-      vec2 offset = vec2(x, y) * u_shadow_params.z;
-      float closest =
-          texture(u_directional_shadow_map, vec3(projected.xy + offset, cascade)).r;
+      vec2 offset = vec2(x, y) * texel;
+      vec3 lookup = vec3(projected.xy + offset, layer);
+      float closest = in_far_atlas ? texture(u_directional_shadow_map_far, lookup).r
+                                   : texture(u_directional_shadow_map, lookup).r;
       blocked += projected.z - bias > closest ? 1.0 : 0.0;
       samples += 1.0;
     }

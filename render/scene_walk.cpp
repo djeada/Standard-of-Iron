@@ -1043,20 +1043,28 @@ void Renderer::render_world(Engine::Core::World* world) {
     return;
   }
 
+  auto& profile = Render::Profiling::global_profile();
+  Render::Profiling::PhaseScope const submit_scope(&profile,
+                                                   Render::Profiling::Phase::Submit);
+
   Engine::Core::World* const simulation_world = world;
   if (m_cached_world != nullptr && m_cached_world != simulation_world) {
     m_render_world_snapshot.reset();
   }
-  simulation_world->request_render_snapshots();
-  std::shared_ptr<Engine::Core::World> render_snapshot =
-      simulation_world->acquire_render_snapshot();
-  if (render_snapshot != nullptr) {
-    if (m_render_world_snapshot != nullptr &&
-        m_render_world_snapshot.get() != render_snapshot.get()) {
-      transfer_render_runtime_state(*m_render_world_snapshot, *render_snapshot);
+  std::shared_ptr<Engine::Core::World> render_snapshot;
+  {
+    Render::Profiling::PhaseScope const snapshot_scope(
+        &profile, Render::Profiling::Phase::Snapshot);
+    simulation_world->request_render_snapshots();
+    render_snapshot = simulation_world->acquire_render_snapshot();
+    if (render_snapshot != nullptr) {
+      if (m_render_world_snapshot != nullptr &&
+          m_render_world_snapshot.get() != render_snapshot.get()) {
+        transfer_render_runtime_state(*m_render_world_snapshot, *render_snapshot);
+      }
+      m_render_world_snapshot = render_snapshot;
+      world = render_snapshot.get();
     }
-    m_render_world_snapshot = render_snapshot;
-    world = render_snapshot.get();
   }
 
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());

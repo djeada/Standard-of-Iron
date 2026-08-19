@@ -3,6 +3,7 @@
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
+#include "terrain_noise.glsl"
 #include "visibility_mask.glsl"
 
 in vec3 v_world_pos;
@@ -52,6 +53,11 @@ uniform float u_soil_foot_height;
 
 uniform int u_has_height_tex;
 uniform sampler2D u_height_tex;
+uniform int u_has_field_tex;
+uniform sampler2D u_field_tex;
+uniform int u_has_noise_atlas;
+uniform sampler2D u_noise_atlas;
+uniform vec2 u_noise_atlas_world_size;
 uniform vec2 u_height_texel_size;
 uniform vec2 u_height_uv_scale, u_height_uv_offset;
 uniform float u_height_tex_to_world;
@@ -62,68 +68,24 @@ uniform float u_screen_toe_clamp;
 uniform vec3 u_camera_pos;
 
 float noise21(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  float a = soi_hash21_8b0317(i);
-  float b = soi_hash21_8b0317(i + vec2(1.0, 0.0));
-  float c = soi_hash21_8b0317(i + vec2(0.0, 1.0));
-  float d = soi_hash21_8b0317(i + vec2(1.0, 1.0));
-  vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+  return soi_terrain_value_noise_2f7ce8(p);
 }
 
 vec2 hash22(vec2 p) {
-  vec2 h = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
-  return -1.0 + 2.0 * fract(sin(h) * 43758.5453123);
+  return soi_terrain_hash22_5a91c4(p);
 }
 
 float gradient_noise(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
-  float a = dot(hash22(i), f);
-  float b = dot(hash22(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
-  float c = dot(hash22(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
-  float d = dot(hash22(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
-  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y) * 1.55;
+  return soi_terrain_gradient_noise_d3b016(p);
 }
 
 float gradient_fbm(vec2 p) {
-  float value = 0.0;
-  float amplitude = 0.54;
-  float footprint = max(length(fwidth(p)), 1e-6);
-  mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
-  int octaves = clamp(u_noise_octaves, 1, 5);
-  for (int i = 0; i < octaves; ++i) {
-    float fade = 1.0 - smoothstep(0.30, 0.85, footprint);
-    if (fade <= 0.001) {
-      break;
-    }
-    value += gradient_noise(p) * amplitude * fade;
-    p = octave_rotation * p * 2.03 + vec2(7.1, -3.8);
-    amplitude *= 0.49;
-    footprint *= 2.03;
-  }
-  return value;
+  return soi_terrain_gradient_fbm_7c25da(
+      p, u_noise_octaves, max(length(fwidth(p)), 1e-6));
 }
 
 vec2 cellular_distances(vec2 p) {
-  vec2 cell = floor(p);
-  vec2 local = fract(p);
-  float nearest = 8.0;
-  float second = 8.0;
-  for (int y = -1; y <= 1; ++y) {
-    for (int x = -1; x <= 1; ++x) {
-      vec2 offset = vec2(float(x), float(y));
-      vec2 point = 0.5 + 0.46 * hash22(cell + offset);
-      float distance_to_point = length(offset + point - local);
-      if (distance_to_point < nearest) {
-        second = nearest;
-        nearest = distance_to_point;
-      } else if (distance_to_point < second) {
-        second = distance_to_point;
-      }
-    }
-  }
-  return vec2(nearest, second);
+  return soi_terrain_cellular_distances_9e14b7(p);
 }
 
 float curvature_from_normal_field(vec3 shading_normal) {
@@ -277,9 +239,13 @@ void main() {
   float entry_face = entry_core * smoothstep(0.045, 0.16, slope) *
                      (1.0 - smoothstep(0.58, 0.82, slope));
   float entry_signal = entry_core * (0.30 + 0.70 * smoothstep(0.025, 0.14, slope));
-  float curvature = (u_has_height_tex == 1)
-                        ? compute_curvature()
-                        : curvature_from_normal_field(smooth_normal);
+  vec2 baked_fields =
+      (u_has_field_tex == 1) ? texture(u_field_tex, height_uv).rg : vec2(0.0);
+  float curvature =
+      (u_has_field_tex == 1)
+          ? baked_fields.y
+          : ((u_has_height_tex == 1) ? compute_curvature()
+                                     : curvature_from_normal_field(smooth_normal));
   float curvature_response = clamp(u_curvature_response, 0.0, 1.0);
   float ridge_response = clamp(u_ridge_response, 0.0, 1.0);
   float gully_response = clamp(u_gully_response, 0.0, 1.0);
@@ -291,9 +257,12 @@ void main() {
   float gully_mask =
       smoothstep(0.0, gully_threshold, max(0.0, -curvature * curvature_gain));
 
-  float sky_openness = (u_has_height_tex == 1)
-                           ? terrain_sky_openness(height_uv, sample_height(height_uv))
-                           : 1.0 - clamp(-curvature * curvature_gain * 6.0, 0.0, 0.55);
+  float sky_openness =
+      (u_has_field_tex == 1)
+          ? baked_fields.x
+          : ((u_has_height_tex == 1)
+                 ? terrain_sky_openness(height_uv, sample_height(height_uv))
+                 : 1.0 - clamp(-curvature * curvature_gain * 6.0, 0.0, 0.55));
 
   float sheltered_ground = smoothstep(0.35, 0.92, sky_openness);
   float terrain_cavity = 1.0 - sheltered_ground;
@@ -312,26 +281,44 @@ void main() {
   float detail_scale = max(u_detail_noise_scale, 0.045);
   vec2 domain_warp = vec2(gradient_fbm(world_coord * macro_scale * 0.43 + 13.7),
                           gradient_fbm(world_coord * macro_scale * 0.43 - 9.2));
-  float regional_field = clamp(
-      0.5 + gradient_fbm(world_coord * macro_scale * 0.56 + domain_warp * 0.85) * 0.72,
-      0.0,
-      1.0);
-  float soil_field = clamp(
-      0.5 + gradient_fbm(world_coord * macro_scale * 4.80 + domain_warp * 0.65 + 31.0) *
-                0.72,
-      0.0,
-      1.0);
-  float moisture_field = clamp(
-      0.5 + gradient_fbm(world_coord * macro_scale * 1.80 - domain_warp * 0.60 + 73.0) *
-                0.68,
-      0.0,
-      1.0);
+
+  vec4 baked_noise = vec4(0.0);
+  if (u_has_noise_atlas == 1) {
+    vec2 atlas_uv = v_world_pos.xz / max(u_noise_atlas_world_size, vec2(1e-4));
+    baked_noise = texture(u_noise_atlas, atlas_uv);
+  }
+
+  float regional_field =
+      (u_has_noise_atlas == 1)
+          ? baked_noise.r
+          : clamp(0.5 + gradient_fbm(world_coord * macro_scale * 0.56 +
+                                     domain_warp * 0.85) *
+                            0.72,
+                  0.0,
+                  1.0);
+  float soil_field = (u_has_noise_atlas == 1)
+                         ? baked_noise.g
+                         : clamp(0.5 + gradient_fbm(world_coord * macro_scale * 4.80 +
+                                                    domain_warp * 0.65 + 31.0) *
+                                           0.72,
+                                 0.0,
+                                 1.0);
+  float moisture_field =
+      (u_has_noise_atlas == 1)
+          ? baked_noise.b
+          : clamp(0.5 + gradient_fbm(world_coord * macro_scale * 1.80 -
+                                     domain_warp * 0.60 + 73.0) *
+                            0.68,
+                  0.0,
+                  1.0);
   float meadow_field =
-      clamp(0.5 + gradient_fbm(world_coord * macro_scale * 1.05 + domain_warp * 0.48 +
-                               vec2(-47.0, 26.0)) *
-                      0.70,
-            0.0,
-            1.0);
+      (u_has_noise_atlas == 1)
+          ? baked_noise.a
+          : clamp(0.5 + gradient_fbm(world_coord * macro_scale * 1.05 +
+                                     domain_warp * 0.48 + vec2(-47.0, 26.0)) *
+                            0.70,
+                  0.0,
+                  1.0);
   float thatch_field =
       clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.60 - domain_warp * 0.32 +
                                vec2(21.0, -39.0)) *

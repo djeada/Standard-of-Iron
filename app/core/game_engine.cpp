@@ -185,6 +185,7 @@
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
+#include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 #include "scene/camera.h"
@@ -648,15 +649,19 @@ void GameEngine::update(float dt) {
   m_runtime.minimap_unit_update_accumulator =
       frame_state.minimap_unit_update_accumulator;
   note_dropped_simulation_ticks(frame_state.dropped_simulation_ticks, dt);
-  sync_scatter_world_props();
-  sync_selected_player_state();
-  sync_economy_state();
-  sync_attack_targeting();
-  sync_interaction_targeting(dt);
-  sync_attack_range_rings();
-  sync_focus_targets();
-  sync_target_focus_markers();
-  update_tutorial(real_dt);
+  {
+    Render::Profiling::AccumulatorScope const sync_scope(
+        &Render::Profiling::global_profile().view_model_sync_us);
+    sync_scatter_world_props();
+    sync_selected_player_state();
+    sync_economy_state();
+    sync_attack_targeting();
+    sync_interaction_targeting(dt);
+    sync_attack_range_rings();
+    sync_focus_targets();
+    sync_target_focus_markers();
+    update_tutorial(real_dt);
+  }
 }
 
 void GameEngine::render(int pixel_width, int pixel_height) {
