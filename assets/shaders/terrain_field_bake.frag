@@ -1,4 +1,5 @@
 #version 330 core
+#include "noise.glsl"
 #include "terrain_noise.glsl"
 
 in vec2 v_uv;

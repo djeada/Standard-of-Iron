@@ -61,6 +61,14 @@ void Mesh::setup_buffers() {
     return;
   }
   initializeOpenGLFunctions();
+  bool reported_stale = false;
+  for (GLenum stale = glGetError(); stale != GL_NO_ERROR; stale = glGetError()) {
+    if (!reported_stale) {
+      reported_stale = true;
+      qWarning() << "Mesh::setup_buffers inherited GL error" << stale
+                 << "from an earlier call";
+    }
+  }
   m_vao = std::make_unique<VertexArray>();
   m_vbo = std::make_unique<Buffer>(Buffer::Type::Vertex);
   m_ebo = std::make_unique<Buffer>(Buffer::Type::Index);

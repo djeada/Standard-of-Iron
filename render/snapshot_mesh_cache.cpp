@@ -130,13 +130,6 @@ auto SnapshotMeshCache::get_or_load(
     ++m_frame_stats.hits;
     return &it->second;
   }
-  if (Render::Creature::runtime_bake_forbidden()) {
-    ++m_frame_stats.misses;
-    Render::Creature::report_runtime_bake_violation(
-        Render::Creature::RuntimeBakeOperation::SnapshotMeshLoad,
-        describe_snapshot_key(key, global_frame));
-    return nullptr;
-  }
 
   const auto vertices = source.frame_vertices_view(global_frame);
   const auto indices = source.indices_view();

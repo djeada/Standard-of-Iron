@@ -70,6 +70,7 @@ public:
   auto is_sound_active(const QString& id) const -> bool;
 
   auto is_track_ready(const QString& id) const -> bool;
+  auto is_track_decode_pending(const QString& id) const -> bool;
 
   void on_audio(float* output, unsigned frames);
 

@@ -277,6 +277,7 @@ void GameEngine::cleanup_opengl_resources() {
 
   m_renderer.reset();
   m_resources.reset();
+  m_runtime.initialized = false;
 
   qInfo() << "OpenGL resources cleaned up";
 }
@@ -432,6 +433,9 @@ auto GameEngine::global_cursor_y() const -> qreal {
 }
 
 void GameEngine::ensure_initialized() {
+  if (!m_renderer || (m_camera == nullptr)) {
+    return;
+  }
   const bool was_initialized = m_runtime.initialized;
   QString error;
   App::Core::WorldBootstrap::ensure_initialized(m_runtime.initialized,

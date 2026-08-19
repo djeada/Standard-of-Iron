@@ -5,6 +5,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -58,6 +59,7 @@ struct AudioEvent {
   int priority = AudioConstants::DEFAULT_PRIORITY;
   AudioCategory category = AudioCategory::SFX;
   bool crossfade = false;
+  std::uint64_t load_serial = 0;
 
   AudioEvent(AudioEventType t,
              std::string id = "",
@@ -138,6 +140,10 @@ private:
   void process_event(const AudioEvent& event);
   void enqueue(AudioEvent&& event);
   void cleanup_inactive_sounds_locked();
+  void enqueue_unload(const std::string& resource_id);
+  void cancel_pending_unload_locked(const std::string& resource_id);
+  auto
+  current_load_serial_locked(const std::string& resource_id) const -> std::uint64_t;
   auto resolve_resource_id_locked(const std::string& resource_id) const -> std::string;
   auto should_accept_sound_locked(int priority) -> bool;
   auto get_active_instance_count_locked(const std::string& resource_id) const -> size_t;
@@ -155,6 +161,8 @@ private:
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
   std::unordered_map<std::string, AudioResourceConfig> resource_configs;
+  std::unordered_map<std::string, std::uint64_t> resource_load_serials;
+  std::unordered_set<std::string> pending_unloads;
   std::unordered_map<std::string, std::string> resource_aliases;
   std::unordered_map<std::string, std::chrono::steady_clock::time_point>
       resource_last_played_at;
