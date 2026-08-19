@@ -84,7 +84,7 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
 
     if ((barracks_entity == nullptr) || (barracks_unit == nullptr) ||
         (barracks_transform == nullptr) || (barracks_prod == nullptr) ||
-        (barracks_unit->spawn_type != Game::Units::SpawnType::Barracks) ||
+        !Game::Units::is_recruitment_building(barracks_unit->spawn_type) ||
         (barracks_unit->owner_id != civilian_unit->owner_id)) {
       civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
       continue;

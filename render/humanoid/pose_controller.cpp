@@ -817,6 +817,132 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
                   baked_spear_direction());
 }
 
+void HumanoidPoseController::crouch(float depth) {
+  using HP = HumanProportions;
+  if (depth <= 0.0005F) {
+    return;
+  }
+  m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - depth);
+  Animation::HumanoidPostureDeltaSample drop{};
+  drop.shoulder_l_y_delta = -depth;
+  drop.shoulder_r_y_delta = -depth;
+  drop.neck_y_delta = -depth;
+  drop.head_y_delta = -depth;
+  drop.hand_l_y_delta = -depth;
+  drop.hand_r_y_delta = -depth;
+  drop.torso_frame_origin_delta = {0.0F, -depth, 0.0F};
+  drop.head_frame_origin_delta = {0.0F, -depth, 0.0F};
+  apply_posture_delta_sample(m_pose, drop);
+  m_pose.elbow_l.setY(m_pose.elbow_l.y() - depth);
+  m_pose.elbow_r.setY(m_pose.elbow_r.y() - depth);
+
+  QVector3D const hip_l =
+      m_pose.pelvis_pos +
+      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+  QVector3D const hip_r =
+      m_pose.pelvis_pos +
+      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
+  m_pose.knee_l = solve_knee_ik(Side::Left, hip_l, m_pose.foot_l, 1.0F);
+  m_pose.knee_r = solve_knee_ik(Side::Right, hip_r, m_pose.foot_r, 1.0F);
+}
+
+namespace {
+
+void apply_ready_weapon_carriage(HumanoidPoseController& controller,
+                                 Animation::HumanoidReadyWeapon weapon,
+                                 float weapon_phase,
+                                 float reach_scale) {
+  switch (weapon) {
+  case Animation::HumanoidReadyWeapon::SwordAndShield:
+    controller.combat_sword_slash_variant(weapon_phase, 0U, reach_scale);
+    break;
+  case Animation::HumanoidReadyWeapon::Spear:
+    controller.spear_thrust_variant(weapon_phase, 0U);
+    break;
+  case Animation::HumanoidReadyWeapon::None:
+    break;
+  }
+}
+
+} // namespace
+
+void HumanoidPoseController::raise_shield_guard(float amount) {
+  using HP = HumanProportions;
+  auto const sample = Animation::resolve_humanoid_guard_stance_pose({
+      .pose = ShieldFormationPose::GuardDefault,
+      .amount = amount,
+      .shoulder_y = HP::SHOULDER_Y,
+  });
+  if (!sample.active) {
+    return;
+  }
+  QVector3D const target = to_qvec(sample.left_hand);
+  place_hand_at(Side::Left,
+                m_pose.hand_l + (target - m_pose.hand_l) * sample.blend_amount);
+  m_pose.shoulder_l += to_qvec(sample.shoulder_l_delta);
+  m_pose.shoulder_r += to_qvec(sample.shoulder_r_delta) * 0.5F;
+  m_pose.neck_base += to_qvec(sample.neck_delta) * 0.6F;
+  m_pose.head_pos += to_qvec(sample.head_delta) * 0.6F;
+}
+
+void HumanoidPoseController::combat_ready_stance(float phase,
+                                                 Animation::HumanoidReadyWeapon weapon,
+                                                 float reach_scale) {
+  auto const sample = Animation::resolve_humanoid_ready_stance({
+      .phase = phase,
+      .weapon = weapon,
+  });
+  apply_ready_weapon_carriage(*this, weapon, sample.weapon_phase, reach_scale);
+  if (weapon == Animation::HumanoidReadyWeapon::SwordAndShield &&
+      sample.shield_raise > 0.0F) {
+    raise_shield_guard(sample.shield_raise);
+  }
+  tilt_torso(sample.torso_side, sample.torso_forward);
+  m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + sample.sway_x);
+  crouch(sample.crouch);
+}
+
+void HumanoidPoseController::melee_reaction(Animation::HumanoidReactionKind kind,
+                                            float phase,
+                                            Animation::HumanoidReadyWeapon weapon,
+                                            float reach_scale) {
+  auto const sample = Animation::resolve_humanoid_reaction_pose({
+      .kind = kind,
+      .phase = phase,
+      .weapon = weapon,
+  });
+  apply_ready_weapon_carriage(*this, weapon, sample.weapon_phase, reach_scale);
+  if (weapon == Animation::HumanoidReadyWeapon::SwordAndShield) {
+    float const base_guard = 0.55F * (1.0F - sample.envelope);
+    float const guard = std::clamp(base_guard + sample.shield_raise, 0.0F, 1.0F);
+    if (guard > 0.0F) {
+      raise_shield_guard(guard);
+    }
+  }
+  if (sample.flinch > 0.0F) {
+    hit_flinch(sample.flinch);
+  }
+  tilt_torso(sample.torso_side, sample.torso_forward);
+  if (sample.head_back > 0.0F) {
+    Animation::HumanoidPostureDeltaSample head{};
+    head.head_z_delta = -sample.head_back;
+    head.neck_z_delta = -sample.head_back * 0.5F;
+    head.head_frame_origin_delta = {0.0F, 0.0F, -sample.head_back};
+    apply_posture_delta_sample(m_pose, head);
+  }
+  QVector3D const right_axis = compute_right_axis();
+  QVector3D const forward_axis = m_anim_ctx.heading_forward();
+  auto const to_world = [&](const Animation::PoseVec3& delta) {
+    return right_axis * delta.x + QVector3D(0.0F, delta.y, 0.0F) +
+           forward_axis * delta.z;
+  };
+  QVector3D const hand_l = m_pose.hand_l + to_world(sample.hand_l_delta);
+  QVector3D const hand_r = m_pose.hand_r + to_world(sample.hand_r_delta);
+  place_hand_at(Side::Left, hand_l);
+  place_hand_at(Side::Right, hand_r);
+  crouch(sample.crouch);
+}
+
 void HumanoidPoseController::tilt_torso(float side_tilt, float forward_tilt) {
   auto const sample = Animation::resolve_humanoid_torso_tilt_pose({
       .heading_right = to_pose_vec(m_anim_ctx.heading_right()),

@@ -351,4 +351,62 @@ TEST(WildlifeActionState, BiteAndDeathProgressComeFromSimulationComponents) {
   EXPECT_TRUE(state.dead);
 }
 
+TEST(WildlifeGaitLatch, AGaitDoesNotDitherOnItsThreshold) {
+  constexpr float k_walk_threshold = 0.02F;
+  constexpr float k_run_threshold = 0.42F;
+
+  Render::GL::Wildlife::DrawState state;
+  state.seed = 0xA17E5EEDU;
+
+  auto tier = Render::GL::Wildlife::GaitTier::Stand;
+  int flips = 0;
+  for (int frame = 0; frame < 120; ++frame) {
+    state.time = static_cast<float>(frame) / 60.0F;
+    (void)Render::GL::Wildlife::gait_speed(state);
+
+    float const ratio = k_walk_threshold + ((frame % 2 == 0) ? 0.0008F : -0.0008F);
+    auto const next = Render::GL::Wildlife::resolve_gait_tier(
+        state, ratio, k_walk_threshold, k_run_threshold);
+    if (next != tier) {
+      ++flips;
+      tier = next;
+    }
+  }
+
+  EXPECT_LE(flips, 1)
+      << "a speed resting on the threshold must not flick the animal between "
+         "standing and walking every frame";
+}
+
+TEST(WildlifeGaitLatch, ASheepKeepsItsHeadDownUntilItWalksOff) {
+  Render::GL::Wildlife::DrawState state;
+  state.seed = 0x5EEB5EEDU;
+  state.grazing = true;
+
+  int frame = 0;
+  auto tick = [&state, &frame](bool moving) {
+    state.time = static_cast<float>(frame++) / 60.0F;
+    (void)Render::GL::Wildlife::gait_speed(state);
+    return Render::GL::Wildlife::grazing_latched(state, moving);
+  };
+
+  for (int i = 0; i < 30; ++i) {
+    ASSERT_TRUE(tick(false));
+  }
+
+  state.grazing = false;
+  for (int i = 0; i < 6; ++i) {
+    EXPECT_TRUE(tick(false))
+        << "the head must not snap up for the moment between the herd deciding "
+           "to move and the legs getting going";
+  }
+  EXPECT_FALSE(tick(true));
+
+  for (int i = 0; i < 120; ++i) {
+    (void)tick(false);
+  }
+  EXPECT_FALSE(tick(false))
+      << "an animal that stops grazing and just stands there lifts its head";
+}
+
 } // namespace

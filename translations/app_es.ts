@@ -1410,10 +1410,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Compra y vende recursos a cambio de oro.</translation>
     </message>
     <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together.</source>
-        <translation>Vigila una amplia extensión de terreno y mantiene unido un asentamiento.</translation>
-    </message>
-    <message>
         <source>Blocks enemy movement.</source>
         <translation>Bloquea el movimiento enemigo.</translation>
     </message>
@@ -1536,6 +1532,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
         <translation>Sigue reclutando mientras tus constructores recolectan. Levanta casas y granjas cuando se agoten la población o la comida.</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
+        <translation>Vigila una amplia extensión de terreno, mantiene unido un asentamiento y acoge a los sanadores.</translation>
     </message>
 </context>
 <context>
@@ -3452,10 +3452,6 @@ Sin ver: nunca explorado.</translation>
         <translation>Reclutamiento</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier. Recruits queue up to five deep and march out to the rally flag. Each costs population from the barracks&apos; own pool as well as materials.</source>
-        <translation>Haz clic izquierdo en un cuartel y elige un soldado. Los reclutas hacen cola de hasta cinco y salen hacia la bandera de reunión. Cada uno cuesta población de la reserva propia del cuartel además de materiales.</translation>
-    </message>
-    <message>
         <source>Population</source>
         <translation>Población</translation>
     </message>
@@ -3584,12 +3580,16 @@ Sin ver: nunca explorado.</translation>
         <translation>Cada tarjeta, recluta o edificio, indica su precio. Una tarjeta gris significa que falta algo; pasa el cursor para leer qué. Las casas cuestan 50 de madera y 15 de piedra, una granja 40 de madera y 10 de piedra, un cuartel 100 de madera y 60 de piedra, una torre defensiva 60 de madera y 80 de piedra; los soldados cuestan madera y hierro más población, y los civiles cuestan comida.</translation>
     </message>
     <message>
-        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>Los cuarteles reclutan soldados y albergan tu patio de reservas. Las casas crían familias y civiles. Las granjas cultivan grano que los constructores siegan para obtener comida. Las torres defensivas disparan a todo lo que esté a su alcance. Los mercados comercian. Los templos refuerzan la moral. Muros y puertas dan forma al campo; las puertas se abren para tus propias tropas.</translation>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>Los cuarteles reclutan soldados y albergan tu almacén. Las casas crían familias y civiles. Las granjas cultivan grano que los constructores cosechan como comida. Las torres de defensa disparan a todo lo que esté a su alcance. Los mercados comercian. Los templos fortalecen la moral y acogen a los sanadores. Muros y puertas dan forma al campo; las puertas se abren para tus propias tropas.</translation>
     </message>
     <message>
-        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>Un cuartel empieza con una reserva de población y la gasta en cada recluta. Las casas la rellenan: cada casa cría familias con el tiempo, allí se puede reclutar un civil por comida y enviarlo al cuartel con Entregar, y la reserva crece. La barra superior muestra tu ejército frente al límite total del mapa.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
+        <translation>Haz clic izquierdo en un cuartel y elige un soldado; los sanadores toman sus votos en un templo. Los reclutas se encolan hasta cinco y marchan hacia la bandera de reunión. Cada uno cuesta población de la reserva propia del edificio, además de materiales.</translation>
+    </message>
+    <message>
+        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>Un cuartel o un templo empieza con una reserva de población y la gasta en cada recluta. Las casas la reponen: cada Casa cría familias con el tiempo, allí puede reclutarse un civil a cambio de comida y enviarse a cualquiera de los dos edificios con Entregar, y la reserva de ese edificio crece. La barra superior muestra tu ejército frente al límite total del mapa.</translation>
     </message>
 </context>
 <context>
@@ -6571,10 +6571,6 @@ Tiempo de construcción: %3 s</translation>
         <translation>Elefante de guerra</translation>
     </message>
     <message>
-        <source>Build a barracks before setting a rally point.</source>
-        <translation>Construye un cuartel antes de fijar un punto de reunión.</translation>
-    </message>
-    <message>
         <source>Temple</source>
         <translation>Templo</translation>
     </message>
@@ -6677,6 +6673,18 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>Harvested %1 times so far.</source>
         <translation>Cosechada %1 veces hasta ahora.</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>Selecciona un cuartel o un templo antes de fijar un punto de reunión.</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>TOMAR VOTOS</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s available population</source>
+        <translation>Entrega civiles aquí para aumentar la población disponible del templo</translation>
     </message>
 </context>
 <context>

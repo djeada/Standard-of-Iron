@@ -376,6 +376,8 @@ public:
 
   float melee_lock_separation_time{0.0F};
 
+  float melee_footwork_offset{0.0F};
+
   static constexpr float k_melee_contact_range_grace = 0.75F;
   static constexpr float k_melee_lock_separation_release = 1.5F;
 
@@ -509,6 +511,7 @@ public:
   RpgCommanderActionPhase phase{RpgCommanderActionPhase::None};
   std::uint8_t combat_action_id{0};
   std::uint8_t melee_attack_sequence{0};
+  std::uint8_t exchange_outcome{0};
   EntityID active_target_id{0};
   std::uint16_t active_target_soldier_slot{
       RpgCommanderTargetComponent::k_no_soldier_slot};
@@ -718,6 +721,31 @@ enum class StaggerTier : std::uint8_t {
   GuardBreak = 4
 };
 
+enum class HitReactionKind : std::uint8_t {
+  Flinch = 0,
+  Block = 1,
+  Evade = 2,
+  Stagger = 3,
+  Recoil = 4,
+};
+
+[[nodiscard]] constexpr auto
+hit_reaction_duration(HitReactionKind kind) noexcept -> float {
+  switch (kind) {
+  case HitReactionKind::Flinch:
+    return 0.30F;
+  case HitReactionKind::Block:
+    return 0.34F;
+  case HitReactionKind::Evade:
+    return 0.36F;
+  case HitReactionKind::Stagger:
+    return 0.60F;
+  case HitReactionKind::Recoil:
+    return 0.26F;
+  }
+  return 0.30F;
+}
+
 class HitFeedbackComponent : public Component {
 public:
   HitFeedbackComponent() = default;
@@ -725,10 +753,13 @@ public:
   EntityID source_attacker_id{0};
   bool is_reacting{false};
   float reaction_time{0.0F};
+  float reaction_duration{k_reaction_duration};
   float reaction_intensity{0.0F};
   float knockback_x{0.0F};
   float knockback_z{0.0F};
+  float knockback_applied{0.0F};
   StaggerTier stagger_tier{StaggerTier::LightFlinch};
+  HitReactionKind reaction_kind{HitReactionKind::Flinch};
   float hit_direction_x{0.0F};
   float hit_direction_z{0.0F};
 
@@ -2016,7 +2047,11 @@ public:
   EntityID attacker_id{0};
   std::uint16_t soldier_slot{0};
   float remaining{0.0F};
+  float duration{0.0F};
   float intensity{0.0F};
+  HitReactionKind reaction_kind{HitReactionKind::Flinch};
+  float hit_direction_x{0.0F};
+  float hit_direction_z{0.0F};
   std::uint32_t revision{0};
 };
 
@@ -2069,6 +2104,8 @@ public:
   CreatureCastPresentation cast{CreatureCastPresentation::None};
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
+  float hit_reaction_progress{0.0F};
+  HitReactionKind hit_reaction_kind{HitReactionKind::Flinch};
   float hit_recoil_x{0.0F};
   float hit_recoil_z{0.0F};
   bool allow_full_body_hit_reaction{true};
@@ -2107,6 +2144,7 @@ public:
   bool authored_action_running{false};
   bool authored_action_completed{false};
   float authored_action_phase{0.0F};
+  std::uint8_t authored_action_exchange_outcome{0};
 
   bool showcase_active{false};
   std::uint8_t showcase_move{0};

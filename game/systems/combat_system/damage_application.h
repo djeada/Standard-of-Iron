@@ -33,6 +33,16 @@ void apply_hit_feedback(Engine::Core::Entity* target,
                         Engine::Core::EntityID attacker_id,
                         Engine::Core::World* world);
 
+void apply_hit_feedback(Engine::Core::Entity* target,
+                        Engine::Core::EntityID attacker_id,
+                        Engine::Core::World* world,
+                        Engine::Core::HitReactionKind kind);
+
+void apply_melee_reaction_feedback(Engine::Core::World* world,
+                                   Engine::Core::Entity* target,
+                                   Engine::Core::EntityID attacker_id,
+                                   Engine::Core::HitReactionKind kind);
+
 void spawn_blood_stain(Engine::Core::World* world,
                        const Engine::Core::Entity* target,
                        float spread = 0.0F,

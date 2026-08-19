@@ -28,6 +28,12 @@ struct DrawState {
   bool dead{false};
 };
 
+enum class GaitTier : std::uint8_t {
+  Stand = 0,
+  Walk = 1,
+  Run = 2
+};
+
 struct ClipTransition {
   Render::Creature::AnimationStateId outgoing{Render::Creature::AnimationStateId::Idle};
   float phase{0.0F};
@@ -38,6 +44,13 @@ struct ClipTransition {
                                       float top_speed) -> DrawState;
 
 [[nodiscard]] auto gait_speed(const DrawState& state) -> float;
+
+[[nodiscard]] auto resolve_gait_tier(const DrawState& state,
+                                     float ratio,
+                                     float walk_threshold,
+                                     float run_threshold) -> GaitTier;
+
+[[nodiscard]] auto grazing_latched(const DrawState& state, bool moving) -> bool;
 
 [[nodiscard]] auto gait_phase(const DrawState& state, float advance) -> float;
 
