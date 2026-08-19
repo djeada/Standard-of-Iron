@@ -547,7 +547,10 @@ auto main(int argc, char* argv[]) -> int {
             fprintf(out,
                     "[CRITICAL] Do not use QT_QUICK_BACKEND=software; the game "
                     "requires Qt Quick's OpenGL backend\n");
-          } else {
+          } else if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
+                     msg.contains("scene graph", Qt::CaseInsensitive) ||
+                     msg.contains("RHI", Qt::CaseInsensitive) ||
+                     msg.contains("graphics", Qt::CaseInsensitive)) {
             fprintf(out,
                     "[CRITICAL] Try running with software OpenGL if this persists\n");
           }
