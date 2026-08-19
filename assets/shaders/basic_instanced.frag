@@ -102,8 +102,9 @@ void main() {
   float avg_color =
       (v_instance_color.r + v_instance_color.g + v_instance_color.b) / 3.0;
   float wrap_amount = avg_color > 0.65 ? 0.52 : (avg_color > 0.40 ? 0.20 : 0.05);
-  color *=
-      environment_lighting(normal, wrap_amount) + local_lighting(v_world_pos, normal);
+  vec3 albedo = color;
+  color *= environment_lighting(normal, wrap_amount);
   color = apply_directional_shadow(color, v_world_pos, normal);
+  color += albedo * local_lighting(v_world_pos, normal);
   frag_color = vec4(color, v_instance_alpha);
 }

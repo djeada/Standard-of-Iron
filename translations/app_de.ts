@@ -2363,20 +2363,20 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Ultra</translation>
     </message>
     <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Maximale Leistung. Aggressives LOD, weniger Details in der Ferne.</translation>
+        <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
+        <translation>Spielbar auf schwacher Hardware: keine Schlagschatten oder Nachbearbeitung, spärliches Gras, reduzierte Details ab wenigen Metern.</translation>
     </message>
     <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Ausgewogene Leistung und Qualität. Für die meisten Systeme empfohlen.</translation>
+        <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
+        <translation>Kleine Schlagschatten, leichtere Shader, weniger Details in der Ferne. Für integrierte Grafik.</translation>
     </message>
     <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Höhere Qualität. Mehr Details in der Ferne sichtbar. Erfordert bessere Hardware.</translation>
+        <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
+        <translation>Alles wie vorgesehen: volle Details überall, volle Schatten und Nachbearbeitung. Empfohlen.</translation>
     </message>
     <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Maximale Qualität. Immer volle Detailstufe. Beste Hardware empfohlen.</translation>
+        <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
+        <translation>Hoch plus kontaktverhärtende Schatten, durchscheinendes Laub, zusätzliche Geländedetails und 8x Kantenglättung. Benötigt eine starke GPU.</translation>
     </message>
 </context>
 <context>

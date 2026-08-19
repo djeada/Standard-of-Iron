@@ -16,7 +16,7 @@ struct DirectionalShadowBlock {
   static constexpr std::size_t k_vec4_floats = 4;
   static constexpr std::size_t k_float_count =
       (k_mat4_floats * static_cast<std::size_t>(k_max_shadow_cascades)) +
-      (k_vec4_floats * 4);
+      (k_vec4_floats * 6);
 
   using Packed = std::array<float, k_float_count>;
 
@@ -35,6 +35,9 @@ struct DirectionalShadowBlock {
   float cascade_blend = 0.0F;
   float far_shadow_map_texel_size = 0.0F;
   float near_cascade_count = 0.0F;
+
+  std::array<float, k_max_shadow_cascades> cascade_texel_world{};
+  std::array<float, k_max_shadow_cascades> cascade_depth_span{};
 
   [[nodiscard]] auto packed_std140() const noexcept -> Packed {
     Packed packed{};
@@ -64,12 +67,19 @@ struct DirectionalShadowBlock {
     packed[cursor++] = cascade_blend;
     packed[cursor++] = far_shadow_map_texel_size;
 
+    for (const float texel : cascade_texel_world) {
+      packed[cursor++] = texel;
+    }
+    for (const float span : cascade_depth_span) {
+      packed[cursor++] = span;
+    }
+
     return packed;
   }
 };
 
-static_assert(DirectionalShadowBlock::k_float_count == 80,
+static_assert(DirectionalShadowBlock::k_float_count == 88,
               "DirectionalShadows in assets/shaders/include/directional_shadows.glsl "
-              "declares mat4[4] + 4 vec4");
+              "declares mat4[4] + 6 vec4");
 
 } // namespace Render::GL

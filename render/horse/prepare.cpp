@@ -3,8 +3,10 @@
 #include <QDebug>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QtMath>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <optional>
 
@@ -122,7 +124,7 @@ void HorseRendererBase::render(const DrawContext& ctx,
 
   ++s_horseRenderStats.total;
 
-  if (effective_lod == HorseLOD::Billboard) {
+  if (effective_lod == HorseLOD::Culled) {
     ++s_horseRenderStats.skipped_lod;
     return;
   }
@@ -135,7 +137,7 @@ void HorseRendererBase::render(const DrawContext& ctx,
   case HorseLOD::Minimal:
     ++s_horseRenderStats.lod_minimal;
     break;
-  case HorseLOD::Billboard:
+  case HorseLOD::Culled:
     break;
   }
 
@@ -235,10 +237,13 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   shadow_inputs.kind = RCP::CreatureKind::Horse;
   shadow_inputs.lod = lod;
   shadow_inputs.camera_distance = camera_distance;
-  shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
-  shadow_inputs.standing_idle = !motion.is_moving && !motion.is_fighting &&
-                                !anim.is_attacking && !anim.is_hit_reacting &&
-                                !anim.is_dying && !anim.is_dead;
+  {
+
+    const QVector3D forward = horse_ctx.model.mapVector(QVector3D(0.0F, 0.0F, 1.0F));
+    shadow_inputs.facing_yaw_degrees =
+        qRadiansToDegrees(std::atan2(double(forward.x()), double(forward.z())));
+  }
+  shadow_inputs.intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
   shadow_inputs.surface_world_y = horse_surface_world_y;
   shadow_inputs.surface_height_valid = true;
   const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
@@ -262,7 +267,7 @@ void prepare_horse_render(const Render::GL::HorseRendererBase& owner,
                           HorsePreparation& out,
                           std::optional<std::uint32_t> request_seed,
                           const QMatrix4x4* shared_grounded_world) {
-  if (lod == Render::Creature::CreatureLOD::Billboard) {
+  if (lod == Render::Creature::CreatureLOD::Culled) {
     return;
   }
   prepare_horse_impl(owner,

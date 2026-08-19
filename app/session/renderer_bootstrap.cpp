@@ -18,7 +18,7 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   RenderingComponents components;
 
   components.renderer = std::make_unique<Render::GL::Renderer>(
-      Render::GraphicsSettings::instance().features().shader_quality);
+      Render::GraphicsSettings::instance().backend_kind());
   components.camera = std::make_unique<Render::GL::Camera>();
   components.surface = std::make_unique<Render::GL::TerrainSurfaceManager>();
   components.features = std::make_unique<Render::GL::TerrainFeatureManager>();

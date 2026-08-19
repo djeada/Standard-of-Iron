@@ -45,13 +45,13 @@ enum class MeshSkinning : std::uint8_t {
 enum class CreatureLOD : std::uint8_t {
   Full = 0,
   Minimal = 1,
-  Billboard = 2,
+  Culled = 2,
 };
 
 inline constexpr std::uint8_t k_lod_full = 1U << 0;
 inline constexpr std::uint8_t k_lod_minimal = 1U << 1;
-inline constexpr std::uint8_t k_lod_billboard = 1U << 2;
-inline constexpr std::uint8_t k_lod_all = k_lod_full | k_lod_minimal | k_lod_billboard;
+inline constexpr std::uint8_t k_lod_culled = 1U << 2;
+inline constexpr std::uint8_t k_lod_all = k_lod_full | k_lod_minimal | k_lod_culled;
 
 [[nodiscard]] constexpr auto lod_bit(CreatureLOD l) noexcept -> std::uint8_t {
   switch (l) {
@@ -59,8 +59,8 @@ inline constexpr std::uint8_t k_lod_all = k_lod_full | k_lod_minimal | k_lod_bil
     return k_lod_full;
   case CreatureLOD::Minimal:
     return k_lod_minimal;
-  case CreatureLOD::Billboard:
-    return k_lod_billboard;
+  case CreatureLOD::Culled:
+    return k_lod_culled;
   }
   return 0;
 }

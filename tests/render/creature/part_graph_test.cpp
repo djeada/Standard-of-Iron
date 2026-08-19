@@ -303,7 +303,7 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
     auto stats = submit_part_graph(beast_topology(),
                                    g,
                                    std::span<const QMatrix4x4>(palette),
-                                   CreatureLOD::Billboard,
+                                   CreatureLOD::Culled,
                                    identity,
                                    sub);
     EXPECT_EQ(stats.submitted, 1U);

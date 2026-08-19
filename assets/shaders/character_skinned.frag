@@ -34,7 +34,7 @@ const float k_readable_rim_far = 0.055;
 const float k_readable_wear_far = 0.30;
 const float k_readable_grime_far = 0.20;
 const float k_readable_blood_far = 0.75;
-const float k_readable_shadow_floor = 0.60;
+const float k_readable_shadow_floor = 0.50;
 const float k_sun_rim_power = 2.4;
 const float k_sun_rim_wrap = 0.35;
 const float k_sun_rim_gain = 0.10;
@@ -46,13 +46,19 @@ const int k_wildlife_material = 7;
 const float k_wildlife_belly_y = 0.26;
 const float k_wildlife_back_span = 0.40;
 const float k_wildlife_rim = 0.030;
+const float k_wildlife_shadow_floor = 0.42;
 const int k_elephant_material = 8;
 const int k_elephant_role_tusk = 6;
 const int k_elephant_role_eye = 7;
 
 const float k_elephant_height_local = 1.75;
 const float k_elephant_rim_cancel = 0.78;
-const float k_elephant_shadow_floor = 0.40;
+const float k_elephant_shadow_floor = 0.26;
+const float k_elephant_sun_rim_scale = 0.30;
+const float k_elephant_diffuse_wrap = 0.10;
+const float k_elephant_belly_shade = 0.22;
+const float k_elephant_highlight_knee = 0.72;
+const float k_elephant_hide_saturation = 0.70;
 
 float readable_zoom(vec3 world_position) {
   float view_distance = length(u_camera_position - world_position);
@@ -106,15 +112,15 @@ vec3 apply_elephant_hide(vec3 base, int color_role, vec3 pos_local) {
   float crease =
       0.5 + 0.5 * sin(pos_local.z * 31.0 + pos_local.x * 23.0 + fine * 6.2831);
   float wrinkle = clamp(fold * 0.5 + crease * 0.5, 0.0, 1.0);
-  vec3 hide = base * (0.92 + 0.08 * wrinkle + 0.03 * (coarse - 0.5));
+  vec3 hide = base * (0.86 + 0.15 * wrinkle + 0.06 * (coarse - 0.5));
 
   float blotch =
       smoothstep(0.20, 0.85, soi_hash13_a1b3c9(floor(pos_local * 4.0) + 29.0));
   float back = smoothstep(0.62, 1.0, height);
   float legs = 1.0 - smoothstep(0.04, 0.34, height);
   float dust = clamp((back * 0.70 + legs * 0.85) * (0.40 + 0.60 * blotch), 0.0, 1.0);
-  hide = mix(hide, hide * vec3(1.34, 1.22, 1.02), dust * 0.55);
-  hide *= 1.0 - (1.0 - smoothstep(0.24, 0.54, height)) * 0.06;
+  hide = mix(hide, hide * vec3(1.10, 1.03, 0.90), dust * 0.45);
+  hide *= 1.0 - (1.0 - smoothstep(0.24, 0.62, height)) * k_elephant_belly_shade;
   return clamp(hide, 0.0, 1.0);
 }
 
@@ -244,8 +250,17 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
   return clamp(worn, 0.0, 1.0);
 }
 
-vec3 shade_readable_character(
-    vec3 base, vec3 surface_normal, vec3 world_position, int material_id, float zoom) {
+const int k_humanoid_role_skin = 2;
+const int k_humanoid_role_leather = 3;
+const int k_humanoid_role_leather_dark = 4;
+const int k_humanoid_role_metal = 6;
+
+vec3 shade_readable_character(vec3 base,
+                              vec3 surface_normal,
+                              vec3 world_position,
+                              int material_id,
+                              int color_role,
+                              float zoom) {
   vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(u_camera_position - world_position);
   float scene_ambient = clamp(environment_ambient_intensity(), 0.08, 0.40);
@@ -254,14 +269,17 @@ vec3 shade_readable_character(
   vec3 sky_color = environment_sky_color();
 
   float ndl = dot(surface_normal, light_dir);
-  float wrapped_diffuse = clamp((ndl + 0.25) / 1.25, 0.0, 1.0);
+  float diffuse_wrap =
+      material_id == k_elephant_material ? k_elephant_diffuse_wrap : 0.25;
+  float wrapped_diffuse = clamp((ndl + diffuse_wrap) / (1.0 + diffuse_wrap), 0.0, 1.0);
   float hemisphere = clamp(surface_normal.y * 0.5 + 0.5, 0.0, 1.0);
   float fill = readable_ambient * (0.78 + hemisphere * 0.22);
-  float direct = wrapped_diffuse * environment_primary_intensity();
+
+  float direct = wrapped_diffuse * environment_primary_intensity() *
+                 mix(1.0, 0.50, environment_night_amount());
   vec3 ambient_light =
       mix(environment_ground_bounce_color(), sky_color, hemisphere) * readable_ambient;
   vec3 color = base * (ambient_light + sun_color * direct) * environment_exposure();
-  color += base * local_lighting(world_position, surface_normal);
 
   float shadow_side = 1.0 - wrapped_diffuse;
   color += base * sky_color * fill * shadow_side *
@@ -273,20 +291,43 @@ vec3 shade_readable_character(
   float back_facing = clamp(dot(-view_dir, light_dir), 0.0, 1.0);
   float sun_rim = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), k_sun_rim_power) *
                   clamp(dot(surface_normal, light_dir) + k_sun_rim_wrap, 0.0, 1.0);
-  color += sun_color * environment_primary_intensity() * sun_rim *
+  float sun_rim_scale =
+      material_id == k_elephant_material ? k_elephant_sun_rim_scale : 1.0;
+  color += sun_color * environment_primary_intensity() * sun_rim * sun_rim_scale *
            (k_sun_rim_gain + k_sun_rim_backlight_gain * back_facing);
 
   float wetness = environment_wetness();
   vec3 half_vector = normalize(light_dir + view_dir);
-  if (material_id == 2) {
-    float metal_glint = pow(max(dot(surface_normal, half_vector), 0.0), 28.0);
-    color += sun_color * metal_glint * 0.18 * environment_primary_intensity();
+  float n_dot_h = max(dot(surface_normal, half_vector), 0.0);
+  float fresnel = pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 4.0);
+  if (material_id == 2 || (material_id == 0 && color_role == k_humanoid_role_metal)) {
+
+    float metal_glint = pow(n_dot_h, 42.0);
+    float metal_sheen = pow(n_dot_h, 9.0);
+    color += sun_color * environment_primary_intensity() *
+             (metal_glint * 0.42 + metal_sheen * 0.12) * base;
+    color += sky_color * (0.08 + fresnel * 0.22) * base;
     color += local_lighting_specular(world_position, surface_normal, view_dir, 1.0);
+  } else if (material_id == 0 && (color_role == k_humanoid_role_leather ||
+                                  color_role == k_humanoid_role_leather_dark)) {
+
+    color += sun_color * environment_primary_intensity() * pow(n_dot_h, 12.0) * 0.10;
+  } else if (material_id == 0 && color_role == k_humanoid_role_skin) {
+
+    color += base * vec3(0.16, 0.05, 0.02) * shadow_side * readable_ambient;
+    color += sun_color * environment_primary_intensity() * pow(n_dot_h, 18.0) * 0.05;
   } else if (wetness > 0.0) {
+
+    bool coat = material_id == 6 || material_id == k_wildlife_material ||
+                material_id == k_elephant_material;
+    float sheen_gain = coat ? 0.22 : 1.0;
     float sheen = pow(max(dot(surface_normal, half_vector), 0.0), k_wet_sheen_power);
-    color += sun_color * sheen * 0.10 * wetness * environment_primary_intensity();
-    color += local_lighting_specular(
-        world_position, surface_normal, view_dir, wetness * k_wet_sheen_gloss);
+    color += sun_color * sheen * 0.10 * sheen_gain * wetness *
+             environment_primary_intensity();
+    color += local_lighting_specular(world_position,
+                                     surface_normal,
+                                     view_dir,
+                                     wetness * k_wet_sheen_gloss * sheen_gain);
     color = mix(color, color * k_wet_darken, wetness * 0.5);
   }
   return clamp(color, 0.0, 1.0);
@@ -306,18 +347,32 @@ void main() {
   readable_wear.x *= mix(1.0, k_readable_wear_far, zoom);
   readable_wear.y *= mix(1.0, k_readable_grime_far, zoom);
   readable_wear.z *= mix(1.0, k_readable_blood_far, zoom);
+#if SOI_SURFACE_DETAIL
+
   base = apply_wear(base, u_material_id, v_color_role, v_pos_local, readable_wear);
+#endif
 
   vec3 surface_normal = normalize(v_normal_ws);
   vec3 light_dir = environment_primary_direction();
   vec3 sun_color = environment_primary_color();
   vec3 sky_color = environment_sky_color();
-  vec3 color =
-      shade_readable_character(base, surface_normal, v_pos_ws, u_material_id, zoom);
+  vec3 color = shade_readable_character(
+      base, surface_normal, v_pos_ws, u_material_id, v_color_role, zoom);
   color = apply_directional_shadow(color, v_pos_ws, surface_normal);
 
-  float shadow_floor = u_material_id == k_elephant_material ? k_elephant_shadow_floor
-                                                            : k_readable_shadow_floor;
+  vec3 local_light = local_lighting(v_pos_ws, surface_normal);
+  local_light = local_light / (vec3(1.0) + local_light * 0.55);
+  color += base * local_light;
+  if (u_material_id == 0) {
+
+    color *= mix(0.80, 1.0, smoothstep(0.0, 0.32, v_pos_local.y));
+  }
+
+  float shadow_floor = u_material_id == k_elephant_material   ? k_elephant_shadow_floor
+                       : u_material_id == k_wildlife_material ? k_wildlife_shadow_floor
+                                                              : k_readable_shadow_floor;
+
+  shadow_floor *= mix(1.0, 0.30, environment_night_amount());
   color = max(color, base * sky_color * shadow_floor);
   if (u_material_id == k_wildlife_material) {
     vec3 view_dir = normalize(u_camera_position - v_pos_ws);
@@ -355,7 +410,17 @@ void main() {
 
     color += environment_ground_bounce_color() * (1.0 - skylight) * 0.06;
     color = max(color, vec3(0.0));
+
+    vec3 shoulder = vec3(1.0 - k_elephant_highlight_knee);
+    vec3 over = max(color - vec3(k_elephant_highlight_knee), vec3(0.0));
+    color = min(color,
+                vec3(k_elephant_highlight_knee) + over * shoulder / (shoulder + over));
   }
   color = apply_zoom_readability(color, zoom);
+  if (u_material_id == k_elephant_material) {
+
+    float hide_luma = dot(color, vec3(0.299, 0.587, 0.114));
+    color = mix(vec3(hide_luma), color, k_elephant_hide_saturation);
+  }
   frag_color = vec4(color, u_alpha);
 }

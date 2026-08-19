@@ -26,6 +26,8 @@ namespace {
 constexpr std::string_view k_default_style_key = "default";
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
+
+constexpr float k_leather_team_mix_weight = 0.15F;
 constexpr float k_cloth_team_mix_weight = 0.09F;
 constexpr float k_cloth_style_mix_weight = 0.91F;
 
@@ -154,8 +156,11 @@ private:
                 variant.palette.cloth,
                 k_cloth_team_mix_weight,
                 k_cloth_style_mix_weight);
-    apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leather_dark);
+    apply_color(
+        style.leather_color, variant.palette.leather, k_leather_team_mix_weight);
+    apply_color(style.leather_dark_color,
+                variant.palette.leather_dark,
+                k_leather_team_mix_weight);
     apply_color(style.metal_color, variant.palette.metal);
     apply_color(style.wood_color, variant.palette.wood);
   }

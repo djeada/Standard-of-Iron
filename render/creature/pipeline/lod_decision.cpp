@@ -7,10 +7,10 @@ auto select_distance_lod(float distance,
   if (distance < t.full) {
     return CreatureLOD::Full;
   }
-  if (distance < t.minimal) {
+  if (distance < t.cull) {
     return CreatureLOD::Minimal;
   }
-  return CreatureLOD::Billboard;
+  return CreatureLOD::Culled;
 }
 
 auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
@@ -29,9 +29,9 @@ auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
 
   out.lod = select_distance_lod(in.distance, in.thresholds);
 
-  if (out.lod == CreatureLOD::Billboard) {
+  if (out.lod == CreatureLOD::Culled) {
     out.culled = true;
-    out.reason = CullReason::Billboard;
+    out.reason = CullReason::Distance;
     return out;
   }
 

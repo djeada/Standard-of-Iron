@@ -6,6 +6,7 @@
 
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "render/graphics_settings.h"
 #include "render/ground/abandoned_home_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
@@ -166,6 +167,14 @@ void TerrainScatterManager::set_light_direction(const QVector3D& dir) {
 
 void TerrainScatterManager::submit(Renderer& renderer, ResourceManager* resources) {
   std::lock_guard<std::mutex> const lock(m_mutex);
+
+  const std::uint32_t generation = GraphicsSettings::instance().generation();
+  if (generation != m_applied_graphics_generation) {
+    m_applied_graphics_generation = generation;
+    if (m_biome != nullptr && !m_biome->grass_matches_graphics_profile()) {
+      m_biome->refresh_grass();
+    }
+  }
 
   const bool previous_filter =
       Render::Ground::Scatter::visibility_filter_enabled_for_current_thread();

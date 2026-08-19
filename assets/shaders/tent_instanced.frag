@@ -83,8 +83,8 @@ void main() {
   vec3 color = albedo * illumination * ao;
   color += sun * specular;
   color += sky * rim;
-  color += albedo * ao * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
+  color += albedo * ao * local_lighting(v_world_pos, normalize(v_normal));
   float night = environment_night_amount();
   if (night > 0.0) {
     float interior = (1.0 - smoothstep(0.10, 0.62, v_local_pos.y)) *

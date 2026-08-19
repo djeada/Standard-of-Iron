@@ -78,11 +78,14 @@ auto DrawQueue::can_batch_mesh(std::size_t sorted_idx_a,
   }
   const auto& mesh_a = std::get<MeshCmdIndex>(a);
   const auto& mesh_b = std::get<MeshCmdIndex>(b);
-  if (mesh_a.alpha < k_opaque_threshold || mesh_b.alpha < k_opaque_threshold) {
+  const bool both_blend_batchable = mesh_a.blend_batchable && mesh_b.blend_batchable;
+  if (!both_blend_batchable &&
+      (mesh_a.alpha < k_opaque_threshold || mesh_b.alpha < k_opaque_threshold)) {
     return false;
   }
   return mesh_a.mesh == mesh_b.mesh && mesh_a.shader == mesh_b.shader &&
-         mesh_a.texture == mesh_b.texture && mesh_a.material_id == mesh_b.material_id;
+         mesh_a.texture == mesh_b.texture && mesh_a.material_id == mesh_b.material_id &&
+         mesh_a.blend_batchable == mesh_b.blend_batchable;
 }
 
 void DrawQueue::sort_full_keys(std::size_t start, std::size_t end) {

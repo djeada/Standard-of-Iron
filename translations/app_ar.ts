@@ -2363,20 +2363,20 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>فائق</translation>
     </message>
     <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>أقصى أداء. تبسيط حادّ للتفاصيل، وتفاصيل أقل على البعد.</translation>
+        <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
+        <translation>قابل للعب على عتاد ضعيف: بلا ظلال مسقطة أو معالجة لاحقة، عشب متناثر، تفاصيل مخفّضة بعد بضعة أمتار.</translation>
     </message>
     <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>توازن بين الأداء والجودة. موصى به لمعظم الأجهزة.</translation>
+        <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
+        <translation>ظلال مسقطة صغيرة، مظلّلات أخف، تفاصيل مخفّضة عن بُعد. للرسوميات المدمجة.</translation>
     </message>
     <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>جودة أعلى. تفاصيل أكثر ظهوراً على البعد. يتطلب عتاداً أفضل.</translation>
+        <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
+        <translation>كل شيء كما صُمّم: تفاصيل كاملة في كل مكان، ظلال ومعالجة لاحقة كاملة. موصى به.</translation>
     </message>
     <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>أقصى جودة. تفاصيل كاملة دائماً. يُنصح بأفضل عتاد.</translation>
+        <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
+        <translation>عالٍ مع ظلال تتصلّب عند التماس، أوراق شبه شفافة، تفاصيل تضاريس إضافية وتنعيم حواف 8x. يتطلب بطاقة رسوميات قوية.</translation>
     </message>
 </context>
 <context>

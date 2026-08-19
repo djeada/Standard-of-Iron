@@ -1,3 +1,4 @@
+#include "quality.glsl"
 #include "tonemap.glsl"
 layout(std140) uniform EnvironmentLighting {
   vec4 u_env_primary_direction_intensity;

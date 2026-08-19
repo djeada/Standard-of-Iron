@@ -22,6 +22,7 @@
 #include "map/terrain.h"
 #include "render/gl/buffer.h"
 #include "render/gl/render_constants.h"
+#include "render/graphics_settings.h"
 #include "render/scene_renderer.h"
 #include "scatter_runtime.h"
 #include "scatter_submission.h"
@@ -153,6 +154,13 @@ void BiomeRenderer::clear() {
 
 void BiomeRenderer::refresh_grass() {
   generate_grass_instances();
+}
+
+auto BiomeRenderer::grass_matches_graphics_profile() const noexcept -> bool {
+  const float wanted =
+      std::clamp(GraphicsSettings::instance().profile().grass_density, 0.0F, 1.0F);
+  return m_generated_grass_density < 0.0F ||
+         std::abs(m_generated_grass_density - wanted) < 1e-4F;
 }
 
 void BiomeRenderer::scatter_grass_clusters(const GrassScatterContext& ctx) {
@@ -348,7 +356,13 @@ void BiomeRenderer::generate_grass_instances() {
   }
 
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
-  const auto& scatter_profile = profiles.scatter;
+  auto scatter_profile = profiles.scatter;
+
+  const float density_scale =
+      std::clamp(GraphicsSettings::instance().profile().grass_density, 0.0F, 1.0F);
+  m_generated_grass_density = density_scale;
+  scatter_profile.patch_density *= density_scale;
+  scatter_profile.background_blade_density *= density_scale;
   if (scatter_profile.patch_density < 0.01F) {
     grass_instance_count = 0;
     grass_instances_dirty = false;

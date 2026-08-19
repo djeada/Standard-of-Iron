@@ -2363,20 +2363,20 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Ultra</translation>
     </message>
     <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Maximum performance. Aggressive LOD, reduced detail at distance.</translation>
+        <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
+        <translation>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</translation>
     </message>
     <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Balanced performance and quality. Recommended for most systems.</translation>
+        <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
+        <translation>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</translation>
     </message>
     <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Higher quality. More detail visible at distance. Requires better hardware.</translation>
+        <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
+        <translation>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</translation>
     </message>
     <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Maximum quality. Full detail always. Best hardware recommended.</translation>
+        <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
+        <translation>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</translation>
     </message>
 </context>
 <context>
