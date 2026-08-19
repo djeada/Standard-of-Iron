@@ -61,22 +61,24 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   return variant;
 }
 
-auto resolve_gait(const DrawState& state,
-                  float gait_ratio) -> Render::Wildlife::SheepGait {
-  if (state.grazing) {
+auto resolve_gait(GaitTier tier, bool grazing) -> Render::Wildlife::SheepGait {
+  if (grazing) {
     return Render::Wildlife::SheepGait::Stand;
   }
-  if (gait_ratio > k_run_threshold) {
+  switch (tier) {
+  case GaitTier::Run:
     return Render::Wildlife::SheepGait::Run;
-  }
-  if (gait_ratio > k_walk_threshold) {
+  case GaitTier::Walk:
     return Render::Wildlife::SheepGait::Walk;
+  case GaitTier::Stand:
+    break;
   }
   return Render::Wildlife::SheepGait::Stand;
 }
 
-auto state_for_gait(const DrawState& state, Render::Wildlife::SheepGait gait)
-    -> Render::Creature::AnimationStateId {
+auto state_for_gait(const DrawState& state,
+                    Render::Wildlife::SheepGait gait,
+                    bool grazing) -> Render::Creature::AnimationStateId {
   switch (gait) {
   case Render::Wildlife::SheepGait::Run:
     return Render::Creature::AnimationStateId::Run;
@@ -85,7 +87,7 @@ auto state_for_gait(const DrawState& state, Render::Wildlife::SheepGait gait)
   case Render::Wildlife::SheepGait::Stand:
     break;
   }
-  if (state.grazing) {
+  if (grazing) {
     return Render::Creature::AnimationStateId::Hold;
   }
 
@@ -98,7 +100,10 @@ void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
 
   float const speed = gait_speed(state);
   float const gait_ratio = std::clamp(speed / k_top_speed, 0.0F, 1.0F);
-  const Render::Wildlife::SheepGait gait = resolve_gait(state, gait_ratio);
+  const GaitTier tier =
+      resolve_gait_tier(state, gait_ratio, k_walk_threshold, k_run_threshold);
+  bool const grazing = grazing_latched(state, tier != GaitTier::Stand);
+  const Render::Wildlife::SheepGait gait = resolve_gait(tier, grazing);
 
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Sheep;
@@ -114,7 +119,7 @@ void draw_sheep(const DrawContext& ctx, ISubmitter& out) {
     inputs.state = Render::Creature::AnimationStateId::WildlifeStartle;
     inputs.phase = action_phase(state, state.flinch_progress);
   } else {
-    inputs.state = state_for_gait(state, gait);
+    inputs.state = state_for_gait(state, gait, grazing);
     if (gait == Render::Wildlife::SheepGait::Stand) {
       float period = k_idle_period_seconds;
       if (inputs.state == Render::Creature::AnimationStateId::Hold) {

@@ -1292,7 +1292,7 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
 
     auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != local_owner_id ||
-        unit->spawn_type != Game::Units::SpawnType::Barracks) {
+        !Game::Units::is_recruitment_building(unit->spawn_type)) {
       continue;
     }
 

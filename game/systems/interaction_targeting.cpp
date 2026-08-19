@@ -86,7 +86,7 @@ auto building_action(const InteractionTargetingRequest& request,
     return InteractionAction::None;
   }
 
-  if (request.has_civilians && unit.spawn_type == Game::Units::SpawnType::Barracks) {
+  if (request.has_civilians && Game::Units::is_recruitment_building(unit.spawn_type)) {
     const auto* production = entity.get_component<Engine::Core::ProductionComponent>();
     if (production != nullptr &&
         production->manpower_available < production->max_units) {

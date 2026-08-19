@@ -80,6 +80,7 @@ auto resolve_humanoid_action_sample(const HumanoidActionSampleInputs& inputs) no
             ? inputs.hit_reaction.reaction_time / inputs.hit_reaction.reaction_duration
             : 1.0F;
     float const envelope = std::max(0.0F, 1.0F - progress);
+    sample.hit_reaction_progress = std::clamp(progress, 0.0F, 1.0F);
     sample.hit_reaction_intensity = inputs.hit_reaction.intensity * envelope;
     float const recoil_envelope = envelope * envelope;
     sample.hit_recoil_x = inputs.hit_reaction.knockback_x * recoil_envelope;

@@ -26,6 +26,7 @@ public:
 
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_home_state() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap selected_temple_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_builder_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_marketplace_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_farm_state() const;

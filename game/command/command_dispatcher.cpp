@@ -584,7 +584,7 @@ void apply_deliver_civilians(World& world,
                           : nullptr;
   if (barracks_unit == nullptr || barracks_transform == nullptr ||
       production == nullptr ||
-      barracks_unit->spawn_type != Game::Units::SpawnType::Barracks) {
+      !Game::Units::is_recruitment_building(barracks_unit->spawn_type)) {
     return;
   }
 

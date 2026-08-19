@@ -224,8 +224,12 @@ void apply_presentation_sample(
   anim.is_defensive_layout_locked = presentation.defensive_layout_locked;
   anim.is_hit_reacting = presentation.is_hit_reacting;
   anim.hit_reaction_intensity = presentation.hit_reaction_intensity;
+  anim.hit_reaction_progress = presentation.hit_reaction_progress;
+  anim.hit_reaction_kind = presentation.hit_reaction_kind;
   anim.hit_recoil_x = presentation.hit_recoil_x;
   anim.hit_recoil_z = presentation.hit_recoil_z;
+  anim.attack_from_melee_lock = presentation.attack_from_melee_lock;
+  anim.attack_exchange_outcome = presentation.authored_action_exchange_outcome;
   anim.is_healing = presentation.is_healing;
   anim.healing_target_dx = presentation.healing_target_dx;
   anim.healing_target_dz = presentation.healing_target_dz;
