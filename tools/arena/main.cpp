@@ -54,6 +54,24 @@ auto parse_time_of_day(const QString& value) -> std::optional<Game::Map::TimeOfD
   return std::nullopt;
 }
 
+auto parse_graphics_quality(const QString& value)
+    -> std::optional<Render::GraphicsQuality> {
+  const QString normalized = value.trimmed().toLower();
+  if (normalized == QStringLiteral("low")) {
+    return Render::GraphicsQuality::Low;
+  }
+  if (normalized == QStringLiteral("medium")) {
+    return Render::GraphicsQuality::Medium;
+  }
+  if (normalized == QStringLiteral("high")) {
+    return Render::GraphicsQuality::High;
+  }
+  if (normalized == QStringLiteral("ultra")) {
+    return Render::GraphicsQuality::Ultra;
+  }
+  return std::nullopt;
+}
+
 auto graphics_quality_name(Render::GraphicsQuality quality) -> QString {
   switch (quality) {
   case Render::GraphicsQuality::Low:
@@ -269,6 +287,11 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Exact decimal environment hour (0-24); overrides "
                      "--time-of-day and any hour a scenario locks."),
       QStringLiteral("hour"));
+  QCommandLineOption const graphics_quality_option(
+      QStringList{QStringLiteral("graphics-quality")},
+      QStringLiteral("Override the scenario's graphics preset: low, medium, high, "
+                     "or ultra."),
+      QStringLiteral("preset"));
   QCommandLineOption const lighting_profile_option(
       QStringList{QStringLiteral("lighting-profile")},
       QStringLiteral("Environment lighting profile."),
@@ -338,6 +361,7 @@ auto main(int argc, char** argv) -> int {
                      seed_option,
                      time_of_day_option,
                      environment_time_option,
+                     graphics_quality_option,
                      lighting_profile_option,
                      artifact_option,
                      capture_interval_option,
@@ -385,6 +409,17 @@ auto main(int argc, char** argv) -> int {
       return 2;
     }
   }
+  std::optional<Render::GraphicsQuality> graphics_quality_override;
+  if (parser.isSet(graphics_quality_option)) {
+    graphics_quality_override =
+        parse_graphics_quality(parser.value(graphics_quality_option));
+    if (!graphics_quality_override.has_value()) {
+      qCritical().noquote() << QStringLiteral(
+          "Invalid --graphics-quality value; expected low, medium, high, or ultra");
+      return 2;
+    }
+  }
+
   const QString lighting_profile = parser.value(lighting_profile_option).trimmed();
 
   const bool include_map_preview_content = parser.isSet(map_preview_content_option);
@@ -406,6 +441,9 @@ auto main(int argc, char** argv) -> int {
     window.viewport()->set_environment_hour_override(environment_hour);
   } else {
     window.viewport()->set_environment_time(environment_hour);
+  }
+  if (graphics_quality_override.has_value()) {
+    window.viewport()->set_graphics_quality_override(*graphics_quality_override);
   }
   window.viewport()->set_terrain_review_content_enabled(include_map_preview_content);
   window.viewport()->set_clean_capture(parser.isSet(clean_capture_option));
@@ -746,7 +784,8 @@ auto main(int argc, char** argv) -> int {
                  watchdog_multiplier,
                  environment_hour,
                  environment_hour_forced,
-                 lighting_profile]() {
+                 lighting_profile,
+                 graphics_quality_override]() {
     if (state->next_index >= state->scenarios.size()) {
       qInfo().noquote()
           << QStringLiteral(
@@ -807,8 +846,11 @@ auto main(int argc, char** argv) -> int {
       QJsonObject const config{
           {QStringLiteral("scenario"), id},
           {QStringLiteral("graphics_quality"),
-           scenario != nullptr ? graphics_quality_name(scenario->graphics_quality)
-                               : QStringLiteral("Unknown")},
+           graphics_quality_override.has_value()
+               ? graphics_quality_name(*graphics_quality_override)
+               : (scenario != nullptr
+                      ? graphics_quality_name(scenario->graphics_quality)
+                      : QStringLiteral("Unknown"))},
           {QStringLiteral("seed"), seed},
           {QStringLiteral("time_of_day"),
            QString::fromLatin1(Game::Map::time_of_day_name(
