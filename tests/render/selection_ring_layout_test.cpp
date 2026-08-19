@@ -100,6 +100,97 @@ TEST(SelectionRingLayout, MatchesGameplayPublishedFormationSlotPositions) {
   }
 }
 
+TEST(SelectionRingLayout, RenderedAnchorsPlaceRingsUnderMovingSoldiers) {
+  std::vector<Engine::Core::FormationSoldierPresentation> soldiers(2);
+  soldiers[0].slot_index = 0;
+  soldiers[0].local_x = -1.0F;
+  soldiers[0].alive = true;
+  soldiers[1].slot_index = 1;
+  soldiers[1].local_x = 1.0F;
+  soldiers[1].alive = true;
+
+  std::vector<Render::Humanoid::SoldierTurnSmoothingState> anchors(2);
+  anchors[0].world_x = 3.4F;
+  anchors[0].world_z = 6.1F;
+  anchors[0].updated_frame = 42U;
+  anchors[0].valid = true;
+  anchors[1].world_x = 5.9F;
+  anchors[1].world_z = 6.4F;
+  anchors[1].updated_frame = 42U;
+  anchors[1].valid = true;
+
+  auto const placements = Render::GL::build_selection_ring_layout({
+      .soldiers = soldiers,
+      .ring_size = 0.3F,
+      .position = QVector3D(5.0F, 0.0F, 7.0F),
+      .soldier_anchors = anchors,
+      .anchor_frame = 42U,
+  });
+
+  ASSERT_EQ(placements.size(), 2U);
+  EXPECT_FLOAT_EQ(placements[0].world_x, 3.4F);
+  EXPECT_FLOAT_EQ(placements[0].world_z, 6.1F);
+  EXPECT_FLOAT_EQ(placements[1].world_x, 5.9F);
+  EXPECT_FLOAT_EQ(placements[1].world_z, 6.4F);
+}
+
+TEST(SelectionRingLayout, StaleOrUnsetAnchorsFallBackToFormationSlots) {
+  std::vector<Engine::Core::FormationSoldierPresentation> soldiers(2);
+  soldiers[0].slot_index = 0;
+  soldiers[0].local_x = -1.0F;
+  soldiers[0].alive = true;
+  soldiers[1].slot_index = 1;
+  soldiers[1].local_x = 1.0F;
+  soldiers[1].alive = true;
+
+  std::vector<Render::Humanoid::SoldierTurnSmoothingState> anchors(2);
+  anchors[0].world_x = 100.0F;
+  anchors[0].world_z = 100.0F;
+  anchors[0].updated_frame = 41U;
+  anchors[0].valid = true;
+  anchors[1].world_x = 200.0F;
+  anchors[1].world_z = 200.0F;
+  anchors[1].updated_frame = 42U;
+  anchors[1].valid = false;
+
+  auto const placements = Render::GL::build_selection_ring_layout({
+      .soldiers = soldiers,
+      .ring_size = 0.3F,
+      .position = QVector3D(5.0F, 0.0F, 7.0F),
+      .soldier_anchors = anchors,
+      .anchor_frame = 42U,
+  });
+
+  ASSERT_EQ(placements.size(), 2U);
+  EXPECT_FLOAT_EQ(placements[0].world_x, 4.0F);
+  EXPECT_FLOAT_EQ(placements[0].world_z, 7.0F);
+  EXPECT_FLOAT_EQ(placements[1].world_x, 6.0F);
+  EXPECT_FLOAT_EQ(placements[1].world_z, 7.0F);
+}
+
+TEST(SelectionRingLayout, AnchorsAreIgnoredWithoutAnAnchorFrame) {
+  std::vector<Engine::Core::FormationSoldierPresentation> soldiers(1);
+  soldiers[0].slot_index = 0;
+  soldiers[0].local_x = -1.0F;
+  soldiers[0].alive = true;
+
+  std::vector<Render::Humanoid::SoldierTurnSmoothingState> anchors(1);
+  anchors[0].world_x = 100.0F;
+  anchors[0].world_z = 100.0F;
+  anchors[0].valid = true;
+
+  auto const placements = Render::GL::build_selection_ring_layout({
+      .soldiers = soldiers,
+      .ring_size = 0.3F,
+      .position = QVector3D(5.0F, 0.0F, 7.0F),
+      .soldier_anchors = anchors,
+  });
+
+  ASSERT_EQ(placements.size(), 1U);
+  EXPECT_FLOAT_EQ(placements[0].world_x, 4.0F);
+  EXPECT_FLOAT_EQ(placements[0].world_z, 7.0F);
+}
+
 TEST(SelectionRingLayout, MultiSoldierRingsUseCompactVisualSize) {
   float const size = Render::GL::Detail::selection_ring_visual_size(
       Game::Units::TroopConfig::instance(), Game::Units::SpawnType::Archer, 20, 1.2F);
