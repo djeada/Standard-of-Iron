@@ -81,10 +81,15 @@ struct AnimationInputs {
   float attack_offset{0.0F};
   bool has_attack_offset{false};
   bool is_in_melee_lock{false};
+  bool attack_from_melee_lock{false};
+  std::uint8_t attack_exchange_outcome{0};
   bool is_casting{false};
   CastVisualKind cast_kind{CastVisualKind::None};
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
+  float hit_reaction_progress{0.0F};
+  Engine::Core::HitReactionKind hit_reaction_kind{
+      Engine::Core::HitReactionKind::Flinch};
 
   float hit_recoil_x{0.0F};
   float hit_recoil_z{0.0F};

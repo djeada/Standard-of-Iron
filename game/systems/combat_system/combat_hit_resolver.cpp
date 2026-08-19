@@ -556,6 +556,34 @@ auto apply_mounted_charge_stagger_if_needed(Engine::Core::Entity& target,
 
 } // namespace
 
+void queue_melee_contact_burst(Engine::Core::Entity& target,
+                               const QVector3D& contact_point,
+                               Engine::Core::RpgContactOutcome outcome,
+                               float intensity) {
+  Game::Systems::RpgCombat::CommanderDamageResult result;
+  bool applied = false;
+  switch (outcome) {
+  case Engine::Core::RpgContactOutcome::Block:
+    result.blocked = true;
+    break;
+  case Engine::Core::RpgContactOutcome::PerfectGuard:
+    result.perfect_guarded = true;
+    break;
+  case Engine::Core::RpgContactOutcome::Dodge:
+    result.dodged = true;
+    break;
+  case Engine::Core::RpgContactOutcome::Damage:
+    applied = true;
+    break;
+  }
+  queue_rpg_contact_presentation(target, contact_point, result, applied);
+  if (auto* presentation =
+          target.get_component<Engine::Core::RpgContactPresentationComponent>();
+      presentation != nullptr && !presentation->entries.empty()) {
+    presentation->entries.back().intensity *= std::max(0.1F, intensity);
+  }
+}
+
 auto resolve_commander_action_hit(Engine::Core::World* world,
                                   const CombatHitRequest& request) -> CombatHitResult {
   CombatHitResult result;

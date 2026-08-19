@@ -50,20 +50,18 @@ auto resolve_variant(const DrawState& state) -> Render::GL::WildlifeVariant {
   return variant;
 }
 
-auto resolve_gait(const DrawState& state,
-                  float gait_ratio) -> Render::Wildlife::WolfGait {
+auto resolve_gait(const DrawState& state, GaitTier tier) -> Render::Wildlife::WolfGait {
   bool const stalking = state.behavior == Game::Wildlife::Behavior::Stalk;
-  if (gait_ratio > k_run_threshold) {
+  switch (tier) {
+  case GaitTier::Run:
     return Render::Wildlife::WolfGait::Run;
+  case GaitTier::Walk:
+    return stalking ? Render::Wildlife::WolfGait::Stalk
+                    : Render::Wildlife::WolfGait::Walk;
+  case GaitTier::Stand:
+    break;
   }
-  if (gait_ratio <= k_walk_threshold) {
-
-    return Render::Wildlife::WolfGait::Stand;
-  }
-  if (stalking) {
-    return Render::Wildlife::WolfGait::Stalk;
-  }
-  return Render::Wildlife::WolfGait::Walk;
+  return Render::Wildlife::WolfGait::Stand;
 }
 
 auto state_for_gait(const DrawState& state, Render::Wildlife::WolfGait gait)
@@ -89,7 +87,8 @@ void draw_wolf(const DrawContext& ctx, ISubmitter& out) {
 
   float const speed = gait_speed(state);
   float const gait_ratio = std::clamp(speed / k_top_speed, 0.0F, 1.0F);
-  const Render::Wildlife::WolfGait gait = resolve_gait(state, gait_ratio);
+  const Render::Wildlife::WolfGait gait = resolve_gait(
+      state, resolve_gait_tier(state, gait_ratio, k_walk_threshold, k_run_threshold));
 
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Wolf;

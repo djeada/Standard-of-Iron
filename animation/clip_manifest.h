@@ -215,7 +215,34 @@ inline constexpr std::uint16_t k_humanoid_construct_kneel_chisel_clip = 66U;
 inline constexpr std::uint16_t k_humanoid_construct_reap_clip = 67U;
 inline constexpr std::uint8_t k_humanoid_construct_clip_count = 5U;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 68U;
+inline constexpr std::uint16_t k_humanoid_combat_ready_clip = 68U;
+inline constexpr std::uint16_t k_humanoid_react_first_clip = 69U;
+inline constexpr std::uint16_t k_humanoid_react_flinch_clip = 69U;
+inline constexpr std::uint16_t k_humanoid_react_block_clip = 70U;
+inline constexpr std::uint16_t k_humanoid_react_evade_clip = 71U;
+inline constexpr std::uint16_t k_humanoid_react_stagger_clip = 72U;
+inline constexpr std::uint8_t k_humanoid_react_clip_count = 4U;
+
+inline constexpr std::uint16_t k_humanoid_clip_count = 73U;
+
+inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
+inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;
+
+[[nodiscard]] constexpr auto
+humanoid_reaction_clip(std::uint8_t reaction_kind) noexcept -> std::uint16_t {
+  switch (reaction_kind) {
+  case 1U:
+    return k_humanoid_react_block_clip;
+  case 2U:
+    return k_humanoid_react_evade_clip;
+  case 3U:
+    return k_humanoid_react_stagger_clip;
+  case 4U:
+    return k_unmapped_clip;
+  default:
+    return k_humanoid_react_flinch_clip;
+  }
+}
 
 inline constexpr float k_humanoid_idle_breath_cycle_time = 8.0F;
 inline constexpr std::uint32_t k_humanoid_idle_breath_frames = 90U;

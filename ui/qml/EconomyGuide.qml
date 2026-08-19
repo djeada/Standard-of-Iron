@@ -97,7 +97,7 @@ QtObject {
         case "marketplace":
             return qsTr("Buys and sells resources for gold.");
         case "temple":
-            return qsTr("Watches over a wide stretch of ground and holds a settlement together.");
+            return qsTr("Watches over a wide stretch of ground, holds a settlement together, and takes in healers.");
         case "wall_segment":
             return qsTr("Blocks enemy movement.");
         case "wall_gate":

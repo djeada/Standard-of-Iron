@@ -56,6 +56,14 @@ enum class BakerWorkType : std::uint8_t {
   KneelingChisel,
   Reap,
 };
+enum class BakerCombatPoseType : std::uint8_t {
+  None,
+  ReadyStance,
+  ReactFlinch,
+  ReactBlock,
+  ReactEvade,
+  ReactStagger,
+};
 enum class BakerHoldType : std::uint8_t {
   None,
   Spear,
@@ -207,6 +215,7 @@ struct HumanoidClipSpec {
   float cycle_time{};
   bool loops{};
   BakerWorkType work_type{BakerWorkType::None};
+  BakerCombatPoseType combat_pose_type{BakerCombatPoseType::None};
 };
 
 [[nodiscard]] auto is_rpg_sword_clip(const HumanoidClipSpec& clip) noexcept -> bool {
@@ -1113,6 +1122,81 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      1.0F,
      true,
      BakerWorkType::Reap},
+    {"combat_ready",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     Animation::k_humanoid_combat_ready_frames,
+     24.0F,
+     Animation::k_humanoid_combat_ready_cycle_time,
+     true,
+     BakerWorkType::None,
+     BakerCombatPoseType::ReadyStance},
+    {"react_flinch",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     30.0F,
+     0.30F,
+     false,
+     BakerWorkType::None,
+     BakerCombatPoseType::ReactFlinch},
+    {"react_block",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     30.0F,
+     0.34F,
+     false,
+     BakerWorkType::None,
+     BakerCombatPoseType::ReactBlock},
+    {"react_evade",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     16U,
+     30.0F,
+     0.36F,
+     false,
+     BakerWorkType::None,
+     BakerCombatPoseType::ReactEvade},
+    {"react_stagger",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::None,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     24U,
+     30.0F,
+     0.60F,
+     false,
+     BakerWorkType::None,
+     BakerCombatPoseType::ReactStagger},
 }};
 
 struct HumanoidSocketSpec {
@@ -1654,6 +1738,22 @@ to_ambient_idle_type(BakerAmbientIdleType t) noexcept -> Render::GL::AmbientIdle
   return Render::GL::AmbientIdleType::None;
 }
 
+[[nodiscard]] auto ready_weapon_for_profile(BakeProfile profile) noexcept
+    -> Animation::HumanoidReadyWeapon {
+  switch (profile) {
+  case BakeProfile::SwordReady:
+  case BakeProfile::Skeleton:
+    return Animation::HumanoidReadyWeapon::SwordAndShield;
+  case BakeProfile::SpearReady:
+    return Animation::HumanoidReadyWeapon::Spear;
+  case BakeProfile::Default:
+  case BakeProfile::Caster:
+  case BakeProfile::StaveCaster:
+    break;
+  }
+  return Animation::HumanoidReadyWeapon::None;
+}
+
 void apply_ground_stance_for_profile(Render::GL::HumanoidPoseController& ctrl,
                                      BakeProfile profile) {
   switch (profile) {
@@ -1763,6 +1863,64 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       ctrl.aim_bow(phase);
       break;
     default:
+      break;
+    }
+  } else if (clip.combat_pose_type != BakerCombatPoseType::None) {
+    Render::GL::HumanoidGaitDescriptor hold_gait{};
+    hold_gait.state = Render::GL::HumanoidMotionState::Hold;
+    hold_gait.cycle_time = 1.8F;
+    hold_gait.cycle_phase = 0.0F;
+    hold_gait.speed = 0.0F;
+    hold_gait.normalized_speed = 0.0F;
+    Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+        0U, 0.0F, hold_gait, variation, pose);
+
+    Render::GL::HumanoidAnimationContext anim_ctx{};
+    anim_ctx.gait = hold_gait;
+    anim_ctx.gait.state = Render::GL::HumanoidMotionState::Attacking;
+    anim_ctx.attack_phase = 0.0F;
+    anim_ctx.jitter_seed = 0U;
+    anim_ctx.inputs.is_attacking = true;
+    anim_ctx.inputs.is_melee = true;
+    anim_ctx.inputs.attack_variant = 0U;
+
+    Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
+    float const sword_reach_scale = profile == BakeProfile::Skeleton ? 0.88F : 1.0F;
+    auto const weapon = ready_weapon_for_profile(profile);
+    if (weapon == Animation::HumanoidReadyWeapon::None) {
+      apply_ground_stance_for_profile(ctrl, profile);
+    }
+    float const pose_phase =
+        clip.loops ? phase : transition_phase(frame_index, clip.frames);
+    switch (clip.combat_pose_type) {
+    case BakerCombatPoseType::ReadyStance:
+      ctrl.combat_ready_stance(pose_phase, weapon, sword_reach_scale);
+      break;
+    case BakerCombatPoseType::ReactFlinch:
+      ctrl.melee_reaction(Animation::HumanoidReactionKind::Flinch,
+                          pose_phase,
+                          weapon,
+                          sword_reach_scale);
+      break;
+    case BakerCombatPoseType::ReactBlock:
+      ctrl.melee_reaction(Animation::HumanoidReactionKind::Block,
+                          pose_phase,
+                          weapon,
+                          sword_reach_scale);
+      break;
+    case BakerCombatPoseType::ReactEvade:
+      ctrl.melee_reaction(Animation::HumanoidReactionKind::Evade,
+                          pose_phase,
+                          weapon,
+                          sword_reach_scale);
+      break;
+    case BakerCombatPoseType::ReactStagger:
+      ctrl.melee_reaction(Animation::HumanoidReactionKind::Stagger,
+                          pose_phase,
+                          weapon,
+                          sword_reach_scale);
+      break;
+    case BakerCombatPoseType::None:
       break;
     }
   } else if (clip.riding_type != BakerRidingType::None) {
@@ -1961,6 +2119,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
 
   if (clip.showcase_type != BakerShowcaseType::None || is_rpg_sword_clip(clip) ||
       clip.work_type != BakerWorkType::None ||
+      clip.combat_pose_type != BakerCombatPoseType::None ||
       clip.attack_type == BakerAttackType::Unarmed ||
       clip.attack_type == BakerAttackType::Sword ||
       clip.attack_type == BakerAttackType::BowMelee ||
@@ -1986,6 +2145,12 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     socket_inputs.is_attacking = true;
     socket_inputs.is_melee = !is_ranged_attack_type(clip.attack_type);
     socket_inputs.attack_variant = clip.attack_variant;
+  }
+  if (clip.combat_pose_type != BakerCombatPoseType::None &&
+      ready_weapon_for_profile(profile) != Animation::HumanoidReadyWeapon::None) {
+    socket_inputs.is_attacking = true;
+    socket_inputs.is_melee = true;
+    socket_inputs.attack_variant = 0U;
   }
   if (clip.riding_type == BakerRidingType::SpearThrust) {
 
@@ -2031,7 +2196,10 @@ void bake_humanoid_clip_frame(BakeProfile profile,
     case HumanoidSocketSpec::Kind::SpearHeadTip:
       if (pose.body_frames.grip_r.radius > 0.0F) {
         out_sockets.push_back(baked_spear_socket_matrix(
-            pose.body_frames.grip_r, socket_inputs, phase, spec.kind));
+            pose.body_frames.grip_r,
+            socket_inputs,
+            clip.combat_pose_type != BakerCombatPoseType::None ? 0.03F : phase,
+            spec.kind));
         continue;
       }
       break;

@@ -54,6 +54,24 @@ find_first_selected_home(Engine::Core::World& world,
   return nullptr;
 }
 
+static auto
+find_first_selected_temple(Engine::Core::World& world,
+                           const std::vector<Engine::Core::EntityID>& selected,
+                           int owner_id) -> Engine::Core::Entity* {
+  for (auto id : selected) {
+    if (auto* e = world.get_entity(id)) {
+      auto* u = e->get_component<Engine::Core::UnitComponent>();
+      if ((u == nullptr) || u->owner_id != owner_id) {
+        continue;
+      }
+      if (u->spawn_type == Game::Units::SpawnType::Temple) {
+        return e;
+      }
+    }
+  }
+  return nullptr;
+}
+
 namespace {
 
 auto resolve_nation_id(int owner_id) -> Game::Systems::NationID {
@@ -88,6 +106,18 @@ auto home_committed_civilian_count(const Engine::Core::ProductionComponent* prod
 
 } // namespace
 
+auto recruiting_building_for(Game::Units::TroopType unit_type)
+    -> Game::Units::SpawnType {
+  switch (unit_type) {
+  case Game::Units::TroopType::Civilian:
+    return Game::Units::SpawnType::Home;
+  case Game::Units::TroopType::Healer:
+    return Game::Units::SpawnType::Temple;
+  default:
+    return Game::Units::SpawnType::Barracks;
+  }
+}
+
 namespace {
 
 auto production_ruling(Engine::Core::Entity& building,
@@ -99,6 +129,9 @@ auto production_ruling(Engine::Core::Entity& building,
   const bool is_home = unit->spawn_type == Game::Units::SpawnType::Home;
   if (!is_home && Game::Units::is_commander_troop(unit_type)) {
     return ProductionResult::CommanderNotRecruitable;
+  }
+  if (unit->spawn_type != recruiting_building_for(unit_type)) {
+    return ProductionResult::WrongBuilding;
   }
   const auto* production = building.get_component<Engine::Core::ProductionComponent>();
   const auto profile = TroopProfileService::instance().get_profile(
@@ -224,6 +257,14 @@ auto ProductionService::find_selected_home(
   return e != nullptr ? e->get_id() : Engine::Core::NULL_ENTITY;
 }
 
+auto ProductionService::find_selected_temple(
+    Engine::Core::World& world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    int owner_id) -> Engine::Core::EntityID {
+  auto* e = find_first_selected_temple(world, selected, owner_id);
+  return e != nullptr ? e->get_id() : Engine::Core::NULL_ENTITY;
+}
+
 auto ProductionService::get_selected_barracks_state(
     Engine::Core::World& world,
     const std::vector<Engine::Core::EntityID>& selected,
@@ -274,6 +315,37 @@ auto ProductionService::get_selected_home_state(
   } else {
     out_state.nation_id = NationRegistry::instance().default_nation_id();
   }
+
+  if (auto* p = e->get_component<Engine::Core::ProductionComponent>()) {
+    out_state.in_progress = p->in_progress;
+    out_state.product_type = p->product_type;
+    out_state.time_remaining = p->time_remaining;
+    out_state.build_time = p->build_time;
+    out_state.produced_count = p->produced_count;
+    out_state.max_units = p->max_units;
+    out_state.villager_cost = p->villager_cost;
+    out_state.manpower_available = p->manpower_available;
+    out_state.queue_size = static_cast<int>(p->production_queue.size());
+    out_state.production_queue = p->production_queue;
+  }
+  return true;
+}
+
+auto ProductionService::get_selected_temple_state(
+    Engine::Core::World& world,
+    const std::vector<Engine::Core::EntityID>& selected,
+    int owner_id,
+    ProductionState& out_state) -> bool {
+  auto* e = find_first_selected_temple(world, selected, owner_id);
+  if (e == nullptr) {
+    out_state = {};
+    return false;
+  }
+
+  out_state = {};
+  out_state.has_temple = true;
+
+  out_state.nation_id = resolve_nation_id(owner_id);
 
   if (auto* p = e->get_component<Engine::Core::ProductionComponent>()) {
     out_state.in_progress = p->in_progress;

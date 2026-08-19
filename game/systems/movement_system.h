@@ -44,7 +44,7 @@ private:
   auto apply_duel_footwork(Engine::Core::Entity* entity,
                            Engine::Core::World* world,
                            Engine::Core::TransformComponent& transform,
-                           const Engine::Core::AttackComponent& attack,
+                           Engine::Core::AttackComponent& attack,
                            float delta_time) const -> bool;
 
   static void

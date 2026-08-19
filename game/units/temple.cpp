@@ -7,7 +7,9 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
+#include "../systems/troop_profile_service.h"
 #include "building_spawn_setup.h"
+#include "units/troop_type.h"
 #include "units/unit.h"
 
 namespace Game::Units {
@@ -58,6 +60,25 @@ void Temple::init(const SpawnParams& params) {
   }
 
   m_r = add_building_renderable(*e, nation_id, m_type_string);
+
+  if (!Game::Core::is_neutral_owner(m_u->owner_id) && params.enables_production) {
+    if (auto* prod = e->add_component<Engine::Core::ProductionComponent>()) {
+      prod->product_type = TroopType::Healer;
+      prod->max_units = params.max_population;
+      prod->manpower_available = params.is_initial_spawn ? params.max_population : 0;
+      prod->in_progress = false;
+      prod->time_remaining = 0.0F;
+      prod->produced_count = 0;
+      prod->rally_x = m_t->position.x + 4.0F;
+      prod->rally_z = m_t->position.z + 2.0F;
+      prod->rally_set = true;
+
+      const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+          nation_id, prod->product_type);
+      prod->build_time = profile.production.build_time;
+      prod->villager_cost = profile.production.cost;
+    }
+  }
 
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);

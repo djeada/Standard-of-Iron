@@ -522,6 +522,51 @@ pitch and reach per variant — a level thrust, a low one, and one over the shie
 
 ---
 
+### The body moves with the blow: root motion and reactions
+
+Everything above picks a clip and a phase; the model matrix is built from the
+transform alone. That left a melee fight looking like two men tapping each
+other with spoons — the arms moved and nothing else did. Two pieces now move the
+root, both resolved by `Animation::resolve_combat_root_motion`
+(`animation/combat_root_motion_manifest.cpp`) and applied in
+`prepare_submission.cpp` after the model has been grounded:
+
+- **The lunge.** A melee swing carries the body: `melee_lunge_offset` loads the
+  weight back a few centimetres through the wind-up, drives forward 0.24 m
+  (sword) or 0.30 m (spear) into contact and eases back through the recovery,
+  with a forward lean of up to 8°. The curve is a function of the visual
+  `attack_phase`, so every soldier's lunge lands on its own cut; formation ranks
+  use a shorter step (they already carry the lane depth pulses), an evaded swing
+  overextends, and a heavy one drives deeper. First-person commanders are
+  excluded — the chase camera hangs off the simulation transform and the
+  controller already steps them in.
+- **The reaction.** `HitReactionKind` (flinch, block, evade, stagger, recoil)
+  drives a recoil along the blow, a pitch about the feet, a roll and a squash,
+  each with its own out-and-back envelope. A single body the simulation has
+  already knocked back gets a smaller visual recoil so the two do not add up.
+  An attacker's `Recoil` — the bounce off a blocked blow — is layered over the
+  swing rather than interrupting it, and so is any light reaction that lands
+  while the blade is already in its strike.
+
+Three clips back this up, baked per profile so a swordsman raises his shield
+where a spearman turns his shaft:
+
+- `combat_ready` — the fighting stance. It is authored on the **first frame of
+  the swing** (`HumanoidPoseController::combat_ready_stance` samples the attack
+  pose at a small phase), with knees bent (`crouch`), torso forward, the shield
+  half up and a slow breathing bob. Locked single bodies use it as their base
+  between swings instead of the parade-rest idle, and formation ranks blend
+  their swings over it. The selection happens in `apply_combat_ready_clip`.
+- `react_flinch`, `react_block`, `react_evade`, `react_stagger` — non-looping
+  reactions driven by the reaction's own progress (`apply_melee_reaction_clip`),
+  so a 0.34 s block and a 0.60 s stagger each play end to end. Their curves live
+  in `animation/reaction_pose_manifest.cpp`; the pose controller turns them into
+  crouch, torso tilt, flinch, shield raise and hand offsets.
+
+`tests/render/creature/combat_root_motion_test.cpp` pins the lunge shape, the
+reaction envelopes and that no reaction tilts the torso far enough to read as a
+fall; `humanoid_preview --clip combat_ready --weapon sword` shows the stance.
+
 ## 6. Quadrupeds: one shared gait evaluator
 
 Horse and elephant share a single parametric gait core instead of each carrying its own

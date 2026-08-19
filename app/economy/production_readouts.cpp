@@ -267,6 +267,59 @@ auto selected_home_state(Engine::Core::World* world,
   return m;
 }
 
+auto selected_temple_state(Engine::Core::World* world,
+                           int local_owner_id) -> QVariantMap {
+  QVariantMap m;
+  m["has_temple"] = false;
+  m["in_progress"] = false;
+  m["time_remaining"] = 0.0;
+  m["build_time"] = 0.0;
+  m["produced_count"] = 0;
+  m["max_units"] = 0;
+  m["villager_cost"] = 1;
+  m["manpower_available"] = 0;
+  m["queue_size"] = 0;
+  m["product_type"] = "";
+  m["production_queue"] = QVariantList{};
+  m["nation_id"] = "";
+
+  if (world == nullptr) {
+    return m;
+  }
+
+  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return m;
+  }
+
+  Game::Systems::ProductionState st;
+  Game::Systems::ProductionService::get_selected_temple_state(
+      *world, selection_system->get_selected_units(), local_owner_id, st);
+
+  m["has_temple"] = st.has_temple;
+  m["in_progress"] = st.in_progress;
+  m["product_type"] =
+      QString::fromStdString(Game::Units::troop_typeToString(st.product_type));
+  m["time_remaining"] = st.time_remaining;
+  m["build_time"] = st.build_time;
+  m["produced_count"] = st.produced_count;
+  m["max_units"] = st.max_units;
+  m["villager_cost"] = st.villager_cost;
+  m["manpower_available"] = st.manpower_available;
+  m["queue_size"] = st.queue_size;
+  m["nation_id"] =
+      QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
+
+  QVariantList queue_list;
+  for (const auto& unit_type : st.production_queue) {
+    queue_list.append(
+        QString::fromStdString(Game::Units::troop_typeToString(unit_type)));
+  }
+  m["production_queue"] = queue_list;
+
+  return m;
+}
+
 auto unit_production_info(const QString& unit_type,
                           const QString& nation_id) -> QVariantMap {
   QVariantMap info = unit_profile(unit_type, nation_id);
