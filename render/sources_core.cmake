@@ -14,7 +14,6 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/template_prewarm_runner.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/effects_submitter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_backend_factory.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/persistent_render_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/draw_queue.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/render_archetype.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/world_view.cpp

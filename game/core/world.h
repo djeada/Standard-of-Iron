@@ -57,6 +57,9 @@ public:
   void request_render_snapshots(bool enabled = true) noexcept {
     m_render_snapshots_requested.store(enabled, std::memory_order_release);
   }
+
+  void ensure_render_snapshot();
+
   [[nodiscard]] auto acquire_render_snapshot() const -> std::shared_ptr<World>;
   [[nodiscard]] auto is_render_snapshot() const noexcept -> bool {
     return m_is_render_snapshot;
@@ -225,5 +228,9 @@ private:
   std::vector<std::uint64_t> m_render_entity_signatures;
   std::uint64_t m_render_publish_revision{0};
 };
+
+void copy_authoritative_snapshot_components(const Entity& source, Entity& destination);
+void copy_presentation_snapshot_components(const Entity& source, Entity& destination);
+void copy_render_components(const Entity& source, Entity& destination);
 
 } // namespace Engine::Core

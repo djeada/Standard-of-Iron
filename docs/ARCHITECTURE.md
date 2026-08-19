@@ -380,7 +380,16 @@ registry, `soi_ai`, and a loop — no Qt Quick, no renderer linked in.
 
 ## Simulation and presentation ownership
 
-Mutable entities belong to the simulation thread. `World::update()` publishes a
+Mutable entities belong to the simulation thread. In the Qt Quick client that
+is `GameEngine`'s own `SoISimulation` `QThread`, which ticks
+`GameEngine::simulate` at a fixed 60 Hz cadence; the QSG render thread runs
+`GameEngine::update_presentation` and `GameEngine::render`. The three, and the
+GUI thread's input entries (`ClientHost::lock_frame`), serialise on one
+recursive frame mutex, and `GameEngine::WorldFreeze` stops both worker threads
+while the main thread rebuilds the world. `TerrainService` is sealed once
+mission setup has placed its last prop, so the renderer's one remaining live
+read (`&session.terrain()`) is of data that cannot change shape until the next
+load. `World::update()` publishes a
 detached render world through an atomic two-buffer handoff when a renderer has
 requested snapshots. Rendering holds the snapshot's mutex and may maintain
 renderer-only animation caches there, but it does not hold the authoritative

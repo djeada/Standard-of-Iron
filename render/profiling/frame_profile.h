@@ -16,13 +16,14 @@ namespace Render::Profiling {
 
 enum class Phase : std::uint8_t {
   Simulation = 0,
-  Snapshot = 1,
-  Collection = 2,
-  Submit = 3,
-  Sort = 4,
-  Shadow = 5,
-  Playback = 6,
-  Present = 7,
+  Frame = 1,
+  Snapshot = 2,
+  Collection = 3,
+  Submit = 4,
+  Sort = 5,
+  Shadow = 6,
+  Playback = 7,
+  Present = 8,
   _Count
 };
 
@@ -30,6 +31,8 @@ enum class Phase : std::uint8_t {
   switch (p) {
   case Phase::Simulation:
     return "sim";
+  case Phase::Frame:
+    return "frame";
   case Phase::Snapshot:
     return "snapshot";
   case Phase::Collection:

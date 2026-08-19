@@ -12,6 +12,7 @@
 #include "game/core/world.h"
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
+#include "game/map/terrain_service.h"
 #include "game/mission/campaign_manager.h"
 #include "game/render_bridge/game_state_serializer.h"
 #include "game/save/serialization.h"
@@ -216,6 +217,12 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
     } else {
       qWarning() << "GameEngine: failed to load undead zone map data:" << map_error;
     }
+  }
+  if (context.scene.session != nullptr) {
+    context.scene.session->terrain().seal();
+  } else {
+    qWarning() << "SaveLoadCoordinator: no session in scene context; terrain left "
+                  "unsealed";
   }
 
   if (context.restore_mission_waves) {

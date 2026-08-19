@@ -20,6 +20,7 @@ CameraViewModel::CameraViewModel(const App::Core::ClientContext& context,
 
 void CameraViewModel::move(float dx, float dz) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   emit moved();
   if (auto* camera = m_context.camera_controller) {
     camera->move(dx, dz);
@@ -28,6 +29,7 @@ void CameraViewModel::move(float dx, float dz) {
 
 void CameraViewModel::elevate(float dy) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   emit moved();
   if (auto* camera = m_context.camera_controller) {
     camera->elevate(dy);
@@ -36,6 +38,7 @@ void CameraViewModel::elevate(float dy) {
 
 void CameraViewModel::zoom(float delta) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   emit moved();
   if (auto* camera = m_context.camera_controller) {
     camera->zoom(delta);
@@ -45,6 +48,7 @@ void CameraViewModel::zoom(float delta) {
 
 void CameraViewModel::yaw(float degrees) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   emit moved();
   if (auto* camera = m_context.camera_controller) {
     camera->yaw(degrees);
@@ -53,6 +57,7 @@ void CameraViewModel::yaw(float degrees) {
 
 void CameraViewModel::orbit(float yaw_deg, float pitch_deg) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   emit moved();
   if (auto* camera = m_context.camera_controller) {
     camera->orbit(yaw_deg, pitch_deg);
@@ -61,6 +66,7 @@ void CameraViewModel::orbit(float yaw_deg, float pitch_deg) {
 
 void CameraViewModel::tilt(int direction, bool shift) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   emit moved();
   if (auto* camera = m_context.camera_controller) {
     camera->tilt(direction, shift);
@@ -69,6 +75,7 @@ void CameraViewModel::tilt(int direction, bool shift) {
 
 void CameraViewModel::reset() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   emit moved();
   auto* camera = m_context.camera_controller;
   if (camera == nullptr || m_context.level == nullptr) {
@@ -80,6 +87,7 @@ void CameraViewModel::reset() {
 
 void CameraViewModel::look_at_world(float x, float z) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* camera = m_context.active_camera;
   if (camera == nullptr) {
     return;
@@ -93,11 +101,13 @@ void CameraViewModel::look_at_world(float x, float z) {
 
 void CameraViewModel::follow_selection(bool enable) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   set_following_selection(enable);
 }
 
 void CameraViewModel::set_follow_lerp(float alpha) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (auto* camera = m_context.camera_controller) {
     camera->set_follow_lerp(alpha);
   }
