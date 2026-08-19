@@ -1,5 +1,6 @@
 #include "terrain_service.h"
 
+#include <QDebug>
 #include <QVector3D>
 
 #include <algorithm>
@@ -363,6 +364,7 @@ void register_authored_building_obstacles(const MapDefinition& map_def) {
 } // namespace
 
 void TerrainService::initialize(const MapDefinition& map_def) {
+  m_sealed = false;
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
   m_height_map = std::make_unique<TerrainHeightMap>(
@@ -393,6 +395,7 @@ void TerrainService::initialize(const MapDefinition& map_def) {
 }
 
 void TerrainService::clear() {
+  m_sealed = false;
   m_height_map.reset();
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
@@ -415,7 +418,16 @@ void TerrainService::clear() {
   bump_navigation_topology_revision();
 }
 
+void TerrainService::seal() {
+  m_sealed = true;
+}
+
 void TerrainService::remove_non_persistent_props() {
+  if (m_sealed) {
+    qWarning()
+        << "TerrainService: remove_non_persistent_props ignored; terrain is sealed";
+    return;
+  }
   m_authored_world_props.erase(
       std::remove_if(m_authored_world_props.begin(),
                      m_authored_world_props.end(),
@@ -433,6 +445,10 @@ void TerrainService::remove_non_persistent_props() {
 auto TerrainService::add_world_prop_at_world(WorldProp prop,
                                              float world_x,
                                              float world_z) -> std::uint64_t {
+  if (m_sealed) {
+    qWarning() << "TerrainService: add_world_prop_at_world ignored; terrain is sealed";
+    return 0;
+  }
   if (m_coord_system == CoordSystem::World || m_height_map == nullptr) {
     prop.x = world_x;
     prop.z = world_z;
@@ -957,6 +973,7 @@ void TerrainService::restore_from_serialized(
     const std::vector<WorldProp>& world_props,
     const std::vector<WorldProp>& authored_world_props,
     const std::vector<Lake>& lakes) {
+  m_sealed = false;
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);

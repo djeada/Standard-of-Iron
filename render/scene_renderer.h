@@ -24,7 +24,6 @@
 #include "gl/resources.h"
 #include "gl/texture.h"
 #include "i_render_backend.h"
-#include "persistent_render_registry.h"
 #include "prepare_worker_pool.h"
 #include "render/async_template_prewarm.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -544,7 +543,6 @@ private:
   SnapshotMeshCache m_snapshot_mesh_cache;
   std::uint32_t m_frame_counter{0};
 
-  Render::PersistentRenderRegistry m_render_registry;
   Engine::Core::World* m_cached_world{nullptr};
 
   AsyncTemplatePrewarm m_async_prewarm;

@@ -152,6 +152,53 @@ TEST(WorldPresentationTest, CanDisablePresentationForHeadlessSimulation) {
             nullptr);
 }
 
+TEST(WorldPresentationTest, ARenderSnapshotIsAvailableBeforeTheFirstUpdate) {
+
+  World world;
+  auto const snapshot = world.acquire_render_snapshot();
+  ASSERT_NE(snapshot, nullptr);
+  EXPECT_TRUE(snapshot->is_render_snapshot());
+  EXPECT_TRUE(snapshot->render_unit_ids().empty());
+}
+
+TEST(WorldPresentationTest, EnsureRenderSnapshotPublishesTheLiveContentsImmediately) {
+
+  World world;
+  auto* entity = world.create_entity();
+  auto* transform = entity->add_component<TransformComponent>();
+  transform->position.x = 7.0F;
+  entity->add_component<UnitComponent>();
+  entity->add_component<Engine::Core::RenderableComponent>();
+  EntityID const id = entity->get_id();
+
+  EXPECT_TRUE(world.acquire_render_snapshot()->render_unit_ids().empty());
+
+  world.ensure_render_snapshot();
+
+  auto const snapshot = world.acquire_render_snapshot();
+  ASSERT_NE(snapshot, nullptr);
+  ASSERT_EQ(snapshot->render_unit_ids().size(), 1U);
+  auto* copied = snapshot->get_entity(id);
+  ASSERT_NE(copied, nullptr);
+  EXPECT_FLOAT_EQ(copied->get_component<TransformComponent>()->position.x, 7.0F);
+}
+
+TEST(WorldPresentationTest,
+     EnsureRenderSnapshotDoesNotRepublishAnAlreadyPublishedWorld) {
+
+  World world;
+  world.request_render_snapshots();
+  world.create_entity()->add_component<Engine::Core::RenderableComponent>();
+  world.update(1.0F / 60.0F);
+
+  auto const published = world.acquire_render_snapshot();
+  ASSERT_NE(published, nullptr);
+
+  world.ensure_render_snapshot();
+
+  EXPECT_EQ(world.acquire_render_snapshot(), published);
+}
+
 TEST(WorldPresentationTest, PublishesDetachedDoubleBufferedRenderWorlds) {
   World world;
   world.request_render_snapshots();

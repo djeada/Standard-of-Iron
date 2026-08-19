@@ -364,7 +364,6 @@ void CommanderPortraitView::PortraitRenderer::render() {
 
     m_face = {};
     post_face_anchor();
-    release_scene();
     return;
   }
 

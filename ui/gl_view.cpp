@@ -192,6 +192,9 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
 }
 
 GLView::GLRenderer::~GLRenderer() {
+  if (m_engine != nullptr) {
+    m_engine->stop_simulation_thread();
+  }
   if (m_continuity_probe != nullptr) {
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(false);
   }
@@ -250,14 +253,9 @@ void GLView::GLRenderer::render() {
       qCritical() << "GLRenderer::render() - gameplay renderer initialization failed";
       return;
     }
-
-    auto now = std::chrono::steady_clock::now();
-    float dt = 1.0F / 60.0F;
-    if (m_last_frame_time.time_since_epoch().count() != 0) {
-      dt = std::chrono::duration<float>(now - m_last_frame_time).count();
-      dt = std::min(dt, 0.1F);
+    if (!m_engine->simulation_thread_running()) {
+      m_engine->start_simulation_thread();
     }
-    m_last_frame_time = now;
 
     auto const frame_work_start = std::chrono::steady_clock::now();
     const double thread_cpu_start_ms = render_thread_cpu_ms();
@@ -272,12 +270,20 @@ void GLView::GLRenderer::render() {
                                    .count()));
     }
 
-    {
-      Render::Profiling::PhaseScope const simulation_scope(
-          &profile, Render::Profiling::Phase::Simulation);
-      m_engine->update(dt);
+    const std::uint64_t simulation_us = m_engine->take_simulation_tick_us();
+    profile.add_phase_us(Render::Profiling::Phase::Simulation, simulation_us);
+
+    float dt = 1.0F / 60.0F;
+    if (m_last_frame_time.time_since_epoch().count() != 0) {
+      dt = std::chrono::duration<float>(frame_work_start - m_last_frame_time).count();
+      dt = std::min(dt, 0.1F);
     }
-    auto const update_end = std::chrono::steady_clock::now();
+    m_last_frame_time = frame_work_start;
+    {
+      Render::Profiling::PhaseScope const frame_scope(&profile,
+                                                      Render::Profiling::Phase::Frame);
+      m_engine->update_presentation(dt);
+    }
     m_engine->render(m_size.width(), m_size.height());
     auto const render_end = std::chrono::steady_clock::now();
     m_last_render_end = render_end;
@@ -286,9 +292,9 @@ void GLView::GLRenderer::render() {
     observe_runtime_continuity();
     observe_runtime_benchmark(
         frame_work_start,
-        std::chrono::duration<double, std::milli>(update_end - frame_work_start)
+        static_cast<double>(simulation_us) / 1000.0,
+        std::chrono::duration<double, std::milli>(render_end - frame_work_start)
             .count(),
-        std::chrono::duration<double, std::milli>(render_end - update_end).count(),
         thread_cpu_end_ms - thread_cpu_start_ms);
 
     if (m_engine->consume_screenshot_request()) {
@@ -463,7 +469,7 @@ void GLView::GLRenderer::observe_runtime_benchmark(
     return;
   }
 
-  m_benchmark_frame_work_ms.push_back(update_ms + render_ms);
+  m_benchmark_frame_work_ms.push_back(render_ms);
   m_benchmark_update_ms.push_back(update_ms);
   m_benchmark_render_ms.push_back(render_ms);
   m_benchmark_thread_cpu_ms.push_back(thread_cpu_ms);

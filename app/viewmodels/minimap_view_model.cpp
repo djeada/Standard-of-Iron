@@ -65,6 +65,7 @@ void MinimapViewModel::on_left_click(qreal mx,
                                      qreal minimap_width,
                                      qreal minimap_height) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* camera = m_context.active_camera;
   if (camera == nullptr) {
     return;
@@ -85,6 +86,7 @@ void MinimapViewModel::on_right_click(qreal mx,
                                       qreal minimap_width,
                                       qreal minimap_height) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   const auto target = world_at(mx, my, minimap_width, minimap_height);
   if (!target) {
     return;

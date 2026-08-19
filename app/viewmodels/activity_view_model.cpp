@@ -97,6 +97,7 @@ auto ActivityViewModel::selection_summary() const -> QVariantMap {
 
 void ActivityViewModel::begin_repair_order() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* cursor = m_context.cursor;
   if (cursor == nullptr) {
     return;
@@ -107,6 +108,7 @@ void ActivityViewModel::begin_repair_order() {
 
 void ActivityViewModel::begin_dismantle_order() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* cursor = m_context.cursor;
   if (cursor == nullptr) {
     return;
@@ -121,6 +123,7 @@ void ActivityViewModel::confirm_dismantle_at(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_builder_dismantle_click(
       sx, sy, m_context.local_owner_id, *m_context.viewport);
 }
@@ -130,6 +133,7 @@ void ActivityViewModel::confirm_repair_at(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_builder_repair_click(
       sx, sy, m_context.local_owner_id, *m_context.viewport);
 }
@@ -139,6 +143,7 @@ void ActivityViewModel::toggle_auto_gather(const QString& priority_product_type)
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_auto_gather_command(priority_product_type);
 }
 
@@ -148,6 +153,7 @@ void ActivityViewModel::set_auto_gather(bool active,
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->set_auto_gather(active, priority_product_type);
 }
 
