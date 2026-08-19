@@ -29,6 +29,11 @@ struct ProjectileAreaImpactResult {
   bool fire_patch_spawned{false};
 };
 
+void queue_melee_contact_burst(Engine::Core::Entity& target,
+                               const QVector3D& contact_point,
+                               Engine::Core::RpgContactOutcome outcome,
+                               float intensity);
+
 [[nodiscard]] auto
 resolve_commander_action_hit(Engine::Core::World* world,
                              const CombatHitRequest& request) -> CombatHitResult;

@@ -123,26 +123,88 @@ The `process_attacks()` processor handles:
 - projectile-based attacks configured through `SpecialAttackComponent`;
 - combat animation triggers.
 
+### Melee exchanges
+
+An RTS melee swing is not a guaranteed hit. `begin_rts_melee_action` asks
+`resolve_melee_exchange_beat` (`combat_system/melee_exchange.cpp`) what this
+swing is, and stores the answer on `RpgCommanderActionComponent::exchange_outcome`
+so that `deal_rts_melee_contact_damage` and the renderer read the same verdict:
+
+| Outcome   | Damage | Defender shows           | Attacker shows        |
+| --------- | ------ | ------------------------ | --------------------- |
+| `Clean`   | ×1.375 | flinch, knock-step back  | the cut, a lunge      |
+| `Heavy`   | ×1.70  | stagger, long knock-step | a deeper lunge        |
+| `Blocked` | ×0.40  | shield/parry, spark      | recoil off the guard  |
+| `Evaded`  | ×0     | lean and sidestep back   | an overextended whiff |
+
+The outcome is not a dice roll. One eight-beat pattern
+(`Clean, Blocked, Clean, Clean, Evaded, Heavy, Blocked, Clean`) is walked by
+`melee_attack_sequence`, rotated per attacker/target pair so the two sides of a
+duel are never on the same beat. `static_assert`s in `melee_exchange.cpp` pin the
+contract: the damage multipliers of one cycle sum to eight, so over any eight
+consecutive swings a unit deals exactly what it dealt before the exchanges
+existed, and replays stay deterministic.
+
+The same beat carries the **cadence**. `resolve_melee_swing_cadence` scales the
+gap before the next swing by the beat's `interval_weight` (quick doubles at 0.7,
+a long measure at 1.75 after the whiff) and the old per-pair delay by its
+`delay_weight`; both weights also sum to eight, so DPS is untouched. A swing is
+played over `min(cooldown, interval)`, and whatever is left of a long beat is
+spent in the ready stance — that gap, not the swing, is what stops a fight
+reading as a metronome.
+
+Targets that cannot defend — buildings, elephants, anything on RPG combat rules,
+a staggered or unarmed unit — always take the clean blow at ×1.0 with the old
+cadence, so structure and siege contracts are unchanged.
+`melee_target_can_defend` is the single place that decides it.
+
+Outcomes are published as `HitReactionKind` on `HitFeedbackComponent` (and on
+`FormationHitPresentationComponent` for the struck soldier slot), together with
+a per-kind `reaction_duration`. `apply_melee_reaction_feedback` is how a blocked
+or evaded blow — one that applied no or little damage — still gets a reaction on
+screen; blocked blows also push a `RpgContactOutcome::Block` burst so the shield
+throws sparks. The attacker of a blocked blow gets a `Recoil` reaction, which the
+renderer layers over the swing instead of cancelling it.
+
+`process_hit_feedback` turns the `knockback_x/z` a hit stores into an actual
+eased knock-step of the body, but only for single bodies outside a formation
+and off the RPG rules (`knockback_moves_body`): formations keep their slots and
+show the step through presentation alone.
+
 ### Duel footwork
 
-`MovementSystem::move_unit` zeroes velocity and freezes facing for the whole
-time a unit is in a melee lock, which is what stops a mass melee sliding around.
-For a commander locked one-on-one that read as two statues trading blows on a
-metronome, so `apply_duel_footwork` gives that case a slow circling instead.
+`MovementSystem::move_unit` zeroes velocity for the whole time a unit is in a
+melee lock, which is what stops a mass melee sliding around. For a single body
+locked one-on-one that read as two statues trading blows, so
+`apply_duel_footwork` gives every such pair footwork. It applies when both
+duellists are single bodies (`duel_footwork_body`: no formation slots, not
+cavalry, not an elephant) and locked onto each other, so line infantry ranks and
+any crowd around a shared target are untouched.
 
-It applies only when the entity has a `CommanderComponent` **and** its lock
-target is locked back onto it, so line infantry and any crowd around a shared
-target are untouched. Each duellist turns about its opponent's position rather
-than about the midpoint: rotation about the other man preserves the distance
-between them exactly, whichever order the two are updated in, so circling can
-never walk a fighter out of his own reach. Both derive the same direction from
-the pair's ids, so the pair turns rigidly, and the rate is a sine that reverses
-every `k_duel_footwork_period_seconds` so a long duel reads as footwork rather
-than as a turntable.
+Two motions are layered:
 
-The arena trace is how to check it: post-contact `position` spread should be
-about a metre in each axis, and the separation between the two should not drift
-at all.
+- **Circling.** Each duellist turns about its opponent's position; rotation
+  about the other man preserves the distance between them exactly, whichever
+  order the two are updated in. Both derive the same direction from the pair's
+  ids so the pair turns rigidly, at `k_duel_footwork_degrees_per_second` each,
+  and the rate is a sine that reverses every `k_duel_footwork_period_seconds`.
+- **The measure.** `duel_measure_target` reads the duellist's own
+  `RpgCommanderActionComponent`: the body closes by `k_duel_measure_advance`
+  through the wind-up and contact of its swing and falls back by
+  `k_duel_measure_retreat` through the recovery; between swings it breathes
+  about the guard distance. The target is a _separation_
+  (`melee_range × k_duel_base_separation_fraction`, clamped), approached at
+  `k_duel_measure_gain_per_second` and no faster than `k_duel_measure_step_speed`,
+  so a knock-step or a drift is closed again within a few ticks and the pair can
+  never walk out of reach or into each other (`k_duel_min_separation`).
+
+Footwork inside a lock is not locomotion: `begin_motion_presentation_frame`
+ignores the displacement of a locked body (`melee_footwork`) so the feet do not
+break into a walk cycle under a fighter who is only shuffling.
+
+The arena trace is how to check it: post-contact `position` should circle the
+pair's centre slowly, and the separation should breathe by a few tenths of a
+metre without drifting.
 
 ### Applying Damage
 

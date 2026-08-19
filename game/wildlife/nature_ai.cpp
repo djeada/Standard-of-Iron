@@ -307,6 +307,17 @@ public:
 
     actions.set_travel_speed(ctx, false);
     wildlife.behavior = Behavior::Roam;
+
+    if (ctx.movement != nullptr && ctx.movement->get_has_target() &&
+        !wildlife.stalled) {
+      float const held_x = wildlife.target_x - ctx.herd.center_x;
+      float const held_z = wildlife.target_z - ctx.herd.center_z;
+      if ((held_x * held_x) + (held_z * held_z) <=
+          k_herd_cohesion_radius * k_herd_cohesion_radius) {
+        return true;
+      }
+    }
+
     float open_x = ctx.herd.center_x;
     float open_z = ctx.herd.center_z;
     if (!actions.pick_open_point(wildlife.rng_state,
@@ -374,6 +385,10 @@ public:
     wildlife.focus_id = 0;
     actions.set_travel_speed(ctx, false);
 
+    if (still_walking(ctx)) {
+      return true;
+    }
+
     float anchor_x = 0.0F;
     float anchor_z = 0.0F;
     wander_anchor(ctx, anchor_x, anchor_z);
@@ -396,6 +411,11 @@ public:
   }
 
 private:
+  static auto still_walking(const NatureContext& ctx) -> bool {
+    return !ctx.wildlife->stalled && ctx.movement != nullptr &&
+           ctx.movement->get_has_target();
+  }
+
   std::string_view m_name;
   float m_min_radius;
   float m_max_radius;

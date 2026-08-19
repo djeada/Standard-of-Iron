@@ -302,4 +302,146 @@ TEST(CivilianDeliverySystemTest, FullBarracksRejectsCivilianWithoutConsumingIt) 
   EXPECT_EQ(barracks_prod->manpower_available, 100);
 }
 
+TEST(TempleRecruitmentTest, HealersAreRecruitedAtTheTempleNotTheBarracks) {
+  Engine::Core::World world;
+
+  auto* barracks = world.create_entity();
+  auto* barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
+  auto* barracks_prod = barracks->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(barracks_unit, nullptr);
+  ASSERT_NE(barracks_prod, nullptr);
+  barracks_unit->spawn_type = Game::Units::SpawnType::Barracks;
+  barracks_unit->owner_id = 1;
+  barracks_prod->max_units = 100;
+  barracks_prod->manpower_available = 100;
+
+  auto* temple = world.create_entity();
+  auto* temple_unit = temple->add_component<Engine::Core::UnitComponent>();
+  auto* temple_prod = temple->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(temple_unit, nullptr);
+  ASSERT_NE(temple_prod, nullptr);
+  temple_unit->spawn_type = Game::Units::SpawnType::Temple;
+  temple_unit->owner_id = 1;
+  temple_prod->max_units = 100;
+  temple_prod->manpower_available = 100;
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Wood, 500);
+  resources.set(1, Game::Systems::ResourceType::Stone, 500);
+  resources.set(1, Game::Systems::ResourceType::Iron, 500);
+  resources.set(1, Game::Systems::ResourceType::Food, 500);
+
+  EXPECT_EQ(Game::Systems::recruiting_building_for(Game::Units::TroopType::Healer),
+            Game::Units::SpawnType::Temple);
+
+  EXPECT_EQ(Game::Systems::ProductionService::start_production(
+                world, barracks->get_id(), Game::Units::TroopType::Healer),
+            Game::Systems::ProductionResult::WrongBuilding);
+  EXPECT_FALSE(barracks_prod->in_progress);
+
+  EXPECT_EQ(Game::Systems::ProductionService::start_production(
+                world, temple->get_id(), Game::Units::TroopType::Healer),
+            Game::Systems::ProductionResult::Success);
+  EXPECT_TRUE(temple_prod->in_progress);
+  EXPECT_EQ(temple_prod->product_type, Game::Units::TroopType::Healer);
+}
+
+TEST(TempleRecruitmentTest, TheTempleDrillsNoSoldiers) {
+  Engine::Core::World world;
+
+  auto* temple = world.create_entity();
+  auto* temple_unit = temple->add_component<Engine::Core::UnitComponent>();
+  auto* temple_prod = temple->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(temple_unit, nullptr);
+  ASSERT_NE(temple_prod, nullptr);
+  temple_unit->spawn_type = Game::Units::SpawnType::Temple;
+  temple_unit->owner_id = 1;
+  temple_prod->max_units = 100;
+  temple_prod->manpower_available = 100;
+
+  EXPECT_EQ(Game::Systems::ProductionService::start_production(
+                world, temple->get_id(), Game::Units::TroopType::Archer),
+            Game::Systems::ProductionResult::WrongBuilding);
+  EXPECT_FALSE(temple_prod->in_progress);
+}
+
+TEST(TempleRecruitmentTest, ASelectedTempleIsFoundAndReportsItsQueue) {
+  Engine::Core::World world;
+
+  auto* temple = world.create_entity();
+  auto* temple_unit = temple->add_component<Engine::Core::UnitComponent>();
+  auto* temple_prod = temple->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(temple_unit, nullptr);
+  ASSERT_NE(temple_prod, nullptr);
+  temple_unit->spawn_type = Game::Units::SpawnType::Temple;
+  temple_unit->owner_id = 1;
+  temple_prod->max_units = 100;
+  temple_prod->manpower_available = 100;
+
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Wood, 500);
+  resources.set(1, Game::Systems::ResourceType::Stone, 500);
+  resources.set(1, Game::Systems::ResourceType::Iron, 500);
+  resources.set(1, Game::Systems::ResourceType::Food, 500);
+
+  const std::vector<Engine::Core::EntityID> selected = {temple->get_id()};
+  EXPECT_EQ(Game::Systems::ProductionService::find_selected_temple(world, selected, 1),
+            temple->get_id());
+  EXPECT_EQ(
+      Game::Systems::ProductionService::find_selected_barracks(world, selected, 1),
+      Engine::Core::NULL_ENTITY);
+
+  ASSERT_EQ(Game::Systems::ProductionService::start_production(
+                world, temple->get_id(), Game::Units::TroopType::Healer),
+            Game::Systems::ProductionResult::Success);
+
+  Game::Systems::ProductionState state;
+  ASSERT_TRUE(Game::Systems::ProductionService::get_selected_temple_state(
+      world, selected, 1, state));
+  EXPECT_TRUE(state.has_temple);
+  EXPECT_TRUE(state.in_progress);
+  EXPECT_EQ(state.product_type, Game::Units::TroopType::Healer);
+}
+
+TEST(TempleRecruitmentTest, CivilianEnteringTheTempleTransfersManpower) {
+  Engine::Core::World world;
+
+  auto* temple = world.create_entity();
+  auto* temple_transform = temple->add_component<Engine::Core::TransformComponent>();
+  auto* temple_unit = temple->add_component<Engine::Core::UnitComponent>();
+  auto* temple_prod = temple->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(temple_transform, nullptr);
+  ASSERT_NE(temple_unit, nullptr);
+  ASSERT_NE(temple_prod, nullptr);
+
+  temple_transform->position = {20.0F, 0.0F, 20.0F};
+  temple_unit->spawn_type = Game::Units::SpawnType::Temple;
+  temple_unit->owner_id = 1;
+  temple_prod->max_units = 100;
+  temple_prod->manpower_available = 0;
+
+  auto* civilian = world.create_entity();
+  auto* civilian_transform =
+      civilian->add_component<Engine::Core::TransformComponent>();
+  auto* civilian_unit = civilian->add_component<Engine::Core::UnitComponent>();
+  auto* delivery = civilian->add_component<Engine::Core::CivilianDeliveryComponent>();
+  ASSERT_NE(civilian_transform, nullptr);
+  ASSERT_NE(civilian_unit, nullptr);
+  ASSERT_NE(delivery, nullptr);
+
+  civilian_transform->position = {20.5F, 0.0F, 20.2F};
+  civilian_unit->spawn_type = Game::Units::SpawnType::Civilian;
+  civilian_unit->owner_id = 1;
+  delivery->target_barracks_id = temple->get_id();
+
+  const auto civilian_id = civilian->get_id();
+
+  Game::Systems::CivilianDeliverySystem system;
+  system.update(&world, 0.016F);
+
+  EXPECT_EQ(world.get_entity(civilian_id), nullptr);
+  EXPECT_EQ(temple_prod->manpower_available,
+            Game::Systems::k_civilian_delivery_population_grant);
+}
+
 } // namespace

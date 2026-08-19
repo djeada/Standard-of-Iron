@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "animation/death_pose_manifest.h"
+#include "animation/reaction_pose_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "animation/showcase_pose_manifest.h"
 #include "humanoid_renderer_base.h"
@@ -67,6 +68,19 @@ public:
   void look_at(const QVector3D& target);
   void hit_flinch(float intensity);
   void tilt_torso(float side_tilt, float forward_tilt);
+
+  void crouch(float depth);
+
+  void raise_shield_guard(float amount);
+
+  void combat_ready_stance(float phase,
+                           Animation::HumanoidReadyWeapon weapon,
+                           float reach_scale = 1.0F);
+
+  void melee_reaction(Animation::HumanoidReactionKind kind,
+                      float phase,
+                      Animation::HumanoidReadyWeapon weapon,
+                      float reach_scale = 1.0F);
 
   auto solve_elbow_ik(Side side,
                       const QVector3D& shoulder,

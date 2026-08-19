@@ -570,8 +570,13 @@ auto CommandController::set_rally_at_screen(qreal sx,
     return result;
   }
 
-  const auto barracks = Game::Systems::ProductionService::find_selected_barracks(
-      *m_world, m_selection_system->get_selected_units(), local_owner_id);
+  const auto& selected = m_selection_system->get_selected_units();
+  auto barracks = Game::Systems::ProductionService::find_selected_barracks(
+      *m_world, selected, local_owner_id);
+  if (barracks == Engine::Core::NULL_ENTITY) {
+    barracks = Game::Systems::ProductionService::find_selected_temple(
+        *m_world, selected, local_owner_id);
+  }
   if (barracks != Engine::Core::NULL_ENTITY) {
     App::Core::OrderRequest request;
     request.kind = App::Core::OrderKind::Rally;
@@ -599,17 +604,26 @@ void CommandController::recruit_near_selected(const QString& unit_type,
     return;
   }
 
-  const bool wants_civilian =
-      unit_type.compare(QStringLiteral("civilian"), Qt::CaseInsensitive) == 0;
-  const auto building = wants_civilian
-                            ? Game::Systems::ProductionService::find_selected_home(
-                                  *m_world, sel, local_owner_id)
-                            : Game::Systems::ProductionService::find_selected_barracks(
-                                  *m_world, sel, local_owner_id);
+  const auto product = Game::Units::troop_typeFromString(unit_type.toStdString());
+
+  Engine::Core::EntityID building = Engine::Core::NULL_ENTITY;
+  switch (Game::Systems::recruiting_building_for(product)) {
+  case Game::Units::SpawnType::Home:
+    building = Game::Systems::ProductionService::find_selected_home(
+        *m_world, sel, local_owner_id);
+    break;
+  case Game::Units::SpawnType::Temple:
+    building = Game::Systems::ProductionService::find_selected_temple(
+        *m_world, sel, local_owner_id);
+    break;
+  default:
+    building = Game::Systems::ProductionService::find_selected_barracks(
+        *m_world, sel, local_owner_id);
+    break;
+  }
   if (building == Engine::Core::NULL_ENTITY) {
     return;
   }
-  const auto product = Game::Units::troop_typeFromString(unit_type.toStdString());
 
   const auto ruling = Game::Systems::ProductionService::can_start_production(
       *m_world, building, product);
