@@ -14,6 +14,15 @@ namespace App::ViewModels {
 class PlacementViewModel;
 }
 
+namespace Game::Map {
+class TerrainService;
+}
+
+namespace Game::Systems {
+class OwnerRegistry;
+class PlayerResourceRegistry;
+} // namespace Game::Systems
+
 namespace App::Mission {
 
 struct TutorialFrameNotes {
@@ -41,6 +50,8 @@ struct TutorialObservationInputs {
   bool mission_running = false;
   const App::ViewModels::PlacementViewModel* placement = nullptr;
   QVariantMap wave_status;
+  const Game::Systems::PlayerResourceRegistry* resources = nullptr;
+  const Game::Systems::OwnerRegistry* owners = nullptr;
 };
 
 struct TutorialFocusInputs {
@@ -49,6 +60,8 @@ struct TutorialFocusInputs {
   int local_owner_id = 1;
   Game::Mission::TutorialFocusTarget target = Game::Mission::TutorialFocusTarget::None;
   QVariantList wave_alerts;
+  const Game::Systems::OwnerRegistry* owners = nullptr;
+  const Game::Map::TerrainService* terrain = nullptr;
 };
 
 [[nodiscard]] auto observe_tutorial_frame(const TutorialObservationInputs& inputs)

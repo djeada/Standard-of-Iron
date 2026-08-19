@@ -85,6 +85,7 @@ constexpr std::uint32_t k_builder_chisel_role_count = 2;
 constexpr std::uint32_t k_builder_sickle_role_count = 2;
 constexpr std::uint32_t k_roman_civilian_mantle_role_count = 2;
 constexpr std::uint32_t k_civilian_pack_role_count = 3;
+constexpr std::uint32_t k_civilian_cudgel_role_count = 2;
 
 enum CivilianPackSlot : std::uint8_t {
   k_pack_bedroll_slot = 0U,
@@ -106,6 +107,11 @@ enum BuilderWorkTunicPaletteSlot : std::uint8_t {
 enum BuilderSicklePaletteSlot : std::uint8_t {
   k_builder_sickle_wood_slot = 0U,
   k_builder_sickle_metal_slot = 1U,
+};
+
+enum CivilianCudgelPaletteSlot : std::uint8_t {
+  k_civilian_cudgel_wood_slot = 0U,
+  k_civilian_cudgel_band_slot = 1U,
 };
 
 enum BuilderHammerPaletteSlot : std::uint8_t {
@@ -146,6 +152,17 @@ auto builder_hammer_fill_role_colors(const HumanoidPalette& palette,
   out[1] = palette.metal;
   out[2] = palette.metal * 0.72F;
   return k_builder_hammer_role_count;
+}
+
+auto civilian_cudgel_fill_role_colors(const HumanoidPalette& palette,
+                                      QVector3D* out,
+                                      std::size_t max) -> std::uint32_t {
+  if (max < k_civilian_cudgel_role_count) {
+    return 0U;
+  }
+  out[0] = palette.wood;
+  out[1] = palette.wood * 0.66F;
+  return k_civilian_cudgel_role_count;
 }
 
 auto builder_saw_fill_role_colors(const HumanoidPalette& palette,
@@ -534,6 +551,29 @@ auto builder_hammer_archetype() -> const RenderArchetype& {
   return archetype;
 }
 
+auto civilian_cudgel_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.21F, 0.02F),
+                           QVector3D(0.0F, 0.14F, 0.02F),
+                           0.017F,
+                           k_civilian_cudgel_wood_slot),
+        generated_cylinder(QVector3D(0.0F, 0.10F, 0.02F),
+                           QVector3D(0.0F, 0.19F, 0.02F),
+                           0.024F,
+                           k_civilian_cudgel_wood_slot),
+        generated_sphere(
+            QVector3D(0.0F, 0.20F, 0.02F), 0.029F, k_civilian_cudgel_wood_slot),
+        generated_cylinder(QVector3D(0.0F, -0.10F, 0.02F),
+                           QVector3D(0.0F, -0.045F, 0.02F),
+                           0.019F,
+                           k_civilian_cudgel_band_slot),
+    }};
+    return build_generated_equipment_archetype("roman_civilian_cudgel", primitives);
+  }();
+  return archetype;
+}
+
 auto builder_saw_archetype() -> const RenderArchetype& {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 8> const primitives{{
@@ -870,6 +910,63 @@ auto roman_builder_variant_table() -> const Render::Creature::ArchetypeVariantTa
   return k_table;
 }
 
+auto roman_civilian_idle_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = []() {
+    ensure_roman_civilian_equipment_contributions_registered();
+    const auto loadout =
+        Render::GL::Nation::resolve_equipment_loadout("troops/roman/civilian");
+    const std::array<EquipmentHandle, 3> handles{
+        loadout.armor_handle, loadout.cloak_handle, loadout.work_apron_handle};
+    return resolve_humanoid_equipment_archetype(
+        "troops/roman/civilian",
+        Render::Creature::ArchetypeRegistry::k_humanoid_base,
+        handles);
+  }();
+  return archetype;
+}
+
+auto roman_civilian_cudgel_unit_archetype() -> Render::Creature::ArchetypeId {
+  static constexpr std::array<std::uint8_t, 2> k_slots{k_civilian_cudgel_wood_slot,
+                                                       k_civilian_cudgel_band_slot};
+  static const auto k_tool_spec = builder_tool_make_static_attachment(
+      civilian_cudgel_archetype(),
+      Render::Creature::ArchetypeRegistry::instance()
+          .get(roman_civilian_idle_archetype())
+          ->role_count,
+      k_slots);
+  static const auto k_archetype = register_builder_tool_variant_archetype(
+      "troops/roman/civilian/cudgel",
+      roman_civilian_idle_archetype(),
+      k_tool_spec,
+      +[](const void* variant_void,
+          QVector3D* out,
+          std::uint32_t base_count,
+          std::size_t max_count) -> std::uint32_t {
+        if (variant_void == nullptr || max_count <= base_count) {
+          return base_count;
+        }
+        const auto& v = *static_cast<const HumanoidVariant*>(variant_void);
+        return base_count + civilian_cudgel_fill_role_colors(
+                                v.palette, out + base_count, max_count - base_count);
+      },
+      static_cast<std::uint8_t>(k_civilian_cudgel_role_count));
+  return k_archetype;
+}
+
+auto roman_civilian_variant_table() -> const Render::Creature::ArchetypeVariantTable& {
+  static const Render::Creature::ArchetypeVariantTable k_table = []() {
+    Render::Creature::ArchetypeVariantTable t{};
+    t.archetype_for_pose[static_cast<std::size_t>(
+        Render::Creature::PoseIntent::AttackMelee)] =
+        roman_civilian_cudgel_unit_archetype();
+    t.state_for_pose[static_cast<std::size_t>(
+        Render::Creature::PoseIntent::AttackMelee)] =
+        Render::Creature::AnimationStateId::AttackSword;
+    return t;
+  }();
+  return k_table;
+}
+
 } // namespace
 
 void register_builder_style(const std::string& nation_id,
@@ -983,18 +1080,11 @@ public:
     using namespace Render::Creature::Pipeline;
     static const UnitVisualSpec spec = []() {
       UnitVisualSpec s{};
-      ensure_roman_civilian_equipment_contributions_registered();
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/roman/civilian");
-      const std::array<EquipmentHandle, 3> handles{
-          loadout.armor_handle, loadout.cloak_handle, loadout.work_apron_handle};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/civilian";
       s.scaling = k_civilian_profile.as_pipeline_scaling();
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/roman/civilian",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base,
-          handles);
+      s.archetype_id = roman_civilian_idle_archetype();
+      s.animation_manifest.variant_table = &roman_civilian_variant_table();
       return s;
     }();
     return spec;
@@ -1034,6 +1124,10 @@ void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
   register_humanoid_renderer(
       registry, "troops/roman/civilian", std::make_shared<CivilianRenderer const>());
+
+  auto& ar = Render::GL::RenderArchetypeRegistry::instance();
+  ar.register_archetype("roman_civilian_cudgel",
+                        [] { (void)civilian_cudgel_archetype(); });
 }
 
 } // namespace Render::GL::Roman

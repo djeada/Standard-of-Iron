@@ -38,7 +38,8 @@ may change in any release — see [Save compatibility](#save-compatibility).
   sickle work loops, and the tool in a builder's hand follows the job — a mallet at
   the tree line, a chisel at the quarry and the ore seam, a sickle in the field, and
   the seeded hammer/saw/chisel mix on a building site. Cornered builders now fight
-  with the mallet in hand instead of bare fists.
+  with the mallet in hand instead of bare fists, and civilians defend themselves
+  with a wooden cudgel instead of their knuckles.
 
 - **The camera says what it does, and every command takes two keys.** Bindings
   hold a primary and an alternate chord at once, so panning answers to the
@@ -94,6 +95,14 @@ may change in any release — see [Save compatibility](#save-compatibility).
   explains in a tooltip why it is refusing when the setup is not startable.
 
 ### Fixed
+
+- **Formations turn like soldiers now, not like a lawnmower blade.** A unit
+  changing direction used to spin every soldier rigidly around its anchor, so
+  the outer files strafed sideways along arcs with their bodies locked to the
+  unit's facing. Each rendered soldier now walks to his slot at a plausible
+  foot speed, pivots on his own feet toward where he is going, and eases back
+  square once he has re-dressed — cavalry wheels instead of sliding. Purely a
+  render-side change; the simulation's positions and hit math are untouched.
 
 - **Twelve switches were silently ignoring enum values that had been added
   since they were written.** Each listed every case it knew about and had no
